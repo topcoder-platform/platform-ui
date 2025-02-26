@@ -1,6 +1,6 @@
 // src/services/useGetUsers.ts
 import { useEffect, useState } from 'react';
-import useAxiosInstance from '~/libs/useAxiosInstance';
+import { axiosV3 } from '~/libs/useAxiosInstance';
 
 export interface User { /* ... */ }
 export interface GetUsersResponse {
@@ -10,14 +10,13 @@ export interface GetUsersResponse {
 }
 
 export const useGetUsers = () => {
-  const axiosInstance = useAxiosInstance();
   const [data, setData] = useState<GetUsersResponse | null>(null);
   const [error, setError] = useState<any>(null);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const response = await axiosInstance.get<GetUsersResponse>('/users');
+        const response = await axiosV3.get<GetUsersResponse>('/users');
         console.log("useGetUsers response:", response)
         setData(response.data);
       } catch (err) {

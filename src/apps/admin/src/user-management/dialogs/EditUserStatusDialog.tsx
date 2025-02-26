@@ -50,8 +50,8 @@ const EditUserStatusDialog: React.FC<EditUserStatusDialogProps> = ({
           </div>
         </div>
         <div className={styles.dialogFooter}>
-          <button className="cancelBtn" onClick={onClose}>Cancel</button>
-          <button className="saveBtn" onClick={handleSubmit}>Save</button>
+          <button className={styles.cancelBtn} onClick={onClose}>Cancel</button>
+          <button className={styles.saveBtn} onClick={handleSubmit}>Save</button>
         </div>
       </div>
     </div>

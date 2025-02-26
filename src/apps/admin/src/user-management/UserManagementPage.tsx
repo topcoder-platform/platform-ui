@@ -1,6 +1,5 @@
 // src/apps/admin/src/user-management/UserManagementPage.tsx
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import { toast } from 'react-toastify';
 import styles from './UserManagementPage.module.scss';
 import { updateUserEmail } from '~/services/updateUserEmail';
@@ -10,9 +9,11 @@ import EditEmailDialog from './dialogs/EditEmailDialog';
 import EditRolesDialog from './dialogs/EditRolesDialog';
 import EditUserStatusDialog from './dialogs/EditUserStatusDialog';
 import EditDropdown from './components/EditDropdown';
+import EditGroupsDialog from './dialogs/EditGroupsDialog';
+import EditTermsDialog from './dialogs/EditTermsDialog';
 
 import { useGetUsers } from '~/services/useGetUsers';
-import { User as AdminUser, Role } from './types';
+import { User as AdminUser, Role, Group, Term } from './types';
 
 // Map the service user to our AdminUser shape.
 function mapServiceUserToAdminUser(serviceUser: any): AdminUser {
@@ -21,11 +22,35 @@ function mapServiceUserToAdminUser(serviceUser: any): AdminUser {
     handle: serviceUser.handle || '',
     email: serviceUser.email || '',
     active: serviceUser.active ?? false,
-    // Map the roles to have id as a number and name from roleName
     roles: Array.isArray(serviceUser.roles)
       ? serviceUser.roles.map((r: any) => ({
-          id: Number(r.id),
-          name: r.roleName,
+          id: String(r.id),
+          roleName: r.roleName,
+        }))
+      : [],
+    groups: Array.isArray(serviceUser.groups)
+      ? serviceUser.groups.map((g: any) => ({
+          id: String(g.id),
+          name: g.name,
+          description: g.description,
+          ssoId: g.ssoId,
+          updatedBy: g.updatedBy,
+          updatedAt: g.updatedAt,
+          createdAt: g.createdAt,
+          createdBy: g.createdBy,
+          privateGroup: g.privateGroup,
+          oldId: g.oldId,
+          organizationId: g.organizationId,
+          selfRegister: g.selfRegister,
+          domain: g.domain,
+          status: g.status,
+        }))
+      : [],
+      terms: Array.isArray(serviceUser.terms)
+      ? serviceUser.terms.map((t: any) => ({
+          id: String(t.id),
+          title: t.title,
+          // map any other fields if present
         }))
       : [],
     modifiedBy: serviceUser.modifiedBy || null,
@@ -49,6 +74,7 @@ function mapServiceUserToAdminUser(serviceUser: any): AdminUser {
 
 
 
+
 type SortField = 'id' | 'handle' | 'email' | 'active';
 
 interface FilterState {
@@ -66,6 +92,12 @@ const UserManagementPage: React.FC = () => {
   const [selectedUserForRoles, setSelectedUserForRoles] = useState<AdminUser | null>(null);
   const [editStatusOpen, setEditStatusOpen] = useState(false);
   const [selectedUserForStatus, setSelectedUserForStatus] = useState<AdminUser | null>(null);
+  const [editGroupsOpen, setEditGroupsOpen] = useState(false);
+  const [selectedUserForGroups, setSelectedUserForGroups] = useState<AdminUser | null>(null);
+  const [editTermsOpen, setEditTermsOpen] = useState(false);
+  const [selectedUserForTerms, setSelectedUserForTerms] = useState<AdminUser | null>(null);
+
+
 
   // Main UI states
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -110,6 +142,7 @@ const UserManagementPage: React.FC = () => {
     setEditEmailOpen(false);
     setSelectedUserForEmail(null);
   };
+  
   const openEditRolesDialog = (user: AdminUser) => {
     setSelectedUserForRoles(user);
     setEditRolesOpen(true);
@@ -118,6 +151,27 @@ const UserManagementPage: React.FC = () => {
     setEditRolesOpen(false);
     setSelectedUserForRoles(null);
   };
+  const openEditGroupsDialog = (user: AdminUser) => {
+    setSelectedUserForGroups(user);
+    setEditGroupsOpen(true);
+  };
+  
+  // Close the edit groups dialog
+  const closeEditGroupsDialog = () => {
+    setEditGroupsOpen(false);
+    setSelectedUserForGroups(null);
+  };
+
+  const openEditTermsDialog = (user: AdminUser) => {
+    setSelectedUserForTerms(user);
+    setEditTermsOpen(true);
+  };
+  
+  const closeEditTermsDialog = () => {
+    setEditTermsOpen(false);
+    setSelectedUserForTerms(null);
+  };
+
   const openEditStatusDialog = (user: AdminUser) => {
     setSelectedUserForStatus(user);
     setEditStatusOpen(true);
@@ -154,6 +208,27 @@ const UserManagementPage: React.FC = () => {
     );
     closeEditRolesDialog();
   };
+
+  const handleSaveGroups = (updatedGroups: Group[]): void => {
+    if (!selectedUserForGroups) return;
+    const userId = selectedUserForGroups.id;
+    setUsers((prev) =>
+      prev.map((u) => (u.id === userId ? { ...u, groups: updatedGroups } : u))
+    );
+    closeEditGroupsDialog();
+  };
+
+  const handleSaveTerms = (updatedTerms: Term[]) => {
+    if (!selectedUserForTerms) return;
+    const userId = selectedUserForTerms.id;
+    setUsers((prev) =>
+      prev.map((u) =>
+        u.id === userId ? { ...u, terms: updatedTerms } : u
+      )
+    );
+    closeEditTermsDialog();
+  };
+  
 
   const handleSaveStatus = async (newStatus: string, comment: string) => {
     if (!selectedUserForStatus) return;
@@ -368,8 +443,8 @@ const UserManagementPage: React.FC = () => {
                         onEditEmail={openEditEmailDialog}
                         onEditRoles={openEditRolesDialog}
                         onEditStatus={openEditStatusDialog}
-                        onEditGroups={() => {}}
-                        onEditTerms={() => {}}
+                        onEditGroups={openEditGroupsDialog}
+                        onEditTerms={openEditTermsDialog}
                       />
                       <button
                         className={`${styles.actionsCellButtons} ${
@@ -459,6 +534,24 @@ const UserManagementPage: React.FC = () => {
           onSave={handleSaveRoles}
         />
       )}
+      {editGroupsOpen && selectedUserForGroups && (
+      <EditGroupsDialog
+        userId={selectedUserForGroups.id}
+        userGroups={selectedUserForGroups.groups || []}
+        onClose={closeEditGroupsDialog}
+        onSave={handleSaveGroups}
+      />
+    )}
+
+{editTermsOpen && selectedUserForTerms && (
+  <EditTermsDialog
+    userId={selectedUserForTerms.id}
+    userTerms={selectedUserForTerms.terms || []}
+    onClose={closeEditTermsDialog}
+    onSave={handleSaveTerms}
+  />
+)}
+
       {editStatusOpen && selectedUserForStatus && (
         <EditUserStatusDialog
           userId={selectedUserForStatus.id}

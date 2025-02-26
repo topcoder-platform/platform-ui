@@ -5,6 +5,34 @@ export interface Role {
   roleName: string;
 }
 
+export interface Group {
+  id: string;
+  name: string;
+  description?: string;
+  ssoId?: string;
+  updatedBy?: string;
+  updatedAt?: string;
+  createdAt?: string;
+  createdBy?: string;
+  privateGroup?: boolean;
+  oldId?: string;
+  organizationId?: string;
+  selfRegister?: boolean;
+  domain?: string;
+  status?: string;
+}
+
+export interface Term {
+  id: string;
+  legacyId?: number;
+  title: string;
+  agreeabilityTypeId?: string;
+  typeId?: number;
+  agreeabilityType?: string;
+  type?: string;
+  url?: string;
+}
+
 export interface Credential {
   activationCode: string | null;
   resetToken: string | null;
@@ -20,6 +48,8 @@ export interface User {
   email: string;
   active: boolean;
   roles: Role[];
+  groups?: Group[]; // <-- Added groups property for user's groups
+  terms?: Term[];
   modifiedBy: string | null;
   modifiedAt: string;
   createdBy: string | null;

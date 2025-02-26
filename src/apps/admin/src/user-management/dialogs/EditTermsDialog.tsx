@@ -1,121 +1,177 @@
-// src/apps/admin/src/user-management/dialogs/EditTermsDialog.tsx
-import React, { useEffect, useState } from 'react'
-import styles from './Dialog.module.scss'
-
-/** Example Term interface */
-interface Term {
-  id: string
-  title: string
-}
+import React, { useEffect, useState, ChangeEvent } from 'react';
+import { axiosV5 } from '~/libs/useAxiosInstance';
+import styles from './Dialog.module.scss';
+import { Term } from '../types';
 
 interface EditTermsDialogProps {
-  userId: number
-  addedTerms: Term[]      // Terms the user already signed
-  notAddedTerms: Term[]   // Terms the user has not signed
-  onClose: () => void
-  onSave: (updatedAdded: Term[], updatedNotAdded: Term[]) => void
+  userId: string;
+  userTerms: Term[];
+  onClose: () => void;
+  onSave: (updatedTerms: Term[]) => void;
 }
 
 const EditTermsDialog: React.FC<EditTermsDialogProps> = ({
   userId,
-  addedTerms,
-  notAddedTerms,
+  userTerms,
   onClose,
   onSave,
 }) => {
-  const [currentAdded, setCurrentAdded] = useState<Term[]>([])
-  const [currentNotAdded, setCurrentNotAdded] = useState<Term[]>([])
-  const [filterAdded, setFilterAdded] = useState<string>('')
-  const [filterNotAdded, setFilterNotAdded] = useState<string>('')
+  const [currentTerms, setCurrentTerms] = useState<Term[]>([]);
+  const [allTerms, setAllTerms] = useState<Term[]>([]);
+  const [selectedTermId, setSelectedTermId] = useState<string>('');
+  const [filterText, setFilterText] = useState<string>('');
 
   useEffect(() => {
-    // Initialize from props
-    setCurrentAdded(addedTerms)
-    setCurrentNotAdded(notAddedTerms)
-  }, [addedTerms, notAddedTerms])
+    // Initialize current terms from props
+    setCurrentTerms(userTerms);
 
-  /** Filter logic for added/not added */
-  const filteredAdded = currentAdded.filter((t) =>
-    t.title.toLowerCase().includes(filterAdded.toLowerCase())
-  )
-  const filteredNotAdded = currentNotAdded.filter((t) =>
-    t.title.toLowerCase().includes(filterNotAdded.toLowerCase())
-  )
+    // Fetch terms from real API GET /v5/terms
+    axiosV5.get('/terms')
+      .then((response) => {
+        console.log('Fetched terms:', response.data);
+        // The API may return an array directly or wrapped in an object.
+        if (Array.isArray(response.data)) {
+          setAllTerms(response.data);
+        } else if (
+          response.data &&
+          response.data.result &&
+          Array.isArray(response.data.result)
+        ) {
+          setAllTerms(response.data.result);
+        }
+      })
+      .catch((error) => {
+        console.error('Error fetching terms', error);
+      });
+  }, [userTerms]);
 
-  /** Unsign term */
-  const unsignTerm = (termId: string) => {
-    const term = currentAdded.find((t) => t.id === termId)
-    if (!term) return
-    // Move from added -> not added
-    setCurrentAdded((prev) => prev.filter((t) => t.id !== termId))
-    setCurrentNotAdded((prev) => [...prev, term])
-  }
+  // API functions
+  const signTermForUser = (termId: string) => {
+    return axiosV5.post(`/terms/${termId}/users`, { memberId: userId });
+  };
 
-  /** Sign term */
-  const signTerm = (termId: string) => {
-    const term = currentNotAdded.find((t) => t.id === termId)
-    if (!term) return
-    // Move from not added -> added
-    setCurrentNotAdded((prev) => prev.filter((t) => t.id !== termId))
-    setCurrentAdded((prev) => [...prev, term])
-  }
+  const unsignTermForUser = (termId: string) => {
+    return axiosV5.delete(`/terms/${termId}/users/${userId}`);
+  };
 
-  /** Handle Save */
+  const removeTerm = (termId: string) => {
+    // Call DELETE API then update state if successful
+    unsignTermForUser(termId)
+      .then(() => {
+        setCurrentTerms((prev) => prev.filter((t) => t.id !== termId));
+      })
+      .catch((err) => {
+        console.error(`Error unsigning term ${termId} for user ${userId}`, err);
+      });
+  };
+
+  const addTerm = () => {
+    if (!selectedTermId) return;
+    const termToAdd = allTerms.find((t) => t.id === selectedTermId);
+    if (!termToAdd) return;
+    // Avoid duplicates
+    if (currentTerms.some((t) => t.id === termToAdd.id)) return;
+
+    // Call POST API to sign the term
+    signTermForUser(selectedTermId)
+      .then(() => {
+        setCurrentTerms((prev) => [...prev, termToAdd]);
+      })
+      .catch((err) => {
+        console.error(`Error signing term ${selectedTermId} for user ${userId}`, err);
+      });
+  };
+
   const handleSave = () => {
-    // Real code: POST /v5/terms/{Term ID}/users for newly added
-    //           DELETE /v5/terms/{Term ID}/users/{User ID} for removed
-    onSave(currentAdded, currentNotAdded)
-  }
+    onSave(currentTerms);
+  };
+
+  // Filter available terms by title (not already signed)
+  const availableTerms = allTerms.filter(
+    (term) =>
+      !currentTerms.some((t) => t.id === term.id) &&
+      term.title.toLowerCase().includes(filterText.toLowerCase())
+  );
 
   return (
     <div className={styles.modalBackdrop}>
       <div className={styles.modalContent}>
+        {/* Header */}
         <div className={styles.dialogHeader}>
-          <h2>Terms of guest{userId}</h2>
+          <h2>Terms for User {userId}</h2>
         </div>
-        <div className={styles.dialogBody}>
-          <div style={{ marginBottom: '1rem' }}>
-            <h3>Added Terms</h3>
-            <label>Title</label>
-            <input
-              type="text"
-              value={filterAdded}
-              onChange={(e) => setFilterAdded(e.target.value)}
-              placeholder="Filter by title..."
-            />
-            {filteredAdded.length === 0 && <p>No terms</p>}
-            {filteredAdded.map((term) => (
-              <div key={term.id} style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span>{term.title}</span>
-                <button onClick={() => unsignTerm(term.id)}>Unsign</button>
-              </div>
-            ))}
-          </div>
 
-          <div style={{ marginBottom: '1rem' }}>
-            <h3>Not Added Terms</h3>
-            <label>Title</label>
+        {/* Body */}
+        <div className={styles.dialogBody}>
+          <h3>Signed Terms</h3>
+          {currentTerms.length ? (
+            <table>
+              <thead>
+                <tr>
+                  <th>Term ID</th>
+                  <th>Title</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {currentTerms.map((term) => (
+                  <tr key={term.id}>
+                    <td>{term.id}</td>
+                    <td>{term.title}</td>
+                    <td>
+                      <button onClick={() => removeTerm(term.id)}>
+                        Unsign
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p>No terms signed yet.</p>
+          )}
+
+          <h3>Add Term</h3>
+          <div style={{ marginBottom: '0.5rem' }}>
             <input
               type="text"
-              value={filterNotAdded}
-              onChange={(e) => setFilterNotAdded(e.target.value)}
-              placeholder="Filter by title..."
+              placeholder="Filter terms by title..."
+              value={filterText}
+              onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                setFilterText(e.target.value)
+              }
+              style={{ width: '100%', padding: '0.4rem', marginBottom: '0.5rem' }}
             />
-            {filteredNotAdded.map((term) => (
-              <div key={term.id} style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span>{term.title}</span>
-                <button onClick={() => signTerm(term.id)}>Sign Terms</button>
-              </div>
-            ))}
           </div>
+          <select
+            value={selectedTermId}
+            onChange={(e) => setSelectedTermId(e.target.value)}
+            style={{ width: '100%', padding: '0.5rem' }}
+          >
+            <option value="">-- Select Term --</option>
+            {availableTerms.map((term) => (
+              <option key={term.id} value={term.id}>
+                {term.title}
+              </option>
+            ))}
+          </select>
+          <button className={styles.addButton} onClick={addTerm}>
+            Sign Term
+          </button>
         </div>
+
+        {/* Footer */}
         <div className={styles.dialogFooter}>
-          <button className="cancelBtn" onClick={onClose}>Close</button>
-          <button className="saveBtn" onClick={handleSave}>Save</button>
+          <button className={styles.cancelBtn} onClick={onClose}>
+            Close
+          </button>
+          <button className={styles.saveBtn} onClick={handleSave}>
+            Save
+          </button>
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default EditTermsDialog
+export default EditTermsDialog;
