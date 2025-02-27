@@ -19,9 +19,10 @@ const TableCell: <T extends { [propertyName: string]: any }>(props: TableCellPro
     = <T extends { [propertyName: string]: any }>(props: TableCellProps<T>) => {
 
         let data: string | JSX.Element | undefined
+        const rawDate = props.data[props.propertyName as string]
         switch (props.type) {
             case 'date':
-                data = textFormatDateLocaleShortString(props.data[props.propertyName as string] as Date)
+                data = textFormatDateLocaleShortString(new Date(rawDate))
                 break
 
             case 'action':
