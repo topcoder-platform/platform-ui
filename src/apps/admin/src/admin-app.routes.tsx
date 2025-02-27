@@ -21,6 +21,18 @@ const ManageUserPage: LazyLoadedComponent = lazyLoad(
     'ManageUserPage',
 )
 
+const ReviewManagement: LazyLoadedComponent = lazyLoad(
+    () => import('./review-management/ReviewManagement'),
+)
+const ReviewManagementPage: LazyLoadedComponent = lazyLoad(
+    () => import('./review-management/ReviewManagementPage'),
+    'ReviewManagementPage',
+)
+const ManageReviewerPage: LazyLoadedComponent = lazyLoad(
+    () => import('./review-management/ManageReviewerPage'),
+    'ManageReviewerPage',
+)
+
 export const toolTitle: string = ToolTitle.admin
 export const rootRoute: string
     = EnvironmentConfig.SUBDOMAIN === AppSubdomain.admin
@@ -28,6 +40,7 @@ export const rootRoute: string
         : `/${AppSubdomain.admin}`
 
 export const manageChallengeRouteId = 'challenge-management'
+export const manageReviewRouteId = 'review-management'
 
 export const adminRoutes: ReadonlyArray<PlatformRoute> = [
     // Admin App Root
@@ -55,6 +68,24 @@ export const adminRoutes: ReadonlyArray<PlatformRoute> = [
                 element: <ChallengeManagement />,
                 id: manageChallengeRouteId,
                 route: manageChallengeRouteId,
+            },
+            // Reviewer Management Module
+            {
+                children: [
+                    {
+                        element: <ReviewManagementPage />,
+                        id: 'review-management-page',
+                        route: '',
+                    },
+                    {
+                        element: <ManageReviewerPage />,
+                        id: 'manage-reviewer',
+                        route: ':challengeId/manage-reviewer',
+                    },
+                ],
+                element: <ReviewManagement />,
+                id: manageReviewRouteId,
+                route: manageReviewRouteId,
             },
         ],
         domain: AppSubdomain.admin,

@@ -1,0 +1,34 @@
+@import '@libs/ui/styles/includes';
+@import '../../styles';
+
+.reviewSummaryList {
+    padding: 0 15px;
+
+    table tbody tr td:nth-last-child(3) {
+      text-align: center;
+    }
+}
+
+.challengeTitle {
+    min-width: 200px;
+    padding: 0;
+    justify-content: flex-start;
+    border-radius: 0;
+    color: $body-color;
+    line-height: 16px;
+    white-space: break-spaces;
+
+    &:hover {
+        color: $blue-110;
+    }
+}
+
+.rowActions {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+
+    > * {
+        flex: none;
+    }
+}
