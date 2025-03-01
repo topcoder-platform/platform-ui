@@ -15,6 +15,12 @@
         opacity: 0.5;
     }
 
+    :global(button.btn-disabled.btn-style-primary.btn-variant-linkblue) {
+        background-color: $link-blue-dark !important;
+        color: $tc-white !important;
+        opacity: 0.5;
+    }
+
     &:first-child {
         border-radius: $sp-2 0 0 $sp-2;
     }

@@ -120,7 +120,7 @@ export const DialogEditUserTerms: FC<Props> = (props: Props) => {
                         {!addedInfoDataMapping[data.id] && (
                             <Button
                                 primary
-                                variant='danger'
+                                variant='linkblue'
                                 label='Sign Terms'
                                 onClick={function onClick() {
                                     notAddedInfo.doAddTerm(data.id)

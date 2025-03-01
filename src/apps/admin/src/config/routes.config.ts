@@ -9,4 +9,5 @@ export const rootRoute: string
         : `/${AppSubdomain.admin}`
 
 export const manageChallengeRouteId = 'challenge-management'
+export const manageReviewRouteId = 'review-management'
 export const userManagementRouteId = 'user-management'

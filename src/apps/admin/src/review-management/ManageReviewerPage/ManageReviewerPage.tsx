@@ -36,9 +36,9 @@ import {
     getChallengeReviewOpportunities,
     rejectPending,
 } from '../../lib/services'
-import { rootRoute } from '../../admin-app.routes'
 import { handleError } from '../../lib/utils'
 import { useEventCallback } from '../../lib/hooks'
+import { rootRoute } from '../../config/routes.config'
 
 import styles from './ManageReviewerPage.module.scss'
 
