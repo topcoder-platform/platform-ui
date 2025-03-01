@@ -52,10 +52,10 @@ const Pagination: FC<PaginationProps> = (props: PaginationProps) => {
                 const pages = []
                 for (
                     let i = props.page - MAX_PAGE_DISPLAY + 1;
-                    i <= props.page;
+                    i <= props.page + MAX_PAGE_DISPLAY;
                     i++
                 ) {
-                    if (i >= 1) {
+                    if (i >= 1 && i <= props.totalPages && pages.length < MAX_PAGE_DISPLAY) {
                         pages.push(i)
                     }
                 }
@@ -95,7 +95,7 @@ const Pagination: FC<PaginationProps> = (props: PaginationProps) => {
 
             return [...oldDisplayPages]
         })
-    }, [props.page])
+    }, [props.page, props.totalPages])
 
     useEffect(() => {
         createDisplayPages()
