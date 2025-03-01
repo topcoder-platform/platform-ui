@@ -1,7 +1,7 @@
 import { toast } from 'react-toastify'
 import _ from 'lodash'
 
-import { ChallengeFilterCriteria } from '../models'
+import { ChallengeFilterCriteria, ReviewFilterCriteria } from '../models'
 
 /**
  * Handles api v5,v3 errors.
@@ -48,6 +48,22 @@ export const createChallengeQueryString = (
     }
 
     if (filterCriteria.status) filter += `&status=${filterCriteria.status}`
+
+    return filter
+}
+
+export const createReviewQueryString = (
+    filterCriteria: ReviewFilterCriteria,
+): string => {
+    let filter = ''
+
+    if (filterCriteria.page) {
+        filter += `page=${filterCriteria.page}`
+    }
+
+    if (filterCriteria.perPage) {
+        filter += `&perPage=${filterCriteria.perPage}`
+    }
 
     return filter
 }

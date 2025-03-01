@@ -24,6 +24,7 @@ interface TableProps<T> {
     readonly moreToLoad?: boolean
     readonly disableSorting?: boolean
     readonly showExpand?: boolean
+    readonly initSort?: Sort
     readonly onLoadMoreClick?: () => void
     readonly onRowClick?: (data: T) => void
     readonly onToggleSort?: (sort: Sort) => void
@@ -41,7 +42,7 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
             = useState<Sort | undefined>(
                 props.removeDefaultSort
                     ? undefined
-                    : tableGetDefaultSort(props.columns),
+                    : tableGetDefaultSort(props.columns, props.initSort),
             )
         const displayColumns = useMemo(() => {
             if (!props.showExpand) {
@@ -50,6 +51,7 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
 
             return _.filter(props.columns, item => !item.isExpand)
         }, [props.columns, props.showExpand])
+
         const [defaultSortDirectionMap, setDefaultSortDirectionMap]: [
             DefaultSortDirectionMap | undefined,
             Dispatch<SetStateAction<DefaultSortDirectionMap | undefined>>

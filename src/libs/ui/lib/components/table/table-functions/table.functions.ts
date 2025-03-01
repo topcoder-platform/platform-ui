@@ -1,7 +1,11 @@
 import { Sort } from '../../../../../../apps/gamification-admin/src/game-lib/pagination'
 import { TableColumn } from '../table-column.model'
 
-export function getDefaultSort<T>(columns: ReadonlyArray<TableColumn<T>>): Sort {
+export function getDefaultSort<T>(columns: ReadonlyArray<TableColumn<T>>, initSort?: Sort): Sort {
+
+    if (initSort) {
+        return initSort
+    }
 
     const defaultSortColumn: TableColumn<T> | undefined = columns.find(col => col.isDefaultSort)
         || columns.find(col => !!col.propertyName)

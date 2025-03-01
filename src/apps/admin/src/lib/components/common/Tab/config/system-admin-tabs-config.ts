@@ -3,6 +3,7 @@ import _ from 'lodash'
 import { TabsNavItem } from '~/libs/ui'
 import {
     manageChallengeRouteId,
+    manageReviewRouteId,
     userManagementRouteId,
 } from '~/apps/admin/src/config/routes.config'
 
@@ -15,6 +16,10 @@ export const SystemAdminTabsConfig: TabsNavItem[] = [
         id: userManagementRouteId,
         title: 'User Management',
     },
+    {
+        id: manageReviewRouteId,
+        title: 'Review Management',
+    },
 ]
 
 export function getTabIdFromPathName(pathname: string): string {
@@ -22,6 +27,10 @@ export function getTabIdFromPathName(pathname: string): string {
 
     if (matchItem) {
         return matchItem.id
+    }
+
+    if (pathname.includes(`/${manageReviewRouteId}`)) {
+        return manageReviewRouteId
     }
 
     return manageChallengeRouteId
