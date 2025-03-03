@@ -42,6 +42,7 @@ interface InputSelectProps {
     readonly placeholder?: string
     readonly tabIndex?: number
     readonly value?: string
+    readonly classNameWrapper?: string
 }
 
 const sameWidthModifier = {
@@ -129,6 +130,7 @@ const InputSelect: FC<InputSelectProps> = (props: InputSelectProps) => {
         if (menuIsVisible) {
             popper.update?.()
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [menuIsVisible])
 
     return (
@@ -166,8 +168,14 @@ const InputSelect: FC<InputSelectProps> = (props: InputSelectProps) => {
                 }}
                 ref={buttonRef}
             >
-                <span className='body-small'>{selectedOption ? label(selectedOption) : ''}</span>
-                <span className='body-small'>{!selectedOption && !!props.placeholder ? props.placeholder : ''}</span>
+                <span className={classNames('body-small', styles.textSelected)}>
+                    {selectedOption ? label(selectedOption) : ''}
+                </span>
+                <span className={classNames('body-small', styles.textSelected)}>
+                    {!selectedOption && !!props.placeholder
+                        ? props.placeholder
+                        : ''}
+                </span>
                 <span className={styles['selected-icon']}>
                     <IconOutline.ChevronDownIcon />
                 </span>

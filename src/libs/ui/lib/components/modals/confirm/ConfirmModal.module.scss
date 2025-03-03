@@ -1,0 +1,14 @@
+.dialogLoadingSpinnerContainer {
+    position: absolute;
+    width: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    bottom: 0;
+    height: 64px;
+    left: 0;
+
+    .spinner {
+        background: none;
+    }
+}

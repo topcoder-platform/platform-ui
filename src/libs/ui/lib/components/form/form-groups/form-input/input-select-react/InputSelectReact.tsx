@@ -23,6 +23,7 @@ export interface InputSelectOption {
 
 interface InputSelectReactProps {
     readonly className?: string
+    readonly classNameWrapper?: string
     readonly dirty?: boolean
     readonly disabled?: boolean
     readonly error?: string
