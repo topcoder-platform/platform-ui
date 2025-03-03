@@ -1,7 +1,9 @@
+import useSWR, { SWRResponse } from 'swr'
 import useSWRInfinite, { SWRInfiniteResponse } from 'swr/infinite'
 
 import { EnvironmentConfig } from '~/config'
 import { xhrGetAsync } from '~/libs/core'
+import { buildUrl } from '~/libs/shared/lib/utils/url'
 
 import { CopilotOpportunity } from '../models/CopilotOpportunity'
 
@@ -58,4 +60,24 @@ export const useCopilotOpportunities = (): CopilotOpportunitiesResponse => {
     const opportunities = data ? data.flat() : []
 
     return { data: opportunities, isValidating, setSize: (s: number) => { setSize(s) }, size }
+}
+
+export type CopilotOpportunityResponse = SWRResponse<CopilotOpportunity, CopilotOpportunity>
+
+/**
+ * Custom hook to fetch copilot opportunity by id.
+ *
+ * @param {string} opportunityId - The unique identifier of the copilot request.
+ * @returns {CopilotOpportunityResponse} - The response containing the copilot request data.
+ */
+export const useCopilotOpportunity = (opportunityId?: string): CopilotOpportunityResponse => {
+    const url = opportunityId ? buildUrl(`${baseUrl}/copilots/opportunities/${opportunityId}`) : undefined
+
+    const fetcher = (urlp: string): Promise<CopilotOpportunity> => xhrGetAsync<CopilotOpportunity>(urlp)
+        .then(copilotOpportunityFactory)
+
+    return useSWR(url, fetcher, {
+        refreshInterval: 0,
+        revalidateOnFocus: false,
+    })
 }
