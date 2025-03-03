@@ -1,0 +1,15 @@
+@import "@libs/ui/styles/includes";
+
+.copy-btn {
+    line-height: 0;
+
+    padding: $sp-3 $sp-4;
+    margin: 10;
+    background: none;
+    border: none;
+    border-radius: inherit;
+
+    &:active {
+        background-color: rgba(darken($blue-10, 25%), 0.25);
+    }
+}

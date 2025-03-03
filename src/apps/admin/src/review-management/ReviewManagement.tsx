@@ -5,7 +5,8 @@ import { routerContext, RouterContextData } from '~/libs/core'
 
 import { Layout } from '../lib/components'
 import { ReviewManagementContextProvider } from '../lib/contexts'
-import { adminRoutes, manageReviewRouteId } from '../admin-app.routes'
+import { adminRoutes } from '../admin-app.routes'
+import { manageReviewRouteId } from '../config/routes.config'
 
 /**
  * The router outlet with layout.

@@ -5,7 +5,8 @@ import { routerContext, RouterContextData } from '~/libs/core'
 
 import { Layout } from '../lib/components'
 import { ChallengeManagementContextProvider } from '../lib/contexts'
-import { adminRoutes, manageChallengeRouteId } from '../admin-app.routes'
+import { adminRoutes } from '../admin-app.routes'
+import { manageChallengeRouteId } from '../config/routes.config'
 
 /**
  * The router outlet with layout.

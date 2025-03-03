@@ -54,6 +54,7 @@ const BaseButton: FC<BaseButtonProps> = props => {
     return (
         <button
             {...dataProps}
+            title={props.title}
             name={props.name}
             value={props.value}
             className={className}

@@ -1,27 +1,24 @@
 import { toast } from 'react-toastify'
+import _ from 'lodash'
 
 import { ChallengeFilterCriteria, ReviewFilterCriteria } from '../models'
 
 /**
- * Handles api v5 errors.
+ * Handles api v5,v3 errors.
  */
 export const handleError = (error: any): void => {
-    let err
-    if (error && error.data) {
-        err = {
-            error: error.data.message,
-            status: error.status,
-        }
+    let errMessage
+    const errorMessageV5 = _.get(error, 'data.message')
+    errMessage = errorMessageV5
+    if (!errMessage) {
+        errMessage = _.get(error, 'response.data.result.content')
     }
 
-    if (!err) {
-        err = {
-            error: error.message,
-            status: error.status,
-        }
+    if (!errMessage) {
+        errMessage = error.message
     }
 
-    toast.error(`${error.message} (${error.status})`)
+    toast.error(`${errMessage} (${error.status})`)
 }
 
 export const createChallengeQueryString = (

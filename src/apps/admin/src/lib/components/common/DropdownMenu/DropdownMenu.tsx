@@ -1,32 +1,45 @@
-import { FC, PropsWithChildren, useRef, useState } from 'react'
+import {
+    Dispatch,
+    FC,
+    PropsWithChildren,
+    SetStateAction,
+    useRef,
+    useState,
+} from 'react'
 import { usePopper } from 'react-popper'
 import cn from 'classnames'
 
 import { Placement } from '@popperjs/core'
 import { Portal } from '~/libs/ui'
-import { useClickOutside } from '~/libs/shared'
+import { useClickOutsideMultipleElements } from '~/libs/shared'
 
 import { useOnScroll } from '../../../hooks'
 
 import styles from './DropdownMenu.module.scss'
 
 interface DropdownMenuProps {
-    trigger: ({
+    trigger?: ({
         open,
         setOpen,
     }: {
         open: boolean
         setOpen: React.Dispatch<React.SetStateAction<boolean>>
     }) => React.ReactElement
+    triggerUI?: React.ReactElement,
     classNames?: { menu?: string; trigger?: string }
     width?: number
     placement?: Placement
+    open?: boolean
+    setOpen?: Dispatch<SetStateAction<boolean>>
+    shouldIgnoreWhenClickMenu?: boolean
 }
 
 const DropdownMenu: FC<PropsWithChildren<DropdownMenuProps>> = props => {
     const triggerRef = useRef<HTMLDivElement>(null)
-    const popperRef = useRef(null)
-    const [open, setOpen] = useState(false)
+    const popperRef = useRef<HTMLDivElement>(null)
+    const [openInternal, setOpenInternal] = useState(false)
+    const setOpen = props.setOpen ?? setOpenInternal
+    const open = props.open !== undefined ? props.open : openInternal
 
     const popper = usePopper(triggerRef.current, popperRef.current, {
         modifiers: [
@@ -37,9 +50,19 @@ const DropdownMenu: FC<PropsWithChildren<DropdownMenuProps>> = props => {
         strategy: 'fixed',
     })
 
-    useClickOutside(triggerRef.current, () => setOpen(false), undefined, {
-        capture: true,
-    })
+    useClickOutsideMultipleElements(
+        [
+            ...(triggerRef.current ? [triggerRef.current] : []),
+            ...(popperRef.current && props.shouldIgnoreWhenClickMenu ? [popperRef.current] : []),
+        ],
+        () => {
+            setOpen(false)
+        },
+        undefined,
+        {
+            capture: true,
+        },
+    )
 
     useOnScroll({ onScroll: () => setOpen(false), target: triggerRef.current })
 
@@ -51,7 +74,8 @@ const DropdownMenu: FC<PropsWithChildren<DropdownMenuProps>> = props => {
                 ref={triggerRef}
                 className={cn(styles.triggerWrapper, props.classNames?.trigger)}
             >
-                {props.trigger(context)}
+                {props.trigger?.(context)}
+                {props.triggerUI}
             </div>
 
             <Portal>

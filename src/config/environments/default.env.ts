@@ -16,6 +16,7 @@ export const PLATFORMUI_URL: string = `https://platform-ui.${TC_DOMAIN}`
 export const USER_PROFILE_URL: string = `https://profiles.${TC_DOMAIN}`
 
 export const API = {
+    URL: `https://api.${TC_DOMAIN}`,
     V1: `https://api.${TC_DOMAIN}/v1`,
     V2: `https://api.${TC_DOMAIN}/v2`,
     V3: `https://api.${TC_DOMAIN}/v3`,
