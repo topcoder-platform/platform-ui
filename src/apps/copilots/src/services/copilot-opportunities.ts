@@ -7,7 +7,7 @@ import { CopilotOpportunity } from '../models/CopilotOpportunity'
 
 const baseUrl = `${EnvironmentConfig.API.V5}/projects`
 
-const PAGE_SIZE = 10
+const PAGE_SIZE = 20
 
 /**
  * Creates a CopilotOpportunity object by merging the provided data and its nested data,
