@@ -1,4 +1,5 @@
 import { FC, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import classNames from 'classnames'
 
 import {
@@ -10,6 +11,7 @@ import {
 } from '~/libs/ui'
 
 import { CopilotOpportunity } from '../../models/CopilotOpportunity'
+import { copilotRoutesMap } from '../../copilots.routes'
 import { CopilotOpportunitiesResponse, useCopilotOpportunities } from '../../services/copilot-opportunities'
 
 import styles from './styles.module.scss'
@@ -72,6 +74,7 @@ const tableColumns: TableColumn<CopilotOpportunity>[] = [
 ]
 
 const CopilotOpportunityList: FC<{}> = () => {
+    const navigate = useNavigate()
 
     const {
         data: opportunities, isValidating, size, setSize,
@@ -81,6 +84,10 @@ const CopilotOpportunityList: FC<{}> = () => {
 
     function loadMore(): void {
         setSize(size + 1)
+    }
+
+    function handleRowClick(opportunity: CopilotOpportunity): void {
+        navigate(copilotRoutesMap.CopilotOpportunityDetails.replace(':opportunityId', `${opportunity.id}`))
     }
 
     const opportunitiesLoading = isValidating
@@ -95,6 +102,7 @@ const CopilotOpportunityList: FC<{}> = () => {
                 data={tableData}
                 moreToLoad={isValidating || opportunities.length > 0}
                 onLoadMoreClick={loadMore}
+                onRowClick={handleRowClick}
             />
             {opportunitiesLoading && (
                 <LoadingSpinner overlay />

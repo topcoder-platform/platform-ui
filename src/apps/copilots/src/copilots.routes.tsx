@@ -5,6 +5,9 @@ const CopilotsApp: LazyLoadedComponent = lazyLoad(() => import('./CopilotsApp'))
 const CopilotOpportunityList: LazyLoadedComponent = lazyLoad(() => import('./pages/copilot-opportunity-list/index'))
 const CopilotsRequests: LazyLoadedComponent = lazyLoad(() => import('./pages/copilot-requests/index'))
 const CopilotsRequestForm: LazyLoadedComponent = lazyLoad(() => import('./pages/copilot-request-form/index'))
+const CopilotOpportunityDetails: LazyLoadedComponent = lazyLoad(
+    () => import('./pages/copilot-opportunity-details/index'),
+)
 
 export const rootRoute: string = (
     EnvironmentConfig.SUBDOMAIN === AppSubdomain.copilots ? '' : `/${AppSubdomain.copilots}`
@@ -33,6 +36,11 @@ export const childRoutes = [
         element: <CopilotsRequests />,
         id: 'CopilotRequestDetails',
         route: '/requests/:requestId',
+    },
+    {
+        element: <CopilotOpportunityDetails />,
+        id: 'CopilotOpportunityDetails',
+        route: '/opportunity/:opportunityId',
     },
 ] as const
 
