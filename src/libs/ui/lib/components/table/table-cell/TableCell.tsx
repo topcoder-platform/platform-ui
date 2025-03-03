@@ -31,19 +31,16 @@ const TableCell: <T extends { [propertyName: string]: any }>(
 ) => {
     const ContainerTag = props.as ?? 'td'
     let data: string | JSX.Element | undefined
+    const rawDate = props.data[props.propertyName as string]
     switch (props.type) {
         case 'date':
-            data = textFormatDateLocaleShortString(
-                props.data[props.propertyName as string] as Date,
-            )
+            data = textFormatDateLocaleShortString(new Date(rawDate))
             break
-
         case 'action':
         case 'element':
         case 'numberElement':
             data = props.renderer?.(props.data)
             break
-
         case 'money':
             data = textFormatMoneyLocaleString(
                 props.data[props.propertyName as string],

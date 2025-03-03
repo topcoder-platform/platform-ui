@@ -1,7 +1,8 @@
-import { lazyLoad, LazyLoadedComponent, PlatformRoute, Rewrite, UserRole } from '~/libs/core'
+import { lazyLoad, LazyLoadedComponent, PlatformRoute, UserRole } from '~/libs/core'
 import { AppSubdomain, EnvironmentConfig, ToolTitle } from '~/config'
 
 const CopilotsApp: LazyLoadedComponent = lazyLoad(() => import('./CopilotsApp'))
+const CopilotOpportunityList: LazyLoadedComponent = lazyLoad(() => import('./pages/copilot-opportunity-list/index'))
 const CopilotsRequests: LazyLoadedComponent = lazyLoad(() => import('./pages/copilot-requests/index'))
 const CopilotsRequestForm: LazyLoadedComponent = lazyLoad(() => import('./pages/copilot-request-form/index'))
 
@@ -14,19 +15,24 @@ export const absoluteRootRoute: string = `${window.location.origin}${rootRoute}`
 
 export const childRoutes = [
     {
+        element: <CopilotOpportunityList />,
+        id: 'CopilotOpportunityList',
+        route: '/',
+    },
+    {
         element: <CopilotsRequests />,
         id: 'CopilotRequests',
-        route: 'requests',
+        route: '/requests',
     },
     {
         element: <CopilotsRequestForm />,
         id: 'CopilotRequestForm',
-        route: 'requests/new',
+        route: '/requests/new',
     },
     {
         element: <CopilotsRequests />,
         id: 'CopilotRequestDetails',
-        route: 'requests/:requestId',
+        route: '/requests/:requestId',
     },
 ] as const
 
@@ -35,17 +41,13 @@ type RouteMap = {
 };
 
 export const copilotRoutesMap = childRoutes.reduce((allRoutes, route) => (
-    Object.assign(allRoutes, { [route.id]: `${rootRoute}/${route.route}` })
+    Object.assign(allRoutes, { [route.id]: `${rootRoute}${route.route}` })
 ), {} as RouteMap)
 
 export const copilotsRoutes: ReadonlyArray<PlatformRoute> = [
     {
         authRequired: true,
         children: [
-            {
-                element: <Rewrite to={childRoutes[0].route} />,
-                route: '',
-            },
             ...childRoutes,
 
         ],

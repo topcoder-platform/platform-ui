@@ -1,0 +1,29 @@
+@import '@libs/ui/styles/includes';
+
+.skillsContainer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.skillPill {
+    background-color: #aaaaaa;
+    color: #333;
+    padding: 4px 8px;
+    border-radius: 10px;
+    white-space: nowrap;
+    font-size: 14px;
+}
+
+.status {
+    color: orange;
+    font-weight: bold;
+    padding: 4px 8px;
+    border-radius: 4px;
+    display: inline-block;
+    text-transform: capitalize;
+}
+
+.activeStatus {
+    color: green;
+}
