@@ -15,6 +15,7 @@ interface PaginationProps {
 }
 
 const Pagination: FC<PaginationProps> = (props: PaginationProps) => {
+    const totalPages = props.totalPages || 1
     const MAX_PAGE_DISPLAY = 5
     const MAX_PAGE_MOBILE_DISPLAY = 3
     const { width: screenWidth }: WindowSize = useWindowSize()
@@ -41,21 +42,27 @@ const Pagination: FC<PaginationProps> = (props: PaginationProps) => {
         return displayPages.slice(start, end)
     }, [displayPages, props.page, screenWidth]) // eslint-disable-line react-hooks/exhaustive-deps, max-len -- unneccessary dependency: screenWidth
 
-    const createDisplayPages = useCallback(() => {
+    const createDisplayPages = useCallback((reset: boolean) => {
+        // eslint-disable-next-line complexity
         setDisplayPages(oldDisplayPages => {
-            if (oldDisplayPages.includes(props.page)) {
-                return [...oldDisplayPages]
+            let expectedDisplayPages = oldDisplayPages
+            if (expectedDisplayPages.includes(props.page) && !reset) {
+                return [...expectedDisplayPages]
+            }
+
+            if (reset) {
+                expectedDisplayPages = []
             }
 
             // Initial
-            if (oldDisplayPages.length === 0) {
+            if (expectedDisplayPages.length === 0) {
                 const pages = []
                 for (
                     let i = props.page - MAX_PAGE_DISPLAY + 1;
                     i <= props.page + MAX_PAGE_DISPLAY;
                     i++
                 ) {
-                    if (i >= 1 && i <= props.totalPages && pages.length < MAX_PAGE_DISPLAY) {
+                    if (i >= 1 && i <= totalPages && pages.length < MAX_PAGE_DISPLAY) {
                         pages.push(i)
                     }
                 }
@@ -64,7 +71,7 @@ const Pagination: FC<PaginationProps> = (props: PaginationProps) => {
             }
 
             // Go next
-            if (props.page > oldDisplayPages[oldDisplayPages.length - 1]) {
+            if (props.page > expectedDisplayPages[expectedDisplayPages.length - 1]) {
                 const pages = []
                 for (
                     let i = props.page - MAX_PAGE_DISPLAY + 1;
@@ -80,7 +87,7 @@ const Pagination: FC<PaginationProps> = (props: PaginationProps) => {
             }
 
             // Go previous
-            if (props.page < oldDisplayPages[0] && props.page >= 1) {
+            if (props.page < expectedDisplayPages[0] && props.page >= 1) {
                 const pages = []
                 for (
                     let i = props.page;
@@ -93,16 +100,20 @@ const Pagination: FC<PaginationProps> = (props: PaginationProps) => {
                 return pages
             }
 
-            return [...oldDisplayPages]
+            return [...expectedDisplayPages]
         })
-    }, [props.page, props.totalPages])
+    }, [props.page, totalPages])
 
     useEffect(() => {
-        createDisplayPages()
-    }, [createDisplayPages])
+        createDisplayPages(true)
+    }, [totalPages]) // eslint-disable-line react-hooks/exhaustive-deps
+
+    useEffect(() => {
+        createDisplayPages(false)
+    }, [props.page]) // eslint-disable-line react-hooks/exhaustive-deps
 
     const createHandlePageClick = (p: number) => () => {
-        if (p === 0 || p > props.totalPages || p === props.page) {
+        if (p === 0 || p > totalPages || p === props.page) {
             return
         }
 
@@ -112,7 +123,7 @@ const Pagination: FC<PaginationProps> = (props: PaginationProps) => {
     const handleFirstClick = useEventCallback(() => props.onPageChange(1))
     const handlePreviousClick = useEventCallback(() => props.onPageChange(props.page - 1))
     const handleNextClick = useEventCallback(() => props.onPageChange(props.page + 1))
-    const handleLastClick = useEventCallback(() => props.onPageChange(props.totalPages))
+    const handleLastClick = useEventCallback(() => props.onPageChange(totalPages))
 
     return (
         <div className={styles.pageButtons}>
@@ -156,10 +167,10 @@ const Pagination: FC<PaginationProps> = (props: PaginationProps) => {
                 icon={IconOutline.ChevronRightIcon}
                 iconToRight
                 label='NEXT'
-                disabled={props.page === props.totalPages || props.disabled}
+                disabled={props.page === totalPages || props.disabled}
                 className={styles.next}
             />
-            {!Number.isNaN(props.totalPages) && (
+            {!Number.isNaN(totalPages) && (
                 <Button
                     onClick={handleLastClick}
                     secondary
@@ -167,7 +178,7 @@ const Pagination: FC<PaginationProps> = (props: PaginationProps) => {
                     icon={IconOutline.ChevronDoubleRightIcon}
                     iconToRight
                     label='LAST'
-                    disabled={props.page === props.totalPages || props.disabled}
+                    disabled={props.page === totalPages || props.disabled}
                     className={styles.last}
                 />
             )}

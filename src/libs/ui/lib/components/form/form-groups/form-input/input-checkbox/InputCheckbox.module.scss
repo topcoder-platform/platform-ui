@@ -49,6 +49,20 @@
         border-radius: 3px;
         border-color: $black-20;
         background-color: $tc-white;
+
+        &:after {
+            transform: rotate(45deg);
+            display: table;
+            width: 6px;
+            height: 10px;
+            border: 2px solid $tc-white;
+            border-top: 0;
+            border-left: 0;
+            content: ' ';
+
+            position: relative;
+            top: -2px;
+        }
     }
 
     &:global(.rc-checkbox-checked) {

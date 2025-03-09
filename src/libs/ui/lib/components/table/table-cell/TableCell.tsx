@@ -22,6 +22,7 @@ interface TableCellProps<T> {
     readonly as?: ElementType
     readonly showExpandIndicator?: boolean
     readonly isExpanded?: boolean
+    readonly colSpan?: number
 }
 
 const TableCell: <T extends { [propertyName: string]: any }>(
@@ -78,6 +79,7 @@ const TableCell: <T extends { [propertyName: string]: any }>(
         <ContainerTag
             className={classes}
             key={`${props.index}-${props.propertyName}`}
+            colSpan={props.colSpan}
         >
             <div
                 className={classNames(

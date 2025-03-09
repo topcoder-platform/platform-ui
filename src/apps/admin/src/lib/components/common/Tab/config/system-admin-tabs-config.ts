@@ -4,6 +4,7 @@ import { TabsNavItem } from '~/libs/ui'
 import {
     manageChallengeRouteId,
     manageReviewRouteId,
+    permissionManagementRouteId,
     userManagementRouteId,
 } from '~/apps/admin/src/config/routes.config'
 
@@ -19,6 +20,20 @@ export const SystemAdminTabsConfig: TabsNavItem[] = [
     {
         id: manageReviewRouteId,
         title: 'Review Management',
+    },
+    {
+        children: [
+            {
+                id: `${permissionManagementRouteId}/roles`,
+                title: 'Roles',
+            },
+            {
+                id: `${permissionManagementRouteId}/groups`,
+                title: 'Groups',
+            },
+        ],
+        id: permissionManagementRouteId,
+        title: 'Permission Management',
     },
 ]
 

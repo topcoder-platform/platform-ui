@@ -1,0 +1,75 @@
+@import '../../styles/includes';
+@import '../../styles/typography';
+
+.tab-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+
+    padding: $sp-3 $sp-4 calc($sp-3 - 2px);
+    color: $black-80;
+    cursor: pointer;
+
+    &.isNotExtraMenu {
+        .tab-label {
+            @include font-weight-bold;
+        }
+    }
+
+    &:global(.active) {
+        color: $black-100;
+        background-color: $blue-25;
+
+        .tab-label {
+            @include font-weight-bold;
+        }
+    }
+
+    &:hover:not(:global(.active)) {
+        color: $black-100;
+        background-color: $blue-15;
+    }
+
+    @include ltemd {
+        border-top: 1px solid $black-20;
+        width: 100%;
+    }
+}
+
+.blockMenuTrigger {
+    @include ltemd {
+        width: 100%;
+    }
+}
+
+.tab-label {
+    @extend .medium-tab;
+}
+
+.tab-badge {
+    @extend .medium-subtitle;
+    display: flex;
+    padding: 0 $border;
+    border-radius: $sp-2;
+    color: $tc-white;
+    min-width: 24px;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+
+    &:global(.info) {
+        background: $blue-100;
+    }
+
+    &:global(.important) {
+        background: $red-100;
+    }
+}
+
+.dropdownIcon {
+    @include icon-xxxl;
+    margin-left: auto;
+    color: $turq-160;
+    transition: 0.15s ease-in-out;
+    width: 20px;
+}

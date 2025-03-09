@@ -13,12 +13,6 @@
     align-items: center;
     padding-right: $sp-3;
 
-    .tab-item {
-        .tab-label {
-            @include font-weight-bold;
-        }
-    }
-
     svg {
         @include icon-xxxl;
         margin-left: auto;
@@ -52,58 +46,12 @@
         left: 0;
         width: 100%;
         z-index: 1;
+    }
 
-        .tab-item {
-            border-top: 1px solid $black-20;
+    :global(.DropdownMenu_triggerWrapper) {
+        @include ltemd {
+            width: 100%;
         }
-    }
-}
-
-.tab-item {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-
-    padding: $sp-3 $sp-4 calc($sp-3 - 2px);
-    color: $black-80;
-    cursor: pointer;
-
-    &:global(.active) {
-        color: $black-100;
-        background-color: $blue-25;
-
-        .tab-label {
-            @include font-weight-bold;
-        }
-    }
-
-    &:hover:not(:global(.active)) {
-        color: $black-100;
-        background-color: $blue-15;
-    }
-}
-
-.tab-label {
-    @extend .medium-tab;
-}
-
-.tab-badge {
-    @extend .medium-subtitle;
-    display: flex;
-    padding: 0 $border;
-    border-radius: $sp-2;
-    color: $tc-white;
-    min-width: 24px;
-    text-align: center;
-    align-items: center;
-    justify-content: center;
-
-    &:global(.info) {
-        background: $blue-100;
-    }
-
-    &:global(.important) {
-        background: $red-100;
     }
 }
 

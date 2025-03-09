@@ -3,7 +3,6 @@
 
 .layout {
     position: relative;
-    min-height: calc(100vh - #{$header-height});
 
     .main {
         margin: $sp-8 0;
@@ -19,4 +18,9 @@
 
 .contentLayoutOuter {
     margin: $sp-8 auto !important;
+}
+
+.contantentLayoutInner {
+    box-sizing: border-box;
+    width: 100%;
 }

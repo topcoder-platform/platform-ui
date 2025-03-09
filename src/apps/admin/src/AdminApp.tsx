@@ -3,7 +3,7 @@ import { Outlet, Routes } from 'react-router-dom'
 
 import { routerContext, RouterContextData } from '~/libs/core'
 
-import { Layout, SWRConfigProvider } from './lib'
+import { AdminAppContextProvider, Layout, SWRConfigProvider } from './lib'
 import { toolTitle } from './admin-app.routes'
 import './lib/styles/index.scss'
 
@@ -24,12 +24,14 @@ const AdminApp: FC = () => {
 
     return (
         <div>
-            <SWRConfigProvider>
-                <Layout>
-                    <Outlet />
-                    <Routes>{childRoutes}</Routes>
-                </Layout>
-            </SWRConfigProvider>
+            <AdminAppContextProvider>
+                <SWRConfigProvider>
+                    <Layout>
+                        <Outlet />
+                        <Routes>{childRoutes}</Routes>
+                    </Layout>
+                </SWRConfigProvider>
+            </AdminAppContextProvider>
         </div>
     )
 }

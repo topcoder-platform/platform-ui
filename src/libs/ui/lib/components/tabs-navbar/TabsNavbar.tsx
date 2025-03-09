@@ -2,7 +2,6 @@ import {
     Dispatch,
     FC,
     MutableRefObject,
-    ReactNode,
     SetStateAction,
     useCallback,
     useLayoutEffect,
@@ -17,11 +16,13 @@ import { useClickOutside } from '~/libs/shared/lib/hooks'
 import { ActiveTabTipIcon, IconOutline } from '../svgs'
 
 import { TabsNavItem } from './tabs-nav-item.model'
+import TabsNavbarItem from './TabsNavbarItem'
 import styles from './TabsNavbar.module.scss'
 
 export interface TabsNavbarProps {
     defaultActive: string
     onChange: (active: string) => void
+    onChildChange?: (active: string, activeChild: string) => void
     tabs: ReadonlyArray<TabsNavItem>
 }
 
@@ -49,7 +50,10 @@ const TabsNavbar: FC<TabsNavbarProps> = (props: TabsNavbarProps) => {
         }
 
         const activatedTab: HTMLElement = tabRefs.current[index]
-        setOffset(activatedTab.offsetLeft + activatedTab.offsetWidth / 2)
+        setOffset(
+            (activatedTab?.offsetLeft ?? 0)
+                + (activatedTab?.offsetWidth ?? 0) / 2,
+        )
     }, [
         props.tabs,
     ])
@@ -62,6 +66,17 @@ const TabsNavbar: FC<TabsNavbarProps> = (props: TabsNavbarProps) => {
         props.onChange,
         updateOffset,
     ])
+    const handleActivateChildTab: (
+        tabId: string,
+        childTabId: string,
+    ) => () => void = useCallback(
+        (tabId: string, childTabId: string) => () => {
+            setTabOpened(tabId)
+            props.onChildChange?.call(undefined, tabId, childTabId)
+            updateOffset(tabId)
+        },
+        [updateOffset, props.onChildChange],
+    )
 
     function toggleMenuIsVisible(): void {
         setMenuIsVisible((menuWasVisible: boolean) => !menuWasVisible)
@@ -86,50 +101,6 @@ const TabsNavbar: FC<TabsNavbarProps> = (props: TabsNavbarProps) => {
         updateOffset,
     ])
 
-    const renderTabItem: (
-        tab: TabsNavItem,
-        activeTabId?: string,
-        ref?: (el: HTMLElement | null) => void
-    ) => ReactNode = (
-        tab,
-        activeTabId,
-        ref,
-    ) => {
-        const tabContent: ReactNode = (
-            <>
-                <span className={styles['tab-label']}>
-                    {tab.title}
-                </span>
-                {tab.badges?.map(badge => (
-                    <span className={classNames(styles['tab-badge'], badge.type)} key={badge.type}>
-                        {badge.count}
-                    </span>
-                ))}
-            </>
-        )
-
-        return tab.url ? (
-            <a
-                ref={ref}
-                className={styles['tab-item']}
-                href={tab.url}
-                rel='noopener noreferrer'
-                target='_blank'
-            >
-                {tabContent}
-            </a>
-        ) : (
-            <div
-                ref={ref}
-                className={classNames(styles['tab-item'], activeTabId === tab.id && 'active')}
-                key={tab.id}
-                onClick={handleActivateTab(tab.id)}
-            >
-                {tabContent}
-            </div>
-        )
-    }
-
     useClickOutside(triggerRef.current, () => setMenuIsVisible(false))
 
     return (
@@ -145,13 +116,30 @@ const TabsNavbar: FC<TabsNavbarProps> = (props: TabsNavbarProps) => {
                 onClick={toggleMenuIsVisible}
                 ref={triggerRef}
             >
-                {renderTabItem(activeTab)}
+                <TabsNavbarItem
+                    tab={activeTab}
+                    menuIsVisible={menuIsVisible}
+                    isExtraMenu={false}
+                    handleActivateTab={handleActivateTab}
+                    handleActivateChildTab={handleActivateChildTab}
+                />
                 <IconOutline.ChevronDownIcon />
             </div>
 
             <div className={classNames(styles['menu-wrapper'])}>
                 {props.tabs.map((tab, i) => (
-                    renderTabItem(tab, tabOpened, el => { tabRefs.current[i] = el as HTMLElement })
+                    <TabsNavbarItem
+                        key={tab.id}
+                        tab={tab}
+                        menuIsVisible={menuIsVisible}
+                        isExtraMenu
+                        handleActivateTab={handleActivateTab}
+                        handleActivateChildTab={handleActivateChildTab}
+                        activeTabId={tabOpened}
+                        ref={function r(el: HTMLElement | null) {
+                            tabRefs.current[i] = el as HTMLElement
+                        }}
+                    />
                 ))}
             </div>
             <div

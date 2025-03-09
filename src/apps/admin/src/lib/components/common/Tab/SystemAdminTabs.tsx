@@ -19,12 +19,18 @@ const SystemAdminTabs: FC = () => {
         navigate(tabId)
     }
 
+    function handleChildTabChange(tabId: string, childTabId: string): void {
+        setActiveTab(tabId)
+        navigate(childTabId)
+    }
+
     return (
         <div className={styles.container}>
             <TabsNavbar
                 defaultActive={activeTab}
                 tabs={SystemAdminTabsConfig}
                 onChange={handleTabChange}
+                onChildChange={handleChildTabChange}
             />
         </div>
     )

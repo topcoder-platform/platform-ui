@@ -12,7 +12,7 @@ import { IconOutline } from '../../../../svgs'
 import styles from './InputDatePicker.module.scss'
 
 interface InputDatePickerProps {
-    date: Date | undefined
+    date: Date | undefined | null
     onChange: (date: Date | null) => void
     readonly className?: string
     readonly dateFormat?: string | string[]
@@ -29,6 +29,7 @@ interface InputDatePickerProps {
     readonly placeholder?: string
     readonly showMonthPicker?: boolean
     readonly showYearPicker?: boolean
+    readonly isClearable?: boolean
     readonly tabIndex?: number
 }
 
@@ -180,6 +181,7 @@ const InputDatePicker: FC<InputDatePickerProps> = (props: InputDatePickerProps) 
                 portalId='react-date-portal'
                 onFocus={() => setStateHasFocus(true)}
                 onBlur={() => setStateHasFocus(false)}
+                isClearable={props.isClearable}
             />
         </InputWrapper>
     )
