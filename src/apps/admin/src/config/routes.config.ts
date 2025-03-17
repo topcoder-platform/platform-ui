@@ -11,3 +11,4 @@ export const rootRoute: string
 export const manageChallengeRouteId = 'challenge-management'
 export const manageReviewRouteId = 'review-management'
 export const userManagementRouteId = 'user-management'
+export const billingAccountRouteId = 'billing-account'

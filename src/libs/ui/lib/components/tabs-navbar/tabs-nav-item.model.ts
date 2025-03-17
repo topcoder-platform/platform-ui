@@ -5,4 +5,5 @@ export interface TabsNavItem {
     id: string
     title: string
     url?: string
+    children?: TabsNavItem[]
 }

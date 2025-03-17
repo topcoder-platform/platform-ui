@@ -2,6 +2,7 @@ import _ from 'lodash'
 
 import { TabsNavItem } from '~/libs/ui'
 import {
+    billingAccountRouteId,
     manageChallengeRouteId,
     manageReviewRouteId,
     userManagementRouteId,
@@ -19,6 +20,20 @@ export const SystemAdminTabsConfig: TabsNavItem[] = [
     {
         id: manageReviewRouteId,
         title: 'Review Management',
+    },
+    {
+        children: [
+            {
+                id: `${billingAccountRouteId}/clients`,
+                title: 'Clients',
+            },
+            {
+                id: `${billingAccountRouteId}/billing-accounts`,
+                title: 'Billing Accounts',
+            },
+        ],
+        id: billingAccountRouteId,
+        title: 'Billing Account',
     },
 ]
 

@@ -17,9 +17,9 @@ import {
  */
 export const getMemberSuggestionsByHandle = async (
     handle: string,
-): Promise<Array<{ handle: string }>> => {
+): Promise<Array<{ handle: string; userId: number }>> => {
     type v3Response<T> = { result: { content: T } }
-    const data = await xhrGetAsync<v3Response<Array<{ handle: string }>>>(
+    const data = await xhrGetAsync<v3Response<Array<{ handle: string; userId: number }>>>(
         `${EnvironmentConfig.API.V3}/members/_suggest/${handle}`,
     )
     return data.result.content
