@@ -25,6 +25,7 @@ interface TableProps<T> {
     readonly disableSorting?: boolean
     readonly showExpand?: boolean
     readonly initSort?: Sort
+    readonly forceSort?: Sort
     readonly onLoadMoreClick?: () => void
     readonly onRowClick?: (data: T) => void
     readonly onToggleSort?: (sort: Sort) => void
@@ -59,6 +60,12 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
             = useState<DefaultSortDirectionMap | undefined>()
         const [sortedData, setSortedData]: [ReadonlyArray<T>, Dispatch<SetStateAction<ReadonlyArray<T>>>]
             = useState<ReadonlyArray<T>>(props.data)
+
+        useEffect(() => {
+            if (props.forceSort || props.removeDefaultSort) {
+                setSort(props.forceSort)
+            }
+        }, [props.forceSort, props.removeDefaultSort])
 
         useEffect(
             () => {

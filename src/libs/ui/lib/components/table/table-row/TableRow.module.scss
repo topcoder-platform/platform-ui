@@ -25,11 +25,11 @@
             }
         }
     }
+}
 
-    &:nth-child(2n) {
-        td {
-            background-color: $tc-white;
-        }
+.isEvenRow {
+    td {
+        background-color: $tc-white;
     }
 }
 

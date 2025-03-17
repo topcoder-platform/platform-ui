@@ -11,7 +11,10 @@ export const NullLayout: FC<PropsWithChildren> = props => (
 )
 
 export const Layout: FC<PropsWithChildren> = props => (
-    <ContentLayout outerClass={styles.contentLayoutOuter}>
+    <ContentLayout
+        innerClass={styles.contantentLayoutInner}
+        outerClass={styles.contentLayoutOuter}
+    >
         <div className={styles.layout}>
             <SystemAdminTabs />
 

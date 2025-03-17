@@ -17,11 +17,11 @@ import {
  */
 export const getMemberSuggestionsByHandle = async (
     handle: string,
-): Promise<Array<{ handle: string }>> => {
+): Promise<Array<{ handle: string; userId: number }>> => {
     type v3Response<T> = { result: { content: T } }
-    const data = await xhrGetAsync<v3Response<Array<{ handle: string }>>>(
-        `${EnvironmentConfig.API.V3}/members/_suggest/${handle}`,
-    )
+    const data = await xhrGetAsync<
+        v3Response<Array<{ handle: string; userId: number }>>
+    >(`${EnvironmentConfig.API.V3}/members/_suggest/${handle}`)
     return data.result.content
 }
 
@@ -50,13 +50,13 @@ export const getMembersByHandle = async (
 export const searchUsers = async (options?: {
     fields?: string
     filter?: string
-    limit?: string
+    limit?: number
 }): Promise<UserInfo[]> => {
     let query = ''
     const opts: {
         fields?: string
         filter?: string
-        limit?: string
+        limit?: number
     } = options || {}
     _.forOwn(
         {
@@ -137,4 +137,16 @@ export const fetchAchievements = async (
         `${EnvironmentConfig.API.V3}/users/${userId}/achievements`,
     )
     return result.result.content.map(adjustUserStatusHistoryResponse)
+}
+
+/**
+ * Find user by id.
+ * @param userId user id.
+ * @returns resolves to user info
+ */
+export const findUserById = async (userId: string | number): Promise<UserInfo> => {
+    const result = await xhrGetAsync<ApiV3Response<UserInfo>>(
+        `${EnvironmentConfig.API.V3}/users/${userId}`,
+    )
+    return adjustUserInfoResponse(result.result.content)
 }

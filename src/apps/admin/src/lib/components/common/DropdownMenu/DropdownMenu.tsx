@@ -64,7 +64,12 @@ const DropdownMenu: FC<PropsWithChildren<DropdownMenuProps>> = props => {
         },
     )
 
-    useOnScroll({ onScroll: () => setOpen(false), target: triggerRef.current })
+    useOnScroll(
+        {
+            onScroll: () => { setOpen(false) },
+            target: triggerRef.current,
+        },
+    )
 
     const context = { open, setOpen }
 
@@ -72,7 +77,7 @@ const DropdownMenu: FC<PropsWithChildren<DropdownMenuProps>> = props => {
         <>
             <div
                 ref={triggerRef}
-                className={cn(styles.triggerWrapper, props.classNames?.trigger)}
+                className={cn(styles.triggerWrapper, props.classNames?.trigger, 'DropdownMenu_triggerWrapper')}
             >
                 {props.trigger?.(context)}
                 {props.triggerUI}
@@ -84,6 +89,7 @@ const DropdownMenu: FC<PropsWithChildren<DropdownMenuProps>> = props => {
                     style={{
                         ...popper.styles.popper,
                         width: `${props.width || triggerRef.current?.clientWidth}px`,
+                        zIndex: 1,
                     }}
                     {...popper.attributes.popper}
                 >
