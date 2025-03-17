@@ -39,7 +39,7 @@ const ChallengeUserFilters: FC<ChallengeUserFiltersProps> = props => {
             label: item.name,
             value: item.id,
         })
-        const emptyOption: InputSelectOption = { label: '', value: '' }
+        const emptyOption: InputSelectOption = { label: 'All', value: '' }
         const o: InputSelectOption | undefined = _.filter(resourceRoles, {
             name: DEFAULT_ROLE_FILTER_NAME,
         })
