@@ -1,5 +1,4 @@
 import { ChangeEvent, FC, useContext, useEffect, useMemo, useRef } from 'react'
-import _ from 'lodash'
 
 import { Button, InputSelect, InputSelectOption } from '~/libs/ui'
 
@@ -25,7 +24,6 @@ interface ChallengeUserFiltersProps {
 }
 
 const ChallengeUserFilters: FC<ChallengeUserFiltersProps> = props => {
-    const DEFAULT_ROLE_FILTER_NAME = 'Submitter'
     const { resourceRoles, loadResourceRoles }: ChallengeManagementContextType
         = useContext(ChallengeManagementContext)
     const {
@@ -40,13 +38,9 @@ const ChallengeUserFilters: FC<ChallengeUserFiltersProps> = props => {
             value: item.id,
         })
         const emptyOption: InputSelectOption = { label: 'All', value: '' }
-        const o: InputSelectOption | undefined = _.filter(resourceRoles, {
-            name: DEFAULT_ROLE_FILTER_NAME,
-        })
-            .map(role2Option)[0]
 
         return {
-            defaultResourceRoleOption: o,
+            defaultResourceRoleOption: emptyOption,
             resourceRoleOptions: [
                 emptyOption,
                 ...resourceRoles.map(role2Option),
