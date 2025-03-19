@@ -18,6 +18,10 @@ import {
 export const getMemberSuggestionsByHandle = async (
     handle: string,
 ): Promise<Array<{ handle: string; userId: number }>> => {
+    if (!handle) {
+        return []
+    }
+
     type v3Response<T> = { result: { content: T } }
     const data = await xhrGetAsync<
         v3Response<Array<{ handle: string; userId: number }>>

@@ -4,7 +4,7 @@ import { InputSelectOption } from '~/libs/ui/lib/components/form/form-groups/for
 /**
  * Common config for ui.
  */
-const EMPTY_OPTION: InputSelectOption = { label: '', value: '' }
+const EMPTY_OPTION: InputSelectOption = { label: 'all', value: '' }
 export const USER_STATUS_SELECT_OPTIONS: InputSelectOption[] = [
     EMPTY_OPTION,
     { label: 'active', value: 'active' },

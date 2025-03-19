@@ -28,6 +28,7 @@ import {
     PageContent,
     PageHeader,
 } from '../../lib/components'
+import { TABLE_PAGINATION_ITEM_PER_PAGE } from '../../config/index.config'
 import {
     ChallengeFilterCriteria,
     ChallengeResource,
@@ -77,7 +78,7 @@ export const ManageUserPage: FC = () => {
         Dispatch<SetStateAction<ChallengeResourceFilterCriteria>>,
     ] = useState<ChallengeResourceFilterCriteria>({
         page: 1,
-        perPage: 5,
+        perPage: TABLE_PAGINATION_ITEM_PER_PAGE,
         roleId: '',
     })
     const [users, setUsers]: [

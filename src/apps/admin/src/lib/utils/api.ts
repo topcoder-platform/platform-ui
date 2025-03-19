@@ -49,6 +49,8 @@ export const createChallengeQueryString = (
 
     if (filterCriteria.status) filter += `&status=${filterCriteria.status}`
 
+    filter += '&sortBy=created&sortOrder=desc'
+
     return filter
 }
 
