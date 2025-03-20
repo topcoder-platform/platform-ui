@@ -9,5 +9,6 @@ export interface TableColumn<T> {
     readonly renderer?: (data: T, params?: any) => JSX.Element | undefined
     readonly tooltip?: string
     readonly isExpand?: boolean
+    readonly colSpan?: number
     readonly type: TableCellType
 }

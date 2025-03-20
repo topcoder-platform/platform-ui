@@ -68,6 +68,9 @@ export const TableRow: <T extends { [propertyName: string]: any }>(
                 className={classNames(
                     styles.tr,
                     props.onRowClick ? styles.clickable : undefined,
+                    {
+                        [styles.isEvenRow]: props.index % 2 === 1,
+                    },
                 )}
                 onClick={function onRowClick(
                     event: MouseEvent<HTMLTableRowElement>,
@@ -79,7 +82,11 @@ export const TableRow: <T extends { [propertyName: string]: any }>(
                 {cells}
             </tr>
             {isExpanded && props.showExpand && (
-                <tr className={classNames(styles.tr)}>
+                <tr
+                    className={classNames(styles.tr, {
+                        [styles.isEvenRow]: props.index % 2 === 1,
+                    })}
+                >
                     <td colSpan={displayColumns.length}>
                         <div className={styles.blockExpandContainer}>
                             {expandColumns.map((col, colIndex) => (

@@ -7,11 +7,11 @@ import _ from 'lodash'
 
 import { UserGroup, UserGroupMember, UserInfo } from '../models'
 import {
-    addMember,
+    addGroupMember,
     fetchGroupMembers,
     fetchGroups,
-    findByMember,
-    removeMember,
+    findGroupByMember,
+    removeGroupMember,
 } from '../services'
 import { handleError } from '../utils'
 
@@ -223,7 +223,7 @@ export function useManageUserGroups(
             type: UserGroupsActionType.FETCH_USER_GROUPS_INIT,
         })
         Promise.all([
-            findByMember({
+            findGroupByMember({
                 memberId: userInfo.id,
                 membershipType: 'user',
                 page: PAGE,
@@ -253,7 +253,7 @@ export function useManageUserGroups(
             dispatch({
                 type: UserGroupsActionType.ADD_USER_GROUP_INIT,
             })
-            addMember(newGroupId, {
+            addGroupMember(newGroupId, {
                 memberId: userInfo.id,
                 membershipType: 'user',
             })
@@ -313,7 +313,7 @@ export function useManageUserGroups(
                             type: UserGroupsActionType.REMOVE_USER_GROUP_DONE,
                         })
                     } else {
-                        removeMember(group.id, membership.memberId)
+                        removeGroupMember(group.id, membership.memberId)
                             .then(() => {
                                 toast.success('Group removed successfully', {
                                     toastId: 'Remove group',

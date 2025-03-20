@@ -5,6 +5,7 @@ import {
     billingAccountRouteId,
     manageChallengeRouteId,
     manageReviewRouteId,
+    permissionManagementRouteId,
     userManagementRouteId,
 } from '~/apps/admin/src/config/routes.config'
 
@@ -34,6 +35,20 @@ export const SystemAdminTabsConfig: TabsNavItem[] = [
         ],
         id: billingAccountRouteId,
         title: 'Billing Account',
+    },
+    {
+        children: [
+            {
+                id: `${permissionManagementRouteId}/roles`,
+                title: 'Roles',
+            },
+            {
+                id: `${permissionManagementRouteId}/groups`,
+                title: 'Groups',
+            },
+        ],
+        id: permissionManagementRouteId,
+        title: 'Permission Management',
     },
 ]
 

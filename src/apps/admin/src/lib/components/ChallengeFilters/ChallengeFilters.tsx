@@ -54,7 +54,7 @@ const ChallengeFilters: FC<ChallengeFiltersProps> = props => {
             label: item,
             value: item,
         })
-        const emptyOption: InputSelectOption = { label: '', value: '' }
+        const emptyOption: InputSelectOption = { label: 'All', value: '' }
 
         return {
             challengeStatusOptions: [

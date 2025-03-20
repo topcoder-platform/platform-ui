@@ -88,6 +88,10 @@ export const getChallengeResources = async (
 export const getResourceEmails = async (
     users: ChallengeResource[],
 ): Promise<ResourceEmail[]> => {
+    if (!users.length) {
+        return Promise.resolve([])
+    }
+
     let qs: string
     if (users.length > 1) {
         qs = users.map(usr => `userIds=${usr.memberId}`)

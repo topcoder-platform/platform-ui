@@ -11,6 +11,7 @@ import {
     billingAccountRouteId,
     manageChallengeRouteId,
     manageReviewRouteId,
+    permissionManagementRouteId,
     rootRoute,
     userManagementRouteId,
 } from './config/routes.config'
@@ -73,6 +74,33 @@ const ClientsPage: LazyLoadedComponent = lazyLoad(
 const ClientEditPage: LazyLoadedComponent = lazyLoad(
     () => import('./billing-account/ClientEditPage'),
     'ClientEditPage',
+)
+const PermissionManagement: LazyLoadedComponent = lazyLoad(
+    () => import('./permission-management/PermissionManagement'),
+)
+const PermissionRolesPage: LazyLoadedComponent = lazyLoad(
+    () => import('./permission-management/PermissionRolesPage'),
+    'PermissionRolesPage',
+)
+const PermissionRoleMembersPage: LazyLoadedComponent = lazyLoad(
+    () => import('./permission-management/PermissionRoleMembersPage'),
+    'PermissionRoleMembersPage',
+)
+const PermissionAddRoleMembersPage: LazyLoadedComponent = lazyLoad(
+    () => import('./permission-management/PermissionAddRoleMembersPage'),
+    'PermissionAddRoleMembersPage',
+)
+const PermissionGroupsPage: LazyLoadedComponent = lazyLoad(
+    () => import('./permission-management/PermissionGroupsPage'),
+    'PermissionGroupsPage',
+)
+const PermissionGroupMembersPage: LazyLoadedComponent = lazyLoad(
+    () => import('./permission-management/PermissionGroupMembersPage'),
+    'PermissionGroupMembersPage',
+)
+const PermissionAddGroupMembersPage: LazyLoadedComponent = lazyLoad(
+    () => import('./permission-management/PermissionAddGroupMembersPage'),
+    'PermissionAddGroupMembersPage',
 )
 
 export const toolTitle: string = ToolTitle.admin
@@ -180,6 +208,44 @@ export const adminRoutes: ReadonlyArray<PlatformRoute> = [
                 element: <BillingAccount />,
                 id: billingAccountRouteId,
                 route: billingAccountRouteId,
+            },
+            // Permission Management Module
+            {
+                children: [
+                    {
+                        element: <PermissionRolesPage />,
+                        id: 'permission-roles-page',
+                        route: 'roles',
+                    },
+                    {
+                        element: <PermissionRoleMembersPage />,
+                        id: 'permission-role-members-page',
+                        route: 'roles/:roleId/role-members',
+                    },
+                    {
+                        element: <PermissionAddRoleMembersPage />,
+                        id: 'permission-add-role-members-page',
+                        route: 'roles/:roleId/role-members/add',
+                    },
+                    {
+                        element: <PermissionGroupsPage />,
+                        id: 'permission-groups-page',
+                        route: 'groups',
+                    },
+                    {
+                        element: <PermissionGroupMembersPage />,
+                        id: 'permission-group-members-page',
+                        route: 'groups/:groupId/group-members',
+                    },
+                    {
+                        element: <PermissionAddGroupMembersPage />,
+                        id: 'permission-add-group-members-page',
+                        route: 'groups/:groupId/group-members/add',
+                    },
+                ],
+                element: <PermissionManagement />,
+                id: permissionManagementRouteId,
+                route: permissionManagementRouteId,
             },
         ],
         domain: AppSubdomain.admin,

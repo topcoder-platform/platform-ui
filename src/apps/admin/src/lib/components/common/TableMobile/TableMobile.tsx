@@ -74,7 +74,8 @@ export const TableMobile: <T extends { [propertyName: string]: any }>(
                                                         && indexItemColumns === 0,
                                                     [styles.bottomRight]:
                                                         indexColumns
-                                                        === props.columns.length - 1
+                                                        === props.columns.length
+                                                        - 1
                                                         && indexItemColumns
                                                         === itemColumns.length - 1,
                                                     [styles.blockCellLabel]:
