@@ -53,7 +53,7 @@ export const BillingAccountResourceNewPage: FC<Props> = (props: Props) => {
         control,
         handleSubmit,
         register,
-        formState: { isValid, errors },
+        formState: { errors },
         setValue,
     }: UseFormReturn<FormNewBillingAccountResource> = useForm({
         defaultValues: {
@@ -95,7 +95,7 @@ export const BillingAccountResourceNewPage: FC<Props> = (props: Props) => {
                         <InputText
                             type='text'
                             name='name'
-                            label='TC Handle(Unfocus this field to fetch user id)'
+                            label='TC Handle (Unfocus this field to fetch user id)'
                             placeholder='Enter'
                             tabIndex={0}
                             onChange={_.noop}
@@ -158,7 +158,7 @@ export const BillingAccountResourceNewPage: FC<Props> = (props: Props) => {
                             primary
                             size='lg'
                             type='submit'
-                            disabled={isAdding || !isValid || isLoading}
+                            disabled={isAdding || isLoading}
                         >
                             Save Changes
                         </Button>

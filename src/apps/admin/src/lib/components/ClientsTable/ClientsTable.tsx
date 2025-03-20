@@ -84,6 +84,7 @@ export const ClientsTable: FC<Props> = (props: Props) => {
                             <Link to={`${data.id}/edit`}>{data.id}</Link>
                             {' '}
                             |
+                            {' '}
                             {data.name}
                         </span>
                     ),

@@ -64,7 +64,7 @@ export const BillingAccountNewPage: FC<Props> = (props: Props) => {
         control,
         watch,
         reset,
-        formState: { isValid, errors, isDirty },
+        formState: { errors, isDirty },
     }: UseFormReturn<FormEditBillingAccount> = useForm({
         defaultValues: {
             salesTax: 0,
@@ -360,7 +360,7 @@ export const BillingAccountNewPage: FC<Props> = (props: Props) => {
                                 }) {
                                     return (
                                         <FieldClientSelect
-                                            label='Client(Start typing...)'
+                                            label='Client (Start typing...)'
                                             placeholder='Enter client you are searching for...'
                                             onChange={function onChange(item: SelectOption) {
                                                 controlProps.field.onChange({
@@ -396,8 +396,7 @@ export const BillingAccountNewPage: FC<Props> = (props: Props) => {
                                 size='lg'
                                 type='submit'
                                 disabled={
-                                    !isValid
-                                    || isAdding
+                                    isAdding
                                     || isUpdating
                                     || !isDirty
                                 }

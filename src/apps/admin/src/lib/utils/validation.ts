@@ -115,6 +115,7 @@ export const formEditBillingAccountSchema: Yup.ObjectSchema<FormEditBillingAccou
                 name: Yup.string()
                     .required('Name is required.'),
             })
+            .default(undefined)
             .required('Client is required.'),
         companyId: Yup.number()
             .typeError('Invalid number.')

@@ -60,7 +60,7 @@ export const ClientEditPage: FC<Props> = (props: Props) => {
         register,
         handleSubmit,
         control,
-        formState: { isValid, errors, isDirty },
+        formState: { errors, isDirty },
         watch,
         reset,
     }: UseFormReturn<FormEditClient> = useForm({
@@ -266,8 +266,7 @@ export const ClientEditPage: FC<Props> = (props: Props) => {
                                 size='lg'
                                 type='submit'
                                 disabled={
-                                    !isValid
-                                    || isAdding
+                                    isAdding
                                     || isUpdating
                                     || !isDirty
                                 }
