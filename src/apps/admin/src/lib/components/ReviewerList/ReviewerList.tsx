@@ -43,7 +43,7 @@ const ApproveButton: FC<{
     const isApproving = props.approvingReviewerId === props.reviewer.userId
     const isOtherApproving = props.approvingReviewerId > 0
     const hideApproveButton
-        = props.openReviews < 1 || props.reviewer.applicationStatus === 'Approved'
+        = props.openReviews < 1 || props.reviewer.applicationStatus !== 'Pending'
 
     return (
         <>
@@ -157,10 +157,10 @@ const ReviewerList: FC<ReviewerListProps> = props => {
             {
                 label: 'Open Review Opp',
                 propertyName: '',
-                renderer: () => (
+                renderer: (reviewer: Reviewer) => (
                     // eslint-disable-next-line jsx-a11y/anchor-is-valid
                     <div className={styles.openReviews}>
-                        {props.openReviews}
+                        {reviewer.currentNumberOfReviewPositions}
                     </div>
                 ),
                 type: 'element',

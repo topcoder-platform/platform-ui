@@ -104,6 +104,14 @@ export const ManageReviewerPage: FC = () => {
             })
     })
 
+    const newSearch = useEventCallback((): void => {
+        doNewSearch()
+            .then(data => {
+                setReviewers(data)
+                window.scrollTo({ left: 0, top: 0 })
+            })
+    })
+
     const sortData = useEventCallback(() => {
         doSortData()
             .then(data => {
@@ -114,19 +122,15 @@ export const ManageReviewerPage: FC = () => {
 
     const reject = useEventCallback((): void => {
         doReject()
-            .then(res => {
-                if (res) {
-                    doNewSearch()
-                }
+            .then(() => {
+                newSearch()
             })
     })
 
     const approve = useEventCallback((reviewer: Reviewer): void => {
         doApprove(reviewer)
-            .then(res => {
-                if (res) {
-                    doNewSearch()
-                }
+            .then(() => {
+                newSearch()
             })
     })
 
