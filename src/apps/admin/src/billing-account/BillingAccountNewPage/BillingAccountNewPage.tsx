@@ -67,8 +67,18 @@ export const BillingAccountNewPage: FC<Props> = (props: Props) => {
         formState: { errors, isDirty },
     }: UseFormReturn<FormEditBillingAccount> = useForm({
         defaultValues: {
+            budgetAmount: '' as any,
+            client: undefined,
+            companyId: '' as any,
+            description: '',
+            endDate: undefined,
+            name: '',
+            paymentTerms: '' as any,
+            poNumber: '',
             salesTax: 0,
+            startDate: undefined,
             status: 'Active',
+            subscriptionNumber: '' as any,
         },
         mode: 'all',
         resolver: yupResolver(formEditBillingAccountSchema),

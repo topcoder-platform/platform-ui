@@ -65,6 +65,10 @@ export const ClientEditPage: FC<Props> = (props: Props) => {
         reset,
     }: UseFormReturn<FormEditClient> = useForm({
         defaultValues: {
+            codeName: '',
+            endDate: undefined,
+            name: '',
+            startDate: undefined,
             status: 'Active',
         },
         mode: 'all',
@@ -163,7 +167,7 @@ export const ClientEditPage: FC<Props> = (props: Props) => {
                                 onChange={_.noop}
                                 classNameWrapper={styles.field}
                                 inputControl={register('codeName')}
-                                error={_.get(errors, 'name.message')}
+                                error={_.get(errors, 'codeName.message')}
                                 dirty
                                 disabled={isAdding || isUpdating}
                             />

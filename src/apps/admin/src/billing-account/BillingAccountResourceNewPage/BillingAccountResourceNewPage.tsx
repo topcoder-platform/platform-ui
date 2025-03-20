@@ -53,7 +53,7 @@ export const BillingAccountResourceNewPage: FC<Props> = (props: Props) => {
         control,
         handleSubmit,
         register,
-        formState: { errors },
+        formState: { errors, isDirty },
         setValue,
     }: UseFormReturn<FormNewBillingAccountResource> = useForm({
         defaultValues: {
@@ -158,7 +158,7 @@ export const BillingAccountResourceNewPage: FC<Props> = (props: Props) => {
                             primary
                             size='lg'
                             type='submit'
-                            disabled={isAdding || isLoading}
+                            disabled={isAdding || isLoading || !isDirty}
                         >
                             Save Changes
                         </Button>
