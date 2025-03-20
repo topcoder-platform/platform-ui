@@ -31,7 +31,6 @@ interface InputDatePickerProps {
     readonly showYearPicker?: boolean
     readonly isClearable?: boolean
     readonly tabIndex?: number
-    readonly isClearable?: boolean
     readonly classNameWrapper?: string
 }
 
