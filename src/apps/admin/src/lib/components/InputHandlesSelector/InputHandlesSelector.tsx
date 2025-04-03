@@ -94,7 +94,7 @@ export const InputHandlesSelector: FC<Props> = (props: Props) => {
                 onChange={function onChange(value: MultiValue<SelectOption>) {
                     props.onChange?.(
                         value.map(v => ({
-                            handle: v.label,
+                            handle: v.label as string,
                             userId: v.value as number,
                         })),
                     )

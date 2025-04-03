@@ -2,6 +2,6 @@
  * Select option for select field
  */
 export interface SelectOption {
-    readonly label: string
+    readonly label: string | number
     readonly value: number | string
 }

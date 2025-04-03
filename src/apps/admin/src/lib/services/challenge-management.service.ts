@@ -1,3 +1,5 @@
+import _ from 'lodash'
+
 import { EnvironmentConfig } from '~/config'
 import {
     PaginatedResponse,
@@ -11,7 +13,6 @@ import {
     Challenge,
     ChallengeFilterCriteria,
     ChallengeResource,
-    ChallengeResourceFilterCriteria,
     ChallengeTrack,
     ChallengeType,
     ResourceEmail,
@@ -72,10 +73,12 @@ export const getChallengeByLegacyId = async (
  */
 export const getChallengeResources = async (
     challengeId: string,
-    filterCriteria: ChallengeResourceFilterCriteria,
+    filterCriteria: {[key: string]: string | number},
 ): Promise<PaginatedResponse<ChallengeResource[]>> => {
-    let filter = `&page=${filterCriteria.page}&perPage=${filterCriteria.perPage}`
-    if (filterCriteria.roleId !== '') filter += `&roleId=${filterCriteria.roleId}`
+    let filter = ''
+    _.forOwn(filterCriteria, (value, key) => {
+        if (!!value) filter += `&${key}=${value}`
+    })
     return xhrGetPaginatedAsync<ChallengeResource[]>(
         `${resourceBaseUrl}/resources?challengeId=${challengeId}${filter}`,
     )

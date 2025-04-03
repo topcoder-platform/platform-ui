@@ -18,7 +18,11 @@ export const handleError = (error: any): void => {
         errMessage = error.message
     }
 
-    toast.error(`${errMessage} (${error.status})`)
+    if (error.status) {
+        toast.error(`${errMessage} (${error.status})`)
+    } else {
+        toast.error(`${errMessage}`)
+    }
 }
 
 export const createChallengeQueryString = (

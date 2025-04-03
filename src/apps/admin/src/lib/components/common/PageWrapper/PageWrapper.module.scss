@@ -1,0 +1,13 @@
+@import "@libs/ui/styles/includes";
+
+.container {
+    display: flex;
+    flex-direction: column;
+}
+
+.headerActions {
+    display: flex;
+    gap: 30px;
+    margin-left: auto;
+    margin-top: $sp-2;
+}

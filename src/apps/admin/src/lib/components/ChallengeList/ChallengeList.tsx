@@ -1,4 +1,4 @@
-import { Dispatch, FC, SetStateAction, useContext, useMemo } from 'react'
+import { Dispatch, FC, SetStateAction, useContext, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import _ from 'lodash'
 import cn from 'classnames'
@@ -134,6 +134,7 @@ const Actions: FC<{
     challenge: Challenge
     currentFilters: ChallengeFilterCriteria
 }> = props => {
+    const [openDropdown, setOpenDropdown] = useState(false)
     const navigate = useNavigate()
     const goToManageUser = useEventCallback(() => {
         navigate(`${props.challenge.id}/manage-user`, {
@@ -169,14 +170,17 @@ const Actions: FC<{
                 onClick={goToManageUser}
                 className={styles.manageUsersLink}
             >
-                Manage Users
+                Manage
             </LinkButton>
 
             <DropdownMenu
                 trigger={createDropdownMenuTrigger}
+                open={openDropdown}
+                setOpen={setOpenDropdown}
                 width={160}
                 placement='bottom-end'
                 classNames={{ menu: 'challenge-list-actions-dropdown-menu' }}
+                shouldIgnoreWhenClickMenu
             >
                 <ul>
                     <li className={cn({ disabled: !hasProjectId })}>
@@ -187,6 +191,10 @@ const Actions: FC<{
                                 }
                                 target='_blank'
                                 rel='noreferrer'
+                                onClick={function onClick() {
+                                    window.open(`${EnvironmentConfig.ADMIN.WORK_MANAGER_URL}/projects/${props.challenge.projectId}/challenges/${props.challenge.id}/view`, '_blank') /* eslint-disable-line max-len */
+                                    setOpenDropdown(false)
+                                }}
                             >
                                 Work Manager
                             </a>
@@ -201,11 +209,31 @@ const Actions: FC<{
                                 }
                                 target='_blank'
                                 rel='noreferrer'
+                                onClick={function onClick() {
+                                    window.open(`${EnvironmentConfig.ADMIN.ONLINE_REVIEW_URL}/actions/ViewProjectDetails?pid=${props.challenge.legacyId}`, '_blank') /* eslint-disable-line max-len */
+                                    setOpenDropdown(false)
+                                }}
                             >
                                 Online Review
                             </a>
                         )}
                         {!hasLegacyId && <span>Online Review</span>}
+                    </li>
+                    <li
+                        onClick={function onClick() {
+                            goToManageUser()
+                            setOpenDropdown(false)
+                        }}
+                    >
+                        Users
+                    </li>
+                    <li
+                        onClick={function onClick() {
+                            navigate(`${props.challenge.id}/manage-resource`)
+                            setOpenDropdown(false)
+                        }}
+                    >
+                        Resources
                     </li>
                 </ul>
             </DropdownMenu>

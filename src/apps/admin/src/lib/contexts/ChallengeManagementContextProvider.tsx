@@ -19,12 +19,14 @@ import {
     getChallengeTypes,
     getResourceRoles,
 } from '../services'
+import { handleError } from '../utils'
 
 export type ChallengeManagementContextType = {
     challengeTypes: ChallengeType[]
     challengeTracks: ChallengeTrack[]
     challengeStatuses: ChallengeStatus[]
     resourceRoles: ResourceRole[]
+    resourceRolesLoading: boolean
 
     loadChallengeTypes: () => void
     loadChallengeTracks: () => void
@@ -40,6 +42,7 @@ export const ChallengeManagementContext: Context<ChallengeManagementContextType>
         loadChallengeTypes: () => undefined,
         loadResourceRoles: () => undefined,
         resourceRoles: [],
+        resourceRolesLoading: false,
     })
 
 export const ChallengeManagementContextProvider: FC<PropsWithChildren> = props => {
@@ -52,6 +55,7 @@ export const ChallengeManagementContextProvider: FC<PropsWithChildren> = props =
         ChallengeStatus.Completed,
     ])
     const [resourceRoles, setResourceRoles] = useState<ResourceRole[]>([])
+    const [resourceRolesLoading, setResourceRolesLoading] = useState(false)
 
     const loadChallengeTypes = useCallback(() => {
         getChallengeTypes()
@@ -68,9 +72,15 @@ export const ChallengeManagementContextProvider: FC<PropsWithChildren> = props =
     }, [])
 
     const loadResourceRoles = useCallback(() => {
+        setResourceRolesLoading(true)
         getResourceRoles()
             .then(roles => {
                 setResourceRoles(roles)
+                setResourceRolesLoading(false)
+            })
+            .catch(e => {
+                handleError(e)
+                setResourceRolesLoading(false)
             })
     }, [])
 
@@ -83,6 +93,7 @@ export const ChallengeManagementContextProvider: FC<PropsWithChildren> = props =
             loadChallengeTypes,
             loadResourceRoles,
             resourceRoles,
+            resourceRolesLoading,
         }),
         [
             challengeStatuses,
@@ -92,6 +103,7 @@ export const ChallengeManagementContextProvider: FC<PropsWithChildren> = props =
             loadChallengeTypes,
             loadResourceRoles,
             resourceRoles,
+            resourceRolesLoading,
         ],
     )
     return (
