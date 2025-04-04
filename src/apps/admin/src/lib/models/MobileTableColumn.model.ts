@@ -4,5 +4,5 @@
 import { TableColumn } from '~/libs/ui'
 
 export interface MobileTableColumn<T> extends TableColumn<T> {
-    readonly mobileType?: 'label'
+    readonly mobileType?: 'label' | 'last-value'
 }

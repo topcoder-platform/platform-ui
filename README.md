@@ -556,6 +556,7 @@ The following summarizes the various [apps](#adding-a-new-platform-ui-applicatio
 - [Gamification Admin](#gamification-admin)
 - [Learn](#learn)
 - [Self Service](#self-service)
+- [Review](#review)
 
 ## Platform App
 
@@ -599,3 +600,10 @@ Application that allows customers to submit/start challenges self-service.
 
 [Work README TBD](./src/apps/self-service/README.md)
 [Work Routes](./src/apps/self-service/src/self-service.routes.tsx)
+
+## Review
+
+The application that allows managing the review submissions.
+
+[Review README TBD](./src/apps/review/README.md)
+[Review Routes](./src/apps/review/src/review-app.routes.tsx)
