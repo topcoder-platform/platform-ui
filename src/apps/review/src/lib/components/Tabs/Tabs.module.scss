@@ -1,0 +1,56 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-wrap: wrap;
+    overflow: hidden;
+    justify-content: space-between;
+    gap: 20px;
+
+    @include ltemd {
+        border-bottom: none;
+    }
+}
+
+.blockLeft {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.blockItem {
+    font-size: 16px;
+    line-height: 22px;
+    /* identical to box height, or 138% */
+    text-align: center;
+    letter-spacing: -0.02em;
+    padding: 12px;
+    min-width: 200px;
+    position: relative;
+
+    &::before {
+        content: '';
+        display: flex;
+        position: absolute;
+        height: 1px;
+        width: 1000px;
+        background-color: var(--Tertiary);
+        bottom: 0;
+        left: 0;
+    }
+
+    &.selected {
+        @include font-weight-semibold;
+
+        &::after {
+            content: '';
+            display: flex;
+            position: absolute;
+            height: 2px;
+            width: 100%;
+            background-color: var(--Primary);
+            bottom: 0;
+            left: 0;
+        }
+    }
+
+}

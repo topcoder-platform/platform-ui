@@ -1,0 +1,15 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    gap: 20px;
+}
+
+.blockLink {
+    text-decoration-line: underline;
+    font-size: 16px;
+    line-height: 22px;
+    letter-spacing: -0.02em;
+
+    @include font-weight-semibold;
+}

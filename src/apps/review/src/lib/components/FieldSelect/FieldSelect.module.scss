@@ -1,0 +1,10 @@
+.container {
+    :global(div[class*='__input-container']) {
+        > input {
+            min-width: 35px !important;
+        }
+    }
+    :global(div[class*='__value-container']) {
+        display: grid;
+    }
+}

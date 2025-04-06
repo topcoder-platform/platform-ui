@@ -1,0 +1,60 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+    color: var(--Primary);
+
+    blockquote {
+        margin: 0;
+        padding: 0 1em;
+        color: #9198a1;
+        border-left: .25em solid var(--Primary);
+    }
+
+    a {
+        color: $link-blue-dark;
+    }
+
+    strong {
+        @include font-weight-bold;
+    }
+
+    em {
+        font-style: italic;
+    }
+
+    ol {
+        list-style-type: decimal;
+        padding: revert;
+        padding-left: 25px;
+    }
+
+    ul {
+        list-style-type: disc;
+        padding: revert;
+        padding-left: 25px;
+    }
+
+    table {
+        display: block;
+        width: 100%;
+        overflow: auto;
+        box-sizing: border-box;
+
+        * {
+            box-sizing: border-box;
+        }
+
+        tr {
+            background-color: #fff;
+            border-top: 1px solid #c6cbd1;
+        }
+
+        th,
+        td {
+            padding: 6px 13px;
+            border: 1px solid #dfe2e5;
+        }
+    }
+}

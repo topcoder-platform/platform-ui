@@ -1,0 +1,11 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+}
+
+.textBlue,
+.textBlue:hover {
+    color: $link-blue-dark;
+}
