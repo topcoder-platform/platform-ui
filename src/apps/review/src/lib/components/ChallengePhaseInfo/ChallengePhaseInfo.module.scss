@@ -1,0 +1,31 @@
+@import "@libs/ui/styles/includes";
+
+.container {
+    display: flex;
+    gap: 48px;
+    margin-top: 24px;
+    flex-wrap: wrap;
+
+    @include ltelg {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 15px 30px;
+    }
+
+    @include ltesm {
+        grid-template-columns: 1fr;
+    }
+}
+
+.blockItem {
+    display: flex;
+    font-size: 14px;
+    line-height: 19px;
+    /* identical to box height, or 136% */
+    letter-spacing: -0.02em;
+    gap: 5px;
+
+    strong {
+        @include font-weight-semibold;
+    }
+}

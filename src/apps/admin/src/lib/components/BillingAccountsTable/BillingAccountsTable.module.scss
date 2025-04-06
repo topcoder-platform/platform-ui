@@ -1,0 +1,40 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+    padding: 0 $sp-8;
+
+    @include ltelg {
+        padding: 0 $sp-4;
+    }
+
+    th:first-child {
+        padding-left: 16px !important;
+
+        @include ltemd {
+            padding-left: 5px !important;
+        }
+    }
+
+    a {
+        color: $blue-110;
+
+        &:hover {
+            color: $blue-110;
+        }
+    }
+}
+
+.btnEditAccount {
+    padding-left: 0;
+}
+
+.btnViewResources {
+    padding-right: 0;
+}
+
+.tableCell {
+    white-space: break-spaces !important;
+    text-align: left !important;
+}
