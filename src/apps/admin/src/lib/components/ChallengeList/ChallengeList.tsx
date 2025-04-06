@@ -7,7 +7,7 @@ import moment from 'moment'
 import { ChevronDownIcon } from '@heroicons/react/solid'
 import { EnvironmentConfig } from '~/config'
 import { useWindowSize, WindowSize } from '~/libs/shared'
-import { Button, LinkButton, Table, type TableColumn } from '~/libs/ui'
+import { Button, Table, type TableColumn } from '~/libs/ui'
 
 import { ReactComponent as RegistrantUserIcon } from '../../assets/i/registrant-user-icon.svg'
 import { ReactComponent as SubmissionIcon } from '../../assets/i/submission-icon.svg'
@@ -142,7 +142,23 @@ const Actions: FC<{
         })
     })
 
-    const createDropdownMenuTrigger = useEventCallback(
+    const manageDropdownMenuTrigger = useEventCallback(
+        (triggerProps: {
+            open: boolean
+            setOpen: Dispatch<SetStateAction<boolean>>
+        }) => {
+            const createToggle = () => (): void => triggerProps.setOpen(!triggerProps.open)
+            return (
+                <Button primary onClick={createToggle()}>
+                    Manage
+                    {' '}
+                    <ChevronDownIcon className='icon icon-fill' />
+                </Button>
+            )
+        },
+    )
+
+    const goToDropdownMenuTrigger = useEventCallback(
         (triggerProps: {
             open: boolean
             setOpen: Dispatch<SetStateAction<boolean>>
@@ -166,15 +182,8 @@ const Actions: FC<{
 
     return (
         <div className={styles.rowActions}>
-            <LinkButton
-                onClick={goToManageUser}
-                className={styles.manageUsersLink}
-            >
-                Manage
-            </LinkButton>
-
             <DropdownMenu
-                trigger={createDropdownMenuTrigger}
+                trigger={manageDropdownMenuTrigger}
                 open={openDropdown}
                 setOpen={setOpenDropdown}
                 width={160}
@@ -183,42 +192,6 @@ const Actions: FC<{
                 shouldIgnoreWhenClickMenu
             >
                 <ul>
-                    <li className={cn({ disabled: !hasProjectId })}>
-                        {hasProjectId && (
-                            <a
-                                href={
-                                    `${EnvironmentConfig.ADMIN.WORK_MANAGER_URL}/projects/${props.challenge.projectId}/challenges/${props.challenge.id}/view` /* eslint-disable-line max-len */
-                                }
-                                target='_blank'
-                                rel='noreferrer'
-                                onClick={function onClick() {
-                                    window.open(`${EnvironmentConfig.ADMIN.WORK_MANAGER_URL}/projects/${props.challenge.projectId}/challenges/${props.challenge.id}/view`, '_blank') /* eslint-disable-line max-len */
-                                    setOpenDropdown(false)
-                                }}
-                            >
-                                Work Manager
-                            </a>
-                        )}
-                        {!hasProjectId && <span>Work Manager</span>}
-                    </li>
-                    <li className={cn({ disabled: !hasLegacyId })}>
-                        {hasLegacyId && (
-                            <a
-                                href={
-                                    `${EnvironmentConfig.ADMIN.ONLINE_REVIEW_URL}/actions/ViewProjectDetails?pid=${props.challenge.legacyId}` /* eslint-disable-line max-len */
-                                }
-                                target='_blank'
-                                rel='noreferrer'
-                                onClick={function onClick() {
-                                    window.open(`${EnvironmentConfig.ADMIN.ONLINE_REVIEW_URL}/actions/ViewProjectDetails?pid=${props.challenge.legacyId}`, '_blank') /* eslint-disable-line max-len */
-                                    setOpenDropdown(false)
-                                }}
-                            >
-                                Online Review
-                            </a>
-                        )}
-                        {!hasLegacyId && <span>Online Review</span>}
-                    </li>
                     <li
                         onClick={function onClick() {
                             goToManageUser()
@@ -234,6 +207,44 @@ const Actions: FC<{
                         }}
                     >
                         Resources
+                    </li>
+                </ul>
+            </DropdownMenu>
+
+            <DropdownMenu
+                trigger={goToDropdownMenuTrigger}
+                width={160}
+                placement='bottom-end'
+                classNames={{ menu: 'challenge-list-actions-dropdown-menu' }}
+            >
+                <ul>
+                    <li className={cn({ disabled: !hasProjectId })}>
+                        {hasProjectId && (
+                            <a
+                                href={
+                                    `${EnvironmentConfig.ADMIN.WORK_MANAGER_URL}/projects/${props.challenge.projectId}/challenges/${props.challenge.id}/view` /* eslint-disable-line max-len */
+                                }
+                                target='_blank'
+                                rel='noreferrer'
+                            >
+                                Work Manager
+                            </a>
+                        )}
+                        {!hasProjectId && <span>Work Manager</span>}
+                    </li>
+                    <li className={cn({ disabled: !hasLegacyId })}>
+                        {hasLegacyId && (
+                            <a
+                                href={
+                                    `${EnvironmentConfig.ADMIN.ONLINE_REVIEW_URL}/actions/ViewProjectDetails?pid=${props.challenge.legacyId}` /* eslint-disable-line max-len */
+                                }
+                                target='_blank'
+                                rel='noreferrer'
+                            >
+                                Online Review
+                            </a>
+                        )}
+                        {!hasLegacyId && <span>Online Review</span>}
                     </li>
                 </ul>
             </DropdownMenu>
