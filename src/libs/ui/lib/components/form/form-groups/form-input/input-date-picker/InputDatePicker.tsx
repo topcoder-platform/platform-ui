@@ -1,5 +1,5 @@
 /* eslint-disable react/jsx-no-bind */
-import { FC, forwardRef, KeyboardEvent, useRef, useState } from 'react'
+import { FC, forwardRef, KeyboardEvent, useMemo, useRef, useState } from 'react'
 import { getMonth, getYear } from 'date-fns'
 import { range } from 'lodash'
 import DatePicker, { ReactDatePicker } from 'react-datepicker'
@@ -31,9 +31,9 @@ interface InputDatePickerProps {
     readonly showYearPicker?: boolean
     readonly isClearable?: boolean
     readonly tabIndex?: number
+    readonly classNameWrapper?: string
 }
 
-const years: number[] = range(1979, getYear(new Date()) + 1, 1)
 const months: string[] = [
     'January',
     'February',
@@ -74,6 +74,10 @@ const CustomInput = forwardRef((props: any, ref) => {
 
 const InputDatePicker: FC<InputDatePickerProps> = (props: InputDatePickerProps) => {
     const datePickerRef = useRef<ReactDatePicker<never, undefined>>(null)
+    const years = useMemo(() => {
+        const maxYear = getYear(props.maxDate ? props.maxDate : new Date()) + 1
+        return range(1979, maxYear, 1)
+    }, [props.maxDate])
 
     const [stateHasFocus, setStateHasFocus] = useState(false)
 

@@ -5,5 +5,8 @@ export interface ApiV3Response<T> {
     result: {
         content: T
         success: boolean
+        metadata: {
+            totalCount: number
+        }
     }
 }

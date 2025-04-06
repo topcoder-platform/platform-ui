@@ -1,0 +1,47 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    padding: $sp-4;
+}
+
+.table {
+    td {
+        border-radius: 0 !important;
+        padding: 8px 16px;
+        background-color: $tc-white;
+        font-weight: 400;
+
+        &.topLeft {
+            border-top-left-radius: 8px !important;
+        }
+        &.topRight {
+            border-top-right-radius: 8px !important;
+        }
+        &.bottomLeft {
+            border-bottom-left-radius: 8px !important;
+        }
+        &.bottomRight {
+            border-bottom-right-radius: 8px !important;
+        }
+    }
+}
+
+.blockCell {
+    white-space: break-spaces !important;
+
+    &.blockCellLabel {
+        white-space: nowrap !important;
+    }
+}
+
+.blockCellLabel {
+    text-transform: capitalize !important;
+    font-weight: bold !important;
+    text-transform: uppercase;
+    white-space: nowrap !important;
+    text-align: right !important;
+
+    :global(.TableCell_blockCell) {
+        justify-content: flex-end;
+    }
+}

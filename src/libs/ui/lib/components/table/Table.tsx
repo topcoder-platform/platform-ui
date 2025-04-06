@@ -62,9 +62,13 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
             = useState<ReadonlyArray<T>>(props.data)
 
         useEffect(() => {
-            if (props.forceSort || props.removeDefaultSort) {
+            if (
+                (props.forceSort || props.removeDefaultSort)
+                && !_.isEqual(sort, props.forceSort)
+            ) {
                 setSort(props.forceSort)
             }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         }, [props.forceSort, props.removeDefaultSort])
 
         useEffect(

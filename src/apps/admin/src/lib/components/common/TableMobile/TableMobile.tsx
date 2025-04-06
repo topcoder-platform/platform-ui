@@ -25,7 +25,7 @@ export const TableMobile: <T extends { [propertyName: string]: any }>(
     props: Props<T>,
 ) => JSX.Element = <T extends { [propertyName: string]: any }>(
     props: Props<T>,
-) => (// eslint-disable-next-line react/jsx-indent
+) => ( // eslint-disable-next-line react/jsx-indent
         <table className={classNames(styles.container, props.className)}>
             <tbody>
                 {props.data.map((itemData, indexData) => (
@@ -81,6 +81,9 @@ export const TableMobile: <T extends { [propertyName: string]: any }>(
                                                     [styles.blockCellLabel]:
                                                         itemItemColumns.mobileType
                                                         === 'label',
+                                                    [styles.blockCellLastValue]:
+                                                        itemItemColumns.mobileType
+                                                        === 'last-value',
                                                 },
                                                 styles.blockCell,
                                             )}

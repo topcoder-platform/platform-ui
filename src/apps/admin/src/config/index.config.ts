@@ -10,6 +10,20 @@ export const USER_STATUS_SELECT_OPTIONS: InputSelectOption[] = [
     { label: 'active', value: 'active' },
     { label: 'inactive', value: 'inactive' },
 ]
+export const BILLING_ACCOUNT_STATUS_FILTER_OPTIONS: InputSelectOption[] = [
+    { label: 'Select status', value: '' },
+    { label: 'Active', value: '1' },
+    { label: 'Inactive', value: '0' },
+]
+export const BILLING_ACCOUNT_STATUS_EDIT_OPTIONS: InputSelectOption[] = [
+    { label: 'Active', value: 'Active' },
+    { label: 'Inactive', value: 'Inactive' },
+]
+export const BILLING_ACCOUNT_RESOURCE_STATUS_EDIT_OPTIONS: InputSelectOption[]
+    = [
+        { label: 'Active', value: 'active' },
+        { label: 'Inactive', value: 'inactive' },
+    ]
 export const USER_STATUS_DETAIL_SELECT_OPTIONS: InputSelectOption[] = [
     { label: 'Verified', value: 'A' },
     { label: 'Inactive - Duplicate account', value: '5' },
