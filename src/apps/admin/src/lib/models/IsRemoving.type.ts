@@ -1,4 +1,4 @@
 /**
  * Use for removing item in table
  */
-export type IsRemovingType = { [key: string]: boolean }
+export type IsRemovingType = { [key: string | number]: boolean }

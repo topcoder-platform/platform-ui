@@ -1,5 +1,5 @@
 /**
- * Use to manage table filter
+ * Use To Manage Table Backend Filter
  */
 import {
     Dispatch,

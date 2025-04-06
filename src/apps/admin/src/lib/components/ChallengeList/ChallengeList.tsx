@@ -1,4 +1,4 @@
-import { Dispatch, FC, SetStateAction, useContext, useMemo } from 'react'
+import { Dispatch, FC, SetStateAction, useContext, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import _ from 'lodash'
 import cn from 'classnames'
@@ -7,7 +7,7 @@ import moment from 'moment'
 import { ChevronDownIcon } from '@heroicons/react/solid'
 import { EnvironmentConfig } from '~/config'
 import { useWindowSize, WindowSize } from '~/libs/shared'
-import { Button, LinkButton, Table, type TableColumn } from '~/libs/ui'
+import { Button, Table, type TableColumn } from '~/libs/ui'
 
 import { ReactComponent as RegistrantUserIcon } from '../../assets/i/registrant-user-icon.svg'
 import { ReactComponent as SubmissionIcon } from '../../assets/i/submission-icon.svg'
@@ -134,6 +134,7 @@ const Actions: FC<{
     challenge: Challenge
     currentFilters: ChallengeFilterCriteria
 }> = props => {
+    const [openDropdown, setOpenDropdown] = useState(false)
     const navigate = useNavigate()
     const goToManageUser = useEventCallback(() => {
         navigate(`${props.challenge.id}/manage-user`, {
@@ -141,7 +142,23 @@ const Actions: FC<{
         })
     })
 
-    const createDropdownMenuTrigger = useEventCallback(
+    const manageDropdownMenuTrigger = useEventCallback(
+        (triggerProps: {
+            open: boolean
+            setOpen: Dispatch<SetStateAction<boolean>>
+        }) => {
+            const createToggle = () => (): void => triggerProps.setOpen(!triggerProps.open)
+            return (
+                <Button primary onClick={createToggle()}>
+                    Manage
+                    {' '}
+                    <ChevronDownIcon className='icon icon-fill' />
+                </Button>
+            )
+        },
+    )
+
+    const goToDropdownMenuTrigger = useEventCallback(
         (triggerProps: {
             open: boolean
             setOpen: Dispatch<SetStateAction<boolean>>
@@ -165,15 +182,37 @@ const Actions: FC<{
 
     return (
         <div className={styles.rowActions}>
-            <LinkButton
-                onClick={goToManageUser}
-                className={styles.manageUsersLink}
+            <DropdownMenu
+                trigger={manageDropdownMenuTrigger}
+                open={openDropdown}
+                setOpen={setOpenDropdown}
+                width={160}
+                placement='bottom-end'
+                classNames={{ menu: 'challenge-list-actions-dropdown-menu' }}
+                shouldIgnoreWhenClickMenu
             >
-                Manage Users
-            </LinkButton>
+                <ul>
+                    <li
+                        onClick={function onClick() {
+                            goToManageUser()
+                            setOpenDropdown(false)
+                        }}
+                    >
+                        Users
+                    </li>
+                    <li
+                        onClick={function onClick() {
+                            navigate(`${props.challenge.id}/manage-resource`)
+                            setOpenDropdown(false)
+                        }}
+                    >
+                        Resources
+                    </li>
+                </ul>
+            </DropdownMenu>
 
             <DropdownMenu
-                trigger={createDropdownMenuTrigger}
+                trigger={goToDropdownMenuTrigger}
                 width={160}
                 placement='bottom-end'
                 classNames={{ menu: 'challenge-list-actions-dropdown-menu' }}

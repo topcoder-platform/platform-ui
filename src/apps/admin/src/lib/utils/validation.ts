@@ -4,6 +4,7 @@ import _ from 'lodash'
 import {
     FormAddGroup,
     FormAddGroupMembers,
+    FormAddResource,
     FormBillingAccountsFilter,
     FormClientsFilter,
     FormEditBillingAccount,
@@ -35,6 +36,33 @@ export const formUsersFiltersSchema: Yup.ObjectSchema<FormUsersFilters>
             .optional(),
         userId: Yup.string()
             .optional(),
+    })
+
+/**
+ * validation schema for form add resource
+ */
+export const formAddResourceSchema: Yup.ObjectSchema<FormAddResource>
+    = Yup.object({
+        handle: Yup.object()
+            .shape({
+                label: Yup.string()
+                    .required('Label is required.'),
+                value: Yup.number()
+                    .required('Value  is required.'),
+            })
+            .default(undefined)
+            .required('Handle is required.'),
+        resourceRole: Yup.object()
+            .shape({
+                label: Yup.string()
+                    .required('Label is required.'),
+                value: Yup.string()
+                    .required('Value  is required.'),
+            })
+            .default(undefined)
+            .required('Role is required.'),
+        userId: Yup.string()
+            .required('User id is required.'),
     })
 
 /**

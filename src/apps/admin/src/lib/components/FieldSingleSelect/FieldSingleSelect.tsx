@@ -1,17 +1,22 @@
 /**
- * Single Select Field With Async Search.
+ * Fidle Single Select.
  */
-import { FC, FocusEvent, MutableRefObject, ReactNode, useMemo, useRef } from 'react'
-import { components, SingleValue } from 'react-select'
-import _ from 'lodash'
-import AsyncSelect from 'react-select/async'
+import {
+    FC,
+    FocusEvent,
+    MutableRefObject,
+    ReactNode,
+    useMemo,
+    useRef,
+} from 'react'
+import ReactSelect, { components, SingleValue } from 'react-select'
 import classNames from 'classnames'
 
 import { IconOutline, InputWrapper, LoadingSpinner } from '~/libs/ui'
 
 import { SelectOption } from '../../models'
 
-import styles from './FieldSingleSelectAsync.module.scss'
+import styles from './FieldSingleSelect.module.scss'
 
 interface Props {
     label?: string
@@ -20,15 +25,12 @@ interface Props {
     readonly value?: SelectOption
     readonly onChange?: (event: SelectOption) => void
     readonly disabled?: boolean
-    readonly loadOptions?: (
-        queryTerm: string,
-        callback: (options: SelectOption[]) => void,
-    ) => void
     readonly dirty?: boolean
     readonly hint?: string
     readonly hideInlineErrors?: boolean
     readonly error?: string
     readonly onBlur?: (event: FocusEvent<HTMLInputElement>) => void
+    readonly options: SelectOption[]
     readonly isLoading?: boolean
 }
 
@@ -45,12 +47,8 @@ const dropdownIndicator
         )
     }
 
-export const FieldSingleSelectAsync: FC<Props> = (props: Props) => {
+export const FieldSingleSelect: FC<Props> = (props: Props) => {
     const wrapRef = useRef<HTMLDivElement>()
-    const fetchDatasDebounce = useMemo(
-        () => (props.loadOptions ? _.debounce(props.loadOptions, 300) : undefined),
-        [props.loadOptions],
-    )
     const asyncSelectComponents = useMemo(
         () => ({
             DropdownIndicator: dropdownIndicator(
@@ -74,7 +72,7 @@ export const FieldSingleSelectAsync: FC<Props> = (props: Props) => {
             hideInlineErrors={props.hideInlineErrors}
             ref={wrapRef as MutableRefObject<HTMLDivElement>}
         >
-            <AsyncSelect
+            <ReactSelect
                 components={asyncSelectComponents}
                 className={classNames(props.className, styles.select)}
                 placeholder={props.placeholder ?? 'Enter'}
@@ -90,9 +88,9 @@ export const FieldSingleSelectAsync: FC<Props> = (props: Props) => {
                     }
                 }}
                 value={props.value}
-                loadOptions={fetchDatasDebounce}
                 isDisabled={props.disabled || props.isLoading}
                 onBlur={props.onBlur}
+                options={props.options}
             />
             {props.isLoading && (
                 <div className={styles.blockActionLoading}>
@@ -103,4 +101,4 @@ export const FieldSingleSelectAsync: FC<Props> = (props: Props) => {
     )
 }
 
-export default FieldSingleSelectAsync
+export default FieldSingleSelect

@@ -1,0 +1,20 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    position: absolute;
+    width: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    bottom: 0;
+    height: 64px;
+    left: $sp-8;
+
+    .spinner {
+        background: none;
+    }
+
+    @include ltelg {
+        left: $sp-4;
+    }
+}
