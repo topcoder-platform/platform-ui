@@ -221,7 +221,7 @@ workflows:
                               - dev
                               - LVT-256
                               - CORE-635
-                              - PM-959_tc-finance-integration
+                              - "shared/dev"
 
             - deployQa:
                   context: org-global
