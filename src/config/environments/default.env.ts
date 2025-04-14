@@ -24,6 +24,7 @@ export const API = {
 }
 
 export const STANDARDIZED_SKILLS_API = `${API.V5}/standardized-skills`
+export const TC_FINANCE_API = `${API.V5}/finance`
 
 export const AUTH = {
     ACCOUNTS_APP_CONNECTOR: `https://accounts-auth0.${TC_DOMAIN}`,

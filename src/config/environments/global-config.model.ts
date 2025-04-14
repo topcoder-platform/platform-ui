@@ -10,6 +10,7 @@ export interface GlobalConfig {
         V5: string
     },
     STANDARDIZED_SKILLS_API: string,
+    TC_FINANCE_API: string,
     AUTH: {
         ACCOUNTS_APP_CONNECTOR: string
     }
