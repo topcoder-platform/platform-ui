@@ -221,6 +221,7 @@ workflows:
                               - dev
                               - LVT-256
                               - CORE-635
+                              - feat/review
 
             - deployQa:
                   context: org-global
