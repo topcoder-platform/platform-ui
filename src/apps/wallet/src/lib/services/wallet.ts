@@ -14,7 +14,6 @@ import { PaginationInfo } from '../models/PaginationInfo'
 import ApiResponse from '../models/ApiResponse'
 
 const baseUrl = `${EnvironmentConfig.TC_FINANCE_API}`
-const baseUrl_old = `${EnvironmentConfig.API.V5}/payments`
 
 export async function getWalletDetails(): Promise<WalletDetails> {
     const response = await xhrGetAsync<ApiResponse<WalletDetails>>(`${baseUrl}/wallet`)
@@ -27,7 +26,7 @@ export async function getWalletDetails(): Promise<WalletDetails> {
 }
 
 export async function getUserPaymentProviders(): Promise<PaymentProvider[]> {
-    const response = await xhrGetAsync<ApiResponse<PaymentProvider[]>>(`${baseUrl_old}/user/payment-methods`)
+    const response = await xhrGetAsync<ApiResponse<PaymentProvider[]>>(`${baseUrl}/user/payment-methods`)
 
     if (response.status === 'error') {
         throw new Error('Error fetching user payment providers')
@@ -37,7 +36,7 @@ export async function getUserPaymentProviders(): Promise<PaymentProvider[]> {
 }
 
 export async function getUserTaxFormDetails(): Promise<TaxForm[]> {
-    const response = await xhrGetAsync<ApiResponse<TaxForm[]>>(`${baseUrl_old}/user/tax-forms`)
+    const response = await xhrGetAsync<ApiResponse<TaxForm[]>>(`${baseUrl}/user/tax-forms`)
     if (response.status === 'error') {
         throw new Error('Error fetching user tax form details')
     }
@@ -91,7 +90,7 @@ export async function setPaymentProvider(
         type,
     })
 
-    const url = `${baseUrl_old}/user/payment-method`
+    const url = `${baseUrl}/user/payment-method`
     const response = await xhrPostAsync<string, ApiResponse<TransactionResponse>>(url, body)
 
     if (response.status === 'error') {
@@ -108,7 +107,7 @@ export async function confirmPaymentProvider(provider: string, code: string, tra
         transactionId,
     })
 
-    const url = `${baseUrl_old}/payment-provider/paypal/confirm`
+    const url = `${baseUrl}/payment-provider/paypal/confirm`
     const response = await xhrPostAsync<string, ApiResponse<string>>(url, body)
 
     if (response.status === 'error') {
@@ -119,7 +118,7 @@ export async function confirmPaymentProvider(provider: string, code: string, tra
 }
 
 export async function getPaymentProviderRegistrationLink(type: string): Promise<TransactionResponse> {
-    const url = `${baseUrl_old}/user/payment-method/${type}/registration-link`
+    const url = `${baseUrl}/user/payment-method/${type}/registration-link`
     const response = await xhrGetAsync<ApiResponse<TransactionResponse>>(url)
 
     if (response.status === 'error') {
@@ -130,7 +129,7 @@ export async function getPaymentProviderRegistrationLink(type: string): Promise<
 }
 
 export async function removePaymentProvider(type: string): Promise<TransactionResponse> {
-    const url = `${baseUrl_old}/user/payment-method/${type}`
+    const url = `${baseUrl}/user/payment-method/${type}`
     const response = await xhrDeleteAsync<ApiResponse<TransactionResponse>>(url)
 
     if (response.status === 'error') {
@@ -146,7 +145,7 @@ export async function setupTaxForm(userId: string, taxForm: string): Promise<Tra
         userId,
     })
 
-    const url = `${baseUrl_old}/user/tax-form`
+    const url = `${baseUrl}/user/tax-form`
     const response = await xhrPostAsync<string, ApiResponse<TransactionResponse>>(url, body)
 
     if (response.status === 'error') {
@@ -157,7 +156,7 @@ export async function setupTaxForm(userId: string, taxForm: string): Promise<Tra
 }
 
 export async function removeTaxForm(taxFormId: string): Promise<TransactionResponse> {
-    const url = `${baseUrl_old}/user/tax-forms/${taxFormId}`
+    const url = `${baseUrl}/user/tax-forms/${taxFormId}`
     const response = await xhrDeleteAsync<ApiResponse<TransactionResponse>>(url)
 
     if (response.status === 'error') {
@@ -168,7 +167,7 @@ export async function removeTaxForm(taxFormId: string): Promise<TransactionRespo
 }
 
 export async function getRecipientViewURL(): Promise<TransactionResponse> {
-    const url = `${baseUrl_old}/user/tax-form/view`
+    const url = `${baseUrl}/user/tax-form/view`
     const response = await xhrGetAsync<ApiResponse<TransactionResponse>>(url)
 
     if (response.status === 'error') {
@@ -182,7 +181,7 @@ export async function processPayments(paymentIds: string[]): Promise<{ processed
     const body = JSON.stringify({
         paymentIds,
     })
-    const url = `${baseUrl_old}/withdraw`
+    const url = `${baseUrl}/withdraw`
     const response = await xhrPostAsync<string, ApiResponse<{ processed: boolean }>>(url, body)
 
     if (response.status === 'error') {
@@ -199,7 +198,7 @@ export async function verifyOtp(transactionId: string, code: string, blob: boole
         transactionId,
     })
 
-    const url = `${baseUrl_old}/otp/verify`
+    const url = `${baseUrl}/otp/verify`
     try {
         // eslint-disable-next-line max-len
         const response = await xhrPostAsyncWithBlobHandling<string, ApiResponse<OtpVerificationResponse> | Blob>(url, body, {
@@ -225,7 +224,7 @@ export async function resendOtp(transactionId: string): Promise<TransactionRespo
         transactionId,
     })
 
-    const url = `${baseUrl_old}/otp/resend`
+    const url = `${baseUrl}/otp/resend`
     try {
         const response = await xhrPostAsync<string, ApiResponse<TransactionResponse>>(url, body)
 
