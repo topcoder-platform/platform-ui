@@ -14,7 +14,6 @@ import { PayoutAudit } from '../models/PayoutAudit'
 import ApiResponse from '../models/ApiResponse'
 
 const baseUrl = `${EnvironmentConfig.TC_FINANCE_API}`
-const baseUrl_old = `${EnvironmentConfig.API.V5}/payments`
 const memberApiBaseUrl = `${EnvironmentConfig.API.V5}/members`
 
 export async function getWalletDetails(): Promise<WalletDetails> {
@@ -38,7 +37,7 @@ export async function getUserPaymentProviders(): Promise<PaymentProvider[]> {
 }
 
 export async function getUserTaxFormDetails(): Promise<TaxForm[]> {
-    const response = await xhrGetAsync<ApiResponse<TaxForm[]>>(`${baseUrl_old}/user/tax-forms`)
+    const response = await xhrGetAsync<ApiResponse<TaxForm[]>>(`${baseUrl}/user/tax-forms`)
     if (response.status === 'error') {
         throw new Error('Error fetching user tax form details')
     }
@@ -105,7 +104,7 @@ export async function getTaxForms(limit: number, offset: number, userIds: string
         userIds,
     })
 
-    const url = `${baseUrl_old}/admin/tax-forms`
+    const url = `${baseUrl}/admin/tax-forms`
     const response = await xhrPostAsync<string, ApiResponse<{
         forms: TaxForm[],
         pagination: PaginationInfo
@@ -132,7 +131,7 @@ export async function getPaymentMethods(limit: number, offset: number, userIds: 
         userIds,
     })
 
-    const url = `${baseUrl_old}/admin/payment-methods`
+    const url = `${baseUrl}/admin/payment-methods`
     const response = await xhrPostAsync<string, ApiResponse<{
         paymentMethods: PaymentProvider[],
         pagination: PaginationInfo
@@ -183,7 +182,7 @@ export async function exportSearchResults(filters: Record<string, string[]>): Pr
 }
 
 export async function downloadTaxForm(userId: string, taxFormId: string): Promise<Blob> {
-    const url = `${baseUrl_old}/admin/tax-forms/${userId}/${taxFormId}/download`
+    const url = `${baseUrl}/admin/tax-forms/${userId}/${taxFormId}/download`
     try {
         return await getAsyncWithBlobHandling<Blob>(url)
     } catch (err) {
@@ -192,7 +191,7 @@ export async function downloadTaxForm(userId: string, taxFormId: string): Promis
 }
 
 export async function deleteTaxForm(userId: string, taxFormId: string): Promise<void> {
-    const url = `${baseUrl_old}/admin/tax-forms/${userId}/${taxFormId}`
+    const url = `${baseUrl}/admin/tax-forms/${userId}/${taxFormId}`
     try {
         return await xhrDeleteAsync(url)
     } catch (err) {
@@ -201,7 +200,7 @@ export async function deleteTaxForm(userId: string, taxFormId: string): Promise<
 }
 
 export async function deletePaymentProvider(userId: string, providerId: number): Promise<void> {
-    const url = `${baseUrl_old}/admin/payment-methods/${userId}/${providerId}`
+    const url = `${baseUrl}/admin/payment-methods/${userId}/${providerId}`
     try {
         return await xhrDeleteAsync(url)
     } catch (err) {
@@ -262,7 +261,7 @@ export async function setPaymentProvider(
         type,
     })
 
-    const url = `${baseUrl_old}/user/payment-method`
+    const url = `${baseUrl}/user/payment-method`
     const response = await xhrPostAsync<string, ApiResponse<TransactionResponse>>(url, body)
 
     if (response.status === 'error') {
@@ -279,7 +278,7 @@ export async function confirmPaymentProvider(provider: string, code: string, tra
         transactionId,
     })
 
-    const url = `${baseUrl_old}/payment-provider/paypal/confirm`
+    const url = `${baseUrl}/payment-provider/paypal/confirm`
     const response = await xhrPostAsync<string, ApiResponse<string>>(url, body)
 
     if (response.status === 'error') {
@@ -290,7 +289,7 @@ export async function confirmPaymentProvider(provider: string, code: string, tra
 }
 
 export async function getPaymentProviderRegistrationLink(type: string): Promise<TransactionResponse> {
-    const url = `${baseUrl_old}/user/payment-method/${type}/registration-link`
+    const url = `${baseUrl}/user/payment-method/${type}/registration-link`
     const response = await xhrGetAsync<ApiResponse<TransactionResponse>>(url)
 
     if (response.status === 'error') {
@@ -301,7 +300,7 @@ export async function getPaymentProviderRegistrationLink(type: string): Promise<
 }
 
 export async function removePaymentProvider(type: string): Promise<TransactionResponse> {
-    const url = `${baseUrl_old}/user/payment-method/${type}`
+    const url = `${baseUrl}/user/payment-method/${type}`
     const response = await xhrDeleteAsync<ApiResponse<TransactionResponse>>(url)
 
     if (response.status === 'error') {
@@ -317,7 +316,7 @@ export async function setupTaxForm(userId: string, taxForm: string): Promise<Tra
         userId,
     })
 
-    const url = `${baseUrl_old}/user/tax-form`
+    const url = `${baseUrl}/user/tax-form`
     const response = await xhrPostAsync<string, ApiResponse<TransactionResponse>>(url, body)
 
     if (response.status === 'error') {
@@ -328,7 +327,7 @@ export async function setupTaxForm(userId: string, taxForm: string): Promise<Tra
 }
 
 export async function removeTaxForm(taxFormId: string): Promise<TransactionResponse> {
-    const url = `${baseUrl_old}/user/tax-forms/${taxFormId}`
+    const url = `${baseUrl}/user/tax-forms/${taxFormId}`
     const response = await xhrDeleteAsync<ApiResponse<TransactionResponse>>(url)
 
     if (response.status === 'error') {
@@ -339,7 +338,7 @@ export async function removeTaxForm(taxFormId: string): Promise<TransactionRespo
 }
 
 export async function getRecipientViewURL(): Promise<TransactionResponse> {
-    const url = `${baseUrl_old}/user/tax-form/view`
+    const url = `${baseUrl}/user/tax-form/view`
     const response = await xhrGetAsync<ApiResponse<TransactionResponse>>(url)
 
     if (response.status === 'error') {
