@@ -182,7 +182,7 @@ export async function processPayments(paymentIds: string[]): Promise<{ processed
     const body = JSON.stringify({
         paymentIds,
     })
-    const url = `${baseUrl}/withdraw`
+    const url = `${baseUrl_old}/withdraw`
     const response = await xhrPostAsync<string, ApiResponse<{ processed: boolean }>>(url, body)
 
     if (response.status === 'error') {
