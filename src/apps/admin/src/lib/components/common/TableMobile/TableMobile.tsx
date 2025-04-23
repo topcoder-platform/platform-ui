@@ -81,6 +81,9 @@ export const TableMobile: <T extends { [propertyName: string]: any }>(
                                                     [styles.blockCellLabel]:
                                                         itemItemColumns.mobileType
                                                         === 'label',
+                                                    [styles.blockCellLastValue]:
+                                                        itemItemColumns.mobileType
+                                                        === 'last-value',
                                                 },
                                                 styles.blockCell,
                                             )}
