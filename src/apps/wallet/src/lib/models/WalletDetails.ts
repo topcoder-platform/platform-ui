@@ -13,6 +13,7 @@ export interface WalletDetails {
     withdrawalMethod: {
         isSetupComplete: boolean
     }
+    // TOOD: remove
     taxForm: {
         isSetupComplete: boolean
     }
