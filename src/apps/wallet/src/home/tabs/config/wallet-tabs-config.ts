@@ -1,11 +1,12 @@
 import { TabsNavItem } from '~/libs/ui'
 
 export enum WalletTabViews {
-    home = '0',
-    winnings = '1',
+    home,
+    winnings,
+    payout,
 }
 
-export const WalletTabsConfig: TabsNavItem[] = [
+export const WalletTabsConfig: TabsNavItem<WalletTabViews>[] = [
     {
         id: WalletTabViews.home,
         title: 'Wallet',
@@ -14,23 +15,29 @@ export const WalletTabsConfig: TabsNavItem[] = [
         id: WalletTabViews.winnings,
         title: 'Winnings',
     },
+    {
+        id: WalletTabViews.payout,
+        title: 'Payout',
+    },
 ]
 
-export function getHashFromTabId(tabId: string): string {
+export function getHashFromTabId(tabId: WalletTabViews): string {
     switch (tabId) {
-        case WalletTabViews.home:
-            return '#home'
         case WalletTabViews.winnings:
             return '#winnings'
+        case WalletTabViews.payout:
+            return '#payout'
         default:
             return '#home'
     }
 }
 
-export function getTabIdFromHash(hash: string): string {
+export function getTabIdFromHash(hash: string): WalletTabViews {
     switch (hash) {
         case '#winnings':
             return WalletTabViews.winnings
+        case '#payout':
+            return WalletTabViews.payout
         default:
             return WalletTabViews.home
     }

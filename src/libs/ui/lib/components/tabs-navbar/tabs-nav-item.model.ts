@@ -1,8 +1,8 @@
 import { TabsNavItemBadge } from './tab-nav-item-badge.model'
 
-export interface TabsNavItem {
+export interface TabsNavItem<T = string> {
     badges?: Array<TabsNavItemBadge>
-    id: string
+    id: T
     title: string
     url?: string
 }
