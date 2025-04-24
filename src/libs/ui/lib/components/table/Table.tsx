@@ -105,7 +105,7 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
             const col = props.columns.find(c => c.propertyName === fieldName)
 
             // if sortable is false, we return
-            if (!col?.isSortable === false) return
+            if (col?.isSortable === false) return
 
             // if we don't have anything to sort by, we shouldn't be here
             if (!sort && !props.removeDefaultSort) {

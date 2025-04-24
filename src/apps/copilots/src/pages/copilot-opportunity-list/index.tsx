@@ -22,7 +22,7 @@ const tableColumns: TableColumn<CopilotOpportunity>[] = [
         label: 'Title',
         propertyName: 'projectName',
         renderer: (copilotOpportunity: CopilotOpportunity) => (
-            <div>
+            <div className={styles.title}>
                 {copilotOpportunity.projectName}
             </div>
         ),

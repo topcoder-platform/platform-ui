@@ -3,8 +3,8 @@
 .skillsContainer {
     display: flex;
     flex-wrap: wrap;
-    overflow-x: auto;
-    overflow-y: hidden;
+    overflow: auto;
+    max-width: 300px;
     gap: 8px;
 }
 
