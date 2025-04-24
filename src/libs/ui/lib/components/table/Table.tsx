@@ -102,6 +102,11 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
 
         function toggleSort(fieldName: string): void {
 
+            const col = props.columns.find(c => c.propertyName === fieldName)
+
+            // if sortable is false, we return
+            if (!col?.isSortable === false) return
+
             // if we don't have anything to sort by, we shouldn't be here
             if (!sort && !props.removeDefaultSort) {
                 return
@@ -129,7 +134,7 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
 
         const headerRow: Array<JSX.Element> = displayColumns
             .map((col, index) => {
-                const isSortable: boolean = !!col.propertyName
+                const isSortable: boolean = !!col.propertyName && col.isSortable !== false
                 const isCurrentlySorted: boolean = isSortable && col.propertyName === sort?.fieldName
                 const colorClass: string = isCurrentlySorted ? 'black-100' : 'black-60'
                 const sortableClass: string | undefined = isSortable ? styles.sortable : undefined
@@ -151,7 +156,7 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
                                     </Tooltip>
                                 </div>
                             )}
-                            {!props.disableSorting && (
+                            {!props.disableSorting && isSortable && (
                                 <TableSort
                                     iconClass={colorClass}
                                     isCurrentlySorted={isCurrentlySorted}

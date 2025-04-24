@@ -3,6 +3,8 @@
 .skillsContainer {
     display: flex;
     flex-wrap: wrap;
+    overflow-x: auto;
+    overflow-y: hidden;
     gap: 8px;
 }
 
@@ -26,4 +28,8 @@
 
 .activeStatus {
     color: green;
+}
+
+.type {
+    white-space: nowrap;
 }

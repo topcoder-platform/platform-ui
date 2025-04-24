@@ -53,11 +53,11 @@ export function getSorted<T extends { [propertyName: string]: any }>(
 
     if (sortColumn.type === 'date') {
         return sortedData
-            .sort((a: T, b: T) => sortNumbers(
-                (a[sort.fieldName] as Date).getTime(),
-                (b[sort.fieldName] as Date).getTime(),
-                sort.direction,
-            ))
+            .sort((a: T, b: T) => {
+                const aDate = new Date(a[sort.fieldName])
+                const bDate = new Date(b[sort.fieldName])
+                return sortNumbers(aDate.getTime(), bDate.getTime(), sort.direction)
+            })
     }
 
     return sortedData
