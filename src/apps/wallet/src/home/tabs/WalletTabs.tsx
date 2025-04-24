@@ -5,10 +5,8 @@ import { UserProfile } from '~/libs/core'
 import { PageTitle, TabsNavbar, TabsNavItem } from '~/libs/ui'
 
 import { getHashFromTabId, getTabIdFromHash, WalletTabsConfig, WalletTabViews } from './config'
-import { PaymentsTab } from './payments'
 import { WinningsTab } from './winnings'
 import { HomeTab } from './home'
-import { TaxFormsTab } from './tax-forms'
 import styles from './WalletTabs.module.scss'
 
 interface WalletHomeProps {
@@ -41,13 +39,9 @@ const WalletTabs: FC<WalletHomeProps> = (props: WalletHomeProps) => {
                 )}
             </PageTitle>
 
-            {activeTab === WalletTabViews.withdrawalmethods && <PaymentsTab />}
-
             {activeTab === WalletTabViews.winnings && <WinningsTab profile={props.profile} />}
 
             {activeTab === WalletTabViews.home && <HomeTab profile={props.profile} />}
-
-            {activeTab === WalletTabViews.taxforms && <TaxFormsTab profile={props.profile} />}
         </div>
     )
 }

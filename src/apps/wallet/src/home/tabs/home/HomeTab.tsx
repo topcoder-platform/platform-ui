@@ -74,6 +74,8 @@ const HomeTab: FC<HomeTabProps> = () => {
                             />
                         }
                     />
+
+                    {/* TODO: check trolley integration? */}
                     {!walletDetails?.withdrawalMethod.isSetupComplete && (
                         <InfoRow
                             title='Withdrawal Method'
@@ -97,7 +99,7 @@ const HomeTab: FC<HomeTabProps> = () => {
                         />
                     )}
 
-                    {!walletDetails?.taxForm.isSetupComplete && (
+                    {/* {!walletDetails?.taxForm.isSetupComplete && (
                         <InfoRow
                             title='Tax Form'
                             value={walletDetails?.taxForm.isSetupComplete ? 'All set' : <Chip text='Setup Required' />}
@@ -112,7 +114,7 @@ const HomeTab: FC<HomeTabProps> = () => {
                                 />
                             }
                         />
-                    )}
+                    )} */}
                 </div>
             )}
         </div>
