@@ -124,3 +124,20 @@ export async function resendOtp(transactionId: string): Promise<TransactionRespo
         throw new Error('Failed to resend OTP.')
     }
 }
+
+/**
+ * Fetches the Trolley portal link from the server.
+ *
+ * @returns {Promise<string>} A promise that resolves to the Trolley portal link.
+ * @throws {Error} If the response does not contain a valid link.
+ */
+export async function getTrolleyPortalLink(): Promise<string> {
+    const url = `${baseUrl}/trolley/portal-link`
+    const response = await xhrGetAsync<{ link: string }>(url)
+
+    if (!response.link) {
+        throw new Error('Error fetching Trolley portal link')
+    }
+
+    return response.link
+}
