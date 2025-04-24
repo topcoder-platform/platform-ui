@@ -43,4 +43,5 @@ export interface GlobalConfig {
         PROFILES: string
         TALENTSEARCH: string
     }
+    TROLLEY_WIDGET_ORIGIN: string
 }

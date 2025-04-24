@@ -75,3 +75,5 @@ export const USERFLOW_SURVEYS = {
     PROFILES: getReactEnv<string>('USERFLOW_SURVEY_PROFILES', '5cfae36f-0700-41c4-8938-0add4037acb2'),
     TALENTSEARCH: getReactEnv<string>('USERFLOW_SURVEY_TALENTSEARCH', 'd1030c93-dd36-4ae0-b5d0-95004b8e9d32'),
 }
+
+export const TROLLEY_WIDGET_ORIGIN = getReactEnv<string>('TROLLEY_WIDGET_ORIGIN', 'https://widget.trolley.com')
