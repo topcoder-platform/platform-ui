@@ -47,7 +47,7 @@ const tableColumns: TableColumn<CopilotOpportunity>[] = [
             const remainingSkills = copilotOpportunity.skills.slice(3)
             return (
                 <div className={styles.skillsContainer}>
-                    {visibleSkills.map(skill => (
+                    {visibleSkills.map((skill: { id: string | number; name: string }) => (
                         <div key={skill.id} className={styles.skillPill}>
                             {skill.name}
                         </div>
