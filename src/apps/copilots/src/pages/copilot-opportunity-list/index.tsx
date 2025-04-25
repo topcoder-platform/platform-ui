@@ -42,15 +42,29 @@ const tableColumns: TableColumn<CopilotOpportunity>[] = [
         isSortable: false,
         label: 'Skills Required',
         propertyName: 'skills',
-        renderer: (copilotOpportunity: CopilotOpportunity) => (
-            <div className={styles.skillsContainer}>
-                {copilotOpportunity.skills.map((skill: any) => (
-                    <div key={skill.id} className={styles.skillPill}>
-                        {skill.name}
-                    </div>
-                ))}
-            </div>
-        ),
+        renderer: (copilotOpportunity: CopilotOpportunity) => {
+            const visibleSkills = copilotOpportunity.skills.slice(0, 3)
+            const remainingSkills = copilotOpportunity.skills.slice(3)
+            return (
+                <div className={styles.skillsContainer}>
+                    {visibleSkills.map(skill => (
+                        <div key={skill.id} className={styles.skillPill}>
+                            {skill.name}
+                        </div>
+                    ))}
+                    {remainingSkills.length > 0 && (
+                        <div
+                            className={styles.skillPill}
+                            title={remainingSkills.map(skill => skill.name)
+                                .join(', ')}
+                        >
+                            +
+                            {remainingSkills.length}
+                        </div>
+                    )}
+                </div>
+            )
+        },
         type: 'element',
     },
     {
