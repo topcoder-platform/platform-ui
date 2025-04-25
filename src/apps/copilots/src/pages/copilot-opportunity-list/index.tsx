@@ -74,7 +74,7 @@ const tableColumns: TableColumn<CopilotOpportunity>[] = [
         type: 'text',
     },
     {
-        label: 'Hours per week needed',
+        label: 'Hours/Week',
         propertyName: 'numHoursPerWeek',
         type: 'number',
     },

@@ -4,7 +4,6 @@
     display: flex;
     flex-wrap: wrap;
     overflow: auto;
-    max-width: 300px;
     gap: 8px;
 }
 
@@ -13,7 +12,7 @@
     color: #333;
     padding: 4px 8px;
     border-radius: 10px;
-    white-space: nowrap;
+    white-space: break-spaces;
     font-size: 14px;
 }
 
