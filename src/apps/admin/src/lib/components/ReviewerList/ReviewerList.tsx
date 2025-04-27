@@ -177,7 +177,7 @@ const ReviewerList: FC<ReviewerListProps> = props => {
                 type: 'element',
             },
             {
-                label: 'Open Review',
+                label: 'Open Reviews',
                 propertyName: '',
                 renderer: (reviewer: Reviewer) => (
                     // eslint-disable-next-line jsx-a11y/anchor-is-valid
