@@ -71,7 +71,7 @@ export type CopilotOpportunityResponse = SWRResponse<CopilotOpportunity, Copilot
  * @returns {CopilotOpportunityResponse} - The response containing the copilot request data.
  */
 export const useCopilotOpportunity = (opportunityId?: string): CopilotOpportunityResponse => {
-    const url = opportunityId ? buildUrl(`${baseUrl}/copilots/opportunities/${opportunityId}`) : undefined
+    const url = opportunityId ? buildUrl(`${baseUrl}/copilot/opportunity/${opportunityId}`) : undefined
 
     const fetcher = (urlp: string): Promise<CopilotOpportunity> => xhrGetAsync<CopilotOpportunity>(urlp)
         .then(copilotOpportunityFactory)
