@@ -1,5 +1,6 @@
 import { FC, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import moment from 'moment'
 
 import {
     ContentLayout,
@@ -58,6 +59,17 @@ const CopilotOpportunityDetails: FC<{}> = () => {
                     <div className={styles.infoText}>
                         <span className={styles.infoHeading}>Status</span>
                         <span className={styles.infoValue}>{opportunity?.status}</span>
+                    </div>
+                </div>
+                <div className={styles.infoColumn}>
+                    <IconOutline.PlayIcon className={styles.icon} />
+                    <div className={styles.infoText}>
+                        <span className={styles.infoHeading}>Start Date</span>
+                        <span className={styles.infoValue}>
+                            {moment(opportunity?.startDate)
+                                .format('MMM D, YYYY')}
+
+                        </span>
                     </div>
                 </div>
                 <div className={styles.infoColumn}>

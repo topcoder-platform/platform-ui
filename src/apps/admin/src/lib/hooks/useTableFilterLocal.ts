@@ -54,7 +54,24 @@ export function useTableFilterLocal<T>(
                 sortField = mappingSortField[sortField]
             }
 
-            datas = _.orderBy(datas, [sortField], [sort.direction])
+            datas = [...datas].sort((a, b) => {
+                const aValue = (a as Record<string, any>)[sortField]
+                const bValue = (b as Record<string, any>)[sortField]
+
+                // Add special case for id field
+                if (sortField === 'id') {
+                    return sort.direction === 'asc'
+                        ? Number(aValue) - Number(bValue)
+                        : Number(bValue) - Number(aValue)
+                }
+
+                // Existing string comparison logic
+                return sort.direction === 'asc'
+                    ? String(aValue)
+                        .localeCompare(String(bValue))
+                    : String(bValue)
+                        .localeCompare(String(aValue))
+            })
         }
 
         setSortedDatas(datas)

@@ -62,6 +62,7 @@ export function useTableFilterBackend<T>(
             fetchDataRef.current.filterCriteria,
             () => {
                 fetchDataRef.current.isLoading = false
+                window.scrollTo({ left: 0, top: 200 })
             },
             () => {
                 fetchDataRef.current.isLoading = false

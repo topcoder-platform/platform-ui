@@ -58,11 +58,12 @@ const ChallengeTitle: FC<{
 const ReviewSummaryList: FC<ReviewListProps> = props => {
     const columns = useMemo<TableColumn<ReviewSummary>[]>(
         () => [
-            {
-                label: 'Challenge type',
-                propertyName: '',
-                type: 'text',
-            },
+            // Hide the columns temporary, we do not have these data now
+            // {
+            //     label: 'Challenge type',
+            //     propertyName: '',
+            //     type: 'text',
+            // },
             {
                 label: 'Challenge Title',
                 propertyName: 'challengeName',
@@ -76,11 +77,11 @@ const ReviewSummaryList: FC<ReviewListProps> = props => {
                 propertyName: 'legacyChallengeId',
                 type: 'text',
             },
-            {
-                label: 'Current phase',
-                propertyName: '',
-                type: 'text',
-            },
+            // {
+            //     label: 'Current phase',
+            //     propertyName: '',
+            //     type: 'text',
+            // },
             { label: 'Status', propertyName: 'challengeStatus', type: 'text' },
             // I think this column is important, and it exits in `admin-app`
             // but resp does not have it, so I just comment it here

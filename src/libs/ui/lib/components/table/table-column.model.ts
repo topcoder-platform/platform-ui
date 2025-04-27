@@ -11,4 +11,5 @@ export interface TableColumn<T> {
     readonly isExpand?: boolean
     readonly colSpan?: number
     readonly type: TableCellType
+    readonly isSortable?: boolean
 }
