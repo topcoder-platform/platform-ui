@@ -1,7 +1,7 @@
 import { FC, useMemo } from 'react'
 import { format } from 'date-fns'
 
-import { CheckIcon } from '@heroicons/react/solid'
+import { CheckIcon, XIcon } from '@heroicons/react/solid'
 import { useWindowSize, WindowSize } from '~/libs/shared'
 import {
     Button,
@@ -27,6 +27,7 @@ export interface ReviewerListProps {
     approvingReviewerId: number
     onPageChange: (page: number) => void
     onApproveApplication: (reviewer: Reviewer) => void
+    onUnapproveApplication: (reviewer: Reviewer) => void
     onToggleSort: (sort: Sort) => void
 }
 
@@ -35,15 +36,22 @@ const ApproveButton: FC<{
     openReviews: number
     approvingReviewerId: number
     onApproveApplication: ReviewerListProps['onApproveApplication']
+    onUnapproveApplication: ReviewerListProps['onUnapproveApplication']
 }> = props => {
     const handleApprove = useEventCallback((): void => {
         props.onApproveApplication(props.reviewer)
+    })
+
+    const handleRemove = useEventCallback((): void => {
+        props.onUnapproveApplication(props.reviewer)
     })
 
     const isApproving = props.approvingReviewerId === props.reviewer.userId
     const isOtherApproving = props.approvingReviewerId > 0
     const hideApproveButton
         = props.openReviews < 1 || props.reviewer.applicationStatus !== 'Pending'
+    const showRemoveButton
+        = props.reviewer.applicationStatus === 'Approved'
 
     return (
         <>
@@ -53,7 +61,19 @@ const ApproveButton: FC<{
                     className={styles.approvingLoadingSpinner}
                 />
             ) : (
-                !hideApproveButton && (
+                hideApproveButton ? (
+                    showRemoveButton && (
+                        <Button
+                            primary
+                            variant='danger'
+                            onClick={handleRemove}
+                        >
+                            <XIcon className='icon icon-fill' />
+                            {' '}
+                            Remove Reviewer
+                        </Button>
+                    )
+                ) : (
                     <Button
                         primary
                         onClick={handleApprove}
@@ -105,6 +125,7 @@ const Actions: FC<{
     openReviews: number
     approvingReviewerId: number
     onApproveApplication: ReviewerListProps['onApproveApplication']
+    onUnapproveApplication: ReviewerListProps['onUnapproveApplication']
 }> = props => (
     <div className={styles.rowActions}>
         <ApproveButton
@@ -112,6 +133,7 @@ const Actions: FC<{
             openReviews={props.openReviews}
             approvingReviewerId={props.approvingReviewerId}
             onApproveApplication={props.onApproveApplication}
+            onUnapproveApplication={props.onUnapproveApplication}
         />
     </div>
 )
@@ -155,7 +177,7 @@ const ReviewerList: FC<ReviewerListProps> = props => {
                 type: 'element',
             },
             {
-                label: 'Open Review Opp',
+                label: 'Open Review',
                 propertyName: '',
                 renderer: (reviewer: Reviewer) => (
                     // eslint-disable-next-line jsx-a11y/anchor-is-valid
@@ -170,7 +192,8 @@ const ReviewerList: FC<ReviewerListProps> = props => {
                 propertyName: 'reviewsInPast60Days',
                 type: 'number',
             },
-            { label: 'Matching Skills', propertyName: '', type: 'text' },
+            // Hide the columns temporary, we do not have these data now
+            // { label: 'Matching Skills', propertyName: '', type: 'text' },
             {
                 label: '',
                 renderer: (reviewer: Reviewer) => (
@@ -179,6 +202,7 @@ const ReviewerList: FC<ReviewerListProps> = props => {
                         openReviews={props.openReviews}
                         approvingReviewerId={props.approvingReviewerId}
                         onApproveApplication={props.onApproveApplication}
+                        onUnapproveApplication={props.onUnapproveApplication}
                     />
                 ),
                 type: 'action',
