@@ -13,6 +13,7 @@ import {
 import { CopilotOpportunity } from '../../models/CopilotOpportunity'
 import { copilotRoutesMap } from '../../copilots.routes'
 import { CopilotOpportunitiesResponse, useCopilotOpportunities } from '../../services/copilot-opportunities'
+import { ProjectTypeLabels } from '../../constants'
 
 import styles from './styles.module.scss'
 
@@ -20,7 +21,12 @@ const tableColumns: TableColumn<CopilotOpportunity>[] = [
     {
         label: 'Title',
         propertyName: 'projectName',
-        type: 'text',
+        renderer: (copilotOpportunity: CopilotOpportunity) => (
+            <div className={styles.title}>
+                {copilotOpportunity.projectName}
+            </div>
+        ),
+        type: 'element',
     },
     {
         label: 'Status',
@@ -33,23 +39,43 @@ const tableColumns: TableColumn<CopilotOpportunity>[] = [
         type: 'element',
     },
     {
+        isSortable: false,
         label: 'Skills Required',
         propertyName: 'skills',
-        renderer: (copilotOpportunity: CopilotOpportunity) => (
-            <div className={styles.skillsContainer}>
-                {copilotOpportunity.skills.map((skill: any) => (
-                    <div key={skill.id} className={styles.skillPill}>
-                        {skill.name}
-                    </div>
-                ))}
-            </div>
-        ),
+        renderer: (copilotOpportunity: CopilotOpportunity) => {
+            const visibleSkills = copilotOpportunity.skills.slice(0, 3)
+            const remainingSkills = copilotOpportunity.skills.slice(3)
+            return (
+                <div className={styles.skillsContainer}>
+                    {visibleSkills.map((skill: { id: string | number; name: string }) => (
+                        <div key={skill.id} className={styles.skillPill}>
+                            {skill.name}
+                        </div>
+                    ))}
+                    {remainingSkills.length > 0 && (
+                        <div
+                            className={styles.skillPill}
+                            title={remainingSkills.map(skill => skill.name)
+                                .join(', ')}
+                        >
+                            +
+                            {remainingSkills.length}
+                        </div>
+                    )}
+                </div>
+            )
+        },
         type: 'element',
     },
     {
         label: 'Type',
         propertyName: 'type',
-        type: 'text',
+        renderer: (copilotOpportunity: CopilotOpportunity) => (
+            <div className={styles.type}>
+                {ProjectTypeLabels[copilotOpportunity.projectType]}
+            </div>
+        ),
+        type: 'element',
     },
     {
         label: 'Starting Date',
@@ -62,7 +88,7 @@ const tableColumns: TableColumn<CopilotOpportunity>[] = [
         type: 'text',
     },
     {
-        label: 'Hours per week needed',
+        label: 'Hours/Week',
         propertyName: 'numHoursPerWeek',
         type: 'number',
     },
@@ -80,7 +106,10 @@ const CopilotOpportunityList: FC<{}> = () => {
         data: opportunities, isValidating, size, setSize,
     }: CopilotOpportunitiesResponse = useCopilotOpportunities()
 
-    const tableData = useMemo(() => opportunities, [opportunities])
+    const tableData = useMemo(() => opportunities.map(opportunity => ({
+        ...opportunity,
+        type: ProjectTypeLabels[opportunity.projectType] ?? '',
+    })), [opportunities])
 
     function loadMore(): void {
         setSize(size + 1)
@@ -103,6 +132,7 @@ const CopilotOpportunityList: FC<{}> = () => {
                 moreToLoad={isValidating || opportunities.length > 0}
                 onLoadMoreClick={loadMore}
                 onRowClick={handleRowClick}
+                removeDefaultSort
             />
             {opportunitiesLoading && (
                 <LoadingSpinner overlay />
