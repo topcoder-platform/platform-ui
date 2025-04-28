@@ -17,9 +17,11 @@ export interface ChallengeInfo {
     currentPhaseEndDateString?: string // this field is calculated at frontend
     timeLeft?: string // this field is calculated at frontend
     timeLeftColor?: string // this field is calculated at frontend
+    timeLeftStatus?: string // this field is calculated at frontend
     reviewProgress?: number // this field is calculated at frontend
     index?: number // this field is calculated at frontend
     submissions: SubmissionInfo[]
+    role: 'Reviewer' | 'Submitter'
 }
 
 /**
@@ -64,5 +66,6 @@ export function adjustChallengeInfo(
                 : 0,
         timeLeft: timeLeft.durationString,
         timeLeftColor: timeLeft.durationColor,
+        timeLeftStatus: timeLeft.durationStatus,
     }
 }

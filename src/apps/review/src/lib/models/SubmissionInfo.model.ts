@@ -1,4 +1,5 @@
 import { adjustReviewInfo, ReviewInfo } from './ReviewInfo.model'
+import { ReviewResult } from './ReviewResult.model'
 
 /**
  * Challenge submission info
@@ -8,6 +9,7 @@ export interface SubmissionInfo {
     handle: string
     handleColor: string
     review?: ReviewInfo
+    reviews?: ReviewResult[]
 }
 
 /**

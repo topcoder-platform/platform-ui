@@ -8,6 +8,8 @@ import classNames from 'classnames'
 import { PageHeader } from '~/apps/admin/src/lib'
 import { PageTitle } from '~/libs/ui'
 
+import { BreadCrumbData } from '../../models'
+import { BreadCrumb } from '../BreadCrumb'
 import { IconArrowLeft, IconExternalLink } from '../../assets/icons'
 
 import styles from './PageWrapper.module.scss'
@@ -18,11 +20,13 @@ interface Props {
     backUrl?: string
     backAction?: () => void
     titleUrl?: string | 'emptyLink'
-    rightHeader?: ReactNode
+    rightHeader?: ReactNode,
+    breadCrumb: BreadCrumbData[]
 }
 
 export const PageWrapper: FC<PropsWithChildren<Props>> = props => (
     <div className={classNames(styles.container, props.className)}>
+        <BreadCrumb list={props.breadCrumb} />
         <PageTitle>{props.pageTitle}</PageTitle>
         <div className={styles.blockHeader}>
             <div className={styles.blockHeaderRight}>

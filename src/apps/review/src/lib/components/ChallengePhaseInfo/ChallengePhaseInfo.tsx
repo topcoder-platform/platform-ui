@@ -5,6 +5,7 @@ import { FC, useMemo } from 'react'
 import classNames from 'classnames'
 
 import { ChallengeInfo } from '../../models'
+import { ProgressBar } from '../ProgressBar'
 
 import styles from './ChallengePhaseInfo.module.scss'
 
@@ -14,18 +15,28 @@ interface Props {
 }
 
 export const ChallengePhaseInfo: FC<Props> = (props: Props) => {
+    const PROGRESS_TYPE = 'progress'
     const uiItems = useMemo(() => {
         const data = props.challengeInfo
         return [
             {
+                icon: 'icon-review',
                 title: 'Phase',
                 value: data.currentPhase,
             },
             {
+                icon: 'icon-handle',
+                title: 'My Role',
+                value: data.role,
+            },
+            {
+                icon: 'icon-event',
                 title: 'Phase End Date',
                 value: data.currentPhaseEndDateString,
             },
             {
+                icon: 'icon-timer',
+                status: data.timeLeftStatus,
                 style: {
                     color: data.timeLeftColor,
                 },
@@ -34,23 +45,54 @@ export const ChallengePhaseInfo: FC<Props> = (props: Props) => {
             },
             {
                 title: 'Review Progress',
-                value: data.reviewProgress
-                    ? `${data.reviewProgress}% Completed`
-                    : '-',
+                type: PROGRESS_TYPE,
+                value: data.reviewProgress,
             },
         ]
     }, [props.challengeInfo])
     return (
         <div className={classNames(styles.container, props.className)}>
-            {uiItems.map(item => (
-                <div className={styles.blockItem} key={item.title}>
-                    <strong>
-                        {item.title}
-                        :
-                    </strong>
-                    <span style={item.style}>{item.value}</span>
-                </div>
-            ))}
+            {uiItems.map(item => {
+                if (item.type === PROGRESS_TYPE) {
+                    return (
+                        <div
+                            className={classNames(
+                                styles.progress,
+                                styles.blockItem,
+                            )}
+                            key={item.title}
+                        >
+                            <ProgressBar
+                                progress={item.value}
+                                withoutPercentage
+                                progressWidth='160px'
+                            />
+                            <div className={styles.progressText}>
+                                <span>Review Progress</span>
+                                <strong>
+                                    {item.value}
+                                    %
+                                </strong>
+                            </div>
+                        </div>
+                    )
+                }
+
+                return (
+                    <div className={styles.blockItem} key={item.title}>
+                        <span className={styles.circleWrapper}>
+                            <i className={item.icon} />
+                        </span>
+                        <div>
+                            <span>{item.title}</span>
+                            <strong style={item.style}>
+                                {item.status && <i className={`icon-${item.status}`} />}
+                                {item.value}
+                            </strong>
+                        </div>
+                    </div>
+                )
+            })}
         </div>
     )
 }

@@ -1,8 +1,8 @@
 /**
  * Table Winners.
  */
-import { FC, useMemo } from 'react'
-import { Link } from 'react-router-dom'
+import { FC, useCallback, useMemo } from 'react'
+import { Link, NavLink } from 'react-router-dom'
 import _ from 'lodash'
 import classNames from 'classnames'
 
@@ -11,9 +11,10 @@ import { useWindowSize, WindowSize } from '~/libs/shared'
 import { TableMobile } from '~/apps/admin/src/lib/components/common/TableMobile'
 import { Table, TableColumn } from '~/libs/ui'
 
-import { ProjectResult } from '../../models'
+import { ProjectResult, ReviewResult } from '../../models'
 import { TableWrapper } from '../TableWrapper'
-import { formatOrdinals } from '../../utils'
+import { ORDINAL_SUFFIX } from '../../../config/index.config'
+import { getFinalScore } from '../../utils'
 
 import styles from './TableWinners.module.scss'
 
@@ -24,12 +25,18 @@ interface Props {
 
 export const TableWinners: FC<Props> = (props: Props) => {
     const { width: screenWidth }: WindowSize = useWindowSize()
-    const isTablet = useMemo(() => screenWidth <= 1120, [screenWidth])
+    const isTablet = useMemo(() => screenWidth <= 744, [screenWidth])
 
     const firstSubmission: ProjectResult | undefined = useMemo(
         () => props.datas[0],
         [props.datas],
     )
+
+    const finalScore = useCallback((data: ReviewResult[] | undefined) => getFinalScore(data), [])
+
+    const prevent = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
+        e.preventDefault()
+    }, [])
 
     const columns = useMemo<TableColumn<ProjectResult>[]>(
         () => [
@@ -39,26 +46,28 @@ export const TableWinners: FC<Props> = (props: Props) => {
                 renderer: (data: ProjectResult) => (
                     <div className={styles.blockPlacementContainer}>
                         {data.placement ? (
-                            <div
-                                className={classNames(
-                                    styles.blockPlacement,
-                                    styles[`blockPlacement-${data.placement}`],
-                                )}
-                            >
-                                {formatOrdinals(data.placement)}
-                            </div>
+                            <i
+                                className={`icon-${ORDINAL_SUFFIX.get(
+                                    data.placement,
+                                )}`}
+                            />
                         ) : undefined}
                         <span>
-                            <span className={styles.textBlue}>
+                            <NavLink
+                                to='#'
+                                onClick={prevent}
+                            >
                                 {data.submissionId}
-                            </span>
-                            {' '}
+                            </NavLink>
+                            <span className={styles.spacing}>-</span>
                             <span>
-                                (
-                                <span style={{ color: data.handleColor }}>
+                                <NavLink
+                                    to='#'
+                                    onClick={prevent}
+                                    style={{ color: data.handleColor }}
+                                >
                                     {data.handle}
-                                </span>
-                                )
+                                </NavLink>
                             </span>
                         </span>
                     </div>
@@ -72,42 +81,44 @@ export const TableWinners: FC<Props> = (props: Props) => {
                         to={`./../scorecard-details/${data.submissionId}?viewMode=true`}
                         className={styles.textBlue}
                     >
-                        {data.finalScore}
+                        {finalScore(data.reviews)}
                     </Link>
                 ),
                 type: 'element',
             },
             ...(firstSubmission?.reviews ?? [])
-                .map(
-                    (review, index) => [
-                        {
-                            label: 'Review Date',
-                            renderer: (data: ProjectResult) => (
-                                <span>{data.reviews[index]?.createdAtString}</span>
-                            ),
-                            type: 'element',
-                        },
-                        {
-                            label: 'Score',
-                            renderer: (data: ProjectResult) => (
+                .map((review, index) => [
+                    {
+                        label: 'Review Date',
+                        renderer: (data: ProjectResult) => (
+                            <span>
+                                {data.reviews[index]?.createdAtString}
+                            </span>
+                        ),
+                        type: 'element',
+                    },
+                    {
+                        label: 'Score',
+                        renderer: (data: ProjectResult) => (
+                            <Link
+                                to={`./../scorecard-details/${data.submissionId}?viewMode=true`}
+                                className={styles.textBlue}
+                            >
+                                {data.reviews[index]?.score}
+                            </Link>
+                        ),
+                        type: 'element',
+                    },
+                    {
+                        className: styles.tableCellNoWrap,
+                        label: 'Appeals',
+                        renderer: (data: ProjectResult) => (
+                            <>
+                                [
                                 <Link
-                                    to={`./../scorecard-details/${data.submissionId}?viewMode=true`}
-                                    className={styles.textBlue}
-                                >
-                                    {data.reviews[index]?.score}
-                                </Link>
-                            ),
-                            type: 'element',
-                        },
-                        {
-                            className: styles.tableCellNoWrap,
-                            label: 'Appeals',
-                            renderer: (data: ProjectResult) => (
-                                <Link
+                                    className={classNames(styles.appealsLink, 'last-element')}
                                     to={`./../scorecard-details/${data.submissionId}?viewMode=true`}
                                 >
-                                    [
-                                    {' '}
                                     <span className={styles.textBlue}>
                                         0
                                     </span>
@@ -120,17 +131,16 @@ export const TableWinners: FC<Props> = (props: Props) => {
                                                 .length
                                         }
                                     </span>
-                                    {' '}
-                                    ]
                                 </Link>
-                            ),
-                            type: 'element',
-                        },
-                    ] as TableColumn<ProjectResult>[],
-                )
+                                ]
+                            </>
+                        ),
+                        type: 'element',
+                    },
+                ] as TableColumn<ProjectResult>[])
                 .reduce((accumulator, value) => accumulator.concat(value), []),
         ],
-        [firstSubmission],
+        [firstSubmission, finalScore, prevent],
     )
 
     const columnsMobile = useMemo<MobileTableColumn<ProjectResult>[][]>(
@@ -157,7 +167,13 @@ export const TableWinners: FC<Props> = (props: Props) => {
     )
 
     return (
-        <TableWrapper className={classNames(styles.container, props.className)}>
+        <TableWrapper
+            className={classNames(
+                styles.container,
+                props.className,
+                'enhanced-table',
+            )}
+        >
             {isTablet ? (
                 <TableMobile columns={columnsMobile} data={props.datas} />
             ) : (

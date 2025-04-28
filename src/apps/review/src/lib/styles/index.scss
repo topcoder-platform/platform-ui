@@ -1,8 +1,14 @@
+@import '@libs/ui/styles/includes';
+@import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300..900;1,300..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+
+$icons: review appeal submission warning error event timer upload reopen 1st 2nd 3rd file handle;
+
 :root {
-    --Yellow: #c9ab00;
-    --Red: #ef3a3a;
-    --Green: #137d60;
-    --RedError: #e91703;
+    --Yellow: #CF8835;
+    --Red: #C1294F;
+    --RedError: #D34E3B;
     --Primary: #545f71;
     --Secondary: #9ba5b7;
     --Tertiary: #eef1f4;
@@ -10,4 +16,173 @@
     --DarkBlue: #2b3545;
     --VeryLightBlue: #e0f3ff;
     --Link: #0d61bf;
+    --FontColor: #0a0a0a;
+    --GrayFontColor: #767676;
+    --TableBorderColor: #A8A8A8;
+    --ButtonColor: #0B3D56;
+    --Actived: #00797A;
+    --TableSubHeader: #E0E4E8;
+    --TableColumn: rgba(224, 228, 232, 0.3);
+    --invertButtonColor: #fff;
+    --Appeal: #E9ECEF;
+    --EditorBorder: rgba(168, 168, 168, 0.5);
+}
+
+//Icons
+@each $icon in $icons {
+    .icon-#{$icon} {
+        background: url('../assets/icons/icon-#{$icon}.svg') no-repeat;
+        background-size: 100% 100%;
+        display: block;
+        flex-shrink: 0;
+        height: 20px;
+        width: 20px;
+    }
+}
+
+//Reskin table
+.enhanced-table {
+    table {
+        width: 100%;
+        thead {
+            tr {
+                th {
+                    background-color: var(--invertButtonColor);
+                    border-bottom: var(--TableBorderColor) solid 1px;
+                    & > div {
+                        color: var(--FontColor) !important;
+                        font-family: "Nunito Sans", sans-serif;
+                        font-size: 14px;
+                        font-weight: 700;
+                        line-height: 20px;
+                        text-transform: none;
+                    }
+                    &:first-child {
+                        padding-left: 16px !important;
+                    }
+                }
+            }
+        }
+        td {
+            @include gtelg {
+                background-color: var(--invertButtonColor);
+            }
+            border-bottom: var(--TableBorderColor) solid 1px;
+            color: var(--FontColor);
+            font-family: "Nunito Sans", sans-serif;
+            font-size: 14px;
+            font-weight: normal;
+            white-space: nowrap;
+            max-width: unset;
+            &:first-child,
+            &:last-child {
+                border-radius: 0;
+            }
+            a {
+                color: #0d61bf;
+            }
+            &:first-child {
+                @include ltemd {
+                    font-weight: 600;
+                    text-transform: none;
+                }
+            }
+        }
+    }
+}
+
+.react-select-container {
+    font-weight: normal;
+    .select__control {
+        border-color: #a8a8a8;
+        &.select__control--menu-is-open {
+            .select__indicator {
+                margin-top: -2px;
+                transform: rotate(-180deg);
+            }
+        }
+    }
+    .select__single-value {
+        font-family: 'Nunito Sans', sans-serif;
+        color: var(--FontColor);
+        font-size: 16px;
+        line-height: 22px;
+    }
+    .select__value-container {
+        padding-left: $sp-4;
+        padding-right: $sp-4;
+    }
+    .select__indicator-separator {
+        display: none;
+    }
+    .select__indicator {
+        background: url('../assets/icons/selector.svg') no-repeat;
+        background-size: 22px 22px;
+        height: 22px;
+        margin-right: $sp-4;
+        width: 22px;
+        padding: 0;
+        svg {
+            display: none;
+        }
+    }
+    .select__option {
+        font-family: 'Nunito Sans', sans-serif;
+        color: var(--FontColor);
+        font-size: 16px;
+        padding-left: $sp-4;
+        padding-right: $sp-4;
+    }
+    &.error {
+        .select__control {
+            border-color: var(--RedError);
+        }
+    }
+}
+
+.borderButton {
+    border: var(--ButtonColor) solid 1px;
+    border-radius: $sp-1;
+    color: var(--ButtonColor);
+    text-decoration-line: underline;
+    font-family: "Nunito Sans", sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 22px;
+    padding: $sp-2 $sp-6;
+    text-decoration: none;
+    transition: all 0.3s ease-in-out;
+    &:hover {
+        background-color: var(--ButtonColor);
+        color: var(--invertButtonColor);
+    }
+}
+
+.filledButton {
+    @extend .borderButton;
+    background-color: var(--ButtonColor);
+    color: var(--invertButtonColor);
+    &:hover {
+        border-color: var(--Actived);
+        background-color: var(--Actived);
+    }
+}
+
+.cancelButton {
+    @extend .borderButton;
+    border-color: var(--Red);
+    color: var(--Red);
+    &:hover {
+        background-color: var(--Red);
+        color: var(--invertButtonColor);
+    }
+}
+
+.errorMessage {
+    color: var(--RedError);
+    font-family: "Nunito Sans", sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 20px;
+    white-space: nowrap;
 }

@@ -9,12 +9,15 @@ import {
     ChallengeInfo,
     ProjectResult,
     RegistrationInfo,
+    Screening,
     SubmissionInfo,
 } from '../models'
 import {
     fetchChallengeInfo,
+    fetchChallengeInfoById,
     fetchProjectResults,
     fetchRegistrations,
+    fetchScreenings,
     fetchSubmissions,
 } from '../services'
 
@@ -23,23 +26,32 @@ export interface useFetchChallengeInfoProps {
     registrations: RegistrationInfo[]
     submissions: SubmissionInfo[]
     projectResults: ProjectResult[]
+    screenings: Screening[]
 }
 
 /**
  * Fetch challenge info
  * @returns challenge info
  */
-export function useFetchChallengeInfo(): useFetchChallengeInfoProps {
+export function useFetchChallengeInfo(id?: string, role?: string): useFetchChallengeInfoProps {
     const [challengeInfo, setChallengeInfo] = useState<ChallengeInfo>()
+    const [screenings, setScreenings] = useState<Screening[]>([])
     const [registrations, setRegistrations] = useState<RegistrationInfo[]>([])
     const [submissions, setSubmissions] = useState<SubmissionInfo[]>([])
     const [projectResults, setProjectResults] = useState<ProjectResult[]>([])
     const loadChallengeInfo = useCallback(() => {
-        fetchChallengeInfo()
-            .then(result => {
-                setChallengeInfo(result)
-            })
-    }, [])
+        if (id) {
+            fetchChallengeInfoById(id)
+                .then(result => {
+                    setChallengeInfo(result)
+                })
+        } else {
+            fetchChallengeInfo()
+                .then(result => {
+                    setChallengeInfo(result)
+                })
+        }
+    }, [id])
 
     const loadRegistrations = useCallback(() => {
         fetchRegistrations()
@@ -49,11 +61,11 @@ export function useFetchChallengeInfo(): useFetchChallengeInfoProps {
     }, [])
 
     const loadSubmissions = useCallback(() => {
-        fetchSubmissions()
+        fetchSubmissions(role)
             .then(results => {
                 setSubmissions(results)
             })
-    }, [])
+    }, [role])
 
     const loadProjectResults = useCallback(() => {
         fetchProjectResults()
@@ -62,17 +74,26 @@ export function useFetchChallengeInfo(): useFetchChallengeInfoProps {
             })
     }, [])
 
+    const loadScreenings = useCallback(() => {
+        fetchScreenings()
+            .then(results => {
+                setScreenings(results)
+            })
+    }, [])
+
     useOnComponentDidMount(() => {
         loadChallengeInfo()
         loadRegistrations()
         loadSubmissions()
         loadProjectResults()
+        loadScreenings()
     })
 
     return {
         challengeInfo,
         projectResults,
         registrations,
+        screenings,
         submissions,
     }
 }

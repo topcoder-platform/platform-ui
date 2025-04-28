@@ -2,9 +2,7 @@
  * Fetch review
  */
 
-import { useCallback, useState } from 'react'
-
-import { useOnComponentDidMount } from '~/apps/admin/src/lib/hooks'
+import { useCallback, useEffect, useState } from 'react'
 
 import { AppealInfo, ReviewInfo, ScorecardInfo } from '../models'
 import { fetchAppeals, fetchReviewInfo, fetchScorecards } from '../services'
@@ -43,11 +41,11 @@ export function useFetchReviews(isEdit: boolean): useFetchReviewsProps {
             })
     }, [isEdit])
 
-    useOnComponentDidMount(() => {
+    useEffect(() => {
         loadScorecard()
         loadAppeals()
         loadReviewInfo()
-    })
+    }, [loadScorecard, loadAppeals, loadReviewInfo])
 
     return {
         appeals,

@@ -18,21 +18,26 @@ export function formatDurationDate(
 ): {
     durationString: string
     durationColor: string
+    durationStatus: string
 } {
     const timeLeftDuration = moment.duration(
         moment(startDate)
             .diff(moment(endDate)),
     )
     const durationMilisecond = timeLeftDuration.asMilliseconds()
-    let durationColor = 'var(--Green)'
+    let durationColor = ''
+    let durationStatus = 'normal'
     if (durationMilisecond < 0) {
         durationColor = 'var(--Red)'
+        durationStatus = 'error'
     } else if (durationMilisecond < THRESHOLD_SHORT_TIME) {
         durationColor = 'var(--Yellow)'
+        durationStatus = 'warning'
     }
 
     return {
         durationColor,
+        durationStatus,
         durationString: (timeLeftDuration as any).format('d[d] h[h] m[m]', {
             trim: 'both',
         }),

@@ -10,8 +10,11 @@
     top: 0;
     background-color: white;
     z-index: 1;
-    padding-top: 20px;
-    padding-bottom: 17px;
+    padding-top: $sp-6;
+    padding-bottom: $sp-6;
+    @include ltemd {
+        top: 46px;
+    }
 }
 
 .blockTitleLeft {
@@ -22,20 +25,20 @@
 }
 
 .textTitle {
-    font-size: 24px;
+    color: var(--FontColor);
+    font-family: "Figtree", sans-serif;
+    font-size: 26px;
     line-height: 30px;
-    /* identical to box height, or 125% */
-    letter-spacing: -0.02em;
     font-weight: $font-weight-bold;
 }
 
 .textTotalScore,
 .textCompleted {
+    color: var(--FontColor);
+    font-family: 'Nunito Sans', sans-serif;
     font-size: 16px;
     line-height: 22px;
-    /* identical to box height, or 138% */
-    letter-spacing: -0.02em;
-    font-weight: $font-weight-semibold;
+    font-weight: $font-weight-bold;
 }
 
 .textTotalScore {
@@ -47,6 +50,6 @@
 
 .blockBtns {
     display: flex;
-    gap: 24px;
+    gap: $sp-4;
     flex-wrap: wrap;
 }

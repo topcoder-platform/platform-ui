@@ -1,6 +1,7 @@
 import { ReactComponent as IconArrowLeft } from './arrow-left.svg'
 import { ReactComponent as IconExternalLink } from './external-link.svg'
-import { ReactComponent as IconChevronDown } from './chevron-down.svg'
+import { ReactComponent as IconChevronDown } from './selector.svg'
+import { ReactComponent as IconError } from './icon-error.svg'
 
 export * from './editor/bold'
 export * from './editor/code'
@@ -18,4 +19,4 @@ export * from './editor/table'
 export * from './editor/unordered-list'
 export * from './editor/upload-file'
 
-export { IconArrowLeft, IconExternalLink, IconChevronDown }
+export { IconArrowLeft, IconExternalLink, IconChevronDown, IconError }

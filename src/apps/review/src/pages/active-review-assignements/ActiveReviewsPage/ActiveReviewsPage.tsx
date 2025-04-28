@@ -1,20 +1,19 @@
 /**
  * Active Reviews Page.
  */
-import { ChangeEvent, FC, useEffect, useState } from 'react'
+import { FC, useEffect, useMemo, useState } from 'react'
+import { toString } from 'lodash'
+import Select, { SingleValue } from 'react-select'
 import classNames from 'classnames'
+
+import { SelectOption } from '~/apps/admin/src/lib/models'
 
 import {
     useFetchActiveReviews,
     useFetchActiveReviewsProps,
 } from '../../../lib/hooks'
 import { CHALLENGE_TYPE_SELECT_OPTIONS } from '../../../config/index.config'
-import {
-    FieldSelect,
-    PageWrapper,
-    TableActiveReviews,
-    TableNoRecord,
-} from '../../../lib'
+import { PageWrapper, TableActiveReviews, TableNoRecord } from '../../../lib'
 
 import styles from './ActiveReviewsPage.module.scss'
 
@@ -23,33 +22,39 @@ interface Props {
 }
 
 export const ActiveReviewsPage: FC<Props> = (props: Props) => {
-    const [challengeType, setChallengeType] = useState('')
+    const [challengeType, setChallengeType] = useState<
+        SingleValue<SelectOption>
+    >(CHALLENGE_TYPE_SELECT_OPTIONS[0])
     const { activeReviews, loadActiveReviews }: useFetchActiveReviewsProps
         = useFetchActiveReviews()
 
+    const breadCrumb = useMemo(
+        () => [{ index: 1, label: 'My Active Challenges' }],
+        [],
+    )
+
     useEffect(() => {
-        loadActiveReviews(challengeType)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [challengeType])
+        if (challengeType) {
+            loadActiveReviews(toString(challengeType.label))
+        }
+    }, [challengeType, loadActiveReviews])
 
     return (
         <PageWrapper
-            pageTitle='Active Reviews'
+            pageTitle='My Active Challenges'
             className={classNames(styles.container, props.className)}
+            breadCrumb={breadCrumb}
         >
-            <FieldSelect
-                name='challengeType'
-                label='Challenge type'
-                placeholder='Select'
-                options={CHALLENGE_TYPE_SELECT_OPTIONS}
-                value={challengeType}
-                onChange={function onChange(
-                    event: ChangeEvent<HTMLInputElement>,
-                ) {
-                    setChallengeType(event.target.value)
-                }}
-                classNameWrapper={styles.fieldSelect}
-            />
+            <div className={styles['filter-bar']}>
+                <label>Challenge type</label>
+                <Select
+                    className='react-select-container'
+                    classNamePrefix='select'
+                    options={CHALLENGE_TYPE_SELECT_OPTIONS}
+                    defaultValue={challengeType}
+                    onChange={setChallengeType}
+                />
+            </div>
 
             {activeReviews.length === 0 ? (
                 <TableNoRecord className={styles.blockTable} />

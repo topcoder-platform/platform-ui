@@ -6,40 +6,55 @@
 }
 
 .blockContent {
-    margin-top: 38px;
-    border: 1px solid var(--Tertiary);
-    border-radius: 8px;
-    padding: 24px 24px 36px;
+    margin-top: 64px;
+    padding-bottom: 40px;
 }
 
 .textTitle {
-    font-size: 24px;
+    color: var(--FontColor);
+    font-family: "Figtree", sans-serif;
+    font-size: 26px;
     line-height: 30px;
-    /* identical to box height, or 125% */
-    letter-spacing: -0.02em;
-    font-weight: $font-weight-bold;
+    font-weight: 700;
 }
 
 .blockTabsContainer {
-    margin-top: 24px;
-    margin-bottom: 18px;
+    margin-top: $sp-6;
+    margin-bottom: $sp-4;
 }
 
 .blockReviewers {
     display: flex;
+    flex-wrap: wrap;
     gap: 40px;
     align-items: center;
+    @include ltemd {
+        padding: 12px 8px;
+        justify-content: space-between;
+        gap: 6px;
+    }
 }
 
 .blockReviewer {
     display: flex;
     gap: 5px;
+    font-family: "Nunito Sans", sans-serif;
+    font-weight: 700;
     font-size: 14px;
     line-height: 19px;
-    /* identical to box height, or 136% */
-    letter-spacing: -0.02em;
 
-    strong {
-        font-weight: $font-weight-semibold;
+    strong,
+    a {
+        white-space: nowrap;
     }
+    strong {
+        color: var(--FontColor);
+    }
+}
+
+.summary {
+    align-items: center;
+    justify-content: space-between;
+    display: flex;
+    flex-wrap: wrap;
 }

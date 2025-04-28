@@ -11,18 +11,17 @@ export const NullLayout: FC<PropsWithChildren> = props => (
 )
 
 export const Layout: FC<PropsWithChildren> = props => (
-    <ContentLayout
-        innerClass={styles.contantentLayoutInner}
-        outerClass={styles.contentLayoutOuter}
-    >
-        <div className={styles.layout}>
-            <NavTabs />
-
-            <div className={styles.main}>
-                {props.children}
+    <>
+        <NavTabs />
+        <ContentLayout
+            innerClass={styles.contantentLayoutInner}
+            outerClass={styles.contentLayoutOuter}
+        >
+            <div className={styles.layout}>
+                <div className={styles.main}>{props.children}</div>
             </div>
-        </div>
-    </ContentLayout>
+        </ContentLayout>
+    </>
 )
 
 export default Layout

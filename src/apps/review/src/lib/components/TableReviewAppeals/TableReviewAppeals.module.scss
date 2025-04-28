@@ -3,9 +3,39 @@
 .container {
     display: flex;
     flex-direction: column;
+    @include ltemd {
+        &:global(.enhanced-table) {
+            table {
+                tbody {
+                    tr:has(:global(.last-element)) {
+                        td {
+                            border-bottom: 0;
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 .textBlue,
 .textBlue:hover {
     color: $link-blue-dark;
+}
+
+.notReviewed {
+    color: var(--GrayFontColor);
+}
+
+.submit {
+    align-items: center;
+    display: flex;
+    font-weight: 700;
+    & > i {
+        margin-right: $sp-2;
+    }
+}
+
+.appealsLink {
+    padding: 0 $sp-1;
 }

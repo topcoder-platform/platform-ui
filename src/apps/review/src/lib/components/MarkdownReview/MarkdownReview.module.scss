@@ -2,8 +2,11 @@
 
 .container {
     display: flex;
+    font-family: "Nunito Sans", sans-serif;
+    font-size: 14px;
     flex-direction: column;
-    color: var(--Primary);
+    line-height: 20px;
+    color: var(--FontColor);
 
     blockquote {
         margin: 0;

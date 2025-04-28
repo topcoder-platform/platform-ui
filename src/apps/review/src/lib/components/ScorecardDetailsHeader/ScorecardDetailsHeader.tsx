@@ -2,10 +2,10 @@
  * Scorecard Details Header.
  */
 import { FC } from 'react'
-
-import { Button } from '~/libs/ui'
+import classNames from 'classnames'
 
 import { ScorecardInfo } from '../../models'
+import { ProgressBar } from '../ProgressBar'
 
 import styles from './ScorecardDetailsHeader.module.scss'
 
@@ -19,41 +19,28 @@ interface Props {
 }
 
 export const ScorecardDetailsHeader: FC<Props> = (props: Props) => (
-    <div className={styles.blockTitle}>
+    <div className={classNames(styles.blockTitle, props.isEdit ? 'edit' : '')}>
         <div className={styles.blockTitleLeft}>
             <span className={styles.textTitle}>
                 {props.scorecardInfo?.name ?? ''}
             </span>
             <span className={styles.textCompleted}>
-                {`${props.reviewProgress ?? '0'}% Completed`}
+                <ProgressBar progress={props.reviewProgress ?? 0} />
             </span>
         </div>
 
-        {props.isEdit ? (
-            <div className={styles.blockBtns}>
-                <Button
-                    label='Expand All'
-                    secondary
-                    size='lg'
-                    onClick={props.expandAll}
-                />
-                <Button
-                    label='Collapse All'
-                    secondary
-                    size='lg'
-                    onClick={props.collapseAll}
-                />
-                <div className={styles.textTotalScore}>
-                    <span>Total Score:</span>
-                    <span>{props.totalScore}</span>
-                </div>
-            </div>
-        ) : (
+        <div className={styles.blockBtns}>
+            <button type='button' className='borderButton' onClick={props.expandAll}>
+                Expand All
+            </button>
+            <button type='button' className='borderButton' onClick={props.collapseAll}>
+                Collapse All
+            </button>
             <div className={styles.textTotalScore}>
                 <span>Total Score:</span>
                 <span>{props.totalScore}</span>
             </div>
-        )}
+        </div>
     </div>
 )
 

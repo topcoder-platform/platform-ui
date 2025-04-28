@@ -8,10 +8,9 @@ import {
     useForm,
     UseFormReturn,
 } from 'react-hook-form'
-import _ from 'lodash'
+import _, { bind } from 'lodash'
 import classNames from 'classnames'
 
-import { Button } from '~/libs/ui'
 import { yupResolver } from '@hookform/resolvers/yup'
 
 import { MarkdownReview } from '../MarkdownReview'
@@ -63,14 +62,15 @@ export const AppealComment: FC<Props> = (props: Props) => {
             )}
 
             {!showResponseForm && !showAppealResponse && (
-                <Button
-                    secondary
-                    size='lg'
-                    label='Respond to Appeal'
+                <button
+                    type='button'
+                    className='borderButton'
                     onClick={function onClick() {
                         setShowResponseForm(true)
                     }}
-                />
+                >
+                    Respond to Appeal
+                </button>
             )}
 
             {showResponseForm && (
@@ -78,6 +78,7 @@ export const AppealComment: FC<Props> = (props: Props) => {
                     className={styles.blockForm}
                     onSubmit={handleSubmit(onSubmit)}
                 >
+                    <label>Respond Appeal</label>
                     <Controller
                         name='response'
                         control={control}
@@ -99,20 +100,16 @@ export const AppealComment: FC<Props> = (props: Props) => {
                         }}
                     />
                     <div className={styles.blockBtns}>
-                        <Button
-                            type='submit'
-                            primary
-                            size='lg'
-                            label='Submit'
-                        />
-                        <Button
-                            secondary
-                            size='lg'
-                            label='Cancel'
-                            onClick={function onClick() {
-                                setShowResponseForm(false)
-                            }}
-                        />
+                        <button className='filledButton' type='submit'>
+                            Submit Appeal
+                        </button>
+                        <button
+                            type='button'
+                            className='borderButton'
+                            onClick={bind(setShowResponseForm, undefined, false)}
+                        >
+                            Cancel
+                        </button>
                     </div>
                 </form>
             )}

@@ -12,8 +12,8 @@ interface Props {
 
 export const ChallengeLinks: FC<Props> = (props: Props) => (
     <div className={classNames(styles.container, props.className)}>
-        <button type='button' className={styles.blockLink}>Contact Manager</button>
-        <button type='button' className={styles.blockLink}>Forum</button>
+        <button type='button' className='borderButton'>Contact Manager</button>
+        <button type='button' className='borderButton'>Forum</button>
     </div>
 )
 

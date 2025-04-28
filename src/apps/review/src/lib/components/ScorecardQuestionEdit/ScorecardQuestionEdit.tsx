@@ -1,13 +1,7 @@
 /**
  * Scorecard Question Edit.
  */
-import {
-    ChangeEvent,
-    Dispatch,
-    FC,
-    SetStateAction,
-    useMemo,
-} from 'react'
+import { Dispatch, FC, SetStateAction, useMemo } from 'react'
 import {
     Control,
     Controller,
@@ -17,20 +11,23 @@ import {
     UseFieldArrayReturn,
     UseFormTrigger,
 } from 'react-hook-form'
-import _ from 'lodash'
+import _, { capitalize, compact, isEmpty } from 'lodash'
+import Select, { SingleValue } from 'react-select'
 import classNames from 'classnames'
 
-import { Button } from '~/libs/ui'
-
 import { FieldMarkdownEditor } from '../FieldMarkdownEditor'
-import { FieldSelect } from '../FieldSelect'
 import { IconChevronDown } from '../../assets/icons'
 import {
     QUESTION_RESPONSE_OPTIONS,
     QUESTION_YES_NO_OPTIONS,
 } from '../../../config/index.config'
 import { MarkdownReview } from '../MarkdownReview'
-import { FormReviews, ReviewItemInfo, ScorecardQuestion } from '../../models'
+import {
+    FormReviews,
+    ReviewItemInfo,
+    ScorecardQuestion,
+    SelectOption,
+} from '../../models'
 
 import styles from './ScorecardQuestionEdit.module.scss'
 
@@ -42,7 +39,7 @@ interface Props {
     sectionIndex: number
     questionIndex: number
     control: Control<FormReviews, any>
-    formFieldItemIndex: number
+    fieldIndex: number
     errors: FieldErrors<FormReviews>
     isTouched: { [key: string]: boolean }
     setIsTouched: Dispatch<
@@ -52,15 +49,17 @@ interface Props {
     >
     trigger: UseFormTrigger<FormReviews>
     recalculateReviewProgress: () => void
-    isExpand: {[key: string]: boolean}
-    setIsExpand: Dispatch<SetStateAction<{
-        [key: string]: boolean;
-    }>>
+    isExpand: { [key: string]: boolean }
+    setIsExpand: Dispatch<
+        SetStateAction<{
+            [key: string]: boolean
+        }>
+    >
 }
 
 export const ScorecardQuestionEdit: FC<Props> = (props: Props) => {
     const isExpand = props.isExpand[props.reviewItem.id]
-    const responseOptions = useMemo(() => {
+    const responseOptions = useMemo<SelectOption[]>(() => {
         if (props.scorecardQuestion.type === 'SCALE') {
             const length
                 = props.scorecardQuestion.scaleMax
@@ -84,14 +83,18 @@ export const ScorecardQuestionEdit: FC<Props> = (props: Props) => {
     }, [props.scorecardQuestion])
 
     const errorMessage = useMemo(
-        () => (props.isTouched[
-            `reviews.${props.formFieldItemIndex}.initialAnswer.message`
-        ]
-            ? _.get(
-                props.errors,
-                `reviews.${props.formFieldItemIndex}.initialAnswer.message`,
-            )
-            : ''),
+        () => {
+            if (props.isTouched[
+                `reviews.${props.fieldIndex}.initialAnswer.message`
+            ]) {
+                return _.get(
+                    props.errors,
+                    `reviews.${props.fieldIndex}.initialAnswer.message`,
+                )
+            }
+
+            return ''
+        },
         [props],
     )
 
@@ -99,8 +102,8 @@ export const ScorecardQuestionEdit: FC<Props> = (props: Props) => {
         const results: { [key: string]: string } = {}
         _.forEach(
             props.reviewItem.reviewItemComments,
-            (commentItem, commentItemIndex) => {
-                results[`${commentItemIndex}.content`]
+            (commentItem, idx) => {
+                results[`${idx}.content`]
                     = commentItem.content ?? ''
             },
         )
@@ -113,18 +116,18 @@ export const ScorecardQuestionEdit: FC<Props> = (props: Props) => {
     }: UseFieldArrayReturn<FormReviews, 'reviews.0.comments', 'id'>
         = useFieldArray({
             control: props.control,
-            name: `reviews.${props.formFieldItemIndex}.comments` as 'reviews.0.comments',
+            name: `reviews.${props.fieldIndex}.comments` as 'reviews.0.comments',
         })
 
     const errorCommentsMessage = useMemo<{ [index: number]: string }>(() => {
         const result: { [index: number]: string } = {}
-        _.forEach(fields, (field, commentItemIndex) => {
-            result[commentItemIndex] = props.isTouched[
-                `reviews.${props.formFieldItemIndex}.comments.${commentItemIndex}.content`
+        _.forEach(fields, (field, idx) => {
+            result[idx] = props.isTouched[
+                `reviews.${props.fieldIndex}.comments.${idx}.content`
             ]
                 ? _.get(
                     props.errors,
-                    `reviews.${props.formFieldItemIndex}.comments.${commentItemIndex}.content.message`,
+                    `reviews.${props.fieldIndex}.comments.${idx}.content.message`,
                 ) ?? ''
                 : ''
         })
@@ -140,7 +143,11 @@ export const ScorecardQuestionEdit: FC<Props> = (props: Props) => {
                     styles.blockRowQuestionHeader,
                     {
                         [styles.isExpand]: isExpand,
-                        [styles.isError]: !!errorMessage,
+                        [styles.isError]:
+                            !!errorMessage
+                            || !isEmpty(
+                                compact(Object.values(errorCommentsMessage)),
+                            ),
                     },
                 )}
             >
@@ -160,25 +167,27 @@ export const ScorecardQuestionEdit: FC<Props> = (props: Props) => {
                         >
                             <IconChevronDown />
                         </button>
-                        <span>
-                            Question
-                            {' '}
-                            {props.groupIndex + 1}
-                            .
-                            {props.sectionIndex + 1}
-                            .
-                            {props.questionIndex + 1}
-                            {' '}
+                        <span className={styles.textQuestion}>
+                            <strong>
+                                Question
+                                {props.groupIndex + 1}
+                                .
+                                {props.sectionIndex + 1}
+                                .
+                                {props.questionIndex + 1}
+                                {' '}
+                            </strong>
                             {props.scorecardQuestion.description}
                         </span>
                     </div>
                 </td>
                 <td className={classNames(styles.blockCellWeight)}>
+                    <i>Weight: </i>
                     {props.scorecardQuestion.weight.toFixed(1)}
                 </td>
                 <td className={styles.blockCellResponse}>
                     <Controller
-                        name={`reviews.${props.formFieldItemIndex}.initialAnswer`}
+                        name={`reviews.${props.fieldIndex}.initialAnswer`}
                         control={props.control}
                         render={function render(controlProps: {
                             field: ControllerRenderProps<
@@ -187,36 +196,68 @@ export const ScorecardQuestionEdit: FC<Props> = (props: Props) => {
                             >
                         }) {
                             return (
-                                <FieldSelect
+                                <Select
+                                    className={classNames(
+                                        'react-select-container',
+                                        errorMessage ? 'error' : '',
+                                    )}
+                                    classNamePrefix='select'
                                     name='response'
-                                    label=''
                                     placeholder='Select'
                                     options={responseOptions}
-                                    value={controlProps.field.value}
-                                    onChange={function onChange(event: ChangeEvent<HTMLInputElement>) {
-                                        controlProps.field.onChange(event)
+                                    value={
+                                        controlProps.field.value
+                                            ? {
+                                                label: controlProps.field
+                                                    .value,
+                                                value: controlProps.field
+                                                    .value,
+                                            }
+                                            : undefined
+                                    }
+                                    onChange={function onChange(option: SingleValue<{ label: string; value: string }>) {
+                                        controlProps.field.onChange(
+                                            (option as SelectOption).value,
+                                        )
+                                        props.recalculateReviewProgress()
+                                        controlProps.field.onChange(
+                                            (option as SelectOption).value,
+                                        )
                                         props.recalculateReviewProgress()
                                     }}
                                     onBlur={function onBlur() {
                                         controlProps.field.onBlur()
                                         props.setIsTouched(old => ({
                                             ...old,
-                                            [`reviews.${props.formFieldItemIndex}.initialAnswer.message`]:
+                                            [`reviews.${props.fieldIndex}.initialAnswer.message`]:
                                                 true,
                                         }))
                                         props.trigger(
-                                            `reviews.${props.formFieldItemIndex}.initialAnswer`,
+                                            `reviews.${props.fieldIndex}.initialAnswer`,
                                         )
                                     }}
-                                    classNameWrapper={styles.blockSelect}
-                                    error={errorMessage}
-                                    dirty
                                 />
                             )
                         }}
                     />
                 </td>
             </tr>
+            {errorMessage && (
+                <tr
+                    className={classNames(
+                        styles.container,
+                        styles.errorMessage,
+                        {
+                            [styles.isExpand]: isExpand,
+                            [styles.isError]: !!errorMessage,
+                        },
+                    )}
+                >
+                    <td colSpan={3}>
+                        <div className='errorMessage'>{errorMessage}</div>
+                    </td>
+                </tr>
+            )}
             {isExpand && (
                 <tr
                     className={classNames(
@@ -224,7 +265,11 @@ export const ScorecardQuestionEdit: FC<Props> = (props: Props) => {
                         props.className,
                         styles.blockRowGuidelines,
                         {
-                            [styles.isError]: !!errorMessage,
+                            [styles.isError]:
+                                !!errorMessage
+                                || !isEmpty(
+                                    compact(Object.values(errorCommentsMessage)),
+                                ),
                         },
                     )}
                 >
@@ -242,21 +287,24 @@ export const ScorecardQuestionEdit: FC<Props> = (props: Props) => {
                     props.className,
                     styles.blockRowResponseComment,
                     {
-                        [styles.isError]: !!errorMessage,
+                        [styles.isError]:
+                            !!errorMessage
+                            || !isEmpty(
+                                compact(Object.values(errorCommentsMessage)),
+                            ),
                     },
                 )}
             >
                 <td colSpan={3}>
                     <div>
                         <div className={styles.blockComments}>
-                            {fields.map((commentItem, commentItemIndex) => (
+                            {fields.map((commentItem, idx) => (
                                 <div
                                     key={commentItem.index}
                                     className={styles.blockCommentForm}
                                 >
                                     <Controller
-                                        // eslint-disable-next-line max-len
-                                        name={`reviews.${props.formFieldItemIndex}.comments.${commentItemIndex}.type`}
+                                        name={`reviews.${props.fieldIndex}.comments.${idx}.type`}
                                         control={props.control}
                                         render={function render(controlProps: {
                                             field: ControllerRenderProps<
@@ -265,44 +313,61 @@ export const ScorecardQuestionEdit: FC<Props> = (props: Props) => {
                                             >
                                         }) {
                                             return (
-                                                <FieldSelect
-                                                    name='response1'
-                                                    label='Response 1'
-                                                    placeholder='Select'
-                                                    options={
-                                                        QUESTION_RESPONSE_OPTIONS
-                                                    }
-                                                    value={
-                                                        controlProps.field.value
-                                                    }
-                                                    // eslint-disable-next-line max-len
-                                                    onChange={function onChange(
-                                                        event: ChangeEvent<HTMLInputElement>,
-                                                    ) {
-                                                        controlProps.field.onChange(
-                                                            event,
-                                                        )
-                                                        props.trigger(
-                                                            // eslint-disable-next-line max-len
-                                                            `reviews.${props.formFieldItemIndex}.comments.${commentItemIndex}.content`,
-                                                        )
-                                                    }}
-                                                    onBlur={function onBlur() {
-                                                        controlProps.field.onBlur()
-                                                    }}
-                                                    error=''
-                                                    dirty
-                                                    classNameWrapper={
+                                                <div
+                                                    className={
                                                         styles.fieldSelectResponse
                                                     }
-                                                />
+                                                >
+                                                    <label>
+                                                        {`Response ${idx + 1}: `}
+                                                    </label>
+                                                    <Select
+                                                        className={classNames(
+                                                            'react-select-container',
+                                                        )}
+                                                        classNamePrefix='select'
+                                                        placeholder='Select'
+                                                        options={
+                                                            QUESTION_RESPONSE_OPTIONS
+                                                        }
+                                                        value={
+                                                            controlProps.field
+                                                                .value
+                                                                ? {
+                                                                    label: capitalize(
+                                                                        controlProps
+                                                                            .field
+                                                                            .value,
+                                                                    ),
+                                                                    value: controlProps
+                                                                        .field
+                                                                        .value,
+                                                                }
+                                                                : undefined
+                                                        }
+                                                        onChange={function onChange(
+                                                            option: SingleValue<{label: string; value: string}>,
+                                                        ) {
+                                                            controlProps.field.onChange(
+                                                                (
+                                                                    option as SelectOption
+                                                                ).value,
+                                                            )
+                                                            props.trigger(
+                                                                `reviews.${props.fieldIndex}.comments.${idx}.content`,
+                                                            )
+                                                        }}
+                                                        onBlur={function onBlur() {
+                                                            controlProps.field.onBlur()
+                                                        }}
+                                                    />
+                                                </div>
                                             )
                                         }}
                                     />
 
                                     <Controller
-                                        // eslint-disable-next-line max-len
-                                        name={`reviews.${props.formFieldItemIndex}.comments.${commentItemIndex}.content`}
+                                        name={`reviews.${props.fieldIndex}.comments.${idx}.content`}
                                         control={props.control}
                                         render={function render(controlProps: {
                                             field: ControllerRenderProps<
@@ -317,7 +382,7 @@ export const ScorecardQuestionEdit: FC<Props> = (props: Props) => {
                                                     }
                                                     initialValue={
                                                         initCommentContents[
-                                                            `${commentItemIndex}.content`
+                                                            `${idx}.content`
                                                         ]
                                                     }
                                                     onChange={
@@ -329,15 +394,14 @@ export const ScorecardQuestionEdit: FC<Props> = (props: Props) => {
                                                         props.setIsTouched(
                                                             old => ({
                                                                 ...old,
-                                                                // eslint-disable-next-line max-len
-                                                                [`reviews.${props.formFieldItemIndex}.comments.${commentItemIndex}.content`]:
+                                                                [`reviews.${props.fieldIndex}.comments.${idx}.content`]:
                                                                     true,
                                                             }),
                                                         )
                                                     }}
                                                     error={
                                                         errorCommentsMessage[
-                                                            commentItemIndex
+                                                            idx
                                                         ]
                                                     }
                                                 />
@@ -348,11 +412,9 @@ export const ScorecardQuestionEdit: FC<Props> = (props: Props) => {
                             ))}
                         </div>
 
-                        <Button
-                            className={styles.btnAddResponse}
-                            secondary
-                            size='lg'
-                            label='Add Response'
+                        <button
+                            type='button'
+                            className='borderButton'
                             onClick={function onClick() {
                                 append({
                                     content: '',
@@ -361,7 +423,9 @@ export const ScorecardQuestionEdit: FC<Props> = (props: Props) => {
                                     type: '',
                                 })
                             }}
-                        />
+                        >
+                            Add Response
+                        </button>
                     </div>
                 </td>
             </tr>

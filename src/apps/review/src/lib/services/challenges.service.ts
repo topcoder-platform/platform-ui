@@ -1,7 +1,7 @@
 /**
  * Challenges service
  */
-import { MockChallengeInfo } from '../../mock-datas'
+import { MockChalenges, MockChallengeInfo } from '../../mock-datas'
 import { adjustChallengeInfo, ChallengeInfo } from '../models'
 
 /**
@@ -10,4 +10,8 @@ import { adjustChallengeInfo, ChallengeInfo } from '../models'
  */
 export const fetchChallengeInfo = async (): Promise<ChallengeInfo> => Promise.resolve(
     adjustChallengeInfo(MockChallengeInfo) as ChallengeInfo,
+)
+
+export const fetchChallengeInfoById = async (id: string): Promise<ChallengeInfo> => Promise.resolve(
+    adjustChallengeInfo(MockChalenges.find(c => c.id === id)) as ChallengeInfo,
 )

@@ -3,6 +3,19 @@
 .container {
     display: flex;
     flex-direction: column;
+    @include ltemd {
+        &:global(.enhanced-table) {
+            table {
+                tbody {
+                    tr:has(:global(.last-element)) {
+                        td {
+                            border-bottom: 0;
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 .textBlue,
@@ -45,4 +58,12 @@
 .tableCellNoWrap {
     white-space: nowrap;
     text-align: left !important;
+}
+
+.spacing {
+    padding: 0 $sp-1;
+}
+
+.appealsLink {
+    padding: 0 $sp-1;
 }

@@ -1,45 +1,65 @@
 @import '@libs/ui/styles/includes';
 
 .container {
+    @include ltemd {
+        display: flex;
+        flex-wrap: wrap;
+    }
     td {
         vertical-align: middle;
+        @include ltemd {
+            &:nth-child(1) {
+                width: 100%;
+            }
+        }
+    }
+    :global(.borderButton) {
+        font-size: 14px;
+        margin-top: $sp-6;
+        margin-left: 136px;
+        margin-bottom: $sp-4;
+        @include ltemd {
+            margin-left: 0;
+        }
     }
 }
 
 .blockQuestion {
+    color: var(--FontColor);
+    font-family: 'Nunito Sans', sans-serif;
     display: flex;
     align-items: center;
-    gap: 10px;
-    font-weight: $font-weight-semibold;
+    gap: 16px;
+    font-weight: 700;
 }
 
 .blockCellWeight {
-    font-weight: $font-weight-semibold;
+    color: var(--FontColor);
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
     width: 100px;
+    i {
+        display: none;
+    }
 
     @include ltemd {
-        width: 90px;
+        align-items: center;
+        display: flex;
+        width: 120px;
+        margin-right: auto;
+        i {
+            display: block;
+            margin-right: $sp-2;
+        }
     }
 }
 
 .blockCellResponse {
-    width: 130px;
-}
-
-.blockSelect {
-    width: 98px;
-
-    :global(.input-error) {
-        white-space: nowrap;
-        justify-content: flex-end;
-
-        svg {
-            flex-shrink: 0;
-        }
-    }
-
-    :global(.input-el) {
-        margin-bottom: 0;
+    width: 160px;
+    font-size: 14px;
+    :global(.react-select-container .select__single-value) {
+        font-size: 14px;
     }
 }
 
@@ -49,19 +69,46 @@
     }
 }
 
-.blockRowQuestionHeader {
-    td {
-        padding: 12px 16px 22px;
-
-        &:first-child {
-            padding-left: 18px;
+.textQuestion {
+    align-items: center;
+    display: flex;
+    strong {
+        width: 138px;
+    }
+    @include ltemd {
+        display: inline;
+        strong {
+            padding-right: $sp-2;
         }
+    }
+}
+
+.errorMessage {
+    td {
+        padding: 0 $sp-4;
+        text-align: right;
+    }
+    &.isError {
+        border-left: 2px solid var(--RedError);
+        border-right: 2px solid var(--RedError);
+    }
+    :global(.errorMessage) {
+        margin-bottom: $sp-4;
+    }
+}
+
+.blockRowQuestionHeader {
+    @include ltemd {
+        padding-bottom: $sp-3;
+    }
+    td {
+        padding: $sp-4;
 
         @include ltemd {
-            padding: 12px 4px 22px;
+            padding: $sp-3 $sp-2 0;
 
             &:first-child {
-                padding-left: 4px;
+                padding-left: $sp-2;
             }
         }
     }
@@ -80,17 +127,18 @@
 }
 
 .textGuidelines {
+    color: var(--FontColor);
+    font-family: "Nunito Sans", sans-serif;
     font-size: 14px;
-    line-height: 19px;
-    letter-spacing: -0.02em;
+    line-height: 20px;
 }
 
 .blockRowGuidelines {
     td {
-        padding: 8px 53px 22px;
+        padding: 8px 192px 22px;
 
         @include ltemd {
-            padding: 8px 37px 22px;
+            padding: 16px 8px;
         }
     }
 
@@ -106,29 +154,49 @@
     gap: 30px;
 }
 
-.blockCommentForm {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-}
-
 .fieldSelectResponse {
+    align-items: center;
     width: 100%;
-    max-width: 234px;
+    display: flex;
+    font-family: "Nunito Sans", sans-serif;
+    font-size: 14px;
+    @include ltemd {
+        display: block;
+    }
+    label {
+        color: var(--FontColor);
+        font-family: "Nunito Sans", sans-serif;
+        font-weight: 700;
+        font-size: 16px;
+        margin-right: 16px;
+        width: 120px;
+    }
+    :global(.select__control) {
+        width: 203px;
+        @include ltemd {
+            width: 100%;
+        }
+        :global(.select__single-value) {
+            font-size: 14px;
+        }
+    }
 }
 
 .blockMarkdownEditor {
-    width: 100%;
-    margin-top: 7px;
+    margin-top: $sp-4;
+    margin-left: 136px;
+    @include ltemd {
+        margin-left: 0;
+    }
 }
 
 .blockRowResponseComment {
     td {
-        padding: 26px 21px 30px 53px;
-        background-color: var(--Tertiary);
+        padding: $sp-6 $sp-6 $sp-6 54px;
+        background-color: var(--TableColumn);
 
         @include ltemd {
-            padding: 26px 10px 30px 10px;
+            padding: $sp-6 $sp-6 $sp-6 10px;
         }
     }
 
@@ -137,8 +205,4 @@
         border-left: 2px solid var(--RedError);
         border-right: 2px solid var(--RedError);
     }
-}
-
-.btnAddResponse {
-    margin-top: 30px;
 }

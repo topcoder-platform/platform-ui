@@ -1,4 +1,26 @@
-.bodyClassName {
-    margin: 0;
-    padding: 0;
+@import "@libs/ui/styles/includes";
+
+.enhancedModal {
+    :global(.react-responsive-modal-modal) {
+        box-shadow: none;
+    }
+    h3 {
+        color: $black-100;
+        font-family: 'Inter', sans-serif;
+        font-size: 24px;
+        text-transform: none;
+        line-height: 30px;
+    }
+    :global(.modal-body) {
+        color: $black-100;
+        font-family: 'Inter', sans-serif;
+        padding: $sp-10 0;
+        line-height: 22px;
+    }
+    .buttons {
+        align-items: center;
+        display: flex;
+        justify-content: flex-end;
+        gap: $sp-3;
+    }
 }

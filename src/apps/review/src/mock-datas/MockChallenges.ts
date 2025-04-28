@@ -6,6 +6,7 @@ import moment from 'moment'
 import { ChallengeInfo } from '../lib/models'
 
 import { MockSubmissions } from './MockSubmissions'
+import { REVIEWER, SUBMITTER } from '../config/index.config'
 
 export const MockChallengeInfo: ChallengeInfo = {
     currentPhase: 'Review',
@@ -15,6 +16,7 @@ export const MockChallengeInfo: ChallengeInfo = {
     id: '1',
     name: 'Topcoder Admin App - User Management',
     submissions: MockSubmissions,
+    role: SUBMITTER,
 }
 
 export const MockChalenges: ChallengeInfo[] = [
@@ -26,6 +28,7 @@ export const MockChalenges: ChallengeInfo[] = [
         id: '1',
         name: 'Topcoder Admin App - User Management',
         submissions: MockSubmissions,
+        role: SUBMITTER,
     },
     {
         currentPhase: 'Review',
@@ -35,6 +38,7 @@ export const MockChalenges: ChallengeInfo[] = [
         id: '2',
         name: 'Robust automation testing framework for mobile applications',
         submissions: [MockSubmissions[1], MockSubmissions[2]],
+        role: SUBMITTER,
     },
     {
         currentPhase: 'Review',
@@ -44,6 +48,7 @@ export const MockChalenges: ChallengeInfo[] = [
         id: '3',
         name: 'Snowflake Submission for Upcoming Opportunities',
         submissions: [MockSubmissions[1], MockSubmissions[2], MockSubmissions[3]],
+        role: SUBMITTER,
     },
     {
         currentPhase: 'Appeal',
@@ -54,6 +59,7 @@ export const MockChalenges: ChallengeInfo[] = [
         id: '4',
         name: 'Work Manager - Assets Library management',
         submissions: [],
+        role: REVIEWER
     },
     {
         currentPhase: 'Appeal Response',
@@ -64,6 +70,7 @@ export const MockChalenges: ChallengeInfo[] = [
         id: '5',
         name: 'Topcoder Admin App - Challenge Management',
         submissions: [],
+        role: REVIEWER
     },
     {
         currentPhase: 'Submission',
@@ -74,6 +81,7 @@ export const MockChalenges: ChallengeInfo[] = [
         id: '5',
         name: 'Design Prisma Schema for Topcoder Review API',
         submissions: [],
+        role: REVIEWER
     },
     {
         currentPhase: 'Submission',
@@ -84,6 +92,7 @@ export const MockChalenges: ChallengeInfo[] = [
         id: '6',
         name: 'Marathon Match 160',
         submissions: [],
+        role: REVIEWER
     },
     {
         currentPhase: 'Submission',
@@ -94,6 +103,7 @@ export const MockChalenges: ChallengeInfo[] = [
         id: '7',
         name: 'Review App - UI prototype Reviewer Flow',
         submissions: [],
+        role: REVIEWER
     },
     {
         currentPhase: 'Submission',
@@ -104,6 +114,7 @@ export const MockChalenges: ChallengeInfo[] = [
         id: '8',
         name: 'Topcoder Online Review - Document uploading failing after upgrade',
         submissions: [],
+        role: REVIEWER
     },
     {
         currentPhase: 'Submission',
@@ -114,6 +125,7 @@ export const MockChalenges: ChallengeInfo[] = [
         id: '9',
         name: 'Topcoder Connect App - Universal nav fixes',
         submissions: [],
+        role: REVIEWER
     },
 ]
 

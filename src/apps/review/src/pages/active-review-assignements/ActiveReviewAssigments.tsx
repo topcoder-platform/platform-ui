@@ -32,7 +32,7 @@ function useChildRoutes(): Array<JSX.Element> | undefined {
         () => reviewRoutes[0].children
             ?.find(r => r.id === activeReviewAssigmentsRouteId)
             ?.children?.map(getRouteElement),
-        [], // eslint-disable-line react-hooks/exhaustive-deps -- missing dependency: getRouteElement
+        [getRouteElement],
     )
     return childRoutes
 }

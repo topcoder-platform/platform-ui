@@ -9,7 +9,6 @@ import classNames from 'classnames'
 import 'easymde/dist/easymde.min.css'
 
 import { useOnComponentDidMount } from '~/apps/admin/src/lib/hooks'
-import { IconSolid } from '~/libs/ui'
 
 import {
     IconBold,
@@ -96,6 +95,53 @@ const allowedOtherExtensions = [
     'application/vnd.openxmlformats-officedocument.presentationml.presentation',
 ]
 
+const stateStrategy = {
+    atom: (ret: any) => {
+        ret.quote = true
+    },
+    comment: (ret: any) => {
+        ret.code = true
+    },
+    em: (ret: any) => {
+        ret.italic = true
+    },
+    link: (ret: any) => {
+        ret.link = true
+    },
+    quote: (ret: any) => {
+        ret.quote = true
+    },
+    strikethrough: (ret: any) => {
+        ret.strikethrough = true
+    },
+    strong: (ret: any) => {
+        ret.bold = true
+    },
+    tag: (ret: any) => {
+        ret.image = true
+    },
+}
+
+const toggleStrategy = {
+    bold: (start: any, end: any) => {
+        const startType = start.replace(/(\*\*|__)(?![\s\S]*(\*\*|__))/, '')
+        const endType = end.replace(/(\*\*|__)/, '')
+        return { endType, startType }
+    },
+    italic: (start: any, end: any) => {
+        const startType = start.replace(/(\*|_)(?![\s\S]*(\*|_))/, '')
+        const endType = end.replace(/(\*|_)/, '')
+        return { endType, startType }
+    },
+    strikethrough: (start: any, end: any) => {
+        const startType = start.replace(/(\*\*|~~)(?![\s\S]*(\*\*|~~))/, '')
+        const endType = end.replace(/(\*\*|~~)/, '')
+        return { endType, startType }
+    },
+}
+
+type CodeMirrorType = keyof typeof stateStrategy | 'variable-2'
+
 export const FieldMarkdownEditor: FC<Props> = (props: Props) => {
     const elementRef = useRef<HTMLTextAreaElement>(null)
     const easyMDE = useRef<any>(null)
@@ -104,7 +150,6 @@ export const FieldMarkdownEditor: FC<Props> = (props: Props) => {
      * The state of CodeMirror at the given position.
      */
     const getState = useCallback(
-        // eslint-disable-next-line complexity
         (cm: CodeMirror.Editor, posInput?: CodeMirror.Position | undefined) => {
             const pos = posInput || cm.getCursor('start')
             const stat = cm.getTokenAt(pos)
@@ -114,35 +159,21 @@ export const FieldMarkdownEditor: FC<Props> = (props: Props) => {
 
             const ret: any = {}
 
-            let data
+            let data: CodeMirrorType
             let text
             for (let i = 0; i < types.length; i++) {
-                data = types[i]
-                if (data === 'strong') {
-                    ret.bold = true
-                } else if (data === 'variable-2') {
+                data = types[i] as CodeMirrorType
+                if (data === 'variable-2') {
                     text = cm.getLine(pos.line)
                     if (/^\s*\d+\.\s/.test(text)) {
                         ret['ordered-list'] = true
                     } else {
                         ret['unordered-list'] = true
                     }
-                } else if (data === 'atom') {
-                    ret.quote = true
-                } else if (data === 'em') {
-                    ret.italic = true
-                } else if (data === 'quote') {
-                    ret.quote = true
-                } else if (data === 'strikethrough') {
-                    ret.strikethrough = true
-                } else if (data === 'comment') {
-                    ret.code = true
-                } else if (data === 'link') {
-                    ret.link = true
-                } else if (data === 'tag') {
-                    ret.image = true
                 } else if (data.match(/^header(-[1-6])?$/)) {
                     ret[data.replace('header', 'heading')] = true
+                } else if (data in stateStrategy) {
+                    stateStrategy[data](ret)
                 }
             }
 
@@ -155,7 +186,6 @@ export const FieldMarkdownEditor: FC<Props> = (props: Props) => {
      * Handle toggle block
      */
     const toggleBlock = useCallback(
-        // eslint-disable-next-line complexity
         (editor: any, type: string, startChars: any, endCharsInput?: any) => {
             if (
                 /editor-preview-active/.test(
@@ -180,16 +210,7 @@ export const FieldMarkdownEditor: FC<Props> = (props: Props) => {
                 text = cm.getLine(startPoint.line)
                 start = text.slice(0, startPoint.ch)
                 end = text.slice(startPoint.ch)
-                if (type === 'bold') {
-                    start = start.replace(/(\*\*|__)(?![\s\S]*(\*\*|__))/, '')
-                    end = end.replace(/(\*\*|__)/, '')
-                } else if (type === 'italic') {
-                    start = start.replace(/(\*|_)(?![\s\S]*(\*|_))/, '')
-                    end = end.replace(/(\*|_)/, '')
-                } else if (type === 'strikethrough') {
-                    start = start.replace(/(\*\*|~~)(?![\s\S]*(\*\*|~~))/, '')
-                    end = end.replace(/(\*\*|~~)/, '')
-                }
+                toggleStrategy[type as keyof typeof toggleStrategy](start, end)
 
                 cm.replaceRange(
                     start + end,
@@ -242,8 +263,7 @@ export const FieldMarkdownEditor: FC<Props> = (props: Props) => {
             cm.setSelection(startPoint, endPoint)
             cm.focus()
         },
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        [],
+        [getState],
     )
 
     /**
@@ -357,8 +377,7 @@ export const FieldMarkdownEditor: FC<Props> = (props: Props) => {
                 editor.options.imageTexts.sbInit,
             )
         }, 1000)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
+    }, [updateFileTag])
 
     /**
      * Reset file input
@@ -483,8 +502,7 @@ export const FieldMarkdownEditor: FC<Props> = (props: Props) => {
                 onPosition,
             )
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
+    }, [getState, replaceSelection])
 
     /**
      * Upload image
@@ -580,8 +598,7 @@ export const FieldMarkdownEditor: FC<Props> = (props: Props) => {
             name: file.name,
             url: MockUploadUrl,
         })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
+    }, [afterFileUploaded, beforeUploadingFile, resetFileInput])
 
     useOnComponentDidMount(() => {
         easyMDE.current = new EasyMDE({
@@ -618,7 +635,9 @@ export const FieldMarkdownEditor: FC<Props> = (props: Props) => {
                 table: [
                     '',
                     // eslint-disable-next-line max-len
-                    '\n\n| Column 1 | Column 2 | Column 3 |\n| -------- | -------- | -------- |\n| Text     | Text      | Text     |\n\n',
+                    '\n\n| Column 1 | Column 2 | Column 3 |\n|'
+                    + '-------- | -------- | -------- |\n|'
+                    + ' Text     | Text      | Text     |\n\n',
                 ],
                 uploadedFile: ['[#name#](#url#)', ''],
                 uploadedImage: ['![#name#](#url#)', ''],
@@ -793,8 +812,7 @@ export const FieldMarkdownEditor: FC<Props> = (props: Props) => {
             <textarea ref={elementRef} placeholder={props.placeholder} />
 
             {props.error && (
-                <div className={classNames(styles.error, 'input-error')}>
-                    <IconSolid.ExclamationIcon />
+                <div className={classNames(styles.error, 'errorMessage')}>
                     {props.error}
                 </div>
             )}

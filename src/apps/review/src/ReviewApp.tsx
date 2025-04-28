@@ -12,8 +12,7 @@ import './lib/styles/index.scss'
 
 const ReviewApp: FC = () => {
     const { getChildRoutes }: RouterContextData = useContext(routerContext)
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- missing dependency: getChildRoutes
-    const childRoutes = useMemo(() => getChildRoutes(toolTitle), [])
+    const childRoutes = useMemo(() => getChildRoutes(toolTitle), [getChildRoutes])
 
     useEffect(() => {
         document.body.classList.add('review-app')

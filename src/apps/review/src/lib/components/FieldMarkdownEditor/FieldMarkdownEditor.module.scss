@@ -6,22 +6,11 @@ $error-line-height: 14px;
 .container {
     display: flex;
     flex-direction: column;
-    height: 366px;
+    height: 280px;
     gap: 9px;
-
-    &.showBorder {
-        :global {
-            .CodeMirror.CodeMirror-wrap {
-                border-right: 1px solid var(--GrayBorder);
-                border-left: 1px solid var(--GrayBorder);
-                border-bottom: 1px solid var(--GrayBorder);
-            }
-            .editor-toolbar {
-                border-top: 1px solid var(--GrayBorder);
-                border-left: 1px solid var(--GrayBorder);
-                border-right: 1px solid var(--GrayBorder);
-            }
-        }
+    @include ltemd {
+        height: 280px;
+        gap: 0;
     }
 
     &.isError {
@@ -55,10 +44,17 @@ $error-line-height: 14px;
             border-right: 1px solid white;
             border-left: 1px solid white;
             border-bottom: 1px solid white;
-            border-top: 1px solid var(--GrayBorder);
+            border-top: 1px solid var(--EditorBorder);
             border-bottom-left-radius: 8px;
             border-bottom-right-radius: 8px;
-            color: var(--Primary);
+            font-family: "Nunito Sans", sans-serif;
+            font-size: 14px;
+            color: var(--FontColor);
+        }
+
+        .CodeMirror-sizer,
+        .CodeMirror-scroll {
+            min-height: unset !important;
         }
 
         .editor-toolbar {
@@ -73,7 +69,10 @@ $error-line-height: 14px;
             gap: 8px;
             padding: 0 8px;
             background-color: white;
-
+            @include ltemd {
+                gap: $sp-1;
+                padding: 0 $sp-1;
+            }
             &::after,
             &::before {
                 content: none;
@@ -85,28 +84,37 @@ $error-line-height: 14px;
 
             button {
                 margin: 8px 0;
-                width: 32px;
-                height: 32px;
+                width: 24px;
+                height: 24px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 padding: 0;
-                margin: 9px 0;
-
+                min-width: 24px;
+                @include ltemd {
+                    margin: $sp-1 0;
+                    height: 24px;
+                    width: 24px;
+                }
                 &::after {
                     content: none;
                 }
             }
 
             i.separator {
-                border-left: 1px solid var(--GrayBorder);
+                border-left: 1px solid var(--EditorBorder);
+                @include ltemd {
+                    margin: 0 $sp-1;
+                }
             }
         }
 
         .editor-statusbar {
+            color: var(--GrayFontColor);
+            font-family: "Nunito Sans", sans-serif;
             font-size: 14px;
             line-height: 19px;
-            padding: 9px 0 0 0;
+            padding: $sp-4 0 0 0;
             overflow: hidden;
             display: flex;
 
@@ -118,9 +126,10 @@ $error-line-height: 14px;
                 margin-left: 0;
                 margin-right: auto;
                 display: flex;
-                color: var(--Secondary);
+                font-family: "Nunito Sans", sans-serif;
+                color: var(--GrayFontColor);
                 font-size: 14px;
-                line-height: 19px;
+                line-height: 20px;
             }
 
             .countOfRemainingChars {

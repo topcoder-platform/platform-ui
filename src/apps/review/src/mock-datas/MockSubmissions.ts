@@ -10,8 +10,8 @@ export const MockSubmissions: SubmissionInfo[] = [
         id: '736590',
     },
     {
-        handle: 'stevenfrog',
-        handleColor: '#2D7E2D',
+        handle: 'shubhangi18',
+        handleColor: '#0A0A0A',
         id: '736592',
         review: {
             appealResuls: [
@@ -35,9 +35,9 @@ export const MockSubmissions: SubmissionInfo[] = [
         },
     },
     {
-        handle: 'nitheeshach_1',
-        handleColor: '#EF3A3A',
-        id: '736597',
+        handle: 'Nikesh2003',
+        handleColor: '#0A0A0A',
+        id: '736592',
         review: {
             appealResuls: [
                 {
@@ -61,9 +61,91 @@ export const MockSubmissions: SubmissionInfo[] = [
         },
     },
     {
-        handle: 'nitheeshach_1',
-        handleColor: '#EF3A3A',
-        id: '736597',
+        handle: 'nursoltan-s',
+        handleColor: '#0A0A0A',
+        id: '726598',
+        review: {
+            appealResuls: [
+                {
+                    id: '1',
+                    success: true,
+                },
+                {
+                    id: '6',
+                    success: true,
+                },
+            ],
+            createdAt: new Date()
+                .toISOString(),
+            id: '2',
+            reviewItems: [
+                {
+                    createdAt: new Date()
+                        .toISOString(),
+                    finalAnswer: 'No',
+                    id: '1',
+                    initialAnswer: 'Yes',
+                    reviewItemComments: [],
+                    scorecardQuestionId: '4',
+                },
+                {
+                    createdAt: new Date()
+                        .toISOString(),
+                    id: '2',
+                    reviewItemComments: [],
+                    scorecardQuestionId: '5',
+                },
+            ],
+            scorecardId: '1',
+            updatedAt: new Date()
+                .toISOString(),
+        },
+    },
+    {
+        handle: 'stevenfrog',
+        handleColor: '#2D7E2D',
+        id: '736591',
+        review: {
+            appealResuls: [
+                {
+                    id: '1',
+                    success: true,
+                },
+                {
+                    id: '6',
+                    success: true,
+                },
+            ],
+            createdAt: new Date()
+                .toISOString(),
+            id: '2',
+            reviewItems: [
+                {
+                    createdAt: new Date()
+                        .toISOString(),
+                    finalAnswer: 'No',
+                    id: '1',
+                    initialAnswer: 'Yes',
+                    reviewItemComments: [],
+                    scorecardQuestionId: '4',
+                },
+                {
+                    createdAt: new Date()
+                        .toISOString(),
+                    id: '2',
+                    reviewItemComments: [],
+                    scorecardQuestionId: '5',
+                },
+            ],
+            scorecardId: '1',
+            updatedAt: new Date()
+                .toISOString(),
+        },
+    },
+    {
+        handle: 'whereishammer',
+        handleColor: '#2D7E2D',
+        id: '726545',
         review: {
             appealResuls: [
                 {

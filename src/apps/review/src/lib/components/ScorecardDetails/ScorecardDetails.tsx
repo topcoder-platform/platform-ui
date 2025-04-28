@@ -13,10 +13,10 @@ import {
     useState,
 } from 'react'
 import { useForm, UseFormReturn } from 'react-hook-form'
+import { NavLink, useNavigate, useSearchParams } from 'react-router-dom'
 import _ from 'lodash'
 import classNames from 'classnames'
 
-import { Button, LinkButton } from '~/libs/ui'
 import { yupResolver } from '@hookform/resolvers/yup'
 
 import { useFetchReviews, useFetchReviewsProps } from '../../hooks'
@@ -25,6 +25,8 @@ import { ScorecardDetailsHeader } from '../ScorecardDetailsHeader'
 import { ScorecardQuestionEdit } from '../ScorecardQuestionEdit'
 import { ScorecardQuestionView } from '../ScorecardQuestionView'
 import { formReviewsSchema, roundWith2DecimalPlaces } from '../../utils'
+import { ConfirmModal } from '../ConfirmModal'
+import { IconError } from '../../assets/icons'
 
 import styles from './ScorecardDetails.module.scss'
 
@@ -37,7 +39,10 @@ interface Props {
 
 export const ScorecardDetails: FC<Props> = (props: Props) => {
     const isEdit = props.isEdit
-    const [isExpand, setIsExpand] = useState<{[key: string]: boolean}>({})
+    const navigate = useNavigate()
+    const [, setSearchParams] = useSearchParams()
+    const [isExpand, setIsExpand] = useState<{ [key: string]: boolean }>({})
+    const [isShowSaveAsDraftModal, setIsShowSaveAsDraftModal] = useState(false)
     const { scorecardInfo, appeals, reviewInfo }: useFetchReviewsProps
         = useFetchReviews(isEdit)
     const mappingAppeals = useMemo<{
@@ -86,10 +91,10 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
         resolver: yupResolver(formReviewsSchema),
     })
 
+    const changeHandle = props.setIsChanged
     useEffect(() => {
-        props.setIsChanged(isDirty)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isDirty])
+        changeHandle(isDirty)
+    }, [isDirty, changeHandle])
 
     const errorMessageTop
         = _.isEmpty(errors) || _.isEmpty(isTouched)
@@ -113,8 +118,7 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
             })
         })
         setIsTouched(isTouchedAll)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
+    }, [getValues])
 
     const ContainerTag = useMemo<ElementType>(
         () => (isEdit ? 'form' : 'div'),
@@ -123,67 +127,89 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
 
     const onSubmit = useCallback((data: FormReviews) => {
         reset(data)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
+        setSearchParams({ viewMode: 'true' }, { replace: true })
+    }, [reset, setSearchParams])
 
     const [reviewProgress, setReviewProgress] = useState(0)
     const [totalScore, setTotalScore] = useState(0)
 
-    const recalculateReviewProgress = useCallback(
-        () => {
-            const reviewFormDatas = getValues().reviews
-            const mapingResult: {
-                [scorecardQuestionId: string]: string
-            } = {}
-            const newReviewProgress = reviewFormDatas.length > 0
-                ? Math.round((
-                    _.filter(reviewFormDatas, review => {
-                        mapingResult[review.scorecardQuestionId] = review.initialAnswer
+    const recalculateReviewProgress = useCallback(() => {
+        const reviewFormDatas = getValues().reviews
+        const mapingResult: {
+            [scorecardQuestionId: string]: string
+        } = {}
+        const newReviewProgress
+            = reviewFormDatas.length > 0
+                ? Math.round(
+                    (_.filter(reviewFormDatas, review => {
+                        mapingResult[review.scorecardQuestionId]
+                            = review.initialAnswer
                         return !!review.initialAnswer
-                    })
-                        .length
-                        * 100)
-                        / reviewFormDatas.length)
+                    }).length
+                    * 100)
+                    / reviewFormDatas.length,
+                )
                 : 0
-            setReviewProgress(newReviewProgress)
+        setReviewProgress(newReviewProgress)
 
-            const groupsScore = _.reduce(
-                scorecardInfo?.scorecardGroups ?? [],
-                (groupResult, group) => {
-                    const groupPoint = (_.reduce(
+        const groupsScore = _.reduce(
+            scorecardInfo?.scorecardGroups ?? [],
+            (groupResult, group) => {
+                const groupPoint
+                    = (_.reduce(
                         group.sections ?? [],
                         (sectionResult, section) => {
-                            const sectionPoint = (_.reduce(
-                                section.questions ?? [],
-                                (questionResult, question) => {
-                                    let questionPoint = 0
-                                    const initialAnswer = mapingResult[question.id]
-                                    if (question.type === 'YES_NO' && initialAnswer === 'Yes') {
-                                        questionPoint = 100
-                                    } else if (question.type === 'SCALE' && !!initialAnswer) {
-                                        const totalPoint = question.scaleMax - question.scaleMin
-                                        const initialAnswerNumber = parseInt(initialAnswer, 10) - question.scaleMin
-                                        questionPoint = totalPoint > 0 ? ((initialAnswerNumber * 100) / totalPoint) : 0
-                                    }
+                            const sectionPoint
+                                = (_.reduce(
+                                    section.questions ?? [],
+                                    (questionResult, question) => {
+                                        let questionPoint = 0
+                                        const initialAnswer
+                                            = mapingResult[question.id]
+                                        if (
+                                            question.type === 'YES_NO'
+                                            && initialAnswer === 'Yes'
+                                        ) {
+                                            questionPoint = 100
+                                        } else if (
+                                            question.type === 'SCALE'
+                                            && !!initialAnswer
+                                        ) {
+                                            const totalPoint
+                                                = question.scaleMax
+                                                - question.scaleMin
+                                            const initialAnswerNumber
+                                                = parseInt(initialAnswer, 10)
+                                                - question.scaleMin
+                                            questionPoint
+                                                = totalPoint > 0
+                                                    ? (initialAnswerNumber
+                                                        * 100)
+                                                        / totalPoint
+                                                    : 0
+                                        }
 
-                                    return questionResult + (questionPoint * question.weight) / 100
-                                },
-                                0,
-                            ) * section.weight) / 100
-
+                                        return (
+                                            questionResult
+                                                + (questionPoint * question.weight)
+                                                / 100
+                                        )
+                                    },
+                                    0,
+                                )
+                                * section.weight)
+                                / 100
                             return sectionResult + sectionPoint
                         },
                         0,
-                    ) * group.weight) / 100
-
-                    return groupResult + groupPoint
-                },
-                0,
-            )
-            setTotalScore(roundWith2DecimalPlaces(groupsScore))
-        },
-        [getValues, scorecardInfo],
-    )
+                    )
+                    * group.weight) / 100
+                return groupResult + groupPoint
+            },
+            0,
+        )
+        setTotalScore(roundWith2DecimalPlaces(groupsScore))
+    }, [getValues, scorecardInfo])
 
     useEffect(() => {
         if (reviewInfo) {
@@ -207,19 +233,26 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
             })
             recalculateReviewProgress()
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [reviewInfo])
+    }, [reviewInfo, recalculateReviewProgress, reset])
 
-    const expandAll = useCallback(
-        () => {
-            setIsExpand(_.reduce(
+    const expandAll = useCallback(() => {
+        setIsExpand(
+            _.reduce(
                 reviewInfo?.reviewItems ?? [],
                 (result, reviewItem) => ({ ...result, [reviewItem.id]: true }),
                 {},
-            ))
-        },
-        [reviewInfo],
-    )
+            ),
+        )
+    }, [reviewInfo])
+
+    const back = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
+        e.preventDefault()
+        navigate(-1)
+    }, [navigate])
+
+    const closeHandel = useCallback(() => {
+        setIsShowSaveAsDraftModal(false)
+    }, [])
 
     return (
         <div className={classNames(styles.container, props.className)}>
@@ -233,14 +266,18 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
                 }}
                 totalScore={totalScore}
             />
-
-            <div
-                className={classNames(styles.textErrorTop, {
-                    [styles.isEmpty]: !errorMessageTop,
-                })}
-            >
-                {errorMessageTop}
-            </div>
+            {errorMessageTop && (
+                <div
+                    className={classNames(styles.textErrorTop, {
+                        [styles.isEmpty]: !errorMessageTop,
+                    })}
+                >
+                    <i>
+                        <IconError />
+                    </i>
+                    {errorMessageTop}
+                </div>
+            )}
 
             {reviewInfo && (
                 <ContainerTag
@@ -256,9 +293,7 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
                                             <td colSpan={3}>
                                                 {groupIndex + 1}
                                                 .
-                                                {' '}
                                                 {group.name}
-                                                {' '}
                                                 (
                                                 {group.weight.toFixed(1)}
                                                 )
@@ -269,13 +304,13 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
                                             (section, sectionIndex) => (
                                                 <Fragment key={section.id}>
                                                     <tr
-                                                        className={
-                                                            styles.blockRowSection
-                                                        }
+                                                        className={classNames(
+                                                            styles.blockRowSection,
+                                                            'question',
+                                                        )}
                                                     >
                                                         <td>
                                                             {section.name}
-                                                            {' '}
                                                             (
                                                             {section.weight.toFixed(1)}
                                                             )
@@ -283,14 +318,15 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
                                                         <td>Weight</td>
                                                         <td>Response</td>
                                                     </tr>
-
                                                     {section.questions.map(
                                                         (
                                                             question,
                                                             questionIndex,
                                                         ) => {
                                                             const reviewItemInfo
-                                                            = mappingReviewInfo[question.id]
+                                                                = mappingReviewInfo[
+                                                                    question.id
+                                                                ]
                                                             if (
                                                                 !reviewItemInfo
                                                             ) {
@@ -329,7 +365,7 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
                                                                     questionIndex={
                                                                         questionIndex
                                                                     }
-                                                                    formFieldItemIndex={
+                                                                    fieldIndex={
                                                                         reviewItemInfo.index
                                                                     }
                                                                     control={
@@ -347,6 +383,12 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
                                                                 />
                                                             ) : (
                                                                 <ScorecardQuestionView
+                                                                    isExpand={
+                                                                        isExpand
+                                                                    }
+                                                                    setIsExpand={
+                                                                        setIsExpand
+                                                                    }
                                                                     key={
                                                                         question.id
                                                                     }
@@ -383,35 +425,44 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
 
                     {isEdit ? (
                         <div className={styles.blockBottomEdit}>
-                            <div className={styles.textErrorBottom}>
-                                {errorMessageBottom}
+                            <div>
+                                {errorMessageBottom && (
+                                    <div className={styles.textErrorBottom}>
+                                        <i>
+                                            <IconError />
+                                        </i>
+                                        {errorMessageBottom}
+                                    </div>
+                                )}
                             </div>
 
                             <div className={styles.blockBtns}>
-                                <Button
-                                    label='Cancel'
-                                    primary
-                                    variant='danger'
-                                    size='lg'
+                                <button
+                                    type='button'
+                                    className='cancelButton'
                                     onClick={props.onCancelEdit}
-                                />
-                                <Button
-                                    label='Save as Draft'
-                                    secondary
-                                    size='lg'
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type='button'
+                                    className='borderButton'
                                     onClick={function onClick() {
+                                        setIsShowSaveAsDraftModal(true)
                                         reset(getValues())
                                     }}
-                                />
-                                <Button
+                                >
+                                    Save as Draft
+                                </button>
+                                <button
                                     type='submit'
-                                    label='Mark as Complete'
-                                    primary
-                                    size='lg'
+                                    className='filledButton'
                                     onClick={function onClick() {
                                         touchedAllField()
                                     }}
-                                />
+                                >
+                                    Mark as Complete
+                                </button>
                             </div>
                         </div>
                     ) : (
@@ -420,16 +471,29 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
                                 <span>Total Score:</span>
                                 <span>{totalScore}</span>
                             </div>
-                            <LinkButton
-                                to='./../../challenge-details'
-                                label='Back to Contest'
-                                primary
-                                size='lg'
-                            />
+                            <div className={styles.buttons}>
+                                <NavLink
+                                    className='filledButton'
+                                    to=''
+                                    onClick={back}
+                                >
+                                    Back to Challenge
+                                </NavLink>
+                            </div>
                         </div>
                     )}
                 </ContainerTag>
             )}
+            <ConfirmModal
+                title='Save as Draft'
+                open={isShowSaveAsDraftModal}
+                onConfirm={closeHandel}
+                onClose={closeHandel}
+                action='OK'
+                withoutCancel
+            >
+                <div>Your draft has been successfully saved!</div>
+            </ConfirmModal>
         </div>
     )
 }

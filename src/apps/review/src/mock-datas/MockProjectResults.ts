@@ -46,6 +46,19 @@ export const MockProjectResults: ProjectResult[] = [
                 reviewerHandleColor: '#EF3A3A',
                 score: 94.33,
             },
+            {
+                appeals: [
+                    {
+                        id: '3',
+                        success: true,
+                    },
+                ],
+                createdAt: new Date()
+                    .toISOString(),
+                reviewerHandle: 'TheRichCode',
+                reviewerHandleColor: '#0A0A0A',
+                score: 94.5,
+            },
         ],
         submissionId: '736590',
     },
@@ -55,7 +68,7 @@ export const MockProjectResults: ProjectResult[] = [
             .toISOString(),
         finalScore: roundWith2DecimalPlaces((90.67 + 94.0) / 2),
         handle: 'shubhangi18',
-        handleColor: '#545F71',
+        handleColor: '#0A0A0A',
         initialScore: 96.45,
         placement: 2,
         reviews: [
@@ -85,6 +98,19 @@ export const MockProjectResults: ProjectResult[] = [
                 reviewerHandleColor: '#EF3A3A',
                 score: 94.0,
             },
+            {
+                appeals: [
+                    {
+                        id: '3',
+                        success: true,
+                    },
+                ],
+                createdAt: new Date()
+                    .toISOString(),
+                reviewerHandle: 'TheRichCode',
+                reviewerHandleColor: '#0A0A0A',
+                score: 94.5,
+            },
         ],
         submissionId: '736592',
     },
@@ -94,7 +120,7 @@ export const MockProjectResults: ProjectResult[] = [
             .toISOString(),
         finalScore: roundWith2DecimalPlaces((98.0 + 94.33) / 2),
         handle: 'Nikesh2003',
-        handleColor: '#545F71',
+        handleColor: '#0A0A0A',
         initialScore: 96.17,
         placement: 3,
         reviews: [
@@ -124,6 +150,19 @@ export const MockProjectResults: ProjectResult[] = [
                 reviewerHandleColor: '#EF3A3A',
                 score: 94.33,
             },
+            {
+                appeals: [
+                    {
+                        id: '3',
+                        success: true,
+                    },
+                ],
+                createdAt: new Date()
+                    .toISOString(),
+                reviewerHandle: 'TheRichCode',
+                reviewerHandleColor: '#0A0A0A',
+                score: 94.5,
+            },
         ],
         submissionId: '736597',
     },
@@ -133,9 +172,9 @@ export const MockProjectResults: ProjectResult[] = [
             .toISOString(),
         finalScore: roundWith2DecimalPlaces((90.67 + 94.5) / 2),
         handle: 'nursoltan-s',
-        handleColor: '#545F71',
+        handleColor: '#0A0A0A',
         initialScore: 92.33,
-        placement: 4,
+        placement: 0,
         reviews: [
             {
                 appeals: [
@@ -163,8 +202,21 @@ export const MockProjectResults: ProjectResult[] = [
                 reviewerHandleColor: '#EF3A3A',
                 score: 94.5,
             },
+            {
+                appeals: [
+                    {
+                        id: '3',
+                        success: true,
+                    },
+                ],
+                createdAt: new Date()
+                    .toISOString(),
+                reviewerHandle: 'TheRichCode',
+                reviewerHandleColor: '#0A0A0A',
+                score: 94.5,
+            },
         ],
-        submissionId: '726592',
+        submissionId: '726598',
     },
     {
         challengeId: '1',
@@ -200,6 +252,19 @@ export const MockProjectResults: ProjectResult[] = [
                     .toISOString(),
                 reviewerHandle: 'vasilica.olariu',
                 reviewerHandleColor: '#EF3A3A',
+                score: 94.5,
+            },
+            {
+                appeals: [
+                    {
+                        id: '3',
+                        success: true,
+                    },
+                ],
+                createdAt: new Date()
+                    .toISOString(),
+                reviewerHandle: 'TheRichCode',
+                reviewerHandleColor: '#0A0A0A',
                 score: 94.5,
             },
         ],
@@ -240,6 +305,19 @@ export const MockProjectResults: ProjectResult[] = [
                 reviewerHandle: 'vasilica.olariu',
                 reviewerHandleColor: '#EF3A3A',
                 score: 91.2,
+            },
+            {
+                appeals: [
+                    {
+                        id: '3',
+                        success: true,
+                    },
+                ],
+                createdAt: new Date()
+                    .toISOString(),
+                reviewerHandle: 'TheRichCode',
+                reviewerHandleColor: '#0A0A0A',
+                score: 94.5,
             },
         ],
         submissionId: '726545',

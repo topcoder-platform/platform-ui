@@ -3,7 +3,7 @@
 .container {
     display: flex;
     flex-direction: column;
-    margin-top: 54px;
+    margin-top: $sp-10;
 }
 
 .blockForm {
@@ -26,15 +26,20 @@
 
 .textErrorTop,
 .textErrorBottom {
+    align-items: center;
     color: var(--RedError);
-    font-size: 16px;
-    line-height: 22px;
-    font-weight: $font-weight-semibold;
-    height: 22px;
+    display: flex;
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 700;
+    & > i {
+        margin-right: $sp-2;
+    }
 }
 
 .textErrorTop {
-    margin-bottom: 17px;
+    margin-bottom: $sp-6;
 
     &.isEmpty {
         height: 2px;
@@ -45,28 +50,50 @@
 .blockTable {
     font-size: 16px;
     line-height: 22px;
+    @include ltemd {
+        display: block;
+        tbody {
+            display: block;
+        }
+    }
 }
 
 .blockRowGroup {
+    @include ltemd {
+        display: block;
+    }
     td {
-        background-color: var(--Primary);
+        background-color: var(--Actived);
+        font-family: 'Nunito Sans', sans-serif;
         color: white;
-        padding: 12px 16px;
-        font-weight: $font-weight-semibold;
+        padding: $sp-4;
+        font-weight: 700;
+        @include ltemd {
+            display: block;
+        }
     }
 }
 
 .blockRowSection {
     td {
-        padding: 16px;
-        background-color: var(--Tertiary);
-
-        &:first-child {
-            font-weight: $font-weight-semibold;
-        }
+        color: var(--FontColor);
+        font-family: 'Nunito Sans', sans-serif;
+        font-size: 14px;
+        padding: $sp-4;
+        background-color: var(--TableSubHeader);
+        font-weight: 700;
+        line-height: 20px;
 
         @include ltemd {
-            padding: 16px 4px;
+            display: block;
+            padding: $sp-4;
+        }
+    }
+    @include ltemd {
+        display: block;
+        td:nth-child(2),
+        td:nth-child(3) {
+            display: none;
         }
     }
 }
@@ -76,25 +103,46 @@
     align-items: center;
     gap: 20px;
     justify-content: space-between;
-    margin-top: 34px;
+    margin-top: 64px;
+    margin-bottom: 56px;
     flex-wrap: wrap;
+    @include ltemd {
+        gap: 10px;
+        margin: $sp-4 0;
+    }
 }
 
 .blockBtns {
     display: flex;
-    gap: 24px;
+    gap: $sp-4;
     flex-wrap: wrap;
+    @include ltemd {
+        gap: 10px;
+    }
 }
 
 .blockBottomView {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 49px;
-    margin-top: 34px;
-
     .textTotalScore {
-        gap: 23px;
-        margin-right: 78px;
+        background-color: var(--TableColumn);
+        color: var(--FontColor);
+        font-family: 'Nunito Sans', sans-serif;
+        font-weight: 700;
+        padding: $sp-4 0;
+        margin-right: 0;
+        justify-content: flex-end;
+        span:nth-child(1) {
+            text-align: center;
+            width: 126px;
+        }
+        span:nth-child(2) {
+            padding: 0 $sp-4;
+            width: 160px;
+        }
+    }
+    .buttons {
+        margin-top: 64px;
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 56px;
     }
 }

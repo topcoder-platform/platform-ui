@@ -1,9 +1,9 @@
 /**
  * Table Active Reviews.
  */
-import { FC, useMemo } from 'react'
-import { Link } from 'react-router-dom'
-import _ from 'lodash'
+import { FC, useCallback, useMemo } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import _, { bind, lowerCase } from 'lodash'
 import classNames from 'classnames'
 
 import { MobileTableColumn } from '~/apps/admin/src/lib/models/MobileTableColumn.model'
@@ -13,6 +13,8 @@ import { Table, TableColumn } from '~/libs/ui'
 
 import { ChallengeInfo } from '../../models'
 import { TableWrapper } from '../TableWrapper'
+import { ProgressBar } from '../ProgressBar'
+import { useRole } from '../../hooks/useRole'
 
 import styles from './TableActiveReviews.module.scss'
 
@@ -22,8 +24,19 @@ interface Props {
 }
 
 export const TableActiveReviews: FC<Props> = (props: Props) => {
+    const navigate = useNavigate()
+    const { updateRole }: { updateRole: (role: string) => void} = useRole()
     const { width: screenWidth }: WindowSize = useWindowSize()
     const isTablet = useMemo(() => screenWidth <= 744, [screenWidth])
+
+    const redirect = useCallback(
+        (data: ChallengeInfo, e: React.MouseEvent<HTMLAnchorElement>) => {
+            e.preventDefault()
+            updateRole(data.role)
+            navigate(`${data.id}/challenge-details`)
+        },
+        [navigate, updateRole],
+    )
 
     const columns = useMemo<TableColumn<ChallengeInfo>[]>(
         () => [
@@ -37,14 +50,32 @@ export const TableActiveReviews: FC<Props> = (props: Props) => {
                 label: 'Project',
                 propertyName: 'name',
                 renderer: (data: ChallengeInfo) => (
-                    <Link to={`${data.id}/challenge-details`}>{data.name}</Link>
+                    <Link to='/' onClick={bind(redirect, this, data)}>
+                        {data.name}
+                    </Link>
                 ),
                 type: 'element',
             },
             {
+                label: 'My Role',
+                propertyName: 'role',
+                type: 'text',
+            },
+            {
                 label: 'Phase',
                 propertyName: 'currentPhase',
-                type: 'text',
+                renderer: (data: ChallengeInfo) => (
+                    <div className={styles.phase}>
+                        <i
+                            className={`icon-${
+                                lowerCase(data.currentPhase)
+                                    .split(' ')[0]
+                            }`}
+                        />
+                        {data.currentPhase}
+                    </div>
+                ),
+                type: 'element',
             },
             {
                 label: 'Phase End Date',
@@ -56,10 +87,16 @@ export const TableActiveReviews: FC<Props> = (props: Props) => {
                 propertyName: 'timeLeft',
                 renderer: (data: ChallengeInfo) => (
                     <span
+                        className={styles.timeLeft}
                         style={{
                             color: data.timeLeftColor,
+                            fontWeight:
+                                data.timeLeftStatus === 'normal'
+                                    ? '400'
+                                    : '700',
                         }}
                     >
+                        <i className={`icon-${data.timeLeftStatus}`} />
                         {data.timeLeft}
                     </span>
                 ),
@@ -68,18 +105,18 @@ export const TableActiveReviews: FC<Props> = (props: Props) => {
             {
                 label: 'Review Progress',
                 propertyName: 'reviewProgress',
-                renderer: (data: ChallengeInfo) => (data.reviewProgress ? (
-                    <span>
-                        {data.reviewProgress}
-                        % Completed
-                    </span>
-                ) : (
-                    <span>-</span>
-                )),
+                renderer: (data: ChallengeInfo) => (
+                    <div className='last-element'>
+                        <ProgressBar
+                            progress={data.reviewProgress}
+                            progressWidth='80px'
+                        />
+                    </div>
+                ),
                 type: 'element',
             },
         ],
-        [],
+        [redirect],
     )
 
     const columnsMobile = useMemo<MobileTableColumn<ChallengeInfo>[][]>(
@@ -106,7 +143,13 @@ export const TableActiveReviews: FC<Props> = (props: Props) => {
     )
 
     return (
-        <TableWrapper className={classNames(styles.container, props.className)}>
+        <TableWrapper
+            className={classNames(
+                styles.container,
+                props.className,
+                'enhanced-table',
+            )}
+        >
             {isTablet ? (
                 <TableMobile columns={columnsMobile} data={props.datas} />
             ) : (

@@ -1,7 +1,7 @@
 /**
  * Scorecard Question View.
  */
-import { FC, Fragment, useMemo } from 'react'
+import { Dispatch, FC, Fragment, SetStateAction, useMemo } from 'react'
 import classNames from 'classnames'
 
 import { useWindowSize, WindowSize } from '~/libs/shared'
@@ -10,6 +10,10 @@ import { AppealComment } from '../AppealComment'
 import { MarkdownReview } from '../MarkdownReview'
 import { AppealInfo, ReviewItemInfo, ScorecardQuestion } from '../../models'
 import { stringIsNumberic } from '../../utils'
+import { IconChevronDown } from '../../assets/icons'
+import { useRole } from '../../hooks'
+import { REVIEWER } from '../../../config/index.config'
+import { Appeal } from '../Appeal'
 
 import styles from './ScorecardQuestionView.module.scss'
 
@@ -23,18 +27,28 @@ interface Props {
     mappingAppeals: {
         [reviewItemCommentId: string]: AppealInfo
     }
+    isExpand: { [key: string]: boolean }
+    setIsExpand: Dispatch<
+        SetStateAction<{
+            [key: string]: boolean
+        }>
+    >
 }
 
 export const ScorecardQuestionView: FC<Props> = (props: Props) => {
+    const { role }: {role: string} = useRole()
+    const isExpand = props.isExpand[props.reviewItem.id]
     const { width: screenWidth }: WindowSize = useWindowSize()
     const isMobile = useMemo(() => screenWidth <= 745, [screenWidth])
 
-    const finalAnswer = useMemo(
-        () => (stringIsNumberic(props.reviewItem.finalAnswer)
-            ? `Rating ${props.reviewItem.finalAnswer}`
-            : props.reviewItem.finalAnswer),
-        [props.reviewItem.finalAnswer],
-    )
+    const finalAnswer = useMemo(() => {
+        if (stringIsNumberic(props.reviewItem.finalAnswer)) {
+            return `Rating ${props.reviewItem.finalAnswer}`
+        }
+
+        return props.reviewItem.finalAnswer
+
+    }, [props.reviewItem.finalAnswer])
 
     return (
         <>
@@ -43,24 +57,60 @@ export const ScorecardQuestionView: FC<Props> = (props: Props) => {
                     styles.container,
                     props.className,
                     styles.blockRowQuestionHeader,
+                    {
+                        [styles.isExpand]: isExpand,
+                    },
                 )}
             >
                 <td className={styles.blockCellQuestion}>
-                    Question
-                    {' '}
-                    {props.groupIndex + 1}
-                    .
-                    {props.sectionIndex + 1}
-                    .
-                    {props.questionIndex + 1}
-                    {' '}
-                    {props.scorecardQuestion.description}
+                    <button
+                        type='button'
+                        className={classNames(styles.btnExpand, {
+                            [styles.expand]: isExpand,
+                        })}
+                        onClick={function onClick() {
+                            props.setIsExpand({
+                                ...props.isExpand,
+                                [props.reviewItem.id]: !isExpand,
+                            })
+                        }}
+                    >
+                        <IconChevronDown />
+                    </button>
+                    <span className={styles.textQuestion}>
+                        <strong>
+                            Question
+                            {props.groupIndex + 1}
+                            .
+                            {props.sectionIndex + 1}
+                            .
+                            {props.questionIndex + 1}
+                        </strong>
+                        {props.scorecardQuestion.description}
+                    </span>
                 </td>
                 <td className={styles.blockCellWeight}>
+                    <i>Weight: </i>
                     {props.scorecardQuestion.weight.toFixed(1)}
                 </td>
                 <td className={styles.blockCellResponse}>{finalAnswer}</td>
             </tr>
+            {isExpand && (
+                <tr
+                    className={classNames(
+                        styles.container,
+                        props.className,
+                        styles.blockRowGuidelines,
+                    )}
+                >
+                    <td colSpan={3}>
+                        <MarkdownReview
+                            value={props.scorecardQuestion.guidelines}
+                            className={styles.textGuidelines}
+                        />
+                    </td>
+                </tr>
+            )}
 
             {props.reviewItem.reviewItemComments.map((commentItem, index) => (
                 <Fragment key={commentItem.sortOrder}>
@@ -72,17 +122,18 @@ export const ScorecardQuestionView: FC<Props> = (props: Props) => {
                             {
                                 [styles.isLast]:
                                     index
-                                    === props.reviewItem.reviewItemComments.length
-                                    - 1
-                                    && !props.mappingAppeals[commentItem.id],
+                                    === props.reviewItem.reviewItemComments
+                                        .length
+                                            - 1
+                                            && !props.mappingAppeals[commentItem.id]
+                                            && role === REVIEWER,
                             },
                         )}
                     >
-                        <td colSpan={isMobile ? 3 : 1}>
+                        <td colSpan={isMobile ? 3 : 2}>
                             <div className={styles.blockResponseComment}>
                                 <span className={styles.textResponse}>
                                     Response
-                                    {' '}
                                     {index + 1}
                                     :
                                 </span>
@@ -99,7 +150,7 @@ export const ScorecardQuestionView: FC<Props> = (props: Props) => {
                             </div>
                         </td>
                     </tr>
-                    {props.mappingAppeals[commentItem.id] && (
+                    {role === REVIEWER ? props.mappingAppeals[commentItem.id] && (
                         <tr
                             key={commentItem.sortOrder}
                             className={classNames(
@@ -109,8 +160,8 @@ export const ScorecardQuestionView: FC<Props> = (props: Props) => {
                                 {
                                     [styles.isLast]:
                                         index
-                                        === props.reviewItem.reviewItemComments.length
-                                        - 1,
+                                            === props.reviewItem.reviewItemComments.length
+                                            - 1,
                                 },
                             )}
                         >
@@ -118,6 +169,24 @@ export const ScorecardQuestionView: FC<Props> = (props: Props) => {
                                 <AppealComment
                                     data={props.mappingAppeals[commentItem.id]}
                                 />
+                            </td>
+                        </tr>
+                    ) : (
+                        <tr
+                            className={classNames(
+                                styles.container,
+                                props.className,
+                                styles.blockRowAppealComment,
+                                {
+                                    [styles.isLast]:
+                                        index
+                                            === props.reviewItem.reviewItemComments.length
+                                            - 1,
+                                },
+                            )}
+                        >
+                            <td colSpan={3}>
+                                <Appeal />
                             </td>
                         </tr>
                     )}

@@ -6,8 +6,6 @@
     color: var(--Primary);
 
     .main {
-        padding: 36px 32px;
-
         @include ltelg {
             padding: 36px 0;
         }
@@ -22,7 +20,7 @@
 }
 
 .contentLayoutOuter {
-    margin: $sp-8 auto !important;
+    margin: $sp-6 auto !important;
 }
 
 .contantentLayoutInner {

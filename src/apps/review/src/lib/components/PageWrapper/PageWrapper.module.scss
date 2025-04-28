@@ -1,4 +1,4 @@
-@import "@libs/ui/styles/includes";
+@import '@libs/ui/styles/includes';
 
 .container {
     display: flex;
@@ -11,14 +11,16 @@
     justify-content: space-between;
     gap: 20px;
     flex-wrap: wrap;
-}
 
-.textTitle {
-    color: var(--Primary);
-    font-size: 32px;
-    line-height: 36px;
+    .textTitle {
+        font-family: 'Inter', sans-serif;
+        color: var(--FontColor);
+        font-size: $sp-8;
+        line-height: 36px;
+        text-transform: none;
 
-    @include font-weight-bold;
+        @include font-weight-bold;
+    }
 }
 
 .blockHeaderRight {
@@ -34,5 +36,6 @@
 }
 
 .blockExternalLink {
-    margin-bottom: 5px;
+    margin-left: $sp-2;
+    margin-bottom: 6px;
 }

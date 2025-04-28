@@ -2,8 +2,8 @@
 
 .container {
     display: flex;
-    gap: 48px;
-    margin-top: 24px;
+    gap: $sp-10;
+    margin-top: $sp-6;
     flex-wrap: wrap;
 
     @include ltelg {
@@ -21,11 +21,45 @@
     display: flex;
     font-size: 14px;
     line-height: 19px;
-    /* identical to box height, or 136% */
-    letter-spacing: -0.02em;
-    gap: 5px;
+
+    .circleWrapper {
+        align-items: center;
+        background-color: #E9ECEF;
+        border-radius: 50%;
+        height: 40px;
+        display: flex;
+        margin-right: $sp-4;
+        flex-shrink: 0;
+        justify-content: center;
+        width: 40px;
+    }
 
     strong {
-        @include font-weight-semibold;
+        align-items: center;
+        color: var(--FontColor);
+        font-family: "Nunito Sans", sans-serif;
+        display: flex;
+        font-weight: 700;
+        line-height: 20px;
+        i {
+            margin-right: $sp-2;
+        }
+    }
+    span {
+        color: var(--GrayFontColor);
+        display: block;
+        font-family: "Nunito Sans", sans-serif;
+        line-height: 20px;
+    }
+}
+
+.progress {
+    display: block;
+    padding-top: 7px;
+    padding-left: $sp-4;
+    .progressText {
+        display: flex;
+        justify-content: space-between;
+        padding-top: 7px;
     }
 }

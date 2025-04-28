@@ -1,15 +1,29 @@
+@import '@libs/ui/styles/includes';
+
 .container {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
 }
 
-.fieldSelect {
-    width: 100%;
-    max-width: 345px;
-    margin-top: 54px;
+.filter-bar {
+    padding-top: 55px;
+    width: 360px;
+    label {
+        display: block;
+        font-family: "Nunito Sans", sans-serif;
+        font-weight: 700;
+        font-size: 14px;
+        color: var(--FontColor);
+        margin-bottom: $sp-2;
+        line-height: 20px;
+    }
+    @include ltemd {
+        width: 100%;
+    }
 }
 
 .blockTable {
-    margin-top: 26px;
+    margin-top: $sp-6;
+    margin-bottom: $sp-10;
 }

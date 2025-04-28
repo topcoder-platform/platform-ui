@@ -3,9 +3,32 @@
 .container {
     display: flex;
     flex-direction: column;
+    @include ltemd {
+        &:global(.enhanced-table) {
+            table {
+                tbody {
+                    tr:has(:global(.last-element)) {
+                        td {
+                            border-bottom: 0;
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 .textBlue,
 .textBlue:hover {
     color: $link-blue-dark;
+}
+
+.phase,
+.timeLeft {
+    align-items: center;
+    display: flex;
+    i {
+        flex-shrink: 0;
+        margin-right: $sp-2;
+    }
 }
