@@ -76,7 +76,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
         totalPages: 0,
     })
     const [editState, setEditState] = React.useState<{
-        netAmount?: number;
+        grossAmount?: number;
         releaseDate?: Date;
         paymentStatus?: string;
         auditNote?: string;
@@ -91,7 +91,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
 
     const handleValueUpdated = useCallback((updates: {
         auditNote?: string,
-        netAmount?: number,
+        grossAmount?: number,
         paymentStatus?: string,
         releaseDate?: Date,
     }) => {
@@ -145,10 +145,10 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                 description: payment.description,
                 details: payment.details,
                 externalId: payment.externalId,
+                grossAmount: formatCurrency(payment.details[0].grossAmount, payment.details[0].currency),
+                grossAmountNumber: parseFloat(payment.details[0].grossAmount),
                 handle: handleMap.get(parseInt(payment.winnerId, 10)) ?? payment.winnerId,
                 id: payment.id,
-                netPayment: formatCurrency(payment.details[0].totalAmount, payment.details[0].currency),
-                netPaymentNumber: parseFloat(payment.details[0].totalAmount),
                 releaseDate: formattedReleaseDate,
                 releaseDateObj: releaseDate,
                 status,
@@ -225,7 +225,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
         // Send to server only the fields that have changed
         const updateObj = {
             auditNote: currentEditState.auditNote !== undefined ? currentEditState.auditNote : undefined,
-            netAmount: currentEditState.netAmount !== undefined ? currentEditState.netAmount : undefined,
+            grossAmount: currentEditState.grossAmount !== undefined ? currentEditState.grossAmount : undefined,
             paymentStatus: currentEditState.paymentStatus !== undefined ? currentEditState.paymentStatus : undefined,
             releaseDate: currentEditState.releaseDate !== undefined ? currentEditState.releaseDate : undefined,
         }
@@ -255,7 +255,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
         if (paymentStatus) updates.paymentStatus = paymentStatus
         if (paymentStatus !== 'CANCELLED') {
             if (updateObj.releaseDate !== undefined) updates.releaseDate = updateObj.releaseDate.toISOString()
-            if (updateObj.netAmount !== undefined) updates.paymentAmount = updateObj.netAmount
+            if (updateObj.grossAmount !== undefined) updates.paymentAmount = updateObj.grossAmount
         }
 
         toast.success('Updating payment', { position: toast.POSITION.BOTTOM_RIGHT })
