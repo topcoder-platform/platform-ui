@@ -91,7 +91,10 @@ const CopilotOpportunityList: FC<{}> = () => {
     const navigate = useNavigate()
 
     const { profile }: ProfileContextData = useContext(profileContext)
-    const isAdmin: boolean = useMemo(() => !!profile?.roles?.includes(UserRole.tcaAdmin), [profile])
+    const isAdminOrPM: boolean = useMemo(
+        () => !!profile?.roles?.some(role => role === UserRole.tcaAdmin || role === UserRole.projectManager),
+        [profile],
+    )
 
     const {
         data: opportunities, isValidating, size, setSize,
@@ -120,7 +123,7 @@ const CopilotOpportunityList: FC<{}> = () => {
     return (
         <ContentLayout
             title='Copilot Opportunities'
-            buttonConfig={isAdmin ? addNewRequestButton : undefined}
+            buttonConfig={isAdminOrPM ? addNewRequestButton : undefined}
         >
             <PageTitle>Copilot Opportunities</PageTitle>
             <Table
