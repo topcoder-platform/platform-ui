@@ -206,6 +206,9 @@ export const formEditClientSchema: Yup.ObjectSchema<FormEditClient>
  */
 export const formRoleMembersFiltersSchema: Yup.ObjectSchema<FormRoleMembersFilters>
     = Yup.object({
+        email: Yup.string()
+            .trim()
+            .optional(),
         userHandle: Yup.string()
             .trim()
             .optional(),
@@ -250,8 +253,13 @@ export const formGroupMembersFiltersSchema: Yup.ObjectSchema<FormGroupMembersFil
  */
 export const formRolesFilterSchema: Yup.ObjectSchema<FormRolesFilter>
     = Yup.object({
-        roleName: Yup.string()
-            .trim()
+        roleName: Yup.object()
+            .shape({
+                label: Yup.string()
+                    .required('Label is required.'),
+                value: Yup.string()
+                    .required('Value is required.'),
+            })
             .required('Role is required.'),
     })
 

@@ -66,6 +66,17 @@ export const RoleMembersFilters: FC<Props> = props => {
                     inputControl={register('userHandle')}
                     disabled={props.isLoading}
                 />
+                <InputText
+                    type='text'
+                    name='email'
+                    label='Email'
+                    placeholder='Enter'
+                    tabIndex={0}
+                    onChange={_.noop}
+                    classNameWrapper={styles.field}
+                    inputControl={register('email')}
+                    disabled={props.isLoading}
+                />
             </div>
 
             <div className={styles.blockBottom}>

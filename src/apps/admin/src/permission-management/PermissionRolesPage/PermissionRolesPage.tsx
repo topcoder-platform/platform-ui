@@ -54,6 +54,7 @@ export const PermissionRolesPage: FC<Props> = (props: Props) => {
                         doFilterRole(filterDatas)
                     }}
                     doAddRole={doAddRole}
+                    roles={roles}
                 />
                 <PageDivider />
                 {isLoading ? (

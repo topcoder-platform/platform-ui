@@ -3,5 +3,6 @@
  */
 export interface RoleMemberInfo {
     id: string
-    handle?: string
+    handle: string | null
+    email: string | null
 }
