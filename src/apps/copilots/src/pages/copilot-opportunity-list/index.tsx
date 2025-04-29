@@ -111,7 +111,7 @@ const CopilotOpportunityList: FC<{}> = () => {
     )
 
     const {
-        data: opportunities, isValidating, size, setSize,
+        data: opportunities, hasMoreOpportunities, isValidating, size, setSize,
     }: CopilotOpportunitiesResponse = useCopilotOpportunities()
 
     const tableData = useMemo(() => opportunities.map(opportunity => ({
@@ -143,7 +143,7 @@ const CopilotOpportunityList: FC<{}> = () => {
             <Table
                 columns={tableColumns}
                 data={tableData}
-                moreToLoad={isValidating || opportunities.length > 0}
+                moreToLoad={hasMoreOpportunities}
                 onLoadMoreClick={loadMore}
                 onRowClick={handleRowClick}
                 removeDefaultSort

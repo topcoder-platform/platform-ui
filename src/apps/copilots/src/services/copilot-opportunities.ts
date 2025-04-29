@@ -29,6 +29,7 @@ function copilotOpportunityFactory(data: any): CopilotOpportunity {
 export interface CopilotOpportunitiesResponse {
     isValidating: boolean;
     data: CopilotOpportunity[];
+    hasMoreOpportunities: boolean;
     size: number;
     setSize: (size: number) => void;
 }
@@ -59,7 +60,10 @@ export const useCopilotOpportunities = (): CopilotOpportunitiesResponse => {
     // Flatten data array
     const opportunities = data ? data.flat() : []
 
-    return { data: opportunities, isValidating, setSize: (s: number) => { setSize(s) }, size }
+    const lastPage = data[data.length - 1] || []
+    const hasMoreOpportunities = lastPage.length === PAGE_SIZE
+
+    return { data: opportunities, hasMoreOpportunities, isValidating, setSize: (s: number) => { setSize(s) }, size }
 }
 
 export type CopilotOpportunityResponse = SWRResponse<CopilotOpportunity, CopilotOpportunity>
