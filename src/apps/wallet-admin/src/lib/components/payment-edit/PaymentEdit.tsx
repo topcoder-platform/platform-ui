@@ -15,10 +15,10 @@ interface PaymentEditFormProps {
     payment: Winning
     canSave?: (canSave: boolean) => void
     onValueUpdated?: ({
-        releaseDate, netAmount, paymentStatus, auditNote,
+        releaseDate, grossAmount, paymentStatus, auditNote,
     }: {
         releaseDate?: Date
-        netAmount?: number
+        grossAmount?: number
         paymentStatus?: string
         auditNote?: string
     }) => void
@@ -27,32 +27,32 @@ interface PaymentEditFormProps {
 const PaymentEdit: React.FC<PaymentEditFormProps> = (props: PaymentEditFormProps) => {
     const [paymentStatus, setPaymentStatus] = useState('')
     const [releaseDate, setReleaseDate] = useState(new Date())
-    const [netAmount, setNetAmount] = useState(0)
-    const [netAmountErrorString, setNetAmountErrorString] = useState('')
+    const [grossAmount, setGrossAmount] = useState(0)
+    const [grossAmountErrorString, setGrossAmountErrorString] = useState('')
     const [auditNote, setAuditNote] = useState('')
     const [dirty, setDirty] = useState(false)
     const [disableEdits, setDisableEdits] = useState(false)
 
     const initialValues = useMemo(() => ({
         auditNote: '',
-        netPayment: props.payment.netPaymentNumber,
+        grossAmount: props.payment.grossAmountNumber,
         paymentStatus: props.payment.status,
         releaseDate: props.payment.releaseDateObj,
     }), [props.payment])
 
-    const validateNetAmount = (value: number): boolean => {
+    const validateGrossAmount = (value: number): boolean => {
         if (Number.isNaN(value)) {
-            setNetAmountErrorString('A valid number is required')
+            setGrossAmountErrorString('A valid number is required')
             return false
         }
 
         if (value < 0) {
-            setNetAmountErrorString('Net Payment must be greater than 0')
+            setGrossAmountErrorString('Payment must be greater than 0')
             return false
         }
 
         if (!/^\d+(\.\d{0,2})?$/.test(value.toString())) {
-            setNetAmountErrorString('Amount can only have 2 decimal places at most')
+            setGrossAmountErrorString('Amount can only have 2 decimal places at most')
             return false
         }
 
@@ -63,17 +63,17 @@ const PaymentEdit: React.FC<PaymentEditFormProps> = (props: PaymentEditFormProps
         let isValid = true
 
         switch (name) {
-            case 'netPayment':
-                isValid = validateNetAmount(value as number)
+            case 'grossPayment':
+                isValid = validateGrossAmount(value as number)
                 if (isValid) {
-                    setNetAmount(value as number)
+                    setGrossAmount(value as number)
                     if (props.onValueUpdated) {
                         props.onValueUpdated({
-                            netAmount: value as number,
+                            grossAmount: value as number,
                         })
                     }
 
-                    setNetAmountErrorString('')
+                    setGrossAmountErrorString('')
                 }
 
                 break
@@ -112,13 +112,13 @@ const PaymentEdit: React.FC<PaymentEditFormProps> = (props: PaymentEditFormProps
     useEffect(() => {
         setPaymentStatus(props.payment.status)
         setReleaseDate(props.payment.releaseDateObj)
-        setNetAmount(props.payment.netPaymentNumber)
+        setGrossAmount(props.payment.grossAmountNumber)
     }, [props.payment])
 
     useEffect(() => {
         const valuesToCheck = [{
-            key: 'netPayment',
-            value: netAmount,
+            key: 'grossPayment',
+            value: grossAmount,
         }, {
             key: 'paymentStatus',
             value: paymentStatus,
@@ -132,7 +132,7 @@ const PaymentEdit: React.FC<PaymentEditFormProps> = (props: PaymentEditFormProps
 
         const isDirty = valuesToCheck.some(x => x.value !== initialValues[x.key as keyof typeof initialValues])
         setDirty(isDirty)
-    }, [netAmount, paymentStatus, releaseDate, auditNote, initialValues])
+    }, [grossAmount, paymentStatus, releaseDate, auditNote, initialValues])
 
     useEffect(() => {
         if (props.canSave) {
@@ -140,8 +140,8 @@ const PaymentEdit: React.FC<PaymentEditFormProps> = (props: PaymentEditFormProps
                 props.canSave(false)
             } else {
                 const valuesToCheck = [{
-                    key: 'netPayment',
-                    value: netAmount,
+                    key: 'grossPayment',
+                    value: grossAmount,
                 }, {
                     key: 'paymentStatus',
                     value: paymentStatus,
@@ -151,10 +151,10 @@ const PaymentEdit: React.FC<PaymentEditFormProps> = (props: PaymentEditFormProps
                 }]
 
                 const haveChange = valuesToCheck.some(x => x.value !== initialValues[x.key as keyof typeof initialValues]) // check if any value has changed that's not the audit note
-                props.canSave(haveChange && netAmountErrorString.length === 0 && auditNote.length > 0)
+                props.canSave(haveChange && grossAmountErrorString.length === 0 && auditNote.length > 0)
             }
         }
-    }, [dirty, auditNote, props, netAmountErrorString.length, netAmount, paymentStatus, releaseDate, initialValues])
+    }, [dirty, auditNote, props, grossAmountErrorString.length, grossAmount, paymentStatus, releaseDate, initialValues])
 
     const getLink = (externalId: string): string => `${TOPCODER_URL}/challenges/${externalId}`
 
@@ -198,16 +198,16 @@ const PaymentEdit: React.FC<PaymentEditFormProps> = (props: PaymentEditFormProps
                 </div>
 
                 <InputText
-                    name='netPayment'
-                    label='Net Payment'
+                    name='grossPayment'
+                    label='Gross Payment'
                     type='number'
                     disabled={disableEdits}
-                    placeholder='Modify Net Payment'
+                    placeholder='Modify Gross Payment Amount'
                     dirty
                     tabIndex={0}
-                    error={netAmountErrorString}
-                    value={props.payment.netPaymentNumber.toString()}
-                    onChange={e => handleInputChange('netPayment', parseFloat(e.target.value))}
+                    error={grossAmountErrorString}
+                    value={props.payment.grossAmountNumber.toString()}
+                    onChange={e => handleInputChange('grossPayment', parseFloat(e.target.value))}
 
                 />
                 <InputSelect
