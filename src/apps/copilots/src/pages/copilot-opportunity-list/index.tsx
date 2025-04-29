@@ -1,14 +1,16 @@
-import { FC, useMemo } from 'react'
+import { FC, useContext, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import classNames from 'classnames'
 
 import {
+    ButtonProps,
     ContentLayout,
     LoadingSpinner,
     PageTitle,
     Table,
     TableColumn,
 } from '~/libs/ui'
+import { profileContext, ProfileContextData, UserRole } from '~/libs/core'
 
 import { CopilotOpportunity } from '../../models/CopilotOpportunity'
 import { copilotRoutesMap } from '../../copilots.routes'
@@ -102,6 +104,12 @@ const tableColumns: TableColumn<CopilotOpportunity>[] = [
 const CopilotOpportunityList: FC<{}> = () => {
     const navigate = useNavigate()
 
+    const { profile }: ProfileContextData = useContext(profileContext)
+    const isAdminOrPM: boolean = useMemo(
+        () => !!profile?.roles?.some(role => role === UserRole.tcaAdmin || role === UserRole.projectManager),
+        [profile],
+    )
+
     const {
         data: opportunities, isValidating, size, setSize,
     }: CopilotOpportunitiesResponse = useCopilotOpportunities()
@@ -121,9 +129,15 @@ const CopilotOpportunityList: FC<{}> = () => {
 
     const opportunitiesLoading = isValidating
 
+    const addNewRequestButton: ButtonProps = {
+        label: 'New Copilot Request',
+        onClick: () => navigate(copilotRoutesMap.CopilotRequestForm),
+    }
+
     return (
         <ContentLayout
             title='Copilot Opportunities'
+            buttonConfig={isAdminOrPM ? addNewRequestButton : undefined}
         >
             <PageTitle>Copilot Opportunities</PageTitle>
             <Table
