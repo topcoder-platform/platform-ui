@@ -91,8 +91,9 @@ const CopilotOpportunityList: FC<{}> = () => {
     const navigate = useNavigate()
 
     const { profile }: ProfileContextData = useContext(profileContext)
+    console.log(profile)
     const isAdminOrPM: boolean = useMemo(
-        () => !!profile?.roles?.some(role => role === UserRole.tcaAdmin || role === UserRole.projectManager),
+        () => !!profile?.roles?.some(role => role === UserRole.administrator || role === UserRole.projectManager),
         [profile],
     )
 
