@@ -256,9 +256,9 @@ export const formRolesFilterSchema: Yup.ObjectSchema<FormRolesFilter>
         roleName: Yup.object()
             .shape({
                 label: Yup.string()
-                    .required('label id is required.'),
+                    .required('Label is required.'),
                 value: Yup.string()
-                    .required('value is required.'),
+                    .required('Value is required.'),
             })
             .required('Role is required.'),
     })

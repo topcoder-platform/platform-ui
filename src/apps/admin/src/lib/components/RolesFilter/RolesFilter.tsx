@@ -107,6 +107,9 @@ export const RolesFilter: FC<Props> = props => {
     return (
         <form
             className={classNames(styles.container, props.className)}
+            // Add this to prevent the unexpected action
+            // We only need to trigger submit when the submit button is clicked,
+            // and this is already handled by the onClick event of the submit button
             onSubmit={_.noop}
         >
             <div className={styles.fields}>
