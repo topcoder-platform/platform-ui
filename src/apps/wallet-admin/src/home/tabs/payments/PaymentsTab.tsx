@@ -8,13 +8,11 @@ import { Collapsible, ConfirmModal, LoadingCircles } from '~/libs/ui'
 import { UserProfile } from '~/libs/core'
 import { downloadBlob } from '~/libs/shared'
 
-import { editPayment, exportSearchResults, getMemberHandle, getPaymentMethods, getPayments, getTaxForms } from '../../../lib/services/wallet'
+import { editPayment, exportSearchResults, getMemberHandle, getPayments } from '../../../lib/services/wallet'
 import { Winning, WinningDetail } from '../../../lib/models/WinningDetail'
 import { FilterBar, formatIOSDateString, PaymentView } from '../../../lib'
 import { ConfirmFlowData } from '../../../lib/models/ConfirmFlowData'
 import { PaginationInfo } from '../../../lib/models/PaginationInfo'
-import { TaxForm } from '../../../lib/models/TaxForm'
-import { PaymentProvider } from '../../../lib/models/PaymentProvider'
 import PaymentEditForm from '../../../lib/components/payment-edit/PaymentEdit'
 import PaymentsTable from '../../../lib/components/payments-table/PaymentTable'
 
@@ -102,7 +100,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
     }, [])
 
     const convertToWinnings = useCallback(
-        (payments: WinningDetail[], handleMap: Map<number, string>, userHasTaxFormSetup: Map<string, boolean>, userHasPaymentProvider: Map<string, boolean>): ReadonlyArray<Winning> => payments.map(payment => {
+        (payments: WinningDetail[], handleMap: Map<number, string>): ReadonlyArray<Winning> => payments.map(payment => {
             const now = new Date()
             const releaseDate = new Date(payment.releaseDate)
             const diffMs = releaseDate.getTime() - now.getTime()
@@ -129,9 +127,9 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
             }
 
             if (status === 'ON_HOLD') {
-                if (!userHasTaxFormSetup.get(payment.winnerId)) {
+                if (!payment.paymentStatus?.taxFormSetupComplete) {
                     status = 'On Hold (Tax Form)'
-                } else if (!userHasPaymentProvider.get(payment.winnerId)) {
+                } else if (!payment.paymentStatus?.payoutSetupComplete) {
                     status = 'On Hold (Payment Provider)'
                 } else {
                     status = 'On Hold (Member)'
@@ -169,30 +167,8 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
             const payments = await getPayments(pagination.pageSize, (pagination.currentPage - 1) * pagination.pageSize, filters)
             const winnerIds = payments.winnings.map(winning => winning.winnerId)
 
-            const onHoldUserIds = payments.winnings
-                .filter(winning => winning.details[0].status === 'ON_HOLD')
-                .map(winning => winning.winnerId)
-
-            const userHasTaxFormSetup: Map<string, boolean> = new Map()
-            const userHasPaymentProvider: Map<string, boolean> = new Map()
-
-            try {
-                const missingTaxForms = await getTaxForms(100, 0, onHoldUserIds)
-                const missingPaymentProviders = await getPaymentMethods(100, 0, onHoldUserIds)
-
-                missingTaxForms.forms.forEach((form: TaxForm) => {
-                    userHasTaxFormSetup.set(form.userId, form.status === 'ACTIVE')
-                })
-
-                missingPaymentProviders.paymentMethods.forEach((method: PaymentProvider) => {
-                    userHasPaymentProvider.set(method.userId, method.status === 'CONNECTED')
-                })
-            } catch (err) {
-                // Ignore errors
-            }
-
             const handleMap = await getMemberHandle(winnerIds)
-            const winningsData = convertToWinnings(payments.winnings, handleMap, userHasTaxFormSetup, userHasPaymentProvider)
+            const winningsData = convertToWinnings(payments.winnings, handleMap)
             setWinnings(winningsData)
             setPagination(payments.pagination)
         } catch (apiError) {

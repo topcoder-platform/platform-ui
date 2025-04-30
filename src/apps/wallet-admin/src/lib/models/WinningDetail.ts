@@ -8,6 +8,11 @@ export interface PaymentDetail {
     datePaid: string
 }
 
+export interface PayoutStatus {
+    payoutSetupComplete: boolean;
+    taxFormSetupComplete: boolean;
+}
+
 export interface Winning {
     id: string
     description: string
@@ -42,4 +47,5 @@ export interface WinningDetail {
     createdAt: string
     releaseDate: string
     datePaid: string
+    paymentStatus?: PayoutStatus
 }
