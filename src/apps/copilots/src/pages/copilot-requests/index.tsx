@@ -1,4 +1,4 @@
-import { FC, useCallback, useMemo } from 'react'
+import { FC, useCallback, useContext, useMemo } from 'react'
 import { find } from 'lodash'
 import { NavigateFunction, Params, useNavigate, useParams } from 'react-router-dom'
 
@@ -14,6 +14,7 @@ import {
     TableColumn,
     useConfirmationModal,
 } from '~/libs/ui'
+import { profileContext, ProfileContextData, UserRole } from '~/libs/core'
 
 import { ProjectTypeLabels } from '../../constants'
 import { approveCopilotRequest, CopilotRequestsResponse, useCopilotRequests } from '../../services/copilot-requests'
@@ -121,6 +122,12 @@ const CopilotRequestsPage: FC = () => {
     const navigate: NavigateFunction = useNavigate()
     const routeParams: Params<string> = useParams()
 
+    const { profile }: ProfileContextData = useContext(profileContext)
+    const isAdminOrPM: boolean = useMemo(
+        () => !!profile?.roles?.some(role => role === UserRole.administrator || role === UserRole.projectManager),
+        [profile],
+    )
+
     const { data: requests = [], isValidating: requestsLoading }: CopilotRequestsResponse = useCopilotRequests()
     const projectIds = useMemo(() => (
         (new Set(requests.map(r => r.projectId))
@@ -156,6 +163,15 @@ const CopilotRequestsPage: FC = () => {
     const addNewRequestButton: ButtonProps = {
         label: 'New Copilot Request',
         onClick: () => navigate(copilotRoutesMap.CopilotRequestForm),
+    }
+
+    if (!isAdminOrPM) {
+        return (
+            <ContentLayout title='Copilot Requests'>
+                <PageTitle>Access Denied</PageTitle>
+                <p>You do not have required permissions to access this page.</p>
+            </ContentLayout>
+        )
     }
 
     return (
