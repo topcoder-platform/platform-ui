@@ -3,16 +3,17 @@
 .skillsContainer {
     display: flex;
     flex-wrap: wrap;
+    overflow: auto;
     gap: 8px;
 }
 
 .skillPill {
-    background-color: #aaaaaa;
+    background-color: #d6d6d6;
     color: #333;
     padding: 4px 8px;
     border-radius: 10px;
-    white-space: nowrap;
-    font-size: 14px;
+    white-space: break-spaces;
+    font-size: 11px;
 }
 
 .status {
@@ -20,10 +21,15 @@
     font-weight: bold;
     padding: 4px 8px;
     border-radius: 4px;
+    white-space: nowrap;
     display: inline-block;
     text-transform: capitalize;
 }
 
 .activeStatus {
     color: green;
+}
+
+.type {
+    white-space: nowrap;
 }

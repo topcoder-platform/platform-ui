@@ -2,5 +2,8 @@
  * Model for roles filter form
  */
 export type FormRolesFilter = {
-    roleName: string
+    roleName: {
+        label: string
+        value: string
+    } | null
 }
