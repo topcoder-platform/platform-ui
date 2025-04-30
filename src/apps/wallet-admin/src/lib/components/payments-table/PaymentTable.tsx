@@ -40,7 +40,7 @@ const PaymentsTable: React.FC<PaymentTableProps> = (props: PaymentTableProps) =>
                             <th className='body-ultra-small-bold'>HANDLE</th>
                             <th className='body-ultra-small-bold'>DESCRIPTION</th>
                             <th className='body-ultra-small-bold'>CREATE DATE</th>
-                            <th className='body-ultra-small-bold'>NET PAYMENT</th>
+                            <th className='body-ultra-small-bold'>PAYMENT</th>
                             <th className='body-ultra-small-bold'>STATUS</th>
                             <th className='body-ultra-small-bold'>RELEASE DATE</th>
                             <th className='body-ultra-small-bold'>DATE PAID</th>
@@ -55,7 +55,7 @@ const PaymentsTable: React.FC<PaymentTableProps> = (props: PaymentTableProps) =>
                                 <td className='body-small-bold'>{payment.handle}</td>
                                 <td className='body-small'>{payment.description}</td>
                                 <td className='body-small-bold'>{payment.createDate}</td>
-                                <td className='body-small-bold'>{payment.netPayment}</td>
+                                <td className='body-small-bold'>{payment.grossAmount}</td>
                                 <td className={`body-small-bold ${styles.capitalize}`}>{payment.status}</td>
                                 <td>{payment.releaseDate}</td>
                                 <td>{payment.datePaid}</td>

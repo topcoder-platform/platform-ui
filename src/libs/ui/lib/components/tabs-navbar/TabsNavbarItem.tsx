@@ -2,12 +2,10 @@
  * Tabs navbar item.
  */
 import {
-    FC,
     ForwardedRef,
     forwardRef,
     MouseEvent,
     ReactNode,
-    RefAttributes,
     useMemo,
     useState,
 } from 'react'
@@ -21,18 +19,21 @@ import { IconOutline } from '../svgs'
 import { TabsNavItem } from './tabs-nav-item.model'
 import styles from './TabsNavbarItem.module.scss'
 
-interface Props {
+interface TabsNavbarItemProps<T> {
     className?: string
-    tab: TabsNavItem
+    tab: TabsNavItem<T>
     menuIsVisible: boolean
     isExtraMenu: boolean
-    activeTabId?: string
-    handleActivateTab: (tabId: string) => () => void
-    handleActivateChildTab: (tabId: string, childTabId: string) => () => void
+    activeTabId?: T
+    handleActivateTab: (tabId: T) => () => void
+    handleActivateChildTab: (tabId: T, childTabId: string) => () => void
 }
 
-export const TabsNavbarItem: FC<Props & RefAttributes<HTMLElement>>
-    = forwardRef<HTMLElement, Props>((props: Props, ref) => {
+export const TabsNavbarItem = forwardRef<HTMLElement, TabsNavbarItemProps<any>>(
+    <T, >(
+        props: TabsNavbarItemProps<T>,
+        ref: ForwardedRef<HTMLElement>,
+    ) => {
         const [openDropdown, setOpenDropdown] = useState(false)
         const { width: screenWidth }: WindowSize = useWindowSize()
         const isMobile = useMemo(() => screenWidth < 745, [screenWidth])
@@ -64,7 +65,7 @@ export const TabsNavbarItem: FC<Props & RefAttributes<HTMLElement>>
                         },
                         props.className,
                     )}
-                    key={props.tab.id}
+                    key={props.tab.id as string}
                     href={props.tab.url}
                     rel='noopener noreferrer'
                     target='_blank'
@@ -79,7 +80,7 @@ export const TabsNavbarItem: FC<Props & RefAttributes<HTMLElement>>
                 <DropdownMenu
                     open={openDropdown}
                     setOpen={setOpenDropdown}
-                    key={props.tab.id}
+                    key={props.tab.id as string}
                     placement='bottom-end'
                     shouldIgnoreWhenClickMenu
                     classNames={{
@@ -96,7 +97,7 @@ export const TabsNavbarItem: FC<Props & RefAttributes<HTMLElement>>
                                 props.activeTabId === props.tab.id && 'active',
                                 props.className,
                             )}
-                            key={props.tab.id}
+                            key={props.tab.id as string}
                             onClick={function onClick(
                                 event: MouseEvent<HTMLDivElement>,
                             ) {
@@ -154,12 +155,13 @@ export const TabsNavbarItem: FC<Props & RefAttributes<HTMLElement>>
                     props.activeTabId === props.tab.id && 'active',
                     props.className,
                 )}
-                key={props.tab.id}
+                key={props.tab.id as string}
                 onClick={props.handleActivateTab(props.tab.id)}
             >
                 {tabContent}
             </div>
         )
-    })
+    },
+)
 
 export default TabsNavbarItem

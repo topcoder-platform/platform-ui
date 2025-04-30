@@ -50,4 +50,5 @@ export interface GlobalConfig {
         WORK_MANAGER_URL: string
         ONLINE_REVIEW_URL: string
     }
+    TROLLEY_WIDGET_ORIGIN: string
 }

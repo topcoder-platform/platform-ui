@@ -1,12 +1,10 @@
 /* eslint-disable camelcase */
 import { EnvironmentConfig } from '~/config'
 import { xhrDeleteAsync, xhrGetAsync, xhrPatchAsync, xhrPostAsync } from '~/libs/core'
-import { getAsyncWithBlobHandling, postAsyncWithBlobHandling } from '~/libs/core/lib/xhr/xhr-functions/xhr.functions'
+import { postAsyncWithBlobHandling } from '~/libs/core/lib/xhr/xhr-functions/xhr.functions'
 
 import { WalletDetails } from '../models/WalletDetails'
-import { PaymentProvider } from '../models/PaymentProvider'
 import { WinningDetail } from '../models/WinningDetail'
-import { TaxForm } from '../models/TaxForm'
 import { TransactionResponse } from '../models/TransactionId'
 import { PaginationInfo } from '../models/PaginationInfo'
 import { WinningsAudit } from '../models/WinningsAudit'
@@ -21,25 +19,6 @@ export async function getWalletDetails(): Promise<WalletDetails> {
 
     if (response.status === 'error') {
         throw new Error('Error fetching wallet details')
-    }
-
-    return response.data
-}
-
-export async function getUserPaymentProviders(): Promise<PaymentProvider[]> {
-    const response = await xhrGetAsync<ApiResponse<PaymentProvider[]>>(`${baseUrl}/user/payment-methods`)
-
-    if (response.status === 'error') {
-        throw new Error('Error fetching user payment providers')
-    }
-
-    return response.data
-}
-
-export async function getUserTaxFormDetails(): Promise<TaxForm[]> {
-    const response = await xhrGetAsync<ApiResponse<TaxForm[]>>(`${baseUrl}/user/tax-forms`)
-    if (response.status === 'error') {
-        throw new Error('Error fetching user tax form details')
     }
 
     return response.data
@@ -94,61 +73,6 @@ export async function editPayment(updates: {
     return response.data
 }
 
-export async function getTaxForms(limit: number, offset: number, userIds: string[]): Promise<{
-    forms: TaxForm[],
-    pagination: PaginationInfo
-}> {
-    const body = JSON.stringify({
-        limit,
-        offset,
-        userIds,
-    })
-
-    const url = `${baseUrl}/admin/tax-forms`
-    const response = await xhrPostAsync<string, ApiResponse<{
-        forms: TaxForm[],
-        pagination: PaginationInfo
-    }>>(url, body)
-
-    if (response.status === 'error') {
-        throw new Error('Error fetching tax forms')
-    }
-
-    if (response.data.forms === null || response.data.forms === undefined) {
-        response.data.forms = []
-    }
-
-    return response.data
-}
-
-export async function getPaymentMethods(limit: number, offset: number, userIds: string[]): Promise<{
-    paymentMethods: PaymentProvider[],
-    pagination: PaginationInfo
-}> {
-    const body = JSON.stringify({
-        limit,
-        offset,
-        userIds,
-    })
-
-    const url = `${baseUrl}/admin/payment-methods`
-    const response = await xhrPostAsync<string, ApiResponse<{
-        paymentMethods: PaymentProvider[],
-        pagination: PaginationInfo
-    }>>(url, body)
-
-    if (response.status === 'error') {
-        throw new Error('Error fetching payment methods')
-    }
-
-    if (response.data.paymentMethods === null || response.data.paymentMethods === undefined) {
-        response.data.paymentMethods = []
-    }
-
-    return response.data
-
-}
-
 export async function exportSearchResults(filters: Record<string, string[]>): Promise<Blob> {
     const url = `${baseUrl}/admin/winnings/export`
 
@@ -178,33 +102,6 @@ export async function exportSearchResults(filters: Record<string, string[]>): Pr
         })
     } catch (err) {
         throw new Error('Failed to export search results')
-    }
-}
-
-export async function downloadTaxForm(userId: string, taxFormId: string): Promise<Blob> {
-    const url = `${baseUrl}/admin/tax-forms/${userId}/${taxFormId}/download`
-    try {
-        return await getAsyncWithBlobHandling<Blob>(url)
-    } catch (err) {
-        throw new Error('Failed to download users tax-form.')
-    }
-}
-
-export async function deleteTaxForm(userId: string, taxFormId: string): Promise<void> {
-    const url = `${baseUrl}/admin/tax-forms/${userId}/${taxFormId}`
-    try {
-        return await xhrDeleteAsync(url)
-    } catch (err) {
-        throw new Error('Failed to delete users tax-form')
-    }
-}
-
-export async function deletePaymentProvider(userId: string, providerId: number): Promise<void> {
-    const url = `${baseUrl}/admin/payment-methods/${userId}/${providerId}`
-    try {
-        return await xhrDeleteAsync(url)
-    } catch (err) {
-        throw new Error('Failed to delete users payment provider')
     }
 }
 
@@ -305,44 +202,6 @@ export async function removePaymentProvider(type: string): Promise<TransactionRe
 
     if (response.status === 'error') {
         throw new Error('Error getting payment provider registration link')
-    }
-
-    return response.data
-}
-
-export async function setupTaxForm(userId: string, taxForm: string): Promise<TransactionResponse> {
-    const body = JSON.stringify({
-        taxForm,
-        userId,
-    })
-
-    const url = `${baseUrl}/user/tax-form`
-    const response = await xhrPostAsync<string, ApiResponse<TransactionResponse>>(url, body)
-
-    if (response.status === 'error') {
-        throw new Error('Error setting tax form')
-    }
-
-    return response.data
-}
-
-export async function removeTaxForm(taxFormId: string): Promise<TransactionResponse> {
-    const url = `${baseUrl}/user/tax-forms/${taxFormId}`
-    const response = await xhrDeleteAsync<ApiResponse<TransactionResponse>>(url)
-
-    if (response.status === 'error') {
-        throw new Error('Error removing tax form')
-    }
-
-    return response.data
-}
-
-export async function getRecipientViewURL(): Promise<TransactionResponse> {
-    const url = `${baseUrl}/user/tax-form/view`
-    const response = await xhrGetAsync<ApiResponse<TransactionResponse>>(url)
-
-    if (response.status === 'error') {
-        throw new Error('Error removing tax form')
     }
 
     return response.data

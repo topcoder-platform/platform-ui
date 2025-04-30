@@ -83,3 +83,5 @@ export const ADMIN = {
     ONLINE_REVIEW_URL: 'https://software.topcoder-dev.com/review',
     WORK_MANAGER_URL: 'https://challenges.topcoder-dev.com',
 }
+
+export const TROLLEY_WIDGET_ORIGIN = getReactEnv<string>('TROLLEY_WIDGET_ORIGIN', 'https://widget.trolley.com')

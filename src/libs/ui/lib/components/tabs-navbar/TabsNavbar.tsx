@@ -1,6 +1,5 @@
 import {
     Dispatch,
-    FC,
     MutableRefObject,
     SetStateAction,
     useCallback,
@@ -19,29 +18,29 @@ import { TabsNavItem } from './tabs-nav-item.model'
 import TabsNavbarItem from './TabsNavbarItem'
 import styles from './TabsNavbar.module.scss'
 
-export interface TabsNavbarProps {
-    defaultActive: string
-    onChange: (active: string) => void
-    onChildChange?: (active: string, activeChild: string) => void
-    tabs: ReadonlyArray<TabsNavItem>
+export interface TabsNavbarProps<T> {
+    defaultActive: T
+    onChange: (active: T) => void
+    onChildChange?: (active: T, activeChild: string) => void
+    tabs: ReadonlyArray<TabsNavItem<T>>
 }
 
-const TabsNavbar: FC<TabsNavbarProps> = (props: TabsNavbarProps) => {
+const TabsNavbar = <T, >(props: TabsNavbarProps<T>): JSX.Element => {
     const query: URLSearchParams = new URLSearchParams(window.location.search)
-    const initialTab: MutableRefObject<string | null> = useRef<string|null>(query.get('tab'))
+    const initialTab: MutableRefObject<T | undefined> = useRef<T|undefined>(query.get('tab') as T)
 
-    const [tabOpened, setTabOpened]: [string | undefined, Dispatch<SetStateAction<string | undefined>>]
-        = useState<string | undefined>(props.defaultActive)
+    const [tabOpened, setTabOpened]: [T | undefined, Dispatch<SetStateAction<T | undefined>>]
+        = useState<T | undefined>(props.defaultActive)
     const tabRefs: MutableRefObject<Array<HTMLElement>> = useRef([] as Array<HTMLElement>)
     const [offset, setOffset]: [number, Dispatch<SetStateAction<number>>] = useState<number>(0)
     const [menuIsVisible, setMenuIsVisible]: [boolean, Dispatch<SetStateAction<boolean>>] = useState(false)
     const triggerRef: MutableRefObject<any> = useRef(undefined)
 
-    const activeTab: TabsNavItem = useMemo(() => (
-        props.tabs.find(tab => tab.id === tabOpened) as TabsNavItem
+    const activeTab: TabsNavItem<T> = useMemo(() => (
+        props.tabs.find(tab => tab.id === tabOpened) as TabsNavItem<T>
     ), [tabOpened, props.tabs])
 
-    const updateOffset: (tabId: string) => void = useCallback((tabId: string) => {
+    const updateOffset: (tabId: T) => void = useCallback((tabId: T) => {
 
         const index: number = props.tabs.findIndex(tab => tab.id === tabId)
         if (index === -1) {
@@ -58,7 +57,7 @@ const TabsNavbar: FC<TabsNavbarProps> = (props: TabsNavbarProps) => {
         props.tabs,
     ])
 
-    const handleActivateTab: (tabId: string) => () => void = useCallback((tabId: string) => () => {
+    const handleActivateTab: (tabId: T) => () => void = useCallback((tabId: T) => () => {
         setTabOpened(tabId)
         props.onChange.call(undefined, tabId)
         updateOffset(tabId)
@@ -67,10 +66,10 @@ const TabsNavbar: FC<TabsNavbarProps> = (props: TabsNavbarProps) => {
         updateOffset,
     ])
     const handleActivateChildTab: (
-        tabId: string,
+        tabId: T,
         childTabId: string,
     ) => () => void = useCallback(
-        (tabId: string, childTabId: string) => () => {
+        (tabId: T, childTabId: string) => () => {
             setTabOpened(tabId)
             props.onChildChange?.call(undefined, tabId, childTabId)
             updateOffset(tabId)
@@ -89,7 +88,7 @@ const TabsNavbar: FC<TabsNavbarProps> = (props: TabsNavbarProps) => {
             && props.tabs.find(tab => tab.id === initialTab.current)
         ) {
             handleActivateTab(initialTab.current)()
-            initialTab.current = ''
+            initialTab.current = undefined
         } else if (props.defaultActive) {
             setTabOpened(props.defaultActive)
             updateOffset(props.defaultActive)
@@ -129,7 +128,7 @@ const TabsNavbar: FC<TabsNavbarProps> = (props: TabsNavbarProps) => {
             <div className={classNames(styles['menu-wrapper'])}>
                 {props.tabs.map((tab, i) => (
                     <TabsNavbarItem
-                        key={tab.id}
+                        key={tab.id as string}
                         tab={tab}
                         menuIsVisible={menuIsVisible}
                         isExtraMenu

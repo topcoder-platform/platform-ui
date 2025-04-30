@@ -74,6 +74,7 @@ const HomeTab: FC<HomeTabProps> = () => {
                             />
                         }
                     />
+
                     {!walletDetails?.withdrawalMethod.isSetupComplete && (
                         <InfoRow
                             title='Withdrawal Method'
@@ -91,7 +92,7 @@ const HomeTab: FC<HomeTabProps> = () => {
                                     icon={IconOutline.ArrowRightIcon}
                                     size='md'
                                     link
-                                    to='#withdrawal-methods'
+                                    to='#payout'
                                 />
                             }
                         />
@@ -108,7 +109,7 @@ const HomeTab: FC<HomeTabProps> = () => {
                                     icon={IconOutline.ArrowRightIcon}
                                     size='md'
                                     link
-                                    to='#tax-forms'
+                                    to='#payout'
                                 />
                             }
                         />
