@@ -4,9 +4,7 @@ import { xhrDeleteAsync, xhrGetAsync, xhrPatchAsync, xhrPostAsync } from '~/libs
 import { postAsyncWithBlobHandling } from '~/libs/core/lib/xhr/xhr-functions/xhr.functions'
 
 import { WalletDetails } from '../models/WalletDetails'
-import { TaxForm } from '../models/TaxForm'
 import { WinningDetail } from '../models/WinningDetail'
-import { PaymentProvider } from '../models/PaymentProvider'
 import { TransactionResponse } from '../models/TransactionId'
 import { PaginationInfo } from '../models/PaginationInfo'
 import { WinningsAudit } from '../models/WinningsAudit'
@@ -227,59 +225,4 @@ export async function getMemberHandle(userIds: string[]): Promise<Map<number, st
     }
 
     return handleMap
-}
-
-// TODO: remove
-export async function getTaxForms(limit: number, offset: number, userIds: string[]): Promise<{
-    forms: TaxForm[],
-    pagination: PaginationInfo
-}> {
-    const body = JSON.stringify({
-        limit,
-        offset,
-        userIds,
-    })
-
-    const url = `${baseUrl}/admin/tax-forms`
-    const response = await xhrPostAsync<string, ApiResponse<{
-        forms: TaxForm[],
-        pagination: PaginationInfo
-    }>>(url, body)
-
-    if (response.status === 'error') {
-        throw new Error('Error fetching tax forms')
-    }
-
-    if (response.data.forms === null || response.data.forms === undefined) {
-        response.data.forms = []
-    }
-
-    return response.data
-}
-
-export async function getPaymentMethods(limit: number, offset: number, userIds: string[]): Promise<{
-    paymentMethods: PaymentProvider[],
-    pagination: PaginationInfo
-}> {
-    const body = JSON.stringify({
-        limit,
-        offset,
-        userIds,
-    })
-
-    const url = `${baseUrl}/admin/payment-methods`
-    const response = await xhrPostAsync<string, ApiResponse<{
-        paymentMethods: PaymentProvider[],
-        pagination: PaginationInfo
-    }>>(url, body)
-
-    if (response.status === 'error') {
-        throw new Error('Error fetching payment methods')
-    }
-
-    if (response.data.paymentMethods === null || response.data.paymentMethods === undefined) {
-        response.data.paymentMethods = []
-    }
-
-    return response.data
 }
