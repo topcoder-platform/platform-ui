@@ -134,10 +134,16 @@ const CopilotOpportunityList: FC<{}> = () => {
         onClick: () => navigate(copilotRoutesMap.CopilotRequestForm),
     }
 
+    const addCopilotRequestsButton: ButtonProps = {
+        label: 'Copilot Requests',
+        onClick: () => navigate(copilotRoutesMap.CopilotRequests),
+    }
+
     return (
         <ContentLayout
             title='Copilot Opportunities'
             buttonConfig={isAdminOrPM ? addNewRequestButton : undefined}
+            secondaryButtonConfig={isAdminOrPM ? addCopilotRequestsButton : undefined}
         >
             <PageTitle>Copilot Opportunities</PageTitle>
             <Table

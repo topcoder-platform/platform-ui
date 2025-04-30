@@ -7,6 +7,7 @@ import styles from './ContentLayout.module.scss'
 
 export interface ContentLayoutProps {
     buttonConfig?: ButtonProps
+    secondaryButtonConfig?: ButtonProps
     children?: ReactNode
     contentClass?: string
     innerClass?: string
@@ -28,6 +29,16 @@ const ContentLayout: FC<ContentLayoutProps> = (props: ContentLayoutProps) => (
                         <h1>
                             {props.title}
                         </h1>
+
+                        {!!props.secondaryButtonConfig && (
+                            <div>
+                                <Button
+                                    {...props.secondaryButtonConfig}
+                                    secondary
+                                    size='lg'
+                                />
+                            </div>
+                        )}
 
                         {!!props.buttonConfig && (
                             <div>
