@@ -127,10 +127,10 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
             }
 
             if (status === 'ON_HOLD') {
-                if (!payment.paymentStatus?.taxFormSetupComplete) {
-                    status = 'On Hold (Tax Form)'
-                } else if (!payment.paymentStatus?.payoutSetupComplete) {
+                if (!payment.paymentStatus?.payoutSetupComplete) {
                     status = 'On Hold (Payment Provider)'
+                } else if (!payment.paymentStatus?.taxFormSetupComplete) {
+                    status = 'On Hold (Tax Form)'
                 } else {
                     status = 'On Hold (Member)'
                 }
