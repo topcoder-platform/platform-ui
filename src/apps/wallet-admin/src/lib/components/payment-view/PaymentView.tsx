@@ -109,9 +109,9 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
                         </div>
 
                         <div className={styles.infoItem}>
-                            <span className={styles.label}>Net Payment</span>
+                            <span className={styles.label}>Payment</span>
                             <p className={styles.value}>
-                                {props.payment.netPaymentNumber.toLocaleString(undefined, {
+                                {props.payment.grossAmountNumber.toLocaleString(undefined, {
                                     currency: 'USD',
                                     style: 'currency',
                                 })}

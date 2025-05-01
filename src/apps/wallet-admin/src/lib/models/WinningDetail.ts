@@ -1,12 +1,16 @@
 export interface PaymentDetail {
     id: string
-    netAmount: string
     grossAmount: string
     totalAmount: string
     installmentNumber: number
     status: string
     currency: string
     datePaid: string
+}
+
+export interface PayoutStatus {
+    payoutSetupComplete: boolean;
+    taxFormSetupComplete: boolean;
 }
 
 export interface Winning {
@@ -16,8 +20,8 @@ export interface Winning {
     type: string
     handle: string;
     createDate: string
-    netPayment: string
-    netPaymentNumber: number
+    grossAmount: string
+    grossAmountNumber: number
     status: string
     releaseDate: string
     releaseDateObj: Date
@@ -43,4 +47,5 @@ export interface WinningDetail {
     createdAt: string
     releaseDate: string
     datePaid: string
+    paymentStatus?: PayoutStatus
 }

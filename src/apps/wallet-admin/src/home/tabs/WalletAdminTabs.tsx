@@ -7,8 +7,6 @@ import { PageTitle, TabsNavbar, TabsNavItem } from '~/libs/ui'
 import { getHashFromTabId, getTabIdFromHash, WalletAdminTabsConfig, WalletAdminTabViews } from './config'
 import { PaymentsTab } from './payments'
 import { HomeTab } from './home'
-import { TaxFormsTab } from './tax-forms'
-import { PaymentMethodsTab } from './payment-methods'
 import styles from './WalletAdminTabs.module.scss'
 
 interface WalletHomeProps {
@@ -46,10 +44,6 @@ const WalletAdminTabs: FC<WalletHomeProps> = (props: WalletHomeProps) => {
             {activeTab === WalletAdminTabViews.home && <HomeTab profile={props.profile} />}
 
             {activeTab === WalletAdminTabViews.payments && <PaymentsTab profile={props.profile} />}
-
-            {activeTab === WalletAdminTabViews.taxforms && <TaxFormsTab profile={props.profile} />}
-
-            {activeTab === WalletAdminTabViews.withdrawalmethods && <PaymentMethodsTab profile={props.profile} />}
         </div>
     )
 }
