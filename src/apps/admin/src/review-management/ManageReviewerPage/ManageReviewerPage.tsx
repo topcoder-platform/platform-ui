@@ -7,7 +7,7 @@ import {
     useRef,
     useState,
 } from 'react'
-import { useParams } from 'react-router-dom'
+import { NavigateFunction, useNavigate, useParams } from 'react-router-dom'
 import { sortBy } from 'lodash'
 
 import { XIcon } from '@heroicons/react/solid'
@@ -61,6 +61,7 @@ export const ManageReviewerPage: FC = () => {
     const { challengeId = '' }: { challengeId?: string } = useParams<{
         challengeId: string
     }>()
+    const navigate: NavigateFunction = useNavigate()
     const [filterCriteria, setFilterCriteria]: [
         ReviewFilterCriteria,
         Dispatch<SetStateAction<ReviewFilterCriteria>>
@@ -132,6 +133,13 @@ export const ManageReviewerPage: FC = () => {
             .then(() => {
                 newSearch()
             })
+    })
+
+    const unapprove = useEventCallback((): void => {
+        // how to get challenge Id?
+        // Now we use one specific challenge id for testing
+        const realChallengeId = 'c713e250-ecb4-4192-8717-d607ddda8db4'
+        navigate(`${rootRoute}/challenge-management/${realChallengeId}/manage-user`)
     })
 
     // Init
@@ -214,6 +222,7 @@ export const ManageReviewerPage: FC = () => {
                         reviewers={reviewers}
                         openReviews={openReviews}
                         onApproveApplication={approve}
+                        onUnapproveApplication={unapprove}
                         approvingReviewerId={userId}
                         paging={{
                             page: filterCriteria.page,

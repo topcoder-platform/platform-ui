@@ -73,7 +73,7 @@ export const RolesFilter: FC<Props> = props => {
         })
         setNewOption(undefined)
         setSearchKey('')
-    }, [])
+    }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
     const onSubmit = useCallback(
         (value: string) => {
