@@ -1,4 +1,4 @@
-import { Dispatch, FC, SetStateAction, useMemo, useState } from 'react'
+import { Dispatch, FC, SetStateAction, useEffect, useMemo, useState } from 'react'
 import { NavigateFunction, useLocation, useNavigate } from 'react-router-dom'
 
 import { TabsNavbar } from '~/libs/ui'
@@ -23,6 +23,14 @@ const SystemAdminTabs: FC = () => {
         setActiveTab(tabId)
         navigate(childTabId)
     }
+
+    // If url is changed by navigator on different tabs, we need set activeTab
+    useEffect(() => {
+        const pathTabId = getTabIdFromPathName(pathname)
+        if (pathTabId !== activeTab) {
+            setActiveTab(pathTabId)
+        }
+    }, [pathname]) // eslint-disable-line react-hooks/exhaustive-deps
 
     return (
         <div className={styles.container}>
