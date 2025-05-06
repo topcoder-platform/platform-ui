@@ -12,6 +12,7 @@ import {
 } from '~/libs/ui'
 import { profileContext, ProfileContextData, UserRole } from '~/libs/core'
 
+import { CopilotApplication } from '../../models/CopilotApplication'
 import {
     copilotBaseUrl,
     CopilotOpportunityResponse,
@@ -19,8 +20,8 @@ import {
     useCopilotOpportunity,
 } from '../../services/copilot-opportunities'
 import { copilotRoutesMap } from '../../copilots.routes'
-import { ApplyOpportunityModal } from './apply-opportunity-modal'
 
+import { ApplyOpportunityModal } from './apply-opportunity-modal'
 import styles from './styles.module.scss'
 
 const CopilotOpportunityDetails: FC<{}> = () => {
@@ -33,7 +34,7 @@ const CopilotOpportunityDetails: FC<{}> = () => {
         () => !!profile?.roles?.some(role => role === UserRole.copilot),
         [profile],
     )
-    const { data: copilotApplications } = useCopilotApplications(opportunityId)
+    const { data: copilotApplications }: { data?: CopilotApplication[] } = useCopilotApplications(opportunityId)
 
     if (!opportunityId) {
         navigate(copilotRoutesMap.CopilotOpportunityList)

@@ -26,7 +26,7 @@ const ApplyOpportunityModal: FC<ApplyOpportunityModalProps> = props => {
         setSuccess(true)
     }, [props.copilotOpportunityId, notes])
 
-    const onChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void = e => {
         setNotes(e.target.value)
     }
 

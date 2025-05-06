@@ -27,15 +27,6 @@ function copilotOpportunityFactory(data: any): CopilotOpportunity {
     }
 }
 
-/**
- * Creates a CopilotApplication object by merging the provided data and its nested data
- * @param data
- * @returns
- */
-function opportunityApplicationFactory(data: any): CopilotApplication[] {
-    return data
-}
-
 export interface CopilotOpportunitiesResponse {
     isValidating: boolean;
     data: CopilotOpportunity[];
@@ -52,7 +43,9 @@ export interface CopilotOpportunitiesResponse {
 export const useCopilotOpportunities = (): CopilotOpportunitiesResponse => {
     const getKey = (pageIndex: number, previousPageData: CopilotOpportunity[]): string | undefined => {
         if (previousPageData && previousPageData.length < PAGE_SIZE) return undefined
-        return `${copilotBaseUrl}/copilots/opportunities?page=${pageIndex + 1}&pageSize=${PAGE_SIZE}&sort=createdAt desc`
+        return `
+            ${copilotBaseUrl}/copilots/opportunities?page=${pageIndex + 1}&pageSize=${PAGE_SIZE}&sort=createdAt desc
+        `
     }
 
     const fetcher = (url: string): Promise<CopilotOpportunity[]> => xhrGetAsync<CopilotOpportunity[]>(url)
@@ -106,7 +99,7 @@ export const useCopilotOpportunity = (opportunityId?: string): CopilotOpportunit
  */
 export const applyCopilotOpportunity = async (opportunityId: number, request: {
     notes?: string;
-}) => {
+}): Promise<CopilotApplication> => {
     const url = `${copilotBaseUrl}/copilots/opportunity/${opportunityId}/apply`
 
     return xhrPostAsync(url, request, {})
@@ -119,7 +112,9 @@ export const applyCopilotOpportunity = async (opportunityId: number, request: {
  * @returns {CopilotApplicationResponse} - The response containing the copilot application data.
  */
 export const useCopilotApplications = (opportunityId?: string): CopilotApplicationResponse => {
-    const url = opportunityId ? buildUrl(`${copilotBaseUrl}/copilots/opportunity/${opportunityId}/applications`) : undefined
+    const url = opportunityId
+        ? buildUrl(`${copilotBaseUrl}/copilots/opportunity/${opportunityId}/applications`)
+        : undefined
 
     const fetcher = (urlp: string): Promise<CopilotApplication[]> => xhrGetAsync<CopilotApplication[]>(urlp)
         .then(data => data)
