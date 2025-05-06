@@ -221,6 +221,7 @@ workflows:
                               - dev
                               - LVT-256
                               - CORE-635
+                              - pm-578
 
             - deployQa:
                   context: org-global
