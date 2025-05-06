@@ -1,23 +1,34 @@
-import { FC, useEffect, useState } from 'react'
+import { FC, useContext, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import moment from 'moment'
+import { mutate } from 'swr'
 
 import {
+    ButtonProps,
     ContentLayout,
     IconOutline,
     LoadingSpinner,
     PageTitle,
 } from '~/libs/ui'
+import { profileContext, ProfileContextData, UserRole } from '~/libs/core'
 
-import { CopilotOpportunityResponse, useCopilotOpportunity } from '../../services/copilot-opportunities'
+import { copilotBaseUrl, CopilotOpportunityResponse, useCopilotApplications, useCopilotOpportunity } from '../../services/copilot-opportunities'
 import { copilotRoutesMap } from '../../copilots.routes'
 
 import styles from './styles.module.scss'
+import { ApplyOpportunityModal } from './apply-opportunity-modal'
 
 const CopilotOpportunityDetails: FC<{}> = () => {
     const { opportunityId }: {opportunityId?: string} = useParams<{ opportunityId?: string }>()
     const navigate = useNavigate()
     const [showNotFound, setShowNotFound] = useState(false)
+    const [showApplyOpportunityModal, setShowApplyOpportunityModal] = useState(false)
+    const { profile }: ProfileContextData = useContext(profileContext)
+    const isCopilot: boolean = useMemo(
+        () => !!profile?.roles?.some(role => role === UserRole.copilot),
+        [profile],
+    )
+    const { data: copilotApplications } = useCopilotApplications(opportunityId)
 
     if (!opportunityId) {
         navigate(copilotRoutesMap.CopilotOpportunityList)
@@ -44,8 +55,17 @@ const CopilotOpportunityDetails: FC<{}> = () => {
         )
     }
 
+    const applyCopilotOpportunityButton: ButtonProps = {
+        label: 'Apply as Copilot',
+        onClick: () => setShowApplyOpportunityModal(true),
+    }
+
+    const onApplied = () => {
+        mutate(`${copilotBaseUrl}/copilots/opportunity/${opportunityId}/applications`)
+    }
+
     return (
-        <ContentLayout title='Copilot Opportunity'>
+        <ContentLayout title='Copilot Opportunity' buttonConfig={isCopilot && copilotApplications && copilotApplications.length === 0 ? applyCopilotOpportunityButton : undefined}>
             <PageTitle>Copilot Opportunity</PageTitle>
             {isValidating && !showNotFound && (
                 <LoadingSpinner />
@@ -132,6 +152,9 @@ const CopilotOpportunityDetails: FC<{}> = () => {
                     <span className={styles.textCaps}>{opportunity?.requiresCommunication}</span>
                 </div>
             </div>
+            {
+                showApplyOpportunityModal && opportunity && <ApplyOpportunityModal copilotOpportunityId={opportunity?.id} onClose={() => setShowApplyOpportunityModal(false)} projectName={opportunity?.projectName} onApplied={onApplied} />
+            }
         </ContentLayout>
     )
 }
