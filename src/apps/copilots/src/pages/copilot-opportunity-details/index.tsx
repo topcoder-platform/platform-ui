@@ -1,3 +1,4 @@
+/* eslint-disable react/jsx-no-bind */
 import { FC, useContext, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { mutate } from 'swr'

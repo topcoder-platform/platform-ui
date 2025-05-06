@@ -1,3 +1,4 @@
+/* eslint-disable react/jsx-no-bind */
 import { FC, useCallback, useState } from 'react'
 
 import { BaseModal, Button, InputTextarea } from '~/libs/ui'
