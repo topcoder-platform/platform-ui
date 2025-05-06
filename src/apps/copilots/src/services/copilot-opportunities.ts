@@ -29,8 +29,8 @@ function copilotOpportunityFactory(data: any): CopilotOpportunity {
 
 /**
  * Creates a CopilotApplication object by merging the provided data and its nested data
- * @param data 
- * @returns 
+ * @param data
+ * @returns
  */
 function opportunityApplicationFactory(data: any): CopilotApplication[] {
     return data
@@ -100,15 +100,15 @@ export const useCopilotOpportunity = (opportunityId?: string): CopilotOpportunit
 
 /**
  * apply copilot opportunity
- * @param opportunityId 
- * @param request 
- * @returns 
+ * @param opportunityId
+ * @param request
+ * @returns
  */
 export const applyCopilotOpportunity = async (opportunityId: number, request: {
     notes?: string;
 }) => {
     const url = `${copilotBaseUrl}/copilots/opportunity/${opportunityId}/apply`
-    
+
     return xhrPostAsync(url, request, {})
 }
 
@@ -122,7 +122,8 @@ export const useCopilotApplications = (opportunityId?: string): CopilotApplicati
     const url = opportunityId ? buildUrl(`${copilotBaseUrl}/copilots/opportunity/${opportunityId}/applications`) : undefined
 
     const fetcher = (urlp: string): Promise<CopilotApplication[]> => xhrGetAsync<CopilotApplication[]>(urlp)
-        .then((data) => data).catch(() => [])
+        .then(data => data)
+        .catch(() => [])
 
     return useSWR(url, fetcher, {
         refreshInterval: 0,
