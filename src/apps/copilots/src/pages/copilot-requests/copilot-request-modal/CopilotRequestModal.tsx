@@ -1,11 +1,12 @@
 import { FC, useCallback, useMemo } from 'react'
 
-import { BaseModal, Button, useConfirmationModal } from '~/libs/ui'
+import { BaseModal, Button, IconSolid, useConfirmationModal } from '~/libs/ui'
 import { textFormatDateLocaleShortString } from '~/libs/shared'
 
 import { CopilotRequest } from '../../../models/CopilotRequest'
 import { Project } from '../../../models/Project'
 import { approveCopilotRequest } from '../../../services/copilot-requests'
+import { copilotRoutesMap } from '../../../copilots.routes'
 
 import styles from './CopilotRequestModal.module.scss'
 
@@ -45,7 +46,7 @@ const CopilotRequestModal: FC<CopilotRequestModalProps> = props => {
             onClose={props.onClose}
             open
             size='lg'
-            title='Copilot Opportunity'
+            title='Copilot Request'
             buttons={props.request.status === 'new' && (
                 <>
                     <Button primary onClick={confirmApprove} label='Approve Request' />
@@ -57,6 +58,18 @@ const CopilotRequestModal: FC<CopilotRequestModalProps> = props => {
                 <div className={styles.detailsLine}>
                     <div>Project</div>
                     <div>{props.project?.name}</div>
+                </div>
+                <div className={styles.detailsLine}>
+                    <div>Opportunity details</div>
+                    <a
+                        href={copilotRoutesMap.CopilotOpportunityDetails
+                            .replace(':opportunityId', `${props.request.opportunity?.id}`)}
+                        target='_blank'
+                        rel='noopener noreferrer'
+                        className={styles.iconLink}
+                    >
+                        <IconSolid.ExternalLinkIcon className='icon-lg' />
+                    </a>
                 </div>
                 <div className={styles.detailsLine}>
                     <div>Request Status</div>
