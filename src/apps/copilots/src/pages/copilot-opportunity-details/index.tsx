@@ -1,6 +1,7 @@
 /* eslint-disable react/jsx-no-bind */
-import { FC, useContext, useEffect, useMemo, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+/* eslint-disable complexity */
+import { Dispatch, FC, SetStateAction, useContext, useEffect, useMemo, useState } from 'react'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { mutate } from 'swr'
 import moment from 'moment'
 
@@ -10,6 +11,7 @@ import {
     IconOutline,
     LoadingSpinner,
     PageTitle,
+    TabsNavbar,
 } from '~/libs/ui'
 import { profileContext, ProfileContextData, UserRole } from '~/libs/core'
 
@@ -20,9 +22,18 @@ import {
     useCopilotApplications,
     useCopilotOpportunity,
 } from '../../services/copilot-opportunities'
+import { FormattedMembers, useMembers } from '../../services/members'
 import { copilotRoutesMap } from '../../copilots.routes'
 
 import { ApplyOpportunityModal } from './apply-opportunity-modal'
+import {
+    CopilotDetailsTabViews,
+    getCopilotDetailsTabsConfig,
+    getHashFromTabId,
+    getTabIdFromHash,
+} from './tabs/config/copilot-details-tabs-config'
+import { OpportunityDetails } from './tabs/opportunity-details'
+import { CopilotApplications } from './tabs/copilot-applications'
 import styles from './styles.module.scss'
 
 const CopilotOpportunityDetails: FC<{}> = () => {
@@ -35,13 +46,35 @@ const CopilotOpportunityDetails: FC<{}> = () => {
         () => !!profile?.roles?.some(role => role === UserRole.copilot),
         [profile],
     )
+    const isAdminOrPM: boolean = useMemo(
+        () => !!profile?.roles?.some(role => role === UserRole.administrator || role === UserRole.projectManager),
+        [profile],
+    )
     const { data: copilotApplications }: { data?: CopilotApplication[] } = useCopilotApplications(opportunityId)
+    const { data: members }: { data?: FormattedMembers[]} = useMembers(
+        copilotApplications ? copilotApplications?.map(item => item.userId) : [],
+    )
 
     if (!opportunityId) {
         navigate(copilotRoutesMap.CopilotOpportunityList)
     }
 
     const { data: opportunity, isValidating }: CopilotOpportunityResponse = useCopilotOpportunity(opportunityId)
+
+    const { hash }: { hash: string } = useLocation()
+
+    const activeTabHash: string = useMemo<string>(() => getTabIdFromHash(hash), [hash])
+
+    const [activeTab, setActiveTab]: [string, Dispatch<SetStateAction<string>>] = useState<string>(activeTabHash)
+
+    useEffect(() => {
+        setActiveTab(activeTabHash)
+    }, [activeTabHash])
+
+    function handleTabChange(tabId: string): void {
+        setActiveTab(tabId)
+        window.location.hash = getHashFromTabId(tabId)
+    }
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -147,29 +180,19 @@ const CopilotOpportunityDetails: FC<{}> = () => {
                     </div>
                 </div>
             </div>
-            <div className={styles.content}>
-                <div>
-                    <h2 className={styles.subHeading}> Required skills </h2>
-                    <div className={styles.skillsContainer}>
-                        {opportunity?.skills.map((skill: any) => (
-                            <div key={skill.id} className={styles.skillPill}>
-                                {skill.name}
-                            </div>
-                        ))}
-                    </div>
-                    <h2 className={styles.subHeading}> Description </h2>
-                    <p>
-                        {opportunity?.overview}
-                    </p>
-                </div>
-                <div>
-                    <h2 className={styles.subHeading}> Complexity </h2>
-                    <span className={styles.textCaps}>{opportunity?.complexity}</span>
+            <TabsNavbar
+                defaultActive={activeTab}
+                onChange={handleTabChange}
+                tabs={getCopilotDetailsTabsConfig(isAdminOrPM)}
+            />
+            {activeTab === CopilotDetailsTabViews.details && <OpportunityDetails opportunity={opportunity} />}
+            {activeTab === CopilotDetailsTabViews.applications && isAdminOrPM && (
+                <CopilotApplications
+                    copilotApplications={copilotApplications}
+                    members={members}
+                />
+            )}
 
-                    <h2 className={styles.subHeading}> Requires Communication </h2>
-                    <span className={styles.textCaps}>{opportunity?.requiresCommunication}</span>
-                </div>
-            </div>
             {
                 showApplyOpportunityModal
                 && opportunity && (
