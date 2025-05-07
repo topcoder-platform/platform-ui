@@ -6,12 +6,17 @@ import { CopilotApplication } from '../../../../models/CopilotApplication'
 import { FormattedMembers } from '../../../../services/members'
 
 import styles from './styles.module.scss'
+import { Link } from 'react-router-dom'
+import { USER_PROFILE_URL } from '~/config/environments/default.env'
 
 const tableColumns: TableColumn<CopilotApplication>[] = [
     {
         label: 'Topcoder Handle',
         propertyName: 'handle',
-        type: 'text',
+        renderer: (copilotApplication: CopilotApplication) => (
+            <a href={`${USER_PROFILE_URL}/${copilotApplication.handle}`} target="_blank">{copilotApplication.handle}</a>
+        ),
+        type: 'element',
     },
     {
         label: 'Fulfillment Rating',
@@ -48,8 +53,8 @@ const CopilotApplications: FC<{
         const member = props.members && props.members.find(each => each.userId === item.userId)
         return {
             ...item,
-            activeProjects: member?.activeProjects,
-            fulfilment: member?.copilotFulfillment,
+            activeProjects: member?.activeProjects || 0,
+            fulfilment: member?.copilotFulfillment || 0,
             handle: member?.handle,
         }
     })
@@ -59,11 +64,17 @@ const CopilotApplications: FC<{
 
     return (
         <div>
-            <Table
-                columns={tableColumns}
-                data={tableData}
-                disableSorting
-            />
+            {
+                tableData.length > 0 && (
+                    <Table
+                        columns={tableColumns}
+                        data={tableData}
+                        disableSorting
+                        removeDefaultSort
+                        preventDefault
+                    />
+                )
+            }
         </div>
     )
 }

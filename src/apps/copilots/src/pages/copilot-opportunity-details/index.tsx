@@ -1,6 +1,6 @@
 /* eslint-disable react/jsx-no-bind */
 /* eslint-disable complexity */
-import { Dispatch, FC, SetStateAction, useContext, useEffect, useMemo, useState } from 'react'
+import { Dispatch, FC, SetStateAction, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { mutate } from 'swr'
 import moment from 'moment'
@@ -41,7 +41,7 @@ const CopilotOpportunityDetails: FC<{}> = () => {
     const navigate = useNavigate()
     const [showNotFound, setShowNotFound] = useState(false)
     const [showApplyOpportunityModal, setShowApplyOpportunityModal] = useState(false)
-    const { profile }: ProfileContextData = useContext(profileContext)
+    const { profile, initialized }: ProfileContextData = useContext(profileContext)
     const isCopilot: boolean = useMemo(
         () => !!profile?.roles?.some(role => role === UserRole.copilot),
         [profile],
@@ -71,10 +71,10 @@ const CopilotOpportunityDetails: FC<{}> = () => {
         setActiveTab(activeTabHash)
     }, [activeTabHash])
 
-    function handleTabChange(tabId: string): void {
+    const handleTabChange = useCallback((tabId: string): void => {
         setActiveTab(tabId)
         window.location.hash = getHashFromTabId(tabId)
-    }
+    }, [getHashFromTabId, setActiveTab])
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -180,11 +180,15 @@ const CopilotOpportunityDetails: FC<{}> = () => {
                     </div>
                 </div>
             </div>
-            <TabsNavbar
-                defaultActive={activeTab}
-                onChange={handleTabChange}
-                tabs={getCopilotDetailsTabsConfig(isAdminOrPM)}
-            />
+            {
+                initialized && (
+                    <TabsNavbar
+                        defaultActive={activeTab}
+                        onChange={handleTabChange}
+                        tabs={getCopilotDetailsTabsConfig(isAdminOrPM)}
+                    />
+                )
+            }
             {activeTab === CopilotDetailsTabViews.details && <OpportunityDetails opportunity={opportunity} />}
             {activeTab === CopilotDetailsTabViews.applications && isAdminOrPM && (
                 <CopilotApplications
