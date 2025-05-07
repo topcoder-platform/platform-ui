@@ -7,7 +7,7 @@ import React, { FC, useCallback, useEffect } from 'react'
 import { Collapsible, ConfirmModal, LoadingCircles } from '~/libs/ui'
 import { UserProfile } from '~/libs/core'
 
-import { getPayments, processPayments } from '../../../lib/services/wallet'
+import { getPayments, processWinningsPayments } from '../../../lib/services/wallet'
 import { Winning, WinningDetail } from '../../../lib/models/WinningDetail'
 import { FilterBar } from '../../../lib'
 import { ConfirmFlowData } from '../../../lib/models/ConfirmFlowData'
@@ -158,7 +158,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
             position: toast.POSITION.BOTTOM_RIGHT,
         })
         try {
-            await processPayments(winningIds)
+            await processWinningsPayments(winningIds)
             toast.success('Payments processed successfully!', {
                 position: toast.POSITION.BOTTOM_RIGHT,
             })
@@ -166,7 +166,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
             let message = 'Failed to process payments. Please try again later.'
 
             if (error instanceof AxiosError) {
-                message = error.response?.data?.error?.message
+                message = error.response?.data?.error?.message ?? error.response?.data?.message ?? error.message ?? ''
 
                 message = message.charAt(0)
                     .toUpperCase() + message.slice(1)
