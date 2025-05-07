@@ -1,4 +1,5 @@
 /* eslint-disable react/jsx-no-bind */
+/* eslint-disable complexity */
 import {
     Dispatch,
     FC,
