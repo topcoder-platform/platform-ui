@@ -60,9 +60,9 @@ export async function getPayments(userId: string, limit: number, offset: number,
     return response.data
 }
 
-export async function processPayments(paymentIds: string[]): Promise<{ processed: boolean }> {
+export async function processWinningsPayments(winningsIds: string[]): Promise<{ processed: boolean }> {
     const body = JSON.stringify({
-        paymentIds,
+        winningsIds,
     })
     const url = `${baseUrl}/withdraw`
     const response = await xhrPostAsync<string, ApiResponse<{ processed: boolean }>>(url, body)
