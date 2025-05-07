@@ -1,6 +1,14 @@
 /* eslint-disable react/jsx-no-bind */
-/* eslint-disable complexity */
-import { Dispatch, FC, SetStateAction, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import {
+    Dispatch,
+    FC,
+    SetStateAction,
+    useCallback,
+    useContext,
+    useEffect,
+    useMemo,
+    useState,
+} from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { mutate } from 'swr'
 import moment from 'moment'
@@ -86,6 +94,14 @@ const CopilotOpportunityDetails: FC<{}> = () => {
         return () => clearTimeout(timer) // Cleanup on unmount
     }, [opportunity])
 
+    const onApplied: () => void = useCallback(() => {
+        mutate(`${copilotBaseUrl}/copilots/opportunity/${opportunityId}/applications`)
+    }, [])
+
+    const onCloseApplyModal: () => void = useCallback(() => {
+        setShowApplyOpportunityModal(false)
+    }, [setShowApplyOpportunityModal])
+
     if (!opportunity && showNotFound) {
         return (
             <ContentLayout title='Copilot Opportunity Details'>
@@ -98,14 +114,6 @@ const CopilotOpportunityDetails: FC<{}> = () => {
     const applyCopilotOpportunityButton: ButtonProps = {
         label: 'Apply as Copilot',
         onClick: () => setShowApplyOpportunityModal(true),
-    }
-
-    const onApplied: () => void = () => {
-        mutate(`${copilotBaseUrl}/copilots/opportunity/${opportunityId}/applications`)
-    }
-
-    const onCloseApplyModal: () => void = () => {
-        setShowApplyOpportunityModal(false)
     }
 
     return (

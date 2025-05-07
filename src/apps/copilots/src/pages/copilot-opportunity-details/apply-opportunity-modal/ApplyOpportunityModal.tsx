@@ -19,17 +19,21 @@ const ApplyOpportunityModal: FC<ApplyOpportunityModalProps> = props => {
     const [success, setSuccess] = useState(false)
 
     const onApply = useCallback(async () => {
-        await applyCopilotOpportunity(props.copilotOpportunityId, {
-            notes,
-        })
+        try {
+            await applyCopilotOpportunity(props.copilotOpportunityId, {
+                notes,
+            })
 
-        props.onApplied()
-        setSuccess(true)
+            props.onApplied()
+            setSuccess(true)
+        } catch (e) {
+            setSuccess(true)
+        }
     }, [props.copilotOpportunityId, notes])
 
-    const onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void = e => {
+    const onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void = useCallback(e => {
         setNotes(e.target.value)
-    }
+    }, [setNotes])
 
     return (
         <BaseModal
