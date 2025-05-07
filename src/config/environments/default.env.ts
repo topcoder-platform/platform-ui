@@ -77,6 +77,7 @@ export const USERFLOW_SURVEYS = {
 }
 
 export const ADMIN = {
+    CHALLENGE_URL: 'https://www.topcoder-dev.com/challenges',
     CONNECT_URL: 'https://connect.topcoder-dev.com',
     DIRECT_URL: 'https://www.topcoder-dev.com/direct',
     ONLINE_REVIEW_URL: 'https://software.topcoder-dev.com/review',

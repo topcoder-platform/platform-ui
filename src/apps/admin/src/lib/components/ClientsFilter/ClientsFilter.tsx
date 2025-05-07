@@ -27,19 +27,25 @@ interface Props {
     onSubmitForm?: (data: FormClientsFilter) => void
 }
 
+const defaultValues: FormClientsFilter = {
+    endDate: undefined,
+    name: '',
+    startDate: undefined,
+    status: '1',
+}
+
 export const ClientsFilter: FC<Props> = (props: Props) => {
     const maxDate = useMemo(() => moment()
         .add(20, 'y')
         .toDate(), [])
     const {
         register,
+        reset,
         handleSubmit,
         control,
-        formState: { isValid },
+        formState: { isValid, isDirty },
     }: UseFormReturn<FormClientsFilter> = useForm({
-        defaultValues: {
-            status: '1',
-        },
+        defaultValues,
         mode: 'all',
         resolver: yupResolver(formClientsFilterSchema),
     })
@@ -148,6 +154,19 @@ export const ClientsFilter: FC<Props> = (props: Props) => {
                     disabled={!isValid || props.isLoading}
                 >
                     Filter
+                </Button>
+                <Button
+                    secondary
+                    onClick={function onClick() {
+                        reset(defaultValues)
+                        setTimeout(() => {
+                            onSubmit(defaultValues)
+                        })
+                    }}
+                    size='lg'
+                    disabled={!isDirty}
+                >
+                    Reset
                 </Button>
             </div>
         </form>

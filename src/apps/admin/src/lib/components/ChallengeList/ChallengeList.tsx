@@ -267,7 +267,13 @@ const ChallengeList: FC<ChallengeListProps> = props => {
                 propertyName: 'name',
                 renderer: (challenge: Challenge) => (
                     // eslint-disable-next-line jsx-a11y/anchor-is-valid
-                    <a href='#' className={styles.challengeTitle}>
+                    <a
+                        href={`${EnvironmentConfig.ADMIN.CHALLENGE_URL}/${challenge.id}`}
+                        className={styles.challengeTitle}
+                        onClick={function onClick() {
+                            window.location.href = `${EnvironmentConfig.ADMIN.CHALLENGE_URL}/${challenge.id}`
+                        }}
+                    >
                         {challenge.name}
                     </a>
                 ),

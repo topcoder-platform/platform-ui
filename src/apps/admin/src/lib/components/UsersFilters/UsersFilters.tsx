@@ -21,14 +21,22 @@ interface Props {
     isLoading?: boolean
 }
 
+const defaultValues: FormUsersFilters = {
+    email: '',
+    handle: '',
+    status: undefined,
+    userId: '',
+}
+
 export const UsersFilters: FC<Props> = props => {
     const {
         register,
+        reset,
         handleSubmit,
         control,
-        formState: { errors, isValid },
+        formState: { errors, isValid, isDirty },
     }: UseFormReturn<FormUsersFilters> = useForm({
-        defaultValues: {},
+        defaultValues,
         mode: 'all',
         resolver: yupResolver(formUsersFiltersSchema),
     })
@@ -143,15 +151,31 @@ export const UsersFilters: FC<Props> = props => {
                     <br />
                     - Maximum number of searched results is 500.
                 </p>
-                <Button
-                    primary
-                    className={styles.searchButton}
-                    size='lg'
-                    type='submit'
-                    disabled={!isValid || props.isLoading}
-                >
-                    Find members
-                </Button>
+
+                <div className={styles.blockBtns}>
+                    <Button
+                        primary
+                        className={styles.searchButton}
+                        size='lg'
+                        type='submit'
+                        disabled={!isValid || props.isLoading}
+                    >
+                        Find members
+                    </Button>
+                    <Button
+                        secondary
+                        onClick={function onClick() {
+                            reset(defaultValues)
+                            setTimeout(() => {
+                                onSubmit(defaultValues)
+                            })
+                        }}
+                        size='lg'
+                        disabled={!isDirty}
+                    >
+                        Reset
+                    </Button>
+                </div>
             </div>
         </form>
     )
