@@ -79,6 +79,7 @@ export const TableRow: <T extends { [propertyName: string]: any }>(
                     if (!props.preventDefault) {
                         event.preventDefault()
                     }
+
                     props.onRowClick?.(props.data)
                 }}
             >

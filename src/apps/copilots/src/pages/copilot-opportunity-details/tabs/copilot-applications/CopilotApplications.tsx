@@ -1,20 +1,25 @@
 import { FC, useMemo } from 'react'
 
 import { Table, TableColumn } from '~/libs/ui'
+import { USER_PROFILE_URL } from '~/config/environments/default.env'
 
 import { CopilotApplication } from '../../../../models/CopilotApplication'
 import { FormattedMembers } from '../../../../services/members'
 
 import styles from './styles.module.scss'
-import { Link } from 'react-router-dom'
-import { USER_PROFILE_URL } from '~/config/environments/default.env'
 
 const tableColumns: TableColumn<CopilotApplication>[] = [
     {
         label: 'Topcoder Handle',
         propertyName: 'handle',
         renderer: (copilotApplication: CopilotApplication) => (
-            <a href={`${USER_PROFILE_URL}/${copilotApplication.handle}`} target="_blank">{copilotApplication.handle}</a>
+            <a
+                href={`${USER_PROFILE_URL}/${copilotApplication.handle}`}
+                target='_blank'
+                rel='noreferrer'
+            >
+                {copilotApplication.handle}
+            </a>
         ),
         type: 'element',
     },
