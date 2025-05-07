@@ -120,8 +120,5 @@ export const useCopilotApplications = (opportunityId?: string): CopilotApplicati
         .then(data => data)
         .catch(() => [])
 
-    return useSWR(url, fetcher, {
-        refreshInterval: 0,
-        revalidateOnFocus: false,
-    })
+    return useSWR(url, fetcher)
 }
