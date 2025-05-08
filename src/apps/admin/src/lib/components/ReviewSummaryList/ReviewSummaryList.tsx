@@ -1,6 +1,7 @@
 import { FC, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 
+import { EnvironmentConfig } from '~/config'
 import { useWindowSize, WindowSize } from '~/libs/shared'
 import { Button, LinkButton, Table, type TableColumn } from '~/libs/ui'
 import { Sort } from '~/apps/gamification-admin/src/game-lib/pagination'
@@ -45,13 +46,17 @@ const ChallengeTitle: FC<{
     review: ReviewSummary
 }> = props => {
     const goToChallenge = useEventCallback(() => {
-        window.location.href = `https://www.topcoder.com/challenges/${props.review.legacyChallengeId}`
+        window.location.href = `${EnvironmentConfig.ADMIN.CHALLENGE_URL}/${props.review.legacyChallengeId}`
     })
 
-    return (
-        <LinkButton onClick={goToChallenge} className={styles.challengeTitle}>
+    return props.review.legacyChallengeId ? (
+        <LinkButton onClick={goToChallenge} className={styles.challengeTitleLink}>
             {props.review.challengeName}
         </LinkButton>
+    ) : (
+        <span className={styles.challengeTitleText}>
+            {props.review.challengeName}
+        </span>
     )
 }
 

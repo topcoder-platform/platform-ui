@@ -45,11 +45,6 @@ export const BillingAccountResourcesTable: FC<Props> = (props: Props) => {
                 type: 'text',
             },
             {
-                label: 'Status',
-                propertyName: 'status',
-                type: 'text',
-            },
-            {
                 className: styles.blockColumnAction,
                 label: '',
                 renderer: (data: BillingAccountResource) => (
@@ -82,20 +77,7 @@ export const BillingAccountResourcesTable: FC<Props> = (props: Props) => {
             ],
             [
                 {
-                    label: 'Status label',
-                    mobileType: 'label',
-                    propertyName: 'status',
-                    renderer: () => <div>Status:</div>,
-                    type: 'element',
-                },
-                {
                     ...columns[1],
-                    mobileType: 'last-value',
-                },
-            ],
-            [
-                {
-                    ...columns[2],
                     colSpan: 2,
                     mobileType: 'last-value',
                 },
