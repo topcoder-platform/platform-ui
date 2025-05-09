@@ -1,23 +1,48 @@
-import { FC, useEffect, useState } from 'react'
+/* eslint-disable react/jsx-no-bind */
+import {
+    FC,
+    useCallback,
+    useContext,
+    useEffect,
+    useMemo,
+    useState,
+} from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { mutate } from 'swr'
 import moment from 'moment'
 
 import {
+    ButtonProps,
     ContentLayout,
     IconOutline,
     LoadingSpinner,
     PageTitle,
 } from '~/libs/ui'
+import { profileContext, ProfileContextData, UserRole } from '~/libs/core'
 
-import { CopilotOpportunityResponse, useCopilotOpportunity } from '../../services/copilot-opportunities'
+import { CopilotApplication } from '../../models/CopilotApplication'
+import {
+    copilotBaseUrl,
+    CopilotOpportunityResponse,
+    useCopilotApplications,
+    useCopilotOpportunity,
+} from '../../services/copilot-opportunities'
 import { copilotRoutesMap } from '../../copilots.routes'
 
+import { ApplyOpportunityModal } from './apply-opportunity-modal'
 import styles from './styles.module.scss'
 
 const CopilotOpportunityDetails: FC<{}> = () => {
     const { opportunityId }: {opportunityId?: string} = useParams<{ opportunityId?: string }>()
     const navigate = useNavigate()
     const [showNotFound, setShowNotFound] = useState(false)
+    const [showApplyOpportunityModal, setShowApplyOpportunityModal] = useState(false)
+    const { profile }: ProfileContextData = useContext(profileContext)
+    const isCopilot: boolean = useMemo(
+        () => !!profile?.roles?.some(role => role === UserRole.copilot),
+        [profile],
+    )
+    const { data: copilotApplications }: { data?: CopilotApplication[] } = useCopilotApplications(opportunityId)
 
     if (!opportunityId) {
         navigate(copilotRoutesMap.CopilotOpportunityList)
@@ -35,6 +60,14 @@ const CopilotOpportunityDetails: FC<{}> = () => {
         return () => clearTimeout(timer) // Cleanup on unmount
     }, [opportunity])
 
+    const onApplied: () => void = useCallback(() => {
+        mutate(`${copilotBaseUrl}/copilots/opportunity/${opportunityId}/applications`)
+    }, [])
+
+    const onCloseApplyModal: () => void = useCallback(() => {
+        setShowApplyOpportunityModal(false)
+    }, [setShowApplyOpportunityModal])
+
     if (!opportunity && showNotFound) {
         return (
             <ContentLayout title='Copilot Opportunity Details'>
@@ -44,8 +77,20 @@ const CopilotOpportunityDetails: FC<{}> = () => {
         )
     }
 
+    const applyCopilotOpportunityButton: ButtonProps = {
+        label: 'Apply as Copilot',
+        onClick: () => setShowApplyOpportunityModal(true),
+    }
+
     return (
-        <ContentLayout title='Copilot Opportunity'>
+        <ContentLayout
+            title='Copilot Opportunity'
+            buttonConfig={
+                isCopilot
+                && copilotApplications
+                && copilotApplications.length === 0 ? applyCopilotOpportunityButton : undefined
+            }
+        >
             <PageTitle>Copilot Opportunity</PageTitle>
             {isValidating && !showNotFound && (
                 <LoadingSpinner />
@@ -132,6 +177,17 @@ const CopilotOpportunityDetails: FC<{}> = () => {
                     <span className={styles.textCaps}>{opportunity?.requiresCommunication}</span>
                 </div>
             </div>
+            {
+                showApplyOpportunityModal
+                && opportunity && (
+                    <ApplyOpportunityModal
+                        copilotOpportunityId={opportunity?.id}
+                        onClose={onCloseApplyModal}
+                        projectName={opportunity?.projectName}
+                        onApplied={onApplied}
+                    />
+                )
+            }
         </ContentLayout>
     )
 }

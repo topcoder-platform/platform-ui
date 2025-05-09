@@ -2,12 +2,13 @@ import useSWR, { SWRResponse } from 'swr'
 import useSWRInfinite, { SWRInfiniteResponse } from 'swr/infinite'
 
 import { EnvironmentConfig } from '~/config'
-import { xhrGetAsync } from '~/libs/core'
+import { xhrGetAsync, xhrPostAsync } from '~/libs/core'
 import { buildUrl } from '~/libs/shared/lib/utils/url'
 
 import { CopilotOpportunity } from '../models/CopilotOpportunity'
+import { CopilotApplication } from '../models/CopilotApplication'
 
-const baseUrl = `${EnvironmentConfig.API.V5}/projects`
+export const copilotBaseUrl = `${EnvironmentConfig.API.V5}/projects`
 
 const PAGE_SIZE = 20
 
@@ -42,7 +43,9 @@ export interface CopilotOpportunitiesResponse {
 export const useCopilotOpportunities = (): CopilotOpportunitiesResponse => {
     const getKey = (pageIndex: number, previousPageData: CopilotOpportunity[]): string | undefined => {
         if (previousPageData && previousPageData.length < PAGE_SIZE) return undefined
-        return `${baseUrl}/copilots/opportunities?page=${pageIndex + 1}&pageSize=${PAGE_SIZE}&sort=createdAt desc`
+        return `
+            ${copilotBaseUrl}/copilots/opportunities?page=${pageIndex + 1}&pageSize=${PAGE_SIZE}&sort=createdAt desc
+        `
     }
 
     const fetcher = (url: string): Promise<CopilotOpportunity[]> => xhrGetAsync<CopilotOpportunity[]>(url)
@@ -68,6 +71,8 @@ export const useCopilotOpportunities = (): CopilotOpportunitiesResponse => {
 
 export type CopilotOpportunityResponse = SWRResponse<CopilotOpportunity, CopilotOpportunity>
 
+export type CopilotApplicationResponse = SWRResponse<CopilotApplication[], CopilotApplication[]>
+
 /**
  * Custom hook to fetch copilot opportunity by id.
  *
@@ -75,7 +80,7 @@ export type CopilotOpportunityResponse = SWRResponse<CopilotOpportunity, Copilot
  * @returns {CopilotOpportunityResponse} - The response containing the copilot request data.
  */
 export const useCopilotOpportunity = (opportunityId?: string): CopilotOpportunityResponse => {
-    const url = opportunityId ? buildUrl(`${baseUrl}/copilot/opportunity/${opportunityId}`) : undefined
+    const url = opportunityId ? buildUrl(`${copilotBaseUrl}/copilot/opportunity/${opportunityId}`) : undefined
 
     const fetcher = (urlp: string): Promise<CopilotOpportunity> => xhrGetAsync<CopilotOpportunity>(urlp)
         .then(copilotOpportunityFactory)
@@ -84,4 +89,36 @@ export const useCopilotOpportunity = (opportunityId?: string): CopilotOpportunit
         refreshInterval: 0,
         revalidateOnFocus: false,
     })
+}
+
+/**
+ * apply copilot opportunity
+ * @param opportunityId
+ * @param request
+ * @returns
+ */
+export const applyCopilotOpportunity = async (opportunityId: number, request: {
+    notes?: string;
+}): Promise<CopilotApplication> => {
+    const url = `${copilotBaseUrl}/copilots/opportunity/${opportunityId}/apply`
+
+    return xhrPostAsync(url, request, {})
+}
+
+/**
+ * Custom hook to fetch copilot applications by opportunity id.
+ *
+ * @param {string} opportunityId - The unique identifier of the copilot request.
+ * @returns {CopilotApplicationResponse} - The response containing the copilot application data.
+ */
+export const useCopilotApplications = (opportunityId?: string): CopilotApplicationResponse => {
+    const url = opportunityId
+        ? buildUrl(`${copilotBaseUrl}/copilots/opportunity/${opportunityId}/applications`)
+        : undefined
+
+    const fetcher = (urlp: string): Promise<CopilotApplication[]> => xhrGetAsync<CopilotApplication[]>(urlp)
+        .then(data => data)
+        .catch(() => [])
+
+    return useSWR(url, fetcher)
 }
