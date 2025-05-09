@@ -3,4 +3,6 @@ export interface CopilotApplication {
     notes?: string,
     createdAt: Date,
     opportunityId: string,
+    handle?: string,
+    userId: number,
 }
