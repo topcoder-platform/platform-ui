@@ -1,5 +1,4 @@
 export function textFormatDateLocaleShortString(date?: Date): string | undefined {
-    console.log(date, 'date')
     return date?.toLocaleDateString(
         undefined,
         {

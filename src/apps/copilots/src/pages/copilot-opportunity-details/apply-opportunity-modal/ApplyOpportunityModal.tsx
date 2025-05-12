@@ -37,7 +37,6 @@ const ApplyOpportunityModal: FC<ApplyOpportunityModalProps> = props => {
         setNotes(e.target.value)
     }, [setNotes])
 
-    console.log(error, 'error')
     return (
         <BaseModal
             onClose={props.onClose}
