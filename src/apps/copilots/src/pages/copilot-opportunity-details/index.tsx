@@ -18,11 +18,13 @@ import {
     ButtonProps,
     ContentLayout,
     IconOutline,
+    IconSolid,
     LoadingSpinner,
     PageTitle,
     TabsNavbar,
 } from '~/libs/ui'
 import { profileContext, ProfileContextData, UserRole } from '~/libs/core'
+import { textFormatDateLocaleShortString } from '~/libs/shared'
 
 import { CopilotApplication } from '../../models/CopilotApplication'
 import {
@@ -77,8 +79,12 @@ const CopilotOpportunityDetails: FC<{}> = () => {
     const [activeTab, setActiveTab]: [string, Dispatch<SetStateAction<string>>] = useState<string>(activeTabHash)
 
     useEffect(() => {
-        setActiveTab(activeTabHash)
-    }, [activeTabHash])
+        if (isAdminOrPM) {
+            setActiveTab(activeTabHash)
+        } else {
+            setActiveTab('0')
+        }
+    }, [activeTabHash, isAdminOrPM])
 
     const handleTabChange = useCallback((tabId: string): void => {
         setActiveTab(tabId)
@@ -97,6 +103,7 @@ const CopilotOpportunityDetails: FC<{}> = () => {
 
     const onApplied: () => void = useCallback(() => {
         mutate(`${copilotBaseUrl}/copilots/opportunity/${opportunityId}/applications`)
+        mutate(`${copilotBaseUrl}/copilots/opportunity/${opportunityId}`)
     }, [])
 
     const onCloseApplyModal: () => void = useCallback(() => {
@@ -117,16 +124,34 @@ const CopilotOpportunityDetails: FC<{}> = () => {
         onClick: () => setShowApplyOpportunityModal(true),
     }
 
+    const application = copilotApplications && copilotApplications[0]
+
     return (
         <ContentLayout
             title='Copilot Opportunity'
             buttonConfig={
                 isCopilot
                 && copilotApplications
-                && copilotApplications.length === 0 ? applyCopilotOpportunityButton : undefined
+                && copilotApplications.length === 0
+                && opportunity?.status === 'active' ? applyCopilotOpportunityButton : undefined
             }
+            infoComponent={(isCopilot && !(copilotApplications
+                && copilotApplications.length === 0
+                && opportunity?.status === 'active'
+            ) && !!application) && (
+                <div className={styles.applied}>
+                    <IconSolid.CheckCircleIcon className={styles.appliedIcon} />
+                    <span
+                        className={styles.appliedText}
+                    >
+                        {`Applied on ${textFormatDateLocaleShortString(new Date(application.createdAt))}`}
+                    </span>
+                </div>
+            )}
         >
-            <PageTitle>Copilot Opportunity</PageTitle>
+            <PageTitle>
+                Copilot Opportunity
+            </PageTitle>
             {isValidating && !showNotFound && (
                 <LoadingSpinner />
             ) }

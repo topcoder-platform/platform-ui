@@ -17,17 +17,19 @@ interface ApplyOpportunityModalProps {
 const ApplyOpportunityModal: FC<ApplyOpportunityModalProps> = props => {
     const [notes, setNotes] = useState('')
     const [success, setSuccess] = useState(false)
+    const [error, setError] = useState('')
 
     const onApply = useCallback(async () => {
         try {
-            await applyCopilotOpportunity(props.copilotOpportunityId, {
+            await applyCopilotOpportunity(props.copilotOpportunityId, notes ? {
                 notes,
-            })
+            } : undefined)
 
             props.onApplied()
             setSuccess(true)
-        } catch (e) {
-            setSuccess(true)
+        } catch (e: any) {
+            setSuccess(false)
+            setError(e.message)
         }
     }, [props.copilotOpportunityId, notes])
 
@@ -35,6 +37,7 @@ const ApplyOpportunityModal: FC<ApplyOpportunityModalProps> = props => {
         setNotes(e.target.value)
     }, [setNotes])
 
+    console.log(error, 'error')
     return (
         <BaseModal
             onClose={props.onClose}
@@ -77,6 +80,8 @@ const ApplyOpportunityModal: FC<ApplyOpportunityModalProps> = props => {
                             name='Notes'
                             onChange={onChange}
                             value={notes}
+                            error={error}
+                            dirty={!!error}
                         />
                     )
                 }
