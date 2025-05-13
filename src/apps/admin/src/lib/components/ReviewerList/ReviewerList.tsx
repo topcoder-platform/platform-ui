@@ -192,6 +192,7 @@ const ReviewerList: FC<ReviewerListProps> = props => {
                 propertyName: 'reviewsInPast60Days',
                 type: 'number',
             },
+            // Hide the columns temporary, we do not have these data now
             // { label: 'Matching Skills', propertyName: '', type: 'text' },
             {
                 label: '',

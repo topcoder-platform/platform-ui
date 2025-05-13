@@ -538,8 +538,8 @@ const ApproveActionType = {
 type ApproveActionType =
     | {
           type: // | typeof ApproveActionType.APPROVE_INIT
-          | typeof ApproveActionType.APPROVE_FAILED
-              | typeof ApproveActionType.APPROVE_DONE
+            | typeof ApproveActionType.APPROVE_FAILED
+            | typeof ApproveActionType.APPROVE_DONE
       }
     | {
           type: typeof ApproveActionType.APPROVE_INIT

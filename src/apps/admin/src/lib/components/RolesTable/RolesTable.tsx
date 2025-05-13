@@ -34,7 +34,7 @@ export const RolesTable: FC<Props> = (props: Props) => {
                         <Link to={`${data.id}/role-members`}>{data.id}</Link>
                     </div>
                 ),
-                type: 'element',
+                type: 'numberElement', // Change from 'element' to 'numberElement'
             },
             {
                 label: 'Role Name',
@@ -187,6 +187,13 @@ export const RolesTable: FC<Props> = (props: Props) => {
             },
         ],
     ], [columns])
+
+    // Convert id fields to numbers to ensure proper sorting
+    const processedData = useMemo(() => props.datas.map(role => ({
+        ...role,
+        id: Number(role.id),
+    })), [props.datas])
+
     const {
         page,
         setPage,
@@ -195,7 +202,7 @@ export const RolesTable: FC<Props> = (props: Props) => {
         setSort,
         sort,
     }: useTableFilterLocalProps<UserRole> = useTableFilterLocal(
-        props.datas ?? [],
+        processedData ?? [],
         undefined,
         {
             createdAtString: 'createdAt',
