@@ -14,6 +14,7 @@ export interface ContentLayoutProps {
     outerClass?: string
     title?: string
     titleClass?: string
+    infoComponent?: ReactNode
 }
 
 const ContentLayout: FC<ContentLayoutProps> = (props: ContentLayoutProps) => (
@@ -47,6 +48,12 @@ const ContentLayout: FC<ContentLayoutProps> = (props: ContentLayoutProps) => (
                                     primary
                                     size='lg'
                                 />
+                            </div>
+                        )}
+
+                        {!!props.infoComponent && (
+                            <div>
+                                {props.infoComponent}
                             </div>
                         )}
 

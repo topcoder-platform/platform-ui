@@ -54,6 +54,22 @@
     color: $teal-100;
 }
 
+.applied {
+    display: flex;
+    align-items: center;
+    .appliedIcon {
+        width: 30px;
+        height: 30px;
+        color: $green-1;
+    }
+
+    .appliedText {
+        font-size: 14px;
+        font-weight: 600;
+        color: #333;
+    }
+}
+
 .textCaps {
     text-transform: capitalize;
 }

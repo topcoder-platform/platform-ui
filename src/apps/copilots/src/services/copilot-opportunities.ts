@@ -97,7 +97,7 @@ export const useCopilotOpportunity = (opportunityId?: string): CopilotOpportunit
  * @param request
  * @returns
  */
-export const applyCopilotOpportunity = async (opportunityId: number, request: {
+export const applyCopilotOpportunity = async (opportunityId: number, request?: {
     notes?: string;
 }): Promise<CopilotApplication> => {
     const url = `${copilotBaseUrl}/copilots/opportunity/${opportunityId}/apply`
