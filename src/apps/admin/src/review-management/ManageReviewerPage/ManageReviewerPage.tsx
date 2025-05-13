@@ -32,6 +32,7 @@ import {
 } from '../../lib/models'
 import {
     approveApplication,
+    getChallengeByLegacyId,
     getChallengeReviewers,
     getChallengeReviewOpportunities,
     rejectPending,
@@ -61,6 +62,7 @@ export const ManageReviewerPage: FC = () => {
     const { challengeId = '' }: { challengeId?: string } = useParams<{
         challengeId: string
     }>()
+    const [challengeUuid, setChallengeUuid] = useState('')
     const navigate: NavigateFunction = useNavigate()
     const [filterCriteria, setFilterCriteria]: [
         ReviewFilterCriteria,
@@ -136,16 +138,24 @@ export const ManageReviewerPage: FC = () => {
     })
 
     const unapprove = useEventCallback((): void => {
-        // how to get challenge Id?
-        // Now we use one specific challenge id for testing
-        const realChallengeId = 'c713e250-ecb4-4192-8717-d607ddda8db4'
-        navigate(`${rootRoute}/challenge-management/${realChallengeId}/manage-user`)
+        if (challengeUuid) {
+            navigate(`${rootRoute}/challenge-management/${challengeUuid}/manage-user`)
+        }
     })
 
     // Init
     useEffect(() => {
         search()
     }, [challengeId]) // eslint-disable-line react-hooks/exhaustive-deps -- missing dependency: search
+
+    // Gets the challenge details by legacyId
+    useEffect(() => {
+        getChallengeByLegacyId(+challengeId)
+            .then(challenge => {
+                setChallengeUuid(challenge.id)
+            })
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- missing dependency: setChallengeUuid
+    }, [challengeId, getChallengeByLegacyId])
 
     // Page change
     const [pageChangeEvent, setPageChangeEvent] = useState(false)
