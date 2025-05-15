@@ -17,4 +17,7 @@ export interface WalletDetails {
     taxForm: {
         isSetupComplete: boolean
     }
+    primaryCurrency?: string | null;
+    estimatedFees?: string | null;
+    taxWithholdingPercentage?: string | null;
 }

@@ -31,5 +31,20 @@
             justify-content: space-around;
             align-items: center;
         }
+
+    }
+}
+
+.taxes {
+    display: block;
+    line-height: 20px;
+    font-size: 14px;
+
+    + .taxes {
+        margin-top: 10px;
+    }
+
+    &.mt {
+        margin-top: 20px;
     }
 }

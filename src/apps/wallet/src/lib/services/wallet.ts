@@ -11,10 +11,10 @@ import { TransactionResponse } from '../models/TransactionId'
 import { PaginationInfo } from '../models/PaginationInfo'
 import ApiResponse from '../models/ApiResponse'
 
-const baseUrl = `${EnvironmentConfig.TC_FINANCE_API}`
+export const WALLET_API_BASE_URL = `${EnvironmentConfig.TC_FINANCE_API}`
 
 export async function getWalletDetails(): Promise<WalletDetails> {
-    const response = await xhrGetAsync<ApiResponse<WalletDetails>>(`${baseUrl}/wallet`)
+    const response = await xhrGetAsync<ApiResponse<WalletDetails>>(`${WALLET_API_BASE_URL}/wallet`)
 
     if (response.status === 'error') {
         throw new Error('Error fetching wallet details')
@@ -43,7 +43,7 @@ export async function getPayments(userId: string, limit: number, offset: number,
         ...filteredFilters,
     })
 
-    const url = `${baseUrl}/user/winnings`
+    const url = `${WALLET_API_BASE_URL}/user/winnings`
     const response = await xhrPostAsync<string, ApiResponse<{
         winnings: WinningDetail[],
         pagination: PaginationInfo
@@ -64,7 +64,7 @@ export async function processWinningsPayments(winningsIds: string[]): Promise<{ 
     const body = JSON.stringify({
         winningsIds,
     })
-    const url = `${baseUrl}/withdraw`
+    const url = `${WALLET_API_BASE_URL}/withdraw`
     const response = await xhrPostAsync<string, ApiResponse<{ processed: boolean }>>(url, body)
 
     if (response.status === 'error') {
@@ -81,7 +81,7 @@ export async function verifyOtp(transactionId: string, code: string, blob: boole
         transactionId,
     })
 
-    const url = `${baseUrl}/otp/verify`
+    const url = `${WALLET_API_BASE_URL}/otp/verify`
     try {
         // eslint-disable-next-line max-len
         const response = await xhrPostAsyncWithBlobHandling<string, ApiResponse<OtpVerificationResponse> | Blob>(url, body, {
@@ -107,7 +107,7 @@ export async function resendOtp(transactionId: string): Promise<TransactionRespo
         transactionId,
     })
 
-    const url = `${baseUrl}/otp/resend`
+    const url = `${WALLET_API_BASE_URL}/otp/resend`
     try {
         const response = await xhrPostAsync<string, ApiResponse<TransactionResponse>>(url, body)
 
@@ -132,7 +132,7 @@ export async function resendOtp(transactionId: string): Promise<TransactionRespo
  * @throws {Error} If the response does not contain a valid link.
  */
 export async function getTrolleyPortalLink(): Promise<string> {
-    const url = `${baseUrl}/trolley/portal-link`
+    const url = `${WALLET_API_BASE_URL}/trolley/portal-link`
     const response = await xhrGetAsync<{ link: string }>(url)
 
     if (!response.link) {
