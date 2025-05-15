@@ -2,6 +2,7 @@
 /* eslint-disable react/jsx-no-bind */
 import { toast } from 'react-toastify'
 import { AxiosError } from 'axios'
+import { Link } from 'react-router-dom'
 import React, { FC, useCallback, useEffect } from 'react'
 
 import { Collapsible, ConfirmModal, LoadingCircles } from '~/libs/ui'
@@ -12,6 +13,8 @@ import { Winning, WinningDetail } from '../../../lib/models/WinningDetail'
 import { FilterBar } from '../../../lib'
 import { ConfirmFlowData } from '../../../lib/models/ConfirmFlowData'
 import { PaginationInfo } from '../../../lib/models/PaginationInfo'
+import { useWalletDetails, WalletDetailsResponse } from '../../../lib/hooks/use-wallet-details'
+import { nullToZero } from '../../../lib/util'
 import PaymentsTable from '../../../lib/components/payments-table/PaymentTable'
 
 import styles from './Winnings.module.scss'
@@ -74,6 +77,8 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
     const [selectedPayments, setSelectedPayments] = React.useState<{ [paymentId: string]: Winning }>({})
     const [isLoading, setIsLoading] = React.useState<boolean>(false)
     const [filters, setFilters] = React.useState<Record<string, string[]>>({})
+    const { data: walletDetails }: WalletDetailsResponse = useWalletDetails()
+
     const [pagination, setPagination] = React.useState<PaginationInfo>({
         currentPage: 1,
         pageSize: 10,
@@ -178,6 +183,58 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
         }
 
         fetchWinnings()
+    }
+
+    function handlePayMeClick(
+        paymentIds: { [paymentId: string]: Winning },
+        totalAmount: string,
+    ): void {
+        setConfirmFlow({
+            action: 'Yes',
+            callback: () => processPayouts(Object.keys(paymentIds)),
+            content: (
+                <>
+                    You are about to process payments for a total of USD
+                    {' '}
+                    {totalAmount}
+                    .
+                    <br />
+                    <br />
+                    {walletDetails && (
+                        <>
+                            <div className={styles.taxes}>
+                                Est. Payment Fees:
+                                {' '}
+                                {nullToZero(walletDetails.estimatedFees)}
+                                {' '}
+                                USD and Tax Withholding:
+                                {' '}
+                                {`${nullToZero(walletDetails.taxWithholdingPercentage)}%`}
+                                {' '}
+                                will be applied on the payment.
+                            </div>
+                            <div className={styles.taxes}>
+                                {walletDetails.primaryCurrency && (
+                                    <>
+                                        You will receive the payment in
+                                        {' '}
+                                        {walletDetails.primaryCurrency}
+                                        {' '}
+                                        currency after 2% coversion fees applied.
+                                    </>
+                                )}
+                            </div>
+                            <div className={`${styles.taxes} ${styles.mt}`}>
+                                You can adjust your payout settings to customize your estimated payment fee and tax withholding percentage in
+                                {' '}
+                                <Link to='#payout'>Payout</Link>
+                            </div>
+                        </>
+                    )}
+                </>
+            ),
+            title: 'Are you sure?',
+        })
     }
 
     return (
@@ -338,17 +395,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                                         currentPage: pageNumber,
                                     })
                                 }}
-                                onPayMeClick={async function onPayMeClicked(
-                                    paymentIds: { [paymentId: string]: Winning },
-                                    totalAmount: string,
-                                ) {
-                                    setConfirmFlow({
-                                        action: 'Yes',
-                                        callback: () => processPayouts(Object.keys(paymentIds)),
-                                        content: `You are about to process payments for a total of USD ${totalAmount}`,
-                                        title: 'Are you sure?',
-                                    })
-                                }}
+                                onPayMeClick={handlePayMeClick}
                             />
                         )}
                         {!isLoading && winnings.length === 0 && (
