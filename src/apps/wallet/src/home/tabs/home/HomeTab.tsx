@@ -4,10 +4,11 @@ import { FC, useEffect, useState } from 'react'
 import { UserProfile } from '~/libs/core'
 import { IconOutline, LinkButton, LoadingCircles } from '~/libs/ui'
 
-import { Balance, WalletDetails } from '../../../lib/models/WalletDetails'
-import { getWalletDetails } from '../../../lib/services/wallet'
+import { Balance } from '../../../lib/models/WalletDetails'
 import { InfoRow } from '../../../lib'
 import { BannerImage, BannerText } from '../../../lib/assets/home'
+import { nullToZero } from '../../../lib/util'
+import { useWalletDetails, WalletDetailsResponse } from '../../../lib/hooks/use-wallet-details'
 import Chip from '../../../lib/components/chip/Chip'
 
 import styles from './Home.module.scss'
@@ -17,27 +18,8 @@ interface HomeTabProps {
 }
 
 const HomeTab: FC<HomeTabProps> = () => {
-    const [walletDetails, setWalletDetails] = useState<WalletDetails | undefined>(undefined)
-    const [isLoading, setIsLoading] = useState(false)
+    const { data: walletDetails, isLoading, error }: WalletDetailsResponse = useWalletDetails()
     const [balanceSum, setBalanceSum] = useState(0)
-    const [error, setError] = useState<string | undefined>(undefined)
-
-    useEffect(() => {
-        // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-        const fetchWalletDetails = async () => {
-            setIsLoading(true)
-            try {
-                const details = await getWalletDetails()
-                setWalletDetails(details)
-            } catch (apiError) {
-                setError('Error fetching wallet details')
-            }
-
-            setIsLoading(false)
-        }
-
-        fetchWalletDetails()
-    }, [])
 
     useEffect(() => {
         if (walletDetails) {
@@ -58,7 +40,7 @@ const HomeTab: FC<HomeTabProps> = () => {
                 <BannerImage />
             </div>
             {isLoading && <LoadingCircles />}
-            {!isLoading && (
+            {!isLoading && walletDetails && (
                 <div className={styles['info-row-container']}>
                     <InfoRow
                         title='Account Balance'
@@ -74,6 +56,24 @@ const HomeTab: FC<HomeTabProps> = () => {
                             />
                         }
                     />
+
+                    {walletDetails.withdrawalMethod.isSetupComplete && walletDetails.taxForm.isSetupComplete && (
+                        <InfoRow
+                            title='Est. Payment Fees and Tax Withholding %'
+                            // eslint-disable-next-line max-len
+                            value={`Fee: ${nullToZero(walletDetails.estimatedFees)} USD / Tax Withholding: ${nullToZero(walletDetails.taxWithholdingPercentage)}%`}
+                            action={
+                                <LinkButton
+                                    label='ADJUST YOUR PAYOUT SETTINGS'
+                                    iconToRight
+                                    icon={IconOutline.ArrowRightIcon}
+                                    size='md'
+                                    link
+                                    to='#payout'
+                                />
+                            }
+                        />
+                    )}
 
                     {!walletDetails?.withdrawalMethod.isSetupComplete && (
                         <InfoRow
