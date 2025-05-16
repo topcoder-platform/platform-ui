@@ -41,6 +41,11 @@ table {
         top: 0;
         background-color: white !important;
         text-transform: uppercase;
+
+        &.description {
+            width: 360px;
+            max-width: 360px;
+        }
     }
 
     tbody tr td:first-child {
@@ -97,7 +102,7 @@ table {
 .actionButtons {
     padding-left: 8px;
     display: flex;
-    justify-content: center;
+    justify-content: flex-end;
     align-items: center;
 }
 
