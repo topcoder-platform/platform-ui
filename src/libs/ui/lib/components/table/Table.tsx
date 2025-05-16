@@ -30,6 +30,7 @@ interface TableProps<T> {
     readonly onRowClick?: (data: T) => void
     readonly onToggleSort?: (sort: Sort) => void
     readonly removeDefaultSort?: boolean
+    readonly preventDefault?: boolean
 }
 
 interface DefaultSortDirectionMap {
@@ -180,6 +181,7 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
                     columns={props.columns}
                     index={index}
                     showExpand={props.showExpand}
+                    preventDefault={props.preventDefault}
                 />
             ))
 
