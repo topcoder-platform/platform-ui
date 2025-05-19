@@ -49,6 +49,10 @@ function formatStatus(status: string): string {
             return 'Paid'
         case 'CANCELLED':
             return 'Cancelled'
+        case 'FAILED':
+            return 'Failed'
+        case 'RETURNED':
+            return 'Returned'
         default:
             return status.replaceAll('_', ' ')
     }
@@ -308,6 +312,14 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                                         {
                                             label: 'Cancelled',
                                             value: 'CANCELLED',
+                                        },
+                                        {
+                                            label: 'Failed',
+                                            value: 'FAILED',
+                                        },
+                                        {
+                                            label: 'Returned',
+                                            value: 'RETURNED',
                                         },
                                     ],
                                     type: 'dropdown',
