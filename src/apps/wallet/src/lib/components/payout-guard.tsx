@@ -9,7 +9,7 @@ export interface PayoutGuardProps {
 }
 
 export const PayoutGuard: FC<PayoutGuardProps & PropsWithChildren> = props => {
-    const canViewPayout = useCanViewPayout(props.profile);
+    const canViewPayout = useCanViewPayout(props.profile)
 
     return (
         <>{canViewPayout && props.children}</>

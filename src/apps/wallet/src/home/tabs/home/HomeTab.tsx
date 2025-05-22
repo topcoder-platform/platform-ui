@@ -59,7 +59,8 @@ const HomeTab: FC<HomeTabProps> = props => {
                     />
 
                     <PayoutGuard profile={props.profile}>
-                        {walletDetails.withdrawalMethod.isSetupComplete && walletDetails.taxForm.isSetupComplete && (
+                        {walletDetails.withdrawalMethod.isSetupComplete
+                            && walletDetails.taxForm.isSetupComplete && (
                             <InfoRow
                                 title='Est. Payment Fees and Tax Withholding %'
                                 // eslint-disable-next-line max-len
@@ -103,7 +104,11 @@ const HomeTab: FC<HomeTabProps> = props => {
                         {!walletDetails?.taxForm.isSetupComplete && (
                             <InfoRow
                                 title='Tax Form'
-                                value={walletDetails?.taxForm.isSetupComplete ? 'All set' : <Chip text='Setup Required' />}
+                                value={
+                                    walletDetails?.taxForm.isSetupComplete
+                                        ? 'All set'
+                                        : <Chip text='Setup Required' />
+                                }
                                 action={
                                     <LinkButton
                                         label='COMPLETE TAX FORM'
