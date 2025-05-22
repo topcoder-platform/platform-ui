@@ -145,10 +145,14 @@ export function useManagePermissionGroups(
                 _.forEach(result, group => {
                     if (group.createdBy) {
                         loadUser(group.createdBy)
+                    } else {
+                        group.createdByHandle = ''
                     }
 
                     if (group.updatedBy) {
                         loadUser(group.updatedBy)
+                    } else {
+                        group.updatedByHandle = ''
                     }
                 })
             })

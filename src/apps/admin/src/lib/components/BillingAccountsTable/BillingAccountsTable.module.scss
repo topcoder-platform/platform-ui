@@ -38,3 +38,9 @@
     white-space: break-spaces !important;
     text-align: left !important;
 }
+
+.desktopTable {
+    td {
+        vertical-align: middle;
+    }
+}

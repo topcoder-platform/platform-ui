@@ -1,12 +1,12 @@
 /**
  * Role members table.
  */
-import { FC, useContext, useEffect, useMemo } from 'react'
+import { FC, useContext, useEffect, useMemo, useState } from 'react'
 import _ from 'lodash'
 import classNames from 'classnames'
 
 import { useWindowSize, WindowSize } from '~/libs/shared'
-import { Button, InputCheckbox, Table, TableColumn } from '~/libs/ui'
+import { Button, colWidthType, InputCheckbox, Table, TableColumn } from '~/libs/ui'
 
 import { AdminAppContext } from '../../contexts'
 import { useTableFilterLocal, useTableFilterLocalProps } from '../../hooks'
@@ -28,6 +28,7 @@ interface Props {
 }
 
 export const RoleMembersTable: FC<Props> = (props: Props) => {
+    const [colWidth, setColWidth] = useState<colWidthType>({})
     const { loadUser, usersMapping, cancelLoadUser }: AdminAppContextType
         = useContext(AdminAppContext)
     const {
@@ -76,6 +77,7 @@ export const RoleMembersTable: FC<Props> = (props: Props) => {
         () => [
             {
                 className: styles.blockCellCheckBox,
+                columnId: 'checkbox',
                 label: () => ( // eslint-disable-line react/no-unstable-nested-components
                     <div className={styles.headerCheckboxWrapper}>
                         <InputCheckbox
@@ -101,11 +103,13 @@ export const RoleMembersTable: FC<Props> = (props: Props) => {
                 type: 'element',
             },
             {
+                columnId: 'id',
                 label: 'User ID',
                 propertyName: 'id',
                 type: 'text',
             },
             {
+                columnId: 'handle',
                 label: 'Handle',
                 propertyName: 'handle',
                 renderer: (data: RoleMemberInfo) => {
@@ -125,6 +129,7 @@ export const RoleMembersTable: FC<Props> = (props: Props) => {
             },
             {
                 className: styles.blockColumnAction,
+                columnId: 'action',
                 label: '',
                 renderer: (data: RoleMemberInfo) => (
                     <Button
@@ -198,6 +203,9 @@ export const RoleMembersTable: FC<Props> = (props: Props) => {
                     onToggleSort={setSort}
                     forceSort={sort}
                     removeDefaultSort
+                    className={styles.desktopTable}
+                    colWidth={colWidth}
+                    setColWidth={setColWidth}
                 />
             )}
 

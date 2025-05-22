@@ -1,12 +1,12 @@
 /**
  * Group members table.
  */
-import { FC, useCallback, useEffect, useMemo } from 'react'
+import { FC, useCallback, useEffect, useMemo, useState } from 'react'
 import _ from 'lodash'
 import classNames from 'classnames'
 
 import { useWindowSize, WindowSize } from '~/libs/shared'
-import { Button, InputCheckbox, Table, TableColumn } from '~/libs/ui'
+import { Button, colWidthType, InputCheckbox, Table, TableColumn } from '~/libs/ui'
 
 import { useTableFilterLocal, useTableFilterLocalProps } from '../../hooks'
 import { UserGroupMember, UserMappingType } from '../../models'
@@ -31,10 +31,11 @@ interface Props {
     toggleSelect: (key: number) => void
     forceSelect: (key: number) => void
     forceUnSelect: (key: number) => void
-    doRemoveGroupMember: (memberId: number) => void
+    doRemoveGroupMember: (memberId: number, memberType: string) => void
 }
 
 export const GroupMembersTable: FC<Props> = (props: Props) => {
+    const [colWidth, setColWidth] = useState<colWidthType>({})
     const {
         page,
         setPage,
@@ -78,6 +79,7 @@ export const GroupMembersTable: FC<Props> = (props: Props) => {
         () => [
             {
                 className: styles.blockCellCheckBox,
+                columnId: 'checkbox',
                 label: () => ( // eslint-disable-line react/no-unstable-nested-components
                     <div className={styles.headerCheckboxWrapper}>
                         <InputCheckbox
@@ -104,12 +106,14 @@ export const GroupMembersTable: FC<Props> = (props: Props) => {
             },
             {
                 className: styles.blockCellWrap,
+                columnId: 'memberId',
                 label: `${props.memberType} ID`,
                 propertyName: 'memberId',
                 type: 'text',
             },
             {
                 className: styles.blockCellWrap,
+                columnId: 'name',
                 label: props.memberType === 'user' ? 'Handle' : 'Group Name',
                 propertyName: 'name',
                 renderer: (data: UserGroupMember) => {
@@ -132,8 +136,8 @@ export const GroupMembersTable: FC<Props> = (props: Props) => {
             },
             {
                 className: styles.blockCellWrap,
+                columnId: 'createdByHandle',
                 label: 'Created By',
-                propertyName: 'createdByHandle',
                 renderer: (data: UserGroupMember) => {
                     if (!data.createdBy) {
                         return <></>
@@ -150,14 +154,15 @@ export const GroupMembersTable: FC<Props> = (props: Props) => {
                 type: 'element',
             },
             {
+                columnId: 'createdAtString',
                 label: 'Created at',
                 propertyName: 'createdAtString',
                 type: 'text',
             },
             {
                 className: styles.blockCellWrap,
+                columnId: 'updatedByHandle',
                 label: 'Modified By',
-                propertyName: 'updatedByHandle',
                 renderer: (data: UserGroupMember) => {
                     if (!data.updatedBy) {
                         return <></>
@@ -174,11 +179,13 @@ export const GroupMembersTable: FC<Props> = (props: Props) => {
                 type: 'element',
             },
             {
+                columnId: 'updatedAtString',
                 label: 'Modified at',
                 propertyName: 'updatedAtString',
                 type: 'text',
             },
             {
+                columnId: 'action',
                 label: '',
                 renderer: (data: UserGroupMember) => (
                     <Button
@@ -186,7 +193,7 @@ export const GroupMembersTable: FC<Props> = (props: Props) => {
                         variant='danger'
                         disabled={props.isRemoving[data.memberId]}
                         onClick={function onClick() {
-                            props.doRemoveGroupMember(data.memberId)
+                            props.doRemoveGroupMember(data.memberId, props.memberType)
                         }}
                     >
                         Remove
@@ -368,6 +375,9 @@ export const GroupMembersTable: FC<Props> = (props: Props) => {
                     onToggleSort={setSort}
                     forceSort={sort}
                     removeDefaultSort
+                    className={styles.desktopTable}
+                    colWidth={colWidth}
+                    setColWidth={setColWidth}
                 />
             )}
 

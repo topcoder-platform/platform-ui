@@ -7,6 +7,7 @@ import _ from 'lodash'
 import { Sort } from '~/apps/gamification-admin/src/game-lib'
 
 import { TABLE_PAGINATION_ITEM_PER_PAGE } from '../../config/index.config'
+import { checkIsDateObject, checkIsNumberObject, checkIsStringNumeric } from '../utils'
 
 export interface useTableFilterLocalProps<T> {
     page: number
@@ -54,15 +55,40 @@ export function useTableFilterLocal<T>(
                 sortField = mappingSortField[sortField]
             }
 
-            datas = [...datas].sort((a, b) => {
-                const aValue = (a as Record<string, any>)[sortField]
-                const bValue = (b as Record<string, any>)[sortField]
+            let isNumberString = false
+            let isDateObject = false
+            let isNumberObject = false
+            _.forEach(datas, data => {
+                const value = (data as Record<string, any>)[sortField]
+                if (value) {
+                    isNumberString = checkIsStringNumeric(value)
+                    isDateObject = checkIsDateObject(value)
+                    isNumberObject = checkIsNumberObject(value)
+                    // eslint-disable-next-line no-useless-return
+                    return
+                }
+            })
 
-                // Add special case for id field
-                if (sortField === 'id') {
+            datas = [...datas].sort((a, b) => {
+                let aValue = (a as Record<string, any>)[sortField]
+                let bValue = (b as Record<string, any>)[sortField]
+
+                if (isNumberString) {
+                    aValue = Number(aValue)
+                    bValue = Number(bValue)
+                }
+
+                if (isDateObject || isNumberObject || isNumberString) {
+                    let compareValue = 0
+                    if (aValue > bValue) {
+                        compareValue = 1
+                    } else if (aValue < bValue) {
+                        compareValue = -1
+                    }
+
                     return sort.direction === 'asc'
-                        ? Number(aValue) - Number(bValue)
-                        : Number(bValue) - Number(aValue)
+                        ? compareValue
+                        : -compareValue
                 }
 
                 // Existing string comparison logic

@@ -1,10 +1,10 @@
 /**
  * Billing account clients page.
  */
-import { FC } from 'react'
+import { FC, useState } from 'react'
 import classNames from 'classnames'
 
-import { LinkButton, LoadingSpinner, PageDivider, PageTitle } from '~/libs/ui'
+import { colWidthType, LinkButton, LoadingSpinner, PageDivider, PageTitle } from '~/libs/ui'
 import { PlusIcon } from '@heroicons/react/solid'
 
 import { MSG_NO_RECORD_FOUND } from '../../config/index.config'
@@ -22,6 +22,7 @@ interface Props {
 const pageTitle = 'Clients'
 
 export const ClientsPage: FC<Props> = (props: Props) => {
+    const [colWidth, setColWidth] = useState<colWidthType>({})
     const {
         isLoading,
         datas,
@@ -77,6 +78,8 @@ export const ClientsPage: FC<Props> = (props: Props) => {
                                 setPage={setPage}
                                 setSort={setSort}
                                 sort={sort}
+                                colWidth={colWidth}
+                                setColWidth={setColWidth}
                             />
                         )}
                     </>

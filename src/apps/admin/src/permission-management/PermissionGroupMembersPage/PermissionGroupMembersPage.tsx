@@ -152,7 +152,7 @@ export const PermissionGroupMembersPage: FC<Props> = (props: Props) => {
                                         {(groupMembers[memberType] || [])
                                             .length === 0 ? (
                                                 <p className={styles.noRecordFound}>
-                                                    No members
+                                                    No groups
                                                 </p>
                                             ) : (
                                                 <div className={styles.blockTableContainer}>

@@ -1,11 +1,11 @@
 /**
  * Groups table.
  */
-import { FC, useMemo } from 'react'
+import { FC, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import classNames from 'classnames'
 
-import { Table, TableColumn } from '~/libs/ui'
+import { colWidthType, Table, TableColumn } from '~/libs/ui'
 import { useWindowSize, WindowSize } from '~/libs/shared'
 
 import { useTableFilterLocal, useTableFilterLocalProps } from '../../hooks'
@@ -23,9 +23,11 @@ interface Props {
 }
 
 export const GroupsTable: FC<Props> = (props: Props) => {
+    const [colWidth, setColWidth] = useState<colWidthType>({})
     const columns = useMemo<TableColumn<UserGroup>[]>(
         () => [
             {
+                columnId: 'id',
                 label: 'Group ID',
                 propertyName: 'id',
                 renderer: (data: UserGroup) => (
@@ -36,6 +38,7 @@ export const GroupsTable: FC<Props> = (props: Props) => {
                 type: 'element',
             },
             {
+                columnId: 'name',
                 label: 'Name',
                 propertyName: 'name',
                 renderer: (data: UserGroup) => (
@@ -47,13 +50,14 @@ export const GroupsTable: FC<Props> = (props: Props) => {
             },
             {
                 className: styles.blockCellWrap,
+                columnId: 'description',
                 label: 'Description',
                 propertyName: 'description',
                 type: 'text',
             },
             {
+                columnId: 'createdByHandle',
                 label: 'Created By',
-                propertyName: 'createdByHandle',
                 renderer: (data: UserGroup) => {
                     if (!data.createdBy) {
                         return <></>
@@ -70,13 +74,14 @@ export const GroupsTable: FC<Props> = (props: Props) => {
                 type: 'element',
             },
             {
+                columnId: 'createdAtString',
                 label: 'Created at',
                 propertyName: 'createdAtString',
                 type: 'text',
             },
             {
+                columnId: 'updatedByHandle',
                 label: 'Modified By',
-                propertyName: 'updatedByHandle',
                 renderer: (data: UserGroup) => {
                     if (!data.updatedBy) {
                         return <></>
@@ -93,6 +98,7 @@ export const GroupsTable: FC<Props> = (props: Props) => {
                 type: 'element',
             },
             {
+                columnId: 'updatedAtString',
                 label: 'Modified at',
                 propertyName: 'updatedAtString',
                 type: 'text',
@@ -235,6 +241,9 @@ export const GroupsTable: FC<Props> = (props: Props) => {
                     onToggleSort={setSort}
                     removeDefaultSort
                     forceSort={sort}
+                    className={styles.desktopTable}
+                    colWidth={colWidth}
+                    setColWidth={setColWidth}
                 />
             )}
             <Pagination
