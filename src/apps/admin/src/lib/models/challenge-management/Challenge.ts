@@ -45,4 +45,5 @@ export interface Challenge {
     groups: Array<object>
     /** Challenge phases. */
     phases: Array<{ name: string; isOpen: boolean; scheduledEndDate: string }>
+    tags: Array<string>
 }
