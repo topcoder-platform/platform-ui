@@ -1,7 +1,7 @@
 import { useParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { mutate } from 'swr'
-import React, { useCallback } from 'react'
+import { useCallback } from 'react'
 
 import { assignCopilotOpportunity, copilotBaseUrl } from '~/apps/copilots/src/services/copilot-opportunities'
 import { CopilotApplication, CopilotApplicationStatus } from '~/apps/copilots/src/models/CopilotApplication'
