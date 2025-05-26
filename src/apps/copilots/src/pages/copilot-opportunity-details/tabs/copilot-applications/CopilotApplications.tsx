@@ -6,6 +6,7 @@ import { USER_PROFILE_URL } from '~/config/environments/default.env'
 import { CopilotApplication } from '../../../../models/CopilotApplication'
 import { FormattedMembers } from '../../../../services/members'
 
+import CopilotApplicationAction from './CopilotApplicationAction'
 import styles from './styles.module.scss'
 
 const tableColumns: TableColumn<CopilotApplication>[] = [
@@ -34,6 +35,16 @@ const tableColumns: TableColumn<CopilotApplication>[] = [
         type: 'text',
     },
     {
+        label: 'Status',
+        propertyName: 'status',
+        renderer: (copilotApplication: CopilotApplication) => (
+            <div className={styles.status}>
+                {copilotApplication.status}
+            </div>
+        ),
+        type: 'element',
+    },
+    {
         label: 'Applied Date',
         propertyName: 'createdAt',
         type: 'date',
@@ -46,6 +57,12 @@ const tableColumns: TableColumn<CopilotApplication>[] = [
                 {copilotApplication.notes}
             </div>
         ),
+        type: 'element',
+    },
+    {
+        label: 'Actions',
+        propertyName: '',
+        renderer: CopilotApplicationAction,
         type: 'element',
     },
 ]
