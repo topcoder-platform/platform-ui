@@ -108,7 +108,7 @@ export const applyCopilotOpportunity = async (opportunityId: number, request?: {
 /**
  * apply copilot opportunity
  * @param opportunityId
- * @param request
+ * @param applicationId
  * @returns
  */
 export const assignCopilotOpportunity = async (
