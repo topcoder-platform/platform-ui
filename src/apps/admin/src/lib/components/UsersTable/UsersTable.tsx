@@ -9,6 +9,7 @@ import moment from 'moment'
 import { useWindowSize, WindowSize } from '~/libs/shared'
 import {
     Button,
+    colWidthType,
     ConfirmModal,
     IconOutline,
     IconSolid,
@@ -45,6 +46,7 @@ interface Props {
 }
 
 export const UsersTable: FC<Props> = props => {
+    const [colWidth, setColWidth] = useState<colWidthType>({})
     const [showDialogEditUserEmail, setShowDialogEditUserEmail] = useState<
         UserInfo | undefined
     >()
@@ -91,33 +93,38 @@ export const UsersTable: FC<Props> = props => {
     const columns = useMemo<TableColumn<UserInfo>[]>(
         () => [
             {
+                columnId: 'id',
                 label: 'User ID',
                 propertyName: 'id',
                 type: 'text',
             },
             {
                 className: styles.blockColumnHandle,
+                columnId: 'handle',
                 label: 'Handle',
                 propertyName: 'handle',
                 type: 'text',
             },
             ...(isTablet
                 ? [
-                      {
-                          isExpand: true,
-                          label: 'Primary Email',
-                          propertyName: 'email',
-                          type: 'text',
-                      } as TableColumn<UserInfo>,
+                    {
+                        columnId: 'email',
+                        isExpand: true,
+                        label: 'Primary Email',
+                        propertyName: 'email',
+                        type: 'text',
+                    } as TableColumn<UserInfo>,
                 ]
                 : [
-                      {
-                          label: 'Primary Email',
-                          propertyName: 'email',
-                          type: 'text',
-                      } as TableColumn<UserInfo>,
+                    {
+                        columnId: 'email',
+                        label: 'Primary Email',
+                        propertyName: 'email',
+                        type: 'text',
+                    } as TableColumn<UserInfo>,
                 ]),
             {
+                columnId: 'firstName',
                 isExpand: true,
                 label: 'Name',
                 propertyName: 'firstName',
@@ -131,6 +138,7 @@ export const UsersTable: FC<Props> = props => {
                 type: 'element',
             },
             {
+                columnId: 'statusDesc',
                 isExpand: true,
                 label: 'User Status',
                 propertyName: 'statusDesc',
@@ -151,12 +159,14 @@ export const UsersTable: FC<Props> = props => {
                 type: 'element',
             },
             {
+                columnId: 'emailStatusDesc',
                 isExpand: true,
                 label: 'Email Status',
                 propertyName: 'emailStatusDesc',
                 type: 'text',
             },
             {
+                columnId: 'createdAt',
                 isExpand: true,
                 label: 'Created at',
                 propertyName: 'createdAt',
@@ -170,6 +180,7 @@ export const UsersTable: FC<Props> = props => {
                 type: 'element',
             },
             {
+                columnId: 'modifiedAt',
                 isExpand: true,
                 label: 'Modified at',
                 propertyName: 'modifiedAt',
@@ -183,6 +194,7 @@ export const UsersTable: FC<Props> = props => {
                 type: 'element',
             },
             {
+                columnId: 'activationCode',
                 isExpand: true,
                 label: 'Activation Code',
                 propertyName: 'activationCode',
@@ -212,6 +224,7 @@ export const UsersTable: FC<Props> = props => {
             ...(isMobile
                 ? [
                     {
+                        columnId: 'active',
                         isExpand: true,
                         label: 'User Active',
                         propertyName: 'active',
@@ -230,6 +243,7 @@ export const UsersTable: FC<Props> = props => {
                 ]
                 : [
                     {
+                        columnId: 'active',
                         label: 'User Active',
                         propertyName: 'active',
                         renderer: (data: UserInfo) => (
@@ -247,6 +261,7 @@ export const UsersTable: FC<Props> = props => {
                 ]),
             {
                 className: styles.blockColumnAction,
+                columnId: 'Action',
                 label: 'Action',
                 renderer: (data: UserInfo) => {
                     function onSelectOption(item: string): void {
@@ -352,6 +367,9 @@ export const UsersTable: FC<Props> = props => {
                 onToggleSort={setSort}
                 showExpand
                 removeDefaultSort
+                className={styles.desktopTable}
+                colWidth={colWidth}
+                setColWidth={setColWidth}
             />
             {props.allUsers.length > 0 && (
                 <Pagination

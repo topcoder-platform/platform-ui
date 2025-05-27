@@ -145,6 +145,7 @@ export const ResourceTable: FC<Props> = (props: Props) => {
                     removeDefaultSort
                     onToggleSort={props.setSort}
                     forceSort={props.sort}
+                    className={styles.desktopTable}
                 />
             )}
             <Pagination

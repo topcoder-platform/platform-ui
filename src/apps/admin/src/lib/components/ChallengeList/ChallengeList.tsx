@@ -332,6 +332,8 @@ const ChallengeList: FC<ChallengeListProps> = props => {
                     columns={columns}
                     data={props.challenges}
                     disableSorting
+                    onToggleSort={_.noop}
+                    className={styles.desktopTable}
                 />
             )}
             {screenWidth <= 1279 && (

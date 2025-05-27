@@ -32,3 +32,9 @@
 .blockCellWrap {
     white-space: break-spaces !important;
 }
+
+.desktopTable {
+    td {
+        vertical-align: middle;
+    }
+}

@@ -16,7 +16,11 @@ export interface UserRole {
     modifiedAt: Date
     modifiedAtString?: string
     modifiedByHandle?: string
-    subjects?: string[]
+    subjects?: {
+        email?: null | string
+        handle?: null | string
+        userId?: null | number
+    }[]
 }
 
 /**
