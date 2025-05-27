@@ -5,7 +5,7 @@ import { UserProfile } from '~/libs/core'
 import { IconOutline, LinkButton, LoadingCircles } from '~/libs/ui'
 
 import { Balance } from '../../../lib/models/WalletDetails'
-import { InfoRow } from '../../../lib'
+import { InfoRow, PayoutGuard } from '../../../lib'
 import { BannerImage, BannerText } from '../../../lib/assets/home'
 import { nullToZero } from '../../../lib/util'
 import { useWalletDetails, WalletDetailsResponse } from '../../../lib/hooks/use-wallet-details'
@@ -17,7 +17,8 @@ interface HomeTabProps {
     profile: UserProfile
 }
 
-const HomeTab: FC<HomeTabProps> = () => {
+const HomeTab: FC<HomeTabProps> = props => {
+
     const { data: walletDetails, isLoading, error }: WalletDetailsResponse = useWalletDetails()
     const [balanceSum, setBalanceSum] = useState(0)
 
@@ -57,63 +58,70 @@ const HomeTab: FC<HomeTabProps> = () => {
                         }
                     />
 
-                    {walletDetails.withdrawalMethod.isSetupComplete && walletDetails.taxForm.isSetupComplete && (
-                        <InfoRow
-                            title='Est. Payment Fees and Tax Withholding %'
-                            // eslint-disable-next-line max-len
-                            value={`Fee: ${nullToZero(walletDetails.estimatedFees)} USD / Tax Withholding: ${nullToZero(walletDetails.taxWithholdingPercentage)}%`}
-                            action={
-                                <LinkButton
-                                    label='ADJUST YOUR PAYOUT SETTINGS'
-                                    iconToRight
-                                    icon={IconOutline.ArrowRightIcon}
-                                    size='md'
-                                    link
-                                    to='#payout'
-                                />
-                            }
-                        />
-                    )}
+                    <PayoutGuard profile={props.profile}>
+                        {walletDetails.withdrawalMethod.isSetupComplete
+                            && walletDetails.taxForm.isSetupComplete && (
+                            <InfoRow
+                                title='Est. Payment Fees and Tax Withholding %'
+                                // eslint-disable-next-line max-len
+                                value={`Fee: ${nullToZero(walletDetails.estimatedFees)} USD / Tax Withholding: ${nullToZero(walletDetails.taxWithholdingPercentage)}%`}
+                                action={
+                                    <LinkButton
+                                        label='ADJUST YOUR PAYOUT SETTINGS'
+                                        iconToRight
+                                        icon={IconOutline.ArrowRightIcon}
+                                        size='md'
+                                        link
+                                        to='#payout'
+                                    />
+                                }
+                            />
+                        )}
 
-                    {!walletDetails?.withdrawalMethod.isSetupComplete && (
-                        <InfoRow
-                            title='Withdrawal Method'
-                            value={
-                                walletDetails?.withdrawalMethod.isSetupComplete ? (
-                                    'Your preferred method'
-                                ) : (
-                                    <Chip text='Setup Required' />
-                                )
-                            }
-                            action={
-                                <LinkButton
-                                    label='SETUP WITHDRAWAL METHOD'
-                                    iconToRight
-                                    icon={IconOutline.ArrowRightIcon}
-                                    size='md'
-                                    link
-                                    to='#payout'
-                                />
-                            }
-                        />
-                    )}
+                        {!walletDetails?.withdrawalMethod.isSetupComplete && (
+                            <InfoRow
+                                title='Withdrawal Method'
+                                value={
+                                    walletDetails?.withdrawalMethod.isSetupComplete ? (
+                                        'Your preferred method'
+                                    ) : (
+                                        <Chip text='Setup Required' />
+                                    )
+                                }
+                                action={
+                                    <LinkButton
+                                        label='SETUP WITHDRAWAL METHOD'
+                                        iconToRight
+                                        icon={IconOutline.ArrowRightIcon}
+                                        size='md'
+                                        link
+                                        to='#payout'
+                                    />
+                                }
+                            />
+                        )}
 
-                    {!walletDetails?.taxForm.isSetupComplete && (
-                        <InfoRow
-                            title='Tax Form'
-                            value={walletDetails?.taxForm.isSetupComplete ? 'All set' : <Chip text='Setup Required' />}
-                            action={
-                                <LinkButton
-                                    label='COMPLETE TAX FORM'
-                                    iconToRight
-                                    icon={IconOutline.ArrowRightIcon}
-                                    size='md'
-                                    link
-                                    to='#payout'
-                                />
-                            }
-                        />
-                    )}
+                        {!walletDetails?.taxForm.isSetupComplete && (
+                            <InfoRow
+                                title='Tax Form'
+                                value={
+                                    walletDetails?.taxForm.isSetupComplete
+                                        ? 'All set'
+                                        : <Chip text='Setup Required' />
+                                }
+                                action={
+                                    <LinkButton
+                                        label='COMPLETE TAX FORM'
+                                        iconToRight
+                                        icon={IconOutline.ArrowRightIcon}
+                                        size='md'
+                                        link
+                                        to='#payout'
+                                    />
+                                }
+                            />
+                        )}
+                    </PayoutGuard>
                 </div>
             )}
         </div>
