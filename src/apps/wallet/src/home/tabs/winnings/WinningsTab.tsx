@@ -45,6 +45,8 @@ function formatStatus(status: string): string {
             return 'On Hold'
         case 'OWED':
             return 'Available'
+        case 'PROCESSING':
+            return 'Processing'
         case 'PAID':
             return 'Paid'
         case 'CANCELLED':
@@ -224,7 +226,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                                         {' '}
                                         {walletDetails.primaryCurrency}
                                         {' '}
-                                        currency after 2% coversion fees applied.
+                                        currency after 2% conversion fees applied.
                                     </>
                                 )}
                             </div>
@@ -304,6 +306,10 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                                         {
                                             label: 'On Hold',
                                             value: 'ON_HOLD',
+                                        },
+                                        {
+                                            label: 'Processing',
+                                            value: 'PROCESSING',
                                         },
                                         {
                                             label: 'Paid',
