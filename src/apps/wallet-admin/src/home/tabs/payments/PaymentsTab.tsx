@@ -287,7 +287,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
             title: 'Edit Payment',
         })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [handleValueUpdated, editState])
+    }, [handleValueUpdated, editState, fetchWinnings])
 
     const isEditingAllowed = (): boolean => props.profile.roles.includes('Payment Admin') || props.profile.roles.includes('Payment Editor')
 
