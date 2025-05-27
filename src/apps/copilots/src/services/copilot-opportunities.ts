@@ -106,6 +106,21 @@ export const applyCopilotOpportunity = async (opportunityId: number, request?: {
 }
 
 /**
+ * apply copilot opportunity
+ * @param opportunityId
+ * @param applicationId
+ * @returns
+ */
+export const assignCopilotOpportunity = async (
+    opportunityId: string,
+    applicationId: number,
+): Promise<{applicationId: number}> => {
+    const url = `${copilotBaseUrl}/copilots/opportunity/${opportunityId}/assign`
+
+    return xhrPostAsync(url, { applicationId: applicationId.toString() }, {})
+}
+
+/**
  * Custom hook to fetch copilot applications by opportunity id.
  *
  * @param {string} opportunityId - The unique identifier of the copilot request.

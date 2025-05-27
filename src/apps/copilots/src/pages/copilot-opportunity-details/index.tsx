@@ -137,8 +137,7 @@ const CopilotOpportunityDetails: FC<{}> = () => {
             }
             infoComponent={(isCopilot && !(copilotApplications
                 && copilotApplications.length === 0
-                && opportunity?.status === 'active'
-            ) && !!application) && (
+            ) && opportunity?.status === 'active' && !!application) && (
                 <div className={styles.applied}>
                     <IconSolid.CheckCircleIcon className={styles.appliedIcon} />
                     <span
