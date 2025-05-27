@@ -9,9 +9,15 @@ import { IconSolid, Tooltip } from '~/libs/ui'
 
 import styles from './styles.module.scss'
 
-const CopilotApplicationAction = (copilotApplication: CopilotApplication, allCopilotApplications: CopilotApplication[]): JSX.Element => {
+const CopilotApplicationAction = (
+    copilotApplication: CopilotApplication,
+    allCopilotApplications: CopilotApplication[],
+): JSX.Element => {
     const { opportunityId }: {opportunityId?: string} = useParams<{ opportunityId?: string }>()
-    const isInvited = useMemo(() => allCopilotApplications.findIndex(item => item.status === CopilotApplicationStatus.INVITED) > -1, [allCopilotApplications])
+    const isInvited = useMemo(
+        () => allCopilotApplications.findIndex(item => item.status === CopilotApplicationStatus.INVITED) > -1,
+        [allCopilotApplications],
+    )
     const onClick = useCallback(async () => {
         if (copilotApplication.status !== CopilotApplicationStatus.PENDING) {
             return
