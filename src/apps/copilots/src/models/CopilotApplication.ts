@@ -1,3 +1,9 @@
+export enum CopilotApplicationStatus {
+    INVITED = 'invited',
+    ACCEPTED = 'accepted',
+    PENDING = 'pending',
+}
+
 export interface CopilotApplication {
     id: number,
     notes?: string,
@@ -5,4 +11,5 @@ export interface CopilotApplication {
     opportunityId: string,
     handle?: string,
     userId: number,
+    status: CopilotApplicationStatus,
 }
