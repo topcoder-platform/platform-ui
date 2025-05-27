@@ -1,7 +1,7 @@
 import { useParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { mutate } from 'swr'
-import { useCallback } from 'react'
+import { useCallback, useMemo } from 'react'
 
 import { assignCopilotOpportunity, copilotBaseUrl } from '~/apps/copilots/src/services/copilot-opportunities'
 import { CopilotApplication, CopilotApplicationStatus } from '~/apps/copilots/src/models/CopilotApplication'
@@ -9,8 +9,9 @@ import { IconSolid, Tooltip } from '~/libs/ui'
 
 import styles from './styles.module.scss'
 
-const CopilotApplicationAction = (copilotApplication: CopilotApplication): JSX.Element => {
+const CopilotApplicationAction = (copilotApplication: CopilotApplication, allCopilotApplications: CopilotApplication[]): JSX.Element => {
     const { opportunityId }: {opportunityId?: string} = useParams<{ opportunityId?: string }>()
+    const isInvited = useMemo(() => allCopilotApplications.findIndex(item => item.status === CopilotApplicationStatus.INVITED) > -1, [allCopilotApplications])
     const onClick = useCallback(async () => {
         if (copilotApplication.status !== CopilotApplicationStatus.PENDING) {
             return
@@ -39,7 +40,7 @@ const CopilotApplicationAction = (copilotApplication: CopilotApplication): JSX.E
             }
 
             {
-                copilotApplication.status === CopilotApplicationStatus.PENDING && (
+                !isInvited && copilotApplication.status === CopilotApplicationStatus.PENDING && (
                     <IconSolid.UserAddIcon />
                 )
             }

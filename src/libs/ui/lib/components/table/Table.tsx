@@ -177,6 +177,7 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
                 <TableRow
                     key={getKey(index)}
                     data={sorted}
+                    allRows={sortedData}
                     onRowClick={props.onRowClick}
                     columns={props.columns}
                     index={index}
