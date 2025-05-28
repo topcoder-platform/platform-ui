@@ -12,4 +12,5 @@ export interface CopilotApplication {
     handle?: string,
     userId: number,
     status: CopilotApplicationStatus,
+    opportunityStatus: string,
 }

@@ -13,13 +13,18 @@ const CopilotApplicationAction = (
     copilotApplication: CopilotApplication,
     allCopilotApplications: CopilotApplication[],
 ): JSX.Element => {
+    console.log(copilotApplication)
     const { opportunityId }: {opportunityId?: string} = useParams<{ opportunityId?: string }>()
     const isInvited = useMemo(
         () => allCopilotApplications.findIndex(item => item.status === CopilotApplicationStatus.INVITED) > -1,
         [allCopilotApplications],
     )
     const onClick = useCallback(async () => {
-        if (copilotApplication.status !== CopilotApplicationStatus.PENDING || isInvited) {
+        if (
+            copilotApplication.status !== CopilotApplicationStatus.PENDING
+            || isInvited
+            || copilotApplication.opportunityStatus !== 'active'
+        ) {
             return
         }
 
@@ -46,7 +51,9 @@ const CopilotApplicationAction = (
             }
 
             {
-                !isInvited && copilotApplication.status === CopilotApplicationStatus.PENDING && (
+                !isInvited
+                && copilotApplication.status === CopilotApplicationStatus.PENDING
+                && copilotApplication.opportunityStatus === 'active' && (
                     <IconSolid.UserAddIcon />
                 )
             }
