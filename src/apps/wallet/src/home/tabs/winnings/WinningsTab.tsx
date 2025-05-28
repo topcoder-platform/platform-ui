@@ -211,9 +211,13 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                             <div className={styles.taxes}>
                                 Est. Payment Fees:
                                 {' '}
-                                {nullToZero(walletDetails.estimatedFees)}
+                                {walletDetails.withdrawalMethod.type === 'paypal'
+                                    ? '2% fee for transfer (max $20 cap) + 3.49% + an international fee (non US) + a fixed fee depending upon currency'
+                                    : `$${nullToZero(walletDetails.estimatedFees)} USD`}
                                 {' '}
-                                USD and Tax Withholding:
+                                and
+                                <br />
+                                Tax Withholding:
                                 {' '}
                                 {`${nullToZero(walletDetails.taxWithholdingPercentage)}%`}
                                 {' '}
