@@ -19,7 +19,7 @@ const CopilotApplicationAction = (
         [allCopilotApplications],
     )
     const onClick = useCallback(async () => {
-        if (copilotApplication.status !== CopilotApplicationStatus.PENDING) {
+        if (copilotApplication.status !== CopilotApplicationStatus.PENDING || isInvited) {
             return
         }
 
