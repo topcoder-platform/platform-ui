@@ -13,7 +13,6 @@ const CopilotApplicationAction = (
     copilotApplication: CopilotApplication,
     allCopilotApplications: CopilotApplication[],
 ): JSX.Element => {
-    console.log(copilotApplication)
     const { opportunityId }: {opportunityId?: string} = useParams<{ opportunityId?: string }>()
     const isInvited = useMemo(
         () => allCopilotApplications.findIndex(item => item.status === CopilotApplicationStatus.INVITED) > -1,

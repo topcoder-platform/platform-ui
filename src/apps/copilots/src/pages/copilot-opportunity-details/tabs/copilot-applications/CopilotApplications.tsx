@@ -80,7 +80,7 @@ const CopilotApplications: FC<{
             activeProjects: member?.activeProjects || 0,
             fulfilment: member?.copilotFulfillment || 0,
             handle: member?.handle,
-            oppourtunityStatus: props.opportunity.status,
+            opportunityStatus: props.opportunity.status,
         }
     })
         .sort((a, b) => (b.fulfilment || 0) - (a.fulfilment || 0)) : [])
