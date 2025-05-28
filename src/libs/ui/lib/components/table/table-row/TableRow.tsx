@@ -22,6 +22,7 @@ interface Props<T> {
     index: number
     readonly showExpand?: boolean
     readonly preventDefault?: boolean
+    allRows?: ReadonlyArray<T>
 }
 
 export const TableRow: <T extends { [propertyName: string]: any }>(
@@ -50,6 +51,7 @@ export const TableRow: <T extends { [propertyName: string]: any }>(
             {...col}
             data={props.data}
             index={props.index}
+            allRows={props.allRows}
             key={getKey(`${props.index}${colIndex}`)}
             showExpandIndicator={colIndex === 0 && props.showExpand}
             isExpanded={isExpanded && colIndex === 0}
