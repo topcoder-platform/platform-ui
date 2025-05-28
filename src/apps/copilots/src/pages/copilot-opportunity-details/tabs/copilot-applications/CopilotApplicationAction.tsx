@@ -19,7 +19,11 @@ const CopilotApplicationAction = (
         [allCopilotApplications],
     )
     const onClick = useCallback(async () => {
-        if (copilotApplication.status !== CopilotApplicationStatus.PENDING || isInvited) {
+        if (
+            copilotApplication.status !== CopilotApplicationStatus.PENDING
+            || isInvited
+            || copilotApplication.opportunityStatus !== 'active'
+        ) {
             return
         }
 
@@ -46,7 +50,9 @@ const CopilotApplicationAction = (
             }
 
             {
-                !isInvited && copilotApplication.status === CopilotApplicationStatus.PENDING && (
+                !isInvited
+                && copilotApplication.status === CopilotApplicationStatus.PENDING
+                && copilotApplication.opportunityStatus === 'active' && (
                     <IconSolid.UserAddIcon />
                 )
             }

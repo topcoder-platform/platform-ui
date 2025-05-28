@@ -2,6 +2,7 @@ import { FC, useMemo } from 'react'
 
 import { Table, TableColumn } from '~/libs/ui'
 import { USER_PROFILE_URL } from '~/config/environments/default.env'
+import { CopilotOpportunity } from '~/apps/copilots/src/models/CopilotOpportunity'
 
 import { CopilotApplication } from '../../../../models/CopilotApplication'
 import { FormattedMembers } from '../../../../services/members'
@@ -70,6 +71,7 @@ const tableColumns: TableColumn<CopilotApplication>[] = [
 const CopilotApplications: FC<{
     copilotApplications?: CopilotApplication[]
     members?: FormattedMembers[]
+    opportunity: CopilotOpportunity
 }> = props => {
     const getData = (): CopilotApplication[] => (props.copilotApplications ? props.copilotApplications.map(item => {
         const member = props.members && props.members.find(each => each.userId === item.userId)
@@ -78,6 +80,7 @@ const CopilotApplications: FC<{
             activeProjects: member?.activeProjects || 0,
             fulfilment: member?.copilotFulfillment || 0,
             handle: member?.handle,
+            opportunityStatus: props.opportunity.status,
         }
     })
         .sort((a, b) => (b.fulfilment || 0) - (a.fulfilment || 0)) : [])
