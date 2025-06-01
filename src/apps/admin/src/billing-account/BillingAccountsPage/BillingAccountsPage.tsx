@@ -1,11 +1,11 @@
 /**
  * Billing accounts page.
  */
-import { FC } from 'react'
+import { FC, useState } from 'react'
 import classNames from 'classnames'
 
 import { PlusIcon } from '@heroicons/react/solid'
-import { LinkButton, LoadingSpinner, PageDivider, PageTitle } from '~/libs/ui'
+import { colWidthType, LinkButton, LoadingSpinner, PageDivider, PageTitle } from '~/libs/ui'
 
 import { BillingAccountsFilter } from '../../lib/components/BillingAccountsFilter'
 import { BillingAccountsTable } from '../../lib/components/BillingAccountsTable'
@@ -22,6 +22,7 @@ interface Props {
 const pageTitle = 'Billing Accounts'
 
 export const BillingAccountsPage: FC<Props> = (props: Props) => {
+    const [colWidth, setColWidth] = useState<colWidthType>({})
     const {
         isLoading,
         datas,
@@ -76,6 +77,8 @@ export const BillingAccountsPage: FC<Props> = (props: Props) => {
                                 setPage={setPage}
                                 setSort={setSort}
                                 sort={sort}
+                                colWidth={colWidth}
+                                setColWidth={setColWidth}
                             />
                         )}
                     </>

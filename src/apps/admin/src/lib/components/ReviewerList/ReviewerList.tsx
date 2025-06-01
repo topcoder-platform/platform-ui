@@ -221,6 +221,7 @@ const ReviewerList: FC<ReviewerListProps> = props => {
                     data={props.reviewers}
                     initSort={{ direction: 'asc', fieldName: '' }}
                     onToggleSort={props.onToggleSort}
+                    className={styles.desktopTable}
                 />
             )}
             {screenWidth <= 984 && (

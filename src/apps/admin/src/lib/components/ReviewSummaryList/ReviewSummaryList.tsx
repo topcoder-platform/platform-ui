@@ -1,9 +1,9 @@
-import { FC, useMemo } from 'react'
+import { FC, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { EnvironmentConfig } from '~/config'
 import { useWindowSize, WindowSize } from '~/libs/shared'
-import { Button, LinkButton, Table, type TableColumn } from '~/libs/ui'
+import { Button, colWidthType, LinkButton, Table, type TableColumn } from '~/libs/ui'
 import { Sort } from '~/apps/gamification-admin/src/game-lib/pagination'
 
 import { Pagination } from '../common/Pagination'
@@ -61,6 +61,7 @@ const ChallengeTitle: FC<{
 }
 
 const ReviewSummaryList: FC<ReviewListProps> = props => {
+    const [colWidth, setColWidth] = useState<colWidthType>({})
     const columns = useMemo<TableColumn<ReviewSummary>[]>(
         () => [
             // Hide the columns temporary, we do not have these data now
@@ -70,6 +71,7 @@ const ReviewSummaryList: FC<ReviewListProps> = props => {
             //     type: 'text',
             // },
             {
+                columnId: 'challengeName',
                 label: 'Challenge Title',
                 propertyName: 'challengeName',
                 renderer: (review: ReviewSummary) => (
@@ -78,6 +80,7 @@ const ReviewSummaryList: FC<ReviewListProps> = props => {
                 type: 'element',
             },
             {
+                columnId: 'legacyChallengeId',
                 label: 'Legacy ID',
                 propertyName: 'legacyChallengeId',
                 type: 'text',
@@ -87,7 +90,12 @@ const ReviewSummaryList: FC<ReviewListProps> = props => {
             //     propertyName: '',
             //     type: 'text',
             // },
-            { label: 'Status', propertyName: 'challengeStatus', type: 'text' },
+            {
+                columnId: 'challengeStatus',
+                label: 'Status',
+                propertyName: 'challengeStatus',
+                type: 'text',
+            },
             // I think this column is important, and it exits in `admin-app`
             // but resp does not have it, so I just comment it here
             // {
@@ -106,6 +114,7 @@ const ReviewSummaryList: FC<ReviewListProps> = props => {
             //     type: 'element',
             // },
             {
+                columnId: 'OpenReviewOpp',
                 label: 'Open Review Opp',
                 renderer: (review: ReviewSummary) => (
                     <div>{review.numberOfReviewerSpots - review.numberOfApprovedApplications}</div>
@@ -113,11 +122,13 @@ const ReviewSummaryList: FC<ReviewListProps> = props => {
                 type: 'element',
             },
             {
+                columnId: 'numberOfPendingApplications',
                 label: 'Review Applications',
                 propertyName: 'numberOfPendingApplications',
                 type: 'number',
             },
             {
+                columnId: 'action',
                 label: '',
                 renderer: (review: ReviewSummary) => (
                     <Actions
@@ -141,6 +152,9 @@ const ReviewSummaryList: FC<ReviewListProps> = props => {
                     initSort={{ direction: 'asc',
                         fieldName: '' }}
                     onToggleSort={props.onToggleSort}
+                    className={styles.desktopTable}
+                    colWidth={colWidth}
+                    setColWidth={setColWidth}
                 />
             )}
             {screenWidth <= 1279 && (

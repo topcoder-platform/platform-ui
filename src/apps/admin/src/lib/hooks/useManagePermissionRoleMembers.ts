@@ -78,9 +78,10 @@ const reducer = (
 
         case RolesActionType.FETCH_ROLE_MEMBERS_DONE: {
             const roleInfo = action.payload
-            const allRoleMembers = (roleInfo.subjects || []).map(
-                memberId => ({ id: memberId }),
-            )
+            const allRoleMembers = (roleInfo.subjects || []).map(subject => ({
+                handle: subject.handle ?? '',
+                id: `${subject.userId ?? ''}`,
+            }))
             return {
                 ...previousState,
                 allRoleMembers,

@@ -154,6 +154,7 @@ export const DialogEditUserRoles: FC<Props> = (props: Props) => {
                                 data={userRoles}
                                 disableSorting
                                 onToggleSort={_.noop}
+                                className={styles.desktopTable}
                             />
                         ) : (
                             <div>No roles</div>

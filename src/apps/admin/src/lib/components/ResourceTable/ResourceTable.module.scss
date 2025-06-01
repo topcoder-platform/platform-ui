@@ -2,3 +2,9 @@
     display: flex;
     flex-direction: column;
 }
+
+.desktopTable {
+    td {
+        vertical-align: middle;
+    }
+}

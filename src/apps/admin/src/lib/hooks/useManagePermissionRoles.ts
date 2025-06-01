@@ -157,10 +157,14 @@ export function useManagePermissionRoles(
                 _.forEach(result, role => {
                     if (role.createdBy) {
                         loadUser(role.createdBy)
+                    } else {
+                        role.createdByHandle = ''
                     }
 
                     if (role.modifiedBy) {
                         loadUser(role.modifiedBy)
+                    } else {
+                        role.modifiedByHandle = ''
                     }
                 })
             })
