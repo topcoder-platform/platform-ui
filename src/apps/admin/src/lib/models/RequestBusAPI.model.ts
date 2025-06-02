@@ -1,5 +1,5 @@
 /**
- * Request to bust api
+ * Request to bus API
  */
 export interface RequestBusAPI {
     topic: string

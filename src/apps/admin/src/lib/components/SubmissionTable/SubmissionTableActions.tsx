@@ -94,7 +94,7 @@ export const SubmissionTableActions: FC<Props> = (props: Props) => {
                     className={classNames({
                         disabled:
                             props.isRemovingReviewSummations[props.data.id]
-                            || !(props.data.reviewSummation ?? []).length,
+                            || !props.data.reviewSummation?.length,
                     })}
                     onClick={function onClick() {
                         props.setShowConfirmDeleteReviewsDialog(props.data)

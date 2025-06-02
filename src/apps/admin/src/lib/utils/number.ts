@@ -42,7 +42,7 @@ export function toFixed(
         return num
     }
 
-    if (_.isNaN(parseFloat(num as string))) return num as number
+    if (Number.isNaN(Number(num))) return num as number
     const numFloat = parseFloat(num as string)
 
     const result = _.toFinite(toAcurateFixed(numFloat, decimal))

@@ -17,7 +17,7 @@ import styles from './SubmissionTable.module.scss'
 
 interface Props {
     className?: string
-    datas: Submission[]
+    data: Submission[]
     isRemovingSubmission: IsRemovingType
     doRemoveSubmission: (item: Submission) => void
     isRemovingReviewSummations: IsRemovingType
@@ -196,11 +196,11 @@ export const SubmissionTable: FC<Props> = (props: Props) => {
     return (
         <TableWrapper className={classNames(styles.container, props.className)}>
             {isTablet ? (
-                <TableMobile columns={columnsMobile} data={props.datas} />
+                <TableMobile columns={columnsMobile} data={props.data} />
             ) : (
                 <Table
                     columns={columns}
-                    data={props.datas}
+                    data={props.data}
                     removeDefaultSort
                     onToggleSort={_.noop}
                     className={styles.desktopTable}

@@ -67,7 +67,7 @@ export const ManageSubmissionPage: FC<Props> = (props: Props) => {
                     ) : (
                         <div className={styles.blockTableContainer}>
                             <SubmissionTable
-                                datas={submissions}
+                                data={submissions}
                                 isRemovingSubmission={isRemovingSubmission}
                                 doRemoveSubmission={doRemoveSubmission}
                                 isRemovingReviewSummations={
