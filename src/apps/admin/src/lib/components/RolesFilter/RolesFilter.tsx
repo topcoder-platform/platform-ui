@@ -56,11 +56,6 @@ export const RolesFilter: FC<Props> = props => {
 
     useEffect(() => {
         props.setFilters({
-            createdAtString: roleName,
-            createdByHandle: roleName,
-            id: roleName,
-            modifiedAtString: roleName,
-            modifiedByHandle: roleName,
             roleName,
         })
     }, [roleName]) // eslint-disable-line react-hooks/exhaustive-deps

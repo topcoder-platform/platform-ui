@@ -7,7 +7,7 @@ import {
     useRef,
     useState,
 } from 'react'
-import { NavigateFunction, useNavigate, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { sortBy } from 'lodash'
 
 import { XIcon } from '@heroicons/react/solid'
@@ -63,7 +63,6 @@ export const ManageReviewerPage: FC = () => {
         challengeId: string
     }>()
     const [challengeUuid, setChallengeUuid] = useState('')
-    const navigate: NavigateFunction = useNavigate()
     const [filterCriteria, setFilterCriteria]: [
         ReviewFilterCriteria,
         Dispatch<SetStateAction<ReviewFilterCriteria>>
@@ -137,12 +136,6 @@ export const ManageReviewerPage: FC = () => {
             })
     })
 
-    const unapprove = useEventCallback((): void => {
-        if (challengeUuid) {
-            navigate(`${rootRoute}/challenge-management/${challengeUuid}/manage-user`)
-        }
-    })
-
     // Init
     useEffect(() => {
         search()
@@ -204,6 +197,14 @@ export const ManageReviewerPage: FC = () => {
             <PageHeader>
                 <h2>{`${pageTitle} ${challengeId}`}</h2>
                 <div className={styles.headerActions}>
+                    <LinkButton
+                        primary
+                        onClick={handleRejectPendingConfirmDialog}
+                        size='lg'
+                        to={`${rootRoute}/challenge-management/${challengeUuid}/manage-user`}
+                    >
+                        User Management
+                    </LinkButton>
                     <Button
                         primary
                         variant='danger'
@@ -232,7 +233,6 @@ export const ManageReviewerPage: FC = () => {
                         reviewers={reviewers}
                         openReviews={openReviews}
                         onApproveApplication={approve}
-                        onUnapproveApplication={unapprove}
                         approvingReviewerId={userId}
                         paging={{
                             page: filterCriteria.page,
