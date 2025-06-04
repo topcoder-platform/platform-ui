@@ -3,6 +3,19 @@
  */
 
 /**
+ * Check if variable is string
+ * @param str input variable
+ * @returns true if the object is a string, false if otherwise
+ */
+export function isStringObject(str: any): boolean {
+    if (typeof str === 'string' || str instanceof String) {
+        return true
+    }
+
+    return false
+}
+
+/**
  * Check if string is number
  * @param str string to check
  * @returns if string is numberic
