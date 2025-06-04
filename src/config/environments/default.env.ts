@@ -77,6 +77,7 @@ export const USERFLOW_SURVEYS = {
 }
 
 export const ADMIN = {
+    AV_SCAN_SCORER_REVIEW_TYPE_ID: '68c5a381-c8ab-48af-92a7-7a869a4ee6c3',
     CHALLENGE_URL: 'https://www.topcoder-dev.com/challenges',
     CONNECT_URL: 'https://connect.topcoder-dev.com',
     DIRECT_URL: 'https://www.topcoder-dev.com/direct',

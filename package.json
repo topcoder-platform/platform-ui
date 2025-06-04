@@ -103,7 +103,7 @@
     "tc-auth-lib": "topcoder-platform/tc-auth-lib#1.0.27",
     "typescript": "^4.8.4",
     "universal-navigation": "https://github.com/topcoder-platform/universal-navigation#9fc50d938be7182",
-    "uuid": "^9.0.0",
+    "uuid": "^11.1.0",
     "yup": "^1.6.1"
   },
   "devDependencies": {
