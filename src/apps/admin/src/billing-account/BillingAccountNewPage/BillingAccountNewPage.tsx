@@ -30,7 +30,7 @@ import { useManageAddBillingAccount, useManageAddBillingAccountProps } from '../
 import { BILLING_ACCOUNT_STATUS_EDIT_OPTIONS } from '../../config/index.config'
 import { PageContent, PageHeader } from '../../lib'
 import { FormEditBillingAccount, SelectOption } from '../../lib/models'
-import { formEditBillingAccountSchema } from '../../lib/utils'
+import { formAddBillingAccountSchema, formEditBillingAccountSchema } from '../../lib/utils'
 
 import styles from './BillingAccountNewPage.module.scss'
 
@@ -46,6 +46,7 @@ export const BillingAccountNewPage: FC<Props> = (props: Props) => {
     const { accountId = '' }: { accountId?: string } = useParams<{
         accountId: string
     }>()
+    const isEdit = useMemo(() => !!accountId, [accountId])
     const {
         isLoading,
         isAdding,
@@ -55,8 +56,8 @@ export const BillingAccountNewPage: FC<Props> = (props: Props) => {
         billingAccount,
     }: useManageAddBillingAccountProps = useManageAddBillingAccount(accountId)
     const pageTitle = useMemo(
-        () => (accountId ? 'Edit Billing Account' : 'New Billing Account'),
-        [accountId],
+        () => (isEdit ? 'Edit Billing Account' : 'New Billing Account'),
+        [isEdit],
     )
     const {
         register,
@@ -81,7 +82,9 @@ export const BillingAccountNewPage: FC<Props> = (props: Props) => {
             subscriptionNumber: '' as any,
         },
         mode: 'all',
-        resolver: yupResolver(formEditBillingAccountSchema),
+        resolver: yupResolver(
+            isEdit ? formEditBillingAccountSchema : formAddBillingAccountSchema,
+        ),
     })
 
     const endDate = watch('endDate')
@@ -354,7 +357,9 @@ export const BillingAccountNewPage: FC<Props> = (props: Props) => {
                                 onChange={_.noop}
                                 classNameWrapper={styles.field}
                                 inputControl={register('paymentTerms')}
-                                disabled={isAdding || isUpdating}
+                                disabled={
+                                    isEdit ? true : isAdding || isUpdating
+                                }
                                 error={_.get(errors, 'paymentTerms.message')}
                                 dirty
                             />
