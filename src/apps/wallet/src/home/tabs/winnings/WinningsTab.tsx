@@ -195,10 +195,10 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
         paymentIds: { [paymentId: string]: Winning },
         totalAmountStr: string,
     ): void {
-        const totalAmount = parseFloat(totalAmountStr);
-        const taxWithholdAmount = parseFloat(nullToZero(walletDetails?.taxWithholdingPercentage ?? '0')) / 100 * totalAmount;
-        const feesAmount = parseFloat(nullToZero(walletDetails?.estimatedFees ?? '0'));
-        const netAmount = totalAmount - taxWithholdAmount - feesAmount;
+        const totalAmount = parseFloat(totalAmountStr)
+        const taxWithholdAmount = (parseFloat(nullToZero(walletDetails?.taxWithholdingPercentage ?? '0')) * totalAmount) / 100
+        const feesAmount = parseFloat(nullToZero(walletDetails?.estimatedFees ?? '0'))
+        const netAmount = totalAmount - taxWithholdAmount - feesAmount
 
         setConfirmFlow({
             action: 'Confirm Payment',
@@ -206,7 +206,10 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
             content: (
                 <>
                     <div className={`${styles.processing} body-medium-normal`}>
-                        Processing Payment: ${totalAmountStr} USD
+                        Processing Payment: $
+                        {totalAmountStr}
+                        {' '}
+                        USD
                     </div>
                     {walletDetails && (
                         <>
@@ -215,15 +218,28 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                                 <ul className={`${styles.breakdownList} body-main`}>
                                     <li>
                                         <span>Base amount:</span>
-                                        <span>${totalAmountStr}</span>
+                                        <span>
+                                            $
+                                            {totalAmountStr}
+                                        </span>
                                     </li>
                                     <li>
-                                        <span>Tax Witholding ({nullToZero(walletDetails.taxWithholdingPercentage)}%):</span>
-                                        <span>${taxWithholdAmount.toFixed(2)}</span>
+                                        <span>
+                                            Tax Witholding (
+                                            {nullToZero(walletDetails.taxWithholdingPercentage)}
+                                            %):
+                                        </span>
+                                        <span>
+                                            $
+                                            {taxWithholdAmount.toFixed(2)}
+                                        </span>
                                     </li>
                                     <li>
                                         <span>Processing fee:</span>
-                                        <span>${feesAmount.toFixed(2)}</span>
+                                        <span>
+                                            $
+                                            {feesAmount.toFixed(2)}
+                                        </span>
                                     </li>
                                 </ul>
                                 <hr />
@@ -233,15 +249,21 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                                 </div>
                                 {walletDetails?.primaryCurrency && walletDetails.primaryCurrency !== 'USD' && (
                                     <div className={`${styles.alert} body-main-medium`}>
-                                        Net amount will be converted to {walletDetails.primaryCurrency} with 2% conversion fee applied.
+                                        Net amount will be converted to
+                                        {' '}
+                                        {walletDetails.primaryCurrency}
+                                        {' '}
+                                        with 2% conversion fee applied.
                                     </div>
                                 )}
                             </div>
                             <div className={`${styles.taxesFooterRow} body-main`}>
                                 You can adjust your payout settings to customize your estimated payment fee
-                                and tax withholding percentage in the{' '}
+                                and tax withholding percentage in the
+                                {' '}
                                 <Link to='#payout'>Payout</Link>
-                                {' '}section.
+                                {' '}
+                                section.
                             </div>
                         </>
                     )}
