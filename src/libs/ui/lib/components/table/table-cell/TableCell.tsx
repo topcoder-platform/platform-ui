@@ -16,7 +16,7 @@ interface TableCellProps<T> {
     readonly index: number
     readonly propertyName?: string
     readonly className?: string
-    readonly renderer?: (data: T) => JSX.Element | undefined
+    readonly renderer?: (data: T, allRows?: ReadonlyArray<T>) => JSX.Element | undefined
     readonly type: TableCellType
     readonly onExpand?: () => void
     readonly as?: ElementType
@@ -24,6 +24,7 @@ interface TableCellProps<T> {
     readonly isExpanded?: boolean
     readonly colSpan?: number
     readonly style?: CSSProperties
+    allRows?: ReadonlyArray<T>
 }
 
 const TableCell: <T extends { [propertyName: string]: any }>(
@@ -41,7 +42,7 @@ const TableCell: <T extends { [propertyName: string]: any }>(
         case 'action':
         case 'element':
         case 'numberElement':
-            data = props.renderer?.(props.data)
+            data = props.renderer?.(props.data, props.allRows)
             break
         case 'money':
             data = textFormatMoneyLocaleString(

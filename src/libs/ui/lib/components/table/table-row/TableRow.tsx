@@ -22,6 +22,8 @@ interface Props<T> {
     index: number
     readonly showExpand?: boolean
     colWidth?: {[key: string]: number}
+    readonly preventDefault?: boolean
+    allRows?: ReadonlyArray<T>
 }
 
 export const TableRow: <T extends { [propertyName: string]: any }>(
@@ -81,7 +83,10 @@ export const TableRow: <T extends { [propertyName: string]: any }>(
                 onClick={function onRowClick(
                     event: MouseEvent<HTMLTableRowElement>,
                 ): void {
-                    event.preventDefault()
+                    if (!props.preventDefault) {
+                        event.preventDefault()
+                    }
+
                     props.onRowClick?.(props.data)
                 }}
             >

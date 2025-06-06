@@ -37,6 +37,7 @@ interface TableProps<T> {
     readonly colWidth?: colWidthType | undefined,
     readonly setColWidth?: Dispatch<SetStateAction<colWidthType>> | undefined
     readonly className?: string
+    readonly preventDefault?: boolean
 }
 
 interface DefaultSortDirectionMap {
@@ -237,11 +238,13 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
                 <TableRow
                     key={getKey(index)}
                     data={sorted}
+                    allRows={sortedData}
                     onRowClick={props.onRowClick}
                     columns={props.columns}
                     index={index}
                     showExpand={props.showExpand}
                     colWidth={colWidthInput}
+                    preventDefault={props.preventDefault}
                 />
             ))
 

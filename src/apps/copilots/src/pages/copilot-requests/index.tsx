@@ -1,4 +1,4 @@
-import { FC, useCallback, useMemo } from 'react'
+import { FC, useCallback, useContext, useMemo } from 'react'
 import { find } from 'lodash'
 import { NavigateFunction, Params, useNavigate, useParams } from 'react-router-dom'
 
@@ -12,8 +12,11 @@ import {
     PageTitle,
     Table,
     TableColumn,
+    Tooltip,
     useConfirmationModal,
 } from '~/libs/ui'
+import { profileContext, ProfileContextData, UserRole } from '~/libs/core'
+import { EnvironmentConfig } from '~/config'
 
 import { ProjectTypeLabels } from '../../constants'
 import { approveCopilotRequest, CopilotRequestsResponse, useCopilotRequests } from '../../services/copilot-requests'
@@ -55,13 +58,38 @@ const CopilotTableActions: FC<{request: CopilotRequest}> = props => {
         navigate(copilotRoutesMap.CopilotRequestDetails.replace(':requestId', `${props.request.id}`))
     }, [navigate, props.request.id])
 
+    const copilotOpportunityId = props.request.opportunity?.id
+
+    const navigateToOpportunity = useCallback(() => {
+        const url = copilotRoutesMap.CopilotOpportunityDetails
+            .replace(':opportunityId', `${copilotOpportunityId}`)
+        window.open(url, '_blank', 'noopener,noreferrer')
+    }, [copilotOpportunityId])
+
     return (
         <>
             {confirmModal.modal}
             <div className={styles.actionButtons}>
                 <div className={styles.viewRequestIcon} onClick={viewRequest}>
-                    <IconSolid.EyeIcon className='icon-lg' />
+                    <Tooltip
+                        content='View Copilot Request'
+                        place='top'
+                    >
+                        <IconSolid.EyeIcon className='icon-lg' />
+                    </Tooltip>
                 </div>
+                {props.request.status === 'approved'
+                && (
+                    <div className={styles.viewRequestIcon} onClick={navigateToOpportunity}>
+                        <Tooltip
+                            content='View Copilot Opportunity'
+                            place='top'
+                        >
+                            <IconSolid.ExternalLinkIcon className='icon-lg' />
+                        </Tooltip>
+                    </div>
+                )}
+
                 {props.request.status === 'new' && (
                     <>
                         <Button icon={IconCheck} primary size='sm' onClick={confirmApprove} />
@@ -80,46 +108,15 @@ const CopilotTableActions: FC<{request: CopilotRequest}> = props => {
     )
 }
 
-const tableColumns: TableColumn<CopilotRequest>[] = [
-    {
-        label: 'Project',
-        propertyName: 'projectName',
-        type: 'text',
-    },
-    {
-        label: 'Type',
-        propertyName: 'type',
-        type: 'text',
-    },
-    {
-        label: 'Status',
-        propertyName: 'status',
-        type: 'text',
-    },
-    {
-        label: '',
-        propertyName: '',
-        type: 'text',
-    },
-    {
-        defaultSortDirection: 'desc',
-        isDefaultSort: true,
-        label: 'Created At',
-        propertyName: 'createdAt',
-        type: 'date',
-    },
-    {
-        label: '',
-        renderer: (request: CopilotRequest) => (
-            <CopilotTableActions request={request} />
-        ),
-        type: 'action',
-    },
-]
-
 const CopilotRequestsPage: FC = () => {
     const navigate: NavigateFunction = useNavigate()
     const routeParams: Params<string> = useParams()
+
+    const { profile }: ProfileContextData = useContext(profileContext)
+    const isAdminOrPM: boolean = useMemo(
+        () => !!profile?.roles?.some(role => role === UserRole.administrator || role === UserRole.projectManager),
+        [profile],
+    )
 
     const { data: requests = [], isValidating: requestsLoading }: CopilotRequestsResponse = useCopilotRequests()
     const projectIds = useMemo(() => (
@@ -146,6 +143,64 @@ const CopilotRequestsPage: FC = () => {
         Object.assign(all, { [c.id]: c })
     ), {} as {[key: string]: Project}), [projects])
 
+    const handleLinkClick = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
+        e.stopPropagation()
+    }, [])
+
+    const tableColumns: TableColumn<CopilotRequest>[] = [
+        {
+            label: 'Project',
+            propertyName: 'projectName',
+            renderer: (copilotRequest: CopilotRequest) => {
+                const projectName = projectsMap[copilotRequest.projectId]?.name
+                const projectLink = `
+                ${EnvironmentConfig.ADMIN.WORK_MANAGER_URL}/projects/${copilotRequest.projectId}/challenges
+                `
+                return (
+                    <a
+                        href={projectLink}
+                        className={styles.title}
+                        target='_blank'
+                        rel='noreferrer'
+                        onClick={handleLinkClick}
+                    >
+                        {projectName}
+                    </a>
+                )
+            },
+            type: 'element',
+        },
+        {
+            label: 'Type',
+            propertyName: 'type',
+            type: 'text',
+        },
+        {
+            label: 'Status',
+            propertyName: 'status',
+            type: 'text',
+        },
+        {
+            label: '',
+            propertyName: '',
+            type: 'text',
+        },
+        {
+            defaultSortDirection: 'desc',
+            isDefaultSort: true,
+            label: 'Created At',
+            propertyName: 'createdAt',
+            type: 'date',
+        },
+        {
+            label: '',
+            renderer: (request: CopilotRequest) => (
+                <CopilotTableActions request={request} />
+            ),
+            type: 'action',
+        },
+    ]
+
     const tableData = useMemo(() => requests.map(request => ({
         ...request,
         projectName: projectsMap[request.projectId]?.name,
@@ -156,6 +211,15 @@ const CopilotRequestsPage: FC = () => {
     const addNewRequestButton: ButtonProps = {
         label: 'New Copilot Request',
         onClick: () => navigate(copilotRoutesMap.CopilotRequestForm),
+    }
+
+    if (!isAdminOrPM) {
+        return (
+            <ContentLayout title='Copilot Requests'>
+                <PageTitle>Access Denied</PageTitle>
+                <p>You do not have required permissions to access this page.</p>
+            </ContentLayout>
+        )
     }
 
     return (

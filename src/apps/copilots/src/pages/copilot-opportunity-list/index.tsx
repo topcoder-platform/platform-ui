@@ -1,14 +1,16 @@
-import { FC, useMemo } from 'react'
+import { FC, useContext, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import classNames from 'classnames'
 
 import {
+    ButtonProps,
     ContentLayout,
     LoadingSpinner,
     PageTitle,
     Table,
     TableColumn,
 } from '~/libs/ui'
+import { profileContext, ProfileContextData, UserRole } from '~/libs/core'
 
 import { CopilotOpportunity } from '../../models/CopilotOpportunity'
 import { copilotRoutesMap } from '../../copilots.routes'
@@ -102,8 +104,14 @@ const tableColumns: TableColumn<CopilotOpportunity>[] = [
 const CopilotOpportunityList: FC<{}> = () => {
     const navigate = useNavigate()
 
+    const { profile }: ProfileContextData = useContext(profileContext)
+    const isAdminOrPM: boolean = useMemo(
+        () => !!profile?.roles?.some(role => role === UserRole.administrator || role === UserRole.projectManager),
+        [profile],
+    )
+
     const {
-        data: opportunities, isValidating, size, setSize,
+        data: opportunities, hasMoreOpportunities, isValidating, size, setSize,
     }: CopilotOpportunitiesResponse = useCopilotOpportunities()
 
     const tableData = useMemo(() => opportunities.map(opportunity => ({
@@ -121,15 +129,27 @@ const CopilotOpportunityList: FC<{}> = () => {
 
     const opportunitiesLoading = isValidating
 
+    const addNewRequestButton: ButtonProps = {
+        label: 'New Copilot Request',
+        onClick: () => navigate(copilotRoutesMap.CopilotRequestForm),
+    }
+
+    const addCopilotRequestsButton: ButtonProps = {
+        label: 'Copilot Requests',
+        onClick: () => navigate(copilotRoutesMap.CopilotRequests),
+    }
+
     return (
         <ContentLayout
             title='Copilot Opportunities'
+            buttonConfig={isAdminOrPM ? addNewRequestButton : undefined}
+            secondaryButtonConfig={isAdminOrPM ? addCopilotRequestsButton : undefined}
         >
             <PageTitle>Copilot Opportunities</PageTitle>
             <Table
                 columns={tableColumns}
                 data={tableData}
-                moreToLoad={isValidating || opportunities.length > 0}
+                moreToLoad={hasMoreOpportunities}
                 onLoadMoreClick={loadMore}
                 onRowClick={handleRowClick}
                 removeDefaultSort

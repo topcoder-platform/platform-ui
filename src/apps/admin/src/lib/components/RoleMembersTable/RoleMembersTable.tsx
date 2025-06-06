@@ -1,16 +1,15 @@
 /**
  * Role members table.
  */
-import { FC, useContext, useEffect, useMemo, useState } from 'react'
+import { FC, useMemo, useState } from 'react'
 import _ from 'lodash'
 import classNames from 'classnames'
 
 import { useWindowSize, WindowSize } from '~/libs/shared'
 import { Button, colWidthType, InputCheckbox, Table, TableColumn } from '~/libs/ui'
 
-import { AdminAppContext } from '../../contexts'
 import { useTableFilterLocal, useTableFilterLocalProps } from '../../hooks'
-import { AdminAppContextType, RoleMemberInfo } from '../../models'
+import { RoleMemberInfo } from '../../models'
 import { MobileTableColumn } from '../../models/MobileTableColumn.model'
 import { Pagination } from '../common/Pagination'
 import { TableMobile } from '../common/TableMobile'
@@ -29,8 +28,6 @@ interface Props {
 
 export const RoleMembersTable: FC<Props> = (props: Props) => {
     const [colWidth, setColWidth] = useState<colWidthType>({})
-    const { loadUser, usersMapping, cancelLoadUser }: AdminAppContextType
-        = useContext(AdminAppContext)
     const {
         page,
         setPage,
@@ -51,27 +48,6 @@ export const RoleMembersTable: FC<Props> = (props: Props) => {
         toggleSelectAll,
         unselectAll,
     }: useTableSelectionProps<string> = useTableSelection<string>(datasIds)
-
-    useEffect(() => {
-        // clear queue of currently loading user handles
-        cancelLoadUser()
-        // load user handles for members visible on the current page
-        _.forEach(results, result => {
-            loadUser(result.id)
-        })
-
-        return () => {
-            // clear queue of currently loading user handles after exit ui
-            cancelLoadUser()
-        }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [results])
-
-    useEffect(() => {
-        _.forEach(results, result => {
-            result.handle = usersMapping[result.id]
-        })
-    }, [usersMapping, results])
 
     const columns = useMemo<TableColumn<RoleMemberInfo>[]>(
         () => [
@@ -112,20 +88,12 @@ export const RoleMembersTable: FC<Props> = (props: Props) => {
                 columnId: 'handle',
                 label: 'Handle',
                 propertyName: 'handle',
-                renderer: (data: RoleMemberInfo) => {
-                    if (!data.id) {
-                        return <></>
-                    }
-
-                    return (
-                        <>
-                            {!usersMapping[data.id]
-                                ? 'loading...'
-                                : usersMapping[data.id]}
-                        </>
-                    )
-                },
-                type: 'element',
+                type: 'text',
+            },
+            {
+                label: 'Email',
+                propertyName: 'email',
+                type: 'text',
             },
             {
                 className: styles.blockColumnAction,
@@ -150,7 +118,6 @@ export const RoleMembersTable: FC<Props> = (props: Props) => {
         [
             isSelectAll,
             selectedDatas,
-            usersMapping,
             props.isRemoving,
             props.isRemovingBool,
             props.doRemoveRoleMember,
@@ -176,12 +143,30 @@ export const RoleMembersTable: FC<Props> = (props: Props) => {
                 ),
                 type: 'element',
             },
+        ], [
+            {
+                ...columns[3],
+                className: '',
+                label: `${columns[3].label as string} label`,
+                mobileType: 'label',
+                renderer: () => (
+                    <div>
+                        {columns[3].label as string}
+                        :
+                    </div>
+                ),
+                type: 'element',
+            },
+            {
+                ...columns[3],
+                mobileType: 'last-value',
+            },
         ],
         [
             {
-                ...columns[3],
+                ...columns[4],
                 className: classNames(
-                    columns[3].className,
+                    columns[4].className,
                     styles.blockRightColumn,
                 ),
                 colSpan: 2,

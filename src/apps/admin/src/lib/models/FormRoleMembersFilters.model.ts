@@ -4,4 +4,5 @@
 export interface FormRoleMembersFilters {
     userId?: string
     userHandle?: string
+    email?: string
 }
