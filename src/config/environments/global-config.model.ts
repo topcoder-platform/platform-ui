@@ -45,6 +45,7 @@ export interface GlobalConfig {
     },
     ADMIN: {
         CONNECT_URL: string
+        DEFAULT_PAYMENT_TERMS: number
         DIRECT_URL: string
         WORK_MANAGER_URL: string
         ONLINE_REVIEW_URL: string
