@@ -193,57 +193,61 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
 
     function handlePayMeClick(
         paymentIds: { [paymentId: string]: Winning },
-        totalAmount: string,
+        totalAmountStr: string,
     ): void {
+        const totalAmount = parseFloat(totalAmountStr);
+        const taxWithholdAmount = parseFloat(nullToZero(walletDetails?.taxWithholdingPercentage ?? '0')) / 100 * totalAmount;
+        const feesAmount = parseFloat(nullToZero(walletDetails?.estimatedFees ?? '0'));
+        const netAmount = totalAmount - taxWithholdAmount - feesAmount;
+
         setConfirmFlow({
-            action: 'Yes',
+            action: 'Confirm Payment',
             callback: () => processPayouts(Object.keys(paymentIds)),
             content: (
                 <>
-                    You are about to process payments for a total of USD
-                    {' '}
-                    {totalAmount}
-                    .
-                    <br />
-                    <br />
+                    <div className={`${styles.processing} body-medium-normal`}>
+                        Processing Payment: ${totalAmountStr} USD
+                    </div>
                     {walletDetails && (
                         <>
-                            <div className={styles.taxes}>
-                                Est. Payment Fees:
-                                {' '}
-                                {walletDetails.withdrawalMethod.type === 'paypal'
-                                    ? '2% fee for transfer (max $20 cap) + 3.49% + an international fee (non US) + a fixed fee depending upon currency'
-                                    : `$${nullToZero(walletDetails.estimatedFees)} USD`}
-                                {' '}
-                                and
-                                <br />
-                                Tax Withholding:
-                                {' '}
-                                {`${nullToZero(walletDetails.taxWithholdingPercentage)}%`}
-                                {' '}
-                                will be applied on the payment.
-                            </div>
-                            <div className={styles.taxes}>
-                                {walletDetails.primaryCurrency && (
-                                    <>
-                                        You will receive the payment in
-                                        {' '}
-                                        {walletDetails.primaryCurrency}
-                                        {' '}
-                                        currency after 2% conversion fees applied.
-                                    </>
+                            <div className={styles.breakdown}>
+                                <h4>Payment Breakdown:</h4>
+                                <ul className={`${styles.breakdownList} body-main`}>
+                                    <li>
+                                        <span>Base amount:</span>
+                                        <span>${totalAmountStr}</span>
+                                    </li>
+                                    <li>
+                                        <span>Tax Witholding ({nullToZero(walletDetails.taxWithholdingPercentage)}%):</span>
+                                        <span>${taxWithholdAmount.toFixed(2)}</span>
+                                    </li>
+                                    <li>
+                                        <span>Processing fee:</span>
+                                        <span>${feesAmount.toFixed(2)}</span>
+                                    </li>
+                                </ul>
+                                <hr />
+                                <div className={`${styles.summary} body-main-bold`}>
+                                    <span>Net amount after fees:</span>
+                                    <span>{netAmount.toFixed(2)}</span>
+                                </div>
+                                {walletDetails?.primaryCurrency && walletDetails.primaryCurrency !== 'USD' && (
+                                    <div className={`${styles.alert} body-main-medium`}>
+                                        Net amount will be converted to {walletDetails.primaryCurrency} with 2% conversion fee applied.
+                                    </div>
                                 )}
                             </div>
-                            <div className={`${styles.taxes} ${styles.mt}`}>
-                                You can adjust your payout settings to customize your estimated payment fee and tax withholding percentage in
-                                {' '}
+                            <div className={`${styles.taxesFooterRow} body-main`}>
+                                You can adjust your payout settings to customize your estimated payment fee
+                                and tax withholding percentage in the{' '}
                                 <Link to='#payout'>Payout</Link>
+                                {' '}section.
                             </div>
                         </>
                     )}
                 </>
             ),
-            title: 'Are you sure?',
+            title: 'Payment Confirmation',
         })
     }
 
@@ -434,6 +438,8 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
             </div>
             {confirmFlow && (
                 <ConfirmModal
+                    size='lg'
+                    maxWidth='610px'
                     title={confirmFlow.title}
                     action={confirmFlow.action}
                     onClose={function onClose() {

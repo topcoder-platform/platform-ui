@@ -62,12 +62,7 @@ const HomeTab: FC<HomeTabProps> = props => {
                         {walletDetails.withdrawalMethod.isSetupComplete && (
                             <InfoRow
                                 title='Est. Payment Fees'
-                                value={
-                                    walletDetails.withdrawalMethod.type === 'paypal'
-                                        // eslint-disable-next-line max-len
-                                        ? '2% fee for transfer (max $20 cap) + 3.49% + an international fee (non US) + a fixed fee depending upon currency'
-                                        : `${nullToZero(walletDetails.estimatedFees)} USD`
-                                }
+                                value={`$${nullToZero(walletDetails.estimatedFees)} USD`}
                                 action={
                                     <LinkButton
                                         label='ADJUST YOUR PAYOUT SETTINGS'
