@@ -34,6 +34,10 @@ export const fetchSubmissions = async (
     }
 
     return Promise.resolve(
-        MockSubmissions.map(adjustSubmissionInfo) as SubmissionInfo[],
+        MockSubmissions.map(adjustSubmissionInfo)
+            .map(s => ({
+                ...s,
+                reviews: s?.reviews?.map(adjustReviewResult),
+            })) as SubmissionInfo[],
     )
 }

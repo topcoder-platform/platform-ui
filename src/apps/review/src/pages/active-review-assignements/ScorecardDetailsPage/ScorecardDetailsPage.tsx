@@ -18,7 +18,8 @@ import {
 } from '../../../lib'
 import { SubmissionInfo } from '../../../lib/models'
 import { SubmissionBarInfo } from '../../../lib/components/SubmissionBarInfo'
-import { SUBMITTER } from '../../../config/index.config'
+import { ChallengeLinksForAdmin } from '../../../lib/components/ChallengeLinksForAdmin'
+import { ADMIN, COPILOT, SUBMITTER } from '../../../config/index.config'
 
 import styles from './ScorecardDetailsPage.module.scss'
 
@@ -85,7 +86,11 @@ export const ScorecardDetailsPage: FC<Props> = (props: Props) => {
         >
             <div className={styles.summary}>
                 {submission && <SubmissionBarInfo submission={submission} />}
-                <ChallengeLinks />
+                {role === ADMIN || role === COPILOT ? (
+                    <ChallengeLinksForAdmin />
+                ) : (
+                    <ChallengeLinks />
+                )}
             </div>
 
             <ScorecardDetails

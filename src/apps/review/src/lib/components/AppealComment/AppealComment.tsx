@@ -8,7 +8,7 @@ import {
     useForm,
     UseFormReturn,
 } from 'react-hook-form'
-import _, { bind } from 'lodash'
+import _, { bind, includes } from 'lodash'
 import classNames from 'classnames'
 
 import { yupResolver } from '@hookform/resolvers/yup'
@@ -17,12 +17,14 @@ import { MarkdownReview } from '../MarkdownReview'
 import { FieldMarkdownEditor } from '../FieldMarkdownEditor'
 import { AppealInfo, FormAppealResponse } from '../../models'
 import { formAppealResponseSchema } from '../../utils'
+import { ADMIN, COPILOT, FINISHTAB, TAB } from '../../../config/index.config'
 
 import styles from './AppealComment.module.scss'
 
 interface Props {
     className?: string
     data: AppealInfo
+    role?: string
 }
 
 export const AppealComment: FC<Props> = (props: Props) => {
@@ -61,7 +63,10 @@ export const AppealComment: FC<Props> = (props: Props) => {
                 </div>
             )}
 
-            {!showResponseForm && !showAppealResponse && (
+            {!showResponseForm
+                && !showAppealResponse
+                && !includes(FINISHTAB, sessionStorage.getItem(TAB))
+                && !includes([COPILOT, ADMIN], props.role) && (
                 <button
                     type='button'
                     className='borderButton'

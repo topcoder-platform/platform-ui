@@ -21,7 +21,17 @@ export interface ChallengeInfo {
     reviewProgress?: number // this field is calculated at frontend
     index?: number // this field is calculated at frontend
     submissions: SubmissionInfo[]
-    role: 'Reviewer' | 'Submitter'
+    role: 'Reviewer' | 'Submitter' | 'Copilot' | 'Admin'
+    type:
+        | 'Design'
+        | 'Code'
+        | 'Bug Hunt'
+        | 'Test Suite'
+        | 'Copilot Opportunity'
+        | 'Marathon Match'
+        | 'First2Finish'
+        | 'Other'
+    reviewLength?: number
 }
 
 /**

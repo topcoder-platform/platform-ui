@@ -2,8 +2,8 @@
  * Table Winners.
  */
 import { FC, useCallback, useMemo } from 'react'
-import { Link, NavLink } from 'react-router-dom'
-import _ from 'lodash'
+import { Link, NavLink, useParams } from 'react-router-dom'
+import _, { includes } from 'lodash'
 import classNames from 'classnames'
 
 import { MobileTableColumn } from '~/apps/admin/src/lib/models/MobileTableColumn.model'
@@ -13,8 +13,9 @@ import { Table, TableColumn } from '~/libs/ui'
 
 import { ProjectResult, ReviewResult } from '../../models'
 import { TableWrapper } from '../TableWrapper'
-import { ORDINAL_SUFFIX } from '../../../config/index.config'
+import { ORDINAL_SUFFIX, WITHOUT_APPEAL } from '../../../config/index.config'
 import { getFinalScore } from '../../utils'
+import { useFetchChallengeInfo, useFetchChallengeInfoProps } from '../../hooks'
 
 import styles from './TableWinners.module.scss'
 
@@ -24,8 +25,12 @@ interface Props {
 }
 
 export const TableWinners: FC<Props> = (props: Props) => {
+    const params = useParams()
     const { width: screenWidth }: WindowSize = useWindowSize()
     const isTablet = useMemo(() => screenWidth <= 744, [screenWidth])
+    const { challengeInfo }: useFetchChallengeInfoProps = useFetchChallengeInfo(
+        params.challengeId,
+    )
 
     const firstSubmission: ProjectResult | undefined = useMemo(
         () => props.datas[0],
@@ -87,60 +92,70 @@ export const TableWinners: FC<Props> = (props: Props) => {
                 type: 'element',
             },
             ...(firstSubmission?.reviews ?? [])
-                .map((review, index) => [
-                    {
-                        label: 'Review Date',
-                        renderer: (data: ProjectResult) => (
-                            <span>
-                                {data.reviews[index]?.createdAtString}
-                            </span>
-                        ),
-                        type: 'element',
-                    },
-                    {
-                        label: 'Score',
-                        renderer: (data: ProjectResult) => (
-                            <Link
-                                to={`./../scorecard-details/${data.submissionId}?viewMode=true`}
-                                className={styles.textBlue}
-                            >
-                                {data.reviews[index]?.score}
-                            </Link>
-                        ),
-                        type: 'element',
-                    },
-                    {
-                        className: styles.tableCellNoWrap,
-                        label: 'Appeals',
-                        renderer: (data: ProjectResult) => (
-                            <>
-                                [
+                .map((review, index) => {
+                    const initialColumns = [
+                        {
+                            label: 'Review Date',
+                            renderer: (data: ProjectResult) => (
+                                <span>
+                                    {data.reviews[index]?.createdAtString}
+                                </span>
+                            ),
+                            type: 'element',
+                        },
+                        {
+                            label: 'Score',
+                            renderer: (data: ProjectResult) => (
                                 <Link
-                                    className={classNames(styles.appealsLink, 'last-element')}
                                     to={`./../scorecard-details/${data.submissionId}?viewMode=true`}
+                                    className={styles.textBlue}
                                 >
-                                    <span className={styles.textBlue}>
-                                        0
-                                    </span>
-                                    {' '}
-                                    /
-                                    {' '}
-                                    <span className={styles.textBlue}>
-                                        {
-                                            data.reviews[index]?.appeals
-                                                .length
-                                        }
-                                    </span>
+                                    {data.reviews[index]?.score}
                                 </Link>
-                                ]
-                            </>
-                        ),
-                        type: 'element',
-                    },
-                ] as TableColumn<ProjectResult>[])
+                            ),
+                            type: 'element',
+                        },
+                    ]
+                    if (includes(WITHOUT_APPEAL, challengeInfo?.type)) {
+                        return initialColumns as TableColumn<ProjectResult>[]
+                    }
+
+                    return (
+                        [
+                            ...initialColumns,
+                            {
+                                className: styles.tableCellNoWrap,
+                                label: 'Appeals',
+                                renderer: (data: ProjectResult) => (
+                                    <>
+                                        [
+                                        <Link
+                                            className={classNames(styles.appealsLink, 'last-element')}
+                                            to={`./../scorecard-details/${data.submissionId}?viewMode=true`}
+                                        >
+                                            <span className={styles.textBlue}>
+                                                0
+                                            </span>
+                                            {' '}
+                                            /
+                                            {' '}
+                                            <span className={styles.textBlue}>
+                                                {
+                                                    data.reviews[index]?.appeals?.length
+                                                }
+                                            </span>
+                                        </Link>
+                                        ]
+                                    </>
+                                ),
+                                type: 'element',
+                            },
+                        ] as TableColumn<ProjectResult>[]
+                    )
+                })
                 .reduce((accumulator, value) => accumulator.concat(value), []),
         ],
-        [firstSubmission, finalScore, prevent],
+        [firstSubmission, finalScore, prevent, challengeInfo?.type],
     )
 
     const columnsMobile = useMemo<MobileTableColumn<ProjectResult>[][]>(

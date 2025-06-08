@@ -14,13 +14,13 @@ import {
 } from 'react'
 import { useForm, UseFormReturn } from 'react-hook-form'
 import { NavLink, useNavigate, useSearchParams } from 'react-router-dom'
-import _ from 'lodash'
+import _, { map } from 'lodash'
 import classNames from 'classnames'
 
 import { yupResolver } from '@hookform/resolvers/yup'
 
 import { useFetchReviews, useFetchReviewsProps } from '../../hooks'
-import { AppealInfo, FormReviews, ReviewItemInfo } from '../../models'
+import { AppealInfo, FormReviews, ReviewInfo, ReviewItemInfo } from '../../models'
 import { ScorecardDetailsHeader } from '../ScorecardDetailsHeader'
 import { ScorecardQuestionEdit } from '../ScorecardQuestionEdit'
 import { ScorecardQuestionView } from '../ScorecardQuestionView'
@@ -43,7 +43,7 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
     const [, setSearchParams] = useSearchParams()
     const [isExpand, setIsExpand] = useState<{ [key: string]: boolean }>({})
     const [isShowSaveAsDraftModal, setIsShowSaveAsDraftModal] = useState(false)
-    const { scorecardInfo, appeals, reviewInfo }: useFetchReviewsProps
+    const { scorecardInfo, appeals, reviewInfo, setReviewInfo }: useFetchReviewsProps
         = useFetchReviews(isEdit)
     const mappingAppeals = useMemo<{
         [reviewItemCommentId: string]: AppealInfo
@@ -254,6 +254,19 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
         setIsShowSaveAsDraftModal(false)
     }, [])
 
+    const [isUpdated, setIsUpdated] = useState(false)
+    const updateReviewItem = useCallback((item: ReviewItemInfo) => {
+        const result = map(reviewInfo?.reviewItems, review => {
+            if (review.id === item.id) {
+                return item
+            }
+
+            return review
+        })
+        setReviewInfo({ ...reviewInfo, reviewItems: result } as ReviewInfo)
+        setIsUpdated(true)
+    }, [reviewInfo, setReviewInfo])
+
     return (
         <div className={classNames(styles.container, props.className)}>
             <ScorecardDetailsHeader
@@ -410,6 +423,9 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
                                                                     mappingAppeals={
                                                                         mappingAppeals
                                                                     }
+                                                                    updateReviewItem={
+                                                                        updateReviewItem
+                                                                    }
                                                                 />
                                                             )
                                                         },
@@ -472,13 +488,23 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
                                 <span>{totalScore}</span>
                             </div>
                             <div className={styles.buttons}>
-                                <NavLink
-                                    className='filledButton'
-                                    to=''
-                                    onClick={back}
-                                >
-                                    Back to Challenge
-                                </NavLink>
+                                {isUpdated ? (
+                                    <NavLink
+                                        className='filledButton'
+                                        to=''
+                                        onClick={back}
+                                    >
+                                        Save
+                                    </NavLink>
+                                ) : (
+                                    <NavLink
+                                        className='filledButton'
+                                        to=''
+                                        onClick={back}
+                                    >
+                                        Back to Challenge
+                                    </NavLink>
+                                )}
                             </div>
                         </div>
                     )}

@@ -24,7 +24,7 @@ export const MockReviewFull: ReviewInfo = {
                 .toISOString(),
             finalAnswer: 'No',
             id: '1',
-            initialAnswer: 'Yes',
+            initialAnswer: 'No',
             reviewItemComments: [
                 {
                     content: mockCommentMarkdown,
@@ -45,9 +45,9 @@ export const MockReviewFull: ReviewInfo = {
         {
             createdAt: new Date()
                 .toISOString(),
-            finalAnswer: '9',
+            finalAnswer: 'Yes',
             id: '2',
-            initialAnswer: '9',
+            initialAnswer: 'Yes',
             reviewItemComments: [
                 {
                     content:

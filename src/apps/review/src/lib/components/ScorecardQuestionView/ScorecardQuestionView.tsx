@@ -1,7 +1,9 @@
 /**
  * Scorecard Question View.
  */
-import { Dispatch, FC, Fragment, SetStateAction, useMemo } from 'react'
+import { Dispatch, FC, Fragment, SetStateAction, useCallback, useMemo } from 'react'
+import { useParams } from 'react-router-dom'
+import { includes } from 'lodash'
 import classNames from 'classnames'
 
 import { useWindowSize, WindowSize } from '~/libs/shared'
@@ -11,9 +13,10 @@ import { MarkdownReview } from '../MarkdownReview'
 import { AppealInfo, ReviewItemInfo, ScorecardQuestion } from '../../models'
 import { stringIsNumberic } from '../../utils'
 import { IconChevronDown } from '../../assets/icons'
-import { useRole } from '../../hooks'
-import { REVIEWER } from '../../../config/index.config'
+import { useFetchChallengeInfo, useFetchChallengeInfoProps, useRole } from '../../hooks'
+import { ADMIN, COPILOT, FINISHTAB, REVIEWER, TAB, WITHOUT_APPEAL } from '../../../config/index.config'
 import { Appeal } from '../Appeal'
+import { ManagerComment } from '../ManagerComment'
 
 import styles from './ScorecardQuestionView.module.scss'
 
@@ -33,13 +36,18 @@ interface Props {
             [key: string]: boolean
         }>
     >
+    updateReviewItem?: (reviewItem: ReviewItemInfo) => void
 }
 
 export const ScorecardQuestionView: FC<Props> = (props: Props) => {
+    const params = useParams()
     const { role }: {role: string} = useRole()
     const isExpand = props.isExpand[props.reviewItem.id]
     const { width: screenWidth }: WindowSize = useWindowSize()
     const isMobile = useMemo(() => screenWidth <= 745, [screenWidth])
+
+    const { challengeInfo }: useFetchChallengeInfoProps
+        = useFetchChallengeInfo(params.challengeId)
 
     const finalAnswer = useMemo(() => {
         if (stringIsNumberic(props.reviewItem.finalAnswer)) {
@@ -49,6 +57,19 @@ export const ScorecardQuestionView: FC<Props> = (props: Props) => {
         return props.reviewItem.finalAnswer
 
     }, [props.reviewItem.finalAnswer])
+
+    const updateFinalAnswer = useCallback(
+        (value: string) => {
+            if (props.updateReviewItem) {
+                props.updateReviewItem({
+                    ...props.reviewItem,
+                    finalAnswer: value,
+                    initialAnswer: value,
+                })
+            }
+        },
+        [props],
+    )
 
     return (
         <>
@@ -124,9 +145,7 @@ export const ScorecardQuestionView: FC<Props> = (props: Props) => {
                                     index
                                     === props.reviewItem.reviewItemComments
                                         .length
-                                            - 1
-                                            && !props.mappingAppeals[commentItem.id]
-                                            && role === REVIEWER,
+                                            - 1,
                             },
                         )}
                     >
@@ -150,48 +169,90 @@ export const ScorecardQuestionView: FC<Props> = (props: Props) => {
                             </div>
                         </td>
                     </tr>
-                    {role === REVIEWER ? props.mappingAppeals[commentItem.id] && (
-                        <tr
-                            key={commentItem.sortOrder}
-                            className={classNames(
-                                styles.container,
-                                props.className,
-                                styles.blockRowAppealComment,
-                                {
-                                    [styles.isLast]:
-                                        index
-                                            === props.reviewItem.reviewItemComments.length
-                                            - 1,
-                                },
-                            )}
-                        >
-                            <td colSpan={3}>
-                                <AppealComment
-                                    data={props.mappingAppeals[commentItem.id]}
-                                />
-                            </td>
-                        </tr>
-                    ) : (
-                        <tr
-                            className={classNames(
-                                styles.container,
-                                props.className,
-                                styles.blockRowAppealComment,
-                                {
-                                    [styles.isLast]:
-                                        index
-                                            === props.reviewItem.reviewItemComments.length
-                                            - 1,
-                                },
-                            )}
-                        >
-                            <td colSpan={3}>
-                                <Appeal />
-                            </td>
-                        </tr>
-                    )}
+                    {!includes(WITHOUT_APPEAL, challengeInfo?.type)
+                        && (includes([REVIEWER, COPILOT, ADMIN], role) ? (
+                            props.mappingAppeals[commentItem.id] && (
+                                <tr
+                                    key={commentItem.sortOrder}
+                                    className={classNames(
+                                        styles.container,
+                                        props.className,
+                                        styles.blockRowAppealComment,
+                                        {
+                                            [styles.isLast]:
+                                                index
+                                                    === props.reviewItem
+                                                        .reviewItemComments
+                                                        .length
+                                                        - 1
+                                                && !includes(
+                                                    [COPILOT, ADMIN],
+                                                    role,
+                                                ),
+                                        },
+                                    )}
+                                >
+                                    <td colSpan={3}>
+                                        <AppealComment
+                                            role={role}
+                                            data={
+                                                props.mappingAppeals[
+                                                    commentItem.id
+                                                ]
+                                            }
+                                        />
+                                    </td>
+                                </tr>
+                            )
+                        ) : (
+                            <tr
+                                className={classNames(
+                                    styles.container,
+                                    props.className,
+                                    styles.blockRowAppealComment,
+                                    {
+                                        [styles.isLast]:
+                                            index
+                                                === props.reviewItem
+                                                    .reviewItemComments.length
+                                                    - 1,
+                                    },
+                                )}
+                            >
+                                <td
+                                    colSpan={3}
+                                    className={classNames(
+                                        includes(
+                                            FINISHTAB,
+                                            sessionStorage.getItem(TAB),
+                                        )
+                                            ? styles.isEmpty
+                                            : '',
+                                    )}
+                                >
+                                    <Appeal role={role} />
+                                </td>
+                            </tr>
+                        ))}
                 </Fragment>
             ))}
+            {includes([COPILOT, ADMIN], role) && (
+                <tr
+                    className={classNames(
+                        styles.container,
+                        props.className,
+                        styles.blockRowManagerComment,
+                        styles.isLast,
+                    )}
+                >
+                    <td colSpan={3}>
+                        <ManagerComment
+                            scorecardQuestion={props.scorecardQuestion}
+                            updateScorecardQuestion={updateFinalAnswer}
+                        />
+                    </td>
+                </tr>
+            )}
         </>
     )
 }

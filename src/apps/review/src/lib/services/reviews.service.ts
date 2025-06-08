@@ -7,19 +7,7 @@ import {
     ChallengeInfo,
     ReviewInfo,
 } from '../models'
-import {
-    MockChalenges,
-    MockChalengesBugHunt,
-    MockChalengesCode,
-    MockChalengesCopilotOpportunity,
-    MockChalengesDesign,
-    MockChalengesFirst2Finish,
-    MockChalengesMarathonMatch,
-    MockChalengesOther,
-    MockChalengesTestSuite,
-    MockReviewEdit,
-    MockReviewFull,
-} from '../../mock-datas'
+import { MockChalenges, MockReviewEdit, MockReviewFull } from '../../mock-datas'
 
 /**
  * Fetch active reviews
@@ -29,23 +17,19 @@ import {
 export const fetchActiveReviews = async (
     challengeType: string,
 ): Promise<ChallengeInfo[]> => {
-    const mappingResult: { [key: string]: ChallengeInfo[] } = {
-        'Bug Hunt': MockChalengesBugHunt,
-        Code: MockChalengesCode,
-        'Copilot Opportunity': MockChalengesCopilotOpportunity,
-        Design: MockChalengesDesign,
-        First2Finish: MockChalengesFirst2Finish,
-        'Marathon Match': MockChalengesMarathonMatch,
-        Other: MockChalengesOther,
-        'Test Suite': MockChalengesTestSuite,
+    if (challengeType === 'All') {
+        return Promise.resolve(
+            MockChalenges.map(
+                (item, index) => adjustChallengeInfo(item, index + 1) as ChallengeInfo,
+            ),
+        )
     }
+
     return Promise.resolve(
-        (mappingResult[challengeType] ?? MockChalenges).map(
-            (item, index) => adjustChallengeInfo(
-                item,
-                index + 1,
-            ) as ChallengeInfo,
-        ),
+        MockChalenges.filter(item => item.type === challengeType)
+            .map(
+                (item, index) => adjustChallengeInfo(item, index + 1) as ChallengeInfo,
+            ),
     )
 }
 
@@ -55,7 +39,5 @@ export const fetchActiveReviews = async (
  * @returns resolves to the review info
  */
 export const fetchReviewInfo = async (isEdit: boolean): Promise<ReviewInfo> => Promise.resolve(
-    adjustReviewInfo(
-        isEdit ? MockReviewEdit : MockReviewFull,
-    ) as ReviewInfo,
+    adjustReviewInfo(isEdit ? MockReviewEdit : MockReviewFull) as ReviewInfo,
 )

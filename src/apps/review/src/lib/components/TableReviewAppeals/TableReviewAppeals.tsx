@@ -3,7 +3,7 @@
  */
 import { FC, useCallback, useMemo } from 'react'
 import { Link, NavLink } from 'react-router-dom'
-import _ from 'lodash'
+import _, { includes } from 'lodash'
 import classNames from 'classnames'
 
 import { MobileTableColumn } from '~/apps/admin/src/lib/models/MobileTableColumn.model'
@@ -14,16 +14,22 @@ import { Table, TableColumn } from '~/libs/ui'
 import { TableWrapper } from '../TableWrapper'
 import { SubmissionInfo } from '../../models'
 import { ProgressBar } from '../ProgressBar'
+import { ADMIN, APPROVAL, COPILOT, WITHOUT_APPEAL } from '../../../config/index.config'
+import { useRole } from '../../hooks'
 
 import styles from './TableReviewAppeals.module.scss'
 
 interface Props {
     className?: string
     datas: SubmissionInfo[]
+    tab: string
+    type?: string
+    firstSubmissions?: SubmissionInfo
 }
 
 export const TableReviewAppeals: FC<Props> = (props: Props) => {
     const { width: screenWidth }: WindowSize = useWindowSize()
+    const { role }: {role: string} = useRole()
     const isTablet = useMemo(() => screenWidth <= 744, [screenWidth])
 
     const prevent = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
@@ -31,59 +37,51 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
     }, [])
 
     const columns = useMemo<TableColumn<SubmissionInfo>[]>(
-        () => [
-            {
-                className: styles.textBlue,
-                label: 'Submission ID',
-                propertyName: 'id',
-                renderer: (data: SubmissionInfo) => <NavLink to='#' onClick={prevent}>{data.id}</NavLink>,
-                type: 'element',
-            },
-            {
-                label: 'Handle',
-                propertyName: 'handle',
-                renderer: (data: SubmissionInfo) => (
-                    <NavLink
-                        to='#'
-                        onClick={prevent}
-                        style={{
-                            color: data.handleColor,
-                        }}
-                    >
-                        {data.handle}
-                    </NavLink>
-                ),
-                type: 'element',
-            },
-            {
-                label: 'Review Date',
-                renderer: (data: SubmissionInfo) => {
-                    if (data.review) {
-                        return (
-                            <span>
-                                {data.review.updatedAtString
-                                    || data.review.createdAtString}
-                            </span>
-                        )
-                    }
-
-                    return <></>
+        () => {
+            const initalColumns = [
+                {
+                    className: styles.textBlue,
+                    label: 'Submission ID',
+                    propertyName: 'id',
+                    renderer: (data: SubmissionInfo) => <NavLink to='#' onClick={prevent}>{data.id}</NavLink>,
+                    type: 'element',
                 },
-                type: 'element',
-            },
-            {
-                label: 'Score',
-                renderer: (data: SubmissionInfo) => {
-                    if (!data.review) {
-                        return (
-                            <span className={styles.notReviewed}>
-                                Not Reviewed
-                            </span>
-                        )
-                    }
+                {
+                    label: 'Handle',
+                    propertyName: 'handle',
+                    renderer: (data: SubmissionInfo) => (
+                        <NavLink
+                            to='#'
+                            onClick={prevent}
+                            style={{
+                                color: data.handleColor,
+                            }}
+                        >
+                            {data.handle}
+                        </NavLink>
+                    ),
+                    type: 'element',
+                },
+                {
+                    label: 'Review Date',
+                    renderer: (data: SubmissionInfo) => {
+                        if (data.review) {
+                            return (
+                                <span>
+                                    {data.review.updatedAtString
+                                        || data.review.createdAtString}
+                                </span>
+                            )
+                        }
 
-                    if (!data.review.initialScore) {
-                        if (!data.review.reviewProgress) {
+                        return <></>
+                    },
+                    type: 'element',
+                },
+                {
+                    label: 'Score',
+                    renderer: (data: SubmissionInfo) => {
+                        if (!data.review) {
                             return (
                                 <span className={styles.notReviewed}>
                                     Not Reviewed
@@ -91,25 +89,69 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                             )
                         }
 
-                        return (
-                            <ProgressBar
-                                progress={data.review.reviewProgress}
-                            />
-                        )
-                    }
+                        if (!data.review.initialScore) {
+                            if (!data.review.reviewProgress) {
+                                return (
+                                    <span className={styles.notReviewed}>
+                                        Not Reviewed
+                                    </span>
+                                )
+                            }
 
-                    return (
-                        <Link
-                            to={`./../scorecard-details/${data.id}?viewMode=true`}
-                            className={styles.textBlue}
-                        >
-                            {data.review.initialScore}
-                        </Link>
-                    )
+                            return (
+                                <ProgressBar
+                                    progress={data.review.reviewProgress}
+                                />
+                            )
+                        }
+
+                        return (
+                            <Link
+                                to={`./../scorecard-details/${data.id}?viewMode=true`}
+                                className={styles.textBlue}
+                            >
+                                {data.review.initialScore}
+                            </Link>
+                        )
+                    },
+                    type: 'element',
                 },
-                type: 'element',
-            },
-            {
+
+            ]
+            const actionColumns = !includes([COPILOT, ADMIN], role) ? [
+                {
+                    className: styles.textBlue,
+                    label: 'Action',
+                    renderer: (data: SubmissionInfo) => (
+                        <Link
+                            to={`./../scorecard-details/${data.id}`}
+                            className={classNames(styles.submit, 'last-element')}
+                        >
+                            <i
+                                className={
+                                    data.review?.initialScore !== undefined
+                                        ? 'icon-reopen'
+                                        : 'icon-upload'
+                                }
+                            />
+                            {data.review?.initialScore !== undefined
+                                ? 'Reopen Review'
+                                : 'Submit Review'}
+                        </Link>
+                    ),
+                    type: 'element',
+                },
+            ] : []
+
+            if (includes([APPROVAL], props.tab)) {
+                return [...initalColumns] as MobileTableColumn<SubmissionInfo>[]
+            }
+
+            if (includes(WITHOUT_APPEAL, props.type)) {
+                return [...initalColumns, ...actionColumns] as TableColumn<SubmissionInfo>[]
+            }
+
+            return [...initalColumns, {
                 label: 'Appeals',
                 renderer: (data: SubmissionInfo) => {
                     if (!data.review) {
@@ -136,31 +178,9 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                     )
                 },
                 type: 'element',
-            },
-            {
-                className: styles.textBlue,
-                label: 'Action',
-                renderer: (data: SubmissionInfo) => (
-                    <Link
-                        to={`./../scorecard-details/${data.id}`}
-                        className={classNames(styles.submit, 'last-element')}
-                    >
-                        <i
-                            className={
-                                data.review?.initialScore !== undefined
-                                    ? 'icon-reopen'
-                                    : 'icon-upload'
-                            }
-                        />
-                        {data.review?.initialScore !== undefined
-                            ? 'Reopen Review'
-                            : 'Submit Review'}
-                    </Link>
-                ),
-                type: 'element',
-            },
-        ],
-        [prevent],
+            }, ...actionColumns] as TableColumn<SubmissionInfo>[]
+        },
+        [prevent, props.tab, props.type, role],
     )
 
     const columnsMobile = useMemo<MobileTableColumn<SubmissionInfo>[][]>(
@@ -198,6 +218,11 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
         [columns],
     )
 
+    const submissions
+        = includes([APPROVAL], props.tab)
+            ? [props.firstSubmissions] as SubmissionInfo[]
+            : props.datas
+
     return (
         <TableWrapper
             className={classNames(
@@ -207,11 +232,11 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
             )}
         >
             {isTablet ? (
-                <TableMobile columns={columnsMobile} data={props.datas} />
+                <TableMobile columns={columnsMobile} data={submissions} />
             ) : (
                 <Table
                     columns={columns}
-                    data={props.datas}
+                    data={submissions}
                     disableSorting
                     onToggleSort={_.noop}
                     removeDefaultSort

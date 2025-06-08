@@ -3,7 +3,7 @@
  */
 import { FC, useCallback, useMemo } from 'react'
 import { Link, NavLink } from 'react-router-dom'
-import _ from 'lodash'
+import _, { find, includes } from 'lodash'
 import classNames from 'classnames'
 
 import { MobileTableColumn } from '~/apps/admin/src/lib/models/MobileTableColumn.model'
@@ -14,21 +14,30 @@ import { Table, TableColumn } from '~/libs/ui'
 import { ReviewResult, SubmissionInfo } from '../../models'
 import { TableWrapper } from '../TableWrapper'
 import { getFinalScore } from '../../utils'
+import { APPROVAL, MOCKHANDLE, WITHOUT_APPEAL } from '../../../config/index.config'
 
 import styles from './TableReviewAppealsForSubmitter.module.scss'
 
 interface Props {
     className?: string
     datas: SubmissionInfo[]
+    type?: string
+    tab: string
+    firstSubmissions?: SubmissionInfo
 }
 
 export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
     const { width: screenWidth }: WindowSize = useWindowSize()
     const isTablet = useMemo(() => screenWidth <= 1120, [screenWidth])
+    const firstSubmission: SubmissionInfo = useMemo(
+        () => {
+            if (includes([APPROVAL], props.tab)) {
+                return props.firstSubmissions as SubmissionInfo
+            }
 
-    const firstSubmission: SubmissionInfo | undefined = useMemo(
-        () => props.datas[0],
-        [props.datas],
+            return find(props.datas, data => data.handle === MOCKHANDLE) as SubmissionInfo
+        },
+        [props.datas, props.tab, props.firstSubmissions],
     )
 
     const finalScore = useCallback((data: ReviewResult[] | undefined) => getFinalScore(data), [])
@@ -59,73 +68,84 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
                 ),
                 type: 'element',
             },
-            ...(firstSubmission.reviews ?? [])
-                .map(
-                    review => [{
-                        label: 'Reviewer',
-                        renderer: () => (
-                            <NavLink
-                                to='#'
-                                onClick={prevent}
-                                className={styles.reviewer}
-                                style={{
-                                    color: review.reviewerHandleColor,
-                                }}
-                            >
-                                {review.reviewerHandle}
-                            </NavLink>
-                        ),
-                        type: 'element',
-                    },
-                    {
-                        label: 'Review Date',
-                        renderer: () => (
-                            <span>{review.createdAtString}</span>
-                        ),
-                        type: 'element',
-                    },
-                    {
-                        label: 'Score',
-                        renderer: (data: SubmissionInfo) => (
-                            <Link
-                                to={`./../scorecard-details/${data.id}?viewMode=true`}
-                                className={styles.textBlue}
-                            >
-                                {review.score}
-                            </Link>
-                        ),
-                        type: 'element',
-                    },
-                    {
-                        className: styles.tableCellNoWrap,
-                        label: 'Appeals',
-                        renderer: (data: SubmissionInfo) => (
-                            <>
-                                [
-                                <Link
-                                    className={classNames(styles.appealsLink, 'last-element')}
-                                    to={`./../scorecard-details/${data.id}?viewMode=true`}
+            ...(firstSubmission?.reviews ?? [])
+                .map(review => {
+                    const initalColumns = [
+                        {
+                            label: 'Reviewer',
+                            renderer: () => (
+                                <NavLink
+                                    to='#'
+                                    onClick={prevent}
+                                    className={styles.reviewer}
+                                    style={{
+                                        color: review.reviewerHandleColor,
+                                    }}
                                 >
-                                    <span className={styles.textBlue}>
-                                        0
-                                    </span>
-                                    {' '}
-                                    /
-                                    {' '}
-                                    <span className={styles.textBlue}>
-                                        {review.appeals.length}
-                                    </span>
+                                    {review.reviewerHandle}
+                                </NavLink>
+                            ),
+                            type: 'element',
+                        },
+                        {
+                            label: 'Review Date',
+                            renderer: () => (
+                                <span>{review.createdAtString}</span>
+                            ),
+                            type: 'element',
+                        },
+                        {
+                            label: 'Score',
+                            renderer: (data: SubmissionInfo) => (
+                                <Link
+                                    to={`./../scorecard-details/${data.id}?viewMode=true`}
+                                    className={styles.textBlue}
+                                >
+                                    {review.score}
                                 </Link>
-                                ]
-                            </>
-                        ),
-                        type: 'element',
-                    },
-                    ] as TableColumn<SubmissionInfo>[],
-                )
+                            ),
+                            type: 'element',
+                        },
+                    ]
+                    if (includes(WITHOUT_APPEAL, props.type)) {
+                        return initalColumns as TableColumn<SubmissionInfo>[]
+                    }
+
+                    return [
+                        ...initalColumns,
+                        {
+                            className: styles.tableCellNoWrap,
+                            label: 'Appeals',
+                            renderer: (data: SubmissionInfo) => (
+                                <>
+                                    [
+                                    <Link
+                                        className={classNames(
+                                            styles.appealsLink,
+                                            'last-element',
+                                        )}
+                                        to={`./../scorecard-details/${data.id}?viewMode=true`}
+                                    >
+                                        <span className={styles.textBlue}>
+                                            0
+                                        </span>
+                                        {' '}
+                                        /
+                                        {' '}
+                                        <span className={styles.textBlue}>
+                                            {review.appeals?.length}
+                                        </span>
+                                    </Link>
+                                    ]
+                                </>
+                            ),
+                            type: 'element',
+                        },
+                    ] as TableColumn<SubmissionInfo>[]
+                })
                 .reduce((accumulator, value) => accumulator.concat(value), []),
         ],
-        [firstSubmission, finalScore, prevent],
+        [firstSubmission, finalScore, prevent, props.type],
     )
 
     const columnsMobile = useMemo<MobileTableColumn<SubmissionInfo>[][]>(
@@ -161,11 +181,11 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
             )}
         >
             {isTablet ? (
-                <TableMobile columns={columnsMobile} data={props.datas} />
+                <TableMobile columns={columnsMobile} data={[firstSubmission]} />
             ) : (
                 <Table
                     columns={columns}
-                    data={props.datas}
+                    data={[firstSubmission]}
                     disableSorting
                     onToggleSort={_.noop}
                     removeDefaultSort

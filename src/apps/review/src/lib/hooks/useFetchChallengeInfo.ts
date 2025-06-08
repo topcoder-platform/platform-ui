@@ -2,6 +2,7 @@
  * Fetch challenge info
  */
 import { useCallback, useState } from 'react'
+import { maxBy } from 'lodash'
 
 import { useOnComponentDidMount } from '~/apps/admin/src/lib/hooks'
 
@@ -22,6 +23,7 @@ import {
 } from '../services'
 
 export interface useFetchChallengeInfoProps {
+    firstSubmissions: SubmissionInfo | undefined
     challengeInfo: ChallengeInfo | undefined
     registrations: RegistrationInfo[]
     submissions: SubmissionInfo[]
@@ -37,6 +39,7 @@ export function useFetchChallengeInfo(id?: string, role?: string): useFetchChall
     const [challengeInfo, setChallengeInfo] = useState<ChallengeInfo>()
     const [screenings, setScreenings] = useState<Screening[]>([])
     const [registrations, setRegistrations] = useState<RegistrationInfo[]>([])
+    const [firstSubmissions, setFirstSubmissions] = useState<SubmissionInfo>()
     const [submissions, setSubmissions] = useState<SubmissionInfo[]>([])
     const [projectResults, setProjectResults] = useState<ProjectResult[]>([])
     const loadChallengeInfo = useCallback(() => {
@@ -65,6 +68,10 @@ export function useFetchChallengeInfo(id?: string, role?: string): useFetchChall
             .then(results => {
                 setSubmissions(results)
             })
+        fetchSubmissions()
+            .then(results => {
+                setFirstSubmissions(maxBy(results, 'review.initialScore'))
+            })
     }, [role])
 
     const loadProjectResults = useCallback(() => {
@@ -84,13 +91,14 @@ export function useFetchChallengeInfo(id?: string, role?: string): useFetchChall
     useOnComponentDidMount(() => {
         loadChallengeInfo()
         loadRegistrations()
-        loadSubmissions()
         loadProjectResults()
         loadScreenings()
+        loadSubmissions()
     })
 
     return {
         challengeInfo,
+        firstSubmissions,
         projectResults,
         registrations,
         screenings,

@@ -18,19 +18,15 @@ import {
     PageWrapper,
     Tabs,
 } from '../../../lib'
+import { fetchTabs } from '../../../lib/services'
+import { SelectOption } from '../../../lib/models'
+import { TAB } from '../../../config/index.config'
 
 import styles from './ChallengeDetailsPage.module.scss'
 
 interface Props {
     className?: string
 }
-
-const tabItems = [
-    'Registration',
-    'Submission / Screening',
-    'Review / Appeals',
-    'Winners',
-]
 
 export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
     const [searchParams, setSearchParams] = useSearchParams()
@@ -42,11 +38,13 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         submissions,
         projectResults,
         screenings,
+        firstSubmissions,
     }: useFetchChallengeInfoProps = useFetchChallengeInfo(
         params.challengeId,
         role,
     )
-    const [selectedTab, setSelectedTab] = useState(0)
+    const [tabItems, setTabItems] = useState<SelectOption[]>([])
+    const [selectedTab, setSelectedTab] = useState<string>('')
     const reviewers = useMemo(
         () => projectResults[0]?.reviews ?? [],
         [projectResults],
@@ -63,18 +61,33 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         [challengeInfo],
     )
 
-    const switchTab = useCallback((tabId: number) => {
-        setSelectedTab(tabId)
-        setSearchParams({ tab: kebabCase(tabItems[tabId]) })
+    const switchTab = useCallback((tab: string) => {
+        setSelectedTab(tab)
+        setSearchParams({ tab: kebabCase(tab) })
     }, [setSearchParams])
 
     useEffect(() => {
         const tab = searchParams.get('tab')
-        if (tab) {
-            const tabId = tabItems.findIndex(item => kebabCase(item) === tab)
-            setSelectedTab(tabId)
+        if (tabItems.length) {
+            if (tab) {
+                const tabId = tabItems.findIndex(item => kebabCase(item.value) === tab)
+                if (tabId > -1) {
+                    setSelectedTab(tabItems[tabId].value)
+                    sessionStorage.setItem(TAB, tabItems[tabId].value)
+                }
+            } else {
+                setSelectedTab(tabItems[0].value)
+                sessionStorage.setItem(TAB, tabItems[0].value)
+            }
         }
-    }, [searchParams])
+    }, [searchParams, tabItems])
+
+    useEffect(() => {
+        if (challengeInfo?.type) {
+            fetchTabs(challengeInfo?.type, challengeInfo.reviewLength)
+                .then(d => setTabItems(d))
+        }
+    }, [challengeInfo?.type, challengeInfo?.reviewLength])
 
     const prevent = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
         e.preventDefault()
@@ -100,10 +113,10 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                 <div className={styles.blockTabsContainer}>
                     <Tabs
                         items={tabItems}
-                        selectedIndex={selectedTab}
+                        selected={selectedTab}
                         onChange={switchTab}
                         rightContent={
-                            selectedTab === 3 ? (
+                            selectedTab === 'Winners' ? (
                                 <div className={styles.blockReviewers}>
                                     {reviewers.map(item => (
                                         <div
@@ -129,11 +142,13 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                 </div>
 
                 <ChallengeDetailsContent
+                    type={challengeInfo?.type}
                     selectedTab={selectedTab}
                     registrations={registrations}
                     submissions={submissions}
                     projectResults={projectResults}
                     screening={screenings}
+                    firstSubmissions={firstSubmissions}
                 />
             </div>
         </PageWrapper>

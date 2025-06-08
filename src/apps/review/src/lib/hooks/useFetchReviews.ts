@@ -11,6 +11,7 @@ export interface useFetchReviewsProps {
     scorecardInfo: ScorecardInfo | undefined
     reviewInfo: ReviewInfo | undefined
     appeals: AppealInfo[]
+    setReviewInfo: (reviewInfo: ReviewInfo) => void
 }
 
 /**
@@ -51,5 +52,6 @@ export function useFetchReviews(isEdit: boolean): useFetchReviewsProps {
         appeals,
         reviewInfo,
         scorecardInfo,
+        setReviewInfo,
     }
 }

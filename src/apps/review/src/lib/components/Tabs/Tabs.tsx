@@ -6,13 +6,15 @@ import classNames from 'classnames'
 
 import { useClickOutside } from '~/libs/shared/lib/hooks'
 
+import { SelectOption } from '../../models'
+
 import styles from './Tabs.module.scss'
 
 interface Props {
     className?: string
-    items: string[]
-    selectedIndex: number
-    onChange?: (selectedIndex: number) => void
+    items: SelectOption[]
+    selected: string
+    onChange?: (selected: string) => void
     rightContent?: ReactNode
 }
 
@@ -35,22 +37,22 @@ export const Tabs: FC<Props> = (props: Props) => {
             ref={triggerRef}
         >
             <span className={styles.selectedItem} onClick={trigger}>
-                {props.items[props.selectedIndex]}
+                {props.selected}
             </span>
             <div className={styles.blockLeft}>
-                {props.items.map((item, index) => (
+                {props.items.map(item => (
                     <button
                         type='button'
                         onClick={function onClick() {
                             setIsOpen(false)
-                            props.onChange?.(index)
+                            props.onChange?.(item.value)
                         }}
-                        key={item}
+                        key={item.label}
                         className={classNames(styles.blockItem, {
-                            [styles.selected]: index === props.selectedIndex,
+                            [styles.selected]: item.value === props.selected,
                         })}
                     >
-                        {item}
+                        {item.label}
                     </button>
                 ))}
             </div>

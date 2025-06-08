@@ -15,21 +15,25 @@ import { TableSubmissionScreening } from '../TableSubmissionScreening'
 import { TableReviewAppeals } from '../TableReviewAppeals'
 import { TableWinners } from '../TableWinners'
 import { useRole } from '../../hooks'
-import { MOCKHANDLE, REVIEWER } from '../../../config/index.config'
+import { APPROVAL, MOCKHANDLE, REVIEWER, SUBMITTER } from '../../../config/index.config'
 import { TableReviewAppealsForSubmitter } from '../TableReviewAppealsForSubmitter'
 
 interface Props {
-    selectedTab: number
+    selectedTab: string
+    type?: string
     registrations: RegistrationInfo[]
     submissions: SubmissionInfo[]
     projectResults: ProjectResult[]
     screening: Screening[]
+    firstSubmissions: SubmissionInfo | undefined
 }
 
 export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
     const selectedTab = props.selectedTab
+    const type = props.type
     const registrations = props.registrations
     const submissions = props.submissions
+    const firstSubmissions = props.firstSubmissions
     const projectResults = props.projectResults
     const { role }: { role: string } = useRole()
     const screening
@@ -48,18 +52,26 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
 
     return (
         <>
-            {selectedTab === 0 ? (
+            {selectedTab === 'Registration' ? (
                 <TableRegistration datas={registrations} />
-            ) : selectedTab === 1 ? (
+            ) : selectedTab === 'Submission / Screening' ? (
                 <TableSubmissionScreening datas={screening} />
-            ) : selectedTab === 2 ? (
-                role === REVIEWER ? (
-                    <TableReviewAppeals datas={submissions} />
-                ) : (
-                    <TableReviewAppealsForSubmitter datas={submissions} />
-                )
-            ) : (
+            ) : selectedTab === 'Winners' ? (
                 <TableWinners datas={projectResults} />
+            ) : (role !== SUBMITTER || selectedTab === APPROVAL) ? (
+                <TableReviewAppeals
+                    datas={submissions}
+                    tab={selectedTab}
+                    type={type}
+                    firstSubmissions={firstSubmissions}
+                />
+            ) : (
+                <TableReviewAppealsForSubmitter
+                    datas={submissions}
+                    tab={selectedTab}
+                    type={type}
+                    firstSubmissions={firstSubmissions}
+                />
             )}
         </>
     )

@@ -4,13 +4,21 @@
 
 import * as Yup from 'yup'
 
-import { FormAppealResponse, FormReviews } from '../models'
+import { FormAppealResponse, FormManagerComment, FormReviews } from '../models'
 
 /**
  * Validation schema for form appeal response
  */
 export const formAppealResponseSchema: Yup.ObjectSchema<FormAppealResponse>
     = Yup.object({
+        response: Yup.string()
+            .required('Response is mandatory'),
+    })
+
+export const formManagerCommentSchema: Yup.ObjectSchema<FormManagerComment>
+    = Yup.object({
+        finalScore: Yup.string()
+            .required('Answer is mandatory'),
         response: Yup.string()
             .required('Response is mandatory'),
     })
