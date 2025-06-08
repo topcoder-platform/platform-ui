@@ -14,6 +14,7 @@ import _ from 'lodash'
 import classNames from 'classnames'
 import moment from 'moment'
 
+import { EnvironmentConfig } from '~/config'
 import {
     Button,
     InputDatePicker,
@@ -133,7 +134,7 @@ export const BillingAccountNewPage: FC<Props> = (props: Props) => {
                 name: billingAccount.name,
                 paymentTerms: billingAccount.paymentTerms
                     ? parseInt(billingAccount.paymentTerms, 10) ?? 0
-                    : undefined,
+                    : EnvironmentConfig.ADMIN.DEFAULT_PAYMENT_TERMS,
                 poNumber: billingAccount.poNumber,
                 salesTax: billingAccount.salesTax,
                 startDate: billingAccount.startDate,
