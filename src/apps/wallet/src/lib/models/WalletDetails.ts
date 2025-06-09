@@ -12,6 +12,7 @@ export interface WalletDetails {
     account: AccountDetails
     withdrawalMethod: {
         isSetupComplete: boolean
+        type: 'paypal' | 'bank'
     }
     // TOOD: remove
     taxForm: {
