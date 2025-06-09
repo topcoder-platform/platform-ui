@@ -59,12 +59,26 @@ const HomeTab: FC<HomeTabProps> = props => {
                     />
 
                     <PayoutGuard profile={props.profile}>
-                        {walletDetails.withdrawalMethod.isSetupComplete
-                            && walletDetails.taxForm.isSetupComplete && (
+                        {walletDetails.withdrawalMethod.isSetupComplete && (
                             <InfoRow
-                                title='Est. Payment Fees and Tax Withholding %'
-                                // eslint-disable-next-line max-len
-                                value={`Fee: ${nullToZero(walletDetails.estimatedFees)} USD / Tax Withholding: ${nullToZero(walletDetails.taxWithholdingPercentage)}%`}
+                                title='Est. Payment Fees'
+                                value={`$${nullToZero(walletDetails.estimatedFees)} USD`}
+                                action={
+                                    <LinkButton
+                                        label='ADJUST YOUR PAYOUT SETTINGS'
+                                        iconToRight
+                                        icon={IconOutline.ArrowRightIcon}
+                                        size='md'
+                                        link
+                                        to='#payout'
+                                    />
+                                }
+                            />
+                        )}
+                        {walletDetails.taxForm.isSetupComplete && (
+                            <InfoRow
+                                title='Est. Tax Withholding %'
+                                value={`${nullToZero(walletDetails.taxWithholdingPercentage)}%`}
                                 action={
                                     <LinkButton
                                         label='ADJUST YOUR PAYOUT SETTINGS'
