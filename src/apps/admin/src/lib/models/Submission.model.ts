@@ -53,7 +53,12 @@ export interface Submission {
 export function recalculateSubmissionRank(
     memberSubmissions: MemberSubmission[],
 ): MemberSubmission[] {
-    _.each(memberSubmissions, memberSubmission => {
+    const validMemberSubmissions: MemberSubmission[] = _.filter(
+        memberSubmissions,
+        memberSubmission => !!memberSubmission.submissions
+            && !!memberSubmission.submissions.length,
+    )
+    _.each(validMemberSubmissions, memberSubmission => {
         memberSubmission.submissions = memberSubmission.submissions.map(adjustSubmissionResponse)
     })
 
@@ -61,7 +66,7 @@ export function recalculateSubmissionRank(
         maxFinalScore: number;
         submissions: MemberSubmission[];
     }
-        = processRanks(memberSubmissions)
+        = processRanks(validMemberSubmissions)
     finalSubmissions.sort((a, b) => {
         if (maxFinalScore === 0) {
             return (a.provisionalRank ?? 0) - (b.provisionalRank ?? 0)

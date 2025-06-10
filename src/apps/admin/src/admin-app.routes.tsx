@@ -29,17 +29,9 @@ const ManageUserPage: LazyLoadedComponent = lazyLoad(
     () => import('./challenge-management/ManageUserPage'),
     'ManageUserPage',
 )
-const ManageResourcePage: LazyLoadedComponent = lazyLoad(
-    () => import('./challenge-management/ManageResourcePage'),
-    'ManageResourcePage',
-)
 const ManageSubmissionPage: LazyLoadedComponent = lazyLoad(
     () => import('./challenge-management/ManageSubmissionPage'),
     'ManageSubmissionPage',
-)
-const AddResourcePage: LazyLoadedComponent = lazyLoad(
-    () => import('./challenge-management/AddResourcePage'),
-    'AddResourcePage',
 )
 const UserManagementPage: LazyLoadedComponent = lazyLoad(
     () => import('./user-management/UserManagementPage'),
@@ -138,16 +130,6 @@ export const adminRoutes: ReadonlyArray<PlatformRoute> = [
                         element: <ManageUserPage />,
                         id: 'manage-user',
                         route: ':challengeId/manage-user',
-                    },
-                    {
-                        element: <ManageResourcePage />,
-                        id: 'manage-resource',
-                        route: ':challengeId/manage-resource',
-                    },
-                    {
-                        element: <AddResourcePage />,
-                        id: 'add-resource',
-                        route: ':challengeId/manage-resource/add',
                     },
                     {
                         element: <ManageSubmissionPage />,

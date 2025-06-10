@@ -202,14 +202,6 @@ const Actions: FC<{
                     >
                         Users
                     </li>
-                    <li
-                        onClick={function onClick() {
-                            navigate(`${props.challenge.id}/manage-resource`)
-                            setOpenDropdown(false)
-                        }}
-                    >
-                        Resources
-                    </li>
                     {isMM && (
                         <li
                             onClick={function onClick() {
