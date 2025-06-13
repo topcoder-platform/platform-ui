@@ -104,6 +104,7 @@ export const createGroup = async (data: FormAddGroup): Promise<UserGroup> => {
         result.updatedBy = '00000000'
         result.updatedByHandle = '00000000 (not found)'
     }
+
     return adjustUserGroupResponse(result)
 }
 
