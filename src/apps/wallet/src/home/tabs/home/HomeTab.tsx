@@ -135,6 +135,22 @@ const HomeTab: FC<HomeTabProps> = props => {
                                 }
                             />
                         )}
+                        {!walletDetails?.identityVerification.isSetupComplete && (
+                            <InfoRow
+                                title='ID Verification'
+                                value={<Chip text='Setup Required' />}
+                                action={
+                                    <LinkButton
+                                        label='COMPLETE VERIFICATION'
+                                        iconToRight
+                                        icon={IconOutline.ArrowRightIcon}
+                                        size='md'
+                                        link
+                                        to='#payout'
+                                    />
+                                }
+                            />
+                        )}
                     </PayoutGuard>
                 </div>
             )}
