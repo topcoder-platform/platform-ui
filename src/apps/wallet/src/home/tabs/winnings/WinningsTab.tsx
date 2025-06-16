@@ -209,7 +209,6 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                         Processing Payment: $
                         {totalAmountStr}
                         {' '}
-                        USD
                     </div>
                     {walletDetails && (
                         <>
@@ -245,7 +244,10 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                                 <hr />
                                 <div className={`${styles.summary} body-main-bold`}>
                                     <span>Net amount after fees:</span>
-                                    <span>{netAmount.toFixed(2)}</span>
+                                    <span>
+                                        $
+                                        {netAmount.toFixed(2)}
+                                    </span>
                                 </div>
                                 {walletDetails?.primaryCurrency && walletDetails.primaryCurrency !== 'USD' && (
                                     <div className={`${styles.alert} body-main-medium`}>
@@ -253,7 +255,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                                         {' '}
                                         {walletDetails.primaryCurrency}
                                         {' '}
-                                        with 2% conversion fee applied.
+                                        with a 2% conversion fee applied.
                                     </div>
                                 )}
                             </div>
