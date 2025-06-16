@@ -7,6 +7,7 @@ import {
     useMemo,
     useState,
 } from 'react'
+import _ from 'lodash'
 
 import {
     ChallengeStatus,
@@ -75,7 +76,7 @@ export const ChallengeManagementContextProvider: FC<PropsWithChildren> = props =
         setResourceRolesLoading(true)
         getResourceRoles()
             .then(roles => {
-                setResourceRoles(roles)
+                setResourceRoles(_.orderBy(roles, ['name']))
                 setResourceRolesLoading(false)
             })
             .catch(e => {

@@ -1,6 +1,7 @@
 /**
  * Groups service
  */
+import _ from 'lodash'
 import qs from 'qs'
 
 import { EnvironmentConfig } from '~/config'
@@ -80,7 +81,7 @@ export const fetchGroups = async (params: {
     const result = await xhrGetAsync<UserGroup[]>(
         `${EnvironmentConfig.API.V5}/groups?${qs.stringify(params)}`,
     )
-    return result.map(adjustUserGroupResponse)
+    return _.orderBy(result.map(adjustUserGroupResponse), ['createdAt'], ['desc'])
 }
 
 /**
@@ -94,6 +95,16 @@ export const createGroup = async (data: FormAddGroup): Promise<UserGroup> => {
         `${EnvironmentConfig.API.V5}/groups`,
         data,
     )
+
+    if (!result.updatedAt) {
+        result.updatedAt = result.createdAt
+    }
+
+    if (!result.updatedBy) {
+        result.updatedBy = '00000000'
+        result.updatedByHandle = '00000000 (not found)'
+    }
+
     return adjustUserGroupResponse(result)
 }
 
