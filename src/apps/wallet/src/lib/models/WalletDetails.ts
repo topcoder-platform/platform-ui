@@ -14,8 +14,10 @@ export interface WalletDetails {
         isSetupComplete: boolean
         type: 'paypal' | 'bank'
     }
-    // TOOD: remove
     taxForm: {
+        isSetupComplete: boolean
+    }
+    identityVerification: {
         isSetupComplete: boolean
     }
     primaryCurrency?: string | null;
