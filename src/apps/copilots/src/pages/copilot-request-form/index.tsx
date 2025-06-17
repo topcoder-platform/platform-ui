@@ -1,14 +1,14 @@
 import { FC, useContext, useMemo, useState } from 'react'
-import { bind, isEmpty } from 'lodash'
+import { bind, debounce, isEmpty } from 'lodash'
 import { toast } from 'react-toastify'
 import classNames from 'classnames'
 
 import { profileContext, ProfileContextData } from '~/libs/core'
 import { Button, IconSolid, InputDatePicker, InputMultiselectOption,
-    InputRadio, InputSelect, InputSelectOption, InputSelectReact, InputText, InputTextarea } from '~/libs/ui'
+    InputRadio, InputSelect, InputSelectReact, InputText, InputTextarea } from '~/libs/ui'
 import { InputSkillSelector } from '~/libs/shared'
 
-import { ProjectsResponse, useProjects } from '../../services/projects'
+import { getProjects } from '../../services/projects'
 import { ProjectTypes, ProjectTypeValues } from '../../constants'
 import { saveCopilotRequest } from '../../services/copilot-requests'
 
@@ -20,19 +20,8 @@ const CopilotRequestForm: FC<{}> = () => {
     const [formValues, setFormValues] = useState<any>({})
     const [isFormChanged, setIsFormChanged] = useState(false)
     const [formErrors, setFormErrors] = useState<any>({})
-    const [searchTerm, setSearchTerm] = useState<string>('')
-    const { data: projectsData }: ProjectsResponse = useProjects(searchTerm)
     const [existingCopilot, setExistingCopilot] = useState<string>('')
     const [paymentType, setPaymentType] = useState<string>('')
-
-    const projects = useMemo(
-        () => (
-            projectsData
-                ? projectsData.map(project => ({ label: project.name, value: project.id }))
-                : []
-        ),
-        [projectsData],
-    )
 
     const projectTypes = ProjectTypes ? ProjectTypes.map(project => ({
         label: project,
@@ -63,18 +52,12 @@ const CopilotRequestForm: FC<{}> = () => {
         setPaymentType(t)
     }
 
-    function filterProjects(option: InputSelectOption, value: string): boolean {
-        setSearchTerm(value)
-        return (
-            option.label
-                ?.toString()
-                .toLowerCase()
-                .includes(value.toLowerCase()) ?? false
-        )
-    }
-
-    function handleProjectSearch(inputValue: string): void {
-        setSearchTerm(inputValue)
+    async function handleProjectSearch(inputValue: string): Promise<Array<{
+        label: string;
+        value: string;
+    }>> {
+        const response = await getProjects(inputValue)
+        return response.map(project => ({ label: project.name, value: project.id }))
     }
 
     function handleProjectSelect(option: React.ChangeEvent<HTMLInputElement>): void {
@@ -268,6 +251,11 @@ const CopilotRequestForm: FC<{}> = () => {
         setFormErrors(updatedFormErrors)
     }
 
+    const debouncedProjectSearch = useMemo(() => debounce((inputValue: string, callback: (options: any[]) => void) => {
+        handleProjectSearch(inputValue)
+            .then(callback)
+    }, 300), [])
+
     return (
         <div className={classNames('d-flex flex-column justify-content-center align-items-center', styles.container)}>
             <div className={styles.form}>
@@ -290,15 +278,14 @@ const CopilotRequestForm: FC<{}> = () => {
                     <p className={styles.formRow}>Select the project you want the copilot for</p>
                     <InputSelectReact
                         tabIndex={0}
-                        options={projects}
                         value={formValues.projectId || ''}
                         onChange={handleProjectSelect}
-                        onInputChange={handleProjectSearch}
+                        loadOptions={debouncedProjectSearch}
+                        async
                         name='project'
                         label='Project'
                         placeholder='Start typing the name of the project'
                         dirty
-                        filterOption={filterProjects}
                         error={formErrors.projectId}
                     />
                     <p className={styles.formRow}>

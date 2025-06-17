@@ -32,6 +32,7 @@ export const childRoutes = [
         authRequired: true,
         element: <CopilotsRequestForm />,
         id: 'CopilotRequestForm',
+        rolesRequired: [UserRole.administrator, UserRole.projectManager] as UserRole[],
         route: '/requests/new',
     },
     {
