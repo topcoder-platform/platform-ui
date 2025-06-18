@@ -125,6 +125,7 @@ const CopilotOpportunityDetails: FC<{}> = () => {
     }
 
     const application = copilotApplications && copilotApplications[0]
+    const isAlreadyMemberOfTheProject = profile && opportunity?.members?.includes(profile.userId)
 
     return (
         <ContentLayout
@@ -133,7 +134,8 @@ const CopilotOpportunityDetails: FC<{}> = () => {
                 isCopilot
                 && copilotApplications
                 && copilotApplications.length === 0
-                && opportunity?.status === 'active' ? applyCopilotOpportunityButton : undefined
+                && opportunity?.status === 'active'
+                && !isAlreadyMemberOfTheProject ? applyCopilotOpportunityButton : undefined
             }
             infoComponent={(isCopilot && !(copilotApplications
                 && copilotApplications.length === 0
