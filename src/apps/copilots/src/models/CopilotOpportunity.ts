@@ -22,4 +22,5 @@ export interface CopilotOpportunity {
     startDate: Date,
     tzRestrictions: 'yes' | 'no',
     createdAt: Date,
+    members: Array<number>,
 }
