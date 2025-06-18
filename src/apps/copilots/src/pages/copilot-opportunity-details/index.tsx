@@ -125,7 +125,7 @@ const CopilotOpportunityDetails: FC<{}> = () => {
     }
 
     const application = copilotApplications && copilotApplications[0]
-    const isAlreadyMemberOfTheProject = profile && opportunity?.members?.includes(profile.userId);
+    const isAlreadyMemberOfTheProject = profile && opportunity?.members?.includes(profile.userId)
 
     return (
         <ContentLayout
