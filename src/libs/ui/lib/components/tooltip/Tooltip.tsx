@@ -25,6 +25,7 @@ interface TooltipProps {
     children?: ReactNode
     triggerOn?: 'click' | 'hover'
     strategy?: 'absolute' | 'fixed'
+    disableTooltip?: boolean
 }
 
 function wrapComponents(el: ReactNode, disableWrap?: boolean): ReactNode {
@@ -56,16 +57,18 @@ const Tooltip: FC<TooltipProps> = (props: TooltipProps) => {
     return (
         <>
             {renderTrigger()}
-            <ReactTooltip
-                className={classNames(styles.tooltip, props.className)}
-                id={tooltipId.current as string}
-                aria-haspopup='true'
-                openOnClick={triggerOnClick}
-                clickable={props.clickable}
-                positionStrategy={props.strategy ?? 'absolute'}
-            >
-                {props.content}
-            </ReactTooltip>
+            {!props.disableTooltip && (
+                <ReactTooltip
+                    className={classNames(styles.tooltip, props.className)}
+                    id={tooltipId.current as string}
+                    aria-haspopup='true'
+                    openOnClick={triggerOnClick}
+                    clickable={props.clickable}
+                    positionStrategy={props.strategy ?? 'absolute'}
+                >
+                    {props.content}
+                </ReactTooltip>
+            )}
         </>
     )
 }

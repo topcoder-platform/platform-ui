@@ -23,4 +23,5 @@ export interface WalletDetails {
     primaryCurrency?: string | null;
     estimatedFees?: string | null;
     taxWithholdingPercentage?: string | null;
+    minWithdrawAmount: number;
 }
