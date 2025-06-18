@@ -414,6 +414,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                             <PaymentsTable
                                 currentPage={pagination.currentPage}
                                 numPages={pagination.totalPages}
+                                minWithdrawAmount={walletDetails?.minWithdrawAmount ?? 0}
                                 payments={winnings}
                                 selectedPayments={selectedPayments}
                                 onSelectedPaymentsChange={function onSelectedPaymentsChanged(selectedWinnings: { [paymentId: string]: Winning }) {
