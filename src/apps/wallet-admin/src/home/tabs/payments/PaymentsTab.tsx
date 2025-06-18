@@ -78,8 +78,8 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
         totalPages: 0,
     })
     const [editState, setEditState] = React.useState<{
-        description?: string;
         grossAmount?: number;
+        description?: string;
         releaseDate?: Date;
         paymentStatus?: string;
         auditNote?: string;
@@ -206,8 +206,8 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
         const currentEditState = editStateRef.current
         // Send to server only the fields that have changed
         const updateObj = {
-            description: currentEditState.description !== undefined ? currentEditState.description : undefined,
             auditNote: currentEditState.auditNote !== undefined ? currentEditState.auditNote : undefined,
+            description: currentEditState.description !== undefined ? currentEditState.description : undefined,
             grossAmount: currentEditState.grossAmount !== undefined ? currentEditState.grossAmount : undefined,
             paymentStatus: currentEditState.paymentStatus !== undefined ? currentEditState.paymentStatus : undefined,
             releaseDate: currentEditState.releaseDate !== undefined ? currentEditState.releaseDate : undefined,
@@ -225,8 +225,8 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
         }
 
         const updates: {
-            description?: string
             auditNote?: string
+            description?: string
             paymentStatus?: 'ON_HOLD_ADMIN' | 'OWED' | 'CANCELLED'
             releaseDate?: string
             paymentAmount?: number
