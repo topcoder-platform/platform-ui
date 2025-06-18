@@ -78,6 +78,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
         totalPages: 0,
     })
     const [editState, setEditState] = React.useState<{
+        description?: string;
         grossAmount?: number;
         releaseDate?: Date;
         paymentStatus?: string;
@@ -93,6 +94,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
 
     const handleValueUpdated = useCallback((updates: {
         auditNote?: string,
+        description?: string,
         grossAmount?: number,
         paymentStatus?: string,
         releaseDate?: Date,
@@ -204,6 +206,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
         const currentEditState = editStateRef.current
         // Send to server only the fields that have changed
         const updateObj = {
+            description: currentEditState.description !== undefined ? currentEditState.description : undefined,
             auditNote: currentEditState.auditNote !== undefined ? currentEditState.auditNote : undefined,
             grossAmount: currentEditState.grossAmount !== undefined ? currentEditState.grossAmount : undefined,
             paymentStatus: currentEditState.paymentStatus !== undefined ? currentEditState.paymentStatus : undefined,
@@ -222,6 +225,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
         }
 
         const updates: {
+            description?: string
             auditNote?: string
             paymentStatus?: 'ON_HOLD_ADMIN' | 'OWED' | 'CANCELLED'
             releaseDate?: string
@@ -232,6 +236,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
             winningsId: paymentId,
         }
 
+        if (updateObj.description) updates.description = updateObj.description
         if (paymentStatus) updates.paymentStatus = paymentStatus
         if (paymentStatus !== 'CANCELLED') {
             if (updateObj.releaseDate !== undefined) updates.releaseDate = updateObj.releaseDate.toISOString()
