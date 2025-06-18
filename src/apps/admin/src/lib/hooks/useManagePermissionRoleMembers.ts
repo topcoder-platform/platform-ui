@@ -85,7 +85,7 @@ const reducer = (
                 .map(roleMember => ({
                     email: roleMember.email,
                     handle: roleMember.handle,
-                    id: roleMember.userId,
+                    id: `${roleMember.userId ?? ''}`,
                 }))
             return {
                 ...previousState,

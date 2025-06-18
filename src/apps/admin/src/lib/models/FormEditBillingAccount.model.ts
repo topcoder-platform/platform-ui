@@ -11,7 +11,7 @@ export interface FormEditBillingAccount {
     poNumber: string
     subscriptionNumber?: number
     description: string
-    paymentTerms: number
+    paymentTerms?: number
     salesTax?: number
     client: {
         id: number

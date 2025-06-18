@@ -5,6 +5,8 @@ import { Sort } from '../../../../../../apps/gamification-admin/src/game-lib/pag
 import { IconOutline } from '../../svgs'
 import { Button } from '../../button'
 
+import styles from './TableSort.module.scss'
+
 interface TableSortProps {
     iconClass: string
     isCurrentlySorted: boolean
@@ -34,7 +36,7 @@ const TableSort: FC<TableSortProps> = (props: TableSortProps) => {
 
     return (
         <Button
-            className={classNames(props.iconClass, 'TableSort')}
+            className={classNames(props.iconClass, 'TableSort', styles.btnSort)}
             icon={icon}
             onClick={handleClick}
             size='sm'

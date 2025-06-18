@@ -45,8 +45,11 @@ export interface GlobalConfig {
     },
     ADMIN: {
         CONNECT_URL: string
+        DEFAULT_PAYMENT_TERMS: number
         DIRECT_URL: string
         WORK_MANAGER_URL: string
         ONLINE_REVIEW_URL: string
+        CHALLENGE_URL: string
+        AV_SCAN_SCORER_REVIEW_TYPE_ID: string
     }
 }

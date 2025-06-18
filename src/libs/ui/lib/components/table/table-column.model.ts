@@ -12,4 +12,5 @@ export interface TableColumn<T> {
     readonly colSpan?: number
     readonly type: TableCellType
     readonly isSortable?: boolean
+    readonly columnId?: string
 }

@@ -158,6 +158,7 @@ export const DialogEditUserGroups: FC<Props> = (props: Props) => {
                                 data={userGroups}
                                 disableSorting
                                 onToggleSort={_.noop}
+                                className={styles.desktopTable}
                             />
                         ) : (
                             <div>No groups</div>

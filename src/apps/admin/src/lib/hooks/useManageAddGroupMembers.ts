@@ -102,12 +102,14 @@ export function useManageAddGroupMembers(
             )
                 .then(() => {
                     if (!hasSubmissionErrors) {
+                        // Change the success message based on the membership type
+                        const entityType = membershipType === 'user' ? 'Member' : 'Group'
                         toast.success(
                             `${
-                                memberIds.length > 1 ? 'Groups' : 'Group'
+                                memberIds.length > 1 ? `${entityType}s` : entityType
                             } added successfully`,
                             {
-                                toastId: 'Add groups',
+                                toastId: `Add ${entityType.toLowerCase()}s`,
                             },
                         )
                         callBack()

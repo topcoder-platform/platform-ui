@@ -1,4 +1,4 @@
-import { ElementType, MouseEvent } from 'react'
+import { CSSProperties, ElementType, MouseEvent } from 'react'
 import classNames from 'classnames'
 
 import { IconOutline } from '~/libs/ui'
@@ -23,6 +23,7 @@ interface TableCellProps<T> {
     readonly showExpandIndicator?: boolean
     readonly isExpanded?: boolean
     readonly colSpan?: number
+    readonly style?: CSSProperties
     allRows?: ReadonlyArray<T>
 }
 
@@ -93,6 +94,7 @@ const TableCell: <T extends { [propertyName: string]: any }>(
                     'TableCell_blockCell',
                 )}
                 onClick={onClick}
+                style={props.style}
             >
                 {props.showExpandIndicator && (
                     <IconOutline.ChevronRightIcon

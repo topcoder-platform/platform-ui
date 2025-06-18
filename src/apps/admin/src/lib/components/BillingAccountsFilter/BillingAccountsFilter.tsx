@@ -27,22 +27,30 @@ interface Props {
     onSubmitForm?: (data: FormBillingAccountsFilter) => void
 }
 
+const defaultValues: FormBillingAccountsFilter = {
+    endDate: undefined,
+    name: '',
+    startDate: undefined,
+    status: '1',
+    user: '',
+}
+
 export const BillingAccountsFilter: FC<Props> = (props: Props) => {
     const maxDate = useMemo(() => moment()
         .add(20, 'y')
         .toDate(), [])
     const {
         register,
+        reset,
         handleSubmit,
         control,
-        formState: { isValid },
+        formState: { isValid, isDirty },
     }: UseFormReturn<FormBillingAccountsFilter> = useForm({
-        defaultValues: {
-            status: '1',
-        },
+        defaultValues,
         mode: 'all',
         resolver: yupResolver(formBillingAccountsFilterSchema),
     })
+
     const onSubmit = useCallback(
         (data: FormBillingAccountsFilter) => {
             props.onSubmitForm?.(data)
@@ -161,6 +169,19 @@ export const BillingAccountsFilter: FC<Props> = (props: Props) => {
                     disabled={!isValid || props.isLoading}
                 >
                     Filter
+                </Button>
+                <Button
+                    secondary
+                    onClick={function onClick() {
+                        reset(defaultValues)
+                        setTimeout(() => {
+                            onSubmit(defaultValues)
+                        })
+                    }}
+                    size='lg'
+                    disabled={!isDirty}
+                >
+                    Reset
                 </Button>
             </div>
         </form>

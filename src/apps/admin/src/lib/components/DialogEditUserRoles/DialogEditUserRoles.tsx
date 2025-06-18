@@ -100,7 +100,7 @@ export const DialogEditUserRoles: FC<Props> = (props: Props) => {
                         variant='danger'
                         label='Remove'
                         onClick={function onClick() {
-                            doRemoveRole(data.id)
+                            doRemoveRole(String(data.id))
                         }}
                         disabled={isRemoving[data.id]}
                     />
@@ -154,6 +154,7 @@ export const DialogEditUserRoles: FC<Props> = (props: Props) => {
                                 data={userRoles}
                                 disableSorting
                                 onToggleSort={_.noop}
+                                className={styles.desktopTable}
                             />
                         ) : (
                             <div>No roles</div>

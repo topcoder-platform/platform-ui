@@ -4,7 +4,6 @@ import _ from 'lodash'
 import {
     FormAddGroup,
     FormAddGroupMembers,
-    FormAddResource,
     FormBillingAccountsFilter,
     FormClientsFilter,
     FormEditBillingAccount,
@@ -36,33 +35,6 @@ export const formUsersFiltersSchema: Yup.ObjectSchema<FormUsersFilters>
             .optional(),
         userId: Yup.string()
             .optional(),
-    })
-
-/**
- * validation schema for form add resource
- */
-export const formAddResourceSchema: Yup.ObjectSchema<FormAddResource>
-    = Yup.object({
-        handle: Yup.object()
-            .shape({
-                label: Yup.string()
-                    .required('Label is required.'),
-                value: Yup.number()
-                    .required('Value  is required.'),
-            })
-            .default(undefined)
-            .required('Handle is required.'),
-        resourceRole: Yup.object()
-            .shape({
-                label: Yup.string()
-                    .required('Label is required.'),
-                value: Yup.string()
-                    .required('Value  is required.'),
-            })
-            .default(undefined)
-            .required('Role is required.'),
-        userId: Yup.string()
-            .required('User id is required.'),
     })
 
 /**
@@ -134,7 +106,7 @@ export function isValidNumber(value: number | undefined): boolean {
 /**
  * validation schema for form new billing account
  */
-export const formEditBillingAccountSchema: Yup.ObjectSchema<FormEditBillingAccount>
+export const formAddBillingAccountSchema: Yup.ObjectSchema<FormEditBillingAccount>
     = Yup.object({
         budgetAmount: Yup.number()
             .transform(value => (Number.isNaN(value) ? undefined : value))
@@ -166,6 +138,59 @@ export const formEditBillingAccountSchema: Yup.ObjectSchema<FormEditBillingAccou
         paymentTerms: Yup.number()
             .typeError('Invalid number.')
             .required('Payment terms is required.')
+            .min(1, 'Payment terms must be greater than or equal 1.'),
+        poNumber: Yup.string()
+            .trim()
+            .required('PO Number is required.'),
+        salesTax: Yup.number()
+            .required('Sales tax is required.'),
+        startDate: Yup.date()
+            .required('Start date is required.'),
+        status: Yup.string()
+            .required('Status is required.'),
+        subscriptionNumber: Yup.number()
+            .transform(value => (Number.isNaN(value) ? undefined : value))
+            .optional()
+            .typeError('Invalid number.')
+            .min(1, 'Subscription number must be greater than or equal 1.'),
+    })
+
+/**
+ * validation schema for form new billing account
+ */
+export const formEditBillingAccountSchema: Yup.ObjectSchema<FormEditBillingAccount>
+    = Yup.object({
+        budgetAmount: Yup.number()
+            .transform(value => (Number.isNaN(value) ? undefined : value))
+            .optional()
+            .typeError('Invalid number.')
+            .min(1, 'Budget amount must be greater than or equal 1.'),
+        client: Yup.object()
+            .shape({
+                id: Yup.number()
+                    .typeError('Invalid number.')
+                    .required('Id is required.'),
+                name: Yup.string()
+                    .required('Name is required.'),
+            })
+            .default(undefined)
+            .required('Client is required.'),
+        companyId: Yup.number()
+            .typeError('Invalid number.')
+            .required('Customer number is required.')
+            .min(1, 'Customer number must be greater than or equal 1.'),
+        description: Yup.string()
+            .trim()
+            .required('Description is required.'),
+        endDate: Yup.date()
+            .required('End date is required.'),
+        name: Yup.string()
+            .trim()
+            .required('Name is required.'),
+        paymentTerms: Yup.number()
+            .transform(value => (Number.isNaN(value) ? undefined : value))
+            .optional()
+            .typeError('Invalid number.')
             .min(1, 'Payment terms must be greater than or equal 1.'),
         poNumber: Yup.string()
             .trim()

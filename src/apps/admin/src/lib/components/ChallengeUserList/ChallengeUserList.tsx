@@ -421,6 +421,7 @@ const ChallengeUserList: FC<ChallengeUserListProps> = props => {
                         columns={columns}
                         data={props.users}
                         disableSorting
+                        className={styles.desktopTable}
                     />
                 )}
                 {screenWidth <= 984 && (

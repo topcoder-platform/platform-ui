@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom'
 import classNames from 'classnames'
 
 import { Sort } from '~/apps/gamification-admin/src/game-lib'
-import { LinkButton, Table, TableColumn } from '~/libs/ui'
+import { colWidthType, LinkButton, Table, TableColumn } from '~/libs/ui'
 import { useWindowSize, WindowSize } from '~/libs/shared'
 
 import { BillingAccount, MobileTableColumn } from '../../models'
@@ -23,12 +23,15 @@ interface Props {
     setPage: Dispatch<SetStateAction<number>>
     sort: Sort | undefined,
     setSort: Dispatch<SetStateAction<Sort | undefined>>
+    colWidth: colWidthType | undefined,
+    setColWidth: Dispatch<SetStateAction<colWidthType>> | undefined
 }
 
 export const BillingAccountsTable: FC<Props> = (props: Props) => {
     const columns = useMemo<TableColumn<BillingAccount>[]>(
         () => [
             {
+                columnId: 'id',
                 label: 'Account ID',
                 renderer: (data: BillingAccount) => (
                     <div>
@@ -39,26 +42,31 @@ export const BillingAccountsTable: FC<Props> = (props: Props) => {
             },
             {
                 className: styles.tableCell,
+                columnId: 'name',
                 label: 'Name',
                 propertyName: 'name',
                 type: 'text',
             },
             {
+                columnId: 'status',
                 label: 'Status',
                 propertyName: 'status',
                 type: 'text',
             },
             {
+                columnId: 'startDateString',
                 label: 'Start Date',
                 propertyName: 'startDateString',
                 type: 'text',
             },
             {
+                columnId: 'endDateString',
                 label: 'End Date',
                 propertyName: 'endDateString',
                 type: 'text',
             },
             {
+                columnId: 'action',
                 label: '',
                 renderer: (data: BillingAccount) => (
                     <span>
@@ -167,6 +175,9 @@ export const BillingAccountsTable: FC<Props> = (props: Props) => {
                     onToggleSort={props.setSort}
                     removeDefaultSort
                     forceSort={props.sort}
+                    colWidth={props.colWidth}
+                    setColWidth={props.setColWidth}
+                    className={styles.desktopTable}
                 />
             )}
             <Pagination

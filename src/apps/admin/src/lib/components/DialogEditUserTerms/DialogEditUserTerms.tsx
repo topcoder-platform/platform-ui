@@ -223,6 +223,7 @@ export const DialogEditUserTerms: FC<Props> = (props: Props) => {
                                             data={addedInfo.datas}
                                             disableSorting
                                             onToggleSort={_.noop}
+                                            className={styles.desktopTable}
                                         />
                                         <Pagination
                                             page={addedInfo.page}
@@ -276,6 +277,7 @@ export const DialogEditUserTerms: FC<Props> = (props: Props) => {
                                             data={notAddedInfo.datas}
                                             disableSorting
                                             onToggleSort={_.noop}
+                                            className={styles.desktopTable}
                                         />
                                         <Pagination
                                             page={notAddedInfo.page}

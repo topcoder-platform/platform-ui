@@ -92,6 +92,7 @@ export const DialogUserStatusHistory: FC<Props> = (props: Props) => {
                                 data={userAchievements}
                                 disableSorting
                                 onToggleSort={_.noop}
+                                className={styles.desktopTable}
                             />
                         )}
                     </>

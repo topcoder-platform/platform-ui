@@ -1,12 +1,12 @@
 /**
  * Role members table.
  */
-import { FC, useMemo } from 'react'
+import { FC, useMemo, useState } from 'react'
 import _ from 'lodash'
 import classNames from 'classnames'
 
 import { useWindowSize, WindowSize } from '~/libs/shared'
-import { Button, InputCheckbox, Table, TableColumn } from '~/libs/ui'
+import { Button, colWidthType, InputCheckbox, Table, TableColumn } from '~/libs/ui'
 
 import { useTableFilterLocal, useTableFilterLocalProps } from '../../hooks'
 import { RoleMemberInfo } from '../../models'
@@ -27,6 +27,7 @@ interface Props {
 }
 
 export const RoleMembersTable: FC<Props> = (props: Props) => {
+    const [colWidth, setColWidth] = useState<colWidthType>({})
     const {
         page,
         setPage,
@@ -52,6 +53,7 @@ export const RoleMembersTable: FC<Props> = (props: Props) => {
         () => [
             {
                 className: styles.blockCellCheckBox,
+                columnId: 'checkbox',
                 label: () => ( // eslint-disable-line react/no-unstable-nested-components
                     <div className={styles.headerCheckboxWrapper}>
                         <InputCheckbox
@@ -77,11 +79,13 @@ export const RoleMembersTable: FC<Props> = (props: Props) => {
                 type: 'element',
             },
             {
+                columnId: 'id',
                 label: 'User ID',
                 propertyName: 'id',
                 type: 'text',
             },
             {
+                columnId: 'handle',
                 label: 'Handle',
                 propertyName: 'handle',
                 type: 'text',
@@ -93,6 +97,7 @@ export const RoleMembersTable: FC<Props> = (props: Props) => {
             },
             {
                 className: styles.blockColumnAction,
+                columnId: 'action',
                 label: '',
                 renderer: (data: RoleMemberInfo) => (
                     <Button
@@ -183,6 +188,9 @@ export const RoleMembersTable: FC<Props> = (props: Props) => {
                     onToggleSort={setSort}
                     forceSort={sort}
                     removeDefaultSort
+                    className={styles.desktopTable}
+                    colWidth={colWidth}
+                    setColWidth={setColWidth}
                 />
             )}
 
