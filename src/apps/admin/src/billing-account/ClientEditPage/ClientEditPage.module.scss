@@ -1,0 +1,62 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+}
+
+.blockForm {
+    padding: $sp-8;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    position: relative;
+
+    @include ltelg {
+        padding: $sp-4;
+    }
+}
+
+.blockFields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 15px 30px;
+
+    @include ltemd {
+        grid-template-columns: 1fr;
+    }
+}
+
+.blockBottom {
+    display: flex;
+    gap: 15px;
+    justify-content: flex-end;
+}
+
+.loadingSpinnerContainer {
+    position: relative;
+    height: 100px;
+
+    .spinner {
+        background: none;
+    }
+}
+
+.blockActionLoading {
+    position: absolute;
+    width: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    bottom: 0;
+    height: 64px;
+    left: $sp-8;
+
+    .spinner {
+        background: none;
+    }
+
+    @include ltelg {
+        left: $sp-4;
+    }
+}

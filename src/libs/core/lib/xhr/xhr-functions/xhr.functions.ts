@@ -4,6 +4,7 @@ import axios, {
     AxiosInstance,
     AxiosRequestConfig,
     AxiosResponse,
+    Method,
 } from 'axios'
 
 import { tokenGetAsync, TokenModel } from '../../auth'
@@ -32,6 +33,18 @@ export function createInstance(): AxiosInstance {
     interceptError(created)
 
     return created
+}
+
+export async function requestAsync<T, R>(
+    { data, method, url }: { data: T; method: Method; url: string },
+    xhrInstance: AxiosInstance = globalInstance,
+): Promise<R> {
+    const output: AxiosResponse<R> = await xhrInstance.request({
+        data,
+        method,
+        url,
+    })
+    return output.data
 }
 
 export async function deleteAsync<T>(

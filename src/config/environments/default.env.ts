@@ -16,6 +16,7 @@ export const PLATFORMUI_URL: string = `https://platform-ui.${TC_DOMAIN}`
 export const USER_PROFILE_URL: string = `https://profiles.${TC_DOMAIN}`
 
 export const API = {
+    URL: `https://api.${TC_DOMAIN}`,
     V1: `https://api.${TC_DOMAIN}/v1`,
     V2: `https://api.${TC_DOMAIN}/v2`,
     V3: `https://api.${TC_DOMAIN}/v3`,
@@ -73,4 +74,14 @@ export const USERFLOW_SURVEYS = {
     ACCOUNT_SETTINGS: getReactEnv<string>('USERFLOW_SURVEY_ACCOUNT_SETTINGS', '3e704fe0-dff4-4af4-abee-383ed162729e'),
     PROFILES: getReactEnv<string>('USERFLOW_SURVEY_PROFILES', '5cfae36f-0700-41c4-8938-0add4037acb2'),
     TALENTSEARCH: getReactEnv<string>('USERFLOW_SURVEY_TALENTSEARCH', 'd1030c93-dd36-4ae0-b5d0-95004b8e9d32'),
+}
+
+export const ADMIN = {
+    AV_SCAN_SCORER_REVIEW_TYPE_ID: '68c5a381-c8ab-48af-92a7-7a869a4ee6c3',
+    CHALLENGE_URL: 'https://www.topcoder-dev.com/challenges',
+    CONNECT_URL: 'https://connect.topcoder-dev.com',
+    DEFAULT_PAYMENT_TERMS: 1,
+    DIRECT_URL: 'https://www.topcoder-dev.com/direct',
+    ONLINE_REVIEW_URL: 'https://software.topcoder-dev.com/review',
+    WORK_MANAGER_URL: 'https://challenges.topcoder-dev.com',
 }

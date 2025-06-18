@@ -8,6 +8,7 @@ export interface GlobalConfig {
         V3: string
         V4: string
         V5: string
+        URL: string
     },
     STANDARDIZED_SKILLS_API: string,
     AUTH: {
@@ -41,5 +42,14 @@ export interface GlobalConfig {
         ACCOUNT_SETTINGS: string
         PROFILES: string
         TALENTSEARCH: string
+    },
+    ADMIN: {
+        CONNECT_URL: string
+        DEFAULT_PAYMENT_TERMS: number
+        DIRECT_URL: string
+        WORK_MANAGER_URL: string
+        ONLINE_REVIEW_URL: string
+        CHALLENGE_URL: string
+        AV_SCAN_SCORER_REVIEW_TYPE_ID: string
     }
 }

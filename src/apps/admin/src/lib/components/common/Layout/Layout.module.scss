@@ -1,0 +1,26 @@
+@import '@libs/ui/styles/includes';
+@import '../../../styles/includes';
+
+.layout {
+    position: relative;
+
+    .main {
+        margin: $sp-8 0;
+        padding: $sp-6;
+        background-color: $black-5;
+        border-radius: 6px;
+
+        @include ltelg {
+            padding: $sp-4;
+        }
+    }
+}
+
+.contentLayoutOuter {
+    margin: $sp-8 auto !important;
+}
+
+.contantentLayoutInner {
+    box-sizing: border-box;
+    width: 100%;
+}

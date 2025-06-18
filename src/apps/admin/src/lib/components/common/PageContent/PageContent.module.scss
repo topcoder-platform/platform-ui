@@ -1,0 +1,13 @@
+@import '@libs/ui/styles/includes';
+@import '../../../styles/includes';
+
+.pageContent {
+    margin-top: $sp-4;
+
+    .inner {
+        max-width: $xl-max;
+        margin: 0 auto;
+        background-color: $tc-white;
+        border-radius: 8px;
+    }
+}

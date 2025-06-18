@@ -1,8 +1,11 @@
-import { FC } from 'react'
+import { FC, useCallback } from 'react'
 import { ModalProps } from 'react-responsive-modal'
 
 import { Button } from '../../button'
 import { BaseModal } from '../base-modal'
+import { LoadingSpinner } from '../../loading-spinner'
+
+import styles from './ConfirmModal.module.scss'
 
 export interface ConfirmModalProps extends ModalProps {
     action?: string
@@ -12,36 +15,58 @@ export interface ConfirmModalProps extends ModalProps {
     showButtons?: boolean
     maxWidth?: string
     size?: 'sm' | 'md' | 'lg'
+    allowBodyScroll?: boolean
+    isLoading?: boolean
 }
 
-const ConfirmModal: FC<ConfirmModalProps> = (props: ConfirmModalProps) => (
-    <BaseModal
-        {...props}
-        styles={{ modal: { maxWidth: props.maxWidth ?? '450px' } }}
-        buttons={(
-            props.showButtons !== false && (
-                <>
-                    <Button
-                        secondary
-                        label='Cancel'
-                        onClick={props.onClose}
-                        size='lg'
-                        tabIndex={1}
-                    />
-                    <Button
-                        disabled={props.canSave === false}
-                        primary
-                        label={props.action || 'Confirm'}
-                        onClick={props.onConfirm}
-                        size='lg'
-                        tabIndex={2}
-                    />
-                </>
-            )
-        )}
-    >
-        {props.children}
-    </BaseModal>
-)
+const ConfirmModal: FC<ConfirmModalProps> = (props: ConfirmModalProps) => {
+    const isLoading = props.isLoading
+    const handleClose = useCallback(() => {
+        if (!isLoading) {
+            props.onClose?.()
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isLoading])
+
+    return (
+        <BaseModal
+            {...props}
+            onClose={handleClose}
+            styles={{ modal: { maxWidth: props.maxWidth ?? '450px' } }}
+            buttons={(
+                props.showButtons !== false && (
+                    <>
+
+                        {props.isLoading && (
+                            <div className={styles.dialogLoadingSpinnerContainer}>
+                                <LoadingSpinner className={styles.spinner} />
+                            </div>
+                        )}
+                        <Button
+                            secondary
+                            label='Cancel'
+                            onClick={handleClose}
+                            size='lg'
+                            // eslint-disable-next-line jsx-a11y/tabindex-no-positive
+                            tabIndex={1}
+                            disabled={props.isLoading}
+                        />
+                        <Button
+                            disabled={props.canSave === false || props.isLoading}
+                            primary
+                            label={props.action || 'Confirm'}
+                            onClick={props.onConfirm}
+                            size='lg'
+                            // eslint-disable-next-line jsx-a11y/tabindex-no-positive
+                            tabIndex={2}
+                        />
+                    </>
+                )
+            )}
+        >
+            {props.children}
+        </BaseModal>
+    )
+}
 
 export default ConfirmModal

@@ -1,0 +1,23 @@
+@import '@libs/ui/styles/includes';
+
+.headerActions {
+    display: flex;
+    gap: 30px;
+    margin-left: auto;
+    margin-top: $sp-2;
+}
+
+.loadingSpinnerContainer {
+    position: relative;
+    height: 100px;
+    margin-top: -30px;
+
+    .spinner {
+        background: none;
+    }
+}
+
+.noRecordFound {
+    padding: 16px 16px 32px;
+    text-align: center;
+}

@@ -1,0 +1,73 @@
+@import '@libs/ui/styles/includes';
+
+$gradient: linear-gradient(
+  to top right,  // This approximates the diagonal direction
+  #086093,  // Start color
+  #028367   // End color
+);
+
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: $gradient; 
+    padding: 20px;
+}
+
+.form {
+    background: white;  
+    padding: 30px;  
+    border-radius: 10px;  
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);  
+    width: 100%;
+    max-width: 1000px;  
+    box-sizing: border-box;
+
+    .heading {
+        margin-bottom: 1rem;
+    }
+
+    .subheading {
+        margin-bottom: 2rem;
+    }
+
+    .formRow {
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+    }
+
+    .formRadioBtn {
+        display: flex;
+        gap: 2rem;
+        margin-bottom: 1rem;
+    }
+
+    .complexity {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .skillsWrapper {
+        border: 1px solid #aaaaaa;
+        border-radius: 0.375rem; 
+    }
+
+    .skillsError {
+        border: 2px solid $red-100;
+        border-radius: 0.375rem; 
+    }
+
+    .error {
+        font-size: 11px;
+        display: flex;
+        align-items: center;
+        color: $red-100;
+
+        svg {
+            @include icon-md;
+            fill: $red-100;
+            margin-right: $sp-1;
+        }
+    }
+}
