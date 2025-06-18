@@ -3,7 +3,7 @@
 import { toast } from 'react-toastify'
 import { AxiosError } from 'axios'
 import { Link } from 'react-router-dom'
-import React, { FC, useCallback, useEffect, useMemo } from 'react'
+import React, { FC, useCallback, useEffect } from 'react'
 
 import { Collapsible, ConfirmModal, LoadingCircles } from '~/libs/ui'
 import { UserProfile } from '~/libs/core'

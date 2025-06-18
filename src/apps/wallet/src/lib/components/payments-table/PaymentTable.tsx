@@ -86,7 +86,7 @@ const PaymentsTable: React.FC<PaymentTableProps> = (props: PaymentTableProps) =>
 
     const total = calculateTotal()
 
-    const isPaymeDisabled = !total || total < props.minWithdrawAmount;
+    const isPaymeDisabled = !total || total < props.minWithdrawAmount
 
     return (
         <>
@@ -194,19 +194,25 @@ const PaymentsTable: React.FC<PaymentTableProps> = (props: PaymentTableProps) =>
                         </div>
                     </>
                 )}
-                <Tooltip content={(
-                    <>
-                        Minimum withdrawal amounti is ${props.minWithdrawAmount}.
-                        <br />
-                        Please select more payments.
-                    </>
-                )} disableTooltip={!isPaymeDisabled}>
+                <Tooltip
+                    content={(
+                        <>
+                            Minimum withdrawal amounti is $
+                            {props.minWithdrawAmount}
+                            .
+                            <br />
+                            Please select more payments.
+                        </>
+                    )}
+                    disableTooltip={!isPaymeDisabled}
+                >
                     <Button
                         primary
                         onClick={() => {
                             if (isPaymeDisabled) {
-                                return;
+                                return
                             }
+
                             props.onPayMeClick(selectedPayments, total.toFixed(2))
                         }}
                         className={styles.paymeBtn}
