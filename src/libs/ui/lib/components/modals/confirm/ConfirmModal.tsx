@@ -1,4 +1,4 @@
-import { FC } from 'react'
+import { FC, useCallback } from 'react'
 import { ModalProps } from 'react-responsive-modal'
 
 import { Button } from '../../button'
@@ -12,36 +12,42 @@ export interface ConfirmModalProps extends ModalProps {
     showButtons?: boolean
     maxWidth?: string
     size?: 'sm' | 'md' | 'lg'
+    isProcessing?: boolean
 }
 
-const ConfirmModal: FC<ConfirmModalProps> = (props: ConfirmModalProps) => (
-    <BaseModal
-        {...props}
-        styles={{ modal: { maxWidth: props.maxWidth ?? '450px' } }}
-        buttons={(
-            props.showButtons !== false && (
-                <>
-                    <Button
-                        secondary
-                        label='Cancel'
-                        onClick={props.onClose}
-                        size='lg'
-                        tabIndex={1}
-                    />
-                    <Button
-                        disabled={props.canSave === false}
-                        primary
-                        label={props.action || 'Confirm'}
-                        onClick={props.onConfirm}
-                        size='lg'
-                        tabIndex={2}
-                    />
-                </>
-            )
-        )}
-    >
-        {props.children}
-    </BaseModal>
-)
+const ConfirmModal: FC<ConfirmModalProps> = (props: ConfirmModalProps) => {
+    const handleConfirm = useCallback((): void => props.onConfirm(), [props.onConfirm])
+
+    return (
+        <BaseModal
+            {...props}
+            styles={{ modal: { maxWidth: props.maxWidth ?? '450px' } }}
+            buttons={(
+                props.showButtons !== false && (
+                    <>
+                        <Button
+                            secondary
+                            label='Cancel'
+                            onClick={props.onClose}
+                            size='lg'
+                            tabIndex={1}
+                        />
+                        <Button
+                            disabled={props.isProcessing || props.canSave === false}
+                            primary
+                            label={props.action || 'Confirm'}
+                            onClick={handleConfirm}
+                            size='lg'
+                            tabIndex={2}
+                            loading={props.isProcessing}
+                        />
+                    </>
+                )
+            )}
+        >
+            {props.children}
+        </BaseModal>
+    )
+}
 
 export default ConfirmModal
