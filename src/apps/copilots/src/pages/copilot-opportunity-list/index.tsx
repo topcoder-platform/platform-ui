@@ -85,6 +85,11 @@ const tableColumns: TableColumn<CopilotOpportunity>[] = [
         type: 'date',
     },
     {
+        label: 'Duration(Weeks)',
+        propertyName: 'numWeeks',
+        type: 'text',
+    },
+    {
         label: 'Complexity',
         propertyName: 'complexity',
         type: 'text',
