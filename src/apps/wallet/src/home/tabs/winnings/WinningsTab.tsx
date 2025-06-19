@@ -1,22 +1,19 @@
 /* eslint-disable max-len */
 /* eslint-disable react/jsx-no-bind */
-import { toast } from 'react-toastify'
-import { AxiosError } from 'axios'
-import { Link } from 'react-router-dom'
 import React, { FC, useCallback, useEffect } from 'react'
 
-import { Collapsible, ConfirmModal, LoadingCircles } from '~/libs/ui'
+import { Collapsible, LoadingCircles } from '~/libs/ui'
 import { UserProfile } from '~/libs/core'
 
-import { getPayments, processWinningsPayments } from '../../../lib/services/wallet'
+import { getPayments } from '../../../lib/services/wallet'
 import { Winning, WinningDetail } from '../../../lib/models/WinningDetail'
 import { FilterBar } from '../../../lib'
-import { ConfirmFlowData } from '../../../lib/models/ConfirmFlowData'
 import { PaginationInfo } from '../../../lib/models/PaginationInfo'
 import { useWalletDetails, WalletDetailsResponse } from '../../../lib/hooks/use-wallet-details'
-import { nullToZero } from '../../../lib/util'
+import { WalletDetails } from '../../../lib/models/WalletDetails'
 import PaymentsTable from '../../../lib/components/payments-table/PaymentTable'
 
+import ConfirmPaymentModal from './ConfirmPayment.modal'
 import styles from './Winnings.module.scss'
 
 interface ListViewProps {
@@ -78,7 +75,7 @@ const formatCurrency = (amountStr: string, currency: string): string => {
 }
 
 const ListView: FC<ListViewProps> = (props: ListViewProps) => {
-    const [confirmFlow, setConfirmFlow] = React.useState<ConfirmFlowData | undefined>(undefined)
+    const [confirmPayments, setConfirmPayments] = React.useState<Winning[]>()
     const [winnings, setWinnings] = React.useState<ReadonlyArray<Winning>>([])
     const [selectedPayments, setSelectedPayments] = React.useState<{ [paymentId: string]: Winning }>({})
     const [isLoading, setIsLoading] = React.useState<boolean>(false)
@@ -146,133 +143,22 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
         }
     }, [props.profile.userId, convertToWinnings, filters, pagination.currentPage, pagination.pageSize])
 
-    const renderConfirmModalContent = React.useMemo(() => {
-        if (confirmFlow?.content === undefined) {
-            return undefined
-        }
-
-        if (typeof confirmFlow?.content === 'function') {
-            return confirmFlow?.content()
-        }
-
-        return confirmFlow?.content
-    }, [confirmFlow])
-
     useEffect(() => {
         fetchWinnings()
     }, [fetchWinnings])
 
-    const processPayouts = async (winningIds: string[]): Promise<void> => {
-        setSelectedPayments({})
-
-        toast.info('Processing payments...', {
-            position: toast.POSITION.BOTTOM_RIGHT,
-        })
-        try {
-            await processWinningsPayments(winningIds)
-            toast.success('Payments processed successfully!', {
-                position: toast.POSITION.BOTTOM_RIGHT,
-            })
-        } catch (error) {
-            let message = 'Failed to process payments. Please try again later.'
-
-            if (error instanceof AxiosError) {
-                message = error.response?.data?.error?.message ?? error.response?.data?.message ?? error.message ?? ''
-
-                message = message.charAt(0)
-                    .toUpperCase() + message.slice(1)
-            }
-
-            toast.error(message, {
-                position: toast.POSITION.BOTTOM_RIGHT,
-            })
-        }
-
-        fetchWinnings()
+    function handlePayMeClick(
+        payments: { [paymentId: string]: Winning },
+    ): void {
+        setConfirmPayments(Object.values(payments))
     }
 
-    function handlePayMeClick(
-        paymentIds: { [paymentId: string]: Winning },
-        totalAmountStr: string,
-    ): void {
-        const totalAmount = parseFloat(totalAmountStr)
-        const taxWithholdAmount = (parseFloat(nullToZero(walletDetails?.taxWithholdingPercentage ?? '0')) * totalAmount) / 100
-        const feesAmount = parseFloat(nullToZero(walletDetails?.estimatedFees ?? '0'))
-        const netAmount = totalAmount - taxWithholdAmount - feesAmount
-
-        setConfirmFlow({
-            action: 'Confirm Payment',
-            callback: () => processPayouts(Object.keys(paymentIds)),
-            content: (
-                <>
-                    <div className={`${styles.processing} body-medium-normal`}>
-                        Processing Payment: $
-                        {totalAmountStr}
-                        {' '}
-                    </div>
-                    {walletDetails && (
-                        <>
-                            <div className={styles.breakdown}>
-                                <h4>Payment Breakdown:</h4>
-                                <ul className={`${styles.breakdownList} body-main`}>
-                                    <li>
-                                        <span>Base amount:</span>
-                                        <span>
-                                            $
-                                            {totalAmountStr}
-                                        </span>
-                                    </li>
-                                    <li>
-                                        <span>
-                                            Tax Witholding (
-                                            {nullToZero(walletDetails.taxWithholdingPercentage)}
-                                            %):
-                                        </span>
-                                        <span>
-                                            $
-                                            {taxWithholdAmount.toFixed(2)}
-                                        </span>
-                                    </li>
-                                    <li>
-                                        <span>Processing fee:</span>
-                                        <span>
-                                            $
-                                            {feesAmount.toFixed(2)}
-                                        </span>
-                                    </li>
-                                </ul>
-                                <hr />
-                                <div className={`${styles.summary} body-main-bold`}>
-                                    <span>Net amount after fees:</span>
-                                    <span>
-                                        $
-                                        {netAmount.toFixed(2)}
-                                    </span>
-                                </div>
-                                {walletDetails?.primaryCurrency && walletDetails.primaryCurrency !== 'USD' && (
-                                    <div className={`${styles.alert} body-main-medium`}>
-                                        Net amount will be converted to
-                                        {' '}
-                                        {walletDetails.primaryCurrency}
-                                        {' '}
-                                        with a 2% conversion fee applied.
-                                    </div>
-                                )}
-                            </div>
-                            <div className={`${styles.taxesFooterRow} body-main`}>
-                                You can adjust your payout settings to customize your estimated payment fee
-                                and tax withholding percentage in the
-                                {' '}
-                                <Link to='#payout'>Payout</Link>
-                                {' '}
-                                section.
-                            </div>
-                        </>
-                    )}
-                </>
-            ),
-            title: 'Payment Confirmation',
-        })
+    function handleCloseConfirmModal(isDone?: boolean): void {
+        setConfirmPayments(undefined)
+        setSelectedPayments({})
+        if (isDone) {
+            fetchWinnings()
+        }
     }
 
     return (
@@ -461,23 +347,13 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                     </Collapsible>
                 </div>
             </div>
-            {confirmFlow && (
-                <ConfirmModal
-                    size='lg'
-                    maxWidth='610px'
-                    title={confirmFlow.title}
-                    action={confirmFlow.action}
-                    onClose={function onClose() {
-                        setConfirmFlow(undefined)
-                    }}
-                    onConfirm={function onConfirm() {
-                        confirmFlow.callback?.()
-                        setConfirmFlow(undefined)
-                    }}
-                    open={confirmFlow !== undefined}
-                >
-                    <div>{renderConfirmModalContent}</div>
-                </ConfirmModal>
+            {confirmPayments && (
+                <ConfirmPaymentModal
+                    userEmail={props.profile.email}
+                    payments={confirmPayments}
+                    walletDetails={walletDetails as WalletDetails}
+                    onClose={handleCloseConfirmModal}
+                />
             )}
         </>
     )
