@@ -18,6 +18,7 @@ interface PaymentEditFormProps {
         releaseDate, grossAmount, paymentStatus, auditNote,
     }: {
         releaseDate?: Date
+        description?: string
         grossAmount?: number
         paymentStatus?: string
         auditNote?: string
@@ -25,6 +26,7 @@ interface PaymentEditFormProps {
 }
 
 const PaymentEdit: React.FC<PaymentEditFormProps> = (props: PaymentEditFormProps) => {
+    const [description, setDescription] = useState('')
     const [paymentStatus, setPaymentStatus] = useState('')
     const [releaseDate, setReleaseDate] = useState(new Date())
     const [grossAmount, setGrossAmount] = useState(0)
@@ -35,6 +37,7 @@ const PaymentEdit: React.FC<PaymentEditFormProps> = (props: PaymentEditFormProps
 
     const initialValues = useMemo(() => ({
         auditNote: '',
+        description: props.payment.description,
         grossAmount: props.payment.grossAmountNumber,
         paymentStatus: props.payment.status,
         releaseDate: props.payment.releaseDateObj,
@@ -86,6 +89,15 @@ const PaymentEdit: React.FC<PaymentEditFormProps> = (props: PaymentEditFormProps
                 }
 
                 break
+            case 'description':
+                setDescription(value as string)
+                if (props.onValueUpdated) {
+                    props.onValueUpdated({
+                        description: value as string,
+                    })
+                }
+
+                break
             case 'releaseDate':
                 setReleaseDate(value as Date)
                 if (props.onValueUpdated) {
@@ -110,6 +122,7 @@ const PaymentEdit: React.FC<PaymentEditFormProps> = (props: PaymentEditFormProps
     }
 
     useEffect(() => {
+        setDescription(props.payment.description)
         setPaymentStatus(props.payment.status)
         setReleaseDate(props.payment.releaseDateObj)
         setGrossAmount(props.payment.grossAmountNumber)
@@ -117,6 +130,9 @@ const PaymentEdit: React.FC<PaymentEditFormProps> = (props: PaymentEditFormProps
 
     useEffect(() => {
         const valuesToCheck = [{
+            key: 'description',
+            value: description,
+        }, {
             key: 'grossPayment',
             value: grossAmount,
         }, {
@@ -132,7 +148,7 @@ const PaymentEdit: React.FC<PaymentEditFormProps> = (props: PaymentEditFormProps
 
         const isDirty = valuesToCheck.some(x => x.value !== initialValues[x.key as keyof typeof initialValues])
         setDirty(isDirty)
-    }, [grossAmount, paymentStatus, releaseDate, auditNote, initialValues])
+    }, [description, grossAmount, paymentStatus, releaseDate, auditNote, initialValues])
 
     useEffect(() => {
         if (props.canSave) {
@@ -140,6 +156,9 @@ const PaymentEdit: React.FC<PaymentEditFormProps> = (props: PaymentEditFormProps
                 props.canSave(false)
             } else {
                 const valuesToCheck = [{
+                    key: 'description',
+                    value: description,
+                }, {
                     key: 'grossPayment',
                     value: grossAmount,
                 }, {
@@ -154,7 +173,7 @@ const PaymentEdit: React.FC<PaymentEditFormProps> = (props: PaymentEditFormProps
                 props.canSave(haveChange && grossAmountErrorString.length === 0 && auditNote.length > 0)
             }
         }
-    }, [dirty, auditNote, props, grossAmountErrorString.length, grossAmount, paymentStatus, releaseDate, initialValues])
+    }, [dirty, auditNote, props, grossAmountErrorString.length, description, grossAmount, paymentStatus, releaseDate, initialValues])
 
     const getLink = (externalId: string): string => `${TOPCODER_URL}/challenges/${externalId}`
 
@@ -208,8 +227,21 @@ const PaymentEdit: React.FC<PaymentEditFormProps> = (props: PaymentEditFormProps
                     error={grossAmountErrorString}
                     value={props.payment.grossAmountNumber.toString()}
                     onChange={e => handleInputChange('grossPayment', parseFloat(e.target.value))}
-
                 />
+
+                <InputText
+                    name='description'
+                    label='Description'
+                    type='text'
+                    disabled={disableEdits}
+                    placeholder='Modify Description'
+                    dirty
+                    tabIndex={0}
+                    error={!description?.length ? 'Description can\'t be empty' : ''}
+                    value={props.payment.description.toString()}
+                    onChange={e => handleInputChange('description', e.target.value)}
+                />
+
                 <InputSelect
                     tabIndex={-1}
                     dirty

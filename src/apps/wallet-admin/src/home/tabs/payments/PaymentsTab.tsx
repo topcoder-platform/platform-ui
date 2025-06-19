@@ -79,6 +79,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
     })
     const [editState, setEditState] = React.useState<{
         grossAmount?: number;
+        description?: string;
         releaseDate?: Date;
         paymentStatus?: string;
         auditNote?: string;
@@ -93,6 +94,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
 
     const handleValueUpdated = useCallback((updates: {
         auditNote?: string,
+        description?: string,
         grossAmount?: number,
         paymentStatus?: string,
         releaseDate?: Date,
@@ -205,6 +207,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
         // Send to server only the fields that have changed
         const updateObj = {
             auditNote: currentEditState.auditNote !== undefined ? currentEditState.auditNote : undefined,
+            description: currentEditState.description !== undefined ? currentEditState.description : undefined,
             grossAmount: currentEditState.grossAmount !== undefined ? currentEditState.grossAmount : undefined,
             paymentStatus: currentEditState.paymentStatus !== undefined ? currentEditState.paymentStatus : undefined,
             releaseDate: currentEditState.releaseDate !== undefined ? currentEditState.releaseDate : undefined,
@@ -223,6 +226,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
 
         const updates: {
             auditNote?: string
+            description?: string
             paymentStatus?: 'ON_HOLD_ADMIN' | 'OWED' | 'CANCELLED'
             releaseDate?: string
             paymentAmount?: number
@@ -232,6 +236,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
             winningsId: paymentId,
         }
 
+        if (updateObj.description) updates.description = updateObj.description
         if (paymentStatus) updates.paymentStatus = paymentStatus
         if (paymentStatus !== 'CANCELLED') {
             if (updateObj.releaseDate !== undefined) updates.releaseDate = updateObj.releaseDate.toISOString()
