@@ -2,7 +2,7 @@ import useSWR, { SWRResponse } from 'swr'
 import useSWRInfinite, { SWRInfiniteResponse } from 'swr/infinite'
 
 import { EnvironmentConfig } from '~/config'
-import { xhrGetAsync, xhrPostAsync } from '~/libs/core'
+import { xhrDeleteAsync, xhrGetAsync, xhrPostAsync } from '~/libs/core'
 import { buildUrl } from '~/libs/shared/lib/utils/url'
 
 import { CopilotOpportunity } from '../models/CopilotOpportunity'
@@ -118,6 +118,19 @@ export const assignCopilotOpportunity = async (
     const url = `${copilotBaseUrl}/copilots/opportunity/${opportunityId}/assign`
 
     return xhrPostAsync(url, { applicationId: applicationId.toString() }, {})
+}
+
+/**
+ * cancel copilot opportunity
+ * @param opportunityId
+ * @returns
+ */
+export const cancelCopilotOpportunity = async (
+    opportunityId: string,
+): Promise<{applicationId: number}> => {
+    const url = `${copilotBaseUrl}/copilots/opportunity/${opportunityId}/cancel`
+
+    return xhrDeleteAsync(url)
 }
 
 /**
