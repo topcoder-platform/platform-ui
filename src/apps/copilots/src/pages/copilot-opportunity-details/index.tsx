@@ -35,6 +35,7 @@ import {
 } from '../../services/copilot-opportunities'
 import { FormattedMembers, useMembers } from '../../services/members'
 import { copilotRoutesMap } from '../../copilots.routes'
+import { ProjectType } from '../../constants'
 
 import { ApplyOpportunityModal } from './apply-opportunity-modal'
 import {
@@ -126,6 +127,21 @@ const CopilotOpportunityDetails: FC<{}> = () => {
 
     const application = copilotApplications && copilotApplications[0]
 
+    const getOpportunityType = (type: string): ProjectType => {
+        switch (type) {
+            case 'ai':
+                return ProjectType.ai
+            case 'datascience':
+                return ProjectType.datascience
+            case 'dev':
+                return ProjectType.developement
+            case 'design':
+                return ProjectType.design
+            default:
+                return ProjectType.qa
+        }
+    }
+
     return (
         <ContentLayout
             title='Copilot Opportunity'
@@ -203,7 +219,11 @@ const CopilotOpportunityDetails: FC<{}> = () => {
                     <IconOutline.CogIcon className={styles.icon} />
                     <div className={styles.infoText}>
                         <span className={styles.infoHeading}>Type</span>
-                        <span className={styles.infoValue}>{opportunity?.type}</span>
+                        <span
+                            className={styles.infoValue}
+                        >
+                            {opportunity?.type && getOpportunityType(opportunity?.type)}
+                        </span>
                     </div>
                 </div>
                 <div className={styles.infoColumn}>
