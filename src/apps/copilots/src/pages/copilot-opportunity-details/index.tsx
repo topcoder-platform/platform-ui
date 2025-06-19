@@ -242,7 +242,7 @@ const CopilotOpportunityDetails: FC<{}> = () => {
                             <span
                                 className={styles.infoValue}
                             >
-                              {opportunity?.type && getOpportunityType(opportunity?.type)}
+                                {opportunity?.type && getOpportunityType(opportunity?.type)}
                             </span>
                         </div>
                     </div>
