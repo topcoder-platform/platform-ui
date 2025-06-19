@@ -48,6 +48,7 @@ import {
 import { OpportunityDetails } from './tabs/opportunity-details'
 import { CopilotApplications } from './tabs/copilot-applications'
 import styles from './styles.module.scss'
+import { toast } from 'react-toastify'
 
 const CopilotOpportunityDetails: FC<{}> = () => {
     const { opportunityId }: {opportunityId?: string} = useParams<{ opportunityId?: string }>()
@@ -105,7 +106,7 @@ const CopilotOpportunityDetails: FC<{}> = () => {
 
     const onApplied: () => void = useCallback(() => {
         mutate(`${copilotBaseUrl}/copilots/opportunity/${opportunityId}/applications`)
-        mutate(`${copilotBaseUrl}/copilots/opportunity/${opportunityId}`)
+        mutate(`${copilotBaseUrl}/copilot/opportunity/${opportunityId}`)
     }, [])
 
     const onCloseApplyModal: () => void = useCallback(() => {
@@ -125,7 +126,8 @@ const CopilotOpportunityDetails: FC<{}> = () => {
         if (opportunityId) {
             await cancelCopilotOpportunity(opportunityId)
             mutate(`${copilotBaseUrl}/copilots/opportunity/${opportunityId}/applications`)
-            mutate(`${copilotBaseUrl}/copilots/opportunity/${opportunityId}`)
+            mutate(`${copilotBaseUrl}/copilot/opportunity/${opportunityId}`)
+            toast.success("Canceled copilot opportunity successfully")
         }
 
     }
