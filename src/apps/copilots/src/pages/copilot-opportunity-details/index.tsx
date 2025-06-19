@@ -12,6 +12,7 @@ import {
 } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { mutate } from 'swr'
+import { toast } from 'react-toastify'
 import moment from 'moment'
 
 import {
@@ -48,7 +49,6 @@ import {
 import { OpportunityDetails } from './tabs/opportunity-details'
 import { CopilotApplications } from './tabs/copilot-applications'
 import styles from './styles.module.scss'
-import { toast } from 'react-toastify'
 
 const CopilotOpportunityDetails: FC<{}> = () => {
     const { opportunityId }: {opportunityId?: string} = useParams<{ opportunityId?: string }>()
@@ -127,7 +127,7 @@ const CopilotOpportunityDetails: FC<{}> = () => {
             await cancelCopilotOpportunity(opportunityId)
             mutate(`${copilotBaseUrl}/copilots/opportunity/${opportunityId}/applications`)
             mutate(`${copilotBaseUrl}/copilot/opportunity/${opportunityId}`)
-            toast.success("Canceled copilot opportunity successfully")
+            toast.success('Canceled copilot opportunity successfully')
         }
 
     }
