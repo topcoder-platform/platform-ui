@@ -60,12 +60,20 @@ export async function getPayments(userId: string, limit: number, offset: number,
     return response.data
 }
 
-export async function processWinningsPayments(winningsIds: string[]): Promise<{ processed: boolean }> {
+export async function processWinningsPayments(
+    winningsIds: string[],
+    otpCode?: string,
+): Promise<{ processed: boolean }> {
     const body = JSON.stringify({
+        otpCode,
         winningsIds,
     })
     const url = `${WALLET_API_BASE_URL}/withdraw`
     const response = await xhrPostAsync<string, ApiResponse<{ processed: boolean }>>(url, body)
+
+    if (response.status === 'error' && response.error?.code?.startsWith('otp_')) {
+        throw response.error
+    }
 
     if (response.status === 'error') {
         throw new Error('Error processing payments')
