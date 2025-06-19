@@ -1,11 +1,11 @@
 /**
  * Roles table.
  */
-import { FC, useMemo } from 'react'
+import { FC, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import classNames from 'classnames'
 
-import { Table, TableColumn } from '~/libs/ui'
+import { colWidthType, Table, TableColumn } from '~/libs/ui'
 import { useWindowSize, WindowSize } from '~/libs/shared'
 
 import { useTableFilterLocal, useTableFilterLocalProps } from '../../hooks'
@@ -24,9 +24,11 @@ interface Props {
 }
 
 export const RolesTable: FC<Props> = (props: Props) => {
+    const [colWidth, setColWidth] = useState<colWidthType>({})
     const columns = useMemo<TableColumn<UserRole>[]>(
         () => [
             {
+                columnId: 'id',
                 label: 'Role ID',
                 propertyName: 'id',
                 renderer: (data: UserRole) => (
@@ -34,9 +36,10 @@ export const RolesTable: FC<Props> = (props: Props) => {
                         <Link to={`${data.id}/role-members`}>{data.id}</Link>
                     </div>
                 ),
-                type: 'element',
+                type: 'numberElement', // Change from 'element' to 'numberElement'
             },
             {
+                columnId: 'roleName',
                 label: 'Role Name',
                 propertyName: 'roleName',
                 renderer: (data: UserRole) => (
@@ -50,8 +53,8 @@ export const RolesTable: FC<Props> = (props: Props) => {
             },
             {
                 className: styles.blockCellWrap,
+                columnId: 'createdByHandle',
                 label: 'Created By',
-                propertyName: 'createdByHandle',
                 renderer: (data: UserRole) => {
                     if (!data.createdBy) {
                         return <></>
@@ -68,14 +71,15 @@ export const RolesTable: FC<Props> = (props: Props) => {
                 type: 'element',
             },
             {
+                columnId: 'createdAtString',
                 label: 'Created at',
                 propertyName: 'createdAtString',
                 type: 'text',
             },
             {
                 className: styles.blockCellWrap,
+                columnId: 'modifiedByHandle',
                 label: 'Modified By',
-                propertyName: 'modifiedByHandle',
                 renderer: (data: UserRole) => {
                     if (!data.modifiedBy) {
                         return <></>
@@ -92,6 +96,7 @@ export const RolesTable: FC<Props> = (props: Props) => {
                 type: 'element',
             },
             {
+                columnId: 'modifiedAtString',
                 label: 'Modified at',
                 propertyName: 'modifiedAtString',
                 type: 'text',
@@ -187,6 +192,13 @@ export const RolesTable: FC<Props> = (props: Props) => {
             },
         ],
     ], [columns])
+
+    // Convert id fields to numbers to ensure proper sorting
+    const processedData = useMemo(() => props.datas.map(role => ({
+        ...role,
+        id: Number(role.id),
+    })), [props.datas])
+
     const {
         page,
         setPage,
@@ -195,7 +207,7 @@ export const RolesTable: FC<Props> = (props: Props) => {
         setSort,
         sort,
     }: useTableFilterLocalProps<UserRole> = useTableFilterLocal(
-        props.datas ?? [],
+        processedData ?? [],
         undefined,
         {
             createdAtString: 'createdAt',
@@ -222,6 +234,9 @@ export const RolesTable: FC<Props> = (props: Props) => {
                     showExpand={false}
                     removeDefaultSort
                     forceSort={sort}
+                    className={styles.desktopTable}
+                    colWidth={colWidth}
+                    setColWidth={setColWidth}
                 />
             )}
 

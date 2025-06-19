@@ -21,6 +21,7 @@ import {
 import { useEventCallback } from '../../hooks'
 import { Challenge, ChallengeFilterCriteria, ChallengeType } from '../../models'
 import { Paging } from '../../models/challenge-management/Pagination'
+import { checkIsMM } from '../../utils'
 
 import { MobileListView } from './MobileListView'
 import styles from './ChallengeList.module.scss'
@@ -134,6 +135,7 @@ const Actions: FC<{
     challenge: Challenge
     currentFilters: ChallengeFilterCriteria
 }> = props => {
+    const isMM = useMemo(() => checkIsMM(props.challenge), [props.challenge])
     const [openDropdown, setOpenDropdown] = useState(false)
     const navigate = useNavigate()
     const goToManageUser = useEventCallback(() => {
@@ -200,14 +202,16 @@ const Actions: FC<{
                     >
                         Users
                     </li>
-                    <li
-                        onClick={function onClick() {
-                            navigate(`${props.challenge.id}/manage-resource`)
-                            setOpenDropdown(false)
-                        }}
-                    >
-                        Resources
-                    </li>
+                    {isMM && (
+                        <li
+                            onClick={function onClick() {
+                                navigate(`${props.challenge.id}/manage-submission`)
+                                setOpenDropdown(false)
+                            }}
+                        >
+                            Submissions
+                        </li>
+                    )}
                 </ul>
             </DropdownMenu>
 
@@ -267,7 +271,13 @@ const ChallengeList: FC<ChallengeListProps> = props => {
                 propertyName: 'name',
                 renderer: (challenge: Challenge) => (
                     // eslint-disable-next-line jsx-a11y/anchor-is-valid
-                    <a href='#' className={styles.challengeTitle}>
+                    <a
+                        href={`${EnvironmentConfig.ADMIN.CHALLENGE_URL}/${challenge.id}`}
+                        className={styles.challengeTitle}
+                        onClick={function onClick() {
+                            window.location.href = `${EnvironmentConfig.ADMIN.CHALLENGE_URL}/${challenge.id}`
+                        }}
+                    >
                         {challenge.name}
                     </a>
                 ),
@@ -326,6 +336,8 @@ const ChallengeList: FC<ChallengeListProps> = props => {
                     columns={columns}
                     data={props.challenges}
                     disableSorting
+                    onToggleSort={_.noop}
+                    className={styles.desktopTable}
                 />
             )}
             {screenWidth <= 1279 && (

@@ -381,7 +381,7 @@ export interface useManagePermissionGroupMembersProps {
         filterCriteria: FormGroupMembersFilters,
         memberType: string,
     ) => void
-    doRemoveGroupMember: (memberId: number) => void
+    doRemoveGroupMember: (memberId: number, memberType: string) => void
     doRemoveGroupMembers: (
         memberIds: number[],
         callBack: () => void,
@@ -590,16 +590,23 @@ export function useManagePermissionGroupMembers(
     )
 
     const doRemoveGroupMember = useCallback(
-        (memberId: number) => {
+        (memberId: number, memberType: string) => {
             dispatch({
                 payload: memberId,
                 type: GroupsActionType.REMOVE_GROUP_MEMBERS_INIT,
             })
             removeGroupMember(groupId, memberId)
                 .then(() => {
-                    toast.success('Member removed successfully', {
-                        toastId: 'Remove group member',
-                    })
+                    if (memberType === 'group') {
+                        toast.success('Group removed successfully', {
+                            toastId: 'Remove group member',
+                        })
+                    } else {
+                        toast.success('Member removed successfully', {
+                            toastId: 'Remove group member',
+                        })
+                    }
+
                     dispatch({
                         payload: memberId,
                         type: GroupsActionType.REMOVE_GROUP_MEMBERS_DONE,

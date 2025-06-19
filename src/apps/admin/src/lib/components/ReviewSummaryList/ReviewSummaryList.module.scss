@@ -9,7 +9,8 @@
     }
 }
 
-.challengeTitle {
+.challengeTitleText,
+.challengeTitleLink {
     min-width: 200px;
     padding: 0;
     justify-content: flex-start;
@@ -17,7 +18,9 @@
     color: $body-color;
     line-height: 16px;
     white-space: break-spaces;
+}
 
+.challengeTitleLink {
     &:hover {
         color: $blue-110;
     }
@@ -30,5 +33,11 @@
 
     > * {
         flex: none;
+    }
+}
+
+.desktopTable {
+    td {
+        vertical-align: middle;
     }
 }

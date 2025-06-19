@@ -23,7 +23,7 @@ import { useOnComponentDidMount } from './useOnComponentDidMount'
 
 // used to get all groups
 const PAGE = 1
-const PER_PAGE = 1000
+const PER_PAGE = 10000
 
 type UserGroupsState = {
     isLoading: boolean

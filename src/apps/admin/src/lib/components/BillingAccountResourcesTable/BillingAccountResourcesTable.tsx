@@ -1,11 +1,11 @@
 /**
  * Billing account resources table.
  */
-import { FC, useMemo } from 'react'
+import { FC, useMemo, useState } from 'react'
 import classNames from 'classnames'
 
 import { useWindowSize, WindowSize } from '~/libs/shared'
-import { Button, Table, TableColumn } from '~/libs/ui'
+import { Button, colWidthType, Table, TableColumn } from '~/libs/ui'
 
 import { useTableFilterLocal, useTableFilterLocalProps } from '../../hooks'
 import { Pagination } from '../common/Pagination'
@@ -26,6 +26,7 @@ interface Props {
 }
 
 export const BillingAccountResourcesTable: FC<Props> = (props: Props) => {
+    const [colWidth, setColWidth] = useState<colWidthType>({})
     const {
         page,
         setPage,
@@ -40,17 +41,14 @@ export const BillingAccountResourcesTable: FC<Props> = (props: Props) => {
     const columns = useMemo<TableColumn<BillingAccountResource>[]>(
         () => [
             {
+                columnId: 'name',
                 label: 'Name',
                 propertyName: 'name',
                 type: 'text',
             },
             {
-                label: 'Status',
-                propertyName: 'status',
-                type: 'text',
-            },
-            {
                 className: styles.blockColumnAction,
+                columnId: 'action',
                 label: '',
                 renderer: (data: BillingAccountResource) => (
                     <Button
@@ -82,20 +80,7 @@ export const BillingAccountResourcesTable: FC<Props> = (props: Props) => {
             ],
             [
                 {
-                    label: 'Status label',
-                    mobileType: 'label',
-                    propertyName: 'status',
-                    renderer: () => <div>Status:</div>,
-                    type: 'element',
-                },
-                {
                     ...columns[1],
-                    mobileType: 'last-value',
-                },
-            ],
-            [
-                {
-                    ...columns[2],
                     colSpan: 2,
                     mobileType: 'last-value',
                 },
@@ -118,6 +103,9 @@ export const BillingAccountResourcesTable: FC<Props> = (props: Props) => {
                     onToggleSort={setSort}
                     forceSort={sort}
                     removeDefaultSort
+                    className={styles.desktopTable}
+                    colWidth={colWidth}
+                    setColWidth={setColWidth}
                 />
             )}
 

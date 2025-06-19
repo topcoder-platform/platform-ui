@@ -125,26 +125,6 @@ export const DialogAddGroup: FC<Props> = (props: Props) => {
                                 )
                             }}
                         />
-                        <Controller
-                            name='selfRegister'
-                            control={control}
-                            render={function render(controlProps: {
-                                field: ControllerRenderProps<
-                                    FormAddGroup,
-                                    'selfRegister'
-                                >
-                            }) {
-                                return (
-                                    <InputCheckbox
-                                        name='selfRegister'
-                                        label='Self Register'
-                                        onChange={controlProps.field.onChange}
-                                        checked={controlProps.field.value}
-                                        disabled={props.isLoading}
-                                    />
-                                )
-                            }}
-                        />
                     </div>
                 </div>
                 <div className={styles.actionButtons}>

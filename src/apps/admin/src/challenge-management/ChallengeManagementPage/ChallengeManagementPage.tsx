@@ -10,6 +10,7 @@ import {
     useState,
 } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import _ from 'lodash'
 
 import { LoadingSpinner, PageDivider, PageTitle } from '~/libs/ui'
 import { PaginatedResponse } from '~/libs/core'
@@ -36,6 +37,17 @@ import { useEventCallback } from '../../lib/hooks'
 
 import styles from './ChallengeManagementPage.module.scss'
 
+const defaultFilter: ChallengeFilterCriteria = {
+    challengeId: '',
+    legacyId: 0,
+    name: '',
+    page: 1,
+    perPage: 25,
+    status: ChallengeStatus.Active,
+    track: null!, // eslint-disable-line @typescript-eslint/no-non-null-assertion, unicorn/no-null
+    type: null!, // eslint-disable-line @typescript-eslint/no-non-null-assertion, unicorn/no-null
+}
+
 /**
  * Challenge Management page.
  */
@@ -45,15 +57,9 @@ export const ChallengeManagementPage: FC = () => {
         ChallengeFilterCriteria,
         Dispatch<SetStateAction<ChallengeFilterCriteria>>,
     ] = useState<ChallengeFilterCriteria>({
-        challengeId: '',
-        legacyId: 0,
-        name: '',
-        page: 1,
-        perPage: 25,
-        status: ChallengeStatus.Active,
-        track: null!, // eslint-disable-line @typescript-eslint/no-non-null-assertion, unicorn/no-null
-        type: null!, // eslint-disable-line @typescript-eslint/no-non-null-assertion, unicorn/no-null
+        ...defaultFilter,
     })
+    const disableReset = useMemo(() => _.isEqual(filterCriteria, defaultFilter), [filterCriteria])
     const [challenges, setChallenges]: [
         Array<Challenge>,
         Dispatch<SetStateAction<Array<Challenge>>>,
@@ -119,19 +125,6 @@ export const ChallengeManagementPage: FC = () => {
         }
     }, [pageChangeEvent]) // eslint-disable-line react-hooks/exhaustive-deps -- missing dependency: search
 
-    // Reset
-    const [resetEvent, setResetEvent] = useState(false)
-    useEffect(() => {
-        if (resetEvent) {
-            search()
-            setResetEvent(false)
-        }
-    }, [resetEvent]) // eslint-disable-line react-hooks/exhaustive-deps -- missing dependency: search
-
-    const handleReset = useEventCallback(() => {
-        previousPageChangeEvent.current = false
-        setResetEvent(true)
-    })
     const handlePageChange = useEventCallback((page: number) => {
         setFilterCriteria({ ...filterCriteria, page })
         setPageChangeEvent(true)
@@ -149,12 +142,15 @@ export const ChallengeManagementPage: FC = () => {
                     onFilterCriteriaChange={setFilterCriteria}
                     onSearch={search}
                     disabled={searching || !filtersInited}
-                    showResetButton={
-                        previousPageChangeEvent.current
-                        && searched
-                        && challenges.length === 0
-                    }
-                    onReset={handleReset}
+                    onReset={function onReset() {
+                        setFilterCriteria({
+                            ...defaultFilter,
+                        })
+                        setTimeout(() => {
+                            search()
+                        })
+                    }}
+                    disableReset={disableReset}
                 />
                 <PageDivider />
                 {searching && (

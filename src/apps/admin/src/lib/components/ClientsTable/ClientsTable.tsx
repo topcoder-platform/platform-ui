@@ -7,7 +7,7 @@ import classNames from 'classnames'
 
 import { Sort } from '~/apps/gamification-admin/src/game-lib'
 import { useWindowSize, WindowSize } from '~/libs/shared'
-import { Table, TableColumn } from '~/libs/ui'
+import { colWidthType, Table, TableColumn } from '~/libs/ui'
 
 import { ClientInfo, MobileTableColumn } from '../../models'
 import { Pagination } from '../common/Pagination'
@@ -23,12 +23,15 @@ interface Props {
     setPage: Dispatch<SetStateAction<number>>
     sort: Sort | undefined
     setSort: Dispatch<SetStateAction<Sort | undefined>>
+    colWidth: colWidthType | undefined,
+    setColWidth: Dispatch<SetStateAction<colWidthType>> | undefined
 }
 
 export const ClientsTable: FC<Props> = (props: Props) => {
     const columns = useMemo<TableColumn<ClientInfo>[]>(
         () => [
             {
+                columnId: 'ClientID',
                 label: 'Client ID',
                 renderer: (data: ClientInfo) => (
                     <div>
@@ -39,26 +42,31 @@ export const ClientsTable: FC<Props> = (props: Props) => {
             },
             {
                 className: styles.tableCell,
+                columnId: 'name',
                 label: 'Name',
                 propertyName: 'name',
                 type: 'text',
             },
             {
+                columnId: 'status',
                 label: 'Status',
                 propertyName: 'status',
                 type: 'text',
             },
             {
+                columnId: 'startDateString',
                 label: 'Start Date',
                 propertyName: 'startDateString',
                 type: 'text',
             },
             {
+                columnId: 'endDateString',
                 label: 'End Date',
                 propertyName: 'endDateString',
                 type: 'text',
             },
             {
+                columnId: 'codeName',
                 label: 'Code name',
                 renderer: (data: ClientInfo) => (
                     <>
@@ -161,6 +169,9 @@ export const ClientsTable: FC<Props> = (props: Props) => {
                     onToggleSort={props.setSort}
                     removeDefaultSort
                     forceSort={props.sort}
+                    className={styles.desktopTable}
+                    colWidth={props.colWidth}
+                    setColWidth={props.setColWidth}
                 />
             )}
             <Pagination

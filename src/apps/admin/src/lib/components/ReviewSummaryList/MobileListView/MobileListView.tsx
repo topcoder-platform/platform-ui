@@ -67,22 +67,22 @@ const MobileListView: FC<MobileListViewProps<ReviewSummary>> = props => {
             <div className={styles.mobileListViewItemContainer} key={d.legacyChallengeId}>
                 <div className={styles.rows}>
                     <div className={styles.row1}>
-                        {/* Title */ propertyElements[1]}
-                        {/* Status  */ propertyElements[4]}
+                        {/* Title */ propertyElements[0]}
+                        {/* Status */ propertyElements[2]}
                     </div>
                     <div className={styles.row2}>
-                        {/* Legacy ID */ propertyElements[2]}
+                        {/* Legacy ID */ propertyElements[1]}
                     </div>
                     <div className={styles.row3}>
-                        {propertyElementLabels[5]}
-                        {/* Open Review Opp' */ propertyElements[5]}
+                        {/* propertyElementLabels[5] */}
+                        {/* Open Review Opp' */ propertyElements[3]}
                     </div>
                     <div className={styles.row4}>
-                        {propertyElementLabels[6]}
-                        {/* Review Applications */ propertyElements[6]}
+                        {propertyElementLabels[4]}
+                        {/* Review Applications */ propertyElements[4]}
                     </div>
                     <div className={styles.row5}>
-                        {/* Action */ propertyElements[7]}
+                        {/* Action */ propertyElements[5]}
                     </div>
                 </div>
             </div>

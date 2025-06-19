@@ -133,7 +133,8 @@ const CopilotOpportunityDetails: FC<{}> = () => {
                 isCopilot
                 && copilotApplications
                 && copilotApplications.length === 0
-                && opportunity?.status === 'active' ? applyCopilotOpportunityButton : undefined
+                && opportunity?.status === 'active'
+                && opportunity?.canApplyAsCopilot ? applyCopilotOpportunityButton : undefined
             }
             infoComponent={(isCopilot && !(copilotApplications
                 && copilotApplications.length === 0
