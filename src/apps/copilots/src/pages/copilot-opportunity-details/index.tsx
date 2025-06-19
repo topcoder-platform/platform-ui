@@ -120,7 +120,7 @@ const CopilotOpportunityDetails: FC<{}> = () => {
         )
     }
 
-    async function cancelCopilotOpportunityHandler() {
+    async function cancelCopilotOpportunityHandler(): Promise<void> {
         if (opportunityId) {
             await cancelCopilotOpportunity(opportunityId)
             mutate(`${copilotBaseUrl}/copilots/opportunity/${opportunityId}/applications`)
@@ -151,7 +151,10 @@ const CopilotOpportunityDetails: FC<{}> = () => {
                 && opportunity?.status === 'active'
                 && opportunity?.canApplyAsCopilot ? applyCopilotOpportunityButton : undefined
             }
-            secondaryButtonConfig={opportunity?.status === 'active' && isAdminOrPM ? cancelCopilotOpportunityButton : undefined}
+            secondaryButtonConfig={
+                opportunity?.status === 'active'
+                && isAdminOrPM ? cancelCopilotOpportunityButton : undefined
+            }
             infoComponent={(isCopilot && !(copilotApplications
                 && copilotApplications.length === 0
             ) && opportunity?.status === 'active' && !!application) && (
@@ -261,7 +264,7 @@ const CopilotOpportunityDetails: FC<{}> = () => {
                     )
                 }
             </div>
-            
+
         </ContentLayout>
     )
 }
