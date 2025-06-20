@@ -1,5 +1,9 @@
 @import '@libs/ui/styles/includes';
 
+.wrapper {
+    min-height: 800px;
+}
+
 .header {
     display: flex;
     align-items: center;

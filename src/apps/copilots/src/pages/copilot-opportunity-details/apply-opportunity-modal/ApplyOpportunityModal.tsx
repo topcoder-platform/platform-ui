@@ -44,8 +44,8 @@ const ApplyOpportunityModal: FC<ApplyOpportunityModalProps> = props => {
             size='lg'
             title={
                 success
-                    ? `Your Application for ${props.projectName} Has Been Received!`
-                    : `Confirm Your Copilot Application for ${props.projectName}`
+                    ? 'Your Application Has Been Received!'
+                    : 'Confirm Your Copilot Application'
             }
             buttons={
                 !success ? (
@@ -62,21 +62,21 @@ const ApplyOpportunityModal: FC<ApplyOpportunityModalProps> = props => {
                 <div className={styles.info}>
                     {
                         success
-                            ? `We appreciate the time and effort you've taken to apply 
-                            for this exciting opportunity. Our team is committed 
-                            to providing a seamless and efficient process to ensure a 
-                            great experience for all copilots. We will review your application 
-                            within short time.`
+                            ? `Thank you for taking the time to apply for this exciting opportunity. 
+                                We truly value your interest and effort. 
+                                Your application will be reviewed promptly.`
                             : `We're excited to see your interest in joining our team as a copilot 
-                            for the ${props.projectName} project! Before we proceed, we want to 
+                            for the "${props.projectName}" project! Before we proceed, we want to 
                             ensure that you have carefully reviewed the project requirements and 
-                            are committed to meeting them.`
+                            are committed to meeting them. Please write below the reason(s) 
+                            why you believe you're a good fit for this project 
+                            (e.g., previous experience, availability, etc.).`
                     }
                 </div>
                 {
                     !success && (
                         <InputTextarea
-                            name='Notes'
+                            name='Reason'
                             onChange={onChange}
                             value={notes}
                             error={error}

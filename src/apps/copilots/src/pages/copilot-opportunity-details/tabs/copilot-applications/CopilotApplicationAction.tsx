@@ -15,7 +15,8 @@ const CopilotApplicationAction = (
 ): JSX.Element => {
     const { opportunityId }: {opportunityId?: string} = useParams<{ opportunityId?: string }>()
     const isInvited = useMemo(
-        () => allCopilotApplications.findIndex(item => item.status === CopilotApplicationStatus.INVITED) > -1,
+        () => allCopilotApplications
+            && allCopilotApplications.findIndex(item => item.status === CopilotApplicationStatus.INVITED) > -1,
         [allCopilotApplications],
     )
     const onClick = useCallback(async () => {
