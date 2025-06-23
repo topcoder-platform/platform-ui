@@ -20,7 +20,6 @@ const CopilotRequestForm: FC<{}> = () => {
     const [formValues, setFormValues] = useState<any>({})
     const [isFormChanged, setIsFormChanged] = useState(false)
     const [formErrors, setFormErrors] = useState<any>({})
-    const [existingCopilot, setExistingCopilot] = useState<string>('')
     const [paymentType, setPaymentType] = useState<string>('')
 
     const projectTypes = ProjectTypes ? ProjectTypes.map(project => ({
@@ -28,16 +27,6 @@ const CopilotRequestForm: FC<{}> = () => {
         value: ProjectTypeValues[project],
     }))
         : []
-
-    function exisitingCopilotToggle(t: 'yes'|'no'): void {
-        setExistingCopilot(t)
-        setFormErrors((prevFormErrors: any) => {
-            const updatedErrors = { ...prevFormErrors }
-            delete updatedErrors.existingCopilot
-            return updatedErrors
-        })
-        setIsFormChanged(true)
-    }
 
     function togglePaymentType(t: 'standard'|'other'): void {
         setFormValues((prevFormValues: any) => ({
@@ -141,12 +130,6 @@ const CopilotRequestForm: FC<{}> = () => {
 
         const fieldValidations: { condition: boolean; key: string; message: string }[] = [
             { condition: !formValues.projectId, key: 'projectId', message: 'Project is required' },
-            { condition: !existingCopilot, key: 'existingCopilot', message: 'Selection is required' },
-            {
-                condition: existingCopilot === 'yes' && !formValues.copilotUsername,
-                key: 'copilotUsername',
-                message: 'Username is required',
-            },
             { condition: !formValues.complexity, key: 'complexity', message: 'Selection is required' },
             {
                 condition: !formValues.requiresCommunication,
@@ -220,7 +203,6 @@ const CopilotRequestForm: FC<{}> = () => {
                     toast.success('Copilot request sent successfully')
                     setFormValues({
                         complexity: '',
-                        copilotUsername: '',
                         numHoursPerWeek: '',
                         numWeeks: '',
                         otherPaymentType: '',
@@ -234,7 +216,6 @@ const CopilotRequestForm: FC<{}> = () => {
                     })
                     setIsFormChanged(false)
                     setFormErrors({})
-                    setExistingCopilot('')
                     setPaymentType('')
                 })
                 .catch(e => {
@@ -288,63 +269,6 @@ const CopilotRequestForm: FC<{}> = () => {
                         dirty
                         error={formErrors.projectId}
                     />
-                    <p className={styles.formRow}>
-                        Are you already working with a copilot that you&apos;d love to work with on this project
-                        as well?
-                    </p>
-
-                    <div className={styles.formRadioBtn}>
-                        <InputRadio
-                            label='Yes'
-                            name='existingCopilot'
-                            id='yes'
-                            value='Yes'
-                            checked={existingCopilot === 'yes'}
-                            onChange={function t() { exisitingCopilotToggle('yes') }}
-                        />
-                        <InputRadio
-                            label='No'
-                            name='existingCopilot'
-                            id='no'
-                            value='No'
-                            checked={existingCopilot === 'no'}
-                            onChange={function t() { exisitingCopilotToggle('no') }}
-                        />
-                    </div>
-                    {
-                        existingCopilot === 'yes'
-                        && (
-                            <div className={styles.formRow}>
-                                <p className={styles.formRow}>
-                                    Great! What is the username of the copilot you&apos;d like to work with again?
-                                </p>
-
-                                <InputText
-                                    name='copilot name'
-                                    label='Copilot username'
-                                    placeholder='Type the copilot username here...'
-                                    dirty
-                                    tabIndex={0}
-                                    type='text'
-                                    onChange={bind(handleFormValueChange, this, 'copilotUsername')}
-                                    value={formValues.copilotUsername}
-                                    error={formErrors.copilotUsername}
-                                />
-                            </div>
-                        )
-                    }
-                    {formErrors.existingCopilot && (
-                        <p className={styles.error}>
-                            <IconSolid.ExclamationIcon />
-                            {formErrors.existingCopilot}
-                        </p>
-                    )}
-                    {formValues.existingCopilot === 'yes' && !formValues.copilotUsername && (
-                        <p className={styles.error}>
-                            <IconSolid.ExclamationIcon />
-                            {formErrors.existingCopilot}
-                        </p>
-                    )}
 
                     <p className={styles.formRow}>What type of project are you working on?</p>
                     <InputSelect
