@@ -3,9 +3,11 @@ import _ from 'lodash'
 import { TabsNavItem } from '~/libs/ui'
 import {
     billingAccountRouteId,
+    gamificationAdminRouteId,
     manageChallengeRouteId,
     manageReviewRouteId,
     permissionManagementRouteId,
+    platformRouteId,
     userManagementRouteId,
 } from '~/apps/admin/src/config/routes.config'
 
@@ -49,6 +51,16 @@ export const SystemAdminTabsConfig: TabsNavItem[] = [
         ],
         id: permissionManagementRouteId,
         title: 'Permission Management',
+    },
+    {
+        children: [
+            {
+                id: `${platformRouteId}/${gamificationAdminRouteId}`,
+                title: 'Badges',
+            },
+        ],
+        id: platformRouteId,
+        title: 'Platform',
     },
 ]
 

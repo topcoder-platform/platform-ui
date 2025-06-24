@@ -1,21 +1,18 @@
-import { Dispatch, FC, SetStateAction, useState } from 'react'
+import { Dispatch, FC, SetStateAction, useMemo, useState } from 'react'
 
-import { Breadcrumb, BreadcrumbItemModel, ContentLayout } from '~/libs/ui'
+import { ContentLayout } from '~/libs/ui'
 
-import { GameBadge, useGamificationBreadcrumb } from '../../game-lib'
+import { GameBadge } from '../../game-lib'
 import { BadgeCreatedModal } from '../../game-lib/modals/badge-created-modal'
 
 import { CreateBadgeForm, createBadgeFormDef } from './create-badge-form'
 import styles from './CreateBadgePage.module.scss'
 
-const CreateBadgePage: FC = () => {
-
-    const breadcrumb: Array<BreadcrumbItemModel> = useGamificationBreadcrumb([
-        {
-            name: 'create badge',
-            url: '#',
-        },
-    ])
+interface Props extends GameBadge {
+    rootPage: string;
+}
+const CreateBadgePage: FC<Props> = (props: Props) => {
+    const formDef = useMemo(() => createBadgeFormDef(props.rootPage), [props.rootPage])
 
     const [showBadgeCreatedModal, setShowBadgeCreatedModal]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
@@ -37,16 +34,16 @@ const CreateBadgePage: FC = () => {
         <ContentLayout
             title='Create Badge'
         >
-            <Breadcrumb items={breadcrumb} />
             <div className={styles.container}>
                 <CreateBadgeForm
-                    formDef={createBadgeFormDef}
+                    formDef={formDef}
                     onSave={onSave}
                 />
             </div>
             {
                 createdBadge && (
                     <BadgeCreatedModal
+                        rootPage={props.rootPage}
                         badge={createdBadge}
                         isOpen={showBadgeCreatedModal}
                         onClose={handleCloseCreateModal}
