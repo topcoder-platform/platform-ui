@@ -21,15 +21,18 @@ import { CopyButton } from '../CopyButton'
 import { DialogEditUserEmail } from '../DialogEditUserEmail'
 import { DialogEditUserRoles } from '../DialogEditUserRoles'
 import { DialogEditUserGroups } from '../DialogEditUserGroups'
+import { DialogEditUserSSOLogin } from '../DialogEditUserSSOLogin'
 import { DialogEditUserTerms } from '../DialogEditUserTerms'
 import { DialogEditUserStatus } from '../DialogEditUserStatus'
 import { DialogUserStatusHistory } from '../DialogUserStatusHistory'
 import { DropdownMenuButton } from '../common/DropdownMenuButton'
-import { useTableFilterLocal, useTableFilterLocalProps } from '../../hooks'
+import { useOnComponentDidMount, useTableFilterLocal, useTableFilterLocalProps } from '../../hooks'
 import { TABLE_DATE_FORMAT } from '../../../config/index.config'
-import { UserInfo } from '../../models'
+import { SSOLoginProvider, UserInfo } from '../../models'
 import { Pagination } from '../common/Pagination'
 import { ReactComponent as RectangleListRegularIcon } from '../../assets/i/rectangle-list-regular-icon.svg'
+import { fetchSSOLoginProviders } from '../../services'
+import { handleError } from '../../utils'
 
 import styles from './UsersTable.module.scss'
 
@@ -47,6 +50,7 @@ interface Props {
 
 export const UsersTable: FC<Props> = props => {
     const [colWidth, setColWidth] = useState<colWidthType>({})
+    const [ssoLoginProviders, setSsoLoginProviders] = useState<SSOLoginProvider[]>([])
     const [showDialogEditUserEmail, setShowDialogEditUserEmail] = useState<
         UserInfo | undefined
     >()
@@ -54,6 +58,9 @@ export const UsersTable: FC<Props> = props => {
         UserInfo | undefined
     >()
     const [showDialogEditUserGroups, setShowDialogEditUserGroups] = useState<
+        UserInfo | undefined
+    >()
+    const [showDialogEditUserSSOLogin, setShowDialogEditSSOLogin] = useState<
         UserInfo | undefined
     >()
     const [showDialogEditUserTerms, setShowDialogEditUserTerms] = useState<
@@ -273,6 +280,8 @@ export const UsersTable: FC<Props> = props => {
                             setShowDialogEditUserGroups(data)
                         } else if (item === 'Terms') {
                             setShowDialogEditUserTerms(data)
+                        } else if (item === 'SSO Logins') {
+                            setShowDialogEditSSOLogin(data)
                         } else if (item === 'Deactivate') {
                             setShowDialogEditUserStatus(data)
                         } else if (item === 'Activate') {
@@ -298,6 +307,7 @@ export const UsersTable: FC<Props> = props => {
                                         'Roles',
                                         'Groups',
                                         'Terms',
+                                        'SSO Logins',
                                         ...(data.active
                                             ? ['Deactivate']
                                             : ['Activate']),
@@ -318,6 +328,7 @@ export const UsersTable: FC<Props> = props => {
                                             'Roles',
                                             'Groups',
                                             'Terms',
+                                            'SSO Logins',
                                         ]}
                                         onSelectOption={onSelectOption}
                                     >
@@ -358,6 +369,16 @@ export const UsersTable: FC<Props> = props => {
         ],
         [isTablet, isMobile],
     )
+
+    useOnComponentDidMount(() => {
+        fetchSSOLoginProviders()
+            .then(result => {
+                setSsoLoginProviders(result)
+            })
+            .catch(e => {
+                handleError(e)
+            })
+    })
 
     return (
         <div className={classNames(styles.container, props.className)}>
@@ -404,6 +425,16 @@ export const UsersTable: FC<Props> = props => {
                         setShowDialogEditUserGroups(undefined)
                     }}
                     userInfo={showDialogEditUserGroups}
+                />
+            )}
+            {showDialogEditUserSSOLogin && (
+                <DialogEditUserSSOLogin
+                    open
+                    setOpen={function setOpen() {
+                        setShowDialogEditSSOLogin(undefined)
+                    }}
+                    userInfo={showDialogEditUserSSOLogin}
+                    providers={ssoLoginProviders}
                 />
             )}
             {showDialogEditUserTerms && (
