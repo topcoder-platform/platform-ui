@@ -3,7 +3,6 @@ import { noop } from 'lodash'
 import { FormDefinition, IconOutline, validatorRequired } from '~/libs/ui'
 
 import { ACCEPTED_BADGE_MIME_TYPES, MAX_BADGE_IMAGE_FILE_SIZE } from '../../../config'
-import { rootRoute } from '../../../gamification-admin.routes'
 
 export enum CreateBadgeFormField {
     badgeActive = 'badgeActive',
@@ -12,7 +11,7 @@ export enum CreateBadgeFormField {
     file = 'file',
 }
 
-export const createBadgeFormDef: FormDefinition = {
+export const createBadgeFormDef: (rootPage: string) => FormDefinition = (rootPage: string) => ({
     buttons: {
         primaryGroup: [
             {
@@ -28,7 +27,7 @@ export const createBadgeFormDef: FormDefinition = {
             {
                 buttonStyle: 'secondary',
                 icon: IconOutline.ChevronLeftIcon,
-                route: rootRoute || '/',
+                route: rootPage,
                 size: 'lg',
             },
         ],
@@ -90,4 +89,4 @@ export const createBadgeFormDef: FormDefinition = {
         },
         renderGroupDividers: false,
     },
-}
+} as FormDefinition)

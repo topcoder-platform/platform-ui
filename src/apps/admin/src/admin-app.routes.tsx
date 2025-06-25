@@ -1,3 +1,4 @@
+import { baseDetailPath, createBadgePath } from '~/apps/gamification-admin'
 import { AppSubdomain, ToolTitle } from '~/config'
 import {
     lazyLoad,
@@ -9,9 +10,11 @@ import {
 
 import {
     billingAccountRouteId,
+    gamificationAdminRouteId,
     manageChallengeRouteId,
     manageReviewRouteId,
     permissionManagementRouteId,
+    platformRouteId,
     rootRoute,
     userManagementRouteId,
 } from './config/routes.config'
@@ -105,6 +108,17 @@ const PermissionGroupMembersPage: LazyLoadedComponent = lazyLoad(
 const PermissionAddGroupMembersPage: LazyLoadedComponent = lazyLoad(
     () => import('./permission-management/PermissionAddGroupMembersPage'),
     'PermissionAddGroupMembersPage',
+)
+
+const Platform: LazyLoadedComponent = lazyLoad(() => import('./platform/Platform'))
+const BadgeDetailPage: LazyLoadedComponent = lazyLoad(
+    () => import('../../gamification-admin/src/pages/badge-detail/BadgeDetailPage'),
+)
+const BadgeListingPage: LazyLoadedComponent = lazyLoad(
+    () => import('../../gamification-admin/src/pages/badge-listing/BadgeListingPage'),
+)
+const CreateBadgePage: LazyLoadedComponent = lazyLoad(
+    () => import('../../gamification-admin/src/pages/create-badge/CreateBadgePage'),
 )
 
 export const toolTitle: string = ToolTitle.admin
@@ -255,6 +269,29 @@ export const adminRoutes: ReadonlyArray<PlatformRoute> = [
                 element: <PermissionManagement />,
                 id: permissionManagementRouteId,
                 route: permissionManagementRouteId,
+            },
+            {
+                children: [
+                    {
+                        element: (
+                            <BadgeListingPage
+                                rootPage={`${rootRoute}/${platformRouteId}/${gamificationAdminRouteId}`}
+                            />
+                        ),
+                        route: gamificationAdminRouteId,
+                    },
+                    {
+                        element: <CreateBadgePage />,
+                        route: `${gamificationAdminRouteId}${createBadgePath}`,
+                    },
+                    {
+                        element: <BadgeDetailPage />,
+                        route: `${gamificationAdminRouteId}${baseDetailPath}/:id`,
+                    },
+                ],
+                element: <Platform />,
+                id: platformRouteId,
+                route: platformRouteId,
             },
         ],
         domain: AppSubdomain.admin,

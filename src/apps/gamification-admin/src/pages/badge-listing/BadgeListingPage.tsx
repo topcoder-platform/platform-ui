@@ -1,4 +1,4 @@
-import { Dispatch, FC, SetStateAction, useState } from 'react'
+import { Dispatch, FC, SetStateAction, useMemo, useState } from 'react'
 import { NavigateFunction, useNavigate } from 'react-router-dom'
 
 import {
@@ -16,15 +16,19 @@ import { createBadgeRoute } from '../../gamification-admin.routes'
 import { badgeListingColumns } from './badge-listing-table'
 import styles from './BadgeListingPage.module.scss'
 
-const BadgeListingPage: FC = () => {
+interface Props extends GameBadge {
+    rootPage: string;
+}
+const BadgeListingPage: FC<Props> = (props: Props) => {
+    const initColumns = useMemo(() => badgeListingColumns(props.rootPage), [props.rootPage])
 
     const [sort, setSort]: [Sort, Dispatch<SetStateAction<Sort>>]
-        = useState<Sort>(tableGetDefaultSort(badgeListingColumns))
+        = useState<Sort>(tableGetDefaultSort(initColumns))
     const [columns]: [
         ReadonlyArray<TableColumn<GameBadge>>,
         Dispatch<SetStateAction<ReadonlyArray<TableColumn<GameBadge>>>>,
     ]
-        = useState<ReadonlyArray<TableColumn<GameBadge>>>([...badgeListingColumns])
+        = useState<ReadonlyArray<TableColumn<GameBadge>>>(initColumns)
 
     const pageHandler: InfinitePageHandler<GameBadge> = useGetGameBadgesPage(sort)
     const navigate: NavigateFunction = useNavigate()
@@ -36,7 +40,7 @@ const BadgeListingPage: FC = () => {
     // header button config
     const buttonConfig: ButtonProps = {
         label: 'Create New Badge',
-        onClick: () => navigate(createBadgeRoute),
+        onClick: () => navigate(createBadgeRoute(props.rootPage)),
     }
 
     if (!pageHandler.data) {

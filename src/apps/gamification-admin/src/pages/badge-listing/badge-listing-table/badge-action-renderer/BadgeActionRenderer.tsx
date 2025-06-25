@@ -6,8 +6,12 @@ import { badgeDetailPath } from '../../../../gamification-admin.routes'
 
 import styles from './BadgeActionRenderer.module.scss'
 
-const BadgeActionRenderer: (badge: GameBadge) => JSX.Element
-    = (badge: GameBadge): JSX.Element => {
+interface Props extends GameBadge {
+    rootPage: string;
+}
+
+const BadgeActionRenderer: (props: Props) => JSX.Element
+    = (props: Props): JSX.Element => {
 
         const isMobile: boolean = useCheckIsMobile()
 
@@ -33,7 +37,7 @@ const BadgeActionRenderer: (badge: GameBadge) => JSX.Element
                         size={isMobile ? 'sm' : 'md'}
                         key={button.label}
                         label={button.label}
-                        to={badgeDetailPath(badge.id, button.view)}
+                        to={badgeDetailPath(props.rootPage, props.id, button.view)}
                     />
                 ))}
             </div>
