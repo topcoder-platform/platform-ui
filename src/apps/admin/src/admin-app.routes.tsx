@@ -18,6 +18,7 @@ import {
     rootRoute,
     userManagementRouteId,
 } from './config/routes.config'
+import { platformSkillRouteId } from './platform/routes.config'
 
 const AdminApp: LazyLoadedComponent = lazyLoad(() => import('./AdminApp'))
 
@@ -111,6 +112,13 @@ const PermissionAddGroupMembersPage: LazyLoadedComponent = lazyLoad(
 )
 
 const Platform: LazyLoadedComponent = lazyLoad(() => import('./platform/Platform'))
+const SkillManagement: LazyLoadedComponent = lazyLoad(
+    () => import('./platform/skill-management/SkillManagement'),
+)
+const SkillManagementLandingPage: LazyLoadedComponent = lazyLoad(
+    () => import('./platform/skill-management/LandingPage'),
+    'LandingPage',
+)
 const BadgeDetailPage: LazyLoadedComponent = lazyLoad(
     () => import('../../gamification-admin/src/pages/badge-detail/BadgeDetailPage'),
 )
@@ -270,8 +278,22 @@ export const adminRoutes: ReadonlyArray<PlatformRoute> = [
                 id: permissionManagementRouteId,
                 route: permissionManagementRouteId,
             },
+
+            // Platform Management Module
             {
                 children: [
+                    {
+                        children: [
+                            {
+                                element: <SkillManagementLandingPage />,
+                                id: 'skills-landing-page',
+                                route: '',
+                            },
+                        ],
+                        element: <SkillManagement />,
+                        id: platformSkillRouteId,
+                        route: platformSkillRouteId,
+                    },
                     {
                         element: (
                             <BadgeListingPage

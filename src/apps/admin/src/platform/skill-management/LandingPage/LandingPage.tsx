@@ -1,8 +1,8 @@
 import { FC } from 'react'
 
-import { ContentLayout, InputCheckbox, PageTitle } from '~/libs/ui'
+import { InputCheckbox, PageTitle } from '~/libs/ui'
 
-import { SkillsManagerContextValue, useSkillsManagerContext } from '../context'
+import { SkillsManagerContextValue, useSkillsManagerContext } from '../lib/context'
 import {
     CategoriesAccordion,
     CategoryModal,
@@ -10,8 +10,8 @@ import {
     PageHeader,
     SearchInput,
     SkillModal,
-} from '../components'
-import { BulkEditor } from '../components/bulk-editor'
+} from '../lib/components'
+import { BulkEditor } from '../lib/components/bulk-editor'
 
 import styles from './LandingPage.module.scss'
 
@@ -30,7 +30,7 @@ const LandingPage: FC<{}> = () => {
     }: SkillsManagerContextValue = useSkillsManagerContext()
 
     return (
-        <ContentLayout innerClass={styles.contentWrap}>
+        <div className={styles.contentWrap}>
             <PageTitle>Skills Manager | Admin</PageTitle>
             <PageHeader title='Skills Manager'>
                 <InputCheckbox
@@ -63,7 +63,7 @@ const LandingPage: FC<{}> = () => {
             )}
 
             {!!showSkillModal && <SkillModal skill={showSkillModal} />}
-        </ContentLayout>
+        </div>
     )
 }
 

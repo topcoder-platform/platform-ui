@@ -6,7 +6,6 @@ import { profilesRoutes } from '~/apps/profiles'
 import { talentSearchRoutes } from '~/apps/talent-search'
 import { accountsRoutes } from '~/apps/accounts'
 import { onboardingRoutes } from '~/apps/onboarding'
-import { skillsManagerRoutes } from '~/apps/skills-manager'
 import { walletRoutes } from '~/apps/wallet'
 import { walletAdminRoutes } from '~/apps/wallet-admin'
 import { copilotsRoutes } from '~/apps/copilots'
@@ -38,7 +37,6 @@ export const platformRoutes: Array<PlatformRoute> = [
     ...walletRoutes,
     ...walletAdminRoutes,
     ...accountsRoutes,
-    ...skillsManagerRoutes,
     ...homeRoutes,
     ...adminRoutes,
 ]
