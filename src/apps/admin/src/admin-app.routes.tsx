@@ -1,3 +1,4 @@
+import { baseDetailPath, createBadgePath } from '~/apps/gamification-admin'
 import { AppSubdomain, ToolTitle } from '~/config'
 import {
     lazyLoad,
@@ -9,6 +10,7 @@ import {
 
 import {
     billingAccountRouteId,
+    gamificationAdminRouteId,
     manageChallengeRouteId,
     manageReviewRouteId,
     permissionManagementRouteId,
@@ -16,7 +18,7 @@ import {
     rootRoute,
     userManagementRouteId,
 } from './config/routes.config'
-import { platformSkillRouteId } from './platform-management/routes.config'
+import { platformSkillRouteId } from './platform/routes.config'
 
 const AdminApp: LazyLoadedComponent = lazyLoad(() => import('./AdminApp'))
 
@@ -109,15 +111,22 @@ const PermissionAddGroupMembersPage: LazyLoadedComponent = lazyLoad(
     'PermissionAddGroupMembersPage',
 )
 
-const PlatformManagement: LazyLoadedComponent = lazyLoad(
-    () => import('./platform-management/PlatformManagement'),
-)
+const Platform: LazyLoadedComponent = lazyLoad(() => import('./platform/Platform'))
 const SkillManagement: LazyLoadedComponent = lazyLoad(
-    () => import('./platform-management/skill-management/SkillManagement'),
+    () => import('./platform/skill-management/SkillManagement'),
 )
 const SkillManagementLandingPage: LazyLoadedComponent = lazyLoad(
-    () => import('./platform-management/skill-management/LandingPage'),
+    () => import('./platform/skill-management/LandingPage'),
     'LandingPage',
+)
+const BadgeDetailPage: LazyLoadedComponent = lazyLoad(
+    () => import('../../gamification-admin/src/pages/badge-detail/BadgeDetailPage'),
+)
+const BadgeListingPage: LazyLoadedComponent = lazyLoad(
+    () => import('../../gamification-admin/src/pages/badge-listing/BadgeListingPage'),
+)
+const CreateBadgePage: LazyLoadedComponent = lazyLoad(
+    () => import('../../gamification-admin/src/pages/create-badge/CreateBadgePage'),
 )
 
 export const toolTitle: string = ToolTitle.admin
@@ -269,6 +278,7 @@ export const adminRoutes: ReadonlyArray<PlatformRoute> = [
                 id: permissionManagementRouteId,
                 route: permissionManagementRouteId,
             },
+
             // Platform Management Module
             {
                 children: [
@@ -284,8 +294,24 @@ export const adminRoutes: ReadonlyArray<PlatformRoute> = [
                         id: platformSkillRouteId,
                         route: platformSkillRouteId,
                     },
+                    {
+                        element: (
+                            <BadgeListingPage
+                                rootPage={`${rootRoute}/${platformRouteId}/${gamificationAdminRouteId}`}
+                            />
+                        ),
+                        route: gamificationAdminRouteId,
+                    },
+                    {
+                        element: <CreateBadgePage />,
+                        route: `${gamificationAdminRouteId}${createBadgePath}`,
+                    },
+                    {
+                        element: <BadgeDetailPage />,
+                        route: `${gamificationAdminRouteId}${baseDetailPath}/:id`,
+                    },
                 ],
-                element: <PlatformManagement />,
+                element: <Platform />,
                 id: platformRouteId,
                 route: platformRouteId,
             },

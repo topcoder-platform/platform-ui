@@ -13,6 +13,15 @@
         @include ltelg {
             padding: $sp-4;
         }
+
+        &.isPlatformPage {
+            padding: 0;
+            background-color: white;
+
+            @include ltelg {
+                padding: 0;
+            }
+        }
     }
 }
 

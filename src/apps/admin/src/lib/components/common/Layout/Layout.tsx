@@ -1,19 +1,18 @@
+
 import { FC, PropsWithChildren, useContext } from 'react'
 import cn from 'classnames'
 
+import { platformRouteId } from '~/apps/admin/src/config/routes.config'
 import { ContentLayout } from '~/libs/ui'
 import { routerContext, RouterContextData } from '~/libs/core'
-import { platformRouteId } from '~/apps/admin/src/config/routes.config'
-import { platformSkillRouteId } from '~/apps/admin/src/platform-management/routes.config'
+import { platformSkillRouteId } from '~/apps/admin/src/platform/routes.config'
 import { AppSubdomain, EnvironmentConfig } from '~/config'
 
 import { SystemAdminTabs } from '../Tab'
 
 import styles from './Layout.module.scss'
 
-export const NullLayout: FC<PropsWithChildren> = props => (
-    <>{props.children}</>
-)
+export const NullLayout: FC<PropsWithChildren> = props => <>{props.children}</>
 
 export type LayoutProps = PropsWithChildren<{
     classes?: { // eslint-disable-line react/no-unused-prop-types -- it's actually used
@@ -41,7 +40,13 @@ export const Layout: FC<LayoutProps> = props => (
     </ContentLayout>
 )
 
-export const PlatformManagementSkillsLayout: FC<LayoutProps> = props => (
+export const PlatformLayout: FC<LayoutProps> = props => (
+    <Layout classes={{ mainClass: styles.isPlatformPage }}>
+        {props.children}
+    </Layout>
+)
+
+export const PlatformSkillsLayout: FC<LayoutProps> = props => (
     <Layout classes={{ contentClass: styles.platformSkillsContentLayout }}>
         {props.children}
     </Layout>
@@ -52,13 +57,22 @@ export function useLayout(): { Layout: FC<LayoutProps> } {
 
     if (!routerContextData.initialized) return { Layout }
 
+    const platformBaseRouteId = EnvironmentConfig.SUBDOMAIN === AppSubdomain.admin
+        ? `/${platformRouteId}`
+        : `/${AppSubdomain.admin}/${platformRouteId}`
+
     const skillManagementRouteId = EnvironmentConfig.SUBDOMAIN === AppSubdomain.admin
         ? `/${platformRouteId}/${platformSkillRouteId}`
         : `/${AppSubdomain.admin}/${platformRouteId}/${platformSkillRouteId}`
 
     if (window.location.pathname.toLowerCase()
         .startsWith(skillManagementRouteId.toLowerCase())) {
-        return { Layout: PlatformManagementSkillsLayout }
+        return { Layout: PlatformSkillsLayout }
+    }
+
+    if (window.location.pathname.toLowerCase()
+        .startsWith(platformBaseRouteId.toLowerCase())) {
+        return { Layout: PlatformLayout }
     }
 
     return { Layout }
