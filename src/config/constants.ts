@@ -1,5 +1,4 @@
 export enum AppSubdomain {
-    skillsManager = 'manage',
     accounts = 'account-settings',
     devCenter = 'devcenter',
     earn = 'earn',
@@ -16,7 +15,6 @@ export enum AppSubdomain {
 }
 
 export enum ToolTitle {
-    skillsManager = 'Manage Skills',
     accounts = 'Account Settings',
     devCenter = 'Dev Center',
     earn = 'Opportunity Feed',

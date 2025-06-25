@@ -20,7 +20,24 @@
     margin: $sp-8 auto !important;
 }
 
-.contantentLayoutInner {
+.contentLayoutInner {
     box-sizing: border-box;
     width: 100%;
+}
+
+/* --- PLATFORM SKILLS LAYOUT --- */
+
+.platformSkillsContentLayout {
+    color: $black-100;
+
+    .layout {
+        .main {
+            padding: 0 0 $sp-6;
+            background-color: $tc-white;
+
+            @include ltelg {
+                padding: $sp-4 0;
+            }
+        }
+    }
 }

@@ -12,9 +12,11 @@ import {
     manageChallengeRouteId,
     manageReviewRouteId,
     permissionManagementRouteId,
+    platformRouteId,
     rootRoute,
     userManagementRouteId,
 } from './config/routes.config'
+import { platformSkillRouteId } from './platform-management/routes.config'
 
 const AdminApp: LazyLoadedComponent = lazyLoad(() => import('./AdminApp'))
 
@@ -105,6 +107,17 @@ const PermissionGroupMembersPage: LazyLoadedComponent = lazyLoad(
 const PermissionAddGroupMembersPage: LazyLoadedComponent = lazyLoad(
     () => import('./permission-management/PermissionAddGroupMembersPage'),
     'PermissionAddGroupMembersPage',
+)
+
+const PlatformManagement: LazyLoadedComponent = lazyLoad(
+    () => import('./platform-management/PlatformManagement'),
+)
+const SkillManagement: LazyLoadedComponent = lazyLoad(
+    () => import('./platform-management/skill-management/SkillManagement'),
+)
+const SkillManagementLandingPage: LazyLoadedComponent = lazyLoad(
+    () => import('./platform-management/skill-management/LandingPage'),
+    'LandingPage',
 )
 
 export const toolTitle: string = ToolTitle.admin
@@ -255,6 +268,26 @@ export const adminRoutes: ReadonlyArray<PlatformRoute> = [
                 element: <PermissionManagement />,
                 id: permissionManagementRouteId,
                 route: permissionManagementRouteId,
+            },
+            // Platform Management Module
+            {
+                children: [
+                    {
+                        children: [
+                            {
+                                element: <SkillManagementLandingPage />,
+                                id: 'skills-landing-page',
+                                route: '',
+                            },
+                        ],
+                        element: <SkillManagement />,
+                        id: platformSkillRouteId,
+                        route: platformSkillRouteId,
+                    },
+                ],
+                element: <PlatformManagement />,
+                id: platformRouteId,
+                route: platformRouteId,
             },
         ],
         domain: AppSubdomain.admin,
