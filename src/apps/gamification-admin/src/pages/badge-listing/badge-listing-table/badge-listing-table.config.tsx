@@ -5,17 +5,17 @@ import { GameBadge } from '../../../game-lib'
 import { BadgeActionRenderer } from './badge-action-renderer'
 import { BadgeListingNameRenderer } from './badge-name-renderer'
 
-export const badgeListingColumns: ReadonlyArray<TableColumn<GameBadge>> = [
+export const badgeListingColumns: (rootPage: string) => ReadonlyArray<TableColumn<GameBadge>> = (rootPage: string) => [
     {
         defaultSortDirection: 'asc',
         isDefaultSort: true,
         label: 'Badge Name',
         propertyName: 'badge_name',
-        renderer: BadgeListingNameRenderer,
+        renderer: (data: GameBadge) => <BadgeListingNameRenderer {...data} />,
         type: 'element',
     },
     {
-        renderer: BadgeActionRenderer,
+        renderer: (data: GameBadge) => <BadgeActionRenderer {...data} rootPage={rootPage} />,
         type: 'action',
     },
 ]

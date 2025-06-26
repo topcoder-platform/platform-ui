@@ -20,6 +20,7 @@ import {
 } from '../models'
 import { FormEditUserStatus } from '../models/FormEditUserStatus.model'
 import { FormAddRoleMembers } from '../models/FormAddRoleMembers.type'
+import { FormAddSSOLoginData } from '../models/FormAddSSOLoginData.model'
 
 /**
  * validation schema for form filter users
@@ -364,6 +365,26 @@ export const formEditUserEmailSchema: Yup.ObjectSchema<FormEditUserEmail>
             .trim()
             .email('Invalid email address.')
             .required('Email address is required.'),
+    })
+
+/**
+ * validation schema for form edit sso user login
+ */
+export const formAddSSOLoginSchema: Yup.ObjectSchema<FormAddSSOLoginData>
+    = Yup.object({
+        email: Yup.string()
+            .trim()
+            .email('Invalid email address.')
+            .required('Email address is required.'),
+        name: Yup.string()
+            .trim()
+            .required('Name is required.'),
+        provider: Yup.string()
+            .trim()
+            .required('Provider is required.'),
+        userId: Yup.string()
+            .trim()
+            .required('User id is required.'),
     })
 
 /**
