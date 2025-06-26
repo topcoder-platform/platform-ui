@@ -5,6 +5,13 @@
     position: relative;
 }
 
+.blockForm {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    position: relative;
+}
+
 .actionButtons {
     display: flex;
     justify-content: flex-end;

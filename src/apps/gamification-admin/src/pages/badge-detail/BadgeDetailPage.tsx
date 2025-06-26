@@ -9,9 +9,10 @@ import {
     RefObject,
     SetStateAction,
     useEffect,
+    useMemo,
     useState,
 } from 'react'
-import { Params, useLocation, useParams } from 'react-router-dom'
+import { Params, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { KeyedMutator, useSWRConfig } from 'swr'
 import { FullConfiguration } from 'swr/dist/types'
@@ -20,8 +21,6 @@ import MarkdownIt from 'markdown-it'
 import sanitizeHtml from 'sanitize-html'
 
 import {
-    Breadcrumb,
-    BreadcrumbItemModel,
     Button,
     ButtonProps,
     ContentLayout,
@@ -39,7 +38,6 @@ import {
     BadgeDetailPageHandler,
     GameBadge,
     Sort,
-    useGamificationBreadcrumb,
     useGetGameBadgeDetails,
     useGetGameBadgesPage,
 } from '../../game-lib'
@@ -60,19 +58,17 @@ const md: MarkdownIt = new MarkdownIt({
     // typographer: true,
 })
 
-const BadgeDetailPage: FC = () => {
+interface Props extends GameBadge {
+    rootPage: string;
+}
+const BadgeDetailPage: FC<Props> = (props: Props) => {
+    const initColumns = useMemo(() => badgeListingColumns(props.rootPage), [props.rootPage])
+    const navigate = useNavigate()
     const [headerButtonConfig, setHeaderButtonConfig]: [
         ButtonProps | undefined,
         Dispatch<SetStateAction<ButtonProps | undefined>>,
     ]
         = useState<ButtonProps | undefined>()
-
-    const breadcrumb: Array<BreadcrumbItemModel> = useGamificationBreadcrumb([
-        {
-            name: 'badge detail',
-            url: '#',
-        },
-    ])
 
     const { id: badgeID }: Readonly<Params<string>> = useParams()
 
@@ -106,7 +102,7 @@ const BadgeDetailPage: FC = () => {
         = useState<boolean>(false)
 
     // badgeListingMutate will reset badge listing page cache when called
-    const sort: Sort = tableGetDefaultSort(badgeListingColumns)
+    const sort: Sort = tableGetDefaultSort(initColumns)
     const { mutate: badgeListingMutate }: { mutate: KeyedMutator<any> } = useGetGameBadgesPage(sort)
 
     const [badgeNameErrorText, setBadgeNameErrorText]: [
@@ -153,6 +149,7 @@ const BadgeDetailPage: FC = () => {
                     onBadgeUpdated()
                 })
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
         newImageFile,
     ])
@@ -175,6 +172,7 @@ const BadgeDetailPage: FC = () => {
                 default: break
             }
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
         badgeDetailsHandler.data,
     ])
@@ -201,6 +199,7 @@ const BadgeDetailPage: FC = () => {
                 setShowActivatedModal(true)
                 onBadgeUpdated()
             })
+            // eslint-disable-next-line no-alert
             .catch(e => alert(`onActivateBadge error: ${e.message}`))
     }
 
@@ -217,6 +216,7 @@ const BadgeDetailPage: FC = () => {
                 setShowActivatedModal(true)
                 onBadgeUpdated()
             })
+            // eslint-disable-next-line no-alert
             .catch(e => alert(`onDisableBadge error: ${e.message}`))
     }
 
@@ -371,8 +371,13 @@ const BadgeDetailPage: FC = () => {
         <ContentLayout
             title='Badge Detail'
             buttonConfig={headerButtonConfig}
+            secondaryButtonConfig={{
+                label: 'Back',
+                onClick: () => {
+                    navigate('./../../')
+                },
+            }}
         >
-            <Breadcrumb items={breadcrumb} />
             <div className={styles.container}>
                 {
                     badgeDetailsHandler.error ? (

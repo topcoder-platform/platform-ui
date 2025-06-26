@@ -12,6 +12,7 @@ export interface BadgeCreatedModalProps {
     badge: GameBadge
     isOpen: boolean
     onClose: () => void
+    rootPage: string;
 }
 
 const BadgeCreatedModal: FC<BadgeCreatedModalProps> = (props: BadgeCreatedModalProps) => {
@@ -52,7 +53,7 @@ const BadgeCreatedModal: FC<BadgeCreatedModalProps> = (props: BadgeCreatedModalP
                             label='View'
                             primary
                             size='lg'
-                            to={badgeDetailPath(props.badge.id)}
+                            to={badgeDetailPath(props.rootPage, props.badge.id)}
                         />
                         <Button
                             label='Create a new badge'

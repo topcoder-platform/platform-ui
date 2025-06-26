@@ -92,7 +92,9 @@ const TabsNavbar: FC<TabsNavbarProps> = (props: TabsNavbarProps) => {
             initialTab.current = ''
         } else if (props.defaultActive) {
             setTabOpened(props.defaultActive)
-            updateOffset(props.defaultActive)
+            setTimeout(() => {
+                updateOffset(props.defaultActive)
+            }, 100)
         }
     }, [
         props.defaultActive,

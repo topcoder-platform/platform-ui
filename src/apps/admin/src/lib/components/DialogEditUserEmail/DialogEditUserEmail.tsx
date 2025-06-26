@@ -67,7 +67,7 @@ export const DialogEditUserEmail: FC<Props> = (props: Props) => {
                     className={classNames(styles.container, props.className)}
                     onSubmit={handleSubmit(onSubmit)}
                 >
-                    <div>
+                    <div className={styles.blockForm}>
                         <InputText
                             type='text'
                             name='id'
