@@ -17,7 +17,7 @@ import {
     LoadingSpinner,
     PageTitle,
 } from '~/libs/ui'
-import { Sort } from '~/apps/gamification-admin/src/game-lib/pagination'
+import { Sort } from '~/apps/admin/src/platform/gamification-admin/src/game-lib'
 
 import {
     Display,
