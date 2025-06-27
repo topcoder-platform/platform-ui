@@ -2,10 +2,10 @@ import { Dispatch, SetStateAction, useEffect, useMemo, useRef, useState } from '
 import _ from 'lodash'
 import classNames from 'classnames'
 
+import { Sort } from '~/apps/admin/src/platform/gamification-admin/src/game-lib'
 import { useWindowSize, WindowSize } from '~/libs/shared'
 
 import { Button } from '../button'
-import { Sort } from '../../../../../apps/gamification-admin/src/game-lib/pagination'
 import { IconOutline } from '../svgs'
 import { Tooltip } from '../tooltip'
 import '../../styles/_includes.scss'
