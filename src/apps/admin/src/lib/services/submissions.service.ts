@@ -24,7 +24,7 @@ export const fetchSubmissionsOfChallenge = async (
     }
 
     const results = await xhrGetAsync<Submission[]>(
-        `${EnvironmentConfig.API.V5}/submissions?challengeId=${challengeId}`,
+        `${EnvironmentConfig.API.V6}/submissions?challengeId=${challengeId}`,
     )
     return adjustSubmissionsResponse(results)
 }
@@ -38,7 +38,7 @@ export const removeSubmission = async (
     submissionId: string,
 ): Promise<ApiV5ResponseSuccess> => {
     const result = await xhrDeleteAsync<ApiV5ResponseSuccess>(
-        `${EnvironmentConfig.API.V5}/submissions/${submissionId}`,
+        `${EnvironmentConfig.API.V6}/submissions/${submissionId}`,
     )
     return result
 }

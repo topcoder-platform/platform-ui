@@ -15,7 +15,7 @@ export const removeReviewSummation = async (
     reviewSummationId: string,
 ): Promise<ApiV5ResponseSuccess> => {
     await xhrDeleteAsync<ApiV5ResponseSuccess>(
-        `${EnvironmentConfig.API.V5}/reviewSummations/${reviewSummationId}`,
+        `${EnvironmentConfig.API.V6}/reviewSummations/${reviewSummationId}`,
     )
     return {
         success: true,
