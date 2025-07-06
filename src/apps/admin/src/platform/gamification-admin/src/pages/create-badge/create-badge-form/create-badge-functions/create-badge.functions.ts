@@ -1,4 +1,4 @@
-import { GameBadge } from '~/apps/gamification-admin/src/game-lib'
+import { GameBadge } from '~/apps/admin/src/platform/gamification-admin/src/game-lib'
 
 import { CreateBadgeRequest, createBadgeSubmitRequestAsync } from './create-badge-store'
 

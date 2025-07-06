@@ -5,7 +5,7 @@ import { Dispatch, FC, SetStateAction, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import classNames from 'classnames'
 
-import { Sort } from '~/apps/gamification-admin/src/game-lib'
+import { Sort } from '~/apps/admin/src/platform/gamification-admin/src/game-lib'
 import { useWindowSize, WindowSize } from '~/libs/shared'
 import { colWidthType, Table, TableColumn } from '~/libs/ui'
 
