@@ -14,7 +14,7 @@ interface AccountTabProps {
 
 const AccountTab: FC<AccountTabProps> = (props: AccountTabProps) => (
     <div className={styles.container}>
-        <h3>ACCOUNT INFORMATION & SECURITY</h3>
+        <h3>ACCOUNT INFORMATION</h3>
 
         <AccountRole profile={props.profile} />
 
