@@ -1,19 +1,30 @@
 /**
  * Active Reviews Page.
  */
-import { FC, useEffect, useMemo, useState } from 'react'
-import { toString } from 'lodash'
+import { FC, useContext, useEffect, useMemo, useState } from 'react'
+import { forEach, toString } from 'lodash'
 import Select, { SingleValue } from 'react-select'
 import classNames from 'classnames'
 
-import { SelectOption } from '~/apps/admin/src/lib/models'
+import { TableLoading } from '~/apps/admin/src/lib'
 
 import {
     useFetchActiveReviews,
     useFetchActiveReviewsProps,
+    useFetchChallengeTracks,
+    useFetchChallengeTracksProps,
+    useFetchChallengeTypes,
+    useFetchChallengeTypesProps,
 } from '../../../lib/hooks'
-import { CHALLENGE_TYPE_SELECT_OPTIONS } from '../../../config/index.config'
-import { PageWrapper, TableActiveReviews, TableNoRecord } from '../../../lib'
+import { ReviewAppContextModel } from '../../../lib/models'
+import { CHALLENGE_TYPE_SELECT_ALL_OPTION } from '../../../config/index.config'
+import {
+    PageWrapper,
+    ReviewAppContext,
+    TableActiveReviews,
+    TableNoRecord,
+} from '../../../lib'
+import { SelectOptionChallengeType } from '../../../lib/models/SelectOptionChallengeType.model'
 
 import styles from './ActiveReviewsPage.module.scss'
 
@@ -22,11 +33,58 @@ interface Props {
 }
 
 export const ActiveReviewsPage: FC<Props> = (props: Props) => {
+    const {
+        cancelLoadMyRoleIds,
+        loginUserInfo,
+        myRoleIdsMapping,
+        resourceRoleMapping,
+        loadMyRoleIds,
+    }: ReviewAppContextModel = useContext(ReviewAppContext)
+
+    const { challengeTypes, isLoading: isLoadingChallengeTypeOnly }: useFetchChallengeTypesProps
+        = useFetchChallengeTypes()
+    const { challengeTracks, isLoading: isLoadingChallengeTrackOnly }: useFetchChallengeTracksProps
+        = useFetchChallengeTracks()
+    const isLoadingChallengeType = isLoadingChallengeTypeOnly || isLoadingChallengeTrackOnly
+
+    const challengeTypeOptions = useMemo<SelectOptionChallengeType[]>(() => {
+        const results: SelectOptionChallengeType[] = [
+            CHALLENGE_TYPE_SELECT_ALL_OPTION,
+        ]
+        forEach(challengeTracks, challengeTrack => {
+            results.push({
+                challengeTrackId: challengeTrack.id,
+                isDisabled: true,
+                label: `--- ${challengeTrack.name} ---`,
+                value: challengeTrack.id,
+            })
+
+            forEach(challengeTypes, challengeType => {
+                results.push({
+                    challengeTrackId: challengeTrack.id,
+                    challengeTypeId: challengeType.id,
+                    label: challengeType.name,
+                    value: `${challengeTrack.id}---${challengeType.id}`,
+                })
+            })
+        })
+
+        return results
+    }, [challengeTypes, challengeTracks])
     const [challengeType, setChallengeType] = useState<
-        SingleValue<SelectOption>
-    >(CHALLENGE_TYPE_SELECT_OPTIONS[0])
-    const { activeReviews, loadActiveReviews }: useFetchActiveReviewsProps
-        = useFetchActiveReviews()
+        SingleValue<SelectOptionChallengeType>
+    >(CHALLENGE_TYPE_SELECT_ALL_OPTION)
+    const {
+        totalPages,
+        page,
+        setPage,
+        activeReviews,
+        isLoading: isLoadingActiveReviews,
+        loadActiveReviews,
+    }: useFetchActiveReviewsProps = useFetchActiveReviews(
+        loadMyRoleIds,
+        cancelLoadMyRoleIds,
+    )
 
     const breadCrumb = useMemo(
         () => [{ index: 1, label: 'My Active Challenges' }],
@@ -34,10 +92,14 @@ export const ActiveReviewsPage: FC<Props> = (props: Props) => {
     )
 
     useEffect(() => {
-        if (challengeType) {
-            loadActiveReviews(toString(challengeType.label))
+        if (challengeType && loginUserInfo) {
+            loadActiveReviews(
+                toString(challengeType.challengeTypeId ?? ''),
+                toString(challengeType.challengeTrackId ?? ''),
+                toString(loginUserInfo.userId),
+            )
         }
-    }, [challengeType, loadActiveReviews])
+    }, [challengeType, loadActiveReviews, loginUserInfo])
 
     return (
         <PageWrapper
@@ -50,19 +112,32 @@ export const ActiveReviewsPage: FC<Props> = (props: Props) => {
                 <Select
                     className='react-select-container'
                     classNamePrefix='select'
-                    options={CHALLENGE_TYPE_SELECT_OPTIONS}
+                    options={challengeTypeOptions}
                     defaultValue={challengeType}
                     onChange={setChallengeType}
+                    isLoading={isLoadingChallengeType}
+                    isDisabled={isLoadingActiveReviews}
                 />
             </div>
 
-            {activeReviews.length === 0 ? (
-                <TableNoRecord className={styles.blockTable} />
+            {isLoadingActiveReviews ? (
+                <TableLoading />
             ) : (
-                <TableActiveReviews
-                    datas={activeReviews}
-                    className={styles.blockTable}
-                />
+                <>
+                    {activeReviews.length === 0 ? (
+                        <TableNoRecord className={styles.blockTable} />
+                    ) : (
+                        <TableActiveReviews
+                            totalPages={totalPages}
+                            page={page}
+                            setPage={setPage}
+                            datas={activeReviews}
+                            className={styles.blockTable}
+                            resourceRoleMapping={resourceRoleMapping}
+                            myRoleIdsMapping={myRoleIdsMapping}
+                        />
+                    )}
+                </>
             )}
         </PageWrapper>
     )

@@ -32,3 +32,18 @@
         margin-right: $sp-2;
     }
 }
+
+.tableBreakCell {
+    white-space: break-spaces !important;
+    text-align: left !important;
+}
+
+.tableCell {
+    vertical-align: middle;
+}
+
+.blockMyRoles {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}

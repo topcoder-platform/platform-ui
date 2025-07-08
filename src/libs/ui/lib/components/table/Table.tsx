@@ -30,6 +30,7 @@ interface TableProps<T> {
     readonly onRowClick?: (data: T) => void
     readonly onToggleSort?: (sort: Sort) => void
     readonly removeDefaultSort?: boolean
+    readonly className?: string
 }
 
 interface DefaultSortDirectionMap {
@@ -180,7 +181,7 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
 
         return (
             /* TODO: sticky header */
-            <div className={styles['table-wrap']}>
+            <div className={classNames(styles['table-wrap'], props.className)}>
                 <table className={styles.table}>
                     <thead>
                         <tr className={styles.tr}>

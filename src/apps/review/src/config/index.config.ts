@@ -13,11 +13,13 @@ export const MARATHON_MATCH = 'Marathon Match'
 export const FIRST2FINISH = 'First2Finish'
 export const OTHER = 'Other'
 
+export const CHALLENGE_TYPE_SELECT_ALL_OPTION: SelectOption = {
+    label: 'All',
+    value: '',
+}
+
 export const CHALLENGE_TYPE_SELECT_OPTIONS: SelectOption[] = [
-    {
-        label: 'All',
-        value: '',
-    },
+    CHALLENGE_TYPE_SELECT_ALL_OPTION,
     ...[
         DESIGN,
         CODE,
@@ -53,6 +55,7 @@ export const QUESTION_RESPONSE_TYPE_MAPPING_DISPLAY: { [key: string]: string }
     REQUIRED: 'Required',
 }
 export const TABLE_DATE_FORMAT = 'MMM DD, HH:mm A'
+export const TABLE_PAGINATION_ITEM_PER_PAGE = 100
 export const THRESHOLD_SHORT_TIME = 2 * 60 * 60 * 1000 // in miliseconds
 
 export const ORDINAL_SUFFIX = new Map([[1, '1st'], [2, '2nd'], [3, '3rd']])

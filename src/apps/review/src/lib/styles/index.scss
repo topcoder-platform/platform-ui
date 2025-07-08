@@ -42,6 +42,11 @@ $icons: review appeal submission warning error event timer upload reopen 1st 2nd
 
 //Reskin table
 .enhanced-table {
+    .enhanced-table-desktop {
+        td {
+            background-color: var(--invertButtonColor);
+        }
+    }
     table {
         width: 100%;
         thead {
@@ -64,9 +69,6 @@ $icons: review appeal submission warning error event timer upload reopen 1st 2nd
             }
         }
         td {
-            @include gtelg {
-                background-color: var(--invertButtonColor);
-            }
             border-bottom: var(--TableBorderColor) solid 1px;
             color: var(--FontColor);
             font-family: "Nunito Sans", sans-serif;
@@ -96,7 +98,7 @@ $icons: review appeal submission warning error event timer upload reopen 1st 2nd
     .select__control {
         border-color: #a8a8a8;
         &.select__control--menu-is-open {
-            .select__indicator {
+            .select__indicator.select__dropdown-indicator {
                 margin-top: -2px;
                 transform: rotate(-180deg);
             }
@@ -115,7 +117,7 @@ $icons: review appeal submission warning error event timer upload reopen 1st 2nd
     .select__indicator-separator {
         display: none;
     }
-    .select__indicator {
+    .select__indicator.select__dropdown-indicator {
         background: url('../assets/icons/selector.svg') no-repeat;
         background-size: 22px 22px;
         height: 22px;

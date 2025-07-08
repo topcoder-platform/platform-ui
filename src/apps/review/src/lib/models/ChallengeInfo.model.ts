@@ -6,6 +6,16 @@ import { formatDurationDate } from '../utils'
 
 import { SubmissionInfo } from './SubmissionInfo.model'
 
+export type ChallengeType =
+        | 'Design'
+        | 'Code'
+        | 'Bug Hunt'
+        | 'Test Suite'
+        | 'Copilot Opportunity'
+        | 'Marathon Match'
+        | 'First2Finish'
+        | 'Other'
+
 /**
  * Challenge info
  */
@@ -21,16 +31,8 @@ export interface ChallengeInfo {
     reviewProgress?: number // this field is calculated at frontend
     index?: number // this field is calculated at frontend
     submissions: SubmissionInfo[]
-    role: 'Reviewer' | 'Submitter' | 'Copilot' | 'Admin'
-    type:
-        | 'Design'
-        | 'Code'
-        | 'Bug Hunt'
-        | 'Test Suite'
-        | 'Copilot Opportunity'
-        | 'Marathon Match'
-        | 'First2Finish'
-        | 'Other'
+    role?: 'Reviewer' | 'Submitter' | 'Copilot' | 'Admin'
+    type: ChallengeType
     reviewLength?: number
 }
 
