@@ -42,8 +42,8 @@ export const getMembersByUserIds = async (
 
 const membersFactory = (members: Member[]): FormattedMembers[] => members.map(member => ({
     ...member,
-    activeProjects: member.stats.find(item => item.COPILOT?.activeProjects)?.COPILOT?.activeProjects || 0,
-    copilotFulfillment: member.stats.find(item => item.COPILOT?.fulfillment)?.COPILOT?.fulfillment || 0,
+    activeProjects: member.stats?.find(item => item.COPILOT?.activeProjects)?.COPILOT?.activeProjects || 0,
+    copilotFulfillment: member.stats?.find(item => item.COPILOT?.fulfillment)?.COPILOT?.fulfillment || 0,
 }))
 
 /**
