@@ -7,6 +7,7 @@ import { profileContext, ProfileContextData } from '~/libs/core'
 import { Button, IconSolid, InputDatePicker, InputMultiselectOption,
     InputRadio, InputSelect, InputSelectReact, InputText, InputTextarea } from '~/libs/ui'
 import { InputSkillSelector } from '~/libs/shared'
+import { EnvironmentConfig } from '~/config'
 
 import { getProjects } from '../../services/projects'
 import { ProjectTypes, ProjectTypeValues } from '../../constants'
@@ -217,6 +218,7 @@ const CopilotRequestForm: FC<{}> = () => {
                     setIsFormChanged(false)
                     setFormErrors({})
                     setPaymentType('')
+                    window.location.href = `https://copilots.${EnvironmentConfig.TC_DOMAIN}/requests`
                 })
                 .catch(e => {
                     toast.error(e.message)
