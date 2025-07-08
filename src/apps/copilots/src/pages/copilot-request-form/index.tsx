@@ -218,7 +218,10 @@ const CopilotRequestForm: FC<{}> = () => {
                     setIsFormChanged(false)
                     setFormErrors({})
                     setPaymentType('')
-                    window.location.href = `https://copilots.${EnvironmentConfig.TC_DOMAIN}/requests`
+                    // Added a small timeout for the toast to be visible properly to the users
+                    setTimeout(() => {
+                        window.location.href = `https://copilots.${EnvironmentConfig.TC_DOMAIN}/requests`
+                    }, 1000)
                 })
                 .catch(e => {
                     toast.error(e.message)
