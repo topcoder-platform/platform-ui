@@ -50,7 +50,7 @@ const ApplyOpportunityModal: FC<ApplyOpportunityModalProps> = props => {
             buttons={
                 !success ? (
                     <>
-                        <Button primary onClick={onApply} label='Apply' />
+                        <Button disabled={!notes} primary onClick={onApply} label='Apply' />
                         <Button secondary onClick={props.onClose} label='Cancel' />
                     </>
                 ) : (
