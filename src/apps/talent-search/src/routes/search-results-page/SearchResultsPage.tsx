@@ -31,27 +31,27 @@ const SearchResultsPage: FC = () => {
     const paginatedMatches = matches.slice(0, currentPage * itemsPerPage)
 
     useEffect(() => {
-        const handleScroll = () => {
-          const scrollY = window.scrollY
-          const visibleHeight = window.innerHeight
-          const fullHeight = document.body.scrollHeight
-      
-          if (scrollY + visibleHeight >= fullHeight - 100) {
+        const handleScroll: () => void = () => {
+            const scrollY = window.scrollY
+            const visibleHeight = window.innerHeight
+            const fullHeight = document.body.scrollHeight
+
+            if (scrollY + visibleHeight >= fullHeight - 100) {
             // Scroll near bottom
-            setCurrentPage(prev => {
-              const maxPages = Math.ceil(matches.length / itemsPerPage)
-              return prev < maxPages ? prev + 1 : prev
-            })
-          }
+                setCurrentPage(prev => {
+                    const maxPages = Math.ceil(matches.length / itemsPerPage)
+                    return prev < maxPages ? prev + 1 : prev
+                })
+            }
         }
-      
+
         window.addEventListener('scroll', handleScroll)
         return () => window.removeEventListener('scroll', handleScroll)
-      }, [matches])
+    }, [matches])
 
-      useEffect(() => {
+    useEffect(() => {
         setCurrentPage(1)
-      }, [skills, matches])
+    }, [skills, matches])
 
     const toggleSkillsModal = useCallback(() => setShowSkillsModal(s => !s), [])
 
