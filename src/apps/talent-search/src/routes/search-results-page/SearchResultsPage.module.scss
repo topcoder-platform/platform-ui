@@ -4,6 +4,24 @@
     min-height: 156px;
 }
 
+.cardWrapper {
+    padding: $sp-6;
+    border-radius: $sp-4;
+
+    background: $tc-white;
+
+    font-family: $font-barlow;
+    color: $black-100;
+
+    @include ltelg {
+        width: 100%;
+    }
+
+    @include ltemd {
+        padding: $sp-3;
+    }
+}
+
 .headerContentLayout {
     height: 100%;
     background-image: url("../../assets/background.jpg");

@@ -1,10 +1,11 @@
-import { FC, useCallback, useState } from 'react'
+import { FC, useCallback, useRef, useState } from 'react'
 import classNames from 'classnames'
+import { AutoSizer, WindowScroller, CellMeasurerCache } from 'react-virtualized'
+
 
 import { Button, ContentLayout, LinkButton, LoadingCircles } from '~/libs/ui'
 import { HowSkillsWorkModal } from '~/libs/shared'
 
-import { TalentCard } from '../../components/talent-card'
 import { SearchInput } from '../../components/search-input'
 import { useUrlQuerySearchParms } from '../../lib/utils/search-query'
 import {
@@ -13,9 +14,38 @@ import {
 } from '../../lib/services'
 
 import styles from './SearchResultsPage.module.scss'
+import 'react-virtualized/styles.css';
+import SearchResultLayout from './SearchResultLayout'
+
+// type CreateCellPositionerParams = {
+//     cellMeasurerCache: CellMeasurerCache
+//     columnCount: number
+//     columnWidth: number
+//     spacer: number
+//   }
+
+// const createCellPositioner = ({
+//     cellMeasurerCache,
+//     columnCount,
+//     columnWidth,
+//     spacer,
+//   }: CreateCellPositionerParams) => {
+//     return defaultCreateCellPositioner({
+//       cellMeasurerCache,
+//       columnCount,
+//       columnWidth,
+//       spacer,
+//     });
+//   }
 
 const SearchResultsPage: FC = () => {
     const [showSkillsModal, setShowSkillsModal] = useState(false)
+    const cache = useRef<CellMeasurerCache>(
+        new CellMeasurerCache({
+            defaultHeight: 300,
+            fixedWidth: true,
+        })
+    )
 
     const [skills, setSkills] = useUrlQuerySearchParms('q')
     const {
@@ -99,15 +129,23 @@ const SearchResultsPage: FC = () => {
                         </>
                     )}
                 </div>
-                <div className={styles.resultsWrap}>
-                    {matches.map(member => (
-                        <TalentCard
-                            queriedSkills={skills}
-                            member={member}
-                            match={member.skillScore}
-                            key={member.userId}
-                        />
-                    ))}
+                <div style={{ width: '100%' }}>
+                    <WindowScroller>
+                        {({ height, scrollTop }) => (
+                            <AutoSizer disableHeight>
+                                {({ width }) => (
+                                    <SearchResultLayout
+                                        width={width}
+                                        height={height}
+                                        scrollTop={scrollTop}
+                                        matches={matches}
+                                        skills={skills}
+                                        cache={cache}
+                                    />
+                                )}
+                            </AutoSizer>
+                        )}
+                    </WindowScroller>    
                 </div>
                 {loading && <LoadingCircles />}
 
