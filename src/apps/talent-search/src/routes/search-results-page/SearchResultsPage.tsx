@@ -1,4 +1,4 @@
-import { FC, useCallback, useState } from 'react'
+import { FC, useCallback, useEffect, useState } from 'react'
 import classNames from 'classnames'
 
 import { Button, ContentLayout, LinkButton, LoadingCircles } from '~/libs/ui'
@@ -17,6 +17,9 @@ import styles from './SearchResultsPage.module.scss'
 const SearchResultsPage: FC = () => {
     const [showSkillsModal, setShowSkillsModal] = useState(false)
 
+    const [currentPage, setCurrentPage] = useState(1)
+    const itemsPerPage = 10
+
     const [skills, setSkills] = useUrlQuerySearchParms('q')
     const {
         loading,
@@ -25,6 +28,30 @@ const SearchResultsPage: FC = () => {
         hasNext,
         total,
     }: InfiniteTalentMatchesResposne = useInfiniteTalentMatches(skills)
+    const paginatedMatches = matches.slice(0, currentPage * itemsPerPage)
+
+    useEffect(() => {
+        const handleScroll = () => {
+          const scrollY = window.scrollY
+          const visibleHeight = window.innerHeight
+          const fullHeight = document.body.scrollHeight
+      
+          if (scrollY + visibleHeight >= fullHeight - 100) {
+            // Scroll near bottom
+            setCurrentPage(prev => {
+              const maxPages = Math.ceil(matches.length / itemsPerPage)
+              return prev < maxPages ? prev + 1 : prev
+            })
+          }
+        }
+      
+        window.addEventListener('scroll', handleScroll)
+        return () => window.removeEventListener('scroll', handleScroll)
+      }, [matches])
+
+      useEffect(() => {
+        setCurrentPage(1)
+      }, [skills, matches])
 
     const toggleSkillsModal = useCallback(() => setShowSkillsModal(s => !s), [])
 
@@ -100,7 +127,7 @@ const SearchResultsPage: FC = () => {
                     )}
                 </div>
                 <div className={styles.resultsWrap}>
-                    {matches.map(member => (
+                    {paginatedMatches.map(member => (
                         <TalentCard
                             queriedSkills={skills}
                             member={member}
