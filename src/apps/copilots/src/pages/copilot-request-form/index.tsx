@@ -1,14 +1,13 @@
 import { FC, useContext, useMemo, useState } from 'react'
 import { bind, debounce, isEmpty } from 'lodash'
 import { toast } from 'react-toastify'
+import { useNavigate } from 'react-router-dom'
 import classNames from 'classnames'
-import { useNavigate } from "react-router-dom"
 
 import { profileContext, ProfileContextData } from '~/libs/core'
 import { Button, IconSolid, InputDatePicker, InputMultiselectOption,
     InputRadio, InputSelect, InputSelectReact, InputText, InputTextarea } from '~/libs/ui'
 import { InputSkillSelector } from '~/libs/shared'
-import { EnvironmentConfig } from '~/config'
 
 import { getProjects } from '../../services/projects'
 import { ProjectTypes, ProjectTypeValues } from '../../constants'
@@ -18,7 +17,7 @@ import styles from './styles.module.scss'
 // eslint-disable-next-line
 const CopilotRequestForm: FC<{}> = () => {
     const { profile }: ProfileContextData = useContext(profileContext)
-    const navigate = useNavigate();
+    const navigate = useNavigate()
 
     const [formValues, setFormValues] = useState<any>({})
     const [isFormChanged, setIsFormChanged] = useState(false)
@@ -222,7 +221,7 @@ const CopilotRequestForm: FC<{}> = () => {
                     setPaymentType('')
                     // Added a small timeout for the toast to be visible properly to the users
                     setTimeout(() => {
-                        navigate("/requests")
+                        navigate('/requests')
                     }, 1000)
                 })
                 .catch(e => {
