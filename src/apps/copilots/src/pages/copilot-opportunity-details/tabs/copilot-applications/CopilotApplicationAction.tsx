@@ -54,13 +54,17 @@ const CopilotApplicationAction = (
                 !isInvited
                 && copilotApplication.status === CopilotApplicationStatus.PENDING
                 && copilotApplication.opportunityStatus === 'active' && (
-                    <IconSolid.UserAddIcon />
+                    <Tooltip content='Send Invitation'>
+                        <IconSolid.UserAddIcon />
+                    </Tooltip>
                 )
             }
 
             {
                 copilotApplication.status === CopilotApplicationStatus.ACCEPTED && (
-                    <IconSolid.BadgeCheckIcon />
+                    <Tooltip content='Application Accepted'>
+                        <IconSolid.BadgeCheckIcon />
+                    </Tooltip>
                 )
             }
         </div>
