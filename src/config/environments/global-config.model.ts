@@ -51,5 +51,7 @@ export interface GlobalConfig {
         ONLINE_REVIEW_URL: string
         CHALLENGE_URL: string
         AV_SCAN_SCORER_REVIEW_TYPE_ID: string
+        AGREE_ELECTRONICALLY: string
+        AGREE_FOR_DOCUSIGN_TEMPLATE: string
     }
 }

@@ -16,8 +16,9 @@ import styles from './FieldSingleSelectAsync.module.scss'
 interface Props {
     label?: string
     className?: string
+    classNameWrapper?: string
     placeholder?: string
-    readonly value?: SelectOption
+    readonly value?: SelectOption | null
     readonly onChange?: (event: SelectOption) => void
     readonly disabled?: boolean
     readonly loadOptions?: (
