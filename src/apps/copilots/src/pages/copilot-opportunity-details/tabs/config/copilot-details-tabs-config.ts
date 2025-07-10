@@ -11,11 +11,11 @@ export const getCopilotDetailsTabsConfig = (isAdminOrPM: boolean, count: number)
         title: 'Details',
     },
     {
-        id: CopilotDetailsTabViews.applications,
         badges: [{
             count,
             type: 'info',
         }],
+        id: CopilotDetailsTabViews.applications,
         title: 'Applications',
     },
 ] : [
