@@ -1,0 +1,38 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+}
+
+.removeSelectionButtonContainer {
+    padding: 20px 0 30px $sp-8;
+
+    @include ltemd {
+        text-align: center;
+        padding-left: $sp-4;
+    }
+}
+
+.blockTableContainer {
+    position: relative;
+}
+
+.blockActionLoading {
+    position: absolute;
+    width: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    bottom: 50px;
+    height: 64px;
+    left: $sp-8;
+
+    .spinner {
+        background: none;
+    }
+
+    @include ltelg {
+        left: $sp-4;
+    }
+}

@@ -12,6 +12,7 @@ import styles from './PageWrapper.module.scss'
 interface Props {
     className?: string
     pageTitle: string
+    pageSubTitle?: ReactNode
     headerActions?: ReactNode
 }
 
@@ -20,6 +21,7 @@ export const PageWrapper: FC<PropsWithChildren<Props>> = props => (
         <PageTitle>{props.pageTitle}</PageTitle>
         <PageHeader>
             <h3 className={styles.textTitle}>{props.pageTitle}</h3>
+            {props.pageSubTitle}
 
             {props.headerActions ? (
                 <div className={styles.headerActions}>

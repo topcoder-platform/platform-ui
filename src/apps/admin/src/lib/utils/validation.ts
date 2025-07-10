@@ -1,9 +1,12 @@
 import * as Yup from 'yup'
 import _ from 'lodash'
 
+import { EnvironmentConfig } from '~/config'
+
 import {
     FormAddGroup,
     FormAddGroupMembers,
+    FormAddTerm,
     FormBillingAccountsFilter,
     FormClientsFilter,
     FormEditBillingAccount,
@@ -16,11 +19,16 @@ import {
     FormRoleMembersFilters,
     FormRolesFilter,
     FormSearchByKey,
+    FormTermsUsersFilter,
     FormUsersFilters,
 } from '../models'
 import { FormEditUserStatus } from '../models/FormEditUserStatus.model'
 import { FormAddRoleMembers } from '../models/FormAddRoleMembers.type'
 import { FormAddSSOLoginData } from '../models/FormAddSSOLoginData.model'
+import { FormAddTermUser } from '../models/FormAddTermUser.model'
+
+const docusignTypeId
+    = EnvironmentConfig.ADMIN.AGREE_FOR_DOCUSIGN_TEMPLATE
 
 /**
  * validation schema for form filter users
@@ -75,6 +83,25 @@ export const formClientsFilterSchema: Yup.ObjectSchema<FormClientsFilter>
             .nullable()
             .optional(),
         status: Yup.string()
+            .trim()
+            .optional(),
+    })
+
+/**
+ * validation schema for form terms users filter
+ */
+export const formTermsUsersFilterSchema: Yup.ObjectSchema<FormTermsUsersFilter>
+    = Yup.object({
+        handle: Yup.string()
+            .trim()
+            .optional(),
+        signTermsFrom: Yup.date()
+            .nullable()
+            .optional(),
+        signTermsTo: Yup.date()
+            .nullable()
+            .optional(),
+        userId: Yup.string()
             .trim()
             .optional(),
     })
@@ -290,6 +317,22 @@ export const formRolesFilterSchema: Yup.ObjectSchema<FormRolesFilter>
     })
 
 /**
+ * validation schema for form add term user
+ */
+export const formAddTermUserSchema: Yup.ObjectSchema<FormAddTermUser>
+    = Yup.object({
+        handle: Yup.object()
+            .shape({
+                label: Yup.string()
+                    .required('Label is required.'),
+                value: Yup.number()
+                    .typeError('Invalid number.')
+                    .required('Value is required.'),
+            })
+            .required('Handle is required.'),
+    })
+
+/**
  * validation schema for form add role members
  */
 export const formAddRoleMembersSchema: Yup.ObjectSchema<FormAddRoleMembers>
@@ -354,6 +397,38 @@ export const formAddGroupMembersSchema: Yup.ObjectSchema<FormAddGroupMembers>
 
                 return schema
             }),
+    })
+
+/**
+ * validation schema for form add term
+ */
+export const formAddTermSchema: Yup.ObjectSchema<FormAddTerm>
+    = Yup.object({
+        agreeabilityTypeId: Yup.string()
+            .trim()
+            .required('Agreeability type is required.'),
+        docusignTemplateId: Yup.string()
+            .trim()
+            .when('agreeabilityTypeId', (agreeabilityTypeId, schema) => {
+                if (agreeabilityTypeId[0] === docusignTypeId) {
+                    return schema.required('Docusign template id is required.')
+                }
+
+                return schema
+            }),
+        text: Yup.string()
+            .trim()
+            .optional(),
+        title: Yup.string()
+            .trim()
+            .required('Title is required.'),
+        typeId: Yup.string()
+            .trim()
+            .required('Type is required.'),
+        url: Yup.string()
+            .trim()
+            .url('Invalid url.')
+            .optional(),
     })
 
 /**

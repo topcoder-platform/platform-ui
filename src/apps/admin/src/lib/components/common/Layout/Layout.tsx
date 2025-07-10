@@ -1,11 +1,10 @@
 import { FC, PropsWithChildren, useContext } from 'react'
 import cn from 'classnames'
 
-import { platformRouteId } from '~/apps/admin/src/config/routes.config'
+import { gamificationAdminRouteId, platformRouteId, rootRoute } from '~/apps/admin/src/config/routes.config'
 import { ContentLayout } from '~/libs/ui'
 import { routerContext, RouterContextData } from '~/libs/core'
 import { platformSkillRouteId } from '~/apps/admin/src/platform/routes.config'
-import { AppSubdomain, EnvironmentConfig } from '~/config'
 
 import { SystemAdminTabs } from '../Tab'
 
@@ -39,8 +38,8 @@ export const Layout: FC<LayoutProps> = props => (
     </ContentLayout>
 )
 
-export const PlatformLayout: FC<LayoutProps> = props => (
-    <Layout classes={{ mainClass: styles.isPlatformPage }}>
+export const PlatformGamificationAdminLayout: FC<LayoutProps> = props => (
+    <Layout classes={{ mainClass: styles.isPlatformGamificationAdminPage }}>
         {props.children}
     </Layout>
 )
@@ -56,13 +55,8 @@ export function useLayout(): { Layout: FC<LayoutProps> } {
 
     if (!routerContextData.initialized) return { Layout }
 
-    const platformBaseRouteId = EnvironmentConfig.SUBDOMAIN === AppSubdomain.admin
-        ? `/${platformRouteId}`
-        : `/${AppSubdomain.admin}/${platformRouteId}`
-
-    const skillManagementRouteId = EnvironmentConfig.SUBDOMAIN === AppSubdomain.admin
-        ? `/${platformRouteId}/${platformSkillRouteId}`
-        : `/${AppSubdomain.admin}/${platformRouteId}/${platformSkillRouteId}`
+    const platformBasePath = `${rootRoute}/${platformRouteId}/${gamificationAdminRouteId}`
+    const skillManagementRouteId = `${rootRoute}/${platformRouteId}/${platformSkillRouteId}`
 
     if (window.location.pathname.toLowerCase()
         .startsWith(skillManagementRouteId.toLowerCase())) {
@@ -70,8 +64,8 @@ export function useLayout(): { Layout: FC<LayoutProps> } {
     }
 
     if (window.location.pathname.toLowerCase()
-        .startsWith(platformBaseRouteId.toLowerCase())) {
-        return { Layout: PlatformLayout }
+        .startsWith(platformBasePath.toLowerCase())) {
+        return { Layout: PlatformGamificationAdminLayout }
     }
 
     return { Layout }

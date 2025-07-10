@@ -14,6 +14,7 @@ import styles from './InputDatePicker.module.scss'
 interface InputDatePickerProps {
     date: Date | undefined | null
     onChange: (date: Date | null) => void
+    onBlur?: () => void
     readonly className?: string
     readonly dateFormat?: string | string[]
     readonly dirty?: boolean
@@ -184,7 +185,10 @@ const InputDatePicker: FC<InputDatePickerProps> = (props: InputDatePickerProps) 
                 popperPlacement='bottom'
                 portalId='react-date-portal'
                 onFocus={() => setStateHasFocus(true)}
-                onBlur={() => setStateHasFocus(false)}
+                onBlur={() => {
+                    setStateHasFocus(false)
+                    props.onBlur?.()
+                }}
                 isClearable={props.isClearable}
             />
         </InputWrapper>

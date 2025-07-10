@@ -18,6 +18,7 @@ export interface useTableFilterBackendProps<T> {
     setSort: Dispatch<SetStateAction<Sort | undefined>>
     sort: Sort | undefined
     setFilterCriteria: (criteria: T | undefined) => void
+    reloadData: () => void
 }
 
 /**
@@ -99,6 +100,7 @@ export function useTableFilterBackend<T>(
 
     return {
         page,
+        reloadData: doSearchDatas,
         setFilterCriteria,
         setPage,
         setSort,

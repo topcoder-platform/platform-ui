@@ -7,6 +7,8 @@ export const VANILLA_FORUM = {
 }
 
 export const ADMIN = {
+    AGREE_ELECTRONICALLY: '2db6c920-4089-4755-9cd1-99b0df0af961',
+    AGREE_FOR_DOCUSIGN_TEMPLATE: '1363a7ab-fd3e-4d7c-abbb-2f7440b8b355',
     AV_SCAN_SCORER_REVIEW_TYPE_ID: '55bbb17d-aac2-45a6-89c3-a8d102863d05',
     CHALLENGE_URL: 'https://www.topcoder.com/challenges',
     CONNECT_URL: 'https://connect.topcoder.com',
