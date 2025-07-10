@@ -35,9 +35,9 @@ const SearchResultsPage: FC = () => {
             const scrollY = window.scrollY
             const visibleHeight = window.innerHeight
             const fullHeight = document.body.scrollHeight
-            const footerElem = document.getElementById("footer-nav-el");
-            const footerHeight = footerElem && footerElem.offsetHeight || 650;
-            if (scrollY + visibleHeight >= fullHeight - footerHeight + 100) {
+            const footerElem = document.getElementById('footer-nav-el')
+            const footerHeight = (footerElem && footerElem.offsetHeight) || 650
+            if (scrollY + visibleHeight >= fullHeight - (footerHeight + 100)) {
             // Scroll near bottom
                 setCurrentPage(prev => {
                     const maxPages = Math.ceil(matches.length / itemsPerPage)
