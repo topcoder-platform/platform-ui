@@ -1,9 +1,8 @@
-import { FC, FocusEvent, useEffect, useState } from 'react'
+import { FC, FocusEvent, useEffect, useRef, useState } from 'react'
 
 import { FormInputAutocompleteOption, InputWrapper } from '~/libs/ui'
 
-import { Editor } from './Editor'
-import styles from './FieldHtmlEditor.module.scss'
+import { BundledEditor } from './BundledEditor'
 
 interface FieldHtmlEditorProps {
     readonly className?: string
@@ -27,6 +26,7 @@ interface FieldHtmlEditorProps {
 const FieldHtmlEditor: FC<FieldHtmlEditorProps> = (
     props: FieldHtmlEditorProps,
 ) => {
+    const editorRef = useRef<any>(null)
     const [initValue, setInitValue] = useState('')
 
     useEffect(() => {
@@ -44,14 +44,32 @@ const FieldHtmlEditor: FC<FieldHtmlEditorProps> = (
             type='textarea'
             hideInlineErrors={props.hideInlineErrors}
         >
-            <Editor
-                initialValue={initValue}
-                className={styles['form-input-textarea']}
-                placeholder={props.placeholder}
+            <BundledEditor
+                onInit={function onInit(_evt: any, editor: any) {
+                    (editorRef.current = editor)
+                }}
+                onChange={function onChange() {
+                    props.onChange(editorRef.current.getContent())
+                }}
                 onBlur={props.onBlur}
-                onChange={props.onChange}
-                error={props.error}
-                disabled={!!props.disabled}
+                initialValue={initValue}
+                init={{
+                    browser_spellcheck: true,
+                    content_style:
+                        'body {'
+                        + 'font-family: "Roboto", Arial, Helvetica, sans-serif;'
+                        + 'font-size: 14px; line-height: 22px;'
+                        + '}',
+                    height: 400,
+                    menubar: false,
+                    plugins: ['table', 'link', 'textcolor', 'contextmenu'],
+                    source_view: true,
+                    statusbar: false,
+                    toolbar:
+                        'undo redo | formatselect | bold italic underline strikethrough |'
+                        + ' forecolor backcolor | link | alignleft aligncenter alignright alignjustify |'
+                        + ' numlist bullist outdent indent | table | removeformat',
+                }}
             />
         </InputWrapper>
     )

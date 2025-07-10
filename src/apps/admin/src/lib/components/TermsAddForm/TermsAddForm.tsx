@@ -365,7 +365,10 @@ export const TermsAddForm: FC<Props> = (props: Props) => {
                         inputControl={register('text')}
                         dirty
                         disabled={isLoading}
-                        classNameWrapper={styles.fieldText}
+                        classNameWrapper={classNames(
+                            styles.fieldText,
+                            styles.fieldAreaContainer,
+                        )}
                     />
                 )}
             </div>

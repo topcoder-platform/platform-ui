@@ -4765,6 +4765,13 @@
   resolved "https://registry.yarnpkg.com/@testing-library/user-event/-/user-event-14.4.3.tgz#af975e367743fa91989cd666666aec31a8f50591"
   integrity sha512-kCUc5MEwaEMakkO5x7aoD+DLi02ehmEM2QCGWvNqAS1dV/fAvORWEjnjsEIvml59M7Y5kCkWN6fCCyPOe8OL6Q==
 
+"@tinymce/tinymce-react@^6.2.1":
+  version "6.2.1"
+  resolved "https://registry.yarnpkg.com/@tinymce/tinymce-react/-/tinymce-react-6.2.1.tgz#23e1d73b0a5b1f01c7d23f5b6c6bb71d7fc617c7"
+  integrity sha512-P/xWz3sNeJ2kXykxBkxM+4vEUYFlqWuJFifcJTmIwqHODJc17eZWvtNapzqGD+mUjXglf3VePu7ojRV1kdK22A==
+  dependencies:
+    prop-types "^15.6.2"
+
 "@tootallnate/once@1":
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/@tootallnate/once/-/once-1.1.2.tgz#ccb91445360179a04e7fe6aff78c00ffc1eeaf82"
@@ -18037,6 +18044,11 @@ tinycolor2@^1.4.1:
   version "1.6.0"
   resolved "https://registry.yarnpkg.com/tinycolor2/-/tinycolor2-1.6.0.tgz#f98007460169b0263b97072c5ae92484ce02d09e"
   integrity sha512-XPaBkWQJdsf3pLKJV9p4qN/S+fm2Oj8AIPo1BTUhg5oxkvm9+SVEGFdhyOz7tTdUTfvxMiAs4sp6/eZO2Ew+pw==
+
+tinymce@^7.9.1:
+  version "7.9.1"
+  resolved "https://registry.yarnpkg.com/tinymce/-/tinymce-7.9.1.tgz#1b18bad9cb7a3b4b12e3e5a7f29fc7daad0713d7"
+  integrity sha512-zaOHwmiP1EqTeLRXAvVriDb00JYnfEjWGPdKEuac7MiZJ5aiDMZ4Unc98Gmajn+PBljOmO1GKV6G0KwWn3+k8A==
 
 tmpl@1.0.5:
   version "1.0.5"
