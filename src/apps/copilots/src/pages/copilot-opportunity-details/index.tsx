@@ -261,7 +261,7 @@ const CopilotOpportunityDetails: FC<{}> = () => {
                         <TabsNavbar
                             defaultActive={activeTab}
                             onChange={handleTabChange}
-                            tabs={getCopilotDetailsTabsConfig(isAdminOrPM)}
+                            tabs={getCopilotDetailsTabsConfig(isAdminOrPM, copilotApplications?.length || 0)}
                         />
                     )
                 }
