@@ -36,7 +36,8 @@ const SearchResultsPage: FC = () => {
             const visibleHeight = window.innerHeight
             const fullHeight = document.body.scrollHeight
 
-            if (scrollY + visibleHeight >= fullHeight - 100) {
+            // negating 763px since footer occupies at least 600px
+            if (scrollY + visibleHeight >= fullHeight - 763) {
             // Scroll near bottom
                 setCurrentPage(prev => {
                     const maxPages = Math.ceil(matches.length / itemsPerPage)
@@ -48,10 +49,6 @@ const SearchResultsPage: FC = () => {
         window.addEventListener('scroll', handleScroll)
         return () => window.removeEventListener('scroll', handleScroll)
     }, [matches])
-
-    useEffect(() => {
-        setCurrentPage(1)
-    }, [skills, matches])
 
     const toggleSkillsModal = useCallback(() => setShowSkillsModal(s => !s), [])
 
