@@ -221,7 +221,7 @@ const CopilotRequestForm: FC<{}> = () => {
                     setPaymentType('')
                     // Added a small timeout for the toast to be visible properly to the users
                     setTimeout(() => {
-                        navigate('/requests')
+                        navigate('/copilots/requests')
                     }, 1000)
                 })
                 .catch(e => {
