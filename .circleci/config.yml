@@ -222,7 +222,7 @@ workflows:
                               - LVT-256
                               - CORE-635
                               - feat/system-admin
-                              - pm-1322
+                              - pm-1448_1
 
             - deployQa:
                   context: org-global
