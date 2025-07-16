@@ -17,6 +17,12 @@
     color: $teal-100;
 }
 
+@media (max-width: 767px) {
+    .header {
+        line-height: 48px;
+    }
+}
+
 
 .infoRow {
     display: flex;
@@ -25,6 +31,13 @@
     gap: 20px;
     margin: 16px 80px;
     padding: 12px 0;
+}
+
+@media (max-width: 767px) {
+    .infoRow {
+        flex-wrap: wrap;
+        margin: 0;
+    }
 }
 
 .infoText {

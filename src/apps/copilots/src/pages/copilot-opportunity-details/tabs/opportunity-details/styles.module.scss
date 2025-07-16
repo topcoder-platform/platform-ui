@@ -11,6 +11,13 @@
     gap: 100px;
 }
 
+@media (max-width: 767px) {
+    .content {
+        flex-direction: column;
+        gap: 15px;
+    }
+}
+
 .content > div:first-child {
     flex: 3;
 }
