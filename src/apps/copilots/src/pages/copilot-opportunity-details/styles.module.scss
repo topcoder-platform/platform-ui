@@ -27,6 +27,13 @@
     padding: 12px 0;
 }
 
+@media (max-width: 767px) {
+    .infoRow {
+        flex-wrap: wrap;
+        margin: 0;
+    }
+}
+
 .infoText {
     display: flex;
     flex-direction: column;

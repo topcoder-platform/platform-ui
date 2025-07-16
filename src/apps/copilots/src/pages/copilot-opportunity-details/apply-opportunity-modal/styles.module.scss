@@ -4,4 +4,12 @@
   .info {
     margin-bottom: 12px;
   }
+
+  &:global(.react-responsive-modal-modal) {
+    :global(.modal-body) {
+        @include ltemd {
+            height: 100%;
+        }
+    }
+}
 }
