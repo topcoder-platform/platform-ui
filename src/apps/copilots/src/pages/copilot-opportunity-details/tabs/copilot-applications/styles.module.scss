@@ -12,3 +12,11 @@
         color: $teal-100;
     }
 }
+
+.noApplications {
+    margin-top: $sp-6;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: large;
+}

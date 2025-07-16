@@ -90,7 +90,7 @@ const CopilotApplications: FC<{
     return (
         <div>
             {
-                tableData.length > 0 && (
+                tableData.length > 0 ? (
                     <Table
                         columns={tableColumns}
                         data={tableData}
@@ -98,6 +98,10 @@ const CopilotApplications: FC<{
                         removeDefaultSort
                         preventDefault
                     />
+                ) : (
+                    <div className={styles.noApplications}>
+                        <span>No Applications yet</span>
+                    </div>
                 )
             }
         </div>
