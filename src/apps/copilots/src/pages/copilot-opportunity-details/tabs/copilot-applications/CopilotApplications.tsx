@@ -102,7 +102,7 @@ const CopilotApplications: FC<{
                     <div className={styles.noApplications}>
                         <span>No Applications yet</span>
                     </div>
-                )       
+                )
             }
         </div>
     )
