@@ -17,6 +17,12 @@
     color: $teal-100;
 }
 
+@media (max-width: 767px) {
+    .header {
+        line-height: 48px;
+    }
+}
+
 
 .infoRow {
     display: flex;
