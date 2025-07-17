@@ -48,6 +48,7 @@ interface InputSelectReactProps {
     readonly async?: boolean
     readonly loadOptions?: (inputValue: string, callback: (option: any) => void) => void
     readonly filterOption?: (option: InputSelectOption, value: string) => boolean
+    readonly isClearable?: boolean
 }
 
 /**
@@ -105,11 +106,12 @@ const InputSelectReact: FC<InputSelectReactProps> = props => {
 
     // throw the proper event type to the form handler (needs name & form element on target)
     function handleSelect(option: unknown): void {
+        const selectedOption = option as InputSelectOption | null
         props.onChange({
             target: {
                 form: findParentFrom(wrapRef.current as HTMLDivElement),
                 name: props.name,
-                value: (option as InputSelectOption).value,
+                value: selectedOption?.value || '',
             },
         } as ChangeEvent<HTMLInputElement>)
     }
@@ -162,6 +164,7 @@ const InputSelectReact: FC<InputSelectReactProps> = props => {
                 formatCreateLabel={props.createLabel}
                 onCreateOption={props.onCreateOption}
                 onBlur={handleBlur}
+                isClearable={props.isClearable}
                 backspaceRemovesValue
                 isDisabled={props.disabled}
                 filterOption={props.filterOption}
