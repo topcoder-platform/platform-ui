@@ -65,7 +65,10 @@ const CopilotOpportunityDetails: FC<{}> = () => {
         [profile],
     )
     const { data: copilotApplications }: { data?: CopilotApplication[] } = useCopilotApplications(opportunityId)
-    const appliedCopilotApplications = useMemo(() => copilotApplications?.filter(item => item.userId === profile?.userId ), [copilotApplications, profile])
+    const appliedCopilotApplications = useMemo(
+        () => copilotApplications?.filter(item => item.userId === profile?.userId),
+        [copilotApplications, profile],
+    )
     const { data: members }: { data?: FormattedMembers[]} = useMembers(
         copilotApplications ? copilotApplications?.map(item => item.userId) : [],
     )
