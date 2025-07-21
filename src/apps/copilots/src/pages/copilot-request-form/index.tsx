@@ -331,6 +331,7 @@ const CopilotRequestForm: FC<{}> = () => {
                             customRadius
                             noCaps
                             leftAlignText
+                            textWrap
                         />
                         {formErrors.complexity && (
                             <p className={styles.error}>
