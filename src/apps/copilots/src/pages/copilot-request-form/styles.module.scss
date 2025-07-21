@@ -50,7 +50,11 @@ $gradient: linear-gradient(
 
     .skillsWrapper {
         border: 1px solid #aaaaaa;
-        border-radius: 0.375rem; 
+        border-radius: 0.375rem;  
+    }
+
+    .skillsWrapper:hover {
+            border-color: #137D60;
     }
 
     .skillsError {

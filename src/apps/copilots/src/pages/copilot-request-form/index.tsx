@@ -250,8 +250,8 @@ const CopilotRequestForm: FC<{}> = () => {
                     <h1 className={styles.heading}> Copilot Request </h1>
                     <p className={styles.subheading}>
                         Hi,
-                        {profile?.firstName}
                         {' '}
+                        {profile?.firstName}
                         !
                         This form is to request a copilot for your project. Please fill in the details below.
                     </p>
@@ -273,6 +273,7 @@ const CopilotRequestForm: FC<{}> = () => {
                         label='Project'
                         placeholder='Start typing the name of the project'
                         dirty
+                        isClearable
                         error={formErrors.projectId}
                     />
 
