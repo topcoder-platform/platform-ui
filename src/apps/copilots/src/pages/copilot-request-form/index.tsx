@@ -264,7 +264,7 @@ const CopilotRequestForm: FC<{}> = () => {
                             </p>
                         )}
 
-                    <p className={styles.formRow}>Copilot Opprotunity Ttitle</p>
+                    <p className={styles.formRow}>Copilot Opportunity Title</p>
                     <InputText
                         dirty
                         type='text'
