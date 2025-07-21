@@ -194,7 +194,7 @@ const CopilotOpportunityDetails: FC<{}> = () => {
             ) }
             <div className={styles.wrapper}>
                 <h1 className={styles.header}>
-                    {opportunity?.projectName}
+                    {opportunity?.opportunityTitle ?? opportunity?.projectName}
                 </h1>
                 <div className={styles.infoRow}>
                     <div className={styles.infoColumn}>

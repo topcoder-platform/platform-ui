@@ -248,6 +248,7 @@ const CopilotRequestForm: FC<{}> = () => {
             <div className={styles.form}>
                 <form>
                     <h1 className={styles.heading}> Copilot Request </h1>
+
                     <p className={styles.subheading}>
                         Hi,
                         {' '}
@@ -262,6 +263,21 @@ const CopilotRequestForm: FC<{}> = () => {
                                 Resolve the errors on the form before submitting
                             </p>
                         )}
+
+                    <p className={styles.formRow}>Copilot Opprotunity Ttitle</p>
+                    <InputText
+                        dirty
+                        type='text'
+                        label='Title'
+                        name='opportunityTitle'
+                        placeholder='Enter a title for the opportunity'
+                        value={formValues.opportunityTitle?.toString()}
+                        onChange={bind(handleFormValueChange, this, 'opportunityTitle')}
+                        error={formErrors.opportunityTitle}
+                        tabIndex={0}
+                        forceUpdateValue
+                    />
+
                     <p className={styles.formRow}>Select the project you want the copilot for</p>
                     <InputSelectReact
                         tabIndex={0}

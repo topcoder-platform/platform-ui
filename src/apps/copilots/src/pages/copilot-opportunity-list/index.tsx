@@ -25,7 +25,7 @@ const tableColumns: TableColumn<CopilotOpportunity>[] = [
         propertyName: 'projectName',
         renderer: (copilotOpportunity: CopilotOpportunity) => (
             <div className={styles.title}>
-                {copilotOpportunity.projectName}
+                {copilotOpportunity.opportunityTitle}
             </div>
         ),
         type: 'element',
