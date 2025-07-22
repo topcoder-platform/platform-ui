@@ -376,7 +376,9 @@ const CopilotRequestForm: FC<{}> = () => {
                         error={formErrors.startDate}
                         dirty
                         minDate={new Date()}
-                        maxDate={new Date(new Date().setFullYear(new Date().getFullYear() + 2))}
+                        maxDate={new Date(new Date()
+                            .setFullYear(new Date()
+                                .getFullYear() + 2))}
                         minYear={new Date()}
                     />
                     <p className={styles.formRow}>How many weeks will you need the copilot for?</p>
