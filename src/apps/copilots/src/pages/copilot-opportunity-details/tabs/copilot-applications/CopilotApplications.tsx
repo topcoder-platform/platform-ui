@@ -54,7 +54,7 @@ const tableColumns: TableColumn<CopilotApplication>[] = [
         label: 'Notes',
         propertyName: 'notes',
         renderer: (copilotApplication: CopilotApplication) => (
-            <div className={styles.title}>
+            <div className={styles.notes}>
                 {copilotApplication.notes}
             </div>
         ),

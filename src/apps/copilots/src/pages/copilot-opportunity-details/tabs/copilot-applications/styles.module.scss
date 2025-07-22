@@ -20,3 +20,14 @@
     align-items: center;
     font-size: large;
 }
+
+.notes {
+    text-align: left;
+    max-width: 200px;
+}
+
+@media (max-width: 767px) {
+    .notes {
+        min-width: 200px;
+    }
+}
