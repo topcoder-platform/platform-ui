@@ -13,6 +13,7 @@ export interface CopilotRequest {
     numHoursPerWeek: number,
     numWeeks: number,
     overview: string,
+    opportunityTitle: string,
     paymentType: string,
     otherPaymentType: string,
     requiresCommunication: 'yes' | 'no',

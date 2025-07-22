@@ -60,6 +60,10 @@ const CopilotRequestModal: FC<CopilotRequestModalProps> = props => {
                     <div>{props.project?.name}</div>
                 </div>
                 <div className={styles.detailsLine}>
+                    <div>Title</div>
+                    <div>{props.request.opportunityTitle}</div>
+                </div>
+                <div className={styles.detailsLine}>
                     <div>Opportunity details</div>
                     <a
                         href={copilotRoutesMap.CopilotOpportunityDetails

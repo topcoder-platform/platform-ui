@@ -171,6 +171,11 @@ const CopilotRequestsPage: FC = () => {
             type: 'element',
         },
         {
+            label: 'Title',
+            propertyName: 'opportunityTitle',
+            type: 'text',
+        },
+        {
             label: 'Type',
             propertyName: 'type',
             type: 'text',
