@@ -65,6 +65,10 @@ const CopilotOpportunityDetails: FC<{}> = () => {
         [profile],
     )
     const { data: copilotApplications }: { data?: CopilotApplication[] } = useCopilotApplications(opportunityId)
+    const appliedCopilotApplications = useMemo(
+        () => copilotApplications?.filter(item => item.userId === profile?.userId),
+        [copilotApplications, profile],
+    )
     const { data: members }: { data?: FormattedMembers[]} = useMembers(
         copilotApplications ? copilotApplications?.map(item => item.userId) : [],
     )
@@ -164,8 +168,8 @@ const CopilotOpportunityDetails: FC<{}> = () => {
             title='Copilot Opportunity'
             buttonConfig={
                 isCopilot
-                && copilotApplications
-                && copilotApplications.length === 0
+                && appliedCopilotApplications
+                && appliedCopilotApplications.length === 0
                 && opportunity?.status === 'active'
                 && opportunity?.canApplyAsCopilot ? applyCopilotOpportunityButton : undefined
             }
@@ -173,8 +177,8 @@ const CopilotOpportunityDetails: FC<{}> = () => {
                 opportunity?.status === 'active'
                 && isAdminOrPM ? cancelCopilotOpportunityButton : undefined
             }
-            infoComponent={(isCopilot && !(copilotApplications
-                && copilotApplications.length === 0
+            infoComponent={(isCopilot && !(appliedCopilotApplications
+                && appliedCopilotApplications.length === 0
             ) && opportunity?.status === 'active' && !!application) && (
                 <div className={styles.applied}>
                     <IconSolid.CheckCircleIcon className={styles.appliedIcon} />
