@@ -259,6 +259,16 @@ const CopilotOpportunityDetails: FC<{}> = () => {
                             <span className={styles.infoValue}>{opportunity?.tzRestrictions}</span>
                         </div>
                     </div>
+                    <div className={styles.infoColumn}>
+                        <IconOutline.CashIcon className={styles.icon} />
+                        <div className={styles.infoText}>
+                            <span className={styles.infoHeading}>Payment</span>
+                            <span className={styles.infoValue}>
+                                {opportunity?.paymentType === 'standard'
+                                    ? opportunity.paymentType : opportunity?.otherPaymentType}
+                            </span>
+                        </div>
+                    </div>
                 </div>
                 {
                     initialized && (
