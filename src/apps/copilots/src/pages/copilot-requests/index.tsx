@@ -58,6 +58,10 @@ const CopilotTableActions: FC<{request: CopilotRequest}> = props => {
         navigate(copilotRoutesMap.CopilotRequestDetails.replace(':requestId', `${props.request.id}`))
     }, [navigate, props.request.id])
 
+    const editRequest = useCallback(() => {
+        navigate(copilotRoutesMap.CopilotRequestEditForm.replace(':requestId', `${props.request.id}`))
+    }, [navigate, props.request.id])
+
     const copilotOpportunityId = props.request.opportunity?.id
 
     const navigateToOpportunity = useCallback(() => {
@@ -76,6 +80,14 @@ const CopilotTableActions: FC<{request: CopilotRequest}> = props => {
                         place='top'
                     >
                         <IconSolid.EyeIcon className='icon-lg' />
+                    </Tooltip>
+                </div>
+                <div className={styles.viewRequestIcon} onClick={editRequest}>
+                    <Tooltip
+                        content='Edit Copilot Request'
+                        place='top'
+                    >
+                        <IconSolid.PencilIcon className='icon-lg' />
                     </Tooltip>
                 </div>
                 {props.request.status === 'approved'

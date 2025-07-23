@@ -1,7 +1,7 @@
-import { FC, useContext, useMemo, useState } from 'react'
+import { FC, useContext, useEffect, useMemo, useState } from 'react'
 import { bind, debounce, isEmpty } from 'lodash'
 import { toast } from 'react-toastify'
-import { useNavigate } from 'react-router-dom'
+import { Params, useNavigate, useParams } from 'react-router-dom'
 import classNames from 'classnames'
 
 import { profileContext, ProfileContextData } from '~/libs/core'
@@ -9,20 +9,57 @@ import { Button, IconSolid, InputDatePicker, InputMultiselectOption,
     InputRadio, InputSelect, InputSelectReact, InputText, InputTextarea } from '~/libs/ui'
 import { InputSkillSelector } from '~/libs/shared'
 
-import { getProjects } from '../../services/projects'
+import { getProjects, ProjectsResponse, useProjects } from '../../services/projects'
 import { ProjectTypes, ProjectTypeValues } from '../../constants'
-import { saveCopilotRequest } from '../../services/copilot-requests'
+import { CopilotRequestResponse, saveCopilotRequest, useCopilotRequest } from '../../services/copilot-requests'
 
 import styles from './styles.module.scss'
+
+const editableFields = [
+    'projectId',
+    'opportunityTitle',
+    'copilotUsername',
+    'complexity',
+    'requiresCommunication',
+    'paymentType',
+    'otherPaymentType',
+    'projectType',
+    'overview',
+    'skills',
+    'startDate',
+    'numWeeks',
+    'tzRestrictions',
+    'numHoursPerWeek',
+]
+
 // eslint-disable-next-line
 const CopilotRequestForm: FC<{}> = () => {
     const { profile }: ProfileContextData = useContext(profileContext)
     const navigate = useNavigate()
+    const routeParams: Params<string> = useParams()
 
     const [formValues, setFormValues] = useState<any>({})
     const [isFormChanged, setIsFormChanged] = useState(false)
     const [formErrors, setFormErrors] = useState<any>({})
     const [paymentType, setPaymentType] = useState<string>('')
+
+    const { data: copilotRequestData }: CopilotRequestResponse = useCopilotRequest(routeParams.requestId)
+
+    useEffect(() => {
+        if (copilotRequestData) {
+            setFormValues(copilotRequestData)
+        }
+    }, [copilotRequestData])
+
+    const { data: projects = [] }: ProjectsResponse = useProjects(undefined, {
+        filter: { id: copilotRequestData?.projectId },
+        isPaused: () => !copilotRequestData?.projectId,
+    })
+
+    const projectOptions = useMemo(() => projects.map(p => ({
+        label: p.name,
+        value: p.id,
+    })), [projects])
 
     const projectTypes = ProjectTypes ? ProjectTypes.map(project => ({
         label: project,
@@ -198,9 +235,10 @@ const CopilotRequestForm: FC<{}> = () => {
         if (isEmpty(updatedFormErrors)) {
             const cleanedFormValues: any = Object.fromEntries(
                 Object.entries(formValues)
-                    .filter(([, value]) => value !== ''), // Excludes null and undefined
+                    // Excludes null and undefined
+                    .filter(([field, value]) => editableFields.includes(field) && value !== ''),
             )
-            saveCopilotRequest(cleanedFormValues)
+            saveCopilotRequest({ ...cleanedFormValues, id: copilotRequestData?.id })
                 .then(() => {
                     toast.success('Copilot request sent successfully')
                     setFormValues({
@@ -254,7 +292,13 @@ const CopilotRequestForm: FC<{}> = () => {
                         {' '}
                         {profile?.firstName}
                         !
-                        This form is to request a copilot for your project. Please fill in the details below.
+                        {' '}
+                        {
+                            copilotRequestData?.id
+                                ? 'Use this form to update the copilot request for your project.'
+                                : 'This form is to request a copilot for your project.'
+                                    + ' Please fill in the details below.'
+                        }
                     </p>
                     { !isEmpty(formErrors)
                         && (
@@ -291,6 +335,7 @@ const CopilotRequestForm: FC<{}> = () => {
                         dirty
                         isClearable
                         error={formErrors.projectId}
+                        options={projectOptions}
                     />
 
                     <p className={styles.formRow}>What type of project are you working on?</p>
@@ -508,7 +553,7 @@ const CopilotRequestForm: FC<{}> = () => {
                     <Button
                         primary
                         size='lg'
-                        label='Send Copilot Request'
+                        label={copilotRequestData ? 'Save Copilot Request' : 'Send Copilot Request'}
                         onClick={handleFormAction}
                         className={styles.formRow}
                         fullWidth
