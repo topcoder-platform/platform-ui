@@ -171,7 +171,7 @@ const CopilotRequestForm: FC<{}> = () => {
             {
                 condition: !formValues.opportunityTitle || formValues.opportunityTitle.length < 7,
                 key: 'opportunityTitle',
-                message: 'The title for the opportunity must be at least 10 characters',
+                message: 'The title for the opportunity must be at least 7 characters',
             },
             { condition: !formValues.projectId, key: 'projectId', message: 'Project is required' },
             { condition: !formValues.complexity, key: 'complexity', message: 'Selection is required' },
