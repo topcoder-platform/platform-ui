@@ -183,6 +183,7 @@ const CopilotRequestsPage: FC = () => {
             type: 'element',
         },
         {
+            className: styles.opportunityTitle,
             label: 'Title',
             propertyName: 'opportunityTitle',
             type: 'text',
