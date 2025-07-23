@@ -168,6 +168,11 @@ const CopilotRequestForm: FC<{}> = () => {
         const updatedFormErrors: { [key: string]: string } = {}
 
         const fieldValidations: { condition: boolean; key: string; message: string }[] = [
+            {
+                condition: !formValues.opportunityTitle || formValues.opportunityTitle.length < 7,
+                key: 'opportunityTitle',
+                message: 'The title for the opportunity must be at least 7 characters',
+            },
             { condition: !formValues.projectId, key: 'projectId', message: 'Project is required' },
             { condition: !formValues.complexity, key: 'complexity', message: 'Selection is required' },
             {
