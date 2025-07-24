@@ -116,7 +116,12 @@ const CopilotRequestForm: FC<{}> = () => {
                 oldFormValues[key] = Array.isArray(value) ? [...value] : []
                 break
             default:
-                value = event.target.value
+                if (event.type === 'blur') {
+                    value = event.target.value?.trim()
+                } else {
+                    value = event.target.value
+                }
+
                 break
         }
 
@@ -169,7 +174,7 @@ const CopilotRequestForm: FC<{}> = () => {
 
         const fieldValidations: { condition: boolean; key: string; message: string }[] = [
             {
-                condition: !formValues.opportunityTitle || formValues.opportunityTitle.length < 7,
+                condition: (formValues.opportunityTitle?.trim().length ?? 0) < 7,
                 key: 'opportunityTitle',
                 message: 'The title for the opportunity must be at least 7 characters',
             },
@@ -322,6 +327,7 @@ const CopilotRequestForm: FC<{}> = () => {
                         placeholder='Enter a title for the opportunity'
                         value={formValues.opportunityTitle?.toString()}
                         onChange={bind(handleFormValueChange, this, 'opportunityTitle')}
+                        onBlur={bind(handleFormValueChange, this, 'opportunityTitle')}
                         error={formErrors.opportunityTitle}
                         tabIndex={0}
                         forceUpdateValue
