@@ -100,6 +100,8 @@ const CopilotRequestForm: FC<{}> = () => {
 
             return updatedErrors
         })
+
+        setIsFormChanged(true)
     }
 
     function handleFormValueChange(
