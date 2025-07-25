@@ -12,7 +12,7 @@ interface Member {
         COPILOT: {
             activeProjects: number,
             fulfillment: number,
-            projects: number;
+            projects: number,
         }
     }[]
 }
