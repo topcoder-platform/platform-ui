@@ -21,9 +21,15 @@ const CopilotRequestModal: FC<CopilotRequestModalProps> = props => {
     const confirmModal = useConfirmationModal()
     const navigate = useNavigate()
 
+    const isEditable = useMemo(() => !['canceled', 'fulfilled'].includes(props.request.status), [props.request.status])
+
     const editRequest = useCallback(() => {
+        if (!isEditable) {
+            return
+        }
+
         navigate(copilotRoutesMap.CopilotRequestEditForm.replace(':requestId', `${props.request.id}`))
-    }, [navigate, props.request.id])
+    }, [isEditable, navigate, props.request.id])
 
     const confirm = useCallback(async ({ title, content, action }: any) => {
         const confirmed = await confirmModal.confirm({ content, title })
@@ -55,7 +61,9 @@ const CopilotRequestModal: FC<CopilotRequestModalProps> = props => {
             title='Copilot Request'
             buttons={(
                 <>
-                    <Button primary onClick={editRequest} label='Edit Request' className={styles.mrAuto} />
+                    {isEditable && (
+                        <Button primary onClick={editRequest} label='Edit Request' className={styles.mrAuto} />
+                    )}
                     {props.request.status === 'new' && (
                         <>
                             <Button primary onClick={confirmApprove} label='Approve Request' />
