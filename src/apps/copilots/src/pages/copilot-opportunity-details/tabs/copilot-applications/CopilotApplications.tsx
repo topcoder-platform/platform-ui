@@ -36,6 +36,11 @@ const tableColumns: TableColumn<CopilotApplication>[] = [
         type: 'text',
     },
     {
+        label: 'Past Projects',
+        propertyName: 'pastProjects',
+        type: 'text',
+    },
+    {
         label: 'Status',
         propertyName: 'status',
         renderer: (copilotApplication: CopilotApplication) => (
@@ -81,6 +86,7 @@ const CopilotApplications: FC<{
             fulfilment: member?.copilotFulfillment || 0,
             handle: member?.handle,
             opportunityStatus: props.opportunity.status,
+            pastProjects: member?.pastProjects || 0,
         }
     })
         .sort((a, b) => (b.fulfilment || 0) - (a.fulfilment || 0)) : [])
