@@ -59,7 +59,7 @@ const CopilotTableActions: FC<{request: CopilotRequest}> = props => {
         navigate(copilotRoutesMap.CopilotRequestDetails.replace(':requestId', `${props.request.id}`))
     }, [navigate, props.request.id])
 
-    const isEditable = useMemo(() => !['canceled', 'fulfilled'].includes(props.request.status), [props.request.status]);
+    const isEditable = useMemo(() => !['canceled', 'fulfilled'].includes(props.request.status), [props.request.status])
 
     const editRequest = useCallback(() => {
         if (!isEditable) {
