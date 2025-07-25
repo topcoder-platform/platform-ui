@@ -12,6 +12,7 @@ interface Member {
         COPILOT: {
             activeProjects: number,
             fulfillment: number,
+            projects: number;
         }
     }[]
 }
@@ -19,6 +20,7 @@ interface Member {
 export interface FormattedMembers extends Member {
     copilotFulfillment: number,
     activeProjects: number,
+    pastProjects: number;
 }
 
 export type MembersResponse = SWRResponse<FormattedMembers[], FormattedMembers[]>
@@ -40,11 +42,16 @@ export const getMembersByUserIds = async (
     )
 }
 
-const membersFactory = (members: Member[]): FormattedMembers[] => members.map(member => ({
-    ...member,
-    activeProjects: member.stats?.find(item => item.COPILOT?.activeProjects)?.COPILOT?.activeProjects || 0,
-    copilotFulfillment: member.stats?.find(item => item.COPILOT?.fulfillment)?.COPILOT?.fulfillment || 0,
-}))
+const membersFactory = (members: Member[]): FormattedMembers[] => members.map(member => {
+    const copilotStats = member.stats?.find(item => item.COPILOT)?.COPILOT ?? {} as Member['stats'][0]['COPILOT']
+
+    return {
+        ...member,
+        activeProjects: copilotStats.activeProjects || 0,
+        copilotFulfillment: copilotStats.fulfillment || 0,
+        pastProjects: copilotStats.projects || 0,
+    }
+})
 
 /**
  * Custom hook to fetch members by list of user ids
