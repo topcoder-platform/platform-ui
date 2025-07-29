@@ -171,7 +171,7 @@ const CopilotOpportunityDetails: FC<{}> = () => {
                 && appliedCopilotApplications
                 && appliedCopilotApplications.length === 0
                 && opportunity?.status === 'active'
-                && opportunity?.canApplyAsCopilot ? applyCopilotOpportunityButton : undefined
+                ? applyCopilotOpportunityButton : undefined
             }
             secondaryButtonConfig={
                 opportunity?.status === 'active'
