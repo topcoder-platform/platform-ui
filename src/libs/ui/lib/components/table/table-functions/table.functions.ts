@@ -65,6 +65,11 @@ export function getSorted<T extends { [propertyName: string]: any }>(
         .sort((a: T, b: T) => {
             const aField: string = a[sort.fieldName]
             const bField: string = b[sort.fieldName]
+
+            // Handle undefined/null values safely
+            if (aField === undefined && bField === undefined) return 0
+            if (aField === undefined) return 1
+            if (bField === undefined) return -1
             return sort.direction === 'asc'
                 ? aField.localeCompare(bField)
                 : bField.localeCompare(aField)
