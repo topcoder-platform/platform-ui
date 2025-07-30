@@ -14,7 +14,6 @@ const CopilotApplicationAction = (
     copilotApplication: CopilotApplication,
     allCopilotApplications: CopilotApplication[],
 ): JSX.Element => {
-    console.log(copilotApplication, 'copilotApplication')
     const { opportunityId }: {opportunityId?: string} = useParams<{ opportunityId?: string }>()
     const [showAlreadyMemberModal, setShowAlreadyMemberModal] = useState(false)
     const isInvited = useMemo(
@@ -32,7 +31,6 @@ const CopilotApplicationAction = (
         }
 
         if (copilotApplication.existingMembership) {
-            console.log('comes here')
             setShowAlreadyMemberModal(true)
             return
         }
