@@ -190,7 +190,7 @@ const CopilotRequestForm: FC<{}> = () => {
             { condition: !formValues.paymentType, key: 'paymentType', message: 'Selection is required' },
             { condition: !formValues.projectType, key: 'projectType', message: 'Selecting project type is required' },
             {
-                condition: !formValues.overview || formValues.overview.length < 10,
+                condition: !formValues.overview || formValues.overview.trim().length < 10,
                 key: 'overview',
                 message: 'Project overview must be at least 10 characters',
             },
@@ -220,7 +220,7 @@ const CopilotRequestForm: FC<{}> = () => {
                 message: 'Number of weeks should be a positive number',
             },
             {
-                condition: !formValues.tzRestrictions,
+                condition: !formValues.tzRestrictions || formValues.tzRestrictions.trim().length === 0,
                 key: 'tzRestrictions',
                 message: 'Providing timezone restrictions is required. Type No if no restrictions',
             },
@@ -233,6 +233,11 @@ const CopilotRequestForm: FC<{}> = () => {
                 condition: formValues.numHoursPerWeek <= 0,
                 key: 'numHoursPerWeek',
                 message: 'Number of hours per week should be a positive number',
+            },
+            {
+                condition: formValues.otherPaymentType && formValues.otherPaymentType.trim().length === 0,
+                key: 'otherPaymentType',
+                message: 'Field cannot be left empty',
             },
         ]
 
