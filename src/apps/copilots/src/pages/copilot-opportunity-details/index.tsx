@@ -99,13 +99,16 @@ const CopilotOpportunityDetails: FC<{}> = () => {
     }, [getHashFromTabId, setActiveTab])
 
     useEffect(() => {
-        const timer = setTimeout(() => {
-            if (!opportunity) {
-                setShowNotFound(true)
-            }
-        }, 2000)
+        if (opportunity) {
+            setShowNotFound(false)
+            return undefined
+        }
 
-        return () => clearTimeout(timer) // Cleanup on unmount
+        const timer = setTimeout(() => {
+            setShowNotFound(true)
+        }, 1000)
+
+        return () => clearTimeout(timer)
     }, [opportunity])
 
     const onApplied: () => void = useCallback(() => {
@@ -116,6 +119,14 @@ const CopilotOpportunityDetails: FC<{}> = () => {
     const onCloseApplyModal: () => void = useCallback(() => {
         setShowApplyOpportunityModal(false)
     }, [setShowApplyOpportunityModal])
+
+    if (isValidating && !opportunity) {
+        return (
+            <ContentLayout title='Copilot Opportunity Details'>
+                <LoadingSpinner />
+            </ContentLayout>
+        )
+    }
 
     if (!opportunity && showNotFound) {
         return (
