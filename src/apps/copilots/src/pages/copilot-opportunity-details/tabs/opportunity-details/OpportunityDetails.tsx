@@ -11,8 +11,7 @@ const OpportunityDetails: FC<{
         <div>
             <h2 className={styles.subHeading}> Required skills </h2>
             <div className={styles.skillsContainer}>
-                {props.opportunity?.skills.map(item => item.name)
-                    .join(',')}
+                {props.opportunity?.skills.map(item => (<span className={styles.skillPill}>{item.name}</span>))}
             </div>
             <h2 className={styles.subHeading}> Description </h2>
             <p>
