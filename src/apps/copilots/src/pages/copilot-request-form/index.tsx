@@ -252,7 +252,10 @@ const CopilotRequestForm: FC<{}> = () => {
             )
             saveCopilotRequest({ ...cleanedFormValues, id: copilotRequestData?.id })
                 .then(() => {
-                    toast.success('Copilot request sent successfully')
+                    toast.success(
+                        copilotRequestData ? 'Copilot request updated successfully'
+                            : 'Copilot request sent successfully',
+                    )
                     setFormValues({
                         complexity: '',
                         numHoursPerWeek: '',
