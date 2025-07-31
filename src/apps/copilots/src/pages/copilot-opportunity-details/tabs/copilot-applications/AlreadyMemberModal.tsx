@@ -34,13 +34,13 @@ const AlreadyMemberModal: FC<AlreadyMemberModalProps> = props => (
 
                 {
                     props.copilotApplication.existingMembership
-                  && ['observer', 'customer'].includes(props.copilotApplication.existingMembership.role)
+                  && ['copilot', 'manager'].includes(props.copilotApplication.existingMembership.role)
                   && <div>Click &apos;Confirm&apos; to accept and complete this opportunity.</div>
                 }
 
                 {
                     props.copilotApplication.existingMembership
-                  && ['copilot', 'manager'].includes(props.copilotApplication.existingMembership.role)
+                  && ['observer', 'customer'].includes(props.copilotApplication.existingMembership.role)
                   && (
                       <div>
                           Click &apos;Confirm&apos; to accept by updating project role to &apos;Copilot&apos;
