@@ -22,7 +22,7 @@ import styles from './styles.module.scss'
 const tableColumns: TableColumn<CopilotOpportunity>[] = [
     {
         label: 'Title',
-        propertyName: 'projectName',
+        propertyName: 'opportunityTitle',
         renderer: (copilotOpportunity: CopilotOpportunity) => (
             <div className={styles.title}>
                 {copilotOpportunity.opportunityTitle}
