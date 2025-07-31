@@ -31,7 +31,18 @@ const AlreadyMemberModal: FC<AlreadyMemberModalProps> = props => (
             <div className={styles.info}>
                 {`The copilot ${props.handle} is part of ${props.projectName} 
                   project with ${props.copilotApplication.existingMembership?.role} role.`}
-                <div>Click &apos;Confirm&apos; to accept and complete this opportunity.</div>
+
+                {
+                  props.copilotApplication.existingMembership
+                  && ['copilot', 'manager'].includes(props.copilotApplication.existingMembership.role)
+                  && <div>Click &apos;Confirm&apos; to accept and complete this opportunity.</div>
+                }
+
+                {
+                  props.copilotApplication.existingMembership
+                  && ['observer', 'customer'].includes(props.copilotApplication.existingMembership.role)
+                  && <div>Click &apos;Confirm&apos; to accept by updating project role to &apos;Copilot&apos; and complete this opportunity</div>
+                }
             </div>
         </div>
     </BaseModal>
