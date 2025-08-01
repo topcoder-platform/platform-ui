@@ -58,6 +58,11 @@ export const useProjects = (search?: string, config?: {isPaused?: () => boolean,
     })
 }
 
+export const getProject = (projectId: string): Promise<Project> => {
+    const url = `${baseUrl}/${projectId}`
+    return xhrGetAsync<Project>(url)
+}
+
 export const getProjects = (search?: string, filter?: any): Promise<Project[]> => {
     const params = { name: `"${search}"`, ...filter }
     const url = buildUrl(baseUrl, params)

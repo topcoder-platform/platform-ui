@@ -1,7 +1,7 @@
 import { FC, useContext, useEffect, useMemo, useState } from 'react'
 import { bind, debounce, isEmpty } from 'lodash'
 import { toast } from 'react-toastify'
-import { Params, useNavigate, useParams } from 'react-router-dom'
+import { Params, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import classNames from 'classnames'
 
 import { profileContext, ProfileContextData } from '~/libs/core'
@@ -9,9 +9,10 @@ import { Button, IconSolid, InputDatePicker, InputMultiselectOption,
     InputRadio, InputSelect, InputSelectReact, InputText, InputTextarea } from '~/libs/ui'
 import { InputSkillSelector } from '~/libs/shared'
 
-import { getProjects, ProjectsResponse, useProjects } from '../../services/projects'
+import { getProject, getProjects, ProjectsResponse, useProjects } from '../../services/projects'
 import { ProjectTypes, ProjectTypeValues } from '../../constants'
 import { CopilotRequestResponse, saveCopilotRequest, useCopilotRequest } from '../../services/copilot-requests'
+import { Project } from '../../models/Project'
 
 import styles from './styles.module.scss'
 
@@ -37,11 +38,13 @@ const CopilotRequestForm: FC<{}> = () => {
     const { profile }: ProfileContextData = useContext(profileContext)
     const navigate = useNavigate()
     const routeParams: Params<string> = useParams()
+    const [params] = useSearchParams()
 
     const [formValues, setFormValues] = useState<any>({})
     const [isFormChanged, setIsFormChanged] = useState(false)
     const [formErrors, setFormErrors] = useState<any>({})
     const [paymentType, setPaymentType] = useState<string>('')
+    const [projectFromQuery, setProjectFromQuery] = useState<Project>()
 
     const { data: copilotRequestData }: CopilotRequestResponse = useCopilotRequest(routeParams.requestId)
 
@@ -51,15 +54,42 @@ const CopilotRequestForm: FC<{}> = () => {
         }
     }, [copilotRequestData])
 
+    const fetchProject = async (): Promise<void> => {
+        const projectId = params.get('projectId')
+
+        if (!projectId) {
+            return
+        }
+
+        const project = await getProject(projectId as string)
+
+        setFormValues((prevValues: any) => ({
+            ...prevValues,
+            projectId: project.id,
+        }))
+        setIsFormChanged(true)
+        setProjectFromQuery(project)
+    }
+
+    useEffect(() => {
+        fetchProject()
+    }, [params])
+
     const { data: projects = [] }: ProjectsResponse = useProjects(undefined, {
         filter: { id: copilotRequestData?.projectId },
         isPaused: () => !copilotRequestData?.projectId,
     })
 
-    const projectOptions = useMemo(() => projects.map(p => ({
-        label: p.name,
-        value: p.id,
-    })), [projects])
+    const projectOptions = useMemo(() => {
+        const projectsFromResponse = projects.map(p => ({
+            label: p.name,
+            value: p.id,
+        }))
+
+        return projectFromQuery
+            ? [...projectsFromResponse, { label: projectFromQuery.name, value: projectFromQuery.id }]
+            : projectsFromResponse
+    }, [projects, projectFromQuery])
 
     const projectTypes = ProjectTypes ? ProjectTypes.map(project => ({
         label: project,
