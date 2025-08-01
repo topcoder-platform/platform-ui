@@ -100,6 +100,7 @@ const tableColumns: TableColumn<CopilotOpportunity>[] = [
         type: 'number',
     },
     {
+        isSortable: false,
         label: 'Payment',
         propertyName: 'paymentType',
         renderer: (copilotOpportunity: CopilotOpportunity) => (
