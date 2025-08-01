@@ -125,7 +125,7 @@ const TabsNavbar: FC<TabsNavbarProps> = (props: TabsNavbarProps) => {
                     handleActivateTab={handleActivateTab}
                     handleActivateChildTab={handleActivateChildTab}
                 />
-                <IconOutline.ChevronDownIcon />
+                {props.tabs.length > 1 && <IconOutline.ChevronDownIcon />}
             </div>
 
             <div className={classNames(styles['menu-wrapper'])}>
