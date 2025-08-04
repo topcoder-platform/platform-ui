@@ -36,6 +36,11 @@ const tableColumns: TableColumn<CopilotApplication>[] = [
         type: 'text',
     },
     {
+        label: 'Past Projects',
+        propertyName: 'pastProjects',
+        type: 'text',
+    },
+    {
         label: 'Status',
         propertyName: 'status',
         renderer: (copilotApplication: CopilotApplication) => (
@@ -54,7 +59,7 @@ const tableColumns: TableColumn<CopilotApplication>[] = [
         label: 'Notes',
         propertyName: 'notes',
         renderer: (copilotApplication: CopilotApplication) => (
-            <div className={styles.title}>
+            <div className={styles.notes}>
                 {copilotApplication.notes}
             </div>
         ),
@@ -81,6 +86,8 @@ const CopilotApplications: FC<{
             fulfilment: member?.copilotFulfillment || 0,
             handle: member?.handle,
             opportunityStatus: props.opportunity.status,
+            pastProjects: member?.pastProjects || 0,
+            projectName: props.opportunity.projectName,
         }
     })
         .sort((a, b) => (b.fulfilment || 0) - (a.fulfilment || 0)) : [])
@@ -90,7 +97,7 @@ const CopilotApplications: FC<{
     return (
         <div>
             {
-                tableData.length > 0 && (
+                tableData.length > 0 ? (
                     <Table
                         columns={tableColumns}
                         data={tableData}
@@ -98,6 +105,10 @@ const CopilotApplications: FC<{
                         removeDefaultSort
                         preventDefault
                     />
+                ) : (
+                    <div className={styles.noApplications}>
+                        <span>No Applications yet</span>
+                    </div>
                 )
             }
         </div>

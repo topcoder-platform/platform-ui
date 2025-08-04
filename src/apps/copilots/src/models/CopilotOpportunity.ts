@@ -15,6 +15,7 @@ export interface CopilotOpportunity {
     numHoursPerWeek: number,
     numWeeks: number,
     overview: string,
+    opportunityTitle: string,
     paymentType: string,
     otherPaymentType: string,
     requiresCommunication: 'yes' | 'no',
@@ -22,5 +23,4 @@ export interface CopilotOpportunity {
     startDate: Date,
     tzRestrictions: 'yes' | 'no',
     createdAt: Date,
-    canApplyAsCopilot: boolean,
 }

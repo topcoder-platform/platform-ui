@@ -1,6 +1,7 @@
 import { FC, useCallback, useContext, useMemo } from 'react'
 import { find } from 'lodash'
 import { NavigateFunction, Params, useNavigate, useParams } from 'react-router-dom'
+import classNames from 'classnames'
 
 import {
     Button,
@@ -58,6 +59,16 @@ const CopilotTableActions: FC<{request: CopilotRequest}> = props => {
         navigate(copilotRoutesMap.CopilotRequestDetails.replace(':requestId', `${props.request.id}`))
     }, [navigate, props.request.id])
 
+    const isEditable = useMemo(() => !['canceled', 'fulfilled'].includes(props.request.status), [props.request.status])
+
+    const editRequest = useCallback(() => {
+        if (!isEditable) {
+            return
+        }
+
+        navigate(copilotRoutesMap.CopilotRequestEditForm.replace(':requestId', `${props.request.id}`))
+    }, [navigate, props.request.id, isEditable])
+
     const copilotOpportunityId = props.request.opportunity?.id
 
     const navigateToOpportunity = useCallback(() => {
@@ -77,6 +88,21 @@ const CopilotTableActions: FC<{request: CopilotRequest}> = props => {
                     >
                         <IconSolid.EyeIcon className='icon-lg' />
                     </Tooltip>
+                </div>
+                <div
+                    className={classNames(styles.viewRequestIcon, !isEditable && styles.disabled)}
+                    onClick={editRequest}
+                >
+                    {isEditable ? (
+                        <Tooltip
+                            content='Edit Copilot Request'
+                            place='top'
+                        >
+                            <IconSolid.PencilIcon className='icon-lg' />
+                        </Tooltip>
+                    ) : (
+                        <IconSolid.PencilIcon className={classNames('icon-lg', styles.disabled)} />
+                    )}
                 </div>
                 {props.request.status === 'approved'
                 && (
@@ -169,6 +195,12 @@ const CopilotRequestsPage: FC = () => {
                 )
             },
             type: 'element',
+        },
+        {
+            className: styles.opportunityTitle,
+            label: 'Title',
+            propertyName: 'opportunityTitle',
+            type: 'text',
         },
         {
             label: 'Type',

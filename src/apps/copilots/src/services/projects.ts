@@ -11,6 +11,8 @@ const baseUrl = `${EnvironmentConfig.API.V5}/projects`
 
 export type ProjectsResponse = SWRResponse<Project[], Project[]>
 
+const sleep = (ms: number): Promise<()=> void> => new Promise(resolve => { setTimeout(resolve, ms) })
+
 /**
  * Custom hook to fetch and manage projects data.
  *
@@ -24,13 +26,26 @@ export const useProjects = (search?: string, config?: {isPaused?: () => boolean,
     const params = { name: search, ...config?.filter }
     const url = buildUrl(baseUrl, params)
 
-    const fetcher = (): Promise<Project[]> => {
-        if (config?.filter?.id && Array.isArray(config.filter.id)) {
-            const chunks = chunk(config.filter.id, 20)
-            return Promise.all(
-                chunks.map(page => xhrGetAsync<Project[]>(buildUrl(baseUrl, { ...params, id: page }))),
-            )
-                .then(responses => responses.flat())
+    const fetcher = async (): Promise<Project[]> => {
+        const ids = config?.filter?.id
+
+        if (Array.isArray(ids)) {
+            const idChunks = chunk(ids, 20)
+            const allResults: Project[] = []
+
+            for (const chunkIds of idChunks) {
+                // eslint-disable-next-line no-await-in-loop
+                const response = await xhrGetAsync<Project[]>(
+                    buildUrl(baseUrl, { ...params, id: chunkIds }),
+                )
+                allResults.push(...response)
+
+                // Rate limit: delay 200ms between calls
+                // eslint-disable-next-line no-await-in-loop
+                await sleep(200)
+            }
+
+            return allResults
         }
 
         return xhrGetAsync<Project[]>(url)
@@ -41,6 +56,11 @@ export const useProjects = (search?: string, config?: {isPaused?: () => boolean,
         refreshInterval: 0,
         revalidateOnFocus: false,
     })
+}
+
+export const getProject = (projectId: string): Promise<Project> => {
+    const url = `${baseUrl}/${projectId}`
+    return xhrGetAsync<Project>(url)
 }
 
 export const getProjects = (search?: string, filter?: any): Promise<Project[]> => {

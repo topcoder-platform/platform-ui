@@ -65,6 +65,10 @@ const CopilotOpportunityDetails: FC<{}> = () => {
         [profile],
     )
     const { data: copilotApplications }: { data?: CopilotApplication[] } = useCopilotApplications(opportunityId)
+    const appliedCopilotApplications = useMemo(
+        () => copilotApplications?.filter(item => item.userId === profile?.userId),
+        [copilotApplications, profile],
+    )
     const { data: members }: { data?: FormattedMembers[]} = useMembers(
         copilotApplications ? copilotApplications?.map(item => item.userId) : [],
     )
@@ -95,13 +99,16 @@ const CopilotOpportunityDetails: FC<{}> = () => {
     }, [getHashFromTabId, setActiveTab])
 
     useEffect(() => {
-        const timer = setTimeout(() => {
-            if (!opportunity) {
-                setShowNotFound(true)
-            }
-        }, 2000)
+        if (opportunity) {
+            setShowNotFound(false)
+            return undefined
+        }
 
-        return () => clearTimeout(timer) // Cleanup on unmount
+        const timer = setTimeout(() => {
+            setShowNotFound(true)
+        }, 1000)
+
+        return () => clearTimeout(timer)
     }, [opportunity])
 
     const onApplied: () => void = useCallback(() => {
@@ -112,6 +119,14 @@ const CopilotOpportunityDetails: FC<{}> = () => {
     const onCloseApplyModal: () => void = useCallback(() => {
         setShowApplyOpportunityModal(false)
     }, [setShowApplyOpportunityModal])
+
+    if (isValidating && !opportunity) {
+        return (
+            <ContentLayout title='Copilot Opportunity Details'>
+                <LoadingSpinner />
+            </ContentLayout>
+        )
+    }
 
     if (!opportunity && showNotFound) {
         return (
@@ -164,17 +179,17 @@ const CopilotOpportunityDetails: FC<{}> = () => {
             title='Copilot Opportunity'
             buttonConfig={
                 isCopilot
-                && copilotApplications
-                && copilotApplications.length === 0
+                && appliedCopilotApplications
+                && appliedCopilotApplications.length === 0
                 && opportunity?.status === 'active'
-                && opportunity?.canApplyAsCopilot ? applyCopilotOpportunityButton : undefined
+                    ? applyCopilotOpportunityButton : undefined
             }
             secondaryButtonConfig={
                 opportunity?.status === 'active'
                 && isAdminOrPM ? cancelCopilotOpportunityButton : undefined
             }
-            infoComponent={(isCopilot && !(copilotApplications
-                && copilotApplications.length === 0
+            infoComponent={(isCopilot && !(appliedCopilotApplications
+                && appliedCopilotApplications.length === 0
             ) && opportunity?.status === 'active' && !!application) && (
                 <div className={styles.applied}>
                     <IconSolid.CheckCircleIcon className={styles.appliedIcon} />
@@ -194,7 +209,7 @@ const CopilotOpportunityDetails: FC<{}> = () => {
             ) }
             <div className={styles.wrapper}>
                 <h1 className={styles.header}>
-                    {opportunity?.projectName}
+                    {opportunity?.opportunityTitle ?? opportunity?.projectName}
                 </h1>
                 <div className={styles.infoRow}>
                     <div className={styles.infoColumn}>
@@ -253,6 +268,16 @@ const CopilotOpportunityDetails: FC<{}> = () => {
                         <div className={styles.infoText}>
                             <span className={styles.infoHeading}>Working Hours</span>
                             <span className={styles.infoValue}>{opportunity?.tzRestrictions}</span>
+                        </div>
+                    </div>
+                    <div className={styles.infoColumn}>
+                        <IconOutline.CashIcon className={styles.icon} />
+                        <div className={styles.infoText}>
+                            <span className={styles.infoHeading}>Payment</span>
+                            <span className={styles.infoValue}>
+                                {opportunity?.paymentType === 'standard'
+                                    ? opportunity.paymentType : opportunity?.otherPaymentType}
+                            </span>
                         </div>
                     </div>
                 </div>

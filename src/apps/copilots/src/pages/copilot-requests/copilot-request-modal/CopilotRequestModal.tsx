@@ -1,4 +1,5 @@
 import { FC, useCallback, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 import { BaseModal, Button, IconSolid, useConfirmationModal } from '~/libs/ui'
 import { textFormatDateLocaleShortString } from '~/libs/shared'
@@ -18,6 +19,17 @@ interface CopilotRequestModalProps {
 
 const CopilotRequestModal: FC<CopilotRequestModalProps> = props => {
     const confirmModal = useConfirmationModal()
+    const navigate = useNavigate()
+
+    const isEditable = useMemo(() => !['canceled', 'fulfilled'].includes(props.request.status), [props.request.status])
+
+    const editRequest = useCallback(() => {
+        if (!isEditable) {
+            return
+        }
+
+        navigate(copilotRoutesMap.CopilotRequestEditForm.replace(':requestId', `${props.request.id}`))
+    }, [isEditable, navigate, props.request.id])
 
     const confirm = useCallback(async ({ title, content, action }: any) => {
         const confirmed = await confirmModal.confirm({ content, title })
@@ -47,10 +59,17 @@ const CopilotRequestModal: FC<CopilotRequestModalProps> = props => {
             open
             size='lg'
             title='Copilot Request'
-            buttons={props.request.status === 'new' && (
+            buttons={(
                 <>
-                    <Button primary onClick={confirmApprove} label='Approve Request' />
-                    <Button primary variant='danger' onClick={confirmReject} label='Reject Request' />
+                    {isEditable && (
+                        <Button primary onClick={editRequest} label='Edit Request' className={styles.mrAuto} />
+                    )}
+                    {props.request.status === 'new' && (
+                        <>
+                            <Button primary onClick={confirmApprove} label='Approve Request' />
+                            <Button primary variant='danger' onClick={confirmReject} label='Reject Request' />
+                        </>
+                    )}
                 </>
             )}
         >
@@ -58,6 +77,10 @@ const CopilotRequestModal: FC<CopilotRequestModalProps> = props => {
                 <div className={styles.detailsLine}>
                     <div>Project</div>
                     <div>{props.project?.name}</div>
+                </div>
+                <div className={styles.detailsLine}>
+                    <div>Title</div>
+                    <div>{props.request.opportunityTitle}</div>
                 </div>
                 <div className={styles.detailsLine}>
                     <div>Opportunity details</div>

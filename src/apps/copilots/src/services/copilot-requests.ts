@@ -1,7 +1,7 @@
 import useSWR, { SWRResponse } from 'swr'
 
 import { EnvironmentConfig } from '~/config'
-import { xhrGetAsync, xhrPostAsync } from '~/libs/core'
+import { xhrGetAsync, xhrPatchAsync, xhrPostAsync } from '~/libs/core'
 import { buildUrl } from '~/libs/shared/lib/utils/url'
 
 import { CopilotRequest } from '../models/CopilotRequest'
@@ -23,6 +23,7 @@ function copilotRequestFactory(data: any): CopilotRequest {
         createdAt: new Date(data.createdAt),
         data: undefined,
         opportunity: data.copilotOpportunity?.[0],
+        startDate: new Date(data.data?.startDate),
     }
 }
 
@@ -54,8 +55,8 @@ export type CopilotRequestResponse = SWRResponse<CopilotRequest, CopilotRequest>
  * @param {string} requestId - The unique identifier of the copilot request.
  * @returns {CopilotRequestResponse} - The response containing the copilot request data.
  */
-export const useCopilotRequest = (requestId: string): CopilotRequestResponse => {
-    const url = buildUrl(`${baseUrl}/copilots/requests/${requestId}`)
+export const useCopilotRequest = (requestId?: string): CopilotRequestResponse => {
+    const url = requestId && buildUrl(`${baseUrl}/copilots/requests/${requestId}`)
 
     const fetcher = (urlp: string): Promise<CopilotRequest> => xhrGetAsync<CopilotRequest>(urlp)
         .then(copilotRequestFactory)
@@ -74,12 +75,14 @@ export const useCopilotRequest = (requestId: string): CopilotRequestResponse => 
  */
 export const saveCopilotRequest = (request: CopilotRequest)
 : Promise<CopilotRequest> => {
-    const url = `${baseUrl}/${request.projectId}/copilots/requests`
+    const url = request.id
+        ? `${baseUrl}/copilots/requests/${request.id}` : `${baseUrl}/${request.projectId}/copilots/requests`
+
     const requestData = {
-        data: request,
+        data: { ...request, id: undefined },
     }
 
-    return xhrPostAsync(url, requestData, {})
+    return request.id ? xhrPatchAsync(url, requestData) : xhrPostAsync(url, requestData, {})
 }
 
 /**

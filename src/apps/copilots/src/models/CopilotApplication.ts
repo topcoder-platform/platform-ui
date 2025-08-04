@@ -4,6 +4,11 @@ export enum CopilotApplicationStatus {
     PENDING = 'pending',
 }
 
+export interface ExistingMembership {
+    role: string,
+    id: number,
+}
+
 export interface CopilotApplication {
     id: number,
     notes?: string,
@@ -13,4 +18,6 @@ export interface CopilotApplication {
     userId: number,
     status: CopilotApplicationStatus,
     opportunityStatus: string,
+    existingMembership?: ExistingMembership,
+    projectName: string,
 }
