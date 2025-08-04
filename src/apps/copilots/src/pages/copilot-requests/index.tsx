@@ -200,7 +200,10 @@ const CopilotRequestsPage: FC = () => {
             className: styles.opportunityTitle,
             label: 'Title',
             propertyName: 'opportunityTitle',
-            type: 'text',
+            renderer: (copilotRequest: CopilotRequest) => (
+                <div className={styles.title}>{copilotRequest.opportunityTitle}</div>
+            ),
+            type: 'element',
         },
         {
             label: 'Type',
