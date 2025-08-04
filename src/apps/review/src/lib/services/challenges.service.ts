@@ -1,11 +1,22 @@
 /**
  * Challenges service
  */
-import { PaginatedResponse, xhrGetPaginatedAsync } from '~/libs/core'
+import {
+    PaginatedResponse,
+    xhrGetAsync,
+    xhrGetPaginatedAsync,
+} from '~/libs/core'
 import { EnvironmentConfig } from '~/config'
 
 import { MockChalenges, MockChallengeInfo } from '../../mock-datas'
-import { adjustChallengeInfo, BackendChallengeTrack, BackendChallengeType, ChallengeInfo } from '../models'
+import {
+    adjustChallengeInfo,
+    BackendChallengeInfo,
+    BackendChallengeTrack,
+    BackendChallengeType,
+    ChallengeInfo,
+    convertBackendChallengeInfo,
+} from '../models'
 
 const challengeBaseUrl = `${EnvironmentConfig.API.V6}`
 
@@ -17,7 +28,24 @@ export const fetchChallengeInfo = async (): Promise<ChallengeInfo> => Promise.re
     adjustChallengeInfo(MockChallengeInfo) as ChallengeInfo,
 )
 
-export const fetchChallengeInfoById = async (id: string): Promise<ChallengeInfo> => Promise.resolve(
+/**
+ * Fetch challenge info by id
+ * @param id challenge id
+ * @returns resolves to the challenge info
+ */
+export const fetchChallengeInfoById = async (id: string): Promise<ChallengeInfo> => {
+    const result = await xhrGetAsync<BackendChallengeInfo>(
+        `${challengeBaseUrl}/challenges/${id}`,
+    )
+    return convertBackendChallengeInfo(result) as ChallengeInfo
+}
+
+/**
+ * Fetch mock challenge info by id
+ * @param id challenge id
+ * @returns resolves to the challenge info
+ */
+export const mockFetchChallengeInfoById = async (id: string): Promise<ChallengeInfo> => Promise.resolve(
     adjustChallengeInfo(MockChalenges.find(c => c.id === id) ?? MockChallengeInfo) as ChallengeInfo,
 )
 

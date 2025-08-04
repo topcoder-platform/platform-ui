@@ -13,7 +13,7 @@ import { MarkdownReview } from '../MarkdownReview'
 import { AppealInfo, ReviewItemInfo, ScorecardQuestion } from '../../models'
 import { stringIsNumberic } from '../../utils'
 import { IconChevronDown } from '../../assets/icons'
-import { useFetchChallengeInfo, useFetchChallengeInfoProps, useRole } from '../../hooks'
+import { useFetchMockChallengeInfo, useFetchMockChallengeInfoProps, useRole, useRoleProps } from '../../hooks'
 import { ADMIN, COPILOT, FINISHTAB, REVIEWER, TAB, WITHOUT_APPEAL } from '../../../config/index.config'
 import { Appeal } from '../Appeal'
 import { ManagerComment } from '../ManagerComment'
@@ -41,13 +41,13 @@ interface Props {
 
 export const ScorecardQuestionView: FC<Props> = (props: Props) => {
     const params = useParams()
-    const { role }: {role: string} = useRole()
+    const { actionChallengeRole }: useRoleProps = useRole()
     const isExpand = props.isExpand[props.reviewItem.id]
     const { width: screenWidth }: WindowSize = useWindowSize()
     const isMobile = useMemo(() => screenWidth <= 745, [screenWidth])
 
-    const { challengeInfo }: useFetchChallengeInfoProps
-        = useFetchChallengeInfo(params.challengeId)
+    const { challengeInfo }: useFetchMockChallengeInfoProps
+        = useFetchMockChallengeInfo(params.challengeId)
 
     const finalAnswer = useMemo(() => {
         if (stringIsNumberic(props.reviewItem.finalAnswer)) {
@@ -170,7 +170,7 @@ export const ScorecardQuestionView: FC<Props> = (props: Props) => {
                         </td>
                     </tr>
                     {!includes(WITHOUT_APPEAL, challengeInfo?.type)
-                        && (includes([REVIEWER, COPILOT, ADMIN], role) ? (
+                        && (includes([REVIEWER, COPILOT, ADMIN], actionChallengeRole) ? (
                             props.mappingAppeals[commentItem.id] && (
                                 <tr
                                     key={commentItem.sortOrder}
@@ -187,14 +187,14 @@ export const ScorecardQuestionView: FC<Props> = (props: Props) => {
                                                         - 1
                                                 && !includes(
                                                     [COPILOT, ADMIN],
-                                                    role,
+                                                    actionChallengeRole,
                                                 ),
                                         },
                                     )}
                                 >
                                     <td colSpan={3}>
                                         <AppealComment
-                                            role={role}
+                                            role={actionChallengeRole}
                                             data={
                                                 props.mappingAppeals[
                                                     commentItem.id
@@ -230,13 +230,13 @@ export const ScorecardQuestionView: FC<Props> = (props: Props) => {
                                             : '',
                                     )}
                                 >
-                                    <Appeal role={role} />
+                                    <Appeal role={actionChallengeRole} />
                                 </td>
                             </tr>
                         ))}
                 </Fragment>
             ))}
-            {includes([COPILOT, ADMIN], role) && (
+            {includes([COPILOT, ADMIN], actionChallengeRole) && (
                 <tr
                     className={classNames(
                         styles.container,

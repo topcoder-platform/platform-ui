@@ -49,5 +49,10 @@ export interface GlobalConfig {
         DIRECT_URL: string
         WORK_MANAGER_URL: string
         ONLINE_REVIEW_URL: string
+    },
+    REVIEW: {
+        CHALLENGE_PAGE_URL: string
+        PROFILE_PAGE_URL: string
+        REVIEW_API: string
     }
 }

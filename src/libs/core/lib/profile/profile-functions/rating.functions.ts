@@ -18,7 +18,11 @@ export const TC_RATING_COLORS: Array<{ color: string, limit: number }> = [{
 /**
  * Inline CSS for rating color
  */
-export function getRatingColor(rating: number): string {
+export function getRatingColor(rating?: number): string {
+    if (rating === undefined) {
+        return '#2a2a2a'
+    }
+
     let i: number = 0
     while (TC_RATING_COLORS[i].limit <= rating) i += 1
 

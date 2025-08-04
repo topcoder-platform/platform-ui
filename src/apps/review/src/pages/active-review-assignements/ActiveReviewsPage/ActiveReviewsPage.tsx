@@ -34,11 +34,11 @@ interface Props {
 
 export const ActiveReviewsPage: FC<Props> = (props: Props) => {
     const {
-        cancelLoadMyRoleIds,
+        cancelLoadMyRoleInfos,
         loginUserInfo,
-        myRoleIdsMapping,
+        myRoleInfosMapping,
         resourceRoleMapping,
-        loadMyRoleIds,
+        loadMyRoleInfos,
     }: ReviewAppContextModel = useContext(ReviewAppContext)
 
     const { challengeTypes, isLoading: isLoadingChallengeTypeOnly }: useFetchChallengeTypesProps
@@ -82,8 +82,8 @@ export const ActiveReviewsPage: FC<Props> = (props: Props) => {
         isLoading: isLoadingActiveReviews,
         loadActiveReviews,
     }: useFetchActiveReviewsProps = useFetchActiveReviews(
-        loadMyRoleIds,
-        cancelLoadMyRoleIds,
+        loadMyRoleInfos,
+        cancelLoadMyRoleInfos,
     )
 
     const breadCrumb = useMemo(
@@ -134,7 +134,7 @@ export const ActiveReviewsPage: FC<Props> = (props: Props) => {
                             datas={activeReviews}
                             className={styles.blockTable}
                             resourceRoleMapping={resourceRoleMapping}
-                            myRoleIdsMapping={myRoleIdsMapping}
+                            myRoleInfosMapping={myRoleInfosMapping}
                         />
                     )}
                 </>

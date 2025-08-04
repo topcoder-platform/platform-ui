@@ -1,17 +1,22 @@
 /**
  * Challenge Details Page.
  */
-import { FC, useCallback, useEffect, useMemo, useState } from 'react'
+import { FC, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { NavLink, useParams, useSearchParams } from 'react-router-dom'
 import { kebabCase } from 'lodash'
 import classNames from 'classnames'
 
+import { TableLoading } from '~/apps/admin/src/lib'
+import { EnvironmentConfig } from '~/config'
+
 import {
-    useFetchChallengeInfo,
-    useFetchChallengeInfoProps,
+    useFetchMockChallengeInfo,
+    useFetchMockChallengeInfoProps,
     useRole,
+    useRoleProps,
 } from '../../../lib/hooks'
 import {
+    ChallengeDetailContext,
     ChallengeDetailsContent,
     ChallengeLinks,
     ChallengePhaseInfo,
@@ -19,7 +24,7 @@ import {
     Tabs,
 } from '../../../lib'
 import { fetchTabs } from '../../../lib/services'
-import { SelectOption } from '../../../lib/models'
+import { ChallengeDetailContextModel, SelectOption } from '../../../lib/models'
 import { TAB } from '../../../config/index.config'
 
 import styles from './ChallengeDetailsPage.module.scss'
@@ -30,18 +35,27 @@ interface Props {
 
 export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
     const [searchParams, setSearchParams] = useSearchParams()
-    const { role }: {role: string} = useRole()
+    const { actionChallengeRole }: useRoleProps = useRole()
     const params = useParams()
+
+    // get challenge info from challenge detail context
     const {
+        challengeId,
         challengeInfo,
-        registrations,
+        isLoadingChallengeInfo,
+        isLoadingChallengeResources: isLoadingRegistrants,
+        registrants,
+    }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
+
+    // get mock datas in for challenge info
+    const {
         submissions,
         projectResults,
         screenings,
         firstSubmissions,
-    }: useFetchChallengeInfoProps = useFetchChallengeInfo(
+    }: useFetchMockChallengeInfoProps = useFetchMockChallengeInfo(
         params.challengeId,
-        role,
+        actionChallengeRole,
     )
     const [tabItems, setTabItems] = useState<SelectOption[]>([])
     const [selectedTab, setSelectedTab] = useState<string>('')
@@ -56,9 +70,11 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                 label: 'Active Reviews',
                 path: '/review/active-review-assigments/',
             },
-            { index: 2, label: challengeInfo?.name ?? '' },
+            ...(isLoadingChallengeInfo
+                ? []
+                : [{ index: 2, label: challengeInfo?.name ?? '' }]),
         ],
-        [challengeInfo],
+        [challengeInfo, isLoadingChallengeInfo],
     )
 
     const switchTab = useCallback((tab: string) => {
@@ -97,60 +113,69 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         <PageWrapper
             pageTitle={challengeInfo?.name ?? ''}
             className={classNames(styles.container, props.className)}
-            titleUrl='emptyLink'
+            titleUrl={`${EnvironmentConfig.REVIEW.CHALLENGE_PAGE_URL}/${challengeId}`}
             breadCrumb={breadCrumb}
         >
-            <div className={styles.summary}>
-                {challengeInfo && (
-                    <ChallengePhaseInfo challengeInfo={challengeInfo} />
-                )}
-                <ChallengeLinks />
-            </div>
+            {isLoadingChallengeInfo ? (
+                <TableLoading />
+            ) : (
+                <>
+                    <div className={styles.summary}>
+                        {challengeInfo && (
+                            <ChallengePhaseInfo challengeInfo={challengeInfo} />
+                        )}
+                        <ChallengeLinks />
+                    </div>
 
-            <div className={styles.blockContent}>
-                <span className={styles.textTitle}>Phases</span>
+                    <div className={styles.blockContent}>
+                        <span className={styles.textTitle}>Phases</span>
 
-                <div className={styles.blockTabsContainer}>
-                    <Tabs
-                        items={tabItems}
-                        selected={selectedTab}
-                        onChange={switchTab}
-                        rightContent={
-                            selectedTab === 'Winners' ? (
-                                <div className={styles.blockReviewers}>
-                                    {reviewers.map(item => (
-                                        <div
-                                            key={item.reviewerHandle}
-                                            className={styles.blockReviewer}
-                                        >
-                                            <strong>Reviewer :</strong>
-                                            <NavLink
-                                                to='#'
-                                                onClick={prevent}
-                                                style={{
-                                                    color: item.reviewerHandleColor,
-                                                }}
-                                            >
-                                                {item.reviewerHandle}
-                                            </NavLink>
+                        <div className={styles.blockTabsContainer}>
+                            <Tabs
+                                items={tabItems}
+                                selected={selectedTab}
+                                onChange={switchTab}
+                                rightContent={
+                                    selectedTab === 'Winners' ? (
+                                        <div className={styles.blockReviewers}>
+                                            {reviewers.map(item => (
+                                                <div
+                                                    key={item.reviewerHandle}
+                                                    className={
+                                                        styles.blockReviewer
+                                                    }
+                                                >
+                                                    <strong>Reviewer :</strong>
+                                                    <NavLink
+                                                        to='#'
+                                                        onClick={prevent}
+                                                        style={{
+                                                            color: item.reviewerHandleColor,
+                                                        }}
+                                                    >
+                                                        {item.reviewerHandle}
+                                                    </NavLink>
+                                                </div>
+                                            ))}
                                         </div>
-                                    ))}
-                                </div>
-                            ) : undefined
-                        }
-                    />
-                </div>
+                                    ) : undefined
+                                }
+                            />
+                        </div>
 
-                <ChallengeDetailsContent
-                    type={challengeInfo?.type}
-                    selectedTab={selectedTab}
-                    registrations={registrations}
-                    submissions={submissions}
-                    projectResults={projectResults}
-                    screening={screenings}
-                    firstSubmissions={firstSubmissions}
-                />
-            </div>
+                        <ChallengeDetailsContent
+                            type={challengeInfo?.type}
+                            selectedTab={selectedTab}
+                            registrations={registrants}
+                            isLoadingRegistrants={isLoadingRegistrants}
+                            submissions={submissions}
+                            projectResults={projectResults}
+                            screening={screenings}
+                            firstSubmissions={firstSubmissions}
+                        />
+                    </div>
+                </>
+            )}
         </PageWrapper>
     )
 }

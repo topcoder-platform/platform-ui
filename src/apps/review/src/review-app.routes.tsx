@@ -11,6 +11,7 @@ import {
 
 import {
     activeReviewAssigmentsRouteId,
+    challengeDetailRouteId,
     rootRoute,
 } from './config/routes.config'
 
@@ -18,6 +19,9 @@ const ReviewApp: LazyLoadedComponent = lazyLoad(() => import('./ReviewApp'))
 
 const ActiveReviewAssigments: LazyLoadedComponent = lazyLoad(
     () => import('./pages/active-review-assignements/ActiveReviewAssigments'),
+)
+const ChallengeDetailContainer: LazyLoadedComponent = lazyLoad(
+    () => import('./pages/active-review-assignements/ChallengeDetailContainer'),
 )
 const ActiveReviewsPage: LazyLoadedComponent = lazyLoad(
     () => import('./pages/active-review-assignements/ActiveReviewsPage'),
@@ -52,14 +56,22 @@ export const reviewRoutes: ReadonlyArray<PlatformRoute> = [
                         route: '',
                     },
                     {
-                        element: <ChallengeDetailsPage />,
-                        id: 'challenge-details-page',
-                        route: ':challengeId/challenge-details',
-                    },
-                    {
-                        element: <ScorecardDetailsPage />,
-                        id: 'scorecard-details-page',
-                        route: ':challengeId/scorecard-details/:scorecardId',
+                        children: [
+                            {
+                                element: <ChallengeDetailsPage />,
+                                id: 'challenge-details-page',
+                                route: 'challenge-details',
+                            },
+                            {
+                                element: <ScorecardDetailsPage />,
+                                id: 'scorecard-details-page',
+                                route: 'scorecard-details/:scorecardId',
+                            },
+
+                        ],
+                        element: <ChallengeDetailContainer />,
+                        id: challengeDetailRouteId,
+                        route: challengeDetailRouteId,
                     },
                 ],
                 element: <ActiveReviewAssigments />,

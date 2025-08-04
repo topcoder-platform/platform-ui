@@ -23,6 +23,7 @@ interface InputTextareaProps {
     readonly tabIndex?: number
     readonly value?: string | number
     readonly inputControl?: UseFormRegisterReturn
+    readonly rows?: number | undefined;
 }
 
 const InputTextarea: FC<InputTextareaProps> = (props: InputTextareaProps) => (
@@ -42,6 +43,7 @@ const InputTextarea: FC<InputTextareaProps> = (props: InputTextareaProps) => (
             placeholder={props.placeholder}
             spellCheck={!!props.spellCheck}
             tabIndex={props.tabIndex ?? -1}
+            rows={props.rows}
             {...(props.inputControl ?? {})}
             onBlur={props.inputControl ? props.inputControl.onBlur : props.onBlur}
             onChange={props.inputControl ? props.inputControl.onChange : props.onChange}

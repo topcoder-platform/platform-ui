@@ -15,11 +15,10 @@ import { Pagination } from '~/apps/admin/src/lib'
 import {
     BackendResourceRole,
     ChallengeInfo,
-    MyRoleIdsMappingType,
+    MyRoleInfosMappingType,
 } from '../../models'
 import { TableWrapper } from '../TableWrapper'
 import { ProgressBar } from '../ProgressBar'
-import { useRole } from '../../hooks/useRole'
 
 import styles from './TableActiveReviews.module.scss'
 
@@ -29,7 +28,7 @@ interface Props {
     resourceRoleMapping?: {
         [key: string]: BackendResourceRole
     }
-    myRoleIdsMapping: MyRoleIdsMappingType // from challenge id to list of my role
+    myRoleInfosMapping: MyRoleInfosMappingType // from challenge id to list of my role
     totalPages: number
     page: number
     setPage: Dispatch<SetStateAction<number>>
@@ -37,36 +36,18 @@ interface Props {
 
 export const TableActiveReviews: FC<Props> = (props: Props) => {
     const navigate = useNavigate()
-    const { updateRole }: { updateRole: (role: string) => void } = useRole()
     const { width: screenWidth }: WindowSize = useWindowSize()
     const isTablet = useMemo(() => screenWidth <= 1000, [screenWidth])
 
     const redirect = useCallback(
         (data: ChallengeInfo, e: React.MouseEvent<HTMLAnchorElement>) => {
             e.preventDefault()
-
-            let myRole: string = data.role ?? 'Submitter'
-            const myRoleIds = props.myRoleIdsMapping[data.id]
-            if (props.resourceRoleMapping && myRoleIds) {
-                myRole = myRoleIds
-                    .map(id => props.resourceRoleMapping?.[id]?.name)
-                    .filter(item => !!item)
-                    .join(', ')
-            }
-
-            updateRole(
-                ['Reviewer', 'Submitter', 'Copilot', 'Admin'].find(
-                    item => myRole.toLowerCase()
-                        .indexOf(item.toLowerCase()) >= 0,
-                ) ?? 'Submitter',
-            )
             navigate(`${data.id}/challenge-details`)
         },
         [
             navigate,
-            updateRole,
             props.resourceRoleMapping,
-            props.myRoleIdsMapping,
+            props.myRoleInfosMapping,
         ],
     )
 
@@ -94,13 +75,13 @@ export const TableActiveReviews: FC<Props> = (props: Props) => {
                 label: 'My Role',
                 propertyName: 'role',
                 renderer: (data: ChallengeInfo) => {
-                    let myRoles = [data.role ?? '']
-                    const myRoleIds = props.myRoleIdsMapping[data.id]
-                    if (!props.resourceRoleMapping || !myRoleIds) {
+                    let myRoles = ['']
+                    const myRoleInfos = props.myRoleInfosMapping[data.id]
+                    if (!props.resourceRoleMapping || !myRoleInfos) {
                         myRoles = ['loading...']
                     } else {
-                        myRoles = myRoleIds
-                            .map(id => props.resourceRoleMapping?.[id]?.name)
+                        myRoles = myRoleInfos
+                            .map(myRoleInfo => props.resourceRoleMapping?.[myRoleInfo.roleId]?.name)
                             .filter(item => !!item) as string[]
                     }
 
@@ -173,7 +154,7 @@ export const TableActiveReviews: FC<Props> = (props: Props) => {
                 type: 'element',
             },
         ],
-        [redirect, props.resourceRoleMapping, props.myRoleIdsMapping],
+        [redirect, props.resourceRoleMapping, props.myRoleInfosMapping],
     )
 
     const columnsMobile = useMemo<MobileTableColumn<ChallengeInfo>[][]>(

@@ -15,7 +15,7 @@ import { ProjectResult, ReviewResult } from '../../models'
 import { TableWrapper } from '../TableWrapper'
 import { ORDINAL_SUFFIX, WITHOUT_APPEAL } from '../../../config/index.config'
 import { getFinalScore } from '../../utils'
-import { useFetchChallengeInfo, useFetchChallengeInfoProps } from '../../hooks'
+import { useFetchMockChallengeInfo, useFetchMockChallengeInfoProps } from '../../hooks'
 
 import styles from './TableWinners.module.scss'
 
@@ -28,7 +28,7 @@ export const TableWinners: FC<Props> = (props: Props) => {
     const params = useParams()
     const { width: screenWidth }: WindowSize = useWindowSize()
     const isTablet = useMemo(() => screenWidth <= 744, [screenWidth])
-    const { challengeInfo }: useFetchChallengeInfoProps = useFetchChallengeInfo(
+    const { challengeInfo }: useFetchMockChallengeInfoProps = useFetchMockChallengeInfo(
         params.challengeId,
     )
 

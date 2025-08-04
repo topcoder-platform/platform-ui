@@ -36,14 +36,13 @@ export interface useFetchActiveReviewsProps {
 
 /**
  * Fetch active reviews
- *
- * @param loadMyRoleIds load my role ids
- * @param cancelLoadMyRoleIds cancel load my role ids
+ * @param loadMyRoleInfos load my role ids
+ * @param cancelLoadMyRoleInfos cancel load my role ids
  * @returns active reviews
  */
 export function useFetchActiveReviews(
-    loadMyRoleIds: (challengeId: string) => void,
-    cancelLoadMyRoleIds: () => void,
+    loadMyRoleInfos: (challengeId: string) => void,
+    cancelLoadMyRoleInfos: () => void,
 ): useFetchActiveReviewsProps {
     const [totalPages, setTotalPages] = useState<number>(1)
     const [isLoading, setIsLoading] = useState(false)
@@ -108,12 +107,12 @@ export function useFetchActiveReviews(
 
     useEffect(() => {
         forEach(activeReviews, review => {
-            loadMyRoleIds(review.id)
+            loadMyRoleInfos(review.id)
         })
 
         return () => {
             // clear queue of currently loading my role ids after exit ui
-            cancelLoadMyRoleIds()
+            cancelLoadMyRoleInfos()
         }
     }, [activeReviews])
 

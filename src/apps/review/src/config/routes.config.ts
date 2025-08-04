@@ -11,3 +11,4 @@ export const rootRoute: string
 export const activeReviewAssigmentsRouteId = 'active-review-assigments'
 export const openOpportunitiesRouteId = 'open-opportunities'
 export const pastReviewAssignmentsRouteId = 'past-review-assignments'
+export const challengeDetailRouteId = ':challengeId'

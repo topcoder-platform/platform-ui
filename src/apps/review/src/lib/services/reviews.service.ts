@@ -4,13 +4,15 @@
 import qs from 'qs'
 
 import { EnvironmentConfig } from '~/config'
-import { xhrGetPaginatedAsync } from '~/libs/core'
+import { xhrGetPaginatedAsync, xhrPostAsync } from '~/libs/core'
 
 import {
     adjustReviewInfo,
     BackendChallengeInfo,
+    BackendContactRequest,
     ChallengeInfo,
     convertBackendChallengeInfo,
+    FormContactManager,
     ReviewInfo,
 } from '../models'
 import { MockReviewEdit, MockReviewFull } from '../../mock-datas'
@@ -55,10 +57,12 @@ export const fetchActiveReviews = async (
         })}`,
     )
     return {
-        data: results.data.map((item, index) => convertBackendChallengeInfo(
-            item,
-            perPage * (page - 1) + index + 1,
-        ) as ChallengeInfo),
+        data: results.data.map(
+            (item, index) => convertBackendChallengeInfo(
+                item,
+                perPage * (page - 1) + index + 1,
+            ) as ChallengeInfo,
+        ),
         totalPages: results.totalPages,
     }
 }
@@ -74,3 +78,33 @@ export const fetchReviewInfo = async (isEdit: boolean): Promise<ReviewInfo> => P
         isEdit ? MockReviewEdit : MockReviewFull,
     ) as ReviewInfo,
 )
+
+/**
+ * Create contact request
+ *
+ * @param challengeId challenge id
+ * @param resourceId resource id
+ * @param data request info
+ * @returns resolves to the contact request info
+ */
+export const createContactRequest = async (
+    challengeId: string,
+    resourceId: string,
+    data: FormContactManager,
+): Promise<BackendContactRequest> => {
+    const result = await xhrPostAsync<
+        {
+            resourceId: string
+            challengeId: string
+            message: string
+        },
+        BackendContactRequest
+    >(`${EnvironmentConfig.REVIEW.REVIEW_API}/contact-requests`, {
+        challengeId,
+        message: data.category
+            ? `${data.category}:${data.message}`
+            : data.message,
+        resourceId,
+    })
+    return result
+}

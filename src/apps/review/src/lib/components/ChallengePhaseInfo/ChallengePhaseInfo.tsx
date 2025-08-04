@@ -6,6 +6,7 @@ import classNames from 'classnames'
 
 import { ChallengeInfo } from '../../models'
 import { ProgressBar } from '../ProgressBar'
+import { useRole, useRoleProps } from '../../hooks'
 
 import styles from './ChallengePhaseInfo.module.scss'
 
@@ -15,6 +16,7 @@ interface Props {
 }
 
 export const ChallengePhaseInfo: FC<Props> = (props: Props) => {
+    const { myChallengeRoles }: useRoleProps = useRole()
     const PROGRESS_TYPE = 'progress'
     const uiItems = useMemo(() => {
         const data = props.challengeInfo
@@ -22,17 +24,23 @@ export const ChallengePhaseInfo: FC<Props> = (props: Props) => {
             {
                 icon: 'icon-review',
                 title: 'Phase',
-                value: data.currentPhase,
+                value: data.currentPhase || 'N/A',
             },
             {
                 icon: 'icon-handle',
                 title: 'My Role',
-                value: data.role,
+                value: (
+                    <div className={styles.blockMyRoles}>
+                        {myChallengeRoles.map(item => (
+                            <span key={item}>{item}</span>
+                        ))}
+                    </div>
+                ),
             },
             {
                 icon: 'icon-event',
                 title: 'Phase End Date',
-                value: data.currentPhaseEndDateString,
+                value: data.currentPhaseEndDateString || 'N/A',
             },
             {
                 icon: 'icon-timer',
@@ -41,7 +49,7 @@ export const ChallengePhaseInfo: FC<Props> = (props: Props) => {
                     color: data.timeLeftColor,
                 },
                 title: 'Time Left',
-                value: data.timeLeft,
+                value: data.timeLeft || 'N/A',
             },
             {
                 title: 'Review Progress',
@@ -49,7 +57,7 @@ export const ChallengePhaseInfo: FC<Props> = (props: Props) => {
                 value: data.reviewProgress,
             },
         ]
-    }, [props.challengeInfo])
+    }, [props.challengeInfo, myChallengeRoles])
     return (
         <div className={classNames(styles.container, props.className)}>
             {uiItems.map(item => {
@@ -85,8 +93,13 @@ export const ChallengePhaseInfo: FC<Props> = (props: Props) => {
                         </span>
                         <div>
                             <span>{item.title}</span>
-                            <strong style={item.style}>
-                                {item.status && <i className={`icon-${item.status}`} />}
+                            <strong
+                                style={item.style}
+                                className={styles.textInfo}
+                            >
+                                {item.status && (
+                                    <i className={`icon-${item.status}`} />
+                                )}
                                 {item.value}
                             </strong>
                         </div>

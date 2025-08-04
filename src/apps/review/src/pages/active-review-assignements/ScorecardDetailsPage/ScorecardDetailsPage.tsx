@@ -6,9 +6,10 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import classNames from 'classnames'
 
 import {
-    useFetchChallengeInfo,
-    useFetchChallengeInfoProps,
+    useFetchMockChallengeInfo,
+    useFetchMockChallengeInfoProps,
     useRole,
+    useRoleProps,
 } from '../../../lib/hooks'
 import {
     ChallengeLinks,
@@ -30,11 +31,11 @@ interface Props {
 export const ScorecardDetailsPage: FC<Props> = (props: Props) => {
     const navigate = useNavigate()
     const params = useParams()
-    const { role }: { role: string} = useRole()
+    const { actionChallengeRole }: useRoleProps = useRole()
     const [showCloseConfirmation, setShowCloseConfirmation] = useState<boolean>(false)
     const [isChanged, setIsChanged] = useState(false)
-    const { challengeInfo, submissions }: useFetchChallengeInfoProps
-        = useFetchChallengeInfo(params.challengeId)
+    const { challengeInfo, submissions }: useFetchMockChallengeInfoProps
+        = useFetchMockChallengeInfo(params.challengeId)
     const [searchParams] = useSearchParams()
     const [submission, setSubmission] = useState<SubmissionInfo>()
     const isEdit = useMemo(
@@ -72,10 +73,10 @@ export const ScorecardDetailsPage: FC<Props> = (props: Props) => {
     }, [submissions, params.scorecardId])
 
     useEffect(() => {
-        if (role === SUBMITTER && isEdit) {
+        if (actionChallengeRole === SUBMITTER && isEdit) {
             navigate('./../../challenge-details')
         }
-    }, [role, isEdit, navigate])
+    }, [actionChallengeRole, isEdit, navigate])
 
     return (
         <PageWrapper
@@ -86,7 +87,7 @@ export const ScorecardDetailsPage: FC<Props> = (props: Props) => {
         >
             <div className={styles.summary}>
                 {submission && <SubmissionBarInfo submission={submission} />}
-                {role === ADMIN || role === COPILOT ? (
+                {actionChallengeRole === ADMIN || actionChallengeRole === COPILOT ? (
                     <ChallengeLinksForAdmin />
                 ) : (
                     <ChallengeLinks />

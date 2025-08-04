@@ -63,3 +63,20 @@
         padding-top: 7px;
     }
 }
+
+.blockMyRoles {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.textInfo {
+    span {
+        align-items: center;
+        color: var(--FontColor);
+        font-family: "Nunito Sans", sans-serif;
+        display: flex;
+        font-weight: 700;
+        line-height: 20px;
+    }
+}

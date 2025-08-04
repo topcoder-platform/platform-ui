@@ -98,6 +98,7 @@ export function convertBackendChallengeInfo(
         currentPhase,
         currentPhaseEndDate,
         currentPhaseEndDateString,
+        discussionsUrl: data.discussions[0]?.url,
         id: data.id,
         index,
         name: data.name,
@@ -107,7 +108,6 @@ export function convertBackendChallengeInfo(
         // We'll handle it later once we've integrated the APIs for the Challenge
         // Review Details and Challenge Review Edit pages
         reviewProgress: 13, // show some dummy data
-        role: undefined,
         submissions: [],
         timeLeft: timeLeft.durationString,
         timeLeftColor: timeLeft.durationColor,

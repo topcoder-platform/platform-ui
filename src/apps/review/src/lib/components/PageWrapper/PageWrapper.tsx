@@ -50,6 +50,8 @@ export const PageWrapper: FC<PropsWithChildren<Props>> = props => (
                         <a
                             className={styles.blockExternalLink}
                             href={props.titleUrl}
+                            target='_blank'
+                            rel='noreferrer'
                         >
                             <IconExternalLink />
                         </a>

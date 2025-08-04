@@ -1,16 +1,52 @@
-import { useState } from 'react'
+/**
+ * Manage user role
+ */
+import { useContext, useMemo } from 'react'
 
-import { SUBMITTER } from '../../config/index.config'
+import {
+    BackendResource,
+    ChallengeDetailContextModel,
+    ChallengeRole,
+} from '../models'
+import { ChallengeDetailContext } from '../contexts'
 
-const useRole = (): {role: string, updateRole: (newState: string) => void} => {
-    const [role, setRole] = useState(localStorage.getItem('role') || SUBMITTER)
+export interface useRoleProps {
+    actionChallengeRole: ChallengeRole
+    myChallengeRoles: string[]
+    myChallengeResources: BackendResource[]
+}
 
-    const updateRole = (newState: string):void => {
-        localStorage.setItem('role', newState)
-        setRole(newState)
+/**
+ * Manage user role for the current challenge
+ * @returns role info
+ */
+const useRole = (): useRoleProps => {
+    const { myResources, myRoles }: ChallengeDetailContextModel = useContext(
+        ChallengeDetailContext,
+    )
+    const { challengeId }: ChallengeDetailContextModel = useContext(
+        ChallengeDetailContext,
+    )
+
+    // Get role for review flow
+    const actionChallengeRole = useMemo<ChallengeRole>(() => {
+        if (!challengeId) {
+            return ''
+        }
+
+        const myRole = myRoles.join(', ')
+
+        return (['Submitter', 'Reviewer', 'Copilot', 'Admin'].find(
+            item => myRole.toLowerCase()
+                .indexOf(item.toLowerCase()) >= 0,
+        ) ?? 'Submitter') as ChallengeRole
+    }, [challengeId, myRoles])
+
+    return {
+        actionChallengeRole,
+        myChallengeResources: myResources,
+        myChallengeRoles: myRoles,
     }
-
-    return { role, updateRole }
 }
 
 export { useRole }

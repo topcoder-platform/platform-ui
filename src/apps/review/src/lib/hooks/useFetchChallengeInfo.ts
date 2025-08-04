@@ -1,107 +1,54 @@
 /**
  * Fetch challenge info
  */
-import { useCallback, useState } from 'react'
-import { maxBy } from 'lodash'
 
-import { useOnComponentDidMount } from '~/apps/admin/src/lib/hooks'
+import {
+    useEffect,
+} from 'react'
+import useSWR, { SWRResponse } from 'swr'
+
+import { handleError } from '~/apps/admin/src/lib/utils'
 
 import {
     ChallengeInfo,
-    ProjectResult,
-    RegistrationInfo,
-    Screening,
-    SubmissionInfo,
 } from '../models'
-import {
-    fetchChallengeInfo,
-    fetchChallengeInfoById,
-    fetchProjectResults,
-    fetchRegistrations,
-    fetchScreenings,
-    fetchSubmissions,
-} from '../services'
+import { fetchChallengeInfoById } from '../services'
 
 export interface useFetchChallengeInfoProps {
-    firstSubmissions: SubmissionInfo | undefined
     challengeInfo: ChallengeInfo | undefined
-    registrations: RegistrationInfo[]
-    submissions: SubmissionInfo[]
-    projectResults: ProjectResult[]
-    screenings: Screening[]
+    isLoading: boolean
 }
 
 /**
  * Fetch challenge info
+ * @param challengeId challenge id
  * @returns challenge info
  */
-export function useFetchChallengeInfo(id?: string, role?: string): useFetchChallengeInfoProps {
-    const [challengeInfo, setChallengeInfo] = useState<ChallengeInfo>()
-    const [screenings, setScreenings] = useState<Screening[]>([])
-    const [registrations, setRegistrations] = useState<RegistrationInfo[]>([])
-    const [firstSubmissions, setFirstSubmissions] = useState<SubmissionInfo>()
-    const [submissions, setSubmissions] = useState<SubmissionInfo[]>([])
-    const [projectResults, setProjectResults] = useState<ProjectResult[]>([])
-    const loadChallengeInfo = useCallback(() => {
-        if (id) {
-            fetchChallengeInfoById(id)
-                .then(result => {
-                    setChallengeInfo(result)
-                })
-        } else {
-            fetchChallengeInfo()
-                .then(result => {
-                    setChallengeInfo(result)
-                })
+export function useFetchChallengeInfo(
+    challengeId?: string,
+): useFetchChallengeInfoProps {
+    // Use swr hooks for challenge info fetching
+    const {
+        data: challengeInfo,
+        error: fetchChallengeInfoError,
+        isValidating: isLoading,
+    }: SWRResponse<ChallengeInfo, Error> = useSWR<ChallengeInfo, Error>(
+        `challengeBaseUrl/challenges/${challengeId}`,
+        {
+            fetcher: () => fetchChallengeInfoById(challengeId ?? ''),
+            isPaused: () => !challengeId,
+        },
+    )
+
+    // Show backend error when fetching challenge info
+    useEffect(() => {
+        if (fetchChallengeInfoError) {
+            handleError(fetchChallengeInfoError)
         }
-    }, [id])
-
-    const loadRegistrations = useCallback(() => {
-        fetchRegistrations()
-            .then(results => {
-                setRegistrations(results)
-            })
-    }, [])
-
-    const loadSubmissions = useCallback(() => {
-        fetchSubmissions(role)
-            .then(results => {
-                setSubmissions(results)
-            })
-        fetchSubmissions()
-            .then(results => {
-                setFirstSubmissions(maxBy(results, 'review.initialScore'))
-            })
-    }, [role])
-
-    const loadProjectResults = useCallback(() => {
-        fetchProjectResults()
-            .then(results => {
-                setProjectResults(results)
-            })
-    }, [])
-
-    const loadScreenings = useCallback(() => {
-        fetchScreenings()
-            .then(results => {
-                setScreenings(results)
-            })
-    }, [])
-
-    useOnComponentDidMount(() => {
-        loadChallengeInfo()
-        loadRegistrations()
-        loadProjectResults()
-        loadScreenings()
-        loadSubmissions()
-    })
+    }, [fetchChallengeInfoError])
 
     return {
         challengeInfo,
-        firstSubmissions,
-        projectResults,
-        registrations,
-        screenings,
-        submissions,
+        isLoading,
     }
 }

@@ -1,3 +1,7 @@
+import { filter, some } from 'lodash'
+
+import { BackendResource } from '../models'
+
 /**
  * Format number to ordinals.
  * @param placement placement
@@ -29,4 +33,24 @@ export function formatOrdinals(placement: number | string): string {
     }
 
     return ord
+}
+
+/**
+ * Filter the resources base on the required roles
+ * @param requireRoles required roles
+ * @param resources list of resources
+ * @returns list of resources
+ */
+export function filterResources(
+    requireRoles: string[],
+    resources: BackendResource[],
+): BackendResource[] {
+    return filter(
+        resources,
+        item => some(
+            requireRoles.map(role => role.toLowerCase()),
+            role => (item.roleName ?? '').toLowerCase()
+                .indexOf(role) >= 0,
+        ),
+    )
 }

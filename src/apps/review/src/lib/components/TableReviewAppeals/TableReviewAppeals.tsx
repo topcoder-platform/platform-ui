@@ -15,7 +15,7 @@ import { TableWrapper } from '../TableWrapper'
 import { SubmissionInfo } from '../../models'
 import { ProgressBar } from '../ProgressBar'
 import { ADMIN, APPROVAL, COPILOT, WITHOUT_APPEAL } from '../../../config/index.config'
-import { useRole } from '../../hooks'
+import { useRole, useRoleProps } from '../../hooks'
 
 import styles from './TableReviewAppeals.module.scss'
 
@@ -29,7 +29,7 @@ interface Props {
 
 export const TableReviewAppeals: FC<Props> = (props: Props) => {
     const { width: screenWidth }: WindowSize = useWindowSize()
-    const { role }: {role: string} = useRole()
+    const { actionChallengeRole }: useRoleProps = useRole()
     const isTablet = useMemo(() => screenWidth <= 744, [screenWidth])
 
     const prevent = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
@@ -118,7 +118,7 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                 },
 
             ]
-            const actionColumns = !includes([COPILOT, ADMIN], role) ? [
+            const actionColumns = !includes([COPILOT, ADMIN], actionChallengeRole) ? [
                 {
                     className: styles.textBlue,
                     label: 'Action',
@@ -180,7 +180,7 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                 type: 'element',
             }, ...actionColumns] as TableColumn<SubmissionInfo>[]
         },
-        [prevent, props.tab, props.type, role],
+        [prevent, props.tab, props.type, actionChallengeRole],
     )
 
     const columnsMobile = useMemo<MobileTableColumn<SubmissionInfo>[][]>(

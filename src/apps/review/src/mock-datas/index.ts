@@ -1,5 +1,4 @@
 export * from './MockChallenges'
-export * from './MockRegistrations'
 export * from './MockProjectResults'
 export * from './MockScorecard'
 export * from './MockReviews'

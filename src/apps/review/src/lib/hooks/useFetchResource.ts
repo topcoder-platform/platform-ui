@@ -1,8 +1,8 @@
 /**
  * Fetch resource
  */
-import { useCallback, useRef, useState } from 'react'
-import { reduce, toString } from 'lodash'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { find, reduce, toString } from 'lodash'
 
 import { TokenModel } from '~/libs/core'
 import { useOnComponentDidMount } from '~/apps/admin/src/lib/hooks'
@@ -12,16 +12,17 @@ import {
     fetchAllMemberRoles,
     fetchAllResourceRoles,
 } from '../services/resources.service'
-import { BackendResourceRole, MyRoleIdsMappingType } from '../models'
+import { BackendResourceRole, MyRoleInfosMappingType } from '../models'
 
 export interface useFetchResourceProps {
-    myRoleIdsMapping: MyRoleIdsMappingType // from challenge id to list of my role
+    myRoleInfosMapping: MyRoleInfosMappingType // from challenge id to list of my role
     isLoadingResourceRoles: boolean
     resourceRoleMapping?: {
         [key: string]: BackendResourceRole
     }
-    loadMyRoleIds: (challengeId: string) => void
-    cancelLoadMyRoleIds: () => void
+    resourceRoleSubmitter?: BackendResourceRole,
+    loadMyRoleInfos: (challengeId: string) => void
+    cancelLoadMyRoleInfos: () => void
 }
 
 /**
@@ -31,20 +32,25 @@ export interface useFetchResourceProps {
 export function useFetchResource(
     loginUserInfo: TokenModel | undefined,
 ): useFetchResourceProps {
-    const [myRoleIdsMapping, setMyRoleIdsMapping]
-        = useState<MyRoleIdsMappingType>({})
+    const [myRoleInfosMapping, setMyRoleInfosMapping]
+        = useState<MyRoleInfosMappingType>({})
     const [isLoadingResourceRoles, setIsLoadingResourceRoles] = useState(false)
     const [resourceRoleMapping, setResourceRoleMapping] = useState<{
         [key: string]: BackendResourceRole
     }>()
-    const myRoleIdsMappingRef = useRef<MyRoleIdsMappingType>({})
-    const myRoleIdsLoadQueue = useRef<string[]>([])
+    const [resourceRoleSubmitter, setResourceRoleSubmitter] = useState<BackendResourceRole>()
+    const myRoleInfosMappingRef = useRef<MyRoleInfosMappingType>({})
+    const myRoleInfosLoadQueue = useRef<string[]>([])
     const isLoadingMyRole = useRef<boolean>(false)
 
     useOnComponentDidMount(() => {
         setIsLoadingResourceRoles(true)
+        // fetch all resource roles on init
         fetchAllResourceRoles()
             .then(results => {
+                setResourceRoleSubmitter(find(results.data, {
+                    name: 'Submitter',
+                }))
                 setResourceRoleMapping(
                     reduce(
                         results.data,
@@ -63,63 +69,79 @@ export function useFetchResource(
             })
     })
 
-    const fetchNextMyRoleIdsInQueue = useCallback(() => {
+    /**
+     * Check to fetch my roles infos in queue
+     */
+    const fetchNextMyRoleInfosInQueue = useCallback(() => {
         if (
             isLoadingMyRole.current
-            || !myRoleIdsLoadQueue.current.length
+            || !myRoleInfosLoadQueue.current.length
             || !loginUserInfo
         ) {
             return
         }
 
-        const nextMyRoleIdsId = myRoleIdsLoadQueue.current[0]
-        myRoleIdsLoadQueue.current = myRoleIdsLoadQueue.current.slice(1)
-        if (myRoleIdsMappingRef.current[nextMyRoleIdsId]) {
-            fetchNextMyRoleIdsInQueue()
+        const nextMyRoleInfosId = myRoleInfosLoadQueue.current[0]
+        myRoleInfosLoadQueue.current = myRoleInfosLoadQueue.current.slice(1)
+        if (myRoleInfosMappingRef.current[nextMyRoleInfosId]) {
+            fetchNextMyRoleInfosInQueue()
             return
         }
 
         isLoadingMyRole.current = true
-        fetchAllMemberRoles(nextMyRoleIdsId, toString(loginUserInfo.userId))
+        // Fetch all member roles for special challenge
+        fetchAllMemberRoles(nextMyRoleInfosId, toString(loginUserInfo.userId))
             .then(res => {
-                myRoleIdsMappingRef.current[nextMyRoleIdsId] = res.data.map(
-                    item => item.roleId,
-                )
-                setMyRoleIdsMapping({
-                    ...myRoleIdsMappingRef.current,
+                myRoleInfosMappingRef.current[nextMyRoleInfosId]
+                    = res.data.filter(
+                        item => item.memberId === toString(loginUserInfo.userId),
+                    )
+                setMyRoleInfosMapping({
+                    ...myRoleInfosMappingRef.current,
                 })
             })
             .catch(() => {
-                myRoleIdsMappingRef.current[nextMyRoleIdsId] = ['not found']
-                setMyRoleIdsMapping({
-                    ...myRoleIdsMappingRef.current,
+                myRoleInfosMappingRef.current[nextMyRoleInfosId] = []
+                setMyRoleInfosMapping({
+                    ...myRoleInfosMappingRef.current,
                 })
             })
             .finally(() => {
                 isLoadingMyRole.current = false
-                fetchNextMyRoleIdsInQueue()
+                fetchNextMyRoleInfosInQueue()
             })
     }, [loginUserInfo])
 
-    const loadMyRoleIds = useCallback(
+    /**
+     * Add new challenge id to loading queue
+     */
+    const loadMyRoleInfos = useCallback(
         (challengeId: string) => {
-            if (challengeId && !myRoleIdsMappingRef.current[challengeId]) {
-                myRoleIdsLoadQueue.current.push(challengeId)
-                fetchNextMyRoleIdsInQueue()
+            if (challengeId && !myRoleInfosMappingRef.current[challengeId]) {
+                myRoleInfosLoadQueue.current.push(challengeId)
+                fetchNextMyRoleInfosInQueue()
             }
         },
-        [fetchNextMyRoleIdsInQueue, loginUserInfo],
+        [fetchNextMyRoleInfosInQueue, loginUserInfo],
     )
 
-    const cancelLoadMyRoleIds = useCallback(() => {
-        myRoleIdsLoadQueue.current = []
+    /**
+     * Cancel load my role infos queue
+     */
+    const cancelLoadMyRoleInfos = useCallback(() => {
+        myRoleInfosLoadQueue.current = []
     }, [])
 
+    useEffect(() => {
+        fetchNextMyRoleInfosInQueue()
+    }, [loginUserInfo])
+
     return {
-        cancelLoadMyRoleIds,
+        cancelLoadMyRoleInfos,
         isLoadingResourceRoles,
-        loadMyRoleIds,
-        myRoleIdsMapping,
+        loadMyRoleInfos,
+        myRoleInfosMapping,
         resourceRoleMapping,
+        resourceRoleSubmitter,
     }
 }

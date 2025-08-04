@@ -3,6 +3,8 @@
  */
 import { FC } from 'react'
 
+import { TableLoading } from '~/apps/admin/src/lib'
+
 import {
     ProjectResult,
     RegistrationInfo,
@@ -14,7 +16,7 @@ import { TableNoRecord } from '../TableNoRecord'
 import { TableSubmissionScreening } from '../TableSubmissionScreening'
 import { TableReviewAppeals } from '../TableReviewAppeals'
 import { TableWinners } from '../TableWinners'
-import { useRole } from '../../hooks'
+import { useRole, useRoleProps } from '../../hooks'
 import { APPROVAL, MOCKHANDLE, REVIEWER, SUBMITTER } from '../../../config/index.config'
 import { TableReviewAppealsForSubmitter } from '../TableReviewAppealsForSubmitter'
 
@@ -22,6 +24,7 @@ interface Props {
     selectedTab: string
     type?: string
     registrations: RegistrationInfo[]
+    isLoadingRegistrants: boolean
     submissions: SubmissionInfo[]
     projectResults: ProjectResult[]
     screening: Screening[]
@@ -35,15 +38,30 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
     const submissions = props.submissions
     const firstSubmissions = props.firstSubmissions
     const projectResults = props.projectResults
-    const { role }: { role: string } = useRole()
+    const { actionChallengeRole }: useRoleProps = useRole()
     const screening
-        = role === REVIEWER
+        = actionChallengeRole === REVIEWER
             ? props.screening
             : props.screening.filter(s => s.handle === MOCKHANDLE)
 
+    // show ui for Registration tab
+    if (selectedTab === 'Registration') {
+        // show loading ui when fetching registrants
+        if (props.isLoadingRegistrants) {
+            return <TableLoading />
+        }
+
+        // show no record message
+        if (!registrations.length) {
+            return <TableNoRecord />
+        }
+
+        // show registrants table
+        return <TableRegistration datas={registrations} />
+    }
+
     if (
-        !registrations.length
-        || !submissions.length
+        !submissions.length
         || !projectResults.length
         || !screening.length
     ) {
@@ -52,13 +70,11 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
 
     return (
         <>
-            {selectedTab === 'Registration' ? (
-                <TableRegistration datas={registrations} />
-            ) : selectedTab === 'Submission / Screening' ? (
+            {selectedTab === 'Submission / Screening' ? (
                 <TableSubmissionScreening datas={screening} />
             ) : selectedTab === 'Winners' ? (
                 <TableWinners datas={projectResults} />
-            ) : (role !== SUBMITTER || selectedTab === APPROVAL) ? (
+            ) : (actionChallengeRole !== SUBMITTER || selectedTab === APPROVAL) ? (
                 <TableReviewAppeals
                     datas={submissions}
                     tab={selectedTab}

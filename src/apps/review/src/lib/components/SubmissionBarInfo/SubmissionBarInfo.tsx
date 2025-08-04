@@ -6,7 +6,7 @@ import { NavLink } from 'react-router-dom'
 import classNames from 'classnames'
 
 import { SubmissionInfo } from '../../models'
-import { useRole } from '../../hooks'
+import { useRole, useRoleProps } from '../../hooks'
 
 import styles from './SubmissionBarInfo.module.scss'
 
@@ -16,7 +16,7 @@ interface Props {
 }
 
 export const SubmissionBarInfo: FC<Props> = (props: Props) => {
-    const { role }: { role: string } = useRole()
+    const { actionChallengeRole }: useRoleProps = useRole()
     const uiItems = useMemo(() => {
         const data = props.submission
         return [
@@ -29,7 +29,7 @@ export const SubmissionBarInfo: FC<Props> = (props: Props) => {
             {
                 icon: 'icon-handle',
                 title: 'My Role',
-                value: role,
+                value: actionChallengeRole,
             },
             {
                 icon: 'icon-handle',
@@ -41,7 +41,7 @@ export const SubmissionBarInfo: FC<Props> = (props: Props) => {
                 value: data.handle,
             },
         ]
-    }, [props.submission, role])
+    }, [props.submission, actionChallengeRole])
 
     const prevent = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
         e.preventDefault()
