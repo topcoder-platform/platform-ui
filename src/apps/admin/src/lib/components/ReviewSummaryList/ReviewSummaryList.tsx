@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { EnvironmentConfig } from '~/config'
 import { useWindowSize, WindowSize } from '~/libs/shared'
 import { Button, colWidthType, LinkButton, Table, type TableColumn } from '~/libs/ui'
-import { Sort } from '~/apps/gamification-admin/src/game-lib/pagination'
+import { Sort } from '~/apps/admin/src/platform/gamification-admin/src/game-lib'
 
 import { Pagination } from '../common/Pagination'
 import { useEventCallback } from '../../hooks'

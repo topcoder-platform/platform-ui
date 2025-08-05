@@ -1,4 +1,4 @@
-import { baseDetailPath, createBadgePath } from '~/apps/gamification-admin'
+import { baseDetailPath, createBadgePath } from '~/apps/admin/src/platform/gamification-admin'
 import { AppSubdomain, ToolTitle } from '~/config'
 import {
     lazyLoad,
@@ -121,13 +121,13 @@ const SkillManagementLandingPage: LazyLoadedComponent = lazyLoad(
     'LandingPage',
 )
 const BadgeDetailPage: LazyLoadedComponent = lazyLoad(
-    () => import('../../gamification-admin/src/pages/badge-detail/BadgeDetailPage'),
+    () => import('./platform/gamification-admin/src/pages/badge-detail/BadgeDetailPage'),
 )
 const BadgeListingPage: LazyLoadedComponent = lazyLoad(
-    () => import('../../gamification-admin/src/pages/badge-listing/BadgeListingPage'),
+    () => import('./platform/gamification-admin/src/pages/badge-listing/BadgeListingPage'),
 )
 const CreateBadgePage: LazyLoadedComponent = lazyLoad(
-    () => import('../../gamification-admin/src/pages/create-badge/CreateBadgePage'),
+    () => import('./platform/gamification-admin/src/pages/create-badge/CreateBadgePage'),
 )
 const TermsListPage: LazyLoadedComponent = lazyLoad(
     () => import('./platform/terms/TermsListPage'),
