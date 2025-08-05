@@ -63,8 +63,8 @@ export const getProject = (projectId: string): Promise<Project> => {
     return xhrGetAsync<Project>(url)
 }
 
-export const getProjects = (search?: string, filter?: any): Promise<Project[]> => {
-    const params = { name: `"${search}"`, ...filter }
+export const getProjects = (search?: string, config?: {filter: any}): Promise<Project[]> => {
+    const params = { name: search, ...config?.filter }
     const url = buildUrl(baseUrl, params)
     return xhrGetAsync<Project[]>(url)
 }
