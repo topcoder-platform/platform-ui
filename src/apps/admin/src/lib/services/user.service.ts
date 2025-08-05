@@ -1,12 +1,19 @@
 import _ from 'lodash'
 
 import { EnvironmentConfig } from '~/config'
-import { xhrDeleteAsync, xhrGetAsync, xhrPatchAsync, xhrPostAsync, xhrPutAsync } from '~/libs/core'
+import {
+    xhrDeleteAsync,
+    xhrGetAsync,
+    xhrPatchAsync,
+    xhrPostAsync,
+    xhrPutAsync,
+} from '~/libs/core'
 
 import {
     adjustUserInfoResponse,
     adjustUserStatusHistoryResponse,
     ApiV3Response,
+    MemberInfo,
     SSOLoginProvider,
     SSOUserLogin,
     UserInfo,
@@ -20,14 +27,14 @@ import { FormAddSSOLoginData } from '../models/FormAddSSOLoginData.model'
  */
 export const getMemberSuggestionsByHandle = async (
     handle: string,
-): Promise<Array<{ handle: string; userId: number }>> => {
+): Promise<Array<MemberInfo>> => {
     if (!handle) {
         return []
     }
 
     type v3Response<T> = { result: { content: T } }
     const data = await xhrGetAsync<
-        v3Response<Array<{ handle: string; userId: number }>>
+        v3Response<Array<MemberInfo>>
     >(`${EnvironmentConfig.API.V3}/members/_suggest/${handle}`)
     return data.result.content
 }
@@ -38,13 +45,13 @@ export const getMemberSuggestionsByHandle = async (
  */
 export const getMembersByHandle = async (
     handles: string[],
-): Promise<Array<{ handle: string }>> => {
+): Promise<Array<MemberInfo>> => {
     let qs = ''
     handles.forEach(handle => {
         qs += `&handlesLower[]=${handle.toLowerCase()}`
     })
 
-    return xhrGetAsync<Array<{ handle: string }>>(
+    return xhrGetAsync<Array<MemberInfo>>(
         `${EnvironmentConfig.API.V5}/members?fields=userId,handle${qs}`,
     )
 }
@@ -83,6 +90,22 @@ export const searchUsers = async (options?: {
         `${EnvironmentConfig.API.V3}/users?${query}`,
     )
     return result.result.content.map(adjustUserInfoResponse)
+}
+
+/**
+ * Get profile by handle.
+ * @param handle the user handle.
+ * @returns resolves to user info
+ */
+export const getProfile = async (handle: string): Promise<MemberInfo> => {
+    if (!handle) {
+        return Promise.reject(new Error('Handle must be specified.'))
+    }
+
+    const result = await xhrGetAsync<ApiV3Response<MemberInfo>>(
+        `${EnvironmentConfig.API.V3}/members/${handle}`,
+    )
+    return result.result.content
 }
 
 /**
@@ -151,7 +174,9 @@ export const fetchAchievements = async (
  * @param userId user id.
  * @returns resolves to user info
  */
-export const findUserById = async (userId: string | number): Promise<UserInfo> => {
+export const findUserById = async (
+    userId: string | number,
+): Promise<UserInfo> => {
     const result = await xhrGetAsync<ApiV3Response<UserInfo>>(
         `${EnvironmentConfig.API.V3}/users/${userId}`,
     )
@@ -163,7 +188,9 @@ export const findUserById = async (userId: string | number): Promise<UserInfo> =
  * @param userId user id.
  * @returns resolves to sso user logins
  */
-export const fetchSSOUserLogins = async (userId: string | number): Promise<SSOUserLogin[]> => {
+export const fetchSSOUserLogins = async (
+    userId: string | number,
+): Promise<SSOUserLogin[]> => {
     const result = await xhrGetAsync<ApiV3Response<SSOUserLogin[]>>(
         `${EnvironmentConfig.API.V3}/users/${userId}/SSOUserLogins`,
     )
