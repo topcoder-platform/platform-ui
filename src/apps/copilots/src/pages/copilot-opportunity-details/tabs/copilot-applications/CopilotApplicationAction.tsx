@@ -38,7 +38,7 @@ const CopilotApplicationAction = (
         if (opportunityId) {
             try {
                 await assignCopilotOpportunity(opportunityId, copilotApplication.id)
-                toast.success('Invited a copilot')
+                toast.success('Accepted as copilot')
                 mutate(`${copilotBaseUrl}/copilots/opportunity/${opportunityId}/applications`)
             } catch (e) {
                 const error = e as Error
@@ -84,7 +84,7 @@ const CopilotApplicationAction = (
                 !isInvited
                 && copilotApplication.status === CopilotApplicationStatus.PENDING
                 && copilotApplication.opportunityStatus === 'active' && (
-                    <Tooltip content='Send Invitation'>
+                    <Tooltip content='Accept Application'>
                         <IconSolid.UserAddIcon />
                     </Tooltip>
                 )
