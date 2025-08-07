@@ -1,9 +1,8 @@
 import { useParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
-import { mutate } from 'swr'
 import { useCallback, useMemo, useState } from 'react'
 
-import { assignCopilotOpportunity, copilotBaseUrl } from '~/apps/copilots/src/services/copilot-opportunities'
+import { assignCopilotOpportunity } from '~/apps/copilots/src/services/copilot-opportunities'
 import { CopilotApplication, CopilotApplicationStatus } from '~/apps/copilots/src/models/CopilotApplication'
 import { IconSolid, Tooltip } from '~/libs/ui'
 
@@ -39,7 +38,7 @@ const CopilotApplicationAction = (
             try {
                 await assignCopilotOpportunity(opportunityId, copilotApplication.id)
                 toast.success('Accepted as copilot')
-                mutate(`${copilotBaseUrl}/copilots/opportunity/${opportunityId}/applications`)
+                copilotApplication.onApplied()
             } catch (e) {
                 const error = e as Error
                 toast.error(error.message)
@@ -56,7 +55,7 @@ const CopilotApplicationAction = (
 
             await assignCopilotOpportunity(opportunityId, copilotApplication.id)
             toast.success('Accepted as copilot')
-            mutate(`${copilotBaseUrl}/copilots/opportunity/${opportunityId}/applications`)
+            copilotApplication.onApplied()
             setShowAlreadyMemberModal(false)
         } catch (e) {
             const error = e as Error

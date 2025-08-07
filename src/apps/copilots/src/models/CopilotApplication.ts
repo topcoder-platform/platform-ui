@@ -20,4 +20,5 @@ export interface CopilotApplication {
     opportunityStatus: string,
     existingMembership?: ExistingMembership,
     projectName: string,
+    onApplied: () => void,
 }

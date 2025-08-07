@@ -296,6 +296,7 @@ const CopilotOpportunityDetails: FC<{}> = () => {
                         copilotApplications={copilotApplications}
                         opportunity={opportunity}
                         members={members}
+                        onApplied={onApplied}
                     />
                 )}
 
