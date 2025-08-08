@@ -77,6 +77,7 @@ const CopilotApplications: FC<{
     copilotApplications?: CopilotApplication[]
     members?: FormattedMembers[]
     opportunity: CopilotOpportunity
+    onApplied: () => void
 }> = props => {
     const getData = (): CopilotApplication[] => (props.copilotApplications ? props.copilotApplications.map(item => {
         const member = props.members && props.members.find(each => each.userId === item.userId)
@@ -85,6 +86,7 @@ const CopilotApplications: FC<{
             activeProjects: member?.activeProjects || 0,
             fulfilment: member?.copilotFulfillment || 0,
             handle: member?.handle,
+            onApplied: props.onApplied,
             opportunityStatus: props.opportunity.status,
             pastProjects: member?.pastProjects || 0,
             projectName: props.opportunity.projectName,
