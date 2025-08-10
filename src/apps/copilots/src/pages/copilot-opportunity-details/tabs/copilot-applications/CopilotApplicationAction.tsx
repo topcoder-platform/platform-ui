@@ -76,7 +76,7 @@ const CopilotApplicationAction = (
                 !isInvited
                 && copilotApplication.status === CopilotApplicationStatus.PENDING
                 && copilotApplication.opportunityStatus === 'active' && (
-                    <Tooltip content='Accept Application'>
+                    <Tooltip content='Accept'>
                         <IconSolid.UserAddIcon />
                     </Tooltip>
                 )
