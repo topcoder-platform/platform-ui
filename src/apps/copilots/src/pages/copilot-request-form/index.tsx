@@ -45,6 +45,7 @@ const CopilotRequestForm: FC<{}> = () => {
     const [formErrors, setFormErrors] = useState<any>({})
     const [paymentType, setPaymentType] = useState<string>('')
     const [projectFromQuery, setProjectFromQuery] = useState<Project>()
+    const activeProjectStatuses = ['active', 'approved', 'draft', 'new']
 
     const { data: copilotRequestData }: CopilotRequestResponse = useCopilotRequest(routeParams.requestId)
 
@@ -114,7 +115,13 @@ const CopilotRequestForm: FC<{}> = () => {
         label: string;
         value: string;
     }>> {
-        const response = await getProjects(inputValue)
+        const response = await getProjects(inputValue, {
+            filter: {
+                status: {
+                    $in: [activeProjectStatuses],
+                },
+            },
+        })
         return response.map(project => ({ label: project.name, value: project.id }))
     }
 
@@ -494,6 +501,7 @@ const CopilotRequestForm: FC<{}> = () => {
                             .setFullYear(new Date()
                                 .getFullYear() + 2))}
                         minYear={new Date()}
+                        className={styles.datepicker}
                     />
                     <p className={styles.formRow}>How many weeks will you need the copilot for?</p>
                     <InputText
