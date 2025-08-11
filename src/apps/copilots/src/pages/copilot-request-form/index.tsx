@@ -501,6 +501,7 @@ const CopilotRequestForm: FC<{}> = () => {
                             .setFullYear(new Date()
                                 .getFullYear() + 2))}
                         minYear={new Date()}
+                        className={styles.datepicker}
                     />
                     <p className={styles.formRow}>How many weeks will you need the copilot for?</p>
                     <InputText
