@@ -30,16 +30,17 @@ export const ScorecardsListPage: FC<{}> = () => {
         isValidating: isLoadingScorecards,
     }: ScorecardsResponse = useFetchScorecards({
         challengeTrack: filters.projectType,
+        challengeType: filters.category,
         name: filters.name,
         page,
         perPage,
+        scorecardType: filters.type,
         status: filters.status,
-        type: filters.type,
     })
 
     const handleFiltersChange = useCallback((newFilters: typeof filters) => {
         setFilters(newFilters)
-        setPage(1) // Optional: reset page on filter change
+        setPage(1)
     }, [])
 
     return (
