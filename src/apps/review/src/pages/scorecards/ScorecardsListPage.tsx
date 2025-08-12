@@ -6,9 +6,7 @@ import { TableLoading } from '~/apps/admin/src/lib'
 import { PageWrapper, ScorecardsFilter, TableNoRecord, TableScorecards } from '../../lib'
 import { ScorecardsResponse, useFetchScorecards } from '../../lib/hooks'
 
-// import { mockScorecards } from '../../mock-datas/MockScorecardList'
-
-// import styles from './ScorecardsListPage.module.scss'
+import styles from './ScorecardsListPage.module.scss'
 
 export const ScorecardsListPage: FC<{}> = () => {
     const [filters, setFilters] = useState({
@@ -19,28 +17,25 @@ export const ScorecardsListPage: FC<{}> = () => {
         type: '',
     })
     const [page, setPage] = useState(1)
+    const perPage = 10
 
     const breadCrumb = useMemo(
         () => [{ index: 1, label: 'Scorecards' }],
         [],
     )
-    // const scorecards: Scorecard[] = mockScorecards
 
     const {
         scoreCards: scorecards,
         metadata,
-        error,
         isValidating: isLoadingScorecards,
     }: ScorecardsResponse = useFetchScorecards({
         challengeTrack: filters.projectType,
         name: filters.name,
         page,
-        perPage: 10,
+        perPage,
         status: filters.status,
         type: filters.type,
     })
-
-    console.log(error)
 
     const handleFiltersChange = useCallback((newFilters: typeof filters) => {
         setFilters(newFilters)
@@ -53,6 +48,11 @@ export const ScorecardsListPage: FC<{}> = () => {
             breadCrumb={breadCrumb}
         >
             <PageTitle>Scorecards</PageTitle>
+            <div className={styles.totalScorecards}>
+                {metadata?.total}
+                {' '}
+                scorecards
+            </div>
             <ScorecardsFilter
                 filters={filters}
                 onFiltersChange={handleFiltersChange}
@@ -68,7 +68,12 @@ export const ScorecardsListPage: FC<{}> = () => {
                             totalPages={metadata?.totalPages}
                             page={page}
                             setPage={setPage}
-                            datas={scorecards}
+                            datas={scorecards.map((item, i) => ({
+                                ...item,
+                                index: (page - 1) * perPage + i + 1,
+                            }))}
+                            metadata={metadata}
+                            perPage={perPage}
                         />
                     )}
 

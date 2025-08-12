@@ -1,9 +1,9 @@
 /**
  * Table Active Reviews.
  */
-import { Dispatch, FC, SetStateAction, useCallback, useMemo } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { bind, noop } from 'lodash'
+import { Dispatch, FC, SetStateAction, useMemo } from 'react'
+import { Link } from 'react-router-dom'
+import { noop } from 'lodash'
 import classNames from 'classnames'
 
 import { MobileTableColumn } from '~/apps/admin/src/lib/models/MobileTableColumn.model'
@@ -21,23 +21,16 @@ import styles from './TableScorecards.module.scss'
 interface Props {
     className?: string
     datas: Scorecard[]
+    metadata?: any
+    perPage?: number
     totalPages: number
     page: number
     setPage: Dispatch<SetStateAction<number>>
 }
 
 export const TableScorecards: FC<Props> = (props: Props) => {
-    const navigate = useNavigate()
     const { width: screenWidth }: WindowSize = useWindowSize()
     const isTablet = useMemo(() => screenWidth <= 1000, [screenWidth])
-
-    const redirect = useCallback(
-        (data: Scorecard, e: React.MouseEvent<HTMLAnchorElement>) => {
-            e.preventDefault()
-            navigate(`${data.id}/details`)
-        },
-        [navigate],
-    )
 
     const columns = useMemo<TableColumn<Scorecard>[]>(
         () => [
@@ -52,7 +45,7 @@ export const TableScorecards: FC<Props> = (props: Props) => {
                 label: 'Scorecard',
                 propertyName: 'name',
                 renderer: (data: Scorecard) => (
-                    <Link to='/' onClick={bind(redirect, this, data)}>
+                    <Link to={`${data.id}/details`}>
                         {data.name}
                     </Link>
                 ),
@@ -109,7 +102,7 @@ export const TableScorecards: FC<Props> = (props: Props) => {
                 type: 'action',
             },
         ],
-        [redirect],
+        [],
     )
 
     const columnsMobile = useMemo<MobileTableColumn<Scorecard>[][]>(
@@ -157,11 +150,24 @@ export const TableScorecards: FC<Props> = (props: Props) => {
                     className='enhanced-table-desktop'
                 />
             )}
-            <Pagination
-                page={props.page}
-                totalPages={props.totalPages}
-                onPageChange={props.setPage}
-            />
+            <div className={styles.pagination}>
+                <div>
+                    Showing 1-
+                    {props.perPage}
+                    {' '}
+                    of
+                    {' '}
+                    {props.metadata.total}
+                    {' '}
+                    results
+                </div>
+                <Pagination
+                    page={props.page}
+                    totalPages={props.totalPages}
+                    onPageChange={props.setPage}
+                />
+            </div>
+
         </TableWrapper>
     )
 }
