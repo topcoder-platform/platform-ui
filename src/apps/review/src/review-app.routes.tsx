@@ -95,9 +95,6 @@ export const reviewRoutes: ReadonlyArray<PlatformRoute> = [
                 route: activeReviewAssigmentsRouteId,
             },
             {
-                element: <ScorecardsContainer />,
-                id: scorecardRouteId,
-                route: scorecardRouteId,
                 children: [
                     {
                         element: <ScorecardsListPage />,
@@ -111,6 +108,9 @@ export const reviewRoutes: ReadonlyArray<PlatformRoute> = [
                     },
 
                 ],
+                element: <ScorecardsContainer />,
+                id: scorecardRouteId,
+                route: scorecardRouteId,
             },
         ],
         domain: AppSubdomain.review,
