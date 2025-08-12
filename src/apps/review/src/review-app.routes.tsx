@@ -37,9 +37,19 @@ const ScorecardDetailsPage: LazyLoadedComponent = lazyLoad(
     'ScorecardDetailsPage',
 )
 
+const ScorecardsContainer: LazyLoadedComponent = lazyLoad(
+    () => import('./pages/scorecards/ScorecardsContainer'),
+    'ScorecardsContainer',
+)
+
 const ScorecardsListPage: LazyLoadedComponent = lazyLoad(
     () => import('./pages/scorecards/ScorecardsListPage'),
     'ScorecardsListPage',
+)
+
+const ViewScorecardPage: LazyLoadedComponent = lazyLoad(
+    () => import('./pages/scorecards/ViewScorecardPage'),
+    'ViewScorecardPage',
 )
 
 export const toolTitle: string = ToolTitle.review
@@ -85,9 +95,22 @@ export const reviewRoutes: ReadonlyArray<PlatformRoute> = [
                 route: activeReviewAssigmentsRouteId,
             },
             {
-                element: <ScorecardsListPage />,
+                element: <ScorecardsContainer />,
                 id: scorecardRouteId,
                 route: scorecardRouteId,
+                children: [
+                    {
+                        element: <ScorecardsListPage />,
+                        id: 'list-scorecards-page',
+                        route: '',
+                    },
+                    {
+                        element: <ViewScorecardPage />,
+                        id: 'view-scorecard-page',
+                        route: ':scorecardId',
+                    },
+
+                ],
             },
         ],
         domain: AppSubdomain.review,

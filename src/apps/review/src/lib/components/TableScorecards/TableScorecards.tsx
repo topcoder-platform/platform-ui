@@ -45,7 +45,7 @@ export const TableScorecards: FC<Props> = (props: Props) => {
                 label: 'Scorecard',
                 propertyName: 'name',
                 renderer: (data: Scorecard) => (
-                    <Link to={`${data.id}/details`}>
+                    <Link to={`${data.id}`}>
                         {data.name}
                     </Link>
                 ),
