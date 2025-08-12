@@ -1,4 +1,6 @@
+import { useNavigate } from 'react-router-dom'
 import { FC, useCallback, useMemo, useState } from 'react'
+import { toast } from 'react-toastify'
 
 import { PageTitle, useConfirmationModal } from '~/libs/ui'
 import { TableLoading } from '~/apps/admin/src/lib'
@@ -7,7 +9,6 @@ import { PageWrapper, ScorecardsFilter, TableNoRecord, TableScorecards } from '.
 import { ScorecardsResponse, useFetchScorecards } from '../../lib/hooks'
 import { cloneScorecard } from '../../lib/services'
 import { Scorecard } from '../../lib/models'
-import { useNavigate } from 'react-router-dom'
 
 // import { mockScorecards } from '../../mock-datas/MockScorecardList'
 
@@ -15,7 +16,7 @@ import { useNavigate } from 'react-router-dom'
 
 export const ScorecardsListPage: FC<{}> = () => {
     const navigate = useNavigate()
-    const { confirm, modal: confirmModal } = useConfirmationModal()
+    const confirmation = useConfirmationModal()
 
     const [filters, setFilters] = useState({
         category: '',
@@ -35,7 +36,6 @@ export const ScorecardsListPage: FC<{}> = () => {
     const {
         scoreCards: scorecards,
         metadata,
-        error,
         isValidating: isLoadingScorecards,
     }: ScorecardsResponse = useFetchScorecards({
         challengeTrack: filters.projectType,
@@ -46,25 +46,34 @@ export const ScorecardsListPage: FC<{}> = () => {
         type: filters.type,
     })
 
-    console.log(error)
-
     const handleFiltersChange = useCallback((newFilters: Partial<typeof filters>) => {
         setFilters(newFilters as typeof filters)
         setPage(1) // Optional: reset page on filter change
     }, [])
 
     const handleScorecardClone = useCallback(async (scorecard: Scorecard) => {
-        if (!await confirm({
-            title: 'Clone Scorecard',
-            content: `Are you sure you want to clone "${scorecard.name}" scorecard?`,
+        if (!await confirmation.confirm({
             action: 'Clone',
+            content: `Are you sure you want to clone "${scorecard.name}" scorecard?`,
+            title: 'Clone Scorecard',
         })) {
-            return;
+            return
         }
 
-        const cloned = await cloneScorecard({id: scorecard.id})
-        navigate(`${cloned.id}/details`)
-    }, [])
+        try {
+            const cloned = await cloneScorecard({ id: scorecard.id })
+            if (!cloned || !cloned.id) {
+                toast.error('Failed to clone scorecard!')
+                return
+            }
+
+            toast.success('Scorecard cloned successfully!')
+            navigate(`${cloned.id}/details`)
+        } catch (error) {
+            toast.error('Failed to clone scorecard!')
+            console.error('Failed to clone scorecard:', error)
+        }
+    }, [navigate, confirmation])
 
     return (
         <PageWrapper
@@ -94,7 +103,7 @@ export const ScorecardsListPage: FC<{}> = () => {
 
                 </>
             )}
-            {confirmModal}
+            {confirmation.modal}
         </PageWrapper>
     )
 
