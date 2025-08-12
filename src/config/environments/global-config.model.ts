@@ -53,5 +53,11 @@ export interface GlobalConfig {
         AV_SCAN_SCORER_REVIEW_TYPE_ID: string
         AGREE_ELECTRONICALLY: string
         AGREE_FOR_DOCUSIGN_TEMPLATE: string
+        AWS_REGION: string
+        AWS_DMZ_BUCKET: string
+        AWS_CLEAN_BUCKET: string
+        AWS_QUARANTINE_BUCKET: string
+        SUBMISSION_SCAN_TOPIC: string
+        AVSCAN_TOPIC: string
     }
 }

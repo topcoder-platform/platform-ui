@@ -1,13 +1,19 @@
 /**
  * Manage Submission Page.
  */
-import { FC } from 'react'
+import { FC, useMemo } from 'react'
 import { useParams } from 'react-router-dom'
 import classNames from 'classnames'
 
 import { LinkButton } from '~/libs/ui'
 
 import {
+    useDownloadSubmission,
+    useDownloadSubmissionProps,
+    useFetchChallenge,
+    useFetchChallengeProps,
+    useManageAVScan,
+    useManageAVScanProps,
     useManageBusEvent,
     useManageBusEventProps,
     useManageChallengeSubmissions,
@@ -20,6 +26,7 @@ import {
     TableLoading,
     TableNoRecord,
 } from '../../lib'
+import { checkIsMM } from '../../lib/utils'
 
 import styles from './ManageSubmissionPage.module.scss'
 
@@ -35,7 +42,13 @@ export const ManageSubmissionPage: FC<Props> = (props: Props) => {
         = useManageBusEvent()
 
     const {
-        isLoading,
+        isLoading: isLoadingChallenge,
+        challengeInfo,
+    }: useFetchChallengeProps = useFetchChallenge(challengeId)
+    const isMM = useMemo(() => checkIsMM(challengeInfo), [challengeInfo])
+
+    const {
+        isLoading: isLoadingSubmission,
         submissions,
         isRemovingSubmission,
         isRemovingSubmissionBool,
@@ -47,6 +60,19 @@ export const ManageSubmissionPage: FC<Props> = (props: Props) => {
         setShowSubmissionHistory,
     }: useManageChallengeSubmissionsProps
         = useManageChallengeSubmissions(challengeId)
+
+    const {
+        isLoading: isDownloadingSubmission,
+        isLoadingBool: isDownloadingSubmissionBool,
+        downloadSubmission,
+    }: useDownloadSubmissionProps = useDownloadSubmission()
+    const {
+        isLoading: isDoingAvScan,
+        isLoadingBool: isDoingAvScanBool,
+        doPostBusEvent: doPostBusEventAvScan,
+    }: useManageAVScanProps = useManageAVScan()
+
+    const isLoading = isLoadingSubmission || isLoadingChallenge
 
     return (
         <PageWrapper
@@ -67,6 +93,10 @@ export const ManageSubmissionPage: FC<Props> = (props: Props) => {
                     ) : (
                         <div className={styles.blockTableContainer}>
                             <SubmissionTable
+                                isDoingAvScan={isDoingAvScan}
+                                doPostBusEventAvScan={doPostBusEventAvScan}
+                                isDownloading={isDownloadingSubmission}
+                                downloadSubmission={downloadSubmission}
                                 data={submissions}
                                 isRemovingSubmission={isRemovingSubmission}
                                 doRemoveSubmission={doRemoveSubmission}
@@ -80,9 +110,12 @@ export const ManageSubmissionPage: FC<Props> = (props: Props) => {
                                 doPostBusEvent={doPostBusEvent}
                                 showSubmissionHistory={showSubmissionHistory}
                                 setShowSubmissionHistory={setShowSubmissionHistory}
+                                isMM={isMM}
                             />
 
-                            {(isRemovingSubmissionBool
+                            {(isDoingAvScanBool
+                                || isDownloadingSubmissionBool
+                                || isRemovingSubmissionBool
                                 || isRunningTestBool
                                 || isRemovingReviewSummationsBool) && (
                                 <ActionLoading />

@@ -11,7 +11,7 @@ import { Challenge, MemberSubmission } from '../models'
  * @param challenge challenge info
  * @returns true if challenge is mm
  */
-export function checkIsMM(challenge: Challenge): boolean {
+export function checkIsMM(challenge?: Challenge): boolean {
     const tags = _.get(challenge, 'tags') || []
     const isMMType = challenge ? challenge.type === 'Marathon Match' : false
     return tags.includes('Marathon Match') || isMMType
