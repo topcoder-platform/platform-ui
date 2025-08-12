@@ -3,13 +3,21 @@ import classNames from 'classnames'
 
 import { Button, IconOutline, InputSelect, InputWrapper } from '~/libs/ui'
 
-import { categoryByProjectType, ProjectType, ScorecardStatus, ScorecardType } from '../../models'
+import {
+    categoryByProjectType,
+    ProjectType,
+    ProjectTypeLabels,
+    ScorecardStatus,
+    ScorecardStatusLabels,
+    ScorecardType,
+    ScorecardTypeLabels,
+} from '../../models'
 
 import styles from './ScorecardsFilter.module.scss'
 
 interface ScorecardFiltersProps {
   filters: {
-    search: string
+    name: string
     type: string
     projectType: string
     category: string
@@ -24,9 +32,7 @@ export const ScorecardFilters: React.FC<ScorecardFiltersProps> = (props: Scoreca
         { label: 'All Projects', value: '' },
         ...Object.values(ProjectType)
             .map(type => ({
-                label: type.replace(/_/g, ' ')
-                    .toLowerCase()
-                    .replace(/\b\w/g, l => l.toUpperCase()),
+                label: ProjectTypeLabels[type],
                 value: type,
             })),
     ]
@@ -35,7 +41,7 @@ export const ScorecardFilters: React.FC<ScorecardFiltersProps> = (props: Scoreca
         { label: 'All Types', value: '' },
         ...Object.values(ScorecardType)
             .map(type => ({
-                label: type,
+                label: ScorecardTypeLabels[type],
                 value: type,
             })),
     ]
@@ -44,9 +50,7 @@ export const ScorecardFilters: React.FC<ScorecardFiltersProps> = (props: Scoreca
         { label: 'All Status', value: '' },
         ...Object.values(ScorecardStatus)
             .map(status => ({
-                label: status.replace(/_/g, ' ')
-                    .toLowerCase()
-                    .replace(/\b\w/g, l => l.toUpperCase()),
+                label: ScorecardStatusLabels[status],
                 value: status,
             })),
     ]
@@ -80,8 +84,8 @@ export const ScorecardFilters: React.FC<ScorecardFiltersProps> = (props: Scoreca
     const handleClear = useCallback(() => {
         props.onFiltersChange({
             category: '',
+            name: '',
             projectType: '',
-            search: '',
             status: '',
             type: '',
         })
@@ -99,8 +103,8 @@ export const ScorecardFilters: React.FC<ScorecardFiltersProps> = (props: Scoreca
             >
                 <input
                     className={classNames(styles.inputText, 'body-small')}
-                    value={props.filters.search}
-                    onChange={handleChange('search')}
+                    value={props.filters.name}
+                    onChange={handleChange('name')}
                     placeholder='Scorecard Name'
                     type='text'
                 />

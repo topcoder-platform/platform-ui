@@ -11,9 +11,9 @@ import { useWindowSize, WindowSize } from '~/libs/shared'
 import { TableMobile } from '~/apps/admin/src/lib/components/common/TableMobile'
 import { Table, TableColumn } from '~/libs/ui'
 import { Pagination } from '~/apps/admin/src/lib'
-import { PencilAltIcon } from '@heroicons/react/outline'
+import { DuplicateIcon, PencilIcon } from '@heroicons/react/outline'
 
-import { Scorecard } from '../../models'
+import { ProjectType, ProjectTypeLabels, Scorecard, ScorecardStatusLabels, ScorecardTypeLabels } from '../../models'
 import { TableWrapper } from '../TableWrapper'
 
 import styles from './TableScorecards.module.scss'
@@ -62,32 +62,48 @@ export const TableScorecards: FC<Props> = (props: Props) => {
                 className: classNames(styles.tableCell),
                 label: 'Type',
                 propertyName: 'type',
-                type: 'text',
+                renderer: (data: Scorecard) => (
+                    <div>{ScorecardTypeLabels[data.type]}</div>
+                ),
+                type: 'element',
             },
             {
                 className: styles.tableCell,
                 label: 'Project Type',
-                propertyName: 'projectType',
-                type: 'text',
+                propertyName: 'challengeTrack',
+                renderer: (data: Scorecard) => (
+                    <div>{ProjectTypeLabels[data.challengeTrack as ProjectType]}</div>
+                ),
+                type: 'element',
             },
             {
                 className: styles.tableCell,
                 label: 'Category',
-                propertyName: 'category',
+                propertyName: 'challengeType',
                 type: 'text',
             },
             {
                 className: styles.tableCell,
                 label: 'Status',
                 propertyName: 'status',
-                type: 'text',
+                renderer: (data: Scorecard) => (
+                    <div>{ScorecardStatusLabels[data.status]}</div>
+                ),
+                type: 'element',
             },
             {
-                className: styles.tableCell,
+                className: classNames(styles.tableCell, styles.tableCellCenter),
                 label: 'Action',
                 renderer: () => (
-                    <div className='last-element'>
-                        <PencilAltIcon />
+                    <div className={styles.action}>
+                        <div className={styles.actionItem}>
+                            <PencilIcon />
+                            <span>Edit</span>
+                        </div>
+                        <div className={styles.actionItem}>
+                            <DuplicateIcon />
+                            <span>Clone</span>
+                        </div>
                     </div>
                 ),
                 type: 'action',

@@ -8,6 +8,14 @@ export enum ProjectType {
   DESIGN = 'DESIGN',
   QUALITY_ASSURANCE = 'QUALITY_ASSURANCE',
 }
+
+export const ProjectTypeLabels: Record<ProjectType, string> = {
+    [ProjectType.DEVELOPMENT]: 'Development',
+    [ProjectType.DATA_SCIENCE]: 'Data Science',
+    [ProjectType.DESIGN]: 'Design',
+    [ProjectType.QUALITY_ASSURANCE]: 'Quality Assurance',
+}
+
 export const categoryByProjectType = {
     DATA_SCIENCE: ['Marathon Match'],
     DESIGN: [
@@ -50,6 +58,12 @@ export enum ScorecardStatus {
   DELETED = 'DELETED',
 }
 
+export const ScorecardStatusLabels: Record<ScorecardStatus, string> = {
+    [ScorecardStatus.ACTIVE]: 'Active',
+    [ScorecardStatus.INACTIVE]: 'Inactive',
+    [ScorecardStatus.DELETED]: 'Deleted',
+}
+
 export enum ScorecardType {
   SCREENING = 'SCREENING',
   REVIEW = 'REVIEW',
@@ -61,11 +75,22 @@ export enum ScorecardType {
   ITERATIVE_REVIEW = 'ITERATIVE_REVIEW',
 }
 
+export const ScorecardTypeLabels: Record<ScorecardType, string> = {
+    [ScorecardType.SCREENING]: 'Screening',
+    [ScorecardType.REVIEW]: 'Review',
+    [ScorecardType.APPROVAL]: 'Approval',
+    [ScorecardType.POST_MORTEM]: 'Post Mortem',
+    [ScorecardType.SPECIFICATION_REVIEW]: 'Specification Review',
+    [ScorecardType.CHECKPOINT_SCREENING]: 'Checkpoint Screening',
+    [ScorecardType.CHECKPOINT_REVIEW]: 'Checkpoint Review',
+    [ScorecardType.ITERATIVE_REVIEW]: 'Iterative Review',
+}
+
 export interface Scorecard {
     id: string
     name: string
     type: ScorecardType
-    projectType: ProjectType
+    challengeTrack: ProjectType
     category: string
     status: ScorecardStatus
     index?: number
