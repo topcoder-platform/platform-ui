@@ -1,8 +1,8 @@
 /**
  * Table Active Reviews.
- */
-import { Dispatch, FC, SetStateAction, useCallback, useMemo } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+*/
+import { Dispatch, FC, SetStateAction, useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import { bind, noop } from 'lodash'
 import classNames from 'classnames'
 
@@ -24,20 +24,12 @@ interface Props {
     totalPages: number
     page: number
     setPage: Dispatch<SetStateAction<number>>
+    onClone: (scorecard: Scorecard) => unknown
 }
 
 export const TableScorecards: FC<Props> = (props: Props) => {
-    const navigate = useNavigate()
     const { width: screenWidth }: WindowSize = useWindowSize()
     const isTablet = useMemo(() => screenWidth <= 1000, [screenWidth])
-
-    const redirect = useCallback(
-        (data: Scorecard, e: React.MouseEvent<HTMLAnchorElement>) => {
-            e.preventDefault()
-            navigate(`${data.id}/details`)
-        },
-        [navigate],
-    )
 
     const columns = useMemo<TableColumn<Scorecard>[]>(
         () => [
@@ -52,7 +44,7 @@ export const TableScorecards: FC<Props> = (props: Props) => {
                 label: 'Scorecard',
                 propertyName: 'name',
                 renderer: (data: Scorecard) => (
-                    <Link to='/' onClick={bind(redirect, this, data)}>
+                    <Link to={`${data.id}/details`}>
                         {data.name}
                     </Link>
                 ),
@@ -94,13 +86,13 @@ export const TableScorecards: FC<Props> = (props: Props) => {
             {
                 className: classNames(styles.tableCell, styles.tableCellCenter),
                 label: 'Action',
-                renderer: () => (
+                renderer: (data: Scorecard) => (
                     <div className={styles.action}>
                         <div className={styles.actionItem}>
                             <PencilIcon />
                             <span>Edit</span>
                         </div>
-                        <div className={styles.actionItem}>
+                        <div className={styles.actionItem} onClick={bind(props.onClone, this, data)}>
                             <DuplicateIcon />
                             <span>Clone</span>
                         </div>
@@ -109,7 +101,7 @@ export const TableScorecards: FC<Props> = (props: Props) => {
                 type: 'action',
             },
         ],
-        [redirect],
+        [],
     )
 
     const columnsMobile = useMemo<MobileTableColumn<Scorecard>[][]>(
