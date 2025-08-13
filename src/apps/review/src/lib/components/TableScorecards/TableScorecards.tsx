@@ -3,7 +3,7 @@
  */
 import { Dispatch, FC, SetStateAction, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { noop } from 'lodash'
+import { bind, noop } from 'lodash'
 import classNames from 'classnames'
 
 import { MobileTableColumn } from '~/apps/admin/src/lib/models/MobileTableColumn.model'
@@ -26,6 +26,7 @@ interface Props {
     totalPages: number
     page: number
     setPage: Dispatch<SetStateAction<number>>
+    onClone: (scorecard: Scorecard) => unknown
 }
 
 export const TableScorecards: FC<Props> = (props: Props) => {
@@ -87,13 +88,13 @@ export const TableScorecards: FC<Props> = (props: Props) => {
             {
                 className: classNames(styles.tableCell, styles.tableCellCenter),
                 label: 'Action',
-                renderer: () => (
+                renderer: (data: Scorecard) => (
                     <div className={styles.action}>
                         <div className={styles.actionItem}>
                             <PencilIcon />
                             <span>Edit</span>
                         </div>
-                        <div className={styles.actionItem}>
+                        <div className={styles.actionItem} onClick={bind(props.onClone, this, data)}>
                             <DuplicateIcon />
                             <span>Clone</span>
                         </div>
