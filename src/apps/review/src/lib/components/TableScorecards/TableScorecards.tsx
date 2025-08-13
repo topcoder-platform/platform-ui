@@ -1,6 +1,6 @@
 /**
  * Table Active Reviews.
-*/
+ */
 import { Dispatch, FC, SetStateAction, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { bind, noop } from 'lodash'
@@ -21,6 +21,8 @@ import styles from './TableScorecards.module.scss'
 interface Props {
     className?: string
     datas: Scorecard[]
+    metadata?: any
+    perPage?: number
     totalPages: number
     page: number
     setPage: Dispatch<SetStateAction<number>>
@@ -44,7 +46,7 @@ export const TableScorecards: FC<Props> = (props: Props) => {
                 label: 'Scorecard',
                 propertyName: 'name',
                 renderer: (data: Scorecard) => (
-                    <Link to={`${data.id}/details`}>
+                    <Link to={`${data.id}`}>
                         {data.name}
                     </Link>
                 ),
@@ -149,11 +151,24 @@ export const TableScorecards: FC<Props> = (props: Props) => {
                     className='enhanced-table-desktop'
                 />
             )}
-            <Pagination
-                page={props.page}
-                totalPages={props.totalPages}
-                onPageChange={props.setPage}
-            />
+            <div className={styles.pagination}>
+                <div>
+                    Showing 1-
+                    {props.perPage}
+                    {' '}
+                    of
+                    {' '}
+                    {props.metadata.total}
+                    {' '}
+                    results
+                </div>
+                <Pagination
+                    page={props.page}
+                    totalPages={props.totalPages}
+                    onPageChange={props.setPage}
+                />
+            </div>
+
         </TableWrapper>
     )
 }

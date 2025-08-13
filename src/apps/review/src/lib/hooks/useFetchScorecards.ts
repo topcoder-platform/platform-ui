@@ -10,7 +10,7 @@ interface UseFetchScorecardsParams {
   perPage: number
   name?: string
   challengeTrack?: string
-  type?: string
+  scorecardType?: string
   challengeType?: string
   status?: string
 }
@@ -33,15 +33,15 @@ export function useFetchScorecards(
         name = '',
         challengeTrack = '',
         challengeType = '',
+        scorecardType = '',
         status = '',
-        type = '',
     }: UseFetchScorecardsParams,
 ): ScorecardsResponse {
     const query = new URLSearchParams({
         page: String(page),
         perPage: String(perPage),
         ...(name ? { name } : {}),
-        ...(type ? { type } : {}),
+        ...(scorecardType ? { scorecardType } : {}),
         ...(challengeTrack ? { challengeTrack } : {}),
         ...(challengeType ? { challengeType } : {}),
         ...(status ? { status } : {}),

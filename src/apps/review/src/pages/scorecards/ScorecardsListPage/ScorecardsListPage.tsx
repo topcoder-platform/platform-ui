@@ -5,14 +5,12 @@ import { toast } from 'react-toastify'
 import { PageTitle, useConfirmationModal } from '~/libs/ui'
 import { TableLoading } from '~/apps/admin/src/lib'
 
-import { PageWrapper, ScorecardsFilter, TableNoRecord, TableScorecards } from '../../lib'
-import { ScorecardsResponse, useFetchScorecards } from '../../lib/hooks'
-import { cloneScorecard } from '../../lib/services'
-import { Scorecard } from '../../lib/models'
+import { Scorecard } from '../../../lib/models'
+import { cloneScorecard } from '../../../lib/services'
+import { PageWrapper, ScorecardsFilter, TableNoRecord, TableScorecards } from '../../../lib'
+import { ScorecardsResponse, useFetchScorecards } from '../../../lib/hooks'
 
-// import { mockScorecards } from '../../mock-datas/MockScorecardList'
-
-// import styles from './ScorecardsListPage.module.scss'
+import styles from './ScorecardsListPage.module.scss'
 
 export const ScorecardsListPage: FC<{}> = () => {
     const navigate = useNavigate()
@@ -26,12 +24,12 @@ export const ScorecardsListPage: FC<{}> = () => {
         type: '',
     })
     const [page, setPage] = useState(1)
+    const perPage = 10
 
     const breadCrumb = useMemo(
         () => [{ index: 1, label: 'Scorecards' }],
         [],
     )
-    // const scorecards: Scorecard[] = mockScorecards
 
     const {
         scoreCards: scorecards,
@@ -39,16 +37,17 @@ export const ScorecardsListPage: FC<{}> = () => {
         isValidating: isLoadingScorecards,
     }: ScorecardsResponse = useFetchScorecards({
         challengeTrack: filters.projectType,
+        challengeType: filters.category,
         name: filters.name,
         page,
-        perPage: 10,
+        perPage,
+        scorecardType: filters.type,
         status: filters.status,
-        type: filters.type,
     })
 
-    const handleFiltersChange = useCallback((newFilters: Partial<typeof filters>) => {
-        setFilters(newFilters as typeof filters)
-        setPage(1) // Optional: reset page on filter change
+    const handleFiltersChange = useCallback((newFilters: typeof filters) => {
+        setFilters(newFilters)
+        setPage(1)
     }, [])
 
     const handleScorecardClone = useCallback(async (scorecard: Scorecard) => {
@@ -81,6 +80,11 @@ export const ScorecardsListPage: FC<{}> = () => {
             breadCrumb={breadCrumb}
         >
             <PageTitle>Scorecards</PageTitle>
+            <div className={styles.totalScorecards}>
+                {metadata?.total}
+                {' '}
+                scorecards
+            </div>
             <ScorecardsFilter
                 filters={filters}
                 onFiltersChange={handleFiltersChange}
@@ -97,7 +101,12 @@ export const ScorecardsListPage: FC<{}> = () => {
                             totalPages={metadata?.totalPages}
                             page={page}
                             setPage={setPage}
-                            datas={scorecards}
+                            datas={scorecards.map((item, i) => ({
+                                ...item,
+                                index: (page - 1) * perPage + i + 1,
+                            }))}
+                            metadata={metadata}
+                            perPage={perPage}
                         />
                     )}
 
