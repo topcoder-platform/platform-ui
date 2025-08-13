@@ -152,7 +152,7 @@ export const TableScorecards: FC<Props> = (props: Props) => {
                 />
             )}
             <div className={styles.pagination}>
-                <div>
+                <div className={styles.paginationText}>
                     Showing 1-
                     {props.perPage}
                     {' '}

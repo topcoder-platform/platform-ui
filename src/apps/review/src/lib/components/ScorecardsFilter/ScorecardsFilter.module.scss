@@ -67,21 +67,37 @@
   .typeSelect {
     flex: 2;
     margin-bottom: 0;
+
+    > div:first-child {
+      padding: 3px 16px 4px 16px;
+    }
   }
 
   .projectTypeSelect {
     flex: 1.5;
     margin-bottom: 0;
+
+    > div:first-child {
+      padding: 3px 16px 4px 16px;
+    }
   }
 
   .categorySelect {
     flex: 1.5;
     margin-bottom: 0;
+
+    > div:first-child {
+      padding: 3px 16px 4px 16px;
+    }
   }
 
   .statusSelect {
     flex: 1;
     margin-bottom: 0;
+
+    > div:first-child {
+      padding: 3px 16px 4px 16px;
+    }
   }
 
   .clearButton {
@@ -110,7 +126,7 @@
     }
 
     :global(.input-wrapper) {
-        height: 38px
+        height: 38px;
     }
 
     :global(.btn-size-lg) {
