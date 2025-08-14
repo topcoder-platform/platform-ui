@@ -19,5 +19,5 @@ export async function membersAutocompete(term: string): Promise<Array<MembersAut
         term,
     }
 
-    return xhrGetAsync(`${EnvironmentConfig.API.V5}/members/autocomplete?${qs.stringify(query)}`)
+    return xhrGetAsync(`${EnvironmentConfig.API.V6}/members/autocomplete?${qs.stringify(query)}`)
 }

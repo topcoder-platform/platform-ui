@@ -1,7 +1,7 @@
 import { EnvironmentConfig } from '~/config'
 
 export function profile(handle: string): string {
-    return `${EnvironmentConfig.API.V5}/members/${handle}`
+    return `${EnvironmentConfig.API.V6}/members/${handle}`
 }
 
 export function verify(): string {
@@ -26,7 +26,7 @@ export function learnBaseURL(): string {
 }
 
 export function memberStatsDistroURL(): string {
-    return `${EnvironmentConfig.API.V5}/members/stats/distribution`
+    return `${EnvironmentConfig.API.V6}/members/stats/distribution`
 }
 
 export function memberModifyURL(): string {
