@@ -13,6 +13,7 @@ import {
     activeReviewAssigmentsRouteId,
     challengeDetailRouteId,
     rootRoute,
+    scorecardRouteId,
 } from './config/routes.config'
 
 const ReviewApp: LazyLoadedComponent = lazyLoad(() => import('./ReviewApp'))
@@ -34,6 +35,21 @@ const ChallengeDetailsPage: LazyLoadedComponent = lazyLoad(
 const ScorecardDetailsPage: LazyLoadedComponent = lazyLoad(
     () => import('./pages/active-review-assignements/ScorecardDetailsPage'),
     'ScorecardDetailsPage',
+)
+
+const ScorecardsContainer: LazyLoadedComponent = lazyLoad(
+    () => import('./pages/scorecards/ScorecardsContainer'),
+    'ScorecardsContainer',
+)
+
+const ScorecardsListPage: LazyLoadedComponent = lazyLoad(
+    () => import('./pages/scorecards/ScorecardsListPage'),
+    'ScorecardsListPage',
+)
+
+const ViewScorecardPage: LazyLoadedComponent = lazyLoad(
+    () => import('./pages/scorecards/ViewScorecardPage'),
+    'ViewScorecardPage',
 )
 
 export const toolTitle: string = ToolTitle.review
@@ -77,6 +93,24 @@ export const reviewRoutes: ReadonlyArray<PlatformRoute> = [
                 element: <ActiveReviewAssigments />,
                 id: activeReviewAssigmentsRouteId,
                 route: activeReviewAssigmentsRouteId,
+            },
+            {
+                children: [
+                    {
+                        element: <ScorecardsListPage />,
+                        id: 'list-scorecards-page',
+                        route: '',
+                    },
+                    {
+                        element: <ViewScorecardPage />,
+                        id: 'view-scorecard-page',
+                        route: ':scorecardId',
+                    },
+
+                ],
+                element: <ScorecardsContainer />,
+                id: scorecardRouteId,
+                route: scorecardRouteId,
             },
         ],
         domain: AppSubdomain.review,
