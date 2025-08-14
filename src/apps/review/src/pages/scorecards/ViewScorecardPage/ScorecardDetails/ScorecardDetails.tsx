@@ -9,36 +9,40 @@ interface ScorecardDetailsProps {
     scorecard: Scorecard
 }
 
-const ScorecardDetails: FC<ScorecardDetailsProps> = ({ scorecard }) => {
-    const getStatusClassname = () => styles[ScorecardStatusLabels[scorecard.status]?.toLowerCase()]
+const ScorecardDetails: FC<ScorecardDetailsProps> = (props: ScorecardDetailsProps) => {
+    const getStatusClassname = (): string => styles[ScorecardStatusLabels[props.scorecard.status]?.toLowerCase()]
     return (
         <div className={styles.container}>
             <div className={styles.left}>
                 <div className={styles.item}>
                     <div className={styles.label}>Version</div>
-                    <div className={styles.value}>{scorecard.version}</div>
+                    <div className={styles.value}>{props.scorecard.version}</div>
                 </div>
                 <div className={styles.item}>
                     <div className={styles.label}>Type</div>
-                    <div className={styles.value}>{ScorecardTypeLabels[scorecard.type]}</div>
+                    <div className={styles.value}>{ScorecardTypeLabels[props.scorecard.type]}</div>
                 </div>
                 <div className={styles.item}>
                     <div className={styles.label}>Project Type</div>
-                    <div className={styles.value}>{ProjectTypeLabels[scorecard.challengeTrack]}</div>
+                    <div className={styles.value}>{ProjectTypeLabels[props.scorecard.challengeTrack]}</div>
                 </div>
             </div>
             <div className={styles.right}>
                 <div className={styles.item}>
                     <div className={styles.label}>Category</div>
-                    <div className={styles.value}>{scorecard.challengeType}</div>
+                    <div className={styles.value}>{props.scorecard.challengeType}</div>
                 </div>
                 <div className={styles.item}>
                     <div className={styles.label}>Status</div>
-                    <div className={cn(styles.value, getStatusClassname())}>{ScorecardStatusLabels[scorecard.status]}</div>
+                    <div
+                        className={cn(styles.value, getStatusClassname())}
+                    >
+                        {ScorecardStatusLabels[props.scorecard.status]}
+                    </div>
                 </div>
                 <div className={styles.item}>
                     <div className={styles.label}>Min - Max. Score</div>
-                    <div className={styles.value}>{`${scorecard.minScore} - ${scorecard.maxScore}`}</div>
+                    <div className={styles.value}>{`${props.scorecard.minScore} - ${props.scorecard.maxScore}`}</div>
                 </div>
             </div>
         </div>

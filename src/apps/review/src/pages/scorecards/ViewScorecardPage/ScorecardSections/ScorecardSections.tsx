@@ -1,16 +1,18 @@
 import { FC } from 'react'
-import { ScorecardSection } from '~/apps/review/src/lib/models'
 import cn from 'classnames'
+
+import { ScorecardSection } from '~/apps/review/src/lib/models'
+
 import styles from './ScorecardSections.module.scss'
 
 interface ScorecardSectionsProps {
     sections: ScorecardSection[]
 }
 
-const ScorecardSections: FC<ScorecardSectionsProps> = ({ sections }) => (
+const ScorecardSections: FC<ScorecardSectionsProps> = (props: ScorecardSectionsProps) => (
     <div className={styles.container}>
         {
-            sections.map((section, sectionIndex) => (
+            props.sections.map((section, sectionIndex) => (
                 <div key={section.id} className={styles.section}>
                     <div className={styles.heading}>
                         <div>{`Section ${sectionIndex + 1}`}</div>
@@ -27,7 +29,11 @@ const ScorecardSections: FC<ScorecardSectionsProps> = ({ sections }) => (
                                 })}
                                 >
                                     <div className={styles.left}>
-                                        <div className={styles.description}>{`${sectionIndex + 1}.${index + 1} ${question.description}`}</div>
+                                        <div
+                                            className={styles.description}
+                                        >
+                                            {`${sectionIndex + 1}.${index + 1} ${question.description}`}
+                                        </div>
                                         <div className={styles.detailItemsWrapper}>
                                             <div className={styles.detailItem}>
                                                 <div className={styles.label}>Guidelines:</div>
@@ -35,7 +41,11 @@ const ScorecardSections: FC<ScorecardSectionsProps> = ({ sections }) => (
                                             </div>
                                             <div className={styles.detailItem}>
                                                 <div className={styles.label}>Scale:</div>
-                                                <div className={styles.value}>{`Scale ${question.scaleMin} - ${question.scaleMax}`}</div>
+                                                <div
+                                                    className={styles.value}
+                                                >
+                                                    {`Scale ${question.scaleMin} - ${question.scaleMax}`}
+                                                </div>
                                             </div>
                                             <div className={styles.detailItem}>
                                                 <div className={styles.label}>Document Upload:</div>
