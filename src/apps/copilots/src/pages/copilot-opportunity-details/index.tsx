@@ -291,12 +291,13 @@ const CopilotOpportunityDetails: FC<{}> = () => {
                     )
                 }
                 {activeTab === CopilotDetailsTabViews.details && <OpportunityDetails opportunity={opportunity} />}
-                {activeTab === CopilotDetailsTabViews.applications && isAdminOrPM && opportunity && (
+                {activeTab === CopilotDetailsTabViews.applications && opportunity && (
                     <CopilotApplications
                         copilotApplications={copilotApplications}
                         opportunity={opportunity}
                         members={members}
                         onApplied={onApplied}
+                        isAdminOrPM
                     />
                 )}
 
