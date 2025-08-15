@@ -1,8 +1,8 @@
 export enum ChallengeStatus {
-    New = 'New',
-    Draft = 'Draft',
-    Active = 'Active',
-    Completed = 'Completed',
+    New = 'NEW',
+    Draft = 'DRAFT',
+    Active = 'ACTIVE',
+    Completed = 'COMPLETED',
 }
 
 export type ChallengeType = {
