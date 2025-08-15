@@ -53,7 +53,7 @@ const ChallengeCurrentPhase: FC<{ challenge: Challenge }> = props => {
 
     let phaseMessage = 'Stalled'
     if (statusPhase) phaseMessage = statusPhase.name
-    else if (props.challenge.status === 'Draft') phaseMessage = 'In Draft'
+    else if (props.challenge.status === 'DRAFT') phaseMessage = 'In Draft'
 
     return <>{phaseMessage}</>
 }
