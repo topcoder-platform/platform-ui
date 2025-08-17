@@ -1,4 +1,5 @@
 import useSWR, { SWRResponse } from 'swr'
+import useSWRInfinite, { SWRInfiniteResponse } from 'swr/infinite'
 
 import { EnvironmentConfig } from '~/config'
 import { xhrGetAsync, xhrPatchAsync, xhrPostAsync } from '~/libs/core'
@@ -7,6 +8,7 @@ import { buildUrl } from '~/libs/shared/lib/utils/url'
 import { CopilotRequest } from '../models/CopilotRequest'
 
 const baseUrl = `${EnvironmentConfig.API.V5}/projects`
+const PAGE_SIZE = 20
 
 /**
  * Creates a CopilotRequest object by merging the provided data and its nested data,
@@ -27,7 +29,13 @@ function copilotRequestFactory(data: any): CopilotRequest {
     }
 }
 
-export type CopilotRequestsResponse = SWRResponse<CopilotRequest[], CopilotRequest[]>
+export type CopilotRequestsResponse = {
+    data: CopilotRequest[];
+    hasMoreCopilotRequests: boolean;
+    isValidating: boolean;
+    size: number;
+    setSize: (size: number) => void;
+}
 
 /**
  * Custom hook to fetch copilot requests for a given project.
@@ -36,15 +44,33 @@ export type CopilotRequestsResponse = SWRResponse<CopilotRequest[], CopilotReque
  * @returns {CopilotRequestsResponse} - The response containing copilot requests.
  */
 export const useCopilotRequests = (projectId?: string): CopilotRequestsResponse => {
-    const url = buildUrl(`${baseUrl}${projectId ? `/${projectId}` : ''}/copilots/requests`)
+    const getKey = (pageIndex: number, previousPageData: CopilotRequest[]): string | undefined => {
+        if (previousPageData && previousPageData.length < PAGE_SIZE) return undefined
+        const url = buildUrl(`${baseUrl}${projectId ? `/${projectId}` : ''}/copilots/requests`)
+        return `
+            ${url}?page=${pageIndex + 1}&pageSize=${PAGE_SIZE}&sort=createdAt desc
+        `
+    }
 
-    const fetcher = (urlp: string): Promise<CopilotRequest[]> => xhrGetAsync<CopilotRequest[]>(urlp)
+    const fetcher = (url: string): Promise<CopilotRequest[]> => xhrGetAsync<CopilotRequest[]>(url)
         .then((data: any) => data.map(copilotRequestFactory))
 
-    return useSWR(url, fetcher, {
-        refreshInterval: 0,
+    const {
+        isValidating,
+        data = [],
+        size,
+        setSize,
+    }: SWRInfiniteResponse<CopilotRequest[]> = useSWRInfinite(getKey, fetcher, {
         revalidateOnFocus: false,
     })
+
+    // Flatten data array
+    const copilotRequests = data ? data.flat() : []
+
+    const lastPage = data[data.length - 1] || []
+    const hasMoreCopilotRequests = lastPage.length === PAGE_SIZE
+
+    return { data: copilotRequests, hasMoreCopilotRequests, isValidating, setSize: (s: number) => { setSize(s) }, size }
 }
 
 export type CopilotRequestResponse = SWRResponse<CopilotRequest, CopilotRequest>
