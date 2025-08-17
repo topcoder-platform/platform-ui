@@ -22,7 +22,6 @@ import { EnvironmentConfig } from '~/config'
 import { ProjectTypeLabels } from '../../constants'
 import { approveCopilotRequest, CopilotRequestsResponse, useCopilotRequests } from '../../services/copilot-requests'
 import { CopilotRequest } from '../../models/CopilotRequest'
-import { ProjectsResponse, useProjects } from '../../services/projects'
 import { copilotRoutesMap } from '../../copilots.routes'
 import { Project } from '../../models/Project'
 
@@ -150,11 +149,6 @@ const CopilotRequestsPage: FC = () => {
         hasMoreCopilotRequests,
         setSize,
         size }: CopilotRequestsResponse = useCopilotRequests()
-    const projectIds = useMemo(() => (
-        (new Set(requests.map(r => r.projectId))
-            .values() as any)
-            .toArray()
-    ), [requests])
 
     const viewRequestDetails = useMemo(() => (
         routeParams.requestId && find(requests, { id: +routeParams.requestId }) as CopilotRequest
