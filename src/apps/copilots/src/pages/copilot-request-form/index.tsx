@@ -276,6 +276,11 @@ const CopilotRequestForm: FC<{}> = () => {
                 key: 'otherPaymentType',
                 message: 'Field cannot be left empty',
             },
+            {
+                condition: formValues.otherPaymentType.trim().length > 8,
+                key: 'otherPaymentType',
+                message: 'Field only allows 8 characters',
+            },
         ]
 
         fieldValidations.forEach(
