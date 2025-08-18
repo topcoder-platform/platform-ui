@@ -4,6 +4,7 @@ import {
     SetStateAction,
     useCallback,
     useContext,
+    useEffect,
     useMemo,
     useRef,
     useState,
@@ -38,6 +39,10 @@ const NavTabs: FC = () => {
         string,
         Dispatch<SetStateAction<string>>
     ] = useState<string>(activeTabPathName)
+
+    useEffect(() => {
+        setActiveTab(activeTabPathName)
+    }, [activeTabPathName])
 
     const handleTabChange = useCallback(
         (tabId: string) => {

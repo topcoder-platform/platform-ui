@@ -1,14 +1,21 @@
+import { useNavigate } from 'react-router-dom'
 import { FC, useCallback, useMemo, useState } from 'react'
+import { toast } from 'react-toastify'
 
-import { PageTitle } from '~/libs/ui'
+import { PageTitle, useConfirmationModal } from '~/libs/ui'
 import { TableLoading } from '~/apps/admin/src/lib'
 
+import { Scorecard } from '../../../lib/models'
+import { cloneScorecard } from '../../../lib/services'
 import { PageWrapper, ScorecardsFilter, TableNoRecord, TableScorecards } from '../../../lib'
 import { ScorecardsResponse, useFetchScorecards } from '../../../lib/hooks'
 
 import styles from './ScorecardsListPage.module.scss'
 
 export const ScorecardsListPage: FC<{}> = () => {
+    const navigate = useNavigate()
+    const confirmation = useConfirmationModal()
+
     const [filters, setFilters] = useState({
         category: '',
         name: '',
@@ -43,6 +50,30 @@ export const ScorecardsListPage: FC<{}> = () => {
         setPage(1)
     }, [])
 
+    const handleScorecardClone = useCallback(async (scorecard: Scorecard) => {
+        if (!await confirmation.confirm({
+            action: 'Clone',
+            content: `Are you sure you want to clone "${scorecard.name}" scorecard?`,
+            title: 'Clone Scorecard',
+        })) {
+            return
+        }
+
+        try {
+            const cloned = await cloneScorecard({ id: scorecard.id })
+            if (!cloned || !cloned.id) {
+                toast.error('Failed to clone scorecard!')
+                return
+            }
+
+            toast.success('Scorecard cloned successfully!')
+            navigate(`${cloned.id}/details`)
+        } catch (error) {
+            toast.error('Failed to clone scorecard!')
+            console.error('Failed to clone scorecard:', error)
+        }
+    }, [navigate, confirmation])
+
     return (
         <PageWrapper
             pageTitle='Scorecards'
@@ -66,6 +97,7 @@ export const ScorecardsListPage: FC<{}> = () => {
                         <TableNoRecord />
                     ) : (
                         <TableScorecards
+                            onClone={handleScorecardClone}
                             totalPages={metadata?.totalPages}
                             page={page}
                             setPage={setPage}
@@ -80,7 +112,7 @@ export const ScorecardsListPage: FC<{}> = () => {
 
                 </>
             )}
-
+            {confirmation.modal}
         </PageWrapper>
     )
 
