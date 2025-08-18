@@ -1,0 +1,107 @@
+@import '@libs/ui/styles/includes';
+
+.pageContentWrap {
+}
+
+.grayWrapper {
+  background-color: #F6F7F9;
+  border-radius: $sp-2;
+  padding: $sp-8;
+}
+
+.scorecardInfo {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: $sp-3 $sp-16;
+}
+
+.headerArea {
+    border-radius: $sp-2 $sp-2 0 0;
+    padding: $sp-3 $sp-4 $sp-2;
+
+    display: flex;
+    flex-wrap: wrap;
+    gap: $sp-2 $sp-4;
+
+    &Label {
+        width: 100%;
+    }
+}
+
+.contentArea {
+    padding: $sp-5 $sp-4;
+}
+
+.groupWrap {
+    .headerArea {
+        background: #0F172A;
+        color: $tc-white;
+    }
+
+    .contentArea {
+        background: #E0E4E84D;
+        padding: $sp-10 $sp-8;
+    }
+}
+
+.sectionWrap {
+    .headerArea {
+        background: $teal-160;
+        color: $tc-white;
+    }
+
+    .contentArea {
+        background: $tc-white;
+    }
+}
+
+.questionWrap {
+    background: #F6F7F9;
+    padding: $sp-5 $sp-4;
+
+    .questionItem {
+        width: 100%;
+
+        display: flex;
+        flex-wrap: wrap;
+        gap: $sp-4;
+    }
+
+    .headerAreaLabel {
+        width: 100%;
+    }
+}
+
+.xlWidthInput {
+    flex: 0 0 84%;
+}
+
+.smWidthInput {
+    flex: 0 0 9.39%;
+}
+
+.mdWidthInput {
+    flex: 0 0 40%;
+}
+
+.doubleInputWrap {
+    display: flex;
+    gap: $sp-3;
+
+    > * {
+        flex: 1;
+    }
+}
+
+.trashIcon {
+    flex: 0 0 2.2%;
+    width: 24px;
+    height: 47px;
+}
+
+.footerArea {
+    display: flex;
+    gap: $sp-4;
+    justify-content: space-between;
+}

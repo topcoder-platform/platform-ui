@@ -8,6 +8,7 @@ import styles from './InputTextarea.module.scss'
 
 interface InputTextareaProps {
     readonly className?: string
+    readonly classNameWrapper?: string
     readonly autocomplete?: FormInputAutocompleteOption
     readonly dirty?: boolean
     readonly disabled?: boolean

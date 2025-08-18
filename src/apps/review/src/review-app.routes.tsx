@@ -51,6 +51,10 @@ const ViewScorecardPage: LazyLoadedComponent = lazyLoad(
     () => import('./pages/scorecards/ViewScorecardPage'),
     'ViewScorecardPage',
 )
+const EditScorecardPage: LazyLoadedComponent = lazyLoad(
+    () => import('./pages/scorecards/EditScorecardPage'),
+    'EditScorecardPage',
+)
 
 export const toolTitle: string = ToolTitle.review
 
@@ -105,6 +109,16 @@ export const reviewRoutes: ReadonlyArray<PlatformRoute> = [
                         element: <ViewScorecardPage />,
                         id: 'view-scorecard-page',
                         route: ':scorecardId',
+                    },
+                    {
+                        element: <EditScorecardPage />,
+                        id: 'edit-scorecard-page',
+                        route: ':scorecardId/edit',
+                    },
+                    {
+                        element: <EditScorecardPage />,
+                        id: 'new-scorecard-page',
+                        route: 'new',
                     },
 
                 ],

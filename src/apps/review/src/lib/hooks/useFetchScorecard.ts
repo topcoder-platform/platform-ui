@@ -1,0 +1,32 @@
+import useSWR, { SWRResponse } from 'swr'
+
+import { EnvironmentConfig } from '~/config'
+import { xhrGetAsync } from '~/libs/core'
+
+import { Scorecard } from '../models'
+
+const baseUrl = `https://local.topcoder-dev.com:4443/scorecards`
+// const baseUrl = `${EnvironmentConfig.API.V6}/review`
+
+interface ScorecardResponse {
+  scorecard: Scorecard | undefined
+  error?: any
+  isValidating: boolean
+}
+
+export function useFetchScorecard(id: string | undefined): ScorecardResponse {
+
+    const fetcher = (url: string): Promise<Scorecard> => xhrGetAsync<Scorecard>(url)
+
+    const { data, error, isValidating }: SWRResponse<Scorecard, any> = useSWR<Scorecard>(
+        // eslint-disable-next-line unicorn/no-null
+        id ? `${baseUrl}/${id}` : null,
+        fetcher,
+    )
+
+    return {
+        error,
+        isValidating,
+        scorecard: data,
+    }
+}

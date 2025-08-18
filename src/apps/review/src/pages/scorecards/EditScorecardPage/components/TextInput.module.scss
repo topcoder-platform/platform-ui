@@ -1,0 +1,40 @@
+@import '@libs/ui/styles/includes';
+
+.inputWrapper {
+    gap: $sp-1;
+    flex: 5;
+    min-width: 355px;
+    width: 100%;
+    margin-bottom: 0;
+    justify-content: end;
+
+    label {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+    }
+}
+
+.inputText {
+    color: $black-60;
+    box-sizing: border-box;
+    border: 0;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    height: auto;
+    border-radius: 0;
+
+    &:focus {
+        box-shadow: none;
+        border: none;
+        outline: none;
+        color: $black-100;
+    }
+
+    &::placeholder {
+        color: $black-60;
+        opacity: 1;
+        text-transform: none;
+    }
+}
