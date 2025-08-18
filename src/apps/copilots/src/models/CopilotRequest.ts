@@ -23,4 +23,7 @@ export interface CopilotRequest {
     tzRestrictions: 'yes' | 'no',
     createdAt: Date,
     opportunity?: CopilotOpportunity,
+    project?: {
+        name: string,
+    },
 }
