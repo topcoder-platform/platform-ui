@@ -82,8 +82,8 @@ export const ScorecardsListPage: FC<{}> = () => {
                 <LinkButton
                     uiv2
                     secondary
-                    to={'new'}
-                    label="+ Add New Scorecard"
+                    to='new'
+                    label='+ Add New Scorecard'
                 />
             )}
         >

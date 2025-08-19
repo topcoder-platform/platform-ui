@@ -5,18 +5,18 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
 
 import { yupResolver } from '@hookform/resolvers/yup'
-import { Button } from '~/libs/ui'
+import { Button, LinkButton } from '~/libs/ui'
 
 import { useFetchScorecard } from '../../../lib/hooks/useFetchScorecard'
 import { saveScorecard } from '../../../lib/services'
 import { rootRoute } from '../../../config/routes.config'
+import { PageWrapper } from '../../../lib'
 
 import { getEmptyScorecard } from './utils'
 import { EditScorecardPageContextProvider } from './EditScorecardPage.context'
 import ScorecardGroupForm, { scorecardGroupSchema } from './components/ScorecardGroupForm'
 import ScorecardInfoForm, { scorecardInfoSchema } from './components/ScorecardInfoForm'
 import styles from './EditScorecardPage.module.scss'
-import { PageWrapper } from '../../../lib'
 
 const EditScorecardPage: FC = () => {
     const navigate = useNavigate()
@@ -26,7 +26,7 @@ const EditScorecardPage: FC = () => {
     const scorecardQuery = useFetchScorecard(params.scorecardId)
     const title = useMemo(() => (
         `${isEditMode ? 'Edit' : 'Create'} Scorecard`
-    ), [isEditMode]);
+    ), [isEditMode])
     const breadCrumb = useMemo(
         () => [
             { index: 1, label: 'Scorecards', path: '..' },
@@ -88,9 +88,9 @@ const EditScorecardPage: FC = () => {
                         <div className={styles.bottomContainer}>
                             <hr />
                             <div className={styles.buttonsWrap}>
-                                <Button type='button' secondary uiv2>
+                                <LinkButton to='..' type='button' secondary uiv2>
                                     Cancel
-                                </Button>
+                                </LinkButton>
                                 <Button type='submit' primary disabled={isSaving || !editForm.formState.isDirty} uiv2>
                                     Save Scorecard
                                 </Button>
