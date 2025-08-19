@@ -7,6 +7,7 @@ import {
     LazyLoadedComponent,
     PlatformRoute,
     Rewrite,
+    UserRole,
 } from '~/libs/core'
 
 import {
@@ -99,6 +100,7 @@ export const reviewRoutes: ReadonlyArray<PlatformRoute> = [
                 route: activeReviewAssigmentsRouteId,
             },
             {
+                authRequired: true,
                 children: [
                     {
                         element: <ScorecardsListPage />,
@@ -124,6 +126,9 @@ export const reviewRoutes: ReadonlyArray<PlatformRoute> = [
                 ],
                 element: <ScorecardsContainer />,
                 id: scorecardRouteId,
+                rolesRequired: [
+                    UserRole.administrator,
+                ],
                 route: scorecardRouteId,
             },
         ],

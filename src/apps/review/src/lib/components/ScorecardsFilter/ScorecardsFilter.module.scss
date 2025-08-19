@@ -67,21 +67,37 @@
   .typeSelect {
     flex: 2;
     margin-bottom: 0;
+
+    > div:first-child {
+      padding: 3px 16px 4px 16px;
+    }
   }
 
   .projectTypeSelect {
     flex: 1.5;
     margin-bottom: 0;
+
+    > div:first-child {
+      padding: 3px 16px 4px 16px;
+    }
   }
 
   .categorySelect {
     flex: 1.5;
     margin-bottom: 0;
+
+    > div:first-child {
+      padding: 3px 16px 4px 16px;
+    }
   }
 
   .statusSelect {
     flex: 1;
     margin-bottom: 0;
+
+    > div:first-child {
+      padding: 3px 16px 4px 16px;
+    }
   }
 
   .clearButton {
@@ -94,27 +110,67 @@
     font-weight: 700;
   }
 
-  @media (max-width: 768px) {
-    flex-direction: column;
-    align-items: stretch;
+}
 
-    > * {
-      flex: 1 !important;
-      width: 100%;
+@media (max-width: 768px) {
+  .filtersContainer {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+
+    .inputWrapper {
+      flex: 1 1 100%;
+      min-width: 0 !important;
+    }
+
+    // Two filters per row
+    .typeSelect,
+    .projectTypeSelect,
+    .categorySelect,
+    .statusSelect,
+    .clearButton {
+      flex: 1 1 calc(50% - 0.5rem);
+      min-width: 0;
     }
   }
-
-    :global(.input-el) {
-        margin-bottom: 0;
-        padding: 3px 16px 3px 16px;
-    }
-
-    :global(.input-wrapper) {
-        height: 38px
-    }
-
-    :global(.btn-size-lg) {
-        padding: 6px 24px;
-    }
-
 }
+
+@media (max-width: 1285px) and (min-width: 769px) {
+
+  .filtersContainer {
+
+    .typeSelect,
+    .projectTypeSelect,
+    .categorySelect,
+    .statusSelect {
+      flex: 1 1 20%;
+      min-width: 0;
+
+      > div:first-child {
+        white-space: normal;
+        min-width: 0;
+      }
+    }
+  }
+}
+
+
+@media (max-width: 500px) {
+  .filtersContainer > * {
+    flex: 1 1 100%;
+  }
+}
+
+:global(.input-el) {
+    margin-bottom: 0;
+    padding: 3px 16px 3px 16px;
+}
+
+:global(.input-wrapper) {
+    height: 38px;
+}
+
+:global(.btn-size-lg) {
+    padding: 6px 24px;
+}
+

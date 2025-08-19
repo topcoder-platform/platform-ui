@@ -33,6 +33,9 @@ export const TableScorecards: FC<Props> = (props: Props) => {
     const { width: screenWidth }: WindowSize = useWindowSize()
     const isTablet = useMemo(() => screenWidth <= 1000, [screenWidth])
 
+    const start = (props.page - 1) * (props.perPage ?? 0) + 1
+    const end = Math.min(props.page * (props.perPage ?? 0), props.metadata?.total ?? 0)
+
     const columns = useMemo<TableColumn<Scorecard>[]>(
         () => [
             {
@@ -152,13 +155,16 @@ export const TableScorecards: FC<Props> = (props: Props) => {
                 />
             )}
             <div className={styles.pagination}>
-                <div>
-                    Showing 1-
-                    {props.perPage}
+                <div className={styles.paginationText}>
+                    Showing
+                    {' '}
+                    {start}
+                    -
+                    {end}
                     {' '}
                     of
                     {' '}
-                    {props.metadata.total}
+                    {props.metadata?.total ?? 0}
                     {' '}
                     results
                 </div>

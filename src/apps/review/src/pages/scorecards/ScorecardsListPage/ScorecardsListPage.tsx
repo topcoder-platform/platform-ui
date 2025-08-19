@@ -94,7 +94,7 @@ export const ScorecardsListPage: FC<{}> = () => {
             ) : (
                 <>
                     {scorecards.length === 0 ? (
-                        <TableNoRecord />
+                        <TableNoRecord message='No scorecards were found that meet your criteria.' />
                     ) : (
                         <TableScorecards
                             onClone={handleScorecardClone}
