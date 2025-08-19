@@ -5,8 +5,7 @@ import { xhrGetAsync } from '~/libs/core'
 
 import { Scorecard } from '../models'
 
-const baseUrl = `https://local.topcoder-dev.com:4443/scorecards`
-// const baseUrl = `${EnvironmentConfig.API.V6}/review`
+const baseUrl = `${EnvironmentConfig.API.V6}/review`
 
 interface ScorecardResponse {
   scorecard: Scorecard | undefined
