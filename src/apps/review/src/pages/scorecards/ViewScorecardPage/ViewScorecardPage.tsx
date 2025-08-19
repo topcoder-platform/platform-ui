@@ -24,7 +24,7 @@ const ViewScorecardPage: FC = () => {
         [],
     )
 
-    const { scorecard } = useFetchScorecard(scorecardId)
+    const scorecardQuery = useFetchScorecard(scorecardId)
 
     return (
         <PageWrapper
@@ -36,24 +36,24 @@ const ViewScorecardPage: FC = () => {
                     icon={PencilIconWrapper}
                     className='borderButton'
                     secondary
-                    to="edit"
+                    to='edit'
                 >
                     Edit Scorecard
                 </LinkButton>
             )}
         >
             {
-                scorecard && (
+                scorecardQuery.scorecard && (
                     <div className={styles.container}>
                         <div className={styles.section}>
                             <h3 className={styles.heading}>1. Scorecard Information</h3>
-                            {scorecard && <ScorecardDetails scorecard={scorecard} />}
+                            <ScorecardDetails scorecard={scorecardQuery.scorecard} />
                         </div>
                         {
-                            scorecard.scorecardGroups.length > 0 && (
+                            scorecardQuery.scorecard.scorecardGroups.length > 0 && (
                                 <div className={cn(styles.section, styles.evaluationStructureSection)}>
                                     <h3 className={styles.heading}>2. Evaluation Structure</h3>
-                                    <ScorecardGroups groups={scorecard.scorecardGroups} />
+                                    <ScorecardGroups groups={scorecardQuery.scorecard.scorecardGroups} />
                                 </div>
                             )
                         }
