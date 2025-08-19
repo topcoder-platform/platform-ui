@@ -58,9 +58,9 @@ export const toolTitle: string = ToolTitle.review
 export const reviewRoutes: ReadonlyArray<PlatformRoute> = [
     // Review App Root
     {
-        authRequired: true,
         children: [
             {
+                authRequired: true,
                 element: <Rewrite to={activeReviewAssigmentsRouteId} />,
                 route: '',
             },
@@ -68,11 +68,13 @@ export const reviewRoutes: ReadonlyArray<PlatformRoute> = [
             {
                 children: [
                     {
+                        authRequired: true,
                         element: <ActiveReviewsPage />,
                         id: 'active-reviews-page',
                         route: '',
                     },
                     {
+                        authRequired: true,
                         children: [
                             {
                                 element: <ChallengeDetailsPage />,
@@ -84,7 +86,6 @@ export const reviewRoutes: ReadonlyArray<PlatformRoute> = [
                                 id: 'scorecard-details-page',
                                 route: 'scorecard-details/:scorecardId',
                             },
-
                         ],
                         element: <ChallengeDetailContainer />,
                         id: challengeDetailRouteId,
@@ -99,11 +100,13 @@ export const reviewRoutes: ReadonlyArray<PlatformRoute> = [
                 authRequired: true,
                 children: [
                     {
+                        authRequired: true,
                         element: <ScorecardsListPage />,
                         id: 'list-scorecards-page',
                         route: '',
                     },
                     {
+                        authRequired: false,
                         element: <ViewScorecardPage />,
                         id: 'view-scorecard-page',
                         route: ':scorecardId',
