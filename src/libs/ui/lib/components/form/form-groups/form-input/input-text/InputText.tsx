@@ -37,6 +37,7 @@ export interface InputTextProps {
     readonly forceUpdateValue?: boolean
     readonly inputControl?: UseFormRegisterReturn
     readonly isLoading?: boolean
+    readonly maxLength?: number
 }
 
 const InputText: FC<InputTextProps> = (props: InputTextProps) => {
@@ -70,6 +71,7 @@ const InputText: FC<InputTextProps> = (props: InputTextProps) => {
             onBlur={props.inputControl ? props.inputControl.onBlur : props.onBlur}
             onChange={props.inputControl ? props.inputControl.onChange : props.onChange}
             name={props.inputControl ? props.inputControl.name : props.name}
+            maxLength={props.maxLength}
         />
     )
 

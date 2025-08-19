@@ -605,6 +605,7 @@ const CopilotRequestForm: FC<{}> = () => {
                                     onChange={bind(handleFormValueChange, this, 'otherPaymentType')}
                                     error={formErrors.otherPaymentType}
                                     tabIndex={0}
+                                    maxLength={8}
                                 />
                             )}
                     </div>
