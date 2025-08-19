@@ -7,6 +7,10 @@
     padding: $sp-2 0;
 }
 
+.title {
+    max-width: 200px;
+}
+
 @media (max-width: 767px) {
     .title {
         min-width: 200px;
