@@ -89,7 +89,7 @@ const CopilotOpportunityDetails: FC<{}> = () => {
         if (isAdminOrPM) {
             setActiveTab(activeTabHash)
         } else {
-            setActiveTab('0')
+            setActiveTab(activeTabHash)
         }
     }, [activeTabHash, isAdminOrPM])
 
@@ -286,7 +286,7 @@ const CopilotOpportunityDetails: FC<{}> = () => {
                         <TabsNavbar
                             defaultActive={activeTab}
                             onChange={handleTabChange}
-                            tabs={getCopilotDetailsTabsConfig(isAdminOrPM, copilotApplications?.length || 0)}
+                            tabs={getCopilotDetailsTabsConfig(copilotApplications?.length || 0)}
                         />
                     )
                 }
