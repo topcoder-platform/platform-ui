@@ -7,7 +7,7 @@ import {
     useReducer,
 } from 'react'
 
-import { Sort } from '~/apps/gamification-admin/src/game-lib'
+import { Sort } from '~/apps/admin/src/platform/gamification-admin/src/game-lib'
 
 import { TABLE_PAGINATION_ITEM_PER_PAGE } from '../../config/index.config'
 import { ClientInfo, FormClientsFilter } from '../models'
