@@ -18,6 +18,7 @@ import {
 } from '~/libs/ui'
 import { profileContext, ProfileContextData, UserRole } from '~/libs/core'
 import { EnvironmentConfig } from '~/config'
+import { Sort } from '~/apps/admin/src/platform/gamification-admin/src/game-lib'
 
 import { ProjectTypeLabels } from '../../constants'
 import { approveCopilotRequest, CopilotRequestsResponse, useCopilotRequests } from '../../services/copilot-requests'
@@ -27,7 +28,6 @@ import { Project } from '../../models/Project'
 
 import { CopilotRequestModal } from './copilot-request-modal'
 import styles from './CopilotRequestsPage.module.scss'
-import { Sort } from '~/apps/admin/src/platform/gamification-admin/src/game-lib'
 
 const CopilotTableActions: FC<{request: CopilotRequest}> = props => {
     const navigate: NavigateFunction = useNavigate()
@@ -140,7 +140,7 @@ const CopilotRequestsPage: FC = () => {
     const [sort, setSort] = useState<Sort>({
         direction: 'desc',
         fieldName: 'createdAt',
-    });
+    })
 
     const { profile }: ProfileContextData = useContext(profileContext)
     const isAdminOrPM: boolean = useMemo(
@@ -239,8 +239,8 @@ const CopilotRequestsPage: FC = () => {
         setSize(size + 1)
     }
 
-    const onToggleSort = (s: Sort) => {
-        setSort(s);
+    function onToggleSort(s: Sort): void {
+        setSort(s)
     }
 
     // header button config

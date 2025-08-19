@@ -4,10 +4,10 @@ import useSWRInfinite, { SWRInfiniteResponse } from 'swr/infinite'
 import { EnvironmentConfig } from '~/config'
 import { xhrGetAsync, xhrPatchAsync, xhrPostAsync } from '~/libs/core'
 import { buildUrl } from '~/libs/shared/lib/utils/url'
-
-import { CopilotRequest } from '../models/CopilotRequest'
 import { Sort } from '~/apps/admin/src/platform/gamification-admin/src/game-lib'
 import { getPaginatedAsync, PaginatedResponse } from '~/libs/core/lib/xhr/xhr-functions/xhr.functions'
+
+import { CopilotRequest } from '../models/CopilotRequest'
 
 const baseUrl = `${EnvironmentConfig.API.V5}/projects`
 const PAGE_SIZE = 20
@@ -46,7 +46,7 @@ export type CopilotRequestsResponse = {
  * @returns {CopilotRequestsResponse} - The response containing copilot requests.
  */
 export const useCopilotRequests = (sort: Sort, projectId?: string): CopilotRequestsResponse => {
-    
+
     const getKey = (pageIndex: number, previousPageData: CopilotRequest[]): string | undefined => {
         if (previousPageData && previousPageData.length < PAGE_SIZE) return undefined
         const url = buildUrl(`${baseUrl}${projectId ? `/${projectId}` : ''}/copilots/requests`)
@@ -55,13 +55,15 @@ export const useCopilotRequests = (sort: Sort, projectId?: string): CopilotReque
         `
     }
 
-    const fetcher = (url: string): Promise<PaginatedResponse<CopilotRequest[]>> => getPaginatedAsync<CopilotRequest[]>(url)
-        .then((data: any) => {
-            return {
+    const fetcher = (
+        url: string,
+    ): Promise<PaginatedResponse<CopilotRequest[]>> => getPaginatedAsync<CopilotRequest[]>(url)
+        .then((data: any) => (
+            {
                 ...data,
                 data: data.data.map(copilotRequestFactory),
             }
-        })
+        ))
 
     const {
         isValidating,
