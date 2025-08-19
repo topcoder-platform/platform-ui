@@ -11,6 +11,7 @@ import { usePageContext } from '../EditScorecardPage.context';
 import { getEmptyScorecardSection, isFieldDirty, weightsSum } from '../utils';
 import * as yup from 'yup';
 import { get } from 'lodash';
+import InputWrapper from './InputWrapper';
 
 export const scorecardSectionSchema = {
     sections: yup.array().of(
@@ -72,37 +73,23 @@ const ScorecardSectionForm: FC<ScorecardSectionFormProps> = props => {
                         <div className={classNames('body-small', styles.headerAreaLabel)}>
                             Section {index+1}
                         </div>
-                        <Controller
-                            name={`${name}.${index}.name`}
-                            control={form.control}
-                            render={({ field: { ref, ...field } }) => (
-                                <InputText
-                                    label='Section Name'
-                                    type="text"
-                                    {...field}
-                                    forceUpdateValue
-                                    classNameWrapper={styles.xlWidthInput}
-                                    error={get(form.formState.errors, `${name}.${index}.name.message`) as unknown as string}
-                                    dirty={isFieldDirty(form, `${name}.${index}.name`)}
-                                />
-                            )}
-                        />
-                        <Controller
-                            name={`${name}.${index}.weight`}
-                            control={form.control}
-                            render={({ field: { ref, ...field } }) => (
-                                <InputText
-                                    label='Weight'
-                                    type="number"
-                                    {...field}
-                                    forceUpdateValue
-                                    classNameWrapper={styles.smWidthInput}
-                                    error={get(form.formState.errors, `${name}.${index}.weight.message`) as unknown as string}
-                                    dirty={isFieldDirty(form, `${name}.${index}.weight`)}
-                                />
-                            )}
-                        />
-                        <TrashIcon className={styles.trashIcon} onClick={() => handleRemove(index, sectionField)} />
+                        <div className={styles.headerAreaInputs}>
+                            <InputWrapper
+                                placeholder="Section Name"
+                                name={`${name}.${index}.name`}
+                                className={styles.xlWidthInput}
+                            >
+                                <input type="text" />
+                            </InputWrapper>
+                            <InputWrapper
+                                placeholder="Weight"
+                                name={`${name}.${index}.weight`}
+                                className={styles.smWidthInput}
+                            >
+                                <input type="number" />
+                            </InputWrapper>
+                            <TrashIcon className={styles.trashIcon} onClick={() => handleRemove(index, sectionField)} />
+                        </div>
                     </div>
                     <div className={styles.contentArea}>
                         <ScorecardQuestionForm prefix={`${name}.${index}`} sectionIndex={index+1} />
@@ -110,7 +97,7 @@ const ScorecardSectionForm: FC<ScorecardSectionFormProps> = props => {
                 </div>
             ))}
             <div className={styles.footerArea}>
-                <Button secondary onClick={handleAddSection}>
+                <Button secondary onClick={handleAddSection} uiv2>
                     + Add New Section
                 </Button>
 

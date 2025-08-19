@@ -1,20 +1,23 @@
 import classNames from 'classnames';
 import * as yup from 'yup';
-import { get, merge } from 'lodash';
-import { FC, useCallback, useMemo } from 'react'
-import { Controller, useFieldArray, useFormContext } from 'react-hook-form';
+import { get } from 'lodash';
+import { ChangeEvent, ChangeEventHandler, FC, useCallback, useMemo } from 'react'
+import { useFieldArray, useFormContext } from 'react-hook-form';
 
 import { TrashIcon } from '@heroicons/react/outline';
-import { Button, InputSelect, InputText, InputTextarea } from '~/libs/ui';
-import { ScorecardQuestion, ScorecardScales, ScorecardSection } from '~/apps/review/src/lib/models';
+import { Button } from '~/libs/ui';
+import { ScorecardScales } from '~/apps/review/src/lib/models';
 
 import styles from '../EditScorecardPage.module.scss'
 import { usePageContext } from '../EditScorecardPage.context';
-import { getEmptyScorecardQuestion, isFieldDirty, weightsSum } from '../utils';
+import { getEmptyScorecardQuestion, weightsSum } from '../utils';
 
 import CalculatedWeightsSum from './CalculatedWeightsSum';
+import InputWrapper from './InputWrapper';
+import BasicSelect from './BasicSelect';
 
 const scorecardScaleOptions = Object.entries(ScorecardScales).map(([value, label]) => ({ value, label }))
+const yesNoOptions = [{ value: true, label: 'Yes' }, { value: false, label: 'No' }]
 
 export const scorecardQuestionSchema = {
     questions: yup.array().of(
@@ -42,6 +45,7 @@ interface ScorecardQuestionFormProps {
 const ScorecardQuestionForm: FC<ScorecardQuestionFormProps> = props => {
     const form = useFormContext();
     const ctx = usePageContext();
+    const values = form.getValues();
 
     const name = useMemo(() => `${props.prefix}.questions`, [props.prefix]);
     const formQuestionsArray = useFieldArray({
@@ -70,15 +74,10 @@ const ScorecardQuestionForm: FC<ScorecardQuestionFormProps> = props => {
     const handleScaleChange = useCallback((ev: any, field: {name: string, value: string, onChange: (...event: any[]) => void}) => {
         const [_, type, min, max] = ev.target.value.match(/^([A-Za-z0-9_]+)(?:\((\d+)-(\d+)\))?$/) ?? []
 
-        form.setValue(field.name, type.toUpperCase())
-        form.setValue(field.name.replace(/\.type$/, '.scaleMin'), Number(min) || 0)
-        form.setValue(field.name.replace(/\.type$/, '.scaleMax'), Number(max) || 0)
-
-        form.trigger()
-        // field.onChange(merge({}, ev, {target: {value: type.toUpperCase()}}))
-        console.log('here77', field.name, type, min, max, ev, merge({}, ev, {target: {value: type.toUpperCase()}}));
-
-    }, []);
+        form.setValue(field.name, type.toUpperCase(), { shouldValidate: true })
+        form.setValue(field.name.replace(/\.type$/, '.scaleMin'), Number(min) || 0, { shouldValidate: true })
+        form.setValue(field.name.replace(/\.type$/, '.scaleMax'), Number(max) || 0, { shouldValidate: true })
+    }, [form]);
 
     return (
         <div className={styles.questionWrap}>
@@ -87,84 +86,72 @@ const ScorecardQuestionForm: FC<ScorecardQuestionFormProps> = props => {
             )}
             {formQuestionsArray.fields.map((questionField, index) => (
                 <div key={questionField.id} className={styles.questionItem}>
-                    <div className={classNames('body-small', styles.headerAreaLabel)}>
+                    <div className={classNames('body-small main-group', styles.headerAreaLabel)}>
                         Question {props.sectionIndex}.{index+1}
                     </div>
-                    <Controller
+                    <InputWrapper
+                        placeholder="Question Name"
                         name={`${name}.${index}.description`}
-                        control={form.control}
-                        render={({ field: { ref, ...field } }) => (
-                            <InputText
-                                label='Question Description'
-                                type="text"
-                                {...field}
-                                forceUpdateValue
-                                classNameWrapper={styles.xlWidthInput}
-                                error={get(form.formState.errors, `${name}.${index}.description.message`) as unknown as string}
-                                dirty={isFieldDirty(form, `${name}.${index}.description`)}
-                            />
-                        )}
-                    />
-                    <Controller
+                        className='main-group'
+                    >
+                        <input type="text" />
+                    </InputWrapper>
+                    <InputWrapper
+                        placeholder="Weight"
                         name={`${name}.${index}.weight`}
-                        control={form.control}
-                        render={({ field: { ref, ...field } }) => (
-                            <InputText
-                                label='Weight'
-                                type="number"
-                                {...field}
-                                forceUpdateValue
-                                classNameWrapper={styles.smWidthInput}
-                                error={get(form.formState.errors, `${name}.${index}.weight.message`) as unknown as string}
-                                dirty={isFieldDirty(form, `${name}.${index}.weight`)}
-                            />
-                        )}
+                        className='weight-group'
+                    >
+                        <input type="number" />
+                    </InputWrapper>
+                    <TrashIcon
+                        className={classNames(styles.trashIcon, styles.blue, 'action-group')}
+                        onClick={() => handleRemove(index, questionField)}
                     />
-                    <TrashIcon className={classNames(styles.trashIcon, styles.blue)} onClick={() => handleRemove(index, questionField)} />
 
-                    <Controller
+                    <InputWrapper
+                        placeholder="Question Guideline"
                         name={`${name}.${index}.guidelines`}
-                        control={form.control}
-                        render={({ field: { ref, ...field } }) => (
-                            <InputTextarea
-                                label='Question Guidelines'
-                                {...field}
-                                classNameWrapper={styles.xlWidthInput}
-                                rows={4}
-                                error={get(form.formState.errors, `${name}.${index}.quidelines.message`) as unknown as string}
-                                dirty={isFieldDirty(form, `${name}.${index}.quidelines`)}
-                            />
-                        )}
-                    />
+                        className='main-group'
+                    >
+                        <textarea rows={4} />
+                    </InputWrapper>
 
-                    <Controller
-                        name={`${name}.${index}.type`}
-                        control={form.control}
-                        render={({ field: { ref, ...field } }) => (
-                            <InputSelect
-                                label="Scale"
-                                {...field}
-                                value={`${field.value.toLowerCase()}${field.value === 'SCALE' ? `(${(questionField as ScorecardQuestion).scaleMin}-${(questionField as ScorecardQuestion).scaleMax})` : ''}`}
-                                classNameWrapper={styles.xlWidthInput}
+                    <div className={classNames('main-group', styles.doubleInputWrap)}>
+                        <InputWrapper
+                            placeholder="Select Scale"
+                            name={`${name}.${index}.type`}
+                        >
+                            <BasicSelect
                                 options={scorecardScaleOptions}
-                                error={get(form.formState.errors, `${name}.${index}.type.message`) as unknown as string}
-                                dirty={isFieldDirty(form, `${name}.${index}.type`)}
-                                onChange={(ev) => handleScaleChange(ev, field)}
+                                {...{
+                                    mapValue: (value: string) => (
+                                        `${value?.toLowerCase()}${value === 'SCALE' ? `(${get(values, `${name}.${index}.scaleMin`)}-${get(values, `${name}.${index}.scaleMax`)})` : ''}`
+                                    ),
+                                    onChange: ((ev: ChangeEvent<HTMLInputElement>, field: any) => handleScaleChange(ev, field)) as ChangeEventHandler,
+                                }}
                             />
-                        )}
-                    />
-                    <input
-                        type="hidden"
-                        {...form.register(`${name}.${index}.scaleMin`)}
-                    />
-                    <input
-                        type="hidden"
-                        {...form.register(`${name}.${index}.scaleMax`)}
-                    />
+                        </InputWrapper>
+                        <input
+                            type="hidden"
+                            {...form.register(`${name}.${index}.scaleMin`)}
+                        />
+                        <input
+                            type="hidden"
+                            {...form.register(`${name}.${index}.scaleMax`)}
+                        />
+
+
+                        <InputWrapper
+                            placeholder="Select Document Requirements"
+                            name={`${name}.${index}.requiresUpload`}
+                        >
+                            <BasicSelect options={yesNoOptions} />
+                        </InputWrapper>
+                    </div>
                 </div>
             ))}
             <div className={styles.footerArea}>
-                <Button secondary onClick={handleAddQuestion}>
+                <Button secondary onClick={handleAddQuestion} uiv2>
                     + Add New Question
                 </Button>
 

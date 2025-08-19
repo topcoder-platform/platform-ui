@@ -28,6 +28,7 @@ export interface BaseButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>
     noCaps?: boolean
     leftAlignText?: boolean
     textWrap?: boolean
+    uiv2?: boolean
 }
 
 const BaseButton: FC<BaseButtonProps> = props => {
@@ -35,6 +36,7 @@ const BaseButton: FC<BaseButtonProps> = props => {
     const dataProps: Partial<BaseButtonProps> = pickBy(props, (v, k) => k.startsWith('data-'))
 
     const className: string = classNames(styles.btn, props.className, {
+        'btn-uiv2': props.uiv2,
         'btn-active': props.active,
         'btn-custom-radius': props.customRadius,
         'btn-disabled': props.disabled,

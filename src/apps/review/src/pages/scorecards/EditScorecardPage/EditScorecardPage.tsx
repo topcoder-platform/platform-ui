@@ -1,10 +1,10 @@
 import * as yup from 'yup';
-import { FC, useCallback, useEffect } from 'react'
+import { FC, useCallback, useEffect, useState } from 'react'
 import { yupResolver } from '@hookform/resolvers/yup'
 
 import styles from './EditScorecardPage.module.scss'
 import { FormProvider, useForm } from 'react-hook-form'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useFetchScorecard } from '../../../lib/hooks/useFetchScorecard'
 import ScorecardInfoForm, { scorecardInfoSchema } from './components/ScorecardInfoForm'
 import ScorecardGroupForm, { scorecardGroupSchema } from './components/ScorecardGroupForm'
@@ -12,11 +12,15 @@ import { getEmptyScorecard } from './utils'
 import { EditScorecardPageContextProvider } from './EditScorecardPage.context'
 import { Button } from '~/libs/ui'
 import { saveScorecard } from '../../../lib/services'
+import { toast } from 'react-toastify';
+import { rootRoute } from '../../../config/routes.config';
 
 interface EditScorecardPageProps {
 }
 
 const EditScorecardPage: FC<EditScorecardPageProps> = props => {
+    const navigate = useNavigate();
+    const [isSaving, setSaving] = useState(false);
     const params = useParams();
     const isEditMode = !!params.scorecardId;
     const scorecardQuery = useFetchScorecard(params.scorecardId)
@@ -30,12 +34,6 @@ const EditScorecardPage: FC<EditScorecardPageProps> = props => {
         })),
     });
 
-    console.log('here12', yup.object({
-            ...scorecardInfoSchema,
-            ...(scorecardGroupSchema as unknown as any),
-        }));
-
-
     useEffect(() => {
       if (scorecardQuery.scorecard && !scorecardQuery.isValidating) {
         editForm.reset(scorecardQuery.scorecard)
@@ -43,8 +41,19 @@ const EditScorecardPage: FC<EditScorecardPageProps> = props => {
     }, [scorecardQuery.scorecard, scorecardQuery.isValidating]);
 
     const handleSubmit = useCallback(async (value: any) => {
-      console.log(value)
-      return saveScorecard(value);
+        setSaving(true);
+        try {
+            const response = await saveScorecard(value);
+            toast.info('Scorecard saved successfully!');
+            if (response.id && !params.scorecardId) {
+                navigate(`${rootRoute}/scorecard/${response.id}/edit`)
+            }
+        } catch (e: any) {
+            toast.error(`Couldn't save scorecard! ${e.message}`);
+            console.error('Couldn\'t save scorecard!', e);
+        } finally {
+            setSaving(false);
+        }
     }, []);
 
     if (scorecardQuery.isValidating) {
@@ -67,10 +76,10 @@ const EditScorecardPage: FC<EditScorecardPageProps> = props => {
                     <div className={styles.bottomContainer}>
                         <hr />
                         <div className={styles.buttonsWrap}>
-                            <Button type='button' secondary>
+                            <Button type='button' secondary uiv2>
                                 Cancel
                             </Button>
-                            <Button type='submit' primary>
+                            <Button type='submit' primary disabled={isSaving || !editForm.formState.isDirty} uiv2>
                                 Save Scorecard
                             </Button>
                         </div>

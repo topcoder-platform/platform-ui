@@ -11,6 +11,7 @@ import { getEmptyScorecardGroup, isFieldDirty, weightsSum } from '../utils';
 import { usePageContext } from '../EditScorecardPage.context';
 import CalculatedWeightsSum from './CalculatedWeightsSum';
 import { get } from 'lodash';
+import InputWrapper from './InputWrapper';
 
 export const scorecardGroupSchema = {
     scorecardGroups: yup.array().of(
@@ -71,37 +72,23 @@ const ScorecardGroupForm: FC<ScorecardGroupFormProps> = props => {
                         <div className={classNames('body-small', styles.headerAreaLabel)}>
                             Group {index+1}
                         </div>
-                        <Controller
-                            name={`${name}.${index}.name`}
-                            control={form.control}
-                            render={({ field: { ref, ...field } }) => (
-                                <InputText
-                                    label='Group Name'
-                                    type="text"
-                                    {...field}
-                                    forceUpdateValue
-                                    classNameWrapper={styles.xlWidthInput}
-                                    error={get(form.formState.errors, [name, index, 'name', 'message']) as unknown as string}
-                                    dirty={isFieldDirty(form, `${name}.${index}.name`)}
-                                />
-                            )}
-                        />
-                        <Controller
-                            name={`${name}.${index}.weight`}
-                            control={form.control}
-                            render={({ field: { ref, ...field } }) => (
-                                <InputText
-                                    label='Weight'
-                                    type="number"
-                                    {...field}
-                                    forceUpdateValue
-                                    classNameWrapper={styles.smWidthInput}
-                                    error={get(form.formState.errors, [name, index, 'weight', 'message']) as unknown as string}
-                                    dirty={isFieldDirty(form, `${name}.${index}.weight`)}
-                                />
-                            )}
-                        />
-                        <TrashIcon className={styles.trashIcon} onClick={() => handleRemove(index, groupField)} />
+                        <div className={styles.headerAreaInputs}>
+                            <InputWrapper
+                                placeholder="Group Name"
+                                name={`${name}.${index}.name`}
+                                className={styles.xlWidthInput}
+                            >
+                                <input type="text" />
+                            </InputWrapper>
+                            <InputWrapper
+                                placeholder="Weight"
+                                name={`${name}.${index}.weight`}
+                                className={styles.smWidthInput}
+                            >
+                                <input type="number" />
+                            </InputWrapper>
+                            <TrashIcon className={styles.trashIcon} onClick={() => handleRemove(index, groupField)} />
+                        </div>
                     </div>
                     <div className={styles.contentArea}>
                         <ScorecardSectionForm prefix={`${name}.${index}`} />
@@ -109,7 +96,7 @@ const ScorecardGroupForm: FC<ScorecardGroupFormProps> = props => {
                 </div>
             ))}
             <div className={styles.footerArea}>
-                <Button secondary onClick={handleAddGroup}>
+                <Button secondary onClick={handleAddGroup} uiv2>
                     + Add New Group
                 </Button>
 

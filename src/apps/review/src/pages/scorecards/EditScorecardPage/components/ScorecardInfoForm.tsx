@@ -7,6 +7,8 @@ import classNames from 'classnames';
 import { InputSelect, InputText } from '~/libs/ui';
 import { ProjectTypeLabels, scorecardCategories, ScorecardStatusLabels, ScorecardTypeLabels } from '../../../../lib/models';
 import { isFieldDirty } from '../utils';
+import InputWrapper from './InputWrapper';
+import BasicSelect from './BasicSelect';
 
 const projectTypeOptions = Object.entries(ProjectTypeLabels).map(([value, label]) => ({ value, label }))
 const statusOptions = Object.entries(ScorecardStatusLabels).map(([value, label]) => ({ value, label }))
@@ -37,128 +39,67 @@ interface ScorecardInfoFormProps {
 
 const ScorecardInfoForm: FC<ScorecardInfoFormProps> = props => {
     const form = useFormContext();
-    console.log('here', form.formState)
 
     return (
         <div className={classNames(styles.grayWrapper, styles.scorecardInfo)}>
-            <Controller
+            <InputWrapper
+                label="Scorecard Name"
                 name="name"
-                control={form.control}
-                render={({ field: { ref, ...field } }) => (
-                    <InputText
-                        label='Scorecard Name'
-                        type="text"
-                        {...field}
-                        forceUpdateValue
-                        classNameWrapper={styles.mdWidthInput}
-                        error={form.formState.errors.name?.message as unknown as string}
-                        dirty={isFieldDirty(form, 'name')}
-                    />
-                )}
-            />
-            <Controller
+                className={styles.mdWidthInput}
+            >
+                <input type="text" />
+            </InputWrapper>
+            <InputWrapper
+                label="Category"
                 name="challengeType"
-                control={form.control}
-                render={({ field: { ref, ...field } }) => (
-                    <InputSelect
-                        {...field}
-                        label="Category"
-                        options={categoryOptions}
-                        classNameWrapper={styles.mdWidthInput}
-                        error={form.formState.errors.challengeType?.message as unknown as string}
-                        dirty={isFieldDirty(form, 'challengeType')}
-                    />
-                )}
-            />
-            <Controller
+                className={styles.mdWidthInput}
+            >
+                <BasicSelect options={categoryOptions} />
+            </InputWrapper>
+            <InputWrapper
+                label="Version"
                 name="version"
-                control={form.control}
-                render={({ field: { ref, ...field } }) => (
-                    <InputText
-                        label='Version'
-                        type="text"
-                        {...field}
-                        forceUpdateValue
-                        classNameWrapper={styles.mdWidthInput}
-                        error={form.formState.errors.version?.message as unknown as string}
-                        dirty={isFieldDirty(form, 'version')}
-                    />
-                )}
-            />
-            <Controller
+                className={styles.mdWidthInput}
+            >
+                <input type="text" />
+            </InputWrapper>
+            <InputWrapper
+                label="Status"
                 name="status"
-                control={form.control}
-                render={({ field: { ref, ...field } }) => (
-                    <InputSelect
-                        {...field}
-                        label="Status"
-                        options={statusOptions}
-                        classNameWrapper={styles.mdWidthInput}
-                        error={form.formState.errors.status?.message as unknown as string}
-                        dirty={isFieldDirty(form, 'status')}
-                    />
-                )}
-            />
-            <Controller
+                className={styles.mdWidthInput}
+            >
+                <BasicSelect options={statusOptions} />
+            </InputWrapper>
+            <InputWrapper
+                label="Type"
                 name="type"
-                control={form.control}
-                render={({ field: { ref, ...field } }) => (
-                    <InputSelect
-                        {...field}
-                        label="Type"
-                        options={typeOptions}
-                        classNameWrapper={styles.mdWidthInput}
-                        error={form.formState.errors.type?.message as unknown as string}
-                        dirty={isFieldDirty(form, 'type')}
-                    />
-                )}
-            />
+                className={styles.mdWidthInput}
+            >
+                <BasicSelect options={typeOptions} />
+            </InputWrapper>
             <div className={classNames(styles.mdWidthInput, styles.doubleInputWrap)}>
-                <Controller
+                <InputWrapper
+                    label="Min. Score"
                     name="minScore"
-                    control={form.control}
-                    render={({ field: { ref, ...field } }) => (
-                        <InputText
-                            label='Min. Score'
-                            type="number"
-                            {...field}
-                            forceUpdateValue
-                            classNameWrapper={styles.qWidthInput}
-                            error={form.formState.errors.minScore?.message as unknown as string}
-                            dirty={isFieldDirty(form, 'minScore')}
-                        />
-                    )}
-                />
-                <Controller
+                    className={styles.qWidthInput}
+                >
+                    <input type="number" />
+                </InputWrapper>
+                <InputWrapper
+                    label="Max. Score"
                     name="maxScore"
-                    control={form.control}
-                    render={({ field: { ref, ...field } }) => (
-                        <InputText
-                            label='Max. Score'
-                            type="number"
-                            {...field}
-                            forceUpdateValue
-                            classNameWrapper={styles.qWidthInput}
-                            error={form.formState.errors.maxScore?.message as unknown as string}
-                            dirty={isFieldDirty(form, 'maxScore')}
-                        />
-                    )}
-                />
+                    className={styles.qWidthInput}
+                >
+                    <input type="number" />
+                </InputWrapper>
             </div>
-            <Controller
+            <InputWrapper
+                label="Project Type"
                 name="challengeTrack"
-                control={form.control}
-                render={({ field: { ref, ...field } }) => (
-                    <InputSelect
-                        {...field}
-                        label="Project Type"
-                        options={projectTypeOptions}
-                        classNameWrapper={styles.mdWidthInput}
-                        error={form.formState.errors.challengeTrack?.message as unknown as string}
-                        dirty={isFieldDirty(form, 'challengeTrack')}
-                    />
-                )}
-            />
+                className={styles.mdWidthInput}
+            >
+                <BasicSelect options={projectTypeOptions} />
+            </InputWrapper>
         </div>
     )
 }
