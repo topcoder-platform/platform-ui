@@ -27,8 +27,8 @@ export interface ReviewItemInfo {
  * @returns updated data
  */
 export function adjustReviewItemInfo(
-    data: ReviewItemInfo | undefined,
-): ReviewItemInfo | undefined {
+    data: ReviewItemInfo,
+): ReviewItemInfo {
     if (!data) {
         return data
     }

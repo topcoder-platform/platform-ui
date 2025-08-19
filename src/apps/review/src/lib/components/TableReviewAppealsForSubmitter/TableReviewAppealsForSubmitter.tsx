@@ -1,44 +1,43 @@
 /**
  * Table Winners.
  */
-import { FC, useCallback, useMemo } from 'react'
+import { FC, useCallback, useContext, useMemo } from 'react'
 import { Link, NavLink } from 'react-router-dom'
-import _, { find, includes } from 'lodash'
+import { includes, noop } from 'lodash'
 import classNames from 'classnames'
 
 import { MobileTableColumn } from '~/apps/admin/src/lib/models/MobileTableColumn.model'
 import { useWindowSize, WindowSize } from '~/libs/shared'
 import { TableMobile } from '~/apps/admin/src/lib/components/common/TableMobile'
 import { Table, TableColumn } from '~/libs/ui'
+import { IsRemovingType } from '~/apps/admin/src/lib/models'
 
-import { ReviewResult, SubmissionInfo } from '../../models'
+import { ChallengeDetailContextModel, ReviewResult, SubmissionInfo } from '../../models'
 import { TableWrapper } from '../TableWrapper'
 import { getFinalScore } from '../../utils'
-import { APPROVAL, MOCKHANDLE, WITHOUT_APPEAL } from '../../../config/index.config'
+import { WITHOUT_APPEAL } from '../../../config/index.config'
+import { ChallengeDetailContext } from '../../contexts'
 
 import styles from './TableReviewAppealsForSubmitter.module.scss'
 
 interface Props {
     className?: string
     datas: SubmissionInfo[]
-    type?: string
-    tab: string
     firstSubmissions?: SubmissionInfo
+    isDownloading: IsRemovingType
+    downloadSubmission: (submissionId: string) => void
 }
 
 export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
+    // get challenge info from challenge detail context
+    const {
+        challengeInfo,
+    }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
+    const challengeType = challengeInfo?.type
+    const challengeTrack = challengeInfo?.track
     const { width: screenWidth }: WindowSize = useWindowSize()
     const isTablet = useMemo(() => screenWidth <= 1120, [screenWidth])
-    const firstSubmission: SubmissionInfo = useMemo(
-        () => {
-            if (includes([APPROVAL], props.tab)) {
-                return props.firstSubmissions as SubmissionInfo
-            }
-
-            return find(props.datas, data => data.handle === MOCKHANDLE) as SubmissionInfo
-        },
-        [props.datas, props.tab, props.firstSubmissions],
-    )
+    const firstSubmission: SubmissionInfo | undefined = props.firstSubmissions
 
     const finalScore = useCallback((data: ReviewResult[] | undefined) => getFinalScore(data), [])
 
@@ -52,7 +51,16 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
                 label: 'Submission ID',
                 propertyName: 'id',
                 renderer: (data: SubmissionInfo) => (
-                    <NavLink to='#' onClick={prevent}>{data.id}</NavLink>
+                    <button
+                        onClick={function onClick() {
+                            props.downloadSubmission(data.id)
+                        }}
+                        className={styles.textBlue}
+                        disabled={props.isDownloading[data.id]}
+                        type='button'
+                    >
+                        {data.id}
+                    </button>
                 ),
                 type: 'element',
             },
@@ -107,7 +115,10 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
                             type: 'element',
                         },
                     ]
-                    if (includes(WITHOUT_APPEAL, props.type)) {
+                    if (
+                        includes(WITHOUT_APPEAL, challengeType)
+                        || includes(WITHOUT_APPEAL, challengeTrack)
+                    ) {
                         return initalColumns as TableColumn<SubmissionInfo>[]
                     }
 
@@ -145,7 +156,14 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
                 })
                 .reduce((accumulator, value) => accumulator.concat(value), []),
         ],
-        [firstSubmission, finalScore, prevent, props.type],
+        [
+            firstSubmission,
+            finalScore,
+            prevent,
+            challengeInfo,
+            props.isDownloading,
+            props.downloadSubmission,
+        ],
     )
 
     const columnsMobile = useMemo<MobileTableColumn<SubmissionInfo>[][]>(
@@ -181,13 +199,13 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
             )}
         >
             {isTablet ? (
-                <TableMobile columns={columnsMobile} data={[firstSubmission]} />
+                <TableMobile columns={columnsMobile} data={props.datas} />
             ) : (
                 <Table
                     columns={columns}
-                    data={[firstSubmission]}
+                    data={props.datas}
                     disableSorting
-                    onToggleSort={_.noop}
+                    onToggleSort={noop}
                     removeDefaultSort
                 />
             )}

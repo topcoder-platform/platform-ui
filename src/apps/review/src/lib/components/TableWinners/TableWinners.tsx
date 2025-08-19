@@ -1,8 +1,8 @@
 /**
  * Table Winners.
  */
-import { FC, useCallback, useMemo } from 'react'
-import { Link, NavLink, useParams } from 'react-router-dom'
+import { FC, useContext, useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import _, { includes } from 'lodash'
 import classNames from 'classnames'
 
@@ -10,38 +10,34 @@ import { MobileTableColumn } from '~/apps/admin/src/lib/models/MobileTableColumn
 import { useWindowSize, WindowSize } from '~/libs/shared'
 import { TableMobile } from '~/apps/admin/src/lib/components/common/TableMobile'
 import { Table, TableColumn } from '~/libs/ui'
+import { IsRemovingType } from '~/apps/admin/src/lib/models'
 
-import { ProjectResult, ReviewResult } from '../../models'
+import { ChallengeDetailContextModel, ProjectResult } from '../../models'
 import { TableWrapper } from '../TableWrapper'
 import { ORDINAL_SUFFIX, WITHOUT_APPEAL } from '../../../config/index.config'
-import { getFinalScore } from '../../utils'
-import { useFetchMockChallengeInfo, useFetchMockChallengeInfoProps } from '../../hooks'
+import { getHandleUrl } from '../../utils'
+import { ChallengeDetailContext } from '../../contexts'
 
 import styles from './TableWinners.module.scss'
 
 interface Props {
     className?: string
     datas: ProjectResult[]
+    isDownloading: IsRemovingType
+    downloadSubmission: (submissionId: string) => void
 }
 
 export const TableWinners: FC<Props> = (props: Props) => {
-    const params = useParams()
     const { width: screenWidth }: WindowSize = useWindowSize()
     const isTablet = useMemo(() => screenWidth <= 744, [screenWidth])
-    const { challengeInfo }: useFetchMockChallengeInfoProps = useFetchMockChallengeInfo(
-        params.challengeId,
-    )
-
+    // get challenge info from challenge detail context
+    const {
+        challengeInfo,
+    }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
     const firstSubmission: ProjectResult | undefined = useMemo(
         () => props.datas[0],
         [props.datas],
     )
-
-    const finalScore = useCallback((data: ReviewResult[] | undefined) => getFinalScore(data), [])
-
-    const prevent = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
-        e.preventDefault()
-    }, [])
 
     const columns = useMemo<TableColumn<ProjectResult>[]>(
         () => [
@@ -50,7 +46,7 @@ export const TableWinners: FC<Props> = (props: Props) => {
                 propertyName: 'submissionId',
                 renderer: (data: ProjectResult) => (
                     <div className={styles.blockPlacementContainer}>
-                        {data.placement ? (
+                        {data.placement && data.placement < 4 ? (
                             <i
                                 className={`icon-${ORDINAL_SUFFIX.get(
                                     data.placement,
@@ -58,21 +54,34 @@ export const TableWinners: FC<Props> = (props: Props) => {
                             />
                         ) : undefined}
                         <span>
-                            <NavLink
-                                to='#'
-                                onClick={prevent}
+                            <button
+                                onClick={function onClick() {
+                                    props.downloadSubmission(data.submissionId)
+                                }}
+                                className={styles.textBlue}
+                                disabled={props.isDownloading[data.submissionId]}
+                                type='button'
                             >
                                 {data.submissionId}
-                            </NavLink>
+                            </button>
                             <span className={styles.spacing}>-</span>
                             <span>
-                                <NavLink
-                                    to='#'
-                                    onClick={prevent}
-                                    style={{ color: data.handleColor }}
+                                <a
+                                    href={getHandleUrl(data.userInfo)}
+                                    target='_blank'
+                                    rel='noreferrer'
+                                    style={{
+                                        color: data.userInfo?.handleColor,
+                                    }}
+                                    onClick={function onClick() {
+                                        window.open(
+                                            getHandleUrl(data.userInfo),
+                                            '_blank',
+                                        )
+                                    }}
                                 >
-                                    {data.handle}
-                                </NavLink>
+                                    {data.userInfo?.memberHandle}
+                                </a>
                             </span>
                         </span>
                     </div>
@@ -86,7 +95,7 @@ export const TableWinners: FC<Props> = (props: Props) => {
                         to={`./../scorecard-details/${data.submissionId}?viewMode=true`}
                         className={styles.textBlue}
                     >
-                        {finalScore(data.reviews)}
+                        {data.finalScore}
                     </Link>
                 ),
                 type: 'element',
@@ -116,7 +125,10 @@ export const TableWinners: FC<Props> = (props: Props) => {
                             type: 'element',
                         },
                     ]
-                    if (includes(WITHOUT_APPEAL, challengeInfo?.type)) {
+                    if (
+                        includes(WITHOUT_APPEAL, challengeInfo?.type)
+                        || includes(WITHOUT_APPEAL, challengeInfo?.track)
+                    ) {
                         return initialColumns as TableColumn<ProjectResult>[]
                     }
 
@@ -155,7 +167,12 @@ export const TableWinners: FC<Props> = (props: Props) => {
                 })
                 .reduce((accumulator, value) => accumulator.concat(value), []),
         ],
-        [firstSubmission, finalScore, prevent, challengeInfo?.type],
+        [
+            firstSubmission,
+            challengeInfo?.type,
+            props.isDownloading,
+            props.downloadSubmission,
+        ],
     )
 
     const columnsMobile = useMemo<MobileTableColumn<ProjectResult>[][]>(

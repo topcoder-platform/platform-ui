@@ -7,8 +7,8 @@ export interface WindowSize {
 
 export function useWindowSize(): WindowSize {
     const [windowSize, setWindowSize]: [WindowSize, Dispatch<SetStateAction<WindowSize>>] = useState({
-        height: 0,
-        width: 0,
+        height: window.innerWidth,
+        width: window.innerHeight,
     })
 
     const handleResize: () => void = useCallback(() => {

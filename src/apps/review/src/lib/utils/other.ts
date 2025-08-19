@@ -1,5 +1,7 @@
 import { filter, some } from 'lodash'
 
+import { EnvironmentConfig } from '~/config'
+
 import { BackendResource } from '../models'
 
 /**
@@ -45,12 +47,18 @@ export function filterResources(
     requireRoles: string[],
     resources: BackendResource[],
 ): BackendResource[] {
-    return filter(
-        resources,
-        item => some(
-            requireRoles.map(role => role.toLowerCase()),
-            role => (item.roleName ?? '').toLowerCase()
-                .indexOf(role) >= 0,
-        ),
-    )
+    return filter(resources, item => some(
+        requireRoles.map(role => role.toLowerCase()),
+        role => (item.roleName ?? '').toLowerCase()
+            .indexOf(role) >= 0,
+    ))
+}
+
+/**
+ * Get handle url from user info
+ * @param userInfo user info
+ * @returns handle url
+ */
+export function getHandleUrl(userInfo?: BackendResource): string {
+    return `${EnvironmentConfig.REVIEW.PROFILE_PAGE_URL}/${userInfo?.memberHandle}`
 }

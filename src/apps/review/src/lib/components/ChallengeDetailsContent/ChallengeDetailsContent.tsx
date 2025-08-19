@@ -3,92 +3,70 @@
  */
 import { FC } from 'react'
 
-import { TableLoading } from '~/apps/admin/src/lib'
+import { ActionLoading } from '~/apps/admin/src/lib'
 
+import { Screening, SubmissionInfo } from '../../models'
 import {
-    ProjectResult,
-    RegistrationInfo,
-    Screening,
-    SubmissionInfo,
-} from '../../models'
-import { TableRegistration } from '../TableRegistration'
-import { TableNoRecord } from '../TableNoRecord'
-import { TableSubmissionScreening } from '../TableSubmissionScreening'
-import { TableReviewAppeals } from '../TableReviewAppeals'
-import { TableWinners } from '../TableWinners'
-import { useRole, useRoleProps } from '../../hooks'
-import { APPROVAL, MOCKHANDLE, REVIEWER, SUBMITTER } from '../../../config/index.config'
-import { TableReviewAppealsForSubmitter } from '../TableReviewAppealsForSubmitter'
+    useDownloadSubmission,
+    useDownloadSubmissionProps,
+} from '../../hooks'
+import {
+    useFetchChallengeResults,
+    useFetchChallengeResultsProps,
+} from '../../hooks/useFetchChallengeResults'
+
+import TabContentRegistration from './TabContentRegistration'
+import TabContentReview from './TabContentReview'
+import TabContentScreening from './TabContentScreening'
+import TabContentWinners from './TabContentWinners'
 
 interface Props {
     selectedTab: string
-    type?: string
-    registrations: RegistrationInfo[]
-    isLoadingRegistrants: boolean
-    submissions: SubmissionInfo[]
-    projectResults: ProjectResult[]
+    isLoadingSubmission: boolean
     screening: Screening[]
-    firstSubmissions: SubmissionInfo | undefined
+    review: SubmissionInfo[]
 }
 
 export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
-    const selectedTab = props.selectedTab
-    const type = props.type
-    const registrations = props.registrations
-    const submissions = props.submissions
-    const firstSubmissions = props.firstSubmissions
-    const projectResults = props.projectResults
-    const { actionChallengeRole }: useRoleProps = useRole()
-    const screening
-        = actionChallengeRole === REVIEWER
-            ? props.screening
-            : props.screening.filter(s => s.handle === MOCKHANDLE)
-
-    // show ui for Registration tab
-    if (selectedTab === 'Registration') {
-        // show loading ui when fetching registrants
-        if (props.isLoadingRegistrants) {
-            return <TableLoading />
-        }
-
-        // show no record message
-        if (!registrations.length) {
-            return <TableNoRecord />
-        }
-
-        // show registrants table
-        return <TableRegistration datas={registrations} />
-    }
-
-    if (
-        !submissions.length
-        || !projectResults.length
-        || !screening.length
-    ) {
-        return <TableNoRecord />
-    }
+    const {
+        isLoading: isDownloadingSubmission,
+        isLoadingBool: isDownloadingSubmissionBool,
+        downloadSubmission,
+    }: useDownloadSubmissionProps = useDownloadSubmission()
+    const {
+        isLoading: isLoadingProjectResult,
+        projectResults,
+    }: useFetchChallengeResultsProps = useFetchChallengeResults(props.review)
 
     return (
         <>
-            {selectedTab === 'Submission / Screening' ? (
-                <TableSubmissionScreening datas={screening} />
-            ) : selectedTab === 'Winners' ? (
-                <TableWinners datas={projectResults} />
-            ) : (actionChallengeRole !== SUBMITTER || selectedTab === APPROVAL) ? (
-                <TableReviewAppeals
-                    datas={submissions}
-                    tab={selectedTab}
-                    type={type}
-                    firstSubmissions={firstSubmissions}
+            {props.selectedTab === 'Registration' ? (
+                <TabContentRegistration />
+            ) : props.selectedTab === 'Submission / Screening' ? (
+                <TabContentScreening
+                    screening={props.screening}
+                    isLoadingScreening={props.isLoadingSubmission}
+                    isDownloading={isDownloadingSubmission}
+                    downloadSubmission={downloadSubmission}
+                />
+            ) : props.selectedTab === 'Winners' ? (
+                <TabContentWinners
+                    isLoading={isLoadingProjectResult}
+                    projectResults={projectResults}
+                    isDownloading={isDownloadingSubmission}
+                    downloadSubmission={downloadSubmission}
                 />
             ) : (
-                <TableReviewAppealsForSubmitter
-                    datas={submissions}
-                    tab={selectedTab}
-                    type={type}
-                    firstSubmissions={firstSubmissions}
+                <TabContentReview
+                    selectedTab={props.selectedTab}
+                    reviews={props.review}
+                    isLoadingReview={props.isLoadingSubmission}
+                    isDownloading={isDownloadingSubmission}
+                    downloadSubmission={downloadSubmission}
                 />
             )}
+
+            {isDownloadingSubmissionBool && <ActionLoading />}
         </>
     )
 }

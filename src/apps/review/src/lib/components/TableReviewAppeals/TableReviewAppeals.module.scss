@@ -18,9 +18,17 @@
     }
 }
 
-.textBlue,
-.textBlue:hover {
+.textBlue {
     color: $link-blue-dark;
+
+    &:hover {
+        color: $link-blue-dark;
+    }
+
+    &:disabled {
+        opacity: 0.7;
+        pointer-events: none;
+    }
 }
 
 .notReviewed {

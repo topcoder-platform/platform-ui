@@ -64,7 +64,10 @@ export const TableActiveReviews: FC<Props> = (props: Props) => {
                 label: 'Project',
                 propertyName: 'name',
                 renderer: (data: ChallengeInfo) => (
-                    <Link to='/' onClick={bind(redirect, this, data)}>
+                    <Link
+                        to={`${data.id}/challenge-details`}
+                        onClick={bind(redirect, this, data)}
+                    >
                         {data.name}
                     </Link>
                 ),

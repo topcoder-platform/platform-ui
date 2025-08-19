@@ -2,7 +2,7 @@
  * Challenge Details Page.
  */
 import { FC, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { NavLink, useParams, useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import { kebabCase } from 'lodash'
 import classNames from 'classnames'
 
@@ -10,10 +10,8 @@ import { TableLoading } from '~/apps/admin/src/lib'
 import { EnvironmentConfig } from '~/config'
 
 import {
-    useFetchMockChallengeInfo,
-    useFetchMockChallengeInfoProps,
-    useRole,
-    useRoleProps,
+    useFetchScreeningReview,
+    useFetchScreeningReviewProps,
 } from '../../../lib/hooks'
 import {
     ChallengeDetailContext,
@@ -26,6 +24,7 @@ import {
 import { fetchTabs } from '../../../lib/services'
 import { ChallengeDetailContextModel, SelectOption } from '../../../lib/models'
 import { TAB } from '../../../config/index.config'
+import { getHandleUrl } from '../../../lib/utils'
 
 import styles from './ChallengeDetailsPage.module.scss'
 
@@ -35,34 +34,25 @@ interface Props {
 
 export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
     const [searchParams, setSearchParams] = useSearchParams()
-    const { actionChallengeRole }: useRoleProps = useRole()
-    const params = useParams()
 
     // get challenge info from challenge detail context
     const {
         challengeId,
         challengeInfo,
         isLoadingChallengeInfo,
-        isLoadingChallengeResources: isLoadingRegistrants,
-        registrants,
+        reviewers,
     }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
 
-    // get mock datas in for challenge info
+    // get challenge screening, review data
     const {
-        submissions,
-        projectResults,
-        screenings,
-        firstSubmissions,
-    }: useFetchMockChallengeInfoProps = useFetchMockChallengeInfo(
-        params.challengeId,
-        actionChallengeRole,
-    )
+        isLoading: isLoadingSubmission,
+        review,
+        reviewProgress,
+        screening,
+    }: useFetchScreeningReviewProps = useFetchScreeningReview()
+
     const [tabItems, setTabItems] = useState<SelectOption[]>([])
     const [selectedTab, setSelectedTab] = useState<string>('')
-    const reviewers = useMemo(
-        () => projectResults[0]?.reviews ?? [],
-        [projectResults],
-    )
     const breadCrumb = useMemo(
         () => [
             {
@@ -105,10 +95,6 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         }
     }, [challengeInfo?.type, challengeInfo?.reviewLength])
 
-    const prevent = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
-        e.preventDefault()
-    }, [])
-
     return (
         <PageWrapper
             pageTitle={challengeInfo?.name ?? ''}
@@ -118,11 +104,14 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         >
             {isLoadingChallengeInfo ? (
                 <TableLoading />
-            ) : (
+            ) : challengeInfo ? (
                 <>
                     <div className={styles.summary}>
                         {challengeInfo && (
-                            <ChallengePhaseInfo challengeInfo={challengeInfo} />
+                            <ChallengePhaseInfo
+                                challengeInfo={challengeInfo}
+                                reviewProgress={reviewProgress}
+                            />
                         )}
                         <ChallengeLinks />
                     </div>
@@ -140,21 +129,28 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                                         <div className={styles.blockReviewers}>
                                             {reviewers.map(item => (
                                                 <div
-                                                    key={item.reviewerHandle}
+                                                    key={item.id}
                                                     className={
                                                         styles.blockReviewer
                                                     }
                                                 >
                                                     <strong>Reviewer :</strong>
-                                                    <NavLink
-                                                        to='#'
-                                                        onClick={prevent}
+                                                    <a
+                                                        href={getHandleUrl(item)}
+                                                        target='_blank'
+                                                        rel='noreferrer'
                                                         style={{
-                                                            color: item.reviewerHandleColor,
+                                                            color: item.handleColor,
+                                                        }}
+                                                        onClick={function onClick() {
+                                                            window.open(
+                                                                getHandleUrl(item),
+                                                                '_blank',
+                                                            )
                                                         }}
                                                     >
-                                                        {item.reviewerHandle}
-                                                    </NavLink>
+                                                        {item.memberHandle}
+                                                    </a>
                                                 </div>
                                             ))}
                                         </div>
@@ -164,18 +160,14 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                         </div>
 
                         <ChallengeDetailsContent
-                            type={challengeInfo?.type}
                             selectedTab={selectedTab}
-                            registrations={registrants}
-                            isLoadingRegistrants={isLoadingRegistrants}
-                            submissions={submissions}
-                            projectResults={projectResults}
-                            screening={screenings}
-                            firstSubmissions={firstSubmissions}
+                            isLoadingSubmission={isLoadingSubmission}
+                            screening={screening}
+                            review={review}
                         />
                     </div>
                 </>
-            )}
+            ) : undefined}
         </PageWrapper>
     )
 }

@@ -20,6 +20,7 @@ export interface useFetchResourceProps {
     resourceRoleMapping?: {
         [key: string]: BackendResourceRole
     }
+    resourceRoleReviewer?: BackendResourceRole,
     resourceRoleSubmitter?: BackendResourceRole,
     loadMyRoleInfos: (challengeId: string) => void
     cancelLoadMyRoleInfos: () => void
@@ -39,6 +40,7 @@ export function useFetchResource(
         [key: string]: BackendResourceRole
     }>()
     const [resourceRoleSubmitter, setResourceRoleSubmitter] = useState<BackendResourceRole>()
+    const [resourceRoleReviewer, setResourceRoleReviewer] = useState<BackendResourceRole>()
     const myRoleInfosMappingRef = useRef<MyRoleInfosMappingType>({})
     const myRoleInfosLoadQueue = useRef<string[]>([])
     const isLoadingMyRole = useRef<boolean>(false)
@@ -50,6 +52,9 @@ export function useFetchResource(
             .then(results => {
                 setResourceRoleSubmitter(find(results.data, {
                     name: 'Submitter',
+                }))
+                setResourceRoleReviewer(find(results.data, {
+                    name: 'Reviewer',
                 }))
                 setResourceRoleMapping(
                     reduce(
@@ -142,6 +147,7 @@ export function useFetchResource(
         loadMyRoleInfos,
         myRoleInfosMapping,
         resourceRoleMapping,
+        resourceRoleReviewer,
         resourceRoleSubmitter,
     }
 }

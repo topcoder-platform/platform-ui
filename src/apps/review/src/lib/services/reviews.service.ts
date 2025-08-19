@@ -1,18 +1,29 @@
 /**
  * Reviews service
  */
+import { forEach, orderBy } from 'lodash'
 import qs from 'qs'
 
 import { EnvironmentConfig } from '~/config'
-import { xhrGetPaginatedAsync, xhrPostAsync } from '~/libs/core'
+import {
+    xhrGetAsync,
+    xhrGetBlobAsync,
+    xhrGetPaginatedAsync,
+    xhrPostAsync,
+} from '~/libs/core'
 
 import {
     adjustReviewInfo,
     BackendChallengeInfo,
     BackendContactRequest,
+    BackendProjectResult,
+    BackendResponseWithMeta,
+    BackendSubmission,
     ChallengeInfo,
     convertBackendChallengeInfo,
+    convertBackendProjectResultToProjectResult,
     FormContactManager,
+    ProjectResult,
     ReviewInfo,
 } from '../models'
 import { MockReviewEdit, MockReviewFull } from '../../mock-datas'
@@ -41,16 +52,12 @@ export const fetchActiveReviews = async (
 }> => {
     const results = await xhrGetPaginatedAsync<BackendChallengeInfo[]>(
         `${challengeBaseUrl}/challenges/?status=ACTIVE&${qs.stringify({
-            ...(challengeTypeId
-                ? {
-                    typeId: challengeTypeId,
-                }
-                : {}),
-            ...(challengeTrackId
-                ? {
-                    trackId: challengeTrackId,
-                }
-                : {}),
+            ...(challengeTypeId ? {
+                typeId: challengeTypeId,
+            } : {}),
+            ...(challengeTrackId ? {
+                trackId: challengeTrackId,
+            } : {}),
             memberId,
             page,
             perPage,
@@ -107,4 +114,97 @@ export const createContactRequest = async (
         resourceId,
     })
     return result
+}
+
+/**
+ * Fetch submissions
+ *
+ * @param page current page
+ * @param perPage number of item per page
+ * @param challengeId challenge id
+ * @returns resolves to the array of submissions
+ */
+export const fetchSubmissions = async (
+    page: number,
+    perPage: number,
+    challengeId: string,
+): Promise<{
+    data: BackendSubmission[]
+    totalPages: number
+}> => {
+    const results = await xhrGetAsync<
+        BackendResponseWithMeta<BackendSubmission[]>
+    >(
+        `${EnvironmentConfig.REVIEW.REVIEW_API}/api/submissions?${qs.stringify({
+            challengeId,
+            page,
+            perPage,
+        })}`,
+    )
+    return {
+        data: results.data,
+        totalPages: results.meta.totalPages,
+    }
+}
+
+/**
+ * Download submission file
+ *
+ * @param submissionId submission id
+ * @returns resolves to the submission file
+ */
+export const downloadSubmissionFile = async (
+    submissionId: string,
+): Promise<Blob> => {
+    const results = await xhrGetBlobAsync<Blob>(
+        `${EnvironmentConfig.REVIEW.REVIEW_API}/api/submissions/${submissionId}/download`,
+    )
+    return results
+}
+
+/**
+ * Fetch project results
+ *
+ * @param page current page
+ * @param perPage number of item per page
+ * @param challengeId challenge id
+ * @returns resolves to the array of project results
+ */
+export const fetchProjectResults = async (
+    page: number,
+    perPage: number,
+    challengeId: string,
+): Promise<{
+    data: ProjectResult[]
+    totalPages: number
+}> => {
+    const results = await xhrGetAsync<
+        BackendResponseWithMeta<BackendProjectResult[]>
+    >(
+        `${EnvironmentConfig.REVIEW.REVIEW_API}/projectResult?${qs.stringify({
+            challengeId,
+            page,
+            perPage,
+        })}`,
+    )
+
+    const dataHavePlacement: BackendProjectResult[] = []
+    const dataNoPlacement: BackendProjectResult[] = []
+    forEach(results.data, item => {
+        if (item.placement) {
+            dataHavePlacement.push(item)
+        } else {
+            dataNoPlacement.push(item)
+        }
+    })
+    // move the project results with placement to the front
+    const data = [
+        ...orderBy(dataHavePlacement, ['placement'], ['asc']),
+        ...dataNoPlacement,
+    ]
+
+    return {
+        data: data.map(convertBackendProjectResultToProjectResult),
+        totalPages: results.meta.totalPages,
+    }
 }

@@ -2,25 +2,24 @@
  * Fetch list of resources of challenge
  */
 import { useContext, useEffect, useMemo } from 'react'
-import { filter, toString } from 'lodash'
+import { filter, reduce, toString } from 'lodash'
 import useSWR, { SWRResponse } from 'swr'
 
 import { handleError } from '~/apps/admin/src/lib/utils'
 
-import {
-    adjustRegistrationInfo,
-    BackendResource,
-    RegistrationInfo,
-    ReviewAppContextModel,
-} from '../models'
+import { BackendResource, ReviewAppContextModel } from '../models'
 import { ReviewAppContext } from '../contexts'
 import { fetchResources } from '../services/resources.service'
 
 export interface useFetchChallengeResourcesProps {
-    registrants: RegistrationInfo[]
+    registrants: BackendResource[]
+    reviewers: BackendResource[]
     myResources: BackendResource[]
     myRoles: string[]
     isLoading: boolean
+    resourceMemberIdMapping: {
+        [memberId: string]: BackendResource
+    }
 }
 
 /**
@@ -34,6 +33,7 @@ export function useFetchChallengeResources(
     const {
         loginUserInfo,
         resourceRoleSubmitter,
+        resourceRoleReviewer,
         resourceRoleMapping,
     }: ReviewAppContextModel = useContext(ReviewAppContext)
 
@@ -42,25 +42,33 @@ export function useFetchChallengeResources(
         data: resources,
         error: fetchResourcesError,
         isValidating: isLoading,
-    }: SWRResponse<RegistrationInfo[], Error> = useSWR<
-        RegistrationInfo[],
-        Error
-    >(`resourceBaseUrl/resources?challengeId=${challengeId}`, {
-        fetcher: async () => {
-            const result = await fetchResources({
-                challengeId,
-            })
-            return result.data.map(adjustRegistrationInfo) as RegistrationInfo[]
+    }: SWRResponse<BackendResource[], Error> = useSWR<BackendResource[], Error>(
+        `resourceBaseUrl/resources?challengeId=${challengeId}`,
+        {
+            fetcher: async () => {
+                const result = await fetchResources({
+                    challengeId,
+                })
+                return result.data
+            },
+            isPaused: () => !challengeId,
         },
-        isPaused: () => !challengeId,
-    })
+    )
+
+    // get mapping of member id to resource
+    const resourceMemberIdMapping = useMemo(() => reduce(
+        resources,
+        (mappingResult, resource: BackendResource) => ({
+            ...mappingResult,
+            [resource.memberId]: resource,
+        }),
+        {},
+    ), [resources])
 
     // Get my resources for the current challenge
     const myResources = useMemo(
         () => (resources ?? [])
-            .filter(
-                resource => resource.memberId === toString(loginUserInfo?.userId),
-            )
+            .filter(resource => resource.memberId === toString(loginUserInfo?.userId))
             .map(myRoleInfo => ({
                 ...myRoleInfo,
                 roleName: resourceRoleMapping?.[myRoleInfo.roleId]?.name,
@@ -92,10 +100,21 @@ export function useFetchChallengeResources(
         return filter(resources, { roleId: resourceRoleSubmitter.id })
     }, [resources, resourceRoleSubmitter])
 
+    // Get reviewers from resource list
+    const reviewers = useMemo(() => {
+        if (!resourceRoleReviewer) {
+            return []
+        }
+
+        return filter(resources, { roleId: resourceRoleReviewer.id })
+    }, [resources, resourceRoleReviewer])
+
     return {
         isLoading,
         myResources,
         myRoles,
         registrants,
+        resourceMemberIdMapping,
+        reviewers,
     }
 }

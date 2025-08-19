@@ -5,14 +5,12 @@ import { SubmissionInfo } from '../lib/models'
 
 export const MockSubmissions: SubmissionInfo[] = [
     {
-        handle: 'Gando19850304',
-        handleColor: '#616BD5',
         id: '736590',
+        memberId: '1234',
     },
     {
-        handle: 'shubhangi18',
-        handleColor: '#0A0A0A',
         id: '736592',
+        memberId: '1234',
         review: {
             appealResuls: [
                 {
@@ -44,7 +42,7 @@ export const MockSubmissions: SubmissionInfo[] = [
                 createdAt: new Date()
                     .toISOString(),
                 reviewerHandle: 'Ghostar',
-                reviewerHandleColor: '#C9AB0',
+                reviewerHandleColor: '#C9AB00',
                 score: 100,
             },
             {
@@ -76,9 +74,8 @@ export const MockSubmissions: SubmissionInfo[] = [
         ],
     },
     {
-        handle: 'Nikesh2003',
-        handleColor: '#0A0A0A',
         id: '736597',
+        memberId: '1234',
         review: {
             appealResuls: [
                 {
@@ -102,9 +99,8 @@ export const MockSubmissions: SubmissionInfo[] = [
         },
     },
     {
-        handle: 'nursoltan-s',
-        handleColor: '#0A0A0A',
         id: '726598',
+        memberId: '1234',
         review: {
             appealResuls: [
                 {
@@ -143,9 +139,8 @@ export const MockSubmissions: SubmissionInfo[] = [
         },
     },
     {
-        handle: 'stevenfrog',
-        handleColor: '#2D7E2D',
         id: '736591',
+        memberId: '1234',
         review: {
             appealResuls: [
                 {
@@ -184,9 +179,8 @@ export const MockSubmissions: SubmissionInfo[] = [
         },
     },
     {
-        handle: 'whereishammer',
-        handleColor: '#2D7E2D',
         id: '726545',
+        memberId: '1234',
         review: {
             appealResuls: [
                 {

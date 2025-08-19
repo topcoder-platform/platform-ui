@@ -3,6 +3,8 @@
 .container {
     display: flex;
     flex-direction: column;
+    position: relative;
+
     @include ltemd {
         &:global(.enhanced-table) {
             table {
@@ -16,11 +18,17 @@
             }
         }
     }
-    .screener {
-        font-weight: 700;
-    }
-    .textBlue,
-    .textBlue:hover {
+
+    .textBlue {
         color: $link-blue-dark;
+
+        &:hover {
+            color: $link-blue-dark;
+        }
+
+        &:disabled {
+            opacity: 0.7;
+            pointer-events: none;
+        }
     }
 }

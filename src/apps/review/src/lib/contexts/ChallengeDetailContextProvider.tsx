@@ -21,6 +21,8 @@ export const ChallengeDetailContext: Context<ChallengeDetailContextModel>
         myResources: [],
         myRoles: [],
         registrants: [],
+        resourceMemberIdMapping: {},
+        reviewers: [],
     })
 
 export const ChallengeDetailContextProvider: FC<PropsWithChildren> = props => {
@@ -36,9 +38,11 @@ export const ChallengeDetailContextProvider: FC<PropsWithChildren> = props => {
     // fetch challenge resources
     const {
         registrants,
+        reviewers,
         myResources,
         myRoles,
         isLoading: isLoadingChallengeResources,
+        resourceMemberIdMapping,
     }: useFetchChallengeResourcesProps = useFetchChallengeResources(challengeId)
 
     const value = useMemo(
@@ -50,6 +54,8 @@ export const ChallengeDetailContextProvider: FC<PropsWithChildren> = props => {
             myResources,
             myRoles,
             registrants,
+            resourceMemberIdMapping,
+            reviewers,
         }),
         [
             challengeId,
@@ -58,7 +64,9 @@ export const ChallengeDetailContextProvider: FC<PropsWithChildren> = props => {
             myResources,
             myRoles,
             registrants,
+            reviewers,
             isLoadingChallengeResources,
+            resourceMemberIdMapping,
         ],
     )
 
