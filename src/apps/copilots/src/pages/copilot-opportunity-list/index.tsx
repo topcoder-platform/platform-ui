@@ -104,9 +104,9 @@ const tableColumns: TableColumn<CopilotOpportunity>[] = [
         label: 'Payment',
         propertyName: 'paymentType',
         renderer: (copilotOpportunity: CopilotOpportunity) => (
-            <div>
+            <div className={styles.payment}>
                 {copilotOpportunity.paymentType === 'standard'
-                    ? copilotOpportunity.paymentType : copilotOpportunity.otherPaymentType}
+                    ? copilotOpportunity.paymentType : copilotOpportunity.otherPaymentType.slice(0, 8)}
             </div>
         ),
         type: 'element',
