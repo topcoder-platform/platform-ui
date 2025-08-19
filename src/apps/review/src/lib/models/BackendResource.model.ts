@@ -1,5 +1,7 @@
 import moment from 'moment'
 
+import { getRatingColor } from '~/libs/core'
+
 import { TABLE_DATE_FORMAT } from '../../config/index.config'
 
 /**
@@ -16,6 +18,7 @@ export interface BackendResource {
     created: string | Date
     createdString?: string // this field is calculated at frontend
     rating?: number
+    handleColor?: string // this field is calculated at frontend
 }
 
 /**
@@ -40,5 +43,6 @@ export function adjustBackendResource(
                 .local()
                 .format(TABLE_DATE_FORMAT)
             : data.created,
+        handleColor: getRatingColor(data.rating),
     }
 }

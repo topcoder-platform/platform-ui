@@ -101,6 +101,7 @@ export function convertBackendChallengeInfo(
         discussionsUrl: data.discussions[0]?.url,
         id: data.id,
         index,
+        legacyId: data.legacyId,
         name: data.name,
         reviewLength: 0,
         // the % = (The number of submission has been reviewed / submitted review) / The total number of submissions.
@@ -112,6 +113,7 @@ export function convertBackendChallengeInfo(
         timeLeft: timeLeft.durationString,
         timeLeftColor: timeLeft.durationColor,
         timeLeftStatus: timeLeft.durationStatus,
+        track: data.track as ChallengeType,
         type: data.type as ChallengeType,
     }
 }

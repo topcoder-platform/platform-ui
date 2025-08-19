@@ -8,20 +8,20 @@ import { MobileTableColumn } from '~/apps/admin/src/lib/models/MobileTableColumn
 import { useWindowSize, WindowSize } from '~/libs/shared'
 import { TableMobile } from '~/apps/admin/src/lib/components/common/TableMobile'
 import { Table, TableColumn } from '~/libs/ui'
-import { EnvironmentConfig } from '~/config'
 import {
     useTableFilterLocal,
     useTableFilterLocalProps,
 } from '~/apps/admin/src/lib/hooks'
 
-import { RegistrationInfo } from '../../models'
+import { BackendResource } from '../../models'
 import { TableWrapper } from '../TableWrapper'
+import { getHandleUrl } from '../../utils'
 
 import styles from './TableRegistration.module.scss'
 
 interface Props {
     className?: string
-    datas: RegistrationInfo[]
+    datas: BackendResource[]
 }
 
 export const TableRegistration: FC<Props> = (props: Props) => {
@@ -29,7 +29,7 @@ export const TableRegistration: FC<Props> = (props: Props) => {
         results,
         setSort,
         sort,
-    }: useTableFilterLocalProps<RegistrationInfo> = useTableFilterLocal(
+    }: useTableFilterLocalProps<BackendResource> = useTableFilterLocal(
         props.datas ?? [],
         undefined,
         {},
@@ -39,14 +39,14 @@ export const TableRegistration: FC<Props> = (props: Props) => {
     const { width: screenWidth }: WindowSize = useWindowSize()
     const isTablet = useMemo(() => screenWidth <= 744, [screenWidth])
 
-    const columns = useMemo<TableColumn<RegistrationInfo>[]>(
+    const columns = useMemo<TableColumn<BackendResource>[]>(
         () => [
             {
                 label: 'Handle',
                 propertyName: 'memberHandle',
-                renderer: (data: RegistrationInfo) => (
+                renderer: (data: BackendResource) => (
                     <a
-                        href={`${EnvironmentConfig.REVIEW.PROFILE_PAGE_URL}/${data.memberHandle}`}
+                        href={getHandleUrl(data)}
                         target='_blank'
                         rel='noreferrer'
                         style={{
@@ -54,7 +54,7 @@ export const TableRegistration: FC<Props> = (props: Props) => {
                         }}
                         onClick={function onClick() {
                             window.open(
-                                `${EnvironmentConfig.REVIEW.PROFILE_PAGE_URL}/${data.memberHandle}`,
+                                getHandleUrl(data),
                                 '_blank',
                             )
                         }}
@@ -67,7 +67,7 @@ export const TableRegistration: FC<Props> = (props: Props) => {
             {
                 label: 'Rating',
                 propertyName: 'rating',
-                renderer: (data: RegistrationInfo) => (
+                renderer: (data: BackendResource) => (
                     <span style={{ color: data.handleColor }}>
                         {data.rating ?? 'Not Rated'}
                     </span>
@@ -77,7 +77,7 @@ export const TableRegistration: FC<Props> = (props: Props) => {
             {
                 label: 'Registration Date',
                 propertyName: 'created',
-                renderer: (data: RegistrationInfo) => (
+                renderer: (data: BackendResource) => (
                     <span className='last-element'>{data.createdString}</span>
                 ),
                 type: 'element',
@@ -86,7 +86,7 @@ export const TableRegistration: FC<Props> = (props: Props) => {
         [],
     )
 
-    const columnsMobile = useMemo<MobileTableColumn<RegistrationInfo>[][]>(
+    const columnsMobile = useMemo<MobileTableColumn<BackendResource>[][]>(
         () => columns.map(
             column => [
                 {
@@ -106,7 +106,7 @@ export const TableRegistration: FC<Props> = (props: Props) => {
                     ...column,
                     mobileType: 'last-value',
                 },
-            ] as MobileTableColumn<RegistrationInfo>[],
+            ] as MobileTableColumn<BackendResource>[],
         ),
         [columns],
     )

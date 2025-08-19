@@ -2,7 +2,7 @@
  * Submissions service
  */
 // Internal imports
-import { MOCKHANDLE, SUBMITTER } from '../../config/index.config'
+import { SUBMITTER } from '../../config/index.config'
 import { MockSubmissionReviews, MockSubmissions } from '../../mock-datas'
 import {
     adjustReviewResult,
@@ -12,17 +12,16 @@ import {
 } from '../models'
 
 /**
- * Fetch challenge submissions
+ * Fetch mock challenge submissions
  * @returns resolves to the challenge submissions
  */
-export const fetchSubmissions = async (
+export const fetchMockSubmissions = async (
     role?: string,
 ): Promise<SubmissionInfo[]> => {
     if (role === SUBMITTER) {
-        const submission = MockSubmissions.filter(
-            sub => sub.handle === MOCKHANDLE,
-        )
-            .map(adjustSubmissionInfo) as SubmissionInfo[]
+        const submission = MockSubmissions.map(
+            adjustSubmissionInfo,
+        ) as SubmissionInfo[]
 
         submission.forEach(s => {
             s.reviews = MockSubmissionReviews.map(
@@ -34,10 +33,13 @@ export const fetchSubmissions = async (
     }
 
     return Promise.resolve(
-        MockSubmissions.map(adjustSubmissionInfo)
-            .map(s => ({
-                ...s,
-                reviews: s?.reviews?.map(adjustReviewResult),
-            })) as SubmissionInfo[],
+        MockSubmissions
+            .map(s => {
+                const results = adjustSubmissionInfo(s)
+                return ({
+                    ...results,
+                    reviews: results?.reviews?.map(adjustReviewResult),
+                })
+            }) as SubmissionInfo[],
     )
 }

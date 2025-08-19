@@ -2,10 +2,10 @@
  * Mock data for the appeal info
  */
 
-import { AppealInfo } from '../lib/models'
+import { AppealInfo, AppealResult } from '../lib/models'
 
 const mockMarkdown
-// eslint-disable-next-line max-len
+    // eslint-disable-next-line max-len
     = 'I disagree! My **biggest concern** for the *above situation* was to focus not only on lorem ipsum but also on lorem ipsa which is more important in this case.'
 
 export const MockAppeals: AppealInfo[] = [
@@ -18,5 +18,12 @@ export const MockAppeals: AppealInfo[] = [
         content: mockMarkdown,
         id: '2',
         reviewItemCommentId: '2',
+    },
+]
+
+export const MockAppealResults: AppealResult[] = [
+    {
+        id: '1',
+        success: true,
     },
 ]

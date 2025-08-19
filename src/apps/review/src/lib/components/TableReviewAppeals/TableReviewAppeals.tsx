@@ -1,8 +1,8 @@
 /**
  * Table Review Appeals.
  */
-import { FC, useCallback, useMemo } from 'react'
-import { Link, NavLink } from 'react-router-dom'
+import { FC, useCallback, useContext, useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import _, { includes } from 'lodash'
 import classNames from 'classnames'
 
@@ -10,12 +10,15 @@ import { MobileTableColumn } from '~/apps/admin/src/lib/models/MobileTableColumn
 import { useWindowSize, WindowSize } from '~/libs/shared'
 import { TableMobile } from '~/apps/admin/src/lib/components/common/TableMobile'
 import { Table, TableColumn } from '~/libs/ui'
+import { IsRemovingType } from '~/apps/admin/src/lib/models'
 
 import { TableWrapper } from '../TableWrapper'
-import { SubmissionInfo } from '../../models'
+import { ChallengeDetailContextModel, SubmissionInfo } from '../../models'
 import { ProgressBar } from '../ProgressBar'
 import { ADMIN, APPROVAL, COPILOT, WITHOUT_APPEAL } from '../../../config/index.config'
 import { useRole, useRoleProps } from '../../hooks'
+import { getHandleUrl } from '../../utils'
+import { ChallengeDetailContext } from '../../contexts'
 
 import styles from './TableReviewAppeals.module.scss'
 
@@ -23,14 +26,21 @@ interface Props {
     className?: string
     datas: SubmissionInfo[]
     tab: string
-    type?: string
     firstSubmissions?: SubmissionInfo
+    isDownloading: IsRemovingType
+    downloadSubmission: (submissionId: string) => void
 }
 
 export const TableReviewAppeals: FC<Props> = (props: Props) => {
+    // get challenge info from challenge detail context
+    const {
+        challengeInfo,
+    }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
     const { width: screenWidth }: WindowSize = useWindowSize()
     const { actionChallengeRole }: useRoleProps = useRole()
     const isTablet = useMemo(() => screenWidth <= 744, [screenWidth])
+    const challengeType = challengeInfo?.type
+    const challengeTrack = challengeInfo?.track
 
     const prevent = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
         e.preventDefault()
@@ -43,22 +53,40 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                     className: styles.textBlue,
                     label: 'Submission ID',
                     propertyName: 'id',
-                    renderer: (data: SubmissionInfo) => <NavLink to='#' onClick={prevent}>{data.id}</NavLink>,
+                    renderer: (data: SubmissionInfo) => (
+                        <button
+                            onClick={function onClick() {
+                                props.downloadSubmission(data.id)
+                            }}
+                            className={styles.textBlue}
+                            disabled={props.isDownloading[data.id]}
+                            type='button'
+                        >
+                            {data.id}
+                        </button>
+                    ),
                     type: 'element',
                 },
                 {
                     label: 'Handle',
                     propertyName: 'handle',
                     renderer: (data: SubmissionInfo) => (
-                        <NavLink
-                            to='#'
-                            onClick={prevent}
+                        <a
+                            href={getHandleUrl(data.userInfo)}
+                            target='_blank'
+                            rel='noreferrer'
                             style={{
-                                color: data.handleColor,
+                                color: data.userInfo?.handleColor,
+                            }}
+                            onClick={function onClick() {
+                                window.open(
+                                    getHandleUrl(data.userInfo),
+                                    '_blank',
+                                )
                             }}
                         >
-                            {data.handle}
-                        </NavLink>
+                            {data.userInfo?.memberHandle ?? ''}
+                        </a>
                     ),
                     type: 'element',
                 },
@@ -147,8 +175,14 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                 return [...initalColumns] as MobileTableColumn<SubmissionInfo>[]
             }
 
-            if (includes(WITHOUT_APPEAL, props.type)) {
-                return [...initalColumns, ...actionColumns] as TableColumn<SubmissionInfo>[]
+            if (
+                includes(WITHOUT_APPEAL, challengeType)
+                || includes(WITHOUT_APPEAL, challengeTrack)
+            ) {
+                return [
+                    ...initalColumns,
+                    ...actionColumns,
+                ] as TableColumn<SubmissionInfo>[]
             }
 
             return [...initalColumns, {
@@ -180,7 +214,14 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                 type: 'element',
             }, ...actionColumns] as TableColumn<SubmissionInfo>[]
         },
-        [prevent, props.tab, props.type, actionChallengeRole],
+        [
+            prevent,
+            props.tab,
+            challengeInfo,
+            actionChallengeRole,
+            props.isDownloading,
+            props.downloadSubmission,
+        ],
     )
 
     const columnsMobile = useMemo<MobileTableColumn<SubmissionInfo>[][]>(

@@ -15,6 +15,7 @@ export type ChallengeType =
         | 'Marathon Match'
         | 'First2Finish'
         | 'Other'
+        | 'Challenge'
 
 /**
  * Challenge info
@@ -32,8 +33,10 @@ export interface ChallengeInfo {
     index?: number // this field is calculated at frontend
     submissions: SubmissionInfo[]
     type: ChallengeType
+    track: ChallengeType
     reviewLength?: number
     discussionsUrl?: string // this field is calculated at frontend
+    legacyId?: number
 }
 
 /**

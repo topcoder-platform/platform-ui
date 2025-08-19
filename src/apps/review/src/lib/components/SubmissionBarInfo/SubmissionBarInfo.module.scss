@@ -49,3 +49,13 @@
         line-height: 20px;
     }
 }
+
+.blockMyRoles {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+
+    span {
+        color: var(--FontColor);
+    }
+}

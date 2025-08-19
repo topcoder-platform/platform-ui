@@ -14,5 +14,6 @@ export interface ReviewAppContextModel {
     resourceRoleMapping?: {
         [key: string]: BackendResourceRole
     }
+    resourceRoleReviewer?: BackendResourceRole
     resourceRoleSubmitter?: BackendResourceRole
 }

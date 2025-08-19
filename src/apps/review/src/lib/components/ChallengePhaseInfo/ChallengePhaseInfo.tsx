@@ -13,6 +13,7 @@ import styles from './ChallengePhaseInfo.module.scss'
 interface Props {
     className?: string
     challengeInfo: ChallengeInfo
+    reviewProgress: number
 }
 
 export const ChallengePhaseInfo: FC<Props> = (props: Props) => {
@@ -54,10 +55,10 @@ export const ChallengePhaseInfo: FC<Props> = (props: Props) => {
             {
                 title: 'Review Progress',
                 type: PROGRESS_TYPE,
-                value: data.reviewProgress,
+                value: props.reviewProgress,
             },
         ]
-    }, [props.challengeInfo, myChallengeRoles])
+    }, [props.challengeInfo, myChallengeRoles, props.reviewProgress])
     return (
         <div className={classNames(styles.container, props.className)}>
             {uiItems.map(item => {

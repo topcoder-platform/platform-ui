@@ -39,7 +39,7 @@ const useRole = (): useRoleProps => {
         return (['Submitter', 'Reviewer', 'Copilot', 'Admin'].find(
             item => myRole.toLowerCase()
                 .indexOf(item.toLowerCase()) >= 0,
-        ) ?? 'Submitter') as ChallengeRole
+        ) ?? '') as ChallengeRole
     }, [challengeId, myRoles])
 
     return {

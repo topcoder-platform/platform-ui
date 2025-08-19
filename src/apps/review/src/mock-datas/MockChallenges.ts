@@ -15,6 +15,7 @@ import {
     MARATHON_MATCH,
     OTHER,
     TEST_SUITE,
+    TRACK_CHALLENGE,
 } from '../config/index.config'
 
 import { MockSubmissions } from './MockSubmissions'
@@ -27,6 +28,7 @@ export const MockChallengeInfo: ChallengeInfo = {
     id: '1',
     name: 'Topcoder Admin App - User Management',
     submissions: MockSubmissions,
+    track: TRACK_CHALLENGE,
     type: DESIGN,
 }
 
@@ -39,6 +41,7 @@ export const MockChalenges: ChallengeInfo[] = [
         id: '1',
         name: 'Topcoder Admin App - User Management',
         submissions: MockSubmissions,
+        track: TRACK_CHALLENGE,
         type: DESIGN,
     },
     {
@@ -49,6 +52,7 @@ export const MockChalenges: ChallengeInfo[] = [
         id: '2',
         name: 'Robust automation testing framework for mobile applications',
         submissions: [MockSubmissions[1], MockSubmissions[2]],
+        track: TRACK_CHALLENGE,
         type: DESIGN,
     },
     {
@@ -59,6 +63,7 @@ export const MockChalenges: ChallengeInfo[] = [
         id: '3',
         name: 'Snowflake Submission for Upcoming Opportunities',
         submissions: [MockSubmissions[1], MockSubmissions[2], MockSubmissions[3]],
+        track: TRACK_CHALLENGE,
         type: DESIGN,
     },
     {
@@ -70,6 +75,7 @@ export const MockChalenges: ChallengeInfo[] = [
         id: '4',
         name: 'Work Manager - Assets Library management',
         submissions: [MockSubmissions[2]],
+        track: TRACK_CHALLENGE,
         type: DESIGN,
     },
     {
@@ -82,6 +88,7 @@ export const MockChalenges: ChallengeInfo[] = [
         name: 'Topcoder Admin App - Challenge Management',
         reviewLength: 5,
         submissions: [MockSubmissions[2]],
+        track: TRACK_CHALLENGE,
         type: FIRST2FINISH,
     },
     {
@@ -94,6 +101,7 @@ export const MockChalenges: ChallengeInfo[] = [
         name: 'Design Prisma Schema for Topcoder Review API',
         reviewLength: 2,
         submissions: [],
+        track: TRACK_CHALLENGE,
         type: FIRST2FINISH,
     },
     {
@@ -105,6 +113,7 @@ export const MockChalenges: ChallengeInfo[] = [
         id: '7',
         name: 'Marathon Match 160',
         submissions: [],
+        track: TRACK_CHALLENGE,
         type: FIRST2FINISH,
     },
     {
@@ -116,6 +125,7 @@ export const MockChalenges: ChallengeInfo[] = [
         id: '8',
         name: 'Review App - UI prototype Reviewer Flow',
         submissions: [],
+        track: TRACK_CHALLENGE,
         type: FIRST2FINISH,
     },
     {
@@ -127,6 +137,7 @@ export const MockChalenges: ChallengeInfo[] = [
         id: '9',
         name: 'Topcoder Online Review - Document uploading failing after upgrade',
         submissions: [],
+        track: TRACK_CHALLENGE,
         type: CODE,
     },
     {
@@ -138,6 +149,7 @@ export const MockChalenges: ChallengeInfo[] = [
         id: '10',
         name: 'RUX - 96HR NEP Platform Design Concept Challenge',
         submissions: [],
+        track: TRACK_CHALLENGE,
         type: CODE,
     },
     {
@@ -149,6 +161,7 @@ export const MockChalenges: ChallengeInfo[] = [
         id: '11',
         name: 'AI Agent for Innovation: From Idea to Live Challenge',
         submissions: [],
+        track: TRACK_CHALLENGE,
         type: CODE,
     },
     {
@@ -160,6 +173,7 @@ export const MockChalenges: ChallengeInfo[] = [
         id: '12',
         name: 'Senior Lead/Analyst/Architect - MS Fabric Expert',
         submissions: [],
+        track: TRACK_CHALLENGE,
         type: CODE,
     },
     {
@@ -171,6 +185,7 @@ export const MockChalenges: ChallengeInfo[] = [
         id: '13',
         name: 'PPT to Video AI Converter Web App',
         submissions: [],
+        track: TRACK_CHALLENGE,
         type: BUG_HUNT,
     },
     {
@@ -182,6 +197,7 @@ export const MockChalenges: ChallengeInfo[] = [
         id: '14',
         name: 'Topcoder Admin App - Roles Management Update',
         submissions: [],
+        track: TRACK_CHALLENGE,
         type: TEST_SUITE,
     },
     {
@@ -193,6 +209,7 @@ export const MockChalenges: ChallengeInfo[] = [
         id: '15',
         name: 'Topcoder Marathon Matches - Identify missing files',
         submissions: [],
+        track: TRACK_CHALLENGE,
         type: COPILOT_OPPORTUNITY,
     },
     {
@@ -204,6 +221,7 @@ export const MockChalenges: ChallengeInfo[] = [
         id: '16',
         name: 'Topcoder Marathon Matches - Identify missing files',
         submissions: [],
+        track: TRACK_CHALLENGE,
         type: MARATHON_MATCH,
     },
     {
@@ -215,6 +233,7 @@ export const MockChalenges: ChallengeInfo[] = [
         id: '17',
         name: 'Utility to Parse and Export Challenge API Data',
         submissions: [],
+        track: TRACK_CHALLENGE,
         type: OTHER,
     },
 ]

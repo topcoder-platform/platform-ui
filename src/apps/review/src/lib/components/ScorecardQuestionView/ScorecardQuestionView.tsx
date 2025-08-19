@@ -170,6 +170,7 @@ export const ScorecardQuestionView: FC<Props> = (props: Props) => {
                         </td>
                     </tr>
                     {!includes(WITHOUT_APPEAL, challengeInfo?.type)
+                        && !includes(WITHOUT_APPEAL, challengeInfo?.track)
                         && (includes([REVIEWER, COPILOT, ADMIN], actionChallengeRole) ? (
                             props.mappingAppeals[commentItem.id] && (
                                 <tr

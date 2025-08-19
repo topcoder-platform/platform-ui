@@ -34,6 +34,7 @@ export const ReviewAppContextProvider: FC<PropsWithChildren> = props => {
         loadMyRoleInfos,
         myRoleInfosMapping,
         resourceRoleMapping,
+        resourceRoleReviewer,
         resourceRoleSubmitter,
     }: useFetchResourceProps = useFetchResource(loginUserInfo)
     const value = useMemo(
@@ -43,6 +44,7 @@ export const ReviewAppContextProvider: FC<PropsWithChildren> = props => {
             loginUserInfo,
             myRoleInfosMapping,
             resourceRoleMapping,
+            resourceRoleReviewer,
             resourceRoleSubmitter,
         }),
         [
@@ -50,6 +52,7 @@ export const ReviewAppContextProvider: FC<PropsWithChildren> = props => {
             loadMyRoleInfos,
             loginUserInfo,
             resourceRoleMapping,
+            resourceRoleReviewer,
             resourceRoleSubmitter,
             myRoleInfosMapping,
         ],

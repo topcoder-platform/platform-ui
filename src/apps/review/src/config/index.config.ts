@@ -5,6 +5,7 @@
 import { SelectOption } from '../lib/models'
 
 export const DESIGN = 'Design'
+export const TRACK_CHALLENGE = 'Challenge'
 export const CODE = 'Code'
 export const BUG_HUNT = 'Bug Hunt'
 export const TEST_SUITE = 'Test Suite'

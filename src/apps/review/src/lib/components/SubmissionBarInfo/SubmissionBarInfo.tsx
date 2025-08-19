@@ -16,7 +16,7 @@ interface Props {
 }
 
 export const SubmissionBarInfo: FC<Props> = (props: Props) => {
-    const { actionChallengeRole }: useRoleProps = useRole()
+    const { myChallengeRoles }: useRoleProps = useRole()
     const uiItems = useMemo(() => {
         const data = props.submission
         return [
@@ -29,19 +29,25 @@ export const SubmissionBarInfo: FC<Props> = (props: Props) => {
             {
                 icon: 'icon-handle',
                 title: 'My Role',
-                value: actionChallengeRole,
+                value: (
+                    <div className={styles.blockMyRoles}>
+                        {myChallengeRoles.map(item => (
+                            <span key={item}>{item}</span>
+                        ))}
+                    </div>
+                ),
             },
             {
                 icon: 'icon-handle',
                 style: {
-                    color: data.handleColor,
+                    color: data.userInfo?.handleColor,
                 },
                 title: 'Handle',
                 type: 'link',
-                value: data.handle,
+                value: data.userInfo?.memberHandle,
             },
         ]
-    }, [props.submission, actionChallengeRole])
+    }, [props.submission, myChallengeRoles])
 
     const prevent = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
         e.preventDefault()

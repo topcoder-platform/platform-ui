@@ -1,6 +1,5 @@
 import { BackendResource } from './BackendResource.model'
 import { ChallengeInfo } from './ChallengeInfo.model'
-import { RegistrationInfo } from './RegistrationInfo.model'
 
 /**
  * Model for challenge detail context
@@ -12,5 +11,9 @@ export interface ChallengeDetailContextModel {
     challengeInfo?: ChallengeInfo
     myResources: BackendResource[]
     myRoles: string[]
-    registrants: RegistrationInfo[]
+    registrants: BackendResource[]
+    reviewers: BackendResource[]
+    resourceMemberIdMapping: {
+        [memberId: string]: BackendResource
+    }
 }
