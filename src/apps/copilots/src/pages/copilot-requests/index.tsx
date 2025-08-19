@@ -200,7 +200,7 @@ const CopilotRequestsPage: FC = () => {
         },
         {
             label: 'Type',
-            propertyName: 'type',
+            propertyName: 'projectType',
             type: 'text',
         },
         {
@@ -232,7 +232,7 @@ const CopilotRequestsPage: FC = () => {
     const tableData = useMemo(() => requests.map(request => ({
         ...request,
         projectName: request.project?.name,
-        type: ProjectTypeLabels[request.projectType] ?? '',
+        projectType: ProjectTypeLabels[request.projectType] ?? '',
     })), [requests])
 
     function loadMore(): void {
