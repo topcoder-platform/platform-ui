@@ -1,4 +1,4 @@
-import { FC, useCallback, useContext, useMemo } from 'react'
+import { FC, useCallback, useContext, useMemo, useState } from 'react'
 import { find } from 'lodash'
 import { NavigateFunction, Params, useNavigate, useParams } from 'react-router-dom'
 import classNames from 'classnames'
@@ -27,6 +27,7 @@ import { Project } from '../../models/Project'
 
 import { CopilotRequestModal } from './copilot-request-modal'
 import styles from './CopilotRequestsPage.module.scss'
+import { Sort } from '~/apps/admin/src/platform/gamification-admin/src/game-lib'
 
 const CopilotTableActions: FC<{request: CopilotRequest}> = props => {
     const navigate: NavigateFunction = useNavigate()
@@ -136,6 +137,10 @@ const CopilotTableActions: FC<{request: CopilotRequest}> = props => {
 const CopilotRequestsPage: FC = () => {
     const navigate: NavigateFunction = useNavigate()
     const routeParams: Params<string> = useParams()
+    const [sort, setSort] = useState<Sort>({
+        direction: 'desc',
+        fieldName: 'createdAt',
+    });
 
     const { profile }: ProfileContextData = useContext(profileContext)
     const isAdminOrPM: boolean = useMemo(
@@ -148,7 +153,7 @@ const CopilotRequestsPage: FC = () => {
         isValidating: requestsLoading,
         hasMoreCopilotRequests,
         setSize,
-        size }: CopilotRequestsResponse = useCopilotRequests()
+        size }: CopilotRequestsResponse = useCopilotRequests(sort)
 
     const viewRequestDetails = useMemo(() => (
         routeParams.requestId && find(requests, { id: +routeParams.requestId }) as CopilotRequest
@@ -234,6 +239,10 @@ const CopilotRequestsPage: FC = () => {
         setSize(size + 1)
     }
 
+    const onToggleSort = (s: Sort) => {
+        setSort(s);
+    }
+
     // header button config
     const addNewRequestButton: ButtonProps = {
         label: 'New Copilot Request',
@@ -260,6 +269,7 @@ const CopilotRequestsPage: FC = () => {
                 data={tableData}
                 moreToLoad={hasMoreCopilotRequests}
                 onLoadMoreClick={loadMore}
+                onToggleSort={onToggleSort}
             />
             {requestsLoading && <LoadingCircles /> }
             {viewRequestDetails && (
