@@ -1,0 +1,174 @@
+@import '@libs/ui/styles/includes';
+
+.pageContentWrap {
+    color: #0A0A0A;
+    font-family: Inter;
+
+    hr {
+        margin: $sp-6 0;
+    }
+}
+
+.pageTitle {
+    font-size: 32px;
+    line-height: 36px;
+    font-weight: bold;
+    color: #0A0A0A;
+    margin-bottom: $sp-8;
+    text-transform: none;
+}
+
+.sectionTitle {
+    font-size: 24px;
+    line-height: 32px;
+    font-weight: bold;
+    margin-bottom: $sp-5;
+    margin-top: $sp-11;
+    text-transform: none;
+    &:first-child {
+        margin-top: $sp-8;
+    }
+
+}
+
+.grayWrapper {
+  background-color: #F6F7F9;
+  border-radius: $sp-2;
+  padding: $sp-8;
+}
+
+.scorecardInfo {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: $sp-3 $sp-16;
+}
+
+.headerArea {
+    border-radius: $sp-2 $sp-2 0 0;
+    padding: $sp-3 $sp-4 $sp-6;
+
+    display: flex;
+    flex-wrap: wrap;
+    gap: $sp-2 $sp-4;
+
+    &Label {
+        width: 100%;
+    }
+
+    &Inputs {
+        display: flex;
+        gap: $sp-4;
+        width: 100%;
+    }
+}
+
+.contentArea {
+    padding: $sp-5 $sp-4;
+}
+
+.groupWrap {
+    .headerArea {
+        background: #0F172A;
+        color: $tc-white;
+    }
+
+    .contentArea {
+        background: #E0E4E84D;
+        padding: $sp-10 $sp-8;
+    }
+}
+
+.sectionWrap {
+    .headerArea {
+        background: $teal-160;
+        color: $tc-white;
+    }
+
+    .contentArea {
+        background: $tc-white;
+    }
+}
+
+.questionWrap {
+    .questionItem {
+        width: 100%;
+        padding: $sp-5 $sp-4;
+        background: #F6F7F9;
+
+        display: grid;
+        grid-template-columns: 1fr 7.85% 3.5%;
+        gap: $sp-4;
+
+        :global(.main-group) {
+            grid-column: 1;
+        }
+
+        :global(.weight-group) {
+            grid-column: 2;
+        }
+
+        :global(.action-group) {
+            grid-column: 3;
+        }
+
+        + .questionItem {
+            margin-top: $sp-4;
+        }
+    }
+
+    .headerAreaLabel {
+        width: 100%;
+    }
+}
+
+.xlWidthInput {
+    flex: 0 1 86%;
+}
+
+.smWidthInput {
+    flex: 0 0 7.85%;
+    min-width: 88px;
+}
+
+.mdWidthInput {
+    flex: 0 0 40%;
+}
+
+.doubleInputWrap {
+    display: flex;
+    gap: $sp-3;
+
+    > * {
+        flex: 1;
+    }
+}
+
+.trashIcon {
+    flex: 0 0 3.5%;
+    width: 24px;
+    height: 38px;
+    padding: 2px;
+    &.blue {
+        color: #0D61BF;
+    }
+}
+
+.footerArea {
+    display: flex;
+    gap: $sp-4;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: $sp-5;
+}
+
+.bottomContainer {
+    margin-top: $sp-8;
+}
+
+.buttonsWrap {
+    display: flex;
+    gap: $sp-2;
+    justify-content: flex-end;
+    align-items: center;
+}

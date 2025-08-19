@@ -48,9 +48,9 @@ export const TableScorecards: FC<Props> = (props: Props) => {
                 className: classNames(styles.textBlue, styles.tableBreakCell, styles.tableCell),
                 label: 'Scorecard',
                 propertyName: 'name',
-                renderer: (data: Scorecard) => (
-                    <Link to={`${data.id}`}>
-                        {data.name}
+                renderer: (scorecard: Scorecard) => (
+                    <Link to={`${scorecard.id}`}>
+                        {scorecard.name}
                     </Link>
                 ),
                 type: 'element',
@@ -59,8 +59,8 @@ export const TableScorecards: FC<Props> = (props: Props) => {
                 className: classNames(styles.tableCell),
                 label: 'Type',
                 propertyName: 'type',
-                renderer: (data: Scorecard) => (
-                    <div>{ScorecardTypeLabels[data.type]}</div>
+                renderer: (scorecard: Scorecard) => (
+                    <div>{ScorecardTypeLabels[scorecard.type]}</div>
                 ),
                 type: 'element',
             },
@@ -68,8 +68,8 @@ export const TableScorecards: FC<Props> = (props: Props) => {
                 className: styles.tableCell,
                 label: 'Project Type',
                 propertyName: 'challengeTrack',
-                renderer: (data: Scorecard) => (
-                    <div>{ProjectTypeLabels[data.challengeTrack as ProjectType]}</div>
+                renderer: (scorecard: Scorecard) => (
+                    <div>{ProjectTypeLabels[scorecard.challengeTrack as ProjectType]}</div>
                 ),
                 type: 'element',
             },
@@ -83,21 +83,21 @@ export const TableScorecards: FC<Props> = (props: Props) => {
                 className: styles.tableCell,
                 label: 'Status',
                 propertyName: 'status',
-                renderer: (data: Scorecard) => (
-                    <div>{ScorecardStatusLabels[data.status]}</div>
+                renderer: (scorecard: Scorecard) => (
+                    <div>{ScorecardStatusLabels[scorecard.status]}</div>
                 ),
                 type: 'element',
             },
             {
                 className: classNames(styles.tableCell, styles.tableCellCenter),
                 label: 'Action',
-                renderer: (data: Scorecard) => (
+                renderer: (scorecard: Scorecard) => (
                     <div className={styles.action}>
-                        <div className={styles.actionItem}>
+                        <Link className={styles.actionItem} to={`${scorecard.id}/edit`}>
                             <PencilIcon />
                             <span>Edit</span>
-                        </div>
-                        <div className={styles.actionItem} onClick={bind(props.onClone, this, data)}>
+                        </Link>
+                        <div className={styles.actionItem} onClick={bind(props.onClone, this, scorecard)}>
                             <DuplicateIcon />
                             <span>Clone</span>
                         </div>

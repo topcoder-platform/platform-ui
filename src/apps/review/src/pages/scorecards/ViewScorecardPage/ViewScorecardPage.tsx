@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom'
 import cn from 'classnames'
 
 import { PencilIcon } from '@heroicons/react/solid'
-import { Button } from '~/libs/ui'
+import { LinkButton } from '~/libs/ui'
 import { profileContext, ProfileContextData, UserRole } from '~/libs/core'
 
 import { PageWrapper } from '../../../lib'
@@ -24,35 +24,36 @@ const ViewScorecardPage: FC = () => {
         [],
     )
 
-    const scorecard = useFetchScorecard({ id: scorecardId as string })
+    const scorecardQuery = useFetchScorecard(scorecardId)
 
     return (
         <PageWrapper
             pageTitle='Software General Review Scorecard'
             breadCrumb={breadCrumb}
             rightHeader={isAdmin && (
-                <Button
+                <LinkButton
                     iconToLeft
                     icon={PencilIconWrapper}
                     className='borderButton'
                     secondary
+                    to='edit'
                 >
                     Edit Scorecard
-                </Button>
+                </LinkButton>
             )}
         >
             {
-                scorecard && (
+                scorecardQuery.scorecard && (
                     <div className={styles.container}>
                         <div className={styles.section}>
                             <h3 className={styles.heading}>1. Scorecard Information</h3>
-                            {scorecard && <ScorecardDetails scorecard={scorecard} />}
+                            <ScorecardDetails scorecard={scorecardQuery.scorecard} />
                         </div>
                         {
-                            scorecard.scorecardGroups.length > 0 && (
+                            scorecardQuery.scorecard.scorecardGroups.length > 0 && (
                                 <div className={cn(styles.section, styles.evaluationStructureSection)}>
                                     <h3 className={styles.heading}>2. Evaluation Structure</h3>
-                                    <ScorecardGroups groups={scorecard.scorecardGroups} />
+                                    <ScorecardGroups groups={scorecardQuery.scorecard.scorecardGroups} />
                                 </div>
                             )
                         }

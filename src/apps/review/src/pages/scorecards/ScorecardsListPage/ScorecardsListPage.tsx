@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { FC, useCallback, useMemo, useState } from 'react'
 import { toast } from 'react-toastify'
 
-import { PageTitle, useConfirmationModal } from '~/libs/ui'
+import { LinkButton, PageTitle, useConfirmationModal } from '~/libs/ui'
 import { TableLoading } from '~/apps/admin/src/lib'
 
 import { Scorecard } from '../../../lib/models'
@@ -78,6 +78,14 @@ export const ScorecardsListPage: FC<{}> = () => {
         <PageWrapper
             pageTitle='Scorecards'
             breadCrumb={breadCrumb}
+            rightHeader={(
+                <LinkButton
+                    uiv2
+                    secondary
+                    to='new'
+                    label='+ Add New Scorecard'
+                />
+            )}
         >
             <PageTitle>Scorecards</PageTitle>
             <div className={styles.totalScorecards}>

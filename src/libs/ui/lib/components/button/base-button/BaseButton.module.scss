@@ -154,29 +154,31 @@ $btn-secondary-border-width: $border;
 }
 
 .btn:global(.btn-style-secondary) {
-    box-shadow: inset 0 0 0 $btn-secondary-border-width var(--btn-variant);
+    --btn-secondary-border-width: $btn-secondary-border-width;
+
+    box-shadow: inset 0 0 0 var(--btn-secondary-border-width) var(--btn-variant);
     color: var(--btn-variant);
     background: $tc-white;
 
     &:hover, &:global(.btn-hover) {
-        box-shadow: inset 0 0 0 $btn-secondary-border-width var(--btn-variant--hover);
+        box-shadow: inset 0 0 0 var(--btn-secondary-border-width) var(--btn-variant--hover);
         background: $tc-white;
         color: var(--btn-variant--hover);
     }
 
     &:active, &:global(.btn-active) {
-        box-shadow: inset 0 0 0 $btn-secondary-border-width var(--btn-variant--active);
+        box-shadow: inset 0 0 0 var(--btn-secondary-border-width) var(--btn-variant--active);
         background: $tc-white;
         color: var(--btn-variant--active);
     }
 
     &:disabled, &:global(.btn-disabled) {
-        box-shadow: inset 0 0 0 $btn-secondary-border-width $black-5;
+        box-shadow: inset 0 0 0 var(--btn-secondary-border-width) $black-5;
         color: $black-60;
     }
 
     &:global(.btn-light) {
-        box-shadow: inset 0 0 0 $btn-secondary-border-width $tc-white;
+        box-shadow: inset 0 0 0 var(--btn-secondary-border-width) $tc-white;
         color: $tc-white;
         background: transparent;
 
@@ -189,7 +191,7 @@ $btn-secondary-border-width: $border;
         }
 
         &:disabled, &:global(.btn-disabled) {
-            box-shadow: inset 0 0 0 $btn-secondary-border-width $black-40;
+            box-shadow: inset 0 0 0 var(--btn-secondary-border-width) $black-40;
             color: $black-60;
         }
     }
@@ -234,4 +236,21 @@ $btn-secondary-border-width: $border;
             color: $black-60;
         }
     }
+}
+
+.btn:global(.btn-uiv2) {
+    --btn-variant: #0B3D56;
+    --btn-variant--hover: #0A334B;
+    --btn-variant--active: #0C455F;
+
+    border-radius: $sp-1;
+
+    font-size: 16px;
+    line-height: 22px;
+    text-transform: none;
+    padding: $sp-2 $sp-6;
+
+    --btn-secondary-border-width: 1px;
+
+    font-weight: $font-weight-medium;
 }

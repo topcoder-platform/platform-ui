@@ -5,23 +5,27 @@ import { xhrGetAsync } from '~/libs/core'
 
 import { Scorecard } from '../models'
 
-interface UseFetchScorecardParams {
-  id: string;
-}
 const baseUrl = `${EnvironmentConfig.API.V6}/review`
 
-export function useFetchScorecard(
-    {
-        id,
-    }: UseFetchScorecardParams,
-): Scorecard {
+interface ScorecardResponse {
+  scorecard: Scorecard | undefined
+  error?: any
+  isValidating: boolean
+}
+
+export function useFetchScorecard(id: string | undefined): ScorecardResponse {
 
     const fetcher = (url: string): Promise<Scorecard> => xhrGetAsync<Scorecard>(url)
 
-    const { data }: SWRResponse<Scorecard, any> = useSWR<Scorecard>(
-        `${baseUrl}/scorecards/${id}`,
+    const { data, error, isValidating }: SWRResponse<Scorecard, any> = useSWR<Scorecard>(
+        // eslint-disable-next-line unicorn/no-null
+        id ? `${baseUrl}/scorecards/${id}` : null,
         fetcher,
     )
 
-    return data as Scorecard
+    return {
+        error,
+        isValidating,
+        scorecard: data,
+    }
 }

@@ -37,6 +37,7 @@ export const categoryByProjectType = {
         'Architecture',
         'Deployment',
         'Process',
+        'Assembly Competition',
         'UI Prototype Competition',
         'Conceptualization',
         'RIA Build Competition',
@@ -53,6 +54,9 @@ export const categoryByProjectType = {
         'Automated Testing',
     ],
 } satisfies Record<ProjectType, string[]>
+
+export const scorecardCategories = Object.values(categoryByProjectType)
+    .flat()
 
 export enum ScorecardStatus {
   ACTIVE = 'ACTIVE',
@@ -88,17 +92,25 @@ export const ScorecardTypeLabels: Record<ScorecardType, string> = {
     [ScorecardType.ITERATIVE_REVIEW]: 'Iterative Review',
 }
 
+export const ScorecardScales = {
+    'scale(1-4)': 'Scale 1-4',
+    'scale(1-5)': 'Scale 1-5',
+    'scale(1-10)': 'Scale 1-10',
+    'scale(1-100)': 'Scale 1-100',
+    test_case: 'Test Case',
+    yes_no: 'Yes / No',
+}
+
 export interface Scorecard {
-    id: string
+    id?: string
     name: string
     type: ScorecardType
     challengeTrack: ProjectType
-    category: string
     status: ScorecardStatus
     index?: number
-    version: string
-    challengeType: string
     minScore: number
     maxScore: number
+    challengeType: string
+    version: string
     scorecardGroups: ScorecardGroup[]
 }

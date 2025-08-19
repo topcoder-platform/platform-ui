@@ -19,11 +19,11 @@ interface InputWrapperProps {
     readonly className?: string
     readonly classNameWrapper?: string
     readonly dirty?: boolean
-    readonly disabled: boolean
+    readonly disabled?: boolean
     readonly error?: string
     readonly hideInlineErrors?: boolean
     readonly hint?: string
-    readonly label: string | JSX.Element
+    readonly label?: string | JSX.Element
     readonly tabIndex?: number
     readonly type: 'checkbox' | 'password' | 'rating' | 'text' | 'textarea' | 'number'
     readonly forceFocusStyle?: boolean

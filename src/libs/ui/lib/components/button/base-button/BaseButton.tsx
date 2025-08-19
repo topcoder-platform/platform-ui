@@ -28,6 +28,7 @@ export interface BaseButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>
     noCaps?: boolean
     leftAlignText?: boolean
     textWrap?: boolean
+    uiv2?: boolean
 }
 
 const BaseButton: FC<BaseButtonProps> = props => {
@@ -49,6 +50,7 @@ const BaseButton: FC<BaseButtonProps> = props => {
         'btn-style-secondary': props.secondary,
         [`btn-variant-${props.variant}`]: !!props.variant,
         'btn-text-wrap': props.textWrap,
+        'btn-uiv2': props.uiv2,
     })
 
     return (
