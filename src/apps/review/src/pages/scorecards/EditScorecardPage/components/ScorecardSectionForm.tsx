@@ -13,9 +13,7 @@ import * as yup from 'yup';
 import { get } from 'lodash';
 
 export const scorecardSectionSchema = {
-    sections: yup.array()
-    .min(1, 'At least one section is required')
-    .test(...weightsSum('sections')).of(
+    sections: yup.array().of(
         yup.object().shape({
             name: yup.string().required('Section name is required'),
             weight: yup
@@ -27,6 +25,8 @@ export const scorecardSectionSchema = {
             ...scorecardQuestionSchema,
         })
     )
+    .min(1, 'At least one section is required')
+    .test(...weightsSum('sections'))
 };
 
 interface ScorecardSectionFormProps {

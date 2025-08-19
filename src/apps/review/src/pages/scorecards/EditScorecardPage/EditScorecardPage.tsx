@@ -18,6 +18,7 @@ interface EditScorecardPageProps {
 
 const EditScorecardPage: FC<EditScorecardPageProps> = props => {
     const params = useParams();
+    const isEditMode = !!params.scorecardId;
     const scorecardQuery = useFetchScorecard(params.scorecardId)
 
     const editForm = useForm({
@@ -52,17 +53,27 @@ const EditScorecardPage: FC<EditScorecardPageProps> = props => {
 
     return (
         <EditScorecardPageContextProvider>
+            <h2 className={styles.pageTitle}>{isEditMode ? 'Edit' : 'Create'} Scorecard</h2>
+
             <form className={styles.pageContentWrap} onSubmit={editForm.handleSubmit(handleSubmit)}>
                 <FormProvider {...editForm}>
+
+                    <h3 className={styles.sectionTitle}>1. Scorecard Information</h3>
                     <ScorecardInfoForm />
+
+                    <h3 className={styles.sectionTitle}>2. Evaluation Structure</h3>
                     <ScorecardGroupForm />
-                    <div className={styles.buttonsWrap}>
-                        <Button type='button' secondary>
-                            Cancel
-                        </Button>
-                        <Button type='submit' primary>
-                            Save Scorecard
-                        </Button>
+
+                    <div className={styles.bottomContainer}>
+                        <hr />
+                        <div className={styles.buttonsWrap}>
+                            <Button type='button' secondary>
+                                Cancel
+                            </Button>
+                            <Button type='submit' primary>
+                                Save Scorecard
+                            </Button>
+                        </div>
                     </div>
                 </FormProvider>
             </form>

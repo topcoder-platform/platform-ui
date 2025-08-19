@@ -3,12 +3,16 @@
 .wrap {
     display: flex;
     gap: $sp-4;
+    align-items: center;
 
     margin-right: 56px;
 }
 
 .labels {
     text-align: right;
+    > * {
+        line-height: 20px;
+    }
 }
 
 .value {

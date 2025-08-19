@@ -120,7 +120,7 @@ const ScorecardQuestionForm: FC<ScorecardQuestionFormProps> = props => {
                             />
                         )}
                     />
-                    <TrashIcon className={styles.trashIcon} onClick={() => handleRemove(index, questionField)} />
+                    <TrashIcon className={classNames(styles.trashIcon, styles.blue)} onClick={() => handleRemove(index, questionField)} />
 
                     <Controller
                         name={`${name}.${index}.guidelines`}

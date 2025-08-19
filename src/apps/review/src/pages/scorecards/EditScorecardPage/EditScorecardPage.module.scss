@@ -1,6 +1,30 @@
 @import '@libs/ui/styles/includes';
 
 .pageContentWrap {
+    color: #0A0A0A;
+    font-family: Inter;
+}
+
+.pageTitle {
+    font-size: 32px;
+    line-height: 36px;
+    font-weight: bold;
+    color: #0A0A0A;
+    margin-bottom: $sp-8;
+    text-transform: none;
+}
+
+.sectionTitle {
+    font-size: 24px;
+    line-height: 32px;
+    font-weight: bold;
+    margin-bottom: $sp-5;
+    margin-top: $sp-11;
+    text-transform: none;
+    &:first-child {
+        margin-top: 0;
+    }
+
 }
 
 .grayWrapper {
@@ -57,15 +81,18 @@
 }
 
 .questionWrap {
-    background: #F6F7F9;
-    padding: $sp-5 $sp-4;
-
     .questionItem {
         width: 100%;
+        padding: $sp-5 $sp-4;
+        background: #F6F7F9;
 
         display: flex;
         flex-wrap: wrap;
         gap: $sp-4;
+
+        + .questionItem {
+            margin-top: $sp-4;
+        }
     }
 
     .headerAreaLabel {
@@ -98,10 +125,26 @@
     flex: 0 0 2.2%;
     width: 24px;
     height: 47px;
+    &.blue {
+        color: #0D61BF;
+    }
 }
 
 .footerArea {
     display: flex;
     gap: $sp-4;
     justify-content: space-between;
+    align-items: center;
+    margin-top: $sp-5;
+}
+
+.bottomContainer {
+    margin-top: $sp-8;
+}
+
+.buttonsWrap {
+    display: flex;
+    gap: $sp-2;
+    justify-content: flex-end;
+    align-items: center;
 }
