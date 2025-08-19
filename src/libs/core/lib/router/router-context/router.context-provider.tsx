@@ -99,7 +99,6 @@ export const RouterProvider: FC<RouterProviderProps> = (props: RouterProviderPro
     }
 
     function getRouteElement(route: PlatformRoute): JSX.Element {
-
         // create the route element
         const routeElement: JSX.Element = !route.authRequired
             ? route.element

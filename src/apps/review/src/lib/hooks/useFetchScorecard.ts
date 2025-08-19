@@ -19,7 +19,7 @@ export function useFetchScorecard(id: string | undefined): ScorecardResponse {
 
     const { data, error, isValidating }: SWRResponse<Scorecard, any> = useSWR<Scorecard>(
         // eslint-disable-next-line unicorn/no-null
-        id ? `${baseUrl}/${id}` : null,
+        id ? `${baseUrl}/scorecards/${id}` : null,
         fetcher,
     )
 

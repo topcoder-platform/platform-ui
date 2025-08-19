@@ -2,6 +2,8 @@
  * Scorecard
  */
 
+import { ScorecardGroup } from './ScorecardGroup.model'
+
 export enum ProjectType {
   DEVELOPMENT = 'DEVELOPMENT',
   DATA_SCIENCE = 'DATA_SCIENCE',
@@ -110,4 +112,5 @@ export interface Scorecard {
     maxScore: number
     challengeType: string
     version: string
+    scorecardGroups: ScorecardGroup[]
 }

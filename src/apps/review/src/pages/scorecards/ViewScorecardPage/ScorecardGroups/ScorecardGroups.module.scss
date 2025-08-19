@@ -1,0 +1,48 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    margin-top: 32px;
+    .group {
+        .heading {
+            padding: 12px 16px;
+            background-color: #0F172A;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            .groupNumber {
+                font-size: 14px;
+                font-family: "Nunito Sans", sans-serif;
+                font-weight: 400;
+            }
+            .groupInfo {
+                display: flex;
+                flex-direction: row;
+                font-size: 16px;
+                font-family: "Nunito Sans", sans-serif;
+                margin-top: 4px;
+                .name {
+                    display: flex;
+                    flex: 1;
+                    font-weight: 700;
+                }
+            }
+        }
+    }
+}
+
+@media (max-width: #{$lg-max}) {
+    .container {
+        .group {
+            .heading {
+                .groupInfo {
+                    flex-direction: column;
+                    .name {
+                        margin-bottom: 8px;
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,14 @@
+.container {
+    padding: 32px 0;
+    .section {
+        &.evaluationStructureSection {
+            margin-top: 54px;
+        }
+        .heading {
+            font-weight: 700;
+            font-size: 24px;
+            color: #0A0A0A;
+            line-height: 30px;
+        }
+    }
+}
