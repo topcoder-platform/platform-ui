@@ -277,7 +277,7 @@ const CopilotRequestForm: FC<{}> = () => {
                 message: 'Field cannot be left empty',
             },
             {
-                condition: formValues.otherPaymentType.trim().length > 8,
+                condition: formValues.otherPaymentType && formValues.otherPaymentType.trim().length > 8,
                 key: 'otherPaymentType',
                 message: 'Field only allows 8 characters',
             },
