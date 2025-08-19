@@ -1,14 +1,14 @@
 import { FC } from 'react'
+import { useFormContext } from 'react-hook-form'
+import classNames from 'classnames'
 
 import styles from './CalculatedWeightsSum.module.scss'
-import { useFormContext } from 'react-hook-form';
-import classNames from 'classnames';
 
 interface CalculatedWeightsSumProps {
-    fieldName: string;
-    label: string;
     description: string;
     error?: string;
+    fieldName: string;
+    label: string;
 }
 
 const CalculatedWeightsSum: FC<CalculatedWeightsSumProps> = props => {
@@ -24,7 +24,9 @@ const CalculatedWeightsSum: FC<CalculatedWeightsSumProps> = props => {
         <div className={styles.wrap}>
             <div className={styles.labels}>
                 <div className='body-small-bold'>
-                    {props.label} Weights:
+                    {props.label}
+                    {' '}
+                    Weights:
                 </div>
                 <div className={classNames('body-small', props.error && 'errorMessage')}>
                     {props.description}

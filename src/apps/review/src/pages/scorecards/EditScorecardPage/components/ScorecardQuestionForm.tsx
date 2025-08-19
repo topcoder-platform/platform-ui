@@ -1,41 +1,47 @@
-import classNames from 'classnames';
-import * as yup from 'yup';
-import { get } from 'lodash';
+import * as yup from 'yup'
+import { get } from 'lodash'
 import { ChangeEvent, ChangeEventHandler, FC, useCallback, useMemo } from 'react'
-import { useFieldArray, useFormContext } from 'react-hook-form';
+import { useFieldArray, useFormContext } from 'react-hook-form'
+import classNames from 'classnames'
 
-import { TrashIcon } from '@heroicons/react/outline';
-import { Button } from '~/libs/ui';
-import { ScorecardScales } from '~/apps/review/src/lib/models';
+import { TrashIcon } from '@heroicons/react/outline'
+import { Button } from '~/libs/ui'
+import { ScorecardScales } from '~/apps/review/src/lib/models'
 
+import { getEmptyScorecardQuestion, weightsSum } from '../utils'
+import { usePageContext } from '../EditScorecardPage.context'
 import styles from '../EditScorecardPage.module.scss'
-import { usePageContext } from '../EditScorecardPage.context';
-import { getEmptyScorecardQuestion, weightsSum } from '../utils';
 
-import CalculatedWeightsSum from './CalculatedWeightsSum';
-import InputWrapper from './InputWrapper';
-import BasicSelect from './BasicSelect';
+import BasicSelect from './BasicSelect'
+import CalculatedWeightsSum from './CalculatedWeightsSum'
+import InputWrapper from './InputWrapper'
 
-const scorecardScaleOptions = Object.entries(ScorecardScales).map(([value, label]) => ({ value, label }))
-const yesNoOptions = [{ value: true, label: 'Yes' }, { value: false, label: 'No' }]
+const scorecardScaleOptions = Object.entries(ScorecardScales)
+    .map(([value, label]) => ({ label, value }))
+const yesNoOptions = [{ label: 'Yes', value: true }, { label: 'No', value: false }]
 
 export const scorecardQuestionSchema = {
-    questions: yup.array().of(
-            yup.object().shape({
-            description: yup.string().required('Description is required'),
-            weight: yup
-                .number()
-                .typeError('Weight must be a number')
-                .required('Weight is required')
-                .min(0, 'Weight must be at least 0')
-                .max(100, 'Weight must be at most 100'),
-            guidelines: yup.string().nullable(),
-            type: yup.string().required('Scale is required'),
-        })
-    )
-    .min(1, 'At least one question is required')
-    .test(...weightsSum('questions'))
-};
+    questions: yup.array()
+        .of(
+            yup.object()
+                .shape({
+                    description: yup.string()
+                        .required('Description is required'),
+                    guidelines: yup.string()
+                        .nullable(),
+                    type: yup.string()
+                        .required('Scale is required'),
+                    weight: yup
+                        .number()
+                        .typeError('Weight must be a number')
+                        .required('Weight is required')
+                        .min(0, 'Weight must be at least 0')
+                        .max(100, 'Weight must be at most 100'),
+                }),
+        )
+        .min(1, 'At least one question is required')
+        .test(...weightsSum('questions')),
+}
 
 interface ScorecardQuestionFormProps {
     sectionIndex: number;
@@ -43,26 +49,26 @@ interface ScorecardQuestionFormProps {
 }
 
 const ScorecardQuestionForm: FC<ScorecardQuestionFormProps> = props => {
-    const form = useFormContext();
-    const ctx = usePageContext();
-    const values = form.getValues();
+    const form = useFormContext()
+    const ctx = usePageContext()
+    const values = form.getValues()
 
-    const name = useMemo(() => `${props.prefix}.questions`, [props.prefix]);
+    const name = useMemo(() => `${props.prefix}.questions`, [props.prefix])
     const formQuestionsArray = useFieldArray({
         control: form.control,
         name,
-    });
+    })
 
     const handleRemove = useCallback(async (index: number, field: any) => {
         if (!await ctx.confirm({
+            content: `Are you sure you want to remove "${field.name ? field.name : `Question ${index + 1}`}" question?`,
             title: 'Confirm Remove Question',
-            content: `Are you sure you want to remove "${field.name ? field.name : `Question ${index + 1}`}" question?`
         })) {
-            return;
+            return
         }
 
         formQuestionsArray.remove(index)
-    }, [ctx]);
+    }, [ctx, formQuestionsArray])
 
     const handleAddQuestion = useCallback(() => {
         formQuestionsArray.append({
@@ -71,13 +77,16 @@ const ScorecardQuestionForm: FC<ScorecardQuestionFormProps> = props => {
         })
     }, [formQuestionsArray])
 
-    const handleScaleChange = useCallback((ev: any, field: {name: string, value: string, onChange: (...event: any[]) => void}) => {
-        const [_, type, min, max] = ev.target.value.match(/^([A-Za-z0-9_]+)(?:\((\d+)-(\d+)\))?$/) ?? []
+    const handleScaleChange = useCallback((
+        ev: any,
+        field: {name: string, value: string, onChange: (...event: any[]) => void},
+    ) => {
+        const [, type, min, max] = ev.target.value.match(/^([A-Za-z0-9_]+)(?:\((\d+)-(\d+)\))?$/) ?? []
 
         form.setValue(field.name, type.toUpperCase(), { shouldValidate: true })
         form.setValue(field.name.replace(/\.type$/, '.scaleMin'), Number(min) || 0, { shouldValidate: true })
         form.setValue(field.name.replace(/\.type$/, '.scaleMax'), Number(max) || 0, { shouldValidate: true })
-    }, [form]);
+    }, [form])
 
     return (
         <div className={styles.questionWrap}>
@@ -87,29 +96,33 @@ const ScorecardQuestionForm: FC<ScorecardQuestionFormProps> = props => {
             {formQuestionsArray.fields.map((questionField, index) => (
                 <div key={questionField.id} className={styles.questionItem}>
                     <div className={classNames('body-small main-group', styles.headerAreaLabel)}>
-                        Question {props.sectionIndex}.{index+1}
+                        Question
+                        {' '}
+                        {props.sectionIndex}
+                        .
+                        {index + 1}
                     </div>
                     <InputWrapper
-                        placeholder="Question Name"
+                        placeholder='Question Name'
                         name={`${name}.${index}.description`}
                         className='main-group'
                     >
-                        <input type="text" />
+                        <input type='text' />
                     </InputWrapper>
                     <InputWrapper
-                        placeholder="Weight"
+                        placeholder='Weight'
                         name={`${name}.${index}.weight`}
                         className='weight-group'
                     >
-                        <input type="number" />
+                        <input type='number' />
                     </InputWrapper>
                     <TrashIcon
                         className={classNames(styles.trashIcon, styles.blue, 'action-group')}
-                        onClick={() => handleRemove(index, questionField)}
+                        onClick={function handleRemoveItem() { handleRemove(index, questionField) }}
                     />
 
                     <InputWrapper
-                        placeholder="Question Guideline"
+                        placeholder='Question Guideline'
                         name={`${name}.${index}.guidelines`}
                         className='main-group'
                     >
@@ -118,32 +131,42 @@ const ScorecardQuestionForm: FC<ScorecardQuestionFormProps> = props => {
 
                     <div className={classNames('main-group', styles.doubleInputWrap)}>
                         <InputWrapper
-                            placeholder="Select Scale"
+                            placeholder='Select Scale'
                             name={`${name}.${index}.type`}
                         >
                             <BasicSelect
                                 options={scorecardScaleOptions}
                                 {...{
                                     mapValue: (value: string) => (
-                                        `${value?.toLowerCase()}${value === 'SCALE' ? `(${get(values, `${name}.${index}.scaleMin`)}-${get(values, `${name}.${index}.scaleMax`)})` : ''}`
+                                        `${value?.toLowerCase()}${
+                                            value === 'SCALE'
+                                                ? `(${
+                                                    get(values, `${name}.${index}.scaleMin`)
+                                                }-${
+                                                    get(values, `${name}.${index}.scaleMax`)
+                                                })`
+                                                : ''
+                                        }`
                                     ),
-                                    onChange: ((ev: ChangeEvent<HTMLInputElement>, field: any) => handleScaleChange(ev, field)) as ChangeEventHandler,
+                                    onChange: ((
+                                        ev: ChangeEvent<HTMLInputElement>,
+                                        field: any,
+                                    ) => handleScaleChange(ev, field)) as ChangeEventHandler,
                                 }}
                             />
                         </InputWrapper>
                         <input
-                            type="hidden"
+                            type='hidden'
                             {...form.register(`${name}.${index}.scaleMin`)}
                         />
                         <input
-                            type="hidden"
+                            type='hidden'
                             {...form.register(`${name}.${index}.scaleMax`)}
                         />
 
-
                         <InputWrapper
-                            placeholder="Select Document Requirements"
                             name={`${name}.${index}.requiresUpload`}
+                            placeholder='Select Document Requirements'
                         >
                             <BasicSelect options={yesNoOptions} />
                         </InputWrapper>

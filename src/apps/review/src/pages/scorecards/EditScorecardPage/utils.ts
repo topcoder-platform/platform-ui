@@ -1,4 +1,4 @@
-import * as yup from 'yup';
+import * as yup from 'yup'
 import { get } from 'lodash'
 import { FieldValues, UseFormReturn } from 'react-hook-form'
 

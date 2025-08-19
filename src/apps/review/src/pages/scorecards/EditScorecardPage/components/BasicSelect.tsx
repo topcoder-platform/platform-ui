@@ -1,6 +1,6 @@
-import classNames from 'classnames';
-import { omit } from 'lodash';
+import { omit } from 'lodash'
 import { FC, SelectHTMLAttributes } from 'react'
+import classNames from 'classnames'
 
 interface BasicSelectProps<T> extends SelectHTMLAttributes<T> {
     options: { label: string; value: string|boolean|number }[];
@@ -13,13 +13,13 @@ const BasicSelect: FC<BasicSelectProps<any>> = props => (
         className={
             classNames(
                 props.className,
-                !props.value && `${props.value}` !== 'false' && 'empty'
+                !props.value && `${props.value}` !== 'false' && 'empty',
             )
         }
     >
         <option
             disabled
-            value=""
+            value=''
         >
             {props.placeholder}
         </option>
