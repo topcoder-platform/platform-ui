@@ -1,0 +1,50 @@
+@import '@libs/ui/styles/includes';
+
+
+.action {
+    display: flex;
+    gap: 16px;
+    color: $link-blue-dark;
+    font-weight: 700;
+
+    .actionItem {
+        display: flex;
+        gap: 4px;
+        align-items: center;
+
+        svg {
+            width: 20px;
+            height: 20px;
+        }
+    }
+}
+
+.tableCell {
+    vertical-align: middle;
+}
+
+.textBlue,
+.textBlue:hover {
+    color: $link-blue-dark;
+}
+
+.tableBreakCell {
+    white-space: break-spaces !important;
+}
+
+.tableCellCenter {
+    text-align: center;
+}
+
+.pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .paginationText {
+        font-size: 12px;
+        font-weight: 400;
+        color: #0A0A0A;
+    }
+}
+

@@ -30,6 +30,7 @@ const PaymentProviderTable: React.FC<PaymentMethodTableProps> = (props: PaymentM
                         <th className='body-ultra-small-bold'>CONNECTED PROVIDER</th>
                         <th className='body-ultra-small-bold'>PROVIDER ID</th>
                         <th className='body-ultra-small-bold'>STATUS</th>
+                        {/* eslint-disable-next-line jsx-a11y/control-has-associated-label */}
                         <th className='body-ultra-small'> </th>
                     </tr>
                 </thead>

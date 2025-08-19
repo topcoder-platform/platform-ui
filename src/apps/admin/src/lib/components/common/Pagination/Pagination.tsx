@@ -74,7 +74,6 @@ const Pagination: FC<PaginationProps> = (props: PaginationProps) => {
                 size='md'
                 icon={IconOutline.ChevronDoubleLeftIcon}
                 iconToLeft
-                label='FIRST'
                 disabled={props.page === 1 || props.disabled}
                 className={styles.first}
             />
@@ -84,7 +83,6 @@ const Pagination: FC<PaginationProps> = (props: PaginationProps) => {
                 size='md'
                 icon={IconOutline.ChevronLeftIcon}
                 iconToLeft
-                label='PREVIOUS'
                 disabled={props.page === 1 || props.disabled}
                 className={styles.previous}
             />
@@ -93,7 +91,6 @@ const Pagination: FC<PaginationProps> = (props: PaginationProps) => {
                     <Button
                         key={`page-${i}`}
                         secondary
-                        variant='round'
                         label={`${i}`}
                         onClick={createHandlePageClick(i)}
                         className={i === props.page ? styles.active : ''}
@@ -107,7 +104,6 @@ const Pagination: FC<PaginationProps> = (props: PaginationProps) => {
                 size='md'
                 icon={IconOutline.ChevronRightIcon}
                 iconToRight
-                label='NEXT'
                 disabled={props.page === totalPages || props.disabled}
                 className={styles.next}
             />
@@ -118,7 +114,6 @@ const Pagination: FC<PaginationProps> = (props: PaginationProps) => {
                     size='md'
                     icon={IconOutline.ChevronDoubleRightIcon}
                     iconToRight
-                    label='LAST'
                     disabled={props.page === totalPages || props.disabled}
                     className={styles.last}
                 />
