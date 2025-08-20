@@ -11,6 +11,11 @@
         display: flex;
         gap: 4px;
         align-items: center;
+        cursor: pointer;
+
+        &:hover {
+            text-decoration: underline;
+        }
 
         svg {
             width: 20px;
