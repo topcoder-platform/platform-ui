@@ -4,6 +4,7 @@ import { EnvironmentConfig } from '~/config'
 import { xhrGetAsync } from '~/libs/core'
 
 import { Scorecard } from '../models'
+import { toast } from 'react-toastify'
 
 const baseUrl = `${EnvironmentConfig.API.V6}/review`
 
@@ -21,6 +22,11 @@ export function useFetchScorecard(id: string | undefined): ScorecardResponse {
         // eslint-disable-next-line unicorn/no-null
         id ? `${baseUrl}/scorecards/${id}` : null,
         fetcher,
+        {
+            onError: (err) => {
+                toast.error(err.message)
+            }
+        }
     )
 
     return {
