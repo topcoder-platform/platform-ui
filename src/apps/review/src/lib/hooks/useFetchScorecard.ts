@@ -1,10 +1,10 @@
+import { toast } from 'react-toastify'
 import useSWR, { SWRResponse } from 'swr'
 
 import { EnvironmentConfig } from '~/config'
 import { xhrGetAsync } from '~/libs/core'
 
 import { Scorecard } from '../models'
-import { toast } from 'react-toastify'
 
 const baseUrl = `${EnvironmentConfig.API.V6}/review`
 
@@ -23,10 +23,10 @@ export function useFetchScorecard(id: string | undefined): ScorecardResponse {
         id ? `${baseUrl}/scorecards/${id}` : null,
         fetcher,
         {
-            onError: (err) => {
+            onError: err => {
                 toast.error(err.message)
-            }
-        }
+            },
+        },
     )
 
     return {
