@@ -29,6 +29,15 @@ export const scorecardQuestionSchema = {
                         .required('Description is required'),
                     guidelines: yup.string()
                         .nullable(),
+                    requiresUpload: yup.boolean()
+                        .transform((value, originalValue) => {
+                            // Handle empty string as undefined (so required() can catch it)
+                            if (originalValue === "") return undefined;
+
+                            // Yup already transforms "true"/"false" strings into booleans
+                            return value;
+                        }).required()
+                        .required('Documents requirements is required'),
                     type: yup.string()
                         .required('Scale is required'),
                     weight: yup
@@ -168,7 +177,18 @@ const ScorecardQuestionForm: FC<ScorecardQuestionFormProps> = props => {
                             name={`${name}.${index}.requiresUpload`}
                             placeholder='Select Document Requirements'
                         >
-                            <BasicSelect options={yesNoOptions} />
+                            <BasicSelect
+                                options={yesNoOptions}
+                                onChange={(function handleChangeRequireUpload(
+                                    ev: ChangeEvent<HTMLInputElement>,
+                                    field: any,
+                                ) {
+                                    field.onChange({
+                                        ...ev,
+                                        target: { ...ev.target, value: ev.target.value === 'true' },
+                                    })
+                                }) as ChangeEventHandler}
+                            />
                         </InputWrapper>
                     </div>
                 </div>
