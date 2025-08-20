@@ -80,9 +80,9 @@
         .section {
             .heading {
                 .sectionInfo {
-                    flex-direction: column;
+                    flex-direction: row;
                     .name {
-                        margin-bottom: 4px;
+                        margin-bottom: 0px;
                     }
                 }
             }

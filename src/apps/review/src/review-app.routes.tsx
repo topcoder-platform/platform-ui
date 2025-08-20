@@ -101,7 +101,6 @@ export const reviewRoutes: ReadonlyArray<PlatformRoute> = [
                 route: activeReviewAssigmentsRouteId,
             },
             {
-                authRequired: true,
                 children: [
                     {
                         authRequired: true,
@@ -110,20 +109,22 @@ export const reviewRoutes: ReadonlyArray<PlatformRoute> = [
                         route: '',
                     },
                     {
-                        authRequired: false,
-                        element: <ViewScorecardPage />,
-                        id: 'view-scorecard-page',
-                        route: ':scorecardId',
-                    },
-                    {
+                        authRequired: true,
                         element: <EditScorecardPage />,
                         id: 'edit-scorecard-page',
                         route: ':scorecardId/edit',
                     },
                     {
+                        authRequired: true,
                         element: <EditScorecardPage />,
                         id: 'new-scorecard-page',
                         route: 'new',
+                    },
+                    {
+                        authRequired: false,
+                        element: <ViewScorecardPage />,
+                        id: 'view-scorecard-page',
+                        route: ':scorecardId',
                     },
 
                 ],
