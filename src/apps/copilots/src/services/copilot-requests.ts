@@ -4,6 +4,8 @@ import useSWRInfinite, { SWRInfiniteResponse } from 'swr/infinite'
 import { EnvironmentConfig } from '~/config'
 import { xhrGetAsync, xhrPatchAsync, xhrPostAsync } from '~/libs/core'
 import { buildUrl } from '~/libs/shared/lib/utils/url'
+import { Sort } from '~/apps/admin/src/platform/gamification-admin/src/game-lib'
+import { getPaginatedAsync, PaginatedResponse } from '~/libs/core/lib/xhr/xhr-functions/xhr.functions'
 
 import { CopilotRequest } from '../models/CopilotRequest'
 
@@ -43,32 +45,37 @@ export type CopilotRequestsResponse = {
  * @param {string} [projectId] - Optional project ID to fetch copilot requests for a specific project.
  * @returns {CopilotRequestsResponse} - The response containing copilot requests.
  */
-export const useCopilotRequests = (projectId?: string): CopilotRequestsResponse => {
+export const useCopilotRequests = (sort: Sort, projectId?: string): CopilotRequestsResponse => {
+
     const getKey = (pageIndex: number, previousPageData: CopilotRequest[]): string | undefined => {
         if (previousPageData && previousPageData.length < PAGE_SIZE) return undefined
         const url = buildUrl(`${baseUrl}${projectId ? `/${projectId}` : ''}/copilots/requests`)
         return `
-            ${url}?page=${pageIndex + 1}&pageSize=${PAGE_SIZE}&sort=createdAt desc
+            ${url}?page=${pageIndex + 1}&pageSize=${PAGE_SIZE}&sort=${sort.fieldName} ${sort.direction}
         `
     }
 
-    const fetcher = (url: string): Promise<CopilotRequest[]> => xhrGetAsync<CopilotRequest[]>(url)
-        .then((data: any) => data.map(copilotRequestFactory))
+    const fetcher = (
+        url: string,
+    ): Promise<PaginatedResponse<CopilotRequest[]>> => getPaginatedAsync<CopilotRequest[]>(url)
+        .then((data: any) => (
+            {
+                ...data,
+                data: data.data.map(copilotRequestFactory),
+            }
+        ))
 
     const {
         isValidating,
         data = [],
         size,
         setSize,
-    }: SWRInfiniteResponse<CopilotRequest[]> = useSWRInfinite(getKey, fetcher, {
+    }: SWRInfiniteResponse<PaginatedResponse<CopilotRequest[]>> = useSWRInfinite(getKey, fetcher, {
         revalidateOnFocus: false,
     })
-
-    // Flatten data array
-    const copilotRequests = data ? data.flat() : []
-
-    const lastPage = data[data.length - 1] || []
-    const hasMoreCopilotRequests = lastPage.length === PAGE_SIZE
+    const latestPage = data[data.length - 1] || {}
+    const copilotRequests = data.flatMap(page => page.data)
+    const hasMoreCopilotRequests = latestPage.page + 1 < latestPage.totalPages
 
     return { data: copilotRequests, hasMoreCopilotRequests, isValidating, setSize: (s: number) => { setSize(s) }, size }
 }

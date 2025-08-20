@@ -1,4 +1,4 @@
-import { FC, useCallback, useContext, useMemo } from 'react'
+import { FC, useCallback, useContext, useMemo, useState } from 'react'
 import { find } from 'lodash'
 import { NavigateFunction, Params, useNavigate, useParams } from 'react-router-dom'
 import classNames from 'classnames'
@@ -18,6 +18,7 @@ import {
 } from '~/libs/ui'
 import { profileContext, ProfileContextData, UserRole } from '~/libs/core'
 import { EnvironmentConfig } from '~/config'
+import { Sort } from '~/apps/admin/src/platform/gamification-admin/src/game-lib'
 
 import { ProjectTypeLabels } from '../../constants'
 import { approveCopilotRequest, CopilotRequestsResponse, useCopilotRequests } from '../../services/copilot-requests'
@@ -136,6 +137,10 @@ const CopilotTableActions: FC<{request: CopilotRequest}> = props => {
 const CopilotRequestsPage: FC = () => {
     const navigate: NavigateFunction = useNavigate()
     const routeParams: Params<string> = useParams()
+    const [sort, setSort] = useState<Sort>({
+        direction: 'desc',
+        fieldName: 'createdAt',
+    })
 
     const { profile }: ProfileContextData = useContext(profileContext)
     const isAdminOrPM: boolean = useMemo(
@@ -148,7 +153,7 @@ const CopilotRequestsPage: FC = () => {
         isValidating: requestsLoading,
         hasMoreCopilotRequests,
         setSize,
-        size }: CopilotRequestsResponse = useCopilotRequests()
+        size }: CopilotRequestsResponse = useCopilotRequests(sort)
 
     const viewRequestDetails = useMemo(() => (
         routeParams.requestId && find(requests, { id: +routeParams.requestId }) as CopilotRequest
@@ -195,7 +200,7 @@ const CopilotRequestsPage: FC = () => {
         },
         {
             label: 'Type',
-            propertyName: 'type',
+            propertyName: 'projectType',
             type: 'text',
         },
         {
@@ -227,11 +232,15 @@ const CopilotRequestsPage: FC = () => {
     const tableData = useMemo(() => requests.map(request => ({
         ...request,
         projectName: request.project?.name,
-        type: ProjectTypeLabels[request.projectType] ?? '',
+        projectType: ProjectTypeLabels[request.projectType] ?? '',
     })), [requests])
 
     function loadMore(): void {
         setSize(size + 1)
+    }
+
+    function onToggleSort(s: Sort): void {
+        setSort(s)
     }
 
     // header button config
@@ -260,6 +269,7 @@ const CopilotRequestsPage: FC = () => {
                 data={tableData}
                 moreToLoad={hasMoreCopilotRequests}
                 onLoadMoreClick={loadMore}
+                onToggleSort={onToggleSort}
             />
             {requestsLoading && <LoadingCircles /> }
             {viewRequestDetails && (
