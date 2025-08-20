@@ -28,14 +28,15 @@ export const scorecardInfoSchema = {
         .required('Category is required'),
     maxScore: yup
         .number()
-        .typeError('Max. Score must be a number')
-        .required('Max. Score is required')
-        .moreThan(yup.ref('minScore'), 'Max. Score must be greater than Min. Score'),
+        .typeError('Max score must be a number')
+        .required('Max score is required')
+        .moreThan(yup.ref('minScore'), 'Max score must be greater than min score')
+        .max(100, 'Max score must be lower than 100'),
     minScore: yup
         .number()
-        .typeError('Min. Score must be a number')
-        .required('Min. Score is required')
-        .min(0, 'Min. Score must be at least 0'),
+        .typeError('Min Score must be a number')
+        .required('Min Score is required')
+        .min(0, 'Min Score must be at least 0'),
     name: yup.string()
         .required('Scorecard Name is required'),
     status: yup.string()

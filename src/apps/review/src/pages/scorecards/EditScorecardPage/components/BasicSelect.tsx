@@ -26,7 +26,7 @@ const BasicSelect: FC<BasicSelectProps<any>> = props => (
         {props.options.map(option => (
             <option
                 key={`${option.value}`}
-                value={option.value as string}
+                value={`${option.value}`}
             >
                 {option.label}
             </option>

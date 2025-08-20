@@ -7,7 +7,7 @@ import { Scorecard, ScorecardGroup, ScorecardQuestion, ScorecardSection } from '
 export const getEmptyScorecardQuestion = (): ScorecardQuestion => ({
     description: '',
     guidelines: '',
-    requiresUpload: false,
+    requiresUpload: '',
     scaleMax: '',
     scaleMin: '',
     sortOrder: 0,
@@ -61,7 +61,7 @@ export const weightsSum = (
         if (!items?.length) return false
         const sum = items.reduce((acc, g) => acc + (Number(g.weight) || 0), 0)
 
-        if (sum !== 100) {
+        if (sum !== value) {
             // force the error to go into `.root`, otherwise it will overwride the array errors
             return ctx.createError({
                 path: ctx.path.replace(/(\.root$)|$/, '.root'),
