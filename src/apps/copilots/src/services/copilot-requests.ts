@@ -1,12 +1,16 @@
 import useSWR, { SWRResponse } from 'swr'
+import useSWRInfinite, { SWRInfiniteResponse } from 'swr/infinite'
 
 import { EnvironmentConfig } from '~/config'
-import { xhrGetAsync, xhrPostAsync } from '~/libs/core'
+import { xhrGetAsync, xhrPatchAsync, xhrPostAsync } from '~/libs/core'
 import { buildUrl } from '~/libs/shared/lib/utils/url'
+import { Sort } from '~/apps/admin/src/platform/gamification-admin/src/game-lib'
+import { getPaginatedAsync, PaginatedResponse } from '~/libs/core/lib/xhr/xhr-functions/xhr.functions'
 
 import { CopilotRequest } from '../models/CopilotRequest'
 
 const baseUrl = `${EnvironmentConfig.API.V5}/projects`
+const PAGE_SIZE = 20
 
 /**
  * Creates a CopilotRequest object by merging the provided data and its nested data,
@@ -23,10 +27,17 @@ function copilotRequestFactory(data: any): CopilotRequest {
         createdAt: new Date(data.createdAt),
         data: undefined,
         opportunity: data.copilotOpportunity?.[0],
+        startDate: new Date(data.data?.startDate),
     }
 }
 
-export type CopilotRequestsResponse = SWRResponse<CopilotRequest[], CopilotRequest[]>
+export type CopilotRequestsResponse = {
+    data: CopilotRequest[];
+    hasMoreCopilotRequests: boolean;
+    isValidating: boolean;
+    size: number;
+    setSize: (size: number) => void;
+}
 
 /**
  * Custom hook to fetch copilot requests for a given project.
@@ -34,16 +45,39 @@ export type CopilotRequestsResponse = SWRResponse<CopilotRequest[], CopilotReque
  * @param {string} [projectId] - Optional project ID to fetch copilot requests for a specific project.
  * @returns {CopilotRequestsResponse} - The response containing copilot requests.
  */
-export const useCopilotRequests = (projectId?: string): CopilotRequestsResponse => {
-    const url = buildUrl(`${baseUrl}${projectId ? `/${projectId}` : ''}/copilots/requests`)
+export const useCopilotRequests = (sort: Sort, projectId?: string): CopilotRequestsResponse => {
 
-    const fetcher = (urlp: string): Promise<CopilotRequest[]> => xhrGetAsync<CopilotRequest[]>(urlp)
-        .then((data: any) => data.map(copilotRequestFactory))
+    const getKey = (pageIndex: number, previousPageData: CopilotRequest[]): string | undefined => {
+        if (previousPageData && previousPageData.length < PAGE_SIZE) return undefined
+        const url = buildUrl(`${baseUrl}${projectId ? `/${projectId}` : ''}/copilots/requests`)
+        return `
+            ${url}?page=${pageIndex + 1}&pageSize=${PAGE_SIZE}&sort=${sort.fieldName} ${sort.direction}
+        `
+    }
 
-    return useSWR(url, fetcher, {
-        refreshInterval: 0,
+    const fetcher = (
+        url: string,
+    ): Promise<PaginatedResponse<CopilotRequest[]>> => getPaginatedAsync<CopilotRequest[]>(url)
+        .then((data: any) => (
+            {
+                ...data,
+                data: data.data.map(copilotRequestFactory),
+            }
+        ))
+
+    const {
+        isValidating,
+        data = [],
+        size,
+        setSize,
+    }: SWRInfiniteResponse<PaginatedResponse<CopilotRequest[]>> = useSWRInfinite(getKey, fetcher, {
         revalidateOnFocus: false,
     })
+    const latestPage = data[data.length - 1] || {}
+    const copilotRequests = data.flatMap(page => page.data)
+    const hasMoreCopilotRequests = latestPage.page + 1 < latestPage.totalPages
+
+    return { data: copilotRequests, hasMoreCopilotRequests, isValidating, setSize: (s: number) => { setSize(s) }, size }
 }
 
 export type CopilotRequestResponse = SWRResponse<CopilotRequest, CopilotRequest>
@@ -54,8 +88,8 @@ export type CopilotRequestResponse = SWRResponse<CopilotRequest, CopilotRequest>
  * @param {string} requestId - The unique identifier of the copilot request.
  * @returns {CopilotRequestResponse} - The response containing the copilot request data.
  */
-export const useCopilotRequest = (requestId: string): CopilotRequestResponse => {
-    const url = buildUrl(`${baseUrl}/copilots/requests/${requestId}`)
+export const useCopilotRequest = (requestId?: string): CopilotRequestResponse => {
+    const url = requestId && buildUrl(`${baseUrl}/copilots/requests/${requestId}`)
 
     const fetcher = (urlp: string): Promise<CopilotRequest> => xhrGetAsync<CopilotRequest>(urlp)
         .then(copilotRequestFactory)
@@ -74,12 +108,14 @@ export const useCopilotRequest = (requestId: string): CopilotRequestResponse => 
  */
 export const saveCopilotRequest = (request: CopilotRequest)
 : Promise<CopilotRequest> => {
-    const url = `${baseUrl}/${request.projectId}/copilots/requests`
+    const url = request.id
+        ? `${baseUrl}/copilots/requests/${request.id}` : `${baseUrl}/${request.projectId}/copilots/requests`
+
     const requestData = {
-        data: request,
+        data: { ...request, id: undefined },
     }
 
-    return xhrPostAsync(url, requestData, {})
+    return request.id ? xhrPatchAsync(url, requestData) : xhrPostAsync(url, requestData, {})
 }
 
 /**

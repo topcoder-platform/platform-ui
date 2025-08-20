@@ -1,54 +1,102 @@
-import { FC, useContext, useMemo, useState } from 'react'
-import { bind, isEmpty } from 'lodash'
+import { FC, useContext, useEffect, useMemo, useState } from 'react'
+import { bind, debounce, isEmpty } from 'lodash'
 import { toast } from 'react-toastify'
+import { Params, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import classNames from 'classnames'
 
 import { profileContext, ProfileContextData } from '~/libs/core'
 import { Button, IconSolid, InputDatePicker, InputMultiselectOption,
-    InputRadio, InputSelect, InputSelectOption, InputSelectReact, InputText, InputTextarea } from '~/libs/ui'
+    InputRadio, InputSelect, InputSelectReact, InputText, InputTextarea } from '~/libs/ui'
 import { InputSkillSelector } from '~/libs/shared'
 
-import { ProjectsResponse, useProjects } from '../../services/projects'
+import { getProject, getProjects, ProjectsResponse, useProjects } from '../../services/projects'
 import { ProjectTypes, ProjectTypeValues } from '../../constants'
-import { saveCopilotRequest } from '../../services/copilot-requests'
+import { CopilotRequestResponse, saveCopilotRequest, useCopilotRequest } from '../../services/copilot-requests'
+import { Project } from '../../models/Project'
 
 import styles from './styles.module.scss'
+
+const editableFields = [
+    'projectId',
+    'opportunityTitle',
+    'copilotUsername',
+    'complexity',
+    'requiresCommunication',
+    'paymentType',
+    'otherPaymentType',
+    'projectType',
+    'overview',
+    'skills',
+    'startDate',
+    'numWeeks',
+    'tzRestrictions',
+    'numHoursPerWeek',
+]
+
 // eslint-disable-next-line
 const CopilotRequestForm: FC<{}> = () => {
     const { profile }: ProfileContextData = useContext(profileContext)
+    const navigate = useNavigate()
+    const routeParams: Params<string> = useParams()
+    const [params] = useSearchParams()
 
     const [formValues, setFormValues] = useState<any>({})
     const [isFormChanged, setIsFormChanged] = useState(false)
     const [formErrors, setFormErrors] = useState<any>({})
-    const [searchTerm, setSearchTerm] = useState<string>('')
-    const { data: projectsData }: ProjectsResponse = useProjects(searchTerm)
-    const [existingCopilot, setExistingCopilot] = useState<string>('')
     const [paymentType, setPaymentType] = useState<string>('')
+    const [projectFromQuery, setProjectFromQuery] = useState<Project>()
+    const activeProjectStatuses = ['active', 'approved', 'draft', 'new']
 
-    const projects = useMemo(
-        () => (
-            projectsData
-                ? projectsData.map(project => ({ label: project.name, value: project.id }))
-                : []
-        ),
-        [projectsData],
-    )
+    const { data: copilotRequestData }: CopilotRequestResponse = useCopilotRequest(routeParams.requestId)
+
+    useEffect(() => {
+        if (copilotRequestData) {
+            setFormValues(copilotRequestData)
+        }
+    }, [copilotRequestData])
+
+    const fetchProject = async (): Promise<void> => {
+        const projectId = params.get('projectId')
+
+        if (!projectId) {
+            return
+        }
+
+        const project = await getProject(projectId as string)
+
+        setFormValues((prevValues: any) => ({
+            ...prevValues,
+            projectId: project.id,
+        }))
+        setIsFormChanged(true)
+        setProjectFromQuery(project)
+    }
+
+    useEffect(() => {
+        fetchProject()
+    }, [params])
+
+    const { data: projects = [] }: ProjectsResponse = useProjects(undefined, {
+        filter: { id: copilotRequestData?.projectId },
+        isPaused: () => !copilotRequestData?.projectId,
+    })
+
+    const projectOptions = useMemo(() => {
+        const projectsFromResponse = projects.map(p => ({
+            label: p.name,
+            value: p.id,
+        }))
+
+        return projectFromQuery
+            ? [...projectsFromResponse, { label: projectFromQuery.name, value: projectFromQuery.id }]
+            : projectsFromResponse
+    }, [projects, projectFromQuery])
 
     const projectTypes = ProjectTypes ? ProjectTypes.map(project => ({
         label: project,
         value: ProjectTypeValues[project],
     }))
         : []
-
-    function exisitingCopilotToggle(t: 'yes'|'no'): void {
-        setExistingCopilot(t)
-        setFormErrors((prevFormErrors: any) => {
-            const updatedErrors = { ...prevFormErrors }
-            delete updatedErrors.existingCopilot
-            return updatedErrors
-        })
-        setIsFormChanged(true)
-    }
 
     function togglePaymentType(t: 'standard'|'other'): void {
         setFormValues((prevFormValues: any) => ({
@@ -63,18 +111,18 @@ const CopilotRequestForm: FC<{}> = () => {
         setPaymentType(t)
     }
 
-    function filterProjects(option: InputSelectOption, value: string): boolean {
-        setSearchTerm(value)
-        return (
-            option.label
-                ?.toString()
-                .toLowerCase()
-                .includes(value.toLowerCase()) ?? false
-        )
-    }
-
-    function handleProjectSearch(inputValue: string): void {
-        setSearchTerm(inputValue)
+    async function handleProjectSearch(inputValue: string): Promise<Array<{
+        label: string;
+        value: string;
+    }>> {
+        const response = await getProjects(inputValue, {
+            filter: {
+                status: {
+                    $in: [activeProjectStatuses],
+                },
+            },
+        })
+        return response.map(project => ({ label: project.name, value: project.id }))
     }
 
     function handleProjectSelect(option: React.ChangeEvent<HTMLInputElement>): void {
@@ -89,6 +137,8 @@ const CopilotRequestForm: FC<{}> = () => {
 
             return updatedErrors
         })
+
+        setIsFormChanged(true)
     }
 
     function handleFormValueChange(
@@ -105,7 +155,12 @@ const CopilotRequestForm: FC<{}> = () => {
                 oldFormValues[key] = Array.isArray(value) ? [...value] : []
                 break
             default:
-                value = event.target.value
+                if (event.type === 'blur') {
+                    value = event.target.value?.trim()
+                } else {
+                    value = event.target.value
+                }
+
                 break
         }
 
@@ -157,13 +212,12 @@ const CopilotRequestForm: FC<{}> = () => {
         const updatedFormErrors: { [key: string]: string } = {}
 
         const fieldValidations: { condition: boolean; key: string; message: string }[] = [
-            { condition: !formValues.projectId, key: 'projectId', message: 'Project is required' },
-            { condition: !existingCopilot, key: 'existingCopilot', message: 'Selection is required' },
             {
-                condition: existingCopilot === 'yes' && !formValues.copilotUsername,
-                key: 'copilotUsername',
-                message: 'Username is required',
+                condition: (formValues.opportunityTitle?.trim().length ?? 0) < 7,
+                key: 'opportunityTitle',
+                message: 'The title for the opportunity must be at least 7 characters',
             },
+            { condition: !formValues.projectId, key: 'projectId', message: 'Project is required' },
             { condition: !formValues.complexity, key: 'complexity', message: 'Selection is required' },
             {
                 condition: !formValues.requiresCommunication,
@@ -173,7 +227,7 @@ const CopilotRequestForm: FC<{}> = () => {
             { condition: !formValues.paymentType, key: 'paymentType', message: 'Selection is required' },
             { condition: !formValues.projectType, key: 'projectType', message: 'Selecting project type is required' },
             {
-                condition: !formValues.overview || formValues.overview.length < 10,
+                condition: !formValues.overview || formValues.overview.trim().length < 10,
                 key: 'overview',
                 message: 'Project overview must be at least 10 characters',
             },
@@ -203,7 +257,7 @@ const CopilotRequestForm: FC<{}> = () => {
                 message: 'Number of weeks should be a positive number',
             },
             {
-                condition: !formValues.tzRestrictions,
+                condition: !formValues.tzRestrictions || formValues.tzRestrictions.trim().length === 0,
                 key: 'tzRestrictions',
                 message: 'Providing timezone restrictions is required. Type No if no restrictions',
             },
@@ -216,6 +270,16 @@ const CopilotRequestForm: FC<{}> = () => {
                 condition: formValues.numHoursPerWeek <= 0,
                 key: 'numHoursPerWeek',
                 message: 'Number of hours per week should be a positive number',
+            },
+            {
+                condition: formValues.otherPaymentType && formValues.otherPaymentType.trim().length === 0,
+                key: 'otherPaymentType',
+                message: 'Field cannot be left empty',
+            },
+            {
+                condition: formValues.otherPaymentType && formValues.otherPaymentType.trim().length > 8,
+                key: 'otherPaymentType',
+                message: 'Field only allows 8 characters',
             },
         ]
 
@@ -230,14 +294,17 @@ const CopilotRequestForm: FC<{}> = () => {
         if (isEmpty(updatedFormErrors)) {
             const cleanedFormValues: any = Object.fromEntries(
                 Object.entries(formValues)
-                    .filter(([, value]) => value !== ''), // Excludes null and undefined
+                    // Excludes null and undefined
+                    .filter(([field, value]) => editableFields.includes(field) && value !== ''),
             )
-            saveCopilotRequest(cleanedFormValues)
+            saveCopilotRequest({ ...cleanedFormValues, id: copilotRequestData?.id })
                 .then(() => {
-                    toast.success('Copilot request sent successfully')
+                    toast.success(
+                        copilotRequestData ? 'Copilot request updated successfully'
+                            : 'Copilot request sent successfully',
+                    )
                     setFormValues({
                         complexity: '',
-                        copilotUsername: '',
                         numHoursPerWeek: '',
                         numWeeks: '',
                         otherPaymentType: '',
@@ -251,8 +318,11 @@ const CopilotRequestForm: FC<{}> = () => {
                     })
                     setIsFormChanged(false)
                     setFormErrors({})
-                    setExistingCopilot('')
                     setPaymentType('')
+                    // Added a small timeout for the toast to be visible properly to the users
+                    setTimeout(() => {
+                        navigate('/requests')
+                    }, 1000)
                 })
                 .catch(e => {
                     toast.error(e.message)
@@ -268,17 +338,29 @@ const CopilotRequestForm: FC<{}> = () => {
         setFormErrors(updatedFormErrors)
     }
 
+    const debouncedProjectSearch = useMemo(() => debounce((inputValue: string, callback: (options: any[]) => void) => {
+        handleProjectSearch(inputValue)
+            .then(callback)
+    }, 300), [])
+
     return (
         <div className={classNames('d-flex flex-column justify-content-center align-items-center', styles.container)}>
             <div className={styles.form}>
                 <form>
                     <h1 className={styles.heading}> Copilot Request </h1>
+
                     <p className={styles.subheading}>
                         Hi,
-                        {profile?.firstName}
                         {' '}
+                        {profile?.firstName}
                         !
-                        This form is to request a copilot for your project. Please fill in the details below.
+                        {' '}
+                        {
+                            copilotRequestData?.id
+                                ? 'Use this form to update the copilot request for your project.'
+                                : 'This form is to request a copilot for your project.'
+                                    + ' Please fill in the details below.'
+                        }
                     </p>
                     { !isEmpty(formErrors)
                         && (
@@ -287,77 +369,37 @@ const CopilotRequestForm: FC<{}> = () => {
                                 Resolve the errors on the form before submitting
                             </p>
                         )}
+
+                    <p className={styles.formRow}>Copilot Opportunity Title</p>
+                    <InputText
+                        dirty
+                        type='text'
+                        label='Title'
+                        name='opportunityTitle'
+                        placeholder='Enter a title for the opportunity'
+                        value={formValues.opportunityTitle?.toString()}
+                        onChange={bind(handleFormValueChange, this, 'opportunityTitle')}
+                        onBlur={bind(handleFormValueChange, this, 'opportunityTitle')}
+                        error={formErrors.opportunityTitle}
+                        tabIndex={0}
+                        forceUpdateValue
+                    />
+
                     <p className={styles.formRow}>Select the project you want the copilot for</p>
                     <InputSelectReact
                         tabIndex={0}
-                        options={projects}
                         value={formValues.projectId || ''}
                         onChange={handleProjectSelect}
-                        onInputChange={handleProjectSearch}
+                        loadOptions={debouncedProjectSearch}
+                        async
                         name='project'
                         label='Project'
                         placeholder='Start typing the name of the project'
                         dirty
-                        filterOption={filterProjects}
+                        isClearable
                         error={formErrors.projectId}
+                        options={projectOptions}
                     />
-                    <p className={styles.formRow}>
-                        Are you already working with a copilot that you&apos;d love to work with on this project
-                        as well?
-                    </p>
-
-                    <div className={styles.formRadioBtn}>
-                        <InputRadio
-                            label='Yes'
-                            name='existingCopilot'
-                            id='yes'
-                            value='Yes'
-                            checked={existingCopilot === 'yes'}
-                            onChange={function t() { exisitingCopilotToggle('yes') }}
-                        />
-                        <InputRadio
-                            label='No'
-                            name='existingCopilot'
-                            id='no'
-                            value='No'
-                            checked={existingCopilot === 'no'}
-                            onChange={function t() { exisitingCopilotToggle('no') }}
-                        />
-                    </div>
-                    {
-                        existingCopilot === 'yes'
-                        && (
-                            <div className={styles.formRow}>
-                                <p className={styles.formRow}>
-                                    Great! What is the username of the copilot you&apos;d like to work with again?
-                                </p>
-
-                                <InputText
-                                    name='copilot name'
-                                    label='Copilot username'
-                                    placeholder='Type the copilot username here...'
-                                    dirty
-                                    tabIndex={0}
-                                    type='text'
-                                    onChange={bind(handleFormValueChange, this, 'copilotUsername')}
-                                    value={formValues.copilotUsername}
-                                    error={formErrors.copilotUsername}
-                                />
-                            </div>
-                        )
-                    }
-                    {formErrors.existingCopilot && (
-                        <p className={styles.error}>
-                            <IconSolid.ExclamationIcon />
-                            {formErrors.existingCopilot}
-                        </p>
-                    )}
-                    {formValues.existingCopilot === 'yes' && !formValues.copilotUsername && (
-                        <p className={styles.error}>
-                            <IconSolid.ExclamationIcon />
-                            {formErrors.existingCopilot}
-                        </p>
-                    )}
 
                     <p className={styles.formRow}>What type of project are you working on?</p>
                     <InputSelect
@@ -413,6 +455,7 @@ const CopilotRequestForm: FC<{}> = () => {
                             customRadius
                             noCaps
                             leftAlignText
+                            textWrap
                         />
                         {formErrors.complexity && (
                             <p className={styles.error}>
@@ -459,6 +502,11 @@ const CopilotRequestForm: FC<{}> = () => {
                         error={formErrors.startDate}
                         dirty
                         minDate={new Date()}
+                        maxDate={new Date(new Date()
+                            .setFullYear(new Date()
+                                .getFullYear() + 2))}
+                        minYear={new Date()}
+                        className={styles.datepicker}
                     />
                     <p className={styles.formRow}>How many weeks will you need the copilot for?</p>
                     <InputText
@@ -557,6 +605,7 @@ const CopilotRequestForm: FC<{}> = () => {
                                     onChange={bind(handleFormValueChange, this, 'otherPaymentType')}
                                     error={formErrors.otherPaymentType}
                                     tabIndex={0}
+                                    maxLength={8}
                                 />
                             )}
                     </div>
@@ -569,7 +618,7 @@ const CopilotRequestForm: FC<{}> = () => {
                     <Button
                         primary
                         size='lg'
-                        label='Send Copilot Request'
+                        label={copilotRequestData ? 'Save Copilot Request' : 'Send Copilot Request'}
                         onClick={handleFormAction}
                         className={styles.formRow}
                         fullWidth

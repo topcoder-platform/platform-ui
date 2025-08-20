@@ -1,4 +1,4 @@
-import { ElementType, MouseEvent } from 'react'
+import { CSSProperties, ElementType, MouseEvent } from 'react'
 import classNames from 'classnames'
 
 import { IconOutline } from '~/libs/ui'
@@ -16,13 +16,15 @@ interface TableCellProps<T> {
     readonly index: number
     readonly propertyName?: string
     readonly className?: string
-    readonly renderer?: (data: T) => JSX.Element | undefined
+    readonly renderer?: (data: T, allRows?: ReadonlyArray<T>) => JSX.Element | undefined
     readonly type: TableCellType
     readonly onExpand?: () => void
     readonly as?: ElementType
     readonly showExpandIndicator?: boolean
     readonly isExpanded?: boolean
     readonly colSpan?: number
+    readonly style?: CSSProperties
+    allRows?: ReadonlyArray<T>
 }
 
 const TableCell: <T extends { [propertyName: string]: any }>(
@@ -40,7 +42,7 @@ const TableCell: <T extends { [propertyName: string]: any }>(
         case 'action':
         case 'element':
         case 'numberElement':
-            data = props.renderer?.(props.data)
+            data = props.renderer?.(props.data, props.allRows)
             break
         case 'money':
             data = textFormatMoneyLocaleString(
@@ -92,6 +94,7 @@ const TableCell: <T extends { [propertyName: string]: any }>(
                     'TableCell_blockCell',
                 )}
                 onClick={onClick}
+                style={props.style}
             >
                 {props.showExpandIndicator && (
                     <IconOutline.ChevronRightIcon

@@ -1,11 +1,13 @@
 import { FC, useCallback, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 
-import { BaseModal, Button, useConfirmationModal } from '~/libs/ui'
+import { BaseModal, Button, IconSolid, useConfirmationModal } from '~/libs/ui'
 import { textFormatDateLocaleShortString } from '~/libs/shared'
 
 import { CopilotRequest } from '../../../models/CopilotRequest'
 import { Project } from '../../../models/Project'
 import { approveCopilotRequest } from '../../../services/copilot-requests'
+import { copilotRoutesMap } from '../../../copilots.routes'
 
 import styles from './CopilotRequestModal.module.scss'
 
@@ -17,6 +19,17 @@ interface CopilotRequestModalProps {
 
 const CopilotRequestModal: FC<CopilotRequestModalProps> = props => {
     const confirmModal = useConfirmationModal()
+    const navigate = useNavigate()
+
+    const isEditable = useMemo(() => !['canceled', 'fulfilled'].includes(props.request.status), [props.request.status])
+
+    const editRequest = useCallback(() => {
+        if (!isEditable) {
+            return
+        }
+
+        navigate(copilotRoutesMap.CopilotRequestEditForm.replace(':requestId', `${props.request.id}`))
+    }, [isEditable, navigate, props.request.id])
 
     const confirm = useCallback(async ({ title, content, action }: any) => {
         const confirmed = await confirmModal.confirm({ content, title })
@@ -45,11 +58,18 @@ const CopilotRequestModal: FC<CopilotRequestModalProps> = props => {
             onClose={props.onClose}
             open
             size='lg'
-            title='Copilot Opportunity'
-            buttons={props.request.status === 'new' && (
+            title='Copilot Request'
+            buttons={(
                 <>
-                    <Button primary onClick={confirmApprove} label='Approve Request' />
-                    <Button primary variant='danger' onClick={confirmReject} label='Reject Request' />
+                    {isEditable && (
+                        <Button primary onClick={editRequest} label='Edit Request' className={styles.mrAuto} />
+                    )}
+                    {props.request.status === 'new' && (
+                        <>
+                            <Button primary onClick={confirmApprove} label='Approve Request' />
+                            <Button primary variant='danger' onClick={confirmReject} label='Reject Request' />
+                        </>
+                    )}
                 </>
             )}
         >
@@ -57,6 +77,22 @@ const CopilotRequestModal: FC<CopilotRequestModalProps> = props => {
                 <div className={styles.detailsLine}>
                     <div>Project</div>
                     <div>{props.project?.name}</div>
+                </div>
+                <div className={styles.detailsLine}>
+                    <div>Title</div>
+                    <div>{props.request.opportunityTitle}</div>
+                </div>
+                <div className={styles.detailsLine}>
+                    <div>Opportunity details</div>
+                    <a
+                        href={copilotRoutesMap.CopilotOpportunityDetails
+                            .replace(':opportunityId', `${props.request.opportunity?.id}`)}
+                        target='_blank'
+                        rel='noopener noreferrer'
+                        className={styles.iconLink}
+                    >
+                        <IconSolid.ExternalLinkIcon className='icon-lg' />
+                    </a>
                 </div>
                 <div className={styles.detailsLine}>
                     <div>Request Status</div>

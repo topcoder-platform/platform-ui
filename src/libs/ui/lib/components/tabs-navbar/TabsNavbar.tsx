@@ -92,7 +92,9 @@ const TabsNavbar: FC<TabsNavbarProps> = (props: TabsNavbarProps) => {
             initialTab.current = ''
         } else if (props.defaultActive) {
             setTabOpened(props.defaultActive)
-            updateOffset(props.defaultActive)
+            setTimeout(() => {
+                updateOffset(props.defaultActive)
+            }, 100)
         }
     }, [
         props.defaultActive,
@@ -123,7 +125,7 @@ const TabsNavbar: FC<TabsNavbarProps> = (props: TabsNavbarProps) => {
                     handleActivateTab={handleActivateTab}
                     handleActivateChildTab={handleActivateChildTab}
                 />
-                <IconOutline.ChevronDownIcon />
+                {props.tabs.length > 1 && <IconOutline.ChevronDownIcon />}
             </div>
 
             <div className={classNames(styles['menu-wrapper'])}>

@@ -1,15 +1,18 @@
 import _ from 'lodash'
 
 import { EnvironmentConfig } from '~/config'
-import { xhrGetAsync, xhrPatchAsync } from '~/libs/core'
+import { xhrDeleteAsync, xhrGetAsync, xhrPatchAsync, xhrPostAsync, xhrPutAsync } from '~/libs/core'
 
 import {
     adjustUserInfoResponse,
     adjustUserStatusHistoryResponse,
     ApiV3Response,
+    SSOLoginProvider,
+    SSOUserLogin,
     UserInfo,
     UserStatusHistory,
 } from '../models'
+import { FormAddSSOLoginData } from '../models/FormAddSSOLoginData.model'
 
 /**
  * Gets the member suggest by handle.
@@ -153,4 +156,85 @@ export const findUserById = async (userId: string | number): Promise<UserInfo> =
         `${EnvironmentConfig.API.V3}/users/${userId}`,
     )
     return adjustUserInfoResponse(result.result.content)
+}
+
+/**
+ * Fetch list of sso user login.
+ * @param userId user id.
+ * @returns resolves to sso user logins
+ */
+export const fetchSSOUserLogins = async (userId: string | number): Promise<SSOUserLogin[]> => {
+    const result = await xhrGetAsync<ApiV3Response<SSOUserLogin[]>>(
+        `${EnvironmentConfig.API.V3}/users/${userId}/SSOUserLogins`,
+    )
+    return result.result.content
+}
+
+/**
+ * Fetch list of sso login provider.
+ * @returns resolves to sso user logins
+ */
+export const fetchSSOLoginProviders = async (): Promise<SSOLoginProvider[]> => {
+    const result = await xhrGetAsync<ApiV3Response<SSOLoginProvider[]>>(
+        `${EnvironmentConfig.API.V3}/ssoLoginProviders`,
+    )
+    return result.result.content
+}
+
+/**
+ * Create sso user login.
+ * @param userId user id.
+ * @param userLogin user login info.
+ * @returns resolves to sso user login
+ */
+export const createSSOUserLogin = async (
+    userId: string | number,
+    userLogin: FormAddSSOLoginData,
+): Promise<SSOUserLogin> => {
+    const result = await xhrPostAsync<
+        {
+            param: FormAddSSOLoginData
+        },
+        ApiV3Response<SSOUserLogin>
+    >(`${EnvironmentConfig.API.V3}/users/${userId}/SSOUserLogin`, {
+        param: userLogin,
+    })
+    return result.result.content
+}
+
+/**
+ * Update sso user login.
+ * @param userId user id.
+ * @param userLogin user login info.
+ * @returns resolves to sso user login
+ */
+export const updateSSOUserLogin = async (
+    userId: string | number,
+    userLogin: FormAddSSOLoginData,
+): Promise<SSOUserLogin> => {
+    const result = await xhrPutAsync<
+        {
+            param: FormAddSSOLoginData
+        },
+        ApiV3Response<SSOUserLogin>
+    >(`${EnvironmentConfig.API.V3}/users/${userId}/SSOUserLogin`, {
+        param: userLogin,
+    })
+    return result.result.content
+}
+
+/**
+ * Delete sso user login.
+ * @param userId user id.
+ * @param provider login provider.
+ * @returns resolves to sso user login
+ */
+export const deleteSSOUserLogin = async (
+    userId: string | number,
+    provider: string,
+): Promise<SSOUserLogin> => {
+    const result = await xhrDeleteAsync<ApiV3Response<SSOUserLogin>>(
+        `${EnvironmentConfig.API.V3}/users/${userId}/SSOUserLogin?provider=${provider}`,
+    )
+    return result.result.content
 }

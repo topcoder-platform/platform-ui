@@ -10,7 +10,7 @@ import {
     Table,
     type TableColumn,
 } from '~/libs/ui'
-import { Sort } from '~/apps/gamification-admin/src/game-lib/pagination'
+import { Sort } from '~/apps/admin/src/platform/gamification-admin/src/game-lib'
 
 import { Reviewer } from '../../models'
 import { useEventCallback } from '../../hooks'
@@ -155,7 +155,7 @@ const ReviewerList: FC<ReviewerListProps> = props => {
                 type: 'element',
             },
             {
-                label: 'Open Review Opp',
+                label: 'Open Reviews',
                 propertyName: '',
                 renderer: (reviewer: Reviewer) => (
                     // eslint-disable-next-line jsx-a11y/anchor-is-valid
@@ -170,7 +170,8 @@ const ReviewerList: FC<ReviewerListProps> = props => {
                 propertyName: 'reviewsInPast60Days',
                 type: 'number',
             },
-            { label: 'Matching Skills', propertyName: '', type: 'text' },
+            // Hide the columns temporary, we do not have these data now
+            // { label: 'Matching Skills', propertyName: '', type: 'text' },
             {
                 label: '',
                 renderer: (reviewer: Reviewer) => (
@@ -197,6 +198,7 @@ const ReviewerList: FC<ReviewerListProps> = props => {
                     data={props.reviewers}
                     initSort={{ direction: 'asc', fieldName: '' }}
                     onToggleSort={props.onToggleSort}
+                    className={styles.desktopTable}
                 />
             )}
             {screenWidth <= 984 && (

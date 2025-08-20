@@ -4,7 +4,6 @@ import _ from 'lodash'
 import {
     FormAddGroup,
     FormAddGroupMembers,
-    FormAddResource,
     FormBillingAccountsFilter,
     FormClientsFilter,
     FormEditBillingAccount,
@@ -21,6 +20,7 @@ import {
 } from '../models'
 import { FormEditUserStatus } from '../models/FormEditUserStatus.model'
 import { FormAddRoleMembers } from '../models/FormAddRoleMembers.type'
+import { FormAddSSOLoginData } from '../models/FormAddSSOLoginData.model'
 
 /**
  * validation schema for form filter users
@@ -36,33 +36,6 @@ export const formUsersFiltersSchema: Yup.ObjectSchema<FormUsersFilters>
             .optional(),
         userId: Yup.string()
             .optional(),
-    })
-
-/**
- * validation schema for form add resource
- */
-export const formAddResourceSchema: Yup.ObjectSchema<FormAddResource>
-    = Yup.object({
-        handle: Yup.object()
-            .shape({
-                label: Yup.string()
-                    .required('Label is required.'),
-                value: Yup.number()
-                    .required('Value  is required.'),
-            })
-            .default(undefined)
-            .required('Handle is required.'),
-        resourceRole: Yup.object()
-            .shape({
-                label: Yup.string()
-                    .required('Label is required.'),
-                value: Yup.string()
-                    .required('Value  is required.'),
-            })
-            .default(undefined)
-            .required('Role is required.'),
-        userId: Yup.string()
-            .required('User id is required.'),
     })
 
 /**
@@ -134,7 +107,7 @@ export function isValidNumber(value: number | undefined): boolean {
 /**
  * validation schema for form new billing account
  */
-export const formEditBillingAccountSchema: Yup.ObjectSchema<FormEditBillingAccount>
+export const formAddBillingAccountSchema: Yup.ObjectSchema<FormEditBillingAccount>
     = Yup.object({
         budgetAmount: Yup.number()
             .transform(value => (Number.isNaN(value) ? undefined : value))
@@ -186,6 +159,59 @@ export const formEditBillingAccountSchema: Yup.ObjectSchema<FormEditBillingAccou
 /**
  * validation schema for form new billing account
  */
+export const formEditBillingAccountSchema: Yup.ObjectSchema<FormEditBillingAccount>
+    = Yup.object({
+        budgetAmount: Yup.number()
+            .transform(value => (Number.isNaN(value) ? undefined : value))
+            .optional()
+            .typeError('Invalid number.')
+            .min(1, 'Budget amount must be greater than or equal 1.'),
+        client: Yup.object()
+            .shape({
+                id: Yup.number()
+                    .typeError('Invalid number.')
+                    .required('Id is required.'),
+                name: Yup.string()
+                    .required('Name is required.'),
+            })
+            .default(undefined)
+            .required('Client is required.'),
+        companyId: Yup.number()
+            .typeError('Invalid number.')
+            .required('Customer number is required.')
+            .min(1, 'Customer number must be greater than or equal 1.'),
+        description: Yup.string()
+            .trim()
+            .required('Description is required.'),
+        endDate: Yup.date()
+            .required('End date is required.'),
+        name: Yup.string()
+            .trim()
+            .required('Name is required.'),
+        paymentTerms: Yup.number()
+            .transform(value => (Number.isNaN(value) ? undefined : value))
+            .optional()
+            .typeError('Invalid number.')
+            .min(1, 'Payment terms must be greater than or equal 1.'),
+        poNumber: Yup.string()
+            .trim()
+            .required('PO Number is required.'),
+        salesTax: Yup.number()
+            .required('Sales tax is required.'),
+        startDate: Yup.date()
+            .required('Start date is required.'),
+        status: Yup.string()
+            .required('Status is required.'),
+        subscriptionNumber: Yup.number()
+            .transform(value => (Number.isNaN(value) ? undefined : value))
+            .optional()
+            .typeError('Invalid number.')
+            .min(1, 'Subscription number must be greater than or equal 1.'),
+    })
+
+/**
+ * validation schema for form new billing account
+ */
 export const formEditClientSchema: Yup.ObjectSchema<FormEditClient>
     = Yup.object({
         codeName: Yup.string()
@@ -206,6 +232,9 @@ export const formEditClientSchema: Yup.ObjectSchema<FormEditClient>
  */
 export const formRoleMembersFiltersSchema: Yup.ObjectSchema<FormRoleMembersFilters>
     = Yup.object({
+        email: Yup.string()
+            .trim()
+            .optional(),
         userHandle: Yup.string()
             .trim()
             .optional(),
@@ -250,8 +279,13 @@ export const formGroupMembersFiltersSchema: Yup.ObjectSchema<FormGroupMembersFil
  */
 export const formRolesFilterSchema: Yup.ObjectSchema<FormRolesFilter>
     = Yup.object({
-        roleName: Yup.string()
-            .trim()
+        roleName: Yup.object()
+            .shape({
+                label: Yup.string()
+                    .required('Label is required.'),
+                value: Yup.string()
+                    .required('Value is required.'),
+            })
             .required('Role is required.'),
     })
 
@@ -331,6 +365,26 @@ export const formEditUserEmailSchema: Yup.ObjectSchema<FormEditUserEmail>
             .trim()
             .email('Invalid email address.')
             .required('Email address is required.'),
+    })
+
+/**
+ * validation schema for form edit sso user login
+ */
+export const formAddSSOLoginSchema: Yup.ObjectSchema<FormAddSSOLoginData>
+    = Yup.object({
+        email: Yup.string()
+            .trim()
+            .email('Invalid email address.')
+            .required('Email address is required.'),
+        name: Yup.string()
+            .trim()
+            .required('Name is required.'),
+        provider: Yup.string()
+            .trim()
+            .required('Provider is required.'),
+        userId: Yup.string()
+            .trim()
+            .required('User id is required.'),
     })
 
 /**

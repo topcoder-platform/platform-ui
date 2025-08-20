@@ -7,12 +7,14 @@ import styles from './ContentLayout.module.scss'
 
 export interface ContentLayoutProps {
     buttonConfig?: ButtonProps
+    secondaryButtonConfig?: ButtonProps
     children?: ReactNode
     contentClass?: string
     innerClass?: string
     outerClass?: string
     title?: string
     titleClass?: string
+    infoComponent?: ReactNode
 }
 
 const ContentLayout: FC<ContentLayoutProps> = (props: ContentLayoutProps) => (
@@ -29,6 +31,16 @@ const ContentLayout: FC<ContentLayoutProps> = (props: ContentLayoutProps) => (
                             {props.title}
                         </h1>
 
+                        {!!props.secondaryButtonConfig && (
+                            <div>
+                                <Button
+                                    {...props.secondaryButtonConfig}
+                                    secondary
+                                    size='lg'
+                                />
+                            </div>
+                        )}
+
                         {!!props.buttonConfig && (
                             <div>
                                 <Button
@@ -36,6 +48,12 @@ const ContentLayout: FC<ContentLayoutProps> = (props: ContentLayoutProps) => (
                                     primary
                                     size='lg'
                                 />
+                            </div>
+                        )}
+
+                        {!!props.infoComponent && (
+                            <div>
+                                {props.infoComponent}
                             </div>
                         )}
 

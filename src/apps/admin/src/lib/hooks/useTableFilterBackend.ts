@@ -10,7 +10,7 @@ import {
     useState,
 } from 'react'
 
-import { Sort } from '~/apps/gamification-admin/src/game-lib'
+import { Sort } from '~/apps/admin/src/platform/gamification-admin/src/game-lib'
 
 export interface useTableFilterBackendProps<T> {
     page: number
@@ -62,6 +62,7 @@ export function useTableFilterBackend<T>(
             fetchDataRef.current.filterCriteria,
             () => {
                 fetchDataRef.current.isLoading = false
+                window.scrollTo({ left: 0, top: 200 })
             },
             () => {
                 fetchDataRef.current.isLoading = false

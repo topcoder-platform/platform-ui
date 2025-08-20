@@ -2,6 +2,8 @@ import { UserSkill } from '~/libs/core'
 
 import { ProjectType } from '../constants'
 
+import { CopilotOpportunity } from './CopilotOpportunity'
+
 export interface CopilotRequest {
     id: number,
     projectId: string,
@@ -11,6 +13,7 @@ export interface CopilotRequest {
     numHoursPerWeek: number,
     numWeeks: number,
     overview: string,
+    opportunityTitle: string,
     paymentType: string,
     otherPaymentType: string,
     requiresCommunication: 'yes' | 'no',
@@ -19,4 +22,8 @@ export interface CopilotRequest {
     status: string,
     tzRestrictions: 'yes' | 'no',
     createdAt: Date,
+    opportunity?: CopilotOpportunity,
+    project?: {
+        name: string,
+    },
 }

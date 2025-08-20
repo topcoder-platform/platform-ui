@@ -19,10 +19,10 @@ import styles from './ChallengeFilters.module.scss'
 interface ChallengeFiltersProps {
     filterCriteria: ChallengeFilterCriteria
     disabled: boolean
-    showResetButton: boolean
     onFilterCriteriaChange: (newFilterCriteria: ChallengeFilterCriteria) => void
     onSearch: () => void
     onReset: () => void
+    disableReset: boolean
 }
 
 const ChallengeFilters: FC<ChallengeFiltersProps> = props => {
@@ -188,28 +188,24 @@ const ChallengeFilters: FC<ChallengeFiltersProps> = props => {
                     disabled={props.disabled}
                 />
             </div>
-            {!props.showResetButton && (
+            <div className={styles.blockBtns}>
                 <Button
                     primary
-                    className={styles.searchButton}
                     onClick={props.onSearch}
                     disabled={props.disabled}
                     size='lg'
                 >
                     Search
                 </Button>
-            )}
-            {props.showResetButton && (
                 <Button
                     secondary
-                    className={styles.searchButton}
                     onClick={handleReset}
-                    disabled={props.disabled}
+                    disabled={props.disabled || props.disableReset}
                     size='lg'
                 >
                     Reset
                 </Button>
-            )}
+            </div>
         </div>
     )
 }

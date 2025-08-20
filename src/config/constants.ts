@@ -1,9 +1,7 @@
 export enum AppSubdomain {
-    skillsManager = 'manage',
     accounts = 'account-settings',
     devCenter = 'devcenter',
     earn = 'earn',
-    gamificationAdmin = 'gamification-admin',
     profiles = 'profiles',
     tcAcademy = 'academy',
     onboarding = 'onboarding',
@@ -17,11 +15,9 @@ export enum AppSubdomain {
 }
 
 export enum ToolTitle {
-    skillsManager = 'Manage Skills',
     accounts = 'Account Settings',
     devCenter = 'Dev Center',
     earn = 'Opportunity Feed',
-    gamificationAdmin = 'Gamification Admin',
     profiles = 'Profiles',
     tcAcademy = 'Topcoder Academy',
     selfService = 'Self Service Challenges',

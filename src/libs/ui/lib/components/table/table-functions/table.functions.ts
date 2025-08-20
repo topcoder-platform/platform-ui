@@ -1,4 +1,5 @@
-import { Sort } from '../../../../../../apps/gamification-admin/src/game-lib/pagination'
+import { Sort } from '~/apps/admin/src/platform/gamification-admin/src/game-lib'
+
 import { TableColumn } from '../table-column.model'
 
 export function getDefaultSort<T>(columns: ReadonlyArray<TableColumn<T>>, initSort?: Sort): Sort {
@@ -53,17 +54,22 @@ export function getSorted<T extends { [propertyName: string]: any }>(
 
     if (sortColumn.type === 'date') {
         return sortedData
-            .sort((a: T, b: T) => sortNumbers(
-                (a[sort.fieldName] as Date).getTime(),
-                (b[sort.fieldName] as Date).getTime(),
-                sort.direction,
-            ))
+            .sort((a: T, b: T) => {
+                const aDate = new Date(a[sort.fieldName])
+                const bDate = new Date(b[sort.fieldName])
+                return sortNumbers(aDate.getTime(), bDate.getTime(), sort.direction)
+            })
     }
 
     return sortedData
         .sort((a: T, b: T) => {
             const aField: string = a[sort.fieldName]
             const bField: string = b[sort.fieldName]
+
+            // Handle undefined/null values safely
+            if (aField === undefined && bField === undefined) return 0
+            if (aField === undefined) return 1
+            if (bField === undefined) return -1
             return sort.direction === 'asc'
                 ? aField.localeCompare(bField)
                 : bField.localeCompare(aField)

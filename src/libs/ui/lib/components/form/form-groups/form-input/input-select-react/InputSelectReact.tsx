@@ -8,6 +8,8 @@ import {
     useRef,
 } from 'react'
 import { find } from 'lodash'
+import AsyncCreatable from 'react-select/async-creatable'
+import AsyncSelect from 'react-select/async'
 import CreatableSelect from 'react-select/creatable'
 import ReactSelect, { GroupBase, OptionsOrGroups } from 'react-select'
 import classNames from 'classnames'
@@ -33,7 +35,7 @@ interface InputSelectReactProps {
     readonly name: string
     readonly onChange: (event: ChangeEvent<HTMLInputElement>) => void
     readonly onInputChange?: (newValue: string) => void
-    readonly options: OptionsOrGroups<unknown, GroupBase<unknown>>
+    readonly options?: OptionsOrGroups<unknown, GroupBase<unknown>>
     readonly placeholder?: string
     readonly tabIndex?: number
     readonly value?: string
@@ -43,7 +45,10 @@ interface InputSelectReactProps {
     readonly onBlur?: (event: FocusEvent<HTMLInputElement>) => void
     readonly openMenuOnClick?: boolean
     readonly openMenuOnFocus?: boolean
+    readonly async?: boolean
+    readonly loadOptions?: (inputValue: string, callback: (option: any) => void) => void
     readonly filterOption?: (option: InputSelectOption, value: string) => boolean
+    readonly isClearable?: boolean
 }
 
 /**
@@ -101,11 +106,12 @@ const InputSelectReact: FC<InputSelectReactProps> = props => {
 
     // throw the proper event type to the form handler (needs name & form element on target)
     function handleSelect(option: unknown): void {
+        const selectedOption = option as InputSelectOption | null
         props.onChange({
             target: {
                 form: findParentFrom(wrapRef.current as HTMLDivElement),
                 name: props.name,
-                value: (option as InputSelectOption).value,
+                value: selectedOption?.value || '',
             },
         } as ChangeEvent<HTMLInputElement>)
     }
@@ -120,9 +126,13 @@ const InputSelectReact: FC<InputSelectReactProps> = props => {
         } as FocusEvent<HTMLInputElement>)
     }
 
-    const Input = useMemo(() => (
-        props.creatable ? CreatableSelect : ReactSelect
-    ), [props.creatable])
+    const Input = useMemo(() => {
+        if (props.async) {
+            return props.creatable ? AsyncCreatable : AsyncSelect
+        }
+
+        return props.creatable ? CreatableSelect : ReactSelect
+    }, [props.creatable, props.async])
 
     return (
         <InputWrapper
@@ -144,6 +154,7 @@ const InputSelectReact: FC<InputSelectReactProps> = props => {
                         styles.select,
                     )
                 }
+                loadOptions={props.loadOptions}
                 onChange={handleSelect}
                 onInputChange={props.onInputChange}
                 menuPortalTarget={menuPortalTarget}
@@ -153,6 +164,7 @@ const InputSelectReact: FC<InputSelectReactProps> = props => {
                 formatCreateLabel={props.createLabel}
                 onCreateOption={props.onCreateOption}
                 onBlur={handleBlur}
+                isClearable={props.isClearable}
                 backspaceRemovesValue
                 isDisabled={props.disabled}
                 filterOption={props.filterOption}

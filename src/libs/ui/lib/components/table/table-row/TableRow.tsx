@@ -21,6 +21,9 @@ interface Props<T> {
     readonly columns: ReadonlyArray<TableColumn<T>>
     index: number
     readonly showExpand?: boolean
+    colWidth?: {[key: string]: number}
+    readonly preventDefault?: boolean
+    allRows?: ReadonlyArray<T>
 }
 
 export const TableRow: <T extends { [propertyName: string]: any }>(
@@ -44,23 +47,28 @@ export const TableRow: <T extends { [propertyName: string]: any }>(
         return _.filter(props.columns, item => !!item.isExpand)
     }, [props.columns, props.showExpand])
     // get the cells in the row
-    const cells: Array<JSX.Element> = displayColumns.map((col, colIndex) => (
-        <TableCell
-            {...col}
-            data={props.data}
-            index={props.index}
-            key={getKey(`${props.index}${colIndex}`)}
-            showExpandIndicator={colIndex === 0 && props.showExpand}
-            isExpanded={isExpanded && colIndex === 0}
-            onExpand={
-                props.showExpand
-                    ? function onExpand() {
-                        setIsExpanded(!isExpanded)
-                    }
-                    : undefined
-            }
-        />
-    ))
+    const cells: Array<JSX.Element> = displayColumns.map((col, colIndex) => {
+        const columnId = `column-id-${col.columnId}-`
+        const colWidth = props.colWidth?.[columnId]
+        return (
+            <TableCell
+                {...col}
+                data={props.data}
+                index={props.index}
+                key={getKey(`${props.index}${colIndex}`)}
+                showExpandIndicator={colIndex === 0 && props.showExpand}
+                isExpanded={isExpanded && colIndex === 0}
+                onExpand={
+                    props.showExpand
+                        ? function onExpand() {
+                            setIsExpanded(!isExpanded)
+                        }
+                        : undefined
+                }
+                style={colWidth ? { width: `${colWidth}px` } : {}}
+            />
+        )
+    })
 
     return (
         <>
@@ -75,7 +83,10 @@ export const TableRow: <T extends { [propertyName: string]: any }>(
                 onClick={function onRowClick(
                     event: MouseEvent<HTMLTableRowElement>,
                 ): void {
-                    event.preventDefault()
+                    if (!props.preventDefault) {
+                        event.preventDefault()
+                    }
+
                     props.onRowClick?.(props.data)
                 }}
             >
@@ -89,35 +100,40 @@ export const TableRow: <T extends { [propertyName: string]: any }>(
                 >
                     <td colSpan={displayColumns.length}>
                         <div className={styles.blockExpandContainer}>
-                            {expandColumns.map((col, colIndex) => (
-                                <div
-                                    key={getKey(`${props.index}${colIndex}`)}
-                                    className={styles.blockExpandItem}
-                                >
-                                    <strong
-                                        className={classNames(
-                                            styles.blockExpandCell,
-                                            styles.blockExpandTitle,
-                                            'TableRow_blockExpandTitle',
-                                        )}
+                            {expandColumns.map((col, colIndex) => {
+                                const columnId = `column-id-${col.columnId}-`
+                                const colWidth = props.colWidth?.[columnId]
+                                return (
+                                    <div
+                                        key={getKey(`${props.index}${colIndex}`)}
+                                        className={styles.blockExpandItem}
                                     >
-                                        {col.label as string}
-                                        :
-                                    </strong>
-                                    <TableCell
-                                        {...col}
-                                        data={props.data}
-                                        index={props.index}
-                                        as='div'
-                                        className={classNames(
-                                            styles.blockExpandCell,
-                                            styles.blockExpandValue,
-                                            col.className,
-                                            'TableCell_blockExpandValue',
-                                        )}
-                                    />
-                                </div>
-                            ))}
+                                        <strong
+                                            className={classNames(
+                                                styles.blockExpandCell,
+                                                styles.blockExpandTitle,
+                                                'TableRow_blockExpandTitle',
+                                            )}
+                                        >
+                                            {col.label as string}
+                                            :
+                                        </strong>
+                                        <TableCell
+                                            {...col}
+                                            data={props.data}
+                                            index={props.index}
+                                            as='div'
+                                            className={classNames(
+                                                styles.blockExpandCell,
+                                                styles.blockExpandValue,
+                                                col.className,
+                                                'TableCell_blockExpandValue',
+                                            )}
+                                            style={colWidth ? { width: `${colWidth}px` } : {}}
+                                        />
+                                    </div>
+                                )
+                            })}
                         </div>
                     </td>
                 </tr>

@@ -6,7 +6,7 @@ import { TABLE_DATE_FORMAT } from '../../config/index.config'
  * Model for user role info
  */
 export interface UserRole {
-    id: string
+    id: string | number
     roleName: string
     createdBy?: string
     createdByHandle?: string
@@ -16,7 +16,11 @@ export interface UserRole {
     modifiedAt: Date
     modifiedAtString?: string
     modifiedByHandle?: string
-    subjects?: string[]
+    subjects?: {
+        email?: null | string
+        handle?: null | string
+        userId?: null | number
+    }[]
 }
 
 /**

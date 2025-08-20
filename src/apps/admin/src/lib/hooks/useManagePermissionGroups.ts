@@ -23,7 +23,7 @@ type GroupsState = {
 
 // used to get all groups
 const PAGE = 1
-const PER_PAGE = 4000
+const PER_PAGE = 10000
 
 const GroupsActionType = {
     ADD_GROUPS_DONE: 'ADD_GROUPS_DONE' as const,
@@ -37,7 +37,6 @@ const GroupsActionType = {
 type GroupsReducerAction =
     | {
           type:
-              | typeof GroupsActionType.ADD_GROUPS_DONE
               | typeof GroupsActionType.ADD_GROUPS_INIT
               | typeof GroupsActionType.ADD_GROUPS_FAILED
               | typeof GroupsActionType.FETCH_GROUPS_INIT
@@ -46,6 +45,10 @@ type GroupsReducerAction =
     | {
           type: typeof GroupsActionType.FETCH_GROUPS_DONE
           payload: UserGroup[]
+      }
+    | {
+          type: typeof GroupsActionType.ADD_GROUPS_DONE
+          payload: UserGroup
       }
 
 const reducer = (
@@ -87,6 +90,7 @@ const reducer = (
         case GroupsActionType.ADD_GROUPS_DONE: {
             return {
                 ...previousState,
+                groups: [action.payload, ...previousState.groups],
                 isAdding: false,
             }
         }
@@ -145,10 +149,14 @@ export function useManagePermissionGroups(
                 _.forEach(result, group => {
                     if (group.createdBy) {
                         loadUser(group.createdBy)
+                    } else {
+                        group.createdByHandle = ''
                     }
 
                     if (group.updatedBy) {
                         loadUser(group.updatedBy)
+                    } else {
+                        group.updatedByHandle = ''
                     }
                 })
             })
@@ -165,23 +173,32 @@ export function useManagePermissionGroups(
             dispatch({
                 type: GroupsActionType.ADD_GROUPS_INIT,
             })
-            function handleSuccess(): void {
+            function handleSuccess(group: UserGroup): void {
+                if (group.createdBy && !group.createdByHandle) {
+                    loadUser(group.createdBy)
+                } else if (!group.createdByHandle) {
+                    group.createdByHandle = ''
+                }
+
+                if (group.updatedBy && !group.updatedByHandle) {
+                    loadUser(group.updatedBy)
+                } else if (!group.updatedByHandle) {
+                    group.updatedByHandle = ''
+                }
+
                 toast.success('Group added successfully', {
                     toastId: 'Add group',
                 })
                 dispatch({
+                    payload: group,
                     type: GroupsActionType.ADD_GROUPS_DONE,
                 })
                 success()
             }
 
             createGroup(groupInfo)
-                .then(() => {
-                    setTimeout(() => {
-                        handleSuccess()
-                        doFetchGroups()
-                    }, 1000) // sometimes the backend does not return the new data
-                    // so I added a 1 second timeout for this
+                .then((group: UserGroup) => {
+                    handleSuccess(group)
                 })
                 .catch(e => {
                     dispatch({
@@ -190,7 +207,7 @@ export function useManagePermissionGroups(
                     handleError(e)
                 })
         },
-        [dispatch, doFetchGroups],
+        [dispatch, loadUser],
     )
 
     useOnComponentDidMount(() => {

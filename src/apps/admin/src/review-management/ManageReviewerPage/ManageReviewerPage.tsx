@@ -17,7 +17,7 @@ import {
     LoadingSpinner,
     PageTitle,
 } from '~/libs/ui'
-import { Sort } from '~/apps/gamification-admin/src/game-lib/pagination'
+import { Sort } from '~/apps/admin/src/platform/gamification-admin/src/game-lib'
 
 import {
     Display,
@@ -32,6 +32,7 @@ import {
 } from '../../lib/models'
 import {
     approveApplication,
+    getChallengeByLegacyId,
     getChallengeReviewers,
     getChallengeReviewOpportunities,
     rejectPending,
@@ -61,6 +62,7 @@ export const ManageReviewerPage: FC = () => {
     const { challengeId = '' }: { challengeId?: string } = useParams<{
         challengeId: string
     }>()
+    const [challengeUuid, setChallengeUuid] = useState('')
     const [filterCriteria, setFilterCriteria]: [
         ReviewFilterCriteria,
         Dispatch<SetStateAction<ReviewFilterCriteria>>
@@ -139,6 +141,15 @@ export const ManageReviewerPage: FC = () => {
         search()
     }, [challengeId]) // eslint-disable-line react-hooks/exhaustive-deps -- missing dependency: search
 
+    // Gets the challenge details by legacyId
+    useEffect(() => {
+        getChallengeByLegacyId(+challengeId)
+            .then(challenge => {
+                setChallengeUuid(challenge.id)
+            })
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- missing dependency: setChallengeUuid
+    }, [challengeId, getChallengeByLegacyId])
+
     // Page change
     const [pageChangeEvent, setPageChangeEvent] = useState(false)
     const previousPageChangeEvent = useRef(false)
@@ -186,6 +197,14 @@ export const ManageReviewerPage: FC = () => {
             <PageHeader>
                 <h2>{`${pageTitle} ${challengeId}`}</h2>
                 <div className={styles.headerActions}>
+                    <LinkButton
+                        primary
+                        onClick={handleRejectPendingConfirmDialog}
+                        size='lg'
+                        to={`${rootRoute}/challenge-management/${challengeUuid}/manage-user`}
+                    >
+                        User Management
+                    </LinkButton>
                     <Button
                         primary
                         variant='danger'
@@ -519,8 +538,8 @@ const ApproveActionType = {
 type ApproveActionType =
     | {
           type: // | typeof ApproveActionType.APPROVE_INIT
-          | typeof ApproveActionType.APPROVE_FAILED
-              | typeof ApproveActionType.APPROVE_DONE
+            | typeof ApproveActionType.APPROVE_FAILED
+            | typeof ApproveActionType.APPROVE_DONE
       }
     | {
           type: typeof ApproveActionType.APPROVE_INIT

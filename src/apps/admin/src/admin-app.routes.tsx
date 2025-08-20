@@ -1,3 +1,4 @@
+import { baseDetailPath, createBadgePath } from '~/apps/admin/src/platform/gamification-admin'
 import { AppSubdomain, ToolTitle } from '~/config'
 import {
     lazyLoad,
@@ -9,12 +10,15 @@ import {
 
 import {
     billingAccountRouteId,
+    gamificationAdminRouteId,
     manageChallengeRouteId,
     manageReviewRouteId,
     permissionManagementRouteId,
+    platformRouteId,
     rootRoute,
     userManagementRouteId,
 } from './config/routes.config'
+import { platformSkillRouteId } from './platform/routes.config'
 
 const AdminApp: LazyLoadedComponent = lazyLoad(() => import('./AdminApp'))
 
@@ -29,13 +33,9 @@ const ManageUserPage: LazyLoadedComponent = lazyLoad(
     () => import('./challenge-management/ManageUserPage'),
     'ManageUserPage',
 )
-const ManageResourcePage: LazyLoadedComponent = lazyLoad(
-    () => import('./challenge-management/ManageResourcePage'),
-    'ManageResourcePage',
-)
-const AddResourcePage: LazyLoadedComponent = lazyLoad(
-    () => import('./challenge-management/AddResourcePage'),
-    'AddResourcePage',
+const ManageSubmissionPage: LazyLoadedComponent = lazyLoad(
+    () => import('./challenge-management/ManageSubmissionPage'),
+    'ManageSubmissionPage',
 )
 const UserManagementPage: LazyLoadedComponent = lazyLoad(
     () => import('./user-management/UserManagementPage'),
@@ -111,6 +111,24 @@ const PermissionAddGroupMembersPage: LazyLoadedComponent = lazyLoad(
     'PermissionAddGroupMembersPage',
 )
 
+const Platform: LazyLoadedComponent = lazyLoad(() => import('./platform/Platform'))
+const SkillManagement: LazyLoadedComponent = lazyLoad(
+    () => import('./platform/skill-management/SkillManagement'),
+)
+const SkillManagementLandingPage: LazyLoadedComponent = lazyLoad(
+    () => import('./platform/skill-management/LandingPage'),
+    'LandingPage',
+)
+const BadgeDetailPage: LazyLoadedComponent = lazyLoad(
+    () => import('./platform/gamification-admin/src/pages/badge-detail/BadgeDetailPage'),
+)
+const BadgeListingPage: LazyLoadedComponent = lazyLoad(
+    () => import('./platform/gamification-admin/src/pages/badge-listing/BadgeListingPage'),
+)
+const CreateBadgePage: LazyLoadedComponent = lazyLoad(
+    () => import('./platform/gamification-admin/src/pages/create-badge/CreateBadgePage'),
+)
+
 export const toolTitle: string = ToolTitle.admin
 
 export const adminRoutes: ReadonlyArray<PlatformRoute> = [
@@ -136,14 +154,9 @@ export const adminRoutes: ReadonlyArray<PlatformRoute> = [
                         route: ':challengeId/manage-user',
                     },
                     {
-                        element: <ManageResourcePage />,
+                        element: <ManageSubmissionPage />,
                         id: 'manage-resource',
-                        route: ':challengeId/manage-resource',
-                    },
-                    {
-                        element: <AddResourcePage />,
-                        id: 'add-resource',
-                        route: ':challengeId/manage-resource/add',
+                        route: ':challengeId/manage-submission',
                     },
                 ],
                 element: <ChallengeManagement />,
@@ -264,6 +277,43 @@ export const adminRoutes: ReadonlyArray<PlatformRoute> = [
                 element: <PermissionManagement />,
                 id: permissionManagementRouteId,
                 route: permissionManagementRouteId,
+            },
+
+            // Platform Management Module
+            {
+                children: [
+                    {
+                        children: [
+                            {
+                                element: <SkillManagementLandingPage />,
+                                id: 'skills-landing-page',
+                                route: '',
+                            },
+                        ],
+                        element: <SkillManagement />,
+                        id: platformSkillRouteId,
+                        route: platformSkillRouteId,
+                    },
+                    {
+                        element: (
+                            <BadgeListingPage
+                                rootPage={`${rootRoute}/${platformRouteId}/${gamificationAdminRouteId}`}
+                            />
+                        ),
+                        route: gamificationAdminRouteId,
+                    },
+                    {
+                        element: <CreateBadgePage />,
+                        route: `${gamificationAdminRouteId}${createBadgePath}`,
+                    },
+                    {
+                        element: <BadgeDetailPage />,
+                        route: `${gamificationAdminRouteId}${baseDetailPath}/:id`,
+                    },
+                ],
+                element: <Platform />,
+                id: platformRouteId,
+                route: platformRouteId,
             },
         ],
         domain: AppSubdomain.admin,

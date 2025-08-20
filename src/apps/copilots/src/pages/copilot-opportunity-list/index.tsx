@@ -1,26 +1,34 @@
-import { FC, useMemo } from 'react'
+import { FC, useContext, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import classNames from 'classnames'
 
 import {
+    ButtonProps,
     ContentLayout,
     LoadingSpinner,
     PageTitle,
     Table,
     TableColumn,
 } from '~/libs/ui'
+import { profileContext, ProfileContextData, UserRole } from '~/libs/core'
 
 import { CopilotOpportunity } from '../../models/CopilotOpportunity'
 import { copilotRoutesMap } from '../../copilots.routes'
 import { CopilotOpportunitiesResponse, useCopilotOpportunities } from '../../services/copilot-opportunities'
+import { ProjectTypeLabels } from '../../constants'
 
 import styles from './styles.module.scss'
 
 const tableColumns: TableColumn<CopilotOpportunity>[] = [
     {
         label: 'Title',
-        propertyName: 'projectName',
-        type: 'text',
+        propertyName: 'opportunityTitle',
+        renderer: (copilotOpportunity: CopilotOpportunity) => (
+            <div className={styles.title}>
+                {copilotOpportunity.opportunityTitle}
+            </div>
+        ),
+        type: 'element',
     },
     {
         label: 'Status',
@@ -33,23 +41,43 @@ const tableColumns: TableColumn<CopilotOpportunity>[] = [
         type: 'element',
     },
     {
+        isSortable: false,
         label: 'Skills Required',
         propertyName: 'skills',
-        renderer: (copilotOpportunity: CopilotOpportunity) => (
-            <div className={styles.skillsContainer}>
-                {copilotOpportunity.skills.map((skill: any) => (
-                    <div key={skill.id} className={styles.skillPill}>
-                        {skill.name}
-                    </div>
-                ))}
-            </div>
-        ),
+        renderer: (copilotOpportunity: CopilotOpportunity) => {
+            const visibleSkills = copilotOpportunity.skills.slice(0, 3)
+            const remainingSkills = copilotOpportunity.skills.slice(3)
+            return (
+                <div className={styles.skillsContainer}>
+                    {visibleSkills.map((skill: { id: string | number; name: string }) => (
+                        <div key={skill.id} className={styles.skillPill}>
+                            {skill.name}
+                        </div>
+                    ))}
+                    {remainingSkills.length > 0 && (
+                        <div
+                            className={styles.skillPill}
+                            title={remainingSkills.map(skill => skill.name)
+                                .join(', ')}
+                        >
+                            +
+                            {remainingSkills.length}
+                        </div>
+                    )}
+                </div>
+            )
+        },
         type: 'element',
     },
     {
         label: 'Type',
         propertyName: 'type',
-        type: 'text',
+        renderer: (copilotOpportunity: CopilotOpportunity) => (
+            <div className={styles.type}>
+                {ProjectTypeLabels[copilotOpportunity.projectType]}
+            </div>
+        ),
+        type: 'element',
     },
     {
         label: 'Starting Date',
@@ -57,30 +85,51 @@ const tableColumns: TableColumn<CopilotOpportunity>[] = [
         type: 'date',
     },
     {
+        label: 'Duration(Weeks)',
+        propertyName: 'numWeeks',
+        type: 'number',
+    },
+    {
         label: 'Complexity',
         propertyName: 'complexity',
         type: 'text',
     },
     {
-        label: 'Hours per week needed',
+        label: 'Hours/Week',
         propertyName: 'numHoursPerWeek',
         type: 'number',
     },
     {
+        isSortable: false,
         label: 'Payment',
         propertyName: 'paymentType',
-        type: 'text',
+        renderer: (copilotOpportunity: CopilotOpportunity) => (
+            <div className={styles.payment}>
+                {copilotOpportunity.paymentType === 'standard'
+                    ? copilotOpportunity.paymentType : copilotOpportunity.otherPaymentType.slice(0, 8)}
+            </div>
+        ),
+        type: 'element',
     },
 ]
 
 const CopilotOpportunityList: FC<{}> = () => {
     const navigate = useNavigate()
 
+    const { profile }: ProfileContextData = useContext(profileContext)
+    const isAdminOrPM: boolean = useMemo(
+        () => !!profile?.roles?.some(role => role === UserRole.administrator || role === UserRole.projectManager),
+        [profile],
+    )
+
     const {
-        data: opportunities, isValidating, size, setSize,
+        data: opportunities, hasMoreOpportunities, isValidating, size, setSize,
     }: CopilotOpportunitiesResponse = useCopilotOpportunities()
 
-    const tableData = useMemo(() => opportunities, [opportunities])
+    const tableData = useMemo(() => opportunities.map(opportunity => ({
+        ...opportunity,
+        type: ProjectTypeLabels[opportunity.projectType] ?? '',
+    })), [opportunities])
 
     function loadMore(): void {
         setSize(size + 1)
@@ -92,17 +141,30 @@ const CopilotOpportunityList: FC<{}> = () => {
 
     const opportunitiesLoading = isValidating
 
+    const addNewRequestButton: ButtonProps = {
+        label: 'New Copilot Request',
+        onClick: () => navigate(copilotRoutesMap.CopilotRequestForm),
+    }
+
+    const addCopilotRequestsButton: ButtonProps = {
+        label: 'Copilot Requests',
+        onClick: () => navigate(copilotRoutesMap.CopilotRequests),
+    }
+
     return (
         <ContentLayout
             title='Copilot Opportunities'
+            buttonConfig={isAdminOrPM ? addNewRequestButton : undefined}
+            secondaryButtonConfig={isAdminOrPM ? addCopilotRequestsButton : undefined}
         >
             <PageTitle>Copilot Opportunities</PageTitle>
             <Table
                 columns={tableColumns}
                 data={tableData}
-                moreToLoad={isValidating || opportunities.length > 0}
+                moreToLoad={hasMoreOpportunities}
                 onLoadMoreClick={loadMore}
                 onRowClick={handleRowClick}
+                removeDefaultSort
             />
             {opportunitiesLoading && (
                 <LoadingSpinner overlay />

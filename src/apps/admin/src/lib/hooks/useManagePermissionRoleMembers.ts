@@ -10,7 +10,7 @@ import {
     RoleMemberInfo,
     UserRole,
 } from '../models'
-import { fetchRole, searchUsers, unassignRole } from '../services'
+import { fetchRole, unassignRole } from '../services'
 import { handleError } from '../utils'
 
 /// /////////////////
@@ -78,9 +78,15 @@ const reducer = (
 
         case RolesActionType.FETCH_ROLE_MEMBERS_DONE: {
             const roleInfo = action.payload
-            const allRoleMembers = (roleInfo.subjects || []).map(
-                memberId => ({ id: memberId }),
+            const allRoleMembers = _.filter(
+                roleInfo.subjects || [],
+                roleMember => (!!roleMember.handle || !!roleMember.email),
             )
+                .map(roleMember => ({
+                    email: roleMember.email,
+                    handle: roleMember.handle,
+                    id: `${roleMember.userId ?? ''}`,
+                }))
             return {
                 ...previousState,
                 allRoleMembers,
@@ -225,56 +231,29 @@ export function useManagePermissionRoleMembers(
         (filterData: FormRoleMembersFilters) => {
             let filteredMembers = _.clone(state.allRoleMembers)
 
-            // filter by ids first, it works immediately as we know all the data
-            // so we don't need to show loader for this
             if (filterData.userId) {
+                filteredMembers = _.filter(
+                    filteredMembers,
+                    member => `${member.id}` === filterData.userId,
+                )
+            }
+
+            if (filterData.email) {
                 filteredMembers = _.filter(filteredMembers, {
-                    id: filterData.userId,
+                    email: filterData.email,
                 })
             }
 
-            // if handle filter is defined and we still have some rows to filter
-            if (filterData.userHandle && filteredMembers.length > 0) {
-                // we show loader as we need to make request to the server
-                dispatch({
-                    type: RolesActionType.FILTER_ROLE_MEMBERS_INIT,
-                })
-
-                // As there is no server API to filter role members and we don't have
-                // user handles to filter, we first have to find user ids by it's handle
-                // and after we can filter users by id
-                searchUsers({
-                    fields: 'id',
-                    filter: `handle=*${filterData.userHandle}*&like=true`,
-                    limit: 1000000, // set big limit to make sure server returns all records
-                })
-                    .then(result => {
-                        const foundIds = _.map(result, 'id')
-
-                        filteredMembers = _.filter(
-                            filteredMembers,
-                            (member: RoleMemberInfo) => _.includes(foundIds, member.id),
-                        )
-                        dispatch({
-                            payload: filteredMembers,
-                            type: RolesActionType.FILTER_ROLE_MEMBERS_DONE,
-                        })
-                    })
-                    .catch(e => {
-                        dispatch({
-                            type: RolesActionType.FILTER_ROLE_MEMBERS_FAILED,
-                        })
-                        handleError(e)
-                    })
-
-                // if we don't filter by handle which makes server request
-                // redraw table immediately
-            } else {
-                dispatch({
-                    payload: filteredMembers,
-                    type: RolesActionType.FILTER_ROLE_MEMBERS_DONE,
+            if (filterData.userHandle) {
+                filteredMembers = _.filter(filteredMembers, {
+                    handle: filterData.userHandle,
                 })
             }
+
+            dispatch({
+                payload: filteredMembers,
+                type: RolesActionType.FILTER_ROLE_MEMBERS_DONE,
+            })
         },
         [dispatch, state.allRoleMembers],
     )

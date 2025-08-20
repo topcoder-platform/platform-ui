@@ -9,12 +9,14 @@ import {
     useMemo,
     useRef,
 } from 'react'
-import ReactSelect, { components, SingleValue } from 'react-select'
+import { components, SingleValue } from 'react-select'
+import CreatableReactSelect from 'react-select/creatable'
 import classNames from 'classnames'
 
 import { IconOutline, InputWrapper, LoadingSpinner } from '~/libs/ui'
 
 import { SelectOption } from '../../models'
+import ReactSelect from '../common/ReactSelectExport'
 
 import styles from './FieldSingleSelect.module.scss'
 
@@ -22,7 +24,7 @@ interface Props {
     label?: string
     className?: string
     placeholder?: string
-    readonly value?: SelectOption
+    readonly value?: SelectOption | null
     readonly onChange?: (event: SelectOption) => void
     readonly disabled?: boolean
     readonly dirty?: boolean
@@ -32,6 +34,10 @@ interface Props {
     readonly onBlur?: (event: FocusEvent<HTMLInputElement>) => void
     readonly options: SelectOption[]
     readonly isLoading?: boolean
+    readonly classNameWrapper?: string
+    readonly onSearchChange?: (value: string) => void
+    readonly creatable?: boolean
+    readonly createLabel?: (inputValue: string) => string
 }
 
 // eslint-disable-next-line react/function-component-definition
@@ -60,6 +66,10 @@ export const FieldSingleSelect: FC<Props> = (props: Props) => {
         [],
     )
 
+    const Input = useMemo(() => (
+        props.creatable ? CreatableReactSelect : ReactSelect
+    ), [props.creatable])
+
     return (
         <InputWrapper
             {...props}
@@ -72,7 +82,7 @@ export const FieldSingleSelect: FC<Props> = (props: Props) => {
             hideInlineErrors={props.hideInlineErrors}
             ref={wrapRef as MutableRefObject<HTMLDivElement>}
         >
-            <ReactSelect
+            <Input
                 components={asyncSelectComponents}
                 className={classNames(props.className, styles.select)}
                 placeholder={props.placeholder ?? 'Enter'}
@@ -88,9 +98,13 @@ export const FieldSingleSelect: FC<Props> = (props: Props) => {
                     }
                 }}
                 value={props.value}
+                defaultValue={props.value}
                 isDisabled={props.disabled || props.isLoading}
                 onBlur={props.onBlur}
                 options={props.options}
+                onInputChange={props.onSearchChange}
+                createOptionPosition='first'
+                formatCreateLabel={props.createLabel}
             />
             {props.isLoading && (
                 <div className={styles.blockActionLoading}>

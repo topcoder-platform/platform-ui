@@ -1,6 +1,7 @@
-import { FC, useCallback, useMemo } from 'react'
+import { FC, useCallback, useContext, useMemo, useState } from 'react'
 import { find } from 'lodash'
 import { NavigateFunction, Params, useNavigate, useParams } from 'react-router-dom'
+import classNames from 'classnames'
 
 import {
     Button,
@@ -8,17 +9,20 @@ import {
     ContentLayout,
     IconCheck,
     IconSolid,
-    LoadingSpinner,
+    LoadingCircles,
     PageTitle,
     Table,
     TableColumn,
+    Tooltip,
     useConfirmationModal,
 } from '~/libs/ui'
+import { profileContext, ProfileContextData, UserRole } from '~/libs/core'
+import { EnvironmentConfig } from '~/config'
+import { Sort } from '~/apps/admin/src/platform/gamification-admin/src/game-lib'
 
 import { ProjectTypeLabels } from '../../constants'
 import { approveCopilotRequest, CopilotRequestsResponse, useCopilotRequests } from '../../services/copilot-requests'
 import { CopilotRequest } from '../../models/CopilotRequest'
-import { ProjectsResponse, useProjects } from '../../services/projects'
 import { copilotRoutesMap } from '../../copilots.routes'
 import { Project } from '../../models/Project'
 
@@ -55,13 +59,63 @@ const CopilotTableActions: FC<{request: CopilotRequest}> = props => {
         navigate(copilotRoutesMap.CopilotRequestDetails.replace(':requestId', `${props.request.id}`))
     }, [navigate, props.request.id])
 
+    const isEditable = useMemo(() => !['canceled', 'fulfilled'].includes(props.request.status), [props.request.status])
+
+    const editRequest = useCallback(() => {
+        if (!isEditable) {
+            return
+        }
+
+        navigate(copilotRoutesMap.CopilotRequestEditForm.replace(':requestId', `${props.request.id}`))
+    }, [navigate, props.request.id, isEditable])
+
+    const copilotOpportunityId = props.request.opportunity?.id
+
+    const navigateToOpportunity = useCallback(() => {
+        const url = copilotRoutesMap.CopilotOpportunityDetails
+            .replace(':opportunityId', `${copilotOpportunityId}`)
+        window.open(url, '_blank', 'noopener,noreferrer')
+    }, [copilotOpportunityId])
+
     return (
         <>
             {confirmModal.modal}
             <div className={styles.actionButtons}>
                 <div className={styles.viewRequestIcon} onClick={viewRequest}>
-                    <IconSolid.EyeIcon className='icon-lg' />
+                    <Tooltip
+                        content='View Copilot Request'
+                        place='top'
+                    >
+                        <IconSolid.EyeIcon className='icon-lg' />
+                    </Tooltip>
                 </div>
+                <div
+                    className={classNames(styles.viewRequestIcon, !isEditable && styles.disabled)}
+                    onClick={editRequest}
+                >
+                    {isEditable ? (
+                        <Tooltip
+                            content='Edit Copilot Request'
+                            place='top'
+                        >
+                            <IconSolid.PencilIcon className='icon-lg' />
+                        </Tooltip>
+                    ) : (
+                        <IconSolid.PencilIcon className={classNames('icon-lg', styles.disabled)} />
+                    )}
+                </div>
+                {props.request.status === 'approved'
+                && (
+                    <div className={styles.viewRequestIcon} onClick={navigateToOpportunity}>
+                        <Tooltip
+                            content='View Copilot Opportunity'
+                            place='top'
+                        >
+                            <IconSolid.ExternalLinkIcon className='icon-lg' />
+                        </Tooltip>
+                    </div>
+                )}
+
                 {props.request.status === 'new' && (
                     <>
                         <Button icon={IconCheck} primary size='sm' onClick={confirmApprove} />
@@ -80,59 +134,26 @@ const CopilotTableActions: FC<{request: CopilotRequest}> = props => {
     )
 }
 
-const tableColumns: TableColumn<CopilotRequest>[] = [
-    {
-        label: 'Project',
-        propertyName: 'projectName',
-        type: 'text',
-    },
-    {
-        label: 'Type',
-        propertyName: 'type',
-        type: 'text',
-    },
-    {
-        label: 'Status',
-        propertyName: 'status',
-        type: 'text',
-    },
-    {
-        label: '',
-        propertyName: '',
-        type: 'text',
-    },
-    {
-        defaultSortDirection: 'desc',
-        isDefaultSort: true,
-        label: 'Created At',
-        propertyName: 'createdAt',
-        type: 'date',
-    },
-    {
-        label: '',
-        renderer: (request: CopilotRequest) => (
-            <CopilotTableActions request={request} />
-        ),
-        type: 'action',
-    },
-]
-
 const CopilotRequestsPage: FC = () => {
     const navigate: NavigateFunction = useNavigate()
     const routeParams: Params<string> = useParams()
-
-    const { data: requests = [], isValidating: requestsLoading }: CopilotRequestsResponse = useCopilotRequests()
-    const projectIds = useMemo(() => (
-        (new Set(requests.map(r => r.projectId))
-            .values() as any)
-            .toArray()
-    ), [requests])
-
-    const { data: projects = [], isValidating: projectsLoading }: ProjectsResponse = useProjects(undefined, {
-        filter: { id: projectIds },
-        isPaused: () => !projectIds?.length,
+    const [sort, setSort] = useState<Sort>({
+        direction: 'desc',
+        fieldName: 'createdAt',
     })
-    const isLoading = projectsLoading || requestsLoading
+
+    const { profile }: ProfileContextData = useContext(profileContext)
+    const isAdminOrPM: boolean = useMemo(
+        () => !!profile?.roles?.some(role => role === UserRole.administrator || role === UserRole.projectManager),
+        [profile],
+    )
+
+    const {
+        data: requests = [],
+        isValidating: requestsLoading,
+        hasMoreCopilotRequests,
+        setSize,
+        size }: CopilotRequestsResponse = useCopilotRequests(sort)
 
     const viewRequestDetails = useMemo(() => (
         routeParams.requestId && find(requests, { id: +routeParams.requestId }) as CopilotRequest
@@ -142,20 +163,99 @@ const CopilotRequestsPage: FC = () => {
         navigate(copilotRoutesMap.CopilotRequests)
     }, [navigate])
 
-    const projectsMap = useMemo(() => projects.reduce((all, c) => (
-        Object.assign(all, { [c.id]: c })
-    ), {} as {[key: string]: Project}), [projects])
+    const handleLinkClick = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
+        e.stopPropagation()
+    }, [])
+
+    const tableColumns: TableColumn<CopilotRequest>[] = [
+        {
+            label: 'Project',
+            propertyName: 'projectName',
+            renderer: (copilotRequest: CopilotRequest) => {
+                const projectLink = `
+                ${EnvironmentConfig.ADMIN.WORK_MANAGER_URL}/projects/${copilotRequest.projectId}/challenges
+                `
+                return (
+                    <a
+                        href={projectLink}
+                        className={styles.title}
+                        target='_blank'
+                        rel='noreferrer'
+                        onClick={handleLinkClick}
+                    >
+                        {copilotRequest.project?.name}
+                    </a>
+                )
+            },
+            type: 'element',
+        },
+        {
+            className: styles.opportunityTitle,
+            label: 'Title',
+            propertyName: 'opportunityTitle',
+            renderer: (copilotRequest: CopilotRequest) => (
+                <div className={styles.title}>{copilotRequest.opportunityTitle}</div>
+            ),
+            type: 'element',
+        },
+        {
+            label: 'Type',
+            propertyName: 'projectType',
+            type: 'text',
+        },
+        {
+            label: 'Status',
+            propertyName: 'status',
+            type: 'text',
+        },
+        {
+            label: '',
+            propertyName: '',
+            type: 'text',
+        },
+        {
+            defaultSortDirection: 'desc',
+            isDefaultSort: true,
+            label: 'Created At',
+            propertyName: 'createdAt',
+            type: 'date',
+        },
+        {
+            label: '',
+            renderer: (request: CopilotRequest) => (
+                <CopilotTableActions request={request} />
+            ),
+            type: 'action',
+        },
+    ]
 
     const tableData = useMemo(() => requests.map(request => ({
         ...request,
-        projectName: projectsMap[request.projectId]?.name,
-        type: ProjectTypeLabels[request.projectType] ?? '',
-    })), [projectsMap, requests])
+        projectName: request.project?.name,
+        projectType: ProjectTypeLabels[request.projectType] ?? '',
+    })), [requests])
+
+    function loadMore(): void {
+        setSize(size + 1)
+    }
+
+    function onToggleSort(s: Sort): void {
+        setSort(s)
+    }
 
     // header button config
     const addNewRequestButton: ButtonProps = {
         label: 'New Copilot Request',
         onClick: () => navigate(copilotRoutesMap.CopilotRequestForm),
+    }
+
+    if (!isAdminOrPM) {
+        return (
+            <ContentLayout title='Copilot Requests'>
+                <PageTitle>Access Denied</PageTitle>
+                <p>You do not have required permissions to access this page.</p>
+            </ContentLayout>
+        )
     }
 
     return (
@@ -164,18 +264,18 @@ const CopilotRequestsPage: FC = () => {
             buttonConfig={addNewRequestButton}
         >
             <PageTitle>Copilot Requests</PageTitle>
-            {isLoading ? (
-                <LoadingSpinner inline />
-            ) : (
-                <Table
-                    columns={tableColumns}
-                    data={tableData}
-                />
-            )}
+            <Table
+                columns={tableColumns}
+                data={tableData}
+                moreToLoad={hasMoreCopilotRequests}
+                onLoadMoreClick={loadMore}
+                onToggleSort={onToggleSort}
+            />
+            {requestsLoading && <LoadingCircles /> }
             {viewRequestDetails && (
                 <CopilotRequestModal
                     request={viewRequestDetails}
-                    project={projectsMap[viewRequestDetails.projectId]}
+                    project={viewRequestDetails.project as Project}
                     onClose={hideRequestDetails}
                 />
             )}

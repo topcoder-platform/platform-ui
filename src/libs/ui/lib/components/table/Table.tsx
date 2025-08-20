@@ -1,9 +1,11 @@
-import { Dispatch, SetStateAction, useEffect, useMemo, useState } from 'react'
+import { Dispatch, SetStateAction, useEffect, useMemo, useRef, useState } from 'react'
 import _ from 'lodash'
 import classNames from 'classnames'
 
+import { Sort } from '~/apps/admin/src/platform/gamification-admin/src/game-lib'
+import { useWindowSize, WindowSize } from '~/libs/shared'
+
 import { Button } from '../button'
-import { Sort } from '../../../../../apps/gamification-admin/src/game-lib/pagination'
 import { IconOutline } from '../svgs'
 import { Tooltip } from '../tooltip'
 import '../../styles/_includes.scss'
@@ -18,6 +20,8 @@ function getKey(key: string | number): string {
     return `${key}`
 }
 
+export type colWidthType = {[key: string]: number}
+
 interface TableProps<T> {
     readonly columns: ReadonlyArray<TableColumn<T>>
     readonly data: ReadonlyArray<T>
@@ -30,7 +34,10 @@ interface TableProps<T> {
     readonly onRowClick?: (data: T) => void
     readonly onToggleSort?: (sort: Sort) => void
     readonly removeDefaultSort?: boolean
+    readonly colWidth?: colWidthType | undefined,
+    readonly setColWidth?: Dispatch<SetStateAction<colWidthType>> | undefined
     readonly className?: string
+    readonly preventDefault?: boolean
 }
 
 interface DefaultSortDirectionMap {
@@ -39,6 +46,11 @@ interface DefaultSortDirectionMap {
 
 const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) => JSX.Element
     = <T extends { [propertyName: string]: any }>(props: TableProps<T>) => {
+        const { width: screenWidth }: WindowSize = useWindowSize()
+        const tableRef = useRef<HTMLTableElement>(null)
+        const screenWidthBkRef = useRef<number>(0)
+        const colWidthInput = props.colWidth
+        const setColWidth = props.setColWidth
 
         const [sort, setSort]: [Sort | undefined, Dispatch<SetStateAction<Sort | undefined>>]
             = useState<Sort | undefined>(
@@ -61,6 +73,52 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
             = useState<DefaultSortDirectionMap | undefined>()
         const [sortedData, setSortedData]: [ReadonlyArray<T>, Dispatch<SetStateAction<ReadonlyArray<T>>>]
             = useState<ReadonlyArray<T>>(props.data)
+
+        useEffect(() => {
+            if (_.isEmpty(colWidthInput) && colWidthInput) {
+                setTimeout(() => {
+                    let haveColumnWidth = true
+                    const colWidthBk: { [key: string]: number } = {}
+                    _.forEach(displayColumns, column => {
+                        const columnId = `column-id-${column.columnId}-`
+                        const colElement = tableRef.current?.querySelector(
+                            `.${columnId}`,
+                        )
+                        const computedStyle = colElement
+                            ? getComputedStyle(colElement)
+                            : { paddingLeft: '0', paddingRight: '0' }
+                        let colWidth = colElement?.clientWidth ?? 0
+                        if (!!colWidth) {
+                            colWidth
+                                -= parseFloat(computedStyle.paddingLeft)
+                                + parseFloat(computedStyle.paddingRight)
+                        }
+
+                        colWidthBk[`column-id-${column.columnId}-`] = colWidth
+                        if (!colWidth) {
+                            haveColumnWidth = false
+                        }
+                    })
+                    if (haveColumnWidth) {
+                        setColWidth?.(colWidthBk)
+                    }
+                }, 10)
+            }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        }, [sortedData, colWidthInput])
+        useEffect(() => {
+            if (!screenWidthBkRef.current) {
+                screenWidthBkRef.current = screenWidth
+                return // do not reset col width on init
+            }
+
+            if (!_.isEmpty(colWidthInput) && screenWidthBkRef.current !== screenWidth) {
+                setColWidth?.({})
+            }
+
+            screenWidthBkRef.current = screenWidth
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        }, [screenWidth])
 
         useEffect(() => {
             if (
@@ -103,6 +161,11 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
 
         function toggleSort(fieldName: string): void {
 
+            const col = props.columns.find(c => c.propertyName === fieldName)
+
+            // if sortable is false, we return
+            if (col?.isSortable === false) return
+
             // if we don't have anything to sort by, we shouldn't be here
             if (!sort && !props.removeDefaultSort) {
                 return
@@ -130,19 +193,22 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
 
         const headerRow: Array<JSX.Element> = displayColumns
             .map((col, index) => {
-                const isSortable: boolean = !!col.propertyName
+                const isSortable: boolean = !!col.propertyName && col.isSortable !== false
                 const isCurrentlySorted: boolean = isSortable && col.propertyName === sort?.fieldName
                 const colorClass: string = isCurrentlySorted ? 'black-100' : 'black-60'
                 const sortableClass: string | undefined = isSortable ? styles.sortable : undefined
+                const columnId = `column-id-${col.columnId}-`
+                const colWidth = colWidthInput?.[columnId]
                 return (
                     <th
-                        className={styles.th}
+                        className={classNames(styles.th, columnId)}
                         key={getKey(index)}
                     >
                         <div
                             className={
                                 classNames(styles['header-container'], styles[col.type], colorClass, sortableClass)
                             }
+                            style={colWidth ? { width: `${colWidth}px` } : {}}
                         >
                             {typeof col.label === 'function' ? col.label() : col.label}
                             {!!col.tooltip && (
@@ -152,7 +218,7 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
                                     </Tooltip>
                                 </div>
                             )}
-                            {!props.disableSorting && (
+                            {!props.disableSorting && isSortable && (
                                 <TableSort
                                     iconClass={colorClass}
                                     isCurrentlySorted={isCurrentlySorted}
@@ -172,17 +238,20 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
                 <TableRow
                     key={getKey(index)}
                     data={sorted}
+                    allRows={sortedData}
                     onRowClick={props.onRowClick}
                     columns={props.columns}
                     index={index}
                     showExpand={props.showExpand}
+                    colWidth={colWidthInput}
+                    preventDefault={props.preventDefault}
                 />
             ))
 
         return (
             /* TODO: sticky header */
             <div className={classNames(styles['table-wrap'], props.className)}>
-                <table className={styles.table}>
+                <table ref={tableRef} className={styles.table}>
                     <thead>
                         <tr className={styles.tr}>
                             {headerRow}

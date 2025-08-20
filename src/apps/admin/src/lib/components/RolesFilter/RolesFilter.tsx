@@ -1,15 +1,33 @@
 /**
  * Roles filter ui.
  */
-import { FC, useCallback, useEffect } from 'react'
-import { useForm, UseFormReturn } from 'react-hook-form'
+import {
+    FC,
+    FocusEvent,
+    useCallback,
+    useEffect,
+    useMemo,
+    useState,
+} from 'react'
+import {
+    Controller,
+    ControllerRenderProps,
+    useForm,
+    UseFormReturn,
+} from 'react-hook-form'
 import _ from 'lodash'
 import classNames from 'classnames'
 
-import { Button, InputText } from '~/libs/ui'
+import { Button } from '~/libs/ui'
 import { yupResolver } from '@hookform/resolvers/yup'
 
-import { FormRolesFilter, TableRolesFilter } from '../../models'
+import { FieldSingleSelect } from '../FieldSingleSelect'
+import {
+    FormRolesFilter,
+    SelectOption,
+    TableRolesFilter,
+    UserRole,
+} from '../../models'
 import { formRolesFilterSchema } from '../../utils'
 
 import styles from './RolesFilter.module.scss'
@@ -20,66 +38,133 @@ interface Props {
     isAdding?: boolean
     setFilters: (filterDatas: TableRolesFilter) => void
     doAddRole: (roleName: string, success: () => void) => void
-}
-
-const defaultValues: FormRolesFilter = {
-    roleName: '',
+    roles: UserRole[]
 }
 
 export const RolesFilter: FC<Props> = props => {
+    const [searchKey, setSearchKey] = useState('')
+    const [newOption, setNewOption] = useState<SelectOption>()
     const {
-        register,
-        handleSubmit,
         watch,
         reset,
-        formState: { isValid },
+        control,
+        setValue,
     }: UseFormReturn<FormRolesFilter> = useForm({
         defaultValues: {
-            roleName: '',
+            // eslint-disable-next-line unicorn/no-null
+            roleName: null, // the react-select only accept null in this case
         },
         mode: 'all',
         resolver: yupResolver(formRolesFilterSchema),
     })
+
+    const roleName = watch('roleName')
+    const createRoleName = useMemo(() => (
+        searchKey || (newOption?.label as string) || roleName?.label || ''
+    ), [searchKey, newOption, roleName])
+    const isValid = useMemo(
+        () => !_.find(props.roles, { roleName: createRoleName }),
+        [props.roles, createRoleName],
+    )
+    const resetAllValue = useCallback(() => {
+        reset({
+            // eslint-disable-next-line unicorn/no-null
+            roleName: null, // the react-select only accept null in this case
+        })
+        setNewOption(undefined)
+        setSearchKey('')
+    }, [])
+
     const onSubmit = useCallback(
-        (data: FormRolesFilter) => {
-            props.doAddRole(data.roleName, () => {
-                reset({
-                    roleName: '',
-                })
+        (value: string) => {
+            setNewOption({
+                label: value,
+                value,
+            })
+            setValue('roleName', {
+                label: value,
+                value,
+            })
+            props.doAddRole(value, () => {
+                resetAllValue()
             })
         },
         // eslint-disable-next-line react-hooks/exhaustive-deps
-        [props.doAddRole],
+        [props.doAddRole, createRoleName],
     )
-
-    const roleName = watch('roleName')
 
     useEffect(() => {
         props.setFilters({
-            createdAtString: roleName,
-            createdByHandle: roleName,
-            id: roleName,
-            modifiedAtString: roleName,
-            modifiedByHandle: roleName,
-            roleName,
+            roleName: createRoleName,
         })
-    }, [roleName]) // eslint-disable-line react-hooks/exhaustive-deps
+    }, [createRoleName]) // eslint-disable-line react-hooks/exhaustive-deps
 
     return (
         <form
             className={classNames(styles.container, props.className)}
-            onSubmit={handleSubmit(onSubmit)}
+            // Add this to prevent the unexpected action
+            // We only need to trigger submit when the submit button is clicked,
+            // and this is already handled by the onClick event of the submit button
+            onSubmit={_.noop}
         >
             <div className={styles.fields}>
-                <InputText
-                    type='text'
-                    name='role'
-                    label='Search/create role'
-                    placeholder='Enter'
-                    tabIndex={0}
-                    onChange={_.noop}
-                    classNameWrapper={styles.field}
-                    inputControl={register('roleName')}
+                <Controller
+                    name='roleName'
+                    control={control}
+                    render={function render(controlProps: {
+                        field: ControllerRenderProps<
+                            FormRolesFilter,
+                            'roleName'
+                        >
+                    }) {
+                        return (
+                            <FieldSingleSelect
+                                options={[
+                                    ...props.roles.map(role => ({
+                                        label: role.roleName,
+                                        value: role.id,
+                                    })),
+                                    ...(newOption ? [newOption] : []),
+                                ]}
+                                label='Search/create role'
+                                placeholder='Select'
+                                value={controlProps.field.value}
+                                onChange={function onChange(newValue: SelectOption) {
+                                    if (newValue.label === newValue.value) {
+                                        if (newValue.value) {
+                                            setNewOption(newValue)
+                                            controlProps.field.onChange(newValue)
+                                        }
+                                    } else {
+                                        setNewOption(undefined)
+                                        controlProps.field.onChange(newValue)
+                                    }
+                                }}
+                                onBlur={function onBlur(event: FocusEvent<HTMLInputElement, Element>) {
+                                    controlProps.field.onBlur()
+                                    if (event.target.value) {
+                                        setNewOption({
+                                            label: event.target.value,
+                                            value: event.target.value,
+                                        })
+                                        setValue('roleName', {
+                                            label: event.target.value,
+                                            value: event.target.value,
+                                        })
+                                    }
+                                }}
+                                dirty
+                                disabled={props.isAdding}
+                                isLoading={props.isLoading}
+                                classNameWrapper={styles.field}
+                                onSearchChange={setSearchKey}
+                                creatable
+                                createLabel={function createLabel(inputValue: string) {
+                                    return `Select "${inputValue}"`
+                                }}
+                            />
+                        )
+                    }}
                 />
 
                 <div className={styles.blockBottom}>
@@ -87,8 +172,10 @@ export const RolesFilter: FC<Props> = props => {
                         primary
                         className={styles.searchButton}
                         size='lg'
-                        type='submit'
                         disabled={!isValid || props.isLoading || props.isAdding}
+                        onClick={function onClick() {
+                            onSubmit(createRoleName)
+                        }}
                     >
                         Create Role
                     </Button>
@@ -96,10 +183,9 @@ export const RolesFilter: FC<Props> = props => {
                         primary
                         className={styles.searchButton}
                         size='lg'
-                        type='submit'
                         variant='danger'
                         onClick={function onClick() {
-                            reset(defaultValues)
+                            resetAllValue()
                         }}
                     >
                         Clear

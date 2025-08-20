@@ -1,9 +1,12 @@
 import { FC, SVGProps } from 'react'
 import classNames from 'classnames'
 
-import { Sort } from '../../../../../../apps/gamification-admin/src/game-lib/pagination'
+import { Sort } from '~/apps/admin/src/platform/gamification-admin/src/game-lib'
+
 import { IconOutline } from '../../svgs'
 import { Button } from '../../button'
+
+import styles from './TableSort.module.scss'
 
 interface TableSortProps {
     iconClass: string
@@ -34,7 +37,7 @@ const TableSort: FC<TableSortProps> = (props: TableSortProps) => {
 
     return (
         <Button
-            className={classNames(props.iconClass, 'TableSort')}
+            className={classNames(props.iconClass, 'TableSort', styles.btnSort)}
             icon={icon}
             onClick={handleClick}
             size='sm'

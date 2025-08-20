@@ -5,4 +5,5 @@ export interface BillingAccountResource {
   id: number
   name: string
   status: string
+  mobileType?: 'label' | 'last-value'
 }

@@ -23,16 +23,27 @@ export const childRoutes = [
         route: '/',
     },
     {
+        authRequired: true,
         element: <CopilotsRequests />,
         id: 'CopilotRequests',
         route: '/requests',
     },
     {
+        authRequired: true,
         element: <CopilotsRequestForm />,
         id: 'CopilotRequestForm',
+        rolesRequired: [UserRole.administrator, UserRole.projectManager] as UserRole[],
         route: '/requests/new',
     },
     {
+        authRequired: true,
+        element: <CopilotsRequestForm />,
+        id: 'CopilotRequestEditForm',
+        rolesRequired: [UserRole.administrator, UserRole.projectManager] as UserRole[],
+        route: '/requests/edit/:requestId',
+    },
+    {
+        authRequired: true,
         element: <CopilotsRequests />,
         id: 'CopilotRequestDetails',
         route: '/requests/:requestId',
@@ -54,10 +65,8 @@ export const copilotRoutesMap = childRoutes.reduce((allRoutes, route) => (
 
 export const copilotsRoutes: ReadonlyArray<PlatformRoute> = [
     {
-        authRequired: true,
         children: [
             ...childRoutes,
-
         ],
         domain: AppSubdomain.copilots,
         element: <CopilotsApp />,
