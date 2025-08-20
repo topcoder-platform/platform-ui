@@ -32,11 +32,11 @@ export const scorecardQuestionSchema = {
                     requiresUpload: yup.boolean()
                         .transform((value, originalValue) => {
                             // Handle empty string as undefined (so required() can catch it)
-                            if (originalValue === "") return undefined;
+                            if (originalValue === '') return undefined
 
                             // Yup already transforms "true"/"false" strings into booleans
-                            return value;
-                        }).required()
+                            return value
+                        })
                         .required('Documents requirements is required'),
                     type: yup.string()
                         .required('Scale is required'),
