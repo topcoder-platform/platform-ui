@@ -37,6 +37,7 @@ export type CopilotRequestsResponse = {
     isValidating: boolean;
     size: number;
     setSize: (size: number) => void;
+    page: number;
 }
 
 /**
@@ -77,7 +78,14 @@ export const useCopilotRequests = (sort: Sort, projectId?: string): CopilotReque
     const copilotRequests = data.flatMap(page => page.data)
     const hasMoreCopilotRequests = latestPage.page + 1 < latestPage.totalPages
 
-    return { data: copilotRequests, hasMoreCopilotRequests, isValidating, setSize: (s: number) => { setSize(s) }, size }
+    return {
+        data: copilotRequests,
+        hasMoreCopilotRequests,
+        isValidating,
+        page: latestPage.page,
+        setSize: (s: number) => { setSize(s) },
+        size,
+    }
 }
 
 export type CopilotRequestResponse = SWRResponse<CopilotRequest, CopilotRequest>
