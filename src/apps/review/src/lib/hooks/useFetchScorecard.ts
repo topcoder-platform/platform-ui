@@ -1,3 +1,4 @@
+import { toast } from 'react-toastify'
 import useSWR, { SWRResponse } from 'swr'
 
 import { EnvironmentConfig } from '~/config'
@@ -21,6 +22,11 @@ export function useFetchScorecard(id: string | undefined): ScorecardResponse {
         // eslint-disable-next-line unicorn/no-null
         id ? `${baseUrl}/scorecards/${id}` : null,
         fetcher,
+        {
+            onError: err => {
+                toast.error(err.message)
+            },
+        },
     )
 
     return {

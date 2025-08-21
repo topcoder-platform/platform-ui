@@ -223,7 +223,7 @@ workflows:
                               - CORE-635
                               - feat/review
                               - feat/system-admin
-                              - pm-1365_1
+                              - pm-1503_2
 
             - deployQa:
                   context: org-global
