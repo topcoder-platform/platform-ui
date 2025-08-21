@@ -106,6 +106,7 @@ export const reviewRoutes: ReadonlyArray<PlatformRoute> = [
                         authRequired: true,
                         element: <ScorecardsListPage />,
                         id: 'list-scorecards-page',
+                        rolesRequired: [UserRole.administrator],
                         route: '',
                     },
                     {
