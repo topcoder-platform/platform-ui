@@ -69,8 +69,9 @@ const ScorecardQuestionForm: FC<ScorecardQuestionFormProps> = props => {
     })
 
     const handleRemove = useCallback(async (index: number, field: any) => {
+        const fieldName = field.name ? field.name : `Question ${props.sectionIndex}.${index + 1}`
         if (!await ctx.confirm({
-            content: `Are you sure you want to remove "${field.name ? field.name : `Question ${index + 1}`}" question?`,
+            content: `Are you sure you want to remove "${fieldName}" question?`,
             title: 'Confirm Remove Question',
         })) {
             return
@@ -82,7 +83,7 @@ const ScorecardQuestionForm: FC<ScorecardQuestionFormProps> = props => {
     const handleAddQuestion = useCallback(() => {
         formQuestionsArray.append({
             ...getEmptyScorecardQuestion(),
-            sortOrder: Math.max(...formQuestionsArray.fields.map(f => get(f, 'sortOrder', 0))) + 1,
+            sortOrder: (Math.max(0, ...formQuestionsArray.fields.map(f => get(f, 'sortOrder', 0))) || 0) + 1,
         })
     }, [formQuestionsArray])
 
