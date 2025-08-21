@@ -154,7 +154,7 @@ const CopilotRequestsPage: FC = () => {
         hasMoreCopilotRequests,
         setSize,
         size,
-        page
+        page,
     }: CopilotRequestsResponse = useCopilotRequests(sort)
 
     const viewRequestDetails = useMemo(() => (
