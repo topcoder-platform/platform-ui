@@ -69,8 +69,9 @@ const ScorecardQuestionForm: FC<ScorecardQuestionFormProps> = props => {
     })
 
     const handleRemove = useCallback(async (index: number, field: any) => {
+        const fieldName = field.name ? field.name : `Question ${props.sectionIndex}.${index + 1}`
         if (!await ctx.confirm({
-            content: `Are you sure you want to remove "${field.name ? field.name : `Question ${props.sectionIndex}.${index + 1}`}" question?`,
+            content: `Are you sure you want to remove "${fieldName}" question?`,
             title: 'Confirm Remove Question',
         })) {
             return
