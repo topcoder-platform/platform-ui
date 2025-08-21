@@ -88,6 +88,17 @@
     .headerArea {
         background: #0F172A;
         color: $tc-white;
+
+        :global(.input-error) {
+            font-family: "Nunito Sans", sans-serif;
+            background: #E2CBC0;
+            width: max-content;
+            padding: 0 $sp-2;
+            border-radius: 2px;
+            font-size: 14px;
+            line-height: 20px;
+            font-weight: bold;
+        }
     }
 
     .contentArea {
@@ -103,6 +114,17 @@
     .headerArea {
         background: $teal-160;
         color: $tc-white;
+
+        :global(.input-error) {
+            font-family: "Nunito Sans", sans-serif;
+            background: #E2CBC0;
+            width: max-content;
+            padding: 0 $sp-2;
+            border-radius: 2px;
+            font-size: 14px;
+            line-height: 20px;
+            font-weight: bold;
+        }
     }
 
     .contentArea {
