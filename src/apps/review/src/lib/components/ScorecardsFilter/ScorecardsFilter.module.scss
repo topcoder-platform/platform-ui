@@ -110,6 +110,19 @@
     font-weight: 700;
   }
 
+  :global(.input-el) {
+    margin-bottom: 0;
+    padding: 3px 16px 3px 16px;
+  }
+
+  :global(.input-wrapper) {
+    height: 38px;
+  }
+
+  :global(.btn-size-lg) {
+    padding: 6px 24px;
+  }
+
 }
 
 @media (max-width: 768px) {
@@ -159,18 +172,5 @@
   .filtersContainer > * {
     flex: 1 1 100%;
   }
-}
-
-:global(.input-el) {
-    margin-bottom: 0;
-    padding: 3px 16px 3px 16px;
-}
-
-:global(.input-wrapper) {
-    height: 38px;
-}
-
-:global(.btn-size-lg) {
-    padding: 6px 24px;
 }
 
