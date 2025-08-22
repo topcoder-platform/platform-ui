@@ -11,16 +11,15 @@ const OpportunityDetails: FC<{
         <div>
             <h2 className={styles.subHeading}> Required skills </h2>
             <div className={styles.skillsContainer}>
-                {props.opportunity?.skills.map((skill: any) => (
-                    <div key={skill.id} className={styles.skillPill}>
-                        {skill.name}
-                    </div>
-                ))}
+                {props.opportunity?.skills.map(item => (<span className={styles.skillPill}>{item.name}</span>))}
             </div>
             <h2 className={styles.subHeading}> Description </h2>
-            <p>
-                {props.opportunity?.overview}
-            </p>
+            {props.opportunity?.overview && (
+                <div dangerouslySetInnerHTML={{
+                    __html: props.opportunity.overview.replace(/\n/g, '<br />'),
+                }}
+                />
+            )}
         </div>
         <div>
             <h2 className={styles.subHeading}> Complexity </h2>

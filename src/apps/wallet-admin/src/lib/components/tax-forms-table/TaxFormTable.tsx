@@ -30,6 +30,7 @@ const TaxFormTable: React.FC<TaxFormTableProps> = (props: TaxFormTableProps) => 
                         <th className='body-ultra-small-bold'>FORM</th>
                         <th className='body-ultra-small-bold'>DATE FILED</th>
                         <th className='body-ultra-small-bold'>STATUS</th>
+                        {/* eslint-disable-next-line jsx-a11y/control-has-associated-label */}
                         <th className='body-ultra-small'> </th>
                     </tr>
                 </thead>

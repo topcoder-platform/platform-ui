@@ -22,10 +22,10 @@ import styles from './styles.module.scss'
 const tableColumns: TableColumn<CopilotOpportunity>[] = [
     {
         label: 'Title',
-        propertyName: 'projectName',
+        propertyName: 'opportunityTitle',
         renderer: (copilotOpportunity: CopilotOpportunity) => (
             <div className={styles.title}>
-                {copilotOpportunity.projectName}
+                {copilotOpportunity.opportunityTitle}
             </div>
         ),
         type: 'element',
@@ -85,6 +85,11 @@ const tableColumns: TableColumn<CopilotOpportunity>[] = [
         type: 'date',
     },
     {
+        label: 'Duration(Weeks)',
+        propertyName: 'numWeeks',
+        type: 'number',
+    },
+    {
         label: 'Complexity',
         propertyName: 'complexity',
         type: 'text',
@@ -95,9 +100,16 @@ const tableColumns: TableColumn<CopilotOpportunity>[] = [
         type: 'number',
     },
     {
+        isSortable: false,
         label: 'Payment',
         propertyName: 'paymentType',
-        type: 'text',
+        renderer: (copilotOpportunity: CopilotOpportunity) => (
+            <div className={styles.payment}>
+                {copilotOpportunity.paymentType === 'standard'
+                    ? copilotOpportunity.paymentType : copilotOpportunity.otherPaymentType.slice(0, 8)}
+            </div>
+        ),
+        type: 'element',
     },
 ]
 
