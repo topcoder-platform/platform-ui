@@ -19,7 +19,7 @@ const ScorecardGroups: FC<ScorecardGroupsProps> = (props: ScorecardGroupsProps) 
                         <div className={styles.groupNumber}>{`Group ${index + 1}`}</div>
                         <div className={styles.groupInfo}>
                             <div className={styles.name}>{group.name}</div>
-                            <div>{group.weight}</div>
+                            <div className={styles.weight}>{group.weight}</div>
                         </div>
                     </div>
                     <ScorecardSections sections={group.sections} />

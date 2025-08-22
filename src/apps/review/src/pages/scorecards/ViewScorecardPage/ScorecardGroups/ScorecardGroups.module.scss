@@ -38,6 +38,9 @@
             .heading {
                 .groupInfo {
                     flex-direction: row;
+                    .weight {
+                        text-align: end;
+                    }
                     .name {
                         margin-bottom: 0px;
                     }
