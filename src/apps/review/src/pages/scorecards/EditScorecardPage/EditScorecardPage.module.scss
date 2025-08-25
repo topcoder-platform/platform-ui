@@ -164,6 +164,12 @@
         }
     }
 
+    .questionHeadingWrapper {
+        display: grid;
+        grid-template-columns: 1fr 93.85% 3.5%;
+        align-items: center;
+    }
+
     .headerAreaLabel {
         width: 100%;
     }
