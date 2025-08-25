@@ -49,7 +49,9 @@ const ScorecardSections: FC<ScorecardSectionsProps> = (props: ScorecardSectionsP
                                             </div>
                                             <div className={styles.detailItem}>
                                                 <div className={styles.label}>Document Upload:</div>
-                                                <div className={styles.value}>{question.requiresUpload ? 'Yes' : 'No'}</div>
+                                                <div className={styles.value}>
+                                                    {question.requiresUpload ? 'Yes' : 'No'}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
