@@ -1,0 +1,16 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    gap: 10px;
+
+    @include ltelg {
+        flex-wrap: wrap;
+    }
+
+    :global(button.btn-disabled.btn-style-primary) {
+        background-color: $turq-160 !important;
+        color: $tc-white !important;
+        opacity: 0.5;
+    }
+}

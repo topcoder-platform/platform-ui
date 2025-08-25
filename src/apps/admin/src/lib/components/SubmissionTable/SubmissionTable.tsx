@@ -6,13 +6,15 @@ import _ from 'lodash'
 import classNames from 'classnames'
 
 import { useWindowSize, WindowSize } from '~/libs/shared'
-import { Button, ConfirmModal, Table, TableColumn } from '~/libs/ui'
+import { ConfirmModal, Table, TableColumn } from '~/libs/ui'
 
 import { IsRemovingType, MobileTableColumn, Submission } from '../../models'
 import { TableMobile } from '../common/TableMobile'
 import { TableWrapper } from '../common/TableWrapper'
 
+import ShowHistoryButton from './ShowHistoryButton'
 import SubmissionTableActions from './SubmissionTableActions'
+import SubmissionTableActionsNonMM from './SubmissionTableActionsNonMM'
 import styles from './SubmissionTable.module.scss'
 
 interface Props {
@@ -26,11 +28,22 @@ interface Props {
     doPostBusEvent: (submissionId: string, testType: string) => void
     showSubmissionHistory: IsRemovingType
     setShowSubmissionHistory: Dispatch<SetStateAction<IsRemovingType>>
+    isMM: boolean
+    isDownloading: IsRemovingType
+    downloadSubmission: (submissionId: string) => void
+    isDoingAvScan: IsRemovingType
+    doPostBusEventAvScan: (submission: Submission) => void
 }
 
 export const SubmissionTable: FC<Props> = (props: Props) => {
     const { width: screenWidth }: WindowSize = useWindowSize()
-    const isTablet = useMemo(() => screenWidth <= 1479, [screenWidth])
+    const isTablet = useMemo(() => {
+        if (props.isMM) {
+            return screenWidth <= 1479
+        }
+
+        return screenWidth <= 900
+    }, [screenWidth, props.isMM])
     const [
         showConfirmDeleteSubmissionDialog,
         setShowConfirmDeleteSubmissionDialog,
@@ -39,122 +52,167 @@ export const SubmissionTable: FC<Props> = (props: Props) => {
         = useState<Submission>()
 
     const columns = useMemo<TableColumn<Submission>[]>(
-        () => [
-            {
-                label: 'Submitter',
-                propertyName: 'createdBy',
-                type: 'text',
-            },
-            {
-                className: 'blockCellWrap',
-                label: 'ID',
-                propertyName: 'id',
-                type: 'text',
-            },
-            {
-                label: 'Submission date',
-                propertyName: 'submittedDateString',
-                type: 'text',
-            },
-            {
-                label: 'Example score',
-                renderer: (data: Submission) => (
-                    <span>
-                        {data.exampleScore === undefined
-                            ? 'N/A'
-                            : data.exampleScore}
-                    </span>
-                ),
-                type: 'element',
-            },
-            {
-                label: 'Provisional score',
-                renderer: (data: Submission) => (
-                    <span>
-                        {data.provisionalScore === undefined
-                            ? 'N/A'
-                            : data.provisionalScore}
-                    </span>
-                ),
-                type: 'element',
-            },
-            {
-                label: 'Final score',
-                renderer: (data: Submission) => (
-                    <span>
-                        {data.finalScore === undefined
-                            ? 'N/A'
-                            : data.finalScore}
-                    </span>
-                ),
-                type: 'element',
-            },
-            {
-                label: 'Provisional rank',
-                renderer: (data: Submission) => (
-                    <span>
-                        {data.provisionalRank === undefined
-                            ? 'N/A'
-                            : data.provisionalRank}
-                    </span>
-                ),
-                type: 'element',
-            },
-            {
-                label: 'Final rank',
-                renderer: (data: Submission) => (
-                    <span>
-                        {data.finalRank === undefined ? 'N/A' : data.finalRank}
-                    </span>
-                ),
-                type: 'element',
-            },
-            {
-                label: '',
-                renderer: (data: Submission) => (
-                    <div className={styles.rowActions}>
-                        <SubmissionTableActions
-                            data={data}
-                            isRunningTest={props.isRunningTest}
-                            doPostBusEvent={props.doPostBusEvent}
-                            isRemovingSubmission={props.isRemovingSubmission}
-                            isRemovingReviewSummations={
-                                props.isRemovingReviewSummations
-                            }
-                            setShowConfirmDeleteSubmissionDialog={
-                                setShowConfirmDeleteSubmissionDialog
-                            }
-                            setShowConfirmDeleteReviewsDialog={
-                                setShowConfirmDeleteReviewsDialog
-                            }
-                        />
-                        {!data.hideToggleHistory && (
-                            <Button
-                                onClick={function onClick() {
-                                    props.setShowSubmissionHistory(prev => ({
-                                        ...prev,
-                                        [data.id]: !prev[data.id],
-                                    }))
+        () => (props.isMM
+            ? [
+                {
+                    label: 'Submitter',
+                    propertyName: 'createdBy',
+                    type: 'text',
+                },
+                {
+                    className: 'blockCellWrap',
+                    label: 'ID',
+                    propertyName: 'id',
+                    type: 'text',
+                },
+                {
+                    label: 'Submission date',
+                    propertyName: 'submittedDateString',
+                    type: 'text',
+                },
+                {
+                    label: 'Example score',
+                    renderer: (data: Submission) => (
+                        <span>
+                            {data.exampleScore === undefined
+                                ? 'N/A'
+                                : data.exampleScore}
+                        </span>
+                    ),
+                    type: 'element',
+                },
+                {
+                    label: 'Provisional score',
+                    renderer: (data: Submission) => (
+                        <span>
+                            {data.provisionalScore === undefined
+                                ? 'N/A'
+                                : data.provisionalScore}
+                        </span>
+                    ),
+                    type: 'element',
+                },
+                {
+                    label: 'Final score',
+                    renderer: (data: Submission) => (
+                        <span>
+                            {data.finalScore === undefined
+                                ? 'N/A'
+                                : data.finalScore}
+                        </span>
+                    ),
+                    type: 'element',
+                },
+                {
+                    label: 'Provisional rank',
+                    renderer: (data: Submission) => (
+                        <span>
+                            {data.provisionalRank === undefined
+                                ? 'N/A'
+                                : data.provisionalRank}
+                        </span>
+                    ),
+                    type: 'element',
+                },
+                {
+                    label: 'Final rank',
+                    renderer: (data: Submission) => (
+                        <span>
+                            {data.finalRank === undefined
+                                ? 'N/A'
+                                : data.finalRank}
+                        </span>
+                    ),
+                    type: 'element',
+                },
+                {
+                    label: '',
+                    renderer: (data: Submission) => (
+                        <div className={styles.rowActions}>
+                            <SubmissionTableActions
+                                data={data}
+                                isRunningTest={props.isRunningTest}
+                                doPostBusEvent={props.doPostBusEvent}
+                                isRemovingSubmission={
+                                    props.isRemovingSubmission
+                                }
+                                isRemovingReviewSummations={
+                                    props.isRemovingReviewSummations
+                                }
+                                setShowConfirmDeleteSubmissionDialog={
+                                    setShowConfirmDeleteSubmissionDialog
+                                }
+                                setShowConfirmDeleteReviewsDialog={
+                                    setShowConfirmDeleteReviewsDialog
+                                }
+                            />
+                            {!data.hideToggleHistory && (
+                                <ShowHistoryButton
+                                    data={data}
+                                    showSubmissionHistory={props.showSubmissionHistory}
+                                    setShowSubmissionHistory={props.setShowSubmissionHistory}
+                                />
+                            )}
+                        </div>
+                    ),
+                    type: 'element',
+                },
+            ]
+            : [
+                {
+                    className: 'blockCellWrap',
+                    label: 'Submission ID',
+                    propertyName: 'id',
+                    type: 'text',
+                },
+                {
+                    label: 'Time submitted',
+                    propertyName: 'submittedDateString',
+                    type: 'text',
+                },
+                {
+                    label: 'Submitter handle',
+                    propertyName: 'createdBy',
+                    type: 'text',
+                },
+                {
+                    label: '',
+                    renderer: (data: Submission) => (
+                        <div className={styles.rowActions}>
+                            <SubmissionTableActionsNonMM
+                                isDoingAvScan={props.isDoingAvScan}
+                                doPostBusEventAvScan={function doPostBusEventAvScan() {
+                                    props.doPostBusEventAvScan(data)
                                 }}
-                            >
-                                {props.showSubmissionHistory[data.id]
-                                    ? 'Hide'
-                                    : 'Show'}
-                                {' '}
-                                History
-                            </Button>
-                        )}
-                    </div>
-                ),
-                type: 'element',
-            },
-        ],
+                                isDownloading={props.isDownloading}
+                                downloadSubmission={function downloadSubmission() {
+                                    props.downloadSubmission(data.id)
+                                }}
+                                data={data}
+                            />
+                            {!data.hideToggleHistory && (
+                                <ShowHistoryButton
+                                    data={data}
+                                    showSubmissionHistory={props.showSubmissionHistory}
+                                    setShowSubmissionHistory={props.setShowSubmissionHistory}
+                                />
+                            )}
+                        </div>
+                    ),
+                    type: 'element',
+                },
+            ]),
         // eslint-disable-next-line react-hooks/exhaustive-deps
         [
+            props.isMM,
             props.isRemovingSubmission,
             props.isRemovingReviewSummations,
             props.isRunningTest,
             props.showSubmissionHistory,
+            props.isDownloading,
+            props.downloadSubmission,
+            props.isDoingAvScan,
+            props.doPostBusEventAvScan,
         ],
     )
 

@@ -276,6 +276,11 @@ const CopilotRequestForm: FC<{}> = () => {
                 key: 'otherPaymentType',
                 message: 'Field cannot be left empty',
             },
+            {
+                condition: formValues.otherPaymentType && formValues.otherPaymentType.trim().length > 8,
+                key: 'otherPaymentType',
+                message: 'Field only allows 8 characters',
+            },
         ]
 
         fieldValidations.forEach(
@@ -600,6 +605,7 @@ const CopilotRequestForm: FC<{}> = () => {
                                     onChange={bind(handleFormValueChange, this, 'otherPaymentType')}
                                     error={formErrors.otherPaymentType}
                                     tabIndex={0}
+                                    maxLength={8}
                                 />
                             )}
                     </div>

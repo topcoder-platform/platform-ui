@@ -1,10 +1,22 @@
 @import '@libs/ui/styles/includes';
 
+.shortPage {
+    margin-bottom: 250px;
+}
+
+.tableWrapper {
+    margin-bottom: 60px;
+}
+
 .actionButtons {
     display: flex;
     gap: $sp-1;
     align-items: center;
     padding: $sp-2 0;
+}
+
+.title {
+    max-width: 200px;
 }
 
 @media (max-width: 767px) {

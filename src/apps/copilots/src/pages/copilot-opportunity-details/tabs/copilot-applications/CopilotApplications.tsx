@@ -67,7 +67,7 @@ const tableColumns: TableColumn<CopilotApplication>[] = [
     },
     {
         label: 'Actions',
-        propertyName: '',
+        propertyName: 'actions',
         renderer: CopilotApplicationAction,
         type: 'element',
     },
@@ -78,6 +78,7 @@ const CopilotApplications: FC<{
     members?: FormattedMembers[]
     opportunity: CopilotOpportunity
     onApplied: () => void
+    isAdminOrPM: boolean
 }> = props => {
     const getData = (): CopilotApplication[] => (props.copilotApplications ? props.copilotApplications.map(item => {
         const member = props.members && props.members.find(each => each.userId === item.userId)
@@ -96,12 +97,18 @@ const CopilotApplications: FC<{
 
     const tableData = useMemo(getData, [props.copilotApplications, props.members])
 
+    const visibleColumns = props.isAdminOrPM
+        ? tableColumns
+        : tableColumns.filter(col => ![
+            'fulfilment', 'activeProjects', 'pastProjects', 'notes', 'actions',
+        ].includes(col.propertyName ?? ''))
+
     return (
         <div>
             {
                 tableData.length > 0 ? (
                     <Table
-                        columns={tableColumns}
+                        columns={visibleColumns}
                         data={tableData}
                         disableSorting
                         removeDefaultSort

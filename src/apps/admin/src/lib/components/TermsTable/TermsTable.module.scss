@@ -1,0 +1,31 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+    padding-top: 0;
+
+    a {
+        color: $blue-110;
+
+        &:hover {
+            color: $blue-110;
+        }
+    }
+}
+
+.rowActions {
+    display: flex;
+    align-items: center;
+}
+
+.tableCell {
+    white-space: break-spaces !important;
+    text-align: left !important;
+}
+
+.desktopTable {
+    td {
+        vertical-align: middle;
+    }
+}

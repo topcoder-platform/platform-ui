@@ -13,6 +13,10 @@
 .rowActions {
     display: flex;
     align-items: center;
+
+    @include ltelg {
+        flex-wrap: wrap;
+    }
 }
 
 .desktopTable {
