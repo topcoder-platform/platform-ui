@@ -9,4 +9,5 @@ export interface ScorecardQuestion {
     weight: number
     scaleMin: number
     scaleMax: number
+    requiresUpload: boolean
 }

@@ -14,7 +14,7 @@ interface ScorecardResponse {
   isValidating: boolean
 }
 
-export function useFetchScorecard(id: string | undefined): ScorecardResponse {
+export function useFetchScorecard(id: string | undefined, shouldRetry: boolean): ScorecardResponse {
 
     const fetcher = (url: string): Promise<Scorecard> => xhrGetAsync<Scorecard>(url)
 
@@ -23,6 +23,12 @@ export function useFetchScorecard(id: string | undefined): ScorecardResponse {
         id ? `${baseUrl}/scorecards/${id}` : null,
         fetcher,
         {
+            ...(shouldRetry
+                ? {}
+                : {
+                    errorRetryCount: 0,
+                    shouldRetryOnError: false,
+                }),
             onError: err => {
                 toast.error(err.message)
             },

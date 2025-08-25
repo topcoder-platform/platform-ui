@@ -24,13 +24,13 @@ const ViewScorecardPage: FC = () => {
         [],
     )
 
-    const scorecardQuery = useFetchScorecard(scorecardId)
+    const scorecardQuery = useFetchScorecard(scorecardId, true)
 
     return (
         <PageWrapper
             pageTitle={(scorecardQuery.scorecard && scorecardQuery.scorecard.name) || ''}
             breadCrumb={breadCrumb}
-            rightHeader={isAdmin && (
+            rightHeader={scorecardQuery.scorecard && isAdmin && (
                 <LinkButton
                     iconToLeft
                     icon={PencilIconWrapper}
