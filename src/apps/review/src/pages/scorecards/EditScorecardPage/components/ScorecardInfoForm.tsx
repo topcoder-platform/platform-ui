@@ -1,8 +1,11 @@
 import * as yup from 'yup'
-import { FC } from 'react'
+import { FC, useMemo } from 'react'
+import { useFormContext } from 'react-hook-form'
 import classNames from 'classnames'
 
 import {
+    categoryByProjectType,
+    ProjectType,
     ProjectTypeLabels,
     scorecardCategories,
     ScorecardStatusLabels,
@@ -19,7 +22,14 @@ const statusOptions = Object.entries(ScorecardStatusLabels)
     .map(([value, label]) => ({ label, value }))
 const typeOptions = Object.entries(ScorecardTypeLabels)
     .map(([value, label]) => ({ label, value }))
-const categoryOptions = scorecardCategories.map(key => ({ label: key, value: key }))
+const categoryOptions = (projectType?: ProjectType): { label: string; value: string }[] => {
+    let categories = scorecardCategories
+    if (projectType) {
+        categories = categoryByProjectType[projectType]
+    }
+
+    return categories.map(key => ({ label: key, value: key }))
+}
 
 export const scorecardInfoSchema = {
     challengeTrack: yup.string()
@@ -47,67 +57,73 @@ export const scorecardInfoSchema = {
         .required('Version is required'),
 }
 
-const ScorecardInfoForm: FC = () => (
-    <div className={classNames(styles.grayWrapper, styles.scorecardInfo)}>
-        <InputWrapper
-            label='Scorecard Name'
-            name='name'
-            className={styles.mdWidthInput}
-        >
-            <input type='text' />
-        </InputWrapper>
-        <InputWrapper
-            label='Category'
-            name='challengeType'
-            className={styles.mdWidthInput}
-        >
-            <BasicSelect options={categoryOptions} />
-        </InputWrapper>
-        <InputWrapper
-            label='Version'
-            name='version'
-            className={styles.mdWidthInput}
-        >
-            <input type='text' />
-        </InputWrapper>
-        <InputWrapper
-            label='Status'
-            name='status'
-            className={styles.mdWidthInput}
-        >
-            <BasicSelect options={statusOptions} />
-        </InputWrapper>
-        <InputWrapper
-            label='Type'
-            name='type'
-            className={styles.mdWidthInput}
-        >
-            <BasicSelect options={typeOptions} />
-        </InputWrapper>
-        <div className={classNames(styles.mdWidthInput, styles.doubleInputWrap)}>
+const ScorecardInfoForm: FC = () => {
+    const form = useFormContext()
+    const challengeTrack = form.watch('challengeTrack')
+    const categories = useMemo(() => categoryOptions(challengeTrack), [challengeTrack])
+
+    return (
+        <div className={classNames(styles.grayWrapper, styles.scorecardInfo)}>
             <InputWrapper
-                label='Min. Score'
-                name='minScore'
-                className={styles.qWidthInput}
+                label='Scorecard Name'
+                name='name'
+                className={styles.mdWidthInput}
             >
-                <input type='number' />
+                <input type='text' />
             </InputWrapper>
             <InputWrapper
-                label='Max. Score'
-                name='maxScore'
-                className={styles.qWidthInput}
+                label='Category'
+                name='challengeType'
+                className={styles.mdWidthInput}
             >
-                <input type='number' />
+                <BasicSelect options={categories} />
+            </InputWrapper>
+            <InputWrapper
+                label='Version'
+                name='version'
+                className={styles.mdWidthInput}
+            >
+                <input type='text' />
+            </InputWrapper>
+            <InputWrapper
+                label='Status'
+                name='status'
+                className={styles.mdWidthInput}
+            >
+                <BasicSelect options={statusOptions} />
+            </InputWrapper>
+            <InputWrapper
+                label='Type'
+                name='type'
+                className={styles.mdWidthInput}
+            >
+                <BasicSelect options={typeOptions} />
+            </InputWrapper>
+            <div className={classNames(styles.mdWidthInput, styles.doubleInputWrap)}>
+                <InputWrapper
+                    label='Min. Score'
+                    name='minScore'
+                    className={styles.qWidthInput}
+                >
+                    <input type='number' />
+                </InputWrapper>
+                <InputWrapper
+                    label='Max. Score'
+                    name='maxScore'
+                    className={styles.qWidthInput}
+                >
+                    <input type='number' />
+                </InputWrapper>
+            </div>
+            <InputWrapper
+                label='Project Type'
+                name='challengeTrack'
+                className={styles.mdWidthInput}
+            >
+                <BasicSelect options={projectTypeOptions} />
             </InputWrapper>
         </div>
-        <InputWrapper
-            label='Project Type'
-            name='challengeTrack'
-            className={styles.mdWidthInput}
-        >
-            <BasicSelect options={projectTypeOptions} />
-        </InputWrapper>
-    </div>
-)
+    )
+}
 
 export default ScorecardInfoForm

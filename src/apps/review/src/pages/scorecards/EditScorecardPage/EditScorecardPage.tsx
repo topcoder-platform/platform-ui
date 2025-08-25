@@ -23,7 +23,7 @@ const EditScorecardPage: FC = () => {
     const [isSaving, setSaving] = useState(false)
     const params = useParams()
     const isEditMode = !!params.scorecardId
-    const scorecardQuery = useFetchScorecard(params.scorecardId)
+    const scorecardQuery = useFetchScorecard(params.scorecardId, false)
     const title = useMemo(() => (
         `${isEditMode ? 'Edit' : 'Create'} Scorecard`
     ), [isEditMode])
@@ -56,7 +56,7 @@ const EditScorecardPage: FC = () => {
             const response = await saveScorecard(value)
             toast.info('Scorecard saved successfully!')
             if (response.id && !params.scorecardId) {
-                navigate(`${rootRoute}/scorecard/${response.id}/edit`)
+                navigate(`${rootRoute}/scorecard/${response.id}`)
             }
         } catch (e: any) {
             toast.error(`Couldn't save scorecard! ${e.message}`)
