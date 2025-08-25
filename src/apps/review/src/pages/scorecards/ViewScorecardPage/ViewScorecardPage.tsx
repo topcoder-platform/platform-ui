@@ -20,7 +20,10 @@ const ViewScorecardPage: FC = () => {
     const { profile }: ProfileContextData = useContext(profileContext)
     const isAdmin = profile?.roles.includes(UserRole.administrator)
     const breadCrumb = useMemo(
-        () => (profile && isAdmin) ? [{ index: 1, label: 'Scorecards', path: '/scorecard' }, { index: 2, label: 'Scorecards Details' }] : [],
+        () => ((profile && isAdmin)
+            ? [{ index: 1, label: 'Scorecards', path: '/scorecard' }, { index: 2, label: 'Scorecards Details' }]
+            : []
+        ),
         [profile, isAdmin],
     )
 
