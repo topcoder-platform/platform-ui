@@ -10,7 +10,7 @@ import {
     useState,
 } from 'react'
 import { NavigateFunction, useLocation, useNavigate } from 'react-router-dom'
-import { bind } from 'lodash'
+import { bind, isEmpty } from 'lodash'
 import classNames from 'classnames'
 
 import { useClickOutside } from '~/libs/shared/lib/hooks'
@@ -28,12 +28,13 @@ const NavTabs: FC = () => {
     const { pathname }: { pathname: string } = useLocation()
 
     const { loginUserInfo }: ReviewAppContextModel = useContext(ReviewAppContext)
+    const isAnonymous = isEmpty(loginUserInfo)
     const userRoles = useMemo(() => loginUserInfo?.roles || [], [loginUserInfo?.roles])
-    const tabs = useMemo(() => getTabsConfig(userRoles), [userRoles])
+    const tabs = useMemo(() => getTabsConfig(userRoles, isAnonymous), [userRoles, isAnonymous])
 
     const activeTabPathName: string = useMemo<string>(
-        () => getTabIdFromPathName(pathname, userRoles),
-        [pathname, userRoles],
+        () => getTabIdFromPathName(pathname, userRoles, isAnonymous),
+        [pathname, userRoles, isAnonymous],
     )
     const [activeTab, setActiveTab]: [
         string,

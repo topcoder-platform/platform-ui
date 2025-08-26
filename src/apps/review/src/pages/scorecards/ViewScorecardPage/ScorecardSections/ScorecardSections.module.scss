@@ -61,6 +61,7 @@
                             .value {
                                 font-weight: 400;
                                 font-size: 14px;
+                                white-space: pre-line;
                             }
                         }
                     }
@@ -97,6 +98,9 @@
                             .detailItem {
                                 flex-direction: column;
                                 min-width: auto;
+                                .value {
+                                    white-space: pre-line;
+                                }
                             }
                         }
                     }
