@@ -116,13 +116,21 @@ export const reviewRoutes: ReadonlyArray<PlatformRoute> = [
                         route: ':scorecardId',
                     },
                     {
+                        authRequired: true,
                         element: <EditScorecardPage />,
                         id: 'edit-scorecard-page',
+                        rolesRequired: [
+                            UserRole.administrator,
+                        ],
                         route: ':scorecardId/edit',
                     },
                     {
+                        authRequired: true,
                         element: <EditScorecardPage />,
                         id: 'new-scorecard-page',
+                        rolesRequired: [
+                            UserRole.administrator,
+                        ],
                         route: 'new',
                     },
 

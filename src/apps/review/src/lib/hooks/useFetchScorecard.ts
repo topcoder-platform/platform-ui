@@ -1,5 +1,5 @@
-import useSWR, { SWRResponse } from 'swr'
 import { sortBy } from 'lodash'
+import useSWR, { SWRResponse } from 'swr'
 
 import { EnvironmentConfig } from '~/config'
 import { xhrGetAsync } from '~/libs/core'
