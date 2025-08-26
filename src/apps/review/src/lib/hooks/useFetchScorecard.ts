@@ -1,4 +1,5 @@
 import useSWR, { SWRResponse } from 'swr'
+import { sortBy } from 'lodash'
 
 import { EnvironmentConfig } from '~/config'
 import { xhrGetAsync } from '~/libs/core'
@@ -26,6 +27,15 @@ export function useFetchScorecard(id: string | undefined): ScorecardResponse {
     return {
         error,
         isValidating,
-        scorecard: data,
+        scorecard: data ? {
+            ...data,
+            scorecardGroups: sortBy(data.scorecardGroups.map(group => ({
+                ...group,
+                sections: sortBy(group.sections.map(section => ({
+                    ...section,
+                    questions: sortBy(section.questions, 'sortOrder'),
+                })), 'sortOrder'),
+            })), 'sortOrder'),
+        } : data,
     }
 }
