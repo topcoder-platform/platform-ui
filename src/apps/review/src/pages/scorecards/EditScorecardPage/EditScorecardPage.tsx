@@ -23,7 +23,7 @@ const EditScorecardPage: FC = () => {
     const [isSaving, setSaving] = useState(false)
     const params = useParams()
     const isEditMode = !!params.scorecardId
-    const scorecardQuery = useFetchScorecard(params.scorecardId)
+    const scorecardQuery = useFetchScorecard(params.scorecardId, false)
     const title = useMemo(() => (
         `${isEditMode ? 'Edit' : 'Create'} Scorecard`
     ), [isEditMode])

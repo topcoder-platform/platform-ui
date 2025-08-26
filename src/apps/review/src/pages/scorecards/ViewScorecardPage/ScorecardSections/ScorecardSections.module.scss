@@ -80,15 +80,18 @@
         .section {
             .heading {
                 .sectionInfo {
-                    flex-direction: column;
+                    flex-direction: row;
                     .name {
-                        margin-bottom: 4px;
+                        margin-bottom: 0px;
+                    }
+                    .weight {
+                        text-align: end;
                     }
                 }
             }
             .questions { 
                 .question {
-                    flex-direction: column;
+                    flex-direction: row;
                     .left {
                         .detailItemsWrapper {
                             .detailItem {
@@ -98,7 +101,10 @@
                         }
                     }
                     .right {
-                        justify-content: flex-start;
+                        justify-content: flex-end;
+                        .weight {
+                            text-align: end;
+                        }
                     }
                 }
             }

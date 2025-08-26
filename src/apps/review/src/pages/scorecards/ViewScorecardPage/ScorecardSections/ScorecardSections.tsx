@@ -18,7 +18,7 @@ const ScorecardSections: FC<ScorecardSectionsProps> = (props: ScorecardSectionsP
                         <div>{`Section ${sectionIndex + 1}`}</div>
                         <div className={styles.sectionInfo}>
                             <div className={styles.name}>{section.name}</div>
-                            <div>{section.weight}</div>
+                            <div className={styles.weight}>{section.weight}</div>
                         </div>
                     </div>
                     <div className={styles.questions}>
@@ -49,13 +49,14 @@ const ScorecardSections: FC<ScorecardSectionsProps> = (props: ScorecardSectionsP
                                             </div>
                                             <div className={styles.detailItem}>
                                                 <div className={styles.label}>Document Upload:</div>
-                                                {/* This will be added once upload functionality works */}
-                                                <div className={styles.value}>NA</div>
+                                                <div className={styles.value}>
+                                                    {question.requiresUpload ? 'Yes' : 'No'}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                     <div className={styles.right}>
-                                        <div>{question.weight}</div>
+                                        <div className={styles.weight}>{question.weight}</div>
                                     </div>
                                 </div>
                             ))

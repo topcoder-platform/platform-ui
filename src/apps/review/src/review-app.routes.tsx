@@ -101,19 +101,13 @@ export const reviewRoutes: ReadonlyArray<PlatformRoute> = [
                 route: activeReviewAssigmentsRouteId,
             },
             {
-                authRequired: true,
                 children: [
                     {
                         authRequired: true,
                         element: <ScorecardsListPage />,
                         id: 'list-scorecards-page',
+                        rolesRequired: [UserRole.administrator],
                         route: '',
-                    },
-                    {
-                        authRequired: false,
-                        element: <ViewScorecardPage />,
-                        id: 'view-scorecard-page',
-                        route: ':scorecardId',
                     },
                     {
                         authRequired: true,
@@ -132,6 +126,12 @@ export const reviewRoutes: ReadonlyArray<PlatformRoute> = [
                             UserRole.administrator,
                         ],
                         route: 'new',
+                    },
+                    {
+                        authRequired: false,
+                        element: <ViewScorecardPage />,
+                        id: 'view-scorecard-page',
+                        route: ':scorecardId',
                     },
 
                 ],

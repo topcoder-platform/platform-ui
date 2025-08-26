@@ -37,9 +37,12 @@
         .group {
             .heading {
                 .groupInfo {
-                    flex-direction: column;
+                    flex-direction: row;
+                    .weight {
+                        text-align: end;
+                    }
                     .name {
-                        margin-bottom: 8px;
+                        margin-bottom: 0px;
                     }
                 }
             }
