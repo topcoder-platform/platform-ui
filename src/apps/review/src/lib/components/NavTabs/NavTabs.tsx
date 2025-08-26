@@ -59,10 +59,6 @@ const NavTabs: FC = () => {
 
     useClickOutside(triggerRef.current, () => setIsOpen(false))
 
-    if (isEmpty(loginUserInfo)) {
-        return null
-    }
-
     return (
         <div
             className={classNames(

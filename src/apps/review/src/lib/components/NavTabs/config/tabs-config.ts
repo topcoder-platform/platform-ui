@@ -22,14 +22,11 @@ export function getTabsConfig(userRoles: string[]): TabsNavItem[] {
             id: pastReviewAssignmentsRouteId,
             title: 'Past Review Assignments',
         },
-    ]
-
-    if (userRoles.includes('administrator')) {
-        tabs.push({
+        {
             id: scorecardRouteId,
             title: 'Scorecards',
-        })
-    }
+        },
+    ]
 
     return tabs
 }
