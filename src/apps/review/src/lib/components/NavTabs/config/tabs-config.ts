@@ -8,7 +8,7 @@ import {
     scorecardRouteId,
 } from '~/apps/review/src/config/routes.config'
 
-export function getTabsConfig(userRoles: string[]): TabsNavItem[] {
+export function getTabsConfig(): TabsNavItem[] {
     const tabs: TabsNavItem[] = [
         {
             id: activeReviewAssigmentsRouteId,
@@ -31,8 +31,8 @@ export function getTabsConfig(userRoles: string[]): TabsNavItem[] {
     return tabs
 }
 
-export function getTabIdFromPathName(pathname: string, userRoles: string[]): string {
-    const matchItem = _.find(getTabsConfig(userRoles), item => pathname.includes(`/${item.id}`))
+export function getTabIdFromPathName(pathname: string): string {
+    const matchItem = _.find(getTabsConfig(), item => pathname.includes(`/${item.id}`))
 
     if (matchItem) {
         return matchItem.id

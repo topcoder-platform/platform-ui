@@ -20,6 +20,7 @@ const ScorecardSections: FC<ScorecardSectionsProps> = (props: ScorecardSectionsP
                 return `Scale ${question.scaleMin} - ${question.scaleMax}`
         }
     }
+
     return (
         <div className={styles.container}>
             {
@@ -48,7 +49,7 @@ const ScorecardSections: FC<ScorecardSectionsProps> = (props: ScorecardSectionsP
                                             <div className={styles.detailItemsWrapper}>
                                                 <div className={styles.detailItem}>
                                                     <div className={styles.label}>Guidelines:</div>
-                                                    <div className={styles.value}>{question.guidelines || "NA"}</div>
+                                                    <div className={styles.value}>{question.guidelines || 'NA'}</div>
                                                 </div>
                                                 <div className={styles.detailItem}>
                                                     <div className={styles.label}>Scale:</div>

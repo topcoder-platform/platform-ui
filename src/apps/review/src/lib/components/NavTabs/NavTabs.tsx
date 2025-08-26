@@ -3,20 +3,16 @@ import {
     FC,
     SetStateAction,
     useCallback,
-    useContext,
     useEffect,
     useMemo,
     useRef,
     useState,
 } from 'react'
 import { NavigateFunction, useLocation, useNavigate } from 'react-router-dom'
-import { bind, isEmpty } from 'lodash'
+import { bind } from 'lodash'
 import classNames from 'classnames'
 
 import { useClickOutside } from '~/libs/shared/lib/hooks'
-
-import { ReviewAppContext } from '../../contexts'
-import { ReviewAppContextModel } from '../../models'
 
 import { getTabIdFromPathName, getTabsConfig } from './config'
 import styles from './NavTabs.module.scss'
@@ -26,14 +22,11 @@ const NavTabs: FC = () => {
     const [isOpen, setIsOpen] = useState<boolean>(false)
     const triggerRef = useRef<HTMLDivElement>(null)
     const { pathname }: { pathname: string } = useLocation()
-
-    const { loginUserInfo }: ReviewAppContextModel = useContext(ReviewAppContext)
-    const userRoles = useMemo(() => loginUserInfo?.roles || [], [loginUserInfo?.roles])
-    const tabs = useMemo(() => getTabsConfig(userRoles), [userRoles])
+    const tabs = useMemo(() => getTabsConfig(), [])
 
     const activeTabPathName: string = useMemo<string>(
-        () => getTabIdFromPathName(pathname, userRoles),
-        [pathname, userRoles],
+        () => getTabIdFromPathName(pathname),
+        [pathname],
     )
     const [activeTab, setActiveTab]: [
         string,
