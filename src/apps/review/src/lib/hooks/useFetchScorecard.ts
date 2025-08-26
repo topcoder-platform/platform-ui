@@ -1,4 +1,5 @@
 import { toast } from 'react-toastify'
+import { sortBy } from 'lodash'
 import useSWR, { SWRResponse } from 'swr'
 
 import { EnvironmentConfig } from '~/config'
@@ -38,6 +39,15 @@ export function useFetchScorecard(id: string | undefined, shouldRetry: boolean):
     return {
         error,
         isValidating,
-        scorecard: data,
+        scorecard: data ? {
+            ...data,
+            scorecardGroups: sortBy(data.scorecardGroups.map(group => ({
+                ...group,
+                sections: sortBy(group.sections.map(section => ({
+                    ...section,
+                    questions: sortBy(section.questions, 'sortOrder'),
+                })), 'sortOrder'),
+            })), 'sortOrder'),
+        } : data,
     }
 }

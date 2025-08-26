@@ -55,8 +55,8 @@ const EditScorecardPage: FC = () => {
         try {
             const response = await saveScorecard(value)
             toast.info('Scorecard saved successfully!')
-            if (response.id && !params.scorecardId) {
-                navigate(`${rootRoute}/scorecard/${response.id}`)
+            if (response.id || value.id) {
+                navigate(`${rootRoute}/scorecard/${response.id || value.id}`)
             }
         } catch (e: any) {
             toast.error(`Couldn't save scorecard! ${e.message}`)
