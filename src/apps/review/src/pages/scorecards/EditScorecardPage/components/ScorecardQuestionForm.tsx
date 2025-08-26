@@ -93,9 +93,10 @@ const ScorecardQuestionForm: FC<ScorecardQuestionFormProps> = props => {
     ) => {
         const [, type, min, max] = ev.target.value.match(/^([A-Za-z0-9_]+)(?:\((\d+)-(\d+)\))?$/) ?? []
 
-        form.setValue(field.name, type.toUpperCase(), { shouldValidate: true })
-        form.setValue(field.name.replace(/\.type$/, '.scaleMin'), Number(min) || 0, { shouldValidate: true })
-        form.setValue(field.name.replace(/\.type$/, '.scaleMax'), Number(max) || 0, { shouldValidate: true })
+        const options = { shouldDirty: true, shouldTouch: true, shouldValidate: true }
+        form.setValue(field.name, type.toUpperCase(), options)
+        form.setValue(field.name.replace(/\.type$/, '.scaleMin'), Number(min) || 0, options)
+        form.setValue(field.name.replace(/\.type$/, '.scaleMax'), Number(max) || 0, options)
     }, [form])
 
     return (

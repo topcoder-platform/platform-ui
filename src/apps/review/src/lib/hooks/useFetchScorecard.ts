@@ -1,5 +1,6 @@
 import { toast } from 'react-toastify'
 import { sortBy } from 'lodash'
+import { useMemo } from 'react'
 import useSWR, { SWRResponse } from 'swr'
 
 import { EnvironmentConfig } from '~/config'
@@ -36,10 +37,8 @@ export function useFetchScorecard(id: string | undefined, shouldRetry: boolean):
         },
     )
 
-    return {
-        error,
-        isValidating,
-        scorecard: data ? {
+    const scorecard = useMemo(() => (
+        data ? {
             ...data,
             scorecardGroups: sortBy(data.scorecardGroups.map(group => ({
                 ...group,
@@ -48,6 +47,12 @@ export function useFetchScorecard(id: string | undefined, shouldRetry: boolean):
                     questions: sortBy(section.questions, 'sortOrder'),
                 })), 'sortOrder'),
             })), 'sortOrder'),
-        } : data,
+        } : data
+    ), [data])
+
+    return {
+        error,
+        isValidating,
+        scorecard,
     }
 }
