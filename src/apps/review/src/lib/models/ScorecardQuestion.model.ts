@@ -3,7 +3,7 @@
  */
 export interface ScorecardQuestion {
     id: string
-    type: 'SCALE' | 'YES_NO'
+    type: 'SCALE' | 'YES_NO' | 'TEST_CASE'
     description: string
     guidelines: string
     weight: number

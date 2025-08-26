@@ -10,7 +10,7 @@ import {
     useState,
 } from 'react'
 import { NavigateFunction, useLocation, useNavigate } from 'react-router-dom'
-import { bind } from 'lodash'
+import { bind, isEmpty } from 'lodash'
 import classNames from 'classnames'
 
 import { useClickOutside } from '~/libs/shared/lib/hooks'
@@ -58,6 +58,10 @@ const NavTabs: FC = () => {
     }, [isOpen])
 
     useClickOutside(triggerRef.current, () => setIsOpen(false))
+
+    if (isEmpty(loginUserInfo)) {
+        return null
+    }
 
     return (
         <div
