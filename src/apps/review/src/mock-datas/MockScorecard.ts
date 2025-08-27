@@ -38,6 +38,7 @@ export const MockScorecard: ScorecardInfo = {
                             scaleMin: 1,
                             type: 'YES_NO',
                             weight: 25,
+                            sortOrder: 0,
                         },
                         {
                             description:
@@ -49,6 +50,7 @@ export const MockScorecard: ScorecardInfo = {
                             scaleMin: 1,
                             type: 'YES_NO',
                             weight: 25,
+                            sortOrder: 1,
                         },
                         {
                             description: 'Were the specifications clear?',
@@ -59,6 +61,7 @@ export const MockScorecard: ScorecardInfo = {
                             scaleMin: 1,
                             type: 'SCALE',
                             weight: 25,
+                            sortOrder: 2,
                         },
                         {
                             description: 'Here comes another question',
@@ -69,6 +72,7 @@ export const MockScorecard: ScorecardInfo = {
                             scaleMin: 1,
                             type: 'SCALE',
                             weight: 25,
+                            sortOrder: 3,
                         },
                     ],
                     sortOrder: 1,
@@ -88,6 +92,7 @@ export const MockScorecard: ScorecardInfo = {
                             scaleMin: 1,
                             type: 'SCALE',
                             weight: 50,
+                            sortOrder: 0,
                         },
                         {
                             description:
@@ -99,6 +104,7 @@ export const MockScorecard: ScorecardInfo = {
                             scaleMin: 1,
                             type: 'SCALE',
                             weight: 50,
+                            sortOrder: 1,
                         },
                     ],
                     sortOrder: 2,
@@ -126,6 +132,7 @@ export const MockScorecard: ScorecardInfo = {
                             scaleMin: 1,
                             type: 'SCALE',
                             weight: 50,
+                            sortOrder: 0,
                         },
                         {
                             description:
@@ -137,6 +144,7 @@ export const MockScorecard: ScorecardInfo = {
                             scaleMin: 1,
                             type: 'SCALE',
                             weight: 50,
+                            sortOrder: 1,
                         },
                     ],
                     sortOrder: 1,
@@ -156,6 +164,7 @@ export const MockScorecard: ScorecardInfo = {
                             scaleMin: 1,
                             type: 'SCALE',
                             weight: 50,
+                            sortOrder: 0,
                         },
                         {
                             description:
@@ -168,6 +177,7 @@ export const MockScorecard: ScorecardInfo = {
                             scaleMin: 1,
                             type: 'SCALE',
                             weight: 50,
+                            sortOrder: 1,
                         },
                     ],
                     sortOrder: 2,
