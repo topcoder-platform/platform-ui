@@ -1,5 +1,4 @@
 import { EnvironmentConfig } from '~/config'
-import { getReactEnv } from '~/config/environments/react-env'
 
 import { LearnConfigModel } from './learn-config.model'
 
@@ -14,5 +13,4 @@ export const LearnConfigDefault: LearnConfigModel = {
         value: 'certificate-container',
     },
     CLIENT: 'https://fcc.topcoder-dev.com:4431',
-    REQUIRE_DICE_ID: `${getReactEnv<string>('REQUIRE_DICE_ID', '')}` === 'true',
 }
