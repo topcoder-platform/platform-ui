@@ -69,7 +69,6 @@ const EditScorecardPage: FC = () => {
         }
     }, [params.scorecardId, navigate])
 
-    // Helper function to reorder array items
     const reorder = (list: any[], startIndex: number, endIndex: number): any[] => {
         const result = Array.from(list)
         const [removed] = result.splice(startIndex, 1)
@@ -77,7 +76,6 @@ const EditScorecardPage: FC = () => {
         return result
     }
 
-    // Helper function to move item between arrays
     const move = (
         source: any[],
         destination: any[],
