@@ -1,11 +1,12 @@
+/* eslint-disable import/no-extraneous-dependencies */
 import * as yup from 'yup'
 import { get } from 'lodash'
 import { ChangeEvent, ChangeEventHandler, FC, useCallback, useMemo } from 'react'
-import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd'
 import { useFieldArray, useFormContext } from 'react-hook-form'
 import classNames from 'classnames'
 
 import { TrashIcon } from '@heroicons/react/outline'
+import { Draggable, Droppable } from '@hello-pangea/dnd'
 import { Button } from '~/libs/ui'
 import { ScorecardScales } from '~/apps/review/src/lib/models'
 
@@ -58,7 +59,6 @@ interface ScorecardQuestionFormProps {
     prefix: string;
 }
 
-
 const ScorecardQuestionForm: FC<ScorecardQuestionFormProps> = props => {
     const form = useFormContext()
     const ctx = usePageContext()
@@ -102,8 +102,8 @@ const ScorecardQuestionForm: FC<ScorecardQuestionFormProps> = props => {
     }, [form])
 
     return (
-        <Droppable droppableId={name} type="question">
-            {(provided) => (
+        <Droppable droppableId={name} type='question'>
+            {provided => (
                 <div
                     className={styles.questionWrap}
                     ref={provided.innerRef}
@@ -118,7 +118,7 @@ const ScorecardQuestionForm: FC<ScorecardQuestionFormProps> = props => {
                             draggableId={questionField.id}
                             index={index}
                         >
-                            {(draggableProvided, snapshot) => (
+                            {draggableProvided => (
                                 <div
                                     ref={draggableProvided.innerRef}
                                     {...draggableProvided.draggableProps}
@@ -126,7 +126,10 @@ const ScorecardQuestionForm: FC<ScorecardQuestionFormProps> = props => {
                                     className={styles.questionItem}
                                 >
                                     <div className={classNames('body-small main-group', styles.headerAreaLabel)}>
-                                        Question {props.sectionIndex}.{index + 1}
+                                        Question
+                                        {` ${props.sectionIndex}`}
+                                        .
+                                        {index + 1}
                                     </div>
                                     <InputWrapper
                                         placeholder='Question Name'

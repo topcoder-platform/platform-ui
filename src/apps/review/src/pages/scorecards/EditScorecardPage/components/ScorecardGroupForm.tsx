@@ -1,10 +1,11 @@
+/* eslint-disable import/no-extraneous-dependencies */
 import * as yup from 'yup'
 import { FC, useCallback } from 'react'
-import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd'
 import { useFieldArray, useFormContext } from 'react-hook-form'
 import classNames from 'classnames'
 
 import { Button } from '~/libs/ui'
+import { Draggable, Droppable } from '@hello-pangea/dnd'
 import { TrashIcon } from '@heroicons/react/outline'
 
 import { usePageContext } from '../EditScorecardPage.context'
@@ -35,7 +36,6 @@ export const scorecardGroupSchema = {
         .test(...weightsSum('groups')),
 }
 
-
 const ScorecardGroupForm: FC = () => {
     const form = useFormContext()
     const ctx = usePageContext()
@@ -65,8 +65,8 @@ const ScorecardGroupForm: FC = () => {
     }, [formGroupsArray])
 
     return (
-        <Droppable droppableId="groups-droppable" type="group">
-            {(provided) => (
+        <Droppable droppableId='groups-droppable' type='group'>
+            {provided => (
                 <div
                     className={styles.groupWrap}
                     ref={provided.innerRef}
@@ -81,7 +81,7 @@ const ScorecardGroupForm: FC = () => {
                             draggableId={groupField.id}
                             index={index}
                         >
-                            {(draggableProvided, snapshot) => (
+                            {draggableProvided => (
                                 <div
                                     ref={draggableProvided.innerRef}
                                     {...draggableProvided.draggableProps}
@@ -89,7 +89,8 @@ const ScorecardGroupForm: FC = () => {
                                 >
                                     <div className={styles.headerArea}>
                                         <div className={classNames('body-small', styles.headerAreaLabel)}>
-                                            Group {index + 1}
+                                            Group
+                                            {` ${index + 1}`}
                                         </div>
                                         <div className={styles.headerAreaInputs}>
                                             <InputWrapper
@@ -108,7 +109,9 @@ const ScorecardGroupForm: FC = () => {
                                             </InputWrapper>
                                             <TrashIcon
                                                 className={styles.trashIcon}
-                                                onClick={function handleRemoveItem() { handleRemove(index, groupField) }}
+                                                onClick={
+                                                    function handleRemoveItem() { handleRemove(index, groupField) }
+                                                }
                                             />
                                         </div>
                                     </div>

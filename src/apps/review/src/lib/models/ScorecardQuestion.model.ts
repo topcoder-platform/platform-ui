@@ -2,7 +2,7 @@
  * Scorecard question info
  */
 export interface ScorecardQuestion {
-    id: string
+    id?: string
     type: 'SCALE' | 'YES_NO' | 'TEST_CASE'
     description: string
     guidelines: string

@@ -1,12 +1,13 @@
+/* eslint-disable import/no-extraneous-dependencies */
 import * as yup from 'yup'
 import { get } from 'lodash'
 import { FC, useCallback, useMemo } from 'react'
-import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd'
 import { useFieldArray, useFormContext } from 'react-hook-form'
 import classNames from 'classnames'
 
-import { Button } from '~/libs/ui'
+import { Draggable, Droppable } from '@hello-pangea/dnd'
 import { TrashIcon } from '@heroicons/react/outline'
+import { Button } from '~/libs/ui'
 
 import { usePageContext } from '../EditScorecardPage.context'
 import { getEmptyScorecardSection, weightsSum } from '../utils'
@@ -40,7 +41,6 @@ interface ScorecardSectionFormProps {
     prefix: string;
 }
 
-
 const ScorecardSectionForm: FC<ScorecardSectionFormProps> = props => {
     const form = useFormContext()
     const ctx = usePageContext()
@@ -70,8 +70,8 @@ const ScorecardSectionForm: FC<ScorecardSectionFormProps> = props => {
     }, [formSectionsArray])
 
     return (
-        <Droppable droppableId={name} type="section">
-            {(provided) => (
+        <Droppable droppableId={name} type='section'>
+            {provided => (
                 <div
                     className={styles.sectionWrap}
                     ref={provided.innerRef}
@@ -86,7 +86,7 @@ const ScorecardSectionForm: FC<ScorecardSectionFormProps> = props => {
                             draggableId={sectionField.id}
                             index={index}
                         >
-                            {(draggableProvided, snapshot) => (
+                            {draggableProvided => (
                                 <div
                                     ref={draggableProvided.innerRef}
                                     {...draggableProvided.draggableProps}
@@ -94,7 +94,8 @@ const ScorecardSectionForm: FC<ScorecardSectionFormProps> = props => {
                                 >
                                     <div className={styles.headerArea}>
                                         <div className={classNames('body-small', styles.headerAreaLabel)}>
-                                            Section {index + 1}
+                                            Section
+                                            {` ${index + 1}`}
                                         </div>
                                         <div className={styles.headerAreaInputs}>
                                             <InputWrapper
@@ -113,7 +114,9 @@ const ScorecardSectionForm: FC<ScorecardSectionFormProps> = props => {
                                             </InputWrapper>
                                             <TrashIcon
                                                 className={styles.trashIcon}
-                                                onClick={function handleRemoveItem() { handleRemove(index, sectionField) }}
+                                                onClick={
+                                                    function handleRemoveItem() { handleRemove(index, sectionField) }
+                                                }
                                             />
                                         </div>
                                     </div>
