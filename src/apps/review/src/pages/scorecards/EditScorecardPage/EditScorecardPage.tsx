@@ -4,13 +4,14 @@ import { FormProvider, useForm } from 'react-hook-form'
 import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
 
+import { DragDropContext, DropResult } from '@hello-pangea/dnd'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { Button, LinkButton } from '~/libs/ui'
 
-import { useFetchScorecard } from '../../../lib/hooks/useFetchScorecard'
 import { saveScorecard } from '../../../lib/services'
 import { rootRoute } from '../../../config/routes.config'
 import { PageWrapper } from '../../../lib'
+import { useFetchScorecard } from '../../../lib/hooks/useFetchScorecard'
 
 import { getEmptyScorecard } from './utils'
 import { EditScorecardPageContextProvider } from './EditScorecardPage.context'
@@ -50,7 +51,7 @@ const EditScorecardPage: FC = () => {
         }
     }, [scorecardQuery.scorecard, scorecardQuery.isValidating])
 
-    const handleSubmit = useCallback(async (value: any) => {
+    const handleSubmit = useCallback(async (value: any): Promise<void> => {
         setSaving(true)
         try {
             const response = await saveScorecard(value)
@@ -60,11 +61,102 @@ const EditScorecardPage: FC = () => {
             }
         } catch (e: any) {
             toast.error(`Couldn't save scorecard! ${e.message}`)
-            console.error('Couldn\'t save scorecard!', e)
+            console.error("Couldn't save scorecard!", e)
         } finally {
             setSaving(false)
         }
     }, [params.scorecardId, navigate])
+
+    // Helper function to reorder array items
+    const reorder = (list: any[], startIndex: number, endIndex: number): any[] => {
+        const result = Array.from(list)
+        const [removed] = result.splice(startIndex, 1)
+        result.splice(endIndex, 0, removed)
+        return result
+    }
+
+    // Helper function to move item between arrays
+    const move = (
+        source: any[],
+        destination: any[],
+        sourceIndex: number,
+        destinationIndex: number,
+    ): { source: any[]; destination: any[] } => {
+        const sourceClone = Array.from(source)
+        const destClone = Array.from(destination)
+        const [removed] = sourceClone.splice(sourceIndex, 1)
+        destClone.splice(destinationIndex, 0, removed)
+        return {
+            destination: destClone,
+            source: sourceClone,
+        }
+    }
+
+    const onDragEnd = (result: DropResult): void => {
+        if (!result.destination) return
+
+        const { source, destination, type }: DropResult<string> = result
+
+        if (type === 'group') {
+            const newGroups = reorder(editForm.getValues('scorecardGroups'), source.index, destination.index)
+            editForm.setValue('scorecardGroups', newGroups, { shouldDirty: true, shouldValidate: true })
+        } else if (type === 'section') {
+            const groups = editForm.getValues('scorecardGroups')
+            const sourceGroupIndex = Number(source.droppableId.split('.')[1])
+            const destGroupIndex = Number(destination.droppableId.split('.')[1])
+
+            if (sourceGroupIndex === destGroupIndex) {
+                // Reorder sections within the same group
+                const newSections = reorder(groups[sourceGroupIndex].sections, source.index, destination.index)
+                groups[sourceGroupIndex].sections = newSections
+            } else {
+                // Move section between groups
+                const { source: newSourceSections, destination: newDestSections } = move(
+                    groups[sourceGroupIndex].sections,
+                    groups[destGroupIndex].sections,
+                    source.index,
+                    destination.index,
+                )
+                groups[sourceGroupIndex].sections = newSourceSections
+                groups[destGroupIndex].sections = newDestSections
+            }
+            editForm.setValue('scorecardGroups', groups, { shouldValidate: true, shouldDirty: true })
+        } else if (type === 'question') {
+            const groups = editForm.getValues('scorecardGroups')
+
+            // Parse droppableIds: format is like "scorecardGroups.0.sections.1.questions"
+            const parseDroppableId = (id: string): { groupIndex: number; sectionIndex: number } => {
+                const parts = id.split('.')
+                return {
+                    groupIndex: Number(parts[1]),
+                    sectionIndex: Number(parts[3]),
+                }
+            }
+
+            const sourceIds = parseDroppableId(source.droppableId)
+            const destIds = parseDroppableId(destination.droppableId)
+
+            if (sourceIds.groupIndex === destIds.groupIndex && sourceIds.sectionIndex === destIds.sectionIndex) {
+                // Reorder questions within the same section
+                const questions = groups[sourceIds.groupIndex].sections[sourceIds.sectionIndex].questions
+                const newQuestions = reorder(questions, source.index, destination.index)
+                groups[sourceIds.groupIndex].sections[sourceIds.sectionIndex].questions = newQuestions
+            } else {
+                // Move question between sections
+                const sourceQuestions = groups[sourceIds.groupIndex].sections[sourceIds.sectionIndex].questions
+                const destQuestions = groups[destIds.groupIndex].sections[destIds.sectionIndex].questions
+                const { source: newSourceQuestions, destination: newDestQuestions } = move(
+                    sourceQuestions,
+                    destQuestions,
+                    source.index,
+                    destination.index,
+                )
+                groups[sourceIds.groupIndex].sections[sourceIds.sectionIndex].questions = newSourceQuestions
+                groups[destIds.groupIndex].sections[destIds.sectionIndex].questions = newDestQuestions
+            }
+            editForm.setValue('scorecardGroups', groups, { shouldValidate: true, shouldDirty: true })
+        }
+    }
 
     if (scorecardQuery.isValidating) {
         return <></>
@@ -78,20 +170,21 @@ const EditScorecardPage: FC = () => {
             >
                 <form className={styles.pageContentWrap} onSubmit={editForm.handleSubmit(handleSubmit)}>
                     <FormProvider {...editForm}>
+                        <DragDropContext onDragEnd={onDragEnd}>
+                            <h3 className={styles.sectionTitle}>1. Scorecard Information</h3>
+                            <ScorecardInfoForm />
 
-                        <h3 className={styles.sectionTitle}>1. Scorecard Information</h3>
-                        <ScorecardInfoForm />
-
-                        <h3 className={styles.sectionTitle}>2. Evaluation Structure</h3>
-                        <ScorecardGroupForm />
+                            <h3 className={styles.sectionTitle}>2. Evaluation Structure</h3>
+                            <ScorecardGroupForm />
+                        </DragDropContext>
 
                         <div className={styles.bottomContainer}>
                             <hr />
                             <div className={styles.buttonsWrap}>
-                                <LinkButton to='..' type='button' secondary uiv2>
+                                <LinkButton to=".." type="button" secondary uiv2>
                                     Cancel
                                 </LinkButton>
-                                <Button type='submit' primary disabled={isSaving || !editForm.formState.isDirty} uiv2>
+                                <Button type="submit" primary disabled={isSaving || !editForm.formState.isDirty} uiv2>
                                     Save Scorecard
                                 </Button>
                             </div>

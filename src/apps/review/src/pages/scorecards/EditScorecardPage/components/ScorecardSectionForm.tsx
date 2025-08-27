@@ -1,6 +1,7 @@
 import * as yup from 'yup'
 import { get } from 'lodash'
 import { FC, useCallback, useMemo } from 'react'
+import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd'
 import { useFieldArray, useFormContext } from 'react-hook-form'
 import classNames from 'classnames'
 
@@ -39,6 +40,7 @@ interface ScorecardSectionFormProps {
     prefix: string;
 }
 
+
 const ScorecardSectionForm: FC<ScorecardSectionFormProps> = props => {
     const form = useFormContext()
     const ctx = usePageContext()
@@ -68,62 +70,80 @@ const ScorecardSectionForm: FC<ScorecardSectionFormProps> = props => {
     }, [formSectionsArray])
 
     return (
-        <div className={styles.sectionWrap}>
-            {!formSectionsArray.fields.length && (
-                <div className='errorMessage'>At least one section is required</div>
-            )}
-            {formSectionsArray.fields.map((sectionField, index) => (
-                <div key={sectionField.id}>
-                    <div className={styles.headerArea}>
-                        <div className={classNames('body-small', styles.headerAreaLabel)}>
-                            Section
-                            {' '}
-                            {index + 1}
-                        </div>
-                        <div className={styles.headerAreaInputs}>
-                            <InputWrapper
-                                placeholder='Section Name'
-                                name={`${name}.${index}.name`}
-                                className={styles.xlWidthInput}
-                            >
-                                <input type='text' />
-                            </InputWrapper>
-                            <InputWrapper
-                                placeholder='Weight'
-                                name={`${name}.${index}.weight`}
-                                className={styles.smWidthInput}
-                            >
-                                <input type='number' />
-                            </InputWrapper>
-                            <TrashIcon
-                                className={styles.trashIcon}
-                                onClick={function handleRemoveItem() { handleRemove(index, sectionField) }}
+        <Droppable droppableId={name} type="section">
+            {(provided) => (
+                <div
+                    className={styles.sectionWrap}
+                    ref={provided.innerRef}
+                    {...provided.droppableProps}
+                >
+                    {!formSectionsArray.fields.length && (
+                        <div className='errorMessage'>At least one section is required</div>
+                    )}
+                    {formSectionsArray.fields.map((sectionField, index) => (
+                        <Draggable
+                            key={sectionField.id}
+                            draggableId={sectionField.id}
+                            index={index}
+                        >
+                            {(draggableProvided, snapshot) => (
+                                <div
+                                    ref={draggableProvided.innerRef}
+                                    {...draggableProvided.draggableProps}
+                                    {...draggableProvided.dragHandleProps}
+                                >
+                                    <div className={styles.headerArea}>
+                                        <div className={classNames('body-small', styles.headerAreaLabel)}>
+                                            Section {index + 1}
+                                        </div>
+                                        <div className={styles.headerAreaInputs}>
+                                            <InputWrapper
+                                                placeholder='Section Name'
+                                                name={`${name}.${index}.name`}
+                                                className={styles.xlWidthInput}
+                                            >
+                                                <input type='text' />
+                                            </InputWrapper>
+                                            <InputWrapper
+                                                placeholder='Weight'
+                                                name={`${name}.${index}.weight`}
+                                                className={styles.smWidthInput}
+                                            >
+                                                <input type='number' />
+                                            </InputWrapper>
+                                            <TrashIcon
+                                                className={styles.trashIcon}
+                                                onClick={function handleRemoveItem() { handleRemove(index, sectionField) }}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className={styles.contentArea}>
+                                        <ScorecardQuestionForm prefix={`${name}.${index}`} sectionIndex={index + 1} />
+                                    </div>
+                                </div>
+                            )}
+                        </Draggable>
+                    ))}
+                    {provided.placeholder}
+                    <div className={styles.footerArea}>
+                        <Button secondary onClick={handleAddSection} uiv2>
+                            + Add New Section
+                        </Button>
+                        {formSectionsArray.fields.length > 0 && (
+                            <CalculatedWeightsSum
+                                fieldName={name}
+                                label='Sections'
+                                description='The sum of section weights within a group must total 100.'
+                                error={(
+                                    get(form.formState.errors, `${name}.root.message`)
+                                    || get(form.formState.errors, `${name}.message`)
+                                ) as unknown as string}
                             />
-                        </div>
-                    </div>
-                    <div className={styles.contentArea}>
-                        <ScorecardQuestionForm prefix={`${name}.${index}`} sectionIndex={index + 1} />
+                        )}
                     </div>
                 </div>
-            ))}
-            <div className={styles.footerArea}>
-                <Button secondary onClick={handleAddSection} uiv2>
-                    + Add New Section
-                </Button>
-
-                {formSectionsArray.fields.length > 0 && (
-                    <CalculatedWeightsSum
-                        fieldName={name}
-                        label='Sections'
-                        description='The sum of section weights within a group must total 100.'
-                        error={(
-                            get(form.formState.errors, `${name}.root.message`)
-                            || get(form.formState.errors, `${name}.message`)
-                        ) as unknown as string}
-                    />
-                )}
-            </div>
-        </div>
+            )}
+        </Droppable>
     )
 }
 

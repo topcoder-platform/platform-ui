@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@datadog/browser-logs": "^4.21.2",
+    "@hello-pangea/dnd": "^18.0.1",
     "@heroicons/react": "^1.0.6",
     "@hookform/resolvers": "^4.1.2",
     "@popperjs/core": "^2.11.8",
