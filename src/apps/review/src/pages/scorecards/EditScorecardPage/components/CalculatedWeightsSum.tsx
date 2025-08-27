@@ -28,7 +28,7 @@ const CalculatedWeightsSum: FC<CalculatedWeightsSumProps> = props => {
                     {' '}
                     Weights:
                 </div>
-                <div className={classNames('body-small', props.error && 'errorMessage')}>
+                <div className={classNames('body-small', props.error && styles.inputError)}>
                     {props.description}
                 </div>
             </div>
