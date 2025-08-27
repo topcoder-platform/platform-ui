@@ -10,4 +10,5 @@ export interface ScorecardQuestion {
     scaleMin: number
     scaleMax: number
     requiresUpload: boolean
+    sortOrder: number
 }

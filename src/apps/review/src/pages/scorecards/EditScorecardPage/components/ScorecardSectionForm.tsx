@@ -14,6 +14,7 @@ import { getEmptyScorecardSection, weightsSum } from '../utils'
 import styles from '../EditScorecardPage.module.scss'
 
 import CalculatedWeightsSum from './CalculatedWeightsSum'
+import DragIcon from './DragIcon'
 import InputWrapper from './InputWrapper'
 import ScorecardQuestionForm, { scorecardQuestionSchema } from './ScorecardQuestionForm'
 
@@ -93,9 +94,12 @@ const ScorecardSectionForm: FC<ScorecardSectionFormProps> = props => {
                                     {...draggableProvided.dragHandleProps}
                                 >
                                     <div className={styles.headerArea}>
-                                        <div className={classNames('body-small', styles.headerAreaLabel)}>
-                                            Section
-                                            {` ${index + 1}`}
+                                        <div className={styles.title}>
+                                            <DragIcon />
+                                            <div className={classNames('body-small', styles.headerAreaLabel)}>
+                                                Section
+                                                {` ${index + 1}`}
+                                            </div>
                                         </div>
                                         <div className={styles.headerAreaInputs}>
                                             <InputWrapper

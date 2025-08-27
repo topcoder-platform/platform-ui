@@ -109,6 +109,9 @@ const EditScorecardPage: FC = () => {
 
             if (sourceGroupIndex === destGroupIndex) {
                 const newSections = reorder(groups[sourceGroupIndex].sections, source.index, destination.index)
+                newSections.forEach((section, index) => {
+                    section.sortOrder = index
+                })
                 groups[sourceGroupIndex].sections = newSections
             } else {
                 const {
@@ -129,6 +132,14 @@ const EditScorecardPage: FC = () => {
                         delete question.id
                     })
                 }
+
+                newSourceSections.forEach((section, index) => {
+                    section.sortOrder = index
+                })
+
+                newDestSections.forEach((section, index) => {
+                    section.sortOrder = index
+                })
 
                 groups[sourceGroupIndex].sections = newSourceSections
                 groups[destGroupIndex].sections = newDestSections
@@ -151,6 +162,9 @@ const EditScorecardPage: FC = () => {
             if (sourceIds.groupIndex === destIds.groupIndex && sourceIds.sectionIndex === destIds.sectionIndex) {
                 const questions = groups[sourceIds.groupIndex].sections[sourceIds.sectionIndex].questions
                 const newQuestions = reorder(questions, source.index, destination.index)
+                newQuestions.forEach((question, index) => {
+                    question.sortOrder = index
+                })
                 groups[sourceIds.groupIndex].sections[sourceIds.sectionIndex].questions = newQuestions
             } else {
                 const sourceQuestions = groups[sourceIds.groupIndex].sections[sourceIds.sectionIndex].questions
@@ -169,6 +183,14 @@ const EditScorecardPage: FC = () => {
                 if (movedQuestion) {
                     delete movedQuestion.id
                 }
+
+                newSourceQuestions.forEach((question, index) => {
+                    question.sortOrder = index
+                })
+
+                newDestQuestions.forEach((question, index) => {
+                    question.sortOrder = index
+                })
 
                 groups[sourceIds.groupIndex].sections[sourceIds.sectionIndex].questions = newSourceQuestions
                 groups[destIds.groupIndex].sections[destIds.sectionIndex].questions = newDestQuestions

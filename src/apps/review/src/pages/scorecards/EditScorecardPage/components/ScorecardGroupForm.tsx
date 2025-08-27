@@ -13,6 +13,7 @@ import { getEmptyScorecardGroup, weightsSum } from '../utils'
 import styles from '../EditScorecardPage.module.scss'
 
 import CalculatedWeightsSum from './CalculatedWeightsSum'
+import DragIcon from './DragIcon'
 import InputWrapper from './InputWrapper'
 import ScorecardSectionForm, { scorecardSectionSchema } from './ScorecardSectionForm'
 
@@ -88,9 +89,12 @@ const ScorecardGroupForm: FC = () => {
                                     {...draggableProvided.dragHandleProps}
                                 >
                                     <div className={styles.headerArea}>
-                                        <div className={classNames('body-small', styles.headerAreaLabel)}>
-                                            Group
-                                            {` ${index + 1}`}
+                                        <div className={styles.title}>
+                                            <DragIcon />
+                                            <div className={classNames('body-small', styles.headerAreaLabel)}>
+                                                Group
+                                                {` ${index + 1}`}
+                                            </div>
                                         </div>
                                         <div className={styles.headerAreaInputs}>
                                             <InputWrapper

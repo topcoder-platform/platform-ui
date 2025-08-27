@@ -16,6 +16,7 @@ import styles from '../EditScorecardPage.module.scss'
 
 import BasicSelect from './BasicSelect'
 import CalculatedWeightsSum from './CalculatedWeightsSum'
+import DragIcon from './DragIcon'
 import InputWrapper from './InputWrapper'
 
 const scorecardScaleOptions = Object.entries(ScorecardScales)
@@ -125,11 +126,14 @@ const ScorecardQuestionForm: FC<ScorecardQuestionFormProps> = props => {
                                     {...draggableProvided.dragHandleProps}
                                     className={styles.questionItem}
                                 >
-                                    <div className={classNames('body-small main-group', styles.headerAreaLabel)}>
-                                        Question
-                                        {` ${props.sectionIndex}`}
-                                        .
-                                        {index + 1}
+                                    <div className={styles.title}>
+                                        <DragIcon />
+                                        <div className={classNames('body-small main-group', styles.headerAreaLabel)}>
+                                            Question
+                                            {` ${props.sectionIndex}`}
+                                            .
+                                            {index + 1}
+                                        </div>
                                     </div>
                                     <InputWrapper
                                         placeholder='Question Name'
