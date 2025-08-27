@@ -338,7 +338,7 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
                                                         ) => {
                                                             const reviewItemInfo
                                                                 = mappingReviewInfo[
-                                                                    question.id
+                                                                    question.id as string
                                                                 ]
                                                             if (
                                                                 !reviewItemInfo
