@@ -88,6 +88,10 @@
     .headerArea {
         background: #0F172A;
         color: $tc-white;
+        .title {
+            display: flex;
+            align-items: center;
+        }
 
         :global(.input-error) {
             font-family: "Nunito Sans", sans-serif;
@@ -115,6 +119,11 @@
     .headerArea {
         background: $teal-160;
         color: $tc-white;
+
+        .title {
+            display: flex;
+            align-items: center;
+        }
 
         :global(.input-error) {
             font-family: "Nunito Sans", sans-serif;
@@ -146,6 +155,11 @@
         display: grid;
         grid-template-columns: 1fr 7.85% 3.5%;
         gap: $sp-4;
+
+        .title {
+            display: flex;
+            align-items: center;
+        }
 
         :global(.main-group) {
             grid-column: 1;

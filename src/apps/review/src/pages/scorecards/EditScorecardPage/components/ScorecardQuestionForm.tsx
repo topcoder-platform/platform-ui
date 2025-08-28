@@ -1,3 +1,4 @@
+/* eslint-disable import/no-extraneous-dependencies */
 import * as yup from 'yup'
 import { get } from 'lodash'
 import { ChangeEvent, ChangeEventHandler, FC, useCallback, useMemo } from 'react'
@@ -5,6 +6,7 @@ import { useFieldArray, useFormContext } from 'react-hook-form'
 import classNames from 'classnames'
 
 import { TrashIcon } from '@heroicons/react/outline'
+import { Draggable, Droppable } from '@hello-pangea/dnd'
 import { Button } from '~/libs/ui'
 import { ScorecardScales } from '~/apps/review/src/lib/models'
 
@@ -14,6 +16,7 @@ import styles from '../EditScorecardPage.module.scss'
 
 import BasicSelect from './BasicSelect'
 import CalculatedWeightsSum from './CalculatedWeightsSum'
+import DragIcon from './DragIcon'
 import InputWrapper from './InputWrapper'
 
 const scorecardScaleOptions = Object.entries(ScorecardScales)
@@ -100,119 +103,143 @@ const ScorecardQuestionForm: FC<ScorecardQuestionFormProps> = props => {
     }, [form])
 
     return (
-        <div className={styles.questionWrap}>
-            {!formQuestionsArray.fields.length && (
-                <div className='errorMessage'>At least one question is required</div>
-            )}
-            {formQuestionsArray.fields.map((questionField, index) => (
-                <div key={questionField.id} className={styles.questionItem}>
-                    <div className={classNames('body-small main-group', styles.headerAreaLabel)}>
-                        Question
-                        {' '}
-                        {props.sectionIndex}
-                        .
-                        {index + 1}
-                    </div>
-                    <InputWrapper
-                        placeholder='Question Name'
-                        name={`${name}.${index}.description`}
-                        className='main-group'
-                    >
-                        <input type='text' />
-                    </InputWrapper>
-                    <InputWrapper
-                        placeholder='Weight'
-                        name={`${name}.${index}.weight`}
-                        className='weight-group'
-                    >
-                        <input type='number' />
-                    </InputWrapper>
-                    <TrashIcon
-                        className={classNames(styles.trashIcon, styles.blue, 'action-group')}
-                        onClick={function handleRemoveItem() { handleRemove(index, questionField) }}
-                    />
-
-                    <InputWrapper
-                        placeholder='Question Guideline'
-                        name={`${name}.${index}.guidelines`}
-                        className='main-group'
-                    >
-                        <textarea rows={4} />
-                    </InputWrapper>
-
-                    <div className={classNames('main-group', styles.doubleInputWrap)}>
-                        <InputWrapper
-                            placeholder='Select Scale'
-                            name={`${name}.${index}.type`}
+        <Droppable droppableId={name} type='question'>
+            {provided => (
+                <div
+                    className={styles.questionWrap}
+                    ref={provided.innerRef}
+                    {...provided.droppableProps}
+                >
+                    {!formQuestionsArray.fields.length && (
+                        <div className='errorMessage'>At least one question is required</div>
+                    )}
+                    {formQuestionsArray.fields.map((questionField, index) => (
+                        <Draggable
+                            key={questionField.id}
+                            draggableId={questionField.id}
+                            index={index}
                         >
-                            <BasicSelect
-                                options={scorecardScaleOptions}
-                                {...{
-                                    mapValue: (value: string) => (
-                                        `${value?.toLowerCase()}${
-                                            value === 'SCALE'
-                                                ? `(${
-                                                    get(values, `${name}.${index}.scaleMin`)
-                                                }-${
-                                                    get(values, `${name}.${index}.scaleMax`)
-                                                })`
-                                                : ''
-                                        }`
-                                    ),
-                                    onChange: ((
-                                        ev: ChangeEvent<HTMLInputElement>,
-                                        field: any,
-                                    ) => handleScaleChange(ev, field)) as ChangeEventHandler,
-                                }}
-                            />
-                        </InputWrapper>
-                        <input
-                            type='hidden'
-                            {...form.register(`${name}.${index}.scaleMin`)}
-                        />
-                        <input
-                            type='hidden'
-                            {...form.register(`${name}.${index}.scaleMax`)}
-                        />
+                            {draggableProvided => (
+                                <div
+                                    ref={draggableProvided.innerRef}
+                                    {...draggableProvided.draggableProps}
+                                    {...draggableProvided.dragHandleProps}
+                                    className={styles.questionItem}
+                                >
+                                    <div className={styles.title}>
+                                        <DragIcon />
+                                        <div className={classNames('body-small main-group', styles.headerAreaLabel)}>
+                                            Question
+                                            {` ${props.sectionIndex}`}
+                                            .
+                                            {index + 1}
+                                        </div>
+                                    </div>
+                                    <InputWrapper
+                                        placeholder='Question Name'
+                                        name={`${name}.${index}.description`}
+                                        className='main-group'
+                                    >
+                                        <input type='text' />
+                                    </InputWrapper>
+                                    <InputWrapper
+                                        placeholder='Weight'
+                                        name={`${name}.${index}.weight`}
+                                        className='weight-group'
+                                    >
+                                        <input type='number' />
+                                    </InputWrapper>
+                                    <TrashIcon
+                                        className={classNames(styles.trashIcon, styles.blue, 'action-group')}
+                                        onClick={function handleRemoveItem() { handleRemove(index, questionField) }}
+                                    />
 
-                        <InputWrapper
-                            name={`${name}.${index}.requiresUpload`}
-                            placeholder='Select Document Requirements'
-                        >
-                            <BasicSelect
-                                options={yesNoOptions}
-                                onChange={(function handleChangeRequireUpload(
-                                    ev: ChangeEvent<HTMLInputElement>,
-                                    field: any,
-                                ) {
-                                    field.onChange({
-                                        ...ev,
-                                        target: { ...ev.target, value: ev.target.value === 'true' },
-                                    })
-                                }) as ChangeEventHandler}
+                                    <InputWrapper
+                                        placeholder='Question Guideline'
+                                        name={`${name}.${index}.guidelines`}
+                                        className='main-group'
+                                    >
+                                        <textarea rows={4} />
+                                    </InputWrapper>
+
+                                    <div className={classNames('main-group', styles.doubleInputWrap)}>
+                                        <InputWrapper
+                                            placeholder='Select Scale'
+                                            name={`${name}.${index}.type`}
+                                        >
+                                            <BasicSelect
+                                                options={scorecardScaleOptions}
+                                                {...{
+                                                    mapValue: (value: string) => (
+                                                        `${value?.toLowerCase()}${
+                                                            value === 'SCALE'
+                                                                ? `(${
+                                                                    get(values, `${name}.${index}.scaleMin`)
+                                                                }-${
+                                                                    get(values, `${name}.${index}.scaleMax`)
+                                                                })`
+                                                                : ''
+                                                        }`
+                                                    ),
+                                                    onChange: ((
+                                                        ev: ChangeEvent<HTMLInputElement>,
+                                                        field: any,
+                                                    ) => handleScaleChange(ev, field)) as ChangeEventHandler,
+                                                }}
+                                            />
+                                        </InputWrapper>
+                                        <input
+                                            type='hidden'
+                                            {...form.register(`${name}.${index}.scaleMin`)}
+                                        />
+                                        <input
+                                            type='hidden'
+                                            {...form.register(`${name}.${index}.scaleMax`)}
+                                        />
+
+                                        <InputWrapper
+                                            name={`${name}.${index}.requiresUpload`}
+                                            placeholder='Select Document Requirements'
+                                        >
+                                            <BasicSelect
+                                                options={yesNoOptions}
+                                                onChange={(function handleChangeRequireUpload(
+                                                    ev: ChangeEvent<HTMLInputElement>,
+                                                    field: any,
+                                                ) {
+                                                    field.onChange({
+                                                        ...ev,
+                                                        target: { ...ev.target, value: ev.target.value === 'true' },
+                                                    })
+                                                }) as ChangeEventHandler}
+                                            />
+                                        </InputWrapper>
+                                    </div>
+                                </div>
+                            )}
+                        </Draggable>
+                    ))}
+                    {provided.placeholder}
+                    <div className={styles.footerArea}>
+                        <Button secondary onClick={handleAddQuestion} uiv2>
+                            + Add New Question
+                        </Button>
+
+                        {formQuestionsArray.fields.length > 0 && (
+                            <CalculatedWeightsSum
+                                fieldName={name}
+                                label='Questions'
+                                description='The sum of question weights within a section must total 100.'
+                                error={(
+                                    get(form.formState.errors, `${name}.root.message`)
+                                    || get(form.formState.errors, `${name}.message`)
+                                ) as unknown as string}
                             />
-                        </InputWrapper>
+                        )}
                     </div>
                 </div>
-            ))}
-            <div className={styles.footerArea}>
-                <Button secondary onClick={handleAddQuestion} uiv2>
-                    + Add New Question
-                </Button>
-
-                {formQuestionsArray.fields.length > 0 && (
-                    <CalculatedWeightsSum
-                        fieldName={name}
-                        label='Questions'
-                        description='The sum of question weights within a section must total 100.'
-                        error={(
-                            get(form.formState.errors, `${name}.root.message`)
-                            || get(form.formState.errors, `${name}.message`)
-                        ) as unknown as string}
-                    />
-                )}
-            </div>
-        </div>
+            )}
+        </Droppable>
     )
 }
 

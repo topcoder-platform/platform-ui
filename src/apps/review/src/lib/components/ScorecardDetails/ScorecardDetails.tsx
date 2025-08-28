@@ -165,7 +165,7 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
                                     (questionResult, question) => {
                                         let questionPoint = 0
                                         const initialAnswer
-                                            = mapingResult[question.id]
+                                            = mapingResult[question.id as string]
                                         if (
                                             question.type === 'YES_NO'
                                             && initialAnswer === 'Yes'
@@ -338,7 +338,7 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
                                                         ) => {
                                                             const reviewItemInfo
                                                                 = mappingReviewInfo[
-                                                                    question.id
+                                                                    question.id as string
                                                                 ]
                                                             if (
                                                                 !reviewItemInfo
