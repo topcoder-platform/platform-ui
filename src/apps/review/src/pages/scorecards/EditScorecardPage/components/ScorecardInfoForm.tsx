@@ -1,5 +1,5 @@
 import * as yup from 'yup'
-import { FC, useMemo } from 'react'
+import { FC, useEffect, useMemo } from 'react'
 import { useFormContext } from 'react-hook-form'
 import classNames from 'classnames'
 
@@ -61,6 +61,14 @@ const ScorecardInfoForm: FC = () => {
     const form = useFormContext()
     const challengeTrack = form.watch('challengeTrack')
     const categories = useMemo(() => categoryOptions(challengeTrack), [challengeTrack])
+
+    useEffect(() => {
+        if (categories.length > 0) {
+            form.setValue('challengeType', categories[0].value)
+        } else {
+            form.setValue('challengeType', '')
+        }
+    }, [challengeTrack, categories, form])
 
     return (
         <div className={classNames(styles.grayWrapper, styles.scorecardInfo)}>
