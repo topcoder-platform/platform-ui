@@ -63,10 +63,10 @@ const ScorecardInfoForm: FC = () => {
     const categories = useMemo(() => categoryOptions(challengeTrack), [challengeTrack])
 
     useEffect(() => {
-        if (categories.length > 0) {
-            form.setValue('challengeType', categories[0].value)
-        } else {
-            form.setValue('challengeType', '')
+        const currentChallengeType = form.getValues('challengeType')
+        const partOfCategories = categories.find(item => item.value === currentChallengeType)
+        if ((!partOfCategories || !currentChallengeType || currentChallengeType === '') && categories.length > 0) {
+            form.setValue('challengeType', categories[0].value, { shouldDirty: true })
         }
     }, [challengeTrack, categories, form])
 
