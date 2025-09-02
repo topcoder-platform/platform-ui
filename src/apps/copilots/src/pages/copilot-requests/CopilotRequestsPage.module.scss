@@ -1,5 +1,13 @@
 @import '@libs/ui/styles/includes';
 
+.shortPage {
+    margin-bottom: 250px;
+}
+
+.tableWrapper {
+    margin-bottom: 60px;
+}
+
 .actionButtons {
     display: flex;
     gap: $sp-1;

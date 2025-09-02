@@ -86,12 +86,8 @@ const CopilotOpportunityDetails: FC<{}> = () => {
     const [activeTab, setActiveTab]: [string, Dispatch<SetStateAction<string>>] = useState<string>(activeTabHash)
 
     useEffect(() => {
-        if (isAdminOrPM) {
-            setActiveTab(activeTabHash)
-        } else {
-            setActiveTab('0')
-        }
-    }, [activeTabHash, isAdminOrPM])
+        setActiveTab(activeTabHash)
+    }, [activeTabHash])
 
     const handleTabChange = useCallback((tabId: string): void => {
         setActiveTab(tabId)
@@ -286,7 +282,7 @@ const CopilotOpportunityDetails: FC<{}> = () => {
                         <TabsNavbar
                             defaultActive={activeTab}
                             onChange={handleTabChange}
-                            tabs={getCopilotDetailsTabsConfig(isAdminOrPM, copilotApplications?.length || 0)}
+                            tabs={getCopilotDetailsTabsConfig(copilotApplications?.length || 0)}
                         />
                     )
                 }
@@ -297,7 +293,7 @@ const CopilotOpportunityDetails: FC<{}> = () => {
                         opportunity={opportunity}
                         members={members}
                         onApplied={onApplied}
-                        isAdminOrPM
+                        isAdminOrPM={isAdminOrPM}
                     />
                 )}
 

@@ -1,0 +1,66 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.blockBtns {
+    display: flex;
+    gap: 15px;
+    justify-content: flex-end;
+}
+
+.blockActionLoading {
+    position: absolute;
+    width: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 64px;
+    left: $sp-8;
+    bottom: $sp-8;
+
+    .spinner {
+        background: none;
+    }
+
+    @include ltelg {
+        left: $sp-4;
+        bottom: $sp-4;
+    }
+}
+
+.fieldTextContainer,
+.fieldTitle {
+    grid-column: 1 / span 2;
+}
+
+.fieldTextContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.fieldAreaContainer {
+    textarea {
+        height: 200px;
+        resize: none;
+    }
+}
+
+.fieldText {
+    width: 100%;
+}
+
+.btnDelete {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+
+    strong {
+        font-weight: bold;
+    }
+}

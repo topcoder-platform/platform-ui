@@ -1,9 +1,8 @@
-import { tokenGetAsync, TokenModel, userGetDiceStatusAsync } from '../../auth'
+import { tokenGetAsync, TokenModel } from '../../auth'
 import { CountryLookup } from '../country-lookup.model'
 import { EditNameRequest } from '../edit-name-request.model'
 import { ModifyTracksRequest } from '../modify-tracks.request'
 import { ModifyMemberEmailPreferencesRequest } from '../modify-user-email-preferences.model'
-import { ModifyUserMFARequest, ModifyUserMFAResponse } from '../modify-user-mfa.model'
 import { UpdateProfileRequest, UserPhotoUpdateResponse } from '../modify-user-profile.model'
 import { ModifyUserPropertyResponse } from '../modify-user-role.model'
 import { UserEmailPreferences } from '../user-email-preference.model'
@@ -20,7 +19,6 @@ import {
     getCountryLookup,
     modifyTracks,
     updateMemberEmailPreferences,
-    updateMemberMFA,
     updateMemberPassword,
     updateMemberPhoto,
     updateMemberProfile,
@@ -40,13 +38,10 @@ export async function getLoggedInAsync(handle?: string): Promise<UserProfile | u
     }
 
     // get the profile
-    const profilePromise: Promise<UserProfile> = profileStoreGet(safeHandle)
-    const dicePromise: Promise<boolean> = userGetDiceStatusAsync(token.userId)
-
-    const [profileResult, diceEnabled]: [UserProfile, boolean] = await Promise.all([profilePromise, dicePromise])
+    const profileResult: UserProfile = await profileStoreGet(safeHandle)
 
     // make the changes we need based on the token
-    const output: UserProfile = profileFactoryCreate(profileResult, token, diceEnabled)
+    const output: UserProfile = profileFactoryCreate(profileResult, token)
     return output
 }
 
@@ -105,13 +100,6 @@ export async function updateMemberEmailPreferencesAsync(
     emailPreferences: ModifyMemberEmailPreferencesRequest,
 ): Promise<UserEmailPreferences> {
     return updateMemberEmailPreferences(email, emailPreferences)
-}
-
-export async function updateMemberMFAStatusAsync(
-    userId: number,
-    payload: ModifyUserMFARequest,
-): Promise<ModifyUserMFAResponse> {
-    return updateMemberMFA(userId, payload)
 }
 
 export async function updateMemberPasswordAsync(

@@ -3919,6 +3919,13 @@
   resolved "https://registry.yarnpkg.com/@testing-library/user-event/-/user-event-14.6.1.tgz#13e09a32d7a8b7060fe38304788ebf4197cd2149"
   integrity sha512-vq7fv0rnt+QTXgPxr5Hjc210p6YKq2kmdziLgnsZGgLJ9e6VAShx1pACLuRjd/AS/sr7phAR58OIIpf0LlmQNw==
 
+"@tinymce/tinymce-react@^6.2.1":
+  version "6.2.1"
+  resolved "https://registry.yarnpkg.com/@tinymce/tinymce-react/-/tinymce-react-6.2.1.tgz#23e1d73b0a5b1f01c7d23f5b6c6bb71d7fc617c7"
+  integrity sha512-P/xWz3sNeJ2kXykxBkxM+4vEUYFlqWuJFifcJTmIwqHODJc17eZWvtNapzqGD+mUjXglf3VePu7ojRV1kdK22A==
+  dependencies:
+    prop-types "^15.6.2"
+
 "@tootallnate/once@1":
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/@tootallnate/once/-/once-1.1.2.tgz#ccb91445360179a04e7fe6aff78c00ffc1eeaf82"
@@ -4026,7 +4033,14 @@
     "@types/node" "*"
     "@types/responselike" "^1.0.0"
 
-"@types/codemirror@^5.60.10", "@types/codemirror@^5.60.15":
+"@types/codemirror@5.60.15":
+  version "5.60.15"
+  resolved "https://registry.yarnpkg.com/@types/codemirror/-/codemirror-5.60.15.tgz#0f82be6f4126d1e59cf4c4830e56dcd49d3c3e8a"
+  integrity sha512-dTOvwEQ+ouKJ/rE9LT1Ue2hmP6H1mZv5+CCnNWu2qtiOe2LQa9lCprEY20HxiDmV/Bxh+dXjywmy5aKvoGjULA==
+  dependencies:
+    "@types/tern" "*"
+
+"@types/codemirror@^5.60.10":
   version "5.60.16"
   resolved "https://registry.yarnpkg.com/@types/codemirror/-/codemirror-5.60.16.tgz#1f462f9771113bd8e1c6130c666b17db8e1087c2"
   integrity sha512-V/yHdamffSS075jit+fDxaOAmdP2liok8NSNJnAZfDJErzOheuygHZEhAJrfmk5TEyM32MhkZjwo/idX791yxw==
@@ -5271,6 +5285,11 @@ ajv@^8.0.0, ajv@^8.6.0, ajv@^8.9.0:
     fast-uri "^3.0.1"
     json-schema-traverse "^1.0.0"
     require-from-string "^2.0.2"
+
+amazon-s3-uri@^0.1.1:
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/amazon-s3-uri/-/amazon-s3-uri-0.1.1.tgz#37afdfa88352ee0c22ac12ea6417a7c725f2b90b"
+  integrity sha512-LklZtJ3lgTFdVpy/5ln0okxdgMdnRmFLRg9FGcJ7DeB5Ez5TCs1DHdmVovcPIxW9tQlA1+QLpGNg1Ig6hv768A==
 
 ansi-align@^3.0.1:
   version "3.0.1"
@@ -6622,9 +6641,9 @@ codemirror-spell-checker@1.1.2:
     typo-js "*"
 
 codemirror@^5.65.15:
-  version "5.65.20"
-  resolved "https://registry.yarnpkg.com/codemirror/-/codemirror-5.65.20.tgz#8aa77c2dbfeb2df9b0828bf8e7d64fdd566eeff0"
-  integrity sha512-i5dLDDxwkFCbhjvL2pNjShsojoL3XHyDwsGv1jqETUoW+lzpBKKqNTUWgQwVAOa0tUm4BwekT455ujafi8payA==
+  version "5.65.19"
+  resolved "https://registry.yarnpkg.com/codemirror/-/codemirror-5.65.19.tgz#71016c701d6a4b6e1982b0f6e7186be65e49653d"
+  integrity sha512-+aFkvqhaAVr1gferNMuN8vkTSrWIFvzlMV9I2KBLCWS2WpZ2+UAkZjlMZmEuT+gcXTi6RrGQCkWq1/bDtGqhIA==
 
 collect-v8-coverage@^1.0.0:
   version "1.0.2"
@@ -7947,7 +7966,7 @@ duplexify@^3.5.0, duplexify@^3.6.0:
     readable-stream "^2.0.0"
     stream-shift "^1.0.0"
 
-easymde@^2.20.0:
+easymde@2.20.0:
   version "2.20.0"
   resolved "https://registry.yarnpkg.com/easymde/-/easymde-2.20.0.tgz#88b3161feab6e1900afa9c4dab3f1da352b0a26e"
   integrity sha512-V1Z5f92TfR42Na852OWnIZMbM7zotWQYTddNaLYZFVKj7APBbyZ3FYJ27gBw2grMW3R6Qdv9J8n5Ij7XRSIgXQ==
@@ -17911,6 +17930,11 @@ tinyglobby@^0.2.13:
     fdir "^6.4.4"
     picomatch "^4.0.2"
 
+tinymce@^7.9.1:
+  version "7.9.1"
+  resolved "https://registry.yarnpkg.com/tinymce/-/tinymce-7.9.1.tgz#1b18bad9cb7a3b4b12e3e5a7f29fc7daad0713d7"
+  integrity sha512-zaOHwmiP1EqTeLRXAvVriDb00JYnfEjWGPdKEuac7MiZJ5aiDMZ4Unc98Gmajn+PBljOmO1GKV6G0KwWn3+k8A==
+
 tmpl@1.0.5:
   version "1.0.5"
   resolved "https://registry.yarnpkg.com/tmpl/-/tmpl-1.0.5.tgz#8683e0b902bb9c20c4f726e3c0b69f36518c07cc"
@@ -18266,9 +18290,9 @@ typescript@^4.8.4:
   integrity sha512-1FXk9E2Hm+QzZQ7z+McJiHL4NW1F2EzMu9Nq9i3zAaGqibafqYwCVU6WyWAuyQRRzOlxou8xZSyXLEN8oKj24g==
 
 typo-js@*:
-  version "1.3.1"
-  resolved "https://registry.yarnpkg.com/typo-js/-/typo-js-1.3.1.tgz#c80f8c7b292caaa17a507226bf74c1cddf6a29e6"
-  integrity sha512-elJkpCL6Z77Ghw0Lv0lGnhBAjSTOQ5FhiVOCfOuxhaoTT2xtLVbqikYItK5HHchzPbHEUFAcjOH669T2ZzeCbg==
+  version "1.2.5"
+  resolved "https://registry.yarnpkg.com/typo-js/-/typo-js-1.2.5.tgz#0aa65e0be9b69036463a3827de8185b4144e3086"
+  integrity sha512-F45vFWdGX8xahIk/sOp79z2NJs8ETMYsmMChm9D5Hlx3+9j7VnCyQyvij5MOCrNY3NNe8noSyokRjQRfq+Bc7A==
 
 ua-parser-js@^0.7.30:
   version "0.7.41"
@@ -19405,6 +19429,7 @@ workbox-window@6.6.1:
     workbox-core "6.6.1"
 
 "wrap-ansi-cjs@npm:wrap-ansi@^7.0.0", wrap-ansi@^7.0.0:
+  name wrap-ansi-cjs
   version "7.0.0"
   resolved "https://registry.yarnpkg.com/wrap-ansi/-/wrap-ansi-7.0.0.tgz#67e145cff510a6a6984bdf1152911d69d2eb9e43"
   integrity sha512-YVGIj2kamLSTxw6NsZjoBxfSwsn0ycdesmc4p+Q21c5zPuZ1pl+NfxVdxPtdHvmNVOQ6XSYG4AUtyt/Fi7D16Q==

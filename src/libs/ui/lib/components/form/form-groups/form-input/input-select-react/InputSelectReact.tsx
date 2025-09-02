@@ -28,6 +28,7 @@ interface InputSelectReactProps {
     readonly classNameWrapper?: string
     readonly dirty?: boolean
     readonly disabled?: boolean
+    readonly isLoading?: boolean
     readonly error?: string
     readonly hideInlineErrors?: boolean
     readonly hint?: string
@@ -168,6 +169,7 @@ const InputSelectReact: FC<InputSelectReactProps> = props => {
                 backspaceRemovesValue
                 isDisabled={props.disabled}
                 filterOption={props.filterOption}
+                isLoading={props.isLoading}
             />
         </InputWrapper>
     )

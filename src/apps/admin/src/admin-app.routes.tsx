@@ -16,6 +16,7 @@ import {
     permissionManagementRouteId,
     platformRouteId,
     rootRoute,
+    termsRouteId,
     userManagementRouteId,
 } from './config/routes.config'
 import { platformSkillRouteId } from './platform/routes.config'
@@ -127,6 +128,22 @@ const BadgeListingPage: LazyLoadedComponent = lazyLoad(
 )
 const CreateBadgePage: LazyLoadedComponent = lazyLoad(
     () => import('./platform/gamification-admin/src/pages/create-badge/CreateBadgePage'),
+)
+const TermsListPage: LazyLoadedComponent = lazyLoad(
+    () => import('./platform/terms/TermsListPage'),
+    'TermsListPage',
+)
+const TermsAddPage: LazyLoadedComponent = lazyLoad(
+    () => import('./platform/terms/TermsAddPage'),
+    'TermsAddPage',
+)
+const TermsEditPage: LazyLoadedComponent = lazyLoad(
+    () => import('./platform/terms/TermsEditPage'),
+    'TermsEditPage',
+)
+const TermsUsersPage: LazyLoadedComponent = lazyLoad(
+    () => import('./platform/terms/TermsUsersPage'),
+    'TermsUsersPage',
 )
 
 export const toolTitle: string = ToolTitle.admin
@@ -309,6 +326,22 @@ export const adminRoutes: ReadonlyArray<PlatformRoute> = [
                     {
                         element: <BadgeDetailPage />,
                         route: `${gamificationAdminRouteId}${baseDetailPath}/:id`,
+                    },
+                    {
+                        element: <TermsListPage />,
+                        route: termsRouteId,
+                    },
+                    {
+                        element: <TermsAddPage />,
+                        route: `${termsRouteId}/add`,
+                    },
+                    {
+                        element: <TermsUsersPage />,
+                        route: `${termsRouteId}/:id/users`,
+                    },
+                    {
+                        element: <TermsEditPage />,
+                        route: `${termsRouteId}/:id/edit`,
                     },
                 ],
                 element: <Platform />,

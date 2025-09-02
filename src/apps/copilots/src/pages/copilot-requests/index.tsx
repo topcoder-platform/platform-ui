@@ -153,7 +153,9 @@ const CopilotRequestsPage: FC = () => {
         isValidating: requestsLoading,
         hasMoreCopilotRequests,
         setSize,
-        size }: CopilotRequestsResponse = useCopilotRequests(sort)
+        size,
+        page,
+    }: CopilotRequestsResponse = useCopilotRequests(sort)
 
     const viewRequestDetails = useMemo(() => (
         routeParams.requestId && find(requests, { id: +routeParams.requestId }) as CopilotRequest
@@ -265,6 +267,7 @@ const CopilotRequestsPage: FC = () => {
         >
             <PageTitle>Copilot Requests</PageTitle>
             <Table
+                className={(page === 1 && tableData.length < 10) ? styles.shortPage : styles.tableWrapper}
                 columns={tableColumns}
                 data={tableData}
                 moreToLoad={hasMoreCopilotRequests}

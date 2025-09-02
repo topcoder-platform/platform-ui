@@ -5,7 +5,7 @@ export enum CopilotDetailsTabViews {
     applications = '1',
 }
 
-export const getCopilotDetailsTabsConfig = (isAdminOrPM: boolean, count: number): TabsNavItem[] => (isAdminOrPM ? [
+export const getCopilotDetailsTabsConfig = (count: number): TabsNavItem[] => ([
     {
         id: CopilotDetailsTabViews.details,
         title: 'Details',
@@ -17,11 +17,6 @@ export const getCopilotDetailsTabsConfig = (isAdminOrPM: boolean, count: number)
         }],
         id: CopilotDetailsTabViews.applications,
         title: 'Applications',
-    },
-] : [
-    {
-        id: CopilotDetailsTabViews.details,
-        title: 'Details',
     },
 ])
 
