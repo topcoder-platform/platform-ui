@@ -23,6 +23,7 @@ interface InputTextareaProps {
     readonly tabIndex?: number
     readonly value?: string | number
     readonly inputControl?: UseFormRegisterReturn
+    readonly classNameWrapper?: string
 }
 
 const InputTextarea: FC<InputTextareaProps> = (props: InputTextareaProps) => (

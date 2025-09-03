@@ -78,11 +78,19 @@ export const USERFLOW_SURVEYS = {
 }
 
 export const ADMIN = {
+    AGREE_ELECTRONICALLY: '5b2798b2-ae82-4210-9b4d-5d6428125ccb',
+    AGREE_FOR_DOCUSIGN_TEMPLATE: '999a26ad-b334-453c-8425-165d4cf496d7',
     AV_SCAN_SCORER_REVIEW_TYPE_ID: '68c5a381-c8ab-48af-92a7-7a869a4ee6c3',
+    AVSCAN_TOPIC: 'avscan.action.scan',
+    AWS_CLEAN_BUCKET: '',
+    AWS_DMZ_BUCKET: 'topcoder-dev-submissions',
+    AWS_QUARANTINE_BUCKET: '',
+    AWS_REGION: 'us-east-1',
     CHALLENGE_URL: 'https://www.topcoder-dev.com/challenges',
     CONNECT_URL: 'https://connect.topcoder-dev.com',
     DEFAULT_PAYMENT_TERMS: 1,
     DIRECT_URL: 'https://www.topcoder-dev.com/direct',
     ONLINE_REVIEW_URL: 'https://software.topcoder-dev.com/review',
+    SUBMISSION_SCAN_TOPIC: 'submission.scan.complete',
     WORK_MANAGER_URL: 'https://challenges.topcoder-dev.com',
 }

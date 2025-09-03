@@ -22,11 +22,9 @@ import {
     getLessonPathFromCurrentLesson,
     LEARN_PATHS,
 } from '../../learn.routes'
-import { LearnConfig } from '../../config'
 
 import { CurriculumSummary } from './curriculum-summary'
 import { TcAcademyPolicyModal } from './tc-academy-policy-modal'
-import { DiceModal } from './dice-modal'
 import styles from './CourseCurriculum.module.scss'
 
 interface CourseCurriculumProps {
@@ -46,8 +44,6 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
     const isLoggedIn: boolean = !!props.profile
 
     const [isTcAcademyPolicyModal, setIsTcAcademyPolicyModal]: [boolean, Dispatch<SetStateAction<boolean>>]
-        = useState<boolean>(false)
-    const [isDiceModalOpen, setIsDiceModalOpen]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
 
     const status: string = props.progress?.status ?? UserCertificationProgressStatus.inititialized
@@ -95,17 +91,6 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
             // add a flag to the return url to show the academic policy modal
             // or resume the course when they're back
             window.location.href = getAuthenticateAndStartCourseRoute()
-            return
-        }
-
-        // if the user is wipro and s/he hasn't set up DICE,
-        // let the user know
-        if (
-            LearnConfig.REQUIRE_DICE_ID
-            && props.profile?.isWipro
-            && !props.profile.diceEnabled
-        ) {
-            setIsDiceModalOpen(true)
             return
         }
 
@@ -188,10 +173,6 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
         setIsTcAcademyPolicyModal(false)
     }
 
-    function onDiceModalClose(): void {
-        setIsDiceModalOpen(false)
-    }
-
     return (
         <>
             <div className={styles.wrap}>
@@ -231,11 +212,6 @@ const CourseCurriculum: FC<CourseCurriculumProps> = (props: CourseCurriculumProp
                 isOpen={isTcAcademyPolicyModal}
                 onClose={onAcademicHonestyModalClose}
                 onConfirm={handlePolicyAccept}
-            />
-
-            <DiceModal
-                isOpen={isDiceModalOpen}
-                onClose={onDiceModalClose}
             />
         </>
     )

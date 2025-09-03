@@ -1,6 +1,7 @@
-import { FC, useCallback, useContext, useMemo } from 'react'
+import { FC, useCallback, useContext, useMemo, useState } from 'react'
 import { find } from 'lodash'
 import { NavigateFunction, Params, useNavigate, useParams } from 'react-router-dom'
+import classNames from 'classnames'
 
 import {
     Button,
@@ -8,7 +9,7 @@ import {
     ContentLayout,
     IconCheck,
     IconSolid,
-    LoadingSpinner,
+    LoadingCircles,
     PageTitle,
     Table,
     TableColumn,
@@ -17,11 +18,11 @@ import {
 } from '~/libs/ui'
 import { profileContext, ProfileContextData, UserRole } from '~/libs/core'
 import { EnvironmentConfig } from '~/config'
+import { Sort } from '~/apps/admin/src/platform/gamification-admin/src/game-lib'
 
 import { ProjectTypeLabels } from '../../constants'
 import { approveCopilotRequest, CopilotRequestsResponse, useCopilotRequests } from '../../services/copilot-requests'
 import { CopilotRequest } from '../../models/CopilotRequest'
-import { ProjectsResponse, useProjects } from '../../services/projects'
 import { copilotRoutesMap } from '../../copilots.routes'
 import { Project } from '../../models/Project'
 
@@ -58,6 +59,16 @@ const CopilotTableActions: FC<{request: CopilotRequest}> = props => {
         navigate(copilotRoutesMap.CopilotRequestDetails.replace(':requestId', `${props.request.id}`))
     }, [navigate, props.request.id])
 
+    const isEditable = useMemo(() => !['canceled', 'fulfilled'].includes(props.request.status), [props.request.status])
+
+    const editRequest = useCallback(() => {
+        if (!isEditable) {
+            return
+        }
+
+        navigate(copilotRoutesMap.CopilotRequestEditForm.replace(':requestId', `${props.request.id}`))
+    }, [navigate, props.request.id, isEditable])
+
     const copilotOpportunityId = props.request.opportunity?.id
 
     const navigateToOpportunity = useCallback(() => {
@@ -77,6 +88,21 @@ const CopilotTableActions: FC<{request: CopilotRequest}> = props => {
                     >
                         <IconSolid.EyeIcon className='icon-lg' />
                     </Tooltip>
+                </div>
+                <div
+                    className={classNames(styles.viewRequestIcon, !isEditable && styles.disabled)}
+                    onClick={editRequest}
+                >
+                    {isEditable ? (
+                        <Tooltip
+                            content='Edit Copilot Request'
+                            place='top'
+                        >
+                            <IconSolid.PencilIcon className='icon-lg' />
+                        </Tooltip>
+                    ) : (
+                        <IconSolid.PencilIcon className={classNames('icon-lg', styles.disabled)} />
+                    )}
                 </div>
                 {props.request.status === 'approved'
                 && (
@@ -111,6 +137,10 @@ const CopilotTableActions: FC<{request: CopilotRequest}> = props => {
 const CopilotRequestsPage: FC = () => {
     const navigate: NavigateFunction = useNavigate()
     const routeParams: Params<string> = useParams()
+    const [sort, setSort] = useState<Sort>({
+        direction: 'desc',
+        fieldName: 'createdAt',
+    })
 
     const { profile }: ProfileContextData = useContext(profileContext)
     const isAdminOrPM: boolean = useMemo(
@@ -118,18 +148,14 @@ const CopilotRequestsPage: FC = () => {
         [profile],
     )
 
-    const { data: requests = [], isValidating: requestsLoading }: CopilotRequestsResponse = useCopilotRequests()
-    const projectIds = useMemo(() => (
-        (new Set(requests.map(r => r.projectId))
-            .values() as any)
-            .toArray()
-    ), [requests])
-
-    const { data: projects = [], isValidating: projectsLoading }: ProjectsResponse = useProjects(undefined, {
-        filter: { id: projectIds },
-        isPaused: () => !projectIds?.length,
-    })
-    const isLoading = projectsLoading || requestsLoading
+    const {
+        data: requests = [],
+        isValidating: requestsLoading,
+        hasMoreCopilotRequests,
+        setSize,
+        size,
+        page,
+    }: CopilotRequestsResponse = useCopilotRequests(sort)
 
     const viewRequestDetails = useMemo(() => (
         routeParams.requestId && find(requests, { id: +routeParams.requestId }) as CopilotRequest
@@ -138,10 +164,6 @@ const CopilotRequestsPage: FC = () => {
     const hideRequestDetails = useCallback(() => {
         navigate(copilotRoutesMap.CopilotRequests)
     }, [navigate])
-
-    const projectsMap = useMemo(() => projects.reduce((all, c) => (
-        Object.assign(all, { [c.id]: c })
-    ), {} as {[key: string]: Project}), [projects])
 
     const handleLinkClick = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
         e.stopPropagation()
@@ -152,7 +174,6 @@ const CopilotRequestsPage: FC = () => {
             label: 'Project',
             propertyName: 'projectName',
             renderer: (copilotRequest: CopilotRequest) => {
-                const projectName = projectsMap[copilotRequest.projectId]?.name
                 const projectLink = `
                 ${EnvironmentConfig.ADMIN.WORK_MANAGER_URL}/projects/${copilotRequest.projectId}/challenges
                 `
@@ -164,15 +185,24 @@ const CopilotRequestsPage: FC = () => {
                         rel='noreferrer'
                         onClick={handleLinkClick}
                     >
-                        {projectName}
+                        {copilotRequest.project?.name}
                     </a>
                 )
             },
             type: 'element',
         },
         {
+            className: styles.opportunityTitle,
+            label: 'Title',
+            propertyName: 'opportunityTitle',
+            renderer: (copilotRequest: CopilotRequest) => (
+                <div className={styles.title}>{copilotRequest.opportunityTitle}</div>
+            ),
+            type: 'element',
+        },
+        {
             label: 'Type',
-            propertyName: 'type',
+            propertyName: 'projectType',
             type: 'text',
         },
         {
@@ -203,9 +233,17 @@ const CopilotRequestsPage: FC = () => {
 
     const tableData = useMemo(() => requests.map(request => ({
         ...request,
-        projectName: projectsMap[request.projectId]?.name,
-        type: ProjectTypeLabels[request.projectType] ?? '',
-    })), [projectsMap, requests])
+        projectName: request.project?.name,
+        projectType: ProjectTypeLabels[request.projectType] ?? '',
+    })), [requests])
+
+    function loadMore(): void {
+        setSize(size + 1)
+    }
+
+    function onToggleSort(s: Sort): void {
+        setSort(s)
+    }
 
     // header button config
     const addNewRequestButton: ButtonProps = {
@@ -228,18 +266,19 @@ const CopilotRequestsPage: FC = () => {
             buttonConfig={addNewRequestButton}
         >
             <PageTitle>Copilot Requests</PageTitle>
-            {isLoading ? (
-                <LoadingSpinner inline />
-            ) : (
-                <Table
-                    columns={tableColumns}
-                    data={tableData}
-                />
-            )}
+            <Table
+                className={(page === 1 && tableData.length < 10) ? styles.shortPage : styles.tableWrapper}
+                columns={tableColumns}
+                data={tableData}
+                moreToLoad={hasMoreCopilotRequests}
+                onLoadMoreClick={loadMore}
+                onToggleSort={onToggleSort}
+            />
+            {requestsLoading && <LoadingCircles /> }
             {viewRequestDetails && (
                 <CopilotRequestModal
                     request={viewRequestDetails}
-                    project={projectsMap[viewRequestDetails.projectId]}
+                    project={viewRequestDetails.project as Project}
                     onClose={hideRequestDetails}
                 />
             )}

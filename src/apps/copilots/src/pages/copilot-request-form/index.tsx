@@ -1,6 +1,7 @@
-import { FC, useContext, useMemo, useState } from 'react'
+import { FC, useContext, useEffect, useMemo, useState } from 'react'
 import { bind, debounce, isEmpty } from 'lodash'
 import { toast } from 'react-toastify'
+import { Params, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import classNames from 'classnames'
 
 import { profileContext, ProfileContextData } from '~/libs/core'
@@ -8,19 +9,88 @@ import { Button, IconSolid, InputDatePicker, InputMultiselectOption,
     InputRadio, InputSelect, InputSelectReact, InputText, InputTextarea } from '~/libs/ui'
 import { InputSkillSelector } from '~/libs/shared'
 
-import { getProjects } from '../../services/projects'
+import { getProject, getProjects, ProjectsResponse, useProjects } from '../../services/projects'
 import { ProjectTypes, ProjectTypeValues } from '../../constants'
-import { saveCopilotRequest } from '../../services/copilot-requests'
+import { CopilotRequestResponse, saveCopilotRequest, useCopilotRequest } from '../../services/copilot-requests'
+import { Project } from '../../models/Project'
 
 import styles from './styles.module.scss'
+
+const editableFields = [
+    'projectId',
+    'opportunityTitle',
+    'copilotUsername',
+    'complexity',
+    'requiresCommunication',
+    'paymentType',
+    'otherPaymentType',
+    'projectType',
+    'overview',
+    'skills',
+    'startDate',
+    'numWeeks',
+    'tzRestrictions',
+    'numHoursPerWeek',
+]
+
 // eslint-disable-next-line
 const CopilotRequestForm: FC<{}> = () => {
     const { profile }: ProfileContextData = useContext(profileContext)
+    const navigate = useNavigate()
+    const routeParams: Params<string> = useParams()
+    const [params] = useSearchParams()
 
     const [formValues, setFormValues] = useState<any>({})
     const [isFormChanged, setIsFormChanged] = useState(false)
     const [formErrors, setFormErrors] = useState<any>({})
     const [paymentType, setPaymentType] = useState<string>('')
+    const [projectFromQuery, setProjectFromQuery] = useState<Project>()
+    const activeProjectStatuses = ['active', 'approved', 'draft', 'new']
+
+    const { data: copilotRequestData }: CopilotRequestResponse = useCopilotRequest(routeParams.requestId)
+
+    useEffect(() => {
+        if (copilotRequestData) {
+            setFormValues(copilotRequestData)
+        }
+    }, [copilotRequestData])
+
+    const fetchProject = async (): Promise<void> => {
+        const projectId = params.get('projectId')
+
+        if (!projectId) {
+            return
+        }
+
+        const project = await getProject(projectId as string)
+
+        setFormValues((prevValues: any) => ({
+            ...prevValues,
+            projectId: project.id,
+        }))
+        setIsFormChanged(true)
+        setProjectFromQuery(project)
+    }
+
+    useEffect(() => {
+        fetchProject()
+    }, [params])
+
+    const { data: projects = [] }: ProjectsResponse = useProjects(undefined, {
+        filter: { id: copilotRequestData?.projectId },
+        isPaused: () => !copilotRequestData?.projectId,
+    })
+
+    const projectOptions = useMemo(() => {
+        const projectsFromResponse = projects.map(p => ({
+            label: p.name,
+            value: p.id,
+        }))
+
+        return projectFromQuery
+            ? [...projectsFromResponse, { label: projectFromQuery.name, value: projectFromQuery.id }]
+            : projectsFromResponse
+    }, [projects, projectFromQuery])
 
     const projectTypes = ProjectTypes ? ProjectTypes.map(project => ({
         label: project,
@@ -45,7 +115,13 @@ const CopilotRequestForm: FC<{}> = () => {
         label: string;
         value: string;
     }>> {
-        const response = await getProjects(inputValue)
+        const response = await getProjects(inputValue, {
+            filter: {
+                status: {
+                    $in: [activeProjectStatuses],
+                },
+            },
+        })
         return response.map(project => ({ label: project.name, value: project.id }))
     }
 
@@ -61,6 +137,8 @@ const CopilotRequestForm: FC<{}> = () => {
 
             return updatedErrors
         })
+
+        setIsFormChanged(true)
     }
 
     function handleFormValueChange(
@@ -77,7 +155,12 @@ const CopilotRequestForm: FC<{}> = () => {
                 oldFormValues[key] = Array.isArray(value) ? [...value] : []
                 break
             default:
-                value = event.target.value
+                if (event.type === 'blur') {
+                    value = event.target.value?.trim()
+                } else {
+                    value = event.target.value
+                }
+
                 break
         }
 
@@ -129,6 +212,11 @@ const CopilotRequestForm: FC<{}> = () => {
         const updatedFormErrors: { [key: string]: string } = {}
 
         const fieldValidations: { condition: boolean; key: string; message: string }[] = [
+            {
+                condition: (formValues.opportunityTitle?.trim().length ?? 0) < 7,
+                key: 'opportunityTitle',
+                message: 'The title for the opportunity must be at least 7 characters',
+            },
             { condition: !formValues.projectId, key: 'projectId', message: 'Project is required' },
             { condition: !formValues.complexity, key: 'complexity', message: 'Selection is required' },
             {
@@ -139,7 +227,7 @@ const CopilotRequestForm: FC<{}> = () => {
             { condition: !formValues.paymentType, key: 'paymentType', message: 'Selection is required' },
             { condition: !formValues.projectType, key: 'projectType', message: 'Selecting project type is required' },
             {
-                condition: !formValues.overview || formValues.overview.length < 10,
+                condition: !formValues.overview || formValues.overview.trim().length < 10,
                 key: 'overview',
                 message: 'Project overview must be at least 10 characters',
             },
@@ -169,7 +257,7 @@ const CopilotRequestForm: FC<{}> = () => {
                 message: 'Number of weeks should be a positive number',
             },
             {
-                condition: !formValues.tzRestrictions,
+                condition: !formValues.tzRestrictions || formValues.tzRestrictions.trim().length === 0,
                 key: 'tzRestrictions',
                 message: 'Providing timezone restrictions is required. Type No if no restrictions',
             },
@@ -182,6 +270,16 @@ const CopilotRequestForm: FC<{}> = () => {
                 condition: formValues.numHoursPerWeek <= 0,
                 key: 'numHoursPerWeek',
                 message: 'Number of hours per week should be a positive number',
+            },
+            {
+                condition: formValues.otherPaymentType && formValues.otherPaymentType.trim().length === 0,
+                key: 'otherPaymentType',
+                message: 'Field cannot be left empty',
+            },
+            {
+                condition: formValues.otherPaymentType && formValues.otherPaymentType.trim().length > 8,
+                key: 'otherPaymentType',
+                message: 'Field only allows 8 characters',
             },
         ]
 
@@ -196,11 +294,15 @@ const CopilotRequestForm: FC<{}> = () => {
         if (isEmpty(updatedFormErrors)) {
             const cleanedFormValues: any = Object.fromEntries(
                 Object.entries(formValues)
-                    .filter(([, value]) => value !== ''), // Excludes null and undefined
+                    // Excludes null and undefined
+                    .filter(([field, value]) => editableFields.includes(field) && value !== ''),
             )
-            saveCopilotRequest(cleanedFormValues)
+            saveCopilotRequest({ ...cleanedFormValues, id: copilotRequestData?.id })
                 .then(() => {
-                    toast.success('Copilot request sent successfully')
+                    toast.success(
+                        copilotRequestData ? 'Copilot request updated successfully'
+                            : 'Copilot request sent successfully',
+                    )
                     setFormValues({
                         complexity: '',
                         numHoursPerWeek: '',
@@ -217,6 +319,10 @@ const CopilotRequestForm: FC<{}> = () => {
                     setIsFormChanged(false)
                     setFormErrors({})
                     setPaymentType('')
+                    // Added a small timeout for the toast to be visible properly to the users
+                    setTimeout(() => {
+                        navigate('/requests')
+                    }, 1000)
                 })
                 .catch(e => {
                     toast.error(e.message)
@@ -242,12 +348,19 @@ const CopilotRequestForm: FC<{}> = () => {
             <div className={styles.form}>
                 <form>
                     <h1 className={styles.heading}> Copilot Request </h1>
+
                     <p className={styles.subheading}>
                         Hi,
-                        {profile?.firstName}
                         {' '}
+                        {profile?.firstName}
                         !
-                        This form is to request a copilot for your project. Please fill in the details below.
+                        {' '}
+                        {
+                            copilotRequestData?.id
+                                ? 'Use this form to update the copilot request for your project.'
+                                : 'This form is to request a copilot for your project.'
+                                    + ' Please fill in the details below.'
+                        }
                     </p>
                     { !isEmpty(formErrors)
                         && (
@@ -256,6 +369,22 @@ const CopilotRequestForm: FC<{}> = () => {
                                 Resolve the errors on the form before submitting
                             </p>
                         )}
+
+                    <p className={styles.formRow}>Copilot Opportunity Title</p>
+                    <InputText
+                        dirty
+                        type='text'
+                        label='Title'
+                        name='opportunityTitle'
+                        placeholder='Enter a title for the opportunity'
+                        value={formValues.opportunityTitle?.toString()}
+                        onChange={bind(handleFormValueChange, this, 'opportunityTitle')}
+                        onBlur={bind(handleFormValueChange, this, 'opportunityTitle')}
+                        error={formErrors.opportunityTitle}
+                        tabIndex={0}
+                        forceUpdateValue
+                    />
+
                     <p className={styles.formRow}>Select the project you want the copilot for</p>
                     <InputSelectReact
                         tabIndex={0}
@@ -267,7 +396,9 @@ const CopilotRequestForm: FC<{}> = () => {
                         label='Project'
                         placeholder='Start typing the name of the project'
                         dirty
+                        isClearable
                         error={formErrors.projectId}
+                        options={projectOptions}
                     />
 
                     <p className={styles.formRow}>What type of project are you working on?</p>
@@ -324,6 +455,7 @@ const CopilotRequestForm: FC<{}> = () => {
                             customRadius
                             noCaps
                             leftAlignText
+                            textWrap
                         />
                         {formErrors.complexity && (
                             <p className={styles.error}>
@@ -370,6 +502,11 @@ const CopilotRequestForm: FC<{}> = () => {
                         error={formErrors.startDate}
                         dirty
                         minDate={new Date()}
+                        maxDate={new Date(new Date()
+                            .setFullYear(new Date()
+                                .getFullYear() + 2))}
+                        minYear={new Date()}
+                        className={styles.datepicker}
                     />
                     <p className={styles.formRow}>How many weeks will you need the copilot for?</p>
                     <InputText
@@ -468,6 +605,7 @@ const CopilotRequestForm: FC<{}> = () => {
                                     onChange={bind(handleFormValueChange, this, 'otherPaymentType')}
                                     error={formErrors.otherPaymentType}
                                     tabIndex={0}
+                                    maxLength={8}
                                 />
                             )}
                     </div>
@@ -480,7 +618,7 @@ const CopilotRequestForm: FC<{}> = () => {
                     <Button
                         primary
                         size='lg'
-                        label='Send Copilot Request'
+                        label={copilotRequestData ? 'Save Copilot Request' : 'Send Copilot Request'}
                         onClick={handleFormAction}
                         className={styles.formRow}
                         fullWidth

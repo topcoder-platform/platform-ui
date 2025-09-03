@@ -14,6 +14,7 @@ import styles from './InputDatePicker.module.scss'
 interface InputDatePickerProps {
     date: Date | undefined | null
     onChange: (date: Date | null) => void
+    onBlur?: () => void
     readonly className?: string
     readonly dateFormat?: string | string[]
     readonly dirty?: boolean
@@ -26,6 +27,7 @@ interface InputDatePickerProps {
     readonly maxTime?: Date | undefined
     readonly minDate?: Date | null | undefined
     readonly minTime?: Date | undefined
+    readonly minYear?: Date | null |undefined
     readonly placeholder?: string
     readonly showMonthPicker?: boolean
     readonly showYearPicker?: boolean
@@ -76,7 +78,8 @@ const InputDatePicker: FC<InputDatePickerProps> = (props: InputDatePickerProps) 
     const datePickerRef = useRef<ReactDatePicker<never, undefined>>(null)
     const years = useMemo(() => {
         const maxYear = getYear(props.maxDate ? props.maxDate : new Date()) + 1
-        return range(1979, maxYear, 1)
+        const minYear = getYear(props.minYear ? props.minYear : 1979)
+        return range(minYear, maxYear, 1)
     }, [props.maxDate])
 
     const [stateHasFocus, setStateHasFocus] = useState(false)
@@ -184,7 +187,10 @@ const InputDatePicker: FC<InputDatePickerProps> = (props: InputDatePickerProps) 
                 popperPlacement='bottom'
                 portalId='react-date-portal'
                 onFocus={() => setStateHasFocus(true)}
-                onBlur={() => setStateHasFocus(false)}
+                onBlur={() => {
+                    setStateHasFocus(false)
+                    props.onBlur?.()
+                }}
                 isClearable={props.isClearable}
             />
         </InputWrapper>

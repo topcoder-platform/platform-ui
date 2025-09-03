@@ -5,19 +5,18 @@ export enum CopilotDetailsTabViews {
     applications = '1',
 }
 
-export const getCopilotDetailsTabsConfig = (isAdminOrPM: boolean): TabsNavItem[] => (isAdminOrPM ? [
+export const getCopilotDetailsTabsConfig = (count: number): TabsNavItem[] => ([
     {
         id: CopilotDetailsTabViews.details,
         title: 'Details',
     },
     {
+        badges: [{
+            count,
+            type: 'info',
+        }],
         id: CopilotDetailsTabViews.applications,
         title: 'Applications',
-    },
-] : [
-    {
-        id: CopilotDetailsTabViews.details,
-        title: 'Details',
     },
 ])
 

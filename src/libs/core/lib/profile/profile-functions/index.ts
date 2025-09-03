@@ -8,7 +8,6 @@ export {
     editNameAsync as profileEditNameAsync,
     updatePrimaryMemberRoleAsync,
     updateMemberEmailPreferencesAsync,
-    updateMemberMFAStatusAsync,
     updateMemberPasswordAsync,
     updateMemberTraitsAsync,
     createMemberTraitsAsync,

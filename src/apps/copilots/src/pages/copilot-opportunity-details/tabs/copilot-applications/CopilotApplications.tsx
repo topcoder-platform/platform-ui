@@ -36,6 +36,11 @@ const tableColumns: TableColumn<CopilotApplication>[] = [
         type: 'text',
     },
     {
+        label: 'Past Projects',
+        propertyName: 'pastProjects',
+        type: 'text',
+    },
+    {
         label: 'Status',
         propertyName: 'status',
         renderer: (copilotApplication: CopilotApplication) => (
@@ -54,7 +59,7 @@ const tableColumns: TableColumn<CopilotApplication>[] = [
         label: 'Notes',
         propertyName: 'notes',
         renderer: (copilotApplication: CopilotApplication) => (
-            <div className={styles.title}>
+            <div className={styles.notes}>
                 {copilotApplication.notes}
             </div>
         ),
@@ -62,7 +67,7 @@ const tableColumns: TableColumn<CopilotApplication>[] = [
     },
     {
         label: 'Actions',
-        propertyName: '',
+        propertyName: 'actions',
         renderer: CopilotApplicationAction,
         type: 'element',
     },
@@ -72,6 +77,8 @@ const CopilotApplications: FC<{
     copilotApplications?: CopilotApplication[]
     members?: FormattedMembers[]
     opportunity: CopilotOpportunity
+    onApplied: () => void
+    isAdminOrPM: boolean
 }> = props => {
     const getData = (): CopilotApplication[] => (props.copilotApplications ? props.copilotApplications.map(item => {
         const member = props.members && props.members.find(each => each.userId === item.userId)
@@ -80,24 +87,37 @@ const CopilotApplications: FC<{
             activeProjects: member?.activeProjects || 0,
             fulfilment: member?.copilotFulfillment || 0,
             handle: member?.handle,
+            onApplied: props.onApplied,
             opportunityStatus: props.opportunity.status,
+            pastProjects: member?.pastProjects || 0,
+            projectName: props.opportunity.projectName,
         }
     })
         .sort((a, b) => (b.fulfilment || 0) - (a.fulfilment || 0)) : [])
 
     const tableData = useMemo(getData, [props.copilotApplications, props.members])
 
+    const visibleColumns = props.isAdminOrPM
+        ? tableColumns
+        : tableColumns.filter(col => ![
+            'fulfilment', 'activeProjects', 'pastProjects', 'notes', 'actions',
+        ].includes(col.propertyName ?? ''))
+
     return (
         <div>
             {
-                tableData.length > 0 && (
+                tableData.length > 0 ? (
                     <Table
-                        columns={tableColumns}
+                        columns={visibleColumns}
                         data={tableData}
                         disableSorting
                         removeDefaultSort
                         preventDefault
                     />
+                ) : (
+                    <div className={styles.noApplications}>
+                        <span>No Applications yet</span>
+                    </div>
                 )
             }
         </div>
