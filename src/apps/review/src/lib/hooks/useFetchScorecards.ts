@@ -22,7 +22,7 @@ export interface ScorecardsResponse {
   isValidating: boolean
 }
 
-const baseUrl = `${EnvironmentConfig.API.V6}/review`
+const baseUrl = `${EnvironmentConfig.API.V6}`
 
 const PAGE_SIZE = 20
 
