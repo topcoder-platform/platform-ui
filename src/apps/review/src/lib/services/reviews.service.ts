@@ -135,7 +135,7 @@ export const fetchSubmissions = async (
     const results = await xhrGetAsync<
         BackendResponseWithMeta<BackendSubmission[]>
     >(
-        `${EnvironmentConfig.REVIEW.REVIEW_API}/api/submissions?${qs.stringify({
+        `${EnvironmentConfig.REVIEW.REVIEW_API}/submissions?${qs.stringify({
             challengeId,
             page,
             perPage,
@@ -157,7 +157,7 @@ export const downloadSubmissionFile = async (
     submissionId: string,
 ): Promise<Blob> => {
     const results = await xhrGetBlobAsync<Blob>(
-        `${EnvironmentConfig.REVIEW.REVIEW_API}/api/submissions/${submissionId}/download`,
+        `${EnvironmentConfig.REVIEW.REVIEW_API}/submissions/${submissionId}/download`,
     )
     return results
 }

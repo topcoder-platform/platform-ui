@@ -7,7 +7,7 @@ import { EnvironmentConfig } from '~/config'
 import { MockScorecard } from '../../mock-datas'
 import { adjustScorecardInfo, Scorecard, ScorecardInfo } from '../models'
 
-const baseUrl = `${EnvironmentConfig.API.V6}/review/scorecards`
+const baseUrl = `${EnvironmentConfig.API.V6}/scorecards`
 
 /**
  * Fetch scorecard

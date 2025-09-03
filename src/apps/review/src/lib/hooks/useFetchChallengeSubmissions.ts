@@ -29,7 +29,7 @@ export function useFetchChallengeSubmissions(
     }: SWRResponse<BackendSubmission[], Error> = useSWR<
         BackendSubmission[],
         Error
-    >(`reviewBaseUrl/api/submissions/${challengeId}`, {
+    >(`reviewBaseUrl/submissions/${challengeId}`, {
         fetcher: async () => {
             const results = await fetchSubmissions(1, 5000, challengeId ?? '')
             return results.data
