@@ -12,7 +12,5 @@ export {
     learnBaseURL,
     memberStatsDistroURL,
     memberEmailPreferencesURL,
-    memberModifyMfaURL,
-    diceIDURL,
     userSkillsUrl,
 } from './profile-endpoint.config'

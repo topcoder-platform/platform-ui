@@ -7,5 +7,4 @@ export interface LearnConfigModel {
         value: string,
     }
     CLIENT: string
-    REQUIRE_DICE_ID: boolean | undefined
 }
