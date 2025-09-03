@@ -13,7 +13,7 @@ import { PayoutAudit } from '../models/PayoutAudit'
 import ApiResponse from '../models/ApiResponse'
 
 const baseUrl = `${EnvironmentConfig.API.V5}/payments`
-const memberApiBaseUrl = `${EnvironmentConfig.API.V5}/members`
+const memberApiBaseUrl = `${EnvironmentConfig.API.V6}/members`
 
 export async function getWalletDetails(): Promise<WalletDetails> {
     const response = await xhrGetAsync<ApiResponse<WalletDetails>>(`${baseUrl}/wallet`)

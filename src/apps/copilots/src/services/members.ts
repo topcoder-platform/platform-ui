@@ -38,7 +38,7 @@ export const getMembersByUserIds = async (
     })
 
     return xhrGetAsync<Array<{ userId: string }>>(
-        `${EnvironmentConfig.API.V5}/members?${qs}`,
+        `${EnvironmentConfig.API.V6}/members?${qs}`,
     )
 }
 
@@ -64,7 +64,7 @@ export const useMembers = (userIds: number[]): MembersResponse => {
     userIds.forEach(userId => {
         qs += `&userIds[]=${userId}`
     })
-    const url = `${EnvironmentConfig.API.V5}/members?${qs}`
+    const url = `${EnvironmentConfig.API.V6}/members?${qs}`
 
     const fetcher = (urlp: string): Promise<FormattedMembers[]> => xhrGetAsync<FormattedMembers[]>(urlp)
         .then(data => membersFactory(data))

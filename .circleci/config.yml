@@ -26,10 +26,11 @@ install_dependency: &install_dependency
 install_deploysuite: &install_deploysuite
     name: Installation of install_deploysuite.
     command: |
-        git clone --branch v1.4.13 https://github.com/topcoder-platform/tc-deploy-scripts ../buildscript
+        git clone --branch v1.4.17 https://github.com/topcoder-platform/tc-deploy-scripts ../buildscript
         cp ./../buildscript/master_deploy.sh .
         cp ./../buildscript/buildenv.sh .
         cp ./../buildscript/awsconfiguration.sh .
+        cp ./../buildscript/psvar-processor.sh .
 
 restore_cache_settings_for_build: &restore_cache_settings_for_build
     key: connect-node-modules-{{ checksum "yarn.lock" }}
@@ -48,14 +49,16 @@ running_yarn_eslint: &running_yarn_eslint
 running_yarn_build: &running_yarn_build
     name: Running Yarn Build
     command: |
-        source buildenvvar
+        # source buildenvvar
+        source buildvar_env
         yarn install
         yarn build
 
 running_yarn_sb_build: &running_yarn_sb_build
     name: Running Yarn Storybook Build
     command: |
-        source buildenvvar
+        # source buildenvvar
+        source buildvar_env
         yarn sb:build
 
 workspace_persist: &workspace_persist
@@ -70,7 +73,9 @@ build_configuration_fetch: &build_configuration_fetch
     name: "configuring environment"
     command: |
         ./awsconfiguration.sh $DEPLOY_ENV
-        ./buildenv.sh -e $DEPLOY_ENV -b ${LOGICAL_ENV}-${APPNAME}-buildvar
+        # ./buildenv.sh -e $DEPLOY_ENV -b ${LOGICAL_ENV}-${APPNAME}-buildvar
+        ./psvar-processor.sh -t appenv -p /config/${APPNAME}/buildvar
+        source buildvar_env
         aws s3 cp s3://tc-platform-${LOGICAL_ENV}/securitymanager/${LOGICAL_ENV}-platform-ui.env ./.environments/.env.${LOGICAL_ENV}.local
 
 lint_steps: &lint_steps # Initialization.
@@ -98,8 +103,10 @@ deploy_steps: &deploy_steps
           command: |
               ./awsconfiguration.sh $DEPLOY_ENV
               source awsenvconf
-              ./buildenv.sh -e $DEPLOY_ENV -b ${LOGICAL_ENV}-${APPNAME}-deployvar
-              source buildenvvar
+              # ./buildenv.sh -e $DEPLOY_ENV -b ${LOGICAL_ENV}-${APPNAME}-deployvar
+              # source buildenvvar
+              ./psvar-processor.sh -t appenv -p /config/${APPNAME}/deployvar
+              source deployvar_env
               ./master_deploy.sh -d CFRONT -e $DEPLOY_ENV -c $ENABLE_CACHE
 
 jobs:
@@ -132,7 +139,7 @@ jobs:
         environment:
             DEPLOY_ENV: "QA"
             LOGICAL_ENV: "qa"
-            APPNAME: "platform-ui-mvp"
+            APPNAME: "platform-ui-mvp-v6"
         steps: *build_steps
 
     build-prod:
@@ -140,7 +147,7 @@ jobs:
         environment:
             DEPLOY_ENV: "PROD"
             LOGICAL_ENV: "prod"
-            APPNAME: "platform-ui-mvp"
+            APPNAME: "platform-ui-mvp-v6"
         steps: *build_steps
 
     # Just tests commited code.
@@ -150,7 +157,7 @@ jobs:
             DEPLOY_ENV: "DEV"
             LOGICAL_ENV: "dev"
             ENABLE_CACHE: true
-            APPNAME: "platform-ui-mvp"
+            APPNAME: "platform-ui-mvp-v6"
         steps: *deploy_steps
 
     deployQa:
@@ -159,7 +166,7 @@ jobs:
             DEPLOY_ENV: "QA"
             LOGICAL_ENV: "qa"
             ENABLE_CACHE: true
-            APPNAME: "platform-ui-mvp"
+            APPNAME: "platform-ui-mvp-v6"
         steps: *deploy_steps
 
     deployProd:
@@ -168,7 +175,7 @@ jobs:
             DEPLOY_ENV: "PROD"
             LOGICAL_ENV: "prod"
             ENABLE_CACHE: true
-            APPNAME: "platform-ui-mvp"
+            APPNAME: "platform-ui-mvp-v6"
         steps: *deploy_steps
 
 workflows:
@@ -222,7 +229,7 @@ workflows:
                               - LVT-256
                               - CORE-635
                               - feat/system-admin
-                              - pm-1365_1
+                              - feat/v6
 
             - deployQa:
                   context: org-global

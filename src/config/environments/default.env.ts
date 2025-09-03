@@ -22,6 +22,7 @@ export const API = {
     V3: `https://api.${TC_DOMAIN}/v3`,
     V4: `https://api.${TC_DOMAIN}/v4`,
     V5: `https://api.${TC_DOMAIN}/v5`,
+    V6: `https://api.${TC_DOMAIN}/v6`,
 }
 
 export const STANDARDIZED_SKILLS_API = `${API.V5}/standardized-skills`

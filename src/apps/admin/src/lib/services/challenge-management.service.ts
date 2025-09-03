@@ -20,9 +20,9 @@ import {
 } from '../models'
 import { createChallengeQueryString } from '../utils'
 
-const challengeBaseUrl = `${EnvironmentConfig.API.V5}`
-const resourceBaseUrl = `${EnvironmentConfig.API.V5}`
-const memberBaseUrl = `${EnvironmentConfig.API.V5}`
+const challengeBaseUrl = `${EnvironmentConfig.API.V6}`
+const resourceBaseUrl = `${EnvironmentConfig.API.V6}`
+const memberBaseUrl = `${EnvironmentConfig.API.V6}`
 
 /**
  * Searches the challenges using v5 api.

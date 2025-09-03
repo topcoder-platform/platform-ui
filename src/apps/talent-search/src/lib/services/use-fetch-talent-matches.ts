@@ -29,7 +29,7 @@ export function useFetchTalentMatches(
         `perPage=${pageSize}`,
     ].join('&')
 
-    const url = `${EnvironmentConfig.API.V5}/members/searchBySkills?${searchParams}`
+    const url = `${EnvironmentConfig.API.V6}/members/searchBySkills?${searchParams}`
 
     const { data, error }: SWRResponse<PaginatedResponse<Member[]>> = useSWR(url, xhrGetPaginatedAsync<Member[]>, {
         isPaused: () => !skills?.length,
