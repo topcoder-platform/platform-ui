@@ -51,7 +51,7 @@ export const getMembersByHandle = async (
         qs += `&handlesLower[]=${handle.toLowerCase()}`
     })
 
-    return xhrGetAsync<Array<{ handle: string }>>(
+    return xhrGetAsync<Array<MemberInfo>>(
         `${EnvironmentConfig.API.V6}/members?fields=userId,handle${qs}`,
     )
 }
