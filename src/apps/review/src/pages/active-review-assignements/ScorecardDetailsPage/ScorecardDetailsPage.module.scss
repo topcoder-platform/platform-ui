@@ -1,0 +1,11 @@
+.container {
+    display: flex;
+    flex-direction: column;
+}
+
+.summary {
+    align-items: center;
+    justify-content: space-between;
+    display: flex;
+    flex-wrap: wrap;
+}

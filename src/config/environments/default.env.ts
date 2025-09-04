@@ -94,3 +94,9 @@ export const ADMIN = {
     SUBMISSION_SCAN_TOPIC: 'submission.scan.complete',
     WORK_MANAGER_URL: 'https://challenges.topcoder-dev.com',
 }
+
+export const REVIEW = {
+    CHALLENGE_PAGE_URL: 'https://www.topcoder-dev.com/challenges',
+    PROFILE_PAGE_URL: 'https://profiles.topcoder-dev.com',
+    REVIEW_API: 'https://api.topcoder-dev.com/v6/review',
+}

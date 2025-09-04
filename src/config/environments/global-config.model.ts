@@ -60,5 +60,10 @@ export interface GlobalConfig {
         AWS_QUARANTINE_BUCKET: string
         SUBMISSION_SCAN_TOPIC: string
         AVSCAN_TOPIC: string
-    }
+    },
+    REVIEW: {
+        CHALLENGE_PAGE_URL: string
+        PROFILE_PAGE_URL: string
+        REVIEW_API: string
+    },
 }

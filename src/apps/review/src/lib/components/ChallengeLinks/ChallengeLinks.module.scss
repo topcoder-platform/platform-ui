@@ -1,0 +1,8 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    padding-top: $sp-6;
+    display: flex;
+    gap: $sp-4;
+    flex-wrap: wrap;
+}

@@ -2,7 +2,7 @@ import { ReactNode, useCallback, useState } from 'react'
 
 import ConfirmModal, { ConfirmModalProps } from './ConfirmModal'
 
-interface ConfirmationProps extends Omit<ConfirmModalProps, 'open'|'onClose'|'onConfirm'> {
+export interface ConfirmationProps extends Omit<ConfirmModalProps, 'open'|'onClose'|'onConfirm'> {
     content: ConfirmModalProps['children']
 }
 

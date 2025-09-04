@@ -1,0 +1,61 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: row;
+    padding: 32px;
+    background-color: #F6F7F9;
+    margin-top: 20px;
+    border-radius: 8px;
+    .left {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+    }
+
+    .item {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 20px;
+        .label {
+            font-weight: 700;
+            font-family: "Nunito Sans", sans-serif;
+            font-size: 16px;
+            color: #000000;
+            margin-bottom: 6px;
+        }
+        .value {
+            font-weight: 400;
+            font-family: "Nunito Sans", sans-serif;
+            font-size: 16px;
+            color: #0A0A0A;
+            text-transform: capitalize;
+            &.active {
+                color: #00797A;
+            }
+
+            &.inactive, &.deleted {
+                color: #767676;
+                font-family: 'Inter', sans-serif;
+                font-weight: 600;
+                font-size: 14px;
+            }
+        }
+    }
+
+    .right {
+        display: flex;
+        flex: 3;
+        flex-direction: column;
+        .item {
+            display: flex;
+            flex-direction: column;
+        }
+    }
+}
+
+@media (max-width: #{$lg-max}) {
+    .container {
+        flex-direction: column;
+    }
+}

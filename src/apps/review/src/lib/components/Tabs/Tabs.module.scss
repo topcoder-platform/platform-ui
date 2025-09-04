@@ -1,0 +1,130 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: inline-flex;
+    flex: 1;
+    justify-content: space-between;
+    gap: 20px;
+    position: relative;
+    min-width: 100%;
+
+    &::after {
+        content: '';
+        display: block;
+        height: 1px;
+        border-bottom: var(--TableBorderColor) solid 1px;
+        width: 100%;
+        position: absolute;
+        bottom: 0;
+    }
+
+    @include ltemd {
+        display: block;
+        border-bottom: none;
+    }
+}
+
+.blockLeft {
+    display: flex;
+    @include ltemd {
+        display: none;
+        button {
+            display: block;
+            width: 100%;
+            text-align: left;
+        }
+    }
+}
+
+.selectedItem {
+    font-family: 'Nunito Sans', sans-serif;
+    color: var(--FontColor);
+    font-size: 16px;
+    display: none;
+    border-radius: $sp-1;
+    @include ltemd {
+        background-color: var(--TableSubHeader);
+        display: block;
+        padding: $sp-2 $sp-6;
+        position: relative;
+        cursor: pointer;
+        &::after {
+            background: url('../../assets/icons/chevron-down.svg') no-repeat;
+            display: block;
+            height: 24px;
+            width: 24px;
+            position: absolute;
+            top: 50%;
+            margin-top: -12px;
+            right: $sp-3;
+            content: '';
+        }
+    }
+}
+
+.blockItem {
+    font-family: 'Nunito Sans', sans-serif;
+    color: var(--FontColor);
+    font-size: 16px;
+    line-height: 22px;
+    /* identical to box height, or 138% */
+    text-align: center;
+    padding: $sp-2 $sp-6;
+    position: relative;
+    white-space: nowrap;
+
+    // &::before {
+    //     content: '';
+    //     display: flex;
+    //     position: absolute;
+    //     height: 1px;
+    //     width: 1000px;
+    //     border-bottom: var(--TableBorderColor) solid 1px;
+    //     bottom: 0;
+    //     left: 0;
+    // }
+
+    &.selected {
+        color: var(--Actived);
+        font-weight: 700;
+
+        &::after {
+            content: '';
+            display: flex;
+            position: absolute;
+            height: 4px;
+            width: 100%;
+            background-color: var(--Actived);
+            bottom: 0;
+            left: 0;
+        }
+    }
+}
+
+.open {
+    @include ltemd {
+        .blockLeft {
+            background-color: var(--Appeal);
+            display: block;
+            position: absolute;
+            left: 0;
+            right: 0;
+            z-index: 100;
+        }
+        .blockItem {
+            position: relative;
+            &.selected {
+                background-color: var(--Actived);
+                color: var(--invertButtonColor);
+            }
+            &::before {
+                display: none;
+            }
+        }
+        .selectedItem {
+            &::after {
+                transform: rotate(-180deg);
+            }
+        }
+    }
+}

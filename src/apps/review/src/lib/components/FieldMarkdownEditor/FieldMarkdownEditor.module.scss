@@ -1,0 +1,170 @@
+@import '@libs/ui/styles/typography';
+@import '@libs/ui/styles/includes';
+
+$error-line-height: 14px;
+
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 280px;
+    gap: 9px;
+    @include ltemd {
+        height: 280px;
+        gap: 0;
+    }
+
+    &.isError {
+        :global {
+            .CodeMirror.CodeMirror-wrap {
+                border-right: 1px solid var(--RedError);
+                border-left: 1px solid var(--RedError);
+                border-bottom: 1px solid var(--RedError);
+            }
+            .editor-toolbar {
+                border-top: 1px solid var(--RedError);
+                border-left: 1px solid var(--RedError);
+                border-right: 1px solid var(--RedError);
+            }
+        }
+    }
+
+    :global {
+        .EasyMDEContainer {
+            height: 100px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .CodeMirror.CodeMirror-wrap {
+            min-height: 0;
+            flex: 1;
+            box-sizing: border-box;
+            height: auto;
+            border-right: 1px solid white;
+            border-left: 1px solid white;
+            border-bottom: 1px solid white;
+            border-top: 1px solid var(--EditorBorder);
+            border-bottom-left-radius: 8px;
+            border-bottom-right-radius: 8px;
+            font-family: "Nunito Sans", sans-serif;
+            font-size: 14px;
+            color: var(--FontColor);
+        }
+
+        .CodeMirror-sizer,
+        .CodeMirror-scroll {
+            min-height: unset !important;
+        }
+
+        .editor-toolbar {
+            opacity: 1;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            border-top: 1px solid white;
+            border-left: 1px solid white;
+            border-right: 1px solid white;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 0 8px;
+            background-color: white;
+            @include ltemd {
+                gap: $sp-1;
+                padding: 0 $sp-1;
+            }
+            &::after,
+            &::before {
+                content: none;
+            }
+
+            button.table {
+                width: auto;
+            }
+
+            button {
+                margin: 8px 0;
+                width: 24px;
+                height: 24px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 0;
+                min-width: 24px;
+                @include ltemd {
+                    margin: $sp-1 0;
+                    height: 24px;
+                    width: 24px;
+                }
+                &::after {
+                    content: none;
+                }
+            }
+
+            i.separator {
+                border-left: 1px solid var(--EditorBorder);
+                @include ltemd {
+                    margin: 0 $sp-1;
+                }
+            }
+        }
+
+        .editor-statusbar {
+            color: var(--GrayFontColor);
+            font-family: "Nunito Sans", sans-serif;
+            font-size: 14px;
+            line-height: 19px;
+            padding: $sp-4 0 0 0;
+            overflow: hidden;
+            display: flex;
+
+            span {
+                min-width: 0;
+            }
+
+            .upload-image {
+                margin-left: 0;
+                margin-right: auto;
+                display: flex;
+                font-family: "Nunito Sans", sans-serif;
+                color: var(--GrayFontColor);
+                font-size: 14px;
+                line-height: 20px;
+            }
+
+            .countOfRemainingChars {
+                margin-left: 0;
+                min-width: 0;
+                display: flex;
+            }
+
+            .message {
+                display: none;
+            }
+        }
+
+        .cm-s-easymde {
+            .cm-link,
+            .cm-url {
+                color: var(--Link);
+            }
+        }
+    }
+}
+
+.error {
+    display: flex;
+    align-items: center;
+    color: $red-100;
+    // extend body ultra small and override it
+    font-size: 14px;
+    line-height: 19px;
+    line-height: $error-line-height;
+    margin-top: $sp-1;
+
+    svg {
+        @include icon-md;
+        fill: $red-100;
+        margin-right: $sp-1;
+    }
+}

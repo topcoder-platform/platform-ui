@@ -1,0 +1,68 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+}
+
+.blockContent {
+    margin-top: 64px;
+    padding-bottom: 40px;
+    position: relative;
+}
+
+.textTitle {
+    color: var(--FontColor);
+    font-family: "Figtree", sans-serif;
+    font-size: 26px;
+    line-height: 30px;
+    font-weight: 700;
+}
+
+.blockTabsContainer {
+    margin-top: $sp-6;
+    margin-bottom: $sp-4;
+    overflow: hidden;
+    overflow-x: auto;
+    @include ltemd {
+        overflow: visible;
+    }
+}
+
+.blockReviewers {
+    display: flex;
+    gap: 40px;
+    align-items: center;
+    @include ltemd {
+        flex-wrap: wrap;
+        padding: 12px 8px;
+        justify-content: space-between;
+        gap: 6px;
+    }
+}
+
+.blockReviewer {
+    display: flex;
+    gap: 5px;
+    font-family: "Nunito Sans", sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    line-height: 19px;
+    @include ltemd {
+        flex-basis: 100%;
+    }
+    strong,
+    a {
+        white-space: nowrap;
+    }
+    strong {
+        color: var(--FontColor);
+    }
+}
+
+.summary {
+    align-items: center;
+    justify-content: space-between;
+    display: flex;
+    flex-wrap: wrap;
+}

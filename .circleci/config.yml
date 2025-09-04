@@ -228,6 +228,7 @@ workflows:
                               - dev
                               - LVT-256
                               - CORE-635
+                              - feat/review
                               - feat/system-admin
                               - feat/v6
 

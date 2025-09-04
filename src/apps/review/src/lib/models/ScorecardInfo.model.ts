@@ -1,0 +1,34 @@
+import _ from 'lodash'
+
+import { adjustScorecardGroup, ScorecardGroup } from './ScorecardGroup.model'
+
+/**
+ * Scorecard info
+ */
+export interface ScorecardInfo {
+    id: string
+    name: string
+    scorecardGroups: ScorecardGroup[]
+}
+
+/**
+ * Update scorecard info to show in ui
+ * @param data data from backend response
+ * @returns updated data
+ */
+export function adjustScorecardInfo(
+    data: ScorecardInfo | undefined,
+): ScorecardInfo | undefined {
+    if (!data) {
+        return data
+    }
+
+    return {
+        ...data,
+        scorecardGroups: _.orderBy(
+            data.scorecardGroups.map(adjustScorecardGroup) as ScorecardGroup[],
+            ['sortOrder'],
+            ['asc'],
+        ),
+    }
+}

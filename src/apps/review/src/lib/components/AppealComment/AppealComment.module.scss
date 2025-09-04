@@ -1,0 +1,75 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    align-items: flex-start;
+    padding: 0 $sp-6 0 0;
+    @include ltemd {
+        padding: 0 $sp-3 $sp-4 0;
+    }
+    :global(.borderButton),
+    :global(.filledButton) {
+        font-size: 14px;
+    }
+    &:has(.blockForm) {
+        gap: 16px;
+    }
+}
+
+.blockAppealComment {
+    background-color: var(--Appeal);
+}
+
+.blockAppealResponse {
+    background-color: var(--TableColumn);
+}
+
+.blockAppealResponse,
+.blockAppealComment {
+    padding: $sp-4;
+    display: flex;
+    flex-direction: column;
+    gap: $sp-2;
+    width: 100%;
+}
+
+.markdownEditor {
+    width: 100%;
+}
+
+.textTitle {
+    color: var(--FontColor);
+    font-family: "Nunito Sans", sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 20px;
+}
+
+.blockBtns {
+    display: flex;
+    gap: 10px;
+    padding-top: 8px;
+    padding-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.blockForm {
+    background-color: var(--TableColumn);
+    display: flex;
+    flex-direction: column;
+    padding: $sp-6;
+    gap: $sp-4;
+    width: 100%;
+    @include ltemd {
+        padding: $sp-4;
+    }
+    label {
+        color: var(--FontColor);
+        font-family: "Nunito Sans", sans-serif;
+        font-size: 16px;
+        font-weight: 700;
+        line-height: 20px;
+    }
+}
