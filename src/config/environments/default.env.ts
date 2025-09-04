@@ -98,5 +98,5 @@ export const ADMIN = {
 export const REVIEW = {
     CHALLENGE_PAGE_URL: 'https://www.topcoder-dev.com/challenges',
     PROFILE_PAGE_URL: 'https://profiles.topcoder-dev.com',
-    REVIEW_API: 'https://api.topcoder-dev.com/v6/review',
+    REVIEW_API: 'https://api.topcoder-dev.com/v6',
 }
