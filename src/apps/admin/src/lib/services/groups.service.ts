@@ -27,7 +27,7 @@ export const findGroupByMember = async (params: {
     membershipType: 'user'
 }): Promise<UserGroup[]> => {
     const result = await xhrGetAsync<UserGroup[]>(
-        `${EnvironmentConfig.API.V5}/groups/?${qs.stringify(params)}`,
+        `${EnvironmentConfig.API.V6}/groups/?${qs.stringify(params)}`,
     )
     return result.map(adjustUserGroupResponse)
 }
@@ -44,7 +44,7 @@ export const findGroupById = async (
 ): Promise<UserGroup> => {
     const fieldsQuery = fields ? `?fields=${fields.join(',')}` : ''
     const result = await xhrGetAsync<UserGroup>(
-        `${EnvironmentConfig.API.V5}/groups/${groupId}${fieldsQuery}`,
+        `${EnvironmentConfig.API.V6}/groups/${groupId}${fieldsQuery}`,
     )
     return adjustUserGroupResponse(result)
 }
@@ -63,7 +63,7 @@ export const fetchGroupMembers = async (
     },
 ): Promise<UserGroupMember[]> => {
     const result = await xhrGetAsync<UserGroupMember[]>(
-        `${EnvironmentConfig.API.V5}/groups/${groupId}/members?${qs.stringify(
+        `${EnvironmentConfig.API.V6}/groups/${groupId}/members?${qs.stringify(
             params,
         )}`,
     )
@@ -79,7 +79,7 @@ export const fetchGroups = async (params: {
     perPage: number
 }): Promise<UserGroup[]> => {
     const result = await xhrGetAsync<UserGroup[]>(
-        `${EnvironmentConfig.API.V5}/groups?${qs.stringify(params)}`,
+        `${EnvironmentConfig.API.V6}/groups?${qs.stringify(params)}`,
     )
     return _.orderBy(result.map(adjustUserGroupResponse), ['createdAt'], ['desc'])
 }
@@ -92,7 +92,7 @@ export const fetchGroups = async (params: {
 /** */
 export const createGroup = async (data: FormAddGroup): Promise<UserGroup> => {
     const result = await xhrPostAsync<FormAddGroup, UserGroup>(
-        `${EnvironmentConfig.API.V5}/groups`,
+        `${EnvironmentConfig.API.V6}/groups`,
         data,
     )
 
@@ -127,7 +127,7 @@ export const addGroupMember = async (
             membershipType: 'user' | 'group'
         },
         string
-    >(`${EnvironmentConfig.API.V5}/groups/${groupId}/members`, entity)
+    >(`${EnvironmentConfig.API.V6}/groups/${groupId}/members`, entity)
     return result
 }
 
@@ -142,7 +142,7 @@ export const removeGroupMember = async (
     memberId: number,
 ): Promise<string> => {
     const result = await xhrDeleteAsync<string>(
-        `${EnvironmentConfig.API.V5}/groups/${groupId}/members/${memberId}`,
+        `${EnvironmentConfig.API.V6}/groups/${groupId}/members/${memberId}`,
     )
     return result
 }

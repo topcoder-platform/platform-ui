@@ -52,7 +52,7 @@ export const getMembersByHandle = async (
     })
 
     return xhrGetAsync<Array<MemberInfo>>(
-        `${EnvironmentConfig.API.V5}/members?fields=userId,handle${qs}`,
+        `${EnvironmentConfig.API.V6}/members?fields=userId,handle${qs}`,
     )
 }
 
