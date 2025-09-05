@@ -45,7 +45,7 @@ export function useFetchChallengeResults(
         Error
     >(`reviewBaseUrl/projectResult/${challengeInfo?.legacyId}`, {
         fetcher: async () => {
-            const results = await fetchProjectResults(1, 5000, `${challengeInfo?.legacyId}`)
+            const results = await fetchProjectResults(1, 50, `${challengeInfo?.legacyId}`)
             return results.data
         },
         isPaused: () => !challengeInfo?.legacyId,

@@ -106,7 +106,7 @@ export const createContactRequest = async (
             message: string
         },
         BackendContactRequest
-    >(`${EnvironmentConfig.REVIEW.REVIEW_API}/contact-requests`, {
+    >(`${EnvironmentConfig.API.V6}/review/contact-requests`, {
         challengeId,
         message: data.category
             ? `${data.category}:${data.message}`
@@ -135,7 +135,7 @@ export const fetchSubmissions = async (
     const results = await xhrGetAsync<
         BackendResponseWithMeta<BackendSubmission[]>
     >(
-        `${EnvironmentConfig.REVIEW.REVIEW_API}/submissions?${qs.stringify({
+        `${EnvironmentConfig.API.V6}/submissions?${qs.stringify({
             challengeId,
             page,
             perPage,
@@ -157,7 +157,7 @@ export const downloadSubmissionFile = async (
     submissionId: string,
 ): Promise<Blob> => {
     const results = await xhrGetBlobAsync<Blob>(
-        `${EnvironmentConfig.REVIEW.REVIEW_API}/submissions/${submissionId}/download`,
+        `${EnvironmentConfig.API.V6}/submissions/${submissionId}/download`,
     )
     return results
 }
@@ -181,7 +181,7 @@ export const fetchProjectResults = async (
     const results = await xhrGetAsync<
         BackendResponseWithMeta<BackendProjectResult[]>
     >(
-        `${EnvironmentConfig.REVIEW.REVIEW_API}/projectResult?${qs.stringify({
+        `${EnvironmentConfig.API.V6}/review/projectResult?${qs.stringify({
             challengeId,
             page,
             perPage,

@@ -27,5 +27,4 @@ export const ADMIN = {
 export const REVIEW = {
     CHALLENGE_PAGE_URL: 'https://www.topcoder.com/challenges',
     PROFILE_PAGE_URL: 'https://profiles.topcoder.com',
-    REVIEW_API: 'https://api.topcoder.com/v6',
 }
