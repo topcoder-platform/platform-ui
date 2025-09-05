@@ -64,6 +64,5 @@ export interface GlobalConfig {
     REVIEW: {
         CHALLENGE_PAGE_URL: string
         PROFILE_PAGE_URL: string
-        REVIEW_API: string
     },
 }
