@@ -3,7 +3,6 @@ import { CountryLookup } from '../../country-lookup.model'
 import { EditNameRequest } from '../../edit-name-request.model'
 import { ModifyTracksRequest } from '../../modify-tracks.request'
 import { ModifyMemberEmailPreferencesRequest } from '../../modify-user-email-preferences.model'
-import { ModifyUserMFARequest, ModifyUserMFAResponse } from '../../modify-user-mfa.model'
 import { UpdateProfileRequest, UserPhotoUpdateResponse } from '../../modify-user-profile.model'
 import { ModifyUserPropertyRequest, ModifyUserPropertyResponse } from '../../modify-user-role.model'
 import { UserEmailPreferences } from '../../user-email-preference.model'
@@ -15,7 +14,6 @@ import { UserVerify } from '../../user-verify.model'
 import {
     countryLookupURL,
     memberEmailPreferencesURL,
-    memberModifyMfaURL,
     memberModifyURL,
     profile as profileUrl,
     verify as verifyUrl,
@@ -60,13 +58,6 @@ export async function updateMemberEmailPreferences(
     return xhrPutAsync<ModifyMemberEmailPreferencesRequest, UserEmailPreferences>(
         `${memberEmailPreferencesURL()}/${email}`,
         request,
-    )
-}
-
-export async function updateMemberMFA(userId: number, payload: ModifyUserMFARequest): Promise<ModifyUserMFAResponse> {
-    return xhrPatchAsync<ModifyUserMFARequest, ModifyUserMFAResponse>(
-        memberModifyMfaURL(userId),
-        payload,
     )
 }
 
