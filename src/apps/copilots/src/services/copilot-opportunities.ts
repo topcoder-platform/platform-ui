@@ -23,7 +23,7 @@ function copilotOpportunityFactory(data: any): CopilotOpportunity {
     return {
         ...data,
         ...data.data,
-        projectName: data.project.name,
+        projectName: data.project?.name,
     }
 }
 
