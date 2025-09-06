@@ -73,7 +73,7 @@ const MobileListView: FC<MobileListViewProps<ReviewSummary>> = props => {
                     <div className={styles.row2}>
                         {/* Legacy ID */ propertyElements[1]}
                     </div>
-                     <div className={styles.row3}>
+                    <div className={styles.row3}>
                         {/* Submission End Date */ propertyElements[3]}
                     </div>
                     <div className={styles.row4}>
