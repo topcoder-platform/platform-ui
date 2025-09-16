@@ -11,7 +11,7 @@ export enum AppSubdomain {
     walletAdmin = 'wallet-admin',
     copilots = 'copilots',
     admin = 'system-admin',
-    review = 'review',
+    review = 'review-v6',
 }
 
 export enum ToolTitle {
