@@ -14,7 +14,6 @@ import {
     adjustUserStatusHistoryResponse,
     ApiV3Response,
     MemberInfo,
-    SSOLoginProvider,
     SSOUserLogin,
     UserInfo,
     UserStatusHistory,
@@ -192,17 +191,6 @@ export const fetchSSOUserLogins = async (
 ): Promise<SSOUserLogin[]> => xhrGetAsync<SSOUserLogin[]>(
     `${EnvironmentConfig.API.V6}/users/${userId}/SSOUserLogins`,
 )
-
-/**
- * Fetch list of sso login provider.
- * @returns resolves to sso user logins
- */
-export const fetchSSOLoginProviders = async (): Promise<SSOLoginProvider[]> => {
-    const result = await xhrGetAsync<ApiV3Response<SSOLoginProvider[]>>(
-        `${EnvironmentConfig.API.V3}/ssoLoginProviders`,
-    )
-    return result.result.content
-}
 
 /**
  * Create sso user login.

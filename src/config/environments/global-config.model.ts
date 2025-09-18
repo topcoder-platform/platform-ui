@@ -1,3 +1,9 @@
+export interface SSOLoginProviderConfig {
+    ssoLoginProviderId: number
+    name: string
+    type: string
+}
+
 export interface GlobalConfig {
     TC_DOMAIN: string
     TOPCODER_URL: string
@@ -65,4 +71,5 @@ export interface GlobalConfig {
         CHALLENGE_PAGE_URL: string
         PROFILE_PAGE_URL: string
     },
+    ADMIN_SSO_LOGIN_PROVIDERS: SSOLoginProviderConfig[]
 }
