@@ -30,7 +30,7 @@ export function memberStatsDistroURL(): string {
 }
 
 export function memberModifyURL(): string {
-    return `${EnvironmentConfig.API.V3}/users`
+    return `${EnvironmentConfig.API.V6}/users`
 }
 
 export function memberEmailPreferencesURL(): string {

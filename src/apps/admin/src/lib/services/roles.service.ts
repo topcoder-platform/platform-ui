@@ -6,7 +6,7 @@ import _ from 'lodash'
 import { EnvironmentConfig } from '~/config'
 import { xhrDeleteAsync, xhrGetAsync, xhrPostAsync } from '~/libs/core'
 
-import { adjustUserRoleResponse, ApiV3Response, UserRole } from '../models'
+import { adjustUserRoleResponse, UserRole } from '../models'
 
 /**
  * Fetchs roles of the specified subject
@@ -17,11 +17,11 @@ import { adjustUserRoleResponse, ApiV3Response, UserRole } from '../models'
 export const fetchRolesBySubject = async (
     subjectId: string,
 ): Promise<UserRole[]> => {
-    const result = await xhrGetAsync<ApiV3Response<UserRole[]>>(
-        `${EnvironmentConfig.API.V3}/roles/?filter=subjectID=${subjectId}`,
+    const roles = await xhrGetAsync<UserRole[]>(
+        `${EnvironmentConfig.API.V6}/roles/?filter=subjectID=${subjectId}`,
     )
-    const roles = result.result.content.map(adjustUserRoleResponse)
-    return _.orderBy(roles, ['roleName'], ['asc'])
+    const adjusted = roles.map(adjustUserRoleResponse)
+    return _.orderBy(adjusted, ['roleName'], ['asc'])
 }
 
 /**
@@ -30,11 +30,11 @@ export const fetchRolesBySubject = async (
  *  by names.
  */
 export const fetchRoles = async (): Promise<UserRole[]> => {
-    const result = await xhrGetAsync<ApiV3Response<UserRole[]>>(
-        `${EnvironmentConfig.API.V3}/roles`,
+    const roles = await xhrGetAsync<UserRole[]>(
+        `${EnvironmentConfig.API.V6}/roles`,
     )
-    const roles = result.result.content.map(adjustUserRoleResponse)
-    return _.orderBy(roles, ['roleName'], ['asc'])
+    const adjusted = roles.map(adjustUserRoleResponse)
+    return _.orderBy(adjusted, ['roleName'], ['asc'])
 }
 
 /**
@@ -43,15 +43,15 @@ export const fetchRoles = async (): Promise<UserRole[]> => {
  * @returns resolves to the role object, if success.
  */
 export const createRole = async (roleName: string): Promise<UserRole> => {
-    const result = await xhrPostAsync<any, ApiV3Response<UserRole>>(
-        `${EnvironmentConfig.API.V3}/roles`,
+    const response = await xhrPostAsync<any, UserRole>(
+        `${EnvironmentConfig.API.V6}/roles`,
         {
             param: {
                 roleName,
             },
         },
     )
-    return adjustUserRoleResponse(result.result.content)
+    return adjustUserRoleResponse(response)
 }
 
 /**
@@ -63,13 +63,10 @@ export const createRole = async (roleName: string): Promise<UserRole> => {
 export const assignRole = async (
     roleId: string,
     userId: string,
-): Promise<string> => {
-    const result = await xhrPostAsync<undefined, ApiV3Response<string>>(
-        `${EnvironmentConfig.API.V3}/roles/${roleId}/assign?action=true&filter=subjectID%3D${userId}`,
-        undefined,
-    )
-    return result.result.content
-}
+): Promise<string> => xhrPostAsync<undefined, string>(
+    `${EnvironmentConfig.API.V6}/roles/${roleId}/assign?action=true&filter=subjectID%3D${userId}`,
+    undefined,
+)
 
 /**
  * Unassigns role from the user.
@@ -80,12 +77,9 @@ export const assignRole = async (
 export const unassignRole = async (
     roleId: string,
     userId: string,
-): Promise<string> => {
-    const result = await xhrDeleteAsync<ApiV3Response<string>>(
-        `${EnvironmentConfig.API.V3}/roles/${roleId}/deassign?action=true&filter=subjectID%3D${userId}`,
-    )
-    return result.result.content
-}
+): Promise<string> => xhrDeleteAsync<string>(
+    `${EnvironmentConfig.API.V6}/roles/${roleId}/deassign?action=true&filter=subjectID%3D${userId}`,
+)
 
 /**
  * Fetchs role info
@@ -97,67 +91,46 @@ export const fetchRole = async (
     roleId: string,
     fields: string[],
 ): Promise<UserRole> => {
-    // there is a bug in backend, when we ask to get role subjects
-    // but there are no subjects, backend returns 404 even if role exists
-    // as a workaround we get role without subjects first to check if it exists
-    // and only after we try to get it subject
-    // TODO: remove code in this if, after this bug is fixed at the backend
-    //       keep only the part after else
+    const baseUrl = `${EnvironmentConfig.API.V6}/roles/${roleId}`
+
     if (fields && _.includes(fields, 'subjects')) {
-        const fieldsWithouSubjects = _.without(fields, 'subjects')
-        // if there are no fields after removing 'subjects', add 'id' to retrieve minimum data
-        if (!fieldsWithouSubjects.length) {
-            fieldsWithouSubjects.push('id')
+        // Work around backend returning 404 when requesting subjects for empty roles.
+        const fieldsWithoutSubjects = _.without(fields, 'subjects')
+        if (!fieldsWithoutSubjects.length) {
+            fieldsWithoutSubjects.push('id')
         }
 
-        const fieldsQuery = fields
-            ? `?fields=${fieldsWithouSubjects.join(',')}`
-            : ''
-
-        return xhrGetAsync<ApiV3Response<UserRole>>(
-            `${EnvironmentConfig.API.V3}/roles/${roleId}${fieldsQuery}`,
+        const fieldsQuery = `?fields=${fieldsWithoutSubjects.join(',')}`
+        const roleWithoutSubjects = await xhrGetAsync<UserRole>(
+            `${baseUrl}${fieldsQuery}`,
         )
-            .then(async (res: ApiV3Response<UserRole>) => {
-                const roleWithoutSubjects = res.result.content
 
-                // now let's try to get subjects
-                return xhrGetAsync<ApiV3Response<UserRole>>(
-                    `${EnvironmentConfig.API.V3}/roles/${roleId}?fields=subjects`,
-                )
-                // populate role with subjects and return it
-                    .then((resChild: ApiV3Response<UserRole>) => _.assign(
-                        roleWithoutSubjects,
-                        {
-                            subjects: resChild.result.content.subjects,
-                        },
-                    ))
-                    .catch((error: any) => {
-                        // if get error 404 in this case we know role exits
-                        // so just return roleWithoutSubjects with subjects as en empty array
-                        if (
-                            error.data
-                            && error.data.result
-                            && error.data.result.status === 404
-                        ) {
-                            return adjustUserRoleResponse(
-                                _.assign(roleWithoutSubjects, {
-                                    subjects: [],
-                                }),
-                            )
-
-                        }
-
-                        // for other errors return rejected promise with error
-                        return Promise.reject(error)
-                    })
+        try {
+            const subjectsResponse = await xhrGetAsync<UserRole>(
+                `${baseUrl}?fields=subjects`,
+            )
+            const mergedRole = _.assign({}, roleWithoutSubjects, {
+                subjects: subjectsResponse.subjects,
             })
+            return adjustUserRoleResponse(mergedRole)
+        } catch (error: any) {
+            const statusCode = error?.data?.result?.status
+                ?? error?.response?.status
+                ?? error?.status
 
+            if (statusCode === 404) {
+                return adjustUserRoleResponse(
+                    _.assign({}, roleWithoutSubjects, { subjects: [] }),
+                )
+            }
+
+            throw error
+        }
     }
 
-    // if don't ask for subjects, then just normal request
-    const fieldsQuery = fields ? `?fields=${fields.join(',')}` : ''
-    const result = await xhrGetAsync<ApiV3Response<UserRole>>(
-        `${EnvironmentConfig.API.V3}/roles/${roleId}${fieldsQuery}`,
+    const fieldsQuery = fields?.length ? `?fields=${fields.join(',')}` : ''
+    const response = await xhrGetAsync<UserRole>(
+        `${baseUrl}${fieldsQuery}`,
     )
-    return adjustUserRoleResponse(result.result.content)
+    return adjustUserRoleResponse(response)
 }
