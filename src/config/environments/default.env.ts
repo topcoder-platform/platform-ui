@@ -61,10 +61,7 @@ export const VANILLA_FORUM = {
     V2_URL: 'https://vanilla.topcoder-dev.com/api/v2',
 }
 
-const ADMIN_SSO_LOGIN_PROVIDERS_ENV = getReactEnv<string | undefined>(
-    'ADMIN_SSO_LOGIN_PROVIDERS',
-    undefined,
-)
+const ADMIN_SSO_LOGIN_PROVIDERS_ENV = '[{"ssoLoginProviderId":1,"name":"okta-customer","type":"samlp"}]'
 
 export const ADMIN_SSO_LOGIN_PROVIDERS: SSOLoginProviderConfig[] = parseSSOLoginProviders(
     ADMIN_SSO_LOGIN_PROVIDERS_ENV,

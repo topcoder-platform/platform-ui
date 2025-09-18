@@ -4,7 +4,12 @@
 import _ from 'lodash'
 
 import { EnvironmentConfig } from '~/config'
-import { xhrDeleteAsync, xhrGetAsync, xhrPostAsync } from '~/libs/core'
+import {
+    xhrDeleteAsync,
+    xhrGetAsync,
+    xhrPatchAsync,
+    xhrPostAsync,
+} from '~/libs/core'
 
 import { adjustUserRoleResponse, UserRole } from '../models'
 
@@ -63,9 +68,9 @@ export const createRole = async (roleName: string): Promise<UserRole> => {
 export const assignRole = async (
     roleId: string,
     userId: string,
-): Promise<string> => xhrPostAsync<undefined, string>(
-    `${EnvironmentConfig.API.V6}/roles/${roleId}/assign?action=true&filter=subjectID%3D${userId}`,
-    undefined,
+): Promise<string> => xhrPatchAsync<{ roleId: string }, string>(
+    `${EnvironmentConfig.API.V6}/user-roles/${userId}`,
+    { roleId },
 )
 
 /**
@@ -78,7 +83,7 @@ export const unassignRole = async (
     roleId: string,
     userId: string,
 ): Promise<string> => xhrDeleteAsync<string>(
-    `${EnvironmentConfig.API.V6}/roles/${roleId}/deassign?action=true&filter=subjectID%3D${userId}`,
+    `${EnvironmentConfig.API.V6}/user-roles/${userId}/${roleId}`,
 )
 
 /**
