@@ -1,15 +1,16 @@
 import { FC, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { format } from 'date-fns'
 
+import { Sort } from '~/apps/admin/src/platform/gamification-admin/src/game-lib'
 import { EnvironmentConfig } from '~/config'
 import { useWindowSize, WindowSize } from '~/libs/shared'
 import { Button, colWidthType, LinkButton, Table, type TableColumn } from '~/libs/ui'
-import { Sort } from '~/apps/admin/src/platform/gamification-admin/src/game-lib'
 
-import { Pagination } from '../common/Pagination'
 import { useEventCallback } from '../../hooks'
 import { ReviewFilterCriteria, ReviewSummary } from '../../models'
 import { Paging } from '../../models/challenge-management/Pagination'
+import { Pagination } from '../common/Pagination'
 
 import { MobileListView } from './MobileListView'
 import styles from './ReviewSummaryList.module.scss'
@@ -98,21 +99,21 @@ const ReviewSummaryList: FC<ReviewListProps> = props => {
             },
             // I think this column is important, and it exits in `admin-app`
             // but resp does not have it, so I just comment it here
-            // {
-            //     label: 'Submission End Date',
-            //     propertyName: 'submissionEndDate',
-            //     renderer: (review: ReviewSummary) => (
-            //         // eslint-disable-next-line jsx-a11y/anchor-is-valid
-            //         <div className={styles.submissionDate}>
-            //           {review.submissionEndDate}
-            //             {/* {format(
-            //                 new Date(review.submissionEndDate),
-            //                 'MMM dd, yyyy HH:mm'
-            //             )} */}
-            //         </div>
-            //     ),
-            //     type: 'element',
-            // },
+            {
+                label: 'Submission End Date',
+                propertyName: 'submissionEndDate',
+                renderer: (review: ReviewSummary) => (
+                    // eslint-disable-next-line jsx-a11y/anchor-is-valid
+                    <div className={styles.submissionDate}>
+                        {review.submissionEndDate
+                            ? format(
+                                new Date(review.submissionEndDate),
+                                'MMM dd, yyyy HH:mm',
+                            ) : 'N/A'}
+                    </div>
+                ),
+                type: 'element',
+            },
             {
                 columnId: 'OpenReviewOpp',
                 label: 'Open Review Opp',

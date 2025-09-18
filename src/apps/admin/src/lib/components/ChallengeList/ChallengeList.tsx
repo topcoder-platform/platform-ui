@@ -218,6 +218,15 @@ const Actions: FC<{
                 classNames={{ menu: 'challenge-list-actions-dropdown-menu' }}
             >
                 <ul>
+                    <li>
+                        <a
+                            href={`${EnvironmentConfig.ADMIN.CHALLENGE_URL}/${props.challenge.id}`}
+                            target='_blank'
+                            rel='noreferrer'
+                        >
+                            Challenge Details
+                        </a>
+                    </li>
                     <li className={cn({ disabled: !hasProjectId })}>
                         {hasProjectId && (
                             <a
@@ -268,11 +277,10 @@ const ChallengeList: FC<ChallengeListProps> = props => {
                 renderer: (challenge: Challenge) => (
                     // eslint-disable-next-line jsx-a11y/anchor-is-valid
                     <a
-                        href={`${EnvironmentConfig.ADMIN.CHALLENGE_URL}/${challenge.id}`}
+                        href={`${EnvironmentConfig.API.V5}/challenges/${challenge.id}`}
                         className={styles.challengeTitle}
-                        onClick={function onClick() {
-                            window.location.href = `${EnvironmentConfig.ADMIN.CHALLENGE_URL}/${challenge.id}`
-                        }}
+                        target='_blank'
+                        rel='noreferrer'
                     >
                         {challenge.name}
                     </a>
@@ -334,6 +342,7 @@ const ChallengeList: FC<ChallengeListProps> = props => {
                     disableSorting
                     onToggleSort={_.noop}
                     className={styles.desktopTable}
+                    preventDefault
                 />
             )}
             {screenWidth <= 1279 && (
