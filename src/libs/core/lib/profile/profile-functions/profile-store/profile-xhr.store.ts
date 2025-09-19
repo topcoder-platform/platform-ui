@@ -39,9 +39,17 @@ export function getMemberStats(handle: string): Promise<UserStats | undefined> {
         .then(stats => (!stats.length ? undefined : stats[0]))
 }
 
+type CountryLookupResponse = CountryLookup[] | { result?: { content?: CountryLookup[] } }
+
 export function getCountryLookup(): Promise<CountryLookup[]> {
-    return xhrGetAsync<CountryLookup[]>(countryLookupURL())
-        .then((countryLookup: any) => countryLookup.result?.content || [])
+    return xhrGetAsync<CountryLookupResponse>(countryLookupURL())
+        .then(countryLookup => {
+            if (Array.isArray(countryLookup)) {
+                return countryLookup
+            }
+
+            return countryLookup?.result?.content ?? []
+        })
 }
 
 export async function updatePrimaryMemberRole(primaryRole: string): Promise<ModifyUserPropertyResponse> {

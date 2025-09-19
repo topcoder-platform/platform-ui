@@ -64,7 +64,10 @@ const MobileListView: FC<MobileListViewProps<ReviewSummary>> = props => {
         ))
 
         return (
-            <div className={styles.mobileListViewItemContainer} key={d.legacyChallengeId}>
+            <div
+                className={styles.mobileListViewItemContainer}
+                key={d.legacyChallengeId || d.challengeId}
+            >
                 <div className={styles.rows}>
                     <div className={styles.row1}>
                         {/* Title */ propertyElements[0]}

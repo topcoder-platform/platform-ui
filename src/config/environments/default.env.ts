@@ -15,7 +15,7 @@ function parseSSOLoginProviders(
         const parsed = JSON.parse(raw) as SSOLoginProviderConfig[]
         return Array.isArray(parsed) ? parsed : []
     } catch (error) {
-        console.error('Failed to parse ADMIN_SSO_LOGIN_PROVIDERS:', error)
+        // Swallow parsing issues and fall back to an empty list to keep boot resilient
         return []
     }
 }

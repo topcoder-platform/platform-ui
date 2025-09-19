@@ -31,11 +31,29 @@ export const getMemberSuggestionsByHandle = async (
         return []
     }
 
-    type v3Response<T> = { result: { content: T } }
-    const data = await xhrGetAsync<
-        v3Response<Array<MemberInfo>>
-    >(`${EnvironmentConfig.API.V3}/members/_suggest/${handle}`)
-    return data.result.content
+    const sanitizedHandle = encodeURIComponent(handle.trim())
+
+    type MemberAutocompleteResponse = {
+        userId: number
+        handle: string
+        firstName?: string | null
+        lastName?: string | null
+        photoURL?: string | null
+        maxRating?: unknown
+    }
+
+    const response = await xhrGetAsync<MemberAutocompleteResponse[]>(
+        `${EnvironmentConfig.API.V6}/members/autocomplete/${sanitizedHandle}`,
+    )
+
+    return response.map(member => ({
+        firstName: member.firstName ?? undefined,
+        handle: member.handle,
+        lastName: member.lastName ?? undefined,
+        maxRating: member.maxRating,
+        photoURL: member.photoURL ?? undefined,
+        userId: member.userId,
+    }))
 }
 
 /**
@@ -101,10 +119,15 @@ export const getProfile = async (handle: string): Promise<MemberInfo> => {
         return Promise.reject(new Error('Handle must be specified.'))
     }
 
-    const result = await xhrGetAsync<ApiV3Response<MemberInfo>>(
-        `${EnvironmentConfig.API.V3}/members/${handle}`,
+    const response = await xhrGetAsync<MemberInfo | ApiV3Response<MemberInfo>>(
+        `${EnvironmentConfig.API.V6}/members/${handle}`,
     )
-    return result.result.content
+
+    if ('result' in response) {
+        return response.result.content
+    }
+
+    return response
 }
 
 /**

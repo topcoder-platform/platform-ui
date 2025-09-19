@@ -7,13 +7,13 @@ import { EnvironmentConfig } from '~/config'
 import {
     xhrDeleteAsync,
     xhrGetAsync,
+    xhrGetPaginatedAsync,
     xhrPatchAsync,
     xhrPostAsync,
 } from '~/libs/core'
 
 import {
     adjustBillingAccountResponse,
-    ApiV3Response,
     BillingAccount,
     BillingAccountResource,
     FormEditBillingAccount,
@@ -39,15 +39,17 @@ export const searchBillingAccounts = async (
     content: BillingAccount[]
     totalPages: number
 }> => {
-    const data = await xhrGetAsync<ApiV3Response<BillingAccount[]>>(
+    const { data, totalPages }: {
+        data: BillingAccount[]
+        totalPages: number
+    } = await xhrGetPaginatedAsync<BillingAccount[]>(
         `${
-            EnvironmentConfig.API.V3
+            EnvironmentConfig.API.V6
         }/billing-accounts?${createFilterPageSortQuery(criteria, pageAndSort)}`,
     )
-    const totalCount = data.result.metadata.totalCount
     return {
-        content: data.result.content.map(adjustBillingAccountResponse),
-        totalPages: Math.ceil(totalCount / pageAndSort.limit),
+        content: data.map(adjustBillingAccountResponse),
+        totalPages,
     }
 }
 
@@ -58,12 +60,9 @@ export const searchBillingAccounts = async (
  */
 export const findAllBillingAccountResources = async (
     accountId: string,
-): Promise<BillingAccountResource[]> => {
-    const data = await xhrGetAsync<ApiV3Response<BillingAccount[]>>(
-        `${EnvironmentConfig.API.V3}/billing-accounts/${accountId}/users`,
-    )
-    return data.result.content
-}
+): Promise<BillingAccountResource[]> => xhrGetAsync<BillingAccountResource[]>(
+    `${EnvironmentConfig.API.V6}/billing-accounts/${accountId}/users`,
+)
 
 /**
  * Find billing account by id
@@ -74,10 +73,10 @@ export const findAllBillingAccountResources = async (
 export const findBillingAccountById = async (
     id: string,
 ): Promise<BillingAccount> => {
-    const data = await xhrGetAsync<ApiV3Response<BillingAccount>>(
-        `${EnvironmentConfig.API.V3}/billing-accounts/${id}`,
+    const data = await xhrGetAsync<BillingAccount>(
+        `${EnvironmentConfig.API.V6}/billing-accounts/${id}`,
     )
-    return adjustBillingAccountResponse(data.result.content)
+    return adjustBillingAccountResponse(data)
 }
 
 /**
@@ -91,7 +90,7 @@ export const deleteBillingAccountResource = async (
     resourceId: string,
 ): Promise<void> => {
     await xhrDeleteAsync<void>(
-        `${EnvironmentConfig.API.V3}/billing-accounts/${accountId}/users/${resourceId}`,
+        `${EnvironmentConfig.API.V6}/billing-accounts/${accountId}/users/${resourceId}`,
     )
 }
 
@@ -153,12 +152,12 @@ export const createBillingAccount = async (
         {
             param: RequestCommonDataType
         },
-        ApiV3Response<BillingAccount[]>
+        BillingAccount[]
     >(
-        `${EnvironmentConfig.API.V3}/billing-accounts`,
+        `${EnvironmentConfig.API.V6}/billing-accounts`,
         createBillingAccountRequestData(data),
     )
-    return resultData.result.content
+    return resultData
 }
 
 /**
@@ -178,15 +177,15 @@ export const editBillingAccount = async (
         {
             param: RequestCommonDataType
         },
-        ApiV3Response<{
+        {
             original: BillingAccount
             updated: BillingAccount
-        }>
+        }
     >(
-        `${EnvironmentConfig.API.V3}/billing-accounts/${accountId}`,
+        `${EnvironmentConfig.API.V6}/billing-accounts/${accountId}`,
         createBillingAccountRequestData(data),
     )
-    return resultData.result.content
+    return resultData
 }
 
 /**
@@ -203,11 +202,11 @@ export const createBillingAccountResource = async (
         {
             param: RequestCommonDataType
         },
-        ApiV3Response<BillingAccountResource>
-    >(`${EnvironmentConfig.API.V3}/billing-accounts/${accountId}/users`, {
+        BillingAccountResource
+    >(`${EnvironmentConfig.API.V6}/billing-accounts/${accountId}/users`, {
         param: {
             userId: data.userId,
         },
     })
-    return resultData.result.content
+    return resultData
 }

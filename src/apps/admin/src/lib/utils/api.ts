@@ -61,7 +61,7 @@ export const createChallengeQueryString = (
 
     if (filterCriteria.status) filter += `&status=${filterCriteria.status}`
 
-    filter += '&sortBy=created&sortOrder=desc'
+    filter += '&sortBy=createdAt&sortOrder=desc'
 
     return filter
 }
@@ -69,17 +69,25 @@ export const createChallengeQueryString = (
 export const createReviewQueryString = (
     filterCriteria: ReviewFilterCriteria,
 ): string => {
-    let filter = ''
+    const params: string[] = []
 
     if (filterCriteria.page) {
-        filter += `page=${filterCriteria.page}`
+        params.push(`page=${filterCriteria.page}`)
     }
 
     if (filterCriteria.perPage) {
-        filter += `&perPage=${filterCriteria.perPage}`
+        params.push(`perPage=${filterCriteria.perPage}`)
     }
 
-    return filter
+    if (filterCriteria.sortBy) {
+        params.push(`sortBy=${filterCriteria.sortBy}`)
+    }
+
+    if (filterCriteria.order) {
+        params.push(`sortOrder=${filterCriteria.order}`)
+    }
+
+    return params.join('&')
 }
 
 export const replaceBrowserUrlQuery = (query: string): void => {

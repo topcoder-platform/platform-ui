@@ -1,4 +1,6 @@
 export interface ReviewSummary {
+    /** Challenge uuid */
+    challengeId: string
     /** Challenge Name */
     challengeName: string
     /** Challenge Status */

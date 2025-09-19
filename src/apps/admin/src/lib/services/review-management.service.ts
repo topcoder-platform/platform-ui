@@ -15,15 +15,75 @@ import { createReviewQueryString } from '../utils'
 /**
  * Searches the review opportunities using v3 api.
  */
+type BackendReviewOpportunitySummary = {
+    challengeId: string
+    challengeLegacyId?: string | number
+    legacyChallengeId?: string | number
+    challengeName: string
+    challengeStatus: string
+    submissionEndDate?: string | null
+    numberOfSubmissions?: number
+    numberOfReviewerSpots?: number
+    numberOfPendingApplications?: number
+    numberOfApprovedApplications?: number
+}
+
+type ReviewOpportunitiesSummaryResponse = {
+    result: {
+        success: boolean
+        status: number
+        content: BackendReviewOpportunitySummary[]
+        metadata?: {
+            total?: number
+            totalPages?: number
+            page?: number
+            perPage?: number
+        }
+    }
+}
+
+/**
+ * Searches the review opportunities using v6 api.
+ */
 export const getReviewOpportunities = async (
     filterCriteria: ReviewFilterCriteria,
-): Promise<Array<ReviewSummary>> => {
-  type v3Response<Review> = { result: { content: Review[], metadata: { totalCount: number } } }
-  const data = await xhrGetAsync<v3Response<ReviewSummary>>(
-      // eslint-disable-next-line max-len
-      `${EnvironmentConfig.API.V3}/reviewOpportunities/reviewApplicationsSummary?${createReviewQueryString(filterCriteria)}`,
-  )
-  return data.result.content
+): Promise<{
+    content: ReviewSummary[]
+    metadata?: {
+        total?: number
+        totalPages?: number
+        page?: number
+        perPage?: number
+    }
+}> => {
+    const response = await xhrGetAsync<ReviewOpportunitiesSummaryResponse>(
+        `${EnvironmentConfig.API.V6}/review-opportunities/summary?${createReviewQueryString(filterCriteria)}`,
+    )
+
+    const mapToReviewSummary = (
+        item: BackendReviewOpportunitySummary,
+    ): ReviewSummary => {
+        const legacyId = item.challengeLegacyId
+            ?? item.legacyChallengeId
+            ?? item.challengeId
+
+        return {
+            challengeId: item.challengeId,
+            challengeName: item.challengeName,
+            challengeStatus: item.challengeStatus,
+            legacyChallengeId: String(legacyId ?? ''),
+            numberOfApprovedApplications: item.numberOfApprovedApplications ?? 0,
+            numberOfPendingApplications: item.numberOfPendingApplications ?? 0,
+            numberOfReviewerSpots: item.numberOfReviewerSpots ?? 0,
+            numberOfSubmissions: item.numberOfSubmissions ?? 0,
+            submissionEndDate: item.submissionEndDate ?? '',
+        }
+    }
+
+    return {
+        content: response.result.content.map(mapToReviewSummary),
+        metadata: response.result.metadata,
+    }
 }
 
 /**
