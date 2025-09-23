@@ -5,7 +5,7 @@ import { FC } from 'react'
 
 import { ActionLoading } from '~/apps/admin/src/lib'
 
-import { Screening, SubmissionInfo } from '../../models'
+import { MappingReviewAppeal, Screening, SubmissionInfo } from '../../models'
 import {
     useDownloadSubmission,
     useDownloadSubmissionProps,
@@ -25,6 +25,7 @@ interface Props {
     isLoadingSubmission: boolean
     screening: Screening[]
     review: SubmissionInfo[]
+    mappingReviewAppeal: MappingReviewAppeal // from review id to appeal info
 }
 
 export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
@@ -63,6 +64,7 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
                     isLoadingReview={props.isLoadingSubmission}
                     isDownloading={isDownloadingSubmission}
                     downloadSubmission={downloadSubmission}
+                    mappingReviewAppeal={props.mappingReviewAppeal}
                 />
             )}
 

@@ -1,4 +1,6 @@
-import { BackendReview } from './BackendReview.model'
+import { forEach, orderBy } from 'lodash'
+
+import { adjustBackendReview, BackendReview } from './BackendReview.model'
 import { BackendSubmissionStatus } from './BackendSubmissionStatus.enum'
 
 /**
@@ -36,4 +38,31 @@ export interface BackendSubmission {
     uploadId: string
     review: BackendReview[]
     reviewSummation: any[]
+    reviewResourceMapping?: { [resourceId: string]: BackendReview } // this field is calculated at frontend
+}
+
+/**
+ * Update submission info to show in ui
+ *
+ * @param data data from backend response
+ * @returns updated data
+ */
+export function adjustBackendSubmission(
+    data: BackendSubmission,
+): BackendSubmission {
+    const review = orderBy(data.review.map(adjustBackendReview), ['createdAtDate'], ['desc'])
+    const listOfValidReview: BackendReview[] = []
+    const reviewResourceMapping: { [resourceId: string]: BackendReview } = {}
+    forEach(review, reviewItem => {
+        if (!reviewResourceMapping[reviewItem.resourceId]) {
+            reviewResourceMapping[reviewItem.resourceId] = reviewItem
+            listOfValidReview.push(reviewItem)
+        }
+    })
+
+    return {
+        ...data,
+        review: listOfValidReview,
+        reviewResourceMapping,
+    }
 }

@@ -45,15 +45,12 @@ export const fetchResources = async (query: {
 }
 
 /**
- * Fetch all member roles.
+ * Fetch all challenge resources.
  * @param challengeId challenge id
- * @param memberId member id
- * @returns resolves to the list of role
+ * @returns resolves to the list of resource
  */
-export const fetchAllMemberRoles = async (
+export const fetchChallengeResouces = async (
     challengeId: string,
-    memberId: string,
 ): Promise<PaginatedResponse<BackendResource[]>> => fetchResources({
     challengeId,
-    memberId,
 })

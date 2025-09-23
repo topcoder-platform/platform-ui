@@ -76,3 +76,5 @@ export const WINNERS = 'Winners'
 export const TAB = 'tab'
 export const FINISHTAB = [WINNERS]
 export const WITHOUT_APPEAL = [DESIGN, FIRST2FINISH]
+
+export const NO_RESOURCE_ID = 'noResource'

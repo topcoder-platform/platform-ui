@@ -15,14 +15,14 @@ import { tokenGetAsync, TokenModel } from '~/libs/core'
 import { useOnComponentDidMount } from '~/apps/admin/src/lib/hooks'
 
 import { ReviewAppContextModel } from '../models'
-import { useFetchResource, useFetchResourceProps } from '../hooks'
+import { useFetchChallengeRelativeDatas, useFetchChallengeRelativeDatasProps } from '../hooks'
 
 export const ReviewAppContext: Context<ReviewAppContextModel>
     = createContext<ReviewAppContextModel>({
-        cancelLoadMyRoleInfos: noop,
-        loadMyRoleInfos: noop,
+        cancelLoadChallengeRelativeInfos: noop,
+        challengeRelativeInfosMapping: {},
+        loadChallengeRelativeInfos: noop,
         loginUserInfo: undefined,
-        myRoleInfosMapping: {},
         resourceRoleMapping: undefined,
     })
 
@@ -30,31 +30,31 @@ export const ReviewAppContextProvider: FC<PropsWithChildren> = props => {
     const [loginUserInfo, setLoginUserInfo] = useState<TokenModel | undefined>(undefined)
     // fetch my resources
     const {
-        cancelLoadMyRoleInfos,
-        loadMyRoleInfos,
-        myRoleInfosMapping,
+        cancelLoadChallengeRelativeInfos,
+        loadChallengeRelativeInfos,
+        challengeRelativeInfosMapping,
         resourceRoleMapping,
         resourceRoleReviewer,
         resourceRoleSubmitter,
-    }: useFetchResourceProps = useFetchResource(loginUserInfo)
+    }: useFetchChallengeRelativeDatasProps = useFetchChallengeRelativeDatas(loginUserInfo)
     const value = useMemo(
         () => ({
-            cancelLoadMyRoleInfos,
-            loadMyRoleInfos,
+            cancelLoadChallengeRelativeInfos,
+            challengeRelativeInfosMapping,
+            loadChallengeRelativeInfos,
             loginUserInfo,
-            myRoleInfosMapping,
             resourceRoleMapping,
             resourceRoleReviewer,
             resourceRoleSubmitter,
         }),
         [
-            cancelLoadMyRoleInfos,
-            loadMyRoleInfos,
+            cancelLoadChallengeRelativeInfos,
+            loadChallengeRelativeInfos,
             loginUserInfo,
             resourceRoleMapping,
             resourceRoleReviewer,
             resourceRoleSubmitter,
-            myRoleInfosMapping,
+            challengeRelativeInfosMapping,
         ],
     )
 

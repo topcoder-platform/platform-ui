@@ -1,57 +1,68 @@
 /**
  * Challenge Phase Info.
  */
-import { FC, useCallback, useMemo } from 'react'
-import { NavLink } from 'react-router-dom'
+import { FC, useContext, useMemo } from 'react'
+import { useParams } from 'react-router-dom'
 import classNames from 'classnames'
 
-import { SubmissionInfo } from '../../models'
+import { BackendSubmission, ChallengeDetailContextModel } from '../../models'
 import { useRole, useRoleProps } from '../../hooks'
+import { ChallengeDetailContext } from '../../contexts'
+import { getHandleUrl } from '../../utils'
 
 import styles from './SubmissionBarInfo.module.scss'
 
 interface Props {
     className?: string
-    submission: SubmissionInfo
+    submission?: BackendSubmission
 }
 
 export const SubmissionBarInfo: FC<Props> = (props: Props) => {
+    // get challenge info from challenge detail context
+    const {
+        resourceMemberIdMapping,
+    }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
+    const {
+        submissionId = '',
+    }: {
+        submissionId?: string
+    } = useParams<{
+        submissionId: string
+    }>()
+    const useInfo = useMemo(
+        () => resourceMemberIdMapping[props.submission?.memberId ?? ''],
+        [resourceMemberIdMapping, props.submission],
+    )
     const { myChallengeRoles }: useRoleProps = useRole()
-    const uiItems = useMemo(() => {
-        const data = props.submission
-        return [
-            {
-                icon: 'icon-file',
-                title: 'Submission ID',
-                type: 'link',
-                value: data.id,
+    const uiItems = useMemo(() => [
+        {
+            icon: 'icon-file',
+            title: 'Submission ID',
+            type: 'link',
+            value: submissionId,
+        },
+        {
+            icon: 'icon-handle',
+            title: 'My Role',
+            value: (
+                <div className={styles.blockMyRoles}>
+                    {myChallengeRoles.map(item => (
+                        <span key={item}>{item}</span>
+                    ))}
+                </div>
+            ),
+        },
+        {
+            href: getHandleUrl(useInfo),
+            icon: 'icon-handle',
+            style: {
+                color: useInfo?.handleColor,
             },
-            {
-                icon: 'icon-handle',
-                title: 'My Role',
-                value: (
-                    <div className={styles.blockMyRoles}>
-                        {myChallengeRoles.map(item => (
-                            <span key={item}>{item}</span>
-                        ))}
-                    </div>
-                ),
-            },
-            {
-                icon: 'icon-handle',
-                style: {
-                    color: data.userInfo?.handleColor,
-                },
-                title: 'Handle',
-                type: 'link',
-                value: data.userInfo?.memberHandle,
-            },
-        ]
-    }, [props.submission, myChallengeRoles])
-
-    const prevent = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
-        e.preventDefault()
-    }, [])
+            title: 'Handle',
+            type: 'link',
+            value: useInfo?.memberHandle ?? '',
+        },
+    ], [myChallengeRoles, submissionId, useInfo])
 
     return (
         <div className={classNames(styles.container, props.className)}>
@@ -63,13 +74,14 @@ export const SubmissionBarInfo: FC<Props> = (props: Props) => {
                     <div>
                         <span>{item.title}</span>
                         {item.type === 'link' ? (
-                            <NavLink
-                                to='#'
-                                onClick={prevent}
+                            <a
+                                href={item.href}
                                 style={item.style}
+                                target='_blank'
+                                rel='noreferrer'
                             >
                                 {item.value}
-                            </NavLink>
+                            </a>
                         ) : (
                             <strong style={item.style}>{item.value}</strong>
                         )}

@@ -25,6 +25,7 @@ import { fetchTabs } from '../../../lib/services'
 import { ChallengeDetailContextModel, SelectOption } from '../../../lib/models'
 import { TAB } from '../../../config/index.config'
 import { getHandleUrl } from '../../../lib/utils'
+import { activeReviewAssigmentsRouteId, rootRoute } from '../../../config/routes.config'
 
 import styles from './ChallengeDetailsPage.module.scss'
 
@@ -49,6 +50,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         review,
         reviewProgress,
         screening,
+        mappingReviewAppeal,
     }: useFetchScreeningReviewProps = useFetchScreeningReview()
 
     const [tabItems, setTabItems] = useState<SelectOption[]>([])
@@ -58,7 +60,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
             {
                 index: 1,
                 label: 'Active Reviews',
-                path: '/review/active-review-assigments/',
+                path: `${rootRoute}/${activeReviewAssigmentsRouteId}/`,
             },
             ...(isLoadingChallengeInfo
                 ? []
@@ -164,6 +166,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                             isLoadingSubmission={isLoadingSubmission}
                             screening={screening}
                             review={review}
+                            mappingReviewAppeal={mappingReviewAppeal}
                         />
                     </div>
                 </>

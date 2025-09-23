@@ -1,7 +1,7 @@
 /**
  * AppealComment.
  */
-import { FC, useCallback, useMemo, useState } from 'react'
+import { FC, useCallback, useEffect, useMemo, useState } from 'react'
 import {
     Controller,
     ControllerRenderProps,
@@ -16,7 +16,7 @@ import { yupResolver } from '@hookform/resolvers/yup'
 
 import { MarkdownReview } from '../MarkdownReview'
 import { FieldMarkdownEditor } from '../FieldMarkdownEditor'
-import { FormManagerComment, ScorecardQuestion, SelectOption } from '../../models'
+import { FormManagerComment, ReviewItemInfo, ScorecardQuestion, SelectOption } from '../../models'
 import { formManagerCommentSchema } from '../../utils'
 import { QUESTION_YES_NO_OPTIONS } from '../../../config/index.config'
 
@@ -25,13 +25,19 @@ import styles from './ManagerComment.module.scss'
 interface Props {
     className?: string
     scorecardQuestion: ScorecardQuestion
-    updateScorecardQuestion: (value: string) => void
+    reviewItem: ReviewItemInfo
+    isSavingManagerComment: boolean
+    addManagerComment: (
+        content: string,
+        updatedResponse: string,
+        reviewItem: ReviewItemInfo,
+        success: () => void,
+    ) => void
 }
 
 export const ManagerComment: FC<Props> = (props: Props) => {
     const [comment, setComment] = useState('')
     const [showCommentForm, setShowCommentForm] = useState(false)
-    const [showComment, setShowComment] = useState(false)
 
     const {
         handleSubmit,
@@ -47,11 +53,16 @@ export const ManagerComment: FC<Props> = (props: Props) => {
     })
 
     const onSubmit = useCallback((data: FormManagerComment) => {
-        setComment(data.response)
-        props.updateScorecardQuestion(data.finalScore)
-        setShowCommentForm(false)
-        setShowComment(true)
-    }, [props])
+        props.addManagerComment(
+            data.response,
+            data.finalScore,
+            props.reviewItem,
+            () => {
+                setComment(data.response)
+                setShowCommentForm(false)
+            },
+        )
+    }, [props.reviewItem])
 
     const responseOptions = useMemo<SelectOption[]>(() => {
         if (props.scorecardQuestion.type === 'SCALE') {
@@ -76,16 +87,33 @@ export const ManagerComment: FC<Props> = (props: Props) => {
         return []
     }, [props.scorecardQuestion])
 
+    useEffect(() => {
+        if (props.reviewItem.managerComment) {
+            setComment(props.reviewItem.managerComment)
+        }
+    }, [props.reviewItem])
+
     return (
         <div className={classNames(styles.container, props.className)}>
-            {showComment && (
+            {!showCommentForm && comment && (
                 <div className={styles.blockManagerComment}>
                     <span className={styles.textTitle}>Manager Comment</span>
                     <MarkdownReview value={comment} />
+                    <div className={styles.blockBtns}>
+                        <button
+                            onClick={function onClick() {
+                                setShowCommentForm(true)
+                            }}
+                            className='filledButton'
+                            type='button'
+                        >
+                            Edit Manager Comment
+                        </button>
+                    </div>
                 </div>
             )}
 
-            {!showCommentForm && !showComment && (
+            {!showCommentForm && !comment && (
                 <button
                     type='button'
                     className='borderButton'
@@ -152,6 +180,7 @@ export const ManagerComment: FC<Props> = (props: Props) => {
                                                 onBlur={function onBlur() {
                                                     controlProps.field.onBlur()
                                                 }}
+                                                isDisabled={props.isSavingManagerComment}
                                             />
                                         )
                                     }}
@@ -175,17 +204,19 @@ export const ManagerComment: FC<Props> = (props: Props) => {
                         }) {
                             return (
                                 <FieldMarkdownEditor
+                                    initialValue={comment}
                                     className={styles.markdownEditor}
                                     onChange={controlProps.field.onChange}
                                     showBorder
                                     onBlur={controlProps.field.onBlur}
                                     error={_.get(errors, 'response.message')}
+                                    disabled={props.isSavingManagerComment}
                                 />
                             )
                         }}
                     />
                     <div className={styles.blockBtns}>
-                        <button className='filledButton' type='submit'>
+                        <button className='filledButton' type='submit' disabled={props.isSavingManagerComment}>
                             Submit Response
                         </button>
                         <button

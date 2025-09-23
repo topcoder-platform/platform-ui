@@ -42,6 +42,7 @@ interface Props {
     fieldIndex: number
     errors: FieldErrors<FormReviews>
     isTouched: { [key: string]: boolean }
+    disabled?: boolean
     setIsTouched: Dispatch<
         SetStateAction<{
             [key: string]: boolean
@@ -236,6 +237,7 @@ export const ScorecardQuestionEdit: FC<Props> = (props: Props) => {
                                             `reviews.${props.fieldIndex}.initialAnswer`,
                                         )
                                     }}
+                                    isDisabled={props.disabled}
                                 />
                             )
                         }}
@@ -360,6 +362,7 @@ export const ScorecardQuestionEdit: FC<Props> = (props: Props) => {
                                                         onBlur={function onBlur() {
                                                             controlProps.field.onBlur()
                                                         }}
+                                                        isDisabled={props.disabled}
                                                     />
                                                 </div>
                                             )
@@ -404,6 +407,7 @@ export const ScorecardQuestionEdit: FC<Props> = (props: Props) => {
                                                             idx
                                                         ]
                                                     }
+                                                    disabled={props.disabled}
                                                 />
                                             )
                                         }}
@@ -423,6 +427,7 @@ export const ScorecardQuestionEdit: FC<Props> = (props: Props) => {
                                     type: '',
                                 })
                             }}
+                            disabled={props.disabled}
                         >
                             Add Response
                         </button>

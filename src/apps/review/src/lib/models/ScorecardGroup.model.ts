@@ -18,13 +18,7 @@ export interface ScorecardGroup {
  * @param data data from backend response
  * @returns updated data
  */
-export function adjustScorecardGroup(
-    data: ScorecardGroup | undefined,
-): ScorecardGroup | undefined {
-    if (!data) {
-        return data
-    }
-
+export function adjustScorecardGroup(data: ScorecardGroup): ScorecardGroup {
     return {
         ...data,
         sections: _.orderBy(data.sections, ['sortOrder'], ['asc']),

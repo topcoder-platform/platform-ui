@@ -98,11 +98,13 @@ export function convertBackendChallengeInfo(
         currentPhase,
         currentPhaseEndDate,
         currentPhaseEndDateString,
+        currentPhaseObject: data.currentPhase,
         discussionsUrl: data.discussions[0]?.url,
         id: data.id,
         index,
         legacyId: data.legacyId,
         name: data.name,
+        phases: data.phases,
         reviewLength: 0,
         // the % = (The number of submission has been reviewed / submitted review) / The total number of submissions.
         // For now, we can skip the review process.
@@ -115,5 +117,6 @@ export function convertBackendChallengeInfo(
         timeLeftStatus: timeLeft.durationStatus,
         track: data.track as ChallengeType,
         type: data.type as ChallengeType,
+        typeId: data.typeId,
     }
 }

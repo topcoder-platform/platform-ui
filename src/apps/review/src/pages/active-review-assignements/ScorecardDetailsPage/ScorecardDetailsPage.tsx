@@ -1,26 +1,32 @@
 /**
  * Scorecard Details Page.
  */
-import { FC, useCallback, useEffect, useMemo, useState } from 'react'
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { FC, useCallback, useContext, useMemo, useState } from 'react'
+import { useParams } from 'react-router-dom'
 import classNames from 'classnames'
 
+import { TableLoading } from '~/apps/admin/src/lib'
+
 import {
-    useFetchMockChallengeInfo,
-    useFetchMockChallengeInfoProps,
+    useAppNavigate,
+    useFetchSubmissionReviews,
+    useFetchSubmissionReviewsProps,
     useRole,
     useRoleProps,
 } from '../../../lib/hooks'
 import {
+    ChallengeDetailContext,
     ChallengeLinks,
     ConfirmModal,
     PageWrapper,
     ScorecardDetails,
 } from '../../../lib'
-import { SubmissionInfo } from '../../../lib/models'
+import { BreadCrumbData, ChallengeDetailContextModel } from '../../../lib/models'
 import { SubmissionBarInfo } from '../../../lib/components/SubmissionBarInfo'
 import { ChallengeLinksForAdmin } from '../../../lib/components/ChallengeLinksForAdmin'
-import { ADMIN, COPILOT, SUBMITTER } from '../../../config/index.config'
+import { ADMIN, COPILOT } from '../../../config/index.config'
+import { useIsEditReview, useIsEditReviewProps } from '../../../lib/hooks/useIsEditReview'
+import { activeReviewAssigmentsRouteId, rootRoute } from '../../../config/routes.config'
 
 import styles from './ScorecardDetailsPage.module.scss'
 
@@ -29,54 +35,66 @@ interface Props {
 }
 
 export const ScorecardDetailsPage: FC<Props> = (props: Props) => {
-    const navigate = useNavigate()
+    const navigate = useAppNavigate()
     const params = useParams()
     const { actionChallengeRole }: useRoleProps = useRole()
     const [showCloseConfirmation, setShowCloseConfirmation] = useState<boolean>(false)
     const [isChanged, setIsChanged] = useState(false)
-    const { challengeInfo, submissions }: useFetchMockChallengeInfoProps
-        = useFetchMockChallengeInfo(params.challengeId)
-    const [searchParams] = useSearchParams()
-    const [submission, setSubmission] = useState<SubmissionInfo>()
-    const isEdit = useMemo(
-        () => searchParams.get('viewMode') !== 'true',
-        [searchParams],
-    )
 
-    const breadCrumb = useMemo(() => [
+    const {
+        challengeInfo,
+        isLoadingChallengeInfo,
+    }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
+    const { isEdit }: useIsEditReviewProps = useIsEditReview()
+
+    const {
+        addAppeal,
+        addAppealResponse,
+        addManagerComment,
+        doDeleteAppeal,
+        mappingAppeals,
+        isLoading,
+        isSavingReview,
+        isSavingAppeal,
+        isSavingAppealResponse,
+        isSavingManagerComment,
+        reviewInfo,
+        scorecardInfo,
+        scorecardId,
+        submissionInfo,
+        saveReviewInfo,
+    }: useFetchSubmissionReviewsProps = useFetchSubmissionReviews()
+
+    const breadCrumb = useMemo<BreadCrumbData[]>(() => [
         {
             index: 1,
             label: 'Active Reviews',
-            path: '/review/active-review-assigments/',
+            path: `${rootRoute}/${activeReviewAssigmentsRouteId}/`,
         },
-        { index: 2, label: challengeInfo?.name, path: -1 },
+        {
+            fallback: './../../../../challenge-details',
+            index: 2,
+            label: challengeInfo?.name,
+            path: -1,
+        },
         {
             index: 3,
-            label: `Review Scorecard - ${params.scorecardId}`,
+            label: `Review Scorecard - ${params.submissionId}`,
         },
-    ], [challengeInfo?.name, params.scorecardId])
+    ], [challengeInfo?.name, params.submissionId])
 
+    /**
+     * Cancel edit
+     */
     const onCancelEdit = useCallback(() => {
         if (isChanged && isEdit) {
             setShowCloseConfirmation(true)
         } else {
-            navigate('./../../challenge-details')
+            navigate(-1, {
+                fallback: './../../../../challenge-details',
+            })
         }
     }, [isChanged, isEdit, navigate])
-
-    useEffect(() => {
-        if (submissions) {
-            setSubmission(
-                submissions.find(s => s.id === params.scorecardId),
-            )
-        }
-    }, [submissions, params.scorecardId])
-
-    useEffect(() => {
-        if (actionChallengeRole === SUBMITTER && isEdit) {
-            navigate('./../../challenge-details')
-        }
-    }, [actionChallengeRole, isEdit, navigate])
 
     return (
         <PageWrapper
@@ -85,36 +103,61 @@ export const ScorecardDetailsPage: FC<Props> = (props: Props) => {
             titleUrl='emptyLink'
             breadCrumb={breadCrumb}
         >
-            <div className={styles.summary}>
-                {submission && <SubmissionBarInfo submission={submission} />}
-                {actionChallengeRole === ADMIN || actionChallengeRole === COPILOT ? (
-                    <ChallengeLinksForAdmin />
-                ) : (
-                    <ChallengeLinks />
-                )}
-            </div>
+            {isLoadingChallengeInfo ? (
+                <TableLoading />
+            ) : (
+                <>
+                    <div className={styles.summary}>
+                        <SubmissionBarInfo submission={submissionInfo} />
+                        {actionChallengeRole === ADMIN || actionChallengeRole === COPILOT ? (
+                            <ChallengeLinksForAdmin
+                                isSavingReview={isSavingReview}
+                                scorecardId={scorecardId}
+                                saveReviewInfo={saveReviewInfo}
+                            />
+                        ) : (
+                            <ChallengeLinks />
+                        )}
+                    </div>
 
-            <ScorecardDetails
-                isEdit={isEdit}
-                onCancelEdit={onCancelEdit}
-                setIsChanged={setIsChanged}
-            />
+                    <ScorecardDetails
+                        mappingAppeals={mappingAppeals}
+                        isEdit={isEdit}
+                        onCancelEdit={onCancelEdit}
+                        setIsChanged={setIsChanged}
+                        scorecardInfo={scorecardInfo}
+                        isLoading={isLoading}
+                        reviewInfo={reviewInfo}
+                        isSavingReview={isSavingReview}
+                        isSavingAppeal={isSavingAppeal}
+                        isSavingAppealResponse={isSavingAppealResponse}
+                        isSavingManagerComment={isSavingManagerComment}
+                        saveReviewInfo={saveReviewInfo}
+                        addAppeal={addAppeal}
+                        addAppealResponse={addAppealResponse}
+                        doDeleteAppeal={doDeleteAppeal}
+                        addManagerComment={addManagerComment}
+                    />
 
-            {isEdit && (
-                <ConfirmModal
-                    title='Discard Confirmation'
-                    action='discard'
-                    onClose={function onClose() {
-                        setShowCloseConfirmation(false)
-                    }}
-                    onConfirm={function onConfirm() {
-                        navigate(-1)
-                    }}
-                    open={showCloseConfirmation}
-                    maxWidth='578px'
-                >
-                    <div>Are you sure you want to discard the changes?</div>
-                </ConfirmModal>
+                    {isEdit && (
+                        <ConfirmModal
+                            title='Discard Confirmation'
+                            action='discard'
+                            onClose={function onClose() {
+                                setShowCloseConfirmation(false)
+                            }}
+                            onConfirm={function onConfirm() {
+                                navigate(-1, {
+                                    fallback: './../../../../challenge-details',
+                                })
+                            }}
+                            open={showCloseConfirmation}
+                            maxWidth='578px'
+                        >
+                            <div>Are you sure you want to discard the changes?</div>
+                        </ConfirmModal>
+                    )}
+                </>
             )}
         </PageWrapper>
     )

@@ -1,23 +1,19 @@
-import { filter } from 'lodash'
+import { filter, forEach } from 'lodash'
 import moment from 'moment'
 
 import { TABLE_DATE_FORMAT } from '../../config/index.config'
-import { MockAppealResults, MockReviewEdit } from '../../mock-datas'
 
 import { adjustReviewItemInfo, ReviewItemInfo } from './ReviewItemInfo.model'
-import { AppealResult } from './AppealResult.model'
-import { BackendSubmission } from './BackendSubmission.model'
-import {
-    convertBackendReviewToReviewResult,
-    ReviewResult,
-} from './ReviewResult.model'
 import { BackendReview } from './BackendReview.model'
+import { convertBackendReviewItem } from './BackendReviewItem.model'
+import { ScorecardInfo } from './ScorecardInfo.model'
+import { ScorecardQuestion } from './ScorecardQuestion.model'
 
 /**
  * Review info
  */
 export interface ReviewInfo {
-    id: string
+    id?: string
     createdAt: string | Date
     createdAtString?: string // this field is calculated at frontend
     updatedAt: string | Date
@@ -27,7 +23,8 @@ export interface ReviewInfo {
     reviewItems: ReviewItemInfo[]
     reviewProgress?: number // this field is calculated at frontend
     scorecardId: string
-    appealResuls: AppealResult[]
+    resourceId: string
+    committed: boolean
 }
 
 /**
@@ -75,45 +72,43 @@ export function adjustReviewInfo(data: ReviewInfo): ReviewInfo {
 }
 
 /**
- * Convert backend submission info to show in review table
+ * Convert backend submission info to show in ui
  *
  * @param data data from backend response
  * @returns updated data
  */
 export function convertBackendReviewToReviewInfo(
     data: BackendReview,
-    submission: BackendSubmission,
 ): ReviewInfo {
-    const createdAt = new Date(data.createdAt)
+    const createdAt = data.createdAt ? new Date(data.createdAt) : ''
     const createdAtString = createdAt
         ? moment(createdAt)
             .local()
             .format(TABLE_DATE_FORMAT)
-        : undefined
-    const updatedAt = new Date(data.updatedAt)
+        : ''
+    const updatedAt = data.updatedAt ? new Date(data.updatedAt) : ''
     const updatedAtString = createdAt
         ? moment(updatedAt)
             .local()
             .format(TABLE_DATE_FORMAT)
-        : undefined
+        : ''
 
-    const reviewItems = submission.review.map(
-        convertBackendReviewToReviewResult,
-    ) as ReviewResult[]
+    const reviewItems = data.reviewItems ?? []
     const totalNumberOfQuestions = reviewItems.length
     const numberOfQuestionsHaveBeenFilled = filter(
         reviewItems,
-        item => !!item.score,
+        item => !!item.initialAnswer,
     ).length
 
     return {
-        appealResuls: MockAppealResults, // use mock data
+        committed: data.committed,
         createdAt,
         createdAtString,
         finalScore: data.finalScore,
         id: data.id,
         initialScore: data.initialScore,
-        reviewItems: MockReviewEdit.reviewItems.map(adjustReviewItemInfo),
+        resourceId: data.resourceId,
+        reviewItems: (data.reviewItems ?? []).map(convertBackendReviewItem),
         // Be calculated by the frontend,
         // the percentage = (The number of questions that have been filled / The total number of questions).
         reviewProgress: totalNumberOfQuestions
@@ -125,5 +120,47 @@ export function convertBackendReviewToReviewInfo(
         scorecardId: '',
         updatedAt,
         updatedAtString,
+    }
+}
+
+/**
+ * Convert backend submission info to show in ui
+ *
+ * @param data scorecard info
+ * @param resourceId resource id
+ * @returns review info
+ */
+export function createEmptyReviewInfoFromScorecard(
+    data: ScorecardInfo,
+    resourceId: string,
+): ReviewInfo {
+    const reviewItems: ReviewItemInfo[] = []
+    forEach(data.scorecardGroups, group => {
+        forEach(group.sections, section => {
+            forEach(section.questions, (question: ScorecardQuestion) => {
+                reviewItems.push({
+                    createdAt: '',
+                    id: `${reviewItems.length}`,
+                    reviewItemComments: [
+                        {
+                            content: '',
+                            id: '1',
+                            sortOrder: 1,
+                            type: '',
+                        },
+                    ],
+                    scorecardQuestionId: question.id ?? '',
+                })
+            })
+        })
+    })
+
+    return {
+        committed: false,
+        createdAt: '',
+        resourceId,
+        reviewItems,
+        scorecardId: data.id,
+        updatedAt: '',
     }
 }
