@@ -15,7 +15,7 @@ import { Pagination } from '~/apps/admin/src/lib'
 import {
     BackendResourceRole,
     ChallengeInfo,
-    MyRoleInfosMappingType,
+    ChallengeRealtiveInfosMapping,
 } from '../../models'
 import { TableWrapper } from '../TableWrapper'
 import { ProgressBar } from '../ProgressBar'
@@ -28,7 +28,7 @@ interface Props {
     resourceRoleMapping?: {
         [key: string]: BackendResourceRole
     }
-    myRoleInfosMapping: MyRoleInfosMappingType // from challenge id to list of my role
+    challengeRelativeInfosMapping: ChallengeRealtiveInfosMapping // from challenge id to list of my role
     totalPages: number
     page: number
     setPage: Dispatch<SetStateAction<number>>
@@ -46,8 +46,6 @@ export const TableActiveReviews: FC<Props> = (props: Props) => {
         },
         [
             navigate,
-            props.resourceRoleMapping,
-            props.myRoleInfosMapping,
         ],
     )
 
@@ -79,11 +77,11 @@ export const TableActiveReviews: FC<Props> = (props: Props) => {
                 propertyName: 'role',
                 renderer: (data: ChallengeInfo) => {
                     let myRoles = ['']
-                    const myRoleInfos = props.myRoleInfosMapping[data.id]
-                    if (!props.resourceRoleMapping || !myRoleInfos) {
+                    const challengeRelativeInfos = props.challengeRelativeInfosMapping[data.id]
+                    if (!props.resourceRoleMapping || !challengeRelativeInfos) {
                         myRoles = ['loading...']
                     } else {
-                        myRoles = myRoleInfos
+                        myRoles = challengeRelativeInfos.myRoles
                             .map(myRoleInfo => props.resourceRoleMapping?.[myRoleInfo.roleId]?.name)
                             .filter(item => !!item) as string[]
                     }
@@ -146,18 +144,25 @@ export const TableActiveReviews: FC<Props> = (props: Props) => {
                 className: styles.tableCell,
                 label: 'Review Progress',
                 propertyName: 'reviewProgress',
-                renderer: (data: ChallengeInfo) => (data.reviewProgress !== undefined ? (
-                    <div className='last-element'>
-                        <ProgressBar
-                            progress={data.reviewProgress}
-                            progressWidth='80px'
-                        />
-                    </div>
-                ) : undefined),
+                renderer: (data: ChallengeInfo) => {
+                    const challengeRelativeInfos = props.challengeRelativeInfosMapping[data.id]
+                    const reviewProgress = challengeRelativeInfos?.reviewProgress
+
+                    return reviewProgress !== undefined ? (
+                        <div className='last-element'>
+                            {reviewProgress !== null && (
+                                <ProgressBar
+                                    progress={reviewProgress}
+                                    progressWidth='80px'
+                                />
+                            )}
+                        </div>
+                    ) : (<span>loading...</span>)
+                },
                 type: 'element',
             },
         ],
-        [redirect, props.resourceRoleMapping, props.myRoleInfosMapping],
+        [redirect, props.resourceRoleMapping, props.challengeRelativeInfosMapping],
     )
 
     const columnsMobile = useMemo<MobileTableColumn<ChallengeInfo>[][]>(

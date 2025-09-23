@@ -17,12 +17,8 @@ export interface ReviewItemComment {
  * @returns updated data
  */
 export function adjustReviewItemComment(
-    data: ReviewItemComment | undefined,
-): ReviewItemComment | undefined {
-    if (!data) {
-        return data
-    }
-
+    data: ReviewItemComment,
+): ReviewItemComment {
     const typeDisplay
         = QUESTION_RESPONSE_TYPE_MAPPING_DISPLAY[data.type] ?? data.type
 

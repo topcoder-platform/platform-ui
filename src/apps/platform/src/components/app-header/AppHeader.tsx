@@ -11,7 +11,7 @@ import {
     useState,
 } from 'react'
 import { NavigateFunction, useNavigate } from 'react-router-dom'
-import type { AuthUser as NavAuthUser, TcUniNavFn } from 'universal-navigation'
+import type { AuthUser as NavAuthUser } from 'universal-navigation'
 import classNames from 'classnames'
 
 import { EnvironmentConfig, PageSubheaderPortalId } from '~/config'
@@ -25,9 +25,10 @@ import {
 } from '~/libs/core'
 import { ConfigContextValue, useConfigContext } from '~/libs/shared'
 
+import { getTcUniNav } from '../../utils'
+
 import UniNavSnippet from './universal-nav-snippet'
 
-declare let tcUniNav: TcUniNavFn
 UniNavSnippet(EnvironmentConfig.URLS.UNIVERSAL_NAV)
 
 interface NavigationRequest {
@@ -86,7 +87,7 @@ const AppHeader: FC<{}> = () => {
 
         headerInit.current = true
 
-        tcUniNav(
+        getTcUniNav()?.(
             'init',
             navElementId,
             {
@@ -116,7 +117,7 @@ const AppHeader: FC<{}> = () => {
     // update uni-nav's tool details
     useEffect(() => {
 
-        tcUniNav(
+        getTcUniNav()?.(
             'update',
             navElementId,
             {
@@ -139,7 +140,7 @@ const AppHeader: FC<{}> = () => {
             return
         }
 
-        tcUniNav(
+        getTcUniNav()?.(
             'update',
             navElementId,
             {

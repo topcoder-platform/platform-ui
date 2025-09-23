@@ -4,17 +4,9 @@
 import { xhrPostAsync, xhrPutAsync } from '~/libs/core'
 import { EnvironmentConfig } from '~/config'
 
-import { MockScorecard } from '../../mock-datas'
-import { adjustScorecardInfo, Scorecard, ScorecardInfo } from '../models'
+import { Scorecard } from '../models'
 
 const baseUrl = `${EnvironmentConfig.API.V6}/scorecards`
-
-/**
- * Fetch scorecard
- * @returns resolves to the scorecard info
- */
-export const fetchScorecards
-  = async (): Promise<ScorecardInfo> => Promise.resolve(adjustScorecardInfo(MockScorecard) as ScorecardInfo)
 
 /**
  * Clone scorecard

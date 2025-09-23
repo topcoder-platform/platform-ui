@@ -17,12 +17,8 @@ export interface ScorecardInfo {
  * @returns updated data
  */
 export function adjustScorecardInfo(
-    data: ScorecardInfo | undefined,
-): ScorecardInfo | undefined {
-    if (!data) {
-        return data
-    }
-
+    data: ScorecardInfo,
+): ScorecardInfo {
     return {
         ...data,
         scorecardGroups: _.orderBy(

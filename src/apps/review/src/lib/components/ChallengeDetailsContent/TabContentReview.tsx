@@ -7,7 +7,7 @@ import { maxBy } from 'lodash'
 import { TableLoading } from '~/apps/admin/src/lib'
 import { IsRemovingType } from '~/apps/admin/src/lib/models'
 
-import { SubmissionInfo } from '../../models'
+import { MappingReviewAppeal, SubmissionInfo } from '../../models'
 import { TableNoRecord } from '../TableNoRecord'
 import { TableReviewAppeals } from '../TableReviewAppeals'
 import { useRole, useRoleProps } from '../../hooks'
@@ -23,6 +23,7 @@ interface Props {
     isLoadingReview: boolean
     isDownloading: IsRemovingType
     downloadSubmission: (submissionId: string) => void
+    mappingReviewAppeal: MappingReviewAppeal // from review id to appeal info
 }
 
 export const TabContentReview: FC<Props> = (props: Props) => {
@@ -53,6 +54,7 @@ export const TabContentReview: FC<Props> = (props: Props) => {
             firstSubmissions={firstSubmissions}
             isDownloading={props.isDownloading}
             downloadSubmission={props.downloadSubmission}
+            mappingReviewAppeal={props.mappingReviewAppeal}
         />
     ) : (
         <TableReviewAppealsForSubmitter
@@ -60,6 +62,7 @@ export const TabContentReview: FC<Props> = (props: Props) => {
             firstSubmissions={firstSubmissions}
             isDownloading={props.isDownloading}
             downloadSubmission={props.downloadSubmission}
+            mappingReviewAppeal={props.mappingReviewAppeal}
         />
     )
 }

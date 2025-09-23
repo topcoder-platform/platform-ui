@@ -1,7 +1,6 @@
 import moment from 'moment'
 
 import { TABLE_DATE_FORMAT } from '../../config/index.config'
-import { MockAppealResults } from '../../mock-datas'
 
 import { AppealResult } from './AppealResult.model'
 import { BackendReview } from './BackendReview.model'
@@ -16,6 +15,7 @@ export interface ReviewResult {
     reviewerHandleColor: string
     createdAt: string | Date
     createdAtString?: string // this field is calculated at frontend
+    resourceId: string
 }
 
 /**
@@ -60,11 +60,12 @@ export function convertBackendReviewToReviewResult(
         : undefined
 
     return {
-        appeals: MockAppealResults, // use mock data
+        appeals: [],
         createdAt,
         createdAtString,
-        reviewerHandle: 'Ghostar', // use mock data
-        reviewerHandleColor: '#C9AB00', // use mock data
+        resourceId: data.resourceId,
+        reviewerHandle: '',
+        reviewerHandleColor: '#2a2a2a',
         score: data.finalScore,
     }
 }

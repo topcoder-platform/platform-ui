@@ -53,7 +53,7 @@ export function convertBackendSubmissionToSubmissionInfo(
         memberId: data.memberId,
         review:
             data.review && data.review[0]
-                ? convertBackendReviewToReviewInfo(data.review[0], data)
+                ? convertBackendReviewToReviewInfo(data.review[0])
                 : undefined,
         reviews: data.review.map(convertBackendReviewToReviewResult),
     }

@@ -88,7 +88,7 @@ export const reviewRoutes: ReadonlyArray<PlatformRoute> = [
                             {
                                 element: <ScorecardDetailsPage />,
                                 id: 'scorecard-details-page',
-                                route: 'scorecard-details/:scorecardId',
+                                route: 'scorecard-details/:submissionId/review/:resourceId',
                             },
                         ],
                         element: <ChallengeDetailContainer />,

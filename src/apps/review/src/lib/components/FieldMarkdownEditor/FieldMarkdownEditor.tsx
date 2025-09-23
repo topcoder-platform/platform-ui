@@ -40,6 +40,7 @@ interface Props {
     onBlur?: () => void
     error?: string
     showBorder?: boolean
+    disabled?: boolean
 }
 const errorMessages = {
     fileTooLarge:
@@ -806,6 +807,7 @@ export const FieldMarkdownEditor: FC<Props> = (props: Props) => {
         <div
             className={classNames(styles.container, props.className, {
                 [styles.isError]: !!props.error,
+                [styles.disabled]: !!props.disabled,
                 [styles.showBorder]: !!props.showBorder,
             })}
         >
