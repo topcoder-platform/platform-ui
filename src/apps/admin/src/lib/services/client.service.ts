@@ -1,11 +1,15 @@
 import _ from 'lodash'
 
 import { EnvironmentConfig } from '~/config'
-import { xhrGetAsync, xhrPatchAsync, xhrPostAsync } from '~/libs/core'
+import {
+    xhrGetAsync,
+    xhrGetPaginatedAsync,
+    xhrPatchAsync,
+    xhrPostAsync,
+} from '~/libs/core'
 
 import {
     adjustClientInfoResponse,
-    ApiV3Response,
     ClientInfo,
     FormEditClient,
     RequestCommonDataType,
@@ -29,16 +33,18 @@ export const searchClients = async (
     content: ClientInfo[]
     totalPages: number
 }> => {
-    const data = await xhrGetAsync<ApiV3Response<ClientInfo[]>>(
-        `${EnvironmentConfig.API.V3}/clients?${createFilterPageSortQuery(
+    const { data, totalPages }: {
+        data: ClientInfo[]
+        totalPages: number
+    } = await xhrGetPaginatedAsync<ClientInfo[]>(
+        `${EnvironmentConfig.API.V6}/clients?${createFilterPageSortQuery(
             criteria,
             pageAndSort,
         )}`,
     )
-    const totalCount = data.result.metadata.totalCount
     return {
-        content: data.result.content.map(adjustClientInfoResponse),
-        totalPages: Math.ceil(totalCount / pageAndSort.limit),
+        content: data.map(adjustClientInfoResponse),
+        totalPages,
     }
 }
 
@@ -50,10 +56,10 @@ export const searchClients = async (
 export const findClientById = async (
     clientId: number | string,
 ): Promise<ClientInfo> => {
-    const data = await xhrGetAsync<ApiV3Response<ClientInfo>>(
-        `${EnvironmentConfig.API.V3}/clients/${clientId}`,
+    const data = await xhrGetAsync<ClientInfo>(
+        `${EnvironmentConfig.API.V6}/clients/${clientId}`,
     )
-    return adjustClientInfoResponse(data.result.content)
+    return adjustClientInfoResponse(data)
 }
 
 /**
@@ -95,9 +101,9 @@ export const createClient = async (
         {
             param: RequestCommonDataType
         },
-        ApiV3Response<ClientInfo>
-    >(`${EnvironmentConfig.API.V3}/clients`, createClientRequestData(data))
-    return resultData.result.content
+        ClientInfo
+    >(`${EnvironmentConfig.API.V6}/clients`, createClientRequestData(data))
+    return resultData
 }
 
 /**
@@ -114,10 +120,10 @@ export const editClient = async (
         {
             param: RequestCommonDataType
         },
-        ApiV3Response<ClientInfo>
+        ClientInfo
     >(
-        `${EnvironmentConfig.API.V3}/clients/${clientId}`,
+        `${EnvironmentConfig.API.V6}/clients/${clientId}`,
         createClientRequestData(data),
     )
-    return resultData.result.content
+    return resultData
 }

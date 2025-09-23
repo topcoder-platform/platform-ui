@@ -147,7 +147,7 @@ export const UsersFilters: FC<Props> = props => {
                     Tips:
                     <br />
                     - Wildcard(*) is available for partial matching. (e.g.
-                    ChrisB*, chris*@appirio.com)
+                    ChrisB*, chris*@wipro.com)
                     <br />
                     - Maximum number of searched results is 500.
                 </p>

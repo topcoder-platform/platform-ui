@@ -56,7 +56,7 @@ export const QUESTION_RESPONSE_TYPE_MAPPING_DISPLAY: { [key: string]: string }
     REQUIRED: 'Required',
 }
 export const TABLE_DATE_FORMAT = 'MMM DD, HH:mm A'
-export const TABLE_PAGINATION_ITEM_PER_PAGE = 10
+export const TABLE_PAGINATION_ITEM_PER_PAGE = 100
 export const THRESHOLD_SHORT_TIME = 2 * 60 * 60 * 1000 // in miliseconds
 
 export const ORDINAL_SUFFIX = new Map([[1, '1st'], [2, '2nd'], [3, '3rd']])

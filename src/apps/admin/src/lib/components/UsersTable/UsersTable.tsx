@@ -6,6 +6,7 @@ import _ from 'lodash'
 import classNames from 'classnames'
 import moment from 'moment'
 
+import { EnvironmentConfig } from '~/config'
 import { useWindowSize, WindowSize } from '~/libs/shared'
 import {
     Button,
@@ -26,13 +27,11 @@ import { DialogEditUserTerms } from '../DialogEditUserTerms'
 import { DialogEditUserStatus } from '../DialogEditUserStatus'
 import { DialogUserStatusHistory } from '../DialogUserStatusHistory'
 import { DropdownMenuButton } from '../common/DropdownMenuButton'
-import { useOnComponentDidMount, useTableFilterLocal, useTableFilterLocalProps } from '../../hooks'
+import { useTableFilterLocal, useTableFilterLocalProps } from '../../hooks'
 import { TABLE_DATE_FORMAT } from '../../../config/index.config'
 import { SSOLoginProvider, UserInfo } from '../../models'
 import { Pagination } from '../common/Pagination'
 import { ReactComponent as RectangleListRegularIcon } from '../../assets/i/rectangle-list-regular-icon.svg'
-import { fetchSSOLoginProviders } from '../../services'
-import { handleError } from '../../utils'
 
 import styles from './UsersTable.module.scss'
 
@@ -50,7 +49,10 @@ interface Props {
 
 export const UsersTable: FC<Props> = props => {
     const [colWidth, setColWidth] = useState<colWidthType>({})
-    const [ssoLoginProviders, setSsoLoginProviders] = useState<SSOLoginProvider[]>([])
+    const ssoLoginProviders = useMemo<SSOLoginProvider[]>(
+        () => EnvironmentConfig.ADMIN_SSO_LOGIN_PROVIDERS.map(provider => ({ ...provider })),
+        [],
+    )
     const [showDialogEditUserEmail, setShowDialogEditUserEmail] = useState<
         UserInfo | undefined
     >()
@@ -369,16 +371,6 @@ export const UsersTable: FC<Props> = props => {
         ],
         [isTablet, isMobile],
     )
-
-    useOnComponentDidMount(() => {
-        fetchSSOLoginProviders()
-            .then(result => {
-                setSsoLoginProviders(result)
-            })
-            .catch(e => {
-                handleError(e)
-            })
-    })
 
     return (
         <div className={classNames(styles.container, props.className)}>

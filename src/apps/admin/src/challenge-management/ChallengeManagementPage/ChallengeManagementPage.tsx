@@ -52,7 +52,7 @@ const defaultFilter: ChallengeFilterCriteria = {
  * Challenge Management page.
  */
 export const ChallengeManagementPage: FC = () => {
-    const pageTitle = 'v5 Challenge Management'
+    const pageTitle = 'Challenge Management'
     const [filterCriteria, setFilterCriteria]: [
         ChallengeFilterCriteria,
         Dispatch<SetStateAction<ChallengeFilterCriteria>>,

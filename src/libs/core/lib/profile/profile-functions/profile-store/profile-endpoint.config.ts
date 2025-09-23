@@ -14,7 +14,7 @@ export function verify(): string {
 export function countryLookupURL(): string {
     // API URL is hardcoded here because there is no DEV API for this endpoint
     // TODO: add DEV API eventually and/or add a config for this
-    return 'https://api.topcoder.com/v3/members/lookup/countries'
+    return `${EnvironmentConfig.API.V6}/members/lookup/countries`
 }
 
 export function gamificationAPIBaseURL(): string {
@@ -30,7 +30,7 @@ export function memberStatsDistroURL(): string {
 }
 
 export function memberModifyURL(): string {
-    return `${EnvironmentConfig.API.V3}/users`
+    return `${EnvironmentConfig.API.V6}/users`
 }
 
 export function memberEmailPreferencesURL(): string {

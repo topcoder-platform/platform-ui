@@ -2,6 +2,23 @@
 import { get } from 'lodash'
 
 import { getReactEnv } from './react-env'
+import type { SSOLoginProviderConfig } from './global-config.model'
+
+function parseSSOLoginProviders(
+    raw: string | undefined,
+): SSOLoginProviderConfig[] {
+    if (!raw) {
+        return []
+    }
+
+    try {
+        const parsed = JSON.parse(raw) as SSOLoginProviderConfig[]
+        return Array.isArray(parsed) ? parsed : []
+    } catch (error) {
+        // Swallow parsing issues and fall back to an empty list to keep boot resilient
+        return []
+    }
+}
 
 export const ENV = getReactEnv<'prod' | 'dev' | 'qa'>('HOST_ENV', 'dev')
 
@@ -43,6 +60,12 @@ export const SPRIG = { ENVIRONMENT_ID: getReactEnv<string | undefined>('SPRIG_EN
 export const VANILLA_FORUM = {
     V2_URL: 'https://vanilla.topcoder-dev.com/api/v2',
 }
+
+const ADMIN_SSO_LOGIN_PROVIDERS_ENV = '[{"ssoLoginProviderId":1,"name":"okta-customer","type":"samlp"}]'
+
+export const ADMIN_SSO_LOGIN_PROVIDERS: SSOLoginProviderConfig[] = parseSSOLoginProviders(
+    ADMIN_SSO_LOGIN_PROVIDERS_ENV,
+)
 
 export const STRIPE = {
     API_KEY: getReactEnv<string>('STRIPE_API_KEY', ''),

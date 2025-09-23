@@ -129,7 +129,7 @@ export const addChallengeResource = async (data: {
     challengeId: string
     memberHandle: string
     roleId: string
-}): Promise<unknown> => xhrPostAsync(`${EnvironmentConfig.API.V5}/resources`, data)
+}): Promise<unknown> => xhrPostAsync(`${resourceBaseUrl}/resources`, data)
 
 /**
  * Gets the challenge details by id.
