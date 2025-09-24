@@ -1,9 +1,7 @@
-import { TcUniNavFn } from 'universal-navigation'
+import { getTcUniNav } from '~/apps/platform/src/utils'
 
 import { CES_SURVEY_ID } from '../config'
 
-declare let tcUniNav: TcUniNavFn
-
 export function triggerSurvey(): void {
-    tcUniNav('triggerFlow', CES_SURVEY_ID, {})
+    getTcUniNav()?.('triggerFlow', CES_SURVEY_ID, {})
 }

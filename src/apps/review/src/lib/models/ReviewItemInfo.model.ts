@@ -19,6 +19,7 @@ export interface ReviewItemInfo {
     finalAnswer?: string
     scorecardQuestionId: string
     reviewItemComments: ReviewItemComment[]
+    managerComment?: string
 }
 
 /**
@@ -29,10 +30,6 @@ export interface ReviewItemInfo {
 export function adjustReviewItemInfo(
     data: ReviewItemInfo,
 ): ReviewItemInfo {
-    if (!data) {
-        return data
-    }
-
     const createdAt = data.createdAt ? new Date(data.createdAt) : data.createdAt
 
     return {

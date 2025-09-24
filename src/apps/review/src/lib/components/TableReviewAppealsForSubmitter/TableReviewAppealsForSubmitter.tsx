@@ -12,10 +12,10 @@ import { TableMobile } from '~/apps/admin/src/lib/components/common/TableMobile'
 import { Table, TableColumn } from '~/libs/ui'
 import { IsRemovingType } from '~/apps/admin/src/lib/models'
 
-import { ChallengeDetailContextModel, ReviewResult, SubmissionInfo } from '../../models'
+import { ChallengeDetailContextModel, MappingReviewAppeal, ReviewResult, SubmissionInfo } from '../../models'
 import { TableWrapper } from '../TableWrapper'
 import { getFinalScore } from '../../utils'
-import { WITHOUT_APPEAL } from '../../../config/index.config'
+import { NO_RESOURCE_ID, WITHOUT_APPEAL } from '../../../config/index.config'
 import { ChallengeDetailContext } from '../../contexts'
 
 import styles from './TableReviewAppealsForSubmitter.module.scss'
@@ -26,6 +26,7 @@ interface Props {
     firstSubmissions?: SubmissionInfo
     isDownloading: IsRemovingType
     downloadSubmission: (submissionId: string) => void
+    mappingReviewAppeal: MappingReviewAppeal // from review id to appeal info
 }
 
 export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
@@ -68,7 +69,7 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
                 label: 'Review Score',
                 renderer: (data: SubmissionInfo) => (
                     <Link
-                        to={`./../scorecard-details/${data.id}?viewMode=true`}
+                        to={`./../scorecard-details/${data.id}/review/${data.review?.resourceId || NO_RESOURCE_ID}`}
                         className={styles.textBlue}
                     >
                         {finalScore(data.reviews)}
@@ -104,14 +105,17 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
                         },
                         {
                             label: 'Score',
-                            renderer: (data: SubmissionInfo) => (
-                                <Link
-                                    to={`./../scorecard-details/${data.id}?viewMode=true`}
-                                    className={styles.textBlue}
-                                >
-                                    {review.score}
-                                </Link>
-                            ),
+                            renderer: (data: SubmissionInfo) => {
+                                const resourceId = data.review?.resourceId || NO_RESOURCE_ID
+                                return (
+                                    <Link
+                                        to={`./../scorecard-details/${data.id}/review/${resourceId}`}
+                                        className={styles.textBlue}
+                                    >
+                                        {review.score}
+                                    </Link>
+                                )
+                            },
                             type: 'element',
                         },
                     ]
@@ -127,29 +131,58 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
                         {
                             className: styles.tableCellNoWrap,
                             label: 'Appeals',
-                            renderer: (data: SubmissionInfo) => (
-                                <>
-                                    [
-                                    <Link
-                                        className={classNames(
-                                            styles.appealsLink,
-                                            'last-element',
-                                        )}
-                                        to={`./../scorecard-details/${data.id}?viewMode=true`}
-                                    >
-                                        <span className={styles.textBlue}>
-                                            0
+                            renderer: (data: SubmissionInfo) => {
+                                if (!data.review || !data.review.id) {
+                                    return (
+                                        <span className={styles.notReviewed}>
+                                            Not Reviewed
                                         </span>
-                                        {' '}
-                                        /
-                                        {' '}
-                                        <span className={styles.textBlue}>
-                                            {review.appeals?.length}
+                                    )
+                                }
+
+                                const appealInfo = props.mappingReviewAppeal[data.review.id]
+                                if (!appealInfo) {
+                                    return (
+                                        <span className={styles.notReviewed}>
+                                            loading...
                                         </span>
-                                    </Link>
-                                    ]
-                                </>
-                            ),
+                                    )
+                                }
+
+                                const resourceId = data.review?.resourceId || NO_RESOURCE_ID
+                                const reviewStatus = (data.review?.status ?? '').toUpperCase()
+                                const hasAppeals = appealInfo.totalAppeals > 0
+
+                                if (!hasAppeals && reviewStatus !== 'COMPLETED') {
+                                    return undefined
+                                }
+
+                                return (
+                                    <>
+                                        [
+                                        <Link
+                                            className={classNames(
+                                                styles.appealsLink,
+                                                'last-element',
+                                            )}
+                                            to={
+                                                `./../scorecard-details/${data.id}/review/${resourceId}`
+                                            }
+                                        >
+                                            <span className={styles.textBlue}>
+                                                {appealInfo.finishAppeals}
+                                            </span>
+                                            {' '}
+                                            /
+                                            {' '}
+                                            <span className={styles.textBlue}>
+                                                {appealInfo.totalAppeals}
+                                            </span>
+                                        </Link>
+                                        ]
+                                    </>
+                                )
+                            },
                             type: 'element',
                         },
                     ] as TableColumn<SubmissionInfo>[]
@@ -163,6 +196,7 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
             challengeInfo,
             props.isDownloading,
             props.downloadSubmission,
+            props.mappingReviewAppeal,
         ],
     )
 

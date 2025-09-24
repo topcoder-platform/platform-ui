@@ -50,7 +50,7 @@ export const formReviewsSchema: Yup.ObjectSchema<FormReviews> = Yup.object({
                                             },
                                         ),
                                     id: Yup.string()
-                                        .required('Id is mandatory'),
+                                        .optional(),
                                     index: Yup.number()
                                         .required('Index is mandatory'),
                                     type: Yup.string()

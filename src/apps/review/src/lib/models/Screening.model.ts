@@ -5,7 +5,7 @@ import { TABLE_DATE_FORMAT } from '../../config/index.config'
 import { BackendSubmission } from './BackendSubmission.model'
 import { BackendResource } from './BackendResource.model'
 
-type ScreeningResult = 'PASS' | 'NO PASS' | '' | 'N/A'
+type ScreeningResult = 'PASS' | 'NO PASS' | '' | '-'
 
 export interface Screening {
     challengeId: string
@@ -36,7 +36,7 @@ export function convertBackendSubmissionToScreening(
             .format(TABLE_DATE_FORMAT)
         : undefined
 
-    let result: ScreeningResult = 'N/A'
+    let result: ScreeningResult = '-'
     // update screening result base on the submission status
     if (data.status.toString() === 'FAILED_SCREENING') {
         result = 'NO PASS'

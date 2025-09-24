@@ -28,6 +28,11 @@ $error-line-height: 14px;
         }
     }
 
+    &.disabled {
+        opacity: 0.5;
+        pointer-events: none;
+    }
+
     :global {
         .EasyMDEContainer {
             height: 100px;

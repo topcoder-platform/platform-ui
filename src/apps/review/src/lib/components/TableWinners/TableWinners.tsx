@@ -91,12 +91,7 @@ export const TableWinners: FC<Props> = (props: Props) => {
             {
                 label: 'Review Score',
                 renderer: (data: ProjectResult) => (
-                    <Link
-                        to={`./../scorecard-details/${data.submissionId}?viewMode=true`}
-                        className={styles.textBlue}
-                    >
-                        {data.finalScore}
-                    </Link>
+                    <span>{data.finalScore}</span>
                 ),
                 type: 'element',
             },
@@ -116,7 +111,7 @@ export const TableWinners: FC<Props> = (props: Props) => {
                             label: 'Score',
                             renderer: (data: ProjectResult) => (
                                 <Link
-                                    to={`./../scorecard-details/${data.submissionId}?viewMode=true`}
+                                    to={`./../scorecard-details/${data.submissionId}/review/${review.resourceId}`}
                                     className={styles.textBlue}
                                 >
                                     {data.reviews[index]?.score}
@@ -143,7 +138,10 @@ export const TableWinners: FC<Props> = (props: Props) => {
                                         [
                                         <Link
                                             className={classNames(styles.appealsLink, 'last-element')}
-                                            to={`./../scorecard-details/${data.submissionId}?viewMode=true`}
+                                            to={
+                                                `./../scorecard-details/${data.submissionId}`
+                                                + `/review/${review.resourceId}`
+                                            }
                                         >
                                             <span className={styles.textBlue}>
                                                 0

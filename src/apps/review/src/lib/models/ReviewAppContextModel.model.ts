@@ -4,12 +4,12 @@
 import { TokenModel } from '~/libs/core'
 
 import { BackendResourceRole } from './BackendResourceRole.model'
-import { MyRoleInfosMappingType } from './MyRoleInfosMappingType.type'
+import { ChallengeRealtiveInfosMapping } from './ChallengeRealtiveInfosMapping.type'
 
 export interface ReviewAppContextModel {
-    myRoleInfosMapping: MyRoleInfosMappingType // from challenge id to list of my role
-    loadMyRoleInfos: (challengeId: string) => void
-    cancelLoadMyRoleInfos: () => void
+    challengeRelativeInfosMapping: ChallengeRealtiveInfosMapping // from challenge id to challenge relative infos
+    loadChallengeRelativeInfos: (challengeId: string) => void
+    cancelLoadChallengeRelativeInfos: () => void
     loginUserInfo: TokenModel | undefined
     resourceRoleMapping?: {
         [key: string]: BackendResourceRole

@@ -2,7 +2,7 @@
  * Form Reviews
  */
 export interface FormReviewComment {
-    id: string
+    id?: string
     content?: string
     type?: string
     index: number

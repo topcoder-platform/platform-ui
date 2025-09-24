@@ -13,11 +13,11 @@ import { Table, TableColumn } from '~/libs/ui'
 import { IsRemovingType } from '~/apps/admin/src/lib/models'
 
 import { TableWrapper } from '../TableWrapper'
-import { ChallengeDetailContextModel, SubmissionInfo } from '../../models'
+import { ChallengeDetailContextModel, MappingReviewAppeal, SubmissionInfo } from '../../models'
 import { ProgressBar } from '../ProgressBar'
-import { ADMIN, APPROVAL, COPILOT, WITHOUT_APPEAL } from '../../../config/index.config'
+import { APPROVAL, NO_RESOURCE_ID, REVIEWER, WITHOUT_APPEAL } from '../../../config/index.config'
 import { useRole, useRoleProps } from '../../hooks'
-import { getHandleUrl } from '../../utils'
+import { getHandleUrl, isReviewPhase } from '../../utils'
 import { ChallengeDetailContext } from '../../contexts'
 
 import styles from './TableReviewAppeals.module.scss'
@@ -29,6 +29,7 @@ interface Props {
     firstSubmissions?: SubmissionInfo
     isDownloading: IsRemovingType
     downloadSubmission: (submissionId: string) => void
+    mappingReviewAppeal: MappingReviewAppeal // from review id to appeal info
 }
 
 export const TableReviewAppeals: FC<Props> = (props: Props) => {
@@ -93,6 +94,14 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                 {
                     label: 'Review Date',
                     renderer: (data: SubmissionInfo) => {
+                        if (!data.review || !data.review.id) {
+                            return (
+                                <span className={styles.notReviewed}>
+                                    Not Reviewed
+                                </span>
+                            )
+                        }
+
                         if (data.review) {
                             return (
                                 <span>
@@ -109,7 +118,7 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                 {
                     label: 'Score',
                     renderer: (data: SubmissionInfo) => {
-                        if (!data.review) {
+                        if (!data.review || !data.review.id) {
                             return (
                                 <span className={styles.notReviewed}>
                                     Not Reviewed
@@ -133,9 +142,11 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                             )
                         }
 
+                        const resourceId = data.review?.resourceId || NO_RESOURCE_ID
+
                         return (
                             <Link
-                                to={`./../scorecard-details/${data.id}?viewMode=true`}
+                                to={`./../scorecard-details/${data.id}/review/${resourceId}`}
                                 className={styles.textBlue}
                             >
                                 {data.review.initialScore}
@@ -146,27 +157,37 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                 },
 
             ]
-            const actionColumns = !includes([COPILOT, ADMIN], actionChallengeRole) ? [
+            const actionColumns = actionChallengeRole === REVIEWER && isReviewPhase(challengeInfo) ? [
                 {
                     className: styles.textBlue,
                     label: 'Action',
-                    renderer: (data: SubmissionInfo) => (
-                        <Link
-                            to={`./../scorecard-details/${data.id}`}
-                            className={classNames(styles.submit, 'last-element')}
-                        >
-                            <i
-                                className={
-                                    data.review?.initialScore !== undefined
-                                        ? 'icon-reopen'
-                                        : 'icon-upload'
-                                }
-                            />
-                            {data.review?.initialScore !== undefined
-                                ? 'Reopen Review'
-                                : 'Submit Review'}
-                        </Link>
-                    ),
+                    renderer: (data: SubmissionInfo) => {
+                        const haveReview
+                            = data.review
+                            && !!data.review.id
+                        const resourceId = data.review?.resourceId || NO_RESOURCE_ID
+
+                        return (
+                            <Link
+                                to={`./../scorecard-details/${data.id}/review/${resourceId}`}
+                                className={classNames(
+                                    styles.submit,
+                                    'last-element',
+                                )}
+                            >
+                                <i
+                                    className={
+                                        haveReview
+                                            ? 'icon-reopen'
+                                            : 'icon-upload'
+                                    }
+                                />
+                                {haveReview
+                                    ? 'Reopen Review'
+                                    : 'Submit Review'}
+                            </Link>
+                        )
+                    },
                     type: 'element',
                 },
             ] : []
@@ -188,23 +209,44 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
             return [...initalColumns, {
                 label: 'Appeals',
                 renderer: (data: SubmissionInfo) => {
-                    if (!data.review) {
-                        return <></>
+                    if (!data.review || !data.review.id) {
+                        return (
+                            <span className={styles.notReviewed}>
+                                Not Reviewed
+                            </span>
+                        )
+                    }
+
+                    const appealInfo = props.mappingReviewAppeal[data.review.id]
+                    if (!appealInfo) {
+                        return (
+                            <span className={styles.notReviewed}>
+                                loading...
+                            </span>
+                        )
+                    }
+
+                    const resourceId = data.review?.resourceId || NO_RESOURCE_ID
+                    const reviewStatus = (data.review?.status ?? '').toUpperCase()
+                    const hasAppeals = appealInfo.totalAppeals > 0
+
+                    if (!hasAppeals && reviewStatus !== 'COMPLETED') {
+                        return undefined
                     }
 
                     return (
                         <>
                             [
                             <Link
-                                to={`./../scorecard-details/${data.id}?viewMode=true`}
+                                to={`./../scorecard-details/${data.id}/review/${resourceId}`}
                                 className={styles.appealsLink}
                             >
-                                <span className={styles.textBlue}>0</span>
+                                <span className={styles.textBlue}>{appealInfo.finishAppeals}</span>
                                 {' '}
                                 /
                                 {' '}
                                 <span className={styles.textBlue}>
-                                    {data.review?.appealResuls.length}
+                                    {appealInfo.totalAppeals}
                                 </span>
                             </Link>
                             ]
@@ -221,6 +263,7 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
             actionChallengeRole,
             props.isDownloading,
             props.downloadSubmission,
+            props.mappingReviewAppeal,
         ],
     )
 

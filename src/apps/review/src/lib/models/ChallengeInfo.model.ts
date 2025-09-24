@@ -5,6 +5,7 @@ import { TABLE_DATE_FORMAT } from '../../config/index.config'
 import { formatDurationDate } from '../utils'
 
 import { SubmissionInfo } from './SubmissionInfo.model'
+import { BackendPhase } from './BackendPhase.model'
 
 export type ChallengeType =
         | 'Design'
@@ -33,10 +34,23 @@ export interface ChallengeInfo {
     index?: number // this field is calculated at frontend
     submissions: SubmissionInfo[]
     type: ChallengeType
+    typeId: string
     track: ChallengeType
     reviewLength?: number
     discussionsUrl?: string // this field is calculated at frontend
     legacyId?: number
+    phases: BackendPhase[]
+    reviewers?: {
+        scorecardId: string
+        isMemberReview: boolean
+        memberReviewerCount: number
+        phaseId: string
+        basePayment: number
+        incrementalPayment: number
+        type: string
+        isAIReviewer: boolean
+    }[]
+    currentPhaseObject?: BackendPhase
 }
 
 /**

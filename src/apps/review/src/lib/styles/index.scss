@@ -154,9 +154,15 @@ $icons: review appeal submission warning error event timer upload reopen 1st 2nd
     padding: $sp-2 $sp-6;
     text-decoration: none;
     transition: all 0.3s ease-in-out;
+    background-color: white;
     &:hover {
         background-color: var(--ButtonColor);
         color: var(--invertButtonColor);
+    }
+    &:disabled {
+        opacity: 0.5;
+        color: var(--ButtonColor);
+        background-color: white;
     }
 }
 
@@ -168,15 +174,26 @@ $icons: review appeal submission warning error event timer upload reopen 1st 2nd
         border-color: var(--Actived);
         background-color: var(--Actived);
     }
+    &:disabled {
+        opacity: 0.5;
+        color: var(--invertButtonColor);
+        background-color: var(--ButtonColor);
+    }
 }
 
 .cancelButton {
     @extend .borderButton;
     border-color: var(--Red);
     color: var(--Red);
+    background-color: white;
     &:hover {
         background-color: var(--Red);
         color: var(--invertButtonColor);
+    }
+    &:disabled {
+        opacity: 0.5;
+        color: var(--Red);
+        background-color: white;
     }
 }
 

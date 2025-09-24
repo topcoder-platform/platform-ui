@@ -13,20 +13,22 @@ import {
     useState,
 } from 'react'
 import { useForm, UseFormReturn } from 'react-hook-form'
-import { NavLink, useNavigate, useSearchParams } from 'react-router-dom'
-import _, { map } from 'lodash'
+import { NavLink, useSearchParams } from 'react-router-dom'
+import { filter, forEach, isEmpty, reduce } from 'lodash'
 import classNames from 'classnames'
 
 import { yupResolver } from '@hookform/resolvers/yup'
+import { TableLoading } from '~/apps/admin/src/lib'
 
-import { useFetchReviews, useFetchReviewsProps } from '../../hooks'
-import { AppealInfo, FormReviews, ReviewInfo, ReviewItemInfo } from '../../models'
+import { useAppNavigate } from '../../hooks'
+import { AppealInfo, FormReviews, MappingAppeal, ReviewInfo, ReviewItemInfo, ScorecardInfo } from '../../models'
 import { ScorecardDetailsHeader } from '../ScorecardDetailsHeader'
 import { ScorecardQuestionEdit } from '../ScorecardQuestionEdit'
 import { ScorecardQuestionView } from '../ScorecardQuestionView'
 import { formReviewsSchema, roundWith2DecimalPlaces } from '../../utils'
 import { ConfirmModal } from '../ConfirmModal'
 import { IconError } from '../../assets/icons'
+import { ReviewItemComment } from '../../models/ReviewItemComment.model'
 
 import styles from './ScorecardDetails.module.scss'
 
@@ -35,25 +37,55 @@ interface Props {
     isEdit: boolean
     onCancelEdit: () => void
     setIsChanged: Dispatch<SetStateAction<boolean>>
+    scorecardInfo?: ScorecardInfo
+    isLoading: boolean
+    reviewInfo?: ReviewInfo
+    isSavingReview: boolean
+    isSavingAppeal: boolean
+    isSavingAppealResponse: boolean
+    isSavingManagerComment: boolean
+    saveReviewInfo: (
+        updatedReview: FormReviews | undefined,
+        fullReview: FormReviews | undefined,
+        committed: boolean,
+        totalScore: number,
+        success: () => void,
+    ) => void
+    mappingAppeals: MappingAppeal
+    addAppeal: (
+        content: string,
+        commentItem: ReviewItemComment,
+        success: () => void,
+    ) => void
+    doDeleteAppeal: (
+        appealInfo: AppealInfo | undefined,
+        success: () => void,
+    ) => void
+    addAppealResponse: (
+        content: string,
+        updatedResponse: string,
+        appeal: AppealInfo,
+        reviewItem: ReviewItemInfo,
+        success: () => void,
+    ) => void
+    addManagerComment: (
+        content: string,
+        updatedResponse: string,
+        reviewItem: ReviewItemInfo,
+        success: () => void,
+    ) => void
 }
 
 export const ScorecardDetails: FC<Props> = (props: Props) => {
+    const scorecardInfo = props.scorecardInfo
+    const isLoading = props.isLoading
+    const reviewInfo = props.reviewInfo
+    const isSavingReview = props.isSavingReview
     const isEdit = props.isEdit
-    const navigate = useNavigate()
+    const navigate = useAppNavigate()
     const [, setSearchParams] = useSearchParams()
     const [isExpand, setIsExpand] = useState<{ [key: string]: boolean }>({})
     const [isShowSaveAsDraftModal, setIsShowSaveAsDraftModal] = useState(false)
-    const { scorecardInfo, appeals, reviewInfo, setReviewInfo }: useFetchReviewsProps
-        = useFetchReviews(isEdit)
-    const mappingAppeals = useMemo<{
-        [reviewItemCommentId: string]: AppealInfo
-    }>(() => {
-        const result: { [key: string]: AppealInfo } = {}
-        _.forEach(appeals, item => {
-            result[item.reviewItemCommentId] = item
-        })
-        return result
-    }, [appeals])
     const mappingReviewInfo = useMemo<{
         [key: string]: {
             item: ReviewItemInfo
@@ -66,7 +98,7 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
                 index: number
             }
         } = {}
-        _.forEach(reviewInfo?.reviewItems ?? [], (item, index) => {
+        forEach(reviewInfo?.reviewItems ?? [], (item, index) => {
             result[item.scorecardQuestionId] = {
                 index,
                 item,
@@ -97,21 +129,21 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
     }, [isDirty, changeHandle])
 
     const errorMessageTop
-        = _.isEmpty(errors) || _.isEmpty(isTouched)
+        = isEmpty(errors) || isEmpty(isTouched)
             ? ''
             : 'There were validation errors. Check below.'
 
     const errorMessageBottom
-        = _.isEmpty(errors) || _.isEmpty(isTouched)
+        = isEmpty(errors) || isEmpty(isTouched)
             ? ''
             : 'There were validation errors. Check above.'
 
     const touchedAllField = useCallback(() => {
         const formData = getValues()
         const isTouchedAll: { [key: string]: boolean } = {}
-        _.forEach(formData.reviews, review => {
+        forEach(formData.reviews, review => {
             isTouchedAll[`reviews.${review.index}.initialAnswer.message`] = true
-            _.forEach(review.comments, comment => {
+            forEach(review.comments, comment => {
                 isTouchedAll[
                     `reviews.${review.index}.comments.${comment.index}.content`
                 ] = true
@@ -125,13 +157,20 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
         [isEdit],
     )
 
-    const onSubmit = useCallback((data: FormReviews) => {
-        reset(data)
-        setSearchParams({ viewMode: 'true' }, { replace: true })
-    }, [reset, setSearchParams])
-
     const [reviewProgress, setReviewProgress] = useState(0)
     const [totalScore, setTotalScore] = useState(0)
+
+    const onSubmit = useCallback((data: FormReviews) => {
+        props.saveReviewInfo(
+            isDirty ? getValues() : undefined,
+            getValues(),
+            true,
+            totalScore,
+            () => {
+                reset(data)
+            },
+        )
+    }, [reset, setSearchParams, totalScore, isDirty])
 
     const recalculateReviewProgress = useCallback(() => {
         const reviewFormDatas = getValues().reviews
@@ -141,7 +180,7 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
         const newReviewProgress
             = reviewFormDatas.length > 0
                 ? Math.round(
-                    (_.filter(reviewFormDatas, review => {
+                    (filter(reviewFormDatas, review => {
                         mapingResult[review.scorecardQuestionId]
                             = review.initialAnswer
                         return !!review.initialAnswer
@@ -152,15 +191,15 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
                 : 0
         setReviewProgress(newReviewProgress)
 
-        const groupsScore = _.reduce(
+        const groupsScore = reduce(
             scorecardInfo?.scorecardGroups ?? [],
             (groupResult, group) => {
                 const groupPoint
-                    = (_.reduce(
+                    = (reduce(
                         group.sections ?? [],
                         (sectionResult, section) => {
                             const sectionPoint
-                                = (_.reduce(
+                                = (reduce(
                                     section.questions ?? [],
                                     (questionResult, question) => {
                                         let questionPoint = 0
@@ -213,7 +252,7 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
 
     useEffect(() => {
         if (reviewInfo) {
-            reset({
+            const newFormData = {
                 reviews: reviewInfo.reviewItems.map(
                     (reviewItem, reviewItemIndex) => ({
                         comments: reviewItem.reviewItemComments.map(
@@ -226,18 +265,19 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
                         ),
                         id: reviewItem.id,
                         index: reviewItemIndex,
-                        initialAnswer: reviewItem.initialAnswer,
+                        initialAnswer: reviewItem.finalAnswer || reviewItem.initialAnswer,
                         scorecardQuestionId: reviewItem.scorecardQuestionId,
                     }),
                 ),
-            })
+            }
+            reset(newFormData)
             recalculateReviewProgress()
         }
     }, [reviewInfo, recalculateReviewProgress, reset])
 
     const expandAll = useCallback(() => {
         setIsExpand(
-            _.reduce(
+            reduce(
                 reviewInfo?.reviewItems ?? [],
                 (result, reviewItem) => ({ ...result, [reviewItem.id]: true }),
                 {},
@@ -247,27 +287,16 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
 
     const back = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
         e.preventDefault()
-        navigate(-1)
+        navigate(-1, {
+            fallback: './../../../../challenge-details',
+        })
     }, [navigate])
 
     const closeHandel = useCallback(() => {
         setIsShowSaveAsDraftModal(false)
     }, [])
 
-    const [isUpdated, setIsUpdated] = useState(false)
-    const updateReviewItem = useCallback((item: ReviewItemInfo) => {
-        const result = map(reviewInfo?.reviewItems, review => {
-            if (review.id === item.id) {
-                return item
-            }
-
-            return review
-        })
-        setReviewInfo({ ...reviewInfo, reviewItems: result } as ReviewInfo)
-        setIsUpdated(true)
-    }, [reviewInfo, setReviewInfo])
-
-    return (
+    return isLoading ? (<TableLoading />) : (
         <div className={classNames(styles.container, props.className)}>
             <ScorecardDetailsHeader
                 isEdit={isEdit}
@@ -343,7 +372,7 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
                                                             if (
                                                                 !reviewItemInfo
                                                             ) {
-                                                                return <></>
+                                                                return undefined
                                                             }
 
                                                             return isEdit ? (
@@ -393,6 +422,7 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
                                                                     setIsTouched={
                                                                         setIsTouched
                                                                     }
+                                                                    disabled={isSavingReview}
                                                                 />
                                                             ) : (
                                                                 <ScorecardQuestionView
@@ -421,10 +451,28 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
                                                                         questionIndex
                                                                     }
                                                                     mappingAppeals={
-                                                                        mappingAppeals
+                                                                        props.mappingAppeals
                                                                     }
-                                                                    updateReviewItem={
-                                                                        updateReviewItem
+                                                                    isSavingAppeal={
+                                                                        props.isSavingAppeal
+                                                                    }
+                                                                    isSavingAppealResponse={
+                                                                        props.isSavingAppealResponse
+                                                                    }
+                                                                    isSavingManagerComment={
+                                                                        props.isSavingManagerComment
+                                                                    }
+                                                                    addAppeal={
+                                                                        props.addAppeal
+                                                                    }
+                                                                    doDeleteAppeal={
+                                                                        props.doDeleteAppeal
+                                                                    }
+                                                                    addAppealResponse={
+                                                                        props.addAppealResponse
+                                                                    }
+                                                                    addManagerComment={
+                                                                        props.addManagerComment
                                                                     }
                                                                 />
                                                             )
@@ -464,9 +512,18 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
                                     type='button'
                                     className='borderButton'
                                     onClick={function onClick() {
-                                        setIsShowSaveAsDraftModal(true)
-                                        reset(getValues())
+                                        props.saveReviewInfo(
+                                            isDirty ? getValues() : undefined,
+                                            getValues(),
+                                            false,
+                                            totalScore,
+                                            () => {
+                                                setIsShowSaveAsDraftModal(true)
+                                                reset(getValues())
+                                            },
+                                        )
                                     }}
+                                    disabled={isSavingReview}
                                 >
                                     Save as Draft
                                 </button>
@@ -476,6 +533,7 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
                                     onClick={function onClick() {
                                         touchedAllField()
                                     }}
+                                    disabled={isSavingReview}
                                 >
                                     Mark as Complete
                                 </button>
@@ -488,23 +546,13 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
                                 <span>{totalScore}</span>
                             </div>
                             <div className={styles.buttons}>
-                                {isUpdated ? (
-                                    <NavLink
-                                        className='filledButton'
-                                        to=''
-                                        onClick={back}
-                                    >
-                                        Save
-                                    </NavLink>
-                                ) : (
-                                    <NavLink
-                                        className='filledButton'
-                                        to=''
-                                        onClick={back}
-                                    >
-                                        Back to Challenge
-                                    </NavLink>
-                                )}
+                                <NavLink
+                                    className='filledButton'
+                                    to=''
+                                    onClick={back}
+                                >
+                                    Back to Challenge
+                                </NavLink>
                             </div>
                         </div>
                     )}
