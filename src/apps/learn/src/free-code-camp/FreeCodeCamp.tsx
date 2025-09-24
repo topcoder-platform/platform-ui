@@ -50,7 +50,6 @@ import {
     getCoursePath,
     getLessonPathFromModule,
 } from '../learn.routes'
-import { LearnConfig } from '../config'
 import { CoursePageContextValue, useCoursePageContext } from '../course-page-wrapper'
 
 import { useCheckAndMarkCourseCompleted } from './hooks/use-mark-course-completed'
@@ -410,7 +409,7 @@ const FreeCodeCamp: FC<{}> = () => {
 
     /**
      * Check if the user accepted the academic honesty policy
-     * and either is not a wipro user or the wipro user has dice enabled.
+     * and either is not a wipro user.
      * if not, redirect user to course details page to accept the policy
      */
     useLayoutEffect(() => {
@@ -421,11 +420,9 @@ const FreeCodeCamp: FC<{}> = () => {
         }
 
         // if the user is logged in,
-        // and the user is a either not wipro user or is a wipro user with dice enabled,
         // and if the user has accepted the academic honesty policy,
         // the user is permitted to take the course, so there's nothing to do.
         if (isLoggedIn
-            && (!LearnConfig.REQUIRE_DICE_ID || !profile?.isWipro || !!profile?.diceEnabled)
             && !!certificateProgress?.academicHonestyPolicyAcceptedAt) {
             return
         }

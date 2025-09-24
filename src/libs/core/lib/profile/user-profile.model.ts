@@ -20,7 +20,6 @@ export interface UserProfile {
     competitionCountryCode: string
     createdAt: number
     description: string
-    diceEnabled: boolean
     email: string
     firstName: string
     handle: string
