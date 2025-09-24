@@ -1,0 +1,49 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+    padding: 0 $sp-8;
+
+    @include ltelg {
+        padding: 0 $sp-4;
+    }
+
+    a {
+        color: $blue-110;
+
+        &:hover {
+            color: $blue-110;
+        }
+    }
+
+    th:first-child {
+        padding-left: 16px !important;
+
+        @include ltemd {
+            padding-left: 5px !important;
+        }
+    }
+}
+
+.blockRightColumn {
+    :global(.TableCell_blockCell) {
+        justify-content: flex-end;
+        text-align: right;
+    }
+}
+
+.blockCellWrap {
+    white-space: break-spaces !important;
+}
+
+.noRecordFound {
+    padding: 16px 16px 32px;
+    text-align: center;
+}
+
+.desktopTable {
+    td {
+        vertical-align: middle;
+    }
+}

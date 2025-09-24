@@ -2,7 +2,10 @@
 import React, { ChangeEvent, useRef } from 'react'
 
 import { Button, IconOutline, InputSelect, InputText } from '~/libs/ui'
-import { InputHandleAutocomplete, MembersAutocompeteResult } from '~/apps/gamification-admin/src/game-lib'
+import {
+    InputHandleAutocomplete,
+    MembersAutocompeteResult,
+} from '~/apps/admin/src/platform/gamification-admin/src/game-lib'
 
 import styles from './FilterBar.module.scss'
 

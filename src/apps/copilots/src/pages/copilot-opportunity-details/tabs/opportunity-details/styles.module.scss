@@ -1,0 +1,43 @@
+@import '@libs/ui/styles/includes';
+
+.subHeading {
+    margin-top: $sp-8;
+}
+
+.content {
+    margin-top: $sp-6;
+    display: flex;
+    flex-direction: row;
+    gap: 100px;
+}
+
+@media (max-width: 767px) {
+    .content {
+        flex-direction: column;
+        gap: 15px;
+    }
+}
+
+.content > div:first-child {
+    flex: 3;
+}
+
+.content > div:last-child {
+    flex: 1;
+}
+
+.skillsContainer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: $sp-2;
+}
+
+.skillPill {
+    background-color: $teal-100;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 10px;
+    white-space: nowrap;
+    font-size: 14px;
+}

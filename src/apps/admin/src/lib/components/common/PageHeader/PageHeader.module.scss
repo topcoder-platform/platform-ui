@@ -1,0 +1,14 @@
+@import '@libs/ui/styles/includes';
+@import '../../../../lib/styles/includes';
+
+.pageHeader {
+    color: $black-100;
+
+    .inner {
+        display: flex;
+        flex-direction: column;
+        margin: 0 auto;
+        box-sizing: border-box;
+        max-width: $xl-max;
+    }
+}

@@ -8,6 +8,7 @@ export interface GlobalConfig {
         V3: string
         V4: string
         V5: string
+        URL: string
     },
     STANDARDIZED_SKILLS_API: string,
     TC_FINANCE_API: string,
@@ -42,6 +43,23 @@ export interface GlobalConfig {
         ACCOUNT_SETTINGS: string
         PROFILES: string
         TALENTSEARCH: string
+    },
+    ADMIN: {
+        CONNECT_URL: string
+        DEFAULT_PAYMENT_TERMS: number
+        DIRECT_URL: string
+        WORK_MANAGER_URL: string
+        ONLINE_REVIEW_URL: string
+        CHALLENGE_URL: string
+        AV_SCAN_SCORER_REVIEW_TYPE_ID: string
+        AGREE_ELECTRONICALLY: string
+        AGREE_FOR_DOCUSIGN_TEMPLATE: string
+        AWS_REGION: string
+        AWS_DMZ_BUCKET: string
+        AWS_CLEAN_BUCKET: string
+        AWS_QUARANTINE_BUCKET: string
+        SUBMISSION_SCAN_TOPIC: string
+        AVSCAN_TOPIC: string
     }
     TROLLEY_WIDGET_ORIGIN: string
 }

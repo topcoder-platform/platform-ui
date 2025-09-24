@@ -1,4 +1,5 @@
 import { FC, FocusEvent } from 'react'
+import { UseFormRegisterReturn } from 'react-hook-form'
 
 import { FormInputAutocompleteOption } from '../form-input-autcomplete-option.enum'
 import { InputWrapper } from '../input-wrapper'
@@ -21,6 +22,8 @@ interface InputTextareaProps {
     readonly spellCheck?: boolean
     readonly tabIndex?: number
     readonly value?: string | number
+    readonly inputControl?: UseFormRegisterReturn
+    readonly classNameWrapper?: string
 }
 
 const InputTextarea: FC<InputTextareaProps> = (props: InputTextareaProps) => (
@@ -35,14 +38,15 @@ const InputTextarea: FC<InputTextareaProps> = (props: InputTextareaProps) => (
         <textarea
             autoComplete={props.autocomplete}
             className={styles['form-input-textarea']}
-            value={props.value ?? ''}
+            value={props.inputControl ? undefined : props.value ?? ''}
             disabled={!!props.disabled}
-            name={props.name}
-            onBlur={props.onBlur}
-            onChange={props.onChange}
             placeholder={props.placeholder}
             spellCheck={!!props.spellCheck}
             tabIndex={props.tabIndex ?? -1}
+            {...(props.inputControl ?? {})}
+            onBlur={props.inputControl ? props.inputControl.onBlur : props.onBlur}
+            onChange={props.inputControl ? props.inputControl.onChange : props.onChange}
+            name={props.inputControl ? props.inputControl.name : props.name}
         />
     </InputWrapper>
 )

@@ -1,0 +1,52 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+    padding: $sp-8 $sp-8 0;
+
+    @include ltelg {
+        padding: $sp-4 $sp-4 0;
+    }
+}
+
+.fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 15px 30px;
+
+    @include ltelg {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    @include ltemd {
+        grid-template-columns: 1fr;
+    }
+}
+
+.field {
+    flex: 1;
+}
+
+.blockBottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 30px;
+    flex-wrap: wrap;
+
+    @include ltemd {
+        flex-direction: column-reverse;
+    }
+}
+
+.textTips {
+    font-size: 14px;
+    color: $black-60;
+}
+
+.blockBtns {
+    display: flex;
+    gap: 15px;
+    justify-content: flex-end;
+}

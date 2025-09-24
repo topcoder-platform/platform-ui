@@ -1,0 +1,49 @@
+.modal {
+    width: 800px !important;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+
+    th:first-child {
+        padding-left: 16px !important;
+    }
+}
+
+.actionButtons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+}
+
+.tableCellNoWrap {
+    white-space: nowrap;
+    text-align: left !important;
+}
+
+.tableCell {
+    white-space: break-spaces !important;
+    text-align: left !important;
+}
+
+.loadingSpinnerContainer {
+    position: relative;
+    height: 100px;
+
+    .spinner {
+        background: none;
+    }
+}
+
+.noRecordFound {
+    padding: 16px 16px 32px;
+    text-align: center;
+}
+
+.desktopTable {
+    td {
+        vertical-align: middle;
+    }
+}

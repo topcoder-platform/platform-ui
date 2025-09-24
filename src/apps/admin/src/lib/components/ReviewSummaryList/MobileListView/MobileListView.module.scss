@@ -1,0 +1,70 @@
+@import '@libs/ui/styles/includes';
+@import '@libs/ui/styles/typography';
+
+.mobileListView {
+    > *:nth-child(odd) {
+        background: $black-5;
+    }
+}
+
+.mobileListViewItemContainer {
+    display: grid;
+    grid-template-columns: 58px 1fr;
+    padding: $sp-4;
+    border-radius: $sp-2;
+    margin-top: 16px;
+    grid-template-columns: 1fr;
+
+    .rows {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+
+        .row1,
+        .row2,
+        .row3,
+        .row4,
+        .row5,
+        .row6,
+        .row7 {
+            display: grid;
+            gap: 16px 32px;
+            align-items: center;
+        }
+
+        .row1 {
+            grid-template-columns: 1fr auto;
+
+            button {
+                white-space: break-spaces;
+            }
+        }
+
+        .row2,
+        .row3,
+        .row4 {
+            grid-template-columns: 1fr auto;
+        }
+
+        .row5 {
+            justify-content: flex-end;
+        }
+    }
+
+    @media (max-width: 567px) {
+        gap: 8px;
+    }
+}
+
+.propertyElement {
+    @extend .medium-subtitle;
+    word-break: break-word;
+    width: fit-content;
+}
+
+.propertyElementLabel {
+  color: $black-60;
+  font-size: 11px;
+  line-height: 14px;
+  text-transform: uppercase;
+}

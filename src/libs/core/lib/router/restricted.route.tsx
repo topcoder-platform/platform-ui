@@ -26,7 +26,7 @@ const RestrictedRoute: FC<RestrictedRouteProps> = props => {
     if (!!profile) {
         if (props.rolesRequired) {
             // if the profile doesn't include all the required roles, show the restricted page
-            if (!profile.roles || props.rolesRequired.some(role => !profile.roles.includes(role))) {
+            if (!profile.roles || !props.rolesRequired.some(role => profile.roles.includes(role))) {
                 return <RestrictedPage />
             }
 

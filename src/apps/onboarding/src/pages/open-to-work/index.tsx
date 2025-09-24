@@ -1,14 +1,13 @@
 import { useNavigate } from 'react-router-dom'
 import { FC, MutableRefObject, useEffect, useRef, useState } from 'react'
 import { connect } from 'react-redux'
-import { pick } from 'lodash'
 import classNames from 'classnames'
 
 import { Button, IconOutline, PageDivider } from '~/libs/ui'
-import { FormInputCheckbox } from '~/apps/self-service/src/components/form-elements'
 
 import { ProgressBar } from '../../components/progress-bar'
 import { updateMemberOpenForWork } from '../../redux/actions/member'
+import FormInputCheckbox from '../../components/form-input-checkbox'
 
 import styles from './styles.module.scss'
 
@@ -104,7 +103,9 @@ export const PageOpenToWorkContent: FC<PageOpenToWorkContentProps> = props => {
     )
 }
 
-const mapStateToProps: any = (state: any) => pick(state.member, 'availableForGigs')
+const mapStateToProps: any = (state: any) => ({
+    availableForGigs: state.member.memberInfo?.availableForGigs,
+})
 
 const mapDispatchToProps: any = {
     updateMemberOpenForWork,

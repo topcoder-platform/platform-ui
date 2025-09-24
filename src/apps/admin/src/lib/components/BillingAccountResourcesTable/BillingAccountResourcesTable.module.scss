@@ -1,0 +1,29 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+    padding: $sp-8 $sp-8 0;
+
+    @include ltelg {
+        padding: $sp-4 $sp-4 0;
+    }
+
+    th:first-child {
+        padding-left: 16px !important;
+
+        @include ltemd {
+            padding-left: 5px !important;
+        }
+    }
+}
+
+.btnDelete {
+    padding-right: 0;
+}
+
+.desktopTable {
+    td {
+        vertical-align: middle;
+    }
+}

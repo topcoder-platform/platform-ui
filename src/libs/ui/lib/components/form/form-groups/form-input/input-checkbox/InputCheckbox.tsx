@@ -14,6 +14,7 @@ interface InputCheckboxProps {
     readonly value?: string
     readonly id?: string
     readonly label?: string
+    readonly onClick?: () => void
 }
 
 const InputCheckbox: FC<InputCheckboxProps> = props => {
@@ -33,6 +34,7 @@ const InputCheckbox: FC<InputCheckboxProps> = props => {
                 value={props.value}
                 id={uid.current}
                 className={classNames(styles.checkbox, styles[`${props.accent ?? 'green'}Accent`])}
+                onClick={props.onClick}
             />
             {props.label && (
                 <label className='body-small' htmlFor={uid.current}>{props.label}</label>

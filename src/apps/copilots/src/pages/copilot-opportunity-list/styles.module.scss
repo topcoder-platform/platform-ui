@@ -1,0 +1,46 @@
+@import '@libs/ui/styles/includes';
+
+.skillsContainer {
+    display: flex;
+    flex-wrap: wrap;
+    overflow: auto;
+    gap: 8px;
+}
+
+@media (max-width: 767px) {
+    .title {
+        min-width: 200px;
+    }
+}
+
+.skillPill {
+    background-color: #d6d6d6;
+    color: #333;
+    padding: 4px 8px;
+    border-radius: 10px;
+    white-space: break-spaces;
+    font-size: 11px;
+}
+
+.status {
+    color: orange;
+    font-weight: bold;
+    padding: 4px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    display: inline-block;
+    text-transform: capitalize;
+}
+
+.activeStatus {
+    color: green;
+}
+
+.type {
+    white-space: nowrap;
+}
+
+.payment {
+    white-space: nowrap;
+}
+

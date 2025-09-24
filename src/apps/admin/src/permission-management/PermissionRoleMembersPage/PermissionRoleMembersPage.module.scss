@@ -1,0 +1,61 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+}
+
+.headerActions {
+    display: flex;
+    gap: 30px;
+    margin-left: auto;
+    margin-top: $sp-2;
+}
+
+.loadingSpinnerContainer {
+    position: relative;
+    height: 100px;
+
+    .spinner {
+        background: none;
+    }
+}
+
+.textTableTitle {
+    font-size: 22px;
+    line-height: 26px;
+    color: $black-100;
+    padding: $sp-8 $sp-8 0;
+
+    @include ltelg {
+        padding: $sp-4 $sp-4 0;
+    }
+}
+
+.noRecordFound {
+    padding: 16px 16px 32px;
+    text-align: center;
+}
+
+.blockTableContainer {
+    position: relative;
+}
+
+.blockActionLoading {
+    position: absolute;
+    width: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    bottom: 0;
+    height: 64px;
+    left: $sp-8;
+
+    .spinner {
+        background: none;
+    }
+
+    @include ltelg {
+        left: $sp-4;
+    }
+}

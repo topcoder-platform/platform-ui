@@ -9,6 +9,22 @@
     word-break: break-word;
     vertical-align: top;
 
+    :global(button.btn-disabled.btn-style-primary.btn-variant-danger) {
+        background-color: $red-120 !important;
+        color: $tc-white !important;
+        opacity: 0.5;
+    }
+
+    :global(button.btn-disabled.btn-style-primary.btn-variant-linkblue) {
+        background-color: $link-blue-dark !important;
+        color: $tc-white !important;
+        opacity: 0.5;
+    }
+
+    :global(button.btn-disabled.btn-variant-tc-green) {
+        opacity: 0.5;
+    }
+
     &:first-child {
         border-radius: $sp-2 0 0 $sp-2;
     }
@@ -27,7 +43,7 @@
     }
 
     &.date,
-    &.money, 
+    &.money,
     &.text {
         white-space: nowrap;
     }
@@ -35,4 +51,20 @@
     &.money {
         text-align: right;
     }
+}
+
+.blockCell {
+    display: flex;
+}
+
+.isExpaned {
+    transform: rotate(90deg);
+}
+
+.clickable {
+    cursor: pointer;
+}
+
+.iconExpand {
+    margin-right: 3px;
 }

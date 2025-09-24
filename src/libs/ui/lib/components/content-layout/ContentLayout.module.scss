@@ -29,10 +29,17 @@
                 border-bottom: $border solid $black-5;
                 margin-top: $sp-2;
                 padding: $sp-6 0;
+                gap: $sp-6;
 
                 h1 {
                     flex: 1;
                     color: $black-100;
+                }
+            }
+
+            @media (max-width: 767px) {
+                .page-header {
+                    flex-direction: column;
                 }
             }
         }

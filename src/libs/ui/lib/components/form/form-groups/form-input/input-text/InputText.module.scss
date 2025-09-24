@@ -3,7 +3,7 @@
 
 .form-input-text {
     @extend .body-small;
-    color: $black-60;
+    color: $black-100;
     box-sizing: border-box;
     border: 0;
     width: 100%;
@@ -57,5 +57,20 @@
                 height: 20px;
             }
         }
+    }
+}
+
+.blockActionLoading {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    top: 0;
+    height: 100%;
+    right: 0;
+    width: 64px;
+
+    .spinner {
+        background: none;
     }
 }

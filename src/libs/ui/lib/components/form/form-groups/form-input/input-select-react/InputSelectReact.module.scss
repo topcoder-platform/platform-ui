@@ -55,7 +55,7 @@
         transition: all 100ms;
         background: none;
         border-radius: 4px;
-        height: $sp-55;
+        min-height: $sp-55;
         margin-top: 2px;
     }
 
@@ -77,7 +77,10 @@
 
     &:global(__single-value) {
         @extend .body-small;
-        color: $black-60;
+        color: $black-100;
+        white-space: break-spaces;
+        word-break: break-all;
+        text-align: left;
     }
 }
 

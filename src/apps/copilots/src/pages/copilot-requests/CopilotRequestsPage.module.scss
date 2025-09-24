@@ -1,0 +1,46 @@
+@import '@libs/ui/styles/includes';
+
+.shortPage {
+    margin-bottom: 250px;
+}
+
+.tableWrapper {
+    margin-bottom: 60px;
+}
+
+.actionButtons {
+    display: flex;
+    gap: $sp-1;
+    align-items: center;
+    padding: $sp-2 0;
+}
+
+.title {
+    max-width: 200px;
+}
+
+@media (max-width: 767px) {
+    .title {
+        min-width: 200px;
+    }
+}
+
+.viewRequestIcon {
+    color: $turq-180;
+    padding: 0 $sp-1;
+    cursor: pointer;
+
+    &:hover {
+        color: $turq-140;
+    }
+}
+
+.opportunityTitle > * {
+    display: block;
+    white-space: pre-wrap;
+}
+
+.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}

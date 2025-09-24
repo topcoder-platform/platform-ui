@@ -1,0 +1,34 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    gap: 15px;
+    padding: $sp-8;
+
+    @include ltelg {
+        padding: $sp-4;
+    }
+}
+
+.blockBtns {
+    display: flex;
+    gap: 15px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+
+.blockFields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 15px 30px;
+    align-items: start;
+
+    @include ltemd {
+        grid-template-columns: 1fr;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+    }
+}

@@ -1,0 +1,68 @@
+@use '../../../styles/typography';
+@import '../../../styles/includes';
+
+.tr {
+    &.clickable {
+        position: relative;
+        cursor: pointer;
+
+        td {
+            border: 1px solid transparent;
+        }
+
+        &:hover {
+            td {
+                border-top-color: $turq-160;
+                border-bottom-color: $turq-160;
+
+                &:first-child {
+                    border-left-color: $turq-160;
+                }
+
+                &:last-child {
+                    border-right-color: $turq-160;
+                }
+            }
+        }
+    }
+}
+
+.isEvenRow {
+    td {
+        background-color: $tc-white;
+    }
+}
+
+.blockExpandContainer {
+    display: table;
+    padding: 8px;
+    width: 100%;
+}
+
+.blockExpandItem {
+    display: table-row;
+    font-size: 14px;
+    line-height: 22px;
+}
+
+.blockExpandTitle {
+    font-weight: bold;
+    padding-right: 0.5em;
+    white-space: nowrap !important;
+    box-sizing: border-box;
+}
+
+.blockExpandCell {
+    display: table-cell;
+}
+
+.blockExpandValue {
+    padding: 0 !important;
+    background-color: white !important;
+    font-weight: 400 !important;
+    white-space: break-spaces !important;
+
+    :global(.TableCell_blockCell) {
+        margin-top: 3px;
+    }
+}

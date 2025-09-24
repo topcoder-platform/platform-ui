@@ -1,0 +1,84 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+}
+
+.loadingSpinnerContainer {
+    position: relative;
+    height: 100px;
+
+    .spinner {
+        background: none;
+    }
+}
+
+.textTableTitle {
+    font-size: 22px;
+    line-height: 26px;
+    color: $black-100;
+    padding: $sp-8 $sp-8 0;
+
+    @include ltelg {
+        padding: $sp-4 $sp-4 0;
+    }
+}
+
+.blockForm {
+    padding: 0 $sp-8 $sp-8;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    position: relative;
+
+    @include ltelg {
+        padding: 0 $sp-4 $sp-4;
+    }
+}
+
+.blockFormFields {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.formRadioBtn {
+    display: flex;
+    gap: 15px;
+}
+
+.blockFieldRadio {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.blockBtns {
+    display: flex;
+    gap: 15px;
+    justify-content: flex-end;
+}
+
+.textRadiosLabel {
+    font-weight: 700;
+}
+
+.blockActionLoading {
+    position: absolute;
+    width: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    bottom: 0;
+    height: 64px;
+    left: $sp-8;
+
+    .spinner {
+        background: none;
+    }
+
+    @include ltelg {
+        left: $sp-4;
+    }
+}

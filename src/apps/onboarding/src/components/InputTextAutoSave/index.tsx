@@ -28,7 +28,7 @@ export interface InputTextProps {
 }
 
 const InputTextAutoSave: FC<InputTextProps> = (props: InputTextProps) => {
-    const [value, setValue] = useState<InputValue>('')
+    const [value, setValue] = useState<InputValue>(props.value || '')
     useEffect(() => {
         setValue(props.value)
     }, [props.value])
@@ -37,6 +37,7 @@ const InputTextAutoSave: FC<InputTextProps> = (props: InputTextProps) => {
         <InputText
             {...props}
             value={value}
+            forceUpdateValue
             onChange={function onChange(event: FocusEvent<HTMLInputElement>) {
                 setValue(event.target.value)
             }}

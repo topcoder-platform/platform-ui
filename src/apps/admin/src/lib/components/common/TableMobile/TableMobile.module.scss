@@ -1,0 +1,68 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    .isEvenRow {
+        td {
+            background-color: $tc-white;
+        }
+
+        .top {
+            padding-top: 32px;
+        }
+
+        .bottom {
+            padding-bottom: 32px;
+        }
+    }
+
+    .isOddRow {
+        .top {
+            padding-top: 16px;
+        }
+
+        .bottom {
+            padding-bottom: 16px;
+        }
+    }
+
+    td {
+        border-radius: 0 !important;
+        padding: 8px 16px;
+
+        &.topLeft {
+            border-top-left-radius: 8px !important;
+        }
+        &.topRight {
+            border-top-right-radius: 8px !important;
+        }
+        &.bottomLeft {
+            border-bottom-left-radius: 8px !important;
+        }
+        &.bottomRight {
+            border-bottom-right-radius: 8px !important;
+        }
+    }
+}
+
+.blockCell {
+    white-space: break-spaces !important;
+
+    &.blockCellLabel {
+        white-space: nowrap !important;
+    }
+}
+
+.blockCellLabel {
+    font-weight: 400;
+    font-size: 11px;
+    line-height: 14px;
+    text-transform: uppercase;
+    white-space: nowrap !important;
+}
+
+.blockCellLastValue {
+    :global(.TableCell_blockCell) {
+        justify-content: flex-end;
+        text-align: right;
+    }
+}

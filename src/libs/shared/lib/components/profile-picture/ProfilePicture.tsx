@@ -29,8 +29,8 @@ const ProfilePicture: FC<ProfilePictureProps> = props => {
         >
             {!loaded && (
                 <span className={styles.profileInitials}>
-                    {props.member.firstName.slice(0, 1)}
-                    {props.member.lastName.slice(0, 1)}
+                    {props.member?.firstName?.slice(0, 1)}
+                    {props.member?.lastName?.slice(0, 1)}
                 </span>
             )}
             {props.member.photoURL && !error && (
