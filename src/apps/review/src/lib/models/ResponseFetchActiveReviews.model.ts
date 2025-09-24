@@ -1,9 +1,7 @@
-import { ChallengeInfo } from './ChallengeInfo.model'
+import { BackendMyReviewAssignment } from './BackendMyReviewAssignment.model'
 
 /**
- * Response for fetch active review
+ * Response for fetch active review assignments.
+ * The endpoint returns a flat list without pagination metadata.
  */
-export interface ResponseFetchActiveReviews {
-    data: ChallengeInfo[]
-    totalPages: number
-}
+export type ResponseFetchActiveReviews = BackendMyReviewAssignment[]

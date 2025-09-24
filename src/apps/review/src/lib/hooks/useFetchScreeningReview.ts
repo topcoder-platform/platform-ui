@@ -125,7 +125,6 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
                         ...challengeSubmission,
                         review: [matchingReview],
                     })
-                    loadResourceAppeal(matchingReview.id)
                 } else {
                     validReviews.push({
                         ...challengeSubmission,
@@ -147,6 +146,16 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
             }
         })
     }, [challengeSubmissions, resourceMemberIdMapping, reviewerIds])
+
+    useEffect(() => {
+        forEach(review, item => {
+            const reviewId = item.review?.id
+
+            if (reviewId) {
+                loadResourceAppeal(reviewId)
+            }
+        })
+    }, [loadResourceAppeal, review])
 
     // get review progress from challenge review
     const reviewProgress = useMemo(() => {

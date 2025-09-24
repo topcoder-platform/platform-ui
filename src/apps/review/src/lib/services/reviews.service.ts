@@ -9,7 +9,6 @@ import {
     xhrDeleteAsync,
     xhrGetAsync,
     xhrGetBlobAsync,
-    xhrGetPaginatedAsync,
     xhrPatchAsync,
     xhrPostAsync,
 } from '~/libs/core'
@@ -19,8 +18,8 @@ import {
     AppealInfo,
     BackendAppeal,
     BackendAppealResponse,
-    BackendChallengeInfo,
     BackendContactRequest,
+    BackendMyReviewAssignment,
     BackendProjectResult,
     BackendRequestAppeal,
     BackendRequestAppealResponse,
@@ -32,9 +31,7 @@ import {
     BackendReviewItem,
     BackendScorecard,
     BackendSubmission,
-    ChallengeInfo,
     convertBackendAppeal,
-    convertBackendChallengeInfo,
     convertBackendProjectResultToProjectResult,
     convertBackendScorecard,
     FormContactManager,
@@ -46,44 +43,24 @@ import {
 const challengeBaseUrl = `${EnvironmentConfig.API.V6}`
 
 /**
- * Fetch active reviews
+ * Fetch active review assignments for the current member.
  *
- * @param page current page
- * @param perPage number of item per page
- * @param challengeTypeId challenge type id
- * @param challengeTrackId challenge track id
- * @param memberId member id
- * @returns resolves to the array of active reviews
+ * @param challengeTypeId optional challenge type filter
+ * @returns resolves to the array of active review assignments
  */
 export const fetchActiveReviews = async (
-    page: number,
-    perPage: number,
-    challengeTypeId: string,
-    challengeTrackId: string,
-    memberId: string,
+    challengeTypeId?: string,
 ): Promise<ResponseFetchActiveReviews> => {
-    const results = await xhrGetPaginatedAsync<BackendChallengeInfo[]>(
-        `${challengeBaseUrl}/challenges/?status=ACTIVE&${qs.stringify({
-            ...(challengeTypeId ? {
-                typeId: challengeTypeId,
-            } : {}),
-            ...(challengeTrackId ? {
-                trackId: challengeTrackId,
-            } : {}),
-            memberId,
-            page,
-            perPage,
-        })}`,
+    const queryString = qs.stringify(
+        challengeTypeId
+            ? { challengeType: challengeTypeId }
+            : {},
+        { addQueryPrefix: true },
     )
-    return {
-        data: results.data.map(
-            (item, index) => convertBackendChallengeInfo(
-                item,
-                perPage * (page - 1) + index + 1,
-            ) as ChallengeInfo,
-        ),
-        totalPages: results.totalPages,
-    }
+
+    return xhrGetAsync<BackendMyReviewAssignment[]>(
+        `${challengeBaseUrl}/my-reviews${queryString}`,
+    )
 }
 
 /**

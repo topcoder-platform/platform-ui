@@ -1,7 +1,7 @@
 /**
  * Table Active Reviews.
  */
-import { Dispatch, FC, SetStateAction, useCallback, useMemo } from 'react'
+import { FC, useCallback, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { bind, lowerCase, noop } from 'lodash'
 import classNames from 'classnames'
@@ -10,12 +10,9 @@ import { MobileTableColumn } from '~/apps/admin/src/lib/models/MobileTableColumn
 import { useWindowSize, WindowSize } from '~/libs/shared'
 import { TableMobile } from '~/apps/admin/src/lib/components/common/TableMobile'
 import { Table, TableColumn } from '~/libs/ui'
-import { Pagination } from '~/apps/admin/src/lib'
 
 import {
-    BackendResourceRole,
-    ChallengeInfo,
-    ChallengeRealtiveInfosMapping,
+    ActiveReviewAssignment,
 } from '../../models'
 import { TableWrapper } from '../TableWrapper'
 import { ProgressBar } from '../ProgressBar'
@@ -24,14 +21,7 @@ import styles from './TableActiveReviews.module.scss'
 
 interface Props {
     className?: string
-    datas: ChallengeInfo[]
-    resourceRoleMapping?: {
-        [key: string]: BackendResourceRole
-    }
-    challengeRelativeInfosMapping: ChallengeRealtiveInfosMapping // from challenge id to list of my role
-    totalPages: number
-    page: number
-    setPage: Dispatch<SetStateAction<number>>
+    datas: ActiveReviewAssignment[]
 }
 
 export const TableActiveReviews: FC<Props> = (props: Props) => {
@@ -40,7 +30,7 @@ export const TableActiveReviews: FC<Props> = (props: Props) => {
     const isTablet = useMemo(() => screenWidth <= 1000, [screenWidth])
 
     const redirect = useCallback(
-        (data: ChallengeInfo, e: React.MouseEvent<HTMLAnchorElement>) => {
+        (data: ActiveReviewAssignment, e: React.MouseEvent<HTMLAnchorElement>) => {
             e.preventDefault()
             navigate(`${data.id}/challenge-details`)
         },
@@ -49,7 +39,7 @@ export const TableActiveReviews: FC<Props> = (props: Props) => {
         ],
     )
 
-    const columns = useMemo<TableColumn<ChallengeInfo>[]>(
+    const columns = useMemo<TableColumn<ActiveReviewAssignment>[]>(
         () => [
             {
                 className: styles.tableCell,
@@ -61,7 +51,7 @@ export const TableActiveReviews: FC<Props> = (props: Props) => {
                 className: classNames(styles.textBlue, styles.tableBreakCell, styles.tableCell),
                 label: 'Project',
                 propertyName: 'name',
-                renderer: (data: ChallengeInfo) => (
+                renderer: (data: ActiveReviewAssignment) => (
                     <Link
                         to={`${data.id}/challenge-details`}
                         onClick={bind(redirect, this, data)}
@@ -75,32 +65,24 @@ export const TableActiveReviews: FC<Props> = (props: Props) => {
                 className: classNames(styles.tableCell),
                 label: 'My Role',
                 propertyName: 'role',
-                renderer: (data: ChallengeInfo) => {
-                    let myRoles = ['']
-                    const challengeRelativeInfos = props.challengeRelativeInfosMapping[data.id]
-                    if (!props.resourceRoleMapping || !challengeRelativeInfos) {
-                        myRoles = ['loading...']
-                    } else {
-                        myRoles = challengeRelativeInfos.myRoles
-                            .map(myRoleInfo => props.resourceRoleMapping?.[myRoleInfo.roleId]?.name)
-                            .filter(item => !!item) as string[]
-                    }
-
-                    return (
-                        <div className={styles.blockMyRoles}>
-                            {myRoles.map(item => (
-                                <span key={item}>{item}</span>
-                            ))}
-                        </div>
-                    )
-                },
+                renderer: (data: ActiveReviewAssignment) => (
+                    <div className={styles.blockMyRoles}>
+                        {(
+                            data.resourceRoles.length
+                                ? data.resourceRoles
+                                : ['--']
+                        ).map(role => (
+                            <span key={role}>{role}</span>
+                        ))}
+                    </div>
+                ),
                 type: 'element',
             },
             {
                 className: styles.tableCell,
                 label: 'Phase',
                 propertyName: 'currentPhase',
-                renderer: (data: ChallengeInfo) => (
+                renderer: (data: ActiveReviewAssignment) => (
                     <div className={styles.phase}>
                         <i
                             className={`icon-${
@@ -123,7 +105,7 @@ export const TableActiveReviews: FC<Props> = (props: Props) => {
                 className: styles.tableCell,
                 label: 'Time Left',
                 propertyName: 'timeLeft',
-                renderer: (data: ChallengeInfo) => (
+                renderer: (data: ActiveReviewAssignment) => (
                     <span
                         className={styles.timeLeft}
                         style={{
@@ -135,7 +117,17 @@ export const TableActiveReviews: FC<Props> = (props: Props) => {
                         }}
                     >
                         <i className={`icon-${data.timeLeftStatus}`} />
-                        {data.timeLeft}
+                        {(() => {
+                            const rawTimeLeft = data.timeLeft?.trim()
+                            const normalizedLate = rawTimeLeft
+                                && data.timeLeftStatus === 'error'
+                                ? rawTimeLeft.replace(/^[+-]/, '').trim()
+                                : ''
+
+                            return normalizedLate
+                                ? `Late by ${normalizedLate}`
+                                : data.timeLeft
+                        })()}
                     </span>
                 ),
                 type: 'element',
@@ -144,28 +136,25 @@ export const TableActiveReviews: FC<Props> = (props: Props) => {
                 className: styles.tableCell,
                 label: 'Review Progress',
                 propertyName: 'reviewProgress',
-                renderer: (data: ChallengeInfo) => {
-                    const challengeRelativeInfos = props.challengeRelativeInfosMapping[data.id]
-                    const reviewProgress = challengeRelativeInfos?.reviewProgress
-
-                    return reviewProgress !== undefined ? (
-                        <div className='last-element'>
-                            {reviewProgress !== null && (
-                                <ProgressBar
-                                    progress={reviewProgress}
-                                    progressWidth='80px'
-                                />
-                            )}
-                        </div>
-                    ) : (<span>loading...</span>)
-                },
+                renderer: (data: ActiveReviewAssignment) => (
+                    <div className='last-element'>
+                        {typeof data.reviewProgress === 'number' ? (
+                            <ProgressBar
+                                progress={data.reviewProgress}
+                                progressWidth='80px'
+                            />
+                        ) : (
+                            <span>--</span>
+                        )}
+                    </div>
+                ),
                 type: 'element',
             },
         ],
-        [redirect, props.resourceRoleMapping, props.challengeRelativeInfosMapping],
+        [redirect],
     )
 
-    const columnsMobile = useMemo<MobileTableColumn<ChallengeInfo>[][]>(
+    const columnsMobile = useMemo<MobileTableColumn<ActiveReviewAssignment>[][]>(
         () => columns.map(
             column => [
                 {
@@ -185,7 +174,7 @@ export const TableActiveReviews: FC<Props> = (props: Props) => {
                     ...column,
                     mobileType: 'last-value',
                 },
-            ] as MobileTableColumn<ChallengeInfo>[],
+            ] as MobileTableColumn<ActiveReviewAssignment>[],
         ),
         [columns],
     )
@@ -210,11 +199,6 @@ export const TableActiveReviews: FC<Props> = (props: Props) => {
                     className='enhanced-table-desktop'
                 />
             )}
-            <Pagination
-                page={props.page}
-                totalPages={props.totalPages}
-                onPageChange={props.setPage}
-            />
         </TableWrapper>
     )
 }

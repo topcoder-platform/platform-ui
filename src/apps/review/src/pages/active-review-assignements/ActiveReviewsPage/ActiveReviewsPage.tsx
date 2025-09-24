@@ -2,7 +2,7 @@
  * Active Reviews Page.
  */
 import { FC, useContext, useEffect, useMemo, useState } from 'react'
-import { forEach, toString } from 'lodash'
+import { forEach } from 'lodash'
 import Select, { SingleValue } from 'react-select'
 import classNames from 'classnames'
 
@@ -34,11 +34,7 @@ interface Props {
 
 export const ActiveReviewsPage: FC<Props> = (props: Props) => {
     const {
-        cancelLoadChallengeRelativeInfos,
         loginUserInfo,
-        challengeRelativeInfosMapping,
-        resourceRoleMapping,
-        loadChallengeRelativeInfos,
     }: ReviewAppContextModel = useContext(ReviewAppContext)
 
     const { challengeTypes, isLoading: isLoadingChallengeTypeOnly }: useFetchChallengeTypesProps
@@ -75,16 +71,10 @@ export const ActiveReviewsPage: FC<Props> = (props: Props) => {
         SingleValue<SelectOptionChallengeType>
     >(CHALLENGE_TYPE_SELECT_ALL_OPTION)
     const {
-        totalPages,
-        page,
-        setPage,
         activeReviews,
         isLoading: isLoadingActiveReviews,
         loadActiveReviews,
-    }: useFetchActiveReviewsProps = useFetchActiveReviews(
-        loadChallengeRelativeInfos,
-        cancelLoadChallengeRelativeInfos,
-    )
+    }: useFetchActiveReviewsProps = useFetchActiveReviews()
 
     const breadCrumb = useMemo(
         () => [{ index: 1, label: 'My Active Challenges' }],
@@ -93,11 +83,7 @@ export const ActiveReviewsPage: FC<Props> = (props: Props) => {
 
     useEffect(() => {
         if (challengeType && loginUserInfo) {
-            loadActiveReviews(
-                toString(challengeType.challengeTypeId ?? ''),
-                toString(challengeType.challengeTrackId ?? ''),
-                toString(loginUserInfo.userId),
-            )
+            loadActiveReviews(challengeType.challengeTypeId)
         }
     }, [challengeType, loadActiveReviews, loginUserInfo])
 
@@ -128,13 +114,8 @@ export const ActiveReviewsPage: FC<Props> = (props: Props) => {
                         <TableNoRecord className={styles.blockTable} />
                     ) : (
                         <TableActiveReviews
-                            totalPages={totalPages}
-                            page={page}
-                            setPage={setPage}
                             datas={activeReviews}
                             className={styles.blockTable}
-                            resourceRoleMapping={resourceRoleMapping}
-                            challengeRelativeInfosMapping={challengeRelativeInfosMapping}
                         />
                     )}
                 </>

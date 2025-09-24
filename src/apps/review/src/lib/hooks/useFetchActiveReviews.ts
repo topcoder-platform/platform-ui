@@ -1,127 +1,139 @@
 /**
- * Fetch active review info
+ * Fetch active review assignments hook.
  */
 
+import moment from 'moment'
+import { uniq } from 'lodash'
 import {
-    Dispatch,
-    SetStateAction,
     useCallback,
-    useEffect,
+    useRef,
     useState,
 } from 'react'
-import { forEach } from 'lodash'
 
 import { handleError } from '~/libs/shared'
-import {
-    useTableFilterBackend,
-    useTableFilterBackendProps,
-} from '~/apps/admin/src/lib/hooks'
 
-import { ChallengeInfo } from '../models'
+import {
+    ActiveReviewAssignment,
+    BackendMyReviewAssignment,
+    ResponseFetchActiveReviews,
+} from '../models'
 import { fetchActiveReviews } from '../services'
-import { TABLE_PAGINATION_ITEM_PER_PAGE } from '../../config/index.config'
+import { formatDurationDate } from '../utils'
+import { TABLE_DATE_FORMAT } from '../../config/index.config'
 
 export interface useFetchActiveReviewsProps {
-    totalPages: number
-    page: number
-    setPage: Dispatch<SetStateAction<number>>
-    activeReviews: ChallengeInfo[]
+    activeReviews: ActiveReviewAssignment[]
     isLoading: boolean
-    loadActiveReviews: (
-        challengeTypeId: string,
-        challengeTrackId: string,
-        memberId: string,
-    ) => void
+    loadActiveReviews: (challengeTypeId?: string) => void
+}
+
+const transformAssignments = (
+    assignments: ResponseFetchActiveReviews,
+): ActiveReviewAssignment[] => {
+    const assignmentsByChallenge = new Map<string, BackendMyReviewAssignment[]>()
+
+    assignments.forEach(item => {
+        const existing = assignmentsByChallenge.get(item.challengeId)
+        if (existing) {
+            existing.push(item)
+        } else {
+            assignmentsByChallenge.set(item.challengeId, [item])
+        }
+    })
+
+    const now = new Date()
+    let index = 1
+    const mapped: ActiveReviewAssignment[] = []
+
+    assignmentsByChallenge.forEach(items => {
+        const base = items[0]
+        const currentPhaseEndDate = base.currentPhaseEndDate
+            ? new Date(base.currentPhaseEndDate)
+            : null
+        const timeMetadata = currentPhaseEndDate
+            ? formatDurationDate(currentPhaseEndDate, now)
+            : undefined
+
+        const resourceRoles = uniq(
+            items
+                .map(item => item.resourceRoleName)
+                .filter((role): role is string => Boolean(role)),
+        )
+
+        const reviewProgressValues = items
+            .map(item => item.reviewProgress)
+            .filter((value): value is number => typeof value === 'number')
+
+        const aggregatedReviewProgress = reviewProgressValues.length
+            ? Math.round(
+                reviewProgressValues.reduce((total, value) => total + value, 0)
+                / reviewProgressValues.length,
+            )
+            : null
+
+        mapped.push({
+            id: base.challengeId,
+            name: base.challengeName,
+            currentPhase: base.currentPhaseName,
+            currentPhaseEndDate,
+            currentPhaseEndDateString: currentPhaseEndDate
+                ? moment(currentPhaseEndDate)
+                    .local()
+                    .format(TABLE_DATE_FORMAT)
+                : undefined,
+            timeLeft: timeMetadata?.durationString,
+            timeLeftColor: timeMetadata?.durationColor,
+            timeLeftStatus: timeMetadata?.durationStatus,
+            reviewProgress: aggregatedReviewProgress,
+            index: index++,
+            resourceRoles,
+            challengeTypeId: base.challengeTypeId,
+            challengeTypeName: base.challengeTypeName,
+        })
+    })
+
+    return mapped
 }
 
 /**
- * Fetch active reviews
- * @param loadChallengeRelativeInfos load my role ids
- * @param cancelLoadChallengeRelativeInfos cancel load my role ids
- * @returns active reviews
+ * Fetch active review assignments.
+ * @returns active review assignments
  */
-export function useFetchActiveReviews(
-    loadChallengeRelativeInfos: (challengeId: string) => void,
-    cancelLoadChallengeRelativeInfos: () => void,
-): useFetchActiveReviewsProps {
-    const [totalPages, setTotalPages] = useState<number>(1)
+export function useFetchActiveReviews(): useFetchActiveReviewsProps {
+    const [activeReviews, setActiveReviews]
+        = useState<ActiveReviewAssignment[]>([])
     const [isLoading, setIsLoading] = useState(false)
-    const [activeReviews, setActiveReviews] = useState<ChallengeInfo[]>([])
-
-    const {
-        page,
-        setPage,
-        setFilterCriteria,
-    }: useTableFilterBackendProps<{
-        challengeTypeId?: string
-        challengeTrackId?: string
-        memberId?: string
-    }> = useTableFilterBackend<{
-        challengeTypeId?: string
-        challengeTrackId?: string
-        memberId?: string
-    }>((pageRequest, sortRequest, filterCriteria, success, fail) => {
-        if (
-            filterCriteria?.challengeTypeId !== undefined
-            && filterCriteria?.challengeTrackId !== undefined
-            && filterCriteria?.memberId !== undefined
-        ) {
-            setIsLoading(true)
-            fetchActiveReviews(
-                pageRequest,
-                TABLE_PAGINATION_ITEM_PER_PAGE,
-                filterCriteria.challengeTypeId,
-                filterCriteria.challengeTrackId,
-                filterCriteria.memberId,
-            )
-                .then(results => {
-                    setTotalPages(results.totalPages)
-                    setActiveReviews(results.data)
-                    setIsLoading(false)
-                    success()
-                })
-                .catch(e => {
-                    handleError(e)
-                    setIsLoading(false)
-                    fail()
-                })
-        } else {
-            fail()
-        }
-    }, {})
+    const latestRequestKeyRef = useRef<string>('')
 
     const loadActiveReviews = useCallback(
-        (
-            challengeTypeId: string,
-            challengeTrackId: string,
-            memberId: string,
-        ) => {
-            setFilterCriteria({
-                challengeTrackId,
-                challengeTypeId,
-                memberId,
-            })
+        async (challengeTypeId?: string) => {
+            const requestKey = challengeTypeId ?? ''
+            latestRequestKeyRef.current = requestKey
+            setIsLoading(true)
+
+            try {
+                const response = await fetchActiveReviews(challengeTypeId)
+                if (latestRequestKeyRef.current !== requestKey) {
+                    return
+                }
+                setActiveReviews(transformAssignments(response))
+            } catch (error) {
+                if (latestRequestKeyRef.current === requestKey) {
+                    handleError(error)
+                }
+            } finally {
+                if (latestRequestKeyRef.current === requestKey) {
+                    setIsLoading(false)
+                }
+            }
         },
-        [setFilterCriteria],
+        [],
     )
-
-    useEffect(() => {
-        forEach(activeReviews, challengeInfo => {
-            loadChallengeRelativeInfos(challengeInfo.id)
-        })
-
-        return () => {
-            // clear queue of currently loading my role ids after exit ui
-            cancelLoadChallengeRelativeInfos()
-        }
-    }, [activeReviews])
 
     return {
         activeReviews,
         isLoading,
         loadActiveReviews,
-        page,
-        setPage,
-        totalPages,
     }
 }
+

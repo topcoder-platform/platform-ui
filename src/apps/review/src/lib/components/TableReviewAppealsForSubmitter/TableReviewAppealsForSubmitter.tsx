@@ -150,6 +150,12 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
                                 }
 
                                 const resourceId = data.review?.resourceId || NO_RESOURCE_ID
+                                const reviewStatus = (data.review?.status ?? '').toUpperCase()
+                                const hasAppeals = appealInfo.totalAppeals > 0
+
+                                if (!hasAppeals && reviewStatus !== 'COMPLETED') {
+                                    return null
+                                }
                                 return (
                                     <>
                                         [

@@ -18,6 +18,7 @@ export interface ReviewInfo {
     createdAtString?: string // this field is calculated at frontend
     updatedAt: string | Date
     updatedAtString?: string // this field is calculated at frontend
+    status?: string | null
     initialScore?: number
     finalScore?: number
     reviewItems: ReviewItemInfo[]
@@ -104,6 +105,7 @@ export function convertBackendReviewToReviewInfo(
         committed: data.committed,
         createdAt,
         createdAtString,
+        status: data.status,
         finalScore: data.finalScore,
         id: data.id,
         initialScore: data.initialScore,
