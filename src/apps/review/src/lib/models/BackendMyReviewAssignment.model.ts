@@ -12,4 +12,3 @@ export interface BackendMyReviewAssignment {
     resourceRoleName: string
     reviewProgress: number | null
 }
-

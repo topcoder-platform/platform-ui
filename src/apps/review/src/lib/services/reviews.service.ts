@@ -53,7 +53,7 @@ export const fetchActiveReviews = async (
 ): Promise<ResponseFetchActiveReviews> => {
     const queryString = qs.stringify(
         challengeTypeId
-            ? { challengeType: challengeTypeId }
+            ? { challengeTypeId }
             : {},
         { addQueryPrefix: true },
     )

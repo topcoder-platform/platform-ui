@@ -231,7 +231,7 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                     const hasAppeals = appealInfo.totalAppeals > 0
 
                     if (!hasAppeals && reviewStatus !== 'COMPLETED') {
-                        return null
+                        return undefined
                     }
 
                     return (

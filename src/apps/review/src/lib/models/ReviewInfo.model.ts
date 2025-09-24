@@ -105,7 +105,6 @@ export function convertBackendReviewToReviewInfo(
         committed: data.committed,
         createdAt,
         createdAtString,
-        status: data.status,
         finalScore: data.finalScore,
         id: data.id,
         initialScore: data.initialScore,
@@ -120,6 +119,7 @@ export function convertBackendReviewToReviewInfo(
             )
             : 0,
         scorecardId: '',
+        status: data.status,
         updatedAt,
         updatedAtString,
     }

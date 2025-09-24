@@ -2,13 +2,13 @@
  * Fetch active review assignments hook.
  */
 
-import moment from 'moment'
 import { uniq } from 'lodash'
 import {
     useCallback,
     useRef,
     useState,
 } from 'react'
+import moment from 'moment'
 
 import { handleError } from '~/libs/shared'
 
@@ -49,7 +49,7 @@ const transformAssignments = (
         const base = items[0]
         const currentPhaseEndDate = base.currentPhaseEndDate
             ? new Date(base.currentPhaseEndDate)
-            : null
+            : undefined
         const timeMetadata = currentPhaseEndDate
             ? formatDurationDate(currentPhaseEndDate, now)
             : undefined
@@ -69,11 +69,14 @@ const transformAssignments = (
                 reviewProgressValues.reduce((total, value) => total + value, 0)
                 / reviewProgressValues.length,
             )
-            : null
+            : undefined
+
+        const currentIndex = index
+        index += 1
 
         mapped.push({
-            id: base.challengeId,
-            name: base.challengeName,
+            challengeTypeId: base.challengeTypeId,
+            challengeTypeName: base.challengeTypeName,
             currentPhase: base.currentPhaseName,
             currentPhaseEndDate,
             currentPhaseEndDateString: currentPhaseEndDate
@@ -81,14 +84,14 @@ const transformAssignments = (
                     .local()
                     .format(TABLE_DATE_FORMAT)
                 : undefined,
+            id: base.challengeId,
+            index: currentIndex,
+            name: base.challengeName,
+            resourceRoles,
+            reviewProgress: aggregatedReviewProgress,
             timeLeft: timeMetadata?.durationString,
             timeLeftColor: timeMetadata?.durationColor,
             timeLeftStatus: timeMetadata?.durationStatus,
-            reviewProgress: aggregatedReviewProgress,
-            index: index++,
-            resourceRoles,
-            challengeTypeId: base.challengeTypeId,
-            challengeTypeName: base.challengeTypeName,
         })
     })
 
@@ -116,6 +119,7 @@ export function useFetchActiveReviews(): useFetchActiveReviewsProps {
                 if (latestRequestKeyRef.current !== requestKey) {
                     return
                 }
+
                 setActiveReviews(transformAssignments(response))
             } catch (error) {
                 if (latestRequestKeyRef.current === requestKey) {
@@ -136,4 +140,3 @@ export function useFetchActiveReviews(): useFetchActiveReviewsProps {
         loadActiveReviews,
     }
 }
-

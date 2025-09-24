@@ -10,10 +10,9 @@ export interface ActiveReviewAssignment {
     timeLeft?: string
     timeLeftColor?: string
     timeLeftStatus?: string
-    reviewProgress: number | null
+    reviewProgress?: number
     index: number
     resourceRoles: string[]
     challengeTypeId: string
     challengeTypeName: string
 }
-

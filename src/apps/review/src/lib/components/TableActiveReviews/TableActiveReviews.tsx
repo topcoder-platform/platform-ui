@@ -121,7 +121,8 @@ export const TableActiveReviews: FC<Props> = (props: Props) => {
                             const rawTimeLeft = data.timeLeft?.trim()
                             const normalizedLate = rawTimeLeft
                                 && data.timeLeftStatus === 'error'
-                                ? rawTimeLeft.replace(/^[+-]/, '').trim()
+                                ? rawTimeLeft.replace(/^[+-]/, '')
+                                    .trim()
                                 : ''
 
                             return normalizedLate
