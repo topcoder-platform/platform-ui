@@ -2,7 +2,7 @@
  * Challenge Details Page.
  */
 import { FC, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useLocation, useSearchParams } from 'react-router-dom'
 import { kebabCase } from 'lodash'
 import classNames from 'classnames'
 
@@ -25,7 +25,11 @@ import { fetchTabs } from '../../../lib/services'
 import { ChallengeDetailContextModel, SelectOption } from '../../../lib/models'
 import { TAB } from '../../../config/index.config'
 import { getHandleUrl } from '../../../lib/utils'
-import { activeReviewAssigmentsRouteId, rootRoute } from '../../../config/routes.config'
+import {
+    activeReviewAssigmentsRouteId,
+    pastReviewAssignmentsRouteId,
+    rootRoute,
+} from '../../../config/routes.config'
 
 import styles from './ChallengeDetailsPage.module.scss'
 
@@ -35,6 +39,7 @@ interface Props {
 
 export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
     const [searchParams, setSearchParams] = useSearchParams()
+    const location = useLocation()
 
     // get challenge info from challenge detail context
     const {
@@ -55,18 +60,34 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
 
     const [tabItems, setTabItems] = useState<SelectOption[]>([])
     const [selectedTab, setSelectedTab] = useState<string>('')
+    const isPastReviewDetail = useMemo(
+        () => location.pathname.includes(`/${pastReviewAssignmentsRouteId}/`),
+        [location.pathname],
+    )
+    const listRouteId = isPastReviewDetail
+        ? pastReviewAssignmentsRouteId
+        : activeReviewAssigmentsRouteId
+    const listLabel = isPastReviewDetail
+        ? 'Past Review Assignments'
+        : 'Active Reviews'
+    const listPath = `${rootRoute}/${listRouteId}/`
     const breadCrumb = useMemo(
         () => [
             {
                 index: 1,
-                label: 'Active Reviews',
-                path: `${rootRoute}/${activeReviewAssigmentsRouteId}/`,
+                label: listLabel,
+                path: listPath,
             },
             ...(isLoadingChallengeInfo
                 ? []
                 : [{ index: 2, label: challengeInfo?.name ?? '' }]),
         ],
-        [challengeInfo, isLoadingChallengeInfo],
+        [
+            challengeInfo,
+            isLoadingChallengeInfo,
+            listLabel,
+            listPath,
+        ],
     )
 
     const switchTab = useCallback((tab: string) => {
@@ -113,6 +134,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                             <ChallengePhaseInfo
                                 challengeInfo={challengeInfo}
                                 reviewProgress={reviewProgress}
+                                variant={isPastReviewDetail ? 'past' : 'active'}
                             />
                         )}
                         <ChallengeLinks />

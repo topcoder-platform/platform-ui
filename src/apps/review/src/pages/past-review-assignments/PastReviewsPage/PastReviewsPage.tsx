@@ -1,14 +1,22 @@
 /**
  * Past Reviews Page.
  */
-import { FC, useContext, useEffect, useMemo, useState } from 'react'
+import {
+    FC,
+    useCallback,
+    useContext,
+    useEffect,
+    useMemo,
+    useState,
+} from 'react'
 import { forEach } from 'lodash'
 import Select, { SingleValue } from 'react-select'
 import classNames from 'classnames'
 
-import { TableLoading } from '~/apps/admin/src/lib'
+import { Pagination, TableLoading } from '~/apps/admin/src/lib'
 
 import {
+    DEFAULT_PAST_REVIEWS_PER_PAGE,
     useFetchChallengeTracks,
     useFetchChallengeTracksProps,
     useFetchChallengeTypes,
@@ -74,6 +82,7 @@ export const PastReviewsPage: FC<Props> = (props: Props) => {
         pastReviews,
         isLoading: isLoadingPastReviews,
         loadPastReviews,
+        pagination,
     }: useFetchPastReviewsProps = useFetchPastReviews()
 
     const breadCrumb = useMemo(
@@ -81,11 +90,28 @@ export const PastReviewsPage: FC<Props> = (props: Props) => {
         [],
     )
 
+    const selectedChallengeTypeId = challengeType?.challengeTypeId
+
     useEffect(() => {
         if (challengeType && loginUserInfo) {
-            loadPastReviews(challengeType.challengeTypeId)
+            loadPastReviews({
+                challengeTypeId: selectedChallengeTypeId,
+                page: 1,
+                perPage: DEFAULT_PAST_REVIEWS_PER_PAGE,
+            })
         }
-    }, [challengeType, loadPastReviews, loginUserInfo])
+    }, [challengeType, loadPastReviews, loginUserInfo, selectedChallengeTypeId])
+
+    const handlePageChange = useCallback(
+        (nextPage: number) => {
+            loadPastReviews({
+                challengeTypeId: selectedChallengeTypeId,
+                page: nextPage,
+                perPage: DEFAULT_PAST_REVIEWS_PER_PAGE,
+            })
+        },
+        [loadPastReviews, selectedChallengeTypeId],
+    )
 
     return (
         <PageWrapper
@@ -108,17 +134,23 @@ export const PastReviewsPage: FC<Props> = (props: Props) => {
 
             {isLoadingPastReviews ? (
                 <TableLoading />
+            ) : pastReviews.length === 0 ? (
+                <TableNoRecord className={styles.blockTable} />
             ) : (
                 <>
-                    {pastReviews.length === 0 ? (
-                        <TableNoRecord className={styles.blockTable} />
-                    ) : (
-                        <TableActiveReviews
-                            datas={pastReviews}
-                            className={styles.blockTable}
-                            hideStatusColumns
-                            disableNavigation
-                        />
+                    <TableActiveReviews
+                        datas={pastReviews}
+                        className={styles.blockTable}
+                        hideStatusColumns
+                    />
+                    {pagination.totalPages > 1 && (
+                        <div className={styles.pagination}>
+                            <Pagination
+                                page={pagination.page}
+                                totalPages={pagination.totalPages}
+                                onPageChange={handlePageChange}
+                            />
+                        </div>
                     )}
                 </>
             )}

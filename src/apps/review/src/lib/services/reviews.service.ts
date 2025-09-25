@@ -66,21 +66,31 @@ export const fetchActiveReviews = async (
 /**
  * Fetch past review assignments for the current member.
  *
- * @param challengeTypeId optional challenge type filter
+ * @param params optional filter and pagination params
  * @returns resolves to the array of past review assignments
  */
-export const fetchPastReviews = async (
-    challengeTypeId?: string,
-): Promise<ResponseFetchActiveReviews> => {
+export interface FetchPastReviewsParams {
+    challengeTypeId?: string
+    page?: number
+    perPage?: number
+}
+
+export const fetchPastReviews = async ({
+    challengeTypeId,
+    page,
+    perPage,
+}: FetchPastReviewsParams = {}): Promise<BackendResponseWithMeta<BackendMyReviewAssignment[]>> => {
     const queryString = qs.stringify(
         {
             ...(challengeTypeId ? { challengeTypeId } : {}),
+            ...(page ? { page } : {}),
+            ...(perPage ? { perPage } : {}),
             past: true,
         },
         { addQueryPrefix: true },
     )
 
-    return xhrGetAsync<BackendMyReviewAssignment[]>(
+    return xhrGetAsync<BackendResponseWithMeta<BackendMyReviewAssignment[]>>(
         `${challengeBaseUrl}/my-reviews${queryString}`,
     )
 }

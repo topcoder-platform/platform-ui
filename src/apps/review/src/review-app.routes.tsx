@@ -13,6 +13,7 @@ import {
 import {
     activeReviewAssigmentsRouteId,
     challengeDetailRouteId,
+    pastChallengeDetailContainerRouteId,
     pastReviewAssignmentsRouteId,
     rootRoute,
     scorecardRouteId,
@@ -116,6 +117,29 @@ export const reviewRoutes: ReadonlyArray<PlatformRoute> = [
                         element: <PastReviewsPage />,
                         id: 'past-reviews-page',
                         route: '',
+                    },
+                    {
+                        authRequired: true,
+                        children: [
+                            {
+                                element: <ChallengeDetailsPage />,
+                                id: 'past-challenge-details-page',
+                                route: 'challenge-details',
+                            },
+                            {
+                                element: <ScorecardDetailsPage />,
+                                id: 'past-scorecard-details-page',
+                                route: 'scorecard-details/:submissionId/review/:resourceId',
+                            },
+                        ],
+                        element: (
+                            <ChallengeDetailContainer
+                                parentRouteId={pastReviewAssignmentsRouteId}
+                                detailRouteId={pastChallengeDetailContainerRouteId}
+                            />
+                        ),
+                        id: pastChallengeDetailContainerRouteId,
+                        route: challengeDetailRouteId,
                     },
                 ],
                 element: <PastReviewAssignments />,

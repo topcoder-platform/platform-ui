@@ -92,6 +92,14 @@ export function convertBackendChallengeInfo(
             .format(TABLE_DATE_FORMAT)
         : undefined
     const currentPhase = data.currentPhase?.name ?? ''
+    const challengeEndDateObject: Date | undefined = data.endDate
+        ? new Date(data.endDate)
+        : undefined
+    const challengeEndDateString = challengeEndDateObject
+        ? moment(challengeEndDateObject)
+            .local()
+            .format(TABLE_DATE_FORMAT)
+        : undefined
 
     return {
         ...data,
@@ -100,6 +108,8 @@ export function convertBackendChallengeInfo(
         currentPhaseEndDateString,
         currentPhaseObject: data.currentPhase,
         discussionsUrl: data.discussions[0]?.url,
+        endDate: challengeEndDateObject ?? data.endDate,
+        endDateString: challengeEndDateString,
         id: data.id,
         index,
         legacyId: data.legacyId,

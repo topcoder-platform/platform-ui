@@ -29,6 +29,7 @@ export interface useFetchActiveReviewsProps {
 
 export const transformAssignments = (
     assignments: ResponseFetchActiveReviews,
+    startIndex = 1,
 ): ActiveReviewAssignment[] => {
     const assignmentsByChallenge = new Map<string, BackendMyReviewAssignment[]>()
 
@@ -42,7 +43,7 @@ export const transformAssignments = (
     })
 
     const now = new Date()
-    let index = 1
+    let index = startIndex
     const mapped: ActiveReviewAssignment[] = []
 
     assignmentsByChallenge.forEach(items => {

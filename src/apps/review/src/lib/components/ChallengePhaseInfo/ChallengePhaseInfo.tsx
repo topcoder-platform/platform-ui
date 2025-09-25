@@ -14,6 +14,7 @@ interface Props {
     className?: string
     challengeInfo: ChallengeInfo
     reviewProgress: number
+    variant?: 'active' | 'past'
 }
 
 export const ChallengePhaseInfo: FC<Props> = (props: Props) => {
@@ -21,29 +22,56 @@ export const ChallengePhaseInfo: FC<Props> = (props: Props) => {
     const PROGRESS_TYPE = 'progress'
     const uiItems = useMemo(() => {
         const data = props.challengeInfo
-        return [
-            {
+        const variant = props.variant ?? 'active'
+
+        const getChallengeEndDateValue = (): string => {
+            if (data.endDateString) {
+                return data.endDateString
+            }
+
+            if (data.endDate instanceof Date) {
+                return data.endDate.toLocaleString()
+            }
+
+            if (typeof data.endDate === 'string') {
+                return data.endDate
+            }
+
+            return 'N/A'
+        }
+
+        const items: any[] = []
+
+        if (variant === 'active') {
+            items.push({
                 icon: 'icon-review',
                 title: 'Phase',
                 value: data.currentPhase || 'N/A',
-            },
-            {
-                icon: 'icon-handle',
-                title: 'My Role',
-                value: (
-                    <div className={styles.blockMyRoles}>
-                        {myChallengeRoles.map(item => (
-                            <span key={item}>{item}</span>
-                        ))}
-                    </div>
-                ),
-            },
-            {
-                icon: 'icon-event',
-                title: 'Phase End Date',
-                value: data.currentPhaseEndDateString || 'N/A',
-            },
-            {
+            })
+        }
+
+        items.push({
+            icon: 'icon-handle',
+            title: 'My Role',
+            value: (
+                <div className={styles.blockMyRoles}>
+                    {myChallengeRoles.map(item => (
+                        <span key={item}>{item}</span>
+                    ))}
+                </div>
+            ),
+        })
+
+        items.push({
+            icon: 'icon-event',
+            title: variant === 'past' ? 'Challenge End Date' : 'Phase End Date',
+            value: variant === 'past'
+                ? getChallengeEndDateValue()
+                : data.currentPhaseEndDateString || 'N/A',
+        })
+
+        if (variant === 'active') {
+            items.push({
                 icon: 'icon-timer',
                 status: data.timeLeftStatus,
                 style: {
@@ -51,14 +79,22 @@ export const ChallengePhaseInfo: FC<Props> = (props: Props) => {
                 },
                 title: 'Time Left',
                 value: data.timeLeft || 'N/A',
-            },
-            {
+            })
+
+            items.push({
                 title: 'Review Progress',
                 type: PROGRESS_TYPE,
                 value: props.reviewProgress,
-            },
-        ]
-    }, [props.challengeInfo, myChallengeRoles, props.reviewProgress])
+            })
+        }
+
+        return items
+    }, [
+        myChallengeRoles,
+        props.challengeInfo,
+        props.reviewProgress,
+        props.variant,
+    ])
     return (
         <div className={classNames(styles.container, props.className)}>
             {uiItems.map(item => {

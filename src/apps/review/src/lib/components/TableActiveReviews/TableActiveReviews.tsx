@@ -26,12 +26,11 @@ interface Props {
     disableNavigation?: boolean
 }
 
-export const TableActiveReviews: FC<Props> = ({
-    className,
-    datas,
-    hideStatusColumns,
-    disableNavigation,
-}: Props) => {
+export const TableActiveReviews: FC<Props> = (props: Props) => {
+    const className = props.className
+    const datas = props.datas
+    const hideStatusColumns = props.hideStatusColumns
+    const disableNavigation = props.disableNavigation
     const navigate = useNavigate()
     const { width: screenWidth }: WindowSize = useWindowSize()
     const isTablet = useMemo(() => screenWidth <= 1000, [screenWidth])

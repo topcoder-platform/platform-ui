@@ -27,6 +27,8 @@ export interface ChallengeInfo {
     currentPhase: string
     currentPhaseEndDate: string | Date
     currentPhaseEndDateString?: string // this field is calculated at frontend
+    endDate?: string | Date
+    endDateString?: string
     timeLeft?: string // this field is calculated at frontend
     timeLeftColor?: string // this field is calculated at frontend
     timeLeftStatus?: string // this field is calculated at frontend

@@ -2,7 +2,7 @@
  * The router outlet.
  */
 
-import { FC, PropsWithChildren, useContext, useMemo } from 'react'
+import { FC, useContext, useMemo } from 'react'
 import { Outlet, Routes } from 'react-router-dom'
 
 import { routerContext, RouterContextData } from '~/libs/core'
@@ -11,8 +11,17 @@ import { reviewRoutes } from '../../review-app.routes'
 import { activeReviewAssigmentsRouteId, challengeDetailRouteId } from '../../config/routes.config'
 import { ChallengeDetailContextProvider } from '../../lib'
 
-export const ChallengeDetailContainer: FC<PropsWithChildren> = () => {
-    const childRoutes = useChildRoutes()
+interface Props {
+    parentRouteId?: string
+    detailRouteId?: string
+}
+
+export const ChallengeDetailContainer: FC<Props> = (props: Props) => {
+    const parentRouteId = props.parentRouteId
+        ?? activeReviewAssigmentsRouteId
+    const detailRouteId = props.detailRouteId
+        ?? challengeDetailRouteId
+    const childRoutes = useChildRoutes(parentRouteId, detailRouteId)
 
     return (
         <ChallengeDetailContextProvider>
@@ -26,14 +35,21 @@ export const ChallengeDetailContainer: FC<PropsWithChildren> = () => {
  * Get child routes of challenge detail page
  * @returns child routes
  */
-function useChildRoutes(): Array<JSX.Element> | undefined {
+function useChildRoutes(
+    parentRouteId: string,
+    detailRouteId: string,
+): Array<JSX.Element> | undefined {
     const { getRouteElement }: RouterContextData = useContext(routerContext)
     const childRoutes = useMemo(
         () => reviewRoutes[0].children
-            ?.find(r => r.id === activeReviewAssigmentsRouteId)
-            ?.children?.find(r => r.id === challengeDetailRouteId)
+            ?.find(r => r.id === parentRouteId)
+            ?.children?.find(r => r.id === detailRouteId)
             ?.children?.map(getRouteElement),
-        [getRouteElement],
+        [
+            detailRouteId,
+            getRouteElement,
+            parentRouteId,
+        ],
     )
     return childRoutes
 }

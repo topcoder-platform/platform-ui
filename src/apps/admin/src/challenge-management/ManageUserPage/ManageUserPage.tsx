@@ -72,7 +72,8 @@ export const ManageUserPage: FC = () => {
     const { challengeId = '' }: { challengeId?: string } = useParams<{
         challengeId: string
     }>()
-    const { challengeInfo } = useFetchChallenge(challengeId)
+    const { challengeInfo }: ReturnType<typeof useFetchChallenge>
+        = useFetchChallenge(challengeId)
     const pageTitle = challengeInfo?.name
         ? `Manage users for ${challengeInfo.name}`
         : 'Manage Users'

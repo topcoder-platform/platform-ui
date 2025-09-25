@@ -103,15 +103,120 @@ export const replaceBrowserUrlQuery = (query: string): void => {
 const STATUS_FILTER_MAP: Record<string, string> = {
     0: 'INACTIVE',
     1: 'ACTIVE',
-    active: 'ACTIVE',
-    Active: 'ACTIVE',
-    inactive: 'INACTIVE',
-    Inactive: 'INACTIVE',
     ACTIVE: 'ACTIVE',
+    Active: 'ACTIVE',
+    active: 'ACTIVE',
     INACTIVE: 'INACTIVE',
+    Inactive: 'INACTIVE',
+    inactive: 'INACTIVE',
 }
 
-const formatDateForQuery = (value: Date): string => {
+type CriteriaValue = string | number | Date | undefined | null
+type Criteria = Record<string, CriteriaValue>
+type QueryParams = Record<string, string | number>
+type PageAndSort = {
+    limit: number
+    page: number
+    sort: string
+}
+
+const CRITERIA_DATE_KEYS: Record<string, { from: string; to: string }> = {
+    endDate: {
+        from: 'endDateFrom',
+        to: 'endDateTo',
+    },
+    startDate: {
+        from: 'startDateFrom',
+        to: 'startDateTo',
+    },
+}
+
+const USER_CRITERIA_KEYS = new Set(['user', 'userId'])
+
+const shouldSkipCriteriaValue = (value: CriteriaValue): boolean => (
+    value === undefined
+    || value === null
+    || (typeof value === 'string' && value.trim() === '')
+)
+
+const resolveDateValue = (value: CriteriaValue): Date | undefined => {
+    if (value instanceof Date) {
+        return value
+    }
+
+    if (typeof value === 'string' || typeof value === 'number') {
+        const candidate = new Date(value)
+        return Number.isNaN(candidate.getTime()) ? undefined : candidate
+    }
+
+    return undefined
+}
+
+const applyDateCriteria = (
+    value: CriteriaValue,
+    target: { from: string; to: string },
+    params: QueryParams,
+): void => {
+    const dateValue = resolveDateValue(value)
+    if (!dateValue) {
+        return
+    }
+
+    const formatted = formatDateForQuery(dateValue)
+    params[target.from] = formatted
+    params[target.to] = formatted
+}
+
+const handleUserCriteria = (value: CriteriaValue, params: QueryParams): void => {
+    params.userId = `${value}`.trim()
+}
+
+const handleStatusCriteria = (value: CriteriaValue, params: QueryParams): void => {
+    const normalizedStatus = `${value}`.trim()
+    const mappedStatus = STATUS_FILTER_MAP[normalizedStatus] ?? normalizedStatus
+    params.status = mappedStatus
+}
+
+const assignDefaultCriteria = (
+    key: string,
+    value: CriteriaValue,
+    params: QueryParams,
+): void => {
+    if (value instanceof Date) {
+        params[key] = formatDateForQuery(value)
+        return
+    }
+
+    params[key] = `${value}`.trim()
+}
+
+const assignPagination = (params: QueryParams, pageAndSort: PageAndSort): void => {
+    if (pageAndSort.limit) {
+        params.perPage = pageAndSort.limit
+    }
+
+    if (pageAndSort.page) {
+        params.page = pageAndSort.page
+    }
+}
+
+const assignSortParams = (params: QueryParams, sort: string): void => {
+    const trimmedSort = sort.trim()
+    if (!trimmedSort) {
+        return
+    }
+
+    const sortMatch = trimmedSort.match(/^([^\s]+)(?:\s+(asc|desc))?$/i)
+    if (sortMatch?.[1]) {
+        params.sortBy = sortMatch[1]
+    }
+
+    if (sortMatch?.[2]) {
+        params.sortOrder = sortMatch[2].toLowerCase()
+    }
+}
+
+function formatDateForQuery(value: Date): string {
     const isoString = value.toISOString()
     return `${isoString.substring(0, 16)}Z`
 }
@@ -123,95 +228,38 @@ const formatDateForQuery = (value: Date): string => {
  * @returns string query
  */
 export const createFilterPageSortQuery = (
-    criteria: { [key: string]: string | number | Date | undefined | null },
-    pageAndSort: {
-        limit: number
-        page: number
-        sort: string
-    },
+    criteria: Criteria,
+    pageAndSort: PageAndSort,
 ): string => {
-    const params: { [key: string]: string | number } = {}
+    const params: QueryParams = {}
 
     Object.entries(criteria)
         .forEach(([key, rawValue]) => {
-            if (rawValue === undefined || rawValue === null) {
+            if (shouldSkipCriteriaValue(rawValue)) {
                 return
             }
 
-            if (typeof rawValue === 'string' && rawValue.trim() === '') {
+            const dateTarget = CRITERIA_DATE_KEYS[key]
+            if (dateTarget) {
+                applyDateCriteria(rawValue, dateTarget, params)
                 return
             }
 
-            switch (key) {
-                case 'startDate': {
-                    const dateValue = rawValue instanceof Date
-                        ? rawValue
-                        : new Date(rawValue)
-                    if (!Number.isNaN(dateValue.getTime())) {
-                        const formatted = formatDateForQuery(dateValue)
-                        params.startDateFrom = formatted
-                        params.startDateTo = formatted
-                    }
-
-                    break
-                }
-
-                case 'endDate': {
-                    const dateValue = rawValue instanceof Date
-                        ? rawValue
-                        : new Date(rawValue)
-                    if (!Number.isNaN(dateValue.getTime())) {
-                        const formatted = formatDateForQuery(dateValue)
-                        params.endDateFrom = formatted
-                        params.endDateTo = formatted
-                    }
-
-                    break
-                }
-
-                case 'user':
-                case 'userId': {
-                    params.userId = `${rawValue}`.trim()
-                    break
-                }
-
-                case 'status': {
-                    const normalizedStatus = `${rawValue}`.trim()
-                    const mappedStatus = STATUS_FILTER_MAP[normalizedStatus]
-                    ?? normalizedStatus
-                    params.status = mappedStatus
-                    break
-                }
-
-                default: {
-                    params[key] = rawValue instanceof Date
-                        ? formatDateForQuery(rawValue)
-                        : `${rawValue}`.trim()
-                }
+            if (USER_CRITERIA_KEYS.has(key)) {
+                handleUserCriteria(rawValue, params)
+                return
             }
+
+            if (key === 'status') {
+                handleStatusCriteria(rawValue, params)
+                return
+            }
+
+            assignDefaultCriteria(key, rawValue, params)
         })
 
-    if (pageAndSort?.limit) {
-        params.perPage = pageAndSort.limit
-    }
-
-    if (pageAndSort?.page) {
-        params.page = pageAndSort.page
-    }
-
-    if (pageAndSort?.sort) {
-        const trimmedSort = pageAndSort.sort.trim()
-        if (trimmedSort) {
-            const sortMatch = trimmedSort.match(/^([^\s]+)(?:\s+(asc|desc))?$/i)
-            if (sortMatch?.[1]) {
-                params.sortBy = sortMatch[1]
-            }
-
-            if (sortMatch?.[2]) {
-                params.sortOrder = sortMatch[2].toLowerCase()
-            }
-        }
-    }
+    assignPagination(params, pageAndSort)
+    assignSortParams(params, pageAndSort.sort)
 
     return qs.stringify(params, { skipNulls: true })
 }
