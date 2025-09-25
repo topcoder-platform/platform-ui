@@ -3,7 +3,6 @@ import _ from 'lodash'
 import { EnvironmentConfig } from '~/config'
 import {
     xhrGetAsync,
-    xhrGetPaginatedAsync,
     xhrPatchAsync,
     xhrPostAsync,
 } from '~/libs/core'
@@ -12,6 +11,7 @@ import {
     adjustClientInfoResponse,
     ClientInfo,
     FormEditClient,
+    PaginatedResponseV6,
     RequestCommonDataType,
 } from '../models'
 import { createFilterPageSortQuery } from '../utils'
@@ -33,18 +33,18 @@ export const searchClients = async (
     content: ClientInfo[]
     totalPages: number
 }> => {
-    const { data, totalPages }: {
-        data: ClientInfo[]
-        totalPages: number
-    } = await xhrGetPaginatedAsync<ClientInfo[]>(
+    const response = await xhrGetAsync<PaginatedResponseV6<ClientInfo>>(
         `${EnvironmentConfig.API.V6}/clients?${createFilterPageSortQuery(
             criteria,
             pageAndSort,
         )}`,
     )
+    const totalPages = response.totalPages
+        || (response.perPage ? Math.ceil(response.total / response.perPage) : 1)
+
     return {
-        content: data.map(adjustClientInfoResponse),
-        totalPages,
+        content: (response.data ?? []).map(adjustClientInfoResponse),
+        totalPages: totalPages || 1,
     }
 }
 

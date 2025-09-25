@@ -161,7 +161,7 @@ export function useManageBillingAccounts(mappingSortField?: {
                     })
             },
             {
-                status: '1',
+                status: 'ACTIVE',
             },
         )
 

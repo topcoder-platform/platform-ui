@@ -4,8 +4,7 @@
 import { FC, useState } from 'react'
 import classNames from 'classnames'
 
-import { colWidthType, LinkButton, LoadingSpinner, PageDivider, PageTitle } from '~/libs/ui'
-import { PlusIcon } from '@heroicons/react/solid'
+import { colWidthType, LoadingSpinner, PageDivider, PageTitle } from '~/libs/ui'
 
 import { MSG_NO_RECORD_FOUND } from '../../config/index.config'
 import { useManageClients, useManageClientsProps } from '../../lib/hooks'
@@ -42,16 +41,6 @@ export const ClientsPage: FC<Props> = (props: Props) => {
             <PageTitle>{pageTitle}</PageTitle>
             <PageHeader>
                 <h3>{pageTitle}</h3>
-                <div className={styles.headerActions}>
-                    <LinkButton
-                        primary
-                        size='lg'
-                        to='new'
-                        icon={PlusIcon}
-                        iconToLeft
-                        label='add client'
-                    />
-                </div>
             </PageHeader>
 
             <PageContent>

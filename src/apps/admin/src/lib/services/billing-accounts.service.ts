@@ -7,7 +7,6 @@ import { EnvironmentConfig } from '~/config'
 import {
     xhrDeleteAsync,
     xhrGetAsync,
-    xhrGetPaginatedAsync,
     xhrPatchAsync,
     xhrPostAsync,
 } from '~/libs/core'
@@ -18,6 +17,7 @@ import {
     BillingAccountResource,
     FormEditBillingAccount,
     FormNewBillingAccountResource,
+    PaginatedResponseV6,
     RequestCommonDataType,
 } from '../models'
 import { createFilterPageSortQuery } from '../utils'
@@ -39,17 +39,18 @@ export const searchBillingAccounts = async (
     content: BillingAccount[]
     totalPages: number
 }> => {
-    const { data, totalPages }: {
-        data: BillingAccount[]
-        totalPages: number
-    } = await xhrGetPaginatedAsync<BillingAccount[]>(
+    const response = await xhrGetAsync<PaginatedResponseV6<BillingAccount>>(
         `${
             EnvironmentConfig.API.V6
         }/billing-accounts?${createFilterPageSortQuery(criteria, pageAndSort)}`,
     )
+
+    const totalPages = response.totalPages
+        || (response.perPage ? Math.ceil(response.total / response.perPage) : 1)
+
     return {
-        content: data.map(adjustBillingAccountResponse),
-        totalPages,
+        content: (response.data ?? []).map(adjustBillingAccountResponse),
+        totalPages: totalPages || 1,
     }
 }
 

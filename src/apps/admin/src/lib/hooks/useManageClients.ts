@@ -160,7 +160,7 @@ export function useManageClients(mappingSortField?: {
                     })
             },
             {
-                status: '1',
+                status: 'ACTIVE',
             },
         )
 

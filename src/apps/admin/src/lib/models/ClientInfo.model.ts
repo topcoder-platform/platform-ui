@@ -32,6 +32,9 @@ export function adjustClientInfoResponse(data: ClientInfo): ClientInfo {
                 .local()
                 .format(TABLE_DATE_FORMAT)
             : data.endDate,
+        status: data.status
+            ? data.status.toString().toUpperCase()
+            : data.status,
         startDate,
         startDateString: data.startDate
             ? moment(data.startDate)

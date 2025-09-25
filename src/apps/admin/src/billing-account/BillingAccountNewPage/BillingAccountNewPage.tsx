@@ -79,7 +79,7 @@ export const BillingAccountNewPage: FC<Props> = (props: Props) => {
             poNumber: '',
             salesTax: 0,
             startDate: undefined,
-            status: 'Active',
+            status: 'ACTIVE',
             subscriptionNumber: '' as any,
         },
         mode: 'all',

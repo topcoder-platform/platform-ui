@@ -31,7 +31,7 @@ const defaultValues: FormBillingAccountsFilter = {
     endDate: undefined,
     name: '',
     startDate: undefined,
-    status: '1',
+    status: 'ACTIVE',
     user: '',
 }
 

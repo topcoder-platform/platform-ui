@@ -100,13 +100,20 @@ export const replaceBrowserUrlQuery = (query: string): void => {
  * @param obj query object
  * @returns query in string
  */
-function serialize(obj: { [key: string]: string | number | Date }): string {
-    const result: string[] = []
-    _.forOwn(obj, (value, key) => {
-        result.push(`${encodeURIComponent(key)}=${value}`)
-    })
+const STATUS_FILTER_MAP: Record<string, string> = {
+    '0': 'INACTIVE',
+    '1': 'ACTIVE',
+    active: 'ACTIVE',
+    Active: 'ACTIVE',
+    inactive: 'INACTIVE',
+    Inactive: 'INACTIVE',
+    ACTIVE: 'ACTIVE',
+    INACTIVE: 'INACTIVE',
+}
 
-    return result.join('&')
+const formatDateForQuery = (value: Date): string => {
+    const isoString = value.toISOString()
+    return `${isoString.substring(0, 16)}Z`
 }
 
 /**
@@ -123,23 +130,80 @@ export const createFilterPageSortQuery = (
         sort: string
     },
 ): string => {
-    const params: { [key: string]: string | number | Date } = {}
-    Object.keys(criteria)
-        .forEach((key: string) => {
-            let value = criteria[key]
-            if (value) {
-                if (key === 'startDate' || key === 'endDate') {
-                    const iosString = (value as Date).toISOString()
-                    value = `${iosString.substring(0, 16)}Z`
-                }
+    const params: { [key: string]: string | number } = {}
 
-                params[key] = value
+    Object.entries(criteria).forEach(([key, rawValue]) => {
+        if (rawValue === undefined || rawValue === null) {
+            return
+        }
+
+        if (typeof rawValue === 'string' && rawValue.trim() === '') {
+            return
+        }
+
+        switch (key) {
+            case 'startDate': {
+                const dateValue = rawValue instanceof Date
+                    ? rawValue
+                    : new Date(rawValue)
+                if (!Number.isNaN(dateValue.getTime())) {
+                    const formatted = formatDateForQuery(dateValue)
+                    params.startDateFrom = formatted
+                    params.startDateTo = formatted
+                }
+                break
             }
-        })
-    return qs.stringify({
-        filter: serialize(params),
-        limit: pageAndSort.limit,
-        offset: (pageAndSort.page - 1) * 25,
-        sort: pageAndSort.sort,
+            case 'endDate': {
+                const dateValue = rawValue instanceof Date
+                    ? rawValue
+                    : new Date(rawValue)
+                if (!Number.isNaN(dateValue.getTime())) {
+                    const formatted = formatDateForQuery(dateValue)
+                    params.endDateFrom = formatted
+                    params.endDateTo = formatted
+                }
+                break
+            }
+            case 'user':
+            case 'userId': {
+                params.userId = `${rawValue}`.trim()
+                break
+        }
+        case 'status': {
+                const normalizedStatus = `${rawValue}`.trim()
+                const mappedStatus = STATUS_FILTER_MAP[normalizedStatus]
+                    ?? normalizedStatus
+                params.status = mappedStatus
+                break
+            }
+            default: {
+                params[key] = rawValue instanceof Date
+                    ? formatDateForQuery(rawValue)
+                    : `${rawValue}`.trim()
+            }
+        }
     })
+
+    if (pageAndSort?.limit) {
+        params.perPage = pageAndSort.limit
+    }
+
+    if (pageAndSort?.page) {
+        params.page = pageAndSort.page
+    }
+
+    if (pageAndSort?.sort) {
+        const trimmedSort = pageAndSort.sort.trim()
+        if (trimmedSort) {
+            const sortMatch = trimmedSort.match(/^([^\s]+)(?:\s+(asc|desc))?$/i)
+            if (sortMatch?.[1]) {
+                params.sortBy = sortMatch[1]
+            }
+            if (sortMatch?.[2]) {
+                params.sortOrder = sortMatch[2].toLowerCase()
+            }
+        }
+    }
+
+    return qs.stringify(params, { skipNulls: true })
 }
