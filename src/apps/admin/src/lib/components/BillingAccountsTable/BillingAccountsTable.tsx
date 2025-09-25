@@ -19,8 +19,10 @@ const formatStatus = (status?: string): string => {
     if (!status) {
         return ''
     }
+
     const normalizedStatus = status.toLowerCase()
-    return `${normalizedStatus.charAt(0).toUpperCase()}${normalizedStatus.slice(1)}`
+    return `${normalizedStatus.charAt(0)
+        .toUpperCase()}${normalizedStatus.slice(1)}`
 }
 
 interface Props {

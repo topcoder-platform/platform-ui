@@ -8,4 +8,3 @@ export interface PaginatedResponseV6<T> {
     total: number
     totalPages: number
 }
-

@@ -101,8 +101,8 @@ export const replaceBrowserUrlQuery = (query: string): void => {
  * @returns query in string
  */
 const STATUS_FILTER_MAP: Record<string, string> = {
-    '0': 'INACTIVE',
-    '1': 'ACTIVE',
+    0: 'INACTIVE',
+    1: 'ACTIVE',
     active: 'ACTIVE',
     Active: 'ACTIVE',
     inactive: 'INACTIVE',
@@ -132,57 +132,64 @@ export const createFilterPageSortQuery = (
 ): string => {
     const params: { [key: string]: string | number } = {}
 
-    Object.entries(criteria).forEach(([key, rawValue]) => {
-        if (rawValue === undefined || rawValue === null) {
-            return
-        }
-
-        if (typeof rawValue === 'string' && rawValue.trim() === '') {
-            return
-        }
-
-        switch (key) {
-            case 'startDate': {
-                const dateValue = rawValue instanceof Date
-                    ? rawValue
-                    : new Date(rawValue)
-                if (!Number.isNaN(dateValue.getTime())) {
-                    const formatted = formatDateForQuery(dateValue)
-                    params.startDateFrom = formatted
-                    params.startDateTo = formatted
-                }
-                break
+    Object.entries(criteria)
+        .forEach(([key, rawValue]) => {
+            if (rawValue === undefined || rawValue === null) {
+                return
             }
-            case 'endDate': {
-                const dateValue = rawValue instanceof Date
-                    ? rawValue
-                    : new Date(rawValue)
-                if (!Number.isNaN(dateValue.getTime())) {
-                    const formatted = formatDateForQuery(dateValue)
-                    params.endDateFrom = formatted
-                    params.endDateTo = formatted
-                }
-                break
+
+            if (typeof rawValue === 'string' && rawValue.trim() === '') {
+                return
             }
-            case 'user':
-            case 'userId': {
-                params.userId = `${rawValue}`.trim()
-                break
-        }
-        case 'status': {
-                const normalizedStatus = `${rawValue}`.trim()
-                const mappedStatus = STATUS_FILTER_MAP[normalizedStatus]
+
+            switch (key) {
+                case 'startDate': {
+                    const dateValue = rawValue instanceof Date
+                        ? rawValue
+                        : new Date(rawValue)
+                    if (!Number.isNaN(dateValue.getTime())) {
+                        const formatted = formatDateForQuery(dateValue)
+                        params.startDateFrom = formatted
+                        params.startDateTo = formatted
+                    }
+
+                    break
+                }
+
+                case 'endDate': {
+                    const dateValue = rawValue instanceof Date
+                        ? rawValue
+                        : new Date(rawValue)
+                    if (!Number.isNaN(dateValue.getTime())) {
+                        const formatted = formatDateForQuery(dateValue)
+                        params.endDateFrom = formatted
+                        params.endDateTo = formatted
+                    }
+
+                    break
+                }
+
+                case 'user':
+                case 'userId': {
+                    params.userId = `${rawValue}`.trim()
+                    break
+                }
+
+                case 'status': {
+                    const normalizedStatus = `${rawValue}`.trim()
+                    const mappedStatus = STATUS_FILTER_MAP[normalizedStatus]
                     ?? normalizedStatus
-                params.status = mappedStatus
-                break
+                    params.status = mappedStatus
+                    break
+                }
+
+                default: {
+                    params[key] = rawValue instanceof Date
+                        ? formatDateForQuery(rawValue)
+                        : `${rawValue}`.trim()
+                }
             }
-            default: {
-                params[key] = rawValue instanceof Date
-                    ? formatDateForQuery(rawValue)
-                    : `${rawValue}`.trim()
-            }
-        }
-    })
+        })
 
     if (pageAndSort?.limit) {
         params.perPage = pageAndSort.limit
@@ -199,6 +206,7 @@ export const createFilterPageSortQuery = (
             if (sortMatch?.[1]) {
                 params.sortBy = sortMatch[1]
             }
+
             if (sortMatch?.[2]) {
                 params.sortOrder = sortMatch[2].toLowerCase()
             }

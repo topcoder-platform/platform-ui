@@ -13,6 +13,7 @@ import {
 import {
     activeReviewAssigmentsRouteId,
     challengeDetailRouteId,
+    pastReviewAssignmentsRouteId,
     rootRoute,
     scorecardRouteId,
 } from './config/routes.config'
@@ -28,6 +29,13 @@ const ChallengeDetailContainer: LazyLoadedComponent = lazyLoad(
 const ActiveReviewsPage: LazyLoadedComponent = lazyLoad(
     () => import('./pages/active-review-assignements/ActiveReviewsPage'),
     'ActiveReviewsPage',
+)
+const PastReviewAssignments: LazyLoadedComponent = lazyLoad(
+    () => import('./pages/past-review-assignments/PastReviewAssignments'),
+)
+const PastReviewsPage: LazyLoadedComponent = lazyLoad(
+    () => import('./pages/past-review-assignments/PastReviewsPage'),
+    'PastReviewsPage',
 )
 const ChallengeDetailsPage: LazyLoadedComponent = lazyLoad(
     () => import('./pages/active-review-assignements/ChallengeDetailsPage'),
@@ -99,6 +107,20 @@ export const reviewRoutes: ReadonlyArray<PlatformRoute> = [
                 element: <ActiveReviewAssigments />,
                 id: activeReviewAssigmentsRouteId,
                 route: activeReviewAssigmentsRouteId,
+            },
+            // Past Review Assignments Module
+            {
+                children: [
+                    {
+                        authRequired: true,
+                        element: <PastReviewsPage />,
+                        id: 'past-reviews-page',
+                        route: '',
+                    },
+                ],
+                element: <PastReviewAssignments />,
+                id: pastReviewAssignmentsRouteId,
+                route: pastReviewAssignmentsRouteId,
             },
             {
                 children: [

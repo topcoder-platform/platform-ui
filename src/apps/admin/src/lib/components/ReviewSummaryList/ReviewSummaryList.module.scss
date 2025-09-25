@@ -9,6 +9,14 @@
     }
 }
 
+.challengeTitleColumn {
+    text-align: left;
+
+    :global(.TableCell_blockCell) {
+        justify-content: flex-start;
+    }
+}
+
 .challengeTitleText,
 .challengeTitleLink {
     min-width: 200px;

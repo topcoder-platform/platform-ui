@@ -64,6 +64,28 @@ export const fetchActiveReviews = async (
 }
 
 /**
+ * Fetch past review assignments for the current member.
+ *
+ * @param challengeTypeId optional challenge type filter
+ * @returns resolves to the array of past review assignments
+ */
+export const fetchPastReviews = async (
+    challengeTypeId?: string,
+): Promise<ResponseFetchActiveReviews> => {
+    const queryString = qs.stringify(
+        {
+            ...(challengeTypeId ? { challengeTypeId } : {}),
+            past: true,
+        },
+        { addQueryPrefix: true },
+    )
+
+    return xhrGetAsync<BackendMyReviewAssignment[]>(
+        `${challengeBaseUrl}/my-reviews${queryString}`,
+    )
+}
+
+/**
  * Create contact request
  *
  * @param challengeId challenge id

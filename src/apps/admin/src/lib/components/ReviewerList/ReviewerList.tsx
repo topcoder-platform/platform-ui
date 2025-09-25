@@ -93,10 +93,14 @@ const ReviewerMail: FC<{
         window.open(`mailto:${props.reviewer.emailAddress}`, '_blank')
     })
 
-    return (
+    const email = props.reviewer.emailAddress?.trim()
+
+    return email ? (
         <LinkButton onClick={mailTo} className={styles.reviewerEmail}>
-            {props.reviewer.emailAddress}
+            {email}
         </LinkButton>
+    ) : (
+        <span className={styles.reviewerEmail}>—</span>
     )
 }
 

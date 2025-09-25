@@ -1,7 +1,7 @@
 import { EnvironmentConfig } from '~/config'
 import {
     xhrGetAsync,
-    xhrPostAsync,
+    xhrPatchAsync,
 } from '~/libs/core'
 
 import {
@@ -86,51 +86,131 @@ export const getReviewOpportunities = async (
     }
 }
 
-/**
- * Searches the reviewer for challenge using v3 api.
- */
-export const getChallengeReviewers = async (
-    challengeId: string,
-): Promise<Array<Reviewer>> => {
-  type v3Response<Reviewer> = { result: { content: Reviewer[] } }
-  const data = await xhrGetAsync<v3Response<Reviewer>>(
-      `${EnvironmentConfig.API.V3}/reviewOpportunities/${challengeId}/reviewApplications`,
-  )
-  return data.result.content
+type ReviewOpportunityApplication = {
+    id: string
+    opportunityId: string
+    userId: string | number
+    handle: string
+    role?: string
+    status?: string
+    applicationDate?: string
+    email?: string
+    stats?: {
+        reviewsInPast60Days?: number
+        currentAssignments?: number
+    }
 }
 
+type ReviewOpportunityResponse = {
+    status?: string
+    type?: string
+    id: string
+    challengeId: string
+    openPositions?: number
+    startDate?: string
+    submissions?: number
+    applications?: ReviewOpportunityApplication[]
+}
+
+type ReviewOpportunityListResponse = {
+    result: {
+        success: boolean
+        status: number
+        content: ReviewOpportunityResponse[]
+    }
+}
+
+type ReviewApplicationsResponse = {
+    result: {
+        success: boolean
+        status: number
+        content: ReviewOpportunityApplication[]
+    }
+}
+
+const mapApplicationToReviewer = (
+    application: ReviewOpportunityApplication,
+): Reviewer => {
+    const stats = application.stats ?? {}
+    const parsedUserId = typeof application.userId === 'number'
+        ? application.userId
+        : Number(application.userId)
+
+    return {
+        applicationDate: application.applicationDate ?? '',
+        applicationId: application.id,
+        applicationRole: application.role ?? '',
+        applicationStatus: application.status ?? '',
+        currentNumberOfReviewPositions:
+            stats.currentAssignments ?? 0,
+        emailAddress: application.email ?? '',
+        handle: application.handle ?? '',
+        reviewsInPast60Days: stats.reviewsInPast60Days ?? 0,
+        userId: Number.isFinite(parsedUserId) ? parsedUserId : 0,
+    }
+}
+
+const mapOpportunity = (
+    opportunity: ReviewOpportunityResponse,
+): ReviewOpportunity => ({
+    applications: (opportunity.applications ?? []).map(mapApplicationToReviewer),
+    challengeId: opportunity.challengeId,
+    id: opportunity.id,
+    openPositions: opportunity.openPositions ?? 0,
+    startDate: opportunity.startDate ?? '',
+    submissions: opportunity.submissions ?? 0,
+    type: opportunity.type ?? '',
+})
+
 /**
- * Get review opportunities for challenge using v3 api.
+ * Get review opportunity for a challenge using v6 api.
  */
 export const getChallengeReviewOpportunities = async (
     challengeId: string,
-): Promise<ReviewOpportunity> => {
-  type v3Response<ReviewOpportunity> = { result: { content: ReviewOpportunity } }
-  const data = await xhrGetAsync<v3Response<ReviewOpportunity>>(
-      `${EnvironmentConfig.API.V3}/reviewOpportunities/${challengeId}`,
-  )
-  return data.result.content
+): Promise<ReviewOpportunity | undefined> => {
+    const response = await xhrGetAsync<ReviewOpportunityListResponse>(
+        `${EnvironmentConfig.API.V6}/review-opportunities/challenge/${challengeId}`,
+    )
+
+    const opportunities = response.result.content ?? []
+    if (!opportunities.length) {
+        return undefined
+    }
+
+    const preferredOpportunity = opportunities.find(opportunity => opportunity.status === 'OPEN')
+
+    return mapOpportunity(preferredOpportunity ?? opportunities[0])
 }
 
 /**
- * Approve application for challenge using v3 api.
+ * Get review applications for an opportunity using v6 api.
  */
-export const approveApplication = async (challengeId: string, data: {
-  userId: number
-  reviewAuctionId: number
-  applicationRoleId: number
-}): Promise<unknown> => xhrPostAsync(
-    // eslint-disable-next-line max-len
-    `${EnvironmentConfig.API.V3}/reviewOpportunities/${challengeId}/reviewApplications/assign?userId=${data.userId}&reviewAuctionId=${data.reviewAuctionId}&applicationRoleId=${data.applicationRoleId}`,
+export const getReviewOpportunityApplications = async (
+    opportunityId: string,
+): Promise<Array<Reviewer>> => {
+    const response = await xhrGetAsync<ReviewApplicationsResponse>(
+        `${EnvironmentConfig.API.V6}/review-applications/opportunity/${opportunityId}`,
+    )
+
+    return (response.result.content ?? []).map(mapApplicationToReviewer)
+}
+
+/**
+ * Approve application for opportunity using v6 api.
+ */
+export const approveApplication = async (
+    applicationId: string,
+): Promise<unknown> => xhrPatchAsync(
+    `${EnvironmentConfig.API.V6}/review-applications/${applicationId}/accept`,
     {},
 )
 
 /**
- * Reject pending for challenge using v3 api.
+ * Reject pending applications for opportunity using v6 api.
  */
 export const rejectPending = async (
-    challengeId: string,
-): Promise<unknown> => xhrPostAsync(
-    `${EnvironmentConfig.API.V3}/reviewOpportunities/${challengeId}/reviewApplications/rejectPending`,
+    opportunityId: string,
+): Promise<unknown> => xhrPatchAsync(
+    `${EnvironmentConfig.API.V6}/review-applications/opportunity/${opportunityId}/reject-all`,
     {},
 )

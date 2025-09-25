@@ -1,4 +1,5 @@
 export * from './useFetchActiveReviews'
+export * from './useFetchPastReviews'
 export * from './useFetchChallengeInfo'
 export * from './useRole'
 export * from './useFetchChallengeRelativeDatas'

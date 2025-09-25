@@ -33,8 +33,8 @@ import {
 import {
     approveApplication,
     getChallengeByLegacyId,
-    getChallengeReviewers,
     getChallengeReviewOpportunities,
+    getReviewOpportunityApplications,
     rejectPending,
 } from '../../lib/services'
 import { handleError } from '../../lib/utils'
@@ -63,6 +63,7 @@ export const ManageReviewerPage: FC = () => {
         challengeId: string
     }>()
     const [challengeUuid, setChallengeUuid] = useState('')
+    const challengeIdentifier = challengeUuid || challengeId
     const [filterCriteria, setFilterCriteria]: [
         ReviewFilterCriteria,
         Dispatch<SetStateAction<ReviewFilterCriteria>>
@@ -86,17 +87,18 @@ export const ManageReviewerPage: FC = () => {
         searched,
         totalReviewers: totalUsers,
         openReviews,
-    }: ReturnType<typeof useSearch> = useSearch({ challengeId, filterCriteria })
+        reviewOpportunityId,
+    }: ReturnType<typeof useSearch> = useSearch({ challengeId: challengeIdentifier, filterCriteria })
 
     const {
         reject: doReject,
         rejecting,
-    }: ReturnType<typeof useReject> = useReject({ challengeId })
+    }: ReturnType<typeof useReject> = useReject({ opportunityId: reviewOpportunityId })
     const [openRejectPendingConfirmDialog, setOpenRejectPendingConfirmDialog]
         = useState(false)
 
     const { approve: doApprove, userId }: ReturnType<typeof useApprove>
-        = useApprove({ challengeId })
+        = useApprove()
 
     const search = useEventCallback((): void => {
         doSearch()
@@ -124,31 +126,69 @@ export const ManageReviewerPage: FC = () => {
 
     const reject = useEventCallback((): void => {
         doReject()
-            .then(() => {
-                newSearch()
+            .then(wasRejected => {
+                if (wasRejected) {
+                    newSearch()
+                }
             })
     })
 
     const approve = useEventCallback((reviewer: Reviewer): void => {
         doApprove(reviewer)
-            .then(() => {
-                newSearch()
+            .then(wasApproved => {
+                if (wasApproved) {
+                    newSearch()
+                }
             })
     })
 
     // Init
     useEffect(() => {
-        search()
-    }, [challengeId]) // eslint-disable-line react-hooks/exhaustive-deps -- missing dependency: search
+        if (challengeIdentifier) {
+            search()
+        }
+    }, [challengeIdentifier]) // eslint-disable-line react-hooks/exhaustive-deps -- missing dependency: search
 
-    // Gets the challenge details by legacyId
+    // Resolve challenge identifier for navigation targets
     useEffect(() => {
-        getChallengeByLegacyId(+challengeId)
-            .then(challenge => {
-                setChallengeUuid(challenge.id)
-            })
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- missing dependency: setChallengeUuid
-    }, [challengeId, getChallengeByLegacyId])
+        let isMounted = true
+
+        const resolve = async (): Promise<void> => {
+            if (!challengeId) {
+                if (isMounted) {
+                    setChallengeUuid('')
+                }
+
+                return
+            }
+
+            if (/^[0-9]+$/.test(challengeId)) {
+                try {
+                    const challenge = await getChallengeByLegacyId(+challengeId)
+                    if (isMounted) {
+                        setChallengeUuid(challenge.id)
+                    }
+                } catch (error) {
+                    handleError(error)
+                    if (isMounted) {
+                        setChallengeUuid('')
+                    }
+                }
+
+                return
+            }
+
+            if (isMounted) {
+                setChallengeUuid(challengeId)
+            }
+        }
+
+        resolve()
+
+        return () => {
+            isMounted = false
+        }
+    }, [challengeId]) // eslint-disable-line react-hooks/exhaustive-deps -- stable service reference
 
     // Page change
     const [pageChangeEvent, setPageChangeEvent] = useState(false)
@@ -201,7 +241,7 @@ export const ManageReviewerPage: FC = () => {
                         primary
                         onClick={handleRejectPendingConfirmDialog}
                         size='lg'
-                        to={`${rootRoute}/challenge-management/${challengeUuid}/manage-user`}
+                        to={`${rootRoute}/challenge-management/${challengeUuid || challengeId}/manage-user`}
                     >
                         User Management
                     </LinkButton>
@@ -210,7 +250,7 @@ export const ManageReviewerPage: FC = () => {
                         variant='danger'
                         onClick={handleRejectPendingConfirmDialog}
                         size='lg'
-                        disabled={rejecting}
+                        disabled={rejecting || !reviewOpportunityId}
                     >
                         <XIcon className='icon icon-fill' />
                         {' '}
@@ -272,6 +312,8 @@ type SearchState = {
     totalReviewers: number
     openReviews: number
     allReviewers: Reviewer[]
+    reviewOpportunityId: string
+    activeChallengeId: string
 }
 
 type SearchReducerAction =
@@ -286,6 +328,8 @@ type SearchReducerAction =
               totalReviewers: number
               openReviews: number
               allReviewers: Reviewer[]
+              reviewOpportunityId: string
+              challengeId: string
           }
       }
 
@@ -300,6 +344,7 @@ const searchReducer = (
                 allReviewers: [],
                 isLoading: true,
                 openReviews: 0,
+                reviewOpportunityId: '',
                 searched: false,
                 totalReviewers: 0,
             }
@@ -308,9 +353,11 @@ const searchReducer = (
         case SearchActionType.SEARCH_DONE: {
             return {
                 ...previousState,
+                activeChallengeId: action.payload.challengeId,
                 allReviewers: action.payload.allReviewers,
                 isLoading: false,
                 openReviews: action.payload.openReviews,
+                reviewOpportunityId: action.payload.reviewOpportunityId,
                 searched: true,
                 totalReviewers: action.payload.totalReviewers,
             }
@@ -353,26 +400,31 @@ function useSearch({
     searching: boolean
     totalReviewers: number
     openReviews: number
+    reviewOpportunityId: string
 } {
     const [state, dispatch] = useReducer(searchReducer, {
+        activeChallengeId: '',
         allReviewers: [],
         isLoading: false,
         openReviews: 0,
+        reviewOpportunityId: '',
         searched: false,
         totalReviewers: 0,
     })
 
     const sortData = useEventCallback(async (data?: Reviewer[]) => {
         const toSortData = data || state.allReviewers
-        let sortedList = []
+        let sortedList: Reviewer[]
 
         if (filterCriteria.sortBy === 'applicationDate') {
             sortedList = sortBy(
                 toSortData,
                 item => new Date(item.applicationDate),
             )
-        } else {
+        } else if (filterCriteria.sortBy) {
             sortedList = sortBy(toSortData, filterCriteria.sortBy)
+        } else {
+            sortedList = [...toSortData]
         }
 
         if (filterCriteria.order === 'desc') {
@@ -386,7 +438,9 @@ function useSearch({
         dispatch({
             payload: {
                 allReviewers: sortedList,
+                challengeId: state.activeChallengeId,
                 openReviews: state.openReviews,
+                reviewOpportunityId: state.reviewOpportunityId,
                 totalReviewers: sortedList.length,
             },
             type: SearchActionType.SEARCH_DONE,
@@ -395,34 +449,102 @@ function useSearch({
         return getPageData(sortedList, filterCriteria)
     })
 
-    const search = useEventCallback(async (newSearch?: boolean): Promise<Reviewer[]> => {
-        // If api search has done, just get page data from last api response
-        if (state.searched && !newSearch) {
-            return getPageData(state.allReviewers, filterCriteria)
+    const resolveChallengeIdentifier = useEventCallback(async (): Promise<string> => {
+        if (!challengeId) {
+            return ''
         }
 
-        dispatch({ type: SearchActionType.SEARCH_INIT })
-        try {
-            const data = await getChallengeReviewers(challengeId)
-            const reviewOpportunity = await getChallengeReviewOpportunities(
-                challengeId,
-            )
+        if (/^[0-9]+$/.test(challengeId)) {
+            const challenge = await getChallengeByLegacyId(+challengeId)
+            return challenge.id
+        }
 
-            dispatch({
-                payload: {
-                    allReviewers: data,
-                    openReviews: reviewOpportunity?.openPositions || 0,
-                    totalReviewers: data.length,
-                },
-                type: SearchActionType.SEARCH_DONE,
-            })
-            return getPageData(data, filterCriteria)
+        return challengeId
+    })
+
+    const fetchOpportunityAndReviewers = useEventCallback(
+        async (resolvedId: string): Promise<{
+            openPositions: number
+            opportunityId: string
+            reviewers: Reviewer[]
+        }> => {
+            const opportunity = await getChallengeReviewOpportunities(resolvedId)
+
+            if (!opportunity) {
+                return {
+                    openPositions: 0,
+                    opportunityId: '',
+                    reviewers: [],
+                }
+            }
+
+            const reviewers = opportunity.id
+                ? await getReviewOpportunityApplications(opportunity.id)
+                : []
+
+            return {
+                openPositions: opportunity.openPositions ?? 0,
+                opportunityId: opportunity.id ?? '',
+                reviewers,
+            }
+        },
+    )
+
+    const search = useEventCallback(async (forceApiFetch = false): Promise<Reviewer[]> => {
+        let resolvedId = ''
+
+        try {
+            resolvedId = await resolveChallengeIdentifier()
         } catch (error) {
             dispatch({ type: SearchActionType.SEARCH_FAILED })
             handleError(error)
             return []
         }
 
+        if (!resolvedId) {
+            dispatch({
+                payload: {
+                    allReviewers: [],
+                    challengeId: '',
+                    openReviews: 0,
+                    reviewOpportunityId: '',
+                    totalReviewers: 0,
+                },
+                type: SearchActionType.SEARCH_DONE,
+            })
+            return []
+        }
+
+        if (
+            state.searched
+            && !forceApiFetch
+            && state.activeChallengeId === resolvedId
+        ) {
+            return getPageData(state.allReviewers, filterCriteria)
+        }
+
+        dispatch({ type: SearchActionType.SEARCH_INIT })
+
+        try {
+            const result = await fetchOpportunityAndReviewers(resolvedId)
+
+            dispatch({
+                payload: {
+                    allReviewers: result.reviewers,
+                    challengeId: resolvedId,
+                    openReviews: result.openPositions,
+                    reviewOpportunityId: result.opportunityId,
+                    totalReviewers: result.reviewers.length,
+                },
+                type: SearchActionType.SEARCH_DONE,
+            })
+
+            return getPageData(result.reviewers, filterCriteria)
+        } catch (error) {
+            dispatch({ type: SearchActionType.SEARCH_FAILED })
+            handleError(error)
+            return []
+        }
     })
 
     const newSearch = useEventCallback(async (): Promise<Reviewer[]> => search(true))
@@ -430,6 +552,7 @@ function useSearch({
     return {
         newSearch,
         openReviews: state.openReviews,
+        reviewOpportunityId: state.reviewOpportunityId,
         search,
         searched: state.searched,
         searching: state.isLoading,
@@ -494,7 +617,7 @@ const rejectReducer = (
     }
 }
 
-function useReject({ challengeId }: { challengeId: string }): {
+function useReject({ opportunityId }: { opportunityId: string }): {
     reject: () => Promise<boolean>
     rejected: boolean
     rejecting: boolean
@@ -505,10 +628,14 @@ function useReject({ challengeId }: { challengeId: string }): {
     })
 
     const reject = useEventCallback(async (): Promise<boolean> => {
+        if (!opportunityId) {
+            return false
+        }
+
         dispatch({ type: RejectActionType.REJECT_INIT })
 
         try {
-            await rejectPending(challengeId)
+            await rejectPending(opportunityId)
             dispatch({ type: RejectActionType.REJECT_DONE })
             return true
         } catch (error) {
@@ -553,6 +680,12 @@ type ApproveState = {
     userId: number
 }
 
+type UseApproveResult = {
+    approve: (reviewer: Reviewer) => Promise<boolean>;
+    approving: boolean;
+    userId: number;
+}
+
 const approveReducer = (
     previousState: ApproveState,
     action: ApproveActionType,
@@ -588,11 +721,7 @@ const approveReducer = (
     }
 }
 
-function useApprove({ challengeId }: { challengeId: string }): {
-    approve: (reviewer: Reviewer) => Promise<boolean>
-    approving: boolean
-    userId: number
-} {
+function useApprove(): UseApproveResult {
     const [state, dispatch] = useReducer(approveReducer, {
         isApproving: false,
         userId: 0,
@@ -600,17 +729,17 @@ function useApprove({ challengeId }: { challengeId: string }): {
 
     const approve = useEventCallback(
         async (reviewer: Reviewer): Promise<boolean> => {
+            if (!reviewer.applicationId) {
+                return false
+            }
+
             dispatch({
                 payload: { userId: reviewer.userId },
                 type: ApproveActionType.APPROVE_INIT,
             })
 
             try {
-                await approveApplication(challengeId, {
-                    applicationRoleId: reviewer.applicationRoleId,
-                    reviewAuctionId: reviewer.reviewAuctionId,
-                    userId: reviewer.userId,
-                })
+                await approveApplication(reviewer.applicationId)
                 dispatch({ type: ApproveActionType.APPROVE_DONE })
                 return true
             } catch (error) {

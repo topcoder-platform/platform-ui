@@ -27,7 +27,7 @@ export interface useFetchActiveReviewsProps {
     loadActiveReviews: (challengeTypeId?: string) => void
 }
 
-const transformAssignments = (
+export const transformAssignments = (
     assignments: ResponseFetchActiveReviews,
 ): ActiveReviewAssignment[] => {
     const assignmentsByChallenge = new Map<string, BackendMyReviewAssignment[]>()

@@ -28,15 +28,25 @@ const Actions: FC<{
     currentFilters: ReviewFilterCriteria
 }> = props => {
     const navigate = useNavigate()
+    const targetId = props.review.challengeId || props.review.legacyChallengeId
+
     const goToManageReviewer = useEventCallback(() => {
-        navigate(`${props.review.legacyChallengeId}/manage-reviewer`, {
+        if (!targetId) {
+            return
+        }
+
+        navigate(`${targetId}/manage-reviewer`, {
             state: { previousReviewSummaryListFilter: props.currentFilters },
         })
     })
 
     return (
         <div className={styles.rowActions}>
-            <Button primary onClick={goToManageReviewer}>
+            <Button
+                primary
+                onClick={goToManageReviewer}
+                disabled={!targetId}
+            >
                 Manage Reviewers
             </Button>
         </div>
@@ -72,6 +82,7 @@ const ReviewSummaryList: FC<ReviewListProps> = props => {
             //     type: 'text',
             // },
             {
+                className: styles.challengeTitleColumn,
                 columnId: 'challengeName',
                 label: 'Challenge Title',
                 propertyName: 'challengeName',
@@ -82,7 +93,7 @@ const ReviewSummaryList: FC<ReviewListProps> = props => {
             },
             {
                 columnId: 'legacyChallengeId',
-                label: 'Legacy ID',
+                label: 'ID',
                 propertyName: 'legacyChallengeId',
                 type: 'text',
             },
@@ -118,7 +129,13 @@ const ReviewSummaryList: FC<ReviewListProps> = props => {
                 columnId: 'OpenReviewOpp',
                 label: 'Open Review Opp',
                 renderer: (review: ReviewSummary) => (
-                    <div>{review.numberOfReviewerSpots - review.numberOfApprovedApplications}</div>
+                    <div>
+                        {Math.max(
+                            review.numberOfReviewerSpots
+                            - review.numberOfApprovedApplications,
+                            0,
+                        )}
+                    </div>
                 ),
                 type: 'element',
             },
