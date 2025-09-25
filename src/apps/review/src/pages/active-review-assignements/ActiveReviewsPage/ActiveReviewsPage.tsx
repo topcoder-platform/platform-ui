@@ -1,14 +1,15 @@
 /**
  * Active Reviews Page.
  */
-import { FC, useContext, useEffect, useMemo, useState } from 'react'
+import { FC, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { forEach } from 'lodash'
 import Select, { SingleValue } from 'react-select'
 import classNames from 'classnames'
 
-import { TableLoading } from '~/apps/admin/src/lib'
+import { Pagination, TableLoading } from '~/apps/admin/src/lib'
 
 import {
+    DEFAULT_ACTIVE_REVIEWS_PER_PAGE,
     useFetchActiveReviews,
     useFetchActiveReviewsProps,
     useFetchChallengeTracks,
@@ -74,6 +75,7 @@ export const ActiveReviewsPage: FC<Props> = (props: Props) => {
         activeReviews,
         isLoading: isLoadingActiveReviews,
         loadActiveReviews,
+        pagination,
     }: useFetchActiveReviewsProps = useFetchActiveReviews()
 
     const breadCrumb = useMemo(
@@ -81,11 +83,28 @@ export const ActiveReviewsPage: FC<Props> = (props: Props) => {
         [],
     )
 
+    const selectedChallengeTypeId = challengeType?.challengeTypeId
+
     useEffect(() => {
         if (challengeType && loginUserInfo) {
-            loadActiveReviews(challengeType.challengeTypeId)
+            loadActiveReviews({
+                challengeTypeId: selectedChallengeTypeId,
+                page: 1,
+                perPage: DEFAULT_ACTIVE_REVIEWS_PER_PAGE,
+            })
         }
-    }, [challengeType, loadActiveReviews, loginUserInfo])
+    }, [challengeType, loadActiveReviews, loginUserInfo, selectedChallengeTypeId])
+
+    const handlePageChange = useCallback(
+        (nextPage: number) => {
+            loadActiveReviews({
+                challengeTypeId: selectedChallengeTypeId,
+                page: nextPage,
+                perPage: DEFAULT_ACTIVE_REVIEWS_PER_PAGE,
+            })
+        },
+        [loadActiveReviews, selectedChallengeTypeId],
+    )
 
     return (
         <PageWrapper
@@ -113,10 +132,21 @@ export const ActiveReviewsPage: FC<Props> = (props: Props) => {
                     {activeReviews.length === 0 ? (
                         <TableNoRecord className={styles.blockTable} />
                     ) : (
-                        <TableActiveReviews
-                            datas={activeReviews}
-                            className={styles.blockTable}
-                        />
+                        <>
+                            <TableActiveReviews
+                                datas={activeReviews}
+                                className={styles.blockTable}
+                            />
+                            {pagination.totalPages > 1 && (
+                                <div className={styles.pagination}>
+                                    <Pagination
+                                        page={pagination.page}
+                                        totalPages={pagination.totalPages}
+                                        onPageChange={handlePageChange}
+                                    />
+                                </div>
+                            )}
+                        </>
                     )}
                 </>
             )}

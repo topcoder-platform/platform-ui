@@ -36,7 +36,6 @@ import {
     convertBackendScorecard,
     FormContactManager,
     ProjectResult,
-    ResponseFetchActiveReviews,
     ScorecardInfo,
 } from '../models'
 
@@ -45,20 +44,30 @@ const challengeBaseUrl = `${EnvironmentConfig.API.V6}`
 /**
  * Fetch active review assignments for the current member.
  *
- * @param challengeTypeId optional challenge type filter
+ * @param params optional filter and pagination params
  * @returns resolves to the array of active review assignments
  */
-export const fetchActiveReviews = async (
-    challengeTypeId?: string,
-): Promise<ResponseFetchActiveReviews> => {
+export interface FetchActiveReviewsParams {
+    challengeTypeId?: string
+    page?: number
+    perPage?: number
+}
+
+export const fetchActiveReviews = async ({
+    challengeTypeId,
+    page,
+    perPage,
+}: FetchActiveReviewsParams = {}): Promise<BackendResponseWithMeta<BackendMyReviewAssignment[]>> => {
     const queryString = qs.stringify(
-        challengeTypeId
-            ? { challengeTypeId }
-            : {},
+        {
+            ...(challengeTypeId ? { challengeTypeId } : {}),
+            ...(page ? { page } : {}),
+            ...(perPage ? { perPage } : {}),
+        },
         { addQueryPrefix: true },
     )
 
-    return xhrGetAsync<BackendMyReviewAssignment[]>(
+    return xhrGetAsync<BackendResponseWithMeta<BackendMyReviewAssignment[]>>(
         `${challengeBaseUrl}/my-reviews${queryString}`,
     )
 }

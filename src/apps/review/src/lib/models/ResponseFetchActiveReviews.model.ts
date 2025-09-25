@@ -1,7 +1,8 @@
 import { BackendMyReviewAssignment } from './BackendMyReviewAssignment.model'
+import { BackendResponseWithMeta } from './BackendResponseWithMeta.model'
 
 /**
  * Response for fetch active review assignments.
- * The endpoint returns a flat list without pagination metadata.
+ * Includes pagination metadata when requesting paginated results.
  */
-export type ResponseFetchActiveReviews = BackendMyReviewAssignment[]
+export type ResponseFetchActiveReviews = BackendResponseWithMeta<BackendMyReviewAssignment[]>
