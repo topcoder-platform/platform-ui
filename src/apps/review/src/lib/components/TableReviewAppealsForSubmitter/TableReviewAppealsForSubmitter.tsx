@@ -18,6 +18,7 @@ import { getFinalScore } from '../../utils'
 import { NO_RESOURCE_ID, WITHOUT_APPEAL } from '../../../config/index.config'
 import { ChallengeDetailContext } from '../../contexts'
 import { useSubmissionDownloadAccess } from '../../hooks'
+import type { UseSubmissionDownloadAccessResult } from '../../hooks/useSubmissionDownloadAccess'
 
 import styles from './TableReviewAppealsForSubmitter.module.scss'
 
@@ -38,7 +39,7 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
     const {
         isSubmissionDownloadRestricted,
         restrictionMessage,
-    } = useSubmissionDownloadAccess()
+    }: UseSubmissionDownloadAccessResult = useSubmissionDownloadAccess()
     const challengeType = challengeInfo?.type
     const challengeTrack = challengeInfo?.track
     const { width: screenWidth }: WindowSize = useWindowSize()
@@ -68,6 +69,7 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
                                 if (isSubmissionDownloadRestricted) {
                                     return
                                 }
+
                                 props.downloadSubmission(data.id)
                             }}
                             className={styles.textBlue}
@@ -222,12 +224,11 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
             firstSubmission,
             finalScore,
             prevent,
-            challengeInfo,
-            props.isDownloading,
-            props.downloadSubmission,
-            props.mappingReviewAppeal,
+            props,
             isSubmissionDownloadRestricted,
             restrictionMessage,
+            challengeType,
+            challengeTrack,
         ],
     )
 

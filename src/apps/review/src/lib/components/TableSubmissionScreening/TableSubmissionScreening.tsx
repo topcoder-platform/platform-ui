@@ -16,6 +16,7 @@ import { TableWrapper } from '../TableWrapper'
 import { getHandleUrl } from '../../utils'
 import { ChallengeDetailContext } from '../../contexts'
 import { useSubmissionDownloadAccess } from '../../hooks'
+import type { UseSubmissionDownloadAccessResult } from '../../hooks/useSubmissionDownloadAccess'
 
 import styles from './TableSubmissionScreening.module.scss'
 
@@ -36,7 +37,7 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
     const {
         isSubmissionDownloadRestricted,
         restrictionMessage,
-    } = useSubmissionDownloadAccess()
+    }: UseSubmissionDownloadAccessResult = useSubmissionDownloadAccess()
     const hasScreeningPhase = useMemo(
         () => challengeInfo?.phases?.some(
             phase => phase.name?.toLowerCase() === 'screening',
@@ -60,6 +61,7 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
                                 if (isSubmissionDownloadRestricted) {
                                     return
                                 }
+
                                 props.downloadSubmission(data.submissionId)
                             }}
                             className={styles.textBlue}
@@ -178,12 +180,10 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
             ]
         },
         [
-            props.isDownloading,
-            props.downloadSubmission,
+            props,
             hasScreeningPhase,
             isSubmissionDownloadRestricted,
             restrictionMessage,
-            props.hideHandleColumn,
         ],
     )
 

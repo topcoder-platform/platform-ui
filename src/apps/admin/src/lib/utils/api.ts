@@ -8,15 +8,17 @@ import { ChallengeFilterCriteria, ReviewFilterCriteria } from '../models'
  * Handles api v5,v3 errors.
  */
 export const handleError = (error: any): void => {
-    const errorCode =
-        _.get(error, 'data.code')
+    const errorCode = _.get(error, 'data.code')
         ?? _.get(error, 'response.data.code')
         ?? error?.code
 
     let errMessage
 
     if (errorCode === 'SUBMISSION_NOT_CLEAN') {
-        errMessage = "Submission is not available in clean storage, meaning it failed antivirus checks or the antivirus checks haven't been run"
+        errMessage = [
+            'Submission is not available in clean storage, meaning it failed antivirus checks',
+            "or the antivirus checks haven't been run",
+        ].join(' ')
     }
 
     if (!errMessage) {

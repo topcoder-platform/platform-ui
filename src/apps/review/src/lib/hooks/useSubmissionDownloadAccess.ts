@@ -68,9 +68,8 @@ export function useSubmissionDownloadAccess(): UseSubmissionDownloadAccessResult
     )
 
     return {
-        isSubmissionPhaseOpen,
         isSubmissionDownloadRestricted,
+        isSubmissionPhaseOpen,
         restrictionMessage: SUBMISSION_DOWNLOAD_RESTRICTION_MESSAGE,
     }
 }
-

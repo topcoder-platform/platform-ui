@@ -3,6 +3,8 @@
  */
 import { useContext, useMemo } from 'react'
 
+import { UserRole } from '~/libs/core'
+
 import {
     BackendResource,
     ChallengeDetailContextModel,
@@ -10,7 +12,6 @@ import {
     ReviewAppContextModel,
 } from '../models'
 import { ChallengeDetailContext, ReviewAppContext } from '../contexts'
-import { UserRole } from '~/libs/core'
 
 export interface useRoleProps {
     actionChallengeRole: ChallengeRole

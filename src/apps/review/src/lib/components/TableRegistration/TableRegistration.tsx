@@ -2,28 +2,24 @@
  * Table Registration.
  */
 import { FC, MouseEvent, useContext, useMemo } from 'react'
+import { toast } from 'react-toastify'
 import classNames from 'classnames'
 
-import { MobileTableColumn } from '~/apps/admin/src/lib/models/MobileTableColumn.model'
-import { useWindowSize, WindowSize } from '~/libs/shared'
-import { TableMobile } from '~/apps/admin/src/lib/components/common/TableMobile'
+import { UserRole } from '~/libs/core'
+import { copyTextToClipboard, useWindowSize, WindowSize } from '~/libs/shared'
 import { IconOutline, Table, TableColumn } from '~/libs/ui'
-import {
-    useTableFilterLocal,
-    useTableFilterLocalProps,
-} from '~/apps/admin/src/lib/hooks'
+import { TableMobile } from '~/apps/admin/src/lib/components/common/TableMobile'
+import { useTableFilterLocal, useTableFilterLocalProps } from '~/apps/admin/src/lib/hooks'
+import { MobileTableColumn } from '~/apps/admin/src/lib/models/MobileTableColumn.model'
 
 import {
     BackendResource,
     ChallengeDetailContextModel,
     ReviewAppContextModel,
 } from '../../models'
-import { TableWrapper } from '../TableWrapper'
-import { getHandleUrl } from '../../utils'
 import { ChallengeDetailContext, ReviewAppContext } from '../../contexts'
-import { UserRole } from '~/libs/core'
-import { copyTextToClipboard } from '~/libs/shared'
-import { toast } from 'react-toastify'
+import { getHandleUrl } from '../../utils'
+import { TableWrapper } from '../TableWrapper'
 
 import styles from './TableRegistration.module.scss'
 
@@ -52,7 +48,9 @@ export const TableRegistration: FC<Props> = (props: Props) => {
 
     const hasCopilotRole = useMemo(
         () => (myRoles ?? [])
-            .some(role => role?.toLowerCase().includes('copilot')),
+            .some(role => role
+                ?.toLowerCase()
+                .includes('copilot')),
         [myRoles],
     )
 

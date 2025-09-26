@@ -179,52 +179,80 @@ function interceptAuth(instance: AxiosInstance): void {
     })
 }
 
+async function hydrateErrorFromBlobResponse(
+    responseData: unknown,
+    response: AxiosResponse | undefined,
+    error: any,
+): Promise<boolean> {
+    if (
+        !responseData
+        || typeof Blob === 'undefined'
+        || !(responseData instanceof Blob)
+    ) {
+        return false
+    }
+
+    try {
+        const payloadText = await responseData.text()
+        if (!payloadText) {
+            return true
+        }
+
+        try {
+            const parsed = JSON.parse(payloadText)
+            if (response) {
+                response.data = parsed
+            }
+
+            error.data = parsed
+        } catch {
+            // fallback to plain text message if parsing fails
+            error.message = payloadText
+        }
+    } catch {
+        // ignore blob parse failures and defer to axios default behaviour
+    }
+
+    return true
+}
+
+function assignErrorMessageFromResponse(error: any, response: AxiosResponse | undefined): void {
+    if (response?.data?.message) {
+        error.message = response.data.message
+    } else if (response?.data?.error?.message) {
+        error.message = response.data.error.message
+    }
+}
+
+function assignErrorCodeFromResponse(error: any, response: AxiosResponse | undefined): void {
+    if (!error.code && response?.data?.code) {
+        error.code = response.data.code
+    }
+}
+
 function interceptError(instance: AxiosInstance): void {
     // handle all http errors
     instance.interceptors.response.use(
         config => config,
         async (error: any) => {
-            const response = error?.response
+            const response: AxiosResponse | undefined = error?.response
 
             if (response?.status && !error.status) {
                 error.status = response.status
             }
 
-            const responseData = response?.data
-            if (
-                responseData
-                && typeof Blob !== 'undefined'
-                && responseData instanceof Blob
-            ) {
-                try {
-                    const payloadText = await responseData.text()
-                    if (payloadText) {
-                        try {
-                            const parsed = JSON.parse(payloadText)
-                            response.data = parsed
-                            error.data = parsed
-                        } catch {
-                            // fallback to plain text message if parsing fails
-                            error.message = payloadText
-                        }
-                    }
-                } catch {
-                    // ignore blob parse failures and defer to axios default behaviour
-                }
-            } else if (responseData && !error.data) {
-                error.data = responseData
+            const blobHandled = await hydrateErrorFromBlobResponse(
+                response?.data,
+                response,
+                error,
+            )
+
+            if (response?.data && !error.data && !blobHandled) {
+                error.data = response.data
             }
 
-            // if there is server error message, then return it inside `message` property of error
-            if (response?.data?.message) {
-                error.message = response.data.message
-            } else if (response?.data?.error?.message) {
-                error.message = response.data.error.message
-            }
-
-            if (!error.code && response?.data?.code) {
-                error.code = response.data.code
-            }
+            assignErrorMessageFromResponse(error, response)
+            assignErrorCodeFromResponse(error, response)
 
             // if there is server errors data, then return it inside `errors` property of error
             error.errors = response?.data?.errors

@@ -6,20 +6,20 @@ import { Link } from 'react-router-dom'
 import _, { includes } from 'lodash'
 import classNames from 'classnames'
 
+import { TableMobile } from '~/apps/admin/src/lib/components/common/TableMobile'
+import { IsRemovingType } from '~/apps/admin/src/lib/models'
 import { MobileTableColumn } from '~/apps/admin/src/lib/models/MobileTableColumn.model'
 import { useWindowSize, WindowSize } from '~/libs/shared'
-import { TableMobile } from '~/apps/admin/src/lib/components/common/TableMobile'
 import { Table, TableColumn, Tooltip } from '~/libs/ui'
-import { IsRemovingType } from '~/apps/admin/src/lib/models'
 
-import { TableWrapper } from '../TableWrapper'
-import { ChallengeDetailContextModel, MappingReviewAppeal, SubmissionInfo } from '../../models'
-import { ProgressBar } from '../ProgressBar'
 import { APPROVAL, NO_RESOURCE_ID, REVIEWER, WITHOUT_APPEAL } from '../../../config/index.config'
-import { useRole, useRoleProps } from '../../hooks'
-import { getHandleUrl, isReviewPhase } from '../../utils'
 import { ChallengeDetailContext } from '../../contexts'
-import { useSubmissionDownloadAccess } from '../../hooks'
+import { useRole, useRoleProps, useSubmissionDownloadAccess } from '../../hooks'
+import type { UseSubmissionDownloadAccessResult } from '../../hooks/useSubmissionDownloadAccess'
+import { ChallengeDetailContextModel, MappingReviewAppeal, SubmissionInfo } from '../../models'
+import { getHandleUrl, isReviewPhase } from '../../utils'
+import { ProgressBar } from '../ProgressBar'
+import { TableWrapper } from '../TableWrapper'
 
 import styles from './TableReviewAppeals.module.scss'
 
@@ -47,7 +47,7 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
     const {
         isSubmissionDownloadRestricted,
         restrictionMessage,
-    } = useSubmissionDownloadAccess()
+    }: UseSubmissionDownloadAccessResult = useSubmissionDownloadAccess()
 
     const columns = useMemo<TableColumn<SubmissionInfo>[]>(
         () => {
@@ -67,6 +67,7 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                                 if (isSubmissionDownloadRestricted) {
                                     return
                                 }
+
                                 props.downloadSubmission(data.id)
                             }}
                             className={styles.textBlue}
@@ -322,15 +323,13 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
             }, ...actionColumns] as TableColumn<SubmissionInfo>[]
         },
         [
-            props.tab,
+            props,
             challengeInfo,
             actionChallengeRole,
-            props.isDownloading,
-            props.downloadSubmission,
-            props.mappingReviewAppeal,
-            props.hideHandleColumn,
             isSubmissionDownloadRestricted,
             restrictionMessage,
+            challengeType,
+            challengeTrack,
         ],
     )
 
