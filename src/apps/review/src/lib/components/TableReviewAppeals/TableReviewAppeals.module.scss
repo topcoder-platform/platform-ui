@@ -31,6 +31,10 @@
     }
 }
 
+.tooltipTrigger {
+    display: inline-block;
+}
+
 .notReviewed {
     color: var(--GrayFontColor);
 }
@@ -46,4 +50,24 @@
 
 .appealsLink {
     padding: 0 $sp-1;
+}
+
+.completedAction {
+    align-items: center;
+    display: flex;
+    justify-content: center;
+}
+
+.completedIcon {
+    align-items: center;
+    background-color: #2fa152;
+    border-radius: 50%;
+    color: #fff;
+    display: flex;
+    font-size: 12px;
+    font-weight: 700;
+    height: 20px;
+    justify-content: center;
+    line-height: 1;
+    width: 20px;
 }

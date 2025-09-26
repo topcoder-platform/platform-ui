@@ -35,11 +35,21 @@ export function formatDurationDate(
         durationStatus = 'warning'
     }
 
+    const absoluteDuration = moment.duration(
+        Math.abs(durationMilisecond),
+        'milliseconds',
+    )
+    const formattedDuration = (absoluteDuration as any)
+        .format('d[d] h[h] m[m]', { trim: 'both' })
+        .trim()
+        || '0m'
+    const durationString = durationMilisecond < 0
+        ? `Late by ${formattedDuration}`
+        : formattedDuration
+
     return {
         durationColor,
         durationStatus,
-        durationString: (timeLeftDuration as any).format('d[d] h[h] m[m]', {
-            trim: 'both',
-        }),
+        durationString,
     }
 }

@@ -9,15 +9,22 @@ import { IsRemovingType } from '~/apps/admin/src/lib/models'
 import { Screening } from '../../models'
 import { TableNoRecord } from '../TableNoRecord'
 import { TableSubmissionScreening } from '../TableSubmissionScreening'
+import { useRole, useRoleProps } from '../../hooks'
+import { REVIEWER } from '../../../config/index.config'
 
 interface Props {
     screening: Screening[]
     isLoadingScreening: boolean
     isDownloading: IsRemovingType
     downloadSubmission: (submissionId: string) => void
+    isActiveChallenge: boolean
 }
 
 export const TabContentScreening: FC<Props> = (props: Props) => {
+    const { actionChallengeRole }: useRoleProps = useRole()
+    const hideHandleColumn = props.isActiveChallenge
+        && actionChallengeRole === REVIEWER
+
     // show loading ui when fetching data
     if (props.isLoadingScreening) {
         return <TableLoading />
@@ -33,6 +40,7 @@ export const TabContentScreening: FC<Props> = (props: Props) => {
             datas={props.screening}
             isDownloading={props.isDownloading}
             downloadSubmission={props.downloadSubmission}
+            hideHandleColumn={hideHandleColumn}
         />
     )
 }

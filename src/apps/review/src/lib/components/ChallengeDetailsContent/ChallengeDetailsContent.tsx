@@ -26,6 +26,7 @@ interface Props {
     screening: Screening[]
     review: SubmissionInfo[]
     mappingReviewAppeal: MappingReviewAppeal // from review id to appeal info
+    isActiveChallenge: boolean
 }
 
 export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
@@ -49,6 +50,7 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
                     isLoadingScreening={props.isLoadingSubmission}
                     isDownloading={isDownloadingSubmission}
                     downloadSubmission={downloadSubmission}
+                    isActiveChallenge={props.isActiveChallenge}
                 />
             ) : props.selectedTab === 'Winners' ? (
                 <TabContentWinners
@@ -65,6 +67,7 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
                     isDownloading={isDownloadingSubmission}
                     downloadSubmission={downloadSubmission}
                     mappingReviewAppeal={props.mappingReviewAppeal}
+                    isActiveChallenge={props.isActiveChallenge}
                 />
             )}
 

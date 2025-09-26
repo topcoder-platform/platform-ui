@@ -124,7 +124,7 @@ export const createContactRequest = async (
             message: string
         },
         BackendContactRequest
-    >(`${EnvironmentConfig.API.V6}/review/contact-requests`, {
+    >(`${EnvironmentConfig.API.V6}/contact-requests`, {
         challengeId,
         message: data.category
             ? `${data.category}:${data.message}`
@@ -261,6 +261,31 @@ export const fetchReviews = async (
             page,
             perPage,
             submissionId,
+        })}`,
+    )
+    return results.data
+}
+
+/**
+ * Fetch challenge reviews
+ *
+ * @param challengeId challenge id
+ * @param page current page
+ * @param perPage number of items per page
+ * @returns resolves to the array of reviews for the challenge
+ */
+export const fetchChallengeReviews = async (
+    challengeId: string,
+    page = 1,
+    perPage = 1000,
+): Promise<BackendReview[]> => {
+    const results = await xhrGetAsync<
+        BackendResponseWithMeta<BackendReview[]>
+    >(
+        `${EnvironmentConfig.API.V6}/reviews?${qs.stringify({
+            challengeId,
+            page,
+            perPage,
         })}`,
     )
     return results.data

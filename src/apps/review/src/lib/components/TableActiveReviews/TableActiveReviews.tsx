@@ -126,18 +126,7 @@ export const TableActiveReviews: FC<Props> = (props: Props) => {
                                 }}
                             >
                                 <i className={`icon-${data.timeLeftStatus}`} />
-                                {(() => {
-                                    const rawTimeLeft = data.timeLeft?.trim()
-                                    const normalizedLate = rawTimeLeft
-                                        && data.timeLeftStatus === 'error'
-                                        ? rawTimeLeft.replace(/^[+-]/, '')
-                                            .trim()
-                                        : ''
-
-                                    return normalizedLate
-                                        ? `Late by ${normalizedLate}`
-                                        : data.timeLeft
-                                })()}
+                                {data.timeLeft}
                             </span>
                         ),
                         type: 'element',

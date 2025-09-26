@@ -13,6 +13,7 @@ import { TableReviewAppeals } from '../TableReviewAppeals'
 import { useRole, useRoleProps } from '../../hooks'
 import {
     APPROVAL,
+    REVIEWER,
     SUBMITTER,
 } from '../../../config/index.config'
 import { TableReviewAppealsForSubmitter } from '../TableReviewAppealsForSubmitter'
@@ -24,6 +25,7 @@ interface Props {
     isDownloading: IsRemovingType
     downloadSubmission: (submissionId: string) => void
     mappingReviewAppeal: MappingReviewAppeal // from review id to appeal info
+    isActiveChallenge: boolean
 }
 
 export const TabContentReview: FC<Props> = (props: Props) => {
@@ -34,6 +36,8 @@ export const TabContentReview: FC<Props> = (props: Props) => {
         [reviews],
     )
     const { actionChallengeRole }: useRoleProps = useRole()
+    const hideHandleColumn = props.isActiveChallenge
+        && actionChallengeRole === REVIEWER
 
     // show loading ui when fetching data
     if (
@@ -44,7 +48,7 @@ export const TabContentReview: FC<Props> = (props: Props) => {
 
     // show no record message
     if (!reviews.length) {
-        return <TableNoRecord />
+        return <TableNoRecord message='No reviews yet' />
     }
 
     return actionChallengeRole !== SUBMITTER || selectedTab === APPROVAL ? (
@@ -55,6 +59,7 @@ export const TabContentReview: FC<Props> = (props: Props) => {
             isDownloading={props.isDownloading}
             downloadSubmission={props.downloadSubmission}
             mappingReviewAppeal={props.mappingReviewAppeal}
+            hideHandleColumn={hideHandleColumn}
         />
     ) : (
         <TableReviewAppealsForSubmitter

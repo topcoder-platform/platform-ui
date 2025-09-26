@@ -1,21 +1,29 @@
 /**
  * Table Registration.
  */
-import { FC, useMemo } from 'react'
+import { FC, MouseEvent, useContext, useMemo } from 'react'
 import classNames from 'classnames'
 
 import { MobileTableColumn } from '~/apps/admin/src/lib/models/MobileTableColumn.model'
 import { useWindowSize, WindowSize } from '~/libs/shared'
 import { TableMobile } from '~/apps/admin/src/lib/components/common/TableMobile'
-import { Table, TableColumn } from '~/libs/ui'
+import { IconOutline, Table, TableColumn } from '~/libs/ui'
 import {
     useTableFilterLocal,
     useTableFilterLocalProps,
 } from '~/apps/admin/src/lib/hooks'
 
-import { BackendResource } from '../../models'
+import {
+    BackendResource,
+    ChallengeDetailContextModel,
+    ReviewAppContextModel,
+} from '../../models'
 import { TableWrapper } from '../TableWrapper'
 import { getHandleUrl } from '../../utils'
+import { ChallengeDetailContext, ReviewAppContext } from '../../contexts'
+import { UserRole } from '~/libs/core'
+import { copyTextToClipboard } from '~/libs/shared'
+import { toast } from 'react-toastify'
 
 import styles from './TableRegistration.module.scss'
 
@@ -39,51 +47,120 @@ export const TableRegistration: FC<Props> = (props: Props) => {
     const { width: screenWidth }: WindowSize = useWindowSize()
     const isTablet = useMemo(() => screenWidth <= 744, [screenWidth])
 
+    const { myRoles }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
+    const { loginUserInfo }: ReviewAppContextModel = useContext(ReviewAppContext)
+
+    const hasCopilotRole = useMemo(
+        () => (myRoles ?? [])
+            .some(role => role?.toLowerCase().includes('copilot')),
+        [myRoles],
+    )
+
+    const isAdmin = useMemo(
+        () => loginUserInfo?.roles?.some(
+            role => typeof role === 'string'
+                && role.toLowerCase() === UserRole.administrator,
+        ) ?? false,
+        [loginUserInfo?.roles],
+    )
+
+    const shouldDisplayEmail = hasCopilotRole || isAdmin
+
     const columns = useMemo<TableColumn<BackendResource>[]>(
-        () => [
-            {
-                label: 'Handle',
-                propertyName: 'memberHandle',
-                renderer: (data: BackendResource) => (
-                    <a
-                        href={getHandleUrl(data)}
-                        target='_blank'
-                        rel='noreferrer'
-                        style={{
-                            color: data.handleColor,
-                        }}
-                        onClick={function onClick() {
-                            window.open(
-                                getHandleUrl(data),
-                                '_blank',
-                            )
-                        }}
-                    >
-                        {data.memberHandle}
-                    </a>
-                ),
-                type: 'element',
-            },
-            {
-                label: 'Rating',
-                propertyName: 'rating',
-                renderer: (data: BackendResource) => (
-                    <span style={{ color: data.handleColor }}>
-                        {data.rating ?? 'Not Rated'}
-                    </span>
-                ),
-                type: 'element',
-            },
-            {
-                label: 'Registration Date',
-                propertyName: 'created',
-                renderer: (data: BackendResource) => (
-                    <span className='last-element'>{data.createdString}</span>
-                ),
-                type: 'element',
-            },
-        ],
-        [],
+        () => {
+            const baseColumns: TableColumn<BackendResource>[] = [
+                {
+                    label: 'Handle',
+                    propertyName: 'memberHandle',
+                    renderer: (data: BackendResource) => (
+                        <a
+                            href={getHandleUrl(data)}
+                            target='_blank'
+                            rel='noreferrer'
+                            style={{
+                                color: data.handleColor,
+                            }}
+                            onClick={function onClick() {
+                                window.open(
+                                    getHandleUrl(data),
+                                    '_blank',
+                                )
+                            }}
+                        >
+                            {data.memberHandle}
+                        </a>
+                    ),
+                    type: 'element',
+                },
+                {
+                    label: 'Rating',
+                    propertyName: 'rating',
+                    renderer: (data: BackendResource) => (
+                        <span style={{ color: data.handleColor }}>
+                            {data.rating ?? 'Not Rated'}
+                        </span>
+                    ),
+                    type: 'element',
+                },
+                {
+                    label: 'Registration Date',
+                    propertyName: 'created',
+                    renderer: (data: BackendResource) => (
+                        <span className='last-element'>{data.createdString}</span>
+                    ),
+                    type: 'element',
+                },
+            ]
+
+            if (shouldDisplayEmail) {
+                baseColumns.splice(1, 0, {
+                    label: 'Email',
+                    propertyName: 'memberEmail',
+                    renderer: (data: BackendResource) => {
+                        const emailValue = data.memberEmail?.trim()
+
+                        if (!emailValue) {
+                            return <span>Unavailable</span>
+                        }
+
+                        const email: string = emailValue
+
+                        async function handleCopyEmail(event: MouseEvent<HTMLButtonElement>): Promise<void> {
+                            event.stopPropagation()
+
+                            await copyTextToClipboard(email)
+                            toast.success('Email copied to clipboard', {
+                                toastId: `challenge-registration-email-copy-${email}`,
+                            })
+                        }
+
+                        return (
+                            <span className={styles.emailCell}>
+                                <a
+                                    href={`mailto:${email}`}
+                                    className={styles.emailLink}
+                                >
+                                    {email}
+                                </a>
+                                <button
+                                    type='button'
+                                    className={styles.copyButton}
+                                    aria-label='Copy email address'
+                                    title='Copy email address'
+                                    onClick={handleCopyEmail}
+                                >
+                                    <IconOutline.DocumentDuplicateIcon />
+                                </button>
+                            </span>
+                        )
+                    },
+                    type: 'element',
+                })
+            }
+
+            return baseColumns
+        },
+        [shouldDisplayEmail],
     )
 
     const columnsMobile = useMemo<MobileTableColumn<BackendResource>[][]>(

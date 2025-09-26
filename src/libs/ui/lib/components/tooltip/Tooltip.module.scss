@@ -5,7 +5,7 @@
   @extend .body-small;
   @include font-roboto;
 
-  display: flex;
+  display: block;
   padding: $sp-2;
   background-color: $tc-black;
   color: $black-5;
@@ -13,6 +13,7 @@
   opacity: 1 !important;
   box-shadow: 0 1px 5px $tips-shadow;
   text-transform: none;
-  max-width: 50ch;
+  max-width: 32rem;
+  white-space: normal;
   z-index: 9;
 }

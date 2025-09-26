@@ -1,8 +1,14 @@
 import { useContext, useEffect, useMemo } from 'react'
 import { every, filter, forEach } from 'lodash'
+import useSWR, { SWRResponse } from 'swr'
 
+import { handleError } from '~/libs/shared'
+
+import { REVIEWER } from '../../config/index.config'
+import { ChallengeDetailContext, ReviewAppContext } from '../contexts'
 import {
     BackendResource,
+    BackendReview,
     BackendSubmission,
     ChallengeDetailContextModel,
     convertBackendSubmissionToScreening,
@@ -13,17 +19,16 @@ import {
     Screening,
     SubmissionInfo,
 } from '../models'
-import { ChallengeDetailContext, ReviewAppContext } from '../contexts'
-import { REVIEWER } from '../../config/index.config'
+import { fetchChallengeReviews } from '../services'
 
-import {
-    useFetchChallengeSubmissions,
-    useFetchChallengeSubmissionsProps,
-} from './useFetchChallengeSubmissions'
 import {
     useFetchAppealQueue,
     useFetchAppealQueueProps,
 } from './useFetchAppealQueue'
+import {
+    useFetchChallengeSubmissions,
+    useFetchChallengeSubmissionsProps,
+} from './useFetchChallengeSubmissions'
 import { useRole, useRoleProps } from './useRole'
 
 export interface useFetchScreeningReviewProps {
@@ -95,6 +100,56 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
         cancelLoadResourceAppeal,
     }: useFetchAppealQueueProps = useFetchAppealQueue()
 
+    const reviewerKey = useMemo(
+        () => reviewerIds
+            .slice()
+            .sort()
+            .join(','),
+        [reviewerIds],
+    )
+
+    const {
+        data: challengeReviews,
+        error: fetchChallengeReviewsError,
+    }: SWRResponse<BackendReview[], Error> = useSWR<BackendReview[], Error>(
+        `reviewBaseUrl/reviews/${challengeId}/${reviewerKey}`,
+        {
+            fetcher: () => fetchChallengeReviews(challengeId ?? ''),
+            isPaused: () => !challengeId || !reviewerIds.length,
+        },
+    )
+
+    useEffect(() => {
+        if (fetchChallengeReviewsError) {
+            handleError(fetchChallengeReviewsError)
+        }
+    }, [fetchChallengeReviewsError])
+
+    const reviewAssignmentsBySubmission = useMemo(
+        () => {
+            const mapping: { [submissionId: string]: { [resourceId: string]: BackendReview } } = {}
+
+            forEach(challengeReviews, reviewItem => {
+                if (!reviewItem) {
+                    return
+                }
+
+                if (!reviewerIds.includes(reviewItem.resourceId)) {
+                    return
+                }
+
+                if (!mapping[reviewItem.submissionId]) {
+                    mapping[reviewItem.submissionId] = {}
+                }
+
+                mapping[reviewItem.submissionId][reviewItem.resourceId] = reviewItem
+            })
+
+            return mapping
+        },
+        [challengeReviews, reviewerIds],
+    )
+
     // get screening data from challenge submissions
     const screening = useMemo(
         () => challengeSubmissions.map(item => {
@@ -120,22 +175,45 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
             forEach(reviewerIds, reviewerId => {
                 const matchingReview
                     = challengeSubmission.reviewResourceMapping?.[reviewerId]
-                if (matchingReview) {
-                    validReviews.push({
-                        ...challengeSubmission,
-                        review: [matchingReview],
-                    })
-                } else {
-                    validReviews.push({
-                        ...challengeSubmission,
-                        review: [
-                            {
-                                ...createEmptyBackendReview(),
-                                resourceId: reviewerId,
-                            },
-                        ],
-                    })
+                const assignmentReview
+                    = reviewAssignmentsBySubmission[challengeSubmission.id]?.[reviewerId]
+
+                let reviewForResource = matchingReview
+
+                if (assignmentReview) {
+                    if (reviewForResource) {
+                        reviewForResource = {
+                            ...reviewForResource,
+                            committed: assignmentReview.committed,
+                            id: assignmentReview.id,
+                            status: assignmentReview.status,
+                            submissionId: assignmentReview.submissionId,
+                        }
+                    } else {
+                        reviewForResource = {
+                            ...assignmentReview,
+                            reviewItems: assignmentReview.reviewItems ?? [],
+                        }
+                    }
                 }
+
+                if (!reviewForResource) {
+                    const emptyReview = {
+                        ...createEmptyBackendReview(),
+                        resourceId: reviewerId,
+                        submissionId: challengeSubmission.id,
+                    }
+                    reviewForResource = emptyReview
+                }
+
+                validReviews.push({
+                    ...challengeSubmission,
+                    review: [reviewForResource],
+                    reviewResourceMapping: {
+                        ...(challengeSubmission.reviewResourceMapping ?? {}),
+                        [reviewerId]: reviewForResource,
+                    },
+                })
             })
         })
         return validReviews.map(item => {
@@ -145,7 +223,12 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
                 userInfo: resourceMemberIdMapping[result.memberId],
             }
         })
-    }, [challengeSubmissions, resourceMemberIdMapping, reviewerIds])
+    }, [
+        challengeSubmissions,
+        resourceMemberIdMapping,
+        reviewerIds,
+        reviewAssignmentsBySubmission,
+    ])
 
     useEffect(() => {
         forEach(review, item => {
@@ -178,7 +261,7 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
 
     useEffect(() => () => {
         cancelLoadResourceAppeal()
-    }, [])
+    }, [cancelLoadResourceAppeal])
 
     return {
         isLoading,

@@ -189,6 +189,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                             screening={screening}
                             review={review}
                             mappingReviewAppeal={mappingReviewAppeal}
+                            isActiveChallenge={!isPastReviewDetail}
                         />
                     </div>
                 </>

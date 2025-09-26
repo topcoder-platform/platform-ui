@@ -7,8 +7,10 @@ import {
     BackendResource,
     ChallengeDetailContextModel,
     ChallengeRole,
+    ReviewAppContextModel,
 } from '../models'
-import { ChallengeDetailContext } from '../contexts'
+import { ChallengeDetailContext, ReviewAppContext } from '../contexts'
+import { UserRole } from '~/libs/core'
 
 export interface useRoleProps {
     actionChallengeRole: ChallengeRole
@@ -26,6 +28,22 @@ const useRole = (): useRoleProps => {
     )
     const { challengeId }: ChallengeDetailContextModel = useContext(
         ChallengeDetailContext,
+    )
+    const { loginUserInfo }: ReviewAppContextModel = useContext(ReviewAppContext)
+
+    const isTopcoderAdmin = useMemo(
+        () => loginUserInfo?.roles?.some(
+            role => typeof role === 'string'
+                && role.toLowerCase() === UserRole.administrator,
+        ) ?? false,
+        [loginUserInfo?.roles],
+    )
+
+    const displayRoles = useMemo(
+        () => (myRoles.length
+            ? myRoles
+            : isTopcoderAdmin ? ['Topcoder Admin'] : []),
+        [isTopcoderAdmin, myRoles],
     )
 
     // Get role for review flow
@@ -45,7 +63,7 @@ const useRole = (): useRoleProps => {
     return {
         actionChallengeRole,
         myChallengeResources: myResources,
-        myChallengeRoles: myRoles,
+        myChallengeRoles: displayRoles,
     }
 }
 

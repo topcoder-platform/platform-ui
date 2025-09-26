@@ -119,6 +119,6 @@ export const ADMIN = {
 }
 
 export const REVIEW = {
-    CHALLENGE_PAGE_URL: 'https://www.topcoder-dev.com/challenges',
+    CHALLENGE_PAGE_URL: 'https://www-v6.topcoder-dev.com/challenges',
     PROFILE_PAGE_URL: 'https://profiles.topcoder-dev.com',
 }

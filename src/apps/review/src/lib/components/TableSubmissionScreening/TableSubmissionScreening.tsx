@@ -8,13 +8,14 @@ import classNames from 'classnames'
 import { MobileTableColumn } from '~/apps/admin/src/lib/models/MobileTableColumn.model'
 import { useWindowSize, WindowSize } from '~/libs/shared'
 import { TableMobile } from '~/apps/admin/src/lib/components/common/TableMobile'
-import { Table, TableColumn } from '~/libs/ui'
+import { Table, TableColumn, Tooltip } from '~/libs/ui'
 import { IsRemovingType } from '~/apps/admin/src/lib/models'
 
 import { ChallengeDetailContextModel, Screening } from '../../models'
 import { TableWrapper } from '../TableWrapper'
 import { getHandleUrl } from '../../utils'
 import { ChallengeDetailContext } from '../../contexts'
+import { useSubmissionDownloadAccess } from '../../hooks'
 
 import styles from './TableSubmissionScreening.module.scss'
 
@@ -23,6 +24,7 @@ interface Props {
     datas: Screening[]
     isDownloading: IsRemovingType
     downloadSubmission: (submissionId: string) => void
+    hideHandleColumn?: boolean
 }
 
 export const TableSubmissionScreening: FC<Props> = (props: Props) => {
@@ -31,34 +33,63 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
     const { challengeInfo }: ChallengeDetailContextModel = useContext(
         ChallengeDetailContext,
     )
+    const {
+        isSubmissionDownloadRestricted,
+        restrictionMessage,
+    } = useSubmissionDownloadAccess()
     const hasScreeningPhase = useMemo(
         () => challengeInfo?.phases?.some(
-            phase => phase.name.toLowerCase() === 'screening',
+            phase => phase.name?.toLowerCase() === 'screening',
         ) ?? false,
         [challengeInfo?.phases],
     )
-
     const columns = useMemo<TableColumn<Screening>[]>(
         () => {
-            const baseColumns: TableColumn<Screening>[] = [
-                {
-                    label: 'Submission ID',
-                    propertyName: 'submissionId',
-                    renderer: (data: Screening) => (
+            const submissionColumn: TableColumn<Screening> = {
+                label: 'Submission ID',
+                propertyName: 'submissionId',
+                renderer: (data: Screening) => {
+                    const isButtonDisabled = Boolean(
+                        props.isDownloading[data.submissionId]
+                        || isSubmissionDownloadRestricted,
+                    )
+
+                    const button = (
                         <button
                             onClick={function onClick() {
+                                if (isSubmissionDownloadRestricted) {
+                                    return
+                                }
                                 props.downloadSubmission(data.submissionId)
                             }}
                             className={styles.textBlue}
-                            disabled={props.isDownloading[data.submissionId]}
+                            disabled={isButtonDisabled}
                             type='button'
                         >
                             {data.submissionId}
                         </button>
-                    ),
-                    type: 'element',
+                    )
+
+                    if (!isSubmissionDownloadRestricted) {
+                        return button
+                    }
+
+                    return (
+                        <Tooltip content={restrictionMessage} triggerOn='click-hover'>
+                            <span
+                                className={styles.tooltipTrigger}
+                            >
+                                {button}
+                            </span>
+                        </Tooltip>
+                    )
                 },
-                {
+                type: 'element',
+            }
+
+            const handleColumn: TableColumn<Screening> | undefined = props.hideHandleColumn
+                ? undefined
+                : {
                     label: 'Handle',
                     propertyName: 'handle',
                     renderer: (data: Screening) => (
@@ -80,15 +111,21 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
                         </a>
                     ),
                     type: 'element',
-                },
-                {
-                    label: 'Submission Date',
-                    propertyName: 'createdAt',
-                    renderer: (data: Screening) => (
-                        <span>{data.createdAtString}</span>
-                    ),
-                    type: 'element',
-                },
+                }
+
+            const submissionDateColumn: TableColumn<Screening> = {
+                label: 'Submission Date',
+                propertyName: 'createdAt',
+                renderer: (data: Screening) => (
+                    <span>{data.createdAtString}</span>
+                ),
+                type: 'element',
+            }
+
+            const baseColumns: TableColumn<Screening>[] = [
+                submissionColumn,
+                ...(handleColumn ? [handleColumn] : []),
+                submissionDateColumn,
             ]
 
             if (!hasScreeningPhase) {
@@ -144,6 +181,9 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
             props.isDownloading,
             props.downloadSubmission,
             hasScreeningPhase,
+            isSubmissionDownloadRestricted,
+            restrictionMessage,
+            props.hideHandleColumn,
         ],
     )
 

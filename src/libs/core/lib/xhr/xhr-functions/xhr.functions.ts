@@ -183,16 +183,51 @@ function interceptError(instance: AxiosInstance): void {
     // handle all http errors
     instance.interceptors.response.use(
         config => config,
-        (error: any) => {
+        async (error: any) => {
+            const response = error?.response
+
+            if (response?.status && !error.status) {
+                error.status = response.status
+            }
+
+            const responseData = response?.data
+            if (
+                responseData
+                && typeof Blob !== 'undefined'
+                && responseData instanceof Blob
+            ) {
+                try {
+                    const payloadText = await responseData.text()
+                    if (payloadText) {
+                        try {
+                            const parsed = JSON.parse(payloadText)
+                            response.data = parsed
+                            error.data = parsed
+                        } catch {
+                            // fallback to plain text message if parsing fails
+                            error.message = payloadText
+                        }
+                    }
+                } catch {
+                    // ignore blob parse failures and defer to axios default behaviour
+                }
+            } else if (responseData && !error.data) {
+                error.data = responseData
+            }
+
             // if there is server error message, then return it inside `message` property of error
-            if (error?.response?.data?.message) {
-                error.message = error?.response?.data?.message
-            } else if (error?.response?.data?.error?.message) {
-                error.message = error?.response?.data?.error?.message
+            if (response?.data?.message) {
+                error.message = response.data.message
+            } else if (response?.data?.error?.message) {
+                error.message = response.data.error.message
+            }
+
+            if (!error.code && response?.data?.code) {
+                error.code = response.data.code
             }
 
             // if there is server errors data, then return it inside `errors` property of error
-            error.errors = error?.response?.data?.errors
+            error.errors = response?.data?.errors
             return Promise.reject(error)
         },
     )

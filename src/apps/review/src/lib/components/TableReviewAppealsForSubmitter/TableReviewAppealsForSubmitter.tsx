@@ -9,7 +9,7 @@ import classNames from 'classnames'
 import { MobileTableColumn } from '~/apps/admin/src/lib/models/MobileTableColumn.model'
 import { useWindowSize, WindowSize } from '~/libs/shared'
 import { TableMobile } from '~/apps/admin/src/lib/components/common/TableMobile'
-import { Table, TableColumn } from '~/libs/ui'
+import { Table, TableColumn, Tooltip } from '~/libs/ui'
 import { IsRemovingType } from '~/apps/admin/src/lib/models'
 
 import { ChallengeDetailContextModel, MappingReviewAppeal, ReviewResult, SubmissionInfo } from '../../models'
@@ -17,6 +17,7 @@ import { TableWrapper } from '../TableWrapper'
 import { getFinalScore } from '../../utils'
 import { NO_RESOURCE_ID, WITHOUT_APPEAL } from '../../../config/index.config'
 import { ChallengeDetailContext } from '../../contexts'
+import { useSubmissionDownloadAccess } from '../../hooks'
 
 import styles from './TableReviewAppealsForSubmitter.module.scss'
 
@@ -31,9 +32,13 @@ interface Props {
 
 export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
     // get challenge info from challenge detail context
+    const { challengeInfo }: ChallengeDetailContextModel = useContext(
+        ChallengeDetailContext,
+    )
     const {
-        challengeInfo,
-    }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
+        isSubmissionDownloadRestricted,
+        restrictionMessage,
+    } = useSubmissionDownloadAccess()
     const challengeType = challengeInfo?.type
     const challengeTrack = challengeInfo?.track
     const { width: screenWidth }: WindowSize = useWindowSize()
@@ -51,18 +56,42 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
             {
                 label: 'Submission ID',
                 propertyName: 'id',
-                renderer: (data: SubmissionInfo) => (
-                    <button
-                        onClick={function onClick() {
-                            props.downloadSubmission(data.id)
-                        }}
-                        className={styles.textBlue}
-                        disabled={props.isDownloading[data.id]}
-                        type='button'
-                    >
-                        {data.id}
-                    </button>
-                ),
+                renderer: (data: SubmissionInfo) => {
+                    const isButtonDisabled = Boolean(
+                        props.isDownloading[data.id]
+                        || isSubmissionDownloadRestricted,
+                    )
+
+                    const button = (
+                        <button
+                            onClick={function onClick() {
+                                if (isSubmissionDownloadRestricted) {
+                                    return
+                                }
+                                props.downloadSubmission(data.id)
+                            }}
+                            className={styles.textBlue}
+                            disabled={isButtonDisabled}
+                            type='button'
+                        >
+                            {data.id}
+                        </button>
+                    )
+
+                    if (!isSubmissionDownloadRestricted) {
+                        return button
+                    }
+
+                    return (
+                        <Tooltip content={restrictionMessage} triggerOn='click-hover'>
+                            <span
+                                className={styles.tooltipTrigger}
+                            >
+                                {button}
+                            </span>
+                        </Tooltip>
+                    )
+                },
                 type: 'element',
             },
             {
@@ -197,6 +226,8 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
             props.isDownloading,
             props.downloadSubmission,
             props.mappingReviewAppeal,
+            isSubmissionDownloadRestricted,
+            restrictionMessage,
         ],
     )
 

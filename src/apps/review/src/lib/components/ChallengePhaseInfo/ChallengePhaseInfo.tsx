@@ -67,7 +67,7 @@ export const ChallengePhaseInfo: FC<Props> = (props: Props) => {
             title: variant === 'past' ? 'Challenge End Date' : 'Phase End Date',
             value: variant === 'past'
                 ? getChallengeEndDateValue()
-                : data.currentPhaseEndDateString || 'N/A',
+                : data.currentPhaseEndDateString || '-',
         })
 
         if (variant === 'active') {
@@ -78,7 +78,7 @@ export const ChallengePhaseInfo: FC<Props> = (props: Props) => {
                     color: data.timeLeftColor,
                 },
                 title: 'Time Left',
-                value: data.timeLeft || 'N/A',
+                value: data.timeLeft || '-',
             })
 
             items.push({

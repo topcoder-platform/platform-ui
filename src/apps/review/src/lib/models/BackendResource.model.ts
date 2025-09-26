@@ -12,6 +12,7 @@ export interface BackendResource {
     challengeId: string
     memberId: string
     memberHandle: string
+    memberEmail?: string
     roleId: string
     roleName?: string // this field is calculated at frontend
     createdBy: string
