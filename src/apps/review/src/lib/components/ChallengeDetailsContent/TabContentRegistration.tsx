@@ -24,7 +24,7 @@ export const TabContentRegistration: FC = () => {
 
     // show no record message
     if (!registrants.length) {
-        return <TableNoRecord />
+        return <TableNoRecord message='No members registered' />
     }
 
     // show registrants table

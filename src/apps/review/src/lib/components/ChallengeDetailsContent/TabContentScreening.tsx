@@ -25,7 +25,7 @@ export const TabContentScreening: FC<Props> = (props: Props) => {
 
     // show no record message
     if (!props.screening.length) {
-        return <TableNoRecord />
+        return <TableNoRecord message='No submissions' />
     }
 
     return (

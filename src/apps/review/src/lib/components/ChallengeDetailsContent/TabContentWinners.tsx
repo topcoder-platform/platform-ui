@@ -25,7 +25,7 @@ export const TabContentWinners: FC<Props> = (props: Props) => {
 
     // show no record message
     if (!props.projectResults.length) {
-        return <TableNoRecord />
+        return <TableNoRecord message="Winners haven't been announced yet" />
     }
 
     return (

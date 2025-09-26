@@ -3,7 +3,7 @@
  */
 import { FC, useCallback, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { bind, lowerCase, noop } from 'lodash'
+import { bind, noop } from 'lodash'
 import classNames from 'classnames'
 
 import { MobileTableColumn } from '~/apps/admin/src/lib/models/MobileTableColumn.model'
@@ -99,12 +99,6 @@ export const TableActiveReviews: FC<Props> = (props: Props) => {
                         propertyName: 'currentPhase',
                         renderer: (data: ActiveReviewAssignment) => (
                             <div className={styles.phase}>
-                                <i
-                                    className={`icon-${
-                                        lowerCase(data.currentPhase)
-                                            .split(' ')[0]
-                                    }`}
-                                />
                                 {data.currentPhase}
                             </div>
                         ),
