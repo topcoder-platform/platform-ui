@@ -91,18 +91,18 @@ export const transformAssignments = (
         index += 1
 
         mapped.push({
+            challengeEndDate,
+            challengeEndDateString: challengeEndDate
+                ? moment(challengeEndDate)
+                    .local()
+                    .format(TABLE_DATE_FORMAT)
+                : undefined,
             challengeTypeId: base.challengeTypeId,
             challengeTypeName: base.challengeTypeName,
             currentPhase: base.currentPhaseName,
             currentPhaseEndDate,
             currentPhaseEndDateString: currentPhaseEndDate
                 ? moment(currentPhaseEndDate)
-                    .local()
-                    .format(TABLE_DATE_FORMAT)
-                : undefined,
-            challengeEndDate,
-            challengeEndDateString: challengeEndDate
-                ? moment(challengeEndDate)
                     .local()
                     .format(TABLE_DATE_FORMAT)
                 : undefined,
@@ -122,6 +122,40 @@ export const transformAssignments = (
 
 type LoadActiveReviewsInternalParams = Required<Pick<FetchActiveReviewsParams, 'page' | 'perPage'>> & {
     challengeTypeId?: string
+    sortBy?: string
+    sortOrder?: 'asc' | 'desc'
+}
+
+function mergeActiveReviewParams(
+    current: LoadActiveReviewsInternalParams,
+    next?: FetchActiveReviewsParams,
+): LoadActiveReviewsInternalParams {
+    const merged: LoadActiveReviewsInternalParams = {
+        ...current,
+        page: next?.page ?? current.page,
+        perPage: next?.perPage ?? current.perPage,
+    }
+
+    if (next && Object.prototype.hasOwnProperty.call(next, 'challengeTypeId')) {
+        merged.challengeTypeId = next.challengeTypeId
+    }
+
+    if (next && Object.prototype.hasOwnProperty.call(next, 'sortBy')) {
+        merged.sortBy = next.sortBy ?? undefined
+    }
+
+    if (next && Object.prototype.hasOwnProperty.call(next, 'sortOrder')) {
+        merged.sortOrder = next.sortOrder ?? undefined
+    }
+
+    if (!merged.sortBy) {
+        delete merged.sortBy
+        delete merged.sortOrder
+    } else if (!merged.sortOrder) {
+        delete merged.sortOrder
+    }
+
+    return merged
 }
 
 /**
@@ -143,19 +177,26 @@ export function useFetchActiveReviews(): useFetchActiveReviewsProps {
         challengeTypeId: undefined,
         page: 1,
         perPage: DEFAULT_ACTIVE_REVIEWS_PER_PAGE,
+        sortBy: undefined,
+        sortOrder: undefined,
     })
 
     const loadActiveReviews = useCallback(
         async (params?: FetchActiveReviewsParams) => {
-            const mergedParams: LoadActiveReviewsInternalParams = {
-                challengeTypeId: params?.challengeTypeId ?? latestParamsRef.current.challengeTypeId,
-                page: params?.page ?? latestParamsRef.current.page,
-                perPage: params?.perPage ?? latestParamsRef.current.perPage,
-            }
+            const mergedParams = mergeActiveReviewParams(
+                latestParamsRef.current,
+                params,
+            )
 
             latestParamsRef.current = mergedParams
 
-            const requestKey = `${mergedParams.challengeTypeId ?? ''}|${mergedParams.page}|${mergedParams.perPage}`
+            const requestKey = [
+                mergedParams.challengeTypeId ?? '',
+                mergedParams.page,
+                mergedParams.perPage,
+                mergedParams.sortBy ?? '',
+                mergedParams.sortOrder ?? '',
+            ].join('|')
             latestRequestKeyRef.current = requestKey
             setIsLoading(true)
 

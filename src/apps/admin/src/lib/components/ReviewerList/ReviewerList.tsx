@@ -27,7 +27,7 @@ export interface ReviewerListProps {
     approvingReviewerId: number
     onPageChange: (page: number) => void
     onApproveApplication: (reviewer: Reviewer) => void
-    onToggleSort: (sort: Sort) => void
+    onToggleSort: (sort: Sort | undefined) => void
 }
 
 const ApproveButton: FC<{

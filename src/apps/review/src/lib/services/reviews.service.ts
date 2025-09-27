@@ -51,18 +51,24 @@ export interface FetchActiveReviewsParams {
     challengeTypeId?: string
     page?: number
     perPage?: number
+    sortBy?: string
+    sortOrder?: 'asc' | 'desc'
 }
 
 export const fetchActiveReviews = async ({
     challengeTypeId,
     page,
     perPage,
+    sortBy,
+    sortOrder,
 }: FetchActiveReviewsParams = {}): Promise<BackendResponseWithMeta<BackendMyReviewAssignment[]>> => {
     const queryString = qs.stringify(
         {
             ...(challengeTypeId ? { challengeTypeId } : {}),
             ...(page ? { page } : {}),
             ...(perPage ? { perPage } : {}),
+            ...(sortBy ? { sortBy } : {}),
+            ...(sortOrder ? { sortOrder } : {}),
         },
         { addQueryPrefix: true },
     )
@@ -82,18 +88,24 @@ export interface FetchPastReviewsParams {
     challengeTypeId?: string
     page?: number
     perPage?: number
+    sortBy?: string
+    sortOrder?: 'asc' | 'desc'
 }
 
 export const fetchPastReviews = async ({
     challengeTypeId,
     page,
     perPage,
+    sortBy,
+    sortOrder,
 }: FetchPastReviewsParams = {}): Promise<BackendResponseWithMeta<BackendMyReviewAssignment[]>> => {
     const queryString = qs.stringify(
         {
             ...(challengeTypeId ? { challengeTypeId } : {}),
             ...(page ? { page } : {}),
             ...(perPage ? { perPage } : {}),
+            ...(sortBy ? { sortBy } : {}),
+            ...(sortOrder ? { sortOrder } : {}),
             past: true,
         },
         { addQueryPrefix: true },

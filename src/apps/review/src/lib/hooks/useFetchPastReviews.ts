@@ -36,6 +36,40 @@ export interface useFetchPastReviewsProps {
 
 type LoadPastReviewsInternalParams = Required<Pick<FetchPastReviewsParams, 'page' | 'perPage'>> & {
     challengeTypeId?: string
+    sortBy?: string
+    sortOrder?: 'asc' | 'desc'
+}
+
+function mergePastReviewParams(
+    current: LoadPastReviewsInternalParams,
+    next?: FetchPastReviewsParams,
+): LoadPastReviewsInternalParams {
+    const merged: LoadPastReviewsInternalParams = {
+        ...current,
+        page: next?.page ?? current.page,
+        perPage: next?.perPage ?? current.perPage,
+    }
+
+    if (next && Object.prototype.hasOwnProperty.call(next, 'challengeTypeId')) {
+        merged.challengeTypeId = next.challengeTypeId
+    }
+
+    if (next && Object.prototype.hasOwnProperty.call(next, 'sortBy')) {
+        merged.sortBy = next.sortBy ?? undefined
+    }
+
+    if (next && Object.prototype.hasOwnProperty.call(next, 'sortOrder')) {
+        merged.sortOrder = next.sortOrder ?? undefined
+    }
+
+    if (!merged.sortBy) {
+        delete merged.sortBy
+        delete merged.sortOrder
+    } else if (!merged.sortOrder) {
+        delete merged.sortOrder
+    }
+
+    return merged
 }
 
 /**
@@ -56,19 +90,26 @@ export function useFetchPastReviews(): useFetchPastReviewsProps {
         challengeTypeId: undefined,
         page: 1,
         perPage: DEFAULT_PAST_REVIEWS_PER_PAGE,
+        sortBy: undefined,
+        sortOrder: undefined,
     })
 
     const loadPastReviews = useCallback(
         async (params?: FetchPastReviewsParams) => {
-            const mergedParams: LoadPastReviewsInternalParams = {
-                challengeTypeId: params?.challengeTypeId ?? latestParamsRef.current.challengeTypeId,
-                page: params?.page ?? latestParamsRef.current.page,
-                perPage: params?.perPage ?? latestParamsRef.current.perPage,
-            }
+            const mergedParams = mergePastReviewParams(
+                latestParamsRef.current,
+                params,
+            )
 
             latestParamsRef.current = mergedParams
 
-            const requestKey = `${mergedParams.challengeTypeId ?? ''}|${mergedParams.page}|${mergedParams.perPage}`
+            const requestKey = [
+                mergedParams.challengeTypeId ?? '',
+                mergedParams.page,
+                mergedParams.perPage,
+                mergedParams.sortBy ?? '',
+                mergedParams.sortOrder ?? '',
+            ].join('|')
             latestRequestKeyRef.current = requestKey
             setIsLoading(true)
 

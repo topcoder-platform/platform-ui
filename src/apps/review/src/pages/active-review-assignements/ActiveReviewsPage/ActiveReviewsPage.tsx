@@ -7,6 +7,7 @@ import Select, { SingleValue } from 'react-select'
 import classNames from 'classnames'
 
 import { Pagination, TableLoading } from '~/apps/admin/src/lib'
+import { Sort } from '~/apps/admin/src/platform/gamification-admin/src/game-lib'
 
 import {
     DEFAULT_ACTIVE_REVIEWS_PER_PAGE,
@@ -71,6 +72,7 @@ export const ActiveReviewsPage: FC<Props> = (props: Props) => {
     const [challengeType, setChallengeType] = useState<
         SingleValue<SelectOptionChallengeType>
     >(CHALLENGE_TYPE_SELECT_ALL_OPTION)
+    const [sort, setSort] = useState<Sort | undefined>(undefined)
     const {
         activeReviews,
         isLoading: isLoadingActiveReviews,
@@ -91,9 +93,11 @@ export const ActiveReviewsPage: FC<Props> = (props: Props) => {
                 challengeTypeId: selectedChallengeTypeId,
                 page: 1,
                 perPage: DEFAULT_ACTIVE_REVIEWS_PER_PAGE,
+                sortBy: sort?.fieldName,
+                sortOrder: sort?.direction,
             })
         }
-    }, [challengeType, loadActiveReviews, loginUserInfo, selectedChallengeTypeId])
+    }, [challengeType, loadActiveReviews, loginUserInfo, selectedChallengeTypeId, sort])
 
     const handlePageChange = useCallback(
         (nextPage: number) => {
@@ -101,9 +105,18 @@ export const ActiveReviewsPage: FC<Props> = (props: Props) => {
                 challengeTypeId: selectedChallengeTypeId,
                 page: nextPage,
                 perPage: DEFAULT_ACTIVE_REVIEWS_PER_PAGE,
+                sortBy: sort?.fieldName,
+                sortOrder: sort?.direction,
             })
         },
-        [loadActiveReviews, selectedChallengeTypeId],
+        [loadActiveReviews, selectedChallengeTypeId, sort],
+    )
+
+    const handleSortChange = useCallback(
+        (nextSort?: Sort) => {
+            setSort(nextSort)
+        },
+        [],
     )
 
     return (
@@ -136,6 +149,8 @@ export const ActiveReviewsPage: FC<Props> = (props: Props) => {
                             <TableActiveReviews
                                 datas={activeReviews}
                                 className={styles.blockTable}
+                                onToggleSort={handleSortChange}
+                                sort={sort}
                             />
                             {pagination.totalPages > 1 && (
                                 <div className={styles.pagination}>

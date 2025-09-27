@@ -14,6 +14,7 @@ import Select, { SingleValue } from 'react-select'
 import classNames from 'classnames'
 
 import { Pagination, TableLoading } from '~/apps/admin/src/lib'
+import { Sort } from '~/apps/admin/src/platform/gamification-admin/src/game-lib'
 
 import {
     DEFAULT_PAST_REVIEWS_PER_PAGE,
@@ -78,6 +79,7 @@ export const PastReviewsPage: FC<Props> = (props: Props) => {
     const [challengeType, setChallengeType] = useState<
         SingleValue<SelectOptionChallengeType>
     >(CHALLENGE_TYPE_SELECT_ALL_OPTION)
+    const [sort, setSort] = useState<Sort | undefined>(undefined)
     const {
         pastReviews,
         isLoading: isLoadingPastReviews,
@@ -98,9 +100,11 @@ export const PastReviewsPage: FC<Props> = (props: Props) => {
                 challengeTypeId: selectedChallengeTypeId,
                 page: 1,
                 perPage: DEFAULT_PAST_REVIEWS_PER_PAGE,
+                sortBy: sort?.fieldName,
+                sortOrder: sort?.direction,
             })
         }
-    }, [challengeType, loadPastReviews, loginUserInfo, selectedChallengeTypeId])
+    }, [challengeType, loadPastReviews, loginUserInfo, selectedChallengeTypeId, sort])
 
     const handlePageChange = useCallback(
         (nextPage: number) => {
@@ -108,9 +112,18 @@ export const PastReviewsPage: FC<Props> = (props: Props) => {
                 challengeTypeId: selectedChallengeTypeId,
                 page: nextPage,
                 perPage: DEFAULT_PAST_REVIEWS_PER_PAGE,
+                sortBy: sort?.fieldName,
+                sortOrder: sort?.direction,
             })
         },
-        [loadPastReviews, selectedChallengeTypeId],
+        [loadPastReviews, selectedChallengeTypeId, sort],
+    )
+
+    const handleSortChange = useCallback(
+        (nextSort?: Sort) => {
+            setSort(nextSort)
+        },
+        [],
     )
 
     return (
@@ -142,6 +155,8 @@ export const PastReviewsPage: FC<Props> = (props: Props) => {
                         datas={pastReviews}
                         className={styles.blockTable}
                         hideStatusColumns
+                        onToggleSort={handleSortChange}
+                        sort={sort}
                     />
                     {pagination.totalPages > 1 && (
                         <div className={styles.pagination}>

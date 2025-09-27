@@ -221,12 +221,17 @@ export const ManageReviewerPage: FC = () => {
         setPageChangeEvent(true)
     })
 
-    const handleSortChange = useEventCallback((sort: Sort) => {
+    const handleSortChange = useEventCallback((sort?: Sort) => {
+        const sortToApply = sort ?? {
+            direction: filterCriteria.order,
+            fieldName: filterCriteria.sortBy,
+        }
+
         setFilterCriteria({
             ...filterCriteria,
-            order: sort.direction,
+            order: sortToApply.direction,
             page: 1,
-            sortBy: sort.fieldName,
+            sortBy: sortToApply.fieldName,
         })
         setSortChangeEvent(true)
     })

@@ -20,7 +20,7 @@ export interface ReviewListProps {
     paging: Paging
     currentFilters: ReviewFilterCriteria
     onPageChange: (page: number) => void
-    onToggleSort: (sort: Sort) => void
+    onToggleSort: (sort: Sort | undefined) => void
 }
 
 const Actions: FC<{

@@ -3,13 +3,14 @@
  */
 import { FC, useCallback, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { bind, noop } from 'lodash'
+import { bind, invert } from 'lodash'
 import classNames from 'classnames'
 
 import { MobileTableColumn } from '~/apps/admin/src/lib/models/MobileTableColumn.model'
 import { useWindowSize, WindowSize } from '~/libs/shared'
 import { TableMobile } from '~/apps/admin/src/lib/components/common/TableMobile'
 import { Table, TableColumn } from '~/libs/ui'
+import { Sort } from '~/apps/admin/src/platform/gamification-admin/src/game-lib'
 
 import {
     ActiveReviewAssignment,
@@ -24,6 +25,8 @@ interface Props {
     datas: ActiveReviewAssignment[]
     hideStatusColumns?: boolean
     disableNavigation?: boolean
+    onToggleSort?: (sort: Sort | undefined) => void
+    sort?: Sort
 }
 
 export const TableActiveReviews: FC<Props> = (props: Props) => {
@@ -31,6 +34,8 @@ export const TableActiveReviews: FC<Props> = (props: Props) => {
     const datas = props.datas
     const hideStatusColumns = props.hideStatusColumns
     const disableNavigation = props.disableNavigation
+    const sort = props.sort
+    const onToggleSort = props.onToggleSort
     const navigate = useNavigate()
     const { width: screenWidth }: WindowSize = useWindowSize()
     const isTablet = useMemo(() => screenWidth <= 1000, [screenWidth])
@@ -45,17 +50,54 @@ export const TableActiveReviews: FC<Props> = (props: Props) => {
         ],
     )
 
+    const sortMapping = useMemo<Record<string, string>>(() => {
+        const mapping: Record<string, string> = {
+            name: 'projectName',
+        }
+
+        if (hideStatusColumns) {
+            mapping.challengeEndDateString = 'challengeEndDate'
+        } else {
+            mapping.currentPhase = 'phase'
+            mapping.currentPhaseEndDateString = 'phaseEndDate'
+            mapping.reviewProgress = 'reviewProgress'
+            mapping.timeLeft = 'timeLeft'
+        }
+
+        return mapping
+    }, [hideStatusColumns])
+
+    const displaySort = useMemo<Sort | undefined>(() => {
+        if (!sort) {
+            return undefined
+        }
+
+        const reverseMapping = invert(sortMapping)
+        const fieldName = reverseMapping[sort.fieldName]
+
+        if (!fieldName) {
+            return undefined
+        }
+
+        return {
+            direction: sort.direction,
+            fieldName,
+        }
+    }, [sort, sortMapping])
+
     const columns = useMemo<TableColumn<ActiveReviewAssignment>[]>(
         () => {
             const baseColumns: TableColumn<ActiveReviewAssignment>[] = [
                 {
                     className: styles.tableCell,
+                    isSortable: false,
                     label: '#',
                     propertyName: 'index',
                     type: 'text',
                 },
                 {
                     className: classNames(styles.textBlue, styles.tableBreakCell, styles.tableCell),
+                    isSortable: true,
                     label: 'Project',
                     propertyName: 'name',
                     renderer: (data: ActiveReviewAssignment) => (
@@ -74,6 +116,7 @@ export const TableActiveReviews: FC<Props> = (props: Props) => {
                 },
                 {
                     className: classNames(styles.tableCell),
+                    isSortable: false,
                     label: 'My Role',
                     propertyName: 'role',
                     renderer: (data: ActiveReviewAssignment) => (
@@ -94,6 +137,7 @@ export const TableActiveReviews: FC<Props> = (props: Props) => {
             if (hideStatusColumns) {
                 baseColumns.push({
                     className: styles.tableCell,
+                    isSortable: true,
                     label: 'End Date',
                     propertyName: 'challengeEndDateString',
                     renderer: (data: ActiveReviewAssignment) => (
@@ -107,6 +151,7 @@ export const TableActiveReviews: FC<Props> = (props: Props) => {
                 baseColumns.push(
                     {
                         className: styles.tableCell,
+                        isSortable: true,
                         label: 'Phase',
                         propertyName: 'currentPhase',
                         renderer: (data: ActiveReviewAssignment) => (
@@ -118,12 +163,14 @@ export const TableActiveReviews: FC<Props> = (props: Props) => {
                     },
                     {
                         className: styles.tableCell,
+                        isSortable: true,
                         label: 'Phase End Date',
                         propertyName: 'currentPhaseEndDateString',
                         type: 'text',
                     },
                     {
                         className: styles.tableCell,
+                        isSortable: true,
                         label: 'Time Left',
                         propertyName: 'timeLeft',
                         renderer: (data: ActiveReviewAssignment) => (
@@ -145,6 +192,7 @@ export const TableActiveReviews: FC<Props> = (props: Props) => {
                     },
                     {
                         className: styles.tableCell,
+                        isSortable: true,
                         label: 'Review Progress',
                         propertyName: 'reviewProgress',
                         renderer: (data: ActiveReviewAssignment) => (
@@ -194,6 +242,31 @@ export const TableActiveReviews: FC<Props> = (props: Props) => {
         [columns],
     )
 
+    const handleToggleSort = useCallback(
+        (nextSort?: Sort) => {
+            if (!onToggleSort) {
+                return
+            }
+
+            if (!nextSort) {
+                onToggleSort(undefined)
+                return
+            }
+
+            const mappedFieldName = sortMapping[nextSort.fieldName]
+            if (!mappedFieldName) {
+                onToggleSort(undefined)
+                return
+            }
+
+            onToggleSort({
+                direction: nextSort.direction,
+                fieldName: mappedFieldName,
+            })
+        },
+        [onToggleSort, sortMapping],
+    )
+
     return (
         <TableWrapper
             className={classNames(
@@ -208,9 +281,9 @@ export const TableActiveReviews: FC<Props> = (props: Props) => {
                 <Table
                     columns={columns}
                     data={datas}
-                    disableSorting
-                    onToggleSort={noop}
+                    onToggleSort={handleToggleSort}
                     removeDefaultSort
+                    forceSort={displaySort}
                     className='enhanced-table-desktop'
                 />
             )}

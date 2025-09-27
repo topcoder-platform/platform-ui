@@ -24,7 +24,11 @@ const AwardedMembersTab: FC<AwardedMembersTabProps> = (props: AwardedMembersTabP
 
     const pageHandler: InfinitePageHandler<MemberBadgeAward> = useGetGameBadgeAssigneesPage(props.badge, sort)
 
-    function onSortClick(newSort: Sort): void {
+    function onSortClick(newSort?: Sort): void {
+        if (!newSort) {
+            return
+        }
+
         setSort({ ...newSort })
     }
 

@@ -32,7 +32,7 @@ interface TableProps<T> {
     readonly forceSort?: Sort
     readonly onLoadMoreClick?: () => void
     readonly onRowClick?: (data: T) => void
-    readonly onToggleSort?: (sort: Sort) => void
+    readonly onToggleSort?: (sort: Sort | undefined) => void
     readonly removeDefaultSort?: boolean
     readonly colWidth?: colWidthType | undefined,
     readonly setColWidth?: Dispatch<SetStateAction<colWidthType>> | undefined
@@ -166,25 +166,31 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
             // if sortable is false, we return
             if (col?.isSortable === false) return
 
-            // if we don't have anything to sort by, we shouldn't be here
-            if (!sort && !props.removeDefaultSort) {
-                return
+            const defaultDirection = (
+                defaultSortDirectionMap as DefaultSortDirectionMap | undefined
+            )?.[fieldName] ?? 'asc'
+
+            let newSort: Sort | undefined
+
+            if (!sort || sort.fieldName !== fieldName) {
+                newSort = {
+                    direction: defaultDirection,
+                    fieldName,
+                }
+            } else if (sort.direction === 'asc') {
+                newSort = {
+                    direction: 'desc',
+                    fieldName,
+                }
+            } else if (props.removeDefaultSort) {
+                newSort = undefined
+            } else {
+                newSort = {
+                    direction: defaultDirection,
+                    fieldName,
+                }
             }
 
-            // get the sort direction
-            let direction: 'asc' | 'desc' = 'asc'
-            if (sort) {
-                direction = fieldName === sort.fieldName
-                    // this is the current sort, so just toggle it
-                    ? sort.direction === 'asc' ? 'desc' : 'asc'
-                    // get the default sort for the field... this will never be undefined
-                    : (defaultSortDirectionMap as DefaultSortDirectionMap)[fieldName]
-            }
-
-            const newSort: Sort = {
-                direction,
-                fieldName,
-            }
             setSort(newSort)
 
             // call the callback to notify parent for sort update

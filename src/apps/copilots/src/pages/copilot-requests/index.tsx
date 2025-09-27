@@ -241,7 +241,11 @@ const CopilotRequestsPage: FC = () => {
         setSize(size + 1)
     }
 
-    function onToggleSort(s: Sort): void {
+    function onToggleSort(s?: Sort): void {
+        if (!s) {
+            return
+        }
+
         setSort(s)
     }
 
