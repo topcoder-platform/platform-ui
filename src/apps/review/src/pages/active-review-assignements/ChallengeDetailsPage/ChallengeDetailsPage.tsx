@@ -68,7 +68,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         ? pastReviewAssignmentsRouteId
         : activeReviewAssigmentsRouteId
     const listLabel = isPastReviewDetail
-        ? 'Past Review Assignments'
+        ? 'My Past Challenges'
         : 'Active Reviews'
     const listPath = `${rootRoute}/${listRouteId}/`
     const breadCrumb = useMemo(

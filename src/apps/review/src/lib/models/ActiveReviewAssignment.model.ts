@@ -7,6 +7,8 @@ export interface ActiveReviewAssignment {
     currentPhase: string
     currentPhaseEndDate?: string | Date | null
     currentPhaseEndDateString?: string
+    challengeEndDate?: string | Date | null
+    challengeEndDateString?: string
     timeLeft?: string
     timeLeftColor?: string
     timeLeftStatus?: string

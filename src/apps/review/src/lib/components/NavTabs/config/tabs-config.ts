@@ -1,5 +1,6 @@
 import _ from 'lodash'
 
+import { EnvironmentConfig } from '~/config'
 import { TabsNavItem } from '~/libs/ui'
 import {
     activeReviewAssigmentsRouteId,
@@ -11,18 +12,18 @@ import {
 export function getTabsConfig(userRoles: string[], isAnonymous: boolean): TabsNavItem[] {
 
     const tabs: TabsNavItem[] = [
-        ...(isAnonymous ? [] : [{
+        ...(!isAnonymous ? [{
             id: activeReviewAssigmentsRouteId,
-            title: 'Active Review Assignments',
-        }]),
+            title: 'Active Challenges',
+        }, {
+            id: pastReviewAssignmentsRouteId,
+            title: 'Past Challenges',
+        }] : []),
         {
             id: openOpportunitiesRouteId,
             title: 'Open Opportunities',
+            url: EnvironmentConfig.REVIEW.OPPORTUNITIES_URL,
         },
-        ...(isAnonymous ? [] : [{
-            id: pastReviewAssignmentsRouteId,
-            title: 'Past Review Assignments',
-        }]),
     ]
 
     if (userRoles.includes('administrator')) {

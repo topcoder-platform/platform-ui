@@ -6,6 +6,7 @@ export interface BackendMyReviewAssignment {
     challengeName: string
     challengeTypeId: string
     challengeTypeName: string
+    challengeEndDate: string | null
     currentPhaseName: string
     currentPhaseEndDate: string | null
     timeLeftInCurrentPhase: number | null

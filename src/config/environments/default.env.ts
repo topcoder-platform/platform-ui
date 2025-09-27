@@ -118,7 +118,13 @@ export const ADMIN = {
     WORK_MANAGER_URL: 'https://challenges.topcoder-dev.com',
 }
 
+const REVIEW_OPPORTUNITIES_URL_DEFAULT = getReactEnv<string>(
+    'REVIEW_OPPORTUNITIES_URL',
+    'https://www-v6.topcoder-dev.com/challenges/?bucket=reviewOpportunities&tracks[DS]=true&tracks[Des]=true&tracks[Dev]=true&tracks[QA]=true',
+)
+
 export const REVIEW = {
     CHALLENGE_PAGE_URL: 'https://www-v6.topcoder-dev.com/challenges',
     PROFILE_PAGE_URL: 'https://profiles.topcoder-dev.com',
+    OPPORTUNITIES_URL: REVIEW_OPPORTUNITIES_URL_DEFAULT,
 }

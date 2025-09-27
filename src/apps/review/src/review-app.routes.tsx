@@ -77,7 +77,7 @@ export const reviewRoutes: ReadonlyArray<PlatformRoute> = [
                 element: <Rewrite to={activeReviewAssigmentsRouteId} />,
                 route: '',
             },
-            // Active Review Assigments Module
+            // Active Challenges Module
             {
                 children: [
                     {
@@ -109,7 +109,7 @@ export const reviewRoutes: ReadonlyArray<PlatformRoute> = [
                 id: activeReviewAssigmentsRouteId,
                 route: activeReviewAssigmentsRouteId,
             },
-            // Past Review Assignments Module
+            // Past Challenges Module
             {
                 children: [
                     {

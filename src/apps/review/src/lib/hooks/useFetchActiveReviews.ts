@@ -63,6 +63,9 @@ export const transformAssignments = (
         const currentPhaseEndDate = base.currentPhaseEndDate
             ? new Date(base.currentPhaseEndDate)
             : undefined
+        const challengeEndDate = base.challengeEndDate
+            ? new Date(base.challengeEndDate)
+            : undefined
         const timeMetadata = currentPhaseEndDate
             ? formatDurationDate(currentPhaseEndDate, now)
             : undefined
@@ -94,6 +97,12 @@ export const transformAssignments = (
             currentPhaseEndDate,
             currentPhaseEndDateString: currentPhaseEndDate
                 ? moment(currentPhaseEndDate)
+                    .local()
+                    .format(TABLE_DATE_FORMAT)
+                : undefined,
+            challengeEndDate,
+            challengeEndDateString: challengeEndDate
+                ? moment(challengeEndDate)
                     .local()
                     .format(TABLE_DATE_FORMAT)
                 : undefined,

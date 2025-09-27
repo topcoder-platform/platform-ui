@@ -8,9 +8,9 @@ export const rootRoute: string
         ? ''
         : `/${AppSubdomain.review}`
 
-export const activeReviewAssigmentsRouteId = 'active-review-assigments'
+export const activeReviewAssigmentsRouteId = 'active-challenges'
 export const openOpportunitiesRouteId = 'open-opportunities'
-export const pastReviewAssignmentsRouteId = 'past-review-assignments'
+export const pastReviewAssignmentsRouteId = 'past-challenges'
 export const challengeDetailRouteId = ':challengeId'
 export const pastChallengeDetailContainerRouteId = 'past-challenge-details'
 export const scorecardRouteId = 'scorecard'

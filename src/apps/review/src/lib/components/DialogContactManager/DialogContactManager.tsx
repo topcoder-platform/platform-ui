@@ -93,7 +93,7 @@ export const DialogContactManager: FC<Props> = (props: Props) => {
                 data,
             )
                 .then(() => {
-                    toast.success('Send contact manager successfully', {
+                    toast.success('Message sent successfully', {
                         toastId: 'Contact manager',
                     })
                     setIsLoading(false)

@@ -91,6 +91,18 @@ export const TableActiveReviews: FC<Props> = (props: Props) => {
                 },
             ]
 
+            if (hideStatusColumns) {
+                baseColumns.push({
+                    className: styles.tableCell,
+                    label: 'End Date',
+                    propertyName: 'challengeEndDateString',
+                    renderer: (data: ActiveReviewAssignment) => (
+                        <span>{data.challengeEndDateString ?? '--'}</span>
+                    ),
+                    type: 'element',
+                })
+            }
+
             if (!hideStatusColumns) {
                 baseColumns.push(
                     {

@@ -70,6 +70,7 @@ export interface GlobalConfig {
     REVIEW: {
         CHALLENGE_PAGE_URL: string
         PROFILE_PAGE_URL: string
+        OPPORTUNITIES_URL: string
     },
     ADMIN_SSO_LOGIN_PROVIDERS: SSOLoginProviderConfig[]
 }

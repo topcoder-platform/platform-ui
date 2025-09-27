@@ -10,10 +10,11 @@ import {
     useState,
 } from 'react'
 import { NavigateFunction, useLocation, useNavigate } from 'react-router-dom'
-import { bind, isEmpty } from 'lodash'
+import { isEmpty } from 'lodash'
 import classNames from 'classnames'
 
 import { useClickOutside } from '~/libs/shared/lib/hooks'
+import { IconOutline, TabsNavItem } from '~/libs/ui'
 
 import { ReviewAppContext } from '../../contexts'
 import { ReviewAppContextModel } from '../../models'
@@ -46,10 +47,16 @@ const NavTabs: FC = () => {
     }, [activeTabPathName])
 
     const handleTabChange = useCallback(
-        (tabId: string) => {
-            setActiveTab(tabId)
+        (tab: TabsNavItem) => {
+            if (tab.url) {
+                setIsOpen(false)
+                window.open(tab.url, '_blank', 'noopener,noreferrer')
+                return
+            }
+
+            setActiveTab(tab.id)
             setIsOpen(false)
-            navigate(tabId)
+            navigate(tab.id)
         },
         [navigate],
     )
@@ -73,17 +80,25 @@ const NavTabs: FC = () => {
                     Review
                 </div>
                 <ul className={styles.tab}>
-                    {tabs.map(tab => (
-                        <li
-                            key={tab.id}
-                            className={
-                                tab.id === activeTab ? `${styles.active}` : ''
-                            }
-                            onClick={bind(handleTabChange, undefined, tab.id)}
-                        >
-                            {tab.title}
-                        </li>
-                    ))}
+                    {tabs.map(tab => {
+                        const isActive = tab.id === activeTab && !tab.url
+
+                        return (
+                            <li
+                                key={tab.id}
+                                className={isActive ? `${styles.active}` : ''}
+                                onClick={() => handleTabChange(tab)}
+                            >
+                                <span className={styles.tabLabel}>{tab.title}</span>
+                                {tab.url && (
+                                    <IconOutline.ExternalLinkIcon
+                                        aria-hidden='true'
+                                        className={styles.externalIcon}
+                                    />
+                                )}
+                            </li>
+                        )
+                    })}
                 </ul>
             </div>
         </div>

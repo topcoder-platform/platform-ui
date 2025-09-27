@@ -65,6 +65,9 @@
                 cursor: pointer;
                 color: var(--FontColor);
                 line-height: 32px;
+                display: flex;
+                align-items: center;
+                gap: $sp-2;
                 &.active {
                     font-weight: 700;
                 }
@@ -95,6 +98,7 @@
                     li {
                         padding: $sp-2 $sp-6;
                         margin-left: 0;
+                        width: 100%;
                         &.active {
                             background-color: var(--Actived);
                             color: var(--invertButtonColor);
@@ -104,4 +108,14 @@
             }
         }
     }
+}
+
+.tabLabel {
+    display: inline-flex;
+    align-items: center;
+}
+
+.externalIcon {
+    width: 16px;
+    height: 16px;
 }

@@ -86,7 +86,7 @@ export const PastReviewsPage: FC<Props> = (props: Props) => {
     }: useFetchPastReviewsProps = useFetchPastReviews()
 
     const breadCrumb = useMemo(
-        () => [{ index: 1, label: 'Past Review Assignments' }],
+        () => [{ index: 1, label: 'My Past Challenges' }],
         [],
     )
 
@@ -115,7 +115,7 @@ export const PastReviewsPage: FC<Props> = (props: Props) => {
 
     return (
         <PageWrapper
-            pageTitle='Past Review Assignments'
+            pageTitle='My Past Challenges'
             className={classNames(styles.container, props.className)}
             breadCrumb={breadCrumb}
         >
