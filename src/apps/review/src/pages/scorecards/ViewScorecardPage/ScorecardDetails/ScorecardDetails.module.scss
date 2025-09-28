@@ -7,7 +7,9 @@
     background-color: #F6F7F9;
     margin-top: 20px;
     border-radius: 8px;
-    .left {
+    gap: 32px;
+
+    .left, .middle, .right {
         display: flex;
         flex: 1;
         flex-direction: column;
@@ -44,9 +46,6 @@
     }
 
     .right {
-        display: flex;
-        flex: 3;
-        flex-direction: column;
         .item {
             display: flex;
             flex-direction: column;

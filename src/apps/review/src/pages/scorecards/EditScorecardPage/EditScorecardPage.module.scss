@@ -232,9 +232,15 @@
     flex: 0 0 40%;
 }
 
+.qWidthInput {
+    flex: 0 0 25%;
+    min-width: 120px;
+}
+
 .xlWidthInput,
 .smWidthInput,
-.mdWidthInput {
+.mdWidthInput,
+.qWidthInput {
     @include ltemd {
         flex: 0 0 100%;
     }

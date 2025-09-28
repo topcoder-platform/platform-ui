@@ -60,19 +60,21 @@ interface ScorecardQuestionFormProps {
     prefix: string;
 }
 
-const ScorecardQuestionForm: FC<ScorecardQuestionFormProps> = props => {
+const ScorecardQuestionForm: FC<ScorecardQuestionFormProps> = (props: ScorecardQuestionFormProps) => {
+    const sectionIndex = props.sectionIndex
+    const prefix = props.prefix
     const form = useFormContext()
     const ctx = usePageContext()
     const values = form.getValues()
 
-    const name = useMemo(() => `${props.prefix}.questions`, [props.prefix])
+    const name = useMemo(() => `${prefix}.questions`, [prefix])
     const formQuestionsArray = useFieldArray({
         control: form.control,
         name,
     })
 
     const handleRemove = useCallback(async (index: number, field: any) => {
-        const fieldName = field.name ? field.name : `Question ${props.sectionIndex}.${index + 1}`
+        const fieldName = field.name ? field.name : `Question ${sectionIndex}.${index + 1}`
         if (!await ctx.confirm({
             content: `Are you sure you want to remove "${fieldName}" question?`,
             title: 'Confirm Remove Question',
@@ -81,7 +83,7 @@ const ScorecardQuestionForm: FC<ScorecardQuestionFormProps> = props => {
         }
 
         formQuestionsArray.remove(index)
-    }, [ctx, formQuestionsArray])
+    }, [ctx, formQuestionsArray, sectionIndex])
 
     const handleAddQuestion = useCallback(() => {
         formQuestionsArray.append({
@@ -130,7 +132,7 @@ const ScorecardQuestionForm: FC<ScorecardQuestionFormProps> = props => {
                                         <DragIcon />
                                         <div className={classNames('body-small main-group', styles.headerAreaLabel)}>
                                             Question
-                                            {` ${props.sectionIndex}`}
+                                            {` ${sectionIndex}`}
                                             .
                                             {index + 1}
                                         </div>

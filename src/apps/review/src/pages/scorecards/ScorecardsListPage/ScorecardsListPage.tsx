@@ -70,7 +70,6 @@ export const ScorecardsListPage: FC<{}> = () => {
             navigate(`${cloned.id}/edit`)
         } catch (error) {
             toast.error('Failed to clone scorecard!')
-            console.error('Failed to clone scorecard:', error)
         }
     }, [navigate, confirmation])
 

@@ -28,6 +28,10 @@ interface Props {
 }
 
 export const TableWinners: FC<Props> = (props: Props) => {
+    const className = props.className
+    const datas = props.datas
+    const isDownloading = props.isDownloading
+    const downloadSubmission = props.downloadSubmission
     const { width: screenWidth }: WindowSize = useWindowSize()
     const isTablet = useMemo(() => screenWidth <= 744, [screenWidth])
     // get challenge info from challenge detail context
@@ -35,8 +39,8 @@ export const TableWinners: FC<Props> = (props: Props) => {
         challengeInfo,
     }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
     const firstSubmission: ProjectResult | undefined = useMemo(
-        () => props.datas[0],
-        [props.datas],
+        () => datas[0],
+        [datas],
     )
 
     const columns = useMemo<TableColumn<ProjectResult>[]>(
@@ -56,10 +60,10 @@ export const TableWinners: FC<Props> = (props: Props) => {
                         <span>
                             <button
                                 onClick={function onClick() {
-                                    props.downloadSubmission(data.submissionId)
+                                    downloadSubmission(data.submissionId)
                                 }}
                                 className={styles.textBlue}
-                                disabled={props.isDownloading[data.submissionId]}
+                                disabled={isDownloading[data.submissionId]}
                                 type='button'
                             >
                                 {data.submissionId}
@@ -167,9 +171,10 @@ export const TableWinners: FC<Props> = (props: Props) => {
         ],
         [
             firstSubmission,
+            challengeInfo?.track,
             challengeInfo?.type,
-            props.isDownloading,
-            props.downloadSubmission,
+            downloadSubmission,
+            isDownloading,
         ],
     )
 
@@ -200,16 +205,16 @@ export const TableWinners: FC<Props> = (props: Props) => {
         <TableWrapper
             className={classNames(
                 styles.container,
-                props.className,
+                className,
                 'enhanced-table',
             )}
         >
             {isTablet ? (
-                <TableMobile columns={columnsMobile} data={props.datas} />
+                <TableMobile columns={columnsMobile} data={datas} />
             ) : (
                 <Table
                     columns={columns}
-                    data={props.datas}
+                    data={datas}
                     disableSorting
                     onToggleSort={_.noop}
                     removeDefaultSort

@@ -39,6 +39,12 @@ interface Props {
 }
 
 export const AppealComment: FC<Props> = (props: Props) => {
+    const className = props.className
+    const appealInfo = props.appealInfo
+    const commentItem = props.commentItem
+    const isSavingAppeal = props.isSavingAppeal
+    const addAppeal = props.addAppeal
+    const doDeleteAppeal = props.doDeleteAppeal
     const [appealResponse, setAppealResponse] = useState('')
     const [showResponseForm, setShowResponseForm] = useState(false)
 
@@ -60,20 +66,20 @@ export const AppealComment: FC<Props> = (props: Props) => {
     })
 
     const onSubmit = useCallback((data: FormAppealResponse) => {
-        props.addAppeal(data.response, props.commentItem, () => {
+        addAppeal(data.response, commentItem, () => {
             setAppealResponse(data.response)
             setShowResponseForm(false)
         })
-    }, [props.commentItem])
+    }, [addAppeal, commentItem])
 
     useEffect(() => {
-        if (props.appealInfo) {
-            setAppealResponse(props.appealInfo.content)
+        if (appealInfo) {
+            setAppealResponse(appealInfo.content)
         }
-    }, [props.appealInfo])
+    }, [appealInfo])
 
     return (
-        <div className={classNames(styles.container, props.className)}>
+        <div className={classNames(styles.container, className)}>
             {appealResponse && !showResponseForm && (
                 <div className={styles.blockAppealComment}>
                     <span className={styles.textTitle}>Appeal Comment</span>
@@ -86,19 +92,19 @@ export const AppealComment: FC<Props> = (props: Props) => {
                                 }}
                                 className='filledButton'
                                 type='button'
-                                disabled={props.isSavingAppeal}
+                                disabled={isSavingAppeal}
                             >
                                 Edit Appeal
                             </button>
                             <button
                                 onClick={function onClick() {
-                                    props.doDeleteAppeal(props.appealInfo, () => {
+                                    doDeleteAppeal(appealInfo, () => {
                                         setAppealResponse('')
                                     })
                                 }}
                                 type='button'
                                 className='cancelButton'
-                                disabled={props.isSavingAppeal}
+                                disabled={isSavingAppeal}
                             >
                                 Delete
                             </button>
@@ -142,14 +148,14 @@ export const AppealComment: FC<Props> = (props: Props) => {
                                     showBorder
                                     onBlur={controlProps.field.onBlur}
                                     error={get(errors, 'response.message')}
-                                    disabled={props.isSavingAppeal}
+                                    disabled={isSavingAppeal}
                                 />
                             )
                         }}
                     />
                     <div className={styles.blockBtns}>
                         <button
-                            disabled={props.isSavingAppeal}
+                            disabled={isSavingAppeal}
                             className='filledButton'
                             type='submit'
                         >

@@ -55,7 +55,7 @@ export const QUESTION_RESPONSE_TYPE_MAPPING_DISPLAY: { [key: string]: string }
     RECOMMENDED: 'Recommended',
     REQUIRED: 'Required',
 }
-export const TABLE_DATE_FORMAT = 'MMM DD, HH:mm A'
+export const TABLE_DATE_FORMAT = 'MMM DD YYYY, HH:mm A'
 export const TABLE_PAGINATION_ITEM_PER_PAGE = 100
 export const THRESHOLD_SHORT_TIME = 2 * 60 * 60 * 1000 // in miliseconds
 

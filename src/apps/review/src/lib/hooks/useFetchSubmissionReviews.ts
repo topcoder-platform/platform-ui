@@ -400,7 +400,6 @@ export function useFetchSubmissionReviews(): useFetchSubmissionReviewsProps {
         [
             updatedReviewInfo,
             setUpdatedReviewInfo,
-            reviewInfo,
             resourceId,
             submissionId,
             currentPhase,

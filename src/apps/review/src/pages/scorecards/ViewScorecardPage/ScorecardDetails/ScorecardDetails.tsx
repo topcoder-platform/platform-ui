@@ -11,6 +11,7 @@ interface ScorecardDetailsProps {
 
 const ScorecardDetails: FC<ScorecardDetailsProps> = (props: ScorecardDetailsProps) => {
     const getStatusClassname = (): string => styles[ScorecardStatusLabels[props.scorecard.status]?.toLowerCase()]
+    const passingScore = props.scorecard.minimumPassingScore ?? 50
     return (
         <div className={styles.container}>
             <div className={styles.left}>
@@ -25,6 +26,12 @@ const ScorecardDetails: FC<ScorecardDetailsProps> = (props: ScorecardDetailsProp
                 <div className={styles.item}>
                     <div className={styles.label}>Project Type</div>
                     <div className={styles.value}>{ProjectTypeLabels[props.scorecard.challengeTrack]}</div>
+                </div>
+            </div>
+            <div className={styles.middle}>
+                <div className={styles.item}>
+                    <div className={styles.label}>Passing Score</div>
+                    <div className={styles.value}>{passingScore}</div>
                 </div>
             </div>
             <div className={styles.right}>

@@ -33,6 +33,7 @@ export const getEmptyScorecard = (): Scorecard => ({
     challengeTrack: '',
     challengeType: '',
     maxScore: '',
+    minimumPassingScore: '',
     minScore: '',
     name: '',
     scorecardGroups: [getEmptyScorecardGroup(

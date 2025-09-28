@@ -17,4 +17,7 @@ export interface ActiveReviewAssignment {
     resourceRoles: string[]
     challengeTypeId: string
     challengeTypeName: string
+    winnerHandle?: string
+    winnerHandleColor?: string
+    winnerProfileUrl?: string
 }

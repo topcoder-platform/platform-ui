@@ -27,6 +27,7 @@ export interface BackendScorecardBase {
     version: string
     minScore: number
     maxScore: number
+    minimumPassingScore: number | null
     createdAt: string
     createdBy: string
     updatedAt: string

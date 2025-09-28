@@ -1,6 +1,7 @@
 import {
     Dispatch,
     FC,
+    MouseEvent,
     SetStateAction,
     useCallback,
     useContext,
@@ -14,7 +15,7 @@ import { isEmpty } from 'lodash'
 import classNames from 'classnames'
 
 import { useClickOutside } from '~/libs/shared/lib/hooks'
-import { IconOutline, TabsNavItem } from '~/libs/ui'
+import { IconOutline } from '~/libs/ui'
 
 import { ReviewAppContext } from '../../contexts'
 import { ReviewAppContextModel } from '../../models'
@@ -46,24 +47,33 @@ const NavTabs: FC = () => {
         setActiveTab(activeTabPathName)
     }, [activeTabPathName])
 
-    const handleTabChange = useCallback(
-        (tab: TabsNavItem) => {
-            if (tab.url) {
-                setIsOpen(false)
-                window.open(tab.url, '_blank', 'noopener,noreferrer')
-                return
-            }
-
-            setActiveTab(tab.id)
-            setIsOpen(false)
-            navigate(tab.id)
-        },
-        [navigate],
-    )
-
     const triggerTab = useCallback(() => {
         setIsOpen(!isOpen)
     }, [isOpen])
+
+    const handleTabClick = useCallback(
+        (event: MouseEvent<HTMLLIElement>) => {
+            const {
+                tabId,
+                tabUrl,
+            }: { tabId?: string; tabUrl?: string } = event.currentTarget.dataset
+
+            if (!tabId) {
+                return
+            }
+
+            if (tabUrl) {
+                setIsOpen(false)
+                window.open(tabUrl, '_blank', 'noopener,noreferrer')
+                return
+            }
+
+            setActiveTab(tabId)
+            setIsOpen(false)
+            navigate(tabId)
+        },
+        [navigate],
+    )
 
     useClickOutside(triggerRef.current, () => setIsOpen(false))
 
@@ -87,7 +97,9 @@ const NavTabs: FC = () => {
                             <li
                                 key={tab.id}
                                 className={isActive ? `${styles.active}` : ''}
-                                onClick={() => handleTabChange(tab)}
+                                data-tab-id={tab.id}
+                                data-tab-url={tab.url || undefined}
+                                onClick={handleTabClick}
                             >
                                 <span className={styles.tabLabel}>{tab.title}</span>
                                 {tab.url && (

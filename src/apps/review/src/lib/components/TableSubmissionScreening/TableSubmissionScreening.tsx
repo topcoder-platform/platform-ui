@@ -1,15 +1,16 @@
 /**
  * Table Submission Screening.
  */
-import { FC, useContext, useMemo } from 'react'
+import { FC, MouseEvent, useContext, useMemo } from 'react'
+import { toast } from 'react-toastify'
 import _ from 'lodash'
 import classNames from 'classnames'
 
-import { MobileTableColumn } from '~/apps/admin/src/lib/models/MobileTableColumn.model'
-import { useWindowSize, WindowSize } from '~/libs/shared'
 import { TableMobile } from '~/apps/admin/src/lib/components/common/TableMobile'
-import { Table, TableColumn, Tooltip } from '~/libs/ui'
 import { IsRemovingType } from '~/apps/admin/src/lib/models'
+import { MobileTableColumn } from '~/apps/admin/src/lib/models/MobileTableColumn.model'
+import { copyTextToClipboard, useWindowSize, WindowSize } from '~/libs/shared'
+import { IconOutline, Table, TableColumn, Tooltip } from '~/libs/ui'
 
 import { ChallengeDetailContextModel, Screening } from '../../models'
 import { TableWrapper } from '../TableWrapper'
@@ -47,6 +48,7 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
     const columns = useMemo<TableColumn<Screening>[]>(
         () => {
             const submissionColumn: TableColumn<Screening> = {
+                className: styles.submissionColumn,
                 label: 'Submission ID',
                 propertyName: 'submissionId',
                 renderer: (data: Screening) => {
@@ -55,7 +57,7 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
                         || isSubmissionDownloadRestricted,
                     )
 
-                    const button = (
+                    const downloadButton = (
                         <button
                             onClick={function onClick() {
                                 if (isSubmissionDownloadRestricted) {
@@ -72,18 +74,46 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
                         </button>
                     )
 
-                    if (!isSubmissionDownloadRestricted) {
-                        return button
+                    async function handleCopySubmissionId(
+                        event: MouseEvent<HTMLButtonElement>,
+                    ): Promise<void> {
+                        event.stopPropagation()
+                        event.preventDefault()
+
+                        if (!data.submissionId) {
+                            return
+                        }
+
+                        await copyTextToClipboard(data.submissionId)
+                        toast.success('Submission ID copied to clipboard', {
+                            toastId: `challenge-submission-id-copy-${data.submissionId}`,
+                        })
                     }
 
-                    return (
+                    const renderedDownloadButton = isSubmissionDownloadRestricted ? (
                         <Tooltip content={restrictionMessage} triggerOn='click-hover'>
-                            <span
-                                className={styles.tooltipTrigger}
-                            >
-                                {button}
+                            <span className={styles.tooltipTrigger}>
+                                {downloadButton}
                             </span>
                         </Tooltip>
+                    ) : (
+                        downloadButton
+                    )
+
+                    return (
+                        <span className={styles.submissionCell}>
+                            {renderedDownloadButton}
+                            <button
+                                type='button'
+                                className={styles.copyButton}
+                                aria-label='Copy submission ID'
+                                title='Copy submission ID'
+                                onClick={handleCopySubmissionId}
+                                disabled={!data.submissionId}
+                            >
+                                <IconOutline.DocumentDuplicateIcon />
+                            </button>
+                        </span>
                     )
                 },
                 type: 'element',

@@ -41,6 +41,11 @@ interface Props {
     className?: string
 }
 
+const DEFAULT_SORT: Sort = {
+    direction: 'desc',
+    fieldName: 'challengeEndDate',
+}
+
 export const PastReviewsPage: FC<Props> = (props: Props) => {
     const {
         loginUserInfo,
@@ -79,7 +84,7 @@ export const PastReviewsPage: FC<Props> = (props: Props) => {
     const [challengeType, setChallengeType] = useState<
         SingleValue<SelectOptionChallengeType>
     >(CHALLENGE_TYPE_SELECT_ALL_OPTION)
-    const [sort, setSort] = useState<Sort | undefined>(undefined)
+    const [sort, setSort] = useState<Sort | undefined>(() => ({ ...DEFAULT_SORT }))
     const {
         pastReviews,
         isLoading: isLoadingPastReviews,

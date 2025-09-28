@@ -42,6 +42,18 @@ export const scorecardInfoSchema = {
         .required('Max score is required')
         .moreThan(yup.ref('minScore'), 'Max score must be greater than min score')
         .max(100, 'Max score must be lower than 100'),
+    minimumPassingScore: yup
+        .number()
+        .typeError('Passing score must be a number')
+        .required('Passing score is required')
+        .min(
+            yup.ref('minScore'),
+            'Passing score must be greater than or equal to min score',
+        )
+        .max(
+            yup.ref('maxScore'),
+            'Passing score must be less than or equal to max score',
+        ),
     minScore: yup
         .number()
         .typeError('Min Score must be a number')
@@ -118,6 +130,13 @@ const ScorecardInfoForm: FC = () => {
                 <InputWrapper
                     label='Max. Score'
                     name='maxScore'
+                    className={styles.qWidthInput}
+                >
+                    <input type='number' />
+                </InputWrapper>
+                <InputWrapper
+                    label='Passing Score'
+                    name='minimumPassingScore'
                     className={styles.qWidthInput}
                 >
                     <input type='number' />

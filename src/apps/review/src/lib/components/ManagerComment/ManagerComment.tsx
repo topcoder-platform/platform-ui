@@ -36,6 +36,11 @@ interface Props {
 }
 
 export const ManagerComment: FC<Props> = (props: Props) => {
+    const className = props.className
+    const scorecardQuestion = props.scorecardQuestion
+    const reviewItem = props.reviewItem
+    const isSavingManagerComment = props.isSavingManagerComment
+    const addManagerComment = props.addManagerComment
     const [comment, setComment] = useState('')
     const [showCommentForm, setShowCommentForm] = useState(false)
 
@@ -53,26 +58,26 @@ export const ManagerComment: FC<Props> = (props: Props) => {
     })
 
     const onSubmit = useCallback((data: FormManagerComment) => {
-        props.addManagerComment(
+        addManagerComment(
             data.response,
             data.finalScore,
-            props.reviewItem,
+            reviewItem,
             () => {
                 setComment(data.response)
                 setShowCommentForm(false)
             },
         )
-    }, [props.reviewItem])
+    }, [addManagerComment, reviewItem])
 
     const responseOptions = useMemo<SelectOption[]>(() => {
-        if (props.scorecardQuestion.type === 'SCALE') {
+        if (scorecardQuestion.type === 'SCALE') {
             const length
-                = props.scorecardQuestion.scaleMax
-                - props.scorecardQuestion.scaleMin
+                = scorecardQuestion.scaleMax
+                - scorecardQuestion.scaleMin
                 + 1
             return Array.from(
                 new Array(length),
-                (x, i) => `${i + props.scorecardQuestion.scaleMin}`,
+                (x, i) => `${i + scorecardQuestion.scaleMin}`,
             )
                 .map(item => ({
                     label: item,
@@ -80,21 +85,21 @@ export const ManagerComment: FC<Props> = (props: Props) => {
                 }))
         }
 
-        if (props.scorecardQuestion.type === 'YES_NO') {
+        if (scorecardQuestion.type === 'YES_NO') {
             return QUESTION_YES_NO_OPTIONS
         }
 
         return []
-    }, [props.scorecardQuestion])
+    }, [scorecardQuestion])
 
     useEffect(() => {
-        if (props.reviewItem.managerComment) {
-            setComment(props.reviewItem.managerComment)
+        if (reviewItem.managerComment) {
+            setComment(reviewItem.managerComment)
         }
-    }, [props.reviewItem])
+    }, [reviewItem])
 
     return (
-        <div className={classNames(styles.container, props.className)}>
+        <div className={classNames(styles.container, className)}>
             {!showCommentForm && comment && (
                 <div className={styles.blockManagerComment}>
                     <span className={styles.textTitle}>Manager Comment</span>
@@ -180,7 +185,7 @@ export const ManagerComment: FC<Props> = (props: Props) => {
                                                 onBlur={function onBlur() {
                                                     controlProps.field.onBlur()
                                                 }}
-                                                isDisabled={props.isSavingManagerComment}
+                                                isDisabled={isSavingManagerComment}
                                             />
                                         )
                                     }}
@@ -210,13 +215,13 @@ export const ManagerComment: FC<Props> = (props: Props) => {
                                     showBorder
                                     onBlur={controlProps.field.onBlur}
                                     error={_.get(errors, 'response.message')}
-                                    disabled={props.isSavingManagerComment}
+                                    disabled={isSavingManagerComment}
                                 />
                             )
                         }}
                     />
                     <div className={styles.blockBtns}>
-                        <button className='filledButton' type='submit' disabled={props.isSavingManagerComment}>
+                        <button className='filledButton' type='submit' disabled={isSavingManagerComment}>
                             Submit Response
                         </button>
                         <button

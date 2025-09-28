@@ -110,6 +110,7 @@ export interface Scorecard {
     index?: number
     minScore: number
     maxScore: number
+    minimumPassingScore: number
     challengeType: string
     version: string
     scorecardGroups: ScorecardGroup[]

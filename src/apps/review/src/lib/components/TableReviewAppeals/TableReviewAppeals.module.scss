@@ -35,6 +35,49 @@
     display: inline-block;
 }
 
+.submissionColumn {
+    width: 240px;
+    min-width: 220px;
+    max-width: 260px;
+    white-space: nowrap;
+
+    :global(.TableCell_blockCell) {
+        width: 100%;
+    }
+}
+
+.submissionCell {
+    display: inline-flex;
+    align-items: center;
+    gap: $sp-2;
+}
+
+.copyButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: $sp-1;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: $link-blue-dark;
+
+    &:hover,
+    &:focus {
+        color: $blue-110;
+    }
+
+    &:disabled {
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+
+    svg {
+        width: 18px;
+        height: 18px;
+    }
+}
+
 .notReviewed {
     color: var(--GrayFontColor);
 }

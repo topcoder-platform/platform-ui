@@ -58,6 +58,9 @@ export function useFetchScorecards(
         error,
         isValidating,
         metadata: data?.metadata,
-        scoreCards: data?.scoreCards || [],
+        scoreCards: data?.scoreCards?.map(scorecard => ({
+            ...scorecard,
+            minimumPassingScore: scorecard.minimumPassingScore ?? 50,
+        })) || [],
     }
 }

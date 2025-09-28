@@ -1,16 +1,17 @@
 /**
  * Table Review Appeals.
  */
-import { FC, useContext, useMemo } from 'react'
+import { FC, MouseEvent, useContext, useMemo } from 'react'
 import { Link } from 'react-router-dom'
+import { toast } from 'react-toastify'
 import _, { includes } from 'lodash'
 import classNames from 'classnames'
 
 import { TableMobile } from '~/apps/admin/src/lib/components/common/TableMobile'
 import { IsRemovingType } from '~/apps/admin/src/lib/models'
 import { MobileTableColumn } from '~/apps/admin/src/lib/models/MobileTableColumn.model'
-import { useWindowSize, WindowSize } from '~/libs/shared'
-import { Table, TableColumn, Tooltip } from '~/libs/ui'
+import { copyTextToClipboard, useWindowSize, WindowSize } from '~/libs/shared'
+import { IconOutline, Table, TableColumn, Tooltip } from '~/libs/ui'
 
 import { APPROVAL, NO_RESOURCE_ID, REVIEWER, WITHOUT_APPEAL } from '../../../config/index.config'
 import { ChallengeDetailContext } from '../../contexts'
@@ -52,7 +53,7 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
     const columns = useMemo<TableColumn<SubmissionInfo>[]>(
         () => {
             const submissionColumn: TableColumn<SubmissionInfo> = {
-                className: styles.textBlue,
+                className: classNames(styles.textBlue, styles.submissionColumn),
                 label: 'Submission ID',
                 propertyName: 'id',
                 renderer: (data: SubmissionInfo) => {
@@ -61,7 +62,7 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                         || isSubmissionDownloadRestricted,
                     )
 
-                    const button = (
+                    const downloadButton = (
                         <button
                             onClick={function onClick() {
                                 if (isSubmissionDownloadRestricted) {
@@ -78,18 +79,48 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                         </button>
                     )
 
-                    if (!isSubmissionDownloadRestricted) {
-                        return button
+                    async function handleCopySubmissionId(
+                        event: MouseEvent<HTMLButtonElement>,
+                    ): Promise<void> {
+                        event.stopPropagation()
+                        event.preventDefault()
+
+                        if (!data.id) {
+                            return
+                        }
+
+                        await copyTextToClipboard(data.id)
+                        toast.success('Submission ID copied to clipboard', {
+                            toastId: `challenge-submission-id-copy-${data.id}`,
+                        })
                     }
 
-                    return (
+                    const renderedDownloadButton = isSubmissionDownloadRestricted ? (
                         <Tooltip content={restrictionMessage} triggerOn='click-hover'>
                             <span
                                 className={styles.tooltipTrigger}
                             >
-                                {button}
+                                {downloadButton}
                             </span>
                         </Tooltip>
+                    ) : (
+                        downloadButton
+                    )
+
+                    return (
+                        <span className={styles.submissionCell}>
+                            {renderedDownloadButton}
+                            <button
+                                type='button'
+                                className={styles.copyButton}
+                                aria-label='Copy submission ID'
+                                title='Copy submission ID'
+                                onClick={handleCopySubmissionId}
+                                disabled={!data.id}
+                            >
+                                <IconOutline.DocumentDuplicateIcon />
+                            </button>
+                        </span>
                     )
                 },
                 type: 'element',

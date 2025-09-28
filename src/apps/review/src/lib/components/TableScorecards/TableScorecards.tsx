@@ -3,7 +3,7 @@
  */
 import { Dispatch, FC, SetStateAction, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { bind, noop } from 'lodash'
+import { noop } from 'lodash'
 import classNames from 'classnames'
 
 import { MobileTableColumn } from '~/apps/admin/src/lib/models/MobileTableColumn.model'
@@ -30,11 +30,19 @@ interface Props {
 }
 
 export const TableScorecards: FC<Props> = (props: Props) => {
+    const className = props.className
+    const datas = props.datas
+    const metadata = props.metadata
+    const perPage = props.perPage
+    const totalPages = props.totalPages
+    const page = props.page
+    const setPage = props.setPage
+    const onClone = props.onClone
     const { width: screenWidth }: WindowSize = useWindowSize()
     const isTablet = useMemo(() => screenWidth <= 1000, [screenWidth])
 
-    const start = (props.page - 1) * (props.perPage ?? 0) + 1
-    const end = Math.min(props.page * (props.perPage ?? 0), props.metadata?.total ?? 0)
+    const start = (page - 1) * (perPage ?? 0) + 1
+    const end = Math.min(page * (perPage ?? 0), metadata?.total ?? 0)
 
     const columns = useMemo<TableColumn<Scorecard>[]>(
         () => [
@@ -97,7 +105,12 @@ export const TableScorecards: FC<Props> = (props: Props) => {
                             <PencilIcon />
                             <span>Edit</span>
                         </Link>
-                        <div className={styles.actionItem} onClick={bind(props.onClone, this, scorecard)}>
+                        <div
+                            className={styles.actionItem}
+                            onClick={function onClick() {
+                                onClone(scorecard)
+                            }}
+                        >
                             <DuplicateIcon />
                             <span>Clone</span>
                         </div>
@@ -106,7 +119,7 @@ export const TableScorecards: FC<Props> = (props: Props) => {
                 type: 'action',
             },
         ],
-        [],
+        [onClone],
     )
 
     const columnsMobile = useMemo<MobileTableColumn<Scorecard>[][]>(
@@ -138,16 +151,16 @@ export const TableScorecards: FC<Props> = (props: Props) => {
         <TableWrapper
             className={classNames(
                 styles.container,
-                props.className,
+                className,
                 'enhanced-table',
             )}
         >
             {isTablet ? (
-                <TableMobile columns={columnsMobile} data={props.datas} />
+                <TableMobile columns={columnsMobile} data={datas} />
             ) : (
                 <Table
                     columns={columns}
-                    data={props.datas}
+                    data={datas}
                     disableSorting
                     onToggleSort={noop}
                     removeDefaultSort
@@ -164,15 +177,11 @@ export const TableScorecards: FC<Props> = (props: Props) => {
                     {' '}
                     of
                     {' '}
-                    {props.metadata?.total ?? 0}
+                    {metadata?.total ?? 0}
                     {' '}
                     results
                 </div>
-                <Pagination
-                    page={props.page}
-                    totalPages={props.totalPages}
-                    onPageChange={props.setPage}
-                />
+                <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
             </div>
 
         </TableWrapper>

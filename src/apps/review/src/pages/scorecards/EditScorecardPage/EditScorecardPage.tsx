@@ -51,7 +51,7 @@ const EditScorecardPage: FC = () => {
         if (scorecardQuery.scorecard && !scorecardQuery.isValidating) {
             editForm.reset(scorecardQuery.scorecard)
         }
-    }, [scorecardQuery.scorecard, scorecardQuery.isValidating])
+    }, [editForm, scorecardQuery.isValidating, scorecardQuery.scorecard])
 
     const handleSubmit = useCallback(async (value: any): Promise<void> => {
         setSaving(true)
@@ -63,11 +63,10 @@ const EditScorecardPage: FC = () => {
             }
         } catch (e: any) {
             toast.error(`Couldn't save scorecard! ${e.message}`)
-            console.error("Couldn't save scorecard!", e)
         } finally {
             setSaving(false)
         }
-    }, [params.scorecardId, navigate])
+    }, [navigate])
 
     const reorder = (list: any[], startIndex: number, endIndex: number): any[] => {
         const result = Array.from(list)

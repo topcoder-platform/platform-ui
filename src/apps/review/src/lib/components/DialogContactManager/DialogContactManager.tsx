@@ -38,6 +38,9 @@ interface Props {
 }
 
 export const DialogContactManager: FC<Props> = (props: Props) => {
+    const className = props.className
+    const open = props.open
+    const setOpen = props.setOpen
     const { myChallengeResources }: useRoleProps = useRole()
     const { challengeId }: ChallengeDetailContextModel = useContext(
         ChallengeDetailContext,
@@ -61,9 +64,9 @@ export const DialogContactManager: FC<Props> = (props: Props) => {
     // close this dialog
     const handleClose = useCallback(() => {
         if (!isLoading) {
-            props.setOpen(false)
+            setOpen(false)
         }
-    }, [isLoading])
+    }, [isLoading, setOpen])
 
     const {
         register,
@@ -113,13 +116,13 @@ export const DialogContactManager: FC<Props> = (props: Props) => {
             blockScroll
             title='Contact Manager'
             onClose={handleClose}
-            open={props.open}
+            open={open}
             classNames={{
                 modal: classNames(styles.modal),
             }}
         >
             <form
-                className={classNames(styles.container, props.className)}
+                className={classNames(styles.container, className)}
                 onSubmit={handleSubmit(onSubmit)}
             >
                 <div>

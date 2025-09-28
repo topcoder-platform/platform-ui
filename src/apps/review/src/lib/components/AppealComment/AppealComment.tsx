@@ -49,6 +49,13 @@ interface Props {
 }
 
 export const AppealComment: FC<Props> = (props: Props) => {
+    const className = props.className
+    const data = props.data
+    const scorecardQuestion = props.scorecardQuestion
+    const isSavingAppealResponse = props.isSavingAppealResponse
+    const reviewItem = props.reviewItem
+    const appealInfo = props.appealInfo
+    const addAppealResponse = props.addAppealResponse
     const [appealResponse, setAppealResponse] = useState('')
     const [showResponseForm, setShowResponseForm] = useState(false)
 
@@ -76,30 +83,30 @@ export const AppealComment: FC<Props> = (props: Props) => {
         resolver: yupResolver(formAppealResponseSchema),
     })
 
-    const onSubmit = useCallback((data: FormAppealResponse) => {
-        if (props.appealInfo) {
-            props.addAppealResponse(
-                data.response,
+    const onSubmit = useCallback((formData: FormAppealResponse) => {
+        if (appealInfo) {
+            addAppealResponse(
+                formData.response,
                 updatedResponse?.value ?? '',
-                props.appealInfo,
-                props.reviewItem,
+                appealInfo,
+                reviewItem,
                 () => {
-                    setAppealResponse(data.response)
+                    setAppealResponse(formData.response)
                     setShowResponseForm(false)
                 },
             )
         }
-    }, [updatedResponse, props.appealInfo, props.addAppealResponse, props.reviewItem])
+    }, [addAppealResponse, appealInfo, reviewItem, updatedResponse])
 
     const responseOptions = useMemo<SelectOption[]>(() => {
-        if (props.scorecardQuestion.type === 'SCALE') {
+        if (scorecardQuestion.type === 'SCALE') {
             const length
-                = props.scorecardQuestion.scaleMax
-                - props.scorecardQuestion.scaleMin
+                = scorecardQuestion.scaleMax
+                - scorecardQuestion.scaleMin
                 + 1
             return Array.from(
                 new Array(length),
-                (x, i) => `${i + props.scorecardQuestion.scaleMin}`,
+                (x, i) => `${i + scorecardQuestion.scaleMin}`,
             )
                 .map(item => ({
                     label: item,
@@ -107,18 +114,18 @@ export const AppealComment: FC<Props> = (props: Props) => {
                 }))
         }
 
-        if (props.scorecardQuestion.type === 'YES_NO') {
+        if (scorecardQuestion.type === 'YES_NO') {
             return QUESTION_YES_NO_OPTIONS
         }
 
         return []
-    }, [props.scorecardQuestion])
+    }, [scorecardQuestion])
 
     return (
-        <div className={classNames(styles.container, props.className)}>
+        <div className={classNames(styles.container, className)}>
             <div className={styles.blockAppealComment}>
                 <span className={styles.textTitle}>Appeal Comment</span>
-                <MarkdownReview value={props.data.content} />
+                <MarkdownReview value={data.content} />
             </div>
             {!showResponseForm && appealResponse && (
                 <div className={styles.blockAppealResponse}>
@@ -175,7 +182,7 @@ export const AppealComment: FC<Props> = (props: Props) => {
                             ) {
                                 setUpdatedResponse(option)
                             }}
-                            isDisabled={props.isSavingAppealResponse}
+                            isDisabled={isSavingAppealResponse}
                         />
                     </div>
                     <Controller
@@ -195,7 +202,7 @@ export const AppealComment: FC<Props> = (props: Props) => {
                                     showBorder
                                     onBlur={controlProps.field.onBlur}
                                     error={get(errors, 'response.message')}
-                                    disabled={props.isSavingAppealResponse}
+                                    disabled={isSavingAppealResponse}
                                 />
                             )
                         }}
@@ -204,7 +211,7 @@ export const AppealComment: FC<Props> = (props: Props) => {
                         <button
                             className='filledButton'
                             type='submit'
-                            disabled={props.isSavingAppealResponse}
+                            disabled={isSavingAppealResponse}
                         >
                             Submit Appeal
                         </button>

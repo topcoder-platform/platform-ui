@@ -40,6 +40,7 @@ export function useFetchScorecard(id: string | undefined, shouldRetry: boolean):
     const scorecard = useMemo(() => (
         data ? {
             ...data,
+            minimumPassingScore: data.minimumPassingScore ?? 50,
             scorecardGroups: sortBy(data.scorecardGroups.map(group => ({
                 ...group,
                 sections: sortBy(group.sections.map(section => ({

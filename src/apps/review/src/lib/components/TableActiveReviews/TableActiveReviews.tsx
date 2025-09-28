@@ -85,6 +85,20 @@ export const TableActiveReviews: FC<Props> = (props: Props) => {
         }
     }, [sort, sortMapping])
 
+    const handleWinnerProfileLinkClick = useCallback(
+        (event: React.MouseEvent<HTMLAnchorElement>) => {
+            const winnerProfileUrl = event.currentTarget.dataset.winnerProfileUrl
+
+            if (!winnerProfileUrl) {
+                return
+            }
+
+            event.preventDefault()
+            window.open(winnerProfileUrl, '_blank')
+        },
+        [],
+    )
+
     const columns = useMemo<TableColumn<ActiveReviewAssignment>[]>(
         () => {
             const baseColumns: TableColumn<ActiveReviewAssignment>[] = [
@@ -133,8 +147,44 @@ export const TableActiveReviews: FC<Props> = (props: Props) => {
                     type: 'element',
                 },
             ]
-
             if (hideStatusColumns) {
+                baseColumns.push({
+                    className: styles.tableCell,
+                    isSortable: false,
+                    label: 'Winner',
+                    propertyName: 'winnerHandle',
+                    renderer: (data: ActiveReviewAssignment) => {
+                        if (!data.winnerHandle) {
+                            return <span>-</span>
+                        }
+
+                        const colorStyle = data.winnerHandleColor
+                            ? { color: data.winnerHandleColor }
+                            : undefined
+
+                        if (data.winnerProfileUrl) {
+                            return (
+                                <a
+                                    href={data.winnerProfileUrl}
+                                    target='_blank'
+                                    rel='noopener noreferrer'
+                                    style={colorStyle}
+                                    data-winner-profile-url={data.winnerProfileUrl}
+                                    onClick={handleWinnerProfileLinkClick}
+                                >
+                                    {data.winnerHandle}
+                                </a>
+                            )
+                        }
+
+                        return (
+                            <span style={colorStyle}>
+                                {data.winnerHandle}
+                            </span>
+                        )
+                    },
+                    type: 'element',
+                })
                 baseColumns.push({
                     className: styles.tableCell,
                     isSortable: true,
@@ -214,7 +264,12 @@ export const TableActiveReviews: FC<Props> = (props: Props) => {
 
             return baseColumns
         },
-        [disableNavigation, hideStatusColumns, redirect],
+        [
+            disableNavigation,
+            handleWinnerProfileLinkClick,
+            hideStatusColumns,
+            redirect,
+        ],
     )
 
     const columnsMobile = useMemo<MobileTableColumn<ActiveReviewAssignment>[][]>(

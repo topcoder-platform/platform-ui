@@ -26,6 +26,7 @@ export const ADMIN = {
 
 export const REVIEW = {
     CHALLENGE_PAGE_URL: 'https://www.topcoder.com/challenges',
+    OPPORTUNITIES_URL: 'https://www.topcoder.com/challenges/?bucket=reviewOpportunities&'
+        + 'tracks[DS]=true&tracks[Des]=true&tracks[Dev]=true&tracks[QA]=true',
     PROFILE_PAGE_URL: 'https://profiles.topcoder.com',
-    OPPORTUNITIES_URL: 'https://www.topcoder.com/challenges/?bucket=reviewOpportunities&tracks[DS]=true&tracks[Des]=true&tracks[Dev]=true&tracks[QA]=true',
 }

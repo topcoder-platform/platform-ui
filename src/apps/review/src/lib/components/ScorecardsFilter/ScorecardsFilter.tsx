@@ -27,6 +27,8 @@ interface ScorecardFiltersProps {
 }
 
 export const ScorecardFilters: React.FC<ScorecardFiltersProps> = (props: ScorecardFiltersProps) => {
+    const filters = props.filters
+    const onFiltersChange = props.onFiltersChange
 
     const projectTypeOptions = [
         { label: 'All Projects', value: '' },
@@ -57,8 +59,8 @@ export const ScorecardFilters: React.FC<ScorecardFiltersProps> = (props: Scoreca
 
     const categoryOptions = [
         { label: 'All Categories', value: '' },
-        ...(props.filters.projectType
-            ? (categoryByProjectType[props.filters.projectType as ProjectType] || []).map(category => ({
+        ...(filters.projectType
+            ? (categoryByProjectType[filters.projectType as ProjectType] || []).map(category => ({
                 label: category,
                 value: category,
             }))
@@ -69,7 +71,7 @@ export const ScorecardFilters: React.FC<ScorecardFiltersProps> = (props: Scoreca
     = (key: keyof ScorecardFiltersProps['filters']) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const value = e.target.value
         const newFilters = {
-            ...props.filters,
+            ...filters,
             [key]: value,
         }
 
@@ -78,18 +80,18 @@ export const ScorecardFilters: React.FC<ScorecardFiltersProps> = (props: Scoreca
             newFilters.category = ''
         }
 
-        props.onFiltersChange(newFilters)
+        onFiltersChange(newFilters)
     }
 
     const handleClear = useCallback(() => {
-        props.onFiltersChange({
+        onFiltersChange({
             category: '',
             name: '',
             projectType: '',
             status: '',
             type: '',
         })
-    }, [])
+    }, [onFiltersChange])
 
     return (
         <div className={styles.filtersContainer}>
@@ -103,7 +105,7 @@ export const ScorecardFilters: React.FC<ScorecardFiltersProps> = (props: Scoreca
             >
                 <input
                     className={classNames(styles.inputText, 'body-small')}
-                    value={props.filters.name}
+                    value={filters.name}
                     onChange={handleChange('name')}
                     placeholder='Scorecard Name'
                     type='text'
@@ -118,7 +120,7 @@ export const ScorecardFilters: React.FC<ScorecardFiltersProps> = (props: Scoreca
                 classNameWrapper={styles.typeSelect}
                 name='type'
                 options={typeOptions}
-                value={props.filters.type}
+                value={filters.type}
                 onChange={handleChange('type')}
                 dirty
             />
@@ -128,7 +130,7 @@ export const ScorecardFilters: React.FC<ScorecardFiltersProps> = (props: Scoreca
                 classNameWrapper={styles.projectTypeSelect}
                 name='projectType'
                 options={projectTypeOptions}
-                value={props.filters.projectType}
+                value={filters.projectType}
                 onChange={handleChange('projectType')}
                 dirty
             />
@@ -138,10 +140,10 @@ export const ScorecardFilters: React.FC<ScorecardFiltersProps> = (props: Scoreca
                 classNameWrapper={styles.categorySelect}
                 name='category'
                 options={categoryOptions}
-                value={props.filters.category}
+                value={filters.category}
                 onChange={handleChange('category')}
                 dirty
-                disabled={!props.filters.projectType}
+                disabled={!filters.projectType}
             />
 
             {/* Status */}
@@ -149,7 +151,7 @@ export const ScorecardFilters: React.FC<ScorecardFiltersProps> = (props: Scoreca
                 classNameWrapper={styles.statusSelect}
                 name='status'
                 options={statusOptions}
-                value={props.filters.status}
+                value={filters.status}
                 onChange={handleChange('status')}
                 dirty
             />

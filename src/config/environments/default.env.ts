@@ -120,11 +120,12 @@ export const ADMIN = {
 
 const REVIEW_OPPORTUNITIES_URL_DEFAULT = getReactEnv<string>(
     'REVIEW_OPPORTUNITIES_URL',
-    'https://www-v6.topcoder-dev.com/challenges/?bucket=reviewOpportunities&tracks[DS]=true&tracks[Des]=true&tracks[Dev]=true&tracks[QA]=true',
+    'https://www-v6.topcoder-dev.com/challenges/?bucket=reviewOpportunities&'
+        + 'tracks[DS]=true&tracks[Des]=true&tracks[Dev]=true&tracks[QA]=true',
 )
 
 export const REVIEW = {
     CHALLENGE_PAGE_URL: 'https://www-v6.topcoder-dev.com/challenges',
-    PROFILE_PAGE_URL: 'https://profiles.topcoder-dev.com',
     OPPORTUNITIES_URL: REVIEW_OPPORTUNITIES_URL_DEFAULT,
+    PROFILE_PAGE_URL: 'https://profiles-v6.topcoder-dev.com/profiles',
 }

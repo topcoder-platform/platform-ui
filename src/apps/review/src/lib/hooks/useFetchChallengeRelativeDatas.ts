@@ -177,7 +177,7 @@ export function useFetchChallengeRelativeDatas(
 
     useEffect(() => {
         fetchNextMyRoleInfosInQueue()
-    }, [loginUserInfo, resourceRoleReviewer])
+    }, [fetchNextMyRoleInfosInQueue, loginUserInfo, resourceRoleReviewer])
 
     return {
         cancelLoadChallengeRelativeInfos,

@@ -80,7 +80,7 @@ const InputDatePicker: FC<InputDatePickerProps> = (props: InputDatePickerProps) 
         const maxYear = getYear(props.maxDate ? props.maxDate : new Date()) + 1
         const minYear = getYear(props.minYear ? props.minYear : 1979)
         return range(minYear, maxYear, 1)
-    }, [props.maxDate])
+    }, [props.maxDate, props.minYear])
 
     const [stateHasFocus, setStateHasFocus] = useState(false)
 

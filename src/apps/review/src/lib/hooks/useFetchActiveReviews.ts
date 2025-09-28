@@ -10,7 +10,9 @@ import {
 } from 'react'
 import moment from 'moment'
 
+import { EnvironmentConfig } from '~/config'
 import { handleError } from '~/libs/shared'
+import { getRatingColor } from '~/libs/core'
 
 import {
     ActiveReviewAssignment,
@@ -76,6 +78,20 @@ export const transformAssignments = (
                 .filter((role): role is string => Boolean(role)),
         )
 
+        const firstPlaceWinner = base.winners
+            ?.find(winner => winner?.placement === 1)
+        const winnerHandle = firstPlaceWinner?.handle
+        const winnerProfileUrl = winnerHandle
+            ? `${EnvironmentConfig.REVIEW.PROFILE_PAGE_URL}/${winnerHandle}`
+            : undefined
+        const winnerHandleColor = firstPlaceWinner
+            ? getRatingColor(
+                typeof firstPlaceWinner.maxRating === 'number'
+                    ? firstPlaceWinner.maxRating
+                    : undefined,
+            )
+            : undefined
+
         const reviewProgressValues = items
             .map(item => item.reviewProgress)
             .filter((value): value is number => typeof value === 'number')
@@ -114,6 +130,9 @@ export const transformAssignments = (
             timeLeft: timeMetadata?.durationString,
             timeLeftColor: timeMetadata?.durationColor,
             timeLeftStatus: timeMetadata?.durationStatus,
+            winnerHandle,
+            winnerHandleColor,
+            winnerProfileUrl,
         })
     })
 

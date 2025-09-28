@@ -19,7 +19,7 @@ type Story = StoryObj<typeof InputMultiselect>;
 
 export const Basic: Story = {
     args: {
-        onChange: d => console.log(d),
+        onChange: () => undefined,
         onFetchOptions: d => Promise.resolve(d ? [
             { label: 'Option 1', value: '1' },
             { label: 'Option 2', value: '2' },

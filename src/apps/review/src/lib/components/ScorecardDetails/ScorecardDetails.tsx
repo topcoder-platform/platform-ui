@@ -13,7 +13,7 @@ import {
     useState,
 } from 'react'
 import { useForm, UseFormReturn } from 'react-hook-form'
-import { NavLink, useSearchParams } from 'react-router-dom'
+import { NavLink } from 'react-router-dom'
 import { filter, forEach, isEmpty, reduce } from 'lodash'
 import classNames from 'classnames'
 
@@ -77,13 +77,24 @@ interface Props {
 }
 
 export const ScorecardDetails: FC<Props> = (props: Props) => {
+    const className = props.className
+    const isEdit = props.isEdit
+    const onCancelEdit = props.onCancelEdit
+    const setIsChanged = props.setIsChanged
     const scorecardInfo = props.scorecardInfo
     const isLoading = props.isLoading
     const reviewInfo = props.reviewInfo
     const isSavingReview = props.isSavingReview
-    const isEdit = props.isEdit
+    const isSavingAppeal = props.isSavingAppeal
+    const isSavingAppealResponse = props.isSavingAppealResponse
+    const isSavingManagerComment = props.isSavingManagerComment
+    const saveReviewInfo = props.saveReviewInfo
+    const mappingAppeals = props.mappingAppeals
+    const addAppeal = props.addAppeal
+    const doDeleteAppeal = props.doDeleteAppeal
+    const addAppealResponse = props.addAppealResponse
+    const addManagerComment = props.addManagerComment
     const navigate = useAppNavigate()
-    const [, setSearchParams] = useSearchParams()
     const [isExpand, setIsExpand] = useState<{ [key: string]: boolean }>({})
     const [isShowSaveAsDraftModal, setIsShowSaveAsDraftModal] = useState(false)
     const mappingReviewInfo = useMemo<{
@@ -123,7 +134,7 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
         resolver: yupResolver(formReviewsSchema),
     })
 
-    const changeHandle = props.setIsChanged
+    const changeHandle = setIsChanged
     useEffect(() => {
         changeHandle(isDirty)
     }, [isDirty, changeHandle])
@@ -161,7 +172,7 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
     const [totalScore, setTotalScore] = useState(0)
 
     const onSubmit = useCallback((data: FormReviews) => {
-        props.saveReviewInfo(
+        saveReviewInfo(
             isDirty ? getValues() : undefined,
             getValues(),
             true,
@@ -170,7 +181,7 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
                 reset(data)
             },
         )
-    }, [reset, setSearchParams, totalScore, isDirty])
+    }, [getValues, isDirty, reset, saveReviewInfo, totalScore])
 
     const recalculateReviewProgress = useCallback(() => {
         const reviewFormDatas = getValues().reviews
@@ -297,7 +308,7 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
     }, [])
 
     return isLoading ? (<TableLoading />) : (
-        <div className={classNames(styles.container, props.className)}>
+        <div className={classNames(styles.container, className)}>
             <ScorecardDetailsHeader
                 isEdit={isEdit}
                 scorecardInfo={scorecardInfo}
@@ -451,28 +462,28 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
                                                                         questionIndex
                                                                     }
                                                                     mappingAppeals={
-                                                                        props.mappingAppeals
+                                                                        mappingAppeals
                                                                     }
                                                                     isSavingAppeal={
-                                                                        props.isSavingAppeal
+                                                                        isSavingAppeal
                                                                     }
                                                                     isSavingAppealResponse={
-                                                                        props.isSavingAppealResponse
+                                                                        isSavingAppealResponse
                                                                     }
                                                                     isSavingManagerComment={
-                                                                        props.isSavingManagerComment
+                                                                        isSavingManagerComment
                                                                     }
                                                                     addAppeal={
-                                                                        props.addAppeal
+                                                                        addAppeal
                                                                     }
                                                                     doDeleteAppeal={
-                                                                        props.doDeleteAppeal
+                                                                        doDeleteAppeal
                                                                     }
                                                                     addAppealResponse={
-                                                                        props.addAppealResponse
+                                                                        addAppealResponse
                                                                     }
                                                                     addManagerComment={
-                                                                        props.addManagerComment
+                                                                        addManagerComment
                                                                     }
                                                                 />
                                                             )
@@ -504,7 +515,7 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
                                 <button
                                     type='button'
                                     className='cancelButton'
-                                    onClick={props.onCancelEdit}
+                                    onClick={onCancelEdit}
                                 >
                                     Cancel
                                 </button>
@@ -512,7 +523,7 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
                                     type='button'
                                     className='borderButton'
                                     onClick={function onClick() {
-                                        props.saveReviewInfo(
+                                        saveReviewInfo(
                                             isDirty ? getValues() : undefined,
                                             getValues(),
                                             false,
