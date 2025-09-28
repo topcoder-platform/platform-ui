@@ -126,13 +126,9 @@ export const ScorecardQuestionView: FC<Props> = (props: Props) => {
                     </button>
                     <span className={styles.textQuestion}>
                         <strong>
-                            Question
-                            {props.groupIndex + 1}
-                            .
-                            {props.sectionIndex + 1}
-                            .
-                            {props.questionIndex + 1}
+                            {`Question ${props.groupIndex + 1}.${props.sectionIndex + 1}.${props.questionIndex + 1}`}
                         </strong>
+                        {' '}
                         {props.scorecardQuestion.description}
                     </span>
                 </td>
@@ -159,46 +155,48 @@ export const ScorecardQuestionView: FC<Props> = (props: Props) => {
                 </tr>
             )}
 
-            {props.reviewItem.reviewItemComments.map((commentItem, index) => (
-                <Fragment key={commentItem.sortOrder}>
-                    <tr
-                        className={classNames(
-                            styles.container,
-                            props.className,
-                            styles.blockRowResponseComment,
-                            {
-                                [styles.isLast]:
-                                    index
-                                    === props.reviewItem.reviewItemComments.length
-                                    - 1,
-                            },
-                        )}
-                    >
-                        <td colSpan={isMobile ? 3 : 2}>
-                            <div className={styles.blockResponseComment}>
-                                <span className={styles.textResponse}>
-                                    Response
-                                    {index + 1}
-                                    :
-                                </span>
-                                <div className={styles.blockCommentContent}>
-                                    <span className={styles.textType}>
-                                        {commentItem.typeDisplay}
-                                    </span>
+            {props.reviewItem.reviewItemComments.map((commentItem, index) => {
+                const commentAppeal
+                    = props.mappingAppeals[commentItem.id]
+                    ?? commentItem.appeal
 
-                                    <MarkdownReview
-                                        value={commentItem.content}
-                                        className={styles.mardownReview}
-                                    />
+                return (
+                    <Fragment key={commentItem.sortOrder}>
+                        <tr
+                            className={classNames(
+                                styles.container,
+                                props.className,
+                                styles.blockRowResponseComment,
+                                {
+                                    [styles.isLast]:
+                                        index
+                                        === props.reviewItem.reviewItemComments.length
+                                            - 1,
+                                },
+                            )}
+                        >
+                            <td colSpan={isMobile ? 3 : 2}>
+                                <div className={styles.blockResponseComment}>
+                                    <span className={styles.textResponse}>
+                                        {`Response ${index + 1}:`}
+                                    </span>
+                                    <div className={styles.blockCommentContent}>
+                                        <span className={styles.textType}>
+                                            {commentItem.typeDisplay}
+                                        </span>
+
+                                        <MarkdownReview
+                                            value={commentItem.content}
+                                            className={styles.mardownReview}
+                                        />
+                                    </div>
                                 </div>
-                            </div>
-                        </td>
-                    </tr>
-                    {includes(
-                        [REVIEWER, COPILOT, ADMIN],
-                        actionChallengeRole,
-                    ) && (
-                        props.mappingAppeals[commentItem.id] && (
+                            </td>
+                        </tr>
+                        {includes(
+                            [REVIEWER, COPILOT, ADMIN],
+                            actionChallengeRole,
+                        ) && commentAppeal && (
                             <tr
                                 key={commentItem.sortOrder}
                                 className={classNames(
@@ -212,74 +210,68 @@ export const ScorecardQuestionView: FC<Props> = (props: Props) => {
                                                     .reviewItemComments
                                                     .length
                                                     - 1
-                                                && !includes(
-                                                    [COPILOT, ADMIN],
-                                                    actionChallengeRole,
-                                                ),
+                                            && !includes(
+                                                [COPILOT, ADMIN],
+                                                actionChallengeRole,
+                                            ),
                                     },
                                 )}
                             >
                                 <td colSpan={3}>
                                     <AppealComment
-                                        data={
-                                            props.mappingAppeals[
-                                                commentItem.id
-                                            ] as AppealInfo
-                                        }
+                                        data={commentAppeal}
                                         scorecardQuestion={props.scorecardQuestion}
                                         isSavingAppealResponse={props.isSavingAppealResponse}
                                         reviewItem={props.reviewItem}
-                                        appealInfo={props.mappingAppeals[commentItem.id]}
+                                        appealInfo={commentAppeal}
                                         addAppealResponse={props.addAppealResponse}
                                     />
                                 </td>
                             </tr>
-                        )
-                    )}
+                        )}
 
-                    {includes(
-                        [SUBMITTER],
-                        actionChallengeRole,
-                    ) && (
-                        <tr
-                            className={classNames(
-                                styles.container,
-                                props.className,
-                                styles.blockRowAppealComment,
-                                {
-                                    [styles.isLast]:
-                                        index
-                                        === props.reviewItem.reviewItemComments
-                                            .length
-                                            - 1,
-                                },
-                            )}
-                        >
-                            <td
-                                colSpan={3}
+                        {includes(
+                            [SUBMITTER],
+                            actionChallengeRole,
+                        ) && (
+                            <tr
                                 className={classNames(
-                                    includes(
-                                        FINISHTAB,
-                                        sessionStorage.getItem(TAB),
-                                    )
-                                        ? styles.isEmpty
-                                        : '',
+                                    styles.container,
+                                    props.className,
+                                    styles.blockRowAppealComment,
+                                    {
+                                        [styles.isLast]:
+                                            index
+                                            === props.reviewItem.reviewItemComments
+                                                .length
+                                                - 1,
+                                    },
                                 )}
                             >
-                                <Appeal
-                                    appealInfo={
-                                        props.mappingAppeals[commentItem.id]
-                                    }
-                                    commentItem={commentItem}
-                                    isSavingAppeal={props.isSavingAppeal}
-                                    addAppeal={props.addAppeal}
-                                    doDeleteAppeal={props.doDeleteAppeal}
-                                />
-                            </td>
-                        </tr>
-                    )}
-                </Fragment>
-            ))}
+                                <td
+                                    colSpan={3}
+                                    className={classNames(
+                                        includes(
+                                            FINISHTAB,
+                                            sessionStorage.getItem(TAB),
+                                        )
+                                            ? styles.isEmpty
+                                            : '',
+                                    )}
+                                >
+                                    <Appeal
+                                        appealInfo={commentAppeal}
+                                        commentItem={commentItem}
+                                        isSavingAppeal={props.isSavingAppeal}
+                                        addAppeal={props.addAppeal}
+                                        doDeleteAppeal={props.doDeleteAppeal}
+                                    />
+                                </td>
+                            </tr>
+                        )}
+                    </Fragment>
+                )
+            })}
             {includes([COPILOT, ADMIN], actionChallengeRole) && !props.reviewInfo?.id && (
                 <tr
                     className={classNames(

@@ -64,7 +64,6 @@ export const TabContentReview: FC<Props> = (props: Props) => {
     ) : (
         <TableReviewAppealsForSubmitter
             datas={reviews}
-            firstSubmissions={firstSubmissions}
             isDownloading={props.isDownloading}
             downloadSubmission={props.downloadSubmission}
             mappingReviewAppeal={props.mappingReviewAppeal}

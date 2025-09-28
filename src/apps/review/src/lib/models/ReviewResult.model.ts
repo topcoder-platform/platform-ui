@@ -1,5 +1,7 @@
 import moment from 'moment'
 
+import { getRatingColor } from '~/libs/core'
+
 import { TABLE_DATE_FORMAT } from '../../config/index.config'
 
 import { AppealResult } from './AppealResult.model'
@@ -9,13 +11,16 @@ import { BackendReview } from './BackendReview.model'
  * Review result info
  */
 export interface ReviewResult {
-    score: number
     appeals: AppealResult[]
-    reviewerHandle: string
-    reviewerHandleColor: string
     createdAt: string | Date
     createdAtString?: string // this field is calculated at frontend
     resourceId: string
+    reviewDate?: string | Date
+    reviewDateString?: string // this field is calculated at frontend
+    reviewerHandle: string
+    reviewerHandleColor: string
+    reviewerMaxRating?: number | null
+    score: number
 }
 
 /**
@@ -31,6 +36,7 @@ export function adjustReviewResult(
     }
 
     const createdAt = data.createdAt ? new Date(data.createdAt) : data.createdAt
+    const reviewDate = data.reviewDate ? new Date(data.reviewDate) : undefined
 
     return {
         ...data,
@@ -40,6 +46,17 @@ export function adjustReviewResult(
                 .local()
                 .format(TABLE_DATE_FORMAT)
             : data.createdAt,
+        reviewDate,
+        reviewDateString: reviewDate
+            ? moment(reviewDate)
+                .local()
+                .format(TABLE_DATE_FORMAT)
+            : (typeof data.reviewDate === 'string' ? data.reviewDate : undefined),
+        reviewerHandle: data.reviewerHandle,
+        reviewerHandleColor: data.reviewerMaxRating
+            ? getRatingColor(data.reviewerMaxRating)
+            : data.reviewerHandleColor,
+        reviewerMaxRating: data.reviewerMaxRating,
     }
 }
 
@@ -58,14 +75,27 @@ export function convertBackendReviewToReviewResult(
             .local()
             .format(TABLE_DATE_FORMAT)
         : undefined
+    const reviewDate = data.reviewDate ? new Date(data.reviewDate) : undefined
+    const reviewDateString = data.reviewDate
+        ? moment(data.reviewDate)
+            .local()
+            .format(TABLE_DATE_FORMAT)
+        : undefined
+    const reviewerHandle = data.reviewerHandle?.trim() || undefined
+    const reviewerMaxRating = data.reviewerMaxRating ?? undefined
 
     return {
         appeals: [],
         createdAt,
         createdAtString,
         resourceId: data.resourceId,
-        reviewerHandle: '',
-        reviewerHandleColor: '#2a2a2a',
+        reviewDate,
+        reviewDateString,
+        reviewerHandle: reviewerHandle ?? '',
+        reviewerHandleColor: reviewerMaxRating && reviewerHandle
+            ? getRatingColor(reviewerMaxRating)
+            : '#2a2a2a',
+        reviewerMaxRating,
         score: data.finalScore,
     }
 }

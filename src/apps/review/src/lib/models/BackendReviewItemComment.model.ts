@@ -2,6 +2,7 @@ import {
     adjustReviewItemComment,
     ReviewItemComment,
 } from './ReviewItemComment.model'
+import { BackendAppeal, convertBackendAppeal } from './BackendAppeal.model'
 
 /**
  * Backend model for review item comment
@@ -32,6 +33,7 @@ export interface BackendReviewItemComment extends BackendReviewItemCommentBase {
     createdBy: string
     updatedAt: string
     updatedBy: string
+    appeal?: BackendAppeal
 }
 
 /**
@@ -44,6 +46,7 @@ export function convertBackendReviewItemComment(
     data: BackendReviewItemComment,
 ): ReviewItemComment {
     return adjustReviewItemComment({
+        appeal: data.appeal ? convertBackendAppeal(data.appeal) : undefined,
         content: data.content === ' ' ? '' : data.content,
         id: data.id,
         sortOrder: data.sortOrder,

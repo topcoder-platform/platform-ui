@@ -186,6 +186,8 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
                             ...reviewForResource,
                             committed: assignmentReview.committed,
                             id: assignmentReview.id,
+                            reviewerHandle: assignmentReview.reviewerHandle,
+                            reviewerMaxRating: assignmentReview.reviewerMaxRating,
                             status: assignmentReview.status,
                             submissionId: assignmentReview.submissionId,
                         }

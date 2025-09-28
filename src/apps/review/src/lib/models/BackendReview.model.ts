@@ -23,6 +23,8 @@ export interface BackendReview {
     createdBy: string
     updatedAt: string
     updatedBy: string
+    reviewerHandle?: string | null
+    reviewerMaxRating?: number | null
     reviewItems?: BackendReviewItem[]
 }
 

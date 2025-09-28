@@ -45,7 +45,7 @@ export const AppealComment: FC<Props> = (props: Props) => {
     const isSavingAppeal = props.isSavingAppeal
     const addAppeal = props.addAppeal
     const doDeleteAppeal = props.doDeleteAppeal
-    const [appealResponse, setAppealResponse] = useState('')
+    const [appealContent, setAppealContent] = useState('')
     const [showResponseForm, setShowResponseForm] = useState(false)
 
     const { challengeInfo }: ChallengeDetailContextModel = useContext(
@@ -67,23 +67,25 @@ export const AppealComment: FC<Props> = (props: Props) => {
 
     const onSubmit = useCallback((data: FormAppealResponse) => {
         addAppeal(data.response, commentItem, () => {
-            setAppealResponse(data.response)
+            setAppealContent(data.response)
             setShowResponseForm(false)
         })
     }, [addAppeal, commentItem])
 
     useEffect(() => {
         if (appealInfo) {
-            setAppealResponse(appealInfo.content)
+            setAppealContent(appealInfo.content)
         }
     }, [appealInfo])
 
+    const appealResponseContent = appealInfo?.appealResponse?.content
+
     return (
         <div className={classNames(styles.container, className)}>
-            {appealResponse && !showResponseForm && (
+            {appealContent && !showResponseForm && (
                 <div className={styles.blockAppealComment}>
                     <span className={styles.textTitle}>Appeal Comment</span>
-                    <MarkdownReview value={appealResponse} />
+                    <MarkdownReview value={appealContent} />
                     {canAddAppeal && (
                         <div className={styles.blockBtns}>
                             <button
@@ -99,7 +101,7 @@ export const AppealComment: FC<Props> = (props: Props) => {
                             <button
                                 onClick={function onClick() {
                                     doDeleteAppeal(appealInfo, () => {
-                                        setAppealResponse('')
+                                        setAppealContent('')
                                     })
                                 }}
                                 type='button'
@@ -113,7 +115,7 @@ export const AppealComment: FC<Props> = (props: Props) => {
                 </div>
             )}
 
-            {!appealResponse && !showResponseForm && canAddAppeal && (
+            {!appealContent && !showResponseForm && canAddAppeal && (
                 <button
                     type='button'
                     className='borderButton'
@@ -123,6 +125,13 @@ export const AppealComment: FC<Props> = (props: Props) => {
                 >
                     Add Appeal
                 </button>
+            )}
+
+            {!showResponseForm && appealResponseContent && (
+                <div className={styles.blockAppealResponse}>
+                    <span className={styles.textTitle}>Appeal Response</span>
+                    <MarkdownReview value={appealResponseContent} />
+                </div>
             )}
 
             {showResponseForm && (
@@ -142,7 +151,7 @@ export const AppealComment: FC<Props> = (props: Props) => {
                         }) {
                             return (
                                 <FieldMarkdownEditor
-                                    initialValue={appealResponse}
+                                    initialValue={appealContent}
                                     className={styles.markdownEditor}
                                     onChange={controlProps.field.onChange}
                                     showBorder

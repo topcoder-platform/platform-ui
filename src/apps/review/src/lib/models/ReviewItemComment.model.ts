@@ -1,5 +1,7 @@
 import { QUESTION_RESPONSE_TYPE_MAPPING_DISPLAY } from '../../config/index.config'
 
+import { AppealInfo } from './AppealInfo.model'
+
 /**
  * Review Item Comment
  */
@@ -9,6 +11,7 @@ export interface ReviewItemComment {
     type: string
     sortOrder: number
     typeDisplay?: string // this field is calculated at frontend
+    appeal?: AppealInfo
 }
 
 /**

@@ -170,14 +170,9 @@ export const ScorecardQuestionEdit: FC<Props> = (props: Props) => {
                         </button>
                         <span className={styles.textQuestion}>
                             <strong>
-                                Question
-                                {props.groupIndex + 1}
-                                .
-                                {props.sectionIndex + 1}
-                                .
-                                {props.questionIndex + 1}
-                                {' '}
+                                {`Question ${props.groupIndex + 1}.${props.sectionIndex + 1}.${props.questionIndex + 1}`}
                             </strong>
+                            {' '}
                             {props.scorecardQuestion.description}
                         </span>
                     </div>

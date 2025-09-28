@@ -163,13 +163,21 @@ export function useFetchSubmissionReviews(): useFetchSubmissionReviewsProps {
     )
 
     useEffect(() => {
-        const result: { [key: string]: AppealInfo } = {}
+        const result: MappingAppeal = {}
         forEach(appeals, item => {
             result[item.reviewItemCommentId] = item
         })
+        forEach(updatedReviewInfo?.reviewItems ?? [], reviewItem => {
+            forEach(reviewItem.reviewItemComments, comment => {
+                if (comment.appeal) {
+                    result[comment.id] = comment.appeal
+                }
+            })
+        })
+
         mappingAppealsRef.current = result
         setMappingAppeals(result)
-    }, [appeals])
+    }, [appeals, updatedReviewInfo])
 
     /**
      * Get scorecard id from reviews and challenge info

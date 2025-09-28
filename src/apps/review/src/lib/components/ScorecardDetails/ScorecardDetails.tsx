@@ -170,6 +170,18 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
 
     const [reviewProgress, setReviewProgress] = useState(0)
     const [totalScore, setTotalScore] = useState(0)
+    const displayedTotalScore = useMemo(() => {
+        const maybeFinalScore = reviewInfo?.finalScore
+        if (
+            !isEdit
+            && typeof maybeFinalScore === 'number'
+            && Number.isFinite(maybeFinalScore)
+        ) {
+            return roundWith2DecimalPlaces(maybeFinalScore)
+        }
+
+        return totalScore
+    }, [isEdit, reviewInfo?.finalScore, totalScore])
 
     const onSubmit = useCallback((data: FormReviews) => {
         saveReviewInfo(
@@ -317,7 +329,7 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
                 collapseAll={function collapseAll() {
                     setIsExpand({})
                 }}
-                totalScore={totalScore}
+                totalScore={displayedTotalScore}
             />
             {errorMessageTop && (
                 <div
@@ -344,12 +356,7 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
                                     <Fragment key={group.id}>
                                         <tr className={styles.blockRowGroup}>
                                             <td colSpan={3}>
-                                                {groupIndex + 1}
-                                                .
-                                                {group.name}
-                                                (
-                                                {group.weight.toFixed(1)}
-                                                )
+                                                {`${groupIndex + 1}. ${group.name} (${group.weight.toFixed(1)})`}
                                             </td>
                                         </tr>
 
@@ -363,10 +370,7 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
                                                         )}
                                                     >
                                                         <td>
-                                                            {section.name}
-                                                            (
-                                                            {section.weight.toFixed(1)}
-                                                            )
+                                                            {`${section.name} (${section.weight.toFixed(1)})`}
                                                         </td>
                                                         <td>Weight</td>
                                                         <td>Response</td>
@@ -554,7 +558,7 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
                         <div className={styles.blockBottomView}>
                             <div className={styles.textTotalScore}>
                                 <span>Total Score:</span>
-                                <span>{totalScore}</span>
+                                <span>{displayedTotalScore}</span>
                             </div>
                             <div className={styles.buttons}>
                                 <NavLink

@@ -1,7 +1,7 @@
 /**
  * AppealComment.
  */
-import { FC, useCallback, useContext, useMemo, useState } from 'react'
+import { FC, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import {
     Controller,
     ControllerRenderProps,
@@ -120,6 +120,10 @@ export const AppealComment: FC<Props> = (props: Props) => {
 
         return []
     }, [scorecardQuestion])
+
+    useEffect(() => {
+        setAppealResponse(data.appealResponse?.content ?? '')
+    }, [data.appealResponse?.content])
 
     return (
         <div className={classNames(styles.container, className)}>

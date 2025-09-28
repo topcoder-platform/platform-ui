@@ -1,6 +1,8 @@
 import { filter, forEach } from 'lodash'
 import moment from 'moment'
 
+import { getRatingColor } from '~/libs/core'
+
 import { TABLE_DATE_FORMAT } from '../../config/index.config'
 
 import { adjustReviewItemInfo, ReviewItemInfo } from './ReviewItemInfo.model'
@@ -18,10 +20,15 @@ export interface ReviewInfo {
     createdAtString?: string // this field is calculated at frontend
     updatedAt: string | Date
     updatedAtString?: string // this field is calculated at frontend
+    reviewDate?: string | Date
+    reviewDateString?: string // this field is calculated at frontend
     status?: string | null
     initialScore?: number
     finalScore?: number
     reviewItems: ReviewItemInfo[]
+    reviewerHandle?: string | null
+    reviewerHandleColor?: string
+    reviewerMaxRating?: number | null
     reviewProgress?: number // this field is calculated at frontend
     scorecardId: string
     resourceId: string
@@ -36,6 +43,7 @@ export interface ReviewInfo {
 export function adjustReviewInfo(data: ReviewInfo): ReviewInfo {
     const createdAt = data.createdAt ? new Date(data.createdAt) : data.createdAt
     const updatedAt = data.updatedAt ? new Date(data.updatedAt) : data.updatedAt
+    const reviewDate = data.reviewDate ? new Date(data.reviewDate) : undefined
 
     const reviewItems = data.reviewItems.map(
         adjustReviewItemInfo,
@@ -46,6 +54,9 @@ export function adjustReviewInfo(data: ReviewInfo): ReviewInfo {
         item => !!item.initialAnswer,
     ).length
 
+    const reviewerHandle = data.reviewerHandle?.trim() || undefined
+    const reviewerMaxRating = data.reviewerMaxRating ?? undefined
+
     return {
         ...data,
         createdAt,
@@ -54,6 +65,21 @@ export function adjustReviewInfo(data: ReviewInfo): ReviewInfo {
                 .local()
                 .format(TABLE_DATE_FORMAT)
             : data.createdAt,
+        reviewDate,
+        reviewDateString: reviewDate
+            ? moment(reviewDate)
+                .local()
+                .format(TABLE_DATE_FORMAT)
+            : (typeof data.reviewDateString === 'string'
+                ? data.reviewDateString
+                : typeof data.reviewDate === 'string'
+                    ? data.reviewDate
+                    : undefined),
+        reviewerHandle,
+        reviewerHandleColor: reviewerMaxRating && reviewerHandle
+            ? getRatingColor(reviewerMaxRating)
+            : data.reviewerHandleColor,
+        reviewerMaxRating,
         reviewItems,
         // Be calculated by the frontend,
         // the percentage = (The number of questions that have been filled / The total number of questions).
@@ -93,6 +119,12 @@ export function convertBackendReviewToReviewInfo(
             .local()
             .format(TABLE_DATE_FORMAT)
         : ''
+    const reviewDate = data.reviewDate ? new Date(data.reviewDate) : undefined
+    const reviewDateString = data.reviewDate
+        ? moment(data.reviewDate)
+            .local()
+            .format(TABLE_DATE_FORMAT)
+        : undefined
 
     const reviewItems = data.reviewItems ?? []
     const totalNumberOfQuestions = reviewItems.length
@@ -100,6 +132,9 @@ export function convertBackendReviewToReviewInfo(
         reviewItems,
         item => !!item.initialAnswer,
     ).length
+
+    const reviewerHandle = data.reviewerHandle?.trim() || undefined
+    const reviewerMaxRating = data.reviewerMaxRating ?? undefined
 
     return {
         committed: data.committed,
@@ -109,9 +144,14 @@ export function convertBackendReviewToReviewInfo(
         id: data.id,
         initialScore: data.initialScore,
         resourceId: data.resourceId,
+        reviewDate,
+        reviewDateString,
+        reviewerHandle,
+        reviewerHandleColor: reviewerMaxRating && reviewerHandle
+            ? getRatingColor(reviewerMaxRating)
+            : undefined,
+        reviewerMaxRating,
         reviewItems: (data.reviewItems ?? []).map(convertBackendReviewItem),
-        // Be calculated by the frontend,
-        // the percentage = (The number of questions that have been filled / The total number of questions).
         reviewProgress: totalNumberOfQuestions
             ? Math.round(
                 (numberOfQuestionsHaveBeenFilled * 100)

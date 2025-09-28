@@ -95,6 +95,16 @@
     padding: 0 $sp-1;
 }
 
+.reviewerCell {
+    white-space: nowrap;
+    font-weight: 600;
+}
+
+.progressLink {
+    display: inline-flex;
+    width: 100%;
+}
+
 .completedAction {
     align-items: center;
     display: flex;
