@@ -19,6 +19,17 @@ export type ChallengeType =
         | 'Challenge'
 
 /**
+ * Winner info for a challenge
+ */
+export interface ChallengeWinner {
+    userId: number
+    handle: string
+    placement: number
+    type?: string
+    maxRating?: number | null
+}
+
+/**
  * Challenge info
  */
 export interface ChallengeInfo {
@@ -42,6 +53,7 @@ export interface ChallengeInfo {
     discussionsUrl?: string // this field is calculated at frontend
     legacyId?: number
     phases: BackendPhase[]
+    winners?: ChallengeWinner[]
     reviewers?: {
         scorecardId: string
         isMemberReview: boolean

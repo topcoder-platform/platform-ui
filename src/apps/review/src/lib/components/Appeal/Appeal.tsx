@@ -158,6 +158,7 @@ export const AppealComment: FC<Props> = (props: Props) => {
                                     onBlur={controlProps.field.onBlur}
                                     error={get(errors, 'response.message')}
                                     disabled={isSavingAppeal}
+                                    uploadCategory='appeal'
                                 />
                             )
                         }}

@@ -82,10 +82,22 @@ interface Props {
 }
 
 export const ScorecardQuestionView: FC<Props> = (props: Props) => {
-    const { actionChallengeRole }: useRoleProps = useRole()
+    const { actionChallengeRole, myChallengeResources }: useRoleProps = useRole()
     const isExpand = props.isExpand[props.reviewItem.id]
     const { width: screenWidth }: WindowSize = useWindowSize()
     const isMobile = useMemo(() => screenWidth <= 745, [screenWidth])
+
+    const reviewResourceId = props.reviewInfo?.resourceId
+
+    const canRespondToAppeal = useMemo(() => {
+        if (actionChallengeRole !== REVIEWER || !reviewResourceId) {
+            return false
+        }
+
+        return myChallengeResources.some(
+            resource => resource.id === reviewResourceId,
+        )
+    }, [actionChallengeRole, myChallengeResources, reviewResourceId])
 
     const finalAnswer = useMemo(() => {
         const answer
@@ -225,6 +237,7 @@ export const ScorecardQuestionView: FC<Props> = (props: Props) => {
                                         reviewItem={props.reviewItem}
                                         appealInfo={commentAppeal}
                                         addAppealResponse={props.addAppealResponse}
+                                        canRespondToAppeal={canRespondToAppeal}
                                     />
                                 </td>
                             </tr>

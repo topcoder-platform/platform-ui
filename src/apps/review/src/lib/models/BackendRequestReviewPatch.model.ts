@@ -2,6 +2,8 @@
  * Backend request to update review
  */
 
+import { BackendRequestReviewItem } from './BackendRequestReviewItem.model'
+
 export interface BackendRequestReviewPatch {
     resourceId?: string
     phaseId?: string
@@ -13,4 +15,6 @@ export interface BackendRequestReviewPatch {
     status?: string
     reviewDate?: string
     committed?: boolean
+    metadata?: Record<string, unknown>
+    reviewItems?: BackendRequestReviewItem[]
 }

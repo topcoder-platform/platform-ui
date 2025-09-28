@@ -1,7 +1,7 @@
 /**
  * Field Markdown Editor.
  */
-import { FC, useCallback, useEffect, useRef } from 'react'
+import { FC, useCallback, useContext, useEffect, useRef } from 'react'
 import _ from 'lodash'
 import CodeMirror from 'codemirror'
 import EasyMDE from 'easymde'
@@ -27,8 +27,10 @@ import {
     IconUnorderedList,
     IconUploadFile,
 } from '../../assets/icons'
-import { MockUploadUrl } from '../../../mock-datas'
 import { humanFileSize } from '../../utils'
+import { ChallengeDetailContext } from '../../contexts'
+import type { ChallengeDetailContextModel } from '../../models'
+import { uploadReviewAttachment } from '../../services'
 
 import styles from './FieldMarkdownEditor.module.scss'
 
@@ -41,6 +43,7 @@ interface Props {
     error?: string
     showBorder?: boolean
     disabled?: boolean
+    uploadCategory?: string
 }
 const errorMessages = {
     fileTooLarge:
@@ -146,6 +149,8 @@ type CodeMirrorType = keyof typeof stateStrategy | 'variable-2'
 export const FieldMarkdownEditor: FC<Props> = (props: Props) => {
     const elementRef = useRef<HTMLTextAreaElement>(null)
     const easyMDE = useRef<any>(null)
+    const { challengeId }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
+    const uploadCategory: string = props.uploadCategory ?? 'general'
 
     /**
      * The state of CodeMirror at the given position.
@@ -484,7 +489,9 @@ export const FieldMarkdownEditor: FC<Props> = (props: Props) => {
         const stat = getState(cm)
         const options = editor.options
         const fileName = file.name
-        const ext = fileName.substring(fileName.lastIndexOf('.') + 1)
+        const extensionIndex = fileName.lastIndexOf('.') + 1
+        const rawExtension = fileName.slice(extensionIndex)
+        const ext = rawExtension.toLowerCase()
         // Check if file type is an image
         if (allowedImageExtensions.includes(ext)) {
             replaceSelection(
@@ -508,17 +515,26 @@ export const FieldMarkdownEditor: FC<Props> = (props: Props) => {
     /**
      * Upload image
      */
-    const customUploadImage = useCallback((file: File) => {
+    const customUploadImage = useCallback(async (file: File) => {
+        const editor = easyMDE.current
+        if (!editor) {
+            return
+        }
+
         const position: any = {}
 
-        const onSuccess: (jsonData: any) => void = (jsonData: any) => {
+        const updateStatusBar = (message: string): void => {
+            editor.updateStatusBar('upload-image', message)
+        }
+
+        const onSuccess = (jsonData: { name: string; url: string }): void => {
             afterFileUploaded(jsonData, position)
             resetFileInput()
         }
 
-        const onError: () => void = () => {
+        const onError = (): void => {
             if (position && position.start && position.end) {
-                easyMDE.current.codemirror.replaceRange(
+                editor.codemirror.replaceRange(
                     '',
                     position.start,
                     position.end,
@@ -528,30 +544,30 @@ export const FieldMarkdownEditor: FC<Props> = (props: Props) => {
             resetFileInput()
         }
 
-        const onErrorSup: (errorMessage: string) => void = (errorMessage: string) => {
-            // show reset status bar
-            easyMDE.current.updateStatusBar(
-                'upload-image',
-                easyMDE.current.options.imageTexts.sbInit,
-            )
-            // run custom error handler
-            if (onError && typeof onError === 'function') {
-                onError()
+        const onErrorSup = (errorMessage: string, error?: unknown): void => {
+            updateStatusBar(editor.options.imageTexts.sbInit)
+
+            if (error) {
+                // eslint-disable-next-line no-console
+                console.error(error)
             }
 
-            // run error handler from options
-            easyMDE.current.options.errorCallback(errorMessage)
+            onError()
+            editor.options.errorCallback(errorMessage)
         }
 
-        // Sometimes a browser couldn't define mime/types, use file extension
-        const getFileType: () => string = () => (file.type
-            ? file.type
-            : file.name.substring(file.name.lastIndexOf('.') + 1))
+        const getFileType = (): string => {
+            if (file.type) {
+                return file.type.toLowerCase()
+            }
 
-        // Parse a message
-        const fillErrorMessage: (errorMessage: string) => string = (errorMessage: string) => {
-            const units
-                = easyMDE.current.options.imageTexts.sizeUnits.split(',')
+            const extensionIndex = file.name.lastIndexOf('.') + 1
+            const rawExtension = file.name.slice(extensionIndex)
+            return rawExtension.toLowerCase()
+        }
+
+        const fillErrorMessage = (errorMessage: string): string => {
+            const units = editor.options.imageTexts.sizeUnits.split(',')
 
             const error = errorMessage
                 .replace('#image_type#', getFileType())
@@ -559,47 +575,70 @@ export const FieldMarkdownEditor: FC<Props> = (props: Props) => {
                 .replace('#image_size#', humanFileSize(file.size, units))
                 .replace(
                     '#image_max_size#',
-                    humanFileSize(easyMDE.current.options.imageMaxSize, units),
+                    humanFileSize(editor.options.imageMaxSize, units),
                 )
 
-            return (
-                `<div class="Messages Errors"><ul><li>${error}</li></ul></div>`
-            )
+            return `<div class="Messages Errors"><ul><li>${error}</li></ul></div>`
         }
 
-        // Save a position of image/file tag
-        const onPosition: (start: any, end: any) => void = (start: any, end: any) => {
+        const onPosition = (start: any, end: any): void => {
             position.start = start
             position.end = end
         }
 
-        // Check mime types
-        if (!easyMDE.current.options.imageAccept.includes(getFileType())) {
+        if (!editor.options.imageAccept.includes(getFileType())) {
             onErrorSup(
-                fillErrorMessage(
-                    easyMDE.current.options.errorMessages.typeNotAllowed,
-                ),
+                fillErrorMessage(editor.options.errorMessages.typeNotAllowed),
             )
             return
         }
 
-        // Check max file size before uploading
-        if (file.size > easyMDE.current.options.imageMaxSize) {
+        if (file.size > editor.options.imageMaxSize) {
             onErrorSup(
-                fillErrorMessage(
-                    easyMDE.current.options.errorMessages.fileTooLarge,
-                ),
+                fillErrorMessage(editor.options.errorMessages.fileTooLarge),
             )
             return
         }
 
         beforeUploadingFile(file, onPosition)
 
-        onSuccess({
-            name: file.name,
-            url: MockUploadUrl,
-        })
-    }, [afterFileUploaded, beforeUploadingFile, resetFileInput])
+        updateStatusBar(
+            editor.options.imageTexts.sbOnDrop.replace('#images_names#', file.name),
+        )
+
+        try {
+            const result = await uploadReviewAttachment(file, {
+                category: uploadCategory,
+                challengeId,
+                onProgress: percent => {
+                    const percentValue = Number.isFinite(percent)
+                        ? Math.max(0, Math.min(100, Math.round(percent)))
+                        : 0
+                    updateStatusBar(
+                        editor.options.imageTexts.sbProgress
+                            .replace('#file_name#', file.name)
+                            .replace('#progress#', `${percentValue}`),
+                    )
+                },
+            })
+
+            onSuccess({
+                name: file.name,
+                url: result.url,
+            })
+        } catch (error) {
+            onErrorSup(
+                fillErrorMessage(editor.options.errorMessages.importError),
+                error,
+            )
+        }
+    }, [
+        afterFileUploaded,
+        beforeUploadingFile,
+        challengeId,
+        resetFileInput,
+        uploadCategory,
+    ])
 
     useOnComponentDidMount(() => {
         easyMDE.current = new EasyMDE({
@@ -622,11 +661,7 @@ export const FieldMarkdownEditor: FC<Props> = (props: Props) => {
                 sbProgress: 'Uploading #file_name#: #progress#%',
                 sizeUnits: ' B, KB, MB',
             },
-            imageUploadFunction: file => {
-                setTimeout(() => {
-                    customUploadImage(file)
-                })
-            },
+            imageUploadFunction: file => customUploadImage(file),
             initialValue: props.initialValue,
             insertTexts: {
                 file: ['[](', '#url#)'],

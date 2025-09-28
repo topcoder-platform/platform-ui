@@ -8,6 +8,7 @@ import {
     Fragment,
     SetStateAction,
     useCallback,
+    useContext,
     useEffect,
     useMemo,
     useState,
@@ -21,7 +22,15 @@ import { yupResolver } from '@hookform/resolvers/yup'
 import { TableLoading } from '~/apps/admin/src/lib'
 
 import { useAppNavigate } from '../../hooks'
-import { AppealInfo, FormReviews, MappingAppeal, ReviewInfo, ReviewItemInfo, ScorecardInfo } from '../../models'
+import {
+    AppealInfo,
+    ChallengeDetailContextModel,
+    FormReviews,
+    MappingAppeal,
+    ReviewInfo,
+    ReviewItemInfo,
+    ScorecardInfo,
+} from '../../models'
 import { ScorecardDetailsHeader } from '../ScorecardDetailsHeader'
 import { ScorecardQuestionEdit } from '../ScorecardQuestionEdit'
 import { ScorecardQuestionView } from '../ScorecardQuestionView'
@@ -29,6 +38,11 @@ import { formReviewsSchema, roundWith2DecimalPlaces } from '../../utils'
 import { ConfirmModal } from '../ConfirmModal'
 import { IconError } from '../../assets/icons'
 import { ReviewItemComment } from '../../models/ReviewItemComment.model'
+import { ChallengeDetailContext } from '../../contexts'
+import {
+    activeReviewAssigmentsRouteId,
+    rootRoute,
+} from '../../../config/routes.config'
 
 import styles from './ScorecardDetails.module.scss'
 
@@ -95,6 +109,9 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
     const addAppealResponse = props.addAppealResponse
     const addManagerComment = props.addManagerComment
     const navigate = useAppNavigate()
+    const { challengeId }: ChallengeDetailContextModel = useContext(
+        ChallengeDetailContext,
+    )
     const [isExpand, setIsExpand] = useState<{ [key: string]: boolean }>({})
     const [isShowSaveAsDraftModal, setIsShowSaveAsDraftModal] = useState(false)
     const mappingReviewInfo = useMemo<{
@@ -191,9 +208,22 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
             totalScore,
             () => {
                 reset(data)
+                if (challengeId) {
+                    navigate(
+                        `${rootRoute}/${activeReviewAssigmentsRouteId}/${challengeId}/challenge-details?tab=review-appeals`,
+                    )
+                }
             },
         )
-    }, [getValues, isDirty, reset, saveReviewInfo, totalScore])
+    }, [
+        challengeId,
+        getValues,
+        isDirty,
+        navigate,
+        reset,
+        saveReviewInfo,
+        totalScore,
+    ])
 
     const recalculateReviewProgress = useCallback(() => {
         const reviewFormDatas = getValues().reviews
@@ -455,6 +485,9 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
                                                                     }
                                                                     reviewItem={
                                                                         reviewItemInfo.item
+                                                                    }
+                                                                    reviewInfo={
+                                                                        reviewInfo
                                                                     }
                                                                     groupIndex={
                                                                         groupIndex

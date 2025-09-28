@@ -72,5 +72,19 @@ export interface GlobalConfig {
         PROFILE_PAGE_URL: string
         OPPORTUNITIES_URL: string
     },
+    FILESTACK: {
+        API_KEY: string
+        CNAME?: string
+        REGION: string
+        CONTAINER: string
+        PATH_PREFIX: string
+        SECURITY?: {
+            POLICY: string
+            SIGNATURE: string
+        },
+        RETRY: number
+        TIMEOUT: number
+        PROGRESS_INTERVAL: number
+    },
     ADMIN_SSO_LOGIN_PROVIDERS: SSOLoginProviderConfig[]
 }

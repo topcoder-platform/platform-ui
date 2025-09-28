@@ -46,6 +46,7 @@ interface Props {
         reviewItem: ReviewItemInfo,
         success: () => void,
     ) => void
+    canRespondToAppeal?: boolean
 }
 
 export const AppealComment: FC<Props> = (props: Props) => {
@@ -56,13 +57,17 @@ export const AppealComment: FC<Props> = (props: Props) => {
     const reviewItem = props.reviewItem
     const appealInfo = props.appealInfo
     const addAppealResponse = props.addAppealResponse
+    const hasRespondPermission = props.canRespondToAppeal ?? false
     const [appealResponse, setAppealResponse] = useState('')
     const [showResponseForm, setShowResponseForm] = useState(false)
 
     const { challengeInfo }: ChallengeDetailContextModel = useContext(
         ChallengeDetailContext,
     )
-    const canAddAppealResponse = useMemo(() => isAppealsResponsePhase(challengeInfo), [challengeInfo])
+    const canAddAppealResponse = useMemo(
+        () => hasRespondPermission && isAppealsResponsePhase(challengeInfo),
+        [challengeInfo, hasRespondPermission],
+    )
 
     const [updatedResponse, setUpdatedResponse] = useState<
         SingleValue<{
@@ -207,6 +212,7 @@ export const AppealComment: FC<Props> = (props: Props) => {
                                     onBlur={controlProps.field.onBlur}
                                     error={get(errors, 'response.message')}
                                     disabled={isSavingAppealResponse}
+                                    uploadCategory='appeal-response'
                                 />
                             )
                         }}

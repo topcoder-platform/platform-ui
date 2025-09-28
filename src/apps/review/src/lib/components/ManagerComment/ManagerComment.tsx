@@ -216,6 +216,7 @@ export const ManagerComment: FC<Props> = (props: Props) => {
                                     onBlur={controlProps.field.onBlur}
                                     error={_.get(errors, 'response.message')}
                                     disabled={isSavingManagerComment}
+                                    uploadCategory='manager-comment'
                                 />
                             )
                         }}

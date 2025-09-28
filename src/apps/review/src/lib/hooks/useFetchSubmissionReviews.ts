@@ -12,7 +12,7 @@ import {
     useRef,
     useState,
 } from 'react'
-import { every, filter, find, forEach, map } from 'lodash'
+import { find, forEach, map } from 'lodash'
 import { toast } from 'react-toastify'
 import { useParams } from 'react-router-dom'
 import useSWR, { SWRResponse } from 'swr'
@@ -34,7 +34,6 @@ import {
     ReviewInfo,
     ReviewItemInfo,
     ScorecardInfo,
-    ScorecardQuestion,
 } from '../models'
 import {
     createAppeal,
@@ -232,35 +231,42 @@ export function useFetchSubmissionReviews(): useFetchSubmissionReviewsProps {
      * Get review info from backend and scorecard info
      */
     const reviewInfo = useMemo(() => {
-        let backendReview: BackendReview | undefined
         if (!scorecardInfo) {
             return undefined
         }
 
-        const mappingScorecardQuestion: { [questionId: string]: boolean } = {}
-        forEach(scorecardInfo.scorecardGroups, group => {
-            forEach(group.sections, section => {
-                forEach(section.questions, (question: ScorecardQuestion) => {
-                    mappingScorecardQuestion[question.id ?? ''] = true
-                })
-            })
-        })
-
+        let backendReview: BackendReview | undefined
         if (resourceId && reviews) {
             backendReview = find(reviews, review => (
                 review.resourceId === resourceId
                 && review.submissionId === submissionId
-                && review.reviewItems
-                && review.reviewItems.length > 0
-                && every(
-                    review.reviewItems,
-                    item => mappingScorecardQuestion[item.scorecardQuestionId],
-                )
             )) as BackendReview
         }
 
         if (backendReview) {
-            return convertBackendReviewToReviewInfo(backendReview)
+            const converted = convertBackendReviewToReviewInfo(backendReview)
+            if (converted.reviewItems.length) {
+                return {
+                    ...converted,
+                    scorecardId:
+                        backendReview.scorecardId
+                        || converted.scorecardId
+                        || scorecardInfo.id,
+                }
+            }
+
+            const emptyReview = createEmptyReviewInfoFromScorecard(
+                scorecardInfo,
+                resourceId,
+            )
+            return {
+                ...converted,
+                reviewItems: emptyReview.reviewItems,
+                scorecardId:
+                    backendReview.scorecardId
+                    || converted.scorecardId
+                    || scorecardInfo.id,
+            }
         }
 
         if (resourceId) {
@@ -313,87 +319,91 @@ export function useFetchSubmissionReviews(): useFetchSubmissionReviewsProps {
             totalScore: number,
             success: () => void,
         ) => {
-            let listRequest: Promise<BackendReview | BackendReviewItem>[] = []
-            if (updatedReviewInfo) {
-                if (updatedReviewInfo.id) {
-                    listRequest.push(
-                        updateReview(updatedReviewInfo.id, {
-                            committed,
-                            finalScore: 0,
-                            initialScore: totalScore,
-                            reviewDate: new Date()
-                                .toISOString(),
-                            status: committed ? 'COMPLETED' : 'DRAFT',
-                        }),
-                    )
-
-                    const updateReviewItemRequests = (
-                        updatedReview?.reviews ?? []
-                    ).map(reviewItem => updateReviewItem(reviewItem.id, {
-                        initialAnswer: reviewItem.initialAnswer || ' ',
-                        reviewItemComments: reviewItem.comments.map(comment => ({
-                            content: comment.content || ' ',
-                            sortOrder: comment.index,
-                            type:
-                                (comment.type as BackendReviewItemCommentType)
-                                || 'COMMENT',
-                        })),
-                        scorecardQuestionId: reviewItem.scorecardQuestionId,
-                    }))
-                    listRequest = [...listRequest, ...updateReviewItemRequests]
-                } else if (fullReview) {
-                    listRequest.push(
-                        new Promise<BackendReview>((resolve, reject) => {
-                            createReview({
-                                committed,
-                                finalScore: 0,
-                                initialScore: totalScore,
-                                phaseId: currentPhase?.id ?? '',
-                                resourceId,
-                                reviewDate: new Date()
-                                    .toISOString(),
-                                reviewItems: (fullReview.reviews ?? []).map(
-                                    reviewItem => ({
-                                        initialAnswer:
-                                            reviewItem.initialAnswer ?? ' ',
-                                        reviewItemComments: filter(
-                                            reviewItem.comments,
-                                            comment => !!comment.content,
-                                        )
-                                            .map(comment => ({
-                                                content: comment.content ?? ' ',
-                                                sortOrder: comment.index,
-                                                type:
-                                                    (comment.type as BackendReviewItemCommentType)
-                                                    ?? 'COMMENT',
-                                            })),
-                                        scorecardQuestionId:
-                                            reviewItem.scorecardQuestionId,
-
-                                    }),
-                                ),
-                                scorecardId,
-                                status: 'DRAFT',
-                                submissionId,
-                                typeId: challengeInfo?.typeId ?? '',
-                            })
-                                .then(rs => {
-                                    setUpdatedReviewInfo(
-                                        convertBackendReviewToReviewInfo(rs),
-                                    )
-                                    resolve(rs)
-                                })
-                                .catch(reject)
-                        }),
-                    )
-                }
+            if (!updatedReviewInfo && !fullReview) {
+                success()
+                return
             }
 
-            if (listRequest.length) {
-                setIsSavingReview(true)
-                Promise.all(listRequest)
+            const status = committed ? 'COMPLETED' : 'IN_PROGRESS'
+            const reviewDate = new Date().toISOString()
 
-                    .then(() => {
+            const buildReviewItemsPayload = (reviews?: FormReviews) => (
+                reviews?.reviews ?? []
+            ).map(reviewItem => ({
+                initialAnswer: reviewItem.initialAnswer || ' ',
+                reviewItemComments: reviewItem.comments.map(comment => ({
+                    content: comment.content || ' ',
+                    sortOrder: comment.index,
+                    type:
+                        (comment.type as BackendReviewItemCommentType)
+                        || 'COMMENT',
+                })),
+                scorecardQuestionId: reviewItem.scorecardQuestionId,
+            }))
+
+            if (updatedReviewInfo?.id) {
+                const reviewItemsPayload = fullReview
+                    ? buildReviewItemsPayload(fullReview)
+                    : updatedReview
+                        ? buildReviewItemsPayload(updatedReview)
+                        : undefined
+
+                const payload = {
+                    committed,
+                    reviewDate,
+                    status,
+                    ...(scorecardId ? { scorecardId } : {}),
+                    ...(challengeInfo?.typeId ? { typeId: challengeInfo.typeId } : {}),
+                    ...(currentPhase?.id ? { phaseId: currentPhase.id } : {}),
+                    ...(reviewItemsPayload
+                        ? { reviewItems: reviewItemsPayload }
+                        : {}),
+                }
+
+                setIsSavingReview(true)
+                updateReview(updatedReviewInfo.id, payload)
+                    .then(response => {
+                        setIsSavingReview(false)
+                        setUpdatedReviewInfo(prev => {
+                            if (!prev) {
+                                return convertBackendReviewToReviewInfo(response)
+                            }
+
+                            return {
+                                ...prev,
+                                committed,
+                                status,
+                            }
+                        })
+                        success()
+                    })
+                    .catch(e => {
+                        setIsSavingReview(false)
+                        handleError(e)
+                    })
+
+                return
+            }
+
+            if (fullReview) {
+                setIsSavingReview(true)
+                createReview({
+                    committed,
+                    finalScore: 0,
+                    initialScore: totalScore,
+                    phaseId: currentPhase?.id ?? '',
+                    resourceId,
+                    reviewDate,
+                    reviewItems: buildReviewItemsPayload(fullReview),
+                    scorecardId,
+                    status,
+                    submissionId,
+                    typeId: challengeInfo?.typeId ?? '',
+                })
+                    .then(rs => {
+                        setUpdatedReviewInfo(
+                            convertBackendReviewToReviewInfo(rs),
+                        )
                         setIsSavingReview(false)
                         success()
                     })

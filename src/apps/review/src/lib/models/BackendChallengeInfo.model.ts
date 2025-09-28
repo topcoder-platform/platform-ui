@@ -13,6 +13,15 @@ import { BackendSkill } from './BackendSkill.model'
 import { BackendLegacy } from './BackendLegacy.model'
 import { BackendTask } from './BackendTask.model'
 import { BackendOverview } from './BackendOverview.model'
+import { ChallengeWinner } from './ChallengeInfo.model'
+
+export interface BackendChallengeWinner {
+    userId: number
+    handle: string
+    placement: number
+    type?: string
+    maxRating?: number | null
+}
 
 /**
  * Backend response for challenge info
@@ -56,6 +65,7 @@ export interface BackendChallengeInfo {
     numOfCheckpointSubmissions: number
     numOfRegistrants: number
     currentPhase?: BackendPhase
+    winners?: BackendChallengeWinner[] | null
 }
 
 /**
@@ -101,6 +111,16 @@ export function convertBackendChallengeInfo(
             .format(TABLE_DATE_FORMAT)
         : undefined
 
+    const winners: ChallengeWinner[] | undefined = data.winners
+        ? data.winners.map(winner => ({
+            handle: winner.handle,
+            maxRating: winner.maxRating ?? undefined,
+            placement: winner.placement,
+            type: winner.type,
+            userId: winner.userId,
+        }))
+        : undefined
+
     return {
         ...data,
         currentPhase,
@@ -128,5 +148,6 @@ export function convertBackendChallengeInfo(
         track: data.track as ChallengeType,
         type: data.type as ChallengeType,
         typeId: data.typeId,
+        winners,
     }
 }

@@ -86,8 +86,6 @@ export const ENABLE_TCA_CERT_MONETIZATION = false
 export const TERMS_URL = 'https://www.topcoder-dev.com/challenges/terms/detail/317cd8f9-d66c-4f2a-8774-63c612d99cd4'
 export const PRIVACY_POLICY_URL = `${TOPCODER_URL}/policy`
 
-export const SUBDOMAIN = window.location.hostname.split('.')[0]
-
 export const GAMIFICATION_ORG_ID = getReactEnv<string>('GAMIFICATION_ORG_ID', undefined)
 
 // TODO: Revert this.  This was done because prod was restricting this and no one was available to fix the config
@@ -129,3 +127,25 @@ export const REVIEW = {
     OPPORTUNITIES_URL: REVIEW_OPPORTUNITIES_URL_DEFAULT,
     PROFILE_PAGE_URL: 'https://profiles-v6.topcoder-dev.com/profiles',
 }
+
+const FILESTACK_SECURITY_POLICY = getReactEnv<string | undefined>('FILESTACK_SECURITY_POLICY', undefined)
+const FILESTACK_SECURITY_SIGNATURE = getReactEnv<string | undefined>('FILESTACK_SECURITY_SIGNATURE', undefined)
+
+export const FILESTACK = {
+    API_KEY: getReactEnv<string>('FILESTACK_API_KEY', ''),
+    CNAME: getReactEnv<string>('FILESTACK_CNAME', 'filestackapi.com'),
+    CONTAINER: getReactEnv<string>('FILESTACK_CONTAINER', 'tc-challenge-v5-dev'),
+    PATH_PREFIX: getReactEnv<string>('FILESTACK_PATH_PREFIX', 'v6-review-app'),
+    PROGRESS_INTERVAL: getReactEnv<number>('FILESTACK_UPLOAD_PROGRESS_INTERVAL', 100),
+    REGION: getReactEnv<string>('FILESTACK_REGION', 'us-east-1'),
+    RETRY: getReactEnv<number>('FILESTACK_UPLOAD_RETRY', 2),
+    SECURITY: FILESTACK_SECURITY_POLICY && FILESTACK_SECURITY_SIGNATURE
+        ? {
+            POLICY: FILESTACK_SECURITY_POLICY,
+            SIGNATURE: FILESTACK_SECURITY_SIGNATURE,
+        }
+        : undefined,
+    TIMEOUT: getReactEnv<number>('FILESTACK_UPLOAD_TIMEOUT', 30 * 60 * 1000),
+}
+
+export const SUBDOMAIN = window.location.hostname.split('.')[0]

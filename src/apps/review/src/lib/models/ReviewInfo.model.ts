@@ -158,7 +158,7 @@ export function convertBackendReviewToReviewInfo(
                 / totalNumberOfQuestions,
             )
             : 0,
-        scorecardId: '',
+        scorecardId: data.scorecardId ?? '',
         status: data.status,
         updatedAt,
         updatedAtString,

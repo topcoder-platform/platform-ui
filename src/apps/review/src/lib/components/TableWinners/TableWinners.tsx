@@ -58,16 +58,22 @@ export const TableWinners: FC<Props> = (props: Props) => {
                             />
                         ) : undefined}
                         <span>
-                            <button
-                                onClick={function onClick() {
-                                    downloadSubmission(data.submissionId)
-                                }}
-                                className={styles.textBlue}
-                                disabled={isDownloading[data.submissionId]}
-                                type='button'
-                            >
-                                {data.submissionId}
-                            </button>
+                            {data.submissionId ? (
+                                <button
+                                    onClick={function onClick() {
+                                        downloadSubmission(data.submissionId)
+                                    }}
+                                    className={styles.textBlue}
+                                    disabled={isDownloading[data.submissionId]}
+                                    type='button'
+                                >
+                                    {data.submissionId}
+                                </button>
+                            ) : (
+                                <span>
+                                    Submission unavailable
+                                </span>
+                            )}
                             <span className={styles.spacing}>-</span>
                             <span>
                                 <a

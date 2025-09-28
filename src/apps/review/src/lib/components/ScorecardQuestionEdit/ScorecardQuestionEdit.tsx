@@ -404,6 +404,7 @@ export const ScorecardQuestionEdit: FC<Props> = (props: Props) => {
                                                         ]
                                                     }
                                                     disabled={props.disabled}
+                                                    uploadCategory='review-comment'
                                                 />
                                             )
                                         }}

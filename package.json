@@ -51,6 +51,7 @@
     "express": "^4.21.2",
     "express-fileupload": "^1.4.0",
     "express-interceptor": "^1.2.0",
+    "filestack-js": "^3.42.0",
     "highcharts": "^10.3.3",
     "highcharts-react-official": "^3.2.0",
     "highlight.js": "^11.6.0",

@@ -262,14 +262,15 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
             }
 
             const finalScore = reviewDetail?.finalScore
+            const formattedScore = typeof finalScore === 'number' && Number.isFinite(finalScore)
+                ? finalScore.toFixed(2)
+                : undefined
             return (
                 <Link
                     to={`./../scorecard-details/${data.id}/review/${resourceId}`}
                     className={styles.textBlue}
                 >
-                    {typeof finalScore === 'number' && Number.isFinite(finalScore)
-                        ? finalScore
-                        : '--'}
+                    {formattedScore ?? '--'}
                 </Link>
             )
         }
