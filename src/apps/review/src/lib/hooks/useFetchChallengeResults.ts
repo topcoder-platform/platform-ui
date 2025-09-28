@@ -179,12 +179,12 @@ export function useFetchChallengeResults(
     }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
 
     const winners = useMemo<ChallengeWinner[]>(() => {
-        if (Array.isArray(challengeInfo?.winners)) {
+        if (challengeInfo && Array.isArray(challengeInfo.winners)) {
             return challengeInfo.winners
         }
 
         return []
-    }, [challengeInfo?.winners])
+    }, [challengeInfo])
     const challengeUuid = challengeInfo?.id ?? challengeId ?? ''
     const shouldFetchReviews = Boolean(challengeUuid && winners.length)
 

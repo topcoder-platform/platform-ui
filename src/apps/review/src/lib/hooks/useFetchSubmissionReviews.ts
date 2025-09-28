@@ -22,6 +22,7 @@ import { handleError } from '~/apps/admin/src/lib/utils'
 import {
     AppealInfo,
     BackendAppealResponse,
+    BackendRequestReviewItem,
     BackendReview,
     BackendReviewItem,
     BackendSubmission,
@@ -330,7 +331,7 @@ export function useFetchSubmissionReviews(): useFetchSubmissionReviewsProps {
 
             const buildReviewItemsPayload = (
                 reviewForm?: FormReviews,
-            ): BackendReviewItem[] => (
+            ): BackendRequestReviewItem[] => (
                 reviewForm?.reviews ?? []
             ).map(reviewItem => ({
                 initialAnswer: reviewItem.initialAnswer || ' ',
