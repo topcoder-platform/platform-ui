@@ -209,9 +209,10 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
             () => {
                 reset(data)
                 if (challengeId) {
-                    navigate(
-                        `${rootRoute}/${activeReviewAssigmentsRouteId}/${challengeId}/challenge-details?tab=review-appeals`,
-                    )
+                    const challengeDetailsRoute
+                        = `${rootRoute}/${activeReviewAssigmentsRouteId}/${challengeId}/challenge-details`
+
+                    navigate(`${challengeDetailsRoute}?tab=review-appeals`)
                 }
             },
         )

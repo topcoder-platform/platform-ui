@@ -7,9 +7,50 @@ import { TABLE_DATE_FORMAT } from '../../config/index.config'
 
 import { adjustReviewItemInfo, ReviewItemInfo } from './ReviewItemInfo.model'
 import { BackendReview } from './BackendReview.model'
-import { convertBackendReviewItem } from './BackendReviewItem.model'
+import { BackendReviewItem, convertBackendReviewItem } from './BackendReviewItem.model'
 import { ScorecardInfo } from './ScorecardInfo.model'
 import { ScorecardQuestion } from './ScorecardQuestion.model'
+
+const parseDateValue = (value?: string | Date | null): Date | undefined => {
+    if (!value) {
+        return undefined
+    }
+
+    return value instanceof Date ? value : new Date(value)
+}
+
+const formatDateString = (value?: Date): string => (
+    value
+        ? moment(value)
+            .local()
+            .format(TABLE_DATE_FORMAT)
+        : ''
+)
+
+const formatOptionalDateString = (value?: Date): string | undefined => (
+    value
+        ? moment(value)
+            .local()
+            .format(TABLE_DATE_FORMAT)
+        : undefined
+)
+
+const calculateReviewProgress = (items: BackendReviewItem[] = []): number => {
+    if (!items.length) {
+        return 0
+    }
+
+    const answered = items.reduce(
+        (count, item) => (item.initialAnswer ? count + 1 : count),
+        0,
+    )
+
+    return Math.round((answered * 100) / items.length)
+}
+
+const normalizeReviewerHandle = (handle?: string | null): string | undefined => (
+    handle?.trim() || undefined
+)
 
 /**
  * Review info
@@ -54,7 +95,7 @@ export function adjustReviewInfo(data: ReviewInfo): ReviewInfo {
         item => !!item.initialAnswer,
     ).length
 
-    const reviewerHandle = data.reviewerHandle?.trim() || undefined
+    const reviewerHandle = normalizeReviewerHandle(data.reviewerHandle)
     const reviewerMaxRating = data.reviewerMaxRating ?? undefined
 
     return {
@@ -107,61 +148,34 @@ export function adjustReviewInfo(data: ReviewInfo): ReviewInfo {
 export function convertBackendReviewToReviewInfo(
     data: BackendReview,
 ): ReviewInfo {
-    const createdAt = data.createdAt ? new Date(data.createdAt) : ''
-    const createdAtString = createdAt
-        ? moment(createdAt)
-            .local()
-            .format(TABLE_DATE_FORMAT)
-        : ''
-    const updatedAt = data.updatedAt ? new Date(data.updatedAt) : ''
-    const updatedAtString = createdAt
-        ? moment(updatedAt)
-            .local()
-            .format(TABLE_DATE_FORMAT)
-        : ''
-    const reviewDate = data.reviewDate ? new Date(data.reviewDate) : undefined
-    const reviewDateString = data.reviewDate
-        ? moment(data.reviewDate)
-            .local()
-            .format(TABLE_DATE_FORMAT)
-        : undefined
-
+    const createdAtDate = parseDateValue(data.createdAt)
+    const updatedAtDate = parseDateValue(data.updatedAt)
+    const reviewDate = parseDateValue(data.reviewDate)
     const reviewItems = data.reviewItems ?? []
-    const totalNumberOfQuestions = reviewItems.length
-    const numberOfQuestionsHaveBeenFilled = filter(
-        reviewItems,
-        item => !!item.initialAnswer,
-    ).length
-
-    const reviewerHandle = data.reviewerHandle?.trim() || undefined
+    const reviewerHandle = normalizeReviewerHandle(data.reviewerHandle)
     const reviewerMaxRating = data.reviewerMaxRating ?? undefined
 
     return {
         committed: data.committed,
-        createdAt,
-        createdAtString,
+        createdAt: createdAtDate ?? '',
+        createdAtString: formatDateString(createdAtDate),
         finalScore: data.finalScore,
         id: data.id,
         initialScore: data.initialScore,
         resourceId: data.resourceId,
         reviewDate,
-        reviewDateString,
+        reviewDateString: formatOptionalDateString(reviewDate),
         reviewerHandle,
         reviewerHandleColor: reviewerMaxRating && reviewerHandle
             ? getRatingColor(reviewerMaxRating)
             : undefined,
         reviewerMaxRating,
-        reviewItems: (data.reviewItems ?? []).map(convertBackendReviewItem),
-        reviewProgress: totalNumberOfQuestions
-            ? Math.round(
-                (numberOfQuestionsHaveBeenFilled * 100)
-                / totalNumberOfQuestions,
-            )
-            : 0,
+        reviewItems: reviewItems.map(convertBackendReviewItem),
+        reviewProgress: calculateReviewProgress(reviewItems),
         scorecardId: data.scorecardId ?? '',
         status: data.status,
-        updatedAt,
-        updatedAtString,
+        updatedAt: updatedAtDate ?? '',
+        updatedAtString: formatDateString(updatedAtDate),
     }
 }
 

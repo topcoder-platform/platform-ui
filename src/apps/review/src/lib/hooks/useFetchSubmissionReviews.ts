@@ -325,10 +325,13 @@ export function useFetchSubmissionReviews(): useFetchSubmissionReviewsProps {
             }
 
             const status = committed ? 'COMPLETED' : 'IN_PROGRESS'
-            const reviewDate = new Date().toISOString()
+            const reviewDate = new Date()
+                .toISOString()
 
-            const buildReviewItemsPayload = (reviews?: FormReviews) => (
-                reviews?.reviews ?? []
+            const buildReviewItemsPayload = (
+                reviewForm?: FormReviews,
+            ): BackendReviewItem[] => (
+                reviewForm?.reviews ?? []
             ).map(reviewItem => ({
                 initialAnswer: reviewItem.initialAnswer || ' ',
                 reviewItemComments: reviewItem.comments.map(comment => ({

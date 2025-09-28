@@ -4,7 +4,7 @@ import { formatDurationDate } from '../utils'
 import { TABLE_DATE_FORMAT } from '../../config/index.config'
 
 import { BackendMetadata } from './BackendMetadata.model'
-import { ChallengeInfo, ChallengeType } from './ChallengeInfo.model'
+import { ChallengeInfo, ChallengeType, ChallengeWinner } from './ChallengeInfo.model'
 import { BackendPhase } from './BackendPhase.model'
 import { BackendDiscussion } from './BackendDiscussion.model'
 import { BackendPrizeSet } from './BackendPrizeSet.model'
@@ -13,7 +13,6 @@ import { BackendSkill } from './BackendSkill.model'
 import { BackendLegacy } from './BackendLegacy.model'
 import { BackendTask } from './BackendTask.model'
 import { BackendOverview } from './BackendOverview.model'
-import { ChallengeWinner } from './ChallengeInfo.model'
 
 export interface BackendChallengeWinner {
     userId: number
