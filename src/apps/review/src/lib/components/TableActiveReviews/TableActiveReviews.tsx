@@ -20,6 +20,14 @@ import { ProgressBar } from '../ProgressBar'
 
 import styles from './TableActiveReviews.module.scss'
 
+const REVIEW_PROGRESS_PHASES = new Set([
+    'review',
+    'iterative review',
+    'appeals',
+    'appeals response',
+    'topgear iterative review',
+])
+
 interface Props {
     className?: string
     datas: ActiveReviewAssignment[]
@@ -247,14 +255,18 @@ export const TableActiveReviews: FC<Props> = (props: Props) => {
                         propertyName: 'reviewProgress',
                         renderer: (data: ActiveReviewAssignment) => (
                             <div className='last-element'>
-                                {typeof data.reviewProgress === 'number' ? (
-                                    <ProgressBar
-                                        progress={data.reviewProgress}
-                                        progressWidth='80px'
-                                    />
-                                ) : (
-                                    <span>--</span>
-                                )}
+                                {typeof data.reviewProgress === 'number'
+                                    && typeof data.currentPhase === 'string'
+                                    && REVIEW_PROGRESS_PHASES.has(
+                                        data.currentPhase.toLowerCase(),
+                                    ) ? (
+                                        <ProgressBar
+                                            progress={data.reviewProgress}
+                                            progressWidth='80px'
+                                        />
+                                    ) : (
+                                        <span>--</span>
+                                    )}
                             </div>
                         ),
                         type: 'element',

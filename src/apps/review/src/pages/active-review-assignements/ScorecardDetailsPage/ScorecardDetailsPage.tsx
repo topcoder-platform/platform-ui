@@ -68,7 +68,7 @@ export const ScorecardDetailsPage: FC<Props> = (props: Props) => {
     const breadCrumb = useMemo<BreadCrumbData[]>(() => [
         {
             index: 1,
-            label: 'Active Reviews',
+            label: 'Active Challenges',
             path: `${rootRoute}/${activeReviewAssigmentsRouteId}/`,
         },
         {
