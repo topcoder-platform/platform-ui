@@ -170,6 +170,7 @@ export const ScorecardQuestionEdit: FC<Props> = (props: Props) => {
                         </button>
                         <span className={styles.textQuestion}>
                             <strong>
+                                {/* eslint-disable-next-line max-len */}
                                 {`Question ${props.groupIndex + 1}.${props.sectionIndex + 1}.${props.questionIndex + 1}`}
                             </strong>
                             {' '}
