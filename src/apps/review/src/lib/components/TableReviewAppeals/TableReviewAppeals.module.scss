@@ -91,6 +91,27 @@
     }
 }
 
+.actionButton {
+    align-items: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    font-weight: 700;
+    gap: $sp-2;
+    padding: 0;
+
+    &:focus {
+        outline: 2px solid currentColor;
+        outline-offset: 2px;
+    }
+
+    &:disabled {
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+}
+
 .appealsLink {
     padding: 0 $sp-1;
 }

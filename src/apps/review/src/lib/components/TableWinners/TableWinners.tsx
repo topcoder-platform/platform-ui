@@ -9,13 +9,15 @@ import classNames from 'classnames'
 import { MobileTableColumn } from '~/apps/admin/src/lib/models/MobileTableColumn.model'
 import { useWindowSize, WindowSize } from '~/libs/shared'
 import { TableMobile } from '~/apps/admin/src/lib/components/common/TableMobile'
-import { Table, TableColumn } from '~/libs/ui'
+import { Table, TableColumn, Tooltip } from '~/libs/ui'
 import { IsRemovingType } from '~/apps/admin/src/lib/models'
 
 import { ProjectResult } from '../../models'
 import { TableWrapper } from '../TableWrapper'
 import { ORDINAL_SUFFIX } from '../../../config/index.config'
 import { getHandleUrl } from '../../utils'
+import { useSubmissionDownloadAccess } from '../../hooks'
+import type { UseSubmissionDownloadAccessResult } from '../../hooks/useSubmissionDownloadAccess'
 
 import styles from './TableWinners.module.scss'
 
@@ -46,59 +48,98 @@ export const TableWinners: FC<Props> = (props: Props) => {
         [datas],
     )
 
+    const {
+        restrictionMessage,
+        isSubmissionDownloadRestrictedForMember,
+        getRestrictionMessageForMember,
+    }: UseSubmissionDownloadAccessResult = useSubmissionDownloadAccess()
+
     const columns = useMemo<TableColumn<ProjectResult>[]>(
         () => [
             {
                 label: 'Submission ID',
                 propertyName: 'submissionId',
-                renderer: (data: ProjectResult) => (
-                    <div className={styles.blockPlacementContainer}>
-                        {data.placement && data.placement < 4 ? (
-                            <i
-                                className={`icon-${ORDINAL_SUFFIX.get(
-                                    data.placement,
-                                )}`}
-                            />
-                        ) : undefined}
+                renderer: (data: ProjectResult) => {
+                    const isRestrictedForRow = data.submissionId
+                        ? isSubmissionDownloadRestrictedForMember(data.userId)
+                        : false
+                    const tooltipMessage = getRestrictionMessageForMember(data.userId)
+                        ?? restrictionMessage
+                    const isButtonDisabled = Boolean(
+                        (data.submissionId
+                            ? isDownloading[data.submissionId]
+                            : false)
+                        || isRestrictedForRow,
+                    )
+
+                    const downloadButton = data.submissionId ? (
+                        <button
+                            onClick={function onClick() {
+                                if (isRestrictedForRow) {
+                                    return
+                                }
+
+                                downloadSubmission(data.submissionId)
+                            }}
+                            className={styles.textBlue}
+                            disabled={isButtonDisabled}
+                            type='button'
+                        >
+                            {data.submissionId}
+                        </button>
+                    ) : (
                         <span>
-                            {data.submissionId ? (
-                                <button
-                                    onClick={function onClick() {
-                                        downloadSubmission(data.submissionId)
-                                    }}
-                                    className={styles.textBlue}
-                                    disabled={isDownloading[data.submissionId]}
-                                    type='button'
-                                >
-                                    {data.submissionId}
-                                </button>
-                            ) : (
-                                <span>
-                                    Submission unavailable
-                                </span>
-                            )}
-                            <span className={styles.spacing}>-</span>
-                            <span>
-                                <a
-                                    href={getHandleUrl(data.userInfo)}
-                                    target='_blank'
-                                    rel='noreferrer'
-                                    style={{
-                                        color: data.userInfo?.handleColor,
-                                    }}
-                                    onClick={function onClick() {
-                                        window.open(
-                                            getHandleUrl(data.userInfo),
-                                            '_blank',
-                                        )
-                                    }}
-                                >
-                                    {data.userInfo?.memberHandle}
-                                </a>
-                            </span>
+                            Submission unavailable
                         </span>
-                    </div>
-                ),
+                    )
+
+                    const renderedDownloadButton = data.submissionId && isRestrictedForRow ? (
+                        <Tooltip
+                            content={tooltipMessage}
+                            triggerOn='click-hover'
+                        >
+                            <span className={styles.tooltipTrigger}>
+                                {downloadButton}
+                            </span>
+                        </Tooltip>
+                    ) : (
+                        downloadButton
+                    )
+
+                    return (
+                        <div className={styles.blockPlacementContainer}>
+                            {data.placement && data.placement < 4 ? (
+                                <i
+                                    className={`icon-${ORDINAL_SUFFIX.get(
+                                        data.placement,
+                                    )}`}
+                                />
+                            ) : undefined}
+                            <span>
+                                {renderedDownloadButton}
+                                <span className={styles.spacing}>-</span>
+                                <span>
+                                    <a
+                                        href={getHandleUrl(data.userInfo)}
+                                        target='_blank'
+                                        rel='noreferrer'
+                                        style={{
+                                            color: data.userInfo?.handleColor,
+                                        }}
+                                        onClick={function onClick() {
+                                            window.open(
+                                                getHandleUrl(data.userInfo),
+                                                '_blank',
+                                            )
+                                        }}
+                                    >
+                                        {data.userInfo?.memberHandle}
+                                    </a>
+                                </span>
+                            </span>
+                        </div>
+                    )
+                },
                 type: 'element',
             },
             {
@@ -131,6 +172,9 @@ export const TableWinners: FC<Props> = (props: Props) => {
             downloadSubmission,
             isDownloading,
             reviewTabUrl,
+            getRestrictionMessageForMember,
+            isSubmissionDownloadRestrictedForMember,
+            restrictionMessage,
         ],
     )
 

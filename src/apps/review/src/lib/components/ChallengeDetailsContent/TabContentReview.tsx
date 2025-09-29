@@ -64,6 +64,7 @@ export const TabContentReview: FC<Props> = (props: Props) => {
             downloadSubmission={props.downloadSubmission}
             mappingReviewAppeal={props.mappingReviewAppeal}
             hideHandleColumn={hideHandleColumn}
+            isActiveChallenge={props.isActiveChallenge}
         />
     ) : (
         <TableReviewAppealsForSubmitter

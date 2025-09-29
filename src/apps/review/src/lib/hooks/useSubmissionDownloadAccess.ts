@@ -19,6 +19,8 @@ export interface UseSubmissionDownloadAccessResult {
     restrictionMessage: string
     isSubmissionDownloadRestrictedForMember: (memberId?: string) => boolean
     getRestrictionMessageForMember: (memberId?: string) => string | undefined
+    shouldRestrictSubmitterToOwnSubmission: boolean
+    currentMemberId?: string
 }
 
 function normaliseRole(role: string | undefined): string | undefined {
@@ -146,10 +148,12 @@ export function useSubmissionDownloadAccess(): UseSubmissionDownloadAccessResult
     )
 
     return {
+        currentMemberId,
         getRestrictionMessageForMember,
         isSubmissionDownloadRestricted,
         isSubmissionDownloadRestrictedForMember,
         isSubmissionPhaseOpen,
         restrictionMessage: SUBMISSION_DOWNLOAD_RESTRICTION_MESSAGE,
+        shouldRestrictSubmitterToOwnSubmission,
     }
 }

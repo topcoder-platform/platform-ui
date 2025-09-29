@@ -31,6 +31,8 @@ import {
     useFetchChallengeSubmissions,
     useFetchChallengeSubmissionsProps,
 } from './useFetchChallengeSubmissions'
+import { useSubmissionDownloadAccess } from './useSubmissionDownloadAccess'
+import type { UseSubmissionDownloadAccessResult } from './useSubmissionDownloadAccess'
 import { useRole, useRoleProps } from './useRole'
 
 export interface useFetchScreeningReviewProps {
@@ -64,10 +66,40 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
 
     // fetch challenge submissions
     const {
-        challengeSubmissions,
+        challengeSubmissions: allChallengeSubmissions,
         isLoading,
-    }: useFetchChallengeSubmissionsProps
-        = useFetchChallengeSubmissions(challengeId)
+    }: useFetchChallengeSubmissionsProps = useFetchChallengeSubmissions(challengeId)
+
+    const {
+        currentMemberId,
+        shouldRestrictSubmitterToOwnSubmission,
+    }: UseSubmissionDownloadAccessResult = useSubmissionDownloadAccess()
+
+    const visibleChallengeSubmissions = useMemo<BackendSubmission[]>(
+        () => {
+            if (!shouldRestrictSubmitterToOwnSubmission) {
+                return allChallengeSubmissions
+            }
+
+            if (!currentMemberId) {
+                return []
+            }
+
+            return allChallengeSubmissions.filter(
+                submission => submission.memberId === currentMemberId,
+            )
+        },
+        [
+            allChallengeSubmissions,
+            currentMemberId,
+            shouldRestrictSubmitterToOwnSubmission,
+        ],
+    )
+
+    const visibleSubmissionIds = useMemo(
+        () => new Set(visibleChallengeSubmissions.map(submission => submission.id)),
+        [visibleChallengeSubmissions],
+    )
 
     // Get list of reviewer ids
     const reviewerIds = useMemo(() => {
@@ -85,7 +117,7 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
         }
 
         if (!results.length) {
-            forEach(challengeSubmissions, challengeSubmission => {
+            forEach(visibleChallengeSubmissions, challengeSubmission => {
                 forEach(challengeSubmission.review, review => {
                     results.push(review.resourceId)
                 })
@@ -94,7 +126,12 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
 
         return results
 
-    }, [challengeReviewers, challengeSubmissions, actionChallengeRole, loginUserInfo])
+    }, [
+        challengeReviewers,
+        visibleChallengeSubmissions,
+        actionChallengeRole,
+        loginUserInfo,
+    ])
 
     // fetch appeal response
     const {
@@ -112,7 +149,7 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
     )
 
     const {
-        data: challengeReviews,
+        data: challengeReviewsData,
         error: fetchChallengeReviewsError,
     }: SWRResponse<BackendReview[], Error> = useSWR<BackendReview[], Error>(
         `reviewBaseUrl/reviews/${challengeId}/${reviewerKey}`,
@@ -120,6 +157,27 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
             fetcher: () => fetchChallengeReviews(challengeId ?? ''),
             isPaused: () => !challengeId || !reviewerIds.length,
         },
+    )
+
+    const challengeReviews = useMemo(
+        () => {
+            if (!challengeReviewsData) {
+                return challengeReviewsData
+            }
+
+            if (!shouldRestrictSubmitterToOwnSubmission) {
+                return challengeReviewsData
+            }
+
+            return challengeReviewsData.filter(reviewItem => (
+                visibleSubmissionIds.has(reviewItem.submissionId)
+            ))
+        },
+        [
+            challengeReviewsData,
+            shouldRestrictSubmitterToOwnSubmission,
+            visibleSubmissionIds,
+        ],
     )
 
     useEffect(() => {
@@ -155,7 +213,7 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
 
     // get screening data from challenge submissions
     const screening = useMemo(
-        () => challengeSubmissions.map(item => {
+        () => visibleChallengeSubmissions.map(item => {
             const result = convertBackendSubmissionToScreening(item)
             return {
                 ...result,
@@ -168,7 +226,7 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
                 userInfo: resourceMemberIdMapping[result.memberId],
             }
         }),
-        [challengeSubmissions, resourceMemberIdMapping],
+        [visibleChallengeSubmissions, resourceMemberIdMapping],
     )
 
     // get review data from challenge submissions
@@ -204,7 +262,7 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
 
     const review = useMemo(() => {
         const validReviews: BackendSubmission[] = []
-        forEach(challengeSubmissions, challengeSubmission => {
+        forEach(visibleChallengeSubmissions, challengeSubmission => {
             forEach(reviewerIds, reviewerId => {
                 const matchingReview
                     = challengeSubmission.reviewResourceMapping?.[reviewerId]
@@ -259,7 +317,7 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
             }
         })
     }, [
-        challengeSubmissions,
+        visibleChallengeSubmissions,
         resourceMemberIdMapping,
         reviewerIds,
         reviewAssignmentsBySubmission,

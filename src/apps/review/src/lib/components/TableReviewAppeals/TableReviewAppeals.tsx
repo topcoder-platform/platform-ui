@@ -1,9 +1,17 @@
 /**
  * Table Review Appeals.
  */
-import { FC, MouseEvent, useContext, useMemo } from 'react'
+import {
+    FC,
+    MouseEvent,
+    useCallback,
+    useContext,
+    useMemo,
+    useState,
+} from 'react'
 import { Link } from 'react-router-dom'
 import { toast } from 'react-toastify'
+import { mutate } from 'swr'
 import _, { includes } from 'lodash'
 import classNames from 'classnames'
 
@@ -11,14 +19,19 @@ import { TableMobile } from '~/apps/admin/src/lib/components/common/TableMobile'
 import { IsRemovingType } from '~/apps/admin/src/lib/models'
 import { MobileTableColumn } from '~/apps/admin/src/lib/models/MobileTableColumn.model'
 import { EnvironmentConfig } from '~/config'
-import { copyTextToClipboard, useWindowSize, WindowSize } from '~/libs/shared'
+import { copyTextToClipboard, handleError, useWindowSize, WindowSize } from '~/libs/shared'
 import { IconOutline, Table, TableColumn, Tooltip } from '~/libs/ui'
 
 import { APPROVAL, NO_RESOURCE_ID, REVIEWER, WITHOUT_APPEAL } from '../../../config/index.config'
-import { ChallengeDetailContext } from '../../contexts'
+import { ChallengeDetailContext, ReviewAppContext } from '../../contexts'
 import { useRole, useRoleProps, useSubmissionDownloadAccess } from '../../hooks'
 import type { UseSubmissionDownloadAccessResult } from '../../hooks/useSubmissionDownloadAccess'
-import { ChallengeDetailContextModel, MappingReviewAppeal, SubmissionInfo } from '../../models'
+import {
+    ChallengeDetailContextModel,
+    MappingReviewAppeal,
+    ReviewAppContextModel,
+    SubmissionInfo,
+} from '../../models'
 import {
     AggregatedReviewDetail,
     AggregatedSubmissionReviews,
@@ -27,6 +40,8 @@ import {
     isReviewPhase,
 } from '../../utils'
 import { ProgressBar } from '../ProgressBar'
+import { ConfirmModal } from '../ConfirmModal'
+import { updateReview } from '../../services'
 import { TableWrapper } from '../TableWrapper'
 
 import styles from './TableReviewAppeals.module.scss'
@@ -40,18 +55,32 @@ interface Props {
     downloadSubmission: (submissionId: string) => void
     mappingReviewAppeal: MappingReviewAppeal // from review id to appeal info
     hideHandleColumn?: boolean
+    isActiveChallenge?: boolean
 }
 
 type SubmissionRow = SubmissionInfo & {
     aggregated?: AggregatedSubmissionReviews
 }
 
+const REOPEN_MESSAGE_SELF = [
+    'The scorecard will be reopened and you will be able to edit it before submitting the scorecard again.',
+    'Are you sure you want to reopen the scorecard?',
+].join(' ')
+
+const REOPEN_MESSAGE_OTHER = [
+    'The scorecard will be reopened and the reviewer will be able to edit it before submitting the scorecard again.',
+    'Are you sure you want to reopen the scorecard?',
+].join(' ')
+
 export const TableReviewAppeals: FC<Props> = (props: Props) => {
     // get challenge info from challenge detail context
     const {
         challengeInfo,
         reviewers,
+        myResources,
+        myRoles,
     }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
+    const { loginUserInfo }: ReviewAppContextModel = useContext(ReviewAppContext)
     const { width: screenWidth }: WindowSize = useWindowSize()
     const { actionChallengeRole }: useRoleProps = useRole()
     const isTablet = useMemo(() => screenWidth <= 744, [screenWidth])
@@ -64,6 +93,7 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
 
     const datas = props.datas
     const downloadSubmission = props.downloadSubmission
+    const isActiveChallenge = props.isActiveChallenge
     const firstSubmissions = props.firstSubmissions
     const hideHandleColumn = props.hideHandleColumn
     const isDownloading = props.isDownloading
@@ -109,6 +139,143 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
         ),
         [challengeTrack, challengeType],
     )
+
+    const [isReopening, setIsReopening] = useState(false)
+    const [pendingReopen, setPendingReopen] = useState<{
+        review?: AggregatedReviewDetail
+        submission?: SubmissionRow
+        isOwnReview?: boolean
+    } | undefined>(undefined)
+
+    const myResourceIds = useMemo(
+        () => new Set(myResources.map(resource => resource.id)),
+        [myResources],
+    )
+
+    const hasReviewerRole = useMemo(
+        () => myRoles.some(role => role?.toLowerCase()
+            .includes('reviewer')),
+        [myRoles],
+    )
+
+    const hasCopilotRole = useMemo(
+        () => myRoles.some(role => role?.toLowerCase()
+            .includes('copilot')),
+        [myRoles],
+    )
+
+    const hasAdminRole = useMemo(
+        () => myRoles.some(role => role?.toLowerCase()
+            .includes('admin')),
+        [myRoles],
+    )
+
+    const isTopcoderAdmin = useMemo(
+        () => loginUserInfo?.roles?.some(
+            role => typeof role === 'string'
+                && role.toLowerCase() === 'administrator',
+        ) ?? false,
+        [loginUserInfo?.roles],
+    )
+
+    const canManageCompletedReviews = useMemo(
+        () => Boolean(
+            isActiveChallenge
+            && isReviewAppealsTab
+            && isReviewPhase(challengeInfo)
+            && (
+                hasReviewerRole
+                || hasCopilotRole
+                || hasAdminRole
+                || isTopcoderAdmin
+            ),
+        ),
+        [
+            challengeInfo,
+            hasAdminRole,
+            hasCopilotRole,
+            hasReviewerRole,
+            isActiveChallenge,
+            isReviewAppealsTab,
+            isTopcoderAdmin,
+        ],
+    )
+
+    const openReopenDialog = useCallback((submission: SubmissionRow, review: AggregatedReviewDetail) => {
+        const resourceId = review.reviewInfo?.resourceId
+            ?? review.resourceId
+        const isOwnReview = resourceId ? myResourceIds.has(resourceId) : false
+
+        setPendingReopen({
+            isOwnReview,
+            review,
+            submission,
+        })
+    }, [myResourceIds])
+
+    const closeReopenDialog = useCallback(() => {
+        setPendingReopen(undefined)
+    }, [])
+
+    const handleConfirmReopen = useCallback(async () => {
+        const reviewId = pendingReopen?.review?.reviewInfo?.id
+
+        if (!reviewId) {
+            closeReopenDialog()
+            return
+        }
+
+        setIsReopening(true)
+
+        try {
+            await updateReview(reviewId, { status: 'IN_PROGRESS' })
+            toast.success('Scorecard reopened.')
+            closeReopenDialog()
+
+            const challengeId = challengeInfo?.id
+
+            if (challengeId) {
+                const mutateKeys = new Set<string>()
+                const reviewerIdsAll = reviewers.map(reviewer => reviewer.id)
+                const reviewerKeyAll = reviewerIdsAll.slice()
+                    .sort()
+                    .join(',')
+                mutateKeys.add(`reviewBaseUrl/reviews/${challengeId}/${reviewerKeyAll}`)
+
+                const memberId = loginUserInfo?.userId
+                    ? `${loginUserInfo.userId}`
+                    : undefined
+
+                if (memberId) {
+                    const reviewerIdsSelf = reviewers
+                        .filter(reviewer => reviewer.memberId === memberId)
+                        .map(reviewer => reviewer.id)
+
+                    if (reviewerIdsSelf.length) {
+                        const reviewerKeySelf = reviewerIdsSelf.slice()
+                            .sort()
+                            .join(',')
+                        mutateKeys.add(`reviewBaseUrl/reviews/${challengeId}/${reviewerKeySelf}`)
+                    }
+                }
+
+                mutateKeys.add(`reviewBaseUrl/submissions/${challengeId}`)
+
+                await Promise.all(Array.from(mutateKeys)
+                    .map(key => mutate(key)))
+            }
+        } catch (error) {
+            handleError(error)
+        } finally {
+            setIsReopening(false)
+        }
+    }, [
+        challengeInfo?.id,
+        closeReopenDialog,
+        loginUserInfo?.userId,
+        pendingReopen,
+        reviewers,
+    ])
 
     const columns = useMemo<TableColumn<SubmissionRow>[]>(() => {
         const submissionColumn: TableColumn<SubmissionRow> = {
@@ -430,6 +597,54 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                         type: 'element',
                     })
                 }
+
+                if (canManageCompletedReviews) {
+                    aggregatedColumns.push({
+                        columnId: `actions-${index}`,
+                        label: 'Actions',
+                        renderer: (data: SubmissionRow) => {
+                            const reviewDetailCandidate = data.aggregated?.reviews[index]
+                            const reviewInfo = reviewDetailCandidate?.reviewInfo
+
+                            if (!reviewInfo?.id) {
+                                return undefined
+                            }
+
+                            const reviewDetail: AggregatedReviewDetail = {
+                                ...reviewDetailCandidate,
+                                reviewInfo,
+                            }
+                            const reviewStatus = (reviewInfo.status ?? '').toUpperCase()
+                            if (reviewStatus !== 'COMPLETED') {
+                                return undefined
+                            }
+
+                            const isTargetReview = pendingReopen?.review?.reviewInfo?.id
+                                === reviewInfo.id
+
+                            function handleReopenClick(): void {
+                                openReopenDialog(data, reviewDetail)
+                            }
+
+                            return (
+                                <button
+                                    type='button'
+                                    className={classNames(
+                                        styles.actionButton,
+                                        styles.textBlue,
+                                        'last-element',
+                                    )}
+                                    onClick={handleReopenClick}
+                                    disabled={isReopening && isTargetReview}
+                                >
+                                    <i className='icon-reopen' />
+                                    Reopen review
+                                </button>
+                            )
+                        },
+                        type: 'element',
+                    })
+                }
             }
 
             return aggregatedColumns
@@ -667,6 +882,7 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
     }, [
         actionChallengeRole,
         allowsAppeals,
+        canManageCompletedReviews,
         challengeInfo,
         isReviewAppealsTab,
         isSubmissionDownloadRestricted,
@@ -675,13 +891,16 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
         hideHandleColumn,
         isDownloading,
         mappingReviewAppeal,
+        isReopening,
+        pendingReopen,
+        openReopenDialog,
         tab,
         restrictionMessage,
     ])
 
     const columnsMobile = useMemo<MobileTableColumn<SubmissionRow>[][]>(
         () => columns.map(column => {
-            if (column.label === 'Action') {
+            if (column.label === 'Action' || column.label === 'Actions') {
                 return [
                     {
                         ...column,
@@ -753,6 +972,22 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                     removeDefaultSort
                 />
             )}
+
+            <ConfirmModal
+                title='Reopen Scorecard Confirmation'
+                open={Boolean(pendingReopen)}
+                onClose={closeReopenDialog}
+                onConfirm={handleConfirmReopen}
+                cancelText='Cancel'
+                action='Confirm'
+                isLoading={isReopening}
+            >
+                <div>
+                    {pendingReopen?.isOwnReview
+                        ? REOPEN_MESSAGE_SELF
+                        : REOPEN_MESSAGE_OTHER}
+                </div>
+            </ConfirmModal>
         </TableWrapper>
     )
 }
