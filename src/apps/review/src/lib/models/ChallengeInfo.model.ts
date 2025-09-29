@@ -52,6 +52,7 @@ export interface ChallengeInfo {
     reviewLength?: number
     discussionsUrl?: string // this field is calculated at frontend
     legacyId?: number
+    status?: string
     phases: BackendPhase[]
     winners?: ChallengeWinner[]
     reviewers?: {

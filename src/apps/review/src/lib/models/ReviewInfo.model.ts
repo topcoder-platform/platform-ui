@@ -1,4 +1,4 @@
-import { filter, forEach } from 'lodash'
+import { forEach } from 'lodash'
 import moment from 'moment'
 
 import { getRatingColor } from '~/libs/core'
@@ -52,6 +52,58 @@ const normalizeReviewerHandle = (handle?: string | null): string | undefined => 
     handle?.trim() || undefined
 )
 
+const calculateReviewItemInfoProgress = (items: ReviewItemInfo[]): number => {
+    if (!items.length) {
+        return 0
+    }
+
+    const answered = items.reduce(
+        (count, item) => (item.initialAnswer ? count + 1 : count),
+        0,
+    )
+
+    return Math.round((answered * 100) / items.length)
+}
+
+const formatDateStringWithFallback = (
+    value: Date | undefined,
+    fallback: string | Date | undefined,
+): string | undefined => (
+    value
+        ? moment(value)
+            .local()
+            .format(TABLE_DATE_FORMAT)
+        : typeof fallback === 'string'
+            ? fallback
+            : undefined
+)
+
+const resolveRatingColor = (
+    rating: number | undefined,
+    handle: string | undefined,
+    fallback: string | undefined,
+): string | undefined => (
+    rating && handle ? getRatingColor(rating) : fallback
+)
+
+const resolveReviewDateString = (
+    reviewDate: Date | undefined,
+    existingReviewDateString: string | undefined,
+    originalReviewDate: string | Date | undefined,
+): string | undefined => {
+    if (reviewDate) {
+        return moment(reviewDate)
+            .local()
+            .format(TABLE_DATE_FORMAT)
+    }
+
+    if (typeof existingReviewDateString === 'string') {
+        return existingReviewDateString
+    }
+
+    return typeof originalReviewDate === 'string' ? originalReviewDate : undefined
+}
+
 /**
  * Review info
  */
@@ -70,6 +122,9 @@ export interface ReviewInfo {
     reviewerHandle?: string | null
     reviewerHandleColor?: string
     reviewerMaxRating?: number | null
+    submitterHandle?: string | null
+    submitterHandleColor?: string
+    submitterMaxRating?: number | null
     reviewProgress?: number // this field is calculated at frontend
     scorecardId: string
     resourceId: string
@@ -82,60 +137,59 @@ export interface ReviewInfo {
  * @returns updated data
  */
 export function adjustReviewInfo(data: ReviewInfo): ReviewInfo {
-    const createdAt = data.createdAt ? new Date(data.createdAt) : data.createdAt
-    const updatedAt = data.updatedAt ? new Date(data.updatedAt) : data.updatedAt
-    const reviewDate = data.reviewDate ? new Date(data.reviewDate) : undefined
+    const createdAtDate = parseDateValue(data.createdAt)
+    const updatedAtDate = parseDateValue(data.updatedAt)
+    const reviewDate = parseDateValue(data.reviewDate)
+
+    const createdAt = createdAtDate ?? data.createdAt
+    const updatedAt = updatedAtDate ?? data.updatedAt
 
     const reviewItems = data.reviewItems.map(
         adjustReviewItemInfo,
     ) as ReviewItemInfo[]
-    const totalNumberOfQuestions = reviewItems.length
-    const numberOfQuestionsHaveBeenFilled = filter(
-        reviewItems,
-        item => !!item.initialAnswer,
-    ).length
 
     const reviewerHandle = normalizeReviewerHandle(data.reviewerHandle)
     const reviewerMaxRating = data.reviewerMaxRating ?? undefined
+    const submitterHandle = normalizeReviewerHandle(data.submitterHandle)
+    const submitterMaxRating = data.submitterMaxRating ?? undefined
+
+    const createdAtString = formatDateStringWithFallback(
+        createdAtDate,
+        data.createdAt,
+    )
+    const updatedAtString = formatDateStringWithFallback(
+        updatedAtDate,
+        data.updatedAt,
+    )
 
     return {
         ...data,
         createdAt,
-        createdAtString: data.createdAt
-            ? moment(data.createdAt)
-                .local()
-                .format(TABLE_DATE_FORMAT)
-            : data.createdAt,
+        createdAtString,
         reviewDate,
-        reviewDateString: reviewDate
-            ? moment(reviewDate)
-                .local()
-                .format(TABLE_DATE_FORMAT)
-            : (typeof data.reviewDateString === 'string'
-                ? data.reviewDateString
-                : typeof data.reviewDate === 'string'
-                    ? data.reviewDate
-                    : undefined),
+        reviewDateString: resolveReviewDateString(
+            reviewDate,
+            data.reviewDateString,
+            data.reviewDate,
+        ),
         reviewerHandle,
-        reviewerHandleColor: reviewerMaxRating && reviewerHandle
-            ? getRatingColor(reviewerMaxRating)
-            : data.reviewerHandleColor,
+        reviewerHandleColor: resolveRatingColor(
+            reviewerMaxRating,
+            reviewerHandle,
+            data.reviewerHandleColor,
+        ),
         reviewerMaxRating,
         reviewItems,
-        // Be calculated by the frontend,
-        // the percentage = (The number of questions that have been filled / The total number of questions).
-        reviewProgress: totalNumberOfQuestions
-            ? Math.round(
-                (numberOfQuestionsHaveBeenFilled * 100)
-                / totalNumberOfQuestions,
-            )
-            : 0,
+        reviewProgress: calculateReviewItemInfoProgress(reviewItems),
+        submitterHandle,
+        submitterHandleColor: resolveRatingColor(
+            submitterMaxRating,
+            submitterHandle,
+            data.submitterHandleColor,
+        ),
+        submitterMaxRating,
         updatedAt,
-        updatedAtString: data.updatedAt
-            ? moment(data.updatedAt)
-                .local()
-                .format(TABLE_DATE_FORMAT)
-            : data.updatedAt,
+        updatedAtString,
     }
 }
 
@@ -152,8 +206,11 @@ export function convertBackendReviewToReviewInfo(
     const updatedAtDate = parseDateValue(data.updatedAt)
     const reviewDate = parseDateValue(data.reviewDate)
     const reviewItems = data.reviewItems ?? []
+    const reviewItemsInfo = reviewItems.map(convertBackendReviewItem)
     const reviewerHandle = normalizeReviewerHandle(data.reviewerHandle)
     const reviewerMaxRating = data.reviewerMaxRating ?? undefined
+    const submitterHandle = normalizeReviewerHandle(data.submitterHandle)
+    const submitterMaxRating = data.submitterMaxRating ?? undefined
 
     return {
         committed: data.committed,
@@ -170,10 +227,15 @@ export function convertBackendReviewToReviewInfo(
             ? getRatingColor(reviewerMaxRating)
             : undefined,
         reviewerMaxRating,
-        reviewItems: reviewItems.map(convertBackendReviewItem),
+        reviewItems: reviewItemsInfo,
         reviewProgress: calculateReviewProgress(reviewItems),
         scorecardId: data.scorecardId ?? '',
         status: data.status,
+        submitterHandle,
+        submitterHandleColor: submitterMaxRating && submitterHandle
+            ? getRatingColor(submitterMaxRating)
+            : undefined,
+        submitterMaxRating,
         updatedAt: updatedAtDate ?? '',
         updatedAtString: formatDateString(updatedAtDate),
     }

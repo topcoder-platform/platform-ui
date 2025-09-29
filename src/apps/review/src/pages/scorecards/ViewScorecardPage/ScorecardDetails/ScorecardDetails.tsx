@@ -20,23 +20,17 @@ const ScorecardDetails: FC<ScorecardDetailsProps> = (props: ScorecardDetailsProp
                     <div className={styles.value}>{props.scorecard.version}</div>
                 </div>
                 <div className={styles.item}>
-                    <div className={styles.label}>Type</div>
+                    <div className={styles.label}>Scorecard Type</div>
                     <div className={styles.value}>{ScorecardTypeLabels[props.scorecard.type]}</div>
                 </div>
                 <div className={styles.item}>
-                    <div className={styles.label}>Project Type</div>
+                    <div className={styles.label}>Challenge Track</div>
                     <div className={styles.value}>{ProjectTypeLabels[props.scorecard.challengeTrack]}</div>
                 </div>
             </div>
             <div className={styles.middle}>
                 <div className={styles.item}>
-                    <div className={styles.label}>Passing Score</div>
-                    <div className={styles.value}>{passingScore}</div>
-                </div>
-            </div>
-            <div className={styles.right}>
-                <div className={styles.item}>
-                    <div className={styles.label}>Category</div>
+                    <div className={styles.label}>Challenge Type</div>
                     <div className={styles.value}>{props.scorecard.challengeType}</div>
                 </div>
                 <div className={styles.item}>
@@ -50,6 +44,12 @@ const ScorecardDetails: FC<ScorecardDetailsProps> = (props: ScorecardDetailsProp
                 <div className={styles.item}>
                     <div className={styles.label}>Min - Max. Score</div>
                     <div className={styles.value}>{`${props.scorecard.minScore} - ${props.scorecard.maxScore}`}</div>
+                </div>
+            </div>
+            <div className={styles.right}>
+                <div className={styles.item}>
+                    <div className={styles.label}>Passing Score</div>
+                    <div className={styles.value}>{passingScore}</div>
                 </div>
             </div>
         </div>

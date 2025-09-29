@@ -21,6 +21,7 @@ import { TableReviewAppealsForSubmitter } from '../TableReviewAppealsForSubmitte
 interface Props {
     selectedTab: string
     reviews: SubmissionInfo[]
+    submitterReviews: SubmissionInfo[]
     isLoadingReview: boolean
     isDownloading: IsRemovingType
     downloadSubmission: (submissionId: string) => void
@@ -31,6 +32,7 @@ interface Props {
 export const TabContentReview: FC<Props> = (props: Props) => {
     const selectedTab = props.selectedTab
     const reviews = props.reviews
+    const submitterReviews = props.submitterReviews
     const firstSubmissions = useMemo(
         () => maxBy(reviews, 'review.initialScore'),
         [reviews],
@@ -40,18 +42,20 @@ export const TabContentReview: FC<Props> = (props: Props) => {
         && actionChallengeRole === REVIEWER
 
     // show loading ui when fetching data
-    if (
-        props.isLoadingReview
-    ) {
+    const isSubmitterView = actionChallengeRole === SUBMITTER
+        && selectedTab !== APPROVAL
+    const reviewRows = isSubmitterView ? submitterReviews : reviews
+
+    if (props.isLoadingReview) {
         return <TableLoading />
     }
 
     // show no record message
-    if (!reviews.length) {
+    if (!reviewRows.length) {
         return <TableNoRecord message='No reviews yet' />
     }
 
-    return actionChallengeRole !== SUBMITTER || selectedTab === APPROVAL ? (
+    return !isSubmitterView ? (
         <TableReviewAppeals
             datas={reviews}
             tab={selectedTab}
@@ -63,7 +67,7 @@ export const TabContentReview: FC<Props> = (props: Props) => {
         />
     ) : (
         <TableReviewAppealsForSubmitter
-            datas={reviews}
+            datas={submitterReviews}
             isDownloading={props.isDownloading}
             downloadSubmission={props.downloadSubmission}
             mappingReviewAppeal={props.mappingReviewAppeal}

@@ -1,6 +1,8 @@
 import { find, forEach, sumBy } from 'lodash'
 import moment from 'moment'
 
+import { getRatingColor } from '~/libs/core'
+
 import { TABLE_DATE_FORMAT } from '../../config/index.config'
 import {
     BackendResource,
@@ -34,6 +36,9 @@ export interface AggregatedSubmissionReviews {
     averageFinalScoreDisplay?: string
     latestReviewDate?: Date
     latestReviewDateString?: string
+    submitterHandle?: string
+    submitterHandleColor?: string
+    submitterMaxRating?: number | null
 }
 
 interface AggregateSubmissionReviewsParams {
@@ -63,6 +68,10 @@ export function aggregateSubmissionReviews({
                 id: submission.id,
                 reviews: [],
                 submission,
+                submitterHandle: submission.review?.submitterHandle ?? undefined,
+                submitterHandleColor: submission.review?.submitterHandleColor ?? undefined,
+                submitterMaxRating: submission.review?.submitterMaxRating
+                    ?? undefined,
             })
         }
 
@@ -108,6 +117,12 @@ export function aggregateSubmissionReviews({
         const finalReviewerMaxRating = reviewInfo?.reviewerMaxRating
             ?? matchingReviewResult?.reviewerMaxRating
             ?? reviewerInfo?.rating
+
+        if (reviewInfo?.submitterHandle) {
+            group.submitterHandle = reviewInfo.submitterHandle
+            group.submitterHandleColor = reviewInfo.submitterHandleColor
+            group.submitterMaxRating = reviewInfo.submitterMaxRating
+        }
 
         if (process.env.NODE_ENV !== 'production') {
             if (finalReviewerHandle) {
@@ -188,12 +203,28 @@ export function aggregateSubmissionReviews({
                 .format(TABLE_DATE_FORMAT)
             : undefined
 
+        const submitterHandle = group.submitterHandle
+            ?? group.submission.review?.submitterHandle
+            ?? undefined
+        const submitterMaxRating = group.submitterMaxRating
+            ?? group.submission.review?.submitterMaxRating
+            ?? undefined
+        const submitterHandleColor = group.submitterHandleColor
+            ?? group.submission.review?.submitterHandleColor
+            ?? (submitterHandle
+                && typeof submitterMaxRating === 'number'
+                ? getRatingColor(submitterMaxRating)
+                : undefined)
+
         aggregatedRows.push({
             ...group,
             averageFinalScore,
             averageFinalScoreDisplay,
             latestReviewDate,
             latestReviewDateString,
+            submitterHandle,
+            submitterHandleColor,
+            submitterMaxRating,
         })
     })
 

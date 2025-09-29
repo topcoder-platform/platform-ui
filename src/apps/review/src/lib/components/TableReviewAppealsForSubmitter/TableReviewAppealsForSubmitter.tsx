@@ -62,6 +62,8 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
     const isDownloading = props.isDownloading
     const mappingReviewAppeal = props.mappingReviewAppeal
     const wrapperClassName = props.className
+    const challengeStatus = challengeInfo?.status?.toUpperCase()
+    const isChallengeCompleted = challengeStatus === 'COMPLETED'
 
     const allowsAppeals = useMemo(
         () => !(
@@ -162,6 +164,37 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
                             <IconOutline.DocumentDuplicateIcon />
                         </button>
                     </span>
+                )
+            },
+            type: 'element',
+        }
+
+        const submitterColumn: TableColumn<SubmissionRow> = {
+            columnId: 'submitter-handle',
+            label: 'Submitter',
+            renderer: (data: SubmissionRow) => {
+                const submitterHandle = data.aggregated?.submitterHandle
+                if (!submitterHandle) {
+                    return (
+                        <span className={styles.notReviewed}>
+                            --
+                        </span>
+                    )
+                }
+
+                const submitterHandleColor = data.aggregated?.submitterHandleColor
+                    ?? '#2a2a2a'
+                const profileUrl = `${EnvironmentConfig.REVIEW.PROFILE_PAGE_URL}/${encodeURIComponent(submitterHandle)}`
+
+                return (
+                    <a
+                        href={profileUrl}
+                        style={{ color: submitterHandleColor }}
+                        target='_blank'
+                        rel='noreferrer'
+                    >
+                        {submitterHandle}
+                    </a>
                 )
             },
             type: 'element',
@@ -327,9 +360,16 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
 
         const aggregatedColumns: TableColumn<SubmissionRow>[] = [
             submissionColumn,
+        ]
+
+        if (isChallengeCompleted) {
+            aggregatedColumns.push(submitterColumn)
+        }
+
+        aggregatedColumns.push(
             reviewDateColumn,
             reviewScoreColumn,
-        ]
+        )
 
         for (let index = 0; index < maxReviewCount; index += 1) {
             aggregatedColumns.push({
@@ -363,6 +403,7 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
         downloadSubmission,
         isSubmissionDownloadRestricted,
         isDownloading,
+        isChallengeCompleted,
         maxReviewCount,
         restrictionMessage,
     ])

@@ -11,11 +11,13 @@ export enum ProjectType {
   QUALITY_ASSURANCE = 'QUALITY_ASSURANCE',
 }
 
-export const ProjectTypeLabels: Record<ProjectType, string> = {
+export const ProjectTypeLabels: Record<ProjectType | 'DEVELOP' | 'QA', string> = {
     [ProjectType.DEVELOPMENT]: 'Development',
     [ProjectType.DATA_SCIENCE]: 'Data Science',
     [ProjectType.DESIGN]: 'Design',
     [ProjectType.QUALITY_ASSURANCE]: 'Quality Assurance',
+    DEVELOP: 'Development',
+    QA: 'Quality Assurance',
 }
 
 export const categoryByProjectType = {
@@ -105,7 +107,7 @@ export interface Scorecard {
     id?: string
     name: string
     type: ScorecardType
-    challengeTrack: ProjectType
+    challengeTrack: ProjectType | 'DEVELOP' | 'QA'
     status: ScorecardStatus
     index?: number
     minScore: number

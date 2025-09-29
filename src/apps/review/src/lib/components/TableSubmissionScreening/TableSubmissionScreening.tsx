@@ -38,6 +38,8 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
     const {
         isSubmissionDownloadRestricted,
         restrictionMessage,
+        isSubmissionDownloadRestrictedForMember,
+        getRestrictionMessageForMember,
     }: UseSubmissionDownloadAccessResult = useSubmissionDownloadAccess()
     const hasScreeningPhase = useMemo(
         () => challengeInfo?.phases?.some(
@@ -52,15 +54,20 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
                 label: 'Submission ID',
                 propertyName: 'submissionId',
                 renderer: (data: Screening) => {
+                    const isRestrictedForRow
+                        = isSubmissionDownloadRestrictedForMember(data.memberId)
+                    const tooltipMessage = getRestrictionMessageForMember(
+                        data.memberId,
+                    ) ?? restrictionMessage
                     const isButtonDisabled = Boolean(
                         props.isDownloading[data.submissionId]
-                        || isSubmissionDownloadRestricted,
+                        || isRestrictedForRow,
                     )
 
                     const downloadButton = (
                         <button
                             onClick={function onClick() {
-                                if (isSubmissionDownloadRestricted) {
+                                if (isRestrictedForRow) {
                                     return
                                 }
 
@@ -90,8 +97,8 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
                         })
                     }
 
-                    const renderedDownloadButton = isSubmissionDownloadRestricted ? (
-                        <Tooltip content={restrictionMessage} triggerOn='click-hover'>
+                    const renderedDownloadButton = isRestrictedForRow ? (
+                        <Tooltip content={tooltipMessage} triggerOn='click-hover'>
                             <span className={styles.tooltipTrigger}>
                                 {downloadButton}
                             </span>
@@ -214,6 +221,8 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
             hasScreeningPhase,
             isSubmissionDownloadRestricted,
             restrictionMessage,
+            isSubmissionDownloadRestrictedForMember,
+            getRestrictionMessageForMember,
         ],
     )
 

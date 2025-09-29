@@ -10,11 +10,15 @@ import { ChallengeDetailContext, ReviewAppContext } from '../contexts'
 
 export const SUBMISSION_DOWNLOAD_RESTRICTION_MESSAGE
     = 'Submissions are available once the submission phase closes.'
+export const SUBMISSION_DOWNLOAD_SUBMITTER_RESTRICTION_MESSAGE
+    = 'You can download only your own submissions until the challenge completes.'
 
 export interface UseSubmissionDownloadAccessResult {
     isSubmissionPhaseOpen: boolean
     isSubmissionDownloadRestricted: boolean
     restrictionMessage: string
+    isSubmissionDownloadRestrictedForMember: (memberId?: string) => boolean
+    getRestrictionMessageForMember: (memberId?: string) => string | undefined
 }
 
 function normaliseRole(role: string | undefined): string | undefined {
@@ -35,6 +39,9 @@ export function useSubmissionDownloadAccess(): UseSubmissionDownloadAccessResult
         [myRoles],
     )
 
+    const challengeStatus = challengeInfo?.status?.toLowerCase()
+    const isChallengeCompleted = challengeStatus === 'completed'
+
     const isSubmissionPhaseOpen = useMemo(
         () => challengeInfo?.phases?.some(
             phase => phase.name?.toLowerCase() === 'submission' && phase.isOpen,
@@ -49,6 +56,11 @@ export function useSubmissionDownloadAccess(): UseSubmissionDownloadAccessResult
 
     const hasCopilotRole = useMemo(
         () => normalisedRoles.some(role => role.includes('copilot')),
+        [normalisedRoles],
+    )
+
+    const hasSubmitterRole = useMemo(
+        () => normalisedRoles.some(role => role.includes('submitter')),
         [normalisedRoles],
     )
 
@@ -67,8 +79,76 @@ export function useSubmissionDownloadAccess(): UseSubmissionDownloadAccessResult
         [isSubmissionPhaseOpen, hasReviewerRole, hasCopilotRole, isAdmin],
     )
 
+    const shouldRestrictSubmitterToOwnSubmission = useMemo(
+        () => hasSubmitterRole
+            && !(hasCopilotRole || isAdmin)
+            && !isChallengeCompleted,
+        [hasSubmitterRole, hasCopilotRole, isAdmin, isChallengeCompleted],
+    )
+
+    const currentMemberId = useMemo(
+        () => {
+            const userId = loginUserInfo?.userId
+
+            if (typeof userId === 'string' || typeof userId === 'number') {
+                return String(userId)
+            }
+
+            return undefined
+        },
+        [loginUserInfo?.userId],
+    )
+
+    const isSubmissionDownloadRestrictedForMember = useMemo(
+        () => (memberId?: string) => {
+            if (isSubmissionDownloadRestricted) {
+                return true
+            }
+
+            if (!shouldRestrictSubmitterToOwnSubmission) {
+                return false
+            }
+
+            if (!memberId) {
+                return true
+            }
+
+            return String(memberId) !== currentMemberId
+        },
+        [
+            isSubmissionDownloadRestricted,
+            shouldRestrictSubmitterToOwnSubmission,
+            currentMemberId,
+        ],
+    )
+
+    const getRestrictionMessageForMember = useMemo(
+        () => (memberId?: string) => {
+            if (isSubmissionDownloadRestricted) {
+                return SUBMISSION_DOWNLOAD_RESTRICTION_MESSAGE
+            }
+
+            if (!shouldRestrictSubmitterToOwnSubmission) {
+                return undefined
+            }
+
+            if (!memberId || String(memberId) !== currentMemberId) {
+                return SUBMISSION_DOWNLOAD_SUBMITTER_RESTRICTION_MESSAGE
+            }
+
+            return undefined
+        },
+        [
+            isSubmissionDownloadRestricted,
+            shouldRestrictSubmitterToOwnSubmission,
+            currentMemberId,
+        ],
+    )
+
     return {
+        getRestrictionMessageForMember,
         isSubmissionDownloadRestricted,
+        isSubmissionDownloadRestrictedForMember,
         isSubmissionPhaseOpen,
         restrictionMessage: SUBMISSION_DOWNLOAD_RESTRICTION_MESSAGE,
     }

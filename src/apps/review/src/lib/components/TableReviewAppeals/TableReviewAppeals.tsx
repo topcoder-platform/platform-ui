@@ -285,7 +285,13 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                 }
 
                 const finalScore = reviewDetail?.finalScore
-                if (typeof finalScore === 'number' && Number.isFinite(finalScore)) {
+                const canShowFinalScore = (
+                    reviewStatus === 'COMPLETED'
+                    && typeof finalScore === 'number'
+                    && Number.isFinite(finalScore)
+                )
+
+                if (canShowFinalScore) {
                     const formattedScore = finalScore.toFixed(2)
                     return (
                         <Link
@@ -311,13 +317,30 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                 }
 
                 if (includes(['PENDING', 'IN_PROGRESS'], reviewStatus)) {
+                    const canContinueReview = (
+                        actionChallengeRole === REVIEWER
+                        && isReviewPhase(challengeInfo)
+                    )
+
+                    if (canContinueReview) {
+                        return (
+                            <Link
+                                to={`./../scorecard-details/${data.id}/review/${resourceId}`}
+                                className={styles.textBlue}
+                            >
+                                Continue Review
+                            </Link>
+                        )
+                    }
+
+                    const statusLabel = reviewStatus === 'PENDING'
+                        ? 'Pending Review'
+                        : 'Review In Progress'
+
                     return (
-                        <Link
-                            to={`./../scorecard-details/${data.id}/review/${resourceId}`}
-                            className={styles.textBlue}
-                        >
-                            Continue Review
-                        </Link>
+                        <span className={styles.notReviewed}>
+                            {statusLabel}
+                        </span>
                     )
                 }
 

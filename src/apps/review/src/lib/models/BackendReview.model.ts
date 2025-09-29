@@ -21,11 +21,13 @@ export interface BackendReview {
     createdAt: string
     createdAtDate?: Date // this field is calculated at frontend
     createdBy: string
-    updatedAt: string
-    updatedBy: string
     reviewerHandle?: string | null
     reviewerMaxRating?: number | null
+    submitterHandle?: string | null
+    submitterMaxRating?: number | null
     reviewItems?: BackendReviewItem[]
+    updatedAt: string
+    updatedBy: string
 }
 
 export function createEmptyBackendReview(): BackendReview {
@@ -45,6 +47,8 @@ export function createEmptyBackendReview(): BackendReview {
         scorecardId: '',
         status: '',
         submissionId: '',
+        submitterHandle: '',
+        submitterMaxRating: undefined,
         typeId: '',
         updatedAt: '',
         updatedBy: '',

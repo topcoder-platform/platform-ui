@@ -4,38 +4,33 @@ import { useFormContext } from 'react-hook-form'
 import classNames from 'classnames'
 
 import {
-    categoryByProjectType,
-    ProjectType,
     ProjectTypeLabels,
-    scorecardCategories,
     ScorecardStatusLabels,
     ScorecardTypeLabels,
 } from '../../../../lib/models'
+import {
+    useFetchChallengeTracks,
+    useFetchChallengeTypes,
+} from '../../../../lib/hooks'
+import type {
+    useFetchChallengeTracksProps,
+    useFetchChallengeTypesProps,
+} from '../../../../lib/hooks'
 import styles from '../EditScorecardPage.module.scss'
 
 import BasicSelect from './BasicSelect'
 import InputWrapper from './InputWrapper'
 
-const projectTypeOptions = Object.entries(ProjectTypeLabels)
-    .map(([value, label]) => ({ label, value }))
 const statusOptions = Object.entries(ScorecardStatusLabels)
     .map(([value, label]) => ({ label, value }))
 const typeOptions = Object.entries(ScorecardTypeLabels)
     .map(([value, label]) => ({ label, value }))
-const categoryOptions = (projectType?: ProjectType): { label: string; value: string }[] => {
-    let categories = scorecardCategories
-    if (projectType) {
-        categories = categoryByProjectType[projectType]
-    }
-
-    return categories.map(key => ({ label: key, value: key }))
-}
 
 export const scorecardInfoSchema = {
     challengeTrack: yup.string()
-        .required('Project Type is required'),
+        .required('Challenge Track is required'),
     challengeType: yup.string()
-        .required('Category is required'),
+        .required('Challenge Type is required'),
     maxScore: yup
         .number()
         .typeError('Max score must be a number')
@@ -69,18 +64,120 @@ export const scorecardInfoSchema = {
         .required('Version is required'),
 }
 
+const toChallengeTrackLabel = (value: string): string => (
+    ProjectTypeLabels[value as keyof typeof ProjectTypeLabels]
+    ?? value
+)
+
+const legacyChallengeTrackMap: Record<string, string> = {
+    DEVELOPMENT: 'DEVELOP',
+    QUALITY_ASSURANCE: 'QA',
+}
+
+const normalizeChallengeTrackValue = (
+    value: string,
+    tracks: useFetchChallengeTracksProps['challengeTracks'],
+): string | undefined => {
+    if (!value) return undefined
+
+    const directMatch = tracks.find(track => track.track === value && track.isActive)
+    if (directMatch) {
+        return directMatch.track
+    }
+
+    const mappedValue = legacyChallengeTrackMap[value]
+    if (mappedValue) {
+        const mappedMatch = tracks.find(track => track.track === mappedValue && track.isActive)
+        if (mappedMatch) {
+            return mappedMatch.track
+        }
+    }
+
+    const normalizedLabel = toChallengeTrackLabel(value)
+    const nameMatch = tracks.find(track => track.name === normalizedLabel && track.isActive)
+    if (nameMatch) {
+        return nameMatch.track
+    }
+
+    const uppercaseValue = value
+        .replace(/\s+/g, '_')
+        .toUpperCase()
+    const fallbackMatch = tracks.find(track => (
+        track.name
+            .replace(/\s+/g, '_')
+            .toUpperCase() === uppercaseValue
+        && track.isActive
+    ))
+
+    return fallbackMatch?.track
+}
+
 const ScorecardInfoForm: FC = () => {
     const form = useFormContext()
-    const challengeTrack = form.watch('challengeTrack')
-    const categories = useMemo(() => categoryOptions(challengeTrack), [challengeTrack])
+    const { challengeTracks }: useFetchChallengeTracksProps = useFetchChallengeTracks()
+    const { challengeTypes }: useFetchChallengeTypesProps = useFetchChallengeTypes()
+
+    const challengeTrackOptions = useMemo(() => (
+        challengeTracks
+            .filter(track => track.isActive)
+            .map(track => ({
+                label: track.name,
+                value: track.track,
+            }))
+    ), [challengeTracks])
+
+    const challengeTypeOptions = useMemo(() => (
+        challengeTypes
+            .filter(type => type.isActive)
+            .map(type => ({
+                label: type.name,
+                value: type.name,
+            }))
+    ), [challengeTypes])
 
     useEffect(() => {
-        const currentChallengeType = form.getValues('challengeType')
-        const partOfCategories = categories.find(item => item.value === currentChallengeType)
-        if ((!partOfCategories || !currentChallengeType || currentChallengeType === '') && categories.length > 0) {
-            form.setValue('challengeType', categories[0].value, { shouldDirty: true })
+        if (!challengeTrackOptions.length) {
+            return
         }
-    }, [challengeTrack, categories, form])
+
+        const currentValue: string = form.getValues('challengeTrack') as string
+        const isCurrentValid: boolean = !!currentValue
+            && challengeTrackOptions.some(option => option.value === currentValue)
+
+        if (currentValue && !isCurrentValid) {
+            const normalizedValue = normalizeChallengeTrackValue(currentValue, challengeTracks)
+            if (normalizedValue) {
+                form.setValue('challengeTrack', normalizedValue, {
+                    shouldDirty: false,
+                    shouldValidate: true,
+                })
+                return
+            }
+        }
+
+        if (!isCurrentValid) {
+            form.setValue('challengeTrack', challengeTrackOptions[0].value, {
+                shouldDirty: false,
+                shouldValidate: true,
+            })
+        }
+    }, [challengeTrackOptions, challengeTracks, form])
+
+    useEffect(() => {
+        if (!challengeTypeOptions.length) {
+            return
+        }
+
+        const currentChallengeType: string = form.getValues('challengeType') as string
+        const partOfCategories: { label: string; value: string } | undefined
+            = challengeTypeOptions.find(item => item.value === currentChallengeType)
+        if ((!partOfCategories || !currentChallengeType) && challengeTypeOptions.length > 0) {
+            form.setValue('challengeType', challengeTypeOptions[0].value, {
+                shouldDirty: false,
+                shouldValidate: true,
+            })
+        }
+    }, [challengeTypeOptions, form])
 
     return (
         <div className={classNames(styles.grayWrapper, styles.scorecardInfo)}>
@@ -92,11 +189,11 @@ const ScorecardInfoForm: FC = () => {
                 <input type='text' />
             </InputWrapper>
             <InputWrapper
-                label='Category'
+                label='Challenge Type'
                 name='challengeType'
                 className={styles.mdWidthInput}
             >
-                <BasicSelect options={categories} />
+                <BasicSelect options={challengeTypeOptions} />
             </InputWrapper>
             <InputWrapper
                 label='Version'
@@ -113,7 +210,7 @@ const ScorecardInfoForm: FC = () => {
                 <BasicSelect options={statusOptions} />
             </InputWrapper>
             <InputWrapper
-                label='Type'
+                label='Scorecard Type'
                 name='type'
                 className={styles.mdWidthInput}
             >
@@ -143,11 +240,11 @@ const ScorecardInfoForm: FC = () => {
                 </InputWrapper>
             </div>
             <InputWrapper
-                label='Project Type'
+                label='Challenge Track'
                 name='challengeTrack'
                 className={styles.mdWidthInput}
             >
-                <BasicSelect options={projectTypeOptions} />
+                <BasicSelect options={challengeTrackOptions} />
             </InputWrapper>
         </div>
     )

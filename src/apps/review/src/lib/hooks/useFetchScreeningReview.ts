@@ -4,13 +4,15 @@ import useSWR, { SWRResponse } from 'swr'
 
 import { handleError } from '~/libs/shared'
 
-import { REVIEWER } from '../../config/index.config'
+import { REVIEWER, SUBMITTER } from '../../config/index.config'
 import { ChallengeDetailContext, ReviewAppContext } from '../contexts'
 import {
     BackendResource,
     BackendReview,
     BackendSubmission,
     ChallengeDetailContextModel,
+    convertBackendReviewToReviewInfo,
+    convertBackendReviewToReviewResult,
     convertBackendSubmissionToScreening,
     convertBackendSubmissionToSubmissionInfo,
     createEmptyBackendReview,
@@ -37,6 +39,7 @@ export interface useFetchScreeningReviewProps {
     screening: Screening[]
     // review data
     review: SubmissionInfo[]
+    submitterReviews: SubmissionInfo[]
     isLoading: boolean
     reviewProgress: number
 }
@@ -169,6 +172,36 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
     )
 
     // get review data from challenge submissions
+    const submitterReviews = useMemo(() => {
+        if (actionChallengeRole !== SUBMITTER) {
+            return []
+        }
+
+        if (!challengeReviews) {
+            return []
+        }
+
+        const memberId = loginUserInfo?.userId
+            ? `${loginUserInfo.userId}`
+            : ''
+        const userInfo = memberId
+            ? resourceMemberIdMapping[memberId]
+            : undefined
+
+        return challengeReviews.map(reviewItem => ({
+            id: reviewItem.submissionId,
+            memberId,
+            review: convertBackendReviewToReviewInfo(reviewItem),
+            reviews: [convertBackendReviewToReviewResult(reviewItem)],
+            userInfo,
+        }))
+    }, [
+        actionChallengeRole,
+        challengeReviews,
+        loginUserInfo?.userId,
+        resourceMemberIdMapping,
+    ])
+
     const review = useMemo(() => {
         const validReviews: BackendSubmission[] = []
         forEach(challengeSubmissions, challengeSubmission => {
@@ -265,11 +298,17 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
         cancelLoadResourceAppeal()
     }, [cancelLoadResourceAppeal])
 
+    const shouldAwaitSubmitterReviews = (
+        actionChallengeRole === SUBMITTER
+        && challengeReviews === undefined
+    )
+
     return {
-        isLoading,
+        isLoading: isLoading || shouldAwaitSubmitterReviews,
         mappingReviewAppeal,
         review,
         reviewProgress,
         screening,
+        submitterReviews,
     }
 }

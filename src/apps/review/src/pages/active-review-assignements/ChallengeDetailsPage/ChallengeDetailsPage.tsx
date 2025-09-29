@@ -56,6 +56,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         reviewProgress,
         screening,
         mappingReviewAppeal,
+        submitterReviews,
     }: useFetchScreeningReviewProps = useFetchScreeningReview()
 
     const [tabItems, setTabItems] = useState<SelectOption[]>([])
@@ -188,6 +189,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                             isLoadingSubmission={isLoadingSubmission}
                             screening={screening}
                             review={review}
+                            submitterReviews={submitterReviews}
                             mappingReviewAppeal={mappingReviewAppeal}
                             isActiveChallenge={!isPastReviewDetail}
                         />

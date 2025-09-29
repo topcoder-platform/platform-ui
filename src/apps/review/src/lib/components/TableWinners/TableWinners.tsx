@@ -1,9 +1,9 @@
 /**
  * Table Winners.
  */
-import { FC, useContext, useMemo } from 'react'
-import { Link } from 'react-router-dom'
-import _, { includes } from 'lodash'
+import { FC, useMemo } from 'react'
+import { Link, useLocation } from 'react-router-dom'
+import _ from 'lodash'
 import classNames from 'classnames'
 
 import { MobileTableColumn } from '~/apps/admin/src/lib/models/MobileTableColumn.model'
@@ -12,11 +12,10 @@ import { TableMobile } from '~/apps/admin/src/lib/components/common/TableMobile'
 import { Table, TableColumn } from '~/libs/ui'
 import { IsRemovingType } from '~/apps/admin/src/lib/models'
 
-import { ChallengeDetailContextModel, ProjectResult } from '../../models'
+import { ProjectResult } from '../../models'
 import { TableWrapper } from '../TableWrapper'
-import { ORDINAL_SUFFIX, WITHOUT_APPEAL } from '../../../config/index.config'
+import { ORDINAL_SUFFIX } from '../../../config/index.config'
 import { getHandleUrl } from '../../utils'
-import { ChallengeDetailContext } from '../../contexts'
 
 import styles from './TableWinners.module.scss'
 
@@ -34,10 +33,14 @@ export const TableWinners: FC<Props> = (props: Props) => {
     const downloadSubmission = props.downloadSubmission
     const { width: screenWidth }: WindowSize = useWindowSize()
     const isTablet = useMemo(() => screenWidth <= 744, [screenWidth])
-    // get challenge info from challenge detail context
-    const {
-        challengeInfo,
-    }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
+    const location = useLocation()
+    const reviewTabUrl = useMemo(() => {
+        const searchParams = new URLSearchParams(location.search)
+        searchParams.set('tab', 'review-appeals')
+        const queryString = searchParams.toString()
+
+        return `${location.pathname}${queryString ? `?${queryString}` : ''}`
+    }, [location.pathname, location.search])
     const firstSubmission: ProjectResult | undefined = useMemo(
         () => datas[0],
         [datas],
@@ -99,15 +102,17 @@ export const TableWinners: FC<Props> = (props: Props) => {
                 type: 'element',
             },
             {
-                label: 'Review Score',
+                label: 'Final Review Score',
                 renderer: (data: ProjectResult) => (
-                    <span>{data.finalScore}</span>
+                    <Link to={reviewTabUrl} className={styles.textBlue}>
+                        {data.finalScore}
+                    </Link>
                 ),
                 type: 'element',
             },
             ...(firstSubmission?.reviews ?? [])
-                .map((review, index) => {
-                    const initialColumns = [
+                .map((_unusedReview, index) => (
+                    [
                         {
                             label: 'Review Date',
                             renderer: (data: ProjectResult) => (
@@ -117,70 +122,15 @@ export const TableWinners: FC<Props> = (props: Props) => {
                             ),
                             type: 'element',
                         },
-                        {
-                            label: 'Score',
-                            renderer: (data: ProjectResult) => (
-                                <Link
-                                    to={`./../scorecard-details/${data.submissionId}/review/${review.resourceId}`}
-                                    className={styles.textBlue}
-                                >
-                                    {data.reviews[index]?.score}
-                                </Link>
-                            ),
-                            type: 'element',
-                        },
-                    ]
-                    if (
-                        includes(WITHOUT_APPEAL, challengeInfo?.type)
-                        || includes(WITHOUT_APPEAL, challengeInfo?.track)
-                    ) {
-                        return initialColumns as TableColumn<ProjectResult>[]
-                    }
-
-                    return (
-                        [
-                            ...initialColumns,
-                            {
-                                className: styles.tableCellNoWrap,
-                                label: 'Appeals',
-                                renderer: (data: ProjectResult) => (
-                                    <>
-                                        [
-                                        <Link
-                                            className={classNames(styles.appealsLink, 'last-element')}
-                                            to={
-                                                `./../scorecard-details/${data.submissionId}`
-                                                + `/review/${review.resourceId}`
-                                            }
-                                        >
-                                            <span className={styles.textBlue}>
-                                                0
-                                            </span>
-                                            {' '}
-                                            /
-                                            {' '}
-                                            <span className={styles.textBlue}>
-                                                {
-                                                    data.reviews[index]?.appeals?.length
-                                                }
-                                            </span>
-                                        </Link>
-                                        ]
-                                    </>
-                                ),
-                                type: 'element',
-                            },
-                        ] as TableColumn<ProjectResult>[]
-                    )
-                })
+                    ] as TableColumn<ProjectResult>[]
+                ))
                 .reduce((accumulator, value) => accumulator.concat(value), []),
         ],
         [
             firstSubmission,
-            challengeInfo?.track,
-            challengeInfo?.type,
             downloadSubmission,
             isDownloading,
+            reviewTabUrl,
         ],
     )
 

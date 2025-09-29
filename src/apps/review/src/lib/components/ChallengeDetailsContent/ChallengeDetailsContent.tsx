@@ -25,6 +25,7 @@ interface Props {
     isLoadingSubmission: boolean
     screening: Screening[]
     review: SubmissionInfo[]
+    submitterReviews: SubmissionInfo[]
     mappingReviewAppeal: MappingReviewAppeal // from review id to appeal info
     isActiveChallenge: boolean
 }
@@ -63,6 +64,7 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
                 <TabContentReview
                     selectedTab={props.selectedTab}
                     reviews={props.review}
+                    submitterReviews={props.submitterReviews}
                     isLoadingReview={props.isLoadingSubmission}
                     isDownloading={isDownloadingSubmission}
                     downloadSubmission={downloadSubmission}
