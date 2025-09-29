@@ -216,7 +216,6 @@ const CopilotRequestsPage: FC = () => {
             type: 'text',
         },
         {
-            defaultSortDirection: 'desc',
             isDefaultSort: true,
             label: 'Created At',
             propertyName: 'createdAt',
