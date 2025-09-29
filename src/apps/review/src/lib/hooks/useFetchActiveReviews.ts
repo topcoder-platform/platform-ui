@@ -41,6 +41,24 @@ export interface useFetchActiveReviewsProps {
     pagination: ActiveReviewsPagination
 }
 
+const normalizeReviewProgressValue = (value: number): number => {
+    if (!Number.isFinite(value)) {
+        return 0
+    }
+
+    const percentage = value <= 1 ? value * 100 : value
+
+    if (percentage < 0) {
+        return 0
+    }
+
+    if (percentage > 100) {
+        return 100
+    }
+
+    return percentage
+}
+
 export const transformAssignments = (
     assignments: BackendMyReviewAssignment[],
     startIndex = 1,
@@ -92,14 +110,15 @@ export const transformAssignments = (
             )
             : undefined
 
-        const reviewProgressValues = items
+        const normalizedReviewProgressValues = items
             .map(item => item.reviewProgress)
             .filter((value): value is number => typeof value === 'number')
+            .map(normalizeReviewProgressValue)
 
-        const aggregatedReviewProgress = reviewProgressValues.length
+        const aggregatedReviewProgress = normalizedReviewProgressValues.length
             ? Math.round(
-                reviewProgressValues.reduce((total, value) => total + value, 0)
-                / reviewProgressValues.length,
+                normalizedReviewProgressValues.reduce((total, value) => total + value, 0)
+                / normalizedReviewProgressValues.length,
             )
             : undefined
 

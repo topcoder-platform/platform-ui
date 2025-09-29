@@ -1,7 +1,13 @@
 /**
  * Table Winners.
  */
-import { FC, MouseEvent, useContext, useMemo } from 'react'
+import {
+    FC,
+    MouseEvent,
+    useCallback,
+    useContext,
+    useMemo,
+} from 'react'
 import { Link } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { includes, noop } from 'lodash'
@@ -20,8 +26,15 @@ import {
     AggregatedReviewDetail,
     AggregatedSubmissionReviews,
     aggregateSubmissionReviews,
+    isAppealsPhase,
+    isAppealsResponsePhase,
 } from '../../utils'
-import { NO_RESOURCE_ID, WITHOUT_APPEAL } from '../../../config/index.config'
+import {
+    FIRST2FINISH,
+    NO_RESOURCE_ID,
+    TRACK_CHALLENGE,
+    WITHOUT_APPEAL,
+} from '../../../config/index.config'
 import { ChallengeDetailContext } from '../../contexts'
 import { useSubmissionDownloadAccess } from '../../hooks'
 import type { UseSubmissionDownloadAccessResult } from '../../hooks/useSubmissionDownloadAccess'
@@ -73,6 +86,29 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
         [challengeTrack, challengeType],
     )
 
+    const isFirst2FinishChallenge = useMemo(
+        () => [challengeType, challengeTrack]
+            .some(type => type === FIRST2FINISH),
+        [challengeTrack, challengeType],
+    )
+
+    const isStandardChallenge = useMemo(
+        () => [challengeType, challengeTrack]
+            .some(type => type === TRACK_CHALLENGE),
+        [challengeTrack, challengeType],
+    )
+
+    const isAppealsWindowOpen = useMemo(
+        () => isAppealsPhase(challengeInfo)
+            || isAppealsResponsePhase(challengeInfo),
+        [challengeInfo],
+    )
+
+    const shouldShowAppealsColumn = useMemo(
+        () => allowsAppeals && (isAppealsWindowOpen || isChallengeCompleted),
+        [allowsAppeals, isAppealsWindowOpen, isChallengeCompleted],
+    )
+
     const aggregatedRows = useMemo(() => aggregateSubmissionReviews({
         mappingReviewAppeal,
         reviewers,
@@ -93,6 +129,43 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
             0,
         ),
         [aggregatedRows],
+    )
+
+    const canDisplayScores = useCallback(
+        (submission: SubmissionRow): boolean => {
+            if (isChallengeCompleted) {
+                return true
+            }
+
+            if (isFirst2FinishChallenge) {
+                const reviews = submission.aggregated?.reviews ?? []
+                if (!reviews.length) {
+                    return false
+                }
+
+                const allReviewsCompleted = reviews.every(review => {
+                    const status = (review.reviewInfo?.status ?? '').toUpperCase()
+                    const committed = review.reviewInfo?.committed ?? false
+
+                    return committed
+                        || includes(['COMPLETED', 'SUBMITTED'], status)
+                })
+
+                return allReviewsCompleted
+            }
+
+            if (isStandardChallenge) {
+                return isAppealsWindowOpen
+            }
+
+            return true
+        },
+        [
+            isAppealsWindowOpen,
+            isChallengeCompleted,
+            isFirst2FinishChallenge,
+            isStandardChallenge,
+        ],
     )
 
     const columns = useMemo<TableColumn<SubmissionRow>[]>(() => {
@@ -222,6 +295,14 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
             columnId: 'review-score',
             label: 'Review Score',
             renderer: (data: SubmissionRow) => {
+                if (!canDisplayScores(data)) {
+                    return (
+                        <span className={styles.notReviewed}>
+                            --
+                        </span>
+                    )
+                }
+
                 const scoreDisplay = data.aggregated?.averageFinalScoreDisplay
                 if (!scoreDisplay) {
                     return (
@@ -287,6 +368,14 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
             const resourceId = reviewDetail?.resourceId || NO_RESOURCE_ID
 
             if (!reviewInfo || !reviewInfo.id) {
+                return (
+                    <span className={styles.notReviewed}>
+                        --
+                    </span>
+                )
+            }
+
+            if (!canDisplayScores(data)) {
                 return (
                     <span className={styles.notReviewed}>
                         --
@@ -386,7 +475,7 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
                 type: 'element',
             })
 
-            if (allowsAppeals) {
+            if (shouldShowAppealsColumn) {
                 aggregatedColumns.push({
                     className: styles.tableCellNoWrap,
                     columnId: `appeals-${index}`,
@@ -400,11 +489,13 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
         return aggregatedColumns
     }, [
         allowsAppeals,
+        canDisplayScores,
         downloadSubmission,
         isSubmissionDownloadRestricted,
         isDownloading,
         isChallengeCompleted,
         maxReviewCount,
+        shouldShowAppealsColumn,
         restrictionMessage,
     ])
 
