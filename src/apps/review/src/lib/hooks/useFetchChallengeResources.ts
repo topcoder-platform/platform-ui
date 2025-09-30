@@ -12,6 +12,7 @@ import { ReviewAppContext } from '../contexts'
 import { fetchResources } from '../services/resources.service'
 
 export interface useFetchChallengeResourcesProps {
+    resources: BackendResource[]
     registrants: BackendResource[]
     reviewers: BackendResource[]
     myResources: BackendResource[]
@@ -55,25 +56,34 @@ export function useFetchChallengeResources(
         },
     )
 
+    const resourcesWithRoleName = useMemo(
+        () => (resources ?? []).map(resource => ({
+            ...resource,
+            roleName: resourceRoleMapping?.[resource.roleId]?.name,
+        })),
+        [resources, resourceRoleMapping],
+    )
+
     // get mapping of member id to resource
     const resourceMemberIdMapping = useMemo(() => reduce(
-        resources,
+        resourcesWithRoleName,
         (mappingResult, resource: BackendResource) => ({
             ...mappingResult,
             [resource.memberId]: resource,
         }),
         {},
-    ), [resources])
+    ), [resourcesWithRoleName])
 
     // Get my resources for the current challenge
     const myResources = useMemo(
-        () => (resources ?? [])
+        () => (resourcesWithRoleName ?? [])
             .filter(resource => resource.memberId === toString(loginUserInfo?.userId))
             .map(myRoleInfo => ({
                 ...myRoleInfo,
-                roleName: resourceRoleMapping?.[myRoleInfo.roleId]?.name,
+                roleName: myRoleInfo.roleName
+                    ?? resourceRoleMapping?.[myRoleInfo.roleId]?.name,
             })),
-        [resources, loginUserInfo, resourceRoleMapping],
+        [resourcesWithRoleName, loginUserInfo, resourceRoleMapping],
     )
 
     // Get list of role name
@@ -97,8 +107,8 @@ export function useFetchChallengeResources(
             return []
         }
 
-        return filter(resources, { roleId: resourceRoleSubmitter.id })
-    }, [resources, resourceRoleSubmitter])
+        return filter(resourcesWithRoleName, { roleId: resourceRoleSubmitter.id })
+    }, [resourcesWithRoleName, resourceRoleSubmitter])
 
     // Get reviewers from resource list
     const reviewers = useMemo(() => {
@@ -106,8 +116,8 @@ export function useFetchChallengeResources(
             return []
         }
 
-        return filter(resources, { roleId: resourceRoleReviewer.id })
-    }, [resources, resourceRoleReviewer])
+        return filter(resourcesWithRoleName, { roleId: resourceRoleReviewer.id })
+    }, [resourcesWithRoleName, resourceRoleReviewer])
 
     return {
         isLoading,
@@ -115,6 +125,7 @@ export function useFetchChallengeResources(
         myRoles,
         registrants,
         resourceMemberIdMapping,
+        resources: resourcesWithRoleName,
         reviewers,
     }
 }

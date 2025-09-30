@@ -442,7 +442,6 @@ export function useFetchSubmissionReviews(): useFetchSubmissionReviewsProps {
             const existingAppeal = mappingAppealsRef.current[commentItem.id]
             const updateInfo = {
                 content,
-                resourceId,
                 reviewItemCommentId: commentItem.id,
             }
             const request = existingAppeal
@@ -467,7 +466,7 @@ export function useFetchSubmissionReviews(): useFetchSubmissionReviewsProps {
                     handleError(e)
                 })
         },
-        [resourceId],
+        [],
     )
 
     /**

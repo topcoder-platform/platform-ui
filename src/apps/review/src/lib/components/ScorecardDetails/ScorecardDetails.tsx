@@ -49,6 +49,7 @@ import styles from './ScorecardDetails.module.scss'
 interface Props {
     className?: string
     isEdit: boolean
+    isManagerEdit?: boolean
     onCancelEdit: () => void
     setIsChanged: Dispatch<SetStateAction<boolean>>
     scorecardInfo?: ScorecardInfo
@@ -93,6 +94,7 @@ interface Props {
 export const ScorecardDetails: FC<Props> = (props: Props) => {
     const className = props.className
     const isEdit = props.isEdit
+    const isManagerEdit = props.isManagerEdit ?? false
     const onCancelEdit = props.onCancelEdit
     const setIsChanged = props.setIsChanged
     const scorecardInfo = props.scorecardInfo
@@ -522,6 +524,9 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
                                                                     }
                                                                     addManagerComment={
                                                                         addManagerComment
+                                                                    }
+                                                                    isManagerEdit={
+                                                                        isManagerEdit
                                                                     }
                                                                 />
                                                             )

@@ -53,13 +53,21 @@ const useRole = (): useRoleProps => {
             return ''
         }
 
-        const myRole = myRoles.join(', ')
+        const normalizedRoles = myRoles.map(role => role.toLowerCase())
+        const matchedRole = ['Submitter', 'Reviewer', 'Copilot', 'Admin'].find(
+            item => normalizedRoles.some(role => role.includes(item.toLowerCase())),
+        ) as ChallengeRole | undefined
 
-        return (['Submitter', 'Reviewer', 'Copilot', 'Admin'].find(
-            item => myRole.toLowerCase()
-                .indexOf(item.toLowerCase()) >= 0,
-        ) ?? '') as ChallengeRole
-    }, [challengeId, myRoles])
+        if (matchedRole) {
+            return matchedRole
+        }
+
+        if (isTopcoderAdmin) {
+            return 'Admin'
+        }
+
+        return ''
+    }, [challengeId, isTopcoderAdmin, myRoles])
 
     return {
         actionChallengeRole,

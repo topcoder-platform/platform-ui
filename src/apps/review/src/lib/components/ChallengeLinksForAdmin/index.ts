@@ -1,1 +1,1 @@
-export { default as ChallengeLinksForAdmin } from './ChallengeLinksForAdmin'
+export { ChallengeLinksForAdmin } from './ChallengeLinksForAdmin'

@@ -5,12 +5,12 @@ import { BackendAppealResponse } from './BackendAppealResponse.model'
  * Backend model for appeal
  */
 export interface BackendAppealBase {
-    resourceId: string
     reviewItemCommentId: string
     content: string
 }
 
 export interface BackendAppeal extends BackendAppealBase {
+    resourceId: string
     id: string
     appealResponse?: BackendAppealResponse
     createdAt: string

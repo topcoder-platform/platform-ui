@@ -48,9 +48,13 @@ export const TableRegistration: FC<Props> = (props: Props) => {
 
     const hasCopilotRole = useMemo(
         () => (myRoles ?? [])
-            .some(role => role
-                ?.toLowerCase()
-                .includes('copilot')),
+            .some(role => {
+                const normalizedRole = role
+                    ?.toLowerCase()
+                    .replace(/[^a-z]/g, '')
+
+                return normalizedRole?.includes('copilot') ?? false
+            }),
         [myRoles],
     )
 
@@ -91,6 +95,14 @@ export const TableRegistration: FC<Props> = (props: Props) => {
                     type: 'element',
                 },
                 {
+                    label: 'Role',
+                    propertyName: 'roleName',
+                    renderer: (data: BackendResource) => (
+                        <span>{data.roleName?.trim() || 'Unknown Role'}</span>
+                    ),
+                    type: 'element',
+                },
+                {
                     label: 'Rating',
                     propertyName: 'rating',
                     renderer: (data: BackendResource) => (
@@ -111,7 +123,7 @@ export const TableRegistration: FC<Props> = (props: Props) => {
             ]
 
             if (shouldDisplayEmail) {
-                baseColumns.splice(1, 0, {
+                baseColumns.splice(2, 0, {
                     label: 'Email',
                     propertyName: 'memberEmail',
                     renderer: (data: BackendResource) => {

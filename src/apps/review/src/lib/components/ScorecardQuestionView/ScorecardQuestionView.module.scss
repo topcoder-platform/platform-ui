@@ -186,6 +186,51 @@
     }
 }
 
+.managerSelect {
+    max-width: 144px;
+    width: 144px;
+}
+
+.managerCommentDisplay {
+    background-color: #ECF4FA;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: $sp-2;
+    padding: $sp-4;
+}
+
+.managerCommentTitle {
+    color: var(--FontColor);
+    font-family: "Nunito Sans", sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 20px;
+}
+
+.managerCommentMarkdown {
+    width: 100%;
+}
+
+.managerCommentEditor {
+    background-color: var(--TableColumn);
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: $sp-4;
+    padding: $sp-4;
+}
+
+.managerCommentEditorInput {
+    width: 100%;
+}
+
+.managerCommentActions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $sp-3;
+}
+
 .blockResponseComment {
     display: flex;
     gap: 16px;

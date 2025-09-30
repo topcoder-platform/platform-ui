@@ -22,6 +22,7 @@ export const ChallengeDetailContext: Context<ChallengeDetailContextModel>
         myRoles: [],
         registrants: [],
         resourceMemberIdMapping: {},
+        resources: [],
         reviewers: [],
     })
 
@@ -37,6 +38,7 @@ export const ChallengeDetailContextProvider: FC<PropsWithChildren> = props => {
 
     // fetch challenge resources
     const {
+        resources,
         registrants,
         reviewers,
         myResources,
@@ -55,18 +57,20 @@ export const ChallengeDetailContextProvider: FC<PropsWithChildren> = props => {
             myRoles,
             registrants,
             resourceMemberIdMapping,
+            resources,
             reviewers,
         }),
         [
             challengeId,
             challengeInfo,
             isLoadingChallengeInfo,
+            isLoadingChallengeResources,
             myResources,
             myRoles,
             registrants,
-            reviewers,
-            isLoadingChallengeResources,
             resourceMemberIdMapping,
+            resources,
+            reviewers,
         ],
     )
 

@@ -2,7 +2,7 @@
  * Challenge Details Page.
  */
 import { FC, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { useLocation, useSearchParams } from 'react-router-dom'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { kebabCase } from 'lodash'
 import classNames from 'classnames'
 
@@ -40,6 +40,8 @@ interface Props {
 export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
     const [searchParams, setSearchParams] = useSearchParams()
     const location = useLocation()
+    const navigate = useNavigate()
+    const searchParamsString = useMemo(() => searchParams.toString(), [searchParams])
 
     // get challenge info from challenge detail context
     const {
@@ -48,6 +50,8 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         isLoadingChallengeInfo,
         reviewers,
     }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
+    const hasChallengeInfo = Boolean(challengeInfo)
+    const challengeStatus = challengeInfo?.status?.toUpperCase()
 
     // get challenge screening, review data
     const {
@@ -95,6 +99,37 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         setSelectedTab(tab)
         setSearchParams({ tab: kebabCase(tab) })
     }, [setSearchParams])
+
+    useEffect(() => {
+        if (!hasChallengeInfo || !challengeId || isPastReviewDetail) {
+            return
+        }
+
+        if (challengeStatus !== 'COMPLETED') {
+            return
+        }
+
+        const normalizedRootRoute = rootRoute.startsWith('/')
+            ? rootRoute.slice(1)
+            : rootRoute
+        const pastChallengePathSegments = [
+            normalizedRootRoute,
+            pastReviewAssignmentsRouteId,
+            challengeId,
+            'challenge-details',
+        ].filter(Boolean)
+        const pastChallengePath = `/${pastChallengePathSegments.join('/')}`
+        const targetUrl = `${pastChallengePath}${searchParamsString ? `?${searchParamsString}` : ''}`
+
+        navigate(targetUrl, { replace: true })
+    }, [
+        challengeId,
+        challengeStatus,
+        hasChallengeInfo,
+        isPastReviewDetail,
+        navigate,
+        searchParamsString,
+    ])
 
     useEffect(() => {
         const tab = searchParams.get('tab')

@@ -11,6 +11,7 @@ export interface ChallengeDetailContextModel {
     challengeInfo?: ChallengeInfo
     myResources: BackendResource[]
     myRoles: string[]
+    resources: BackendResource[]
     registrants: BackendResource[]
     reviewers: BackendResource[]
     resourceMemberIdMapping: {

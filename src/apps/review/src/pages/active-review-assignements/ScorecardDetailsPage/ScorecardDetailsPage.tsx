@@ -1,7 +1,14 @@
 /**
  * Scorecard Details Page.
  */
-import { FC, useCallback, useContext, useMemo, useState } from 'react'
+import {
+    FC,
+    useCallback,
+    useContext,
+    useEffect,
+    useMemo,
+    useState,
+} from 'react'
 import { useParams } from 'react-router-dom'
 import classNames from 'classnames'
 
@@ -37,9 +44,14 @@ interface Props {
 export const ScorecardDetailsPage: FC<Props> = (props: Props) => {
     const navigate = useAppNavigate()
     const params = useParams()
-    const { actionChallengeRole }: useRoleProps = useRole()
+    const {
+        actionChallengeRole,
+        myChallengeResources,
+        myChallengeRoles,
+    }: useRoleProps = useRole()
     const [showCloseConfirmation, setShowCloseConfirmation] = useState<boolean>(false)
     const [isChanged, setIsChanged] = useState(false)
+    const [isManagerEdit, setIsManagerEdit] = useState(false)
 
     const {
         challengeInfo,
@@ -60,7 +72,6 @@ export const ScorecardDetailsPage: FC<Props> = (props: Props) => {
         isSavingManagerComment,
         reviewInfo,
         scorecardInfo,
-        scorecardId,
         submissionInfo,
         saveReviewInfo,
     }: useFetchSubmissionReviewsProps = useFetchSubmissionReviews()
@@ -96,6 +107,53 @@ export const ScorecardDetailsPage: FC<Props> = (props: Props) => {
         }
     }, [isChanged, isEdit, navigate])
 
+    const hasChallengeAdminRole = useMemo(
+        () => myChallengeResources.some(
+            resource => resource.roleName?.toLowerCase() === ADMIN.toLowerCase(),
+        ),
+        [myChallengeResources],
+    )
+
+    const hasTopcoderAdminRole = useMemo(
+        () => myChallengeRoles.some(
+            role => role?.toLowerCase()
+                .includes('admin'),
+        ),
+        [myChallengeRoles],
+    )
+
+    const hasChallengeCopilotRole = useMemo(
+        () => myChallengeResources.some(
+            resource => resource.roleName?.toLowerCase() === COPILOT.toLowerCase(),
+        ),
+        [myChallengeResources],
+    )
+
+    const canEditScorecard = useMemo(
+        () => Boolean(
+            reviewInfo?.committed
+            && (hasChallengeAdminRole
+                || hasTopcoderAdminRole
+                || hasChallengeCopilotRole),
+        ),
+        [
+            hasChallengeAdminRole,
+            hasChallengeCopilotRole,
+            hasTopcoderAdminRole,
+            reviewInfo?.committed,
+        ],
+    )
+
+    useEffect(() => {
+        if (!canEditScorecard && isManagerEdit) {
+            setIsManagerEdit(false)
+        }
+    }, [canEditScorecard, isManagerEdit])
+
+    const toggleManagerEdit = useCallback(() => {
+        setIsManagerEdit(prev => !prev)
+    }, [])
+
     return (
         <PageWrapper
             pageTitle={challengeInfo?.name ?? ''}
@@ -112,8 +170,11 @@ export const ScorecardDetailsPage: FC<Props> = (props: Props) => {
                         {actionChallengeRole === ADMIN || actionChallengeRole === COPILOT ? (
                             <ChallengeLinksForAdmin
                                 isSavingReview={isSavingReview}
-                                scorecardId={scorecardId}
                                 saveReviewInfo={saveReviewInfo}
+                                reviewInfo={reviewInfo}
+                                canEditScorecard={canEditScorecard}
+                                isManagerEdit={isManagerEdit}
+                                onToggleManagerEdit={toggleManagerEdit}
                             />
                         ) : (
                             <ChallengeLinks />
@@ -128,6 +189,7 @@ export const ScorecardDetailsPage: FC<Props> = (props: Props) => {
                         scorecardInfo={scorecardInfo}
                         isLoading={isLoading}
                         reviewInfo={reviewInfo}
+                        isManagerEdit={isManagerEdit}
                         isSavingReview={isSavingReview}
                         isSavingAppeal={isSavingAppeal}
                         isSavingAppealResponse={isSavingAppealResponse}
