@@ -10,7 +10,6 @@ import styles from './styles.module.scss'
 interface ApplyOpportunityModalProps {
     onClose: () => void
     copilotOpportunityId: number
-    projectName: string
     onApplied: () => void
 }
 
@@ -66,10 +65,10 @@ const ApplyOpportunityModal: FC<ApplyOpportunityModalProps> = props => {
                                 We truly value your interest and effort. 
                                 Your application will be reviewed promptly.`
                             : `We're excited to see your interest in joining our team as a copilot 
-                            for the "${props.projectName}" project! Before we proceed, we want to 
-                            ensure that you have carefully reviewed the project requirements and 
+                            for this opportunity! Before we proceed, we want to 
+                            ensure that you have carefully reviewed the opportunity requirements and 
                             are committed to meeting them. Please write below the reason(s) 
-                            why you believe you're a good fit for this project 
+                            why you believe you're a good fit for this opportunity 
                             (e.g., previous experience, availability, etc.).`
                     }
                 </div>
