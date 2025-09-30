@@ -154,7 +154,7 @@ $btn-secondary-border-width: $border;
 }
 
 .btn:global(.btn-style-secondary) {
-    --btn-secondary-border-width: $btn-secondary-border-width;
+    --btn-secondary-border-width: #{$btn-secondary-border-width};
 
     box-shadow: inset 0 0 0 var(--btn-secondary-border-width) var(--btn-variant);
     color: var(--btn-variant);
