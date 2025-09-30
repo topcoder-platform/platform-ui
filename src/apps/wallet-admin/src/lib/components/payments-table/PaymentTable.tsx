@@ -44,7 +44,7 @@ const PaymentsTable: React.FC<PaymentTableProps> = (props: PaymentTableProps) =>
                             <th className='body-ultra-small-bold'>STATUS</th>
                             <th className='body-ultra-small-bold'>RELEASE DATE</th>
                             <th className='body-ultra-small-bold'>DATE PAID</th>
-                            <th className='body-ultra-small-bold'> </th>
+                            <th className='body-ultra-small-bold' aria-label='actions'> </th>
                         </tr>
                     </thead>
                     <tbody>
