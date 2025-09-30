@@ -10,7 +10,6 @@ import styles from './styles.module.scss'
 interface ApplyOpportunityModalProps {
     onClose: () => void
     copilotOpportunityId: number
-    projectName: string
     onApplied: () => void
 }
 
