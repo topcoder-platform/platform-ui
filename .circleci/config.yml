@@ -223,6 +223,7 @@ workflows:
                               - CORE-635
                               - feat/system-admin
                               - pm-1365_1
+                              - PM-959_tc-finance-integration
 
             - deployQa:
                   context: org-global
