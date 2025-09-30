@@ -32,7 +32,9 @@ interface TabsNavbarItemProps<T> {
 }
 
 export const TabsNavbarItem: FC<TabsNavbarItemProps<any> & RefAttributes<HTMLElement>>
-    = forwardRef<HTMLElement, TabsNavbarItemProps<any>>(<T, >(props: TabsNavbarItemProps<T>, ref: ForwardedRef<HTMLElement>) => {
+    = forwardRef<HTMLElement, TabsNavbarItemProps<any>>(
+        <T, >(props: TabsNavbarItemProps<T>, ref: ForwardedRef<HTMLElement>
+    ) => {
         const [openDropdown, setOpenDropdown] = useState(false)
         const { width: screenWidth }: WindowSize = useWindowSize()
         const isMobile = useMemo(() => screenWidth < 745, [screenWidth])
