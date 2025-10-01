@@ -303,7 +303,6 @@ const CopilotOpportunityDetails: FC<{}> = () => {
                         <ApplyOpportunityModal
                             copilotOpportunityId={opportunity?.id}
                             onClose={onCloseApplyModal}
-                            projectName={opportunity?.projectName}
                             onApplied={onApplied}
                         />
                     )
