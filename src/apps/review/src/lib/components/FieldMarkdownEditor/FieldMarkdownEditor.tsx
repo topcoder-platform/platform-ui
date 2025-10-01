@@ -662,7 +662,7 @@ export const FieldMarkdownEditor: FC<Props> = (props: Props) => {
                 sizeUnits: ' B, KB, MB',
             },
             imageUploadFunction: file => customUploadImage(file),
-            initialValue: props.initialValue,
+            initialValue: props.initialValue ?? '',
             insertTexts: {
                 file: ['[](', '#url#)'],
                 horizontalRule: ['', '\n\n-----\n\n'],
@@ -835,7 +835,16 @@ export const FieldMarkdownEditor: FC<Props> = (props: Props) => {
     })
 
     useEffect(() => {
-        easyMDE.current?.value(props.initialValue)
+        if (!easyMDE.current) {
+            return
+        }
+
+        const incomingValue = props.initialValue ?? ''
+        const editorValue = easyMDE.current.value()
+
+        if (incomingValue !== editorValue) {
+            easyMDE.current.value(incomingValue)
+        }
     }, [props.initialValue])
 
     return (

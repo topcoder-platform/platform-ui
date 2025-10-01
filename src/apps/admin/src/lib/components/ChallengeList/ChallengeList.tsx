@@ -277,7 +277,7 @@ const ChallengeList: FC<ChallengeListProps> = props => {
                 renderer: (challenge: Challenge) => (
                     // eslint-disable-next-line jsx-a11y/anchor-is-valid
                     <a
-                        href={`${EnvironmentConfig.API.V5}/challenges/${challenge.id}`}
+                        href={`${EnvironmentConfig.API.V6}/challenges/${challenge.id}`}
                         className={styles.challengeTitle}
                         target='_blank'
                         rel='noreferrer'
