@@ -161,7 +161,7 @@ export const fetchMemberTraits: any = () => async (dispatch: any) => {
         const personalizations: PersonalizationInfo[] = personalizationExpValue.map((e: any) => _.omitBy({
             ...e,
             availableForGigs: e.availableForGigs,
-            profileSelfTitle: e.profileSelfTitle,
+            profileSelfTitle: e.personalization[0]?.profileSelfTitle || e.profileSelfTitle,
             referAs: e.referAs,
             shortBio: e.shortBio,
         }, _.isUndefined))
