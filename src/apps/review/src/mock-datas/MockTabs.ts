@@ -8,11 +8,19 @@ import {
     OTHER,
     TEST_SUITE,
 } from '../config/index.config'
+import type { SelectOption } from '../lib/models'
+
+type TabsFactory = (tabsLength?: number) => SelectOption[]
+
+type MockTabsConfig = {
+    name: string
+    tabs: SelectOption[] | TabsFactory
+}
 
 /**
  * Mock data for the tabs
  */
-export const MockTabs = [
+export const MockTabs: MockTabsConfig[] = [
     {
         name: `${CODE} ${BUG_HUNT} ${TEST_SUITE} ${COPILOT_OPPORTUNITY} ${MARATHON_MATCH} ${OTHER}`,
         tabs: [
@@ -61,35 +69,23 @@ export const MockTabs = [
     },
     {
         name: `${FIRST2FINISH}`,
-        tabs: (length: number) => {
-            const iterativeReview = Array.from({ length }, (_, i) => {
-                if (i === 0) {
-                    return {
-                        label: 'Iterative Review',
-                        value: 'Iterative Review',
-                    }
-                }
-
-                return {
-                    label: `Iterative Review ${i + 1}`,
-                    value: `Iterative Review ${i + 1}`,
-                }
-            })
-            return [
-                {
-                    label: 'Registration',
-                    value: 'Registration',
-                },
-                {
-                    label: 'Submission / Screening',
-                    value: 'Submission / Screening',
-                },
-                ...iterativeReview,
-                {
-                    label: 'Winners',
-                    value: 'Winners',
-                },
-            ]
-        },
+        tabs: () => [
+            {
+                label: 'Registration',
+                value: 'Registration',
+            },
+            {
+                label: 'Submission / Screening',
+                value: 'Submission / Screening',
+            },
+            {
+                label: 'Iterative Review',
+                value: 'Iterative Review',
+            },
+            {
+                label: 'Winners',
+                value: 'Winners',
+            },
+        ],
     },
 ]

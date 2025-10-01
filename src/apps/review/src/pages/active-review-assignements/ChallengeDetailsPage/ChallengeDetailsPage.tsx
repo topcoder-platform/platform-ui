@@ -23,7 +23,7 @@ import {
 } from '../../../lib'
 import { fetchTabs } from '../../../lib/services'
 import { ChallengeDetailContextModel, SelectOption } from '../../../lib/models'
-import { TAB } from '../../../config/index.config'
+import { FIRST2FINISH, ITERATIVE_REVIEW, TAB } from '../../../config/index.config'
 import { getHandleUrl } from '../../../lib/utils'
 import {
     activeReviewAssigmentsRouteId,
@@ -148,11 +148,25 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
     }, [searchParams, tabItems])
 
     useEffect(() => {
-        if (challengeInfo?.type) {
-            fetchTabs(challengeInfo?.type, challengeInfo.reviewLength)
-                .then(d => setTabItems(d))
+        if (!challengeInfo?.type) {
+            return
         }
-    }, [challengeInfo?.type, challengeInfo?.reviewLength])
+
+        const iterativePhaseCount = challengeInfo.phases?.filter(
+            phase => phase.name === ITERATIVE_REVIEW,
+        ).length ?? 0
+
+        const requestedTabLength = challengeInfo.type === FIRST2FINISH
+            ? Math.max(iterativePhaseCount, 1)
+            : challengeInfo.reviewLength
+
+        fetchTabs(challengeInfo.type, requestedTabLength)
+            .then(d => setTabItems(d))
+    }, [
+        challengeInfo?.phases,
+        challengeInfo?.reviewLength,
+        challengeInfo?.type,
+    ])
 
     return (
         <PageWrapper

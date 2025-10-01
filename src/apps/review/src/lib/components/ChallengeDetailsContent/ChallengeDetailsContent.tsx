@@ -14,7 +14,9 @@ import {
     useFetchChallengeResults,
     useFetchChallengeResultsProps,
 } from '../../hooks/useFetchChallengeResults'
+import { ITERATIVE_REVIEW } from '../../../config/index.config'
 
+import TabContentIterativeReview from './TabContentIterativeReview'
 import TabContentRegistration from './TabContentRegistration'
 import TabContentReview from './TabContentReview'
 import TabContentScreening from './TabContentScreening'
@@ -59,6 +61,15 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
                     projectResults={projectResults}
                     isDownloading={isDownloadingSubmission}
                     downloadSubmission={downloadSubmission}
+                />
+            ) : props.selectedTab.startsWith(ITERATIVE_REVIEW) ? (
+                <TabContentIterativeReview
+                    reviews={props.review}
+                    submitterReviews={props.submitterReviews}
+                    isLoadingReview={props.isLoadingSubmission}
+                    isDownloading={isDownloadingSubmission}
+                    downloadSubmission={downloadSubmission}
+                    isActiveChallenge={props.isActiveChallenge}
                 />
             ) : (
                 <TabContentReview

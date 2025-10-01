@@ -65,6 +65,31 @@ const calculateReviewItemInfoProgress = (items: ReviewItemInfo[]): number => {
     return Math.round((answered * 100) / items.length)
 }
 
+const parseReviewMetadata = (
+    metadata: string | Record<string, unknown> | null | undefined,
+): Record<string, unknown> | undefined => {
+    if (!metadata) {
+        return undefined
+    }
+
+    if (typeof metadata === 'object') {
+        return metadata as Record<string, unknown>
+    }
+
+    if (typeof metadata !== 'string') {
+        return undefined
+    }
+
+    try {
+        const parsed = JSON.parse(metadata)
+        return typeof parsed === 'object' && parsed !== null
+            ? parsed as Record<string, unknown>
+            : undefined
+    } catch {
+        return undefined
+    }
+}
+
 const formatDateStringWithFallback = (
     value: Date | undefined,
     fallback: string | Date | undefined,
@@ -127,6 +152,8 @@ export interface ReviewInfo {
     submitterMaxRating?: number | null
     reviewProgress?: number // this field is calculated at frontend
     scorecardId: string
+    phaseId?: string
+    metadata?: Record<string, unknown>
     resourceId: string
     committed: boolean
 }
@@ -211,6 +238,7 @@ export function convertBackendReviewToReviewInfo(
     const reviewerMaxRating = data.reviewerMaxRating ?? undefined
     const submitterHandle = normalizeReviewerHandle(data.submitterHandle)
     const submitterMaxRating = data.submitterMaxRating ?? undefined
+    const metadata = parseReviewMetadata(data.metadata)
 
     return {
         committed: data.committed,
@@ -219,6 +247,8 @@ export function convertBackendReviewToReviewInfo(
         finalScore: data.finalScore,
         id: data.id,
         initialScore: data.initialScore,
+        metadata,
+        phaseId: data.phaseId,
         resourceId: data.resourceId,
         reviewDate,
         reviewDateString: formatOptionalDateString(reviewDate),
@@ -276,6 +306,8 @@ export function createEmptyReviewInfoFromScorecard(
     return {
         committed: false,
         createdAt: '',
+        metadata: undefined,
+        phaseId: undefined,
         resourceId,
         reviewItems,
         scorecardId: data.id,
