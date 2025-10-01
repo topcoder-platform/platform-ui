@@ -144,9 +144,9 @@ export const fetchMemberTraits: any = () => async (dispatch: any) => {
             return ({
                 collegeName: e.collegeName,
                 endDate,
+                endYear: e.endYear,
                 id: index + 1,
                 major: e.degree,
-                endYear: e.endYear,
                 startDate,
             })
         })
@@ -194,10 +194,12 @@ const createWorksPayloadData: any = (works: WorkInfo[]) => {
         }: any = work
         return {
             companyName: company || '',
+            // eslint-disable-next-line unicorn/no-null
+            endDate: endDate ? endDate.toISOString() : null,
             industry,
             position,
+            // eslint-disable-next-line unicorn/no-null
             startDate: startDate ? startDate.toISOString() : null,
-            endDate: endDate ? endDate.toISOString() : null,
             working: currentlyWorking,
         }
     })
@@ -206,8 +208,8 @@ const createWorksPayloadData: any = (works: WorkInfo[]) => {
         categoryName: UserTraitCategoryNames.work,
         traitId: UserTraitIds.work,
         traits: {
-            traitId: UserTraitIds.work,
             data,
+            traitId: UserTraitIds.work,
         },
     }
     return [payload]
@@ -247,8 +249,8 @@ const createEducationsPayloadData: any = (educations: EducationInfo[]) => {
             endYear,
         }: any = education
         return {
-            degree: major,
             collegeName,
+            degree: major,
             endYear: parseInt(endYear, 10),
         }
     })
@@ -257,8 +259,8 @@ const createEducationsPayloadData: any = (educations: EducationInfo[]) => {
         categoryName: UserTraitCategoryNames.education,
         traitId: UserTraitIds.education,
         traits: {
-            traitId: UserTraitIds.education,
             data,
+            traitId: UserTraitIds.education,
         },
     }
     return [payload]
@@ -310,8 +312,8 @@ const createPersonalizationsPayloadData: any = (personalizations: Personalizatio
         categoryName: UserTraitCategoryNames.personalization,
         traitId: UserTraitIds.personalization,
         traits: {
-            traitId: UserTraitIds.personalization,
             data,
+            traitId: UserTraitIds.personalization,
         },
     }
     return [payload]

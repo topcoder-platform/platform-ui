@@ -1,5 +1,5 @@
 import { FC, FocusEvent, useEffect, useState } from 'react'
-import { getYear, setYear } from 'date-fns'
+import { getYear } from 'date-fns'
 import _ from 'lodash'
 import classNames from 'classnames'
 
