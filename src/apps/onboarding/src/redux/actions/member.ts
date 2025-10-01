@@ -267,7 +267,6 @@ const createEducationsPayloadData: any = (educations: EducationInfo[]) => {
 export const updateMemberEducations: any = (educations: EducationInfo[]) => async (dispatch: any) => {
     try {
         const tokenInfo: TokenModel = await getAsyncToken()
-        console.log(createEducationsPayloadData(educations), 'createEducationsPayloadData(educations)')
         await updateMemberTraits(tokenInfo.handle || '', createEducationsPayloadData(educations))
         dispatch(updateEducations(educations))
     } catch (error) {
