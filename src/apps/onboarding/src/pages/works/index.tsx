@@ -73,7 +73,7 @@ export const PageWorksContent: FC<{
                 ...(startDateString ? [startDateString] : []),
                 ...(endDateString ? [endDateString] : []),
             ].join('-'),
-            description: workItem.company,
+            description: workItem.companyName,
         }
     }), [works])
 

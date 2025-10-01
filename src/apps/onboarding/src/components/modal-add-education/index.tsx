@@ -28,7 +28,7 @@ const ModalAddEducation: FC<ModalAddEducationProps> = (props: ModalAddEducationP
     const [educationInfo, setEducationInfo] = useState(emptyEducationInfo())
     const [formErrors, setFormErrors] = useState<any>({
         collegeName: undefined,
-        endDate: undefined,
+        endYear: undefined,
         major: undefined,
     })
 
@@ -42,8 +42,8 @@ const ModalAddEducation: FC<ModalAddEducationProps> = (props: ModalAddEducationP
             errorTmp.major = 'Required'
         }
 
-        if (!educationInfo.endDate) {
-            errorTmp.endDate = 'Required'
+        if (!educationInfo.endYear) {
+            errorTmp.endYear = 'Required'
         }
 
         setFormErrors(errorTmp)
@@ -123,19 +123,16 @@ const ModalAddEducation: FC<ModalAddEducationProps> = (props: ModalAddEducationP
                     <InputSelect
                         tabIndex={0}
                         options={yearOptions}
-                        value={educationInfo.endDate ? `${getYear(educationInfo.endDate)}` : undefined}
+                        value={educationInfo.endYear?.toString()}
                         onChange={function onChange(event: any) {
                             setEducationInfo({
                                 ...educationInfo,
-                                endDate: setYear(
-                                    new Date(),
-                                    parseInt(event.target.value, 10),
-                                ),
+                                endYear: event.target.value,
                             })
                         }}
                         dirty
-                        error={formErrors.endDate}
-                        name='endDate'
+                        error={formErrors.endYear}
+                        name='endYear'
                         label='End Year or Expected *'
                         placeholder='Select year'
                     />
