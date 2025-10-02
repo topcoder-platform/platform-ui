@@ -1,13 +1,17 @@
 /**
  * Challenge Details Page.
  */
+import { kebabCase } from 'lodash'
 import { FC, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
-import { kebabCase } from 'lodash'
+import { toast } from 'react-toastify'
+import { useSWRConfig } from 'swr'
 import classNames from 'classnames'
 
 import { TableLoading } from '~/apps/admin/src/lib'
+import { handleError } from '~/apps/admin/src/lib/utils'
 import { EnvironmentConfig } from '~/config'
+import { InputCheckbox } from '~/libs/ui'
 
 import {
     useFetchScreeningReview,
@@ -21,8 +25,12 @@ import {
     PageWrapper,
     Tabs,
 } from '../../../lib'
-import { fetchTabs } from '../../../lib/services'
-import { ChallengeDetailContextModel, SelectOption } from '../../../lib/models'
+import { fetchTabs, updatePhaseChangeNotifications } from '../../../lib/services'
+import {
+    BackendResource,
+    ChallengeDetailContextModel,
+    SelectOption,
+} from '../../../lib/models'
 import { FIRST2FINISH, ITERATIVE_REVIEW, TAB } from '../../../config/index.config'
 import { getHandleUrl } from '../../../lib/utils'
 import {
@@ -42,12 +50,16 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
     const location = useLocation()
     const navigate = useNavigate()
     const searchParamsString = useMemo(() => searchParams.toString(), [searchParams])
+    const swrConfig = useSWRConfig()
+    const mutate = swrConfig.mutate
 
     // get challenge info from challenge detail context
     const {
         challengeId,
         challengeInfo,
         isLoadingChallengeInfo,
+        isLoadingChallengeResources,
+        myResources,
         reviewers,
     }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
     const hasChallengeInfo = Boolean(challengeInfo)
@@ -69,6 +81,92 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         () => location.pathname.includes(`/${pastReviewAssignmentsRouteId}/`),
         [location.pathname],
     )
+    const currentUserResource = useMemo<BackendResource | undefined>(() => myResources
+        .find(resource => typeof resource.phaseChangeNotifications === 'boolean')
+        ?? myResources[0], [myResources])
+    const currentUserResourceId = currentUserResource?.id
+    const resourcesCacheKey = useMemo(
+        () => (challengeId
+            ? `resourceBaseUrl/resources?challengeId=${challengeId}`
+            : undefined),
+        [challengeId],
+    )
+    const [phaseNotificationsEnabled, setPhaseNotificationsEnabled] = useState<boolean>(
+        currentUserResource?.phaseChangeNotifications ?? false,
+    )
+    const [isSavingPhaseNotifications, setIsSavingPhaseNotifications] = useState(false)
+
+    useEffect(() => {
+        setPhaseNotificationsEnabled(currentUserResource?.phaseChangeNotifications ?? false)
+    }, [currentUserResource?.phaseChangeNotifications])
+
+    const noop = useCallback(() => undefined, [])
+
+    const togglePhaseNotifications = useCallback(async () => {
+        if (!currentUserResourceId || isSavingPhaseNotifications) {
+            return
+        }
+
+        const nextValue = !phaseNotificationsEnabled
+        const previousValue = phaseNotificationsEnabled
+
+        setPhaseNotificationsEnabled(nextValue)
+        setIsSavingPhaseNotifications(true)
+
+        try {
+            await updatePhaseChangeNotifications(currentUserResourceId, nextValue)
+
+            if (resourcesCacheKey) {
+                await mutate(
+                    resourcesCacheKey,
+                    (current: BackendResource[] | undefined) => {
+                        if (!current) {
+                            return current
+                        }
+
+                        return current.map(resource => (resource.id === currentUserResourceId
+                            ? {
+                                ...resource,
+                                phaseChangeNotifications: nextValue,
+                            }
+                            : resource))
+                    },
+                    false,
+                )
+
+                await mutate(resourcesCacheKey)
+            }
+
+            toast.success(
+                `Phase notifications ${nextValue ? 'enabled' : 'disabled'}.`,
+                {
+                    toastId: `phase-notifications-${currentUserResourceId}`,
+                },
+            )
+        } catch (error) {
+            setPhaseNotificationsEnabled(previousValue)
+            handleError(error as Error)
+            toast.error('Failed to update phase notifications.', {
+                toastId: `phase-notifications-error-${currentUserResourceId}`,
+            })
+        } finally {
+            setIsSavingPhaseNotifications(false)
+        }
+    }, [
+        currentUserResourceId,
+        isSavingPhaseNotifications,
+        mutate,
+        phaseNotificationsEnabled,
+        resourcesCacheKey,
+    ])
+
+    const shouldShowPhaseNotificationToggle = useMemo(
+        () => !isPastReviewDetail && Boolean(currentUserResourceId),
+        [isPastReviewDetail, currentUserResourceId],
+    )
+    const isPhaseNotificationToggleDisabled = isSavingPhaseNotifications
+        || isLoadingChallengeResources
+
     const listRouteId = isPastReviewDetail
         ? pastReviewAssignmentsRouteId
         : activeReviewAssigmentsRouteId
@@ -191,7 +289,22 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                     </div>
 
                     <div className={styles.blockContent}>
-                        <span className={styles.textTitle}>Phases</span>
+                        <div className={styles.phaseHeader}>
+                            <span className={styles.textTitle}>Phases</span>
+
+                            {shouldShowPhaseNotificationToggle ? (
+                                <div className={styles.phaseNotificationToggle}>
+                                    <InputCheckbox
+                                        name='phase-notifications'
+                                        label='Phase Notifications'
+                                        checked={phaseNotificationsEnabled}
+                                        onChange={noop}
+                                        onClick={togglePhaseNotifications}
+                                        disabled={isPhaseNotificationToggleDisabled}
+                                    />
+                                </div>
+                            ) : undefined}
+                        </div>
 
                         <div className={styles.blockTabsContainer}>
                             <Tabs

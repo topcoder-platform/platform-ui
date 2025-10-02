@@ -20,6 +20,7 @@ export interface BackendResource {
     createdString?: string // this field is calculated at frontend
     rating?: number
     handleColor?: string // this field is calculated at frontend
+    phaseChangeNotifications?: boolean
 }
 
 /**

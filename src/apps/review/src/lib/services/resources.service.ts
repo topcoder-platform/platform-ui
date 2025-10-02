@@ -3,7 +3,11 @@
  */
 import qs from 'qs'
 
-import { PaginatedResponse, xhrGetPaginatedAsync } from '~/libs/core'
+import {
+    PaginatedResponse,
+    xhrGetPaginatedAsync,
+    xhrPutAsync,
+} from '~/libs/core'
 import { EnvironmentConfig } from '~/config'
 
 import {
@@ -54,3 +58,20 @@ export const fetchChallengeResouces = async (
 ): Promise<PaginatedResponse<BackendResource[]>> => fetchResources({
     challengeId,
 })
+
+/**
+ * Update resource phase change notifications preference.
+ * @param resourceId resource identifier
+ * @param phaseChangeNotifications desired preference value
+ */
+export const updatePhaseChangeNotifications = async (
+    resourceId: string,
+    phaseChangeNotifications: boolean,
+): Promise<void> => {
+    await xhrPutAsync(
+        `${resourceBaseUrl}/resources/${resourceId}/phase-change-notifications`,
+        {
+            phaseChangeNotifications,
+        },
+    )
+}
