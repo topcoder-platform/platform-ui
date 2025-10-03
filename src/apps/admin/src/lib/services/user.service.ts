@@ -1,9 +1,11 @@
 import _ from 'lodash'
 
 import { EnvironmentConfig } from '~/config'
+import type { PaginatedResponse } from '~/libs/core'
 import {
     xhrDeleteAsync,
     xhrGetAsync,
+    xhrGetPaginatedAsync,
     xhrPatchAsync,
     xhrPostAsync,
     xhrPutAsync,
@@ -93,7 +95,20 @@ export const searchUsers = async (options?: {
         {
             fields:
                 opts.fields
-                || 'id,handle,email,active,emailActive,status,credential,firstName,lastName,createdAt,modifiedAt',
+                || [
+                    'id',
+                    'handle',
+                    'email',
+                    'active',
+                    'emailActive',
+                    'emailVerified',
+                    'status',
+                    'credential',
+                    'firstName',
+                    'lastName',
+                    'createdAt',
+                    'modifiedAt',
+                ].join(','),
             filter: opts.filter,
             limit: opts.limit,
         },
@@ -107,6 +122,61 @@ export const searchUsers = async (options?: {
         `${EnvironmentConfig.API.V6}/users?${query}`,
     )
     return users.map(adjustUserInfoResponse)
+}
+
+/**
+ * Search users with pagination metadata.
+ * @param options the search options including pagination.
+ * @returns resolves to paginated response of users
+ */
+export const searchUsersPaginated = async (options?: {
+    fields?: string
+    filter?: string
+    limit?: number
+    offset?: number
+}): Promise<PaginatedResponse<UserInfo[]>> => {
+    let query = ''
+    const opts: {
+        fields?: string
+        filter?: string
+        limit?: number
+        offset?: number
+    } = options || {}
+    _.forOwn(
+        {
+            fields:
+                opts.fields
+                || [
+                    'id',
+                    'handle',
+                    'email',
+                    'active',
+                    'emailActive',
+                    'emailVerified',
+                    'status',
+                    'credential',
+                    'firstName',
+                    'lastName',
+                    'createdAt',
+                    'modifiedAt',
+                ].join(','),
+            filter: opts.filter,
+            limit: opts.limit,
+            offset: opts.offset,
+        },
+        (value, key) => {
+            if (value !== undefined && value !== null && value !== '') {
+                query += `&${key}=${encodeURIComponent(String(value))}`
+            }
+        },
+    )
+    const response = await xhrGetPaginatedAsync<UserInfo[]>(
+        `${EnvironmentConfig.API.V6}/users?${query}`,
+    )
+    return {
+        ...response,
+        data: response.data.map(adjustUserInfoResponse),
+    }
 }
 
 /**

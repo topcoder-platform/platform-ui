@@ -37,6 +37,7 @@ import { RemoveUsersConfirmDialog } from '../RemoveUsersConfirmDialog'
 import { useEventCallback, useOnComponentDidMount } from '../../hooks'
 import { Paging } from '../../models/challenge-management/Pagination'
 import { Pagination } from '../common/Pagination'
+import { CopyButton } from '../CopyButton'
 
 import { MobileListView } from './MobileListView'
 import styles from './ChallengeUserList.module.scss'
@@ -157,23 +158,33 @@ const UserRole: FC<{ user: ChallengeResource }> = props => {
     return <>{s}</>
 }
 
-const UserEmail: FC<{ user: ChallengeResource }> = props => {
+const UserEmailWithCopy: FC<{ user: ChallengeResource }> = props => {
     const { userEmails }: { userEmails: ResourceEmail[] } = useContext(
         ChallengeUserListContext,
     )
-    const s = useMemo(() => {
+
+    const email = useMemo(() => {
         if (userEmails.length === 0) {
-            return 'Loading...'
+            return ''
         }
 
         const usr = _.find(userEmails, {
             userId: parseInt(props.user.memberId, 10),
         })
 
-        return usr?.email || 'NOT FOUND'
+        return usr?.email || ''
     }, [userEmails, props.user.memberId])
 
-    return <>{s}</>
+    if (!email) {
+        return <span>Loading...</span>
+    }
+
+    return (
+        <div className={styles.emailCell}>
+            <span className={styles.emailText}>{email}</span>
+            <CopyButton text={email} />
+        </div>
+    )
 }
 
 const RemoveButton: FC<{
@@ -386,7 +397,7 @@ const ChallengeUserList: FC<ChallengeUserListProps> = props => {
                 label: 'E-Mail',
                 propertyName: 'memberId',
                 renderer: (user: ChallengeResource) => (
-                    <UserEmail user={user} />
+                    <UserEmailWithCopy user={user} />
                 ),
                 type: 'element',
             },

@@ -16,17 +16,24 @@ interface CopyButtonProps {
 }
 
 export const CopyButton: React.FC<CopyButtonProps> = props => {
+    const [copied, setCopied] = React.useState<boolean>(false)
+
     function handleCopyClick(): void {
         copyTextToClipboard(props.text ?? '')
             .then(() => {
-                toast.success('Copied', {
+                setCopied(true)
+                setTimeout(() => setCopied(false), 1200)
+                toast.success('Copied to clipboard', {
                     toastId: 'CopyButton',
                 })
             })
     }
 
     return (
-        <Tooltip content='Copy to clipboard'>
+        <Tooltip
+            content={copied ? 'Copied to clipboard' : 'Copy to clipboard'}
+            triggerOn='click-hover'
+        >
             <Button
                 size='xl'
                 className={classNames(styles['copy-btn'], props.className)}

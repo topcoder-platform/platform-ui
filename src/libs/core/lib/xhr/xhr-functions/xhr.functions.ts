@@ -7,6 +7,9 @@ import axios, {
     Method,
 } from 'axios'
 
+import { EnvironmentConfig } from '~/config'
+import type { LocalServiceOverride } from '~/config/environments/global-config.model'
+
 import { tokenGetAsync, TokenModel } from '../../auth'
 
 // initialize the global instance when this singleton is loaded
@@ -29,6 +32,7 @@ export function createInstance(): AxiosInstance {
     })
 
     // add the interceptors
+    interceptLocalApiRouting(created)
     interceptAuth(created)
     interceptError(created)
 
@@ -177,6 +181,82 @@ function interceptAuth(instance: AxiosInstance): void {
 
         return config
     })
+}
+
+function interceptLocalApiRouting(instance: AxiosInstance): void {
+    const overrides: LocalServiceOverride[] = EnvironmentConfig.LOCAL_SERVICE_OVERRIDES ?? []
+
+    if (!overrides.length) {
+        return
+    }
+
+    instance.interceptors.request.use(config => {
+        if (!config.url) {
+            return config
+        }
+
+        const absoluteUrl = toAbsoluteUrl(config.url, config.baseURL)
+
+        if (!absoluteUrl) {
+            return config
+        }
+
+        let parsed: URL
+
+        try {
+            parsed = new URL(absoluteUrl)
+        } catch {
+            return config
+        }
+
+        const override: LocalServiceOverride | undefined = overrides.find(
+            ({ prefix }: LocalServiceOverride) => parsed.pathname.startsWith(prefix),
+        )
+
+        if (!override) {
+            return config
+        }
+
+        let target: URL
+
+        try {
+            target = new URL(override.target)
+        } catch {
+            return config
+        }
+
+        if (parsed.host === target.host && parsed.protocol === target.protocol) {
+            return config
+        }
+
+        const normalizedBasePath = target.pathname === '/' ? '' : target.pathname.replace(/\/$/, '')
+        const rewrittenPath = `${normalizedBasePath}${parsed.pathname}`
+        const finalUrl = `${target.protocol}//${target.host}${rewrittenPath}${parsed.search}${parsed.hash}`
+
+        config.url = finalUrl
+        config.baseURL = undefined
+
+        return config
+    })
+}
+
+function toAbsoluteUrl(url: string, baseUrl?: string): string | undefined {
+    if (/^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//.test(url)) {
+        return url
+    }
+
+    const base = baseUrl || (typeof window !== 'undefined' ? window.location.origin : undefined)
+
+    if (!base) {
+        return undefined
+    }
+
+    try {
+        return new URL(url, base)
+            .toString()
+    } catch {
+        return undefined
+    }
 }
 
 async function hydrateErrorFromBlobResponse(

@@ -4,6 +4,11 @@ export interface SSOLoginProviderConfig {
     type: string
 }
 
+export interface LocalServiceOverride {
+    prefix: string
+    target: string
+}
+
 export interface GlobalConfig {
     TC_DOMAIN: string
     TOPCODER_URL: string
@@ -21,7 +26,7 @@ export interface GlobalConfig {
     AUTH: {
         ACCOUNTS_APP_CONNECTOR: string
     }
-    ENV: 'dev' | 'prod' | 'qa'
+    ENV: 'dev' | 'prod' | 'qa' | 'local'
     LOGGING: {
         PUBLIC_TOKEN: string | undefined
         SERVICE: string
@@ -87,4 +92,5 @@ export interface GlobalConfig {
         PROGRESS_INTERVAL: number
     },
     ADMIN_SSO_LOGIN_PROVIDERS: SSOLoginProviderConfig[]
+    LOCAL_SERVICE_OVERRIDES?: LocalServiceOverride[]
 }

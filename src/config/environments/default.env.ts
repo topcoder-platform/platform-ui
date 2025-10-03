@@ -2,7 +2,7 @@
 import { get } from 'lodash'
 
 import { getReactEnv } from './react-env'
-import type { SSOLoginProviderConfig } from './global-config.model'
+import type { LocalServiceOverride, SSOLoginProviderConfig } from './global-config.model'
 
 function parseSSOLoginProviders(
     raw: string | undefined,
@@ -20,10 +20,11 @@ function parseSSOLoginProviders(
     }
 }
 
-export const ENV = getReactEnv<'prod' | 'dev' | 'qa'>('HOST_ENV', 'dev')
+export const ENV = getReactEnv<'prod' | 'dev' | 'qa' | 'local'>('HOST_ENV', 'dev')
 
 export const TC_DOMAIN: string = get({
     dev: 'topcoder-dev.com',
+    local: 'topcoder-dev.com',
     prod: 'topcoder.com',
     qa: 'topcoder-qa.com',
 }, ENV, 'topcoder.com')
@@ -66,6 +67,8 @@ const ADMIN_SSO_LOGIN_PROVIDERS_ENV = '[{"ssoLoginProviderId":1,"name":"okta-cus
 export const ADMIN_SSO_LOGIN_PROVIDERS: SSOLoginProviderConfig[] = parseSSOLoginProviders(
     ADMIN_SSO_LOGIN_PROVIDERS_ENV,
 )
+
+export const LOCAL_SERVICE_OVERRIDES: LocalServiceOverride[] = []
 
 export const STRIPE = {
     API_KEY: getReactEnv<string>('STRIPE_API_KEY', ''),

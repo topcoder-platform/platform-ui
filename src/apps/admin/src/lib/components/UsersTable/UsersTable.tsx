@@ -38,6 +38,9 @@ import styles from './UsersTable.module.scss'
 interface Props {
     className?: string
     allUsers: UserInfo[]
+    page: number
+    totalPages: number
+    onPageChange: (page: number) => void
     updatingStatus: { [key: string]: boolean }
     doUpdateStatus: (
         userInfo: UserInfo,
@@ -90,14 +93,11 @@ export const UsersTable: FC<Props> = props => {
 
     const isTablet = useMemo(() => screenWidth <= 984, [screenWidth])
     const isMobile = useMemo(() => screenWidth <= 745, [screenWidth])
-    const {
-        page,
-        setPage,
-        totalPages,
-        results,
-        setSort,
-    }: useTableFilterLocalProps<UserInfo> = useTableFilterLocal(
+    const { results, setSort }: useTableFilterLocalProps<UserInfo> = useTableFilterLocal(
         props.allUsers ?? [],
+        undefined,
+        undefined,
+        true,
     )
     const columns = useMemo<TableColumn<UserInfo>[]>(
         () => [
@@ -207,27 +207,32 @@ export const UsersTable: FC<Props> = props => {
                 isExpand: true,
                 label: 'Activation Code',
                 propertyName: 'activationCode',
-                renderer: (data: UserInfo) => (
-                    <div className={styles.blockActivationCode}>
-                        {!!data.credential.activationCode && (
-                            <span className={styles.textActivationCode}>{data.credential.activationCode}</span>
-                        )}
+                renderer: (data: UserInfo) => {
+                    const activationCode = data.credential?.activationCode ?? ''
+                    const activationLink = data.activationLink ?? ''
 
-                        <div className={styles.blockActivationCodeLink}>
-                            <input
-                                type='text'
-                                value={data.activationLink}
-                                readOnly
-                                className={styles.blockActivationCodeInput}
-                            />
+                    return (
+                        <div className={styles.blockActivationCode}>
+                            {!!activationCode && (
+                                <span className={styles.textActivationCode}>{activationCode}</span>
+                            )}
 
-                            <CopyButton
-                                text={data.activationLink}
-                                className={styles.btnCopy}
-                            />
+                            <div className={styles.blockActivationCodeLink}>
+                                <input
+                                    type='text'
+                                    value={activationLink}
+                                    readOnly
+                                    className={styles.blockActivationCodeInput}
+                                />
+
+                                <CopyButton
+                                    text={activationLink}
+                                    className={styles.btnCopy}
+                                />
+                            </div>
                         </div>
-                    </div>
-                ),
+                    )
+                },
                 type: 'element',
             },
             ...(isMobile
@@ -287,8 +292,11 @@ export const UsersTable: FC<Props> = props => {
                         } else if (item === 'Deactivate') {
                             setShowDialogEditUserStatus(data)
                         } else if (item === 'Activate') {
+                            const isEmailVerified
+                                = data.emailVerified ?? data.emailActive ?? false
+
                             let confirmation = `Are you sure you want to activate user '${data.handle}'?`
-                            if (!data.emailActive) {
+                            if (!isEmailVerified) {
                                 confirmation
                                   += "\nEmail address is also verified by the operation. Please confirm it's valid."
                             }
@@ -386,9 +394,9 @@ export const UsersTable: FC<Props> = props => {
             />
             {props.allUsers.length > 0 && (
                 <Pagination
-                    page={page}
-                    totalPages={totalPages}
-                    onPageChange={setPage}
+                    page={props.page}
+                    totalPages={props.totalPages}
+                    onPageChange={props.onPageChange}
                 />
             )}
 

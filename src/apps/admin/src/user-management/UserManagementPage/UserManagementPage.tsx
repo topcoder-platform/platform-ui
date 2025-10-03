@@ -28,6 +28,9 @@ export const UserManagementPage: FC<Props> = (props: Props) => {
         isLoading,
         updatingStatus,
         doUpdateStatus,
+        page,
+        totalPages,
+        onPageChange,
     }: useManageUsersProps = useManageUsers()
 
     return (
@@ -58,6 +61,9 @@ export const UserManagementPage: FC<Props> = (props: Props) => {
                         ) : (
                             <UsersTable
                                 allUsers={users}
+                                page={page}
+                                totalPages={totalPages}
+                                onPageChange={onPageChange}
                                 updatingStatus={updatingStatus}
                                 doUpdateStatus={doUpdateStatus}
                             />

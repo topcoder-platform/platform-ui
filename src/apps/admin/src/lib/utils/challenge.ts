@@ -40,9 +40,17 @@ export function processRanks(submissions: MemberSubmission[]): {
         if (pA === undefined) pA = 0
         if (pB === undefined) pB = 0
         if (pA === pB) {
-            const timeA = _.get(a, 'submissions[0].submittedDate')
-            const timeB = _.get(b, 'submissions[0].submittedDate')
-            return timeA.getTime() - timeB.getTime()
+            const timeA = _.get(
+                a,
+                'submissions[0].submittedDate',
+            ) as Date | null | undefined
+            const timeB = _.get(
+                b,
+                'submissions[0].submittedDate',
+            ) as Date | null | undefined
+            const dateA = timeA instanceof Date ? timeA : new Date(0)
+            const dateB = timeB instanceof Date ? timeB : new Date(0)
+            return dateA.getTime() - dateB.getTime()
         }
 
         return pB - pA
@@ -63,9 +71,17 @@ export function processRanks(submissions: MemberSubmission[]): {
         if (pA > 0) maxFinalScore = pA
         if (pB > 0) maxFinalScore = pB
         if (pA === pB) {
-            const timeA = _.get(a, 'submissions[0].submittedDate')
-            const timeB = _.get(b, 'submissions[0].submittedDate')
-            return timeA.getTime() - timeB.getTime()
+            const timeA = _.get(
+                a,
+                'submissions[0].submittedDate',
+            ) as Date | null | undefined
+            const timeB = _.get(
+                b,
+                'submissions[0].submittedDate',
+            ) as Date | null | undefined
+            const dateA = timeA instanceof Date ? timeA : new Date(0)
+            const dateB = timeB instanceof Date ? timeB : new Date(0)
+            return dateA.getTime() - dateB.getTime()
         }
 
         return pB - pA

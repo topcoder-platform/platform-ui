@@ -1,12 +1,13 @@
 /**
  * Manage users redux state
  */
-import { useCallback, useReducer } from 'react'
+import { useCallback, useReducer, useRef } from 'react'
 import { toast } from 'react-toastify'
 import _ from 'lodash'
 
 import { UserInfo } from '../models'
-import { searchUsers, updateUserStatus } from '../services'
+import { searchUsersPaginated, updateUserStatus } from '../services'
+import { TABLE_PAGINATION_ITEM_PER_PAGE } from '../../config/index.config'
 import { handleError } from '../utils'
 
 /// /////////////////
@@ -16,6 +17,9 @@ import { handleError } from '../utils'
 type UsersState = {
     isLoading: boolean
     users: UserInfo[]
+    page: number
+    totalPages: number
+    total: number
     updatingStatus: { [key: string]: boolean }
 }
 
@@ -23,6 +27,7 @@ const UsersActionType = {
     FETCH_USERS_DONE: 'FETCH_USERS_DONE' as const,
     FETCH_USERS_FAILED: 'FETCH_USERS_FAILED' as const,
     FETCH_USERS_INIT: 'FETCH_USERS_INIT' as const,
+    SET_PAGE: 'SET_PAGE' as const,
     UPDATE_USER_STATUS_DONE: 'UPDATE_USER_STATUS_DONE' as const,
     UPDATE_USER_STATUS_FAILED: 'UPDATE_USER_STATUS_FAILED' as const,
     UPDATE_USER_STATUS_INIT: 'UPDATE_USER_STATUS_INIT' as const,
@@ -36,8 +41,9 @@ type UsersReducerAction =
       }
     | {
           type: typeof UsersActionType.FETCH_USERS_DONE
-          payload: UserInfo[]
+          payload: { users: UserInfo[]; page: number; totalPages: number; total: number }
       }
+    | { type: typeof UsersActionType.SET_PAGE; payload: number }
     | {
           type:
               | typeof UsersActionType.UPDATE_USER_STATUS_INIT
@@ -66,7 +72,10 @@ const reducer = (
             return {
                 ...previousState,
                 isLoading: false,
-                users: action.payload,
+                page: action.payload.page,
+                total: action.payload.total,
+                totalPages: action.payload.totalPages,
+                users: action.payload.users,
             }
         }
 
@@ -119,6 +128,9 @@ export interface useManageUsersProps {
     isLoading: boolean
     users: UserInfo[]
     doSearchUsers: (filter: string) => void
+    page: number
+    totalPages: number
+    onPageChange: (page: number) => void
     updatingStatus: { [key: string]: boolean }
     doUpdateStatus: (
         userInfo: UserInfo,
@@ -135,19 +147,66 @@ export interface useManageUsersProps {
 export function useManageUsers(): useManageUsersProps {
     const [state, dispatch] = useReducer(reducer, {
         isLoading: false,
+        page: 1,
+        total: 0,
+        totalPages: 0,
         updatingStatus: {},
         users: [],
     })
+    const filterRef = useRef('')
 
     const doSearchUsers = useCallback(
         (filter: string) => {
             dispatch({
                 type: UsersActionType.FETCH_USERS_INIT,
             })
-            searchUsers({ filter })
+            filterRef.current = filter || ''
+            searchUsersPaginated({
+                filter: filterRef.current,
+                limit: TABLE_PAGINATION_ITEM_PER_PAGE,
+                offset: 0,
+            })
                 .then(result => {
                     dispatch({
-                        payload: result,
+                        payload: {
+                            page: result.page || 1,
+                            total: result.total || 0,
+                            totalPages: result.totalPages || 0,
+                            users: result.data,
+                        },
+                        type: UsersActionType.FETCH_USERS_DONE,
+                    })
+                })
+                .catch(e => {
+                    dispatch({
+                        type: UsersActionType.FETCH_USERS_FAILED,
+                    })
+                    handleError(e)
+                })
+        },
+        [dispatch],
+    )
+
+    const onPageChange = useCallback(
+        (page: number) => {
+            if (page < 1) return
+            dispatch({
+                type: UsersActionType.FETCH_USERS_INIT,
+            })
+            const offset = (page - 1) * TABLE_PAGINATION_ITEM_PER_PAGE
+            searchUsersPaginated({
+                filter: filterRef.current,
+                limit: TABLE_PAGINATION_ITEM_PER_PAGE,
+                offset,
+            })
+                .then(result => {
+                    dispatch({
+                        payload: {
+                            page: result.page || page,
+                            total: result.total || 0,
+                            totalPages: result.totalPages || 0,
+                            users: result.data,
+                        },
                         type: UsersActionType.FETCH_USERS_DONE,
                     })
                 })
@@ -205,6 +264,9 @@ export function useManageUsers(): useManageUsersProps {
         doSearchUsers,
         doUpdateStatus,
         isLoading: state.isLoading,
+        onPageChange,
+        page: state.page,
+        totalPages: state.totalPages,
         updatingStatus: state.updatingStatus,
         users: state.users,
     }

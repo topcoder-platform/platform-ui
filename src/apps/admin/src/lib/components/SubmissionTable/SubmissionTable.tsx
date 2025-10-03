@@ -7,6 +7,8 @@ import classNames from 'classnames'
 
 import { useWindowSize, WindowSize } from '~/libs/shared'
 import { ConfirmModal, Table, TableColumn } from '~/libs/ui'
+import { EnvironmentConfig } from '~/config'
+import { getRatingColor } from '~/libs/core'
 
 import { IsRemovingType, MobileTableColumn, Submission } from '../../models'
 import { TableMobile } from '../common/TableMobile'
@@ -56,8 +58,29 @@ export const SubmissionTable: FC<Props> = (props: Props) => {
             ? [
                 {
                     label: 'Submitter',
-                    propertyName: 'createdBy',
-                    type: 'text',
+                    renderer: (data: Submission) => {
+                        const handle = data.submitterHandle || data.createdBy
+                        const rating = data.submitterMaxRating ?? undefined
+                        const href = handle
+                            ? `${EnvironmentConfig.URLS.USER_PROFILE}/${encodeURIComponent(handle)}`
+                            : undefined
+                        const color = getRatingColor(
+                            typeof rating === 'number' ? rating : undefined,
+                        )
+                        return handle && href ? (
+                            <a
+                                href={href}
+                                target='_blank'
+                                rel='noreferrer'
+                                style={{ color }}
+                            >
+                                {handle}
+                            </a>
+                        ) : (
+                            <span>{data.createdBy}</span>
+                        )
+                    },
+                    type: 'element',
                 },
                 {
                     className: 'blockCellWrap',
@@ -172,8 +195,29 @@ export const SubmissionTable: FC<Props> = (props: Props) => {
                 },
                 {
                     label: 'Submitter handle',
-                    propertyName: 'createdBy',
-                    type: 'text',
+                    renderer: (data: Submission) => {
+                        const handle = data.submitterHandle || data.createdBy
+                        const rating = data.submitterMaxRating ?? undefined
+                        const href = handle
+                            ? `${EnvironmentConfig.URLS.USER_PROFILE}/${encodeURIComponent(handle)}`
+                            : undefined
+                        const color = getRatingColor(
+                            typeof rating === 'number' ? rating : undefined,
+                        )
+                        return handle && href ? (
+                            <a
+                                href={href}
+                                target='_blank'
+                                rel='noreferrer'
+                                style={{ color }}
+                            >
+                                {handle}
+                            </a>
+                        ) : (
+                            <span>{data.createdBy}</span>
+                        )
+                    },
+                    type: 'element',
                 },
                 {
                     label: '',
