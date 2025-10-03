@@ -63,9 +63,9 @@ export const findClientById = async (
 }
 
 /**
- * Create client request data
+ * Create client request data (for POST)
  * @param data client data
- * @returns request data
+ * @returns request body matching CreateClientRequestDto
  */
 const createClientRequestData = (
     data: FormEditClient,
@@ -84,9 +84,30 @@ const createClientRequestData = (
             requestData[key] = value
         }
     })
-    return {
-        param: requestData,
+    return { param: requestData }
+}
+
+/**
+ * Create client update data (for PATCH)
+ * @param data client data
+ * @returns request body matching UpdateClientDto
+ */
+const createClientPatchData = (
+    data: FormEditClient,
+): RequestCommonDataType => {
+    const requestData: RequestCommonDataType = {
+        endDate: `${data.endDate.toISOString()
+            .substring(0, 16)}Z`,
+        startDate: `${data.startDate.toISOString()
+            .substring(0, 16)}Z`,
     }
+    _.forEach(['name', 'codeName', 'status'], key => {
+        const value = (data as unknown as RequestCommonDataType)[key]
+        if (value !== null && value !== undefined) {
+            requestData[key] = value
+        }
+    })
+    return requestData
 }
 
 /**
@@ -116,14 +137,9 @@ export const editClient = async (
     clientId: string,
     data: FormEditClient,
 ): Promise<ClientInfo> => {
-    const resultData = await xhrPatchAsync<
-        {
-            param: RequestCommonDataType
-        },
-        ClientInfo
-    >(
+    const resultData = await xhrPatchAsync<RequestCommonDataType, ClientInfo>(
         `${EnvironmentConfig.API.V6}/clients/${clientId}`,
-        createClientRequestData(data),
+        createClientPatchData(data),
     )
     return resultData
 }

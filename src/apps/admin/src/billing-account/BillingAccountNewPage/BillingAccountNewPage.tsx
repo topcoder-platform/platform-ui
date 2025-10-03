@@ -380,7 +380,7 @@ export const BillingAccountNewPage: FC<Props> = (props: Props) => {
                                             placeholder='Enter client you are searching for...'
                                             onChange={function onChange(item: SelectOption) {
                                                 controlProps.field.onChange({
-                                                    id: item.value as number,
+                                                    id: String(item.value),
                                                     name: item.label,
                                                 })
                                             }}
@@ -394,10 +394,11 @@ export const BillingAccountNewPage: FC<Props> = (props: Props) => {
                                                     }
                                                     : controlProps.field.value
                                             }
-                                            error={_.get(
-                                                errors,
-                                                'client.message',
-                                            )}
+                                            error={
+                                                _.get(errors, 'client.message')
+                                                || _.get(errors, 'client.id.message')
+                                                || _.get(errors, 'client.name.message')
+                                            }
                                             dirty
                                             disabled={isAdding || isUpdating}
                                         />
@@ -414,7 +415,8 @@ export const BillingAccountNewPage: FC<Props> = (props: Props) => {
                                 disabled={
                                     isAdding
                                     || isUpdating
-                                    || !isDirty
+                                    // Only require changes on edit forms; allow submit on new to trigger validation
+                                    || (isEdit && !isDirty)
                                 }
                             >
                                 Save Changes

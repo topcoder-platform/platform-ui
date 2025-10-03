@@ -1,7 +1,6 @@
 /**
  * Billing accounts service
  */
-import _ from 'lodash'
 
 import { EnvironmentConfig } from '~/config'
 import {
@@ -102,42 +101,39 @@ export const deleteBillingAccountResource = async (
  */
 const createBillingAccountRequestData = (
     data: FormEditBillingAccount,
-): {
-    param: RequestCommonDataType
-} => {
-    const requestData: RequestCommonDataType = {
-        clientId: data.client.id,
-        endDate: `${data.endDate.toISOString()
-            .substring(0, 16)}Z`,
-        salesTax: data.salesTax,
-        startDate: `${data.startDate.toISOString()
-            .substring(0, 16)}Z`,
-    }
-    if (data.paymentTerms) {
-        requestData.paymentTerms = {
-            id: data.paymentTerms,
-        }
-    }
+): RequestCommonDataType => {
+    const startDate = data.startDate
+        ? `${data.startDate.toISOString()
+            .substring(0, 16)}Z`
+        : undefined
+    const endDate = data.endDate
+        ? `${data.endDate.toISOString()
+            .substring(0, 16)}Z`
+        : undefined
 
-    _.forEach(
-        [
-            'name',
-            'companyId',
-            'status',
-            'budgetAmount',
-            'poNumber',
-            'subscriptionNumber',
-            'description',
-        ],
-        key => {
-            const value = (data as unknown as RequestCommonDataType)[key]
-            if (value !== null && value !== undefined) {
-                requestData[key] = value
-            }
-        },
-    )
     return {
-        param: requestData,
+        // Map UI fields to API in natural ascending key order
+        budget: data.budgetAmount,
+        clientId:
+            data.client?.id !== undefined && data.client?.id !== null
+                ? String(data.client.id)
+                : undefined,
+        description: data.description,
+        endDate,
+        markup: 0,
+        name: data.name,
+        paymentTerms:
+            data.paymentTerms !== undefined && data.paymentTerms !== null
+                ? String(data.paymentTerms)
+                : undefined,
+        poNumber: data.poNumber,
+        salesTax: data.salesTax,
+        startDate,
+        status: data.status,
+        subscriptionNumber:
+            data.subscriptionNumber !== undefined && data.subscriptionNumber !== null
+                ? String(data.subscriptionNumber)
+                : undefined,
     }
 }
 
@@ -148,13 +144,8 @@ const createBillingAccountRequestData = (
  */
 export const createBillingAccount = async (
     data: FormEditBillingAccount,
-): Promise<BillingAccount[]> => {
-    const resultData = await xhrPostAsync<
-        {
-            param: RequestCommonDataType
-        },
-        BillingAccount[]
-    >(
+): Promise<BillingAccount> => {
+    const resultData = await xhrPostAsync<RequestCommonDataType, BillingAccount>(
         `${EnvironmentConfig.API.V6}/billing-accounts`,
         createBillingAccountRequestData(data),
     )
@@ -170,19 +161,8 @@ export const createBillingAccount = async (
 export const editBillingAccount = async (
     accountId: string,
     data: FormEditBillingAccount,
-): Promise<{
-    original: BillingAccount
-    updated: BillingAccount
-}> => {
-    const resultData = await xhrPatchAsync<
-        {
-            param: RequestCommonDataType
-        },
-        {
-            original: BillingAccount
-            updated: BillingAccount
-        }
-    >(
+): Promise<BillingAccount> => {
+    const resultData = await xhrPatchAsync<RequestCommonDataType, BillingAccount>(
         `${EnvironmentConfig.API.V6}/billing-accounts/${accountId}`,
         createBillingAccountRequestData(data),
     )

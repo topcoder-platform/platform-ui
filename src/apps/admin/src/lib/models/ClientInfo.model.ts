@@ -6,7 +6,7 @@ import { TABLE_DATE_FORMAT } from '../../config/index.config'
  * Model for client info
  */
 export interface ClientInfo {
-    id: number
+    id: number | string
     name: string
     status: string
     startDate: Date
