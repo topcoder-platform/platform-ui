@@ -5,6 +5,8 @@ export * from './default.env'
 export const LOCAL_SERVICE_OVERRIDES: LocalServiceOverride[] = [
     { prefix: '/v5/billing-accounts', target: 'http://localhost:3010' },
     { prefix: '/v6/billing-accounts', target: 'http://localhost:3010' },
+    { prefix: '/v6/clients', target: 'http://localhost:3010' },
+    { prefix: '/v6/clients', target: 'http://localhost:3010' },
 
     { prefix: '/v6/challenge-settings', target: 'http://localhost:3000' },
     { prefix: '/v6/challenge-tracks', target: 'http://localhost:3000' },
@@ -35,6 +37,8 @@ export const LOCAL_SERVICE_OVERRIDES: LocalServiceOverride[] = [
     { prefix: '/v6/reviewSummations', target: 'http://localhost:3005' },
     { prefix: '/v6/reviewTypes', target: 'http://localhost:3005' },
     { prefix: '/v6/reviews', target: 'http://localhost:3005' },
+    { prefix: '/v6/review-opportunities', target: 'http://localhost:3005' },
+    { prefix: '/v6/review-applications', target: 'http://localhost:3005' },
 
     { prefix: '/v6/standardized-skills', target: 'http://localhost:3006' },
 ]

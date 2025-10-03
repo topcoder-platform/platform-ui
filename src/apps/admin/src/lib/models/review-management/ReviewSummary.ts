@@ -15,6 +15,6 @@ export interface ReviewSummary {
     numberOfReviewerSpots: number
     /** Number Of Submissions */
     numberOfSubmissions: number
-    /** Submission End Date */
+    /** Review Start Date */
     submissionEndDate: string
 }

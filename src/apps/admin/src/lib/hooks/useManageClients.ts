@@ -90,6 +90,7 @@ export interface useManageClientsProps {
     sort: Sort | undefined
     setSort: Dispatch<SetStateAction<Sort | undefined>>
     totalPages: number
+    reloadData?: () => void
 }
 
 /**
@@ -111,6 +112,7 @@ export function useManageClients(mappingSortField?: {
         setFilterCriteria,
         sort,
         setSort,
+        reloadData,
     }: useTableFilterBackendProps<FormClientsFilter>
         = useTableFilterBackend<FormClientsFilter>(
             (pagRequest, sortRequest, filterCriteria, success, fail) => {
@@ -129,9 +131,19 @@ export function useManageClients(mappingSortField?: {
                 searchClients(
                     filterCriteria
                         ? {
-                            endDate: filterCriteria.endDate,
+                            ...(filterCriteria.startDate
+                                ? {
+                                    endDateFrom: filterCriteria.startDate,
+                                    startDateFrom: filterCriteria.startDate,
+                                }
+                                : {}),
+                            ...(filterCriteria.endDate
+                                ? {
+                                    endDateTo: filterCriteria.endDate,
+                                    startDateTo: filterCriteria.endDate,
+                                }
+                                : {}),
                             name: filterCriteria.name,
-                            startDate: filterCriteria.startDate,
                             status: filterCriteria.status,
                         }
                         : {},
@@ -168,6 +180,7 @@ export function useManageClients(mappingSortField?: {
         datas: state.datas,
         isLoading: state.isLoading,
         page,
+        reloadData,
         setFilterCriteria,
         setPage,
         setSort,

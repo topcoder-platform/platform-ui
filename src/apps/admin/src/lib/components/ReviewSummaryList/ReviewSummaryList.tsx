@@ -60,13 +60,23 @@ const ChallengeTitle: FC<{
         window.location.href = `${EnvironmentConfig.ADMIN.CHALLENGE_URL}/${props.review.legacyChallengeId}`
     })
 
+    const fullTitle = props.review.challengeName || ''
+    const maxLen = 60
+    const shortTitle = fullTitle.length > maxLen
+        ? `${fullTitle.slice(0, maxLen)}…`
+        : fullTitle
+
     return props.review.legacyChallengeId ? (
-        <LinkButton onClick={goToChallenge} className={styles.challengeTitleLink}>
-            {props.review.challengeName}
+        <LinkButton
+            onClick={goToChallenge}
+            className={styles.challengeTitleLink}
+            title={fullTitle}
+        >
+            {shortTitle}
         </LinkButton>
     ) : (
-        <span className={styles.challengeTitleText}>
-            {props.review.challengeName}
+        <span className={styles.challengeTitleText} title={fullTitle}>
+            {shortTitle}
         </span>
     )
 }
@@ -91,27 +101,17 @@ const ReviewSummaryList: FC<ReviewListProps> = props => {
                 ),
                 type: 'element',
             },
-            {
-                columnId: 'legacyChallengeId',
-                label: 'ID',
-                propertyName: 'legacyChallengeId',
-                type: 'text',
-            },
+
             // {
             //     label: 'Current phase',
             //     propertyName: '',
             //     type: 'text',
             // },
-            {
-                columnId: 'challengeStatus',
-                label: 'Status',
-                propertyName: 'challengeStatus',
-                type: 'text',
-            },
+            // Status column removed to prevent table overflow
             // I think this column is important, and it exits in `admin-app`
             // but resp does not have it, so I just comment it here
             {
-                label: 'Submission End Date',
+                label: 'Review Start Date',
                 propertyName: 'submissionEndDate',
                 renderer: (review: ReviewSummary) => (
                     // eslint-disable-next-line jsx-a11y/anchor-is-valid

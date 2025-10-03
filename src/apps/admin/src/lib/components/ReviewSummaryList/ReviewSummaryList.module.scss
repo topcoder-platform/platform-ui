@@ -19,13 +19,13 @@
 
 .challengeTitleText,
 .challengeTitleLink {
-    min-width: 200px;
+    min-width: 120px;
     padding: 0;
     justify-content: flex-start;
     border-radius: 0;
     color: $body-color;
     line-height: 16px;
-    white-space: break-spaces;
+    white-space: normal;
 }
 
 .challengeTitleLink {
@@ -45,6 +45,9 @@
 }
 
 .desktopTable {
+    th {
+        white-space: normal;
+    }
     td {
         vertical-align: middle;
     }
