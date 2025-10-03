@@ -28,6 +28,9 @@ export const PermissionRoleMembersPage: FC<Props> = (props: Props) => {
         isLoading,
         roleInfo,
         roleMembers,
+        page,
+        totalPages,
+        onPageChange,
         doFilterRoleMembers,
         isFiltering,
         isRemoving,
@@ -36,11 +39,13 @@ export const PermissionRoleMembersPage: FC<Props> = (props: Props) => {
         doRemoveRoleMembers,
     }: useManagePermissionRoleMembersProps = useManagePermissionRoleMembers(roleId)
 
+    const pageTitleWithRole = roleInfo?.roleName ? `${pageTitle}: ${roleInfo.roleName}` : pageTitle
+
     return (
         <div className={classNames(styles.container, props.className)}>
-            <PageTitle>{pageTitle}</PageTitle>
+            <PageTitle>{pageTitleWithRole}</PageTitle>
             <PageHeader>
-                <h3>{pageTitle}</h3>
+                <h3>{pageTitleWithRole}</h3>
                 <div className={styles.headerActions}>
                     <LinkButton
                         primary
@@ -88,6 +93,9 @@ export const PermissionRoleMembersPage: FC<Props> = (props: Props) => {
                                         isRemoving={isRemoving}
                                         isRemovingBool={isRemovingBool}
                                         datas={roleMembers}
+                                        page={page}
+                                        totalPages={totalPages}
+                                        onPageChange={onPageChange}
                                         doRemoveRoleMember={doRemoveRoleMember}
                                         doRemoveRoleMembers={doRemoveRoleMembers}
                                     />

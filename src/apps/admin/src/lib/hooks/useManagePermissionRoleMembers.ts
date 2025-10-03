@@ -10,8 +10,9 @@ import {
     RoleMemberInfo,
     UserRole,
 } from '../models'
-import { fetchRole, unassignRole } from '../services'
+import { fetchRole, fetchRoleMembersPaginated, unassignRole } from '../services'
 import { handleError } from '../utils'
+import { TABLE_PAGINATION_ITEM_PER_PAGE } from '../../config/index.config'
 
 /// /////////////////
 // Permission role members reducer
@@ -22,11 +23,13 @@ type RolesState = {
     isFiltering: boolean
     isRemoving: { [key: string]: boolean }
     roleInfo?: UserRole
-    filteredRoleMembers: RoleMemberInfo[]
-    allRoleMembers: RoleMemberInfo[]
+    roleMembers: RoleMemberInfo[]
+    page: number
+    totalPages: number
 }
 
 const RolesActionType = {
+    FETCH_ROLE_INFO_DONE: 'FETCH_ROLE_INFO_DONE' as const,
     FETCH_ROLE_MEMBERS_DONE: 'FETCH_ROLE_MEMBERS_DONE' as const,
     FETCH_ROLE_MEMBERS_FAILED: 'FETCH_ROLE_MEMBERS_FAILED' as const,
     FETCH_ROLE_MEMBERS_INIT: 'FETCH_ROLE_MEMBERS_INIT' as const,
@@ -47,8 +50,12 @@ type RolesReducerAction =
               | typeof RolesActionType.FILTER_ROLE_MEMBERS_FAILED
       }
     | {
-          type: typeof RolesActionType.FETCH_ROLE_MEMBERS_DONE
+          type: typeof RolesActionType.FETCH_ROLE_INFO_DONE
           payload: UserRole
+      }
+    | {
+          type: typeof RolesActionType.FETCH_ROLE_MEMBERS_DONE
+          payload: { data: RoleMemberInfo[]; page: number; totalPages: number }
       }
     | {
           type: typeof RolesActionType.FILTER_ROLE_MEMBERS_DONE
@@ -70,29 +77,25 @@ const reducer = (
         case RolesActionType.FETCH_ROLE_MEMBERS_INIT: {
             return {
                 ...previousState,
-                allRoleMembers: [],
-                filteredRoleMembers: [],
                 isLoading: true,
+                roleMembers: [],
+            }
+        }
+
+        case RolesActionType.FETCH_ROLE_INFO_DONE: {
+            return {
+                ...previousState,
+                roleInfo: action.payload,
             }
         }
 
         case RolesActionType.FETCH_ROLE_MEMBERS_DONE: {
-            const roleInfo = action.payload
-            const allRoleMembers = _.filter(
-                roleInfo.subjects || [],
-                roleMember => (!!roleMember.handle || !!roleMember.email),
-            )
-                .map(roleMember => ({
-                    email: roleMember.email,
-                    handle: roleMember.handle,
-                    id: `${roleMember.userId ?? ''}`,
-                }))
             return {
                 ...previousState,
-                allRoleMembers,
-                filteredRoleMembers: allRoleMembers,
                 isLoading: false,
-                roleInfo,
+                page: action.payload.page,
+                roleMembers: action.payload.data,
+                totalPages: action.payload.totalPages,
             }
         }
 
@@ -106,16 +109,16 @@ const reducer = (
         case RolesActionType.FILTER_ROLE_MEMBERS_INIT: {
             return {
                 ...previousState,
-                filteredRoleMembers: [],
                 isFiltering: true,
+                roleMembers: [],
             }
         }
 
         case RolesActionType.FILTER_ROLE_MEMBERS_DONE: {
             return {
                 ...previousState,
-                filteredRoleMembers: action.payload,
                 isFiltering: false,
+                roleMembers: action.payload,
             }
         }
 
@@ -137,22 +140,17 @@ const reducer = (
         }
 
         case RolesActionType.REMOVE_ROLE_MEMBERS_DONE: {
-            const allRoleMembers = _.filter(
-                previousState.allRoleMembers,
-                role => role.id !== action.payload,
-            )
-            const filteredRoleMembers = _.filter(
-                previousState.allRoleMembers,
+            const roleMembers = _.filter(
+                previousState.roleMembers,
                 role => role.id !== action.payload,
             )
             return {
                 ...previousState,
-                allRoleMembers,
-                filteredRoleMembers,
                 isRemoving: {
                     ...previousState.isRemoving,
                     [action.payload]: false,
                 },
+                roleMembers,
             }
         }
 
@@ -179,6 +177,9 @@ export interface useManagePermissionRoleMembersProps {
     isRemoving: { [key: string]: boolean }
     roleInfo?: UserRole
     roleMembers: RoleMemberInfo[]
+    page: number
+    totalPages: number
+    onPageChange: (page: number) => void
     doFilterRoleMembers: (filterData: FormRoleMembersFilters) => void
     doRemoveRoleMember: (roleMember: RoleMemberInfo) => void
     doRemoveRoleMembers: (roleMemberIds: string[], callBack: () => void) => void
@@ -193,13 +194,15 @@ export function useManagePermissionRoleMembers(
     roleId: string,
 ): useManagePermissionRoleMembersProps {
     const [state, dispatch] = useReducer(reducer, {
-        allRoleMembers: [],
-        filteredRoleMembers: [],
         isFiltering: false,
         isLoading: false,
         isRemoving: {},
+        page: 1,
+        roleMembers: [],
+        totalPages: 1,
     })
     const isLoadingRef = useRef(false)
+    const filtersRef = useRef<FormRoleMembersFilters>({})
     const isRemovingBool = useMemo(
         () => _.some(state.isRemoving, value => value === true),
         [state.isRemoving],
@@ -210,11 +213,27 @@ export function useManagePermissionRoleMembers(
             type: RolesActionType.FETCH_ROLE_MEMBERS_INIT,
         })
         isLoadingRef.current = true
-        fetchRole(roleId, ['id', 'roleName', 'subjects'])
-            .then(result => {
-                isLoadingRef.current = false
+        // Fetch role info (for title) then fetch first page of members
+        fetchRole(roleId, ['id', 'roleName'])
+            .then(async result => {
                 dispatch({
                     payload: result,
+                    type: RolesActionType.FETCH_ROLE_INFO_DONE,
+                })
+                const resp = await fetchRoleMembersPaginated(roleId, {
+                    email: filtersRef.current.email,
+                    page: 1,
+                    perPage: TABLE_PAGINATION_ITEM_PER_PAGE,
+                    userHandle: filtersRef.current.userHandle,
+                    userId: filtersRef.current.userId,
+                })
+                isLoadingRef.current = false
+                dispatch({
+                    payload: {
+                        data: resp.data,
+                        page: resp.page || 1,
+                        totalPages: resp.totalPages || 1,
+                    },
                     type: RolesActionType.FETCH_ROLE_MEMBERS_DONE,
                 })
             })
@@ -229,34 +248,67 @@ export function useManagePermissionRoleMembers(
 
     const doFilterRoleMembers = useCallback(
         (filterData: FormRoleMembersFilters) => {
-            let filteredMembers = _.clone(state.allRoleMembers)
-
-            if (filterData.userId) {
-                filteredMembers = _.filter(
-                    filteredMembers,
-                    member => `${member.id}` === filterData.userId,
-                )
+            dispatch({ type: RolesActionType.FILTER_ROLE_MEMBERS_INIT })
+            filtersRef.current = {
+                email: filterData.email,
+                userHandle: filterData.userHandle,
+                userId: filterData.userId,
             }
-
-            if (filterData.email) {
-                filteredMembers = _.filter(filteredMembers, {
-                    email: filterData.email,
-                })
-            }
-
-            if (filterData.userHandle) {
-                filteredMembers = _.filter(filteredMembers, {
-                    handle: filterData.userHandle,
-                })
-            }
-
-            dispatch({
-                payload: filteredMembers,
-                type: RolesActionType.FILTER_ROLE_MEMBERS_DONE,
+            fetchRoleMembersPaginated(roleId, {
+                page: 1,
+                perPage: TABLE_PAGINATION_ITEM_PER_PAGE,
+                ...filtersRef.current,
             })
+                .then(resp => {
+                    const mapped: RoleMemberInfo[] = resp.data.map(m => ({
+                        email: m.email,
+                        handle: m.handle,
+                        id: m.id,
+                    }))
+                    dispatch({
+                        payload: mapped,
+                        type: RolesActionType.FILTER_ROLE_MEMBERS_DONE,
+                    })
+                    dispatch({
+                        payload: {
+                            data: mapped,
+                            page: resp.page || 1,
+                            totalPages: resp.totalPages || 1,
+                        },
+                        type: RolesActionType.FETCH_ROLE_MEMBERS_DONE,
+                    })
+                })
+                .catch(e => {
+                    dispatch({ type: RolesActionType.FILTER_ROLE_MEMBERS_FAILED })
+                    handleError(e)
+                })
         },
-        [dispatch, state.allRoleMembers],
+        [dispatch, roleId],
     )
+
+    const onPageChange = useCallback((page: number) => {
+        if (page < 1) return
+        dispatch({ type: RolesActionType.FETCH_ROLE_MEMBERS_INIT })
+        fetchRoleMembersPaginated(roleId, {
+            page,
+            perPage: TABLE_PAGINATION_ITEM_PER_PAGE,
+            ...filtersRef.current,
+        })
+            .then(resp => {
+                dispatch({
+                    payload: {
+                        data: resp.data,
+                        page: resp.page || page,
+                        totalPages: resp.totalPages || 1,
+                    },
+                    type: RolesActionType.FETCH_ROLE_MEMBERS_DONE,
+                })
+            })
+            .catch(e => {
+                dispatch({ type: RolesActionType.FETCH_ROLE_MEMBERS_FAILED })
+                handleError(e)
+            })
+    }, [dispatch, roleId])
 
     const doRemoveRoleMember = useCallback(
         (roleMember: RoleMemberInfo) => {
@@ -273,6 +325,8 @@ export function useManagePermissionRoleMembers(
                         payload: roleMember.id,
                         type: RolesActionType.REMOVE_ROLE_MEMBERS_DONE,
                     })
+                    // Refresh current page after remove
+                    onPageChange((state.page || 1))
                 })
                 .catch(e => {
                     dispatch({
@@ -282,7 +336,7 @@ export function useManagePermissionRoleMembers(
                     handleError(e)
                 })
         },
-        [dispatch, roleId],
+        [dispatch, roleId, onPageChange, state.page],
     )
 
     const doRemoveRoleMembers = useCallback(
@@ -320,6 +374,8 @@ export function useManagePermissionRoleMembers(
                             type: RolesActionType.REMOVE_ROLE_MEMBERS_DONE,
                         })
                     })
+                    // Refresh current page after bulk remove
+                    onPageChange((state.page || 1))
                 })
                 .catch(e => {
                     _.forEach(roleMemberIds, roleMemberId => {
@@ -331,7 +387,7 @@ export function useManagePermissionRoleMembers(
                     handleError(e)
                 })
         },
-        [dispatch, roleId],
+        [dispatch, roleId, onPageChange, state.page],
     )
 
     useEffect(() => {
@@ -348,7 +404,10 @@ export function useManagePermissionRoleMembers(
         isLoading: state.isLoading,
         isRemoving: state.isRemoving,
         isRemovingBool,
+        onPageChange,
+        page: state.page,
         roleInfo: state.roleInfo,
-        roleMembers: state.filteredRoleMembers,
+        roleMembers: state.roleMembers,
+        totalPages: state.totalPages,
     }
 }

@@ -12,6 +12,10 @@ import {
 } from '~/libs/core'
 
 import { adjustUserRoleResponse, UserRole } from '../models'
+import { PaginatedResponseV6 } from '../models/PaginatedResponseV6.model'
+import { RoleMemberInfo } from '../models/RoleMemberInfo.model'
+
+type RoleMemberRaw = { userId?: number; handle?: string | null; email?: string | null }
 
 /**
  * Fetchs roles of the specified subject
@@ -138,4 +142,92 @@ export const fetchRole = async (
         `${baseUrl}${fieldsQuery}`,
     )
     return adjustUserRoleResponse(response)
+}
+
+/**
+ * Fetch members assigned to a role, with optional filters.
+ */
+export const fetchRoleMembers = async (
+    roleId: string,
+    filters?: { userId?: string; userHandle?: string; email?: string },
+): Promise<RoleMemberInfo[]> => {
+    const baseUrl = `${EnvironmentConfig.API.V6}/roles/${roleId}/subjects`
+    const params: string[] = []
+    if (filters?.userId) params.push(`userId=${encodeURIComponent(filters.userId)}`)
+    if (filters?.userHandle) params.push(`userHandle=${encodeURIComponent(filters.userHandle)}`)
+    if (filters?.email) params.push(`email=${encodeURIComponent(filters.email)}`)
+    const url = params.length ? `${baseUrl}?${params.join('&')}` : baseUrl
+    const response = await xhrGetAsync<RoleMemberRaw[]>(url)
+    return (response || []).map(m => ({
+        email: m.email ?? undefined,
+        handle: m.handle ?? undefined,
+        id: String(m.userId ?? ''),
+    }))
+}
+
+/**
+ * Fetch members assigned to a role with server-side pagination and optional filters.
+ */
+export const fetchRoleMembersPaginated = async (
+    roleId: string,
+    options: {
+        page: number
+        perPage: number
+        userId?: string
+        userHandle?: string
+        email?: string
+    },
+): Promise<PaginatedResponseV6<RoleMemberInfo>> => {
+    const baseUrl = `${EnvironmentConfig.API.V6}/roles/${roleId}/subjects`
+    const queryMap: Record<string, string | number | undefined> = {
+        email: options.email,
+        page: options.page,
+        perPage: options.perPage,
+        userHandle: options.userHandle,
+        userId: options.userId,
+    }
+    const params = Object.entries(queryMap)
+        .filter(([, v]) => v !== undefined && v !== null && v !== '')
+        .map(([k, v]) => `${k}=${encodeURIComponent(String(v as string | number))}`)
+    const url = params.length ? `${baseUrl}?${params.join('&')}` : baseUrl
+
+    const raw = await xhrGetAsync<any>(url)
+
+    // Support both array (non-paginated) and object (paginated) responses
+    if (Array.isArray(raw)) {
+        const mappedArr: RoleMemberInfo[] = (raw || []).map(
+            (m: RoleMemberRaw) => ({
+                email: m?.email ?? undefined,
+                handle: m?.handle ?? undefined,
+                id: String(m?.userId ?? ''),
+            }),
+        )
+        return {
+            data: mappedArr,
+            page: 1,
+            perPage: mappedArr.length,
+            total: mappedArr.length,
+            totalPages: 1,
+        }
+    }
+
+    const dataArray = (raw?.data ?? []) as Array<RoleMemberRaw>
+    const mapped: RoleMemberInfo[] = dataArray.map(m => ({
+        email: m.email ?? undefined,
+        handle: m.handle ?? undefined,
+        id: String(m.userId ?? ''),
+    }))
+
+    const safeTotal = Number(raw?.total ?? mapped.length)
+    const safePerPage = Number(raw?.perPage ?? mapped.length)
+    const computedTotalPages = raw?.totalPages
+        || (safePerPage ? Math.ceil(safeTotal / safePerPage) : 1)
+
+    return {
+        data: mapped,
+        page: raw?.page || 1,
+        perPage: safePerPage,
+        total: safeTotal,
+        totalPages: computedTotalPages,
+    }
 }

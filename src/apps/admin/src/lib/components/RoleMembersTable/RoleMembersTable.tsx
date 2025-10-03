@@ -24,19 +24,22 @@ interface Props {
     isRemoving: { [key: string]: boolean }
     doRemoveRoleMember: (roleMember: RoleMemberInfo) => void
     doRemoveRoleMembers: (roleMemberIds: string[], callback: () => void) => void
+    page: number
+    totalPages: number
+    onPageChange: (page: number) => void
 }
 
 export const RoleMembersTable: FC<Props> = (props: Props) => {
     const [colWidth, setColWidth] = useState<colWidthType>({})
     const {
-        page,
-        setPage,
-        totalPages,
         results,
         setSort,
         sort,
     }: useTableFilterLocalProps<RoleMemberInfo> = useTableFilterLocal(
         props.datas ?? [],
+        undefined,
+        undefined,
+        true,
     )
     const datasIds = useMemo(() => results.map(item => item.id), [results])
     const {
@@ -210,9 +213,9 @@ export const RoleMembersTable: FC<Props> = (props: Props) => {
                 </Button>
             </div>
             <Pagination
-                page={page}
-                totalPages={totalPages}
-                onPageChange={setPage}
+                page={props.page}
+                totalPages={props.totalPages}
+                onPageChange={props.onPageChange}
             />
         </div>
     )
