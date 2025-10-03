@@ -1,5 +1,5 @@
 export default interface WorkInfo {
-    company?: string
+    companyName?: string
     position?: string
     industry?: string
     startDate?: Date

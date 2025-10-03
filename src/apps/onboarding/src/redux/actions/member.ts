@@ -117,10 +117,10 @@ export const fetchMemberTraits: any = () => async (dispatch: any) => {
     if (workExpValue) {
         // workExpValue is array of works. fill it to state
         const works: WorkInfo[] = workExpValue.map((j: any, index: number) => {
-            const startDate: Date | undefined = dateTimeToDate(j.timePeriodFrom)
-            const endDate: Date | undefined = dateTimeToDate(j.timePeriodTo)
+            const startDate: Date | undefined = dateTimeToDate(j.startDate)
+            const endDate: Date | undefined = dateTimeToDate(j.endDate)
             return ({
-                company: j.company,
+                companyName: j.companyName,
                 currentlyWorking: j.working,
                 endDate,
                 id: index + 1,
@@ -142,10 +142,11 @@ export const fetchMemberTraits: any = () => async (dispatch: any) => {
             const startDate: Date | undefined = dateTimeToDate(e.timePeriodFrom)
             const endDate: Date | undefined = dateTimeToDate(e.timePeriodTo)
             return ({
-                collegeName: e.schoolCollegeName,
+                collegeName: e.collegeName,
                 endDate,
+                endYear: e.endYear,
                 id: index + 1,
-                major: e.major,
+                major: e.degree,
                 startDate,
             })
         })
@@ -160,7 +161,7 @@ export const fetchMemberTraits: any = () => async (dispatch: any) => {
         const personalizations: PersonalizationInfo[] = personalizationExpValue.map((e: any) => _.omitBy({
             ...e,
             availableForGigs: e.availableForGigs,
-            profileSelfTitle: e.profileSelfTitle,
+            profileSelfTitle: e.personalization[0]?.profileSelfTitle || e.profileSelfTitle,
             referAs: e.referAs,
             shortBio: e.shortBio,
         }, _.isUndefined))
@@ -192,11 +193,13 @@ const createWorksPayloadData: any = (works: WorkInfo[]) => {
             currentlyWorking,
         }: any = work
         return {
-            company,
+            companyName: company || '',
+            // eslint-disable-next-line unicorn/no-null
+            endDate: endDate ? endDate.toISOString() : null,
             industry,
             position,
-            timePeriodFrom: startDate ? startDate.toISOString() : '',
-            timePeriodTo: endDate ? endDate.toISOString() : '',
+            // eslint-disable-next-line unicorn/no-null
+            startDate: startDate ? startDate.toISOString() : null,
             working: currentlyWorking,
         }
     })
@@ -206,6 +209,7 @@ const createWorksPayloadData: any = (works: WorkInfo[]) => {
         traitId: UserTraitIds.work,
         traits: {
             data,
+            traitId: UserTraitIds.work,
         },
     }
     return [payload]
@@ -242,14 +246,12 @@ const createEducationsPayloadData: any = (educations: EducationInfo[]) => {
         const {
             collegeName,
             major,
-            startDate,
-            endDate,
+            endYear,
         }: any = education
         return {
-            major,
-            schoolCollegeName: collegeName,
-            timePeriodFrom: startDate ? startDate.toISOString() : '',
-            timePeriodTo: endDate ? endDate.toISOString() : '',
+            collegeName,
+            degree: major,
+            endYear: parseInt(endYear, 10),
         }
     })
 
@@ -258,6 +260,7 @@ const createEducationsPayloadData: any = (educations: EducationInfo[]) => {
         traitId: UserTraitIds.education,
         traits: {
             data,
+            traitId: UserTraitIds.education,
         },
     }
     return [payload]
@@ -266,7 +269,6 @@ const createEducationsPayloadData: any = (educations: EducationInfo[]) => {
 export const updateMemberEducations: any = (educations: EducationInfo[]) => async (dispatch: any) => {
     try {
         const tokenInfo: TokenModel = await getAsyncToken()
-
         await updateMemberTraits(tokenInfo.handle || '', createEducationsPayloadData(educations))
         dispatch(updateEducations(educations))
     } catch (error) {
@@ -311,6 +313,7 @@ const createPersonalizationsPayloadData: any = (personalizations: Personalizatio
         traitId: UserTraitIds.personalization,
         traits: {
             data,
+            traitId: UserTraitIds.personalization,
         },
     }
     return [payload]
