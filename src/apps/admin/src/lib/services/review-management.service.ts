@@ -95,10 +95,9 @@ type ReviewOpportunityApplication = {
     status?: string
     applicationDate?: string
     email?: string
-    stats?: {
-        reviewsInPast60Days?: number
-        currentAssignments?: number
-    }
+    // v6 API returns these metrics at the top level
+    openReviews?: number
+    latestCompletedReviews?: number
 }
 
 type ReviewOpportunityResponse = {
@@ -128,10 +127,28 @@ type ReviewApplicationsResponse = {
     }
 }
 
+const toTitleCase = (value?: string): string => {
+    if (!value) return ''
+    // Normalize known statuses from v6 API
+    const map: Record<string, string> = {
+        APPROVED: 'Approved',
+        CANCELLED: 'Cancelled',
+        PENDING: 'Pending',
+        REJECTED: 'Rejected',
+    }
+    const upper = value.toUpperCase()
+    if (map[upper]) return map[upper]
+    // Fallback: generic title-case
+    return value
+        .toLowerCase()
+        .split('_')
+        .map(w => (w ? w[0].toUpperCase() + w.slice(1) : w))
+        .join(' ')
+}
+
 const mapApplicationToReviewer = (
     application: ReviewOpportunityApplication,
 ): Reviewer => {
-    const stats = application.stats ?? {}
     const parsedUserId = typeof application.userId === 'number'
         ? application.userId
         : Number(application.userId)
@@ -139,13 +156,13 @@ const mapApplicationToReviewer = (
     return {
         applicationDate: application.applicationDate ?? '',
         applicationId: application.id,
-        applicationRole: application.role ?? '',
-        applicationStatus: application.status ?? '',
+        applicationRole: toTitleCase(application.role),
+        applicationStatus: toTitleCase(application.status),
         currentNumberOfReviewPositions:
-            stats.currentAssignments ?? 0,
+            application.openReviews ?? 0,
         emailAddress: application.email ?? '',
         handle: application.handle ?? '',
-        reviewsInPast60Days: stats.reviewsInPast60Days ?? 0,
+        reviewsInPast60Days: application.latestCompletedReviews ?? 0,
         userId: Number.isFinite(parsedUserId) ? parsedUserId : 0,
     }
 }
