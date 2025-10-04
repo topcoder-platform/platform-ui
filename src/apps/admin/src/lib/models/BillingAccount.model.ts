@@ -48,13 +48,13 @@ export function adjustBillingAccountResponse(
     return {
         ...data,
         budgetAmount,
+        companyId: derivedCompanyId as any,
         endDate,
         endDateString: data.endDate
             ? moment(data.endDate)
                 .local()
                 .format(TABLE_DATE_FORMAT)
             : data.endDate,
-        companyId: derivedCompanyId as any,
         startDate,
         startDateString: data.startDate
             ? moment(data.startDate)

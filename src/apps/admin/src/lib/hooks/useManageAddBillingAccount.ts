@@ -9,9 +9,9 @@ import { BillingAccount, ClientInfo, FormEditBillingAccount, FormEditClient } fr
 import {
     createBillingAccount,
     editBillingAccount,
+    editClient,
     findBillingAccountById,
     findClientById,
-    editClient,
 } from '../services'
 
 /// /////////////////
@@ -216,10 +216,10 @@ export function useManageAddBillingAccount(
                         try {
                             const client = await findClientById(data.client.id)
                             const patch: FormEditClient = {
-                                name: client.name,
                                 codeName: String(data.companyId),
-                                startDate: client.startDate,
                                 endDate: client.endDate,
+                                name: client.name,
+                                startDate: client.startDate,
                                 status: client.status,
                             }
                             await editClient(String(client.id), patch)
@@ -228,6 +228,7 @@ export function useManageAddBillingAccount(
                             console.warn('Failed to update client customer number (codeName):', e)
                         }
                     }
+
                     toast.success('Billing account added successfully', {
                         toastId: 'Add accounts',
                     })
@@ -258,10 +259,10 @@ export function useManageAddBillingAccount(
                         try {
                             const client = await findClientById(data.client.id)
                             const patch: FormEditClient = {
-                                name: client.name,
                                 codeName: String(data.companyId),
-                                startDate: client.startDate,
                                 endDate: client.endDate,
+                                name: client.name,
+                                startDate: client.startDate,
                                 status: client.status,
                             }
                             await editClient(String(client.id), patch)
@@ -269,6 +270,7 @@ export function useManageAddBillingAccount(
                             console.warn('Failed to update client customer number (codeName):', e)
                         }
                     }
+
                     toast.success('Billing account updated successfully', {
                         toastId: 'Update accounts',
                     })
