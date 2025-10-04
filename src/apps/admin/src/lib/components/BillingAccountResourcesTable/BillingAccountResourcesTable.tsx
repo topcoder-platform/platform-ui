@@ -53,7 +53,7 @@ export const BillingAccountResourcesTable: FC<Props> = (props: Props) => {
                 renderer: (data: BillingAccountResource) => (
                     <Button
                         variant='tc-green'
-                        label='Delete'
+                        label='Remove'
                         disabled={props.isRemoving[data.id]}
                         onClick={function onClick() {
                             props.doRemoveItem(data)

@@ -11,6 +11,7 @@ import {
     findAllBillingAccountResources,
     searchUsers,
 } from '../services'
+import { findUserById } from '../services/user.service'
 import { handleError } from '../utils'
 
 /// /////////////////
@@ -131,6 +132,7 @@ export interface useManageBillingAccountResourcesProps {
     isRemovingBool: boolean
     billingAccountResources: BillingAccountResource[]
     doRemoveBillingAccountResource: (data: BillingAccountResource) => void
+    refresh: () => void
 }
 
 /**
@@ -162,10 +164,26 @@ export function useManageBillingAccountResources(
         })
         isLoadingRef.current = true
         findAllBillingAccountResources(accountId)
-            .then(result => {
+            .then(async result => {
+                // Map any numeric "name" values (user IDs) to member handles
+                const mapped: BillingAccountResource[] = await Promise.all(
+                    (result || []).map(async (r) => {
+                        const isNumericId = /^\d+$/.test(r.name)
+                        if (!isNumericId) return r
+                        try {
+                            const user = await findUserById(r.name)
+                            if (user && user.handle) {
+                                return { ...r, name: user.handle }
+                            }
+                        } catch (_) {
+                            // ignore and fall back to original value
+                        }
+                        return r
+                    }),
+                )
                 isLoadingRef.current = false
                 dispatch({
-                    payload: result,
+                    payload: mapped,
                     type: BillingAccountResourcesActionType.FETCH_BILLING_ACCOUNT_RESOURCES_DONE,
                 })
             })
@@ -190,6 +208,23 @@ export function useManageBillingAccountResources(
                     type: BillingAccountResourcesActionType.REMOVE_BILLING_ACCOUNT_RESOURCES_FAILED,
                 })
                 handleError(error)
+            }
+
+            const numericId = /^\d+$/.test(item.name) ? item.name : null
+            if (numericId) {
+                // If the table value is a userId, delete directly by userId
+                deleteBillingAccountResource(accountId, numericId)
+                    .then(() => {
+                        toast.success('Billing account resource removed successfully', {
+                            toastId: 'Remove billing account resource',
+                        })
+                        dispatch({
+                            payload: item.id,
+                            type: BillingAccountResourcesActionType.REMOVE_BILLING_ACCOUNT_RESOURCES_DONE,
+                        })
+                    })
+                    .catch(handleActionError)
+                return
             }
 
             searchUsers({
@@ -235,5 +270,10 @@ export function useManageBillingAccountResources(
         isLoading: state.isLoading,
         isRemoving: state.isRemoving,
         isRemovingBool,
+        refresh: () => {
+            if (!isLoadingRef.current) {
+                doFetchBillingAccountResource()
+            }
+        },
     }
 }
