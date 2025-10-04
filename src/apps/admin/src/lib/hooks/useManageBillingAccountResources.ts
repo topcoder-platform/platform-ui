@@ -167,7 +167,7 @@ export function useManageBillingAccountResources(
             .then(async result => {
                 // Map any numeric "name" values (user IDs) to member handles
                 const mapped: BillingAccountResource[] = await Promise.all(
-                    (result || []).map(async (r) => {
+                    (result || []).map(async r => {
                         const isNumericId = /^\d+$/.test(r.name)
                         if (!isNumericId) return r
                         try {
@@ -175,9 +175,10 @@ export function useManageBillingAccountResources(
                             if (user && user.handle) {
                                 return { ...r, name: user.handle }
                             }
-                        } catch (_) {
+                        } catch {
                             // ignore and fall back to original value
                         }
+
                         return r
                     }),
                 )
@@ -210,7 +211,7 @@ export function useManageBillingAccountResources(
                 handleError(error)
             }
 
-            const numericId = /^\d+$/.test(item.name) ? item.name : null
+            const numericId = /^\d+$/.test(item.name) ? item.name : undefined
             if (numericId) {
                 // If the table value is a userId, delete directly by userId
                 deleteBillingAccountResource(accountId, numericId)

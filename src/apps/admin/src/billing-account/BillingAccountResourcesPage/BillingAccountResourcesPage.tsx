@@ -1,7 +1,7 @@
 /**
  * Billing account resources page.
  */
-import { FC, useCallback, useMemo, useState } from 'react'
+import { FC, useCallback, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import classNames from 'classnames'
 
@@ -40,7 +40,7 @@ export const BillingAccountResourcesPage: FC<Props> = (props: Props) => {
 
     // Remove confirmation state
     const [confirmOpen, setConfirmOpen] = useState(false)
-    const [pendingRemoveHandle, setPendingRemoveHandle] = useState<string | null>(null)
+    const [pendingRemoveHandle, setPendingRemoveHandle] = useState<string | undefined>(undefined)
 
     const handleRequestRemove = useCallback((item: { id: number; name: string }) => {
         setPendingRemoveHandle(item.name)
@@ -52,13 +52,15 @@ export const BillingAccountResourcesPage: FC<Props> = (props: Props) => {
             // doRemove expects a BillingAccountResource-like item
             doRemoveBillingAccountResource({ id: -1, name: pendingRemoveHandle, status: 'active' })
         }
+
         setConfirmOpen(false)
-        setPendingRemoveHandle(null)
+
+        setPendingRemoveHandle(undefined)
     }, [pendingRemoveHandle, doRemoveBillingAccountResource])
 
     // Add resource modal state
     const [addOpen, setAddOpen] = useState(false)
-    const [addSelection, setAddSelection] = useState<SelectOption | null>(null)
+    const [addSelection, setAddSelection] = useState<SelectOption | undefined>(undefined)
     const [isAdding, setIsAdding] = useState(false)
 
     // Using FieldHandleSelect below which wraps async autocomplete
@@ -73,12 +75,16 @@ export const BillingAccountResourcesPage: FC<Props> = (props: Props) => {
                 userId: String(addSelection.value),
             })
             setAddOpen(false)
-            setAddSelection(null)
+            setAddSelection(undefined)
             refresh()
         } finally {
             setIsAdding(false)
         }
     }, [accountId, addSelection, refresh])
+
+    const openAddModal = useCallback(() => setAddOpen(true), [])
+    const closeAddModal = useCallback(() => setAddOpen(false), [])
+    const closeConfirmModal = useCallback(() => setConfirmOpen(false), [])
 
     return (
         <div className={classNames(styles.container, props.className)}>
@@ -89,7 +95,7 @@ export const BillingAccountResourcesPage: FC<Props> = (props: Props) => {
                     <Button
                         primary
                         size='lg'
-                        onClick={() => setAddOpen(true)}
+                        onClick={openAddModal}
                         icon={PlusIcon}
                         iconToLeft
                     >
@@ -136,15 +142,17 @@ export const BillingAccountResourcesPage: FC<Props> = (props: Props) => {
             <ConfirmModal
                 title='Remove Resource'
                 open={confirmOpen}
-                onClose={() => setConfirmOpen(false)}
+                onClose={closeConfirmModal}
                 onConfirm={handleConfirmRemove}
                 action='Yes'
             >
-                Are you sure you want to remove {pendingRemoveHandle} from this billing account?
+                Are you sure you want to remove&nbsp;
+                {pendingRemoveHandle}
+                &nbsp;from this billing account?
             </ConfirmModal>
 
             {/* Add Resource Modal */}
-            <BaseModal title='Add Resource' open={addOpen} onClose={() => setAddOpen(false)}>
+            <BaseModal title='Add Resource' open={addOpen} onClose={closeAddModal}>
                 <div className={styles.blockForm}>
                     <FieldHandleSelect
                         label='Member Handle'
@@ -155,7 +163,7 @@ export const BillingAccountResourcesPage: FC<Props> = (props: Props) => {
                         isLoading={isAdding}
                     />
                     <div className={styles.blockBtns}>
-                        <Button secondary size='lg' onClick={() => setAddOpen(false)} disabled={isAdding}>
+                        <Button secondary size='lg' onClick={closeAddModal} disabled={isAdding}>
                             Cancel
                         </Button>
                         <Button primary size='lg' onClick={handleAddResource} disabled={!addSelection || isAdding}>
