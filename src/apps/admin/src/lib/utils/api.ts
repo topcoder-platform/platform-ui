@@ -135,14 +135,19 @@ type PageAndSort = {
     sort: string
 }
 
+// Date filter mapping:
+// - Start Date input should constrain both startDateFrom and endDateFrom
+// - End Date input should constrain both startDateTo and endDateTo
 const CRITERIA_DATE_KEYS: Record<string, { from: string; to: string }> = {
+    // End Date input -> upper bounds for both start and end
     endDate: {
-        from: 'endDateFrom',
+        from: 'startDateTo',
         to: 'endDateTo',
     },
+    // Start Date input -> lower bounds for both start and end
     startDate: {
         from: 'startDateFrom',
-        to: 'startDateTo',
+        to: 'endDateFrom',
     },
 }
 
