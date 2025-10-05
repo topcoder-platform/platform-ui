@@ -1,7 +1,7 @@
 /**
  * Challenge Details Page.
  */
-import { kebabCase } from 'lodash'
+import { kebabCase, startCase, toLower, toUpper, trim } from 'lodash'
 import { FC, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
@@ -203,7 +203,10 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
             return
         }
 
-        if (challengeStatus !== 'COMPLETED') {
+        const isEndedChallenge = challengeStatus === 'COMPLETED'
+            || (challengeStatus?.startsWith('CANCELLED') ?? false)
+
+        if (!isEndedChallenge) {
             return
         }
 
@@ -228,6 +231,35 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         navigate,
         searchParamsString,
     ])
+
+    const formatChallengeStatusLabel = useCallback((rawStatus?: string): string | undefined => {
+        if (!rawStatus) return undefined
+        const normalized = toUpper(trim(rawStatus))
+
+        if (normalized === 'COMPLETED') {
+            return 'Completed'
+        }
+
+        if (normalized === 'CANCELLED') {
+            return 'Cancelled'
+        }
+
+        if (normalized.startsWith('CANCELLED_')) {
+            const reason = normalized.slice('CANCELLED_'.length)
+            const prettyReason = startCase(toLower(reason))
+            return `Cancelled: ${prettyReason}`
+        }
+
+        // Fallback to a readable Title Case
+        return startCase(toLower(normalized))
+    }, [])
+
+    const statusPillClass = useMemo(() => {
+        if (!challengeStatus) return undefined
+        if (challengeStatus === 'COMPLETED') return styles.completed
+        if (challengeStatus.startsWith('CANCELLED')) return styles.cancelled
+        return undefined
+    }, [challengeStatus])
 
     useEffect(() => {
         const tab = searchParams.get('tab')
@@ -277,6 +309,18 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                 <TableLoading />
             ) : challengeInfo ? (
                 <>
+                    {isPastReviewDetail && (
+                        (() => {
+                            const label = formatChallengeStatusLabel(challengeInfo.status)
+                            return label ? (
+                                <div className={styles.statusPillRow}>
+                                    <span className={classNames(styles.statusPill, statusPillClass)}>
+                                        {label}
+                                    </span>
+                                </div>
+                            ) : undefined
+                        })()
+                    )}
                     <div className={styles.summary}>
                         {challengeInfo && (
                             <ChallengePhaseInfo

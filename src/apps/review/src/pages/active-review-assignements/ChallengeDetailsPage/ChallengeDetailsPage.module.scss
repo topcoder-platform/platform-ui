@@ -79,3 +79,28 @@
     display: flex;
     flex-wrap: wrap;
 }
+
+.statusPillRow {
+    margin-top: $sp-2;
+    margin-bottom: $sp-2;
+}
+
+.statusPill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: $sp-1 $sp-2;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+
+    &.completed {
+        background-color: $green-25;
+        color: $green-140;
+    }
+
+    &.cancelled {
+        background-color: $red-25;
+        color: $red-140;
+    }
+}
