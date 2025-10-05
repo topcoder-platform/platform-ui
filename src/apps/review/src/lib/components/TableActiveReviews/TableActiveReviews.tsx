@@ -60,7 +60,7 @@ export const TableActiveReviews: FC<Props> = (props: Props) => {
 
     const sortMapping = useMemo<Record<string, string>>(() => {
         const mapping: Record<string, string> = {
-            name: 'projectName',
+            name: 'challengeName',
         }
 
         if (hideStatusColumns) {

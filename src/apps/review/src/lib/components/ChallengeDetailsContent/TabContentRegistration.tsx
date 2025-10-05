@@ -4,38 +4,21 @@
 import { FC, useContext } from 'react'
 
 import { TableLoading } from '~/apps/admin/src/lib'
-import { UserRole } from '~/libs/core'
 
-import { ChallengeDetailContextModel, ReviewAppContextModel } from '../../models'
+import { ChallengeDetailContextModel } from '../../models'
 import { TableRegistration } from '../TableRegistration'
 import { TableNoRecord } from '../TableNoRecord'
-import { ChallengeDetailContext, ReviewAppContext } from '../../contexts'
+import { ChallengeDetailContext } from '../../contexts'
 
 export const TabContentRegistration: FC = () => {
     // get challenge info from challenge detail context
     const {
         isLoadingChallengeResources,
-        myRoles,
         registrants,
-        resources,
     }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
-    const { loginUserInfo }: ReviewAppContextModel = useContext(ReviewAppContext)
 
-    const hasCopilotRole = (myRoles ?? [])
-        .some(role => {
-            const normalizedRole = role
-                ?.toLowerCase()
-                .replace(/[^a-z]/g, '')
-
-            return normalizedRole?.includes('copilot') ?? false
-        })
-
-    const isAdmin = loginUserInfo?.roles?.some(
-        role => typeof role === 'string'
-            && role.toLowerCase() === UserRole.administrator,
-    ) ?? false
-
-    const registrationData = hasCopilotRole || isAdmin ? resources : registrants
+    // Always show only registrants on Registration tab
+    const registrationData = registrants
 
     // show loading ui when fetching registrants
     if (isLoadingChallengeResources) {

@@ -23,12 +23,16 @@ import {
     ChallengeLinks,
     ChallengePhaseInfo,
     PageWrapper,
+    ReviewAppContext,
+    TableNoRecord,
+    TableRegistration,
     Tabs,
 } from '../../../lib'
 import { fetchTabs, updatePhaseChangeNotifications } from '../../../lib/services'
 import {
     BackendResource,
     ChallengeDetailContextModel,
+    ReviewAppContextModel,
     SelectOption,
 } from '../../../lib/models'
 import { FIRST2FINISH, ITERATIVE_REVIEW, TAB } from '../../../config/index.config'
@@ -45,6 +49,7 @@ interface Props {
     className?: string
 }
 
+// eslint-disable-next-line complexity
 export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
     const [searchParams, setSearchParams] = useSearchParams()
     const location = useLocation()
@@ -59,9 +64,11 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         challengeInfo,
         isLoadingChallengeInfo,
         isLoadingChallengeResources,
+        resources,
         myResources,
         reviewers,
     }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
+    const { loginUserInfo }: ReviewAppContextModel = useContext(ReviewAppContext)
     const hasChallengeInfo = Boolean(challengeInfo)
     const challengeStatus = challengeInfo?.status?.toUpperCase()
 
@@ -298,6 +305,26 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         challengeInfo?.type,
     ])
 
+    // Determine if current user should see the Resources section
+    const hasCopilotRole = useMemo(
+        () => (myResources ?? [])
+            .some(resource => {
+                const roleName = resource.roleName ?? ''
+                const normalizedRole = roleName
+                    ?.toLowerCase()
+                    .replace(/[^a-z]/g, '')
+                return normalizedRole?.includes('copilot') ?? false
+            }),
+        [myResources],
+    )
+    const isAdmin = useMemo(
+        () => loginUserInfo?.roles?.some(
+            role => typeof role === 'string' && role.toLowerCase() === 'administrator',
+        ) ?? false,
+        [loginUserInfo?.roles],
+    )
+    const shouldShowResourcesSection = hasCopilotRole || isAdmin
+
     return (
         <PageWrapper
             pageTitle={challengeInfo?.name ?? ''}
@@ -400,6 +427,19 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                             isActiveChallenge={!isPastReviewDetail}
                         />
                     </div>
+
+                    {shouldShowResourcesSection ? (
+                        <div className={styles.blockContent}>
+                            <span className={styles.textTitle}>Resources</span>
+                            {isLoadingChallengeResources ? (
+                                <TableLoading />
+                            ) : resources && resources.length > 0 ? (
+                                <TableRegistration datas={resources} />
+                            ) : (
+                                <TableNoRecord message='No resources' />
+                            )}
+                        </div>
+                    ) : undefined}
                 </>
             ) : undefined}
         </PageWrapper>

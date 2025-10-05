@@ -320,11 +320,19 @@ export const adminRoutes: ReadonlyArray<PlatformRoute> = [
                         route: gamificationAdminRouteId,
                     },
                     {
-                        element: <CreateBadgePage />,
+                        element: (
+                            <CreateBadgePage
+                                rootPage={`${rootRoute}/${platformRouteId}/${gamificationAdminRouteId}`}
+                            />
+                        ),
                         route: `${gamificationAdminRouteId}${createBadgePath}`,
                     },
                     {
-                        element: <BadgeDetailPage />,
+                        element: (
+                            <BadgeDetailPage
+                                rootPage={`${rootRoute}/${platformRouteId}/${gamificationAdminRouteId}`}
+                            />
+                        ),
                         route: `${gamificationAdminRouteId}${baseDetailPath}/:id`,
                     },
                     {

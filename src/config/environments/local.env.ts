@@ -41,5 +41,5 @@ export const LOCAL_SERVICE_OVERRIDES: LocalServiceOverride[] = [
     { prefix: '/v6/review-opportunities', target: 'http://localhost:3005' },
     { prefix: '/v6/review-applications', target: 'http://localhost:3005' },
 
-    { prefix: '/v6/standardized-skills', target: 'http://localhost:3006' },
+    { prefix: '/v5/standardized-skills', target: 'http://localhost:3006' },
 ]
