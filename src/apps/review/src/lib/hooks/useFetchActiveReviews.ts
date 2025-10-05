@@ -146,6 +146,7 @@ export const transformAssignments = (
             name: base.challengeName,
             resourceRoles,
             reviewProgress: aggregatedReviewProgress,
+            status: base.status,
             timeLeft: timeMetadata?.durationString,
             timeLeftColor: timeMetadata?.durationColor,
             timeLeftStatus: timeMetadata?.durationStatus,

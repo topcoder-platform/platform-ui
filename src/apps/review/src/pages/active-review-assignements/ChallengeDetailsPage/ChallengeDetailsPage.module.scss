@@ -104,3 +104,15 @@
         color: $red-140;
     }
 }
+
+.statusPillCompleted {
+    @extend .statusPill;
+    background-color: $green-25;
+    color: $green-140;
+}
+
+.statusPillCancelled {
+    @extend .statusPill;
+    background-color: $red-25;
+    color: $red-140;
+}

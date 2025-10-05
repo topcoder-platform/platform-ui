@@ -47,3 +47,35 @@
     flex-direction: column;
     gap: 8px;
 }
+
+.statusPill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: $sp-1 $sp-2;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+
+    &.completed {
+        background-color: $green-25;
+        color: $green-140;
+    }
+
+    &.cancelled {
+        background-color: $red-25;
+        color: $red-140;
+    }
+}
+
+.statusPillCompleted {
+    @extend .statusPill;
+    background-color: $green-25;
+    color: $green-140;
+}
+
+.statusPillCancelled {
+    @extend .statusPill;
+    background-color: $red-25;
+    color: $red-140;
+}

@@ -24,4 +24,5 @@ export interface BackendMyReviewAssignment {
     resourceRoleName: string
     reviewProgress: number | null
     winners?: BackendMyReviewAssignmentWinner[] | null
+    status?: string
 }

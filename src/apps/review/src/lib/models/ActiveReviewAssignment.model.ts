@@ -20,4 +20,5 @@ export interface ActiveReviewAssignment {
     winnerHandle?: string
     winnerHandleColor?: string
     winnerProfileUrl?: string
+    status?: string
 }

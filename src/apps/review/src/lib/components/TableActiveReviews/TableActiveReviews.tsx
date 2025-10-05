@@ -3,7 +3,7 @@
  */
 import { FC, useCallback, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { bind, invert } from 'lodash'
+import { bind, invert, startCase, toLower, toUpper, trim } from 'lodash'
 import classNames from 'classnames'
 
 import { MobileTableColumn } from '~/apps/admin/src/lib/models/MobileTableColumn.model'
@@ -136,26 +136,66 @@ export const TableActiveReviews: FC<Props> = (props: Props) => {
                     ),
                     type: 'element',
                 },
-                {
-                    className: classNames(styles.tableCell),
-                    isSortable: false,
-                    label: 'My Role',
-                    propertyName: 'role',
-                    renderer: (data: ActiveReviewAssignment) => (
-                        <div className={styles.blockMyRoles}>
-                            {(
-                                data.resourceRoles.length
-                                    ? data.resourceRoles
-                                    : ['--']
-                            ).map(role => (
-                                <span key={role}>{role}</span>
-                            ))}
-                        </div>
-                    ),
-                    type: 'element',
-                },
             ]
+            const myRoleColumn: TableColumn<ActiveReviewAssignment> = {
+                className: classNames(styles.tableCell),
+                isSortable: false,
+                label: 'My Role',
+                propertyName: 'role',
+                renderer: (data: ActiveReviewAssignment) => (
+                    <div className={styles.blockMyRoles}>
+                        {(
+                            data.resourceRoles.length
+                                ? data.resourceRoles
+                                : ['--']
+                        ).map(role => (
+                            <span key={role}>{role}</span>
+                        ))}
+                    </div>
+                ),
+                type: 'element',
+            }
             if (hideStatusColumns) {
+                // Insert Status column before Winner and End Date
+                baseColumns.push({
+                    className: styles.tableCell,
+                    isSortable: false,
+                    label: 'Status',
+                    propertyName: 'status',
+                    renderer: (data: ActiveReviewAssignment) => {
+                        const raw = data.status
+                        const normalized = raw ? toUpper(trim(raw)) : undefined
+
+                        const formatLabel = (value?: string): string | undefined => {
+                            if (!value) return undefined
+                            if (value === 'COMPLETED') return 'Completed'
+                            if (value === 'CANCELLED') return 'Cancelled'
+                            if (value.startsWith('CANCELLED_')) {
+                                const reason = value.slice('CANCELLED_'.length)
+                                return `Cancelled: ${startCase(toLower(reason))}`
+                            }
+
+                            return startCase(toLower(value))
+                        }
+
+                        const label = formatLabel(normalized)
+                        const variantClass = normalized === 'COMPLETED'
+                            ? styles.statusPillCompleted
+                            : normalized?.startsWith('CANCELLED')
+                                ? styles.statusPillCancelled
+                                : undefined
+
+                        return label ? (
+                            <span className={classNames(styles.statusPill, variantClass)}>
+                                {label}
+                            </span>
+                        ) : (
+                            <span>--</span>
+                        )
+                    },
+                    type: 'element',
+                })
+                baseColumns.push(myRoleColumn)
                 baseColumns.push({
                     className: styles.tableCell,
                     isSortable: false,
@@ -206,6 +246,7 @@ export const TableActiveReviews: FC<Props> = (props: Props) => {
             }
 
             if (!hideStatusColumns) {
+                baseColumns.push(myRoleColumn)
                 baseColumns.push(
                     {
                         className: styles.tableCell,

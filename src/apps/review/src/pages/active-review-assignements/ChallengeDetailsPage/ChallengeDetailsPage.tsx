@@ -256,8 +256,8 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
 
     const statusPillClass = useMemo(() => {
         if (!challengeStatus) return undefined
-        if (challengeStatus === 'COMPLETED') return styles.completed
-        if (challengeStatus.startsWith('CANCELLED')) return styles.cancelled
+        if (challengeStatus === 'COMPLETED') return styles.statusPillCompleted
+        if (challengeStatus.startsWith('CANCELLED')) return styles.statusPillCancelled
         return undefined
     }, [challengeStatus])
 
