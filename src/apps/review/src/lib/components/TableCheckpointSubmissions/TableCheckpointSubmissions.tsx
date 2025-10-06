@@ -1,7 +1,7 @@
 /**
- * Table Submission Screening.
+ * Table Checkpoint Submissions.
  */
-import { FC, MouseEvent, useContext, useMemo } from 'react'
+import { FC, MouseEvent, useMemo } from 'react'
 import { toast } from 'react-toastify'
 import _ from 'lodash'
 import classNames from 'classnames'
@@ -12,41 +12,32 @@ import { MobileTableColumn } from '~/apps/admin/src/lib/models/MobileTableColumn
 import { copyTextToClipboard, useWindowSize, WindowSize } from '~/libs/shared'
 import { IconOutline, Table, TableColumn, Tooltip } from '~/libs/ui'
 
-import { ChallengeDetailContextModel, Screening } from '../../models'
+import { Screening } from '../../models'
 import { TableWrapper } from '../TableWrapper'
 import { getHandleUrl } from '../../utils'
-import { ChallengeDetailContext } from '../../contexts'
 import { useSubmissionDownloadAccess } from '../../hooks'
 import type { UseSubmissionDownloadAccessResult } from '../../hooks/useSubmissionDownloadAccess'
 
-import styles from './TableSubmissionScreening.module.scss'
+import styles from './TableCheckpointSubmissions.module.scss'
 
 interface Props {
     className?: string
     datas: Screening[]
     isDownloading: IsRemovingType
     downloadSubmission: (submissionId: string) => void
-    hideHandleColumn?: boolean
 }
 
-export const TableSubmissionScreening: FC<Props> = (props: Props) => {
+export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
     const { width: screenWidth }: WindowSize = useWindowSize()
     const isTablet = useMemo(() => screenWidth <= 984, [screenWidth])
-    const { challengeInfo }: ChallengeDetailContextModel = useContext(
-        ChallengeDetailContext,
-    )
+
     const {
         isSubmissionDownloadRestricted,
         restrictionMessage,
         isSubmissionDownloadRestrictedForMember,
         getRestrictionMessageForMember,
     }: UseSubmissionDownloadAccessResult = useSubmissionDownloadAccess()
-    const hasScreeningPhase = useMemo(
-        () => challengeInfo?.phases?.some(
-            phase => phase.name?.toLowerCase() === 'screening',
-        ) ?? false,
-        [challengeInfo?.phases],
-    )
+
     const columns = useMemo<TableColumn<Screening>[]>(
         () => {
             const submissionColumn: TableColumn<Screening> = {
@@ -126,31 +117,29 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
                 type: 'element',
             }
 
-            const handleColumn: TableColumn<Screening> | undefined = props.hideHandleColumn
-                ? undefined
-                : {
-                    label: 'Handle',
-                    propertyName: 'handle',
-                    renderer: (data: Screening) => (
-                        <a
-                            href={getHandleUrl(data.userInfo)}
-                            target='_blank'
-                            rel='noreferrer'
-                            style={{
-                                color: data.userInfo?.handleColor,
-                            }}
-                            onClick={function onClick() {
-                                window.open(
-                                    getHandleUrl(data.userInfo),
-                                    '_blank',
-                                )
-                            }}
-                        >
-                            {data.userInfo?.memberHandle ?? ''}
-                        </a>
-                    ),
-                    type: 'element',
-                }
+            const handleColumn: TableColumn<Screening> = {
+                label: 'Handle',
+                propertyName: 'handle',
+                renderer: (data: Screening) => (
+                    <a
+                        href={getHandleUrl(data.userInfo)}
+                        target='_blank'
+                        rel='noreferrer'
+                        style={{
+                            color: data.userInfo?.handleColor,
+                        }}
+                        onClick={function onClick() {
+                            window.open(
+                                getHandleUrl(data.userInfo),
+                                '_blank',
+                            )
+                        }}
+                    >
+                        {data.userInfo?.memberHandle ?? ''}
+                    </a>
+                ),
+                type: 'element',
+            }
 
             const submissionDateColumn: TableColumn<Screening> = {
                 label: 'Submission Date',
@@ -161,20 +150,12 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
                 type: 'element',
             }
 
-            const baseColumns: TableColumn<Screening>[] = [
-                submissionColumn,
-                ...(handleColumn ? [handleColumn] : []),
-                submissionDateColumn,
-            ]
-
-            if (!hasScreeningPhase) {
-                return baseColumns
-            }
-
             return [
-                ...baseColumns,
+                submissionColumn,
+                handleColumn,
+                submissionDateColumn,
                 {
-                    label: 'Screener',
+                    label: 'Checkpoint Reviewer',
                     propertyName: 'screenerHandle',
                     renderer: (data: Screening) => (data.screener?.id ? (
                         <a
@@ -205,36 +186,14 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
                     type: 'element',
                 },
                 {
-                    label: 'Screening Score',
+                    label: 'Checkpoint Score',
                     propertyName: 'score',
                     type: 'text',
-                },
-                {
-                    label: 'Screening Result',
-                    propertyName: 'result',
-                    renderer: (data: Screening) => {
-                        const val = (data.result || '').toUpperCase()
-                        if (val === 'PASS') {
-                            return (
-                                <span className={styles.resultPass}>Pass</span>
-                            )
-                        }
-
-                        if (val === 'NO PASS' || val === 'FAIL') {
-                            return (
-                                <span className={styles.resultFail}>Fail</span>
-                            )
-                        }
-
-                        return <span>-</span>
-                    },
-                    type: 'element',
                 },
             ]
         },
         [
             props,
-            hasScreeningPhase,
             isSubmissionDownloadRestricted,
             restrictionMessage,
             isSubmissionDownloadRestrictedForMember,
@@ -269,11 +228,7 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
 
     return (
         <TableWrapper
-            className={classNames(
-                styles.container,
-                props.className,
-                'enhanced-table',
-            )}
+            className={classNames(styles.container, props.className, 'enhanced-table')}
         >
             {isTablet ? (
                 <TableMobile columns={columnsMobile} data={props.datas} />
@@ -290,4 +245,4 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
     )
 }
 
-export default TableSubmissionScreening
+export default TableCheckpointSubmissions

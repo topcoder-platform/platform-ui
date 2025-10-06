@@ -8,6 +8,7 @@ import classNames from 'classnames'
 
 import { Pagination, TableLoading } from '~/apps/admin/src/lib'
 import { Sort } from '~/apps/admin/src/platform/gamification-admin/src/game-lib'
+import { Button, IconOutline } from '~/libs/ui'
 
 import {
     DEFAULT_ACTIVE_REVIEWS_PER_PAGE,
@@ -26,7 +27,7 @@ import {
     TableActiveReviews,
     TableNoRecord,
 } from '../../../lib'
-import { SelectOptionChallengeType } from '../../../lib/models/SelectOptionChallengeType.model'
+import { SelectOption } from '../../../lib/models/SelectOption.model'
 
 import styles from './ActiveReviewsPage.module.scss'
 
@@ -50,32 +51,27 @@ export const ActiveReviewsPage: FC<Props> = (props: Props) => {
         = useFetchChallengeTracks()
     const isLoadingChallengeType = isLoadingChallengeTypeOnly || isLoadingChallengeTrackOnly
 
-    const challengeTypeOptions = useMemo<SelectOptionChallengeType[]>(() => {
-        const results: SelectOptionChallengeType[] = [
-            CHALLENGE_TYPE_SELECT_ALL_OPTION,
-        ]
+    const challengeTrackOptions = useMemo<SelectOption[]>(() => {
+        const results: SelectOption[] = [CHALLENGE_TYPE_SELECT_ALL_OPTION]
         forEach(challengeTracks, challengeTrack => {
-            results.push({
-                challengeTrackId: challengeTrack.id,
-                isDisabled: true,
-                label: `--- ${challengeTrack.name} ---`,
-                value: challengeTrack.id,
-            })
-
-            forEach(challengeTypes, challengeType => {
-                results.push({
-                    challengeTrackId: challengeTrack.id,
-                    challengeTypeId: challengeType.id,
-                    label: challengeType.name,
-                    value: `${challengeTrack.id}---${challengeType.id}`,
-                })
-            })
+            results.push({ label: challengeTrack.name, value: challengeTrack.id })
         })
-
         return results
-    }, [challengeTypes, challengeTracks])
+    }, [challengeTracks])
+
+    const challengeTypeOptions = useMemo<SelectOption[]>(() => {
+        const results: SelectOption[] = [CHALLENGE_TYPE_SELECT_ALL_OPTION]
+        forEach(challengeTypes, challengeType => {
+            results.push({ label: challengeType.name, value: challengeType.id })
+        })
+        return results
+    }, [challengeTypes])
+
+    const [challengeTrack, setChallengeTrack] = useState<
+        SingleValue<SelectOption>
+    >(CHALLENGE_TYPE_SELECT_ALL_OPTION)
     const [challengeType, setChallengeType] = useState<
-        SingleValue<SelectOptionChallengeType>
+        SingleValue<SelectOption>
     >(CHALLENGE_TYPE_SELECT_ALL_OPTION)
     const [sort, setSort] = useState<Sort | undefined>(() => ({ ...DEFAULT_SORT }))
     const {
@@ -90,31 +86,42 @@ export const ActiveReviewsPage: FC<Props> = (props: Props) => {
         [],
     )
 
-    const selectedChallengeTypeId = challengeType?.challengeTypeId
+    const selectedChallengeTrackId = challengeTrack?.value || undefined
+    const selectedChallengeTypeId = challengeType?.value || undefined
 
     useEffect(() => {
         if (challengeType && loginUserInfo) {
             loadActiveReviews({
-                challengeTypeId: selectedChallengeTypeId,
+                challengeTrackId: selectedChallengeTrackId || undefined,
+                challengeTypeId: selectedChallengeTypeId || undefined,
                 page: 1,
                 perPage: DEFAULT_ACTIVE_REVIEWS_PER_PAGE,
                 sortBy: sort?.fieldName,
                 sortOrder: sort?.direction,
             })
         }
-    }, [challengeType, loadActiveReviews, loginUserInfo, selectedChallengeTypeId, sort])
+    }, [
+        challengeTrack,
+        challengeType,
+        loadActiveReviews,
+        loginUserInfo,
+        selectedChallengeTrackId,
+        selectedChallengeTypeId,
+        sort,
+    ])
 
     const handlePageChange = useCallback(
         (nextPage: number) => {
             loadActiveReviews({
-                challengeTypeId: selectedChallengeTypeId,
+                challengeTrackId: selectedChallengeTrackId || undefined,
+                challengeTypeId: selectedChallengeTypeId || undefined,
                 page: nextPage,
                 perPage: DEFAULT_ACTIVE_REVIEWS_PER_PAGE,
                 sortBy: sort?.fieldName,
                 sortOrder: sort?.direction,
             })
         },
-        [loadActiveReviews, selectedChallengeTypeId, sort],
+        [loadActiveReviews, selectedChallengeTrackId, selectedChallengeTypeId, sort],
     )
 
     const handleSortChange = useCallback(
@@ -124,6 +131,19 @@ export const ActiveReviewsPage: FC<Props> = (props: Props) => {
         [],
     )
 
+    const handleClear = useCallback(() => {
+        setChallengeTrack(CHALLENGE_TYPE_SELECT_ALL_OPTION)
+        setChallengeType(CHALLENGE_TYPE_SELECT_ALL_OPTION)
+        loadActiveReviews({
+            challengeTrackId: undefined,
+            challengeTypeId: undefined,
+            page: 1,
+            perPage: DEFAULT_ACTIVE_REVIEWS_PER_PAGE,
+            sortBy: sort?.fieldName,
+            sortOrder: sort?.direction,
+        })
+    }, [loadActiveReviews, sort])
+
     return (
         <PageWrapper
             pageTitle='My Active Challenges'
@@ -131,16 +151,41 @@ export const ActiveReviewsPage: FC<Props> = (props: Props) => {
             breadCrumb={breadCrumb}
         >
             <div className={styles['filter-bar']}>
-                <label>Challenge type</label>
-                <Select
-                    className='react-select-container'
-                    classNamePrefix='select'
-                    options={challengeTypeOptions}
-                    defaultValue={challengeType}
-                    onChange={setChallengeType}
-                    isLoading={isLoadingChallengeType}
-                    isDisabled={isLoadingActiveReviews}
-                />
+                <div className={styles.filterGroup}>
+                    <label>Challenge track</label>
+                    <Select
+                        className='react-select-container'
+                        classNamePrefix='select'
+                        options={challengeTrackOptions}
+                        value={challengeTrack}
+                        onChange={setChallengeTrack}
+                        isLoading={isLoadingChallengeType}
+                        isDisabled={isLoadingActiveReviews}
+                    />
+                </div>
+                <div className={styles.filterGroup}>
+                    <label>Challenge type</label>
+                    <Select
+                        className='react-select-container'
+                        classNamePrefix='select'
+                        options={challengeTypeOptions}
+                        value={challengeType}
+                        onChange={setChallengeType}
+                        isLoading={isLoadingChallengeType}
+                        isDisabled={isLoadingActiveReviews}
+                    />
+                </div>
+                <div className={styles.actions}>
+                    <Button
+                        className={styles.clearButton}
+                        label='Clear'
+                        secondary
+                        size='lg'
+                        onClick={handleClear}
+                        icon={IconOutline.XIcon}
+                        iconToLeft
+                    />
+                </div>
             </div>
 
             {isLoadingActiveReviews ? (

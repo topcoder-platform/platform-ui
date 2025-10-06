@@ -37,6 +37,7 @@ interface Props {
     isDownloading: IsRemovingType
     downloadSubmission: (submissionId: string) => void
     hideHandleColumn?: boolean
+    columnLabel?: string
 }
 
 interface ScoreMetadata {
@@ -114,6 +115,7 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
     const downloadSubmission = props.downloadSubmission
     const hideHandleColumn = props.hideHandleColumn
     const isDownloading = props.isDownloading
+    const columnLabel = props.columnLabel || 'Iterative Review'
     const {
         isSubmissionDownloadRestricted,
         restrictionMessage,
@@ -253,7 +255,7 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
     const reviewColumn: TableColumn<SubmissionInfo> = useMemo(
         () => ({
             columnId: 'iterative-review',
-            label: 'Iterative Review',
+            label: columnLabel,
             renderer: (data: SubmissionInfo) => {
                 const review = data.review
 
@@ -350,7 +352,7 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
             },
             type: 'element',
         }),
-        [],
+        [columnLabel],
     )
 
     const reviewDateColumn: TableColumn<SubmissionInfo> = useMemo(

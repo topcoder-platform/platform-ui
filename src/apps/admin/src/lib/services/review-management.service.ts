@@ -127,6 +127,11 @@ type ReviewApplicationsResponse = {
     }
 }
 
+type MemberEmailRecord = {
+    userId: number
+    email: string
+}
+
 const toTitleCase = (value?: string): string => {
     if (!value) return ''
     // Normalize known statuses from v6 API
@@ -208,8 +213,54 @@ export const getReviewOpportunityApplications = async (
     const response = await xhrGetAsync<ReviewApplicationsResponse>(
         `${EnvironmentConfig.API.V6}/review-applications/opportunity/${opportunityId}`,
     )
+    const applications = response.result.content ?? []
 
-    return (response.result.content ?? []).map(mapApplicationToReviewer)
+    // First map base fields from the opportunity applications
+    const reviewers = applications.map(mapApplicationToReviewer)
+
+    // If email is already present from API, we can short‑circuit
+    const hasMissingEmails = reviewers.some(r => !r.emailAddress)
+    if (!hasMissingEmails) {
+        return reviewers
+    }
+
+    // Fetch missing emails from member-api in bulk using userIds
+    const uniqueUserIds = Array.from(new Set(
+        reviewers
+            .filter(r => !r.emailAddress)
+            .map(r => r.userId)
+            .filter(id => Number.isFinite(id)),
+    )) as number[]
+
+    if (!uniqueUserIds.length) {
+        return reviewers
+    }
+
+    // Build query string according to v6 members endpoint
+    const qs = uniqueUserIds.length > 1
+        ? uniqueUserIds
+            .map(id => `userIds=${id}`)
+            .join('&')
+        : `userId=${uniqueUserIds[0]}`
+
+    try {
+        const emailRecords = await xhrGetAsync<MemberEmailRecord[]>(
+            `${EnvironmentConfig.API.V6}/members?${qs}&fields=userId,email&perPage=${uniqueUserIds.length}`,
+        )
+
+        const emailByUserId = new Map<number, string>(
+            (emailRecords || []).map(r => [Number(r.userId), r.email ?? '']),
+        )
+
+        return reviewers.map(r => (
+            r.emailAddress
+                ? r
+                : { ...r, emailAddress: emailByUserId.get(r.userId) ?? '' }
+        ))
+    } catch (error) {
+        // If the email lookup fails for any reason, return the base data
+        return reviewers
+    }
 }
 
 /**

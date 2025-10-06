@@ -36,6 +36,7 @@ export interface useFetchPastReviewsProps {
 
 type LoadPastReviewsInternalParams = Required<Pick<FetchPastReviewsParams, 'page' | 'perPage'>> & {
     challengeTypeId?: string
+    challengeTrackId?: string
     sortBy?: string
     sortOrder?: 'asc' | 'desc'
 }
@@ -50,17 +51,18 @@ function mergePastReviewParams(
         perPage: next?.perPage ?? current.perPage,
     }
 
-    if (next && Object.prototype.hasOwnProperty.call(next, 'challengeTypeId')) {
-        merged.challengeTypeId = next.challengeTypeId
+    function assignFromNext<K extends keyof LoadPastReviewsInternalParams>(key: K): void {
+        if (!next || !Object.prototype.hasOwnProperty.call(next, key)) return
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const value = (next as any)[key];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (merged as any)[key] = value ?? undefined
     }
 
-    if (next && Object.prototype.hasOwnProperty.call(next, 'sortBy')) {
-        merged.sortBy = next.sortBy ?? undefined
-    }
-
-    if (next && Object.prototype.hasOwnProperty.call(next, 'sortOrder')) {
-        merged.sortOrder = next.sortOrder ?? undefined
-    }
+    assignFromNext('challengeTypeId')
+    assignFromNext('challengeTrackId')
+    assignFromNext('sortBy')
+    assignFromNext('sortOrder')
 
     if (!merged.sortBy) {
         delete merged.sortBy
@@ -87,6 +89,7 @@ export function useFetchPastReviews(): useFetchPastReviewsProps {
     }))
     const latestRequestKeyRef = useRef<string>('')
     const latestParamsRef = useRef<LoadPastReviewsInternalParams>({
+        challengeTrackId: undefined,
         challengeTypeId: undefined,
         page: 1,
         perPage: DEFAULT_PAST_REVIEWS_PER_PAGE,
@@ -105,6 +108,7 @@ export function useFetchPastReviews(): useFetchPastReviewsProps {
 
             const requestKey = [
                 mergedParams.challengeTypeId ?? '',
+                mergedParams.challengeTrackId ?? '',
                 mergedParams.page,
                 mergedParams.perPage,
                 mergedParams.sortBy ?? '',

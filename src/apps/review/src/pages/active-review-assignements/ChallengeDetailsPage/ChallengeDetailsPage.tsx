@@ -76,6 +76,8 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         review,
         reviewProgress,
         screening,
+        checkpoint,
+        approvalReviews,
         mappingReviewAppeal,
         submitterReviews,
     }: useFetchScreeningReviewProps = useFetchScreeningReview()
@@ -296,7 +298,48 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
             : challengeInfo.reviewLength
 
         fetchTabs(challengeInfo.type, requestedTabLength)
-            .then(d => setTabItems(d))
+            .then(d => {
+                const phases = challengeInfo.phases ?? []
+                const hasCheckpointSubmission = phases.some(
+                    p => (p.name || '').toLowerCase() === 'checkpoint submission',
+                )
+                const hasCheckpointReview = phases.some(
+                    p => (p.name || '').toLowerCase() === 'checkpoint review',
+                )
+                const hasApprovalPhase = phases.some(
+                    p => (p.name || '').toLowerCase() === 'approval',
+                )
+
+                const tabs = [...d]
+
+                // Insert Checkpoint tab between Registration and Submission / Screening if both phases exist
+                if (
+                    hasCheckpointSubmission
+                    && hasCheckpointReview
+                    && !tabs.some(t => t.value === 'Checkpoint')
+                ) {
+                    const regIdx = tabs.findIndex(t => t.value === 'Registration')
+                    const insertIdx = regIdx >= 0 ? regIdx + 1 : 0
+                    tabs.splice(insertIdx, 0, { label: 'Checkpoint', value: 'Checkpoint' })
+                }
+
+                // Ensure Approval tab appears only if approval phases exist; place before Winners
+                const approvalIdx = tabs.findIndex(t => t.value === 'Approval')
+                if (hasApprovalPhase && approvalIdx < 0) {
+                    const reviewIdx = tabs.findIndex(
+                        t => t.value === 'Review / Appeals' || t.value === 'Review',
+                    )
+                    const winnersIdx = tabs.findIndex(t => t.value === 'Winners')
+                    const insertIdx = reviewIdx >= 0
+                        ? reviewIdx + 1
+                        : (winnersIdx >= 0 ? winnersIdx : tabs.length)
+                    tabs.splice(insertIdx, 0, { label: 'Approval', value: 'Approval' })
+                } else if (!hasApprovalPhase && approvalIdx >= 0) {
+                    tabs.splice(approvalIdx, 1)
+                }
+
+                setTabItems(tabs)
+            })
     }, [
         challengeInfo?.phases,
         challengeInfo?.reviewLength,
@@ -387,8 +430,10 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                             selectedTab={selectedTab}
                             isLoadingSubmission={isLoadingSubmission}
                             screening={screening}
+                            checkpoint={checkpoint}
                             review={review}
                             submitterReviews={submitterReviews}
+                            approvalReviews={approvalReviews}
                             mappingReviewAppeal={mappingReviewAppeal}
                             isActiveChallenge={!isPastReviewDetail}
                         />

@@ -1,7 +1,9 @@
+import { every, filter, find, forEach } from 'lodash'
 import { useContext, useEffect, useMemo } from 'react'
-import { every, filter, forEach } from 'lodash'
 import useSWR, { SWRResponse } from 'swr'
 
+import { EnvironmentConfig } from '~/config'
+import { xhrGetAsync } from '~/libs/core'
 import { handleError } from '~/libs/shared'
 
 import { REVIEWER, SUBMITTER } from '../../config/index.config'
@@ -23,25 +25,23 @@ import {
 } from '../models'
 import { fetchChallengeReviews } from '../services'
 
-import {
-    useFetchAppealQueue,
-    useFetchAppealQueueProps,
-} from './useFetchAppealQueue'
-import {
-    useFetchChallengeSubmissions,
-    useFetchChallengeSubmissionsProps,
-} from './useFetchChallengeSubmissions'
+import { useFetchAppealQueue, useFetchAppealQueueProps } from './useFetchAppealQueue'
+import { useFetchChallengeSubmissions, useFetchChallengeSubmissionsProps } from './useFetchChallengeSubmissions'
+import { useRole, useRoleProps } from './useRole'
 import { useSubmissionDownloadAccess } from './useSubmissionDownloadAccess'
 import type { UseSubmissionDownloadAccessResult } from './useSubmissionDownloadAccess'
-import { useRole, useRoleProps } from './useRole'
 
 export interface useFetchScreeningReviewProps {
     mappingReviewAppeal: MappingReviewAppeal // from review id to appeal info
     // screening data
     screening: Screening[]
+    // checkpoint data (if any)
+    checkpoint: Screening[]
     // review data
     review: SubmissionInfo[]
     submitterReviews: SubmissionInfo[]
+    // approval reviews (one entry per approval review instance)
+    approvalReviews: SubmissionInfo[]
     isLoading: boolean
     reviewProgress: number
 }
@@ -60,6 +60,7 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
     // get challenge info from challenge detail context
     const {
         challengeId,
+        challengeInfo,
         resourceMemberIdMapping,
         reviewers: challengeReviewers,
     }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
@@ -180,6 +181,63 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
         ],
     )
 
+    // Resolve scorecard ids for Screening and Checkpoint Review phases (if present)
+    const screeningScorecardId = useMemo<string | undefined>(() => {
+        const screeningPhase = challengeInfo?.phases?.find(
+            p => (p.name || '').toLowerCase() === 'screening',
+        )
+        const scorecardConstraint = screeningPhase
+            ? find(screeningPhase.constraints ?? [], c => c.name === 'Scorecard')
+            : undefined
+        return scorecardConstraint ? `${scorecardConstraint.value}` : undefined
+    }, [challengeInfo?.phases])
+
+    const checkpointReviewScorecardId = useMemo<string | undefined>(() => {
+        const cpReviewPhase = challengeInfo?.phases?.find(
+            p => (p.name || '').toLowerCase() === 'checkpoint review',
+        )
+        const scorecardConstraint = cpReviewPhase
+            ? find(cpReviewPhase.constraints ?? [], c => c.name === 'Scorecard')
+            : undefined
+        return scorecardConstraint ? `${scorecardConstraint.value}` : undefined
+    }, [challengeInfo?.phases])
+
+    // Fetch minimumPassingScore for screening and checkpoint review scorecards
+    type ScorecardBase = { id: string; minimumPassingScore: number | null }
+    const {
+        data: screeningScorecardBase,
+    }: SWRResponse<ScorecardBase | undefined, Error> = useSWR<ScorecardBase | undefined, Error>(
+        `EnvironmentConfig.API.V6/scorecards/screening/${screeningScorecardId || ''}`,
+        {
+            fetcher: async () => {
+                if (!screeningScorecardId) return undefined
+                const rs = await xhrGetAsync<{
+                    id: string
+                    minimumPassingScore: number | null
+                }>(`${EnvironmentConfig.API.V6}/scorecards/${screeningScorecardId}`)
+                return rs
+            },
+            isPaused: () => !screeningScorecardId,
+        },
+    )
+
+    const {
+        data: checkpointScorecardBase,
+    }: SWRResponse<ScorecardBase | undefined, Error> = useSWR<ScorecardBase | undefined, Error>(
+        `EnvironmentConfig.API.V6/scorecards/checkpoint/${checkpointReviewScorecardId || ''}`,
+        {
+            fetcher: async () => {
+                if (!checkpointReviewScorecardId) return undefined
+                const rs = await xhrGetAsync<{
+                    id: string
+                    minimumPassingScore: number | null
+                }>(`${EnvironmentConfig.API.V6}/scorecards/${checkpointReviewScorecardId}`)
+                return rs
+            },
+            isPaused: () => !checkpointReviewScorecardId,
+        },
+    )
+
     useEffect(() => {
         if (fetchChallengeReviewsError) {
             handleError(fetchChallengeReviewsError)
@@ -213,21 +271,133 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
 
     // get screening data from challenge submissions
     const screening = useMemo(
-        () => visibleChallengeSubmissions.map(item => {
-            const result = convertBackendSubmissionToScreening(item)
-            return {
-                ...result,
-                screener: result.screenerId
-                    ? resourceMemberIdMapping[result.screenerId]
-                    : ({
-                        handleColor: '#2a2a2a',
-                        memberHandle: 'Not assigned',
-                    } as BackendResource),
-                userInfo: resourceMemberIdMapping[result.memberId],
+        () => {
+            const screeningReviewsBySubmission = new Map<string, BackendReview>()
+            if (challengeReviews && screeningScorecardId) {
+                forEach(challengeReviews, rv => {
+                    if (rv && rv.scorecardId === screeningScorecardId) {
+                        screeningReviewsBySubmission.set(rv.submissionId, rv)
+                    }
+                })
             }
-        }),
-        [visibleChallengeSubmissions, resourceMemberIdMapping],
+
+            const minPass = screeningScorecardBase?.minimumPassingScore ?? undefined
+
+            return visibleChallengeSubmissions.map(item => {
+                const base = convertBackendSubmissionToScreening(item)
+                const matchedReview = screeningReviewsBySubmission.get(item.id)
+                const numericScore: number | undefined = matchedReview
+                    ? (Number.isFinite(matchedReview.finalScore)
+                        ? matchedReview.finalScore
+                        : Number.isFinite(matchedReview.initialScore)
+                            ? matchedReview.initialScore
+                            : undefined)
+                    : undefined
+
+                const scoreDisplay = typeof numericScore === 'number'
+                    ? (Number.isInteger(numericScore)
+                        ? `${numericScore}`
+                        : numericScore.toFixed(2))
+                    : base.score
+
+                // determine pass/fail using minimumPassingScore when available
+                let result = base.result
+                let screenerId: string | undefined = base.screenerId
+                if (matchedReview) {
+                    screenerId = matchedReview.resourceId
+                }
+
+                if (typeof numericScore === 'number' && typeof minPass === 'number') {
+                    result = numericScore >= minPass ? 'PASS' as const : 'NO PASS' as const
+                }
+
+                return {
+                    ...base,
+                    result,
+                    score: scoreDisplay,
+                    screener: screenerId
+                        ? resourceMemberIdMapping[screenerId]
+                        : ({
+                            handleColor: '#2a2a2a',
+                            memberHandle: 'Not assigned',
+                        } as BackendResource),
+                    screenerId,
+                    userInfo: resourceMemberIdMapping[base.memberId],
+                }
+            })
+        },
+        [
+            challengeReviews,
+            resourceMemberIdMapping,
+            screeningScorecardBase?.minimumPassingScore,
+            screeningScorecardId,
+            visibleChallengeSubmissions,
+        ],
     )
+
+    // Build checkpoint rows if checkpoint submissions and reviews exist
+    const checkpoint = useMemo(() => {
+        const checkpointReviewsBySubmission = new Map<string, BackendReview>()
+        if (challengeReviews && checkpointReviewScorecardId) {
+            forEach(challengeReviews, rv => {
+                if (rv && rv.scorecardId === checkpointReviewScorecardId) {
+                    checkpointReviewsBySubmission.set(rv.submissionId, rv)
+                }
+            })
+        }
+
+        const minPass = checkpointScorecardBase?.minimumPassingScore ?? undefined
+
+        return visibleChallengeSubmissions
+            .filter(s => (s.type || '').toUpperCase()
+                .includes('CHECKPOINT'))
+            .map(item => {
+                const base = convertBackendSubmissionToScreening(item)
+                const matchedReview = checkpointReviewsBySubmission.get(item.id)
+                const numericScore: number | undefined = matchedReview
+                    ? (Number.isFinite(matchedReview.finalScore)
+                        ? matchedReview.finalScore
+                        : Number.isFinite(matchedReview.initialScore)
+                            ? matchedReview.initialScore
+                            : undefined)
+                    : undefined
+                const scoreDisplay = typeof numericScore === 'number'
+                    ? (Number.isInteger(numericScore)
+                        ? `${numericScore}`
+                        : numericScore.toFixed(2))
+                    : 'Pending'
+
+                let result = base.result
+                let screenerId: string | undefined = base.screenerId
+                if (matchedReview) {
+                    screenerId = matchedReview.resourceId
+                }
+
+                if (typeof numericScore === 'number' && typeof minPass === 'number') {
+                    result = numericScore >= minPass ? 'PASS' as const : 'NO PASS' as const
+                }
+
+                return {
+                    ...base,
+                    result,
+                    score: scoreDisplay,
+                    screener: screenerId
+                        ? resourceMemberIdMapping[screenerId]
+                        : ({
+                            handleColor: '#2a2a2a',
+                            memberHandle: 'Not assigned',
+                        } as BackendResource),
+                    screenerId,
+                    userInfo: resourceMemberIdMapping[base.memberId],
+                }
+            })
+    }, [
+        challengeReviews,
+        checkpointReviewScorecardId,
+        checkpointScorecardBase?.minimumPassingScore,
+        resourceMemberIdMapping,
+        visibleChallengeSubmissions,
+    ])
 
     // get review data from challenge submissions
     const submitterReviews = useMemo(() => {
@@ -323,6 +493,40 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
         reviewAssignmentsBySubmission,
     ])
 
+    // Build approval reviews list (one entry per approval review instance)
+    const approvalReviews = useMemo<SubmissionInfo[]>(() => {
+        const approvalPhaseIds = new Set(
+            (challengeInfo?.phases ?? [])
+                .filter(p => (p.name || '').toLowerCase() === 'approval')
+                .map(p => p.id),
+        )
+
+        if (!challengeReviews?.length || approvalPhaseIds.size === 0) {
+            return []
+        }
+
+        const submissionsById = new Map(visibleChallengeSubmissions.map(s => [s.id, s]))
+        const result: SubmissionInfo[] = []
+
+        forEach(challengeReviews, rv => {
+            if (!rv) return
+            if (!approvalPhaseIds.has(rv.phaseId)) return
+            const submission = submissionsById.get(rv.submissionId)
+            if (!submission) return
+
+            const reviewInfo = convertBackendReviewToReviewInfo(rv)
+            result.push({
+                id: submission.id,
+                memberId: submission.memberId,
+                review: reviewInfo,
+                reviews: [convertBackendReviewToReviewResult(rv)],
+                userInfo: resourceMemberIdMapping[submission.memberId],
+            })
+        })
+
+        return result
+    }, [challengeInfo?.phases, challengeReviews, resourceMemberIdMapping, visibleChallengeSubmissions])
+
     useEffect(() => {
         forEach(review, item => {
             const reviewId = item.review?.id
@@ -362,6 +566,8 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
     )
 
     return {
+        approvalReviews,
+        checkpoint,
         isLoading: isLoading || shouldAwaitSubmitterReviews,
         mappingReviewAppeal,
         review,

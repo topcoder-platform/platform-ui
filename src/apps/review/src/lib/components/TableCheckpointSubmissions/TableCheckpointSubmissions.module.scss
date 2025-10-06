@@ -80,24 +80,3 @@
     }
 }
 
-.resultPill {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: $sp-1 $sp-2;
-    border-radius: 999px;
-    font-size: 12px;
-    font-weight: 700;
-}
-
-.resultPass {
-    @extend .resultPill;
-    background-color: $green-25;
-    color: $green-140;
-}
-
-.resultFail {
-    @extend .resultPill;
-    background-color: $red-25;
-    color: $red-140;
-}

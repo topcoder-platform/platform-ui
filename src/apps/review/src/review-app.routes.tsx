@@ -77,6 +77,17 @@ export const reviewRoutes: ReadonlyArray<PlatformRoute> = [
                 element: <Rewrite to={activeReviewAssigmentsRouteId} />,
                 route: '',
             },
+            // Legacy redirect: /review/challenges/:challengeId
+            // -> /review/active-challenges/:challengeId/challenge-details
+            {
+                authRequired: true,
+                element: (
+                    <Rewrite
+                        to={`${activeReviewAssigmentsRouteId}/:challengeId/challenge-details`}
+                    />
+                ),
+                route: 'challenges/:challengeId',
+            },
             // Active Challenges Module
             {
                 children: [

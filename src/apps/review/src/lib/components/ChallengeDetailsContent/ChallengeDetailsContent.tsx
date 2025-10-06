@@ -16,6 +16,8 @@ import {
 } from '../../hooks/useFetchChallengeResults'
 import { ITERATIVE_REVIEW } from '../../../config/index.config'
 
+import TabContentApproval from './TabContentApproval'
+import TabContentCheckpoint from './TabContentCheckpoint'
 import TabContentIterativeReview from './TabContentIterativeReview'
 import TabContentRegistration from './TabContentRegistration'
 import TabContentReview from './TabContentReview'
@@ -26,8 +28,10 @@ interface Props {
     selectedTab: string
     isLoadingSubmission: boolean
     screening: Screening[]
+    checkpoint: Screening[]
     review: SubmissionInfo[]
     submitterReviews: SubmissionInfo[]
+    approvalReviews: SubmissionInfo[]
     mappingReviewAppeal: MappingReviewAppeal // from review id to appeal info
     isActiveChallenge: boolean
 }
@@ -55,12 +59,28 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
                     downloadSubmission={downloadSubmission}
                     isActiveChallenge={props.isActiveChallenge}
                 />
+            ) : props.selectedTab === 'Checkpoint' ? (
+                <TabContentCheckpoint
+                    checkpoint={props.checkpoint}
+                    isLoading={props.isLoadingSubmission}
+                    isDownloading={isDownloadingSubmission}
+                    downloadSubmission={downloadSubmission}
+                />
             ) : props.selectedTab === 'Winners' ? (
                 <TabContentWinners
                     isLoading={isLoadingProjectResult}
                     projectResults={projectResults}
                     isDownloading={isDownloadingSubmission}
                     downloadSubmission={downloadSubmission}
+                />
+            ) : props.selectedTab === 'Approval' ? (
+                <TabContentApproval
+                    reviews={props.approvalReviews}
+                    submitterReviews={props.submitterReviews}
+                    isLoadingReview={props.isLoadingSubmission}
+                    isDownloading={isDownloadingSubmission}
+                    downloadSubmission={downloadSubmission}
+                    isActiveChallenge={props.isActiveChallenge}
                 />
             ) : props.selectedTab.startsWith(ITERATIVE_REVIEW) ? (
                 <TabContentIterativeReview

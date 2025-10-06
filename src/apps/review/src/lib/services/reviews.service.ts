@@ -49,6 +49,7 @@ const challengeBaseUrl = `${EnvironmentConfig.API.V6}`
  */
 export interface FetchActiveReviewsParams {
     challengeTypeId?: string
+    challengeTrackId?: string
     page?: number
     perPage?: number
     sortBy?: string
@@ -57,6 +58,7 @@ export interface FetchActiveReviewsParams {
 
 export const fetchActiveReviews = async ({
     challengeTypeId,
+    challengeTrackId,
     page,
     perPage,
     sortBy,
@@ -65,6 +67,7 @@ export const fetchActiveReviews = async ({
     const queryString = qs.stringify(
         {
             ...(challengeTypeId ? { challengeTypeId } : {}),
+            ...(challengeTrackId ? { challengeTrackId } : {}),
             ...(page ? { page } : {}),
             ...(perPage ? { perPage } : {}),
             ...(sortBy ? { sortBy } : {}),
@@ -86,6 +89,7 @@ export const fetchActiveReviews = async ({
  */
 export interface FetchPastReviewsParams {
     challengeTypeId?: string
+    challengeTrackId?: string
     page?: number
     perPage?: number
     sortBy?: string
@@ -94,6 +98,7 @@ export interface FetchPastReviewsParams {
 
 export const fetchPastReviews = async ({
     challengeTypeId,
+    challengeTrackId,
     page,
     perPage,
     sortBy,
@@ -102,6 +107,7 @@ export const fetchPastReviews = async ({
     const queryString = qs.stringify(
         {
             ...(challengeTypeId ? { challengeTypeId } : {}),
+            ...(challengeTrackId ? { challengeTrackId } : {}),
             ...(page ? { page } : {}),
             ...(perPage ? { perPage } : {}),
             ...(sortBy ? { sortBy } : {}),
