@@ -352,8 +352,8 @@ const FreeCodeCamp: FC<{}> = () => {
         providerParam,
         certificateProgress,
         profile?.handle,
-        setCertificateProgress,
         courseData,
+        setCertificateProgress,
     )
 
     useEffect(() => {

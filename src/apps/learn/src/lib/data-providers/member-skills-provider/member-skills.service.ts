@@ -11,4 +11,3 @@ export async function verifyMemberSkills(handle: string, skillIds: string[]): Pr
     const url = `${EnvironmentConfig.API.V6}/members/${handle}/skills/verify`
     await xhrPostAsync(url, { skillIds })
 }
-

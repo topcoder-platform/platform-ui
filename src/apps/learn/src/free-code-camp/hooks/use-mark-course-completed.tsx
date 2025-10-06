@@ -9,16 +9,25 @@ import {
     UserCertificationProgressStatus,
 } from '../../lib'
 import { getCertificationCompletedPath } from '../../learn.routes'
-import { verifyMemberSkills as verifyMemberSkillsApi } from '../../lib/data-providers/member-skills-provider/member-skills.service'
+import {
+    verifyMemberSkills as verifyMemberSkillsApi,
+} from '../../lib/data-providers/member-skills-provider/member-skills.service'
 
 export const useCheckAndMarkCourseCompleted: (
     isLoggedIn: boolean,
     providerName: string,
     certificateProgress?: LearnUserCertificationProgress,
     userHandle?: string,
-    setCertificateProgress?: (progess: LearnUserCertificationProgress) => void,
     courseData?: LearnCourse,
-) => void = (isLoggedIn, providerName, certificateProgress, userHandle, setCertificateProgress = noop, courseData) => {
+    setCertificateProgress?: (progess: LearnUserCertificationProgress) => void,
+) => void = (
+    isLoggedIn,
+    providerName,
+    certificateProgress,
+    userHandle,
+    courseData,
+    setCertificateProgress = noop,
+) => {
     const navigate: NavigateFunction = useNavigate()
     const location: any = useLocation()
     const isUpdating: MutableRefObject<boolean> = useRef(false)
@@ -59,6 +68,7 @@ export const useCheckAndMarkCourseCompleted: (
                         console.warn('Failed to verify member skills:', e)
                     }
                 }
+
                 const completedPath: string = getCertificationCompletedPath(
                     providerName,
                     certificateProgress.certification,
