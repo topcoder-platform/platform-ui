@@ -31,7 +31,7 @@ export const TC_DOMAIN: string = get({
 
 export const TOPCODER_URL: string = `https://www.${TC_DOMAIN}`
 export const PLATFORMUI_URL: string = `https://platform-ui.${TC_DOMAIN}`
-export const USER_PROFILE_URL: string = `https://profiles.${TC_DOMAIN}`
+export const USER_PROFILE_URL: string = `https://profiles-v6.${TC_DOMAIN}/profiles`
 
 export const API = {
     URL: `https://api.${TC_DOMAIN}`,
