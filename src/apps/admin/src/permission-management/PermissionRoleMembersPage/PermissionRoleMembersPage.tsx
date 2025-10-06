@@ -83,10 +83,12 @@ export const PermissionRoleMembersPage: FC<Props> = (props: Props) => {
                         </div>
                     ) : (
                         <>
-                            {roleMembers.length === 0 ? (
+                            {roleInfo?.roleName === 'Topcoder Talent' ? (
                                 <p className={styles.noRecordFound}>
-                                    No members
+                                    This role has too many members to display
                                 </p>
+                            ) : roleMembers.length === 0 ? (
+                                <p className={styles.noRecordFound}>No members</p>
                             ) : (
                                 <div className={styles.blockTableContainer}>
                                     <RoleMembersTable
