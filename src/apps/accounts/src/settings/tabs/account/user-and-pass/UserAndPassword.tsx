@@ -18,7 +18,7 @@ import {
     UserTraitIds,
     UserTraits,
 } from '~/libs/core'
-import { SettingSection, triggerSurvey } from '~/apps/accounts/src/lib'
+import { SettingSection } from '~/apps/accounts/src/lib'
 
 import { UserAndPassFromConfig } from './user-and-pass.form.config'
 import styles from './UserAndPassword.module.scss'
@@ -84,7 +84,6 @@ const UserAndPassword: FC<UserAndPasswordProps> = (props: UserAndPasswordProps) 
                 setUserConsent(!userConsent)
                 mutateTraits()
                 toast.success('User consent updated successfully.')
-                triggerSurvey()
             })
             .catch(() => {
                 toast.error('Failed to update user consent.')

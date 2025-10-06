@@ -12,9 +12,8 @@ export function verify(): string {
 }
 
 export function countryLookupURL(): string {
-    // API URL is hardcoded here because there is no DEV API for this endpoint
-    // TODO: add DEV API eventually and/or add a config for this
-    return `${EnvironmentConfig.API.V6}/members/lookup/countries`
+    // Fetch country list from lookups-api-v6; request a large page to get all
+    return `${EnvironmentConfig.API.V6}/lookups/countries?page=1&perPage=9999`
 }
 
 export function gamificationAPIBaseURL(): string {

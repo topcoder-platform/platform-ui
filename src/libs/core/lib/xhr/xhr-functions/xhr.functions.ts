@@ -32,6 +32,7 @@ export function createInstance(): AxiosInstance {
     })
 
     // add the interceptors
+    interceptLegacyCountryLookupPath(created)
     interceptLocalApiRouting(created)
     interceptAuth(created)
     interceptError(created)
@@ -235,6 +236,37 @@ function interceptLocalApiRouting(instance: AxiosInstance): void {
 
         config.url = finalUrl
         config.baseURL = undefined
+
+        return config
+    })
+}
+
+function interceptLegacyCountryLookupPath(instance: AxiosInstance): void {
+    // Rewrite deprecated country lookup path to lookups-api path
+    instance.interceptors.request.use(config => {
+        if (!config.url) {
+            return config
+        }
+
+        const absoluteUrl = toAbsoluteUrl(config.url, config.baseURL)
+        if (!absoluteUrl) {
+            return config
+        }
+
+        let parsed: URL
+        try {
+            parsed = new URL(absoluteUrl)
+        } catch {
+            return config
+        }
+
+        const legacyPaths = ['/v6/members/lookup/countries', '/v6/members/lookups/countries']
+        if (legacyPaths.some(p => parsed.pathname === p || parsed.pathname === `${p}/`)) {
+            const newPath = '/v6/lookups/countries'
+            const finalUrl = `${parsed.protocol}//${parsed.host}${newPath}${parsed.search}${parsed.hash}`
+            config.url = finalUrl
+            config.baseURL = undefined
+        }
 
         return config
     })

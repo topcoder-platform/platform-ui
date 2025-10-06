@@ -4,7 +4,6 @@ import { useSearchParams } from 'react-router-dom'
 import { MemberTraitsAPI, useMemberTraits, UserProfile, UserTrait, UserTraitIds } from '~/libs/core'
 
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
-import { triggerSurvey } from '../../lib'
 import { AddButton, EditMemberPropertyBtn, EmptySection } from '../../components'
 
 import { ModifyWorkExpirenceModal } from './ModifyWorkExpirenceModal'
@@ -52,7 +51,6 @@ const WorkExpirence: FC<WorkExpirenceProps> = (props: WorkExpirenceProps) => {
             setIsEditMode(false)
             mutateTraits()
             props.refreshProfile(props.profile.handle)
-            triggerSurvey()
         }, 1000)
     }
 

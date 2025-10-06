@@ -6,7 +6,7 @@ import { profileContext, ProfileContextData, profileGetPublicAsync, UserProfile 
 import { TALENT_SEARCH_PATHS } from '~/apps/talent-search'
 import { LoadingSpinner } from '~/libs/ui'
 
-import { notifyUniNavi, triggerSurvey } from '../lib'
+import { notifyUniNavi } from '../lib'
 
 import { ProfilePageLayout } from './page-layout'
 import { MemberProfileContextValue, useMemberProfileContext } from './MemberProfile.context'
@@ -50,7 +50,6 @@ const MemberProfilePage: FC<{}> = () => {
                 setProfile({ ...userProfile } as UserProfile)
                 if (userProfile) {
                     notifyUniNavi(userProfile)
-                    triggerSurvey()
                 }
             })
     ), [])

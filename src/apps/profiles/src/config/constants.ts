@@ -1,4 +1,4 @@
-import { EnvironmentConfig } from '~/config'
+// import { EnvironmentConfig } from '~/config'
 
 export enum TRACKS_PROFILE_MAP {
     DEVELOP = 'Developer',
@@ -23,6 +23,6 @@ export enum profileEditModes {
     onboardingCompleted = 'onboardingCompleted',
 }
 
-export const CES_SURVEY_ID = EnvironmentConfig.USERFLOW_SURVEYS.PROFILES
+// (removed) CES Survey/Userflow integrations
 
 export const MAX_PRINCIPAL_SKILLS_COUNT = 10

@@ -12,7 +12,6 @@ import {
     OtherServiceProviderIcon,
     SettingSection,
     TelevisionServiceProviderIcon,
-    triggerSurvey,
 } from '~/apps/accounts/src/lib'
 
 import { serviceProviderTypes } from './service-provider-types.config'
@@ -76,6 +75,9 @@ const ServiceProvider: FC<ServiceProviderProps> = (props: ServiceProviderProps) 
     const [itemToRemove, setItemToRemove]: [UserTrait | undefined, Dispatch<SetStateAction<UserTrait | undefined>>]
         = useState<UserTrait | undefined>()
 
+    const [isSaving, setIsSaving] = useState<boolean>(false)
+    const [isDeleting, setIsDeleting] = useState<boolean>(false)
+
     useEffect(() => {
         const raw = props.serviceProviderTrait?.traits.data as any[] | undefined
         if (!raw) {
@@ -125,6 +127,10 @@ const ServiceProvider: FC<ServiceProviderProps> = (props: ServiceProviderProps) 
     }
 
     function handleFormAction(): void {
+        if (isSaving) {
+            return
+        }
+
         // validate the form
         const sN: string = trim(selectedServiceProviderName)
         const updatedFormErrors: { [key: string]: string } = {}
@@ -149,6 +155,7 @@ const ServiceProvider: FC<ServiceProviderProps> = (props: ServiceProviderProps) 
         }
 
         if (isEmpty(updatedFormErrors)) {
+            setIsSaving(true)
             // call the API to update the trait based on action type
             if (isEditMode) {
                 const updatedServiceProviderTypesData: UserTrait[] = reject(
@@ -183,7 +190,6 @@ const ServiceProvider: FC<ServiceProviderProps> = (props: ServiceProviderProps) 
                             ...updatedServiceProviderTypesData || [],
                             serviceProviderTypeUpdate,
                         ])
-                        triggerSurvey()
                     })
                     .catch(() => {
                         toast.error('Error updating Service Provider')
@@ -191,6 +197,7 @@ const ServiceProvider: FC<ServiceProviderProps> = (props: ServiceProviderProps) 
                     .finally(() => {
                         resetForm()
                         setIsEditMode(false)
+                        setIsSaving(false)
                     })
             } else {
                 const request = [{
@@ -221,13 +228,13 @@ const ServiceProvider: FC<ServiceProviderProps> = (props: ServiceProviderProps) 
                             ...serviceProviderTypesData || [],
                             serviceProviderTypeUpdate,
                         ])
-                        triggerSurvey()
                     })
                     .catch(() => {
                         toast.error('Error adding new Service Provider')
                     })
                     .finally(() => {
                         resetForm()
+                        setIsSaving(false)
                     })
             }
         }
@@ -242,12 +249,17 @@ const ServiceProvider: FC<ServiceProviderProps> = (props: ServiceProviderProps) 
     }
 
     function onRemoveItemConfirm(): void {
+        if (isDeleting) {
+            return
+        }
+
         const updatedServiceProviderTypesData: UserTrait[] = reject(serviceProviderTypesData, (trait: UserTrait) => (
             trait.name === itemToRemove?.name && trait.serviceProviderType === itemToRemove?.serviceProviderType
         )) || []
 
         resetForm()
 
+        setIsDeleting(true)
         updateMemberTraitsAsync(
             props.profile.handle,
             [{
@@ -266,13 +278,13 @@ const ServiceProvider: FC<ServiceProviderProps> = (props: ServiceProviderProps) 
             .then(() => {
                 toast.success('Service Provider deleted successfully')
                 setServiceProviderTypesData(updatedServiceProviderTypesData)
-                triggerSurvey()
             })
             .catch(() => {
                 toast.error('Error deleting Service Provider')
             })
             .finally(() => {
                 toggleRemoveConfirmation()
+                setIsDeleting(false)
             })
     }
 
@@ -329,6 +341,7 @@ const ServiceProvider: FC<ServiceProviderProps> = (props: ServiceProviderProps) 
                 onClose={toggleRemoveConfirmation}
                 onConfirm={onRemoveItemConfirm}
                 open={removeConfirmationOpen}
+                isLoading={isDeleting}
             >
                 <div>
                     Are you sure you want to delete
@@ -373,6 +386,7 @@ const ServiceProvider: FC<ServiceProviderProps> = (props: ServiceProviderProps) 
                             link
                             label={`${isEditMode ? 'Edit' : 'Add'} Service Provider to your List`}
                             onClick={handleFormAction}
+                            disabled={isSaving}
                         />
                         {isEditMode && (
                             <Button

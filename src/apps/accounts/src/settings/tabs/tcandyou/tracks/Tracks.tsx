@@ -9,7 +9,6 @@ import {
     DesignTrackIcon,
     DevelopmentTrackIcon,
     SettingSection,
-    triggerSurvey,
 } from '~/apps/accounts/src/lib'
 
 import styles from './Tracks.module.scss'
@@ -21,6 +20,7 @@ interface TracksProps {
 const Tracks: FC<TracksProps> = (props: TracksProps) => {
     const [memberTracks, setMemberTracks]: [TC_TRACKS[], Dispatch<TC_TRACKS[]>]
         = useState<TC_TRACKS[]>(props.profile.tracks || [])
+    const [isUpdating, setIsUpdating] = useState<boolean>(false)
 
     const memberProfileContext: ProfileContextData = useContext(profileContext)
 
@@ -29,6 +29,11 @@ const Tracks: FC<TracksProps> = (props: TracksProps) => {
     }, [props.profile])
 
     function handleTracksChange(type: TC_TRACKS): void {
+        if (isUpdating) {
+            return
+        }
+
+        setIsUpdating(true)
         const hasTrack: boolean = memberTracks.includes(type)
         let updatedTracks: TC_TRACKS[]
 
@@ -54,10 +59,12 @@ const Tracks: FC<TracksProps> = (props: TracksProps) => {
                     } as any,
                 })
                 toast.success('Your profile has been updated.')
-                triggerSurvey()
             })
             .catch(() => {
                 toast.error('Failed to update your profile.')
+            })
+            .finally(() => {
+                setIsUpdating(false)
             })
     }
 
@@ -83,6 +90,7 @@ const Tracks: FC<TracksProps> = (props: TracksProps) => {
                         name='designTrack'
                         onChange={bind(handleTracksChange, this, 'DESIGN')}
                         value={!!memberTracks.includes('DESIGN')}
+                        disabled={isUpdating}
                     />
                 )}
             />
@@ -98,6 +106,7 @@ const Tracks: FC<TracksProps> = (props: TracksProps) => {
                         name='devTrack'
                         onChange={bind(handleTracksChange, this, 'DEVELOP')}
                         value={!!memberTracks.includes('DEVELOP')}
+                        disabled={isUpdating}
                     />
                 )}
             />
@@ -113,6 +122,7 @@ const Tracks: FC<TracksProps> = (props: TracksProps) => {
                         name='dsTrack'
                         onChange={bind(handleTracksChange, this, 'DATA_SCIENCE')}
                         value={!!memberTracks.includes('DATA_SCIENCE')}
+                        disabled={isUpdating}
                     />
                 )}
             />

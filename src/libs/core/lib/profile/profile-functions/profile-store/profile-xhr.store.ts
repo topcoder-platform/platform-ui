@@ -39,16 +39,25 @@ export function getMemberStats(handle: string): Promise<UserStats | undefined> {
         .then(stats => (!stats.length ? undefined : stats[0]))
 }
 
-type CountryLookupResponse = CountryLookup[] | { result?: { content?: CountryLookup[] } }
+type CountryLookupResponse = CountryLookup[] | { result?: { content?: CountryLookup[] } } | any[] | { data?: any[] }
 
 export function getCountryLookup(): Promise<CountryLookup[]> {
     return xhrGetAsync<CountryLookupResponse>(countryLookupURL())
-        .then(countryLookup => {
-            if (Array.isArray(countryLookup)) {
-                return countryLookup
-            }
+        .then(resp => {
+            const list: any[] = Array.isArray(resp)
+                ? resp
+                : Array.isArray((resp as any)?.result?.content)
+                    ? (resp as any).result.content
+                    : Array.isArray((resp as any)?.result)
+                        ? (resp as any).result
+                        : Array.isArray((resp as any)?.data)
+                            ? (resp as any).data
+                            : []
 
-            return countryLookup?.result?.content ?? []
+            return list.map((c: any) => ({
+                country: c.country ?? c.name ?? '',
+                countryCode: c.countryCode ?? c.code ?? c.isoCode ?? c.isoCode3 ?? c.isoCode2 ?? '',
+            })) as CountryLookup[]
         })
 }
 
