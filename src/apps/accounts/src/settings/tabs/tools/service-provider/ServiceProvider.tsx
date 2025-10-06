@@ -3,7 +3,7 @@ import { bind, isEmpty, reject, trim } from 'lodash'
 import { toast } from 'react-toastify'
 import classNames from 'classnames'
 
-import { updateMemberTraitsAsync, updateOrCreateMemberTraitsAsync, UserProfile, UserTrait } from '~/libs/core'
+import { createMemberTraitsAsync, updateMemberTraitsAsync, UserProfile, UserTrait, UserTraitIds } from '~/libs/core'
 import { Button, Collapsible, ConfirmModal, IconOutline, InputSelect, InputText } from '~/libs/ui'
 import {
     FinancialInstitutionIcon,
@@ -22,6 +22,22 @@ interface ServiceProviderProps {
     serviceProviderTrait: UserTrait | undefined
     profile: UserProfile
 }
+
+// Map between human-friendly labels used by the UI and
+// the enum values expected by the API/Prisma schema
+const enumByLabel: Record<string, string> = {
+    'Financial Institution': 'FinancialInstitution',
+    'Internet Service Provider': 'InternetServiceProvider',
+    'Mobile Carrier': 'MobileCarrier',
+    Other: 'Other',
+    Television: 'Television',
+}
+
+const labelByEnum: Record<string, string> = Object.entries(enumByLabel)
+    .reduce((acc: Record<string, string>, [label, enumVal]) => {
+        acc[enumVal] = label
+        return acc
+    }, {})
 
 const ServiceProvider: FC<ServiceProviderProps> = (props: ServiceProviderProps) => {
     const formElRef: MutableRefObject<HTMLDivElement | any> = useRef()
@@ -61,7 +77,18 @@ const ServiceProvider: FC<ServiceProviderProps> = (props: ServiceProviderProps) 
         = useState<UserTrait | undefined>()
 
     useEffect(() => {
-        setServiceProviderTypesData(props.serviceProviderTrait?.traits.data)
+        const raw = props.serviceProviderTrait?.traits.data as any[] | undefined
+        if (!raw) {
+            setServiceProviderTypesData(undefined)
+            return
+        }
+
+        const normalized = raw.map((t: any) => ({
+            name: t.name,
+            // Prefer UI label if present, otherwise map enum -> label, fallback to raw
+            serviceProviderType: t.serviceProviderType || labelByEnum[t.type] || t.type,
+        }))
+        setServiceProviderTypesData(normalized)
     }, [props.serviceProviderTrait])
 
     function toggleRemoveConfirmation(): void {
@@ -141,7 +168,12 @@ const ServiceProvider: FC<ServiceProviderProps> = (props: ServiceProviderProps) 
                             data: [
                                 ...updatedServiceProviderTypesData || [],
                                 serviceProviderTypeUpdate,
-                            ],
+                            ].map((t: any) => ({
+                                name: t.name,
+                                // Convert UI label -> API enum when sending
+                                type: enumByLabel[t.serviceProviderType || t.type] || t.type,
+                            })),
+                            traitId: UserTraitIds.serviceProvider,
                         },
                     }],
                 )
@@ -161,18 +193,27 @@ const ServiceProvider: FC<ServiceProviderProps> = (props: ServiceProviderProps) 
                         setIsEditMode(false)
                     })
             } else {
-                updateOrCreateMemberTraitsAsync(
+                const request = [{
+                    categoryName: 'Service Provider',
+                    traitId: 'service_provider',
+                    traits: {
+                        data: [
+                            ...serviceProviderTypesData || [],
+                            serviceProviderTypeUpdate,
+                        ].map((t: any) => ({
+                            name: t.name,
+                            // Convert UI label -> API enum when sending
+                            type: enumByLabel[t.serviceProviderType || t.type] || t.type,
+                        })),
+                        traitId: UserTraitIds.serviceProvider,
+                    },
+                }]
+
+                const action = props.serviceProviderTrait ? updateMemberTraitsAsync : createMemberTraitsAsync
+
+                action(
                     props.profile.handle,
-                    [{
-                        categoryName: 'Service Provider',
-                        traitId: 'service_provider',
-                        traits: {
-                            data: [
-                                ...serviceProviderTypesData || [],
-                                serviceProviderTypeUpdate,
-                            ],
-                        },
-                    }],
+                    request,
                 )
                     .then(() => {
                         toast.success('Service Provider added successfully')
@@ -213,7 +254,12 @@ const ServiceProvider: FC<ServiceProviderProps> = (props: ServiceProviderProps) 
                 categoryName: 'Service Provider',
                 traitId: 'service_provider',
                 traits: {
-                    data: updatedServiceProviderTypesData,
+                    data: (updatedServiceProviderTypesData || []).map((t: any) => ({
+                        name: t.name,
+                        // Convert UI label -> API enum when sending
+                        type: enumByLabel[t.serviceProviderType || t.type] || t.type,
+                    })),
+                    traitId: UserTraitIds.serviceProvider,
                 },
             }],
         )

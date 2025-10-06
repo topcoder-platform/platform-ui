@@ -15,6 +15,7 @@ import {
     useMemberTraits,
     UserProfile,
     UserTrait,
+    UserTraitIds,
     UserTraits,
 } from '~/libs/core'
 import { SettingSection, triggerSurvey } from '~/apps/accounts/src/lib'
@@ -76,6 +77,7 @@ const UserAndPassword: FC<UserAndPasswordProps> = (props: UserAndPasswordProps) 
                 data: [{
                     userConsent: !userConsent,
                 }],
+                traitId: UserTraitIds.personalization,
             },
         }])
             .then(() => {

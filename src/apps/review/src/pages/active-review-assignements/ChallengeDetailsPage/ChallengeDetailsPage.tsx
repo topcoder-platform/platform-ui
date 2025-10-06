@@ -36,7 +36,6 @@ import {
     SelectOption,
 } from '../../../lib/models'
 import { FIRST2FINISH, ITERATIVE_REVIEW, TAB } from '../../../config/index.config'
-import { getHandleUrl } from '../../../lib/utils'
 import {
     activeReviewAssigmentsRouteId,
     pastReviewAssignmentsRouteId,
@@ -66,7 +65,6 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         isLoadingChallengeResources,
         resources,
         myResources,
-        reviewers,
     }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
     const { loginUserInfo }: ReviewAppContextModel = useContext(ReviewAppContext)
     const hasChallengeInfo = Boolean(challengeInfo)
@@ -382,38 +380,6 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                                 items={tabItems}
                                 selected={selectedTab}
                                 onChange={switchTab}
-                                rightContent={
-                                    selectedTab === 'Winners' ? (
-                                        <div className={styles.blockReviewers}>
-                                            {reviewers.map(item => (
-                                                <div
-                                                    key={item.id}
-                                                    className={
-                                                        styles.blockReviewer
-                                                    }
-                                                >
-                                                    <strong>Reviewer :</strong>
-                                                    <a
-                                                        href={getHandleUrl(item)}
-                                                        target='_blank'
-                                                        rel='noreferrer'
-                                                        style={{
-                                                            color: item.handleColor,
-                                                        }}
-                                                        onClick={function onClick() {
-                                                            window.open(
-                                                                getHandleUrl(item),
-                                                                '_blank',
-                                                            )
-                                                        }}
-                                                    >
-                                                        {item.memberHandle}
-                                                    </a>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    ) : undefined
-                                }
                             />
                         </div>
 

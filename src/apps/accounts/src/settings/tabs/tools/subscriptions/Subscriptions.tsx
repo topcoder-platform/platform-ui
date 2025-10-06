@@ -3,7 +3,7 @@ import { bind, isEmpty, reject, trim } from 'lodash'
 import { toast } from 'react-toastify'
 import classNames from 'classnames'
 
-import { updateMemberTraitsAsync, updateOrCreateMemberTraitsAsync, UserProfile, UserTrait } from '~/libs/core'
+import { createMemberTraitsAsync, updateMemberTraitsAsync, UserProfile, UserTrait, UserTraitIds } from '~/libs/core'
 import { Button, Collapsible, ConfirmModal, IconOutline, InputText } from '~/libs/ui'
 import { SettingSection, SubscriptionsIcon, triggerSurvey } from '~/apps/accounts/src/lib'
 
@@ -46,7 +46,14 @@ const Subscriptions: FC<SubscriptionsProps> = (props: SubscriptionsProps) => {
         = useState<UserTrait | undefined>()
 
     useEffect(() => {
-        setSubscriptionsTypesData(props.subscriptionsTrait?.traits.data)
+        const raw = props.subscriptionsTrait?.traits.data as any[] | undefined
+        if (!raw) {
+            setSubscriptionsTypesData(undefined)
+            return
+        }
+
+        const normalized = raw.map((t: any) => (typeof t === 'string' ? { name: t } : t))
+        setSubscriptionsTypesData(normalized)
     }, [props.subscriptionsTrait])
 
     function toggleRemoveConfirmation(): void {
@@ -114,7 +121,8 @@ const Subscriptions: FC<SubscriptionsProps> = (props: SubscriptionsProps) => {
                             data: [
                                 ...updatedSubscriptionsTypesData || [],
                                 softwareTypeUpdate,
-                            ],
+                            ].map((t: any) => t.name),
+                            traitId: UserTraitIds.subscription,
                         },
                     }],
                 )
@@ -134,7 +142,8 @@ const Subscriptions: FC<SubscriptionsProps> = (props: SubscriptionsProps) => {
                         setIsEditMode(false)
                     })
             } else {
-                updateOrCreateMemberTraitsAsync(
+                const action = props.subscriptionsTrait ? updateMemberTraitsAsync : createMemberTraitsAsync
+                action(
                     props.profile.handle,
                     [{
                         categoryName: 'Subscription',
@@ -143,7 +152,8 @@ const Subscriptions: FC<SubscriptionsProps> = (props: SubscriptionsProps) => {
                             data: [
                                 ...subscriptionsTypesData || [],
                                 softwareTypeUpdate,
-                            ],
+                            ].map((t: any) => t.name),
+                            traitId: UserTraitIds.subscription,
                         },
                     }],
                 )
@@ -186,7 +196,8 @@ const Subscriptions: FC<SubscriptionsProps> = (props: SubscriptionsProps) => {
                 categoryName: 'Subscription',
                 traitId: 'subscription',
                 traits: {
-                    data: updatedSubscriptionsTypesData,
+                    data: (updatedSubscriptionsTypesData || []).map((t: any) => t.name),
+                    traitId: UserTraitIds.subscription,
                 },
             }],
         )

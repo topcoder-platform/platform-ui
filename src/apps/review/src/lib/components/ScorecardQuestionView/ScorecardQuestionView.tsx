@@ -118,7 +118,9 @@ function getResponseOptions(scorecardQuestion: ScorecardQuestion): SelectOption[
 }
 
 function getFormattedAnswer(reviewItem: ReviewItemInfo): string | undefined {
-    const answer = reviewItem.finalAnswer ?? reviewItem.initialAnswer ?? undefined
+    // Prefer finalAnswer when it is a non-empty string; otherwise fall back to initialAnswer
+    // Using logical OR ensures empty strings don't mask a valid initialAnswer
+    const answer = reviewItem.finalAnswer || reviewItem.initialAnswer || undefined
 
     if (stringIsNumberic(answer)) {
         return `Rating ${answer}`
@@ -592,7 +594,8 @@ export const ScorecardQuestionView: FC<Props> = (props: Props) => {
     const reviewerHandle = reviewInfo?.reviewerHandle
     const isManagerEditMode = isManagerEdit ?? false
     const currentScoreValue = useMemo(
-        () => reviewItem.finalAnswer ?? reviewItem.initialAnswer ?? '',
+        // Show a selected score if finalAnswer is set; otherwise fall back to initialAnswer
+        () => reviewItem.finalAnswer || reviewItem.initialAnswer || '',
         [reviewItem.finalAnswer, reviewItem.initialAnswer],
     )
     const existingManagerComment = reviewItem.managerComment ?? ''

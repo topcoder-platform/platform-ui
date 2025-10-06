@@ -3,7 +3,7 @@ import { bind, isEmpty, reject, trim } from 'lodash'
 import { toast } from 'react-toastify'
 import classNames from 'classnames'
 
-import { updateMemberTraitsAsync, updateOrCreateMemberTraitsAsync, UserProfile, UserTrait } from '~/libs/core'
+import { createMemberTraitsAsync, updateMemberTraitsAsync, UserProfile, UserTrait, UserTraitIds } from '~/libs/core'
 import { Button, Collapsible, ConfirmModal, IconOutline, InputSelect, InputText } from '~/libs/ui'
 import { SettingSection, SoftwareIcon, triggerSurvey } from '~/apps/accounts/src/lib'
 
@@ -130,6 +130,7 @@ const Software: FC<SoftwareProps> = (props: SoftwareProps) => {
                                 ...updatedSoftwareTypesData || [],
                                 softwareTypeUpdate,
                             ],
+                            traitId: UserTraitIds.software,
                         },
                     }],
                 )
@@ -149,18 +150,23 @@ const Software: FC<SoftwareProps> = (props: SoftwareProps) => {
                         setIsEditMode(false)
                     })
             } else {
-                updateOrCreateMemberTraitsAsync(
+                const request = [{
+                    categoryName: 'Software',
+                    traitId: 'software',
+                    traits: {
+                        data: [
+                            ...softwareTypesData || [],
+                            softwareTypeUpdate,
+                        ],
+                        traitId: UserTraitIds.software,
+                    },
+                }]
+
+                const action = props.softwareTrait ? updateMemberTraitsAsync : createMemberTraitsAsync
+
+                action(
                     props.profile.handle,
-                    [{
-                        categoryName: 'Software',
-                        traitId: 'software',
-                        traits: {
-                            data: [
-                                ...softwareTypesData || [],
-                                softwareTypeUpdate,
-                            ],
-                        },
-                    }],
+                    request,
                 )
                     .then(() => {
                         toast.success('Software added successfully')
@@ -202,6 +208,7 @@ const Software: FC<SoftwareProps> = (props: SoftwareProps) => {
                 traitId: 'software',
                 traits: {
                     data: updatedSoftwareTypesData,
+                    traitId: UserTraitIds.software,
                 },
             }],
         )
@@ -234,7 +241,7 @@ const Software: FC<SoftwareProps> = (props: SoftwareProps) => {
                             </div>
                         )}
                         title={trait.name}
-                        infoText={trait.softwareType}
+                        infoText={softwareTypes.find(t => t.value === trait.softwareType)?.label || trait.softwareType}
                         actionElement={(
                             <div className={styles.actionElements}>
                                 <Button

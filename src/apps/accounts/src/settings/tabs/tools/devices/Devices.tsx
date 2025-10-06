@@ -5,11 +5,12 @@ import { toast } from 'react-toastify'
 import classNames from 'classnames'
 
 import {
+    createMemberTraitsAsync,
     updateMemberTraitsAsync,
-    updateOrCreateMemberTraitsAsync,
     useMemberDevicesLookup,
     UserProfile,
     UserTrait,
+    UserTraitIds,
 } from '~/libs/core'
 import { Button, Collapsible, ConfirmModal, IconOutline, InputSelect } from '~/libs/ui'
 import {
@@ -166,6 +167,7 @@ const Devices: FC<DevicesProps> = (props: DevicesProps) => {
                 traitId: 'device',
                 traits: {
                     data: updatedDeviceTypesData,
+                    traitId: UserTraitIds.device,
                 },
             }],
         )
@@ -269,6 +271,7 @@ const Devices: FC<DevicesProps> = (props: DevicesProps) => {
                                 ...updatedDeviceTypesData || [],
                                 deviceUpdate,
                             ],
+                            traitId: UserTraitIds.device,
                         },
                     }],
                 )
@@ -288,18 +291,23 @@ const Devices: FC<DevicesProps> = (props: DevicesProps) => {
                         setIsEditMode(false)
                     })
             } else {
-                updateOrCreateMemberTraitsAsync(
+                const request = [{
+                    categoryName: 'Device',
+                    traitId: 'device',
+                    traits: {
+                        data: [
+                            ...deviceTypesData || [],
+                            deviceUpdate,
+                        ],
+                        traitId: UserTraitIds.device,
+                    },
+                }]
+
+                const action = props.devicesTrait ? updateMemberTraitsAsync : createMemberTraitsAsync
+
+                action(
                     props.profile.handle,
-                    [{
-                        categoryName: 'Device',
-                        traitId: 'device',
-                        traits: {
-                            data: [
-                                ...deviceTypesData || [],
-                                deviceUpdate,
-                            ],
-                        },
-                    }],
+                    request,
                 )
                     .then(() => {
                         toast.success('Device added successfully')

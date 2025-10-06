@@ -7,6 +7,7 @@ export const LOCAL_SERVICE_OVERRIDES: LocalServiceOverride[] = [
     { prefix: '/v6/billing-accounts', target: 'http://localhost:3010' },
     { prefix: '/v6/clients', target: 'http://localhost:3010' },
     { prefix: '/v6/clients', target: 'http://localhost:3010' },
+    { prefix: '/v6/lookups', target: 'http://localhost:3007' },
 
     { prefix: '/v6/challenge-settings', target: 'http://localhost:3000' },
     { prefix: '/v6/challenge-tracks', target: 'http://localhost:3000' },
