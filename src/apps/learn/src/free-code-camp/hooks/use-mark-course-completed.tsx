@@ -3,19 +3,22 @@ import { MutableRefObject, useEffect, useRef } from 'react'
 import { NavigateFunction, useLocation, useNavigate } from 'react-router-dom'
 
 import {
+    LearnCourse,
     LearnUserCertificationProgress,
     userCertificationProgressCompleteCourseAsync,
     UserCertificationProgressStatus,
 } from '../../lib'
 import { getCertificationCompletedPath } from '../../learn.routes'
+import { verifyMemberSkills as verifyMemberSkillsApi } from '../../lib/data-providers/member-skills-provider/member-skills.service'
 
 export const useCheckAndMarkCourseCompleted: (
     isLoggedIn: boolean,
     providerName: string,
     certificateProgress?: LearnUserCertificationProgress,
     userHandle?: string,
-    setCertificateProgress?: (progess: LearnUserCertificationProgress) => void
-) => void = (isLoggedIn, providerName, certificateProgress, userHandle, setCertificateProgress = noop) => {
+    setCertificateProgress?: (progess: LearnUserCertificationProgress) => void,
+    courseData?: LearnCourse,
+) => void = (isLoggedIn, providerName, certificateProgress, userHandle, setCertificateProgress = noop, courseData) => {
     const navigate: NavigateFunction = useNavigate()
     const location: any = useLocation()
     const isUpdating: MutableRefObject<boolean> = useRef(false)
@@ -44,7 +47,18 @@ export const useCheckAndMarkCourseCompleted: (
             providerName,
         )
             .then(setCertificateProgress)
-            .then(() => {
+            .then(async () => {
+                // Verify course skills in member-api-v6
+                const skillIds: string[] = (courseData?.skills || []).map(s => s.id)
+                if (userHandle && skillIds.length) {
+                    try {
+                        await verifyMemberSkillsApi(userHandle, skillIds)
+                    } catch (e) {
+                        // do not block navigation on error
+                        // eslint-disable-next-line no-console
+                        console.warn('Failed to verify member skills:', e)
+                    }
+                }
                 const completedPath: string = getCertificationCompletedPath(
                     providerName,
                     certificateProgress.certification,

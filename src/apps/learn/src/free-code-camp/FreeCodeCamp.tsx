@@ -353,6 +353,7 @@ const FreeCodeCamp: FC<{}> = () => {
         certificateProgress,
         profile?.handle,
         setCertificateProgress,
+        courseData,
     )
 
     useEffect(() => {
