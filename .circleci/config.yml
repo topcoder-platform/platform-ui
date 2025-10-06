@@ -231,6 +231,7 @@ workflows:
                               - feat/review
                               - feat/system-admin
                               - feat/v6
+                              - debug-profiles
 
             - deployQa:
                   context: org-global
