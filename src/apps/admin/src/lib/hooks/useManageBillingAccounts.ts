@@ -12,6 +12,7 @@ import { Sort } from '~/apps/admin/src/platform/gamification-admin/src/game-lib'
 import { TABLE_PAGINATION_ITEM_PER_PAGE } from '../../config/index.config'
 import { BillingAccount, FormBillingAccountsFilter } from '../models'
 import { searchBillingAccounts } from '../services'
+import { searchUsers } from '../services/user.service'
 import { handleError } from '../utils'
 
 import { useTableFilterBackend, useTableFilterBackendProps } from './useTableFilterBackend'
@@ -126,23 +127,71 @@ export function useManageBillingAccounts(mappingSortField?: {
                     sortFieldName = mappingSortField[sortFieldName]
                 }
 
-                searchBillingAccounts(
-                    filterCriteria
-                        ? {
-                            endDate: filterCriteria.endDate,
-                            name: filterCriteria.name,
-                            startDate: filterCriteria.startDate,
-                            status: filterCriteria.status,
-                            user: filterCriteria.user,
+                // Resolve user filter to userId (supports numeric ID or exact/unique handle)
+                const run = async (): Promise<void> => {
+                    try {
+                        let resolvedUserId: string | undefined
+
+                        if (filterCriteria?.user) {
+                            const raw = `${filterCriteria.user}`.trim()
+                            if (raw) {
+                                // If numeric, assume it's already a userId
+                                if (/^\d+$/.test(raw)) {
+                                    resolvedUserId = raw
+                                } else {
+                                    // Try exact handle match first
+                                    const users = await searchUsers({
+                                        fields: 'id,handle',
+                                        filter: `handle=${raw}`,
+                                        limit: 1,
+                                    })
+                                    if (users && users.length > 0) {
+                                        resolvedUserId = users[0].id
+                                    } else {
+                                        // Fallback: try a LIKE search; use only if exactly one match
+                                        const likeUsers = await searchUsers({
+                                            fields: 'id,handle',
+                                            filter: `handle=*${raw}*&like=true`,
+                                            limit: 2,
+                                        })
+                                        if (likeUsers.length === 1) {
+                                            resolvedUserId = likeUsers[0].id
+                                        }
+                                    }
+                                }
+                            }
                         }
-                        : {},
-                    {
-                        limit: TABLE_PAGINATION_ITEM_PER_PAGE,
-                        page: pageRequest,
-                        sort: sortRequest ? `${sortFieldName} ${sortRequest.direction}` : '',
-                    },
-                )
-                    .then(result => {
+
+                        // If user was provided but couldn't be resolved -> no results
+                        if (filterCriteria?.user && !resolvedUserId) {
+                            dispatch({
+                                payload: { data: [], totalPages: 1 },
+                                type: BillingAccountsActionType.FETCH_BILLING_ACCOUNTS_DONE,
+                            })
+                            success()
+                            return
+                        }
+
+                        const criteria = filterCriteria
+                            ? {
+                                endDate: filterCriteria.endDate,
+                                name: filterCriteria.name,
+                                startDate: filterCriteria.startDate,
+                                status: filterCriteria.status,
+                                // Only pass userId when resolved
+                                ...(resolvedUserId ? { userId: resolvedUserId } : {}),
+                            }
+                            : {}
+
+                        const result = await searchBillingAccounts(
+                            criteria,
+                            {
+                                limit: TABLE_PAGINATION_ITEM_PER_PAGE,
+                                page: pageRequest,
+                                sort: sortRequest ? `${sortFieldName} ${sortRequest.direction}` : '',
+                            },
+                        )
+
                         dispatch({
                             payload: {
                                 data: result.content,
@@ -151,14 +200,16 @@ export function useManageBillingAccounts(mappingSortField?: {
                             type: BillingAccountsActionType.FETCH_BILLING_ACCOUNTS_DONE,
                         })
                         success()
-                    })
-                    .catch(e => {
+                    } catch (e: any) {
                         dispatch({
                             type: BillingAccountsActionType.FETCH_BILLING_ACCOUNTS_FAILED,
                         })
                         handleError(e)
                         fail()
-                    })
+                    }
+                }
+
+                run()
             },
             {
                 status: 'ACTIVE',

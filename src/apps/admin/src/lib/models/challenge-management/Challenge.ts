@@ -46,4 +46,8 @@ export interface Challenge {
     /** Challenge phases. */
     phases: Array<{ name: string; isOpen: boolean; scheduledEndDate: string }>
     tags: Array<string>
+    /** Challenge billing info. */
+    billing?: {
+        billingAccountId?: string | number
+    }
 }

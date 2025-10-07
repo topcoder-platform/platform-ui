@@ -366,6 +366,11 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
     )
     const shouldShowResourcesSection = hasCopilotRole || isAdmin
 
+    // Determine if the current user is allowed to view this challenge detail
+    const isLoadingAnything = isLoadingChallengeInfo || isLoadingChallengeResources
+    const isUserResource = (myResources?.length ?? 0) > 0
+    const canViewChallenge = isAdmin || isUserResource
+
     return (
         <PageWrapper
             pageTitle={challengeInfo?.name ?? ''}
@@ -375,6 +380,12 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         >
             {isLoadingChallengeInfo ? (
                 <TableLoading />
+            ) : (!isLoadingAnything && hasChallengeInfo && !canViewChallenge) ? (
+                <div className={styles.permissionDeniedMessage}>
+                    You do not have permission to see this challenge.
+                    {' '}
+                    If you think this is in error, please email support@topcoder.com
+                </div>
             ) : challengeInfo ? (
                 <>
                     {isPastReviewDetail && (

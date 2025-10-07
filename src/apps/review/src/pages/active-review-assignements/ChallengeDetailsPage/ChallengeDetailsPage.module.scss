@@ -116,3 +116,11 @@
     background-color: $red-25;
     color: $red-140;
 }
+
+.permissionDeniedMessage {
+    color: $red-140;
+    font-family: "Nunito Sans", sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    margin-top: 24px;
+}

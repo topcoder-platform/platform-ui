@@ -13,6 +13,7 @@ import {
     gamificationAdminRouteId,
     manageChallengeRouteId,
     manageReviewRouteId,
+    paymentsRouteId,
     permissionManagementRouteId,
     platformRouteId,
     rootRoute,
@@ -144,6 +145,11 @@ const TermsEditPage: LazyLoadedComponent = lazyLoad(
 const TermsUsersPage: LazyLoadedComponent = lazyLoad(
     () => import('./platform/terms/TermsUsersPage'),
     'TermsUsersPage',
+)
+
+const PaymentsPage: LazyLoadedComponent = lazyLoad(
+    () => import('./payments/PaymentsPage'),
+    'PaymentsPage',
 )
 
 export const toolTitle: string = ToolTitle.admin
@@ -355,6 +361,12 @@ export const adminRoutes: ReadonlyArray<PlatformRoute> = [
                 element: <Platform />,
                 id: platformRouteId,
                 route: platformRouteId,
+            },
+            // Payments Module
+            {
+                element: <PaymentsPage />,
+                id: paymentsRouteId,
+                route: paymentsRouteId,
             },
         ],
         domain: AppSubdomain.admin,
