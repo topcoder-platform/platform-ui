@@ -29,6 +29,7 @@ export const LOCAL_SERVICE_OVERRIDES: LocalServiceOverride[] = [
     { prefix: '/v6/roles', target: 'http://localhost:3002' },
     { prefix: '/v6/permissions', target: 'http://localhost:3002' },
     { prefix: '/v6/user-roles', target: 'http://localhost:3002' },
+    { prefix: '/v6/identityproviders', target: 'http://localhost:3002' },
 
     { prefix: '/v6/members', target: 'http://localhost:3003' },
 

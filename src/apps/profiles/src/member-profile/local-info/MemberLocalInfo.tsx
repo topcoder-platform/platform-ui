@@ -60,11 +60,27 @@ const MemberLocalInfo: FC<MemberLocalInfoProps> = (props: MemberLocalInfoProps) 
         }, 1000)
     }
 
+    const locationDisplay: string = useMemo(() => {
+        if (city && memberCountry) {
+            return `${city}, ${memberCountry}`
+        }
+
+        if (city) {
+            return city
+        }
+
+        if (memberCountry) {
+            return memberCountry
+        }
+
+        return 'Unknown location'
+    }, [city, memberCountry])
+
     return (
         <div className={styles.container}>
             <div className={styles.localInfo}>
                 <IconSolid.LocationMarkerIcon />
-                {`${!!city ? `${city}, ` : ''}${memberCountry}`}
+                {locationDisplay}
                 {
                     canEdit && (
                         <EditMemberPropertyBtn

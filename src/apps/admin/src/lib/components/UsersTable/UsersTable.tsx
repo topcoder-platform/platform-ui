@@ -1,7 +1,7 @@
 /**
  * Users table.
  */
-import { FC, useMemo, useState } from 'react'
+import { FC, useEffect, useMemo, useState } from 'react'
 import _ from 'lodash'
 import classNames from 'classnames'
 import moment from 'moment'
@@ -30,6 +30,7 @@ import { DropdownMenuButton } from '../common/DropdownMenuButton'
 import { useTableFilterLocal, useTableFilterLocalProps } from '../../hooks'
 import { TABLE_DATE_FORMAT } from '../../../config/index.config'
 import { SSOLoginProvider, UserInfo } from '../../models'
+import { fetchSSOLoginProviders } from '../../services'
 import { Pagination } from '../common/Pagination'
 import { ReactComponent as RectangleListRegularIcon } from '../../assets/i/rectangle-list-regular-icon.svg'
 
@@ -52,10 +53,25 @@ interface Props {
 
 export const UsersTable: FC<Props> = props => {
     const [colWidth, setColWidth] = useState<colWidthType>({})
-    const ssoLoginProviders = useMemo<SSOLoginProvider[]>(
-        () => EnvironmentConfig.ADMIN_SSO_LOGIN_PROVIDERS.map(provider => ({ ...provider })),
-        [],
-    )
+    const [ssoLoginProviders, setSsoLoginProviders] = useState<SSOLoginProvider[]>([])
+    // initial fallback values from environment, until remote loads
+    useEffect(() => {
+        if (EnvironmentConfig.ADMIN_SSO_LOGIN_PROVIDERS?.length) {
+            setSsoLoginProviders(EnvironmentConfig.ADMIN_SSO_LOGIN_PROVIDERS.map(p => ({ ...p })))
+        }
+    }, [])
+    // Fetch providers from identity-api on mount
+    useEffect(() => {
+        fetchSSOLoginProviders()
+            .then((list: SSOLoginProvider[]) => {
+                if (Array.isArray(list) && list.length) {
+                    setSsoLoginProviders(list)
+                }
+            })
+            .catch(() => {
+                // ignore and keep fallback from env
+            })
+    }, [])
     const [showDialogEditUserEmail, setShowDialogEditUserEmail] = useState<
         UserInfo | undefined
     >()

@@ -10,6 +10,7 @@ import { BaseModal, Button, LinkButton, LoadingSpinner, PageTitle } from '~/libs
 
 import { BillingAccountResourcesTable } from '../../lib/components/BillingAccountResourcesTable'
 import { useManageBillingAccountResources, useManageBillingAccountResourcesProps } from '../../lib/hooks'
+import { BillingAccountResource } from '../../lib/models'
 import { MSG_NO_RECORD_FOUND } from '../../config/index.config'
 import { PageContent, PageHeader } from '../../lib'
 import { ConfirmModal } from '../../lib/components/common/ConfirmModal/ConfirmModal'
@@ -40,23 +41,22 @@ export const BillingAccountResourcesPage: FC<Props> = (props: Props) => {
 
     // Remove confirmation state
     const [confirmOpen, setConfirmOpen] = useState(false)
-    const [pendingRemoveHandle, setPendingRemoveHandle] = useState<string | undefined>(undefined)
+    const [pendingRemoveItem, setPendingRemoveItem] = useState<BillingAccountResource | undefined>(undefined)
 
-    const handleRequestRemove = useCallback((item: { id: number; name: string }) => {
-        setPendingRemoveHandle(item.name)
+    const handleRequestRemove = useCallback((item: BillingAccountResource) => {
+        setPendingRemoveItem(item)
         setConfirmOpen(true)
     }, [])
 
     const handleConfirmRemove = useCallback(() => {
-        if (pendingRemoveHandle) {
-            // doRemove expects a BillingAccountResource-like item
-            doRemoveBillingAccountResource({ id: -1, name: pendingRemoveHandle, status: 'active' })
+        if (pendingRemoveItem) {
+            doRemoveBillingAccountResource(pendingRemoveItem)
         }
 
         setConfirmOpen(false)
 
-        setPendingRemoveHandle(undefined)
-    }, [pendingRemoveHandle, doRemoveBillingAccountResource])
+        setPendingRemoveItem(undefined)
+    }, [pendingRemoveItem, doRemoveBillingAccountResource])
 
     // Add resource modal state
     const [addOpen, setAddOpen] = useState(false)
@@ -147,7 +147,7 @@ export const BillingAccountResourcesPage: FC<Props> = (props: Props) => {
                 action='Yes'
             >
                 Are you sure you want to remove&nbsp;
-                {pendingRemoveHandle}
+                {pendingRemoveItem?.name}
                 &nbsp;from this billing account?
             </ConfirmModal>
 
