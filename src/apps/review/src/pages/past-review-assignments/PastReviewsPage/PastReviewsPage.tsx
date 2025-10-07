@@ -17,6 +17,13 @@ import { Pagination, TableLoading } from '~/apps/admin/src/lib'
 import { Sort } from '~/apps/admin/src/platform/gamification-admin/src/game-lib'
 import { Button, IconOutline } from '~/libs/ui'
 
+import { CHALLENGE_TYPE_SELECT_ALL_OPTION } from '../../../config/index.config'
+import {
+    PageWrapper,
+    ReviewAppContext,
+    TableActiveReviews,
+    TableNoRecord,
+} from '../../../lib'
 import {
     DEFAULT_PAST_REVIEWS_PER_PAGE,
     useFetchChallengeTracks,
@@ -27,14 +34,8 @@ import {
     useFetchPastReviewsProps,
 } from '../../../lib/hooks'
 import { ReviewAppContextModel } from '../../../lib/models'
-import { CHALLENGE_TYPE_SELECT_ALL_OPTION } from '../../../config/index.config'
-import {
-    PageWrapper,
-    ReviewAppContext,
-    TableActiveReviews,
-    TableNoRecord,
-} from '../../../lib'
 import { SelectOption } from '../../../lib/models/SelectOption.model'
+import { getAllowedTypeAbbreviationsByTrack } from '../../../lib/utils/challengeTypesByTrack'
 
 import styles from './PastReviewsPage.module.scss'
 
@@ -66,20 +67,29 @@ export const PastReviewsPage: FC<Props> = (props: Props) => {
         return results
     }, [challengeTracks])
 
-    const challengeTypeOptions = useMemo<SelectOption[]>(() => {
-        const results: SelectOption[] = [CHALLENGE_TYPE_SELECT_ALL_OPTION]
-        forEach(challengeTypes, challengeType => {
-            results.push({ label: challengeType.name, value: challengeType.id })
-        })
-        return results
-    }, [challengeTypes])
-
     const [challengeTrack, setChallengeTrack] = useState<
         SingleValue<SelectOption>
     >(CHALLENGE_TYPE_SELECT_ALL_OPTION)
     const [challengeType, setChallengeType] = useState<
         SingleValue<SelectOption>
     >(CHALLENGE_TYPE_SELECT_ALL_OPTION)
+
+    const challengeTypeOptions = useMemo<SelectOption[]>(() => {
+        const results: SelectOption[] = [CHALLENGE_TYPE_SELECT_ALL_OPTION]
+
+        // When a track is selected, filter type options by allowed abbreviations.
+        const selectedTrack = challengeTracks.find(t => t.id === (challengeTrack?.value || ''))
+        const allowedAbbrevs = getAllowedTypeAbbreviationsByTrack(selectedTrack?.track)
+
+        forEach(challengeTypes, challengeTypeItem => {
+            if (!allowedAbbrevs || allowedAbbrevs.includes(challengeTypeItem.abbreviation)) {
+                results.push({ label: challengeTypeItem.name, value: challengeTypeItem.id })
+            }
+        })
+
+        return results
+    }, [challengeTypes, challengeTracks, challengeTrack])
+
     const [sort, setSort] = useState<Sort | undefined>(() => ({ ...DEFAULT_SORT }))
     const {
         pastReviews,
@@ -95,6 +105,18 @@ export const PastReviewsPage: FC<Props> = (props: Props) => {
 
     const selectedChallengeTrackId = challengeTrack?.value || undefined
     const selectedChallengeTypeId = challengeType?.value || undefined
+
+    // If the selected type is not allowed for the selected track, reset to All
+    useEffect(() => {
+        const selectedTrack = challengeTracks.find(t => t.id === selectedChallengeTrackId)
+        const allowedAbbrevs = getAllowedTypeAbbreviationsByTrack(selectedTrack?.track)
+        if (!allowedAbbrevs) return
+
+        const selectedType = challengeTypes.find(t => t.id === selectedChallengeTypeId)
+        if (selectedType && !allowedAbbrevs.includes(selectedType.abbreviation)) {
+            setChallengeType(CHALLENGE_TYPE_SELECT_ALL_OPTION)
+        }
+    }, [challengeTracks, challengeTypes, selectedChallengeTrackId, selectedChallengeTypeId])
 
     useEffect(() => {
         if (challengeType && loginUserInfo) {
