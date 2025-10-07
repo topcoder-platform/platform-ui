@@ -533,7 +533,8 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
     const postMortemReviews = useMemo<SubmissionInfo[]>(() => {
         const postMortemPhaseIds = new Set(
             (challengeInfo?.phases ?? [])
-                .filter(p => ((p.name || '').toLowerCase().replace(/[^a-z]/g, '') === 'postmortem'))
+                .filter(p => ((p.name || '').toLowerCase()
+                    .replace(/[^a-z]/g, '') === 'postmortem'))
                 .map(p => p.id),
         )
 
@@ -606,9 +607,9 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
     return {
         approvalReviews,
         checkpoint,
-        postMortemReviews,
         isLoading: isLoading || shouldAwaitSubmitterReviews,
         mappingReviewAppeal,
+        postMortemReviews,
         review,
         reviewProgress,
         screening,

@@ -17,9 +17,9 @@ import {
 import { ITERATIVE_REVIEW } from '../../../config/index.config'
 
 import TabContentApproval from './TabContentApproval'
-import TabContentPostMortem from './TabContentPostMortem'
 import TabContentCheckpoint from './TabContentCheckpoint'
 import TabContentIterativeReview from './TabContentIterativeReview'
+import TabContentPostMortem from './TabContentPostMortem'
 import TabContentRegistration from './TabContentRegistration'
 import TabContentReview from './TabContentReview'
 import TabContentScreening from './TabContentScreening'

@@ -4,7 +4,7 @@ import { formatDurationDate } from '../utils'
 import { TABLE_DATE_FORMAT } from '../../config/index.config'
 
 import { BackendMetadata } from './BackendMetadata.model'
-import { ChallengeInfo, ChallengeType, ChallengeWinner, ChallengeTrack } from './ChallengeInfo.model'
+import { ChallengeInfo, ChallengeTrack, ChallengeType, ChallengeWinner } from './ChallengeInfo.model'
 import { BackendPhase } from './BackendPhase.model'
 import { BackendDiscussion } from './BackendDiscussion.model'
 import { BackendPrizeSet } from './BackendPrizeSet.model'
@@ -68,6 +68,57 @@ export interface BackendChallengeInfo {
     winners?: BackendChallengeWinner[] | null
 }
 
+function normalizeType(
+    type: BackendChallengeInfo['type'],
+    typeId: string,
+): ChallengeType {
+    if (typeof type === 'object') {
+        return {
+            abbreviation: (type as any).abbreviation,
+            id: (type as any).id ?? typeId,
+            name: (type as any).name,
+        }
+    }
+
+    return {
+        id: typeId,
+        name: type as unknown as string,
+    }
+}
+
+function normalizeTrack(
+    track: BackendChallengeInfo['track'],
+    trackId: string,
+): ChallengeTrack {
+    if (typeof track === 'object') {
+        return {
+            abbreviation: (track as any).abbreviation,
+            id: (track as any).id ?? trackId,
+            name: (track as any).name,
+            track: (track as any).track,
+        }
+    }
+
+    return {
+        id: trackId,
+        name: track as unknown as string,
+    }
+}
+
+function mapWinners(
+    winners: BackendChallengeInfo['winners'],
+): ChallengeWinner[] | undefined {
+    return winners
+        ? winners.map(winner => ({
+            handle: winner.handle,
+            maxRating: winner.maxRating ?? undefined,
+            placement: winner.placement,
+            type: winner.type,
+            userId: winner.userId,
+        }))
+        : undefined
+}
+
 /**
  * Convert backend challenge info to show in ui
  *
@@ -111,39 +162,11 @@ export function convertBackendChallengeInfo(
             .format(TABLE_DATE_FORMAT)
         : undefined
 
-    const winners: ChallengeWinner[] | undefined = data.winners
-        ? data.winners.map(winner => ({
-            handle: winner.handle,
-            maxRating: winner.maxRating ?? undefined,
-            placement: winner.placement,
-            type: winner.type,
-            userId: winner.userId,
-        }))
-        : undefined
+    const winners: ChallengeWinner[] | undefined = mapWinners(data.winners)
 
     // normalize type/track to objects
-    const normalizedType: ChallengeType = (typeof data.type === 'object')
-        ? {
-            id: (data.type as any).id ?? data.typeId,
-            name: (data.type as any).name,
-            abbreviation: (data.type as any).abbreviation,
-        }
-        : {
-            id: data.typeId,
-            name: data.type as unknown as string,
-        }
-
-    const normalizedTrack: ChallengeTrack = (typeof data.track === 'object')
-        ? {
-            id: (data.track as any).id ?? data.trackId,
-            name: (data.track as any).name,
-            abbreviation: (data.track as any).abbreviation,
-            track: (data.track as any).track,
-        }
-        : {
-            id: data.trackId,
-            name: data.track as unknown as string,
-        }
+    const normalizedType: ChallengeType = normalizeType(data.type, data.typeId)
+    const normalizedTrack: ChallengeTrack = normalizeTrack(data.track, data.trackId)
 
     return {
         ...data,

@@ -48,6 +48,96 @@ interface Props {
     className?: string
 }
 
+// Helpers to keep UI hooks simple and under complexity limits
+const normalize = (s?: string): string => (s || '').toLowerCase()
+const normalizeAlpha = (s?: string): string => normalize(s)
+    .replace(/[^a-z]/g, '')
+
+const hasPhase = (phases: Array<{ name?: string }>, name: string): boolean => (
+    phases.some(p => normalize(p.name) === normalize(name))
+)
+
+const hasPhaseAlpha = (phases: Array<{ name?: string }>, normalizedName: string): boolean => (
+    phases.some(p => normalizeAlpha(p.name) === normalizedName)
+)
+
+const insertTabIfMissing = (
+    tabs: SelectOption[],
+    value: string,
+    label: string,
+    insertIdx: number,
+): void => {
+    if (!tabs.some(t => t.value === value)) {
+        tabs.splice(insertIdx, 0, { label, value })
+    }
+}
+
+const addCheckpointTab = (tabs: SelectOption[], phases: Array<{ name?: string }>): void => {
+    const hasCheckpointSubmission = hasPhase(phases, 'checkpoint submission')
+    const hasCheckpointReview = hasPhase(phases, 'checkpoint review')
+    if (hasCheckpointSubmission && hasCheckpointReview) {
+        const regIdx = tabs.findIndex(t => t.value === 'Registration')
+        const insertIdx = regIdx >= 0 ? regIdx + 1 : 0
+        insertTabIfMissing(tabs, 'Checkpoint', 'Checkpoint', insertIdx)
+    }
+}
+
+const ensureApprovalTab = (tabs: SelectOption[], phases: Array<{ name?: string }>): void => {
+    const hasApprovalPhase = hasPhase(phases, 'approval')
+    const approvalIdx = tabs.findIndex(t => t.value === 'Approval')
+    if (hasApprovalPhase) {
+        if (approvalIdx < 0) {
+            const reviewIdx = tabs.findIndex(
+                t => t.value === 'Review / Appeals' || t.value === 'Review',
+            )
+            const winnersIdx = tabs.findIndex(t => t.value === 'Winners')
+            const insertIdx = reviewIdx >= 0
+                ? reviewIdx + 1
+                : (winnersIdx >= 0 ? winnersIdx : tabs.length)
+            insertTabIfMissing(tabs, 'Approval', 'Approval', insertIdx)
+        }
+    } else if (approvalIdx >= 0) {
+        tabs.splice(approvalIdx, 1)
+    }
+}
+
+const ensurePostMortemTab = (
+    tabs: SelectOption[],
+    phases: Array<{ name?: string }>,
+    challengeTypeName?: string,
+): void => {
+    const isTopgearTask = normalize(challengeTypeName) === 'topgear task'
+    const hasPostMortemPhase = hasPhaseAlpha(phases, 'postmortem')
+    const postMortemIdx = tabs.findIndex(t => t.value === 'Post-Mortem')
+
+    if (isTopgearTask && hasPostMortemPhase) {
+        if (postMortemIdx < 0) {
+            const reviewIdx = tabs.findIndex(
+                t => t.value === 'Review / Appeals' || t.value === 'Review',
+            )
+            const winnersIdx = tabs.findIndex(t => t.value === 'Winners')
+            const insertIdx = reviewIdx >= 0
+                ? reviewIdx + 1
+                : (winnersIdx >= 0 ? winnersIdx : tabs.length)
+            insertTabIfMissing(tabs, 'Post-Mortem', 'Post-Mortem', insertIdx)
+        }
+    } else if (postMortemIdx >= 0) {
+        tabs.splice(postMortemIdx, 1)
+    }
+}
+
+const computeTabs = (
+    base: SelectOption[],
+    phases: Array<{ name?: string }>,
+    challengeTypeName?: string,
+): SelectOption[] => {
+    const tabs = [...base]
+    addCheckpointTab(tabs, phases)
+    ensureApprovalTab(tabs, phases)
+    ensurePostMortemTab(tabs, phases, challengeTypeName)
+    return tabs
+}
+
 // eslint-disable-next-line complexity
 export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
     const [searchParams, setSearchParams] = useSearchParams()
@@ -299,68 +389,9 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
             : challengeInfo.reviewLength
 
         fetchTabs(challengeInfo.type?.name || '', requestedTabLength)
-            .then(d => {
-                const phases = challengeInfo.phases ?? []
-                const hasCheckpointSubmission = phases.some(
-                    p => (p.name || '').toLowerCase() === 'checkpoint submission',
-                )
-                const hasCheckpointReview = phases.some(
-                    p => (p.name || '').toLowerCase() === 'checkpoint review',
-                )
-                const hasApprovalPhase = phases.some(
-                    p => (p.name || '').toLowerCase() === 'approval',
-                )
-                const hasPostMortemPhase = phases.some(p => (
-                    ((p.name || '').toLowerCase().replace(/[^a-z]/g, '') === 'postmortem')
-                ))
-                const isTopgearTask = (challengeInfo?.type?.name || '')
-                    .toLowerCase() === 'topgear task'
-
-                const tabs = [...d]
-
-                // Insert Checkpoint tab between Registration and Submission / Screening if both phases exist
-                if (
-                    hasCheckpointSubmission
-                    && hasCheckpointReview
-                    && !tabs.some(t => t.value === 'Checkpoint')
-                ) {
-                    const regIdx = tabs.findIndex(t => t.value === 'Registration')
-                    const insertIdx = regIdx >= 0 ? regIdx + 1 : 0
-                    tabs.splice(insertIdx, 0, { label: 'Checkpoint', value: 'Checkpoint' })
-                }
-
-                // Ensure Approval tab appears only if approval phases exist; place before Winners
-                const approvalIdx = tabs.findIndex(t => t.value === 'Approval')
-                if (hasApprovalPhase && approvalIdx < 0) {
-                    const reviewIdx = tabs.findIndex(
-                        t => t.value === 'Review / Appeals' || t.value === 'Review',
-                    )
-                    const winnersIdx = tabs.findIndex(t => t.value === 'Winners')
-                    const insertIdx = reviewIdx >= 0
-                        ? reviewIdx + 1
-                        : (winnersIdx >= 0 ? winnersIdx : tabs.length)
-                    tabs.splice(insertIdx, 0, { label: 'Approval', value: 'Approval' })
-                } else if (!hasApprovalPhase && approvalIdx >= 0) {
-                    tabs.splice(approvalIdx, 1)
-                }
-
-                // Insert Post-Mortem tab for Topgear Task with Post-Mortem phase
-                const postMortemIdx = tabs.findIndex(t => t.value === 'Post-Mortem')
-                if (isTopgearTask && hasPostMortemPhase && postMortemIdx < 0) {
-                    const reviewIdx = tabs.findIndex(
-                        t => t.value === 'Review / Appeals' || t.value === 'Review',
-                    )
-                    const winnersIdx = tabs.findIndex(t => t.value === 'Winners')
-                    const insertIdx = reviewIdx >= 0
-                        ? reviewIdx + 1
-                        : (winnersIdx >= 0 ? winnersIdx : tabs.length)
-                    tabs.splice(insertIdx, 0, { label: 'Post-Mortem', value: 'Post-Mortem' })
-                } else if ((!isTopgearTask || !hasPostMortemPhase) && postMortemIdx >= 0) {
-                    tabs.splice(postMortemIdx, 1)
-                }
-
-                setTabItems(tabs)
-            })
+            .then(d => setTabItems(
+                computeTabs(d, challengeInfo.phases ?? [], challengeInfo.type?.name),
+            ))
     }, [
         challengeInfo?.phases,
         challengeInfo?.reviewLength,
