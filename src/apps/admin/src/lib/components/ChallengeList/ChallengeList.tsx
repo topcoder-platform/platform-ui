@@ -41,9 +41,7 @@ const ChallengeCurrentPhase: FC<{ challenge: Challenge }> = props => {
                 .diff(b.scheduledEndDate))[0]
     }
 
-    const typeName = typeof props.challenge.type === 'string'
-        ? props.challenge.type
-        : (props.challenge.type && 'name' in props.challenge.type ? props.challenge.type.name : undefined)
+    const typeName = props.challenge.type?.name
 
     if (
         !statusPhase
@@ -124,9 +122,7 @@ const TrackIcon: FC<{ challenge: Challenge }> = props => {
         }
     }
 
-    const trackName = typeof props.challenge.track === 'string'
-        ? props.challenge.track
-        : (props.challenge.track && 'name' in props.challenge.track ? props.challenge.track.name : '')
+    const trackName = props.challenge.track?.name || ''
 
     return (
         <div
@@ -299,12 +295,8 @@ const ChallengeList: FC<ChallengeListProps> = props => {
             {
                 label: 'Type & Track',
                 renderer: (challenge: Challenge) => {
-                    const typeName = typeof challenge.type === 'string'
-                        ? challenge.type
-                        : (challenge.type && 'name' in challenge.type ? challenge.type.name : '')
-                    const trackName = typeof challenge.track === 'string'
-                        ? challenge.track
-                        : (challenge.track && 'name' in challenge.track ? challenge.track.name : '')
+                    const typeName = challenge.type?.name || ''
+                    const trackName = challenge.track?.name || ''
                     return (
                         <div>
                             {typeName}

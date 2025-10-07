@@ -42,6 +42,8 @@ export interface useFetchScreeningReviewProps {
     submitterReviews: SubmissionInfo[]
     // approval reviews (one entry per approval review instance)
     approvalReviews: SubmissionInfo[]
+    // post-mortem reviews (one entry per post-mortem instance)
+    postMortemReviews: SubmissionInfo[]
     isLoading: boolean
     reviewProgress: number
 }
@@ -527,6 +529,42 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
         return result
     }, [challengeInfo?.phases, challengeReviews, resourceMemberIdMapping, visibleChallengeSubmissions])
 
+    // Build post-mortem reviews list (for Topgear Task challenges)
+    const postMortemReviews = useMemo<SubmissionInfo[]>(() => {
+        const postMortemPhaseIds = new Set(
+            (challengeInfo?.phases ?? [])
+                .filter(p => ((p.name || '').toLowerCase().replace(/[^a-z]/g, '') === 'postmortem'))
+                .map(p => p.id),
+        )
+
+        if (!challengeReviews?.length || postMortemPhaseIds.size === 0) {
+            return []
+        }
+
+        const submissionsById = new Map(visibleChallengeSubmissions.map(s => [s.id, s]))
+        const allowedReviewerIds = new Set(reviewerIds)
+        const result: SubmissionInfo[] = []
+
+        forEach(challengeReviews, rv => {
+            if (!rv) return
+            if (!postMortemPhaseIds.has(rv.phaseId)) return
+            if (allowedReviewerIds.size > 0 && !allowedReviewerIds.has(rv.resourceId)) return
+            const submission = submissionsById.get(rv.submissionId)
+            if (!submission) return
+
+            const reviewInfo = convertBackendReviewToReviewInfo(rv)
+            result.push({
+                id: submission.id,
+                memberId: submission.memberId,
+                review: reviewInfo,
+                reviews: [convertBackendReviewToReviewResult(rv)],
+                userInfo: resourceMemberIdMapping[submission.memberId],
+            })
+        })
+
+        return result
+    }, [challengeInfo?.phases, challengeReviews, resourceMemberIdMapping, visibleChallengeSubmissions])
+
     useEffect(() => {
         forEach(review, item => {
             const reviewId = item.review?.id
@@ -568,6 +606,7 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
     return {
         approvalReviews,
         checkpoint,
+        postMortemReviews,
         isLoading: isLoading || shouldAwaitSubmitterReviews,
         mappingReviewAppeal,
         review,

@@ -5,6 +5,8 @@ import { FC, useContext, useMemo, useState } from 'react'
 import classNames from 'classnames'
 
 import {
+    ADMIN,
+    COPILOT,
     REVIEWER,
     SUBMITTER,
 } from '../../../config/index.config'
@@ -36,16 +38,10 @@ export const ChallengeLinks: FC<Props> = (props: Props) => {
         [myResources],
     )
 
-    // Determine if the challenge is past
-    const isPast = useMemo(() => {
-        const status = (challengeInfo?.status || '').toUpperCase()
-        return status === 'COMPLETED' || status.startsWith('CANCELLED')
-    }, [challengeInfo?.status])
-
-    // Payments button visibility: only copilots and admins on past challenges
+    // Payments button visibility: only copilots and admins
     const canShowPaymentsButton = useMemo(
-        () => !isPast || ['Admin', 'Copilot'].includes(actionChallengeRole),
-        [isPast, actionChallengeRole],
+        () => [ADMIN, COPILOT].includes(actionChallengeRole as any),
+        [actionChallengeRole],
     )
 
     return (

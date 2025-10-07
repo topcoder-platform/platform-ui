@@ -78,6 +78,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         screening,
         checkpoint,
         approvalReviews,
+        postMortemReviews,
         mappingReviewAppeal,
         submitterReviews,
     }: useFetchScreeningReviewProps = useFetchScreeningReview()
@@ -293,11 +294,11 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
             phase => phase.name === ITERATIVE_REVIEW,
         ).length ?? 0
 
-        const requestedTabLength = challengeInfo.type === FIRST2FINISH
+        const requestedTabLength = (challengeInfo.type?.name === FIRST2FINISH)
             ? Math.max(iterativePhaseCount, 1)
             : challengeInfo.reviewLength
 
-        fetchTabs(challengeInfo.type, requestedTabLength)
+        fetchTabs(challengeInfo.type?.name || '', requestedTabLength)
             .then(d => {
                 const phases = challengeInfo.phases ?? []
                 const hasCheckpointSubmission = phases.some(
@@ -309,6 +310,11 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                 const hasApprovalPhase = phases.some(
                     p => (p.name || '').toLowerCase() === 'approval',
                 )
+                const hasPostMortemPhase = phases.some(p => (
+                    ((p.name || '').toLowerCase().replace(/[^a-z]/g, '') === 'postmortem')
+                ))
+                const isTopgearTask = (challengeInfo?.type?.name || '')
+                    .toLowerCase() === 'topgear task'
 
                 const tabs = [...d]
 
@@ -336,6 +342,21 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                     tabs.splice(insertIdx, 0, { label: 'Approval', value: 'Approval' })
                 } else if (!hasApprovalPhase && approvalIdx >= 0) {
                     tabs.splice(approvalIdx, 1)
+                }
+
+                // Insert Post-Mortem tab for Topgear Task with Post-Mortem phase
+                const postMortemIdx = tabs.findIndex(t => t.value === 'Post-Mortem')
+                if (isTopgearTask && hasPostMortemPhase && postMortemIdx < 0) {
+                    const reviewIdx = tabs.findIndex(
+                        t => t.value === 'Review / Appeals' || t.value === 'Review',
+                    )
+                    const winnersIdx = tabs.findIndex(t => t.value === 'Winners')
+                    const insertIdx = reviewIdx >= 0
+                        ? reviewIdx + 1
+                        : (winnersIdx >= 0 ? winnersIdx : tabs.length)
+                    tabs.splice(insertIdx, 0, { label: 'Post-Mortem', value: 'Post-Mortem' })
+                } else if ((!isTopgearTask || !hasPostMortemPhase) && postMortemIdx >= 0) {
+                    tabs.splice(postMortemIdx, 1)
                 }
 
                 setTabItems(tabs)
@@ -445,6 +466,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                             review={review}
                             submitterReviews={submitterReviews}
                             approvalReviews={approvalReviews}
+                            postMortemReviews={postMortemReviews}
                             mappingReviewAppeal={mappingReviewAppeal}
                             isActiveChallenge={!isPastReviewDetail}
                         />

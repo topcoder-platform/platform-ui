@@ -56,6 +56,11 @@ export function useSubmissionDownloadAccess(): UseSubmissionDownloadAccessResult
         [normalisedRoles],
     )
 
+    const hasIterativeReviewerRole = useMemo(
+        () => normalisedRoles.some(role => role.includes('iterative reviewer')),
+        [normalisedRoles],
+    )
+
     const hasCopilotRole = useMemo(
         () => normalisedRoles.some(role => role.includes('copilot')),
         [normalisedRoles],
@@ -77,15 +82,29 @@ export function useSubmissionDownloadAccess(): UseSubmissionDownloadAccessResult
     const isSubmissionDownloadRestricted = useMemo(
         () => isSubmissionPhaseOpen
             && hasReviewerRole
+            && !hasIterativeReviewerRole
             && !(hasCopilotRole || isAdmin),
-        [isSubmissionPhaseOpen, hasReviewerRole, hasCopilotRole, isAdmin],
+        [
+            isSubmissionPhaseOpen,
+            hasReviewerRole,
+            hasIterativeReviewerRole,
+            hasCopilotRole,
+            isAdmin,
+        ],
     )
 
     const shouldRestrictSubmitterToOwnSubmission = useMemo(
         () => hasSubmitterRole
             && !(hasCopilotRole || isAdmin)
-            && !isChallengeCompleted,
-        [hasSubmitterRole, hasCopilotRole, isAdmin, isChallengeCompleted],
+            && !isChallengeCompleted
+            && !hasIterativeReviewerRole,
+        [
+            hasSubmitterRole,
+            hasCopilotRole,
+            isAdmin,
+            isChallengeCompleted,
+            hasIterativeReviewerRole,
+        ],
     )
 
     const currentMemberId = useMemo(

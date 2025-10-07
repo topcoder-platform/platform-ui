@@ -32,10 +32,9 @@ export const ChallengePhaseInfo: FC<Props> = (props: Props) => {
     const PROGRESS_TYPE = 'progress'
 
     const isTopgearTask = useMemo(() => {
-        const t = (props.challengeInfo?.type || '').toString()
-            .toLowerCase()
+        const t = (props.challengeInfo?.type?.name || '').toLowerCase()
         return t === 'topgear task'
-    }, [props.challengeInfo?.type])
+    }, [props.challengeInfo?.type?.name])
 
     const walletUrl = useMemo(
         () => `https://wallet.${EnvironmentConfig.TC_DOMAIN}`,

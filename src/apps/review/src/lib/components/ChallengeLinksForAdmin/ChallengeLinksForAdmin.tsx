@@ -11,6 +11,7 @@ import {
 import classNames from 'classnames'
 
 import { ConfirmModal } from '../ConfirmModal'
+import { DialogPayments } from '../DialogPayments'
 import { useAppNavigate } from '../../hooks'
 import {
     ChallengeDetailContext,
@@ -50,6 +51,7 @@ interface Props {
 export const ChallengeLinksForAdmin: FC<Props> = (props: Props) => {
     const [showCloseConfirmation, setShowCloseConfirmation] = useState(false)
     const [showContactManager, setShowContactManager] = useState(false)
+    const [showPayments, setShowPayments] = useState(false)
     const navigate = useAppNavigate()
     const {
         challengeInfo,
@@ -94,6 +96,17 @@ export const ChallengeLinksForAdmin: FC<Props> = (props: Props) => {
                     </a>
                 )}
 
+                {/* Payments available for Admin/Copilot (this component is only rendered for them) */}
+                <button
+                    type='button'
+                    className='borderButton'
+                    onClick={function onClick() {
+                        setShowPayments(true)
+                    }}
+                >
+                    Payments
+                </button>
+
                 {props.canEditScorecard && (
                     <button
                         type='button'
@@ -121,6 +134,15 @@ export const ChallengeLinksForAdmin: FC<Props> = (props: Props) => {
                     open
                     setOpen={function setOpen(open: boolean) {
                         setShowContactManager(open)
+                    }}
+                />
+            )}
+
+            {showPayments && (
+                <DialogPayments
+                    open
+                    setOpen={function setOpen(open: boolean) {
+                        setShowPayments(open)
                     }}
                 />
             )}

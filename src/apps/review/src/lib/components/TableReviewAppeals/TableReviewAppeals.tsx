@@ -132,12 +132,22 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
         [aggregatedRows, isReviewAppealsTab],
     )
 
+    // Only allow Appeals columns if the challenge type/track supports it
+    // AND the challenge actually contains an Appeals-related phase.
+    const hasAppealsPhase = useMemo(() => {
+        const phases = challengeInfo?.phases ?? []
+        return phases.some(p => {
+            const name = (p?.name || '').toLowerCase()
+            return name === 'appeals' || name === 'appeals response'
+        })
+    }, [challengeInfo?.phases])
+
     const allowsAppeals = useMemo(
-        () => !(
-            includes(WITHOUT_APPEAL, challengeType)
-            || includes(WITHOUT_APPEAL, challengeTrack)
+        () => hasAppealsPhase && !(
+            includes(WITHOUT_APPEAL, challengeType?.name)
+            || includes(WITHOUT_APPEAL, challengeTrack?.name)
         ),
-        [challengeTrack, challengeType],
+        [challengeTrack?.name, challengeType?.name, hasAppealsPhase],
     )
 
     const [isReopening, setIsReopening] = useState(false)

@@ -4,7 +4,7 @@ import { formatDurationDate } from '../utils'
 import { TABLE_DATE_FORMAT } from '../../config/index.config'
 
 import { BackendMetadata } from './BackendMetadata.model'
-import { ChallengeInfo, ChallengeType, ChallengeWinner } from './ChallengeInfo.model'
+import { ChallengeInfo, ChallengeType, ChallengeWinner, ChallengeTrack } from './ChallengeInfo.model'
 import { BackendPhase } from './BackendPhase.model'
 import { BackendDiscussion } from './BackendDiscussion.model'
 import { BackendPrizeSet } from './BackendPrizeSet.model'
@@ -53,8 +53,9 @@ export interface BackendChallengeInfo {
     prizeSets: BackendPrizeSet[]
     terms: BackendTerm[]
     skills: BackendSkill[]
-    track: string
-    type: string
+    // type/track may be string (legacy) or object (new)
+    track: string | { id: string; name: string; abbreviation?: string; track?: string }
+    type: string | { id: string; name: string; abbreviation?: string }
     legacy: BackendLegacy
     task: BackendTask
     created: string
@@ -120,6 +121,30 @@ export function convertBackendChallengeInfo(
         }))
         : undefined
 
+    // normalize type/track to objects
+    const normalizedType: ChallengeType = (typeof data.type === 'object')
+        ? {
+            id: (data.type as any).id ?? data.typeId,
+            name: (data.type as any).name,
+            abbreviation: (data.type as any).abbreviation,
+        }
+        : {
+            id: data.typeId,
+            name: data.type as unknown as string,
+        }
+
+    const normalizedTrack: ChallengeTrack = (typeof data.track === 'object')
+        ? {
+            id: (data.track as any).id ?? data.trackId,
+            name: (data.track as any).name,
+            abbreviation: (data.track as any).abbreviation,
+            track: (data.track as any).track,
+        }
+        : {
+            id: data.trackId,
+            name: data.track as unknown as string,
+        }
+
     return {
         ...data,
         currentPhase,
@@ -145,8 +170,8 @@ export function convertBackendChallengeInfo(
         timeLeft: timeLeft.durationString,
         timeLeftColor: timeLeft.durationColor,
         timeLeftStatus: timeLeft.durationStatus,
-        track: data.track as ChallengeType,
-        type: data.type as ChallengeType,
+        track: normalizedTrack,
+        type: normalizedType,
         typeId: data.typeId,
         winners,
     }

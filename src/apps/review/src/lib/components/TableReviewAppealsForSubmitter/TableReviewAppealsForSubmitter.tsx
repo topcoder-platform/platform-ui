@@ -78,24 +78,33 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
     const challengeStatus = challengeInfo?.status?.toUpperCase()
     const isChallengeCompleted = challengeStatus === 'COMPLETED'
 
+    // Show Appeals columns only if the challenge includes an Appeals phase
+    const hasAppealsPhase = useMemo(() => {
+        const phases = challengeInfo?.phases ?? []
+        return phases.some(p => {
+            const name = (p?.name || '').toLowerCase()
+            return name === 'appeals' || name === 'appeals response'
+        })
+    }, [challengeInfo?.phases])
+
     const allowsAppeals = useMemo(
-        () => !(
-            includes(WITHOUT_APPEAL, challengeType)
-            || includes(WITHOUT_APPEAL, challengeTrack)
+        () => hasAppealsPhase && !(
+            includes(WITHOUT_APPEAL, challengeType?.name)
+            || includes(WITHOUT_APPEAL, challengeTrack?.name)
         ),
-        [challengeTrack, challengeType],
+        [challengeTrack?.name, challengeType?.name, hasAppealsPhase],
     )
 
     const isFirst2FinishChallenge = useMemo(
-        () => [challengeType, challengeTrack]
+        () => [challengeType?.name, challengeTrack?.name]
             .some(type => type === FIRST2FINISH),
-        [challengeTrack, challengeType],
+        [challengeTrack?.name, challengeType?.name],
     )
 
     const isStandardChallenge = useMemo(
-        () => [challengeType, challengeTrack]
+        () => [challengeType?.name, challengeTrack?.name]
             .some(type => type === TRACK_CHALLENGE),
-        [challengeTrack, challengeType],
+        [challengeTrack?.name, challengeType?.name],
     )
 
     const isAppealsWindowOpen = useMemo(

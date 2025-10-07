@@ -13,11 +13,7 @@ import { Challenge, MemberSubmission } from '../models'
  */
 export function checkIsMM(challenge?: Challenge): boolean {
     const tags = _.get(challenge, 'tags') || []
-    const typeName = challenge
-        ? (typeof (challenge as any).type === 'string'
-            ? (challenge as any).type
-            : _.get((challenge as any).type, 'name'))
-        : undefined
+    const typeName = challenge ? _.get(challenge, 'type.name') as string | undefined : undefined
     const isMMType = typeName === 'Marathon Match'
     return tags.includes('Marathon Match') || isMMType
 }

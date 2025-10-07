@@ -17,6 +17,7 @@ import {
 import { ITERATIVE_REVIEW } from '../../../config/index.config'
 
 import TabContentApproval from './TabContentApproval'
+import TabContentPostMortem from './TabContentPostMortem'
 import TabContentCheckpoint from './TabContentCheckpoint'
 import TabContentIterativeReview from './TabContentIterativeReview'
 import TabContentRegistration from './TabContentRegistration'
@@ -32,6 +33,7 @@ interface Props {
     review: SubmissionInfo[]
     submitterReviews: SubmissionInfo[]
     approvalReviews: SubmissionInfo[]
+    postMortemReviews: SubmissionInfo[]
     mappingReviewAppeal: MappingReviewAppeal // from review id to appeal info
     isActiveChallenge: boolean
 }
@@ -76,6 +78,15 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
             ) : props.selectedTab === 'Approval' ? (
                 <TabContentApproval
                     reviews={props.approvalReviews}
+                    submitterReviews={props.submitterReviews}
+                    isLoadingReview={props.isLoadingSubmission}
+                    isDownloading={isDownloadingSubmission}
+                    downloadSubmission={downloadSubmission}
+                    isActiveChallenge={props.isActiveChallenge}
+                />
+            ) : props.selectedTab === 'Post-Mortem' ? (
+                <TabContentPostMortem
+                    reviews={props.postMortemReviews}
                     submitterReviews={props.submitterReviews}
                     isLoadingReview={props.isLoadingSubmission}
                     isDownloading={isDownloadingSubmission}

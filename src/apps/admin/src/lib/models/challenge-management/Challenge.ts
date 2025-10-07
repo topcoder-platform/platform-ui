@@ -24,12 +24,12 @@ export interface Challenge {
     name: string
     /** Direct-app project ID. */
     legacyId: string
-    /** Challenge type (string name or object). */
-    type: ChallengeType['name'] | { id: string; name: string }
+    /** Challenge type. */
+    type: ChallengeType
     /** Type UUID. */
     typeId: string
-    /** Challenge track (string name or object). */
-    track: ChallengeTrack['name'] | { id: string; name: string; track?: string }
+    /** Challenge track. */
+    track: ChallengeTrack
     legacy: {
         subTrack: string
     }

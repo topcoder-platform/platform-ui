@@ -7,16 +7,19 @@ import { formatDurationDate } from '../utils'
 import { SubmissionInfo } from './SubmissionInfo.model'
 import { BackendPhase } from './BackendPhase.model'
 
-export type ChallengeType =
-        | 'Design'
-        | 'Code'
-        | 'Bug Hunt'
-        | 'Test Suite'
-        | 'Copilot Opportunity'
-        | 'Marathon Match'
-        | 'First2Finish'
-        | 'Other'
-        | 'Challenge'
+// Challenge type/track are now objects
+export interface ChallengeType {
+    id: string
+    name: string
+    abbreviation?: string
+}
+
+export interface ChallengeTrack {
+    id: string
+    name: string
+    abbreviation?: string
+    track?: string
+}
 
 /**
  * Winner info for a challenge
@@ -48,7 +51,7 @@ export interface ChallengeInfo {
     submissions: SubmissionInfo[]
     type: ChallengeType
     typeId: string
-    track: ChallengeType
+    track: ChallengeTrack
     reviewLength?: number
     discussionsUrl?: string // this field is calculated at frontend
     legacyId?: number
