@@ -42,5 +42,11 @@ export const LOCAL_SERVICE_OVERRIDES: LocalServiceOverride[] = [
     { prefix: '/v6/review-opportunities', target: 'http://localhost:3005' },
     { prefix: '/v6/review-applications', target: 'http://localhost:3005' },
 
+    // Review app: route payments and appeals to local review API
+    { prefix: '/v6/payments', target: 'http://localhost:3005' },
+    { prefix: '/v6/appeals', target: 'http://localhost:3005' },
+    { prefix: '/v6/scorecards', target: 'http://localhost:3005' },
+    { prefix: '/v6/contact-requests', target: 'http://localhost:3005' },
+
     { prefix: '/v5/standardized-skills', target: 'http://localhost:3006' },
 ]

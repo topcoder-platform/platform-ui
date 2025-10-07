@@ -134,6 +134,7 @@ export function convertBackendChallengeInfo(
         legacyId: data.legacyId,
         name: data.name,
         phases: data.phases,
+        prizeSets: data.prizeSets,
         reviewLength: 0,
         // the % = (The number of submission has been reviewed / submitted review) / The total number of submissions.
         // For now, we can skip the review process.

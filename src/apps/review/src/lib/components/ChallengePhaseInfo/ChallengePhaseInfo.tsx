@@ -1,12 +1,17 @@
 /**
  * Challenge Phase Info.
  */
-import { FC, useMemo } from 'react'
+import { FC, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import classNames from 'classnames'
 
-import { ChallengeInfo } from '../../models'
-import { ProgressBar } from '../ProgressBar'
+import { EnvironmentConfig } from '~/config'
+
+import type { ChallengeInfo, ReviewAppContextModel } from '../../models'
+import type { WinningDetailDto } from '../../services'
+import { ChallengeDetailContext, ReviewAppContext } from '../../contexts'
 import { useRole, useRoleProps } from '../../hooks'
+import { fetchWinningsByExternalId } from '../../services'
+import { ProgressBar } from '../ProgressBar'
 
 import styles from './ChallengePhaseInfo.module.scss'
 
@@ -19,7 +24,92 @@ interface Props {
 
 export const ChallengePhaseInfo: FC<Props> = (props: Props) => {
     const { myChallengeRoles }: useRoleProps = useRole()
+    const { challengeId }: { challengeId?: string } = useContext(ChallengeDetailContext)
+    const { loginUserInfo }: ReviewAppContextModel = useContext(ReviewAppContext)
+    const [paymentAmount, setPaymentAmount] = useState<string | undefined>(undefined)
+    const [hasPayment, setHasPayment] = useState(false)
+    const [isLoadingPayment, setIsLoadingPayment] = useState(false)
     const PROGRESS_TYPE = 'progress'
+
+    const isTopgearTask = useMemo(() => {
+        const t = (props.challengeInfo?.type || '').toString()
+            .toLowerCase()
+        return t === 'topgear task'
+    }, [props.challengeInfo?.type])
+
+    const walletUrl = useMemo(
+        () => `https://wallet.${EnvironmentConfig.TC_DOMAIN}`,
+        [],
+    )
+
+    const formatCurrency = useCallback((amount: number | string, currency?: string): string => {
+        const n = typeof amount === 'number' ? amount : Number(amount)
+        if (Number.isNaN(n)) return String(amount)
+        const nf = new Intl.NumberFormat('en-US', {
+            currency: currency || 'USD',
+            maximumFractionDigits: 2,
+            minimumFractionDigits: 2,
+            style: 'currency',
+        })
+        return nf.format(n)
+    }, [])
+
+    useEffect(() => {
+        const run = async (): Promise<void> => {
+            const isPast = (props.variant ?? 'active') === 'past'
+            if (!isPast || isTopgearTask) return
+            if (!challengeId || !loginUserInfo?.userId) return
+            setIsLoadingPayment(true)
+            setHasPayment(false)
+            setPaymentAmount(undefined)
+
+            try {
+                const winnings: WinningDetailDto[] = await fetchWinningsByExternalId(challengeId)
+                const userIdStr = String(loginUserInfo.userId)
+                const myWinnings = winnings.filter(w => String(w.winnerId) === userIdStr)
+
+                if (!myWinnings.length) {
+                    setHasPayment(false)
+                    setPaymentAmount(undefined)
+                    return
+                }
+
+                // Sum all detail amounts for this user
+                let total = 0
+                let currency: string | undefined
+                myWinnings.forEach(w => {
+                    w.details?.forEach(d => {
+                        const val = Number(d.totalAmount)
+                        if (!Number.isNaN(val)) {
+                            total += val
+                        }
+
+                        // Prefer the first encountered currency
+                        if (!currency && d.currency) {
+                            currency = d.currency
+                        }
+                    })
+                })
+
+                if (total > 0) {
+                    const pretty = formatCurrency(total, currency || 'USD')
+                    setPaymentAmount(pretty)
+                    setHasPayment(true)
+                } else {
+                    setHasPayment(false)
+                    setPaymentAmount(undefined)
+                }
+            } catch (err) {
+                // swallow and don't show payment cell on errors
+                setHasPayment(false)
+                setPaymentAmount(undefined)
+            } finally {
+                setIsLoadingPayment(false)
+            }
+        }
+
+        run()
+    }, [challengeId, loginUserInfo?.userId, props.variant, isTopgearTask, formatCurrency])
     const uiItems = useMemo(() => {
         const data = props.challengeInfo
         const variant = props.variant ?? 'active'
@@ -70,6 +160,22 @@ export const ChallengePhaseInfo: FC<Props> = (props: Props) => {
                 : data.currentPhaseEndDateString || '-',
         })
 
+        if (variant === 'past' && hasPayment && paymentAmount && !isLoadingPayment && !isTopgearTask) {
+            items.push({
+                icon: 'icon-dollar',
+                title: 'Payment',
+                value: (
+                    <a
+                        href={walletUrl}
+                        target='_blank'
+                        rel='noreferrer noopener'
+                    >
+                        {paymentAmount}
+                    </a>
+                ),
+            })
+        }
+
         if (variant === 'active') {
             items.push({
                 icon: 'icon-timer',
@@ -94,6 +200,11 @@ export const ChallengePhaseInfo: FC<Props> = (props: Props) => {
         props.challengeInfo,
         props.reviewProgress,
         props.variant,
+        hasPayment,
+        paymentAmount,
+        isLoadingPayment,
+        isTopgearTask,
+        walletUrl,
     ])
     return (
         <div className={classNames(styles.container, props.className)}>

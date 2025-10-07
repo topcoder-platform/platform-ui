@@ -120,7 +120,7 @@ export const TableActiveReviews: FC<Props> = (props: Props) => {
                 {
                     className: classNames(styles.textBlue, styles.tableBreakCell, styles.tableCell),
                     isSortable: true,
-                    label: 'Project',
+                    label: 'Challenge',
                     propertyName: 'name',
                     renderer: (data: ActiveReviewAssignment) => (
                         disableNavigation ? (
