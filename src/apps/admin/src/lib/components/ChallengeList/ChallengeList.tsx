@@ -41,9 +41,13 @@ const ChallengeCurrentPhase: FC<{ challenge: Challenge }> = props => {
                 .diff(b.scheduledEndDate))[0]
     }
 
+    const typeName = typeof props.challenge.type === 'string'
+        ? props.challenge.type
+        : (props.challenge.type && 'name' in props.challenge.type ? props.challenge.type.name : undefined)
+
     if (
         !statusPhase
-        && props.challenge.type === 'First2Finish'
+        && typeName === 'First2Finish'
         && props.challenge.phases.length
     ) {
         statusPhase = _.clone(props.challenge.phases[0])
@@ -120,10 +124,14 @@ const TrackIcon: FC<{ challenge: Challenge }> = props => {
         }
     }
 
+    const trackName = typeof props.challenge.track === 'string'
+        ? props.challenge.track
+        : (props.challenge.track && 'name' in props.challenge.track ? props.challenge.track.name : '')
+
     return (
         <div
             className={cn(styles.trackIcon)}
-            style={iconStyles(props.challenge.track)}
+            style={iconStyles(trackName)}
         >
             {type?.abbreviation}
         </div>
@@ -290,17 +298,25 @@ const ChallengeList: FC<ChallengeListProps> = props => {
             { label: 'Legacy ID', propertyName: 'legacyId', type: 'text' },
             {
                 label: 'Type & Track',
-                renderer: (challenge: Challenge) => (
-                    <div>
-                        {challenge.type}
-                        <br />
-                        {challenge.track}
-                        {' '}
-                        {challenge.legacy.subTrack
-                            ? ` / ${challenge.legacy.subTrack}`
-                            : ''}
-                    </div>
-                ),
+                renderer: (challenge: Challenge) => {
+                    const typeName = typeof challenge.type === 'string'
+                        ? challenge.type
+                        : (challenge.type && 'name' in challenge.type ? challenge.type.name : '')
+                    const trackName = typeof challenge.track === 'string'
+                        ? challenge.track
+                        : (challenge.track && 'name' in challenge.track ? challenge.track.name : '')
+                    return (
+                        <div>
+                            {typeName}
+                            <br />
+                            {trackName}
+                            {' '}
+                            {challenge.legacy.subTrack
+                                ? ` / ${challenge.legacy.subTrack}`
+                                : ''}
+                        </div>
+                    )
+                },
                 type: 'element',
             },
             {
