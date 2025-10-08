@@ -8,6 +8,7 @@ import ConnectInfo from '../../models/ConnectInfo'
 import EducationInfo from '../../models/EducationInfo'
 import MemberAddress from '../../models/MemberAddress'
 import MemberInfo from '../../models/MemberInfo'
+import OnboardingChecklistInfo from '../../models/OnboardingChecklistInfo'
 import PersonalizationInfo from '../../models/PersonalizationInfo'
 import WorkInfo from '../../models/WorkInfo'
 
@@ -20,6 +21,7 @@ const initialState: {
     connectInfo?: ConnectInfo
     loadingMemberTraits?: boolean
     loadingMemberInfo?: boolean
+    onboardingChecklist?: OnboardingChecklistInfo
 } = {
 }
 
@@ -53,6 +55,11 @@ const memberReducer: any = (
             return {
                 ...state,
                 personalizations: action.payload,
+            }
+        case ACTIONS.MEMBER.SET_ONBOARDING_CHECKLIST:
+            return {
+                ...state,
+                onboardingChecklist: action.payload,
             }
         case ACTIONS.MEMBER.SET_ADDRESS:
             return {
