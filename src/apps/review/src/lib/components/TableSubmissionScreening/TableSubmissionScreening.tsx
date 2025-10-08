@@ -54,11 +54,12 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
                 label: 'Submission ID',
                 propertyName: 'submissionId',
                 renderer: (data: Screening) => {
-                    const isRestrictedForRow
-                        = isSubmissionDownloadRestrictedForMember(data.memberId)
-                    const tooltipMessage = getRestrictionMessageForMember(
-                        data.memberId,
-                    ) ?? restrictionMessage
+                    const isRestrictedBase = isSubmissionDownloadRestrictedForMember(data.memberId)
+                    const failedScan = data.virusScan === false
+                    const isRestrictedForRow = isRestrictedBase || failedScan
+                    const tooltipMessage = failedScan
+                        ? 'Submission failed virus scan'
+                        : (getRestrictionMessageForMember(data.memberId) ?? restrictionMessage)
                     const isButtonDisabled = Boolean(
                         props.isDownloading[data.submissionId]
                         || isRestrictedForRow,
@@ -161,10 +162,36 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
                 type: 'element',
             }
 
+            const virusScanColumn: TableColumn<Screening> = {
+                label: 'Virus Scan',
+                propertyName: 'virusScan',
+                renderer: (data: Screening) => {
+                    if (data.virusScan === true) {
+                        return (
+                            <span className={styles.virusOkIcon} title='Scan passed' aria-label='Scan passed'>
+                                <IconOutline.CheckCircleIcon />
+                            </span>
+                        )
+                    }
+
+                    if (data.virusScan === false) {
+                        return (
+                            <span className={styles.virusWarnIcon} title='Scan failed' aria-label='Scan failed'>
+                                <IconOutline.ExclamationIcon />
+                            </span>
+                        )
+                    }
+
+                    return <span>-</span>
+                },
+                type: 'element',
+            }
+
             const baseColumns: TableColumn<Screening>[] = [
                 submissionColumn,
                 ...(handleColumn ? [handleColumn] : []),
                 submissionDateColumn,
+                virusScanColumn,
             ]
 
             if (!hasScreeningPhase) {

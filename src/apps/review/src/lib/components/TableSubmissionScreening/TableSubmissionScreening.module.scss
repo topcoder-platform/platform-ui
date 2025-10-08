@@ -101,3 +101,23 @@
     background-color: $red-25;
     color: $red-140;
 }
+
+.virusOkIcon {
+    color: $green-140;
+    display: inline-flex;
+    align-items: center;
+    svg {
+        width: 18px;
+        height: 18px;
+    }
+}
+
+.virusWarnIcon {
+    color: $orange-140;
+    display: inline-flex;
+    align-items: center;
+    svg {
+        width: 18px;
+        height: 18px;
+    }
+}

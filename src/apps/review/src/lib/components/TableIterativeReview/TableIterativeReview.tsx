@@ -21,15 +21,18 @@ import {
     useWindowSize,
     WindowSize,
 } from '~/libs/shared'
+import { EnvironmentConfig } from '~/config'
+import { UserRole } from '~/libs/core'
 
 import { NO_RESOURCE_ID } from '../../../config/index.config'
-import { ChallengeDetailContextModel, ReviewInfo, SubmissionInfo } from '../../models'
-import { ChallengeDetailContext } from '../../contexts'
+import { ChallengeDetailContextModel, ReviewAppContextModel, ReviewInfo, SubmissionInfo } from '../../models'
+import { ChallengeDetailContext, ReviewAppContext } from '../../contexts'
 import { getHandleUrl, isReviewPhase } from '../../utils'
 import { TableWrapper } from '../TableWrapper'
 import { ProgressBar } from '../ProgressBar'
 import { useSubmissionDownloadAccess } from '../../hooks'
 import type { UseSubmissionDownloadAccessResult } from '../../hooks/useSubmissionDownloadAccess'
+// no-op
 
 import styles from './TableIterativeReview.module.scss'
 
@@ -129,6 +132,48 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
     }: UseSubmissionDownloadAccessResult = useSubmissionDownloadAccess()
     const { width: screenWidth }: WindowSize = useWindowSize()
     const isTablet = useMemo(() => screenWidth <= 744, [screenWidth])
+    const { loginUserInfo }: ReviewAppContextModel = useContext(ReviewAppContext)
+
+    const isAdmin = useMemo(
+        () => loginUserInfo?.roles?.some(
+            role => typeof role === 'string'
+                && role.toLowerCase() === UserRole.administrator,
+        ) ?? false,
+        [loginUserInfo?.roles],
+    )
+
+    const hasCopilotRole = useMemo(
+        () => (myRoles ?? [])
+            .some(role => (role || '')
+                .toLowerCase()
+                .includes('copilot')),
+        [myRoles],
+    )
+
+    const isAdminOrCopilot = useMemo(
+        () => isAdmin || hasCopilotRole,
+        [hasCopilotRole, isAdmin],
+    )
+
+    const isF2FOrTopgearTask = useMemo(() => {
+        const typeName = (challengeInfo?.type?.name || '').toString()
+            .toLowerCase()
+        const trackName = (challengeInfo?.track?.name || '').toString()
+            .toLowerCase()
+        return typeName === 'first2finish'
+            || trackName === 'first2finish'
+            || typeName === 'topgear task'
+            || trackName === 'topgear task'
+    }, [challengeInfo?.type?.name, challengeInfo?.track?.name])
+
+    // Specifically detect First2Finish (exclude Topgear Task)
+    const isFirst2Finish = useMemo(() => {
+        const typeName = (challengeInfo?.type?.name || '').toString()
+            .toLowerCase()
+        const trackName = (challengeInfo?.track?.name || '').toString()
+            .toLowerCase()
+        return typeName === 'first2finish' || trackName === 'first2finish'
+    }, [challengeInfo?.type?.name, challengeInfo?.track?.name])
 
     const submissionColumn: TableColumn<SubmissionInfo> = useMemo(
         () => ({
@@ -144,15 +189,17 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
                     data.memberId,
                 ) ?? restrictionMessage
 
+                const failedScan = (data as SubmissionInfo).virusScan === false
                 const isButtonDisabled = Boolean(
                     isDownloading[data.id]
-                    || isRestrictedForMember,
+                    || isRestrictedForMember
+                    || failedScan,
                 )
 
                 const downloadButton = (
                     <button
                         onClick={function onClick() {
-                            if (isRestrictedForMember) {
+                            if (isRestrictedForMember || failedScan) {
                                 return
                             }
 
@@ -184,10 +231,11 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
 
                 const shouldShowTooltip = isRestrictedForMember
                     || isSubmissionDownloadRestricted
+                    || failedScan
 
                 const renderedDownloadButton = shouldShowTooltip ? (
                     <Tooltip
-                        content={tooltipMessage}
+                        content={failedScan ? 'Submission failed virus scan' : tooltipMessage}
                         triggerOn='click-hover'
                     >
                         <span className={styles.tooltipTrigger}>
@@ -393,6 +441,38 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
         [],
     )
 
+    const reviewerColumn: TableColumn<SubmissionInfo> = useMemo(
+        () => ({
+            columnId: 'reviewer',
+            label: 'Reviewer',
+            renderer: (data: SubmissionInfo) => {
+                const handle = data.review?.reviewerHandle?.trim()
+                const color = data.review?.reviewerHandleColor ?? '#2a2a2a'
+
+                if (!handle) {
+                    return <span>--</span>
+                }
+
+                const url = `${EnvironmentConfig.REVIEW.PROFILE_PAGE_URL}/${encodeURIComponent(handle)}`
+                return (
+                    <a
+                        href={url}
+                        target='_blank'
+                        rel='noreferrer'
+                        style={{ color }}
+                        onClick={function onClick() {
+                            window.open(url, '_blank')
+                        }}
+                    >
+                        {handle}
+                    </a>
+                )
+            },
+            type: 'element',
+        }),
+        [],
+    )
+
     const hasIterativeReviewerRole = useMemo(
         () => (myRoles ?? [])
             .some(role => role?.toLowerCase()
@@ -401,7 +481,19 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
     )
 
     const actionColumn: TableColumn<SubmissionInfo> | undefined = useMemo(() => {
-        if (!hasIterativeReviewerRole || !isReviewPhase(challengeInfo)) {
+        // Show Action column to Iterative Reviewers during active review phase,
+        // and for First2Finish also when iterative reviews are completed (past phase)
+        if (!hasIterativeReviewerRole) {
+            return undefined
+        }
+
+        const hasCompletedIterativeReviews = (datas || []).some(d => (
+            ['COMPLETED', 'SUBMITTED'].includes((d.review?.status || '').toString()
+                .toUpperCase())
+        ))
+
+        const allowColumn = isReviewPhase(challengeInfo) || (isFirst2Finish && hasCompletedIterativeReviews)
+        if (!allowColumn) {
             return undefined
         }
 
@@ -416,6 +508,9 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
 
                 // Completed or submitted
                 if (['COMPLETED', 'SUBMITTED'].includes(status)) {
+                    // Build a pill label based on the column label
+                    const normalized = (columnLabel || 'Iterative Review').trim()
+                    const pillText = `${normalized} Complete`
                     return (
                         <div
                             aria-label='Review completed'
@@ -423,8 +518,9 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
                             title='Review completed'
                         >
                             <span className={styles.completedIcon} aria-hidden='true'>
-                                &check;
+                                <IconOutline.CheckIcon />
                             </span>
+                            <span className={styles.completedPill}>{pillText}</span>
                         </div>
                     )
                 }
@@ -448,17 +544,31 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
             },
             type: 'element',
         }
-    }, [challengeInfo, hasIterativeReviewerRole])
+    }, [challengeInfo, hasIterativeReviewerRole, isFirst2Finish, datas, columnLabel])
 
-    const columns = useMemo<TableColumn<SubmissionInfo>[]>(
-        () => [
+    const columns = useMemo<TableColumn<SubmissionInfo>[]>(() => {
+        const baseColumns: TableColumn<SubmissionInfo>[] = [
             submissionColumn,
             ...(handleColumn ? [handleColumn] : []),
             reviewColumn,
             reviewDateColumn,
-        ],
-        [handleColumn, reviewColumn, reviewDateColumn, submissionColumn],
-    )
+        ]
+
+        // For First2Finish or Topgear Task, show Reviewer column to Admins/Copilots
+        if (isAdminOrCopilot && isF2FOrTopgearTask) {
+            baseColumns.push(reviewerColumn)
+        }
+
+        return baseColumns
+    }, [
+        handleColumn,
+        isAdminOrCopilot,
+        isF2FOrTopgearTask,
+        reviewColumn,
+        reviewDateColumn,
+        reviewerColumn,
+        submissionColumn,
+    ])
 
     const columnsMobile = useMemo<MobileTableColumn<SubmissionInfo>[][]>(() => (
         (actionColumn ? [...columns, actionColumn] : columns).map(column => ([

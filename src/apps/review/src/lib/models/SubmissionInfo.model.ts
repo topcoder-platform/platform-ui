@@ -19,6 +19,10 @@ export interface SubmissionInfo {
     userInfo?: BackendResource // this field is calculated at frontend
     review?: ReviewInfo
     reviews?: ReviewResult[]
+    /**
+     * Virus scan status (true when scan passed, false when failed).
+     */
+    virusScan?: boolean
 }
 
 /**
@@ -56,5 +60,6 @@ export function convertBackendSubmissionToSubmissionInfo(
                 ? convertBackendReviewToReviewInfo(data.review[0])
                 : undefined,
         reviews: data.review.map(convertBackendReviewToReviewResult),
+        virusScan: data.virusScan,
     }
 }

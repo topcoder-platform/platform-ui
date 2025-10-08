@@ -113,29 +113,15 @@ export const ChallengePhaseInfo: FC<Props> = (props: Props) => {
         const data = props.challengeInfo
         const variant = props.variant ?? 'active'
 
-        const getChallengeEndDateValue = (): string => {
-            if (data.endDateString) {
-                return data.endDateString
-            }
-
-            if (data.endDate instanceof Date) {
-                return data.endDate.toLocaleString()
-            }
-
-            if (typeof data.endDate === 'string') {
-                return data.endDate
-            }
-
-            return 'N/A'
-        }
-
         const items: any[] = []
 
         if (variant === 'active') {
+            const phaseLabel = computeIterativeReviewLabel(data) || data.currentPhase || 'N/A'
+
             items.push({
                 icon: 'icon-review',
                 title: 'Phase',
-                value: data.currentPhase || 'N/A',
+                value: phaseLabel,
             })
         }
 
@@ -155,11 +141,11 @@ export const ChallengePhaseInfo: FC<Props> = (props: Props) => {
             icon: 'icon-event',
             title: variant === 'past' ? 'Challenge End Date' : 'Phase End Date',
             value: variant === 'past'
-                ? getChallengeEndDateValue()
+                ? getChallengeEndDateValue(data)
                 : data.currentPhaseEndDateString || '-',
         })
 
-        if (variant === 'past' && hasPayment && paymentAmount && !isLoadingPayment && !isTopgearTask) {
+        if (shouldShowPayment(variant, hasPayment, Boolean(paymentAmount), isLoadingPayment, isTopgearTask)) {
             items.push({
                 icon: 'icon-dollar',
                 title: 'Payment',
@@ -258,3 +244,78 @@ export const ChallengePhaseInfo: FC<Props> = (props: Props) => {
 }
 
 export default ChallengePhaseInfo
+
+// Helpers extracted to keep render-useMemo complexity low
+function isIterativePhaseName(name?: string): boolean {
+    return typeof name === 'string' && name.trim()
+        .toLowerCase()
+        .includes('iterative review')
+}
+
+function computeIterativeReviewLabel(data: any): string | undefined {
+    const phases = Array.isArray(data?.phases) ? data.phases : []
+
+    const current = data?.currentPhaseObject
+    const currentIsIterative = isIterativePhaseName(current?.name)
+
+    const openIterative = currentIsIterative
+        ? current
+        : phases.find((p: any) => p.isOpen && isIterativePhaseName(p.name))
+
+    if (!openIterative || !isIterativePhaseName(openIterative.name)) {
+        return undefined
+    }
+
+    const iterativePhases = phases
+        .filter((p: any) => isIterativePhaseName(p.name))
+        .slice()
+        .sort((a: any, b: any) => {
+            const aStart = new Date(a.actualStartDate || a.scheduledStartDate || '')
+                .getTime()
+            const bStart = new Date(b.actualStartDate || b.scheduledStartDate || '')
+                .getTime()
+
+            if (!Number.isNaN(aStart) && !Number.isNaN(bStart) && aStart !== bStart) {
+                return aStart - bStart
+            }
+
+            return 0
+        })
+
+    const idx = iterativePhases.findIndex((p: any) => p.id === openIterative.id)
+    const number = idx >= 0 ? idx + 1 : undefined
+    if (!number) return undefined
+    return `Iterative Review ${number}`
+}
+
+function getChallengeEndDateValue(data: any): string {
+    if (data?.endDateString) {
+        return data.endDateString
+    }
+
+    if (data?.endDate instanceof Date) {
+        return data.endDate.toLocaleString()
+    }
+
+    if (typeof data?.endDate === 'string') {
+        return data.endDate
+    }
+
+    return 'N/A'
+}
+
+function shouldShowPayment(
+    variant: string,
+    hasPayment: boolean,
+    hasPaymentAmount: boolean,
+    isLoadingPayment: boolean,
+    isTopgearTask: boolean,
+): boolean {
+    return (
+        variant === 'past'
+        && hasPayment
+        && hasPaymentAmount
+        && !isLoadingPayment
+        && !isTopgearTask
+    )
+}

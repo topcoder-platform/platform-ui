@@ -3,7 +3,7 @@ import {
     useEffect,
     useMemo,
 } from 'react'
-import { find, orderBy } from 'lodash'
+import { orderBy } from 'lodash'
 import useSWR, { SWRResponse } from 'swr'
 
 import { handleError } from '~/libs/shared'
@@ -122,20 +122,71 @@ const buildProjectResult = ({
     winner,
 }: BuildProjectResultParams): ProjectResult | undefined => {
     const memberId = `${winner.userId}`
-    const submission = find(submissions, { memberId })
-    const submissionId = submission?.id
 
-    if (!submissionId) {
+    // Find all submissions for this member
+    const memberSubmissions = submissions.filter(s => s.memberId === memberId)
+
+    if (!memberSubmissions.length) {
         return undefined
     }
 
-    const fallbackReviews = submission?.reviews ?? []
-    const mappedReviews = reviewsBySubmissionId.get(submissionId) ?? fallbackReviews
-    const orderedReviews = orderReviewsByCreatedDate(mappedReviews)
-    const finalScoreCandidate = toFiniteNumber(submission?.review?.finalScore)
-    const computedFinalScore = computeFinalScore(orderedReviews, finalScoreCandidate)
-    const initialScoreCandidate = toFiniteNumber(submission?.review?.initialScore)
-    const computedInitialScore = initialScoreCandidate ?? computedFinalScore
+    // Evaluate each submission's effective final score using available reviews
+    type EvaluatedSubmission = {
+        submission: SubmissionInfo
+        orderedReviews: ReviewResult[]
+        computedFinalScore: number
+        computedInitialScore: number
+    }
+
+    const evaluated: EvaluatedSubmission[] = memberSubmissions.map(submission => {
+        const fallbackReviews = submission?.reviews ?? []
+        const mappedReviews = reviewsBySubmissionId.get(submission.id) ?? fallbackReviews
+        const orderedReviews = orderReviewsByCreatedDate(mappedReviews)
+        const finalScoreCandidate = toFiniteNumber(submission?.review?.finalScore)
+        const computedFinalScore = computeFinalScore(orderedReviews, finalScoreCandidate)
+        const initialScoreCandidate = toFiniteNumber(submission?.review?.initialScore)
+        const computedInitialScore = initialScoreCandidate ?? computedFinalScore
+
+        return {
+            computedFinalScore,
+            computedInitialScore,
+            orderedReviews,
+            submission,
+        }
+    })
+
+    // Pick the submission with the highest computed final score
+    const best = evaluated.reduce((bestSoFar, current) => {
+        if (!bestSoFar) {
+            return current
+        }
+
+        if (current.computedFinalScore > bestSoFar.computedFinalScore) {
+            return current
+        }
+
+        // Tie-breaker: prefer the one with the most recent review date
+        if (current.computedFinalScore === bestSoFar.computedFinalScore) {
+            const currentDate = current.orderedReviews[0]?.createdAt
+                ? new Date(current.orderedReviews[0].createdAt)
+                    .getTime()
+                : 0
+            const bestDate = bestSoFar.orderedReviews[0]?.createdAt
+                ? new Date(bestSoFar.orderedReviews[0].createdAt)
+                    .getTime()
+                : 0
+            if (currentDate > bestDate) {
+                return current
+            }
+        }
+
+        return bestSoFar
+    }, undefined as EvaluatedSubmission | undefined)
+
+    if (!best) {
+        return undefined
+    }
+
     const userInfo = resolveUserInfo({
         challengeUuid,
         memberId,
@@ -145,14 +196,14 @@ const buildProjectResult = ({
 
     return adjustProjectResult({
         challengeId: challengeUuid,
-        createdAt: submission?.review?.createdAt
-            ?? orderedReviews[0]?.createdAt
+        createdAt: best.submission?.review?.createdAt
+            ?? best.orderedReviews[0]?.createdAt
             ?? new Date(),
-        finalScore: computedFinalScore,
-        initialScore: computedInitialScore,
+        finalScore: best.computedFinalScore,
+        initialScore: best.computedInitialScore,
         placement: winner.placement,
-        reviews: orderedReviews,
-        submissionId,
+        reviews: best.orderedReviews,
+        submissionId: best.submission.id,
         userId: memberId,
         userInfo,
     })

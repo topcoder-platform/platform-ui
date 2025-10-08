@@ -45,11 +45,12 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
                 label: 'Submission ID',
                 propertyName: 'submissionId',
                 renderer: (data: Screening) => {
-                    const isRestrictedForRow
-                        = isSubmissionDownloadRestrictedForMember(data.memberId)
-                    const tooltipMessage = getRestrictionMessageForMember(
-                        data.memberId,
-                    ) ?? restrictionMessage
+                    const isRestrictedBase = isSubmissionDownloadRestrictedForMember(data.memberId)
+                    const failedScan = data.virusScan === false
+                    const isRestrictedForRow = isRestrictedBase || failedScan
+                    const tooltipMessage = failedScan
+                        ? 'Submission failed virus scan'
+                        : (getRestrictionMessageForMember(data.memberId) ?? restrictionMessage)
                     const isButtonDisabled = Boolean(
                         props.isDownloading[data.submissionId]
                         || isRestrictedForRow,

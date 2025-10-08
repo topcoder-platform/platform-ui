@@ -39,7 +39,6 @@ import {
     getHandleUrl,
     isReviewPhase,
 } from '../../utils'
-import { ProgressBar } from '../ProgressBar'
 import { ConfirmModal } from '../ConfirmModal'
 import { updateReview } from '../../services'
 import { TableWrapper } from '../TableWrapper'
@@ -101,9 +100,27 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
     const tab = props.tab
     const wrapperClassName = props.className
 
-    const isReviewAppealsTab = tab === 'Review / Appeals'
+    // Aggregated mode is used on the Appeals tab for admins/copilots (not for reviewers)
+    const hasReviewerRole = useMemo(
+        () => myRoles.some(role => role?.toLowerCase()
+            .includes('reviewer')),
+        [myRoles],
+    )
+    const hasCopilotRole = useMemo(
+        () => myRoles.some(role => role?.toLowerCase()
+            .includes('copilot')),
+        [myRoles],
+    )
+    const hasAdminRole = useMemo(
+        () => myRoles.some(role => role?.toLowerCase()
+            .includes('admin')),
+        [myRoles],
+    )
+
+    const isAggregatedTab = (tab === 'Appeals') && (!hasReviewerRole)
+
     const aggregatedRows = useMemo(() => {
-        if (!isReviewAppealsTab) {
+        if (!isAggregatedTab) {
             return [] as AggregatedSubmissionReviews[]
         }
 
@@ -112,7 +129,7 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
             reviewers,
             submissions: datas,
         })
-    }, [datas, isReviewAppealsTab, mappingReviewAppeal, reviewers])
+    }, [datas, isAggregatedTab, mappingReviewAppeal, reviewers])
 
     const aggregatedSubmissionRows = useMemo<SubmissionRow[]>(
         () => aggregatedRows.map(row => ({
@@ -123,13 +140,13 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
     )
 
     const maxReviewCount = useMemo(
-        () => (isReviewAppealsTab
+        () => (isAggregatedTab
             ? aggregatedRows.reduce(
                 (count, row) => Math.max(count, row.reviews.length),
                 0,
             )
             : 0),
-        [aggregatedRows, isReviewAppealsTab],
+        [aggregatedRows, isAggregatedTab],
     )
 
     // Only allow Appeals columns if the challenge type/track supports it
@@ -150,6 +167,12 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
         [challengeTrack?.name, challengeType?.name, hasAppealsPhase],
     )
 
+    // Only show "Respond to Appeals" when Appeals Response phase is open
+    const isAppealsResponsePhaseOpen = useMemo(() => {
+        const phases = challengeInfo?.phases ?? []
+        return phases.some(p => (p?.name || '').toLowerCase() === 'appeals response' && p.isOpen)
+    }, [challengeInfo?.phases])
+
     const [isReopening, setIsReopening] = useState(false)
     const [pendingReopen, setPendingReopen] = useState<{
         review?: AggregatedReviewDetail
@@ -160,24 +183,6 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
     const myResourceIds = useMemo(
         () => new Set(myResources.map(resource => resource.id)),
         [myResources],
-    )
-
-    const hasReviewerRole = useMemo(
-        () => myRoles.some(role => role?.toLowerCase()
-            .includes('reviewer')),
-        [myRoles],
-    )
-
-    const hasCopilotRole = useMemo(
-        () => myRoles.some(role => role?.toLowerCase()
-            .includes('copilot')),
-        [myRoles],
-    )
-
-    const hasAdminRole = useMemo(
-        () => myRoles.some(role => role?.toLowerCase()
-            .includes('admin')),
-        [myRoles],
     )
 
     const isTopcoderAdmin = useMemo(
@@ -191,7 +196,7 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
     const canManageCompletedReviews = useMemo(
         () => Boolean(
             isActiveChallenge
-            && isReviewAppealsTab
+            && isAggregatedTab
             && isReviewPhase(challengeInfo)
             && (
                 hasReviewerRole
@@ -206,7 +211,7 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
             hasCopilotRole,
             hasReviewerRole,
             isActiveChallenge,
-            isReviewAppealsTab,
+            isAggregatedTab,
             isTopcoderAdmin,
         ],
     )
@@ -287,6 +292,8 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
         reviewers,
     ])
 
+    /* eslint-disable indent, padding-line-between-statements */
+    // eslint-disable-next-line complexity
     const columns = useMemo<TableColumn<SubmissionRow>[]>(() => {
         const submissionColumn: TableColumn<SubmissionRow> = {
             className: classNames(styles.textBlue, styles.submissionColumn),
@@ -294,15 +301,17 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
             label: 'Submission ID',
             propertyName: 'id',
             renderer: (data: SubmissionRow) => {
+                const failedScan = data.virusScan === false
                 const isButtonDisabled = Boolean(
                     isDownloading[data.id]
-                    || isSubmissionDownloadRestricted,
+                    || isSubmissionDownloadRestricted
+                    || failedScan,
                 )
 
                 const downloadButton = (
                     <button
                         onClick={function onClick() {
-                            if (isSubmissionDownloadRestricted) {
+                            if (isSubmissionDownloadRestricted || failedScan) {
                                 return
                             }
 
@@ -332,8 +341,11 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                     })
                 }
 
-                const renderedDownloadButton = isSubmissionDownloadRestricted ? (
-                    <Tooltip content={restrictionMessage} triggerOn='click-hover'>
+                const tooltipContent = failedScan
+                    ? 'Submission failed virus scan'
+                    : restrictionMessage
+                const renderedDownloadButton = (isSubmissionDownloadRestricted || failedScan) ? (
+                    <Tooltip content={tooltipContent} triggerOn='click-hover'>
                         <span className={styles.tooltipTrigger}>
                             {downloadButton}
                         </span>
@@ -361,7 +373,7 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
             type: 'element',
         }
 
-        if (isReviewAppealsTab) {
+        if (isAggregatedTab) {
             const reviewDateColumn: TableColumn<SubmissionRow> = {
                 columnId: 'review-date',
                 label: 'Review Date',
@@ -614,8 +626,9 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                                         title='Review completed'
                                     >
                                         <span className={styles.completedIcon} aria-hidden='true'>
-                                            &check;
+                                            <IconOutline.CheckIcon />
                                         </span>
+                                        <span className={styles.completedPill}>Review Complete</span>
                                     </div>,
                                 )
                             } else {
@@ -749,8 +762,12 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                         </span>
                     )
                 }
-
-                return <></>
+                // If review exists but is not completed/submitted, show Not Reviewed
+                return (
+                    <span className={styles.notReviewed}>
+                        Not Reviewed
+                    </span>
+                )
             },
             type: 'element',
         }
@@ -759,40 +776,30 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
             columnId: 'score-default',
             label: 'Score',
             renderer: (data: SubmissionRow) => {
+                // If there is no review started, show placeholder
                 if (!data.review || !data.review.id) {
+                    return <span className={styles.notReviewed}>--</span>
+                }
+
+                const status = (data.review?.status ?? '').toUpperCase()
+                const isCompleted = ['COMPLETED', 'SUBMITTED'].includes(status)
+                const finalScore = data.review?.finalScore
+
+                if (isCompleted && typeof finalScore === 'number' && Number.isFinite(finalScore)) {
+                    const resourceId = data.review?.resourceId || NO_RESOURCE_ID
+                    const formattedScore = finalScore.toFixed(2)
                     return (
-                        <span className={styles.notReviewed}>
-                            Not Reviewed
-                        </span>
+                        <Link
+                            to={`./../scorecard-details/${data.id}/review/${resourceId}`}
+                            className={styles.textBlue}
+                        >
+                            {formattedScore}
+                        </Link>
                     )
                 }
 
-                if (!data.review.initialScore) {
-                    if (!data.review.reviewProgress) {
-                        return (
-                            <span className={styles.notReviewed}>
-                                Not Reviewed
-                            </span>
-                        )
-                    }
-
-                    return (
-                        <ProgressBar
-                            progress={data.review.reviewProgress}
-                        />
-                    )
-                }
-
-                const resourceId = data.review?.resourceId || NO_RESOURCE_ID
-
-                return (
-                    <Link
-                        to={`./../scorecard-details/${data.id}/review/${resourceId}`}
-                        className={styles.textBlue}
-                    >
-                        {data.review.initialScore}
-                    </Link>
-                )
+                // For non-completed or missing final score, show placeholder
+                return <span className={styles.notReviewed}>--</span>
             },
             type: 'element',
         }
@@ -804,7 +811,10 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
             scoreColumn,
         ]
 
-        const actionColumns = actionChallengeRole === REVIEWER && isReviewPhase(challengeInfo) ? [
+        // Actions on Review tab only (complete/reopen/submit review)
+        const actionColumns = (actionChallengeRole === REVIEWER
+            && isReviewPhase(challengeInfo)
+            && tab === 'Review') ? [
             {
                 className: styles.textBlue,
                 columnId: 'action',
@@ -837,8 +847,9 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                                 title='Review completed'
                             >
                                 <span className={styles.completedIcon} aria-hidden='true'>
-                                    &check;
+                                    <IconOutline.CheckIcon />
                                 </span>
+                                <span className={styles.completedPill}>Review Complete</span>
                             </div>
                         )
                     }
@@ -880,8 +891,16 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                 ...actionColumns,
             ] as TableColumn<SubmissionRow>[]
         }
+        // For Review tab: do not show Appeals column
+        if (tab === 'Review') {
+            return [
+                ...initalColumns,
+                ...actionColumns,
+            ] as TableColumn<SubmissionRow>[]
+        }
 
-        return [...initalColumns, {
+        // Build Appeals column
+        const appealsCol: TableColumn<SubmissionRow> = {
             columnId: 'appeals-default',
             label: 'Appeals',
             renderer: (data: SubmissionRow) => {
@@ -930,13 +949,83 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                 )
             },
             type: 'element',
-        }, ...actionColumns] as TableColumn<SubmissionRow>[]
+        }
+
+        // For Appeals Response: add Remaining and Respond action
+        if (tab === 'Appeals Response') {
+            const remainingCol: TableColumn<SubmissionRow> = {
+                columnId: 'appeals-remaining',
+                label: 'Remaining',
+                renderer: (data: SubmissionRow) => {
+                    if (!data.review || !data.review.id) {
+                        return <span className={styles.notReviewed}>--</span>
+                    }
+                    const appealInfo = mappingReviewAppeal[data.review.id]
+                    const total = appealInfo?.totalAppeals ?? 0
+                    const finished = appealInfo?.finishAppeals ?? 0
+                    const remaining = Math.max(total - finished, 0)
+                    return <span className={styles.textBlue}>{remaining}</span>
+                },
+                type: 'element',
+            }
+
+            const respondActionCol: TableColumn<SubmissionRow> = {
+                className: styles.textBlue,
+                columnId: 'respond-action',
+                label: 'Action',
+                renderer: (data: SubmissionRow) => {
+                    const resourceId = data.review?.resourceId || NO_RESOURCE_ID
+                    if (!data.review?.id) {
+                        return (
+                            <span className={classNames(styles.notReviewed, 'last-element')}>
+                                --
+                            </span>
+                        )
+                    }
+
+                    // Only render the action when the Appeals Response phase is open
+                    if (isAppealsResponsePhaseOpen) {
+                        return (
+                            <Link
+                                to={`./../scorecard-details/${data.id}/review/${resourceId}`}
+                                className={classNames(styles.submit, 'last-element')}
+                            >
+                                Respond to Appeals
+                            </Link>
+                        )
+                    }
+
+                    return (
+                        <span className={classNames(styles.notReviewed, 'last-element')}>
+                            --
+                        </span>
+                    )
+                },
+                type: 'element',
+            }
+
+            return [
+                ...initalColumns,
+                appealsCol,
+                remainingCol,
+                // Include Respond action column only when phase is open
+                ...(isAppealsResponsePhaseOpen ? [respondActionCol] : []),
+            ] as TableColumn<SubmissionRow>[]
+        }
+
+        // Appeals tab (non-aggregated reviewer view)
+        return [
+            ...initalColumns,
+            appealsCol,
+            ...actionColumns,
+        ] as TableColumn<SubmissionRow>[]
     }, [
         actionChallengeRole,
         allowsAppeals,
         canManageCompletedReviews,
         challengeInfo,
-        isReviewAppealsTab,
+        isAppealsResponsePhaseOpen,
+        isAggregatedTab,
         isSubmissionDownloadRestricted,
         maxReviewCount,
         downloadSubmission,
@@ -950,6 +1039,7 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
         restrictionMessage,
     ])
 
+    /* eslint-enable indent, padding-line-between-statements */
     const columnsMobile = useMemo<MobileTableColumn<SubmissionRow>[][]>(
         () => columns.map(column => {
             if (column.label === 'Action' || column.label === 'Actions') {
@@ -986,7 +1076,7 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
     )
 
     const submissions: SubmissionRow[] = useMemo(() => {
-        if (isReviewAppealsTab) {
+        if (isAggregatedTab) {
             return aggregatedSubmissionRows
         }
 
@@ -1001,7 +1091,7 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
         aggregatedSubmissionRows,
         datas,
         firstSubmissions,
-        isReviewAppealsTab,
+        isAggregatedTab,
         tab,
     ])
 

@@ -18,6 +18,10 @@ export interface Screening {
     result: ScreeningResult
     memberId: string
     userInfo?: BackendResource // this field is calculated at frontend
+    /**
+     * Virus scan status (true when scan passed, false when failed).
+     */
+    virusScan?: boolean
 }
 
 /**
@@ -53,5 +57,6 @@ export function convertBackendSubmissionToScreening(
         score: data.screeningScore ?? 'Pending',
         screenerId: '',
         submissionId: data.id,
+        virusScan: data.virusScan,
     }
 }

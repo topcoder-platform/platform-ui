@@ -36,6 +36,11 @@ export interface BackendSubmission {
     updatedBy: string
     legacyUploadId: string
     uploadId: string
+    /**
+     * Virus scan status (true when scan passed, false when failed).
+     * Optional for backward compatibility when API may not return it.
+     */
+    virusScan?: boolean
     review: BackendReview[]
     reviewSummation: any[]
     reviewResourceMapping?: { [resourceId: string]: BackendReview } // this field is calculated at frontend

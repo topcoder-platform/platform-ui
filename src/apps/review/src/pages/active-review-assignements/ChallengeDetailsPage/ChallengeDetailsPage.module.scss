@@ -42,6 +42,21 @@
     }
 }
 
+.phaseDates {
+    margin-bottom: $sp-3;
+    font-family: "Nunito Sans", sans-serif;
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--FontColor);
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.phaseDatesSep {
+    opacity: 0.6;
+}
+
 .blockReviewers {
     display: flex;
     gap: 40px;

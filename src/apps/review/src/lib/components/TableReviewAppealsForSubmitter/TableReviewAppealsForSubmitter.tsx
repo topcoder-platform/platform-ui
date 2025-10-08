@@ -47,6 +47,7 @@ interface Props {
     isDownloading: IsRemovingType
     downloadSubmission: (submissionId: string) => void
     mappingReviewAppeal: MappingReviewAppeal // from review id to appeal info
+    tab?: string
 }
 
 type SubmissionRow = SubmissionInfo & {
@@ -184,15 +185,17 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
             label: 'Submission ID',
             propertyName: 'id',
             renderer: (data: SubmissionRow) => {
+                const failedScan = data.virusScan === false
                 const isButtonDisabled = Boolean(
                     isDownloading[data.id]
-                    || isSubmissionDownloadRestricted,
+                    || isSubmissionDownloadRestricted
+                    || failedScan,
                 )
 
                 const downloadButton = (
                     <button
                         onClick={function onClick() {
-                            if (isSubmissionDownloadRestricted) {
+                            if (isSubmissionDownloadRestricted || failedScan) {
                                 return
                             }
 
@@ -222,8 +225,11 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
                     })
                 }
 
-                const renderedDownloadButton = isSubmissionDownloadRestricted ? (
-                    <Tooltip content={restrictionMessage} triggerOn='click-hover'>
+                const tooltipContent = failedScan
+                    ? 'Submission failed virus scan'
+                    : restrictionMessage
+                const renderedDownloadButton = isSubmissionDownloadRestricted || failedScan ? (
+                    <Tooltip content={tooltipContent} triggerOn='click-hover'>
                         <span className={styles.tooltipTrigger}>
                             {downloadButton}
                         </span>
@@ -319,6 +325,22 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
                             --
                         </span>
                     )
+                }
+
+                // On Appeals tab, make the average score clickable to a review page
+                if ((props.tab || '').toLowerCase() === 'appeals') {
+                    const reviewDetail = data.aggregated?.reviews?.[0]
+                    const resourceId = reviewDetail?.resourceId || reviewDetail?.reviewInfo?.resourceId
+                    if (resourceId) {
+                        return (
+                            <Link
+                                to={`./../scorecard-details/${data.id}/review/${resourceId}`}
+                                className={styles.textBlue}
+                            >
+                                {scoreDisplay}
+                            </Link>
+                        )
+                    }
                 }
 
                 return <span>{scoreDisplay}</span>
@@ -495,6 +517,32 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
             }
         }
 
+        // Add a single Action column for Appeals tab: "Appeal"
+        if ((props.tab || '').toLowerCase() === 'appeals') {
+            aggregatedColumns.push({
+                className: styles.textBlue,
+                columnId: 'action',
+                label: 'Action',
+                renderer: (data: SubmissionRow) => {
+                    const reviewDetail = data.aggregated?.reviews?.[0]
+                    const resourceId = reviewDetail?.resourceId || reviewDetail?.reviewInfo?.resourceId
+                    if (!resourceId) return <></>
+                    return (
+                        <Link
+                            to={`./../scorecard-details/${data.id}/review/${resourceId}`}
+                            className={classNames(
+                                styles.textBlue,
+                                'last-element',
+                            )}
+                        >
+                            Appeal
+                        </Link>
+                    )
+                },
+                type: 'element',
+            })
+        }
+
         return aggregatedColumns
     }, [
         allowsAppeals,
@@ -506,6 +554,7 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
         maxReviewCount,
         shouldShowAppealsColumn,
         restrictionMessage,
+        props.tab,
     ])
 
     const columnsMobile = useMemo<MobileTableColumn<SubmissionRow>[][]>(

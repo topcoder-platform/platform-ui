@@ -14,8 +14,9 @@ import {
     useState,
 } from 'react'
 import { useForm, UseFormReturn } from 'react-hook-form'
+import { useSWRConfig } from 'swr'
 import { NavLink } from 'react-router-dom'
-import { filter, forEach, isEmpty, reduce } from 'lodash'
+import { filter, forEach, isEmpty, kebabCase, reduce } from 'lodash'
 import classNames from 'classnames'
 
 import { yupResolver } from '@hookform/resolvers/yup'
@@ -111,9 +112,10 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
     const addAppealResponse = props.addAppealResponse
     const addManagerComment = props.addManagerComment
     const navigate = useAppNavigate()
-    const { challengeId }: ChallengeDetailContextModel = useContext(
+    const { challengeId, challengeInfo }: ChallengeDetailContextModel = useContext(
         ChallengeDetailContext,
     )
+    const { mutate }: { mutate: (key: any, data?: any, opts?: any) => Promise<any> } = useSWRConfig()
     const [isExpand, setIsExpand] = useState<{ [key: string]: boolean }>({})
     const [isShowSaveAsDraftModal, setIsShowSaveAsDraftModal] = useState(false)
     const mappingReviewInfo = useMemo<{
@@ -208,23 +210,58 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
             getValues(),
             true,
             totalScore,
-            () => {
+            async () => {
                 reset(data)
                 if (challengeId) {
                     const challengeDetailsRoute
                         = `${rootRoute}/${activeReviewAssigmentsRouteId}/${challengeId}/challenge-details`
 
-                    navigate(`${challengeDetailsRoute}?tab=review-appeals`)
+                    // Proactively revalidate any cached review lists for this challenge
+                    // so the score/status reflect immediately on return.
+                    try {
+                        await mutate(
+                            (key: unknown) => (
+                                typeof key === 'string'
+                                && key.startsWith(`reviewBaseUrl/reviews/${challengeId}/`)
+                            ),
+                        )
+                        // Also refresh the submissions list cache so any
+                        // reviewResourceMapping/states used as fallbacks are up-to-date.
+                        await mutate(`reviewBaseUrl/submissions/${challengeId}`)
+                    } catch {}
+
+                    const tabFromPhase = computeTabFromPhase(
+                        (challengeInfo?.phases || []) as Array<{
+                            id?: string
+                            name?: string
+                            scheduledStartDate?: string
+                            actualStartDate?: string
+                        }>,
+                        reviewInfo?.phaseId,
+                        challengeInfo?.type?.name,
+                        challengeInfo?.type?.abbreviation,
+                    )
+                    const hasIterativePhase = (challengeInfo?.phases || [])
+                        .some(p => (p?.name || '').toString()
+                            .toLowerCase()
+                            .startsWith('iterative review'))
+                    const tabSlug = tabFromPhase || (hasIterativePhase ? 'iterative-review' : 'review-appeals')
+                    navigate(`${challengeDetailsRoute}?tab=${tabSlug}`)
                 }
             },
         )
     }, [
         challengeId,
+        challengeInfo?.phases,
+        challengeInfo?.type?.abbreviation,
+        challengeInfo?.type?.name,
         getValues,
         isDirty,
         navigate,
+        mutate,
         reset,
         saveReviewInfo,
+        reviewInfo?.phaseId,
         totalScore,
     ])
 
@@ -627,3 +664,118 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
 }
 
 export default ScorecardDetails
+
+// Helpers extracted to tame complexity and satisfy lint rules
+function normString(s?: string): string {
+    return (s || '').trim()
+        .toLowerCase()
+}
+
+function isExactRegistration(name?: string): boolean {
+    return normString(name) === 'registration'
+}
+
+function isExactSubmission(name?: string): boolean {
+    return normString(name) === 'submission'
+}
+
+function isIterativeReview(name?: string): boolean {
+    return normString(name)
+        .includes('iterative review')
+}
+
+function sortPhasesForDetails(
+    phases: Array<{
+        id?: string
+        name?: string
+        scheduledStartDate?: string
+        actualStartDate?: string
+    }>,
+    typeName?: string,
+    typeAbbrev?: string,
+): Array<{
+    id?: string
+    name?: string
+    scheduledStartDate?: string
+    actualStartDate?: string
+}> {
+    let sorted = [...phases].sort((a, b) => {
+        const aStart = new Date(a.actualStartDate || a.scheduledStartDate || '')
+            .getTime()
+        const bStart = new Date(b.actualStartDate || b.scheduledStartDate || '')
+            .getTime()
+        if (!Number.isNaN(aStart) && !Number.isNaN(bStart)) {
+            if (aStart !== bStart) return aStart - bStart
+            const aReg = isExactRegistration(a.name)
+            const bReg = isExactRegistration(b.name)
+            const aSub = isExactSubmission(a.name)
+            const bSub = isExactSubmission(b.name)
+            if (aReg && bSub) return -1
+            if (aSub && bReg) return 1
+        }
+
+        return 0
+    })
+
+    const tn = typeName?.toLowerCase?.() || ''
+    const ta = typeAbbrev?.toLowerCase?.() || ''
+    const isF2F = ta === 'f2f' || tn.replace(/\s|-/g, '') === 'first2finish'
+    if (isF2F) {
+        const iterative = sorted.filter(p => isIterativeReview(p.name))
+        if (iterative.length) {
+            const remaining = sorted.filter(p => !isIterativeReview(p.name))
+            const regIdx = remaining.findIndex(p => isExactRegistration(p.name))
+            const subIdx = remaining.findIndex(p => isExactSubmission(p.name))
+            const afterIdx = Math.max(regIdx, subIdx)
+            if (afterIdx >= 0 && afterIdx < remaining.length) {
+                sorted = [
+                    ...remaining.slice(0, afterIdx + 1),
+                    ...iterative,
+                    ...remaining.slice(afterIdx + 1),
+                ]
+            } else {
+                sorted = [...remaining, ...iterative]
+            }
+        }
+    }
+
+    return sorted
+}
+
+function computeTabFromPhase(
+    phases: Array<{
+        id?: string
+        name?: string
+        scheduledStartDate?: string
+        actualStartDate?: string
+    }>,
+    targetPhaseId?: string,
+    typeName?: string,
+    typeAbbrev?: string,
+): string | undefined {
+    if (!phases.length || !targetPhaseId) return undefined
+
+    const sorted = sortPhasesForDetails(phases, typeName, typeAbbrev)
+
+    // Number duplicate labels the same way as ChallengeDetailsPage
+    const counts = new Map<string, number>()
+    for (const p of sorted) {
+        const raw = (p?.name || '').trim()
+        if (raw) {
+            const n = counts.get(raw) || 0
+            counts.set(raw, n + 1)
+            const label = n === 0 ? raw : `${raw} ${n + 1}`
+            if (p.id === targetPhaseId) {
+                // Only return a tab for Iterative Review phases to avoid
+                // changing non-iterative redirects.
+                if (isIterativeReview(raw)) {
+                    return kebabCase(label)
+                }
+
+                return undefined
+            }
+        }
+    }
+
+    return undefined
+}

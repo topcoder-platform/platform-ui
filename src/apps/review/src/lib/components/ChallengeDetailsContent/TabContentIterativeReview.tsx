@@ -22,6 +22,8 @@ interface Props {
     isDownloading: IsRemovingType
     downloadSubmission: (submissionId: string) => void
     isActiveChallenge: boolean
+    columnLabel?: string
+    phaseIdFilter?: string
 }
 
 const getSubmissionPriority = (submission: SubmissionInfo): number => {
@@ -56,10 +58,16 @@ export const TabContentIterativeReview: FC<Props> = (props: Props) => {
     const isSubmitterView = actionChallengeRole === SUBMITTER
     const sourceRows = isSubmitterView ? props.submitterReviews : props.reviews
 
+    const filteredRows = useMemo(() => {
+        const phaseId = props.phaseIdFilter?.trim()
+        if (!phaseId) return sourceRows
+        return sourceRows.filter(s => s.review?.phaseId === phaseId)
+    }, [sourceRows, props.phaseIdFilter])
+
     const reviewRows = useMemo(() => {
         const map = new Map<string, SubmissionInfo>()
 
-        sourceRows.forEach(submission => {
+        filteredRows.forEach(submission => {
             const existing = map.get(submission.id)
 
             if (!existing) {
@@ -73,7 +81,7 @@ export const TabContentIterativeReview: FC<Props> = (props: Props) => {
         })
 
         return Array.from(map.values())
-    }, [sourceRows])
+    }, [filteredRows])
 
     if (props.isLoadingReview) {
         return <TableLoading />
@@ -89,6 +97,7 @@ export const TabContentIterativeReview: FC<Props> = (props: Props) => {
             isDownloading={props.isDownloading}
             downloadSubmission={props.downloadSubmission}
             hideHandleColumn={hideHandleColumn}
+            columnLabel={props.columnLabel}
         />
     )
 }

@@ -16,7 +16,7 @@ import { InputCheckbox } from '~/libs/ui'
 import {
     useFetchScreeningReview,
     useFetchScreeningReviewProps,
-} from '../../../lib/hooks'
+    useRole, useRoleProps } from '../../../lib/hooks'
 import {
     ChallengeDetailContext,
     ChallengeDetailsContent,
@@ -28,14 +28,14 @@ import {
     TableRegistration,
     Tabs,
 } from '../../../lib'
-import { fetchTabs, updatePhaseChangeNotifications } from '../../../lib/services'
+import { updatePhaseChangeNotifications } from '../../../lib/services'
 import {
     BackendResource,
     ChallengeDetailContextModel,
     ReviewAppContextModel,
     SelectOption,
 } from '../../../lib/models'
-import { FIRST2FINISH, ITERATIVE_REVIEW, TAB } from '../../../config/index.config'
+import { REVIEWER, TAB } from '../../../config/index.config'
 import {
     activeReviewAssigmentsRouteId,
     pastReviewAssignmentsRouteId,
@@ -49,17 +49,8 @@ interface Props {
 }
 
 // Helpers to keep UI hooks simple and under complexity limits
-const normalize = (s?: string): string => (s || '').toLowerCase()
-const normalizeAlpha = (s?: string): string => normalize(s)
-    .replace(/[^a-z]/g, '')
 
-const hasPhase = (phases: Array<{ name?: string }>, name: string): boolean => (
-    phases.some(p => normalize(p.name) === normalize(name))
-)
-
-const hasPhaseAlpha = (phases: Array<{ name?: string }>, normalizedName: string): boolean => (
-    phases.some(p => normalizeAlpha(p.name) === normalizedName)
-)
+// helpers for label handling
 
 const insertTabIfMissing = (
     tabs: SelectOption[],
@@ -72,71 +63,179 @@ const insertTabIfMissing = (
     }
 }
 
-const addCheckpointTab = (tabs: SelectOption[], phases: Array<{ name?: string }>): void => {
-    const hasCheckpointSubmission = hasPhase(phases, 'checkpoint submission')
-    const hasCheckpointReview = hasPhase(phases, 'checkpoint review')
-    if (hasCheckpointSubmission && hasCheckpointReview) {
-        const regIdx = tabs.findIndex(t => t.value === 'Registration')
-        const insertIdx = regIdx >= 0 ? regIdx + 1 : 0
-        insertTabIfMissing(tabs, 'Checkpoint', 'Checkpoint', insertIdx)
-    }
-}
-
-const ensureApprovalTab = (tabs: SelectOption[], phases: Array<{ name?: string }>): void => {
-    const hasApprovalPhase = hasPhase(phases, 'approval')
-    const approvalIdx = tabs.findIndex(t => t.value === 'Approval')
-    if (hasApprovalPhase) {
-        if (approvalIdx < 0) {
-            const reviewIdx = tabs.findIndex(
-                t => t.value === 'Review / Appeals' || t.value === 'Review',
-            )
-            const winnersIdx = tabs.findIndex(t => t.value === 'Winners')
-            const insertIdx = reviewIdx >= 0
-                ? reviewIdx + 1
-                : (winnersIdx >= 0 ? winnersIdx : tabs.length)
-            insertTabIfMissing(tabs, 'Approval', 'Approval', insertIdx)
-        }
-    } else if (approvalIdx >= 0) {
-        tabs.splice(approvalIdx, 1)
-    }
-}
-
-const ensurePostMortemTab = (
-    tabs: SelectOption[],
-    phases: Array<{ name?: string }>,
-    challengeTypeName?: string,
-): void => {
-    const isTopgearTask = normalize(challengeTypeName) === 'topgear task'
-    const hasPostMortemPhase = hasPhaseAlpha(phases, 'postmortem')
-    const postMortemIdx = tabs.findIndex(t => t.value === 'Post-Mortem')
-
-    if (isTopgearTask && hasPostMortemPhase) {
-        if (postMortemIdx < 0) {
-            const reviewIdx = tabs.findIndex(
-                t => t.value === 'Review / Appeals' || t.value === 'Review',
-            )
-            const winnersIdx = tabs.findIndex(t => t.value === 'Winners')
-            const insertIdx = reviewIdx >= 0
-                ? reviewIdx + 1
-                : (winnersIdx >= 0 ? winnersIdx : tabs.length)
-            insertTabIfMissing(tabs, 'Post-Mortem', 'Post-Mortem', insertIdx)
-        }
-    } else if (postMortemIdx >= 0) {
-        tabs.splice(postMortemIdx, 1)
-    }
-}
-
-const computeTabs = (
-    base: SelectOption[],
-    phases: Array<{ name?: string }>,
-    challengeTypeName?: string,
+// Build tabs directly from the challenge phases (one tab per phase)
+const buildPhaseTabs = (
+    phases: Array<{ id?: string; name?: string; scheduledStartDate?: string; actualStartDate?: string }>,
+    status?: string,
+    opts?: { isF2F?: boolean },
 ): SelectOption[] => {
-    const tabs = [...base]
-    addCheckpointTab(tabs, phases)
-    ensureApprovalTab(tabs, phases)
-    ensurePostMortemTab(tabs, phases, challengeTypeName)
-    return tabs
+    // Helper: normalize name for comparisons
+    const norm = (s?: string): string => (s || '')
+        .trim()
+        .toLowerCase()
+
+    const isExactRegistration = (name?: string): boolean => norm(name) === 'registration'
+    const isExactSubmission = (name?: string): boolean => norm(name) === 'submission'
+    const isIterativeReview = (name?: string): boolean => {
+        const n = norm(name)
+        return n.includes('iterative review')
+    }
+
+    // Sort phases by start date; when Registration and Submission start at the same time,
+    // put Registration first (to the left).
+    let sorted = [...phases].sort((a, b) => {
+        const aStart = new Date(
+            a.actualStartDate || a.scheduledStartDate || '',
+        )
+            .getTime()
+        const bStart = new Date(
+            b.actualStartDate || b.scheduledStartDate || '',
+        )
+            .getTime()
+
+        if (!Number.isNaN(aStart) && !Number.isNaN(bStart)) {
+            if (aStart !== bStart) return aStart - bStart
+
+            // Tie-breaker when both open at the same time
+            const aReg = isExactRegistration(a.name)
+            const bReg = isExactRegistration(b.name)
+            const aSub = isExactSubmission(a.name)
+            const bSub = isExactSubmission(b.name)
+
+            // If one is Registration and the other is Submission, Registration comes first
+            if (aReg && bSub) return -1
+            if (aSub && bReg) return 1
+        }
+
+        // Fallback: keep original relative order
+        return 0
+    })
+
+    // For First2Finish: show any Iterative Review phases AFTER Registration and Submission.
+    if (opts?.isF2F) {
+        const iterative = sorted.filter(p => isIterativeReview(p.name))
+        if (iterative.length) {
+            const remaining = sorted.filter(p => !isIterativeReview(p.name))
+            const regIdx = remaining.findIndex(p => isExactRegistration(p.name))
+            const subIdx = remaining.findIndex(p => isExactSubmission(p.name))
+            const afterIdx = Math.max(regIdx, subIdx)
+            if (afterIdx >= 0 && afterIdx < remaining.length) {
+                sorted = [
+                    ...remaining.slice(0, afterIdx + 1),
+                    ...iterative,
+                    ...remaining.slice(afterIdx + 1),
+                ]
+            } else {
+                // If Registration/Submission not found for any reason, keep original order
+                sorted = [...remaining, ...iterative]
+            }
+        }
+    }
+
+    // Add numbering for duplicate phase names (e.g., Iterative Review 2, 3, ...)
+    const counts = new Map<string, number>()
+    const nextLabel = (name: string): string => {
+        const n = counts.get(name) || 0
+        counts.set(name, n + 1)
+        if (n === 0) return name
+        return `${name} ${n + 1}`
+    }
+
+    const items: SelectOption[] = []
+    sorted.forEach(p => {
+        const raw = p?.name?.trim() || ''
+        if (!raw) return
+        const label = nextLabel(raw)
+        items.push({ label, value: label })
+    })
+
+    // Preserve Winners tab at the end for completed/cancelled challenges
+    const normalizedStatus = (status || '').toUpperCase()
+    const isEnded = normalizedStatus === 'COMPLETED' || normalizedStatus.startsWith('CANCELLED')
+    if (isEnded) {
+        insertTabIfMissing(items, 'Winners', 'Winners', items.length)
+    }
+
+    return items
 }
+
+// Map the tab label to its corresponding phase (same ordering/labeling as buildPhaseTabs)
+const findPhaseByTabLabel = (
+    phases: Array<{
+        id?: string
+        name?: string
+        scheduledStartDate?: string
+        actualStartDate?: string
+        scheduledEndDate?: string
+        actualEndDate?: string
+    }>,
+    label: string,
+    opts?: { isF2F?: boolean },
+): typeof phases[number] | undefined => {
+    const norm = (s?: string): string => (s || '').trim()
+        .toLowerCase()
+    const isExactRegistration = (name?: string): boolean => norm(name) === 'registration'
+    const isExactSubmission = (name?: string): boolean => norm(name) === 'submission'
+    const isIterativeReview = (name?: string): boolean => norm(name)
+        .includes('iterative review')
+
+    let sorted = [...phases].sort((a, b) => {
+        const aStart = new Date(a.actualStartDate || a.scheduledStartDate || '')
+            .getTime()
+        const bStart = new Date(b.actualStartDate || b.scheduledStartDate || '')
+            .getTime()
+        if (!Number.isNaN(aStart) && !Number.isNaN(bStart)) {
+            if (aStart !== bStart) return aStart - bStart
+            const aReg = isExactRegistration(a.name)
+            const bReg = isExactRegistration(b.name)
+            const aSub = isExactSubmission(a.name)
+            const bSub = isExactSubmission(b.name)
+            if (aReg && bSub) return -1
+            if (aSub && bReg) return 1
+        }
+
+        return 0
+    })
+
+    if (opts?.isF2F) {
+        const iterative = sorted.filter(p => isIterativeReview(p.name))
+        if (iterative.length) {
+            const remaining = sorted.filter(p => !isIterativeReview(p.name))
+            const regIdx = remaining.findIndex(p => isExactRegistration(p.name))
+            const subIdx = remaining.findIndex(p => isExactSubmission(p.name))
+            const afterIdx = Math.max(regIdx, subIdx)
+            if (afterIdx >= 0 && afterIdx < remaining.length) {
+                sorted = [
+                    ...remaining.slice(0, afterIdx + 1),
+                    ...iterative,
+                    ...remaining.slice(afterIdx + 1),
+                ]
+            } else {
+                sorted = [...remaining, ...iterative]
+            }
+        }
+    }
+
+    const counts = new Map<string, number>()
+    const labelFor = (rawName: string): string => {
+        const n = counts.get(rawName) || 0
+        counts.set(rawName, n + 1)
+        if (n === 0) return rawName
+        return `${rawName} ${n + 1}`
+    }
+
+    for (const p of sorted) {
+        const raw = p?.name?.trim() || ''
+        if (raw) {
+            const computedLabel = labelFor(raw)
+            if (computedLabel === label) return p
+        }
+    }
+
+    return undefined
+}
+
+// (Phase dates display removed)
 
 // eslint-disable-next-line complexity
 export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
@@ -157,6 +256,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         myResources,
     }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
     const { loginUserInfo }: ReviewAppContextModel = useContext(ReviewAppContext)
+    const { actionChallengeRole }: useRoleProps = useRole()
     const hasChallengeInfo = Boolean(challengeInfo)
     const challengeStatus = challengeInfo?.status?.toUpperCase()
 
@@ -376,27 +476,46 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
     }, [searchParams, tabItems])
 
     useEffect(() => {
-        if (!challengeInfo?.type) {
-            return
+        if (!challengeInfo) return
+        const typeName = challengeInfo?.type?.name?.toLowerCase?.() || ''
+        const typeAbbrev = challengeInfo?.type?.abbreviation?.toLowerCase?.() || ''
+        const isF2F = typeAbbrev === 'f2f' || typeName.replace(/\s|-/g, '') === 'first2finish'
+        const items = buildPhaseTabs(
+            challengeInfo.phases ?? [],
+            challengeInfo.status,
+            { isF2F },
+        )
+
+        // Compute phases with pending review assignments for current user (reviewer roles)
+        const pendingPhaseIds = new Set<string>()
+        if (actionChallengeRole === REVIEWER) {
+            for (const s of review) {
+                const r = s.review
+                const status = (r?.status || '').toUpperCase()
+                if (r?.id && status !== 'SUBMITTED' && status !== 'COMPLETED' && r.phaseId) {
+                    pendingPhaseIds.add(r.phaseId)
+                }
+            }
         }
 
-        const iterativePhaseCount = challengeInfo.phases?.filter(
-            phase => phase.name === ITERATIVE_REVIEW,
-        ).length ?? 0
+        // Flag tab items that correspond to an open phase with a pending review
+        const flagged = items.map(it => {
+            const phase = findPhaseByTabLabel(
+                challengeInfo?.phases ?? [],
+                it.value,
+                { isF2F },
+            )
+            const isOpen = Boolean((phase as { isOpen?: boolean } | undefined)?.isOpen)
+            const needsAttention = Boolean(
+                (phase as { id?: string } | undefined)?.id
+                && pendingPhaseIds.has((phase as { id?: string } | undefined)?.id as string)
+                && isOpen,
+            )
+            return needsAttention ? { ...it, warning: true } : it
+        })
 
-        const requestedTabLength = (challengeInfo.type?.name === FIRST2FINISH)
-            ? Math.max(iterativePhaseCount, 1)
-            : challengeInfo.reviewLength
-
-        fetchTabs(challengeInfo.type?.name || '', requestedTabLength)
-            .then(d => setTabItems(
-                computeTabs(d, challengeInfo.phases ?? [], challengeInfo.type?.name),
-            ))
-    }, [
-        challengeInfo?.phases,
-        challengeInfo?.reviewLength,
-        challengeInfo?.type,
-    ])
+        setTabItems(flagged)
+    }, [challengeInfo, actionChallengeRole, review])
 
     // Determine if current user should see the Resources section
     const hasCopilotRole = useMemo(
@@ -500,6 +619,21 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                             postMortemReviews={postMortemReviews}
                             mappingReviewAppeal={mappingReviewAppeal}
                             isActiveChallenge={!isPastReviewDetail}
+                            selectedPhaseId={(() => {
+                                const phase = findPhaseByTabLabel(
+                                    challengeInfo?.phases ?? [],
+                                    selectedTab,
+                                    (() => {
+                                        const typeName = challengeInfo?.type?.name?.toLowerCase?.() || ''
+                                        const typeAbbrev = challengeInfo?.type?.abbreviation?.toLowerCase?.() || ''
+                                        const simplifiedType = typeName.replace(/\s|-/g, '')
+                                        const isF2F = typeAbbrev === 'f2f'
+                                            || simplifiedType === 'first2finish'
+                                        return { isF2F }
+                                    })(),
+                                )
+                                return (phase as { id?: string } | undefined)?.id
+                            })()}
                         />
                     </div>
 

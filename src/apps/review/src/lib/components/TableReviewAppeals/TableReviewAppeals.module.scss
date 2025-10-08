@@ -150,10 +150,28 @@
     border-radius: 50%;
     color: #fff;
     display: flex;
-    font-size: 12px;
-    font-weight: 700;
     height: 20px;
     justify-content: center;
     line-height: 1;
     width: 20px;
+
+    svg {
+        width: 14px;
+        height: 14px;
+        color: #fff;
+    }
+}
+
+.completedPill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: $sp-2;
+    padding: $sp-1 $sp-2;
+    border-radius: 999px;
+    background-color: $green-25;
+    color: $green-140;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
 }

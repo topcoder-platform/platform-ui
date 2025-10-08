@@ -101,6 +101,16 @@
     }
 }
 
+.warningIcon {
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 6px;
+    height: 16px;
+    width: 16px;
+    position: relative;
+    top: -1px;
+}
+
 .open {
     @include ltemd {
         .blockLeft {

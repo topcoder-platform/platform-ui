@@ -72,6 +72,7 @@ export const TabContentReview: FC<Props> = (props: Props) => {
             isDownloading={props.isDownloading}
             downloadSubmission={props.downloadSubmission}
             mappingReviewAppeal={props.mappingReviewAppeal}
+            tab={selectedTab}
         />
     )
 }
