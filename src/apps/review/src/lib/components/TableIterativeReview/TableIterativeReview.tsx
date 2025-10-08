@@ -4,6 +4,7 @@
 import {
     FC,
     MouseEvent,
+    useContext,
     useMemo,
 } from 'react'
 import { Link } from 'react-router-dom'
@@ -22,8 +23,9 @@ import {
 } from '~/libs/shared'
 
 import { NO_RESOURCE_ID } from '../../../config/index.config'
-import { ReviewInfo, SubmissionInfo } from '../../models'
-import { getHandleUrl } from '../../utils'
+import { ChallengeDetailContextModel, ReviewInfo, SubmissionInfo } from '../../models'
+import { ChallengeDetailContext } from '../../contexts'
+import { getHandleUrl, isReviewPhase } from '../../utils'
 import { TableWrapper } from '../TableWrapper'
 import { ProgressBar } from '../ProgressBar'
 import { useSubmissionDownloadAccess } from '../../hooks'
@@ -116,6 +118,9 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
     const hideHandleColumn = props.hideHandleColumn
     const isDownloading = props.isDownloading
     const columnLabel = props.columnLabel || 'Iterative Review'
+    const { challengeInfo, myRoles }: ChallengeDetailContextModel = useContext(
+        ChallengeDetailContext,
+    )
     const {
         isSubmissionDownloadRestricted,
         restrictionMessage,
@@ -387,6 +392,63 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
         [],
     )
 
+    const hasIterativeReviewerRole = useMemo(
+        () => (myRoles ?? [])
+            .some(role => role?.toLowerCase()
+                .includes('iterative reviewer')),
+        [myRoles],
+    )
+
+    const actionColumn: TableColumn<SubmissionInfo> | undefined = useMemo(() => {
+        if (!hasIterativeReviewerRole || !isReviewPhase(challengeInfo)) {
+            return undefined
+        }
+
+        return {
+            columnId: 'action',
+            label: 'Action',
+            renderer: (data: SubmissionInfo) => {
+                const review = data.review
+                const resourceId = review?.resourceId || NO_RESOURCE_ID
+                const status = (review?.status ?? '').toUpperCase()
+                const hasReview = !!review?.id
+
+                // Completed or submitted
+                if (['COMPLETED', 'SUBMITTED'].includes(status)) {
+                    return (
+                        <div
+                            aria-label='Review completed'
+                            className={classNames(styles.completedAction, 'last-element')}
+                            title='Review completed'
+                        >
+                            <span className={styles.completedIcon} aria-hidden='true'>
+                                &check;
+                            </span>
+                        </div>
+                    )
+                }
+
+                // Allow navigating to complete the review if pending or in progress
+                if (['PENDING', 'IN_PROGRESS'].includes(status) || (
+                    !status && hasReview
+                ) || review?.reviewProgress) {
+                    return (
+                        <Link
+                            to={`./../scorecard-details/${data.id}/review/${resourceId}`}
+                            className={classNames(styles.submit, 'last-element')}
+                        >
+                            <i className='icon-upload' />
+                            Complete Review
+                        </Link>
+                    )
+                }
+
+                return undefined
+            },
+            type: 'element',
+        }
+    }, [challengeInfo, hasIterativeReviewerRole])
+
     const columns = useMemo<TableColumn<SubmissionInfo>[]>(
         () => [
             submissionColumn,
@@ -398,7 +460,7 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
     )
 
     const columnsMobile = useMemo<MobileTableColumn<SubmissionInfo>[][]>(() => (
-        columns.map(column => ([
+        (actionColumn ? [...columns, actionColumn] : columns).map(column => ([
             {
                 ...column,
                 className: '',
@@ -417,7 +479,7 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
                 mobileType: 'last-value',
             },
         ] as MobileTableColumn<SubmissionInfo>[]))
-    ), [columns])
+    ), [actionColumn, columns])
 
     return (
         <TableWrapper
@@ -431,7 +493,7 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
                 <TableMobile columns={columnsMobile} data={datas} />
             ) : (
                 <Table
-                    columns={columns}
+                    columns={actionColumn ? [...columns, actionColumn] : columns}
                     data={datas}
                     disableSorting
                     onToggleSort={_.noop}
