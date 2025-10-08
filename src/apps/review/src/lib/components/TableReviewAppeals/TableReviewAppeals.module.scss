@@ -82,6 +82,18 @@
     color: var(--GrayFontColor);
 }
 
+.statusBadgePending {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: $sp-1 $sp-2;
+    border-radius: 999px;
+    background-color: $orange-25;
+    color: $orange-140;
+    font-size: 12px;
+    font-weight: 600;
+}
+
 .submit {
     align-items: center;
     display: flex;

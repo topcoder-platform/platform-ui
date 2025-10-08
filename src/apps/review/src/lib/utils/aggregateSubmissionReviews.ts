@@ -192,10 +192,16 @@ export function aggregateSubmissionReviews({
             ? averageFinalScore.toFixed(2)
             : undefined
 
-        const latestReviewDate = group.reviews
-            .map(review => review.reviewDate)
-            .filter((value): value is Date => !!value)
-            .sort((first, second) => second.getTime() - first.getTime())[0]
+        const completedStatuses = new Set(['COMPLETED', 'SUBMITTED'])
+        const allCompleted = group.reviews.length > 0
+            && group.reviews.every(r => completedStatuses.has((r.status ?? '').toUpperCase()))
+
+        const latestReviewDate = allCompleted
+            ? group.reviews
+                .map(review => review.reviewDate)
+                .filter((value): value is Date => !!value)
+                .sort((first, second) => second.getTime() - first.getTime())[0]
+            : undefined
 
         const latestReviewDateString = latestReviewDate
             ? moment(latestReviewDate)

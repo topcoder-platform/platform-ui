@@ -367,10 +367,13 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
             renderer: (data: SubmissionInfo) => {
                 const review = data.review
 
-                if (!hasActiveReview(review)) {
+                const status = (review?.status ?? '').toUpperCase()
+                const isCompleted = ['COMPLETED', 'SUBMITTED'].includes(status)
+
+                if (!hasActiveReview(review) || !isCompleted) {
                     return (
                         <span className={styles.pendingText}>
-                            Pending
+                            Not Reviewed
                         </span>
                     )
                 }
@@ -382,9 +385,7 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
                 return reviewDate ? (
                     <span>{reviewDate}</span>
                 ) : (
-                    <span className={styles.pendingText}>
-                        Pending
-                    </span>
+                    <span className={styles.pendingText}>Not Reviewed</span>
                 )
             },
             type: 'element',

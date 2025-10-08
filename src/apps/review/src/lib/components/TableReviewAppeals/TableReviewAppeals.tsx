@@ -387,8 +387,8 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                     const scoreDisplay = data.aggregated?.averageFinalScoreDisplay
                     if (!scoreDisplay) {
                         return (
-                            <span className={styles.notReviewed}>
-                                --
+                            <span className={styles.statusBadgePending}>
+                                Pending Review
                             </span>
                         )
                     }
@@ -452,12 +452,7 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
 
                 if (!reviewInfo || !reviewInfo.id) {
                     return (
-                        <Link
-                            to={`./../scorecard-details/${data.id}/review/${resourceId}`}
-                            className={styles.textBlue}
-                        >
-                            Start Review
-                        </Link>
+                        <span className={styles.notReviewed}>--</span>
                     )
                 }
 
@@ -480,55 +475,15 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                     )
                 }
 
-                if (reviewInfo.reviewProgress) {
+                // For non-completed reviews, show placeholder only
+                if (!includes(['COMPLETED'], reviewStatus)) {
                     return (
-                        <Link
-                            to={`./../scorecard-details/${data.id}/review/${resourceId}`}
-                            className={styles.progressLink}
-                        >
-                            <ProgressBar
-                                progress={reviewInfo.reviewProgress}
-                            />
-                        </Link>
+                        <span className={styles.notReviewed}>--</span>
                     )
                 }
 
-                if (includes(['PENDING', 'IN_PROGRESS'], reviewStatus)) {
-                    const canContinueReview = (
-                        actionChallengeRole === REVIEWER
-                        && isReviewPhase(challengeInfo)
-                    )
-
-                    if (canContinueReview) {
-                        return (
-                            <Link
-                                to={`./../scorecard-details/${data.id}/review/${resourceId}`}
-                                className={styles.textBlue}
-                            >
-                                Continue Review
-                            </Link>
-                        )
-                    }
-
-                    const statusLabel = reviewStatus === 'PENDING'
-                        ? 'Pending Review'
-                        : 'Review In Progress'
-
-                    return (
-                        <span className={styles.notReviewed}>
-                            {statusLabel}
-                        </span>
-                    )
-                }
-
-                return (
-                    <Link
-                        to={`./../scorecard-details/${data.id}/review/${resourceId}`}
-                        className={styles.textBlue}
-                    >
-                        Open Review
-                    </Link>
-                )
+                // Fallback (should not normally reach here)
+                return <span className={styles.notReviewed}>--</span>
             }
 
             const renderAppealsCell = (
@@ -608,53 +563,136 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                     })
                 }
 
-                if (canManageCompletedReviews) {
-                    aggregatedColumns.push({
-                        columnId: `actions-${index}`,
-                        label: 'Actions',
-                        renderer: (data: SubmissionRow) => {
-                            const reviewDetailCandidate = data.aggregated?.reviews[index]
-                            const reviewInfo = reviewDetailCandidate?.reviewInfo
+                // Per-review action columns removed in favor of a single combined Actions column below
+            }
 
-                            if (!reviewInfo?.id) {
-                                return undefined
+            // Add a single combined Actions column
+            const myReviewerResourceIds = new Set(
+                myResources
+                    .filter(r => (r.roleName || '')
+                        .toLowerCase()
+                        .includes('reviewer')
+                        && !(r.roleName || '').toLowerCase()
+                            .includes('iterative'))
+                    .map(r => r.id),
+            )
+
+            if ((myReviewerResourceIds.size > 0 || canManageCompletedReviews) && isReviewPhase(challengeInfo)) {
+                aggregatedColumns.push({
+                    className: styles.textBlue,
+                    columnId: 'actions',
+                    label: 'Actions',
+                    renderer: (data: SubmissionRow) => {
+                        // Find my review for this submission if present
+                        const myReviewDetail = data.aggregated?.reviews.find(r => (
+                            (r.resourceId && myReviewerResourceIds.has(r.resourceId))
+                            || (r.reviewInfo?.resourceId && myReviewerResourceIds.has(r.reviewInfo.resourceId))
+                        ))
+
+                        // Prefer the resourceId from my review if found; otherwise use one of mine
+                        const fallbackResourceId = Array.from(myReviewerResourceIds)[0]
+                        const resourceId = myReviewDetail?.resourceId
+                            || myReviewDetail?.reviewInfo?.resourceId
+                            || fallbackResourceId
+                            || NO_RESOURCE_ID
+
+                        const status = (myReviewDetail?.reviewInfo?.status ?? '').toUpperCase()
+
+                        // Collect action elements
+                        const elements: JSX.Element[] = []
+
+                        const hasReviewRole = myReviewerResourceIds.size > 0
+                        if (hasReviewRole) {
+                            if (includes(['COMPLETED', 'SUBMITTED'], status)) {
+                                elements.push(
+                                    <div
+                                        key='completed-indicator'
+                                        aria-label='Review completed'
+                                        className={classNames(
+                                            styles.completedAction,
+                                        )}
+                                        title='Review completed'
+                                    >
+                                        <span className={styles.completedIcon} aria-hidden='true'>
+                                            &check;
+                                        </span>
+                                    </div>,
+                                )
+                            } else {
+                                elements.push(
+                                    <Link
+                                        key='complete-review'
+                                        to={`./../scorecard-details/${data.id}/review/${resourceId}`}
+                                        className={classNames(
+                                            styles.submit,
+                                        )}
+                                    >
+                                        <i className='icon-upload' />
+                                        Complete Review
+                                    </Link>,
+                                )
                             }
+                        }
 
-                            const reviewDetail: AggregatedReviewDetail = {
-                                ...reviewDetailCandidate,
-                                reviewInfo,
-                            }
-                            const reviewStatus = (reviewInfo.status ?? '').toUpperCase()
-                            if (reviewStatus !== 'COMPLETED') {
-                                return undefined
-                            }
+                        // Add reopen actions for completed reviews if user can manage
+                        if (canManageCompletedReviews) {
+                            (data.aggregated?.reviews || []).forEach(rv => {
+                                const reviewInfo = rv?.reviewInfo
+                                if (!reviewInfo?.id) return
+                                const st = (reviewInfo.status ?? '').toUpperCase()
+                                if (st !== 'COMPLETED') return
+                                const isTargetReview = pendingReopen?.review?.reviewInfo?.id === reviewInfo.id
 
-                            const isTargetReview = pendingReopen?.review?.reviewInfo?.id
-                                === reviewInfo.id
+                                function handleReopenClick(): void {
+                                    openReopenDialog(data, {
+                                        ...rv,
+                                        reviewInfo,
+                                    } as AggregatedReviewDetail)
+                                }
 
-                            function handleReopenClick(): void {
-                                openReopenDialog(data, reviewDetail)
-                            }
+                                elements.push(
+                                    <button
+                                        key={`reopen-${reviewInfo.id}`}
+                                        type='button'
+                                        className={classNames(
+                                            styles.actionButton,
+                                            styles.textBlue,
+                                        )}
+                                        onClick={handleReopenClick}
+                                        disabled={isReopening && isTargetReview}
+                                    >
+                                        <i className='icon-reopen' />
+                                        Reopen review
+                                    </button>,
+                                )
+                            })
+                        }
 
-                            return (
-                                <button
-                                    type='button'
-                                    className={classNames(
-                                        styles.actionButton,
-                                        styles.textBlue,
-                                        'last-element',
-                                    )}
-                                    onClick={handleReopenClick}
-                                    disabled={isReopening && isTargetReview}
-                                >
-                                    <i className='icon-reopen' />
-                                    Reopen review
-                                </button>
+                        // Mark last interactive element for row border styling
+                        if (elements.length > 0) {
+                            const last = elements[elements.length - 1]
+                            elements[elements.length - 1] = (
+                                <span key='last-wrap' className='last-element'>
+                                    {last}
+                                </span>
                             )
-                        },
-                        type: 'element',
-                    })
-                }
+                        }
+
+                        return (
+                            <span>
+                                {elements.map((el, i) => (
+                                    <span
+                                        key={`wrap-${String((el as any).key)}`}
+                                        style={{ marginRight: i < elements.length - 1 ? 12 : 0 }}
+                                    >
+                                        {el}
+                                    </span>
+                                ))}
+                            </span>
+                        )
+                    },
+                    type: 'element',
+                })
             }
 
             return aggregatedColumns
@@ -699,10 +737,14 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                     )
                 }
 
-                if (data.review) {
+                const status = (data.review?.status ?? '').toUpperCase()
+                const isCompleted = ['COMPLETED', 'SUBMITTED'].includes(status)
+
+                if (data.review && isCompleted) {
                     return (
                         <span>
                             {data.review.updatedAtString
+                                || data.review.reviewDateString
                                 || data.review.createdAtString}
                         </span>
                     )
