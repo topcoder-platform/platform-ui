@@ -44,6 +44,12 @@ const toFiniteNumber = (value?: number | null): number | undefined => (
     typeof value === 'number' && Number.isFinite(value) ? value : undefined
 )
 
+const toScorePrecision = (value: number): number => {
+    const normalized = Number(value.toFixed(2))
+
+    return Number.isNaN(normalized) ? value : normalized
+}
+
 const orderReviewsByCreatedDate = (reviews: ReviewResult[]): ReviewResult[] => orderBy(
     reviews,
     review => {
@@ -97,8 +103,11 @@ const computeFinalScore = (
     reviews: ReviewResult[],
     aggregateScore: number | undefined,
 ): number => {
-    if (typeof aggregateScore === 'number') {
-        return aggregateScore
+    if (
+        typeof aggregateScore === 'number'
+        && Number.isFinite(aggregateScore)
+    ) {
+        return toScorePrecision(aggregateScore)
     }
 
     if (!reviews.length) {
@@ -111,7 +120,7 @@ const computeFinalScore = (
     )
     const averageScore = totalScore / reviews.length
 
-    return Math.round(averageScore * 100) / 100
+    return toScorePrecision(averageScore)
 }
 
 const buildProjectResult = ({
@@ -157,12 +166,10 @@ const buildProjectResult = ({
 
     // Compute average of individual final scores across all submissions
     const averageFinalScoreAcrossSubmissions = evaluated.length
-        ? Math.round(
-            (
-                evaluated.reduce((sum, item) => sum + item.computedFinalScore, 0)
-                / evaluated.length
-            ) * 100,
-        ) / 100
+        ? toScorePrecision(
+            evaluated.reduce((sum, item) => sum + item.computedFinalScore, 0)
+            / evaluated.length,
+        )
         : 0
 
     // Pick the submission with the highest computed final score

@@ -38,7 +38,7 @@ export const TableWinners: FC<Props> = (props: Props) => {
     const location = useLocation()
     const reviewTabUrl = useMemo(() => {
         const searchParams = new URLSearchParams(location.search)
-        searchParams.set('tab', 'review-appeals')
+        searchParams.set('tab', 'review')
         const queryString = searchParams.toString()
 
         return `${location.pathname}${queryString ? `?${queryString}` : ''}`

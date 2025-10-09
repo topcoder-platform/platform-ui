@@ -245,7 +245,7 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
                         .some(p => (p?.name || '').toString()
                             .toLowerCase()
                             .startsWith('iterative review'))
-                    const tabSlug = tabFromPhase || (hasIterativePhase ? 'iterative-review' : 'review-appeals')
+                    const tabSlug = tabFromPhase || (hasIterativePhase ? 'iterative-review' : 'review')
                     navigate(`${challengeDetailsRoute}?tab=${tabSlug}`)
                 }
             },
