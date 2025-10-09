@@ -42,7 +42,6 @@ const EducationAndCertifications: FC<EducationAndCertificationsProps> = (props: 
 
     const loading = tcaDataLoading || traitsLoading
 
-    console.log(memberEducationTraits, 'memberEducationTraitskhaskdasd ')
     const memberEducation: UserTrait[] | undefined
         = useMemo(() => memberEducationTraits?.[0]?.traits?.data, [memberEducationTraits])
 
