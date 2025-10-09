@@ -43,10 +43,6 @@ export const TableWinners: FC<Props> = (props: Props) => {
 
         return `${location.pathname}${queryString ? `?${queryString}` : ''}`
     }, [location.pathname, location.search])
-    const firstSubmission: ProjectResult | undefined = useMemo(
-        () => datas[0],
-        [datas],
-    )
 
     const {
         restrictionMessage,
@@ -158,24 +154,15 @@ export const TableWinners: FC<Props> = (props: Props) => {
                 },
                 type: 'element',
             },
-            ...(firstSubmission?.reviews ?? [])
-                .map((_unusedReview, index) => (
-                    [
-                        {
-                            label: 'Review Date',
-                            renderer: (data: ProjectResult) => (
-                                <span>
-                                    {data.reviews[index]?.createdAtString}
-                                </span>
-                            ),
-                            type: 'element',
-                        },
-                    ] as TableColumn<ProjectResult>[]
-                ))
-                .reduce((accumulator, value) => accumulator.concat(value), []),
+            {
+                label: 'Submission Date',
+                renderer: (data: ProjectResult) => (
+                    <span>{data.submittedDateString || data.createdAtString || '-'}</span>
+                ),
+                type: 'element',
+            },
         ],
         [
-            firstSubmission,
             downloadSubmission,
             isDownloading,
             reviewTabUrl,

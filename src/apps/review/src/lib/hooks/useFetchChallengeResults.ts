@@ -214,6 +214,7 @@ const buildProjectResult = ({
         placement: winner.placement,
         reviews: best.orderedReviews,
         submissionId: best.submission.id,
+        submittedDate: best.submission?.submittedDate,
         userId: memberId,
         userInfo,
     })

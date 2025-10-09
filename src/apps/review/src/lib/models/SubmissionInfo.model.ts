@@ -1,3 +1,7 @@
+import moment from 'moment'
+
+import { TABLE_DATE_FORMAT } from '../../config/index.config'
+
 import { BackendResource } from './BackendResource.model'
 import { BackendSubmission } from './BackendSubmission.model'
 import {
@@ -19,6 +23,14 @@ export interface SubmissionInfo {
     userInfo?: BackendResource // this field is calculated at frontend
     review?: ReviewInfo
     reviews?: ReviewResult[]
+    /**
+     * The date/time when the submission was created.
+     */
+    submittedDate?: string | Date
+    /**
+     * Localized string for the submitted date, computed on frontend.
+     */
+    submittedDateString?: string
     /**
      * Virus scan status (true when scan passed, false when failed).
      */
@@ -52,6 +64,13 @@ export function adjustSubmissionInfo(
 export function convertBackendSubmissionToSubmissionInfo(
     data: BackendSubmission,
 ): SubmissionInfo {
+    const submittedDate = data.submittedDate ? new Date(data.submittedDate) : undefined
+    const submittedDateString = submittedDate
+        ? moment(submittedDate)
+            .local()
+            .format(TABLE_DATE_FORMAT)
+        : undefined
+
     return {
         id: data.id,
         memberId: data.memberId,
@@ -60,6 +79,8 @@ export function convertBackendSubmissionToSubmissionInfo(
                 ? convertBackendReviewToReviewInfo(data.review[0])
                 : undefined,
         reviews: data.review.map(convertBackendReviewToReviewResult),
+        submittedDate,
+        submittedDateString,
         virusScan: data.virusScan,
     }
 }

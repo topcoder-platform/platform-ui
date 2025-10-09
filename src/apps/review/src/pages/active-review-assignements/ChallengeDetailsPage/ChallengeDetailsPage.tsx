@@ -206,7 +206,7 @@ const computePhaseCompletionFromScreenings = (
 const buildPhaseTabs = (
     phases: Array<{ id?: string; name?: string; scheduledStartDate?: string; actualStartDate?: string }>,
     status?: string,
-    opts?: { isF2F?: boolean },
+    opts?: { isF2F?: boolean; isTask?: boolean },
 ): SelectOption[] => {
     // Helper: normalize name for comparisons
     const norm = (s?: string): string => (s || '')
@@ -276,8 +276,8 @@ const buildPhaseTabs = (
         return dateComparator(a, b)
     })
 
-    // For First2Finish: show any Iterative Review phases AFTER Registration and Submission.
-    if (opts?.isF2F) {
+    // For First2Finish and Task: show any Iterative Review phases AFTER Registration and Submission.
+    if (opts?.isF2F || opts?.isTask) {
         const iterative = sorted.filter(p => isIterativeReview(p.name))
         if (iterative.length) {
             const remaining = sorted.filter(p => !isIterativeReview(p.name))
@@ -335,7 +335,7 @@ const findPhaseByTabLabel = (
         actualEndDate?: string
     }>,
     label: string,
-    opts?: { isF2F?: boolean },
+    opts?: { isF2F?: boolean; isTask?: boolean },
 ): typeof phases[number] | undefined => {
     const norm = (s?: string): string => (s || '').trim()
         .toLowerCase()
@@ -394,7 +394,7 @@ const findPhaseByTabLabel = (
         return dateComparator(a, b)
     })
 
-    if (opts?.isF2F) {
+    if (opts?.isF2F || opts?.isTask) {
         const iterative = sorted.filter(p => isIterativeReview(p.name))
         if (iterative.length) {
             const remaining = sorted.filter(p => !isIterativeReview(p.name))
@@ -713,11 +713,14 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         if (!challengeInfo) return
         const typeName = challengeInfo?.type?.name?.toLowerCase?.() || ''
         const typeAbbrev = challengeInfo?.type?.abbreviation?.toLowerCase?.() || ''
-        const isF2F = typeAbbrev === 'f2f' || typeName.replace(/\s|-/g, '') === 'first2finish'
+        const simplifiedType = typeName.replace(/\s|-/g, '')
+        const isF2F = typeAbbrev === 'f2f' || simplifiedType === 'first2finish'
+        // Detect standard Task type (exclude Topgear Task)
+        const isTask = typeAbbrev === 'task' || typeAbbrev === 'tsk' || simplifiedType === 'task'
         const items = buildPhaseTabs(
             challengeInfo.phases ?? [],
             challengeInfo.status,
-            { isF2F },
+            { isF2F, isTask },
         )
 
         // Only add indicators on active-challenges view
@@ -1104,7 +1107,9 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                                         const simplifiedType = typeName.replace(/\s|-/g, '')
                                         const isF2F = typeAbbrev === 'f2f'
                                             || simplifiedType === 'first2finish'
-                                        return { isF2F }
+                                        const isTask = ['task', 'tsk'].includes(typeAbbrev)
+                                            || simplifiedType === 'task'
+                                        return { isF2F, isTask }
                                     })(),
                                 )
                                 return (phase as { id?: string } | undefined)?.id

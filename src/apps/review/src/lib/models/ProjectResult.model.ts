@@ -14,6 +14,14 @@ export interface ProjectResult {
     submissionId: string
     createdAt: string | Date
     createdAtString?: string // this field is calculated at frontend
+    /**
+     * The date/time when the winning submission was created.
+     */
+    submittedDate?: string | Date
+    /**
+     * Localized string for the submitted date, computed on frontend.
+     */
+    submittedDateString?: string
     initialScore: number
     placement: number
     finalScore: number
@@ -35,6 +43,9 @@ export function adjustProjectResult(
     }
 
     const createdAt = data.createdAt ? new Date(data.createdAt) : data.createdAt
+    const submittedDate = data.submittedDate
+        ? (data.submittedDate instanceof Date ? data.submittedDate : new Date(data.submittedDate))
+        : undefined
 
     return {
         ...data,
@@ -45,6 +56,12 @@ export function adjustProjectResult(
                 .format(TABLE_DATE_FORMAT)
             : data.createdAt,
         reviews: data.reviews.map(adjustReviewResult) as ReviewResult[],
+        submittedDate,
+        submittedDateString: submittedDate
+            ? moment(submittedDate)
+                .local()
+                .format(TABLE_DATE_FORMAT)
+            : data.submittedDateString,
     }
 }
 
