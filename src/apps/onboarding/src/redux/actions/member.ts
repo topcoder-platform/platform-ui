@@ -14,6 +14,7 @@ import ConnectInfo from '../../models/ConnectInfo'
 import EducationInfo from '../../models/EducationInfo'
 import MemberAddress from '../../models/MemberAddress'
 import MemberInfo from '../../models/MemberInfo'
+import OnboardingChecklistInfo from '../../models/OnboardingChecklistInfo'
 import PersonalizationInfo from '../../models/PersonalizationInfo'
 import WorkInfo from '../../models/WorkInfo'
 
@@ -40,6 +41,14 @@ export const updatePersonalizations: (personalizations: PersonalizationInfo[]) =
         ...personalizations,
     ],
     type: ACTIONS.MEMBER.SET_PERSONALIZATIONS,
+})
+
+export const updateOnboardingChecklist: (onboardingChecklist: OnboardingChecklistInfo) => {
+    payload: OnboardingChecklistInfo
+    type: string
+} = (onboardingChecklist: OnboardingChecklistInfo) => ({
+    payload: onboardingChecklist,
+    type: ACTIONS.MEMBER.SET_ONBOARDING_CHECKLIST,
 })
 
 export const updateConnectInfo: any = (connectInfo: ConnectInfo) => ({
@@ -157,7 +166,6 @@ export const fetchMemberTraits: any = () => async (dispatch: any) => {
         (t: any) => t.traitId === UserTraitIds.personalization,
     )
     const personalizationExpValue: any = personalizationExp?.traits?.data
-    console.log(memberTraits, personalizationExpValue, 'e')
     if (personalizationExpValue) {
         const personalizations: PersonalizationInfo[] = personalizationExpValue.map((e: any) => _.omitBy({
             ...e,
@@ -167,6 +175,19 @@ export const fetchMemberTraits: any = () => async (dispatch: any) => {
             shortBio: e.shortBio,
         }, _.isUndefined))
         dispatch(updatePersonalizations(personalizations))
+    }
+
+    const onboardingChecklistExp: any = memberTraits.find(
+        (t: any) => t.traitId === UserTraitIds.onboardingChecklist,
+    )
+    const onboardingChecklistExpValue: any = onboardingChecklistExp?.traits?.data
+
+    if (onboardingChecklistExpValue) {
+        const profileCompletenessChecklist = onboardingChecklistExpValue
+            .find((item: any) => item.listItemType === 'profile_completed')
+        if (profileCompletenessChecklist) {
+            dispatch(updateOnboardingChecklist(profileCompletenessChecklist.metadata))
+        }
     }
 
     const connectInfoExp: any = memberTraits.find(
@@ -214,6 +235,39 @@ const createWorksPayloadData: any = (works: WorkInfo[]) => {
         },
     }
     return [payload]
+}
+
+const createOnboardingChecklistData: any = (onboardingChecklist: OnboardingChecklistInfo) => {
+    const isProfileInComplete = Object.values(onboardingChecklist)
+        .includes(false)
+    const payload: any = {
+        categoryName: UserTraitCategoryNames.onboardingChecklist,
+        traitId: UserTraitIds.onboardingChecklist,
+        traits: {
+            data: [{
+                date: new Date()
+                    .toISOString(),
+                listItemType: 'profile_completed',
+                message: isProfileInComplete ? 'Profile is incomplete' : 'Completed',
+                metadata: onboardingChecklist,
+                status: isProfileInComplete ? 'pending_at_user' : 'completed',
+            }],
+            traitId: UserTraitIds.onboardingChecklist,
+        },
+    }
+    return [payload]
+}
+
+export const createOnboardingChecklist: any = (
+    onboardingChecklist: OnboardingChecklistInfo,
+) => async (dispatch: any) => {
+    try {
+        const tokenInfo: TokenModel = await getAsyncToken()
+
+        await createMemberTraits(tokenInfo.handle || '', createOnboardingChecklistData(onboardingChecklist))
+        dispatch(updateOnboardingChecklist(onboardingChecklist))
+    } catch (error) {
+    }
 }
 
 export const updateMemberWorks: any = (works: WorkInfo[]) => async (dispatch: any) => {
@@ -326,6 +380,18 @@ export const updateMemberPersonalizations: any = (personalizations: Personalizat
 
         await updateMemberTraits(tokenInfo.handle || '', createPersonalizationsPayloadData(personalizations))
         dispatch(updatePersonalizations(personalizations))
+    } catch (error) {
+    }
+}
+
+export const updateMemberOnboardingChecklist: any = (
+    onboardingChecklistInfo: OnboardingChecklistInfo,
+) => async (dispatch: any) => {
+    try {
+        const tokenInfo: TokenModel = await getAsyncToken()
+
+        await updateMemberTraits(tokenInfo.handle || '', createOnboardingChecklistData(onboardingChecklistInfo))
+        dispatch(updateOnboardingChecklist(onboardingChecklistInfo))
     } catch (error) {
     }
 }

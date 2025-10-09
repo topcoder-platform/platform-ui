@@ -17,22 +17,30 @@ import {
 } from '../../hooks/useAutoSavePersonalization'
 import {
     createMemberPersonalizations,
+    createOnboardingChecklist,
     setMemberPhotoUrl,
     updateMemberDescription,
+    updateMemberOnboardingChecklist,
     updateMemberPersonalizations,
     updateMemberPhotoUrl,
 } from '../../redux/actions/member'
+import EducationInfo from '../../models/EducationInfo'
 import FieldAvatar from '../../components/FieldAvatar'
 import InputTextAutoSave from '../../components/InputTextAutoSave'
 import InputTextareaAutoSave from '../../components/InputTextareaAutoSave'
 import MemberInfo from '../../models/MemberInfo'
+import OnboardingChecklistInfo from '../../models/OnboardingChecklistInfo'
 import PersonalizationInfo from '../../models/PersonalizationInfo'
+import WorkInfo from '../../models/WorkInfo'
 
 import styles from './styles.module.scss'
 
 interface PagePersonalizationContentReduxProps {
     memberInfo?: MemberInfo,
     reduxPersonalizations: PersonalizationInfo[] | undefined
+    reduxEducations: EducationInfo[] | undefined
+    reduxWorks: WorkInfo[] | undefined
+    reduxOnboardingChecklist: OnboardingChecklistInfo | undefined
     loadingMemberTraits: boolean
     loadingMemberInfo: boolean
 }
@@ -43,6 +51,9 @@ interface PagePersonalizationContentProps extends PagePersonalizationContentRedu
     setMemberPhotoUrl: (photoUrl: string) => void
     updateMemberPhotoUrl: (photoUrl: string) => void
     updateMemberDescription: (photoUrl: string) => void
+    updateMemberOnboardingChecklist: (onboardingChecklist: OnboardingChecklistInfo) => Promise<void>;
+    createOnboardingChecklist: (onboardingChecklist: OnboardingChecklistInfo) => Promise<void>;
+
 }
 
 const PagePersonalizationContent: FC<PagePersonalizationContentProps> = props => {
@@ -167,10 +178,28 @@ const PagePersonalizationContent: FC<PagePersonalizationContentProps> = props =>
                     primary
                     iconToLeft
                     disabled={!!shouldNavigateTo.current}
-                    onClick={function onClick() {
+                    onClick={async function onClick() {
+                        if (!props.reduxOnboardingChecklist) {
+                            await props.createOnboardingChecklist({
+                                ...(props.reduxOnboardingChecklist || {}),
+                                bio: !!props.reduxPersonalizations?.length,
+                                education: !!props.reduxEducations?.length,
+                                skills: !!props.memberInfo?.skills.length,
+                                work: !!props.reduxWorks?.length,
+                            } as OnboardingChecklistInfo)
+                        } else {
+                            await props.updateMemberOnboardingChecklist({
+                                ...(props.reduxOnboardingChecklist || {}),
+                                bio: !!props.reduxPersonalizations?.length,
+                                education: !!props.reduxEducations?.length,
+                                skills: !!props.memberInfo?.skills.length,
+                                work: !!props.reduxWorks?.length,
+                            })
+                        }
+
                         nextPage(
                             `${EnvironmentConfig.USER_PROFILE_URL}/${props.memberInfo?.handle}`
-                            + '?edit-mode=onboardingCompleted',
+                                + '?edit-mode=onboardingCompleted',
                         )
                     }}
                 >
@@ -188,20 +217,28 @@ const mapStateToProps: (state: any) => PagePersonalizationContentReduxProps
             loadingMemberInfo,
             personalizations,
             memberInfo,
+            educations,
+            works,
+            onboardingChecklist,
         }: any = state.member
 
         return {
             loadingMemberInfo,
             loadingMemberTraits,
             memberInfo,
+            reduxEducations: educations,
+            reduxOnboardingChecklist: onboardingChecklist,
             reduxPersonalizations: personalizations,
+            reduxWorks: works,
         }
     }
 
 const mapDispatchToProps: any = {
     createMemberPersonalizations,
+    createOnboardingChecklist,
     setMemberPhotoUrl,
     updateMemberDescription,
+    updateMemberOnboardingChecklist,
     updateMemberPersonalizations,
     updateMemberPhotoUrl,
 }
