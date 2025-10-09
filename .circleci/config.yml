@@ -231,6 +231,7 @@ workflows:
                               - feat/review
                               - feat/system-admin
                               - feat/v6
+                              - pm-2074_1
 
             - deployQa:
                   context: org-global
