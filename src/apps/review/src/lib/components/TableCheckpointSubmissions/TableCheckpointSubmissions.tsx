@@ -2,6 +2,7 @@
  * Table Checkpoint Submissions.
  */
 import { FC, MouseEvent, useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import _ from 'lodash'
 import classNames from 'classnames'
@@ -25,6 +26,7 @@ interface Props {
     datas: Screening[]
     isDownloading: IsRemovingType
     downloadSubmission: (submissionId: string) => void
+    mode?: 'submission' | 'screening' | 'review'
 }
 
 export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
@@ -40,6 +42,7 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
 
     const columns = useMemo<TableColumn<Screening>[]>(
         () => {
+            const mode = props.mode || 'submission'
             const submissionColumn: TableColumn<Screening> = {
                 className: styles.submissionColumn,
                 label: 'Submission ID',
@@ -151,12 +154,132 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
                 type: 'element',
             }
 
-            return [
+            const baseColumns: TableColumn<Screening>[] = [
                 submissionColumn,
                 handleColumn,
                 submissionDateColumn,
+            ]
+
+            if (mode === 'submission') {
+                return baseColumns
+            }
+
+            if (mode === 'screening') {
+                const screeningColumns: TableColumn<Screening>[] = [
+                    ...baseColumns,
+                    {
+                        label: 'Checkpoint Screener',
+                        propertyName: 'screenerHandle',
+                        renderer: (data: Screening) => (data.screener?.id ? (
+                            <a
+                                href={getHandleUrl(data.screener)}
+                                target='_blank'
+                                rel='noreferrer'
+                                style={{
+                                    color: data.screener?.handleColor,
+                                }}
+                                onClick={function onClick() {
+                                    window.open(
+                                        getHandleUrl(data.screener),
+                                        '_blank',
+                                    )
+                                }}
+                            >
+                                {data.screener?.memberHandle ?? ''}
+                            </a>
+                        ) : (
+                            <span
+                                style={{
+                                    color: data.screener?.handleColor,
+                                }}
+                            >
+                                {data.screener?.memberHandle ?? ''}
+                            </span>
+                        )),
+                        type: 'element',
+                    },
+                    {
+                        label: 'Screening Score',
+                        propertyName: 'score',
+                        type: 'text',
+                    },
+                    {
+                        label: 'Screening Result',
+                        propertyName: 'result',
+                        renderer: (data: Screening) => {
+                            const val = (data.result || '').toUpperCase()
+                            if (val === 'PASS') {
+                                return (
+                                    <span className={styles.resultPass}>Pass</span>
+                                )
+                            }
+
+                            if (val === 'NO PASS' || val === 'FAIL') {
+                                return (
+                                    <span className={styles.resultFail}>Fail</span>
+                                )
+                            }
+
+                            return <span>-</span>
+                        },
+                        type: 'element',
+                    },
+                ]
+
+                // Determine if an Action column is needed (current user has any checkpoint screening assignment)
+                const hasAnyMyAssignment = (props.datas || []).some(d => !!d.myReviewResourceId)
+                if (!hasAnyMyAssignment) {
+                    return screeningColumns
+                }
+
+                const actionColumn: TableColumn<Screening> = {
+                    label: 'Action',
+                    propertyName: 'action',
+                    renderer: (data: Screening) => {
+                        const resourceId = data.myReviewResourceId
+                        if (!resourceId) return undefined
+
+                        const status = (data.myReviewStatus || '').toUpperCase()
+                        if (['COMPLETED', 'SUBMITTED'].includes(status)) {
+                            return (
+                                <div
+                                    aria-label='Screening completed'
+                                    className={styles.completedAction}
+                                    title='Screening completed'
+                                >
+                                    <span className={styles.completedIcon} aria-hidden='true'>
+                                        <IconOutline.CheckIcon />
+                                    </span>
+                                    <span className={styles.completedPill}>Screening Complete</span>
+                                </div>
+                            )
+                        }
+
+                        // Pending or In Progress (or empty but assignment exists)
+                        return (
+                            <Link
+                                to={`./../scorecard-details/${data.submissionId}/review/${resourceId}`}
+                                className={classNames(styles.submit, 'last-element')}
+                            >
+                                <i className='icon-upload' />
+                                Complete Screening
+                            </Link>
+                        )
+                    },
+                    type: 'element',
+                }
+
+                return [
+                    ...screeningColumns,
+                    actionColumn,
+                ]
+            }
+
+            // mode === 'review'
+            return [
+                ...baseColumns,
                 {
-                    label: 'Checkpoint Reviewer',
+                    label: 'Checkpoint Review',
                     propertyName: 'screenerHandle',
                     renderer: (data: Screening) => (data.screener?.id ? (
                         <a
@@ -187,7 +310,7 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
                     type: 'element',
                 },
                 {
-                    label: 'Checkpoint Score',
+                    label: 'Review Score',
                     propertyName: 'score',
                     type: 'text',
                 },

@@ -114,10 +114,11 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
         [challengeInfo],
     )
 
-    const shouldShowAppealsColumn = useMemo(
-        () => allowsAppeals && (isAppealsWindowOpen || isChallengeCompleted),
-        [allowsAppeals, isAppealsWindowOpen, isChallengeCompleted],
-    )
+    const shouldShowAppealsColumn = useMemo(() => {
+        const tabName = (props.tab || '').toLowerCase()
+        // Only show Appeals columns on the "Appeals" tab for submitters
+        return allowsAppeals && tabName === 'appeals'
+    }, [allowsAppeals, props.tab])
 
     const aggregatedRows = useMemo(() => aggregateSubmissionReviews({
         mappingReviewAppeal,
@@ -201,7 +202,7 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
 
                             downloadSubmission(data.id)
                         }}
-                        className={styles.textBlue}
+                        className={classNames(styles.textBlue, styles.linkButton)}
                         disabled={isButtonDisabled}
                         type='button'
                     >
@@ -518,15 +519,17 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
         }
 
         // Add a single Action column for Appeals tab: "Appeal"
-        if ((props.tab || '').toLowerCase() === 'appeals') {
+        // Only show when the Appeals phase is currently open
+        if ((props.tab || '').toLowerCase() === 'appeals' && isAppealsPhase(challengeInfo)) {
             aggregatedColumns.push({
                 className: styles.textBlue,
                 columnId: 'action',
                 label: 'Action',
                 renderer: (data: SubmissionRow) => {
-                    const reviewDetail = data.aggregated?.reviews?.[0]
-                    const resourceId = reviewDetail?.resourceId || reviewDetail?.reviewInfo?.resourceId
-                    if (!resourceId) return <></>
+                    // Choose the first real review (ignore placeholders)
+                    const reviewDetail = (data.aggregated?.reviews || []).find(r => r.reviewInfo?.id)
+                    const resourceId = reviewDetail?.reviewInfo?.resourceId || reviewDetail?.resourceId
+                    if (!reviewDetail?.reviewInfo?.id || !resourceId) return <></>
                     return (
                         <Link
                             to={`./../scorecard-details/${data.id}/review/${resourceId}`}
@@ -554,6 +557,7 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
         maxReviewCount,
         shouldShowAppealsColumn,
         restrictionMessage,
+        challengeInfo,
         props.tab,
     ])
 

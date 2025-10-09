@@ -9,7 +9,7 @@ import {
     useMemo,
     useState,
 } from 'react'
-import { useParams } from 'react-router-dom'
+import { useLocation, useParams } from 'react-router-dom'
 import classNames from 'classnames'
 
 import { TableLoading } from '~/apps/admin/src/lib'
@@ -43,6 +43,7 @@ interface Props {
 
 export const ScorecardDetailsPage: FC<Props> = (props: Props) => {
     const navigate = useAppNavigate()
+    const location = useLocation()
     const params = useParams()
     const {
         actionChallengeRole,
@@ -143,6 +144,23 @@ export const ScorecardDetailsPage: FC<Props> = (props: Props) => {
             reviewInfo?.committed,
         ],
     )
+
+    // Redirect: if user is on a past-challenges route but the challenge is ACTIVE,
+    // send them to the corresponding active-challenges route, preserving the rest of the path and query.
+    useEffect(() => {
+        const status = challengeInfo?.status?.toUpperCase()
+        const isActiveChallenge = status === 'ACTIVE'
+        if (!isActiveChallenge) return
+
+        const pastPrefix = '/past-challenges/'
+        const idx = location.pathname.indexOf(pastPrefix)
+        if (idx < 0) return
+
+        const before = location.pathname.slice(0, idx)
+        const after = location.pathname.slice(idx + pastPrefix.length)
+        const targetPath = `${before}/active-challenges/${after}`
+        navigate(`${targetPath}${location.search || ''}`, { replace: true })
+    }, [challengeInfo?.status, location.pathname, location.search, navigate])
 
     useEffect(() => {
         if (!canEditScorecard && isManagerEdit) {

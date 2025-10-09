@@ -117,10 +117,12 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
         [myRoles],
     )
 
-    const isAggregatedTab = (tab === 'Appeals') && (!hasReviewerRole)
+    // Aggregated view groups one row per submission and shows
+    // reviewer columns + average score. Use it for Appeals and Review tabs.
+    const isAggregatedView = (tab === 'Appeals' || tab === 'Review')
 
     const aggregatedRows = useMemo(() => {
-        if (!isAggregatedTab) {
+        if (!isAggregatedView) {
             return [] as AggregatedSubmissionReviews[]
         }
 
@@ -129,7 +131,7 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
             reviewers,
             submissions: datas,
         })
-    }, [datas, isAggregatedTab, mappingReviewAppeal, reviewers])
+    }, [datas, isAggregatedView, mappingReviewAppeal, reviewers])
 
     const aggregatedSubmissionRows = useMemo<SubmissionRow[]>(
         () => aggregatedRows.map(row => ({
@@ -140,13 +142,13 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
     )
 
     const maxReviewCount = useMemo(
-        () => (isAggregatedTab
+        () => (isAggregatedView
             ? aggregatedRows.reduce(
                 (count, row) => Math.max(count, row.reviews.length),
                 0,
             )
             : 0),
-        [aggregatedRows, isAggregatedTab],
+        [aggregatedRows, isAggregatedView],
     )
 
     // Only allow Appeals columns if the challenge type/track supports it
@@ -196,7 +198,7 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
     const canManageCompletedReviews = useMemo(
         () => Boolean(
             isActiveChallenge
-            && isAggregatedTab
+            && isAggregatedView
             && isReviewPhase(challengeInfo)
             && (
                 hasReviewerRole
@@ -211,7 +213,7 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
             hasCopilotRole,
             hasReviewerRole,
             isActiveChallenge,
-            isAggregatedTab,
+            isAggregatedView,
             isTopcoderAdmin,
         ],
     )
@@ -317,7 +319,7 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
 
                             downloadSubmission(data.id)
                         }}
-                        className={styles.textBlue}
+                        className={classNames(styles.textBlue, styles.linkButton)}
                         disabled={isButtonDisabled}
                         type='button'
                     >
@@ -373,7 +375,30 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
             type: 'element',
         }
 
-        if (isAggregatedTab) {
+        if (isAggregatedView) {
+            // Optional Handle column (submitter) — keep parity with non-aggregated view
+            const handleColumnAgg: TableColumn<SubmissionRow> | undefined = hideHandleColumn
+                ? undefined
+                : {
+                    columnId: 'handle-aggregated',
+                    label: 'Handle',
+                    propertyName: 'handle',
+                    renderer: (data: SubmissionRow) => (
+                        <a
+                            href={getHandleUrl(data.userInfo)}
+                            target='_blank'
+                            rel='noreferrer'
+                            style={{ color: data.aggregated?.submitterHandleColor }}
+                            onClick={function onClick() {
+                                window.open(getHandleUrl(data.userInfo), '_blank')
+                            }}
+                        >
+                            {data.aggregated?.submitterHandle ?? data.userInfo?.memberHandle ?? ''}
+                        </a>
+                    ),
+                    type: 'element',
+                }
+
             const reviewDateColumn: TableColumn<SubmissionRow> = {
                 columnId: 'review-date',
                 label: 'Review Date',
@@ -547,6 +572,7 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
 
             const aggregatedColumns: TableColumn<SubmissionRow>[] = [
                 submissionColumn,
+                ...(handleColumnAgg ? [handleColumnAgg] : []),
                 reviewDateColumn,
                 reviewScoreColumn,
             ]
@@ -554,19 +580,20 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
             for (let index = 0; index < maxReviewCount; index += 1) {
                 aggregatedColumns.push({
                     columnId: `reviewer-${index}`,
-                    label: `Reviewer ${index + 1}`,
+                    label: maxReviewCount === 1 ? 'Reviewer' : `Reviewer ${index + 1}`,
                     renderer: (data: SubmissionRow) => renderReviewerCell(data, index),
                     type: 'element',
                 })
 
                 aggregatedColumns.push({
                     columnId: `score-${index}`,
-                    label: `Score ${index + 1}`,
+                    label: maxReviewCount === 1 ? 'Score' : `Score ${index + 1}`,
                     renderer: (data: SubmissionRow) => renderScoreCell(data, index),
                     type: 'element',
                 })
 
-                if (allowsAppeals) {
+                // Do not show Appeals columns on the Review tab
+                if (allowsAppeals && tab !== 'Review') {
                     aggregatedColumns.push({
                         columnId: `appeals-${index}`,
                         label: `Appeals ${index + 1}`,
@@ -1025,7 +1052,7 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
         canManageCompletedReviews,
         challengeInfo,
         isAppealsResponsePhaseOpen,
-        isAggregatedTab,
+        isAggregatedView,
         isSubmissionDownloadRestricted,
         maxReviewCount,
         downloadSubmission,
@@ -1076,7 +1103,7 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
     )
 
     const submissions: SubmissionRow[] = useMemo(() => {
-        if (isAggregatedTab) {
+        if (isAggregatedView) {
             return aggregatedSubmissionRows
         }
 
@@ -1091,7 +1118,7 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
         aggregatedSubmissionRows,
         datas,
         firstSubmissions,
-        isAggregatedTab,
+        isAggregatedView,
         tab,
     ])
 

@@ -378,12 +378,21 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
         )
     }, [reviewInfo])
 
-    const back = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
+    const back = useCallback(async (e: React.MouseEvent<HTMLAnchorElement>) => {
         e.preventDefault()
+        try {
+            if (challengeId) {
+                // Ensure the challenge details reflect the latest data (e.g., active phase)
+                await mutate(`challengeBaseUrl/challenges/${challengeId}`)
+            }
+        } catch {
+            // no-op: navigation should still occur even if revalidation fails
+        }
+
         navigate(-1, {
             fallback: './../../../../challenge-details',
         })
-    }, [navigate])
+    }, [challengeId, mutate, navigate])
 
     const closeHandel = useCallback(() => {
         setIsShowSaveAsDraftModal(false)

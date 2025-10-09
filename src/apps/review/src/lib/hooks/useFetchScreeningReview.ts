@@ -37,6 +37,8 @@ export interface useFetchScreeningReviewProps {
     screening: Screening[]
     // checkpoint data (if any)
     checkpoint: Screening[]
+    // checkpoint review data (if any)
+    checkpointReview: Screening[]
     // review data
     review: SubmissionInfo[]
     submitterReviews: SubmissionInfo[]
@@ -65,6 +67,8 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
         challengeInfo,
         resourceMemberIdMapping,
         reviewers: challengeReviewers,
+        resources,
+        myResources,
     }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
 
     // fetch challenge submissions
@@ -101,6 +105,16 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
 
     const visibleSubmissionIds = useMemo(
         () => new Set(visibleChallengeSubmissions.map(submission => submission.id)),
+        [visibleChallengeSubmissions],
+    )
+
+    // Subsets by submission type for tab-specific displays
+    const contestSubmissions = useMemo(
+        () => visibleChallengeSubmissions.filter(s => (s.type || '').toUpperCase() === 'CONTEST_SUBMISSION'),
+        [visibleChallengeSubmissions],
+    )
+    const finalFixSubmissions = useMemo(
+        () => visibleChallengeSubmissions.filter(s => (s.type || '').toUpperCase() === 'STUDIO_FINAL_FIX_SUBMISSION'),
         [visibleChallengeSubmissions],
     )
 
@@ -194,6 +208,16 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
         return scorecardConstraint ? `${scorecardConstraint.value}` : undefined
     }, [challengeInfo?.phases])
 
+    const checkpointScreeningScorecardId = useMemo<string | undefined>(() => {
+        const cpScreeningPhase = challengeInfo?.phases?.find(
+            p => (p.name || '').toLowerCase() === 'checkpoint screening',
+        )
+        const scorecardConstraint = cpScreeningPhase
+            ? find(cpScreeningPhase.constraints ?? [], c => c.name === 'Scorecard')
+            : undefined
+        return scorecardConstraint ? `${scorecardConstraint.value}` : undefined
+    }, [challengeInfo?.phases])
+
     const checkpointReviewScorecardId = useMemo<string | undefined>(() => {
         const cpReviewPhase = challengeInfo?.phases?.find(
             p => (p.name || '').toLowerCase() === 'checkpoint review',
@@ -224,9 +248,26 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
     )
 
     const {
-        data: checkpointScorecardBase,
+        data: checkpointScreeningScorecardBase,
     }: SWRResponse<ScorecardBase | undefined, Error> = useSWR<ScorecardBase | undefined, Error>(
-        `EnvironmentConfig.API.V6/scorecards/checkpoint/${checkpointReviewScorecardId || ''}`,
+        `EnvironmentConfig.API.V6/scorecards/checkpoint-screening/${checkpointScreeningScorecardId || ''}`,
+        {
+            fetcher: async () => {
+                if (!checkpointScreeningScorecardId) return undefined
+                const rs = await xhrGetAsync<{
+                    id: string
+                    minimumPassingScore: number | null
+                }>(`${EnvironmentConfig.API.V6}/scorecards/${checkpointScreeningScorecardId}`)
+                return rs
+            },
+            isPaused: () => !checkpointScreeningScorecardId,
+        },
+    )
+
+    const {
+        data: checkpointReviewScorecardBase,
+    }: SWRResponse<ScorecardBase | undefined, Error> = useSWR<ScorecardBase | undefined, Error>(
+        `EnvironmentConfig.API.V6/scorecards/checkpoint-review/${checkpointReviewScorecardId || ''}`,
         {
             fetcher: async () => {
                 if (!checkpointReviewScorecardId) return undefined
@@ -285,7 +326,8 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
 
             const minPass = screeningScorecardBase?.minimumPassingScore ?? undefined
 
-            return visibleChallengeSubmissions.map(item => {
+            // Only show CONTEST_SUBMISSION on Submission/Screening tabs
+            return contestSubmissions.map(item => {
                 const base = convertBackendSubmissionToScreening(item)
                 const matchedReview = screeningReviewsBySubmission.get(item.id)
                 const numericScore: number | undefined = matchedReview
@@ -333,12 +375,108 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
             resourceMemberIdMapping,
             screeningScorecardBase?.minimumPassingScore,
             screeningScorecardId,
-            visibleChallengeSubmissions,
+            contestSubmissions,
         ],
     )
 
     // Build checkpoint rows if checkpoint submissions and reviews exist
     const checkpoint = useMemo(() => {
+        const checkpointReviewsBySubmission = new Map<string, BackendReview>()
+        if (challengeReviews && checkpointScreeningScorecardId) {
+            forEach(challengeReviews, rv => {
+                if (rv && rv.scorecardId === checkpointScreeningScorecardId) {
+                    checkpointReviewsBySubmission.set(rv.submissionId, rv)
+                }
+            })
+        }
+
+        const minPass = checkpointScreeningScorecardBase?.minimumPassingScore ?? undefined
+
+        // Resolve a challenge-level Checkpoint Screener (if any) for handle display
+        const checkpointScreenerResource = (resources ?? [])
+            .find(r => (r.roleName || '').toLowerCase() === 'checkpoint screener')
+
+        // Current viewer's Checkpoint Screener resource id (if they have this role)
+        const myCheckpointScreenerResourceId = (myResources ?? [])
+            .find(r => (r.roleName || '').toLowerCase() === 'checkpoint screener')?.id
+
+        return visibleChallengeSubmissions
+            .filter(s => (s.type || '').toUpperCase()
+                .includes('CHECKPOINT'))
+            // eslint-disable-next-line complexity
+            .map(item => {
+                const base = convertBackendSubmissionToScreening(item)
+                const matchedReview = checkpointReviewsBySubmission.get(item.id)
+                const numericScore: number | undefined = matchedReview
+                    ? (Number.isFinite(matchedReview.finalScore)
+                        ? matchedReview.finalScore
+                        : Number.isFinite(matchedReview.initialScore)
+                            ? matchedReview.initialScore
+                            : undefined)
+                    : undefined
+                const scoreDisplay = typeof numericScore === 'number'
+                    ? (Number.isInteger(numericScore)
+                        ? `${numericScore}`
+                        : numericScore.toFixed(2))
+                    : 'Pending'
+
+                let result = base.result
+                let screenerId: string | undefined = base.screenerId
+                if (matchedReview) {
+                    screenerId = matchedReview.resourceId
+                }
+
+                if (typeof numericScore === 'number' && typeof minPass === 'number') {
+                    result = numericScore >= minPass ? 'PASS' as const : 'NO PASS' as const
+                }
+
+                // Determine screener to display: review assignment screener -> challenge-level screener -> Not assigned
+                const screenerDisplay = ((): BackendResource => {
+                    if (screenerId) {
+                        const r = (resources ?? []).find(x => x.id === screenerId)
+                        if (r) return r
+                    }
+
+                    if (checkpointScreenerResource) return checkpointScreenerResource
+                    return {
+                        handleColor: '#2a2a2a',
+                        memberHandle: 'Not assigned',
+                    } as BackendResource
+                })()
+
+                // Find a pending/in-progress assignment for current viewer (if any)
+                const myAssignment
+                    = (myCheckpointScreenerResourceId && challengeReviews && checkpointScreeningScorecardId)
+                        ? challengeReviews.find(rv => (
+                            rv.submissionId === item.id
+                        && rv.resourceId === myCheckpointScreenerResourceId
+                        && rv.scorecardId === checkpointScreeningScorecardId
+                        ))
+                        : undefined
+
+                return {
+                    ...base,
+                    myReviewResourceId: myAssignment?.resourceId,
+                    myReviewStatus: myAssignment?.status ?? undefined,
+                    result,
+                    score: scoreDisplay,
+                    screener: screenerDisplay,
+                    screenerId: screenerDisplay?.id || screenerId,
+                    userInfo: resourceMemberIdMapping[base.memberId],
+                }
+            })
+    }, [
+        challengeReviews,
+        checkpointScreeningScorecardId,
+        checkpointScreeningScorecardBase?.minimumPassingScore,
+        resourceMemberIdMapping,
+        resources,
+        myResources,
+        visibleChallengeSubmissions,
+    ])
+
+    // Build checkpoint review rows if checkpoint review submissions and reviews exist
+    const checkpointReview = useMemo(() => {
         const checkpointReviewsBySubmission = new Map<string, BackendReview>()
         if (challengeReviews && checkpointReviewScorecardId) {
             forEach(challengeReviews, rv => {
@@ -348,7 +486,7 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
             })
         }
 
-        const minPass = checkpointScorecardBase?.minimumPassingScore ?? undefined
+        const minPass = checkpointReviewScorecardBase?.minimumPassingScore ?? undefined
 
         return visibleChallengeSubmissions
             .filter(s => (s.type || '').toUpperCase()
@@ -396,7 +534,7 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
     }, [
         challengeReviews,
         checkpointReviewScorecardId,
-        checkpointScorecardBase?.minimumPassingScore,
+        checkpointReviewScorecardBase?.minimumPassingScore,
         resourceMemberIdMapping,
         visibleChallengeSubmissions,
     ])
@@ -434,7 +572,8 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
 
     const review = useMemo(() => {
         const validReviews: BackendSubmission[] = []
-        forEach(visibleChallengeSubmissions, challengeSubmission => {
+        // Only show CONTEST_SUBMISSION on Review tabs
+        forEach(contestSubmissions, challengeSubmission => {
             forEach(reviewerIds, reviewerId => {
                 const matchingReview
                     = challengeSubmission.reviewResourceMapping?.[reviewerId]
@@ -489,7 +628,7 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
             }
         })
     }, [
-        visibleChallengeSubmissions,
+        contestSubmissions,
         resourceMemberIdMapping,
         reviewerIds,
         reviewAssignmentsBySubmission,
@@ -507,7 +646,8 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
             return []
         }
 
-        const submissionsById = new Map(visibleChallengeSubmissions.map(s => [s.id, s]))
+        // Only map to STUDIO_FINAL_FIX_SUBMISSION submissions for Approval tab
+        const submissionsById = new Map(finalFixSubmissions.map(s => [s.id, s]))
         const result: SubmissionInfo[] = []
 
         forEach(challengeReviews, rv => {
@@ -527,7 +667,7 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
         })
 
         return result
-    }, [challengeInfo?.phases, challengeReviews, resourceMemberIdMapping, visibleChallengeSubmissions])
+    }, [challengeInfo?.phases, challengeReviews, resourceMemberIdMapping, finalFixSubmissions])
 
     // Build post-mortem reviews list (for Topgear Task challenges)
     const postMortemReviews = useMemo<SubmissionInfo[]>(() => {
@@ -607,6 +747,7 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
     return {
         approvalReviews,
         checkpoint,
+        checkpointReview,
         isLoading: isLoading || shouldAwaitSubmitterReviews,
         mappingReviewAppeal,
         postMortemReviews,

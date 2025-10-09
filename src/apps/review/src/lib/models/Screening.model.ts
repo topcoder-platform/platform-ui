@@ -22,6 +22,16 @@ export interface Screening {
      * Virus scan status (true when scan passed, false when failed).
      */
     virusScan?: boolean
+    /**
+     * For the current viewer: resourceId of their review assignment (if any)
+     * used to deep-link to scorecard details.
+     */
+    myReviewResourceId?: string
+    /**
+     * For the current viewer: status of their review assignment (if any)
+     * e.g., PENDING | IN_PROGRESS | SUBMITTED | COMPLETED
+     */
+    myReviewStatus?: string
 }
 
 /**

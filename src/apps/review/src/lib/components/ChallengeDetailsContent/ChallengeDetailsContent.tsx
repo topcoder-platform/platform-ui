@@ -1,20 +1,22 @@
 /**
  * Challenge Details Content.
  */
-import { FC } from 'react'
+import { FC, ReactNode, useContext, useMemo } from 'react'
 
 import { ActionLoading } from '~/apps/admin/src/lib'
 
-import { MappingReviewAppeal, Screening, SubmissionInfo } from '../../models'
+import { ChallengeDetailContext } from '../../contexts'
+import { ChallengeInfo, MappingReviewAppeal, Screening, SubmissionInfo } from '../../models'
 import {
     useDownloadSubmission,
     useDownloadSubmissionProps,
-} from '../../hooks'
+    useRole, useRoleProps } from '../../hooks'
 import {
     useFetchChallengeResults,
     useFetchChallengeResultsProps,
 } from '../../hooks/useFetchChallengeResults'
-import { ITERATIVE_REVIEW } from '../../../config/index.config'
+import { ITERATIVE_REVIEW, SUBMITTER } from '../../../config/index.config'
+import { TableNoRecord } from '../TableNoRecord'
 
 import TabContentApproval from './TabContentApproval'
 import TabContentCheckpoint from './TabContentCheckpoint'
@@ -29,6 +31,7 @@ interface Props {
     isLoadingSubmission: boolean
     screening: Screening[]
     checkpoint: Screening[]
+    checkpointReview: Screening[]
     review: SubmissionInfo[]
     submitterReviews: SubmissionInfo[]
     approvalReviews: SubmissionInfo[]
@@ -38,7 +41,19 @@ interface Props {
     selectedPhaseId?: string
 }
 
+// Internal wrapper to match tab layout spacing
+const TabContentWrapper = (props: { children: ReactNode }): JSX.Element => <>{props.children}</>
+
+// Lightweight wrapper to reuse existing empty-state style
+const TabContentPlaceholder = (props: { message: string }): JSX.Element => (
+    <TabContentWrapper>
+        <TableNoRecord message={props.message} />
+    </TabContentWrapper>
+)
+
 export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
+    const { challengeInfo }: { challengeInfo?: ChallengeInfo } = useContext(ChallengeDetailContext)
+    const { actionChallengeRole }: useRoleProps = useRole()
     const {
         isLoading: isDownloadingSubmission,
         isLoadingBool: isDownloadingSubmissionBool,
@@ -49,109 +64,145 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
         projectResults,
     }: useFetchChallengeResultsProps = useFetchChallengeResults(props.review)
 
+    // Determine if the selected tab corresponds to a phase that hasn't opened yet
+    const selectedPhase = useMemo(
+        () => (props.selectedPhaseId
+            ? (challengeInfo?.phases || []).find(p => p.id === props.selectedPhaseId)
+            : undefined),
+        [challengeInfo?.phases, props.selectedPhaseId],
+    )
+    const isFuturePhaseForSubmitter = useMemo(() => {
+        if (!props.isActiveChallenge) return false
+        if (actionChallengeRole !== SUBMITTER) return false
+        if (!selectedPhase) return false
+        const isOpen = Boolean((selectedPhase as { isOpen?: boolean }).isOpen)
+        const hasStarted = Boolean(selectedPhase.actualStartDate)
+        // If phase is not open and hasn't actually started, consider it future
+        if (!isOpen && !hasStarted) return true
+        // Fallback to scheduled start in the future if available
+        const startMs = Date.parse(selectedPhase.actualStartDate || selectedPhase.scheduledStartDate || '')
+        if (Number.isFinite(startMs)) {
+            return startMs > Date.now()
+        }
+
+        return false
+    }, [actionChallengeRole, selectedPhase, props.isActiveChallenge])
+    const unopenedPhaseMessage = useMemo(() => {
+        if (!selectedPhase) return undefined
+        const name = (selectedPhase.name || props.selectedTab || 'selected').toLowerCase()
+        return `The ${name} phase hasn't opened yet.`
+    }, [selectedPhase, props.selectedTab])
+
     return (
         <>
-            {(() => {
-                if (props.selectedTab === 'Registration') {
-                    return <TabContentRegistration />
-                }
+            {isFuturePhaseForSubmitter ? (
+                <TabContentPlaceholder message={unopenedPhaseMessage || "This phase hasn't opened yet."} />
+            ) : (
+                (() => {
+                    if (props.selectedTab === 'Registration') {
+                        return <TabContentRegistration />
+                    }
 
-                if (
-                    props.selectedTab === 'Submission / Screening'
+                    if (
+                        props.selectedTab === 'Submission / Screening'
                     || props.selectedTab === 'Submission'
                     || props.selectedTab === 'Screening'
-                ) {
-                    return (
-                        <TabContentScreening
-                            screening={props.screening}
-                            isLoadingScreening={props.isLoadingSubmission}
-                            isDownloading={isDownloadingSubmission}
-                            downloadSubmission={downloadSubmission}
-                            isActiveChallenge={props.isActiveChallenge}
-                        />
-                    )
-                }
+                    ) {
+                        return (
+                            <TabContentScreening
+                                screening={props.screening}
+                                isLoadingScreening={props.isLoadingSubmission}
+                                isDownloading={isDownloadingSubmission}
+                                downloadSubmission={downloadSubmission}
+                                isActiveChallenge={props.isActiveChallenge}
+                            />
+                        )
+                    }
 
-                if (
-                    props.selectedTab === 'Checkpoint'
+                    if (
+                        props.selectedTab === 'Checkpoint'
                     || props.selectedTab === 'Checkpoint Submission'
+                    || props.selectedTab === 'Checkpoint Screening'
                     || props.selectedTab === 'Checkpoint Review'
-                ) {
-                    return (
-                        <TabContentCheckpoint
-                            checkpoint={props.checkpoint}
-                            isLoading={props.isLoadingSubmission}
-                            isDownloading={isDownloadingSubmission}
-                            downloadSubmission={downloadSubmission}
-                        />
-                    )
-                }
+                    ) {
+                        return (
+                            <TabContentCheckpoint
+                                checkpoint={props.checkpoint}
+                                checkpointReview={props.checkpointReview}
+                                isLoading={props.isLoadingSubmission}
+                                isDownloading={isDownloadingSubmission}
+                                downloadSubmission={downloadSubmission}
+                                selectedTab={props.selectedTab}
+                            />
+                        )
+                    }
 
-                if (props.selectedTab === 'Winners') {
-                    return (
-                        <TabContentWinners
-                            isLoading={isLoadingProjectResult}
-                            projectResults={projectResults}
-                            isDownloading={isDownloadingSubmission}
-                            downloadSubmission={downloadSubmission}
-                        />
-                    )
-                }
+                    if (props.selectedTab === 'Winners') {
+                        return (
+                            <TabContentWinners
+                                isLoading={isLoadingProjectResult}
+                                projectResults={projectResults}
+                                isDownloading={isDownloadingSubmission}
+                                downloadSubmission={downloadSubmission}
+                            />
+                        )
+                    }
 
-                if (props.selectedTab === 'Approval') {
-                    return (
-                        <TabContentApproval
-                            reviews={props.approvalReviews}
-                            submitterReviews={props.submitterReviews}
-                            isLoadingReview={props.isLoadingSubmission}
-                            isDownloading={isDownloadingSubmission}
-                            downloadSubmission={downloadSubmission}
-                            isActiveChallenge={props.isActiveChallenge}
-                        />
-                    )
-                }
+                    if (props.selectedTab === 'Approval') {
+                        return (
+                            <TabContentApproval
+                                reviews={props.approvalReviews}
+                                submitterReviews={props.submitterReviews}
+                                isLoadingReview={props.isLoadingSubmission}
+                                isDownloading={isDownloadingSubmission}
+                                downloadSubmission={downloadSubmission}
+                                isActiveChallenge={props.isActiveChallenge}
+                            />
+                        )
+                    }
 
-                if (props.selectedTab === 'Post-Mortem') {
-                    return (
-                        <TabContentIterativeReview
-                            reviews={props.postMortemReviews}
-                            submitterReviews={props.submitterReviews}
-                            isLoadingReview={props.isLoadingSubmission}
-                            isDownloading={isDownloadingSubmission}
-                            downloadSubmission={downloadSubmission}
-                            isActiveChallenge={props.isActiveChallenge}
-                            columnLabel='Post-Mortem'
-                        />
-                    )
-                }
+                    if (props.selectedTab === 'Post-Mortem') {
+                        return (
+                            <TabContentIterativeReview
+                                reviews={props.postMortemReviews}
+                                submitterReviews={props.submitterReviews}
+                                isLoadingReview={props.isLoadingSubmission}
+                                isDownloading={isDownloadingSubmission}
+                                downloadSubmission={downloadSubmission}
+                                isActiveChallenge={props.isActiveChallenge}
+                                columnLabel='Post-Mortem'
+                            />
+                        )
+                    }
 
-                if (props.selectedTab.startsWith(ITERATIVE_REVIEW)) {
+                    if (props.selectedTab.startsWith(ITERATIVE_REVIEW)) {
+                        return (
+                            <TabContentIterativeReview
+                                reviews={props.review}
+                                submitterReviews={props.submitterReviews}
+                                isLoadingReview={props.isLoadingSubmission}
+                                isDownloading={isDownloadingSubmission}
+                                downloadSubmission={downloadSubmission}
+                                isActiveChallenge={props.isActiveChallenge}
+                                phaseIdFilter={props.selectedPhaseId}
+                            />
+                        )
+                    }
+
                     return (
-                        <TabContentIterativeReview
+                        <TabContentReview
+                            selectedTab={props.selectedTab}
                             reviews={props.review}
                             submitterReviews={props.submitterReviews}
                             isLoadingReview={props.isLoadingSubmission}
                             isDownloading={isDownloadingSubmission}
                             downloadSubmission={downloadSubmission}
+                            mappingReviewAppeal={props.mappingReviewAppeal}
                             isActiveChallenge={props.isActiveChallenge}
-                            phaseIdFilter={props.selectedPhaseId}
                         />
                     )
-                }
-
-                return (
-                    <TabContentReview
-                        selectedTab={props.selectedTab}
-                        reviews={props.review}
-                        submitterReviews={props.submitterReviews}
-                        isLoadingReview={props.isLoadingSubmission}
-                        isDownloading={isDownloadingSubmission}
-                        downloadSubmission={downloadSubmission}
-                        mappingReviewAppeal={props.mappingReviewAppeal}
-                        isActiveChallenge={props.isActiveChallenge}
-                    />
-                )
-            })()}
+                })()
+            )}
 
             {isDownloadingSubmissionBool && <ActionLoading />}
         </>

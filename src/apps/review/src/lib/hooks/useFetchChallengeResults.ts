@@ -155,6 +155,16 @@ const buildProjectResult = ({
         }
     })
 
+    // Compute average of individual final scores across all submissions
+    const averageFinalScoreAcrossSubmissions = evaluated.length
+        ? Math.round(
+            (
+                evaluated.reduce((sum, item) => sum + item.computedFinalScore, 0)
+                / evaluated.length
+            ) * 100,
+        ) / 100
+        : 0
+
     // Pick the submission with the highest computed final score
     const best = evaluated.reduce((bestSoFar, current) => {
         if (!bestSoFar) {
@@ -199,7 +209,7 @@ const buildProjectResult = ({
         createdAt: best.submission?.review?.createdAt
             ?? best.orderedReviews[0]?.createdAt
             ?? new Date(),
-        finalScore: best.computedFinalScore,
+        finalScore: averageFinalScoreAcrossSubmissions,
         initialScore: best.computedInitialScore,
         placement: winner.placement,
         reviews: best.orderedReviews,

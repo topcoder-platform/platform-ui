@@ -35,7 +35,8 @@ import {
     ReviewAppContextModel,
     SelectOption,
 } from '../../../lib/models'
-import { REVIEWER, TAB } from '../../../config/index.config'
+import { REVIEWER, SUBMITTER, TAB } from '../../../config/index.config'
+import { isAppealsPhase } from '../../../lib/utils'
 import {
     activeReviewAssigmentsRouteId,
     pastReviewAssignmentsRouteId,
@@ -81,34 +82,60 @@ const buildPhaseTabs = (
         return n.includes('iterative review')
     }
 
-    // Sort phases by start date; when Registration and Submission start at the same time,
-    // put Registration first (to the left).
-    let sorted = [...phases].sort((a, b) => {
-        const aStart = new Date(
-            a.actualStartDate || a.scheduledStartDate || '',
-        )
+    // Common date-based comparator used as a fallback
+    const dateComparator = (a: typeof phases[number], b: typeof phases[number]): number => {
+        const aStart = new Date(a.actualStartDate || a.scheduledStartDate || '')
             .getTime()
-        const bStart = new Date(
-            b.actualStartDate || b.scheduledStartDate || '',
-        )
+        const bStart = new Date(b.actualStartDate || b.scheduledStartDate || '')
             .getTime()
-
         if (!Number.isNaN(aStart) && !Number.isNaN(bStart)) {
             if (aStart !== bStart) return aStart - bStart
-
-            // Tie-breaker when both open at the same time
+            // Tie-breaker when both open at the same time: Registration before Submission
             const aReg = isExactRegistration(a.name)
             const bReg = isExactRegistration(b.name)
             const aSub = isExactSubmission(a.name)
             const bSub = isExactSubmission(b.name)
-
-            // If one is Registration and the other is Submission, Registration comes first
             if (aReg && bSub) return -1
             if (aSub && bReg) return 1
         }
 
-        // Fallback: keep original relative order
         return 0
+    }
+
+    // When checkpoint phases exist, enforce a specific visual order for tabs
+    const explicitOrderList = [
+        'registration',
+        'checkpoint submission',
+        'checkpoint screening',
+        'checkpoint review',
+        'submission',
+        'screening',
+        'review',
+        'approval',
+    ]
+    const explicitOrder = new Map<string, number>(
+        explicitOrderList.map((n, i) => [n, i]),
+    )
+    const hasCheckpointPhases = phases.some(p => {
+        const n = norm(p.name)
+        return n === 'checkpoint submission' || n === 'checkpoint screening' || n === 'checkpoint review'
+    })
+
+    let sorted = [...phases].sort((a, b) => {
+        const aName = norm(a.name)
+        const bName = norm(b.name)
+
+        if (hasCheckpointPhases) {
+            const aRank = explicitOrder.has(aName) ? (explicitOrder.get(aName) as number) : Number.POSITIVE_INFINITY
+            const bRank = explicitOrder.has(bName) ? (explicitOrder.get(bName) as number) : Number.POSITIVE_INFINITY
+
+            if (aRank !== bRank) return aRank - bRank
+            // If both are outside the explicit list, or same rank, fall back to date ordering
+            return dateComparator(a, b)
+        }
+
+        // Default behavior (no checkpoint phases): date ordering with tie-breakers
+        return dateComparator(a, b)
     })
 
     // For First2Finish: show any Iterative Review phases AFTER Registration and Submission.
@@ -179,7 +206,8 @@ const findPhaseByTabLabel = (
     const isIterativeReview = (name?: string): boolean => norm(name)
         .includes('iterative review')
 
-    let sorted = [...phases].sort((a, b) => {
+    // Shared date-based comparator fallback
+    const dateComparator = (a: typeof phases[number], b: typeof phases[number]): number => {
         const aStart = new Date(a.actualStartDate || a.scheduledStartDate || '')
             .getTime()
         const bStart = new Date(b.actualStartDate || b.scheduledStartDate || '')
@@ -195,6 +223,37 @@ const findPhaseByTabLabel = (
         }
 
         return 0
+    }
+
+    // Keep ordering logic aligned with buildPhaseTabs when checkpoint phases exist
+    const explicitOrderList = [
+        'registration',
+        'checkpoint submission',
+        'checkpoint screening',
+        'checkpoint review',
+        'submission',
+        'screening',
+        'review',
+        'approval',
+    ]
+    const explicitOrder = new Map<string, number>(explicitOrderList.map((n, i) => [n, i]))
+    const hasCheckpointPhases = phases.some(p => {
+        const n = norm(p.name)
+        return n === 'checkpoint submission' || n === 'checkpoint screening' || n === 'checkpoint review'
+    })
+
+    let sorted = [...phases].sort((a, b) => {
+        const aName = norm(a.name)
+        const bName = norm(b.name)
+        if (hasCheckpointPhases) {
+            const aRank = explicitOrder.has(aName) ? (explicitOrder.get(aName) as number) : Number.POSITIVE_INFINITY
+            const bRank = explicitOrder.has(bName) ? (explicitOrder.get(bName) as number) : Number.POSITIVE_INFINITY
+            if (aRank !== bRank) return aRank - bRank
+
+            return dateComparator(a, b)
+        }
+
+        return dateComparator(a, b)
     })
 
     if (opts?.isF2F) {
@@ -267,6 +326,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         reviewProgress,
         screening,
         checkpoint,
+        checkpointReview,
         approvalReviews,
         postMortemReviews,
         mappingReviewAppeal,
@@ -294,6 +354,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
     )
     const [isSavingPhaseNotifications, setIsSavingPhaseNotifications] = useState(false)
 
+    // eslint-disable-next-line complexity
     useEffect(() => {
         setPhaseNotificationsEnabled(currentUserResource?.phaseChangeNotifications ?? false)
     }, [currentUserResource?.phaseChangeNotifications])
@@ -396,6 +457,40 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         setSearchParams({ tab: kebabCase(tab) })
     }, [setSearchParams])
 
+    // Redirect: if user is on a past-challenges route but the challenge is ACTIVE,
+    // send them to the corresponding active-challenges route, preserving the rest of the path and query.
+    useEffect(() => {
+        if (!hasChallengeInfo || !challengeId || !isPastReviewDetail) {
+            return
+        }
+
+        const isActiveChallenge = challengeStatus === 'ACTIVE'
+        if (!isActiveChallenge) {
+            return
+        }
+
+        const pastPrefix = `/${pastReviewAssignmentsRouteId}/`
+        const activePrefix = `/${activeReviewAssigmentsRouteId}/`
+        const idx = location.pathname.indexOf(pastPrefix)
+        if (idx < 0) {
+            return
+        }
+
+        const before = location.pathname.slice(0, idx)
+        const after = location.pathname.slice(idx + pastPrefix.length)
+        const targetPath = `${before}${activePrefix}${after}`
+        const targetUrl = `${targetPath}${searchParamsString ? `?${searchParamsString}` : ''}`
+        navigate(targetUrl, { replace: true })
+    }, [
+        challengeId,
+        challengeStatus,
+        hasChallengeInfo,
+        isPastReviewDetail,
+        location.pathname,
+        navigate,
+        searchParamsString,
+    ])
+
     useEffect(() => {
         if (!hasChallengeInfo || !challengeId || isPastReviewDetail) {
             return
@@ -475,6 +570,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         }
     }, [searchParams, tabItems])
 
+    // eslint-disable-next-line complexity
     useEffect(() => {
         if (!challengeInfo) return
         const typeName = challengeInfo?.type?.name?.toLowerCase?.() || ''
@@ -498,7 +594,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
             }
         }
 
-        // Flag tab items that correspond to an open phase with a pending review
+        // Flag tab items that correspond to an open phase with a pending review (reviewers)
         const flagged = items.map(it => {
             const phase = findPhaseByTabLabel(
                 challengeInfo?.phases ?? [],
@@ -514,8 +610,29 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
             return needsAttention ? { ...it, warning: true } : it
         })
 
-        setTabItems(flagged)
-    }, [challengeInfo, actionChallengeRole, review])
+        // Submitter view: if Appeals is open and the member has a review they can appeal,
+        // add a warning indicator to the Appeals tab.
+        let finalItems = flagged
+        if (actionChallengeRole === SUBMITTER) {
+            const appealsOpen = isAppealsPhase(challengeInfo)
+            if (appealsOpen) {
+                const hasAnyReview = (submitterReviews ?? []).some(
+                    s => (
+                        (s.reviews && s.reviews.length > 0)
+                        || Boolean(s.review?.id)
+                    ),
+                )
+                if (hasAnyReview) {
+                    finalItems = flagged.map(it => (it.value.trim()
+                        .toLowerCase() === 'appeals'
+                        ? { ...it, warning: true }
+                        : it))
+                }
+            }
+        }
+
+        setTabItems(finalItems)
+    }, [challengeInfo, actionChallengeRole, review, submitterReviews])
 
     // Determine if current user should see the Resources section
     const hasCopilotRole = useMemo(
@@ -613,6 +730,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                             isLoadingSubmission={isLoadingSubmission}
                             screening={screening}
                             checkpoint={checkpoint}
+                            checkpointReview={checkpointReview}
                             review={review}
                             submitterReviews={submitterReviews}
                             approvalReviews={approvalReviews}

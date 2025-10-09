@@ -11,9 +11,11 @@ import TableCheckpointSubmissions from '../TableCheckpointSubmissions/TableCheck
 
 interface Props {
     checkpoint: Screening[]
+    checkpointReview?: Screening[]
     isLoading: boolean
     isDownloading: IsRemovingType
     downloadSubmission: (submissionId: string) => void
+    selectedTab?: string
 }
 
 export const TabContentCheckpoint: FC<Props> = (props: Props) => {
@@ -21,11 +23,18 @@ export const TabContentCheckpoint: FC<Props> = (props: Props) => {
         return <TableLoading />
     }
 
+    const tab = (props.selectedTab || '').toLowerCase()
+    const isScreening = tab === 'checkpoint screening' || tab.startsWith('checkpoint screening ')
+    const isReview = tab === 'checkpoint review' || tab.startsWith('checkpoint review ')
+    const mode: 'submission' | 'screening' | 'review' = isReview ? 'review' : (isScreening ? 'screening' : 'submission')
+    const data = isReview ? (props.checkpointReview ?? []) : props.checkpoint
+
     return (
         <TableCheckpointSubmissions
-            datas={props.checkpoint}
+            datas={data}
             isDownloading={props.isDownloading}
             downloadSubmission={props.downloadSubmission}
+            mode={mode}
         />
     )
 }

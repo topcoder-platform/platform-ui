@@ -61,6 +61,11 @@ export function aggregateSubmissionReviews({
 
     const grouped = new Map<string, AggregatedSubmissionReviews>()
     const seenReviewIdsBySubmission = new Map<string, Set<string>>()
+    const discoveredResourceIds = new Set<string>()
+    const reviewerHandleByResourceId = reviewers.reduce<Record<string, string | undefined>>((acc, r) => {
+        acc[r.id] = r.memberHandle
+        return acc
+    }, {})
 
     forEach(submissions, submission => {
         if (!grouped.has(submission.id)) {
@@ -93,6 +98,10 @@ export function aggregateSubmissionReviews({
         }
 
         const reviewerInfo = resourceId ? reviewerByResourceId[resourceId] : undefined
+        if (resourceId) {
+            discoveredResourceIds.add(resourceId)
+        }
+
         const reviewDate = reviewInfo?.reviewDate
             ? new Date(reviewInfo.reviewDate)
             : reviewInfo?.updatedAt
@@ -111,6 +120,10 @@ export function aggregateSubmissionReviews({
         const finalReviewerHandle = reviewHandle
             ?? resultHandle
             ?? resourceHandle
+        if (resourceId && !reviewerHandleByResourceId[resourceId]) {
+            reviewerHandleByResourceId[resourceId] = finalReviewerHandle
+        }
+
         const finalReviewerHandleColor = reviewInfo?.reviewerHandleColor
             ?? matchingReviewResult?.reviewerHandleColor
             ?? reviewerInfo?.handleColor
@@ -179,7 +192,75 @@ export function aggregateSubmissionReviews({
 
     const aggregatedRows: AggregatedSubmissionReviews[] = []
 
+    // Establish a deterministic reviewer order across all submissions.
+    // Prefer the explicit reviewers list; otherwise fall back to discovered resourceIds.
+    const orderedResourceIds: string[] = (() => {
+        const base: string[] = reviewers.length
+            ? reviewers
+                .slice()
+                .sort((a, b) => (
+                    (a.memberHandle || '')
+                        .localeCompare(
+                            b.memberHandle || '',
+                            undefined,
+                            { sensitivity: 'base' },
+                        )
+                    || a.id.localeCompare(b.id)
+                ))
+                .map(r => r.id)
+            : Array.from(discoveredResourceIds)
+                .slice()
+                .sort((a, b) => (reviewerHandleByResourceId[a] || a)
+                    .localeCompare(reviewerHandleByResourceId[b] || b, undefined, { sensitivity: 'base' }))
+
+        // Ensure any discovered ids that aren't in base are appended deterministically
+        const baseSet = new Set(base)
+        const extras = Array.from(discoveredResourceIds)
+            .filter(id => !baseSet.has(id))
+            .sort((a, b) => (reviewerHandleByResourceId[a] || a)
+                .localeCompare(reviewerHandleByResourceId[b] || b, undefined, { sensitivity: 'base' }))
+
+        return [...base, ...extras]
+    })()
+
     grouped.forEach(group => {
+        // Reorder reviews to match the deterministic reviewer order and
+        // insert placeholders for missing reviewers so columns align.
+        const byResourceId: Record<string, AggregatedReviewDetail> = {}
+        group.reviews.forEach(r => {
+            if (r.resourceId) {
+                byResourceId[r.resourceId] = r
+            }
+        })
+
+        const ordered: AggregatedReviewDetail[] = []
+        orderedResourceIds.forEach(id => {
+            if (byResourceId[id]) {
+                ordered.push(byResourceId[id])
+            } else {
+                ordered.push({
+                    finishedAppeals: 0,
+                    resourceId: id,
+                    totalAppeals: 0,
+                    unresolvedAppeals: 0,
+                })
+            }
+        })
+
+        // Append any reviews without a resourceId (rare) in a deterministic way
+        const unmatched = group.reviews
+            .filter(r => !r.resourceId)
+            .slice()
+            .sort((a, b) => (
+                (a.reviewerHandle || '')
+                    .localeCompare(
+                        b.reviewerHandle || '',
+                        undefined,
+                        { sensitivity: 'base' },
+                    )
+            ))
+
+        group.reviews = [...ordered, ...unmatched]
         const scoredReviews = group.reviews.filter(
             review => typeof review.finalScore === 'number'
                 && Number.isFinite(review.finalScore),

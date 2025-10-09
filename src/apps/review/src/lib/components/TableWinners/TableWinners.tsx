@@ -144,11 +144,18 @@ export const TableWinners: FC<Props> = (props: Props) => {
             },
             {
                 label: 'Final Review Score',
-                renderer: (data: ProjectResult) => (
-                    <Link to={reviewTabUrl} className={styles.textBlue}>
-                        {data.finalScore}
-                    </Link>
-                ),
+                renderer: (data: ProjectResult) => {
+                    const formatted = (typeof data.finalScore === 'number'
+                        && Number.isFinite(data.finalScore))
+                        ? data.finalScore.toFixed(2)
+                        : `${data.finalScore}`
+
+                    return (
+                        <Link to={reviewTabUrl} className={styles.textBlue}>
+                            {formatted}
+                        </Link>
+                    )
+                },
                 type: 'element',
             },
             ...(firstSubmission?.reviews ?? [])
