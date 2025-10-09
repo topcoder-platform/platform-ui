@@ -3,4 +3,6 @@ export type SelectOption = {
   label: string;
   // Optional visual indicator for warnings (e.g., pending action)
   warning?: boolean;
+  // Optional visual indicator for completion (e.g., obligations completed)
+  completed?: boolean;
 };

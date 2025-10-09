@@ -102,13 +102,23 @@
 }
 
 .warningIcon {
-    display: inline-block;
+    // Override the global .icon-warning (which is display: block)
+    display: inline-block !important;
     vertical-align: middle;
     margin-left: 6px;
     height: 16px;
     width: 16px;
     position: relative;
     top: -1px;
+}
+
+.completedIcon {
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 6px;
+    height: 16px;
+    width: 16px;
+    color: var(--Actived); // Use platform accent as green
 }
 
 .open {

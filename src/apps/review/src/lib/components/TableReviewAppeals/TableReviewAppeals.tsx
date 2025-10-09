@@ -1010,8 +1010,15 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                         )
                     }
 
+                    // Determine remaining appeals for this submission/review
+                    const appealInfo = mappingReviewAppeal[data.review.id]
+                    const total = appealInfo?.totalAppeals ?? 0
+                    const finished = appealInfo?.finishAppeals ?? 0
+                    const remaining = Math.max(total - finished, 0)
+
                     // Only render the action when the Appeals Response phase is open
-                    if (isAppealsResponsePhaseOpen) {
+                    // and there are remaining appeals for this reviewer on this submission
+                    if (isAppealsResponsePhaseOpen && remaining > 0) {
                         return (
                             <Link
                                 to={`./../scorecard-details/${data.id}/review/${resourceId}`}

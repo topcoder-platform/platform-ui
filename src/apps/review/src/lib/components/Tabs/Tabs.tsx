@@ -1,13 +1,13 @@
+/* eslint-disable ordered-imports/ordered-imports */
 /**
  * Tabs.
  */
-import { FC, ReactNode, useCallback, useRef, useState } from 'react'
-import classNames from 'classnames'
-
+import type { FC, ReactNode } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { useClickOutside } from '~/libs/shared/lib/hooks'
-
+import { IconCheck } from '~/libs/ui'
+import classNames from 'classnames'
 import { SelectOption } from '../../models'
-
 import styles from './Tabs.module.scss'
 
 interface Props {
@@ -56,6 +56,8 @@ export const Tabs: FC<Props> = (props: Props) => {
                         {item.warning ? (
                             // Global class 'icon-warning' defined in review app styles
                             <span className={classNames('icon-warning', styles.warningIcon)} />
+                        ) : item.completed ? (
+                            <IconCheck className={styles.completedIcon} />
                         ) : undefined}
                     </button>
                 ))}

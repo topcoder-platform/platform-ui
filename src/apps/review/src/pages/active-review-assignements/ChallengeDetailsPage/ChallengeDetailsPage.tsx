@@ -32,11 +32,12 @@ import { updatePhaseChangeNotifications } from '../../../lib/services'
 import {
     BackendResource,
     ChallengeDetailContextModel,
+    ChallengeInfo,
     ReviewAppContextModel,
     SelectOption,
 } from '../../../lib/models'
 import { REVIEWER, SUBMITTER, TAB } from '../../../config/index.config'
-import { isAppealsPhase } from '../../../lib/utils'
+import { isAppealsPhase, isAppealsResponsePhase } from '../../../lib/utils'
 import {
     activeReviewAssigmentsRouteId,
     pastReviewAssignmentsRouteId,
@@ -62,6 +63,143 @@ const insertTabIfMissing = (
     if (!tabs.some(t => t.value === value)) {
         tabs.splice(insertIdx, 0, { label, value })
     }
+}
+
+// Compute a Set of this member's reviewer resource IDs (excluding iterative roles)
+const getReviewerResourceIds = (myResources?: Array<{ id?: string; roleName?: string }> | null): Set<string> => new Set(
+    (myResources || [])
+        .filter(r => (r.roleName || '')
+            .toLowerCase()
+            .includes('reviewer')
+            && !(r.roleName || '')
+                .toLowerCase()
+                .includes('iterative'))
+        .map(r => r.id as string)
+        .filter(Boolean) as string[],
+)
+
+// Compute a Set of this member's approver resource IDs
+const getApproverResourceIds = (myResources?: Array<{ id?: string; roleName?: string }> | null): Set<string> => new Set(
+    (myResources || [])
+        .filter(r => (r.roleName || '')
+            .toLowerCase()
+            .includes('approver'))
+        .map(r => r.id as string)
+        .filter(Boolean) as string[],
+)
+
+// Determine review completion flags for tabs (any assignment and any pending)
+const computeReviewCompletion = (
+    review: Array<{ review?: { id?: string; status?: string | null; resourceId?: string } }> | undefined,
+    reviewerIds: Set<string>,
+): { hasAnyReviewAssignment: boolean; hasAnyPendingReview: boolean } => {
+    let hasAnyReviewAssignment = false
+    let hasAnyPendingReview = false
+
+    if (reviewerIds.size > 0) {
+        for (const s of review || []) {
+            const r = s.review
+            const isMine = Boolean(r?.id)
+                && Boolean(r?.resourceId)
+                && reviewerIds.has(r?.resourceId as string)
+            if (isMine) {
+                hasAnyReviewAssignment = true
+                const status = (r?.status || '').toUpperCase()
+                if (status !== 'COMPLETED') {
+                    hasAnyPendingReview = true
+                }
+            }
+        }
+    }
+
+    return { hasAnyPendingReview, hasAnyReviewAssignment }
+}
+
+// Determine approval completion flags for tabs (any assignment and any pending)
+const computeApprovalCompletion = (
+    approvalReviews: Array<{ review?: { id?: string; status?: string | null; resourceId?: string } }> | undefined,
+    approverIds: Set<string>,
+): { hasAnyApprovalAssignment: boolean; hasAnyPendingApproval: boolean } => {
+    let hasAnyApprovalAssignment = false
+    let hasAnyPendingApproval = false
+
+    if (approverIds.size > 0) {
+        for (const s of approvalReviews || []) {
+            const r = s.review
+            const isMine = Boolean(r?.id)
+                && Boolean(r?.resourceId)
+                && approverIds.has(r?.resourceId as string)
+            if (isMine) {
+                hasAnyApprovalAssignment = true
+                const status = (r?.status || '').toUpperCase()
+                if (status !== 'COMPLETED') {
+                    hasAnyPendingApproval = true
+                }
+            }
+        }
+    }
+
+    return { hasAnyApprovalAssignment, hasAnyPendingApproval }
+}
+
+// Determine whether there are appeals responses remaining for the reviewer and if complete
+const computeAppealsResponse = (
+    review: Array<{ review?: { id?: string; resourceId?: string } }> | undefined,
+    reviewerIds: Set<string>,
+    mappingReviewAppeal: Record<string, { totalAppeals?: number; finishAppeals?: number }> | undefined,
+    challengeInfo: ChallengeInfo | undefined,
+): { hasAppealsResponseObligation: boolean; appealsResponseComplete: boolean } => {
+    let hasAppealsResponseObligation = false
+    let appealsResponseComplete = false
+
+    if (reviewerIds.size > 0 && isAppealsResponsePhase(challengeInfo)) {
+        let remainingFound = false
+        let anyReviewFound = false
+
+        for (const s of review || []) {
+            const r = s.review
+            const belongsToMe = Boolean(r?.id)
+                && (!r?.resourceId || reviewerIds.has(r?.resourceId as string))
+            if (belongsToMe) {
+                anyReviewFound = true
+                const stat = r?.id ? mappingReviewAppeal?.[r.id] : undefined
+                const total = stat?.totalAppeals ?? 0
+                const finished = stat?.finishAppeals ?? 0
+                const remaining = Math.max(total - finished, 0)
+                if (remaining > 0) {
+                    remainingFound = true
+                }
+            }
+        }
+
+        hasAppealsResponseObligation = anyReviewFound
+        appealsResponseComplete = anyReviewFound && !remainingFound
+    }
+
+    return { appealsResponseComplete, hasAppealsResponseObligation }
+}
+
+// Determine completion flags for generic screening-like phases using Screening[] data
+const computePhaseCompletionFromScreenings = (
+    rows: Array<{ myReviewResourceId?: string; myReviewStatus?: string }> | undefined,
+    myResourceIds: Set<string>,
+): { hasAnyAssignment: boolean; hasAnyPending: boolean } => {
+    let hasAnyAssignment = false
+    let hasAnyPending = false
+    if (myResourceIds.size > 0) {
+        for (const s of rows || []) {
+            const rid = s.myReviewResourceId
+            if (rid && myResourceIds.has(rid)) {
+                hasAnyAssignment = true
+                const status = (s.myReviewStatus || '').toUpperCase()
+                if (status !== 'COMPLETED') {
+                    hasAnyPending = true
+                }
+            }
+        }
+    }
+
+    return { hasAnyAssignment, hasAnyPending }
 }
 
 // Build tabs directly from the challenge phases (one tab per phase)
@@ -582,37 +720,140 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
             { isF2F },
         )
 
-        // Compute phases with pending review assignments for current user (reviewer roles)
-        const pendingPhaseIds = new Set<string>()
-        if (actionChallengeRole === REVIEWER) {
-            for (const s of review) {
+        // Only add indicators on active-challenges view
+        if (isPastReviewDetail) {
+            setTabItems(items)
+            return
+        }
+
+        // Determine phase ids by type for quick lookup
+        const phasesByName = new Map<string, string[]>();
+        (challengeInfo?.phases ?? []).forEach((p: { id?: string; name?: string }) => {
+            const n = (p.name || '').trim()
+                .toLowerCase()
+            const ids = phasesByName.get(n) || []
+            if (p.id) ids.push(p.id)
+            phasesByName.set(n, ids)
+        })
+
+        const myReviewerResourceIds = new Set(
+            (myResources || [])
+                .filter(r => {
+                    const n = (r.roleName || '').toLowerCase()
+                    return n.includes('reviewer') && !n.includes('iterative')
+                })
+                .map(r => r.id),
+        )
+        const myScreenerResourceIds = new Set(
+            (myResources || [])
+                .filter(r => {
+                    const n = (r.roleName || '').toLowerCase()
+                    return n.includes('screener') && !n.includes('checkpoint')
+                })
+                .map(r => r.id),
+        )
+        const myCheckpointScreenerResourceIds = new Set(
+            (myResources || [])
+                .filter(r => (r.roleName || '').toLowerCase() === 'checkpoint screener')
+                .map(r => r.id),
+        )
+        const myCheckpointReviewerResourceIds = new Set(
+            (myResources || [])
+                .filter(r => (r.roleName || '').toLowerCase() === 'checkpoint reviewer')
+                .map(r => r.id),
+        )
+
+        // Pending state per phase
+        const pendingReview = (() => {
+            if (myReviewerResourceIds.size === 0) return false
+            // Treat not-started (no id) or non-COMPLETED as pending
+            return (review || []).some(s => {
                 const r = s.review
-                const status = (r?.status || '').toUpperCase()
-                if (r?.id && status !== 'SUBMITTED' && status !== 'COMPLETED' && r.phaseId) {
-                    pendingPhaseIds.add(r.phaseId)
-                }
+                if (!r) return false
+                if (!r.resourceId || !myReviewerResourceIds.has(r.resourceId)) return false
+                const status = (r.status || '').toUpperCase()
+                return status !== 'COMPLETED'
+            })
+        })()
+
+        const pendingScreening = (() => {
+            if (myScreenerResourceIds.size === 0) return false
+            return (screening || []).some(s => (
+                s.myReviewResourceId && myScreenerResourceIds.has(s.myReviewResourceId)
+                && ((s.myReviewStatus || '').toUpperCase() !== 'COMPLETED')
+            ))
+        })()
+
+        const pendingCheckpointScreening = (() => {
+            if (myCheckpointScreenerResourceIds.size === 0) return false
+            return (checkpoint || []).some(s => (
+                s.myReviewResourceId && myCheckpointScreenerResourceIds.has(s.myReviewResourceId)
+                && ((s.myReviewStatus || '').toUpperCase() !== 'COMPLETED')
+            ))
+        })()
+
+        const pendingCheckpointReview = (() => {
+            if (myCheckpointReviewerResourceIds.size === 0) return false
+            return (checkpointReview || []).some(s => (
+                s.myReviewResourceId && myCheckpointReviewerResourceIds.has(s.myReviewResourceId)
+                && ((s.myReviewStatus || '').toUpperCase() !== 'COMPLETED')
+            ))
+        })()
+
+        // Start with base items; add warnings per label if the viewer has obligations pending
+        const flagged = items.map(it => {
+            const label = it.value.trim()
+                .toLowerCase()
+            if (label === 'review' && pendingReview) {
+                return { ...it, warning: true }
+            }
+
+            if (label === 'screening' && pendingScreening) {
+                return { ...it, warning: true }
+            }
+
+            if (label === 'checkpoint screening' && pendingCheckpointScreening) {
+                return { ...it, warning: true }
+            }
+
+            if (label === 'checkpoint review' && pendingCheckpointReview) {
+                return { ...it, warning: true }
+            }
+
+            return it
+        })
+
+        // Reviewer view: if current phase is Appeals Response and there are any remaining
+        // appeal responses for this reviewer, flag the 'Appeals Response' tab.
+        let finalItems = flagged
+        if (actionChallengeRole === REVIEWER && isAppealsResponsePhase(challengeInfo)) {
+
+            // Compute whether any of my reviews still have remaining appeals to respond to
+            const hasRemainingAppealResponses = (review || []).some(s => {
+                const r = s.review
+                if (!r?.id) return false
+                if (r.resourceId && !myReviewerResourceIds.has(r.resourceId)) return false
+                const stat = (mappingReviewAppeal?.[r.id])
+                const total = stat?.totalAppeals ?? 0
+                const finished = stat?.finishAppeals ?? 0
+                const remaining = Math.max(total - finished, 0)
+                return remaining > 0
+            })
+
+            if (hasRemainingAppealResponses) {
+                finalItems = flagged.map(it => {
+                    const normalized = it.value
+                        .trim()
+                        .toLowerCase()
+                    return normalized === 'appeals response'
+                        ? { ...it, warning: true }
+                        : it
+                })
             }
         }
 
-        // Flag tab items that correspond to an open phase with a pending review (reviewers)
-        const flagged = items.map(it => {
-            const phase = findPhaseByTabLabel(
-                challengeInfo?.phases ?? [],
-                it.value,
-                { isF2F },
-            )
-            const isOpen = Boolean((phase as { isOpen?: boolean } | undefined)?.isOpen)
-            const needsAttention = Boolean(
-                (phase as { id?: string } | undefined)?.id
-                && pendingPhaseIds.has((phase as { id?: string } | undefined)?.id as string)
-                && isOpen,
-            )
-            return needsAttention ? { ...it, warning: true } : it
-        })
-
         // Submitter view: if Appeals is open and the member has a review they can appeal,
         // add a warning indicator to the Appeals tab.
-        let finalItems = flagged
         if (actionChallengeRole === SUBMITTER) {
             const appealsOpen = isAppealsPhase(challengeInfo)
             if (appealsOpen) {
@@ -623,7 +864,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                     ),
                 )
                 if (hasAnyReview) {
-                    finalItems = flagged.map(it => (it.value.trim()
+                    finalItems = finalItems.map(it => (it.value.trim()
                         .toLowerCase() === 'appeals'
                         ? { ...it, warning: true }
                         : it))
@@ -632,7 +873,123 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         }
 
         setTabItems(finalItems)
-    }, [challengeInfo, actionChallengeRole, review, submitterReviews])
+    }, [challengeInfo, actionChallengeRole, review, submitterReviews, myResources, mappingReviewAppeal])
+
+    // Add completion indicators for active challenges on relevant tabs
+    // eslint-disable-next-line complexity
+    useEffect(() => {
+        if (!challengeInfo || !tabItems.length || isPastReviewDetail) return
+
+        const norm = (s: string): string => s.trim()
+            .toLowerCase()
+
+        const reviewerIds = getReviewerResourceIds(myResources)
+        const approverIds = getApproverResourceIds(myResources)
+        const {
+            hasAnyReviewAssignment,
+            hasAnyPendingReview,
+        }: { hasAnyReviewAssignment: boolean; hasAnyPendingReview: boolean } = computeReviewCompletion(
+            review,
+            reviewerIds,
+        )
+        const {
+            hasAnyApprovalAssignment,
+            hasAnyPendingApproval,
+        }: { hasAnyApprovalAssignment: boolean; hasAnyPendingApproval: boolean } = computeApprovalCompletion(
+            approvalReviews,
+            approverIds,
+        )
+        const {
+            hasAppealsResponseObligation,
+            appealsResponseComplete,
+        }: { hasAppealsResponseObligation: boolean; appealsResponseComplete: boolean } = computeAppealsResponse(
+            review,
+            reviewerIds,
+            mappingReviewAppeal as Record<string, { totalAppeals?: number; finishAppeals?: number }> | undefined,
+            challengeInfo,
+        )
+
+        // Compute completion for Screening/Checkpoint phases using my assignment markers
+        const myScreenerIds = new Set(
+            (myResources || [])
+                .filter(r => {
+                    const n = (r.roleName || '').toLowerCase()
+                    return n.includes('screener') && !n.includes('checkpoint')
+                })
+                .map(r => r.id as string),
+        )
+        const myCheckpointScreenerIds = new Set(
+            (myResources || [])
+                .filter(r => (r.roleName || '').toLowerCase() === 'checkpoint screener')
+                .map(r => r.id as string),
+        )
+        const myCheckpointReviewerIds = new Set(
+            (myResources || [])
+                .filter(r => (r.roleName || '').toLowerCase() === 'checkpoint reviewer')
+                .map(r => r.id as string),
+        )
+
+        const {
+            hasAnyAssignment: hasAnyScreeningAssignment,
+            hasAnyPending: hasAnyPendingScreening,
+        }: { hasAnyAssignment: boolean; hasAnyPending: boolean }
+            = computePhaseCompletionFromScreenings(screening, myScreenerIds)
+        const {
+            hasAnyAssignment: hasAnyCheckpointScreeningAssignment,
+            hasAnyPending: hasAnyPendingCheckpointScreening,
+        }: { hasAnyAssignment: boolean; hasAnyPending: boolean }
+            = computePhaseCompletionFromScreenings(checkpoint, myCheckpointScreenerIds)
+        const {
+            hasAnyAssignment: hasAnyCheckpointReviewAssignment,
+            hasAnyPending: hasAnyPendingCheckpointReview,
+        }: { hasAnyAssignment: boolean; hasAnyPending: boolean }
+            = computePhaseCompletionFromScreenings(checkpointReview, myCheckpointReviewerIds)
+
+        const iterativeReviewCompleted = hasAnyReviewAssignment && !hasAnyPendingReview
+        const completedLabels = new Set<string>([
+            ...(iterativeReviewCompleted ? ['review'] : []),
+            ...((hasAppealsResponseObligation && appealsResponseComplete) ? ['appeals response'] : []),
+            ...((hasAnyApprovalAssignment && !hasAnyPendingApproval) ? ['approval'] : []),
+            ...((hasAnyScreeningAssignment && !hasAnyPendingScreening) ? ['screening'] : []),
+            ...((hasAnyCheckpointScreeningAssignment && !hasAnyPendingCheckpointScreening)
+                ? ['checkpoint screening']
+                : []),
+            ...((hasAnyCheckpointReviewAssignment && !hasAnyPendingCheckpointReview)
+                ? ['checkpoint review']
+                : []),
+        ])
+
+        const isCompletedLabel = (label: string): boolean => (
+            completedLabels.has(label)
+            || (iterativeReviewCompleted && label.startsWith('iterative review'))
+        )
+
+        const nextItems = tabItems.map(item => {
+            const label = norm(item.value)
+            if (isCompletedLabel(label)) {
+                return { ...item, completed: true, warning: false }
+            }
+
+            return item
+        })
+
+        const changed = nextItems.some((n, idx) => (
+            n.completed !== tabItems[idx].completed
+        ) || (
+            n.warning !== tabItems[idx].warning
+        ))
+        if (changed) {
+            setTabItems(nextItems)
+        }
+    }, [
+        tabItems,
+        isPastReviewDetail,
+        myResources,
+        review,
+        mappingReviewAppeal,
+        challengeInfo,
+        approvalReviews,
+    ])
 
     // Determine if current user should see the Resources section
     const hasCopilotRole = useMemo(

@@ -31,6 +31,48 @@ import { useRole, useRoleProps } from './useRole'
 import { useSubmissionDownloadAccess } from './useSubmissionDownloadAccess'
 import type { UseSubmissionDownloadAccessResult } from './useSubmissionDownloadAccess'
 
+// Local helpers
+function getNumericScore(review: BackendReview | undefined): number | undefined {
+    if (!review) return undefined
+    if (Number.isFinite(review.finalScore)) return review.finalScore
+    if (Number.isFinite(review.initialScore)) return review.initialScore
+    return undefined
+}
+
+function scoreToDisplay(numericScore: number | undefined, fallback: string | undefined): string {
+    if (typeof numericScore === 'number') {
+        return Number.isInteger(numericScore) ? `${numericScore}` : numericScore.toFixed(2)
+    }
+
+    return fallback ?? 'Pending'
+}
+
+function determinePassFail(
+    numericScore: number | undefined,
+    minPass: number | null | undefined,
+    baseResult: Screening['result'],
+): Screening['result'] {
+    if (typeof numericScore === 'number' && typeof minPass === 'number') {
+        return numericScore >= minPass ? 'PASS' : 'NO PASS'
+    }
+
+    return baseResult
+}
+
+function findMyAssignment(
+    challengeReviews: BackendReview[] | undefined,
+    submissionId: string,
+    myResourceId?: string,
+    scorecardId?: string,
+): BackendReview | undefined {
+    if (!myResourceId || !challengeReviews || !scorecardId) return undefined
+    return challengeReviews.find(rv => (
+        rv.submissionId === submissionId
+        && rv.resourceId === myResourceId
+        && rv.scorecardId === scorecardId
+    ))
+}
+
 export interface useFetchScreeningReviewProps {
     mappingReviewAppeal: MappingReviewAppeal // from review id to appeal info
     // screening data
@@ -325,46 +367,42 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
             }
 
             const minPass = screeningScorecardBase?.minimumPassingScore ?? undefined
+            // Current viewer's Screener resource id (if they have this role)
+            const myScreenerResourceId = (myResources ?? [])
+                .find(r => {
+                    const n = (r.roleName || '').toLowerCase()
+                    return n.includes('screener') && !n.includes('checkpoint')
+                })?.id
 
             // Only show CONTEST_SUBMISSION on Submission/Screening tabs
+            // eslint-disable-next-line complexity
             return contestSubmissions.map(item => {
                 const base = convertBackendSubmissionToScreening(item)
                 const matchedReview = screeningReviewsBySubmission.get(item.id)
-                const numericScore: number | undefined = matchedReview
-                    ? (Number.isFinite(matchedReview.finalScore)
-                        ? matchedReview.finalScore
-                        : Number.isFinite(matchedReview.initialScore)
-                            ? matchedReview.initialScore
-                            : undefined)
-                    : undefined
+                const numericScore = getNumericScore(matchedReview)
+                const scoreDisplay = scoreToDisplay(numericScore, base.score)
 
-                const scoreDisplay = typeof numericScore === 'number'
-                    ? (Number.isInteger(numericScore)
-                        ? `${numericScore}`
-                        : numericScore.toFixed(2))
-                    : base.score
+                const screenerId = matchedReview?.resourceId ?? base.screenerId
+                const result = determinePassFail(numericScore, minPass, base.result)
 
-                // determine pass/fail using minimumPassingScore when available
-                let result = base.result
-                let screenerId: string | undefined = base.screenerId
-                if (matchedReview) {
-                    screenerId = matchedReview.resourceId
-                }
-
-                if (typeof numericScore === 'number' && typeof minPass === 'number') {
-                    result = numericScore >= minPass ? 'PASS' as const : 'NO PASS' as const
-                }
+                const myAssignment
+                    = (myScreenerResourceId && challengeReviews && screeningScorecardId)
+                        ? challengeReviews.find(rv => (
+                            rv.submissionId === item.id
+                            && rv.resourceId === myScreenerResourceId
+                            && rv.scorecardId === screeningScorecardId
+                        ))
+                        : undefined
 
                 return {
                     ...base,
+                    myReviewResourceId: myAssignment?.resourceId,
+                    myReviewStatus: myAssignment?.status ?? undefined,
                     result,
                     score: scoreDisplay,
                     screener: screenerId
                         ? resourceMemberIdMapping[screenerId]
-                        : ({
-                            handleColor: '#2a2a2a',
-                            memberHandle: 'Not assigned',
-                        } as BackendResource),
+                        : ({ handleColor: '#2a2a2a', memberHandle: 'Not assigned' } as BackendResource),
                     screenerId,
                     userInfo: resourceMemberIdMapping[base.memberId],
                 }
@@ -488,45 +526,38 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
 
         const minPass = checkpointReviewScorecardBase?.minimumPassingScore ?? undefined
 
+        // Current viewer's Checkpoint Reviewer resource id (if they have this role)
+        const myCheckpointReviewerResourceId = (myResources ?? [])
+            .find(r => (r.roleName || '').toLowerCase() === 'checkpoint reviewer')?.id
+
         return visibleChallengeSubmissions
             .filter(s => (s.type || '').toUpperCase()
                 .includes('CHECKPOINT'))
             .map(item => {
                 const base = convertBackendSubmissionToScreening(item)
                 const matchedReview = checkpointReviewsBySubmission.get(item.id)
-                const numericScore: number | undefined = matchedReview
-                    ? (Number.isFinite(matchedReview.finalScore)
-                        ? matchedReview.finalScore
-                        : Number.isFinite(matchedReview.initialScore)
-                            ? matchedReview.initialScore
-                            : undefined)
-                    : undefined
-                const scoreDisplay = typeof numericScore === 'number'
-                    ? (Number.isInteger(numericScore)
-                        ? `${numericScore}`
-                        : numericScore.toFixed(2))
-                    : 'Pending'
+                const numericScore = getNumericScore(matchedReview)
+                const scoreDisplay = scoreToDisplay(numericScore, 'Pending')
 
-                let result = base.result
-                let screenerId: string | undefined = base.screenerId
-                if (matchedReview) {
-                    screenerId = matchedReview.resourceId
-                }
+                const screenerId = matchedReview?.resourceId ?? base.screenerId
+                const result = determinePassFail(numericScore, minPass, base.result)
 
-                if (typeof numericScore === 'number' && typeof minPass === 'number') {
-                    result = numericScore >= minPass ? 'PASS' as const : 'NO PASS' as const
-                }
+                const myAssignment = findMyAssignment(
+                    challengeReviews,
+                    item.id,
+                    myCheckpointReviewerResourceId,
+                    checkpointReviewScorecardId,
+                )
 
                 return {
                     ...base,
+                    myReviewResourceId: myAssignment?.resourceId,
+                    myReviewStatus: myAssignment?.status ?? undefined,
                     result,
                     score: scoreDisplay,
                     screener: screenerId
                         ? resourceMemberIdMapping[screenerId]
-                        : ({
-                            handleColor: '#2a2a2a',
-                            memberHandle: 'Not assigned',
-                        } as BackendResource),
+                        : ({ handleColor: '#2a2a2a', memberHandle: 'Not assigned' } as BackendResource),
                     screenerId,
                     userInfo: resourceMemberIdMapping[base.memberId],
                 }
@@ -535,6 +566,7 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
         challengeReviews,
         checkpointReviewScorecardId,
         checkpointReviewScorecardBase?.minimumPassingScore,
+        myResources,
         resourceMemberIdMapping,
         visibleChallengeSubmissions,
     ])
