@@ -77,6 +77,7 @@ const ModifyEducationModal: FC<ModifyEducationModalProps> = (props: ModifyEducat
             traitId: UserTraitIds.education,
             traits: {
                 data: memberEducation || [],
+                traitId: UserTraitIds.education,
             },
         }, props.education)
             .then(() => {
@@ -90,20 +91,9 @@ const ModifyEducationModal: FC<ModifyEducationModalProps> = (props: ModifyEducat
     }
 
     function handleFormValueChange(key: string, event: React.ChangeEvent<HTMLInputElement>): void {
-        let value: string | boolean | Date | undefined
-
-        switch (key) {
-            case 'endDate':
-                value = new Date(event.target.value)
-                break
-            default:
-                value = event.target.value
-                break
-        }
-
         setFormValues({
             ...formValues,
-            [key]: value,
+            [key]: event.target.value,
         })
     }
 
@@ -118,25 +108,24 @@ const ModifyEducationModal: FC<ModifyEducationModalProps> = (props: ModifyEducat
     function handleFormAction(): void {
         setFormErrors({})
 
-        if (!trim(formValues.schoolCollegeName as string)) {
+        if (!trim(formValues.collegeName as string)) {
             setFormErrors({
-                schoolCollegeName: 'School is required',
+                collegeName: 'School is required',
             })
             return
         }
 
-        if (!trim(formValues.major as string)) {
+        if (!trim(formValues.degree as string)) {
             setFormErrors({
-                major: 'Degree is required',
+                degree: 'Degree is required',
             })
             return
         }
 
         const updatedEducation: UserTrait = {
-            graduated: formValues.graduated,
-            major: formValues.major,
-            schoolCollegeName: formValues.schoolCollegeName,
-            timePeriodTo: formValues.endDate ? (formValues.endDate as Date).toISOString() : undefined,
+            collegeName: formValues.collegeName,
+            degree: formValues.degree,
+            endYear: formValues.endYear,
         }
 
         if (editedItemIndex !== undefined && memberEducation) {
@@ -160,10 +149,9 @@ const ModifyEducationModal: FC<ModifyEducationModalProps> = (props: ModifyEducat
         setEditedItemIndex(indx)
 
         setFormValues({
-            endDate: education.timePeriodTo ? new Date(education.timePeriodTo) : undefined,
-            graduated: education.graduated,
-            major: education.major,
-            schoolCollegeName: education.schoolCollegeName,
+            collegeName: education.collegeName,
+            degree: education.degree,
+            endYear: education.endYear,
         })
     }
 
@@ -226,7 +214,7 @@ const ModifyEducationModal: FC<ModifyEducationModalProps> = (props: ModifyEducat
                             memberEducation?.map((education: UserTrait, indx: number) => (
                                 <div
                                     className={styles.educationCardWrap}
-                                    key={`${education.schoolCollegeName}-${education.major}`}
+                                    key={`${education.collegeName}-${education.degree}`}
                                 >
                                     <EducationCard education={education} isModalView />
                                     <div className={styles.actionElements}>
@@ -257,24 +245,24 @@ const ModifyEducationModal: FC<ModifyEducationModalProps> = (props: ModifyEducat
                         <InputText
                             name='school'
                             label='Name of College or University *'
-                            error={formErrors.schoolCollegeName}
+                            error={formErrors.collegeName}
                             placeholder='Enter name of college or university'
                             dirty
                             tabIndex={0}
                             type='text'
-                            onChange={bind(handleFormValueChange, this, 'schoolCollegeName')}
-                            value={formValues.schoolCollegeName as string}
+                            onChange={bind(handleFormValueChange, this, 'collegeName')}
+                            value={formValues.collegeName as string}
                         />
                         <InputText
-                            name='major'
+                            name='degree'
                             label='Degree *'
-                            error={formErrors.major}
+                            error={formErrors.degree}
                             placeholder='Enter Degree'
                             dirty
                             tabIndex={0}
                             type='text'
-                            onChange={bind(handleFormValueChange, this, 'major')}
-                            value={formValues.major as string}
+                            onChange={bind(handleFormValueChange, this, 'degree')}
+                            value={formValues.degree as string}
                         />
                         <InputSelect
                             options={yearOptions}

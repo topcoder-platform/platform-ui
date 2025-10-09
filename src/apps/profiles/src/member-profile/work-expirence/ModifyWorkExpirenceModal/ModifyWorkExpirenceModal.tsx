@@ -76,6 +76,7 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
             traitId: UserTraitIds.work,
             traits: {
                 data: workExpirence || [],
+                traitId: UserTraitIds.work,
             },
         }, props.workExpirence)
             .then(() => {
