@@ -24,6 +24,10 @@ export interface SubmissionInfo {
     review?: ReviewInfo
     reviews?: ReviewResult[]
     /**
+     * Aggregated final score from review summations when available.
+     */
+    aggregateScore?: number
+    /**
      * The date/time when the submission was created.
      */
     submittedDate?: string | Date
@@ -70,8 +74,19 @@ export function convertBackendSubmissionToSubmissionInfo(
             .local()
             .format(TABLE_DATE_FORMAT)
         : undefined
+    const aggregateScoreRaw = data.reviewSummation?.[0]?.aggregateScore
+    const aggregateScoreParsed = typeof aggregateScoreRaw === 'number'
+        ? aggregateScoreRaw
+        : typeof aggregateScoreRaw === 'string'
+            ? Number.parseFloat(aggregateScoreRaw)
+            : undefined
+    const aggregateScore = typeof aggregateScoreParsed === 'number'
+        && Number.isFinite(aggregateScoreParsed)
+        ? aggregateScoreParsed
+        : undefined
 
     return {
+        aggregateScore,
         id: data.id,
         memberId: data.memberId,
         review:

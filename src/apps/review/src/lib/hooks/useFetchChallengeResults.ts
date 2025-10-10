@@ -151,7 +151,9 @@ const buildProjectResult = ({
         const fallbackReviews = submission?.reviews ?? []
         const mappedReviews = reviewsBySubmissionId.get(submission.id) ?? fallbackReviews
         const orderedReviews = orderReviewsByCreatedDate(mappedReviews)
-        const finalScoreCandidate = toFiniteNumber(submission?.review?.finalScore)
+        const aggregateScoreCandidate = toFiniteNumber(submission?.aggregateScore)
+        const finalScoreCandidate = aggregateScoreCandidate
+            ?? toFiniteNumber(submission?.review?.finalScore)
         const computedFinalScore = computeFinalScore(orderedReviews, finalScoreCandidate)
         const initialScoreCandidate = toFiniteNumber(submission?.review?.initialScore)
         const computedInitialScore = initialScoreCandidate ?? computedFinalScore
@@ -163,14 +165,6 @@ const buildProjectResult = ({
             submission,
         }
     })
-
-    // Compute average of individual final scores across all submissions
-    const averageFinalScoreAcrossSubmissions = evaluated.length
-        ? toScorePrecision(
-            evaluated.reduce((sum, item) => sum + item.computedFinalScore, 0)
-            / evaluated.length,
-        )
-        : 0
 
     // Pick the submission with the highest computed final score
     const best = evaluated.reduce((bestSoFar, current) => {
@@ -216,7 +210,7 @@ const buildProjectResult = ({
         createdAt: best.submission?.review?.createdAt
             ?? best.orderedReviews[0]?.createdAt
             ?? new Date(),
-        finalScore: averageFinalScoreAcrossSubmissions,
+        finalScore: best.computedFinalScore,
         initialScore: best.computedInitialScore,
         placement: winner.placement,
         reviews: best.orderedReviews,

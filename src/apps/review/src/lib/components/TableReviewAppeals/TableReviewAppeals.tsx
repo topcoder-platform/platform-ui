@@ -28,6 +28,7 @@ import { useRole, useRoleProps, useSubmissionDownloadAccess } from '../../hooks'
 import type { UseSubmissionDownloadAccessResult } from '../../hooks/useSubmissionDownloadAccess'
 import {
     ChallengeDetailContextModel,
+    ChallengeInfo,
     MappingReviewAppeal,
     ReviewAppContextModel,
     SubmissionInfo,
@@ -181,6 +182,10 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
         submission?: SubmissionRow
         isOwnReview?: boolean
     } | undefined>(undefined)
+    const [
+        isReviewPhaseClosedModalOpen,
+        setIsReviewPhaseClosedModalOpen,
+    ] = useState(false)
 
     const myResourceIds = useMemo(
         () => new Set(myResources.map(resource => resource.id)),
@@ -218,6 +223,25 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
         ],
     )
 
+    const getLatestChallengeInfo = useCallback(async (): Promise<ChallengeInfo | undefined> => {
+        const challengeId = challengeInfo?.id
+
+        if (!challengeId) {
+            return challengeInfo
+        }
+
+        try {
+            const updatedChallengeInfo = await mutate(
+                `challengeBaseUrl/challenges/${challengeId}`,
+            ) as ChallengeInfo | undefined
+
+            return updatedChallengeInfo ?? challengeInfo
+        } catch (error) {
+            handleError(error)
+            return challengeInfo
+        }
+    }, [challengeInfo])
+
     const openReopenDialog = useCallback((submission: SubmissionRow, review: AggregatedReviewDetail) => {
         const resourceId = review.reviewInfo?.resourceId
             ?? review.resourceId
@@ -232,6 +256,11 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
 
     const closeReopenDialog = useCallback(() => {
         setPendingReopen(undefined)
+    }, [])
+
+    const closeReviewPhaseClosedModal = useCallback(() => {
+        setIsReviewPhaseClosedModalOpen(false)
+        window.location.reload()
     }, [])
 
     const handleConfirmReopen = useCallback(async () => {
@@ -683,7 +712,14 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                                 if (st !== 'COMPLETED') return
                                 const isTargetReview = pendingReopen?.review?.reviewInfo?.id === reviewInfo.id
 
-                                function handleReopenClick(): void {
+                                async function handleReopenClick(): Promise<void> {
+                                    const latestChallengeInfo = await getLatestChallengeInfo()
+
+                                    if (!isReviewPhase(latestChallengeInfo)) {
+                                        setIsReviewPhaseClosedModalOpen(true)
+                                        return
+                                    }
+
                                     openReopenDialog(data, {
                                         ...rv,
                                         reviewInfo,
@@ -1163,6 +1199,16 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                         ? REOPEN_MESSAGE_SELF
                         : REOPEN_MESSAGE_OTHER}
                 </div>
+            </ConfirmModal>
+            <ConfirmModal
+                title='Review Phase Closed'
+                open={isReviewPhaseClosedModalOpen}
+                onClose={closeReviewPhaseClosedModal}
+                onConfirm={closeReviewPhaseClosedModal}
+                withoutCancel
+                action='OK'
+            >
+                <div>Review is no longer open for this challenge</div>
             </ConfirmModal>
         </TableWrapper>
     )
