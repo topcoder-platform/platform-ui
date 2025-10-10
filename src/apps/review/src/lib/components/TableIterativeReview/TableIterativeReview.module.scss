@@ -52,7 +52,7 @@
 
 .submissionCell {
     display: inline-flex;
-    align-items: center;
+    align-items: flex-start;
     gap: $sp-2;
 }
 
@@ -60,7 +60,8 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: $sp-1;
+    align-self: flex-start;
+    padding: 0;
     border: none;
     background: none;
     cursor: pointer;

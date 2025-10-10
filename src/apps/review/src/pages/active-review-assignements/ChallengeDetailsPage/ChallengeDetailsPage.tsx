@@ -314,10 +314,10 @@ const buildPhaseTabs = (
         items.push({ label, value: label })
     })
 
-    // Preserve Winners tab at the end for completed/cancelled challenges
+    // Preserve Winners tab at the end only for completed challenges
     const normalizedStatus = (status || '').toUpperCase()
-    const isEnded = normalizedStatus === 'COMPLETED' || normalizedStatus.startsWith('CANCELLED')
-    if (isEnded) {
+    const showWinnersTab = normalizedStatus.startsWith('COMPLETED')
+    if (showWinnersTab) {
         insertTabIfMissing(items, 'Winners', 'Winners', items.length)
     }
 

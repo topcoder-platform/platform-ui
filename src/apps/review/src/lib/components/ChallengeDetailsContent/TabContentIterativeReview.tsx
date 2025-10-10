@@ -88,7 +88,10 @@ export const TabContentIterativeReview: FC<Props> = (props: Props) => {
     }
 
     if (!reviewRows.length) {
-        return <TableNoRecord message='No iterative reviews yet' />
+        const emptyMessage = props.columnLabel === 'Post-Mortem'
+            ? 'No post-mortem reviews yet'
+            : 'No iterative reviews yet'
+        return <TableNoRecord message={emptyMessage} />
     }
 
     return (
