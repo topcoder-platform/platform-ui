@@ -6,6 +6,7 @@ import { formatDurationDate } from '../utils'
 
 import { SubmissionInfo } from './SubmissionInfo.model'
 import { BackendPhase } from './BackendPhase.model'
+import { BackendMetadata } from './BackendMetadata.model'
 
 // Challenge type/track are now objects
 export interface ChallengeType {
@@ -73,6 +74,7 @@ export interface ChallengeInfo {
         isAIReviewer: boolean
     }[]
     currentPhaseObject?: BackendPhase
+    metadata?: BackendMetadata[]
 }
 
 /**

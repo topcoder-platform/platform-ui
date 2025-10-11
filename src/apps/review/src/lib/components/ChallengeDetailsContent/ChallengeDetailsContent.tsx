@@ -99,18 +99,22 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
                 <TabContentPlaceholder message={unopenedPhaseMessage || "This phase hasn't opened yet."} />
             ) : (
                 (() => {
-                    if (props.selectedTab === 'Registration') {
+                    const selectedTabLower = (props.selectedTab || '').toLowerCase()
+
+                    if (selectedTabLower === 'registration') {
                         return <TabContentRegistration />
                     }
 
-                    if (
-                        props.selectedTab === 'Submission / Screening'
-                    || props.selectedTab === 'Submission'
-                    || props.selectedTab === 'Screening'
-                    ) {
+                    if (['submission / screening', 'submission', 'screening'].includes(selectedTabLower)) {
+                        const restrictScreeningToLatest = ['screening', 'submission / screening', 'submission']
+                            .includes(selectedTabLower)
+                        const screeningRows = restrictScreeningToLatest
+                            ? props.screening.filter(submission => submission.isLatest === true)
+                            : props.screening
+
                         return (
                             <TabContentScreening
-                                screening={props.screening}
+                                screening={screeningRows}
                                 isLoadingScreening={props.isLoadingSubmission}
                                 isDownloading={isDownloadingSubmission}
                                 downloadSubmission={downloadSubmission}
@@ -119,12 +123,12 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
                         )
                     }
 
-                    if (
-                        props.selectedTab === 'Checkpoint'
-                    || props.selectedTab === 'Checkpoint Submission'
-                    || props.selectedTab === 'Checkpoint Screening'
-                    || props.selectedTab === 'Checkpoint Review'
-                    ) {
+                    if ([
+                        'checkpoint',
+                        'checkpoint submission',
+                        'checkpoint screening',
+                        'checkpoint review',
+                    ].includes(selectedTabLower)) {
                         return (
                             <TabContentCheckpoint
                                 checkpoint={props.checkpoint}
@@ -137,7 +141,7 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
                         )
                     }
 
-                    if (props.selectedTab === 'Winners') {
+                    if (selectedTabLower === 'winners') {
                         return (
                             <TabContentWinners
                                 isLoading={isLoadingProjectResult}
@@ -148,7 +152,7 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
                         )
                     }
 
-                    if (props.selectedTab === 'Approval') {
+                    if (selectedTabLower === 'approval') {
                         return (
                             <TabContentApproval
                                 reviews={props.approvalReviews}
@@ -161,7 +165,7 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
                         )
                     }
 
-                    if (props.selectedTab === 'Post-Mortem') {
+                    if (selectedTabLower === 'post-mortem') {
                         return (
                             <TabContentIterativeReview
                                 reviews={props.postMortemReviews}

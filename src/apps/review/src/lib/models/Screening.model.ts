@@ -32,6 +32,10 @@ export interface Screening {
      * e.g., PENDING | IN_PROGRESS | SUBMITTED | COMPLETED
      */
     myReviewStatus?: string
+    /**
+     * Indicates whether this submission is the latest for the member.
+     */
+    isLatest?: boolean
 }
 
 /**
@@ -62,6 +66,7 @@ export function convertBackendSubmissionToScreening(
         challengeId: data.challengeId,
         createdAt,
         createdAtString,
+        isLatest: data.isLatest ?? false,
         memberId: data.memberId,
         result,
         score: data.screeningScore ?? 'Pending',

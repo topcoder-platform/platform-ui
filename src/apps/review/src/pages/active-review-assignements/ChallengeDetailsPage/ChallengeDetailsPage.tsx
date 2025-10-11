@@ -7,6 +7,7 @@ import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { useSWRConfig } from 'swr'
 import classNames from 'classnames'
+import moment from 'moment'
 
 import { TableLoading } from '~/apps/admin/src/lib'
 import { handleError } from '~/apps/admin/src/lib/utils'
@@ -22,6 +23,8 @@ import {
     ChallengeDetailsContent,
     ChallengeLinks,
     ChallengePhaseInfo,
+    ChallengeTimeline,
+    ChallengeTimelineRow,
     PageWrapper,
     ReviewAppContext,
     TableNoRecord,
@@ -30,13 +33,14 @@ import {
 } from '../../../lib'
 import { updatePhaseChangeNotifications } from '../../../lib/services'
 import {
+    BackendPhase,
     BackendResource,
     ChallengeDetailContextModel,
     ChallengeInfo,
     ReviewAppContextModel,
     SelectOption,
 } from '../../../lib/models'
-import { REVIEWER, SUBMITTER, TAB } from '../../../config/index.config'
+import { REVIEWER, SUBMITTER, TAB, TABLE_DATE_FORMAT } from '../../../config/index.config'
 import { isAppealsPhase, isAppealsResponsePhase } from '../../../lib/utils'
 import {
     activeReviewAssigmentsRouteId,
@@ -49,6 +53,18 @@ import styles from './ChallengeDetailsPage.module.scss'
 interface Props {
     className?: string
 }
+
+type PhaseLike = Pick<
+    BackendPhase,
+    | 'id'
+    | 'phaseId'
+    | 'name'
+    | 'isOpen'
+    | 'scheduledStartDate'
+    | 'actualStartDate'
+    | 'scheduledEndDate'
+    | 'actualEndDate'
+>
 
 // Helpers to keep UI hooks simple and under complexity limits
 
@@ -204,7 +220,7 @@ const computePhaseCompletionFromScreenings = (
 
 // Build tabs directly from the challenge phases (one tab per phase)
 const buildPhaseTabs = (
-    phases: Array<{ id?: string; name?: string; scheduledStartDate?: string; actualStartDate?: string }>,
+    phases: Array<PhaseLike>,
     status?: string,
     opts?: { isF2F?: boolean; isTask?: boolean },
 ): SelectOption[] => {
@@ -326,17 +342,10 @@ const buildPhaseTabs = (
 
 // Map the tab label to its corresponding phase (same ordering/labeling as buildPhaseTabs)
 const findPhaseByTabLabel = (
-    phases: Array<{
-        id?: string
-        name?: string
-        scheduledStartDate?: string
-        actualStartDate?: string
-        scheduledEndDate?: string
-        actualEndDate?: string
-    }>,
+    phases: Array<PhaseLike>,
     label: string,
     opts?: { isF2F?: boolean; isTask?: boolean },
-): typeof phases[number] | undefined => {
+): PhaseLike | undefined => {
     const norm = (s?: string): string => (s || '').trim()
         .toLowerCase()
     const isExactRegistration = (name?: string): boolean => norm(name) === 'registration'
@@ -692,6 +701,16 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         return undefined
     }, [challengeStatus])
 
+    const phaseOrderingOptions = useMemo(() => {
+        const typeName = challengeInfo?.type?.name?.toLowerCase?.() || ''
+        const typeAbbrev = challengeInfo?.type?.abbreviation?.toLowerCase?.() || ''
+        const simplifiedType = typeName.replace(/\s|-/g, '')
+        return {
+            isF2F: typeAbbrev === 'f2f' || simplifiedType === 'first2finish',
+            isTask: typeAbbrev === 'task' || typeAbbrev === 'tsk' || simplifiedType === 'task',
+        }
+    }, [challengeInfo?.type?.abbreviation, challengeInfo?.type?.name])
+
     useEffect(() => {
         const tab = searchParams.get('tab')
         if (tabItems.length) {
@@ -711,16 +730,10 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
     // eslint-disable-next-line complexity
     useEffect(() => {
         if (!challengeInfo) return
-        const typeName = challengeInfo?.type?.name?.toLowerCase?.() || ''
-        const typeAbbrev = challengeInfo?.type?.abbreviation?.toLowerCase?.() || ''
-        const simplifiedType = typeName.replace(/\s|-/g, '')
-        const isF2F = typeAbbrev === 'f2f' || simplifiedType === 'first2finish'
-        // Detect standard Task type (exclude Topgear Task)
-        const isTask = typeAbbrev === 'task' || typeAbbrev === 'tsk' || simplifiedType === 'task'
         const items = buildPhaseTabs(
             challengeInfo.phases ?? [],
             challengeInfo.status,
-            { isF2F, isTask },
+            phaseOrderingOptions,
         )
 
         // Only add indicators on active-challenges view
@@ -867,16 +880,29 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                     ),
                 )
                 if (hasAnyReview) {
-                    finalItems = finalItems.map(it => (it.value.trim()
-                        .toLowerCase() === 'appeals'
-                        ? { ...it, warning: true }
-                        : it))
+                    finalItems = finalItems.map(it => {
+                        const normalizedValue = it.value
+                            .trim()
+                            .toLowerCase()
+
+                        return normalizedValue === 'appeals'
+                            ? { ...it, warning: true }
+                            : it
+                    })
                 }
             }
         }
 
         setTabItems(finalItems)
-    }, [challengeInfo, actionChallengeRole, review, submitterReviews, myResources, mappingReviewAppeal])
+    }, [
+        challengeInfo,
+        actionChallengeRole,
+        review,
+        submitterReviews,
+        myResources,
+        mappingReviewAppeal,
+        phaseOrderingOptions,
+    ])
 
     // Add completion indicators for active challenges on relevant tabs
     // eslint-disable-next-line complexity
@@ -1014,6 +1040,70 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
     )
     const shouldShowResourcesSection = hasCopilotRole || isAdmin
 
+    const timelineRows = useMemo<ChallengeTimelineRow[]>(() => {
+        if (!challengeInfo?.phases || challengeInfo.phases.length === 0) {
+            return []
+        }
+
+        const baseItems = buildPhaseTabs(
+            challengeInfo.phases,
+            challengeInfo.status,
+            phaseOrderingOptions,
+        )
+        const seen = new Set<string>()
+        const nowMs = Date.now()
+
+        const formatDate = (value?: string): string => {
+            if (!value) return '-'
+            const parsed = moment(value)
+            if (!parsed.isValid()) return '-'
+            return parsed
+                .local()
+                .format(TABLE_DATE_FORMAT)
+        }
+
+        const rows: ChallengeTimelineRow[] = []
+        baseItems.forEach(item => {
+            const phase = findPhaseByTabLabel(
+                challengeInfo.phases,
+                item.value,
+                phaseOrderingOptions,
+            )
+
+            if (!phase) return
+
+            const uniqueKey = phase.id
+                || `${phase.name}-${phase.scheduledStartDate}-${phase.actualStartDate}`
+            if (seen.has(uniqueKey)) {
+                return
+            }
+
+            seen.add(uniqueKey)
+
+            const startSource = phase.actualStartDate || phase.scheduledStartDate
+            const endSource = phase.actualEndDate || phase.scheduledEndDate
+            const actualEndMs = phase.actualEndDate ? Date.parse(phase.actualEndDate) : NaN
+            const hasPastActualEnd = Number.isFinite(actualEndMs) && actualEndMs < nowMs
+
+            const status = (() => {
+                if (phase.isOpen) return 'Open'
+                if (!phase.isOpen && hasPastActualEnd) return 'Closed'
+                if (!phase.isOpen && !phase.actualStartDate) return 'Pending'
+                return 'Closed'
+            })()
+
+            rows.push({
+                end: formatDate(endSource),
+                id: phase.id || phase.phaseId,
+                name: phase.name || 'Unnamed Phase',
+                start: formatDate(startSource),
+                status,
+            })
+        })
+
+        return rows
+    }, [challengeInfo, phaseOrderingOptions])
+
     // Determine if the current user is allowed to view this challenge detail
     const isLoadingAnything = isLoadingChallengeInfo || isLoadingChallengeResources
     const isUserResource = (myResources?.length ?? 0) > 0
@@ -1116,6 +1206,13 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                             })()}
                         />
                     </div>
+
+                    {timelineRows.length > 0 ? (
+                        <div className={styles.blockContent}>
+                            <span className={styles.textTitle}>Timeline</span>
+                            <ChallengeTimeline rows={timelineRows} />
+                        </div>
+                    ) : undefined}
 
                     {shouldShowResourcesSection ? (
                         <div className={styles.blockContent}>

@@ -7,6 +7,7 @@ import {
     useCallback,
     useContext,
     useMemo,
+    useState,
 } from 'react'
 import { Link } from 'react-router-dom'
 import { toast } from 'react-toastify'
@@ -22,12 +23,16 @@ import { IsRemovingType } from '~/apps/admin/src/lib/models'
 
 import { ChallengeDetailContextModel, MappingReviewAppeal, SubmissionInfo } from '../../models'
 import { TableWrapper } from '../TableWrapper'
+import { SubmissionHistoryModal } from '../SubmissionHistoryModal'
 import {
     AggregatedReviewDetail,
     AggregatedSubmissionReviews,
     aggregateSubmissionReviews,
+    getSubmissionHistoryKey,
     isAppealsPhase,
     isAppealsResponsePhase,
+    partitionSubmissionHistory,
+    SubmissionHistoryPartition,
 } from '../../utils'
 import {
     FIRST2FINISH,
@@ -63,7 +68,9 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
         ChallengeDetailContext,
     )
     const {
+        getRestrictionMessageForMember,
         isSubmissionDownloadRestricted,
+        isSubmissionDownloadRestrictedForMember,
         restrictionMessage,
     }: UseSubmissionDownloadAccessResult = useSubmissionDownloadAccess()
     const challengeType = challengeInfo?.type
@@ -76,16 +83,112 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
     const isDownloading = props.isDownloading
     const mappingReviewAppeal = props.mappingReviewAppeal
     const wrapperClassName = props.className
+    const isSubmissionTab = useMemo(
+        () => (props.tab || '').toLowerCase() === 'submission',
+        [props.tab],
+    )
     const challengeStatus = challengeInfo?.status?.toUpperCase()
     const isChallengeCompleted = challengeStatus === 'COMPLETED'
+
+    const submissionHistory = useMemo<SubmissionHistoryPartition>(
+        () => partitionSubmissionHistory(datas, challengeInfo?.submissions),
+        [challengeInfo?.submissions, datas],
+    )
+    const {
+        latestSubmissions,
+        historyByMember,
+    }: SubmissionHistoryPartition = submissionHistory
+
+    const submissionMetaById = useMemo(() => {
+        const map = new Map<string, SubmissionInfo>()
+        const challengeSubmissions = challengeInfo?.submissions ?? []
+
+        challengeSubmissions.forEach(submission => {
+            if (submission?.id) {
+                map.set(submission.id, submission)
+            }
+        })
+        datas.forEach(submission => {
+            if (submission?.id && !map.has(submission.id)) {
+                map.set(submission.id, submission)
+            }
+        })
+        return map
+    }, [challengeInfo?.submissions, datas])
+
+    const resolveSubmissionMeta = useCallback(
+        (submissionId: string): SubmissionInfo | undefined => submissionMetaById.get(submissionId),
+        [submissionMetaById],
+    )
+
+    const [historyKey, setHistoryKey] = useState<string | undefined>(undefined)
+
+    const historyEntriesForModal = useMemo<SubmissionInfo[]>(
+        () => (historyKey ? historyByMember.get(historyKey) ?? [] : []),
+        [historyByMember, historyKey],
+    )
+
+    const closeHistoryModal = useCallback((): void => {
+        setHistoryKey(undefined)
+    }, [])
+
+    const openHistoryModal = useCallback(
+        (memberId: string | undefined, submissionId: string): void => {
+            const key = getSubmissionHistoryKey(memberId, submissionId)
+            const historyEntries = historyByMember.get(key)
+            if (!historyEntries || historyEntries.length === 0) {
+                return
+            }
+
+            setHistoryKey(key)
+        },
+        [historyByMember],
+    )
+
+    const hasHistoryEntries = useMemo(
+        () => isSubmissionTab && Array.from(historyByMember.values())
+            .some(list => list.length > 0),
+        [historyByMember, isSubmissionTab],
+    )
+
+    const getHistoryRestriction = useCallback(
+        (submission: SubmissionInfo): { message?: string; restricted: boolean } => {
+            const restrictedForMember = isSubmissionDownloadRestrictedForMember(submission.memberId)
+            const message = restrictedForMember
+                ? getRestrictionMessageForMember(submission.memberId) ?? restrictionMessage
+                : undefined
+
+            return {
+                message,
+                restricted: restrictedForMember,
+            }
+        },
+        [
+            getRestrictionMessageForMember,
+            isSubmissionDownloadRestrictedForMember,
+            restrictionMessage,
+        ],
+    )
+
+    const handleHistoryButtonClick = useCallback((event: MouseEvent<HTMLButtonElement>): void => {
+        const submissionId = event.currentTarget.dataset.submissionId
+        if (!submissionId) {
+            return
+        }
+
+        const memberIdValue = event.currentTarget.dataset.memberId
+        const normalizedMemberId = memberIdValue && memberIdValue.length ? memberIdValue : undefined
+        openHistoryModal(normalizedMemberId, submissionId)
+    }, [openHistoryModal])
 
     // Show Appeals columns only if the challenge includes an Appeals phase
     const hasAppealsPhase = useMemo(() => {
         const phases = challengeInfo?.phases ?? []
-        return phases.some(p => {
-            const name = (p?.name || '').toLowerCase()
-            return name === 'appeals' || name === 'appeals response'
-        })
+        return phases
+            .some(p => {
+                const name = (p?.name || '').toLowerCase()
+                return name === 'appeals' || name === 'appeals response'
+            })
     }, [challengeInfo?.phases])
 
     const allowsAppeals = useMemo(
@@ -120,11 +223,14 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
         return allowsAppeals && tabName === 'appeals'
     }, [allowsAppeals, props.tab])
 
-    const aggregatedRows = useMemo(() => aggregateSubmissionReviews({
-        mappingReviewAppeal,
-        reviewers,
-        submissions: datas,
-    }), [datas, mappingReviewAppeal, reviewers])
+    const aggregatedRows = useMemo(
+        () => aggregateSubmissionReviews({
+            mappingReviewAppeal,
+            reviewers,
+            submissions: latestSubmissions,
+        }),
+        [latestSubmissions, mappingReviewAppeal, reviewers],
+    )
 
     const aggregatedSubmissionRows = useMemo<SubmissionRow[]>(
         () => aggregatedRows.map(row => ({
@@ -518,28 +624,75 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
             }
         }
 
-        // Add a single Action column for Appeals tab: "Appeal"
-        // Only show when the Appeals phase is currently open
-        if ((props.tab || '').toLowerCase() === 'appeals' && isAppealsPhase(challengeInfo)) {
+        const shouldShowAppealAction = (props.tab || '').toLowerCase() === 'appeals'
+            && isAppealsPhase(challengeInfo)
+        const shouldRenderActionsColumn = shouldShowAppealAction || hasHistoryEntries
+
+        if (shouldRenderActionsColumn) {
             aggregatedColumns.push({
                 className: styles.textBlue,
-                columnId: 'action',
-                label: 'Action',
+                columnId: 'actions',
+                label: 'Actions',
                 renderer: (data: SubmissionRow) => {
-                    // Choose the first real review (ignore placeholders)
-                    const reviewDetail = (data.aggregated?.reviews || []).find(r => r.reviewInfo?.id)
-                    const resourceId = reviewDetail?.reviewInfo?.resourceId || reviewDetail?.resourceId
-                    if (!reviewDetail?.reviewInfo?.id || !resourceId) return <></>
+                    const actionEntries: Array<{ key: string; element: JSX.Element }> = []
+
+                    if (shouldShowAppealAction) {
+                        const reviewDetail = (data.aggregated?.reviews || []).find(r => r.reviewInfo?.id)
+                        const resourceId = reviewDetail?.reviewInfo?.resourceId || reviewDetail?.resourceId
+
+                        if (reviewDetail?.reviewInfo?.id && resourceId) {
+                            actionEntries.push({
+                                element: (
+                                    <Link
+                                        to={`./../scorecard-details/${data.id}/review/${resourceId}`}
+                                        className={classNames(styles.textBlue, 'last-element')}
+                                    >
+                                        Appeal
+                                    </Link>
+                                ),
+                                key: 'appeal-action',
+                            })
+                        }
+                    }
+
+                    const historyKeyForRow = getSubmissionHistoryKey(data.memberId, data.id)
+                    const rowHistory = historyByMember.get(historyKeyForRow) ?? []
+                    if (isSubmissionTab && rowHistory.length > 0) {
+                        actionEntries.push({
+                            element: (
+                                <button
+                                    type='button'
+                                    className={styles.historyButton}
+                                    data-member-id={data.memberId ?? ''}
+                                    data-submission-id={data.id}
+                                    onClick={handleHistoryButtonClick}
+                                >
+                                    View Submission History
+                                </button>
+                            ),
+                            key: 'submission-history',
+                        })
+                    }
+
+                    if (!actionEntries.length) {
+                        return <span className={styles.notReviewed}>--</span>
+                    }
+
+                    if (actionEntries.length === 1) {
+                        return actionEntries[0].element
+                    }
+
                     return (
-                        <Link
-                            to={`./../scorecard-details/${data.id}/review/${resourceId}`}
-                            className={classNames(
-                                styles.textBlue,
-                                'last-element',
-                            )}
-                        >
-                            Appeal
-                        </Link>
+                        <span className={styles.actionsCell}>
+                            {actionEntries.map(entry => (
+                                <span
+                                    key={entry.key}
+                                    className={styles.actionItem}
+                                >
+                                    {entry.element}
+                                </span>
+                            ))}
+                        </span>
                     )
                 },
                 type: 'element',
@@ -550,14 +703,18 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
     }, [
         allowsAppeals,
         canDisplayScores,
+        hasHistoryEntries,
         downloadSubmission,
+        historyByMember,
         isSubmissionDownloadRestricted,
         isDownloading,
         isChallengeCompleted,
         maxReviewCount,
+        openHistoryModal,
         shouldShowAppealsColumn,
         restrictionMessage,
         challengeInfo,
+        isSubmissionTab,
         props.tab,
     ])
 
@@ -604,6 +761,15 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
                     removeDefaultSort
                 />
             )}
+            <SubmissionHistoryModal
+                open={Boolean(historyKey)}
+                onClose={closeHistoryModal}
+                submissions={historyEntriesForModal}
+                downloadSubmission={downloadSubmission}
+                isDownloading={isDownloading}
+                getRestriction={getHistoryRestriction}
+                getSubmissionMeta={resolveSubmissionMeta}
+            />
         </TableWrapper>
     )
 }

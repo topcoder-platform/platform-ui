@@ -22,7 +22,7 @@ import {
     ReviewInfo,
 } from '../../models'
 import { DialogContactManager } from '../DialogContactManager'
-import { filterResources } from '../../utils'
+import { filterResources, isReviewPhase } from '../../utils'
 import {
     ADMIN,
     COPILOT,
@@ -65,6 +65,49 @@ export const ChallengeLinksForAdmin: FC<Props> = (props: Props) => {
         ).length > 0,
         [myResources],
     )
+
+    const canShowReopenButton = useMemo(() => {
+        if (!props.reviewInfo?.id) {
+            return false
+        }
+
+        const statusUpper = (challengeInfo?.status ?? '').toString()
+            .toUpperCase()
+        if (!statusUpper.startsWith('ACTIVE')) {
+            return false
+        }
+
+        if (statusUpper.includes('COMPLETED') || statusUpper.includes('CANCELLED')) {
+            return false
+        }
+
+        if (!isReviewPhase(challengeInfo)) {
+            return false
+        }
+
+        const currentPhaseId = challengeInfo?.currentPhaseObject?.id
+        const reviewPhaseId = props.reviewInfo?.phaseId
+        if (!currentPhaseId || !reviewPhaseId) {
+            return false
+        }
+
+        if (currentPhaseId !== reviewPhaseId) {
+            return false
+        }
+
+        if (challengeInfo?.currentPhaseObject?.isOpen === false) {
+            return false
+        }
+
+        return true
+    }, [
+        challengeInfo?.currentPhase,
+        challengeInfo?.currentPhaseObject?.id,
+        challengeInfo?.currentPhaseObject?.isOpen,
+        challengeInfo?.status,
+        props.reviewInfo?.id,
+        props.reviewInfo?.phaseId,
+    ])
 
     const reopen = useCallback(() => {
         setShowCloseConfirmation(true)
@@ -117,7 +160,7 @@ export const ChallengeLinksForAdmin: FC<Props> = (props: Props) => {
                     </button>
                 )}
 
-                {props.reviewInfo?.id && (
+                {canShowReopenButton && (
                     <button
                         disabled={props.isSavingReview}
                         type='button'

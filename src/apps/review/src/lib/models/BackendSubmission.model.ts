@@ -44,6 +44,10 @@ export interface BackendSubmission {
     review: BackendReview[]
     reviewSummation: any[]
     reviewResourceMapping?: { [resourceId: string]: BackendReview } // this field is calculated at frontend
+    /**
+     * Indicates whether the submission is the latest for the member.
+     */
+    isLatest?: boolean
 }
 
 /**

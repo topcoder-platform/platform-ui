@@ -38,11 +38,16 @@ import {
     AggregatedSubmissionReviews,
     aggregateSubmissionReviews,
     getHandleUrl,
+    getSubmissionHistoryKey,
     isReviewPhase,
+    partitionSubmissionHistory,
+    shouldRestrictToLatestSubmissions,
+    SubmissionHistoryPartition,
 } from '../../utils'
 import { ConfirmModal } from '../ConfirmModal'
 import { updateReview } from '../../services'
 import { TableWrapper } from '../TableWrapper'
+import { SubmissionHistoryModal } from '../SubmissionHistoryModal'
 
 import styles from './TableReviewAppeals.module.scss'
 
@@ -60,6 +65,79 @@ interface Props {
 
 type SubmissionRow = SubmissionInfo & {
     aggregated?: AggregatedSubmissionReviews
+}
+
+function createReopenActionButtons(
+    submission: SubmissionRow,
+    aggregatedReviews: AggregatedReviewDetail[] | undefined,
+    {
+        canManageCompletedReviews,
+        getLatestChallengeInfo,
+        isReopening,
+        openReopenDialog,
+        pendingReopen,
+        setIsReviewPhaseClosedModalOpen,
+    }: {
+        canManageCompletedReviews: boolean
+        getLatestChallengeInfo: () => Promise<ChallengeInfo | undefined>
+        isReopening: boolean
+        openReopenDialog: (submission: SubmissionRow, review: AggregatedReviewDetail) => void
+        pendingReopen: { review?: AggregatedReviewDetail } | undefined
+        setIsReviewPhaseClosedModalOpen: (isOpen: boolean) => void
+    },
+): JSX.Element[] {
+    if (!canManageCompletedReviews) {
+        return []
+    }
+
+    const buttons: JSX.Element[] = []
+
+    const reviews = aggregatedReviews ?? []
+
+    reviews.forEach(rv => {
+        const reviewInfo = rv?.reviewInfo
+        if (!reviewInfo?.id) {
+            return
+        }
+
+        if ((reviewInfo.status ?? '').toUpperCase() !== 'COMPLETED') {
+            return
+        }
+
+        const isTargetReview = pendingReopen?.review?.reviewInfo?.id === reviewInfo.id
+
+        async function handleReopenClick(): Promise<void> {
+            const latestChallengeInfo = await getLatestChallengeInfo()
+
+            if (!isReviewPhase(latestChallengeInfo)) {
+                setIsReviewPhaseClosedModalOpen(true)
+                return
+            }
+
+            openReopenDialog(submission, {
+                ...rv,
+                reviewInfo,
+            } as AggregatedReviewDetail)
+        }
+
+        buttons.push(
+            <button
+                key={`reopen-${reviewInfo.id}`}
+                type='button'
+                className={classNames(
+                    styles.actionButton,
+                    styles.textBlue,
+                )}
+                onClick={handleReopenClick}
+                disabled={isReopening && isTargetReview}
+            >
+                <i className='icon-reopen' />
+                Reopen review
+            </button>,
+        )
+    })
+
+    return buttons
 }
 
 const REOPEN_MESSAGE_SELF = [
@@ -87,7 +165,9 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
     const challengeType = challengeInfo?.type
     const challengeTrack = challengeInfo?.track
     const {
+        getRestrictionMessageForMember,
         isSubmissionDownloadRestricted,
+        isSubmissionDownloadRestrictedForMember,
         restrictionMessage,
     }: UseSubmissionDownloadAccessResult = useSubmissionDownloadAccess()
 
@@ -99,28 +179,150 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
     const isDownloading = props.isDownloading
     const mappingReviewAppeal = props.mappingReviewAppeal
     const tab = props.tab
+    const isSubmissionTab = (tab || '').toLowerCase() === 'submission'
     const wrapperClassName = props.className
+
+    const submissionHistory = useMemo<SubmissionHistoryPartition>(
+        () => partitionSubmissionHistory(datas, challengeInfo?.submissions),
+        [challengeInfo?.submissions, datas],
+    )
+    const {
+        latestSubmissions,
+        latestSubmissionIds,
+        historyByMember,
+    }: SubmissionHistoryPartition = submissionHistory
+    const hasHistoryEntries = useMemo(
+        () => isSubmissionTab && Array.from(historyByMember.values())
+            .some(list => list.length > 0),
+        [historyByMember, isSubmissionTab],
+    )
+
+    const submissionMetaById = useMemo(() => {
+        const map = new Map<string, SubmissionInfo>();
+        (challengeInfo?.submissions ?? []).forEach(submission => {
+            if (submission?.id) {
+                map.set(submission.id, submission)
+            }
+        })
+        datas.forEach(submission => {
+            if (submission?.id && !map.has(submission.id)) {
+                map.set(submission.id, submission)
+            }
+        })
+        return map
+    }, [challengeInfo?.submissions, datas])
+
+    const resolveSubmissionMeta = useCallback(
+        (submissionId: string): SubmissionInfo | undefined => submissionMetaById.get(submissionId),
+        [submissionMetaById],
+    )
+
+    const restrictToLatest = useMemo(
+        () => shouldRestrictToLatestSubmissions(challengeInfo),
+        [challengeInfo],
+    )
+
+    const [historyKey, setHistoryKey] = useState<string | undefined>(undefined)
+
+    const historyEntriesForModal = useMemo<SubmissionInfo[]>(
+        () => (historyKey ? historyByMember.get(historyKey) ?? [] : []),
+        [historyByMember, historyKey],
+    )
+
+    const closeHistoryModal = useCallback((): void => {
+        setHistoryKey(undefined)
+    }, [])
+
+    const openHistoryModal = useCallback(
+        (memberId: string | undefined, submissionId: string): void => {
+            const key = getSubmissionHistoryKey(memberId, submissionId)
+            const historyEntries = historyByMember.get(key)
+            if (!historyEntries || historyEntries.length === 0) {
+                return
+            }
+
+            setHistoryKey(key)
+        },
+        [historyByMember],
+    )
+
+    const getHistoryRestriction = useCallback(
+        (submission: SubmissionInfo): { message?: string; restricted: boolean } => {
+            const restrictedForMember = isSubmissionDownloadRestrictedForMember(submission.memberId)
+            const message = restrictedForMember
+                ? getRestrictionMessageForMember(submission.memberId) ?? restrictionMessage
+                : undefined
+
+            return {
+                message,
+                restricted: restrictedForMember,
+            }
+        },
+        [
+            getRestrictionMessageForMember,
+            isSubmissionDownloadRestrictedForMember,
+            restrictionMessage,
+        ],
+    )
+
+    const handleHistoryButtonClick = useCallback((event: MouseEvent<HTMLButtonElement>): void => {
+        const submissionId = event.currentTarget.dataset.submissionId
+        if (!submissionId) {
+            return
+        }
+
+        const memberIdValue = event.currentTarget.dataset.memberId
+        const normalizedMemberId = memberIdValue && memberIdValue.length ? memberIdValue : undefined
+        openHistoryModal(normalizedMemberId, submissionId)
+    }, [openHistoryModal])
 
     // Aggregated mode is used on the Appeals tab for admins/copilots (not for reviewers)
     const hasReviewerRole = useMemo(
-        () => myRoles.some(role => role?.toLowerCase()
-            .includes('reviewer')),
+        () => myRoles
+            .some(role => role?.toLowerCase()
+                .includes('reviewer')),
         [myRoles],
     )
     const hasCopilotRole = useMemo(
-        () => myRoles.some(role => role?.toLowerCase()
-            .includes('copilot')),
+        () => myRoles
+            .some(role => role?.toLowerCase()
+                .includes('copilot')),
         [myRoles],
     )
     const hasAdminRole = useMemo(
-        () => myRoles.some(role => role?.toLowerCase()
-            .includes('admin')),
+        () => myRoles
+            .some(role => role?.toLowerCase()
+                .includes('admin')),
         [myRoles],
     )
 
-    // Aggregated view groups one row per submission and shows
-    // reviewer columns + average score. Use it for Appeals and Review tabs.
-    const isAggregatedView = (tab === 'Appeals' || tab === 'Review')
+    const isTopcoderAdmin = useMemo(
+        () => loginUserInfo?.roles?.some(
+            role => typeof role === 'string'
+                && role.toLowerCase() === 'administrator',
+        ) ?? false,
+        [loginUserInfo?.roles],
+    )
+
+    const canViewHistory = hasAdminRole || hasCopilotRole || isTopcoderAdmin
+
+    // Aggregated view groups one row per submission and shows reviewer columns + average score.
+    const isAggregatedView = useMemo(() => {
+        if (tab === 'Appeals' || tab === 'Review') {
+            return true
+        }
+
+        if (tab === 'Appeals Response') {
+            return hasCopilotRole || hasAdminRole || isTopcoderAdmin
+        }
+
+        return false
+    }, [hasAdminRole, hasCopilotRole, isTopcoderAdmin, tab])
+
+    const submissionsForAggregation = useMemo(
+        () => (restrictToLatest ? latestSubmissions : datas),
+        [datas, latestSubmissions, restrictToLatest],
+    )
 
     const aggregatedRows = useMemo(() => {
         if (!isAggregatedView) {
@@ -130,16 +332,24 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
         return aggregateSubmissionReviews({
             mappingReviewAppeal,
             reviewers,
-            submissions: datas,
+            submissions: submissionsForAggregation,
         })
-    }, [datas, isAggregatedView, mappingReviewAppeal, reviewers])
+    }, [isAggregatedView, mappingReviewAppeal, reviewers, submissionsForAggregation])
 
     const aggregatedSubmissionRows = useMemo<SubmissionRow[]>(
-        () => aggregatedRows.map(row => ({
-            ...row.submission,
-            aggregated: row,
-        })),
-        [aggregatedRows],
+        () => {
+            const rows = aggregatedRows.map(row => ({
+                ...row.submission,
+                aggregated: row,
+            }))
+
+            if (!restrictToLatest) {
+                return rows
+            }
+
+            return rows.filter(row => latestSubmissionIds.has(row.id))
+        },
+        [aggregatedRows, latestSubmissionIds, restrictToLatest],
     )
 
     const maxReviewCount = useMemo(
@@ -190,14 +400,6 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
     const myResourceIds = useMemo(
         () => new Set(myResources.map(resource => resource.id)),
         [myResources],
-    )
-
-    const isTopcoderAdmin = useMemo(
-        () => loginUserInfo?.roles?.some(
-            role => typeof role === 'string'
-                && role.toLowerCase() === 'administrator',
-        ) ?? false,
-        [loginUserInfo?.roles],
     )
 
     const canManageCompletedReviews = useMemo(
@@ -571,7 +773,12 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                 }
 
                 const totalAppeals = reviewDetail?.totalAppeals ?? 0
-                const unresolvedAppeals = reviewDetail?.unresolvedAppeals ?? 0
+                const finishedAppeals = reviewDetail?.finishedAppeals ?? 0
+                const unresolvedAppeals = reviewDetail?.unresolvedAppeals
+                    ?? Math.max(totalAppeals - finishedAppeals, 0)
+                const primaryAppealsCount = tab === 'Appeals Response'
+                    ? finishedAppeals
+                    : unresolvedAppeals
 
                 if (!totalAppeals && (reviewInfo.status ?? '').toUpperCase() !== 'COMPLETED') {
                     return (
@@ -588,7 +795,7 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                     >
                         [
                         {' '}
-                        <span className={styles.textBlue}>{unresolvedAppeals}</span>
+                        <span className={styles.textBlue}>{primaryAppealsCount}</span>
                         {' '}
                         /
                         {' '}
@@ -597,6 +804,30 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                         ]
                     </Link>
                 )
+            }
+
+            const renderRemainingCell = (
+                data: SubmissionRow,
+                reviewIndex: number,
+            ): JSX.Element => {
+                const reviewDetail: AggregatedReviewDetail | undefined
+                    = data.aggregated?.reviews[reviewIndex]
+
+                const reviewInfo = reviewDetail?.reviewInfo
+
+                if (!reviewInfo || !reviewInfo.id) {
+                    return (
+                        <span className={styles.notReviewed}>
+                            --
+                        </span>
+                    )
+                }
+
+                const totalAppeals = reviewDetail?.totalAppeals ?? 0
+                const finishedAppeals = reviewDetail?.finishedAppeals ?? 0
+                const remainingAppeals = Math.max(totalAppeals - finishedAppeals, 0)
+
+                return <span className={styles.textBlue}>{remainingAppeals}</span>
             }
 
             const aggregatedColumns: TableColumn<SubmissionRow>[] = [
@@ -625,10 +856,19 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                 if (allowsAppeals && tab !== 'Review') {
                     aggregatedColumns.push({
                         columnId: `appeals-${index}`,
-                        label: `Appeals ${index + 1}`,
+                        label: maxReviewCount === 1 ? 'Appeals' : `Appeals ${index + 1}`,
                         renderer: (data: SubmissionRow) => renderAppealsCell(data, index),
                         type: 'element',
                     })
+
+                    if (tab === 'Appeals Response') {
+                        aggregatedColumns.push({
+                            columnId: `remaining-${index}`,
+                            label: maxReviewCount === 1 ? 'Remaining' : `Remaining ${index + 1}`,
+                            renderer: (data: SubmissionRow) => renderRemainingCell(data, index),
+                            type: 'element',
+                        })
+                    }
                 }
 
                 // Per-review action columns removed in favor of a single combined Actions column below
@@ -665,14 +905,13 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                             || NO_RESOURCE_ID
 
                         const status = (myReviewDetail?.reviewInfo?.status ?? '').toUpperCase()
-
-                        // Collect action elements
-                        const elements: JSX.Element[] = []
-
+                        const historyKeyForRow = getSubmissionHistoryKey(data.memberId, data.id)
+                        const rowHistory = historyByMember.get(historyKeyForRow) ?? []
                         const hasReviewRole = myReviewerResourceIds.size > 0
-                        if (hasReviewRole) {
-                            if (includes(['COMPLETED', 'SUBMITTED'], status)) {
-                                elements.push(
+                        const primaryAction = !hasReviewRole
+                            ? undefined
+                            : includes(['COMPLETED', 'SUBMITTED'], status)
+                                ? (
                                     <div
                                         key='completed-indicator'
                                         aria-label='Review completed'
@@ -685,10 +924,9 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                                             <IconOutline.CheckIcon />
                                         </span>
                                         <span className={styles.completedPill}>Review Complete</span>
-                                    </div>,
+                                    </div>
                                 )
-                            } else {
-                                elements.push(
+                                : (
                                     <Link
                                         key='complete-review'
                                         to={`./../scorecard-details/${data.id}/review/${resourceId}`}
@@ -698,61 +936,42 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                                     >
                                         <i className='icon-upload' />
                                         Complete Review
-                                    </Link>,
+                                    </Link>
                                 )
-                            }
-                        }
 
-                        // Add reopen actions for completed reviews if user can manage
-                        if (canManageCompletedReviews) {
-                            (data.aggregated?.reviews || []).forEach(rv => {
-                                const reviewInfo = rv?.reviewInfo
-                                if (!reviewInfo?.id) return
-                                const st = (reviewInfo.status ?? '').toUpperCase()
-                                if (st !== 'COMPLETED') return
-                                const isTargetReview = pendingReopen?.review?.reviewInfo?.id === reviewInfo.id
+                        const reopenButtons = createReopenActionButtons(
+                            data,
+                            data.aggregated?.reviews,
+                            {
+                                canManageCompletedReviews,
+                                getLatestChallengeInfo,
+                                isReopening,
+                                openReopenDialog,
+                                pendingReopen,
+                                setIsReviewPhaseClosedModalOpen,
+                            },
+                        )
 
-                                async function handleReopenClick(): Promise<void> {
-                                    const latestChallengeInfo = await getLatestChallengeInfo()
-
-                                    if (!isReviewPhase(latestChallengeInfo)) {
-                                        setIsReviewPhaseClosedModalOpen(true)
-                                        return
-                                    }
-
-                                    openReopenDialog(data, {
-                                        ...rv,
-                                        reviewInfo,
-                                    } as AggregatedReviewDetail)
-                                }
-
-                                elements.push(
-                                    <button
-                                        key={`reopen-${reviewInfo.id}`}
-                                        type='button'
-                                        className={classNames(
-                                            styles.actionButton,
-                                            styles.textBlue,
-                                        )}
-                                        onClick={handleReopenClick}
-                                        disabled={isReopening && isTargetReview}
-                                    >
-                                        <i className='icon-reopen' />
-                                        Reopen review
-                                    </button>,
-                                )
-                            })
-                        }
-
-                        // Mark last interactive element for row border styling
-                        if (elements.length > 0) {
-                            const last = elements[elements.length - 1]
-                            elements[elements.length - 1] = (
-                                <span key='last-wrap' className='last-element'>
-                                    {last}
-                                </span>
+                        const historyAction = (canViewHistory && isSubmissionTab && rowHistory.length > 0)
+                            ? (
+                                <button
+                                    key='view-submission-history'
+                                    type='button'
+                                    className={styles.historyButton}
+                                    data-member-id={data.memberId ?? ''}
+                                    data-submission-id={data.id}
+                                    onClick={handleHistoryButtonClick}
+                                >
+                                    View Submission History
+                                </button>
                             )
-                        }
+                            : undefined
+
+                        const elements = [
+                            primaryAction,
+                            historyAction,
+                            ...reopenButtons,
+                        ].filter(Boolean) as JSX.Element[]
 
                         return (
                             <span>
@@ -761,7 +980,11 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                                         key={`wrap-${String((el as any).key)}`}
                                         style={{ marginRight: i < elements.length - 1 ? 12 : 0 }}
                                     >
-                                        {el}
+                                        {i === elements.length - 1 ? (
+                                            <span className='last-element'>
+                                                {el}
+                                            </span>
+                                        ) : el}
                                     </span>
                                 ))}
                             </span>
@@ -899,8 +1122,10 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                         </Link>
                     )
 
+                    let primaryAction: JSX.Element
+
                     if (includes(['COMPLETED', 'SUBMITTED'], reviewStatus)) {
-                        return (
+                        primaryAction = (
                             <div
                                 aria-label='Review completed'
                                 className={classNames(
@@ -915,16 +1140,10 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                                 <span className={styles.completedPill}>Review Complete</span>
                             </div>
                         )
-                    }
-
-                    if (
-                        includes(['PENDING', 'IN_PROGRESS'], reviewStatus)
-                    ) {
-                        return actionLink
-                    }
-
-                    if (!reviewStatus && hasReview) {
-                        return (
+                    } else if (includes(['PENDING', 'IN_PROGRESS'], reviewStatus)) {
+                        primaryAction = actionLink
+                    } else if (!reviewStatus && hasReview) {
+                        primaryAction = (
                             <Link
                                 to={`./../scorecard-details/${data.id}/review/${resourceId}`}
                                 className={classNames(
@@ -936,22 +1155,101 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                                 Reopen Review
                             </Link>
                         )
+                    } else {
+                        primaryAction = actionLink
                     }
 
-                    return actionLink
+                    const actionEntries: Array<{ element: JSX.Element; key: string }> = [
+                        { element: primaryAction, key: 'primary-action' },
+                    ]
+                    const historyKeyForRow = getSubmissionHistoryKey(data.memberId, data.id)
+                    const rowHistory = historyByMember.get(historyKeyForRow) ?? []
+
+                    if (canViewHistory && isSubmissionTab && rowHistory.length > 0) {
+                        actionEntries.push({
+                            element: (
+                                <button
+                                    type='button'
+                                    className={styles.historyButton}
+                                    data-member-id={data.memberId ?? ''}
+                                    data-submission-id={data.id}
+                                    onClick={handleHistoryButtonClick}
+                                >
+                                    View Submission History
+                                </button>
+                            ),
+                            key: 'submission-history',
+                        })
+                    }
+
+                    if (!actionEntries.length) {
+                        return <span className={styles.notReviewed}>--</span>
+                    }
+
+                    if (actionEntries.length === 1) {
+                        return actionEntries[0].element
+                    }
+
+                    return (
+                        <span className={styles.actionsCell}>
+                            {actionEntries.map(entry => (
+                                <span
+                                    key={entry.key}
+                                    className={styles.actionItem}
+                                >
+                                    {entry.element}
+                                </span>
+                            ))}
+                        </span>
+                    )
                 },
                 type: 'element',
             },
         ] : []
+        const historyOnlyColumn: TableColumn<SubmissionRow> | undefined = (!actionColumns.length
+            && canViewHistory
+            && isSubmissionTab
+            && hasHistoryEntries)
+            ? {
+                className: styles.textBlue,
+                columnId: 'submission-history',
+                label: 'Actions',
+                renderer: (data: SubmissionRow) => {
+                    const historyKeyForRow = getSubmissionHistoryKey(data.memberId, data.id)
+                    const rowHistory = historyByMember.get(historyKeyForRow) ?? []
+
+                    if (rowHistory.length === 0) {
+                        return <span className={styles.notReviewed}>--</span>
+                    }
+
+                    return (
+                        <button
+                            type='button'
+                            className={styles.historyButton}
+                            data-member-id={data.memberId ?? ''}
+                            data-submission-id={data.id}
+                            onClick={handleHistoryButtonClick}
+                        >
+                            View Submission History
+                        </button>
+                    )
+                },
+                type: 'element',
+            }
+            : undefined
 
         if (includes([APPROVAL], tab)) {
-            return [...initalColumns] as TableColumn<SubmissionRow>[]
+            return [
+                ...initalColumns,
+                ...(historyOnlyColumn ? [historyOnlyColumn] : []),
+            ] as TableColumn<SubmissionRow>[]
         }
 
         if (!allowsAppeals) {
             return [
                 ...initalColumns,
                 ...actionColumns,
+                ...(historyOnlyColumn ? [historyOnlyColumn] : []),
             ] as TableColumn<SubmissionRow>[]
         }
         // For Review tab: do not show Appeals column
@@ -959,6 +1257,7 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
             return [
                 ...initalColumns,
                 ...actionColumns,
+                ...(historyOnlyColumn ? [historyOnlyColumn] : []),
             ] as TableColumn<SubmissionRow>[]
         }
 
@@ -1080,6 +1379,7 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                 remainingCol,
                 // Include Respond action column only when phase is open
                 ...(isAppealsResponsePhaseOpen ? [respondActionCol] : []),
+                ...(historyOnlyColumn ? [historyOnlyColumn] : []),
             ] as TableColumn<SubmissionRow>[]
         }
 
@@ -1088,6 +1388,7 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
             ...initalColumns,
             appealsCol,
             ...actionColumns,
+            ...(historyOnlyColumn ? [historyOnlyColumn] : []),
         ] as TableColumn<SubmissionRow>[]
     }, [
         actionChallengeRole,
@@ -1105,8 +1406,16 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
         isReopening,
         pendingReopen,
         openReopenDialog,
+        canViewHistory,
+        handleHistoryButtonClick,
+        isSubmissionTab,
         tab,
         restrictionMessage,
+        historyByMember,
+        hasHistoryEntries,
+        myResources,
+        getLatestChallengeInfo,
+        setIsReviewPhaseClosedModalOpen,
     ])
 
     /* eslint-enable indent, padding-line-between-statements */
@@ -1156,12 +1465,19 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                 : []
         }
 
-        return datas as SubmissionRow[]
+        if (!restrictToLatest) {
+            return datas as SubmissionRow[]
+        }
+
+        const latestRows = datas.filter(submission => latestSubmissionIds.has(submission.id))
+        return latestRows as SubmissionRow[]
     }, [
         aggregatedSubmissionRows,
         datas,
         firstSubmissions,
         isAggregatedView,
+        latestSubmissionIds,
+        restrictToLatest,
         tab,
     ])
 
@@ -1184,6 +1500,16 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                     removeDefaultSort
                 />
             )}
+
+            <SubmissionHistoryModal
+                open={Boolean(historyKey)}
+                onClose={closeHistoryModal}
+                submissions={historyEntriesForModal}
+                downloadSubmission={downloadSubmission}
+                isDownloading={isDownloading}
+                getRestriction={getHistoryRestriction}
+                getSubmissionMeta={resolveSubmissionMeta}
+            />
 
             <ConfirmModal
                 title='Reopen Scorecard Confirmation'

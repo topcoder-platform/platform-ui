@@ -774,6 +774,7 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
     const shouldAwaitSubmitterReviews = (
         actionChallengeRole === SUBMITTER
         && challengeReviews === undefined
+        && visibleChallengeSubmissions.length > 0
     )
 
     return {

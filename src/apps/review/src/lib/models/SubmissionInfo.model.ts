@@ -39,6 +39,10 @@ export interface SubmissionInfo {
      * Virus scan status (true when scan passed, false when failed).
      */
     virusScan?: boolean
+    /**
+     * Indicates whether this submission is the latest for the member.
+     */
+    isLatest?: boolean
 }
 
 /**
@@ -88,6 +92,7 @@ export function convertBackendSubmissionToSubmissionInfo(
     return {
         aggregateScore,
         id: data.id,
+        isLatest: data.isLatest ?? false,
         memberId: data.memberId,
         review:
             data.review && data.review[0]

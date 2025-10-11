@@ -58,7 +58,7 @@ export const ScorecardDetailsPage: FC<Props> = (props: Props) => {
         challengeInfo,
         isLoadingChallengeInfo,
     }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
-    const { isEdit }: useIsEditReviewProps = useIsEditReview()
+    const { isEdit: isEditPhase }: useIsEditReviewProps = useIsEditReview()
 
     const {
         addAppeal,
@@ -76,6 +76,26 @@ export const ScorecardDetailsPage: FC<Props> = (props: Props) => {
         submissionInfo,
         saveReviewInfo,
     }: useFetchSubmissionReviewsProps = useFetchSubmissionReviews()
+
+    const isReviewCompleted = useMemo(
+        () => {
+            const statusUpper = (reviewInfo?.status || '')
+                .toString()
+                .toUpperCase()
+
+            if (statusUpper === 'COMPLETED') {
+                return true
+            }
+
+            return Boolean(reviewInfo?.committed)
+        },
+        [reviewInfo?.committed, reviewInfo?.status],
+    )
+
+    const isEdit = useMemo(
+        () => isEditPhase && !isReviewCompleted,
+        [isEditPhase, isReviewCompleted],
+    )
 
     const breadCrumb = useMemo<BreadCrumbData[]>(() => [
         {

@@ -1,7 +1,14 @@
 /**
  * Table Submission Screening.
  */
-import { FC, MouseEvent, useContext, useMemo } from 'react'
+import {
+    FC,
+    MouseEvent,
+    useCallback,
+    useContext,
+    useMemo,
+    useState,
+} from 'react'
 import { toast } from 'react-toastify'
 import _ from 'lodash'
 import classNames from 'classnames'
@@ -12,9 +19,15 @@ import { MobileTableColumn } from '~/apps/admin/src/lib/models/MobileTableColumn
 import { copyTextToClipboard, useWindowSize, WindowSize } from '~/libs/shared'
 import { IconOutline, Table, TableColumn, Tooltip } from '~/libs/ui'
 
-import { ChallengeDetailContextModel, Screening } from '../../models'
+import { ChallengeDetailContextModel, Screening, SubmissionInfo } from '../../models'
 import { TableWrapper } from '../TableWrapper'
-import { getHandleUrl } from '../../utils'
+import { SubmissionHistoryModal } from '../SubmissionHistoryModal'
+import {
+    getHandleUrl,
+    getSubmissionHistoryKey,
+    partitionSubmissionHistory,
+    SubmissionHistoryPartition,
+} from '../../utils'
 import { ChallengeDetailContext } from '../../contexts'
 import { useSubmissionDownloadAccess } from '../../hooks'
 import type { UseSubmissionDownloadAccessResult } from '../../hooks/useSubmissionDownloadAccess'
@@ -46,6 +59,130 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
             phase => phase.name?.toLowerCase() === 'screening',
         ) ?? false,
         [challengeInfo?.phases],
+    )
+    const submissionMetaById = useMemo(() => {
+        const map = new Map<string, SubmissionInfo>()
+        const challengeSubmissions = challengeInfo?.submissions ?? []
+
+        challengeSubmissions.forEach(submission => {
+            if (submission?.id) {
+                map.set(submission.id, submission)
+            }
+        })
+
+        props.datas.forEach(screening => {
+            const submissionId = screening.submissionId
+            if (!submissionId) {
+                return
+            }
+
+            const existing = map.get(submissionId)
+            let createdAt: Date | undefined
+            if (screening.createdAt instanceof Date && !Number.isNaN(screening.createdAt.getTime())) {
+                createdAt = screening.createdAt
+            } else if (typeof screening.createdAt === 'string' && screening.createdAt) {
+                const parsed = new Date(screening.createdAt)
+                if (!Number.isNaN(parsed.getTime())) {
+                    createdAt = parsed
+                }
+            }
+
+            map.set(submissionId, {
+                ...existing,
+                id: existing?.id ?? submissionId,
+                isLatest: screening.isLatest ?? existing?.isLatest,
+                memberId: screening.memberId ?? existing?.memberId ?? '',
+                submittedDate: createdAt ?? existing?.submittedDate,
+                submittedDateString: screening.createdAtString ?? existing?.submittedDateString,
+                virusScan: screening.virusScan ?? existing?.virusScan,
+            })
+        })
+
+        return map
+    }, [challengeInfo?.submissions, props.datas])
+
+    const primarySubmissionInfos = useMemo<SubmissionInfo[]>(
+        () => props.datas
+            .map(screening => submissionMetaById.get(screening.submissionId))
+            .filter((submission): submission is SubmissionInfo => Boolean(submission)),
+        [props.datas, submissionMetaById],
+    )
+
+    const historySourceSubmissions = useMemo<SubmissionInfo[]>(
+        () => Array.from(submissionMetaById.values()),
+        [submissionMetaById],
+    )
+
+    const submissionHistory = useMemo(
+        () => partitionSubmissionHistory(primarySubmissionInfos, historySourceSubmissions),
+        [historySourceSubmissions, primarySubmissionInfos],
+    )
+
+    const { historyByMember }: SubmissionHistoryPartition = submissionHistory
+
+    const hasHistoryEntries = useMemo(
+        () => Array.from(historyByMember.values())
+            .some(list => list.length > 0),
+        [historyByMember],
+    )
+
+    const [historyKey, setHistoryKey] = useState<string | undefined>(undefined)
+
+    const historyEntriesForModal = useMemo<SubmissionInfo[]>(
+        () => (historyKey ? historyByMember.get(historyKey) ?? [] : []),
+        [historyByMember, historyKey],
+    )
+
+    const closeHistoryModal = useCallback((): void => {
+        setHistoryKey(undefined)
+    }, [])
+
+    const openHistoryModal = useCallback(
+        (memberId: string | undefined, submissionId: string): void => {
+            const key = getSubmissionHistoryKey(memberId, submissionId)
+            const historyEntries = historyByMember.get(key)
+            if (!historyEntries || historyEntries.length === 0) {
+                return
+            }
+
+            setHistoryKey(key)
+        },
+        [historyByMember],
+    )
+
+    const getHistoryRestriction = useCallback(
+        (submission: SubmissionInfo): { message?: string; restricted: boolean } => {
+            const restrictedForMember = isSubmissionDownloadRestrictedForMember(submission.memberId)
+            const message = restrictedForMember
+                ? getRestrictionMessageForMember(submission.memberId) ?? restrictionMessage
+                : undefined
+
+            return {
+                message,
+                restricted: restrictedForMember,
+            }
+        },
+        [
+            getRestrictionMessageForMember,
+            isSubmissionDownloadRestrictedForMember,
+            restrictionMessage,
+        ],
+    )
+
+    const handleHistoryButtonClick = useCallback((event: MouseEvent<HTMLButtonElement>): void => {
+        const submissionId = event.currentTarget.dataset.submissionId
+        if (!submissionId) {
+            return
+        }
+
+        const memberIdValue = event.currentTarget.dataset.memberId
+        const normalizedMemberId = memberIdValue && memberIdValue.length ? memberIdValue : undefined
+        openHistoryModal(normalizedMemberId, submissionId)
+    }, [openHistoryModal])
+
+    const resolveSubmissionMeta = useCallback(
+        (submissionId: string): SubmissionInfo | undefined => submissionMetaById.get(submissionId),
+        [submissionMetaById],
     )
     const columns = useMemo<TableColumn<Screening>[]>(
         () => {
@@ -194,11 +331,43 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
                 virusScanColumn,
             ]
 
+            const actionColumn: TableColumn<Screening> | undefined = hasHistoryEntries
+                ? {
+                    className: styles.textBlue,
+                    label: 'Actions',
+                    propertyName: 'actions',
+                    renderer: (data: Screening) => {
+                        const historyKeyForRow = getSubmissionHistoryKey(data.memberId, data.submissionId)
+                        const rowHistory = historyByMember.get(historyKeyForRow) ?? []
+                        if (rowHistory.length === 0) {
+                            return <span>--</span>
+                        }
+
+                        return (
+                            <button
+                                type='button'
+                                className={classNames(styles.historyButton, 'last-element')}
+                                data-member-id={data.memberId ?? ''}
+                                data-submission-id={data.submissionId}
+                                onClick={handleHistoryButtonClick}
+                            >
+                                View Submission History
+                            </button>
+                        )
+                    },
+                    type: 'element',
+                }
+                : undefined
+
+            const baseColumnsWithActions = actionColumn
+                ? [...baseColumns, actionColumn]
+                : baseColumns
+
             if (!hasScreeningPhase) {
-                return baseColumns
+                return baseColumnsWithActions
             }
 
-            return [
+            const screeningColumns: TableColumn<Screening>[] = [
                 ...baseColumns,
                 {
                     label: 'Screener',
@@ -258,6 +427,8 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
                     type: 'element',
                 },
             ]
+
+            return actionColumn ? [...screeningColumns, actionColumn] : screeningColumns
         },
         [
             props,
@@ -266,6 +437,9 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
             restrictionMessage,
             isSubmissionDownloadRestrictedForMember,
             getRestrictionMessageForMember,
+            hasHistoryEntries,
+            historyByMember,
+            handleHistoryButtonClick,
         ],
     )
 
@@ -313,6 +487,16 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
                     removeDefaultSort
                 />
             )}
+
+            <SubmissionHistoryModal
+                open={Boolean(historyKey)}
+                onClose={closeHistoryModal}
+                submissions={historyEntriesForModal}
+                downloadSubmission={props.downloadSubmission}
+                isDownloading={props.isDownloading}
+                getRestriction={getHistoryRestriction}
+                getSubmissionMeta={resolveSubmissionMeta}
+            />
         </TableWrapper>
     )
 }

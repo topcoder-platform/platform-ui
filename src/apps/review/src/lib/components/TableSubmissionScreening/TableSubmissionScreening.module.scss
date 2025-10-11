@@ -79,6 +79,24 @@
             height: 18px;
         }
     }
+
+    .historyButton {
+        background: none;
+        border: none;
+        color: $link-blue-dark;
+        cursor: pointer;
+        padding: 0;
+
+        &:hover,
+        &:focus {
+            color: $blue-110;
+        }
+
+        &:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+    }
 }
 
 .resultPill {

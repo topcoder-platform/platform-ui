@@ -33,9 +33,23 @@ export const TabContentReview: FC<Props> = (props: Props) => {
     const selectedTab = props.selectedTab
     const reviews = props.reviews
     const submitterReviews = props.submitterReviews
+    const restrictToLatest = ['review', 'screening', 'appeals', 'appeals response']
+        .includes((selectedTab || '').toLowerCase())
+    const filteredReviews = useMemo(
+        () => (restrictToLatest
+            ? reviews.filter(submission => submission.isLatest === true)
+            : reviews),
+        [restrictToLatest, reviews],
+    )
+    const filteredSubmitterReviews = useMemo(
+        () => (restrictToLatest
+            ? submitterReviews.filter(submission => submission.isLatest === true)
+            : submitterReviews),
+        [restrictToLatest, submitterReviews],
+    )
     const firstSubmissions = useMemo(
-        () => maxBy(reviews, 'review.initialScore'),
-        [reviews],
+        () => maxBy(filteredReviews, 'review.initialScore'),
+        [filteredReviews],
     )
     const { actionChallengeRole }: useRoleProps = useRole()
     const hideHandleColumn = props.isActiveChallenge
@@ -44,7 +58,7 @@ export const TabContentReview: FC<Props> = (props: Props) => {
     // show loading ui when fetching data
     const isSubmitterView = actionChallengeRole === SUBMITTER
         && selectedTab !== APPROVAL
-    const reviewRows = isSubmitterView ? submitterReviews : reviews
+    const reviewRows = isSubmitterView ? filteredSubmitterReviews : filteredReviews
 
     if (props.isLoadingReview) {
         return <TableLoading />
@@ -57,7 +71,7 @@ export const TabContentReview: FC<Props> = (props: Props) => {
 
     return !isSubmitterView ? (
         <TableReviewAppeals
-            datas={reviews}
+            datas={filteredReviews}
             tab={selectedTab}
             firstSubmissions={firstSubmissions}
             isDownloading={props.isDownloading}
@@ -68,7 +82,7 @@ export const TabContentReview: FC<Props> = (props: Props) => {
         />
     ) : (
         <TableReviewAppealsForSubmitter
-            datas={submitterReviews}
+            datas={filteredSubmitterReviews}
             isDownloading={props.isDownloading}
             downloadSubmission={props.downloadSubmission}
             mappingReviewAppeal={props.mappingReviewAppeal}
