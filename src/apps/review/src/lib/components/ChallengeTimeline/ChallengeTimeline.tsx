@@ -4,11 +4,18 @@
 import { FC, useMemo } from 'react'
 import classNames from 'classnames'
 
-import { Table, TableColumn } from '~/libs/ui'
+import { Button, Table, TableColumn } from '~/libs/ui'
 
 import { TableWrapper } from '../TableWrapper'
 
 import styles from './ChallengeTimeline.module.scss'
+
+export interface ChallengeTimelineAction {
+    label: string
+    onClick: () => void
+    disabled?: boolean
+    loading?: boolean
+}
 
 export interface ChallengeTimelineRow {
     id?: string
@@ -16,11 +23,14 @@ export interface ChallengeTimelineRow {
     status: string
     start: string
     end: string
+    actions?: ChallengeTimelineAction[]
+    duration?: number
 }
 
 interface Props {
     className?: string
     rows: ChallengeTimelineRow[]
+    showActions?: boolean
 }
 
 const STATUS_CLASS_MAP: Record<string, string> = {
@@ -30,8 +40,8 @@ const STATUS_CLASS_MAP: Record<string, string> = {
 }
 
 export const ChallengeTimeline: FC<Props> = (props: Props) => {
-    const columns = useMemo<TableColumn<ChallengeTimelineRow>[]>(
-        () => [
+    const columns = useMemo<TableColumn<ChallengeTimelineRow>[]>(() => {
+        const baseColumns: TableColumn<ChallengeTimelineRow>[] = [
             {
                 className: styles.phaseCell,
                 columnId: 'phase',
@@ -79,16 +89,60 @@ export const ChallengeTimeline: FC<Props> = (props: Props) => {
                 renderer: (row: ChallengeTimelineRow) => <span>{row.end}</span>,
                 type: 'element',
             },
-        ],
-        [],
-    )
+        ]
+
+        if (props.showActions) {
+            baseColumns.push({
+                className: styles.actionsColumn,
+                columnId: 'actions',
+                isSortable: false,
+                label: 'Actions',
+                propertyName: 'actions',
+                renderer: (row: ChallengeTimelineRow) => {
+                    const availableActions = row.actions?.filter(Boolean) ?? []
+
+                    if (!availableActions.length) {
+                        return (
+                            <span className={styles.noActions}>--</span>
+                        )
+                    }
+
+                    return (
+                        <span className={styles.actionsList}>
+                            {availableActions.map(action => (
+                                <Button
+                                    key={action.label}
+                                    secondary
+                                    size='sm'
+                                    noCaps
+                                    onClick={action.onClick}
+                                    disabled={action.disabled}
+                                    loading={action.loading}
+                                >
+                                    {action.label}
+                                </Button>
+                            ))}
+                        </span>
+                    )
+                },
+                type: 'element',
+            })
+        }
+
+        return baseColumns
+    }, [props.showActions])
 
     if (props.rows.length === 0) {
         return <></>
     }
 
     return (
-        <TableWrapper className={classNames(styles.container, props.className, 'enhanced-table')}>
+        <TableWrapper className={classNames(
+            styles.container,
+            props.className,
+            'enhanced-table',
+        )}
+        >
             <Table
                 columns={columns}
                 data={props.rows}

@@ -2,7 +2,7 @@
  * Challenge Details Page.
  */
 import { kebabCase, startCase, toLower, toUpper, trim } from 'lodash'
-import { FC, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { FC, FocusEvent, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { useSWRConfig } from 'swr'
@@ -12,7 +12,7 @@ import moment from 'moment'
 import { TableLoading } from '~/apps/admin/src/lib'
 import { handleError } from '~/apps/admin/src/lib/utils'
 import { EnvironmentConfig } from '~/config'
-import { InputCheckbox } from '~/libs/ui'
+import { BaseModal, Button, InputCheckbox, InputText } from '~/libs/ui'
 
 import {
     useFetchScreeningReview,
@@ -24,6 +24,7 @@ import {
     ChallengeLinks,
     ChallengePhaseInfo,
     ChallengeTimeline,
+    ChallengeTimelineAction,
     ChallengeTimelineRow,
     PageWrapper,
     ReviewAppContext,
@@ -31,7 +32,11 @@ import {
     TableRegistration,
     Tabs,
 } from '../../../lib'
-import { updatePhaseChangeNotifications } from '../../../lib/services'
+import {
+    updateChallengePhase,
+    UpdateChallengePhaseRequest,
+    updatePhaseChangeNotifications,
+} from '../../../lib/services'
 import {
     BackendPhase,
     BackendResource,
@@ -60,6 +65,7 @@ type PhaseLike = Pick<
     | 'phaseId'
     | 'name'
     | 'isOpen'
+    | 'duration'
     | 'scheduledStartDate'
     | 'actualStartDate'
     | 'scheduledEndDate'
@@ -496,10 +502,20 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
             : undefined),
         [challengeId],
     )
+    const challengeInfoCacheKey = useMemo(
+        () => (challengeId
+            ? `challengeBaseUrl/challenges/${challengeId}`
+            : undefined),
+        [challengeId],
+    )
     const [phaseNotificationsEnabled, setPhaseNotificationsEnabled] = useState<boolean>(
         currentUserResource?.phaseChangeNotifications ?? false,
     )
     const [isSavingPhaseNotifications, setIsSavingPhaseNotifications] = useState(false)
+    const [phaseActionLoadingMap, setPhaseActionLoadingMap] = useState<Record<string, boolean>>({})
+    const [reopenTarget, setReopenTarget] = useState<{ id: string; name: string; duration?: number }>()
+    const [reopenDuration, setReopenDuration] = useState<string>('')
+    const [reopenDurationError, setReopenDurationError] = useState<string | undefined>()
 
     // eslint-disable-next-line complexity
     useEffect(() => {
@@ -1039,6 +1055,10 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         [loginUserInfo?.roles],
     )
     const shouldShowResourcesSection = hasCopilotRole || isAdmin
+    const canManagePhases = useMemo(
+        () => !isPastReviewDetail && (hasCopilotRole || isAdmin),
+        [hasCopilotRole, isAdmin, isPastReviewDetail],
+    )
 
     const timelineRows = useMemo<ChallengeTimelineRow[]>(() => {
         if (!challengeInfo?.phases || challengeInfo.phases.length === 0) {
@@ -1093,6 +1113,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
             })()
 
             rows.push({
+                duration: typeof phase.duration === 'number' ? phase.duration : undefined,
                 end: formatDate(endSource),
                 id: phase.id || phase.phaseId,
                 name: phase.name || 'Unnamed Phase',
@@ -1103,6 +1124,177 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
 
         return rows
     }, [challengeInfo, phaseOrderingOptions])
+
+    const setPhaseActionLoading = useCallback((phaseId: string, loading: boolean) => {
+        setPhaseActionLoadingMap(prev => ({
+            ...prev,
+            [phaseId]: loading,
+        }))
+    }, [])
+
+    const handlePhaseUpdate = useCallback(async (
+        phaseId: string,
+        payload: UpdateChallengePhaseRequest,
+        messages: { success: string; error: string; toastId: string },
+    ): Promise<boolean> => {
+        if (!phaseId) {
+            return false
+        }
+
+        setPhaseActionLoading(phaseId, true)
+
+        try {
+            await updateChallengePhase(phaseId, payload)
+
+            if (challengeInfoCacheKey) {
+                await mutate(challengeInfoCacheKey)
+            }
+
+            toast.success(messages.success, {
+                toastId: `challenge-phase-${phaseId}-${messages.toastId}`,
+            })
+
+            return true
+        } catch (error) {
+            handleError(error as Error)
+            toast.error(messages.error, {
+                toastId: `challenge-phase-${phaseId}-${messages.toastId}-error`,
+            })
+
+            return false
+        } finally {
+            setPhaseActionLoading(phaseId, false)
+        }
+    }, [challengeInfoCacheKey, mutate, setPhaseActionLoading])
+
+    const openReopenModal = useCallback((
+        phaseId: string,
+        phaseName: string,
+        duration?: number,
+    ) => {
+        setReopenTarget({ duration, id: phaseId, name: phaseName })
+        setReopenDuration(typeof duration === 'number' ? String(duration) : '')
+        setReopenDurationError(undefined)
+    }, [])
+
+    const closeReopenModal = useCallback(() => {
+        setReopenTarget(undefined)
+        setReopenDuration('')
+        setReopenDurationError(undefined)
+    }, [])
+
+    const handleReopenDurationChange = useCallback((event: FocusEvent<HTMLInputElement>) => {
+        setReopenDuration(event.currentTarget.value)
+        if (reopenDurationError) {
+            setReopenDurationError(undefined)
+        }
+    }, [reopenDurationError])
+
+    const timelineRowsWithActions = useMemo<ChallengeTimelineRow[]>(() => {
+        if (!canManagePhases) {
+            return timelineRows
+        }
+
+        return timelineRows.map(row => {
+            const phaseId = row.id
+            if (!phaseId) {
+                return row
+            }
+
+            const normalizedStatus = row.status
+                .trim()
+                .toLowerCase()
+            const isLoading = Boolean(phaseActionLoadingMap[phaseId])
+            const actions: ChallengeTimelineAction[] = []
+
+            if (normalizedStatus === 'open') {
+                actions.push({
+                    disabled: isLoading,
+                    label: 'Close',
+                    loading: isLoading,
+                    onClick: () => {
+                        handlePhaseUpdate(phaseId, { isOpen: false }, {
+                            error: `Failed to close ${row.name} phase.`,
+                            success: `${row.name} phase closed.`,
+                            toastId: 'close',
+                        })
+                    },
+                })
+            } else if (normalizedStatus === 'pending') {
+                actions.push({
+                    disabled: isLoading,
+                    label: 'Open',
+                    loading: isLoading,
+                    onClick: () => {
+                        handlePhaseUpdate(phaseId, { isOpen: true }, {
+                            error: `Failed to open ${row.name} phase.`,
+                            success: `${row.name} phase opened.`,
+                            toastId: 'open',
+                        })
+                    },
+                })
+            } else if (normalizedStatus === 'closed') {
+                actions.push({
+                    disabled: isLoading,
+                    label: 'Reopen',
+                    onClick: () => openReopenModal(phaseId, row.name, row.duration),
+                })
+            }
+
+            if (!actions.length) {
+                return row
+            }
+
+            return {
+                ...row,
+                actions,
+            }
+        })
+    }, [canManagePhases, handlePhaseUpdate, openReopenModal, phaseActionLoadingMap, timelineRows])
+
+    const isReopenSubmitting = reopenTarget
+        ? Boolean(phaseActionLoadingMap[reopenTarget.id])
+        : false
+
+    const handleReopenSubmit = useCallback(async () => {
+        if (!reopenTarget) {
+            return
+        }
+
+        const trimmedDuration = reopenDuration.trim()
+        if (!trimmedDuration) {
+            setReopenDurationError('Duration is required.')
+            return
+        }
+
+        const parsedDuration = Number(trimmedDuration)
+        if (!Number.isFinite(parsedDuration) || parsedDuration <= 0) {
+            setReopenDurationError('Duration must be a positive number.')
+            return
+        }
+
+        const didSucceed = await handlePhaseUpdate(
+            reopenTarget.id,
+            {
+                duration: parsedDuration,
+                isOpen: true,
+            },
+            {
+                error: `Failed to reopen ${reopenTarget.name} phase.`,
+                success: `${reopenTarget.name} phase reopened.`,
+                toastId: 'reopen',
+            },
+        )
+
+        if (didSucceed) {
+            closeReopenModal()
+        }
+    }, [
+        closeReopenModal,
+        handlePhaseUpdate,
+        reopenDuration,
+        reopenTarget,
+    ])
 
     // Determine if the current user is allowed to view this challenge detail
     const isLoadingAnything = isLoadingChallengeInfo || isLoadingChallengeResources
@@ -1207,10 +1399,13 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                         />
                     </div>
 
-                    {timelineRows.length > 0 ? (
+                    {timelineRowsWithActions.length > 0 ? (
                         <div className={styles.blockContent}>
                             <span className={styles.textTitle}>Timeline</span>
-                            <ChallengeTimeline rows={timelineRows} />
+                            <ChallengeTimeline
+                                rows={timelineRowsWithActions}
+                                showActions={canManagePhases}
+                            />
                         </div>
                     ) : undefined}
 
@@ -1228,6 +1423,51 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                     ) : undefined}
                 </>
             ) : undefined}
+            <BaseModal
+                open={Boolean(reopenTarget)}
+                onClose={closeReopenModal}
+                showCloseIcon
+                classNames={{
+                    modal: styles.reopenModal,
+                }}
+            >
+                <div className={styles.reopenModalContent}>
+                    <div className={styles.reopenModalTitle}>
+                        How long should the phase be extended for
+                    </div>
+                    <InputText
+                        name='reopen-duration'
+                        label='Duration'
+                        type='number'
+                        value={reopenDuration}
+                        forceUpdateValue
+                        placeholder='Enter duration'
+                        onChange={handleReopenDurationChange}
+                        error={reopenDurationError}
+                        classNameWrapper={styles.reopenModalInput}
+                        disabled={isReopenSubmitting}
+                    />
+                    <div className={styles.reopenModalActions}>
+                        <Button
+                            secondary
+                            size='lg'
+                            onClick={closeReopenModal}
+                            disabled={isReopenSubmitting}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            primary
+                            size='lg'
+                            onClick={handleReopenSubmit}
+                            disabled={isReopenSubmitting}
+                            loading={isReopenSubmitting}
+                        >
+                            Reopen
+                        </Button>
+                    </div>
+                </div>
+            </BaseModal>
         </PageWrapper>
     )
 }

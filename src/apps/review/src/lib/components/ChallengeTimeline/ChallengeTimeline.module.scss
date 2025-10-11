@@ -15,6 +15,10 @@
     white-space: nowrap;
 }
 
+.actionsColumn {
+    white-space: nowrap;
+}
+
 .status {
     align-items: center;
     border-radius: 999px;
@@ -40,6 +44,17 @@
 .statusPending {
     background-color: $orange-25;
     color: $orange-140;
+}
+
+.actionsList {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: $sp-2;
+    align-items: center;
+}
+
+.noActions {
+    color: $black-60;
 }
 
 @include ltemd {

@@ -134,8 +134,37 @@
 
 .permissionDeniedMessage {
     color: $red-140;
-    font-family: "Nunito Sans", sans-serif;
-    font-size: 16px;
+   font-family: "Nunito Sans", sans-serif;
+   font-size: 16px;
+   font-weight: 700;
+   margin-top: 24px;
+}
+
+.reopenModal {
+    max-width: 480px;
+    width: 100%;
+}
+
+.reopenModalContent {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-4;
+    padding: $sp-4;
+}
+
+.reopenModalTitle {
+    font-family: "Figtree", sans-serif;
+    font-size: 20px;
     font-weight: 700;
-    margin-top: 24px;
+    color: var(--FontColor);
+}
+
+.reopenModalInput {
+    margin: 0;
+}
+
+.reopenModalActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: $sp-3;
 }
