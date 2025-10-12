@@ -15,9 +15,14 @@ export interface BackendReview {
     finalScore: number
     initialScore: number
     typeId: string | null
-    metadata: string | null
+    metadata: string | Record<string, unknown> | null
     status: string | null
     reviewDate: string | null
+    /**
+     * Optional phase name hint returned by the API.
+     * Used for matching reviews when phase metadata is incomplete.
+     */
+    phaseName?: string | null
     createdAt: string
     createdAtDate?: Date // this field is calculated at frontend
     createdBy: string
@@ -42,6 +47,7 @@ export function createEmptyBackendReview(): BackendReview {
         legacySubmissionId: '',
         metadata: '',
         phaseId: '',
+        phaseName: '',
         resourceId: '',
         reviewDate: '',
         scorecardId: '',

@@ -22,7 +22,7 @@ import { EnvironmentConfig } from '~/config'
 import { copyTextToClipboard, handleError, useWindowSize, WindowSize } from '~/libs/shared'
 import { IconOutline, Table, TableColumn, Tooltip } from '~/libs/ui'
 
-import { APPROVAL, NO_RESOURCE_ID, REVIEWER, WITHOUT_APPEAL } from '../../../config/index.config'
+import { APPROVAL, REVIEWER, WITHOUT_APPEAL } from '../../../config/index.config'
 import { ChallengeDetailContext, ReviewAppContext } from '../../contexts'
 import { useRole, useRoleProps, useSubmissionDownloadAccess } from '../../hooks'
 import type { UseSubmissionDownloadAccessResult } from '../../hooks/useSubmissionDownloadAccess'
@@ -715,7 +715,6 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                     = data.aggregated?.reviews[reviewIndex]
 
                 const reviewInfo = reviewDetail?.reviewInfo
-                const resourceId = reviewDetail?.resourceId || NO_RESOURCE_ID
                 const reviewStatus = (reviewInfo?.status ?? '').toUpperCase()
 
                 if (!reviewInfo || !reviewInfo.id) {
@@ -735,7 +734,7 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                     const formattedScore = finalScore.toFixed(2)
                     return (
                         <Link
-                            to={`./../scorecard-details/${data.id}/review/${resourceId}`}
+                            to={`./../review/${reviewInfo.id}`}
                             className={styles.textBlue}
                         >
                             {formattedScore}
@@ -762,7 +761,6 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                     = data.aggregated?.reviews[reviewIndex]
 
                 const reviewInfo = reviewDetail?.reviewInfo
-                const resourceId = reviewDetail?.resourceId || NO_RESOURCE_ID
 
                 if (!reviewInfo || !reviewInfo.id) {
                     return (
@@ -790,7 +788,7 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
 
                 return (
                     <Link
-                        to={`./../scorecard-details/${data.id}/review/${resourceId}`}
+                        to={`./../review/${reviewInfo.id}`}
                         className={styles.appealsLink}
                     >
                         [
@@ -897,13 +895,8 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                             || (r.reviewInfo?.resourceId && myReviewerResourceIds.has(r.reviewInfo.resourceId))
                         ))
 
-                        // Prefer the resourceId from my review if found; otherwise use one of mine
-                        const fallbackResourceId = Array.from(myReviewerResourceIds)[0]
-                        const resourceId = myReviewDetail?.resourceId
-                            || myReviewDetail?.reviewInfo?.resourceId
-                            || fallbackResourceId
-                            || NO_RESOURCE_ID
-
+                        const reviewId = myReviewDetail?.reviewInfo?.id
+                            ?? myReviewDetail?.reviewId
                         const status = (myReviewDetail?.reviewInfo?.status ?? '').toUpperCase()
                         const historyKeyForRow = getSubmissionHistoryKey(data.memberId, data.id)
                         const rowHistory = historyByMember.get(historyKeyForRow) ?? []
@@ -927,16 +920,20 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                                     </div>
                                 )
                                 : (
-                                    <Link
-                                        key='complete-review'
-                                        to={`./../scorecard-details/${data.id}/review/${resourceId}`}
-                                        className={classNames(
-                                            styles.submit,
-                                        )}
-                                    >
-                                        <i className='icon-upload' />
-                                        Complete Review
-                                    </Link>
+                                    reviewId
+                                        ? (
+                                            <Link
+                                                key='complete-review'
+                                                to={`./../review/${reviewId}`}
+                                                className={classNames(
+                                                    styles.submit,
+                                                )}
+                                            >
+                                                <i className='icon-upload' />
+                                                Complete Review
+                                            </Link>
+                                        )
+                                        : undefined
                                 )
 
                         const reopenButtons = createReopenActionButtons(
@@ -1067,16 +1064,16 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                     return <span className={styles.notReviewed}>--</span>
                 }
 
+                const reviewId = data.review.id
                 const status = (data.review?.status ?? '').toUpperCase()
                 const isCompleted = ['COMPLETED', 'SUBMITTED'].includes(status)
                 const finalScore = data.review?.finalScore
 
                 if (isCompleted && typeof finalScore === 'number' && Number.isFinite(finalScore)) {
-                    const resourceId = data.review?.resourceId || NO_RESOURCE_ID
                     const formattedScore = finalScore.toFixed(2)
                     return (
                         <Link
-                            to={`./../scorecard-details/${data.id}/review/${resourceId}`}
+                            to={`./../review/${reviewId}`}
                             className={styles.textBlue}
                         >
                             {formattedScore}
@@ -1097,6 +1094,89 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
             scoreColumn,
         ]
 
+        const renderReviewCompletedAction = (): JSX.Element => (
+            <div
+                aria-label='Review completed'
+                className={classNames(
+                    styles.completedAction,
+                    'last-element',
+                )}
+                title='Review completed'
+            >
+                <span className={styles.completedIcon} aria-hidden='true'>
+                    <IconOutline.CheckIcon />
+                </span>
+                <span className={styles.completedPill}>Review Complete</span>
+            </div>
+        )
+
+        const createPrimaryAction = ({
+            actionLink,
+            hasReview,
+            reviewId,
+            reviewStatus,
+        }: {
+            actionLink?: JSX.Element
+            hasReview: boolean
+            reviewId?: string
+            reviewStatus: string
+        }): JSX.Element | undefined => {
+            if (includes(['COMPLETED', 'SUBMITTED'], reviewStatus)) {
+                return renderReviewCompletedAction()
+            }
+
+            if (includes(['PENDING', 'IN_PROGRESS'], reviewStatus) && actionLink) {
+                return actionLink
+            }
+
+            if (!reviewStatus && hasReview && reviewId) {
+                return (
+                    <Link
+                        to={`./../review/${reviewId}`}
+                        className={classNames(
+                            styles.submit,
+                            'last-element',
+                        )}
+                    >
+                        <i className='icon-reopen' />
+                        Reopen Review
+                    </Link>
+                )
+            }
+
+            return actionLink
+        }
+
+        const createHistoryEntry = (
+            data: SubmissionRow,
+        ): { element: JSX.Element; key: string } | undefined => {
+            if (!canViewHistory || !isSubmissionTab) {
+                return undefined
+            }
+
+            const historyKeyForRow = getSubmissionHistoryKey(data.memberId, data.id)
+            const rowHistory = historyByMember.get(historyKeyForRow) ?? []
+
+            if (rowHistory.length === 0) {
+                return undefined
+            }
+
+            return {
+                element: (
+                    <button
+                        type='button'
+                        className={styles.historyButton}
+                        data-member-id={data.memberId ?? ''}
+                        data-submission-id={data.id}
+                        onClick={handleHistoryButtonClick}
+                    >
+                        View Submission History
+                    </button>
+                ),
+                key: 'submission-history',
+            }
+        }
+
         // Actions on Review tab only (complete/reopen/submit review)
         const actionColumns = (actionChallengeRole === REVIEWER
             && isReviewPhase(challengeInfo)
@@ -1106,12 +1186,12 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                 columnId: 'action',
                 label: 'Action',
                 renderer: (data: SubmissionRow) => {
-                    const resourceId = data.review?.resourceId || NO_RESOURCE_ID
+                    const reviewId = data.review?.id
                     const reviewStatus = (data.review?.status ?? '').toUpperCase()
-                    const hasReview = !!data.review?.id
-                    const actionLink = (
+                    const hasReview = !!reviewId
+                    const actionLink = reviewId ? (
                         <Link
-                            to={`./../scorecard-details/${data.id}/review/${resourceId}`}
+                            to={`./../review/${reviewId}`}
                             className={classNames(
                                 styles.submit,
                                 'last-element',
@@ -1120,66 +1200,23 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                             <i className='icon-upload' />
                             Submit Review
                         </Link>
-                    )
+                    ) : undefined
+                    const primaryAction = createPrimaryAction({
+                        actionLink,
+                        hasReview,
+                        reviewId,
+                        reviewStatus,
+                    })
 
-                    let primaryAction: JSX.Element
+                    const actionEntries: Array<{ element: JSX.Element; key: string }> = primaryAction
+                        ? [
+                            { element: primaryAction, key: 'primary-action' },
+                        ]
+                        : []
+                    const historyEntry = createHistoryEntry(data)
 
-                    if (includes(['COMPLETED', 'SUBMITTED'], reviewStatus)) {
-                        primaryAction = (
-                            <div
-                                aria-label='Review completed'
-                                className={classNames(
-                                    styles.completedAction,
-                                    'last-element',
-                                )}
-                                title='Review completed'
-                            >
-                                <span className={styles.completedIcon} aria-hidden='true'>
-                                    <IconOutline.CheckIcon />
-                                </span>
-                                <span className={styles.completedPill}>Review Complete</span>
-                            </div>
-                        )
-                    } else if (includes(['PENDING', 'IN_PROGRESS'], reviewStatus)) {
-                        primaryAction = actionLink
-                    } else if (!reviewStatus && hasReview) {
-                        primaryAction = (
-                            <Link
-                                to={`./../scorecard-details/${data.id}/review/${resourceId}`}
-                                className={classNames(
-                                    styles.submit,
-                                    'last-element',
-                                )}
-                            >
-                                <i className='icon-reopen' />
-                                Reopen Review
-                            </Link>
-                        )
-                    } else {
-                        primaryAction = actionLink
-                    }
-
-                    const actionEntries: Array<{ element: JSX.Element; key: string }> = [
-                        { element: primaryAction, key: 'primary-action' },
-                    ]
-                    const historyKeyForRow = getSubmissionHistoryKey(data.memberId, data.id)
-                    const rowHistory = historyByMember.get(historyKeyForRow) ?? []
-
-                    if (canViewHistory && isSubmissionTab && rowHistory.length > 0) {
-                        actionEntries.push({
-                            element: (
-                                <button
-                                    type='button'
-                                    className={styles.historyButton}
-                                    data-member-id={data.memberId ?? ''}
-                                    data-submission-id={data.id}
-                                    onClick={handleHistoryButtonClick}
-                                >
-                                    View Submission History
-                                </button>
-                            ),
-                            key: 'submission-history',
-                        })
+                    if (historyEntry) {
+                        actionEntries.push(historyEntry)
                     }
 
                     if (!actionEntries.length) {
@@ -1274,7 +1311,8 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                     )
                 }
 
-                const appealInfo = mappingReviewAppeal[data.review.id]
+                const reviewId = data.review.id
+                const appealInfo = mappingReviewAppeal[reviewId]
                 if (!appealInfo) {
                     return (
                         <span className={styles.notReviewed}>
@@ -1283,7 +1321,6 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                     )
                 }
 
-                const resourceId = data.review?.resourceId || NO_RESOURCE_ID
                 const reviewStatus = (data.review?.status ?? '').toUpperCase()
                 const hasAppeals = appealInfo.totalAppeals > 0
 
@@ -1295,7 +1332,7 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                     <>
                         [
                         <Link
-                            to={`./../scorecard-details/${data.id}/review/${resourceId}`}
+                            to={`./../review/${reviewId}`}
                             className={styles.appealsLink}
                         >
                             <span className={styles.textBlue}>{appealInfo.finishAppeals}</span>
@@ -1322,7 +1359,8 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                     if (!data.review || !data.review.id) {
                         return <span className={styles.notReviewed}>--</span>
                     }
-                    const appealInfo = mappingReviewAppeal[data.review.id]
+                    const reviewId = data.review.id
+                    const appealInfo = mappingReviewAppeal[reviewId]
                     const total = appealInfo?.totalAppeals ?? 0
                     const finished = appealInfo?.finishAppeals ?? 0
                     const remaining = Math.max(total - finished, 0)
@@ -1336,8 +1374,8 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                 columnId: 'respond-action',
                 label: 'Action',
                 renderer: (data: SubmissionRow) => {
-                    const resourceId = data.review?.resourceId || NO_RESOURCE_ID
-                    if (!data.review?.id) {
+                    const reviewId = data.review?.id
+                    if (!reviewId) {
                         return (
                             <span className={classNames(styles.notReviewed, 'last-element')}>
                                 --
@@ -1346,7 +1384,7 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                     }
 
                     // Determine remaining appeals for this submission/review
-                    const appealInfo = mappingReviewAppeal[data.review.id]
+                    const appealInfo = mappingReviewAppeal[reviewId]
                     const total = appealInfo?.totalAppeals ?? 0
                     const finished = appealInfo?.finishAppeals ?? 0
                     const remaining = Math.max(total - finished, 0)
@@ -1356,7 +1394,7 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                     if (isAppealsResponsePhaseOpen && remaining > 0) {
                         return (
                             <Link
-                                to={`./../scorecard-details/${data.id}/review/${resourceId}`}
+                                to={`./../review/${reviewId}`}
                                 className={classNames(styles.submit, 'last-element')}
                             >
                                 Respond to Appeals

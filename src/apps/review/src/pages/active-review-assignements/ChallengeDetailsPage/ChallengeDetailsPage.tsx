@@ -72,6 +72,24 @@ type PhaseLike = Pick<
     | 'actualEndDate'
 >
 
+const MINUTES_PER_HOUR = 60
+const SECONDS_PER_MINUTE = 60
+const SECONDS_PER_HOUR = MINUTES_PER_HOUR * SECONDS_PER_MINUTE
+
+const parseNonNegativeInteger = (value: string): number | undefined => {
+    const trimmedValue = value.trim()
+    if (!trimmedValue) {
+        return 0
+    }
+
+    const parsedValue = Number(trimmedValue)
+    if (!Number.isFinite(parsedValue) || parsedValue < 0 || !Number.isInteger(parsedValue)) {
+        return undefined
+    }
+
+    return parsedValue
+}
+
 // Helpers to keep UI hooks simple and under complexity limits
 
 // helpers for label handling
@@ -513,6 +531,10 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
     )
     const [isSavingPhaseNotifications, setIsSavingPhaseNotifications] = useState(false)
     const [phaseActionLoadingMap, setPhaseActionLoadingMap] = useState<Record<string, boolean>>({})
+    const [extendTarget, setExtendTarget] = useState<{ id: string; name: string; duration?: number }>()
+    const [extendHours, setExtendHours] = useState<string>('')
+    const [extendMinutes, setExtendMinutes] = useState<string>('')
+    const [extendError, setExtendError] = useState<string | undefined>()
     const [reopenTarget, setReopenTarget] = useState<{ id: string; name: string; duration?: number }>()
     const [reopenDuration, setReopenDuration] = useState<string>('')
     const [reopenDurationError, setReopenDurationError] = useState<string | undefined>()
@@ -1077,13 +1099,32 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         [hasCopilotRole, isAdmin, isPastReviewDetail],
     )
 
+    const challengePhases = challengeInfo?.phases
+
+    const phaseLookup = useMemo(() => {
+        const map = new Map<string, BackendPhase>()
+        if (challengePhases) {
+            challengePhases.forEach(phaseItem => {
+                if (phaseItem.id) {
+                    map.set(phaseItem.id, phaseItem)
+                }
+
+                if (phaseItem.phaseId) {
+                    map.set(phaseItem.phaseId, phaseItem)
+                }
+            })
+        }
+
+        return map
+    }, [challengePhases])
+
     const timelineRows = useMemo<ChallengeTimelineRow[]>(() => {
-        if (!challengeInfo?.phases || challengeInfo.phases.length === 0) {
+        if (!challengePhases || challengePhases.length === 0) {
             return []
         }
 
         const baseItems = buildPhaseTabs(
-            challengeInfo.phases,
+            challengePhases,
             challengeInfo.status,
             phaseOrderingOptions,
         )
@@ -1102,7 +1143,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         const rows: ChallengeTimelineRow[] = []
         baseItems.forEach(item => {
             const phase = findPhaseByTabLabel(
-                challengeInfo.phases,
+                challengePhases,
                 item.value,
                 phaseOrderingOptions,
             )
@@ -1140,7 +1181,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         })
 
         return rows
-    }, [challengeInfo, phaseOrderingOptions])
+    }, [challengeInfo, challengePhases, phaseOrderingOptions])
 
     const setPhaseActionLoading = useCallback((phaseId: string, loading: boolean) => {
         setPhaseActionLoadingMap(prev => ({
@@ -1184,6 +1225,105 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         }
     }, [challengeInfoCacheKey, mutate, setPhaseActionLoading])
 
+    const openExtendModal = useCallback((
+        phaseId: string,
+        phaseName: string,
+        duration?: number,
+    ) => {
+        const safeDuration = typeof duration === 'number' && Number.isFinite(duration)
+            ? Math.max(duration, 0)
+            : 0
+        const hours = Math.floor(safeDuration / SECONDS_PER_HOUR)
+        const minutes = Math.floor((safeDuration % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE)
+
+        setExtendTarget({
+            duration: safeDuration,
+            id: phaseId,
+            name: phaseName,
+        })
+        setExtendHours(String(hours))
+        setExtendMinutes(String(minutes))
+        setExtendError(undefined)
+    }, [])
+
+    const closeExtendModal = useCallback(() => {
+        setExtendTarget(undefined)
+        setExtendHours('')
+        setExtendMinutes('')
+        setExtendError(undefined)
+    }, [])
+
+    const handleExtendHoursChange = useCallback((event: FocusEvent<HTMLInputElement>) => {
+        setExtendHours(event.currentTarget.value)
+        if (extendError) {
+            setExtendError(undefined)
+        }
+    }, [extendError])
+
+    const handleExtendMinutesChange = useCallback((event: FocusEvent<HTMLInputElement>) => {
+        setExtendMinutes(event.currentTarget.value)
+        if (extendError) {
+            setExtendError(undefined)
+        }
+    }, [extendError])
+
+    const handleExtendSubmit = useCallback(async () => {
+        if (!extendTarget) {
+            return
+        }
+
+        const parsedHours = parseNonNegativeInteger(extendHours)
+        const parsedMinutes = parseNonNegativeInteger(extendMinutes)
+
+        if (
+            parsedHours === undefined
+            || parsedMinutes === undefined
+            || parsedMinutes >= MINUTES_PER_HOUR
+        ) {
+            setExtendError('Enter valid non-negative hours and minutes. Minutes must be below 60.')
+            return
+        }
+
+        const totalSeconds = ((parsedHours * MINUTES_PER_HOUR) + parsedMinutes) * SECONDS_PER_MINUTE
+
+        if (totalSeconds <= 0) {
+            setExtendError('Duration must be greater than zero.')
+            return
+        }
+
+        const currentDuration = extendTarget.duration ?? 0
+
+        if (totalSeconds <= currentDuration) {
+            setExtendError('New duration must be longer than the current duration.')
+            return
+        }
+
+        setExtendError(undefined)
+
+        const didSucceed = await handlePhaseUpdate(
+            extendTarget.id,
+            {
+                duration: totalSeconds,
+                isOpen: true,
+            },
+            {
+                error: `Failed to extend ${extendTarget.name} phase.`,
+                success: `${extendTarget.name} phase extended.`,
+                toastId: 'extend',
+            },
+        )
+
+        if (didSucceed) {
+            closeExtendModal()
+        }
+    }, [
+        closeExtendModal,
+        extendHours,
+        extendMinutes,
+        extendTarget,
+        handlePhaseUpdate,
+    ])
+
     const openReopenModal = useCallback((
         phaseId: string,
         phaseName: string,
@@ -1223,8 +1363,15 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                 .toLowerCase()
             const isLoading = Boolean(phaseActionLoadingMap[phaseId])
             const actions: ChallengeTimelineAction[] = []
+            const phaseData = phaseLookup.get(phaseId)
 
             if (normalizedStatus === 'open') {
+                actions.push({
+                    disabled: isLoading,
+                    label: 'Extend',
+                    loading: isLoading,
+                    onClick: () => openExtendModal(phaseId, row.name, row.duration),
+                })
                 actions.push({
                     disabled: isLoading,
                     label: 'Close',
@@ -1238,18 +1385,30 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                     },
                 })
             } else if (normalizedStatus === 'pending') {
-                actions.push({
-                    disabled: isLoading,
-                    label: 'Open',
-                    loading: isLoading,
-                    onClick: () => {
-                        handlePhaseUpdate(phaseId, { isOpen: true }, {
-                            error: `Failed to open ${row.name} phase.`,
-                            success: `${row.name} phase opened.`,
-                            toastId: 'open',
-                        })
-                    },
-                })
+                let canOpenPhase = true
+
+                if (phaseData?.predecessor) {
+                    const predecessorPhase = phaseLookup.get(phaseData.predecessor)
+                    const predecessorCompleted = Boolean(predecessorPhase?.actualStartDate)
+                    if (!predecessorCompleted) {
+                        canOpenPhase = false
+                    }
+                }
+
+                if (canOpenPhase) {
+                    actions.push({
+                        disabled: isLoading,
+                        label: 'Open',
+                        loading: isLoading,
+                        onClick: () => {
+                            handlePhaseUpdate(phaseId, { isOpen: true }, {
+                                error: `Failed to open ${row.name} phase.`,
+                                success: `${row.name} phase opened.`,
+                                toastId: 'open',
+                            })
+                        },
+                    })
+                }
             } else if (normalizedStatus === 'closed') {
                 actions.push({
                     disabled: isLoading,
@@ -1267,7 +1426,19 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                 actions,
             }
         })
-    }, [canManagePhases, handlePhaseUpdate, openReopenModal, phaseActionLoadingMap, timelineRows])
+    }, [
+        canManagePhases,
+        handlePhaseUpdate,
+        openExtendModal,
+        openReopenModal,
+        phaseActionLoadingMap,
+        phaseLookup,
+        timelineRows,
+    ])
+
+    const isExtendSubmitting = extendTarget
+        ? Boolean(phaseActionLoadingMap[extendTarget.id])
+        : false
 
     const isReopenSubmitting = reopenTarget
         ? Boolean(phaseActionLoadingMap[reopenTarget.id])
@@ -1446,6 +1617,64 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                     ) : undefined}
                 </>
             ) : undefined}
+            <BaseModal
+                open={Boolean(extendTarget)}
+                onClose={closeExtendModal}
+                showCloseIcon
+                classNames={{
+                    modal: styles.reopenModal,
+                }}
+            >
+                <div className={styles.reopenModalContent}>
+                    <div className={styles.reopenModalTitle}>
+                        Extend Phase Duration
+                    </div>
+                    <div className={styles.phaseDurationInputs}>
+                        <InputText
+                            name='extend-hours'
+                            label='Hours'
+                            type='number'
+                            value={extendHours}
+                            forceUpdateValue
+                            placeholder='0'
+                            onChange={handleExtendHoursChange}
+                            classNameWrapper={styles.reopenModalInput}
+                            disabled={isExtendSubmitting}
+                        />
+                        <InputText
+                            name='extend-minutes'
+                            label='Minutes'
+                            type='number'
+                            value={extendMinutes}
+                            forceUpdateValue
+                            placeholder='0'
+                            onChange={handleExtendMinutesChange}
+                            error={extendError}
+                            classNameWrapper={styles.reopenModalInput}
+                            disabled={isExtendSubmitting}
+                        />
+                    </div>
+                    <div className={styles.reopenModalActions}>
+                        <Button
+                            secondary
+                            size='lg'
+                            onClick={closeExtendModal}
+                            disabled={isExtendSubmitting}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            primary
+                            size='lg'
+                            onClick={handleExtendSubmit}
+                            disabled={isExtendSubmitting}
+                            loading={isExtendSubmitting}
+                        >
+                            Extend
+                        </Button>
+                    </div>
+                </div>
+            </BaseModal>
             <BaseModal
                 open={Boolean(reopenTarget)}
                 onClose={closeReopenModal}

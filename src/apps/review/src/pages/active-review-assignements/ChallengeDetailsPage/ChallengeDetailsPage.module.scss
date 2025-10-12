@@ -180,10 +180,17 @@
 
 .reopenModalInput {
     margin: 0;
+    flex: 1 1 100%;
 }
 
 .reopenModalActions {
     display: flex;
     justify-content: flex-end;
+    gap: $sp-3;
+}
+
+.phaseDurationInputs {
+    display: flex;
+    flex-wrap: wrap;
     gap: $sp-3;
 }

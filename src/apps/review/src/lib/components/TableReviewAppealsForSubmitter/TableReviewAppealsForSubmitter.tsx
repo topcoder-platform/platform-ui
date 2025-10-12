@@ -36,7 +36,6 @@ import {
 } from '../../utils'
 import {
     FIRST2FINISH,
-    NO_RESOURCE_ID,
     TRACK_CHALLENGE,
     WITHOUT_APPEAL,
 } from '../../../config/index.config'
@@ -437,11 +436,11 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
                 // On Appeals tab, make the average score clickable to a review page
                 if ((props.tab || '').toLowerCase() === 'appeals') {
                     const reviewDetail = data.aggregated?.reviews?.[0]
-                    const resourceId = reviewDetail?.resourceId || reviewDetail?.reviewInfo?.resourceId
-                    if (resourceId) {
+                    const reviewId = reviewDetail?.reviewInfo?.id || reviewDetail?.reviewId
+                    if (reviewId) {
                         return (
                             <Link
-                                to={`./../scorecard-details/${data.id}/review/${resourceId}`}
+                                to={`./../review/${reviewId}`}
                                 className={styles.textBlue}
                             >
                                 {scoreDisplay}
@@ -503,9 +502,9 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
                 = data.aggregated?.reviews[reviewIndex]
 
             const reviewInfo = reviewDetail?.reviewInfo
-            const resourceId = reviewDetail?.resourceId || NO_RESOURCE_ID
+            const reviewId = reviewInfo?.id || reviewDetail?.reviewId
 
-            if (!reviewInfo || !reviewInfo.id) {
+            if (!reviewInfo || !reviewId) {
                 return (
                     <span className={styles.notReviewed}>
                         --
@@ -527,7 +526,7 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
                 : undefined
             return (
                 <Link
-                    to={`./../scorecard-details/${data.id}/review/${resourceId}`}
+                    to={`./../review/${reviewId}`}
                     className={styles.textBlue}
                 >
                     {formattedScore ?? '--'}
@@ -543,9 +542,9 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
                 = data.aggregated?.reviews[reviewIndex]
 
             const reviewInfo = reviewDetail?.reviewInfo
-            const resourceId = reviewDetail?.resourceId || NO_RESOURCE_ID
+            const reviewId = reviewInfo?.id || reviewDetail?.reviewId
 
-            if (!reviewInfo || !reviewInfo.id) {
+            if (!reviewInfo || !reviewId) {
                 return (
                     <span className={styles.notReviewed}>
                         --
@@ -570,7 +569,7 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
                         styles.appealsLink,
                         'last-element',
                     )}
-                    to={`./../scorecard-details/${data.id}/review/${resourceId}`}
+                    to={`./../review/${reviewId}`}
                 >
                     [
                     {' '}
@@ -638,13 +637,13 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
 
                     if (shouldShowAppealAction) {
                         const reviewDetail = (data.aggregated?.reviews || []).find(r => r.reviewInfo?.id)
-                        const resourceId = reviewDetail?.reviewInfo?.resourceId || reviewDetail?.resourceId
+                        const reviewId = reviewDetail?.reviewInfo?.id || reviewDetail?.reviewId
 
-                        if (reviewDetail?.reviewInfo?.id && resourceId) {
+                        if (reviewId) {
                             actionEntries.push({
                                 element: (
                                     <Link
-                                        to={`./../scorecard-details/${data.id}/review/${resourceId}`}
+                                        to={`./../review/${reviewId}`}
                                         className={classNames(styles.textBlue, 'last-element')}
                                     >
                                         Appeal

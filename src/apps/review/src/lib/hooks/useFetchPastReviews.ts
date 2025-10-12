@@ -37,6 +37,7 @@ export interface useFetchPastReviewsProps {
 type LoadPastReviewsInternalParams = Required<Pick<FetchPastReviewsParams, 'page' | 'perPage'>> & {
     challengeTypeId?: string
     challengeTrackId?: string
+    challengeName?: string
     sortBy?: string
     sortOrder?: 'asc' | 'desc'
 }
@@ -61,6 +62,7 @@ function mergePastReviewParams(
 
     assignFromNext('challengeTypeId')
     assignFromNext('challengeTrackId')
+    assignFromNext('challengeName')
     assignFromNext('sortBy')
     assignFromNext('sortOrder')
 
@@ -89,6 +91,7 @@ export function useFetchPastReviews(): useFetchPastReviewsProps {
     }))
     const latestRequestKeyRef = useRef<string>('')
     const latestParamsRef = useRef<LoadPastReviewsInternalParams>({
+        challengeName: undefined,
         challengeTrackId: undefined,
         challengeTypeId: undefined,
         page: 1,
@@ -109,6 +112,7 @@ export function useFetchPastReviews(): useFetchPastReviewsProps {
             const requestKey = [
                 mergedParams.challengeTypeId ?? '',
                 mergedParams.challengeTrackId ?? '',
+                mergedParams.challengeName ?? '',
                 mergedParams.page,
                 mergedParams.perPage,
                 mergedParams.sortBy ?? '',

@@ -2,6 +2,7 @@
  * Past Reviews Page.
  */
 import {
+    ChangeEvent,
     FC,
     useCallback,
     useContext,
@@ -15,7 +16,7 @@ import classNames from 'classnames'
 
 import { Pagination, TableLoading } from '~/apps/admin/src/lib'
 import { Sort } from '~/apps/admin/src/platform/gamification-admin/src/game-lib'
-import { Button, IconOutline } from '~/libs/ui'
+import { Button, IconOutline, InputText } from '~/libs/ui'
 
 import { CHALLENGE_TYPE_SELECT_ALL_OPTION } from '../../../config/index.config'
 import {
@@ -73,6 +74,7 @@ export const PastReviewsPage: FC<Props> = (props: Props) => {
     const [challengeType, setChallengeType] = useState<
         SingleValue<SelectOption>
     >(CHALLENGE_TYPE_SELECT_ALL_OPTION)
+    const [challengeName, setChallengeName] = useState<string>('')
 
     const challengeTypeOptions = useMemo<SelectOption[]>(() => {
         const results: SelectOption[] = [CHALLENGE_TYPE_SELECT_ALL_OPTION]
@@ -121,6 +123,7 @@ export const PastReviewsPage: FC<Props> = (props: Props) => {
     useEffect(() => {
         if (challengeType && loginUserInfo) {
             loadPastReviews({
+                challengeName: challengeName || undefined,
                 challengeTrackId: selectedChallengeTrackId || undefined,
                 challengeTypeId: selectedChallengeTypeId || undefined,
                 page: 1,
@@ -132,6 +135,7 @@ export const PastReviewsPage: FC<Props> = (props: Props) => {
     }, [
         challengeTrack,
         challengeType,
+        challengeName,
         loadPastReviews,
         loginUserInfo,
         selectedChallengeTrackId,
@@ -142,6 +146,7 @@ export const PastReviewsPage: FC<Props> = (props: Props) => {
     const handlePageChange = useCallback(
         (nextPage: number) => {
             loadPastReviews({
+                challengeName: challengeName || undefined,
                 challengeTrackId: selectedChallengeTrackId || undefined,
                 challengeTypeId: selectedChallengeTypeId || undefined,
                 page: nextPage,
@@ -150,7 +155,13 @@ export const PastReviewsPage: FC<Props> = (props: Props) => {
                 sortOrder: sort?.direction,
             })
         },
-        [loadPastReviews, selectedChallengeTrackId, selectedChallengeTypeId, sort],
+        [
+            challengeName,
+            loadPastReviews,
+            selectedChallengeTrackId,
+            selectedChallengeTypeId,
+            sort,
+        ],
     )
 
     const handleSortChange = useCallback(
@@ -160,10 +171,19 @@ export const PastReviewsPage: FC<Props> = (props: Props) => {
         [],
     )
 
+    const handleChallengeNameChange = useCallback(
+        (event: ChangeEvent<HTMLInputElement>) => {
+            setChallengeName(event.target.value)
+        },
+        [],
+    )
+
     const handleClear = useCallback(() => {
         setChallengeTrack(CHALLENGE_TYPE_SELECT_ALL_OPTION)
         setChallengeType(CHALLENGE_TYPE_SELECT_ALL_OPTION)
+        setChallengeName('')
         loadPastReviews({
+            challengeName: undefined,
             challengeTrackId: undefined,
             challengeTypeId: undefined,
             page: 1,
@@ -180,40 +200,59 @@ export const PastReviewsPage: FC<Props> = (props: Props) => {
             breadCrumb={breadCrumb}
         >
             <div className={styles['filter-bar']}>
-                <div className={styles.filterGroup}>
-                    <label>Challenge track</label>
-                    <Select
+                <div className={classNames(styles.filterGroup, styles.searchGroup)}>
+                    <InputText
+                        name='challengeName'
+                        type='text'
+                        placeholder='Search challenges...'
+                        value={challengeName}
+                        forceUpdateValue
+                        onChange={handleChallengeNameChange}
                         className='react-select-container'
-                        classNamePrefix='select'
-                        options={challengeTrackOptions}
-                        value={challengeTrack}
-                        onChange={setChallengeTrack}
-                        isLoading={isLoadingChallengeType}
-                        isDisabled={isLoadingPastReviews}
+                        classNameWrapper={styles.searchInputWrapper}
+                        label={(
+                            <span className={styles.srOnly}>
+                                Search by name
+                            </span>
+                        )}
                     />
                 </div>
-                <div className={styles.filterGroup}>
-                    <label>Challenge type</label>
-                    <Select
-                        className='react-select-container'
-                        classNamePrefix='select'
-                        options={challengeTypeOptions}
-                        value={challengeType}
-                        onChange={setChallengeType}
-                        isLoading={isLoadingChallengeType}
-                        isDisabled={isLoadingPastReviews}
-                    />
-                </div>
-                <div className={styles.actions}>
-                    <Button
-                        className={styles.clearButton}
-                        label='Clear'
-                        secondary
-                        size='lg'
-                        onClick={handleClear}
-                        icon={IconOutline.XIcon}
-                        iconToLeft
-                    />
+                <div className={styles.filterRow}>
+                    <div className={styles.filterGroup}>
+                        <label>Challenge track</label>
+                        <Select
+                            className='react-select-container'
+                            classNamePrefix='select'
+                            options={challengeTrackOptions}
+                            value={challengeTrack}
+                            onChange={setChallengeTrack}
+                            isLoading={isLoadingChallengeType}
+                            isDisabled={isLoadingPastReviews}
+                        />
+                    </div>
+                    <div className={styles.filterGroup}>
+                        <label>Challenge type</label>
+                        <Select
+                            className='react-select-container'
+                            classNamePrefix='select'
+                            options={challengeTypeOptions}
+                            value={challengeType}
+                            onChange={setChallengeType}
+                            isLoading={isLoadingChallengeType}
+                            isDisabled={isLoadingPastReviews}
+                        />
+                    </div>
+                    <div className={styles.actions}>
+                        <Button
+                            className={styles.clearButton}
+                            label='Clear'
+                            secondary
+                            size='lg'
+                            onClick={handleClear}
+                            icon={IconOutline.XIcon}
+                            iconToLeft
+                        />
+                    </div>
                 </div>
             </div>
 

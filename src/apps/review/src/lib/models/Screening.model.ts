@@ -28,6 +28,10 @@ export interface Screening {
      */
     myReviewResourceId?: string
     /**
+     * For the current viewer: reviewId of their assignment (if any).
+     */
+    myReviewId?: string
+    /**
      * For the current viewer: status of their review assignment (if any)
      * e.g., PENDING | IN_PROGRESS | SUBMITTED | COMPLETED
      */
@@ -36,6 +40,10 @@ export interface Screening {
      * Indicates whether this submission is the latest for the member.
      */
     isLatest?: boolean
+    /**
+     * The review id associated with this screening entry (if available).
+     */
+    reviewId?: string
 }
 
 /**

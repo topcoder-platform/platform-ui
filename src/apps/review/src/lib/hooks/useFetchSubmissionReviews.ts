@@ -42,7 +42,7 @@ import {
     createReview,
     deleteAppeal,
     fetchAppeals,
-    fetchReviews,
+    fetchReview,
     fetchScorecard,
     fetchSubmission,
     updateAppeal,
@@ -111,15 +111,8 @@ export function useFetchSubmissionReviews(): useFetchSubmissionReviewsProps {
     const [isSavingAppealResponse, setIsSavingAppealResponse] = useState(false)
     const [isSavingManagerComment, setIsSavingManagerComment] = useState(false)
     const { actionChallengeRole }: useRoleProps = useRole()
-    const {
-        submissionId = '',
-        resourceId = '',
-    }: {
-        submissionId?: string
-        resourceId?: string
-    } = useParams<{
-        submissionId: string
-        resourceId: string
+    const { reviewId = '' }: { reviewId?: string } = useParams<{
+        reviewId: string
     }>()
 
     const { challengeInfo }: ChallengeDetailContextModel = useContext(
@@ -134,19 +127,24 @@ export function useFetchSubmissionReviews(): useFetchSubmissionReviewsProps {
 
     // Use swr hooks for reviews info fetching
     const {
-        data: reviews,
-        error: fetchReviewsError,
-        isValidating: isLoadingReviews,
-    }: SWRResponse<BackendReview[], Error> = useSWR<BackendReview[], Error>(
-        `EnvironmentConfig.API.V6/reviews/challengeId/${challengeInfo?.id}/submissionId/${submissionId}`,
+        data: review,
+        error: fetchReviewError,
+        isValidating: isLoadingReview,
+    }: SWRResponse<BackendReview, Error> = useSWR<BackendReview, Error>(
+        reviewId
+            ? `EnvironmentConfig.API.V6/reviews/${reviewId}`
+            : undefined,
         {
-            fetcher: () => fetchReviews(1, 100, `${challengeInfo?.id}`, submissionId),
-            isPaused: () => !challengeInfo
-                || !submissionId
-                || (isReviewPhase(challengeInfo)
+            fetcher: () => fetchReview(reviewId),
+            isPaused: () => !reviewId
+                || (!!challengeInfo
+                && isReviewPhase(challengeInfo)
                 && actionChallengeRole === SUBMITTER),
         },
     )
+
+    const submissionId = review?.submissionId ?? ''
+    const resourceId = review?.resourceId ?? ''
 
     // Use swr hooks for appeals info fetching
     const mappingAppealsRef = useRef<MappingAppeal>({})
@@ -180,11 +178,11 @@ export function useFetchSubmissionReviews(): useFetchSubmissionReviewsProps {
     }, [appeals, updatedReviewInfo])
 
     /**
-     * Get scorecard id from reviews and challenge info
+     * Get scorecard id from review and challenge info
      */
     const scorecardId = useMemo(() => {
-        if (reviews && reviews[0]) {
-            return reviews[0].scorecardId
+        if (review?.scorecardId) {
+            return review.scorecardId
         }
 
         if (!challengeInfo) {
@@ -200,7 +198,7 @@ export function useFetchSubmissionReviews(): useFetchSubmissionReviewsProps {
             name: 'Scorecard',
         })
         return `${scoreCardInfo?.value ?? ''}`
-    }, [challengeInfo, reviews])
+    }, [challengeInfo, review])
 
     // Use swr hooks for scorecard info fetching
     const {
@@ -236,21 +234,13 @@ export function useFetchSubmissionReviews(): useFetchSubmissionReviewsProps {
             return undefined
         }
 
-        let backendReview: BackendReview | undefined
-        if (resourceId && reviews) {
-            backendReview = find(reviews, review => (
-                review.resourceId === resourceId
-                && review.submissionId === submissionId
-            )) as BackendReview
-        }
-
-        if (backendReview) {
-            const converted = convertBackendReviewToReviewInfo(backendReview)
+        if (review) {
+            const converted = convertBackendReviewToReviewInfo(review)
             if (converted.reviewItems.length) {
                 return {
                     ...converted,
                     scorecardId:
-                        backendReview.scorecardId
+                        review.scorecardId
                         || converted.scorecardId
                         || scorecardInfo.id,
                 }
@@ -264,7 +254,7 @@ export function useFetchSubmissionReviews(): useFetchSubmissionReviewsProps {
                 ...converted,
                 reviewItems: emptyReview.reviewItems,
                 scorecardId:
-                    backendReview.scorecardId
+                    review.scorecardId
                     || converted.scorecardId
                     || scorecardInfo.id,
             }
@@ -275,7 +265,7 @@ export function useFetchSubmissionReviews(): useFetchSubmissionReviewsProps {
         }
 
         return undefined
-    }, [reviews, resourceId, submissionId, scorecardInfo])
+    }, [review, resourceId, scorecardInfo])
 
     useEffect(() => {
         setUpdatedReviewInfo(reviewInfo)
@@ -283,10 +273,10 @@ export function useFetchSubmissionReviews(): useFetchSubmissionReviewsProps {
 
     // Show backend error when fetching reviews info
     useEffect(() => {
-        if (fetchReviewsError) {
-            handleError(fetchReviewsError)
+        if (fetchReviewError) {
+            handleError(fetchReviewError)
         }
-    }, [fetchReviewsError])
+    }, [fetchReviewError])
 
     // Show backend error when fetching scorecard info
     useEffect(() => {
@@ -522,15 +512,15 @@ export function useFetchSubmissionReviews(): useFetchSubmissionReviewsProps {
                             .then(rs => {
                                 const result = map(
                                     reviewInfo?.reviewItems ?? [],
-                                    review => {
-                                        if (review.id === reviewItem.id) {
+                                    existingReview => {
+                                        if (existingReview.id === reviewItem.id) {
                                             return {
-                                                ...review,
+                                                ...existingReview,
                                                 finalAnswer: updatedResponse,
                                             }
                                         }
 
-                                        return review
+                                        return existingReview
                                     },
                                 )
                                 if (updatedReviewInfo) {
@@ -615,16 +605,16 @@ export function useFetchSubmissionReviews(): useFetchSubmissionReviewsProps {
                 .then(() => {
                     const result = map(
                         reviewInfo?.reviewItems ?? [],
-                        review => {
-                            if (review.id === reviewItem.id) {
+                        existingReview => {
+                            if (existingReview.id === reviewItem.id) {
                                 return {
-                                    ...review,
+                                    ...existingReview,
                                     finalAnswer: updatedResponse,
                                     managerComment: content,
                                 }
                             }
 
-                            return review
+                            return existingReview
                         },
                     )
                     if (updatedReviewInfo) {
@@ -652,7 +642,7 @@ export function useFetchSubmissionReviews(): useFetchSubmissionReviewsProps {
         addManagerComment,
         doDeleteAppeal,
         isLoading:
-            isLoadingReviews || isLoadingScorecard || isLoadingSubmission,
+            isLoadingReview || isLoadingScorecard || isLoadingSubmission,
         isSavingAppeal,
         isSavingAppealResponse,
         isSavingManagerComment,

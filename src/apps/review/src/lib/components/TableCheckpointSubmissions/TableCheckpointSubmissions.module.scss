@@ -166,3 +166,10 @@
     font-weight: 700;
     white-space: nowrap;
 }
+
+.emptyState {
+    padding: $sp-6 0;
+    text-align: center;
+    color: var(--GrayFontColor);
+    font-size: 14px;
+}

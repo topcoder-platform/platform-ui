@@ -32,6 +32,7 @@ interface Props {
 export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
     const { width: screenWidth }: WindowSize = useWindowSize()
     const isTablet = useMemo(() => screenWidth <= 984, [screenWidth])
+    const mode = props.mode ?? 'submission'
 
     const {
         isSubmissionDownloadRestricted,
@@ -42,7 +43,7 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
 
     const columns = useMemo<TableColumn<Screening>[]>(
         () => {
-            const mode = props.mode || 'submission'
+            const tableMode = props.mode ?? 'submission'
             const submissionColumn: TableColumn<Screening> = {
                 className: styles.submissionColumn,
                 label: 'Submission ID',
@@ -160,11 +161,11 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
                 submissionDateColumn,
             ]
 
-            if (mode === 'submission') {
+            if (tableMode === 'submission') {
                 return baseColumns
             }
 
-            if (mode === 'screening') {
+            if (tableMode === 'screening') {
                 const screeningColumns: TableColumn<Screening>[] = [
                     ...baseColumns,
                     {
@@ -203,8 +204,8 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
                         propertyName: 'score',
                         renderer: (data: Screening) => {
                             const hasNumericScore = data.score && data.score !== 'Pending'
-                            const resourceId = data.screenerId
-                            const canViewScorecard = hasNumericScore && resourceId
+                            const reviewId = data.reviewId
+                            const canViewScorecard = hasNumericScore && reviewId
 
                             if (!canViewScorecard) {
                                 return <span>{data.score}</span>
@@ -212,7 +213,7 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
 
                             return (
                                 <Link
-                                    to={`./../scorecard-details/${data.submissionId}/review/${resourceId}`}
+                                    to={`./../review/${reviewId}`}
                                     className={styles.scoreLink}
                                 >
                                     {data.score}
@@ -266,9 +267,6 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
                     label: 'Action',
                     propertyName: 'action',
                     renderer: (data: Screening) => {
-                        const resourceId = data.myReviewResourceId
-                        if (!resourceId) return undefined
-
                         const status = (data.myReviewStatus || '').toUpperCase()
                         if (['COMPLETED', 'SUBMITTED'].includes(status)) {
                             return (
@@ -285,10 +283,15 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
                             )
                         }
 
+                        const reviewId = data.myReviewId
+                        if (!reviewId) {
+                            return undefined
+                        }
+
                         // Pending or In Progress (or empty but assignment exists)
                         return (
                             <Link
-                                to={`./../scorecard-details/${data.submissionId}/review/${resourceId}`}
+                                to={`./../review/${reviewId}`}
                                 className={classNames(styles.submit, 'last-element')}
                             >
                                 <i className='icon-upload' />
@@ -313,8 +316,8 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
                     propertyName: 'score',
                     renderer: (data: Screening) => {
                         const hasNumericScore = data.score && data.score !== 'Pending'
-                        const resourceId = data.screenerId
-                        const canViewScorecard = hasNumericScore && resourceId
+                        const reviewId = data.reviewId
+                        const canViewScorecard = hasNumericScore && reviewId
 
                         if (!canViewScorecard) {
                             return <span>{data.score}</span>
@@ -322,7 +325,7 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
 
                         return (
                             <Link
-                                to={`./../scorecard-details/${data.submissionId}/review/${resourceId}`}
+                                to={`./../review/${reviewId}`}
                                 className={styles.scoreLink}
                             >
                                 {data.score}
@@ -398,11 +401,18 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
         [columns],
     )
 
+    const hasCheckpointData = (props.datas?.length ?? 0) > 0
+    const shouldShowEmptyState = !hasCheckpointData && (mode === 'screening' || mode === 'review')
+
     return (
         <TableWrapper
             className={classNames(styles.container, props.className, 'enhanced-table')}
         >
-            {isTablet ? (
+            {shouldShowEmptyState ? (
+                <p className={styles.emptyState}>
+                    No checkpoint submissions yet
+                </p>
+            ) : isTablet ? (
                 <TableMobile columns={columnsMobile} data={props.datas} />
             ) : (
                 <Table

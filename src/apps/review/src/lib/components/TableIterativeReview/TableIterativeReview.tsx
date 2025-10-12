@@ -24,7 +24,6 @@ import {
 import { EnvironmentConfig } from '~/config'
 import { UserRole } from '~/libs/core'
 
-import { NO_RESOURCE_ID } from '../../../config/index.config'
 import { ChallengeDetailContextModel, ReviewAppContextModel, ReviewInfo, SubmissionInfo } from '../../models'
 import { ChallengeDetailContext, ReviewAppContext } from '../../contexts'
 import { getHandleUrl, isReviewPhase } from '../../utils'
@@ -325,9 +324,13 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
                 const outcomeLabel = formatOutcome(
                     (review?.metadata as ScoreMetadata | undefined)?.outcome,
                 )
-                const resourceId = review?.resourceId || NO_RESOURCE_ID
+                const reviewId = review?.id
 
                 if (['COMPLETED', 'SUBMITTED'].includes(status) && reviewScore !== undefined) {
+                    if (!reviewId) {
+                        return undefined
+                    }
+
                     const normalisedOutcome = outcomeLabel?.toLowerCase()
                     const isPassOutcome = normalisedOutcome === 'pass'
                     const isFailOutcome = normalisedOutcome === 'fail'
@@ -352,7 +355,7 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
                             <div className={styles.scoreRow}>
                                 {outcomeIndicator}
                                 <Link
-                                    to={`./../scorecard-details/${data.id}/review/${resourceId}`}
+                                    to={`./../review/${reviewId}`}
                                     className={styles.scoreLink}
                                 >
                                     {formatScore(reviewScore)}
@@ -368,9 +371,13 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
                 }
 
                 if (['COMPLETED', 'SUBMITTED'].includes(status)) {
+                    if (!reviewId) {
+                        return undefined
+                    }
+
                     return (
                         <Link
-                            to={`./../scorecard-details/${data.id}/review/${resourceId}`}
+                            to={`./../review/${reviewId}`}
                             className={styles.scoreLink}
                         >
                             View Scorecard
@@ -502,7 +509,7 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
             label: 'Action',
             renderer: (data: SubmissionInfo) => {
                 const review = data.review
-                const resourceId = review?.resourceId || NO_RESOURCE_ID
+                const reviewId = review?.id
                 const status = (review?.status ?? '').toUpperCase()
                 const hasReview = !!review?.id
 
@@ -529,9 +536,13 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
                 if (['PENDING', 'IN_PROGRESS'].includes(status) || (
                     !status && hasReview
                 ) || review?.reviewProgress) {
+                    if (!reviewId) {
+                        return undefined
+                    }
+
                     return (
                         <Link
-                            to={`./../scorecard-details/${data.id}/review/${resourceId}`}
+                            to={`./../review/${reviewId}`}
                             className={classNames(styles.submit, 'last-element')}
                         >
                             <i className='icon-upload' />

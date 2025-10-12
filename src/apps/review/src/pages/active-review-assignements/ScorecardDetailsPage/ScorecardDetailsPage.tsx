@@ -44,7 +44,7 @@ interface Props {
 export const ScorecardDetailsPage: FC<Props> = (props: Props) => {
     const navigate = useAppNavigate()
     const location = useLocation()
-    const params = useParams()
+    const { reviewId = '' }: { reviewId?: string } = useParams<{ reviewId: string }>()
     const {
         actionChallengeRole,
         myChallengeResources,
@@ -97,6 +97,13 @@ export const ScorecardDetailsPage: FC<Props> = (props: Props) => {
         [isEditPhase, isReviewCompleted],
     )
 
+    const reviewBreadcrumbLabel = useMemo(
+        () => submissionInfo?.id
+            ?? reviewInfo?.submissionId
+            ?? reviewId,
+        [reviewId, reviewInfo?.submissionId, submissionInfo?.id],
+    )
+
     const breadCrumb = useMemo<BreadCrumbData[]>(() => [
         {
             index: 1,
@@ -111,9 +118,9 @@ export const ScorecardDetailsPage: FC<Props> = (props: Props) => {
         },
         {
             index: 3,
-            label: `Review Scorecard - ${params.submissionId}`,
+            label: `Review Scorecard - ${reviewBreadcrumbLabel}`,
         },
-    ], [challengeInfo?.name, params.submissionId])
+    ], [challengeInfo?.name, reviewBreadcrumbLabel])
 
     /**
      * Cancel edit

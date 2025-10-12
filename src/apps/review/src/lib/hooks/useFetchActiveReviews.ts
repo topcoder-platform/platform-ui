@@ -162,6 +162,7 @@ export const transformAssignments = (
 type LoadActiveReviewsInternalParams = Required<Pick<FetchActiveReviewsParams, 'page' | 'perPage'>> & {
     challengeTypeId?: string
     challengeTrackId?: string
+    challengeName?: string
     sortBy?: string
     sortOrder?: 'asc' | 'desc'
 }
@@ -186,6 +187,7 @@ function mergeActiveReviewParams(
 
     assignFromNext('challengeTypeId')
     assignFromNext('challengeTrackId')
+    assignFromNext('challengeName')
     assignFromNext('sortBy')
     assignFromNext('sortOrder')
 
@@ -215,6 +217,7 @@ export function useFetchActiveReviews(): useFetchActiveReviewsProps {
     }))
     const latestRequestKeyRef = useRef<string>('')
     const latestParamsRef = useRef<LoadActiveReviewsInternalParams>({
+        challengeName: undefined,
         challengeTrackId: undefined,
         challengeTypeId: undefined,
         page: 1,
@@ -235,6 +238,7 @@ export function useFetchActiveReviews(): useFetchActiveReviewsProps {
             const requestKey = [
                 mergedParams.challengeTypeId ?? '',
                 mergedParams.challengeTrackId ?? '',
+                mergedParams.challengeName ?? '',
                 mergedParams.page,
                 mergedParams.perPage,
                 mergedParams.sortBy ?? '',

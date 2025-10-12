@@ -8,9 +8,9 @@
 .filter-bar {
     padding-top: 55px;
     display: flex;
-    align-items: flex-end;
+    flex-direction: column;
+    align-items: flex-start;
     gap: $sp-4;
-    flex-wrap: wrap;
 
     .filterGroup {
         width: 360px;
@@ -23,6 +23,18 @@
             margin-bottom: $sp-2;
             line-height: 20px;
         }
+    }
+
+    .searchGroup {
+        width: 100%;
+        max-width: 360px;
+    }
+
+    .filterRow {
+        display: flex;
+        align-items: flex-end;
+        gap: $sp-4;
+        flex-wrap: wrap;
     }
 
     .actions {
@@ -49,4 +61,21 @@
     align-self: flex-end;
     margin-top: -$sp-4;
     margin-bottom: $sp-10;
+}
+
+.searchInputWrapper :global(.label) {
+    margin-bottom: 0;
+}
+
+.srOnly {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
 }

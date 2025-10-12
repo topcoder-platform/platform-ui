@@ -50,6 +50,7 @@ const challengeBaseUrl = `${EnvironmentConfig.API.V6}`
 export interface FetchActiveReviewsParams {
     challengeTypeId?: string
     challengeTrackId?: string
+    challengeName?: string
     page?: number
     perPage?: number
     sortBy?: string
@@ -59,6 +60,7 @@ export interface FetchActiveReviewsParams {
 export const fetchActiveReviews = async ({
     challengeTypeId,
     challengeTrackId,
+    challengeName,
     page,
     perPage,
     sortBy,
@@ -68,6 +70,7 @@ export const fetchActiveReviews = async ({
         {
             ...(challengeTypeId ? { challengeTypeId } : {}),
             ...(challengeTrackId ? { challengeTrackId } : {}),
+            ...(challengeName ? { challengeName } : {}),
             ...(page ? { page } : {}),
             ...(perPage ? { perPage } : {}),
             ...(sortBy ? { sortBy } : {}),
@@ -90,6 +93,7 @@ export const fetchActiveReviews = async ({
 export interface FetchPastReviewsParams {
     challengeTypeId?: string
     challengeTrackId?: string
+    challengeName?: string
     page?: number
     perPage?: number
     sortBy?: string
@@ -99,6 +103,7 @@ export interface FetchPastReviewsParams {
 export const fetchPastReviews = async ({
     challengeTypeId,
     challengeTrackId,
+    challengeName,
     page,
     perPage,
     sortBy,
@@ -108,6 +113,7 @@ export const fetchPastReviews = async ({
         {
             ...(challengeTypeId ? { challengeTypeId } : {}),
             ...(challengeTrackId ? { challengeTrackId } : {}),
+            ...(challengeName ? { challengeName } : {}),
             ...(page ? { page } : {}),
             ...(perPage ? { perPage } : {}),
             ...(sortBy ? { sortBy } : {}),
@@ -193,6 +199,18 @@ export const fetchSubmission = async (
     )
     return adjustBackendSubmission(results)
 }
+
+/**
+ * Fetch review by id
+ *
+ * @param reviewId review id
+ * @returns resolves to the review info
+ */
+export const fetchReview = async (
+    reviewId: string,
+): Promise<BackendReview> => xhrGetAsync<BackendReview>(
+    `${EnvironmentConfig.API.V6}/reviews/${reviewId}`,
+)
 
 /**
  * Download submission file

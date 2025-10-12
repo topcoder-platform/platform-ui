@@ -155,6 +155,7 @@ export interface ReviewInfo {
     phaseId?: string
     metadata?: Record<string, unknown>
     resourceId: string
+    submissionId?: string
     committed: boolean
 }
 
@@ -261,6 +262,7 @@ export function convertBackendReviewToReviewInfo(
         reviewProgress: calculateReviewProgress(reviewItems),
         scorecardId: data.scorecardId ?? '',
         status: data.status,
+        submissionId: data.submissionId,
         submitterHandle,
         submitterHandleColor: submitterMaxRating && submitterHandle
             ? getRatingColor(submitterMaxRating)
