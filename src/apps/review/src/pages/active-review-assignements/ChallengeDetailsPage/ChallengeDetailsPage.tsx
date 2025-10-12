@@ -717,6 +717,23 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         return undefined
     }, [challengeStatus])
 
+    const trackTypePills = useMemo(() => {
+        const pills: string[] = []
+        const trackName = trim(challengeInfo?.track?.name ?? '')
+
+        if (trackName) {
+            pills.push(`Track: ${trackName}`)
+        }
+
+        const typeName = trim(challengeInfo?.type?.name ?? '')
+
+        if (typeName) {
+            pills.push(`Type: ${typeName}`)
+        }
+
+        return pills
+    }, [challengeInfo?.track?.name, challengeInfo?.type?.name])
+
     const phaseOrderingOptions = useMemo(() => {
         const typeName = challengeInfo?.type?.name?.toLowerCase?.() || ''
         const typeAbbrev = challengeInfo?.type?.abbreviation?.toLowerCase?.() || ''
@@ -1300,6 +1317,10 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
     const isLoadingAnything = isLoadingChallengeInfo || isLoadingChallengeResources
     const isUserResource = (myResources?.length ?? 0) > 0
     const canViewChallenge = isAdmin || isUserResource
+    const statusLabel = isPastReviewDetail
+        ? formatChallengeStatusLabel(challengeInfo?.status)
+        : undefined
+    const shouldShowChallengeMetaRow = Boolean(statusLabel) || trackTypePills.length > 0
 
     return (
         <PageWrapper
@@ -1318,18 +1339,20 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                 </div>
             ) : challengeInfo ? (
                 <>
-                    {isPastReviewDetail && (
-                        (() => {
-                            const label = formatChallengeStatusLabel(challengeInfo.status)
-                            return label ? (
-                                <div className={styles.statusPillRow}>
-                                    <span className={classNames(styles.statusPill, statusPillClass)}>
-                                        {label}
-                                    </span>
-                                </div>
-                            ) : undefined
-                        })()
-                    )}
+                    {shouldShowChallengeMetaRow ? (
+                        <div className={styles.statusPillRow}>
+                            {statusLabel ? (
+                                <span className={classNames(styles.statusPill, statusPillClass)}>
+                                    {statusLabel}
+                                </span>
+                            ) : undefined}
+                            {trackTypePills.map(text => (
+                                <span key={text} className={styles.metaPill}>
+                                    {text}
+                                </span>
+                            ))}
+                        </div>
+                    ) : undefined}
                     <div className={styles.summary}>
                         {challengeInfo && (
                             <ChallengePhaseInfo

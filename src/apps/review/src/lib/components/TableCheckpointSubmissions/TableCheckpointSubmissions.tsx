@@ -201,7 +201,25 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
                     {
                         label: 'Screening Score',
                         propertyName: 'score',
-                        type: 'text',
+                        renderer: (data: Screening) => {
+                            const hasNumericScore = data.score && data.score !== 'Pending'
+                            const resourceId = data.screenerId
+                            const canViewScorecard = hasNumericScore && resourceId
+
+                            if (!canViewScorecard) {
+                                return <span>{data.score}</span>
+                            }
+
+                            return (
+                                <Link
+                                    to={`./../scorecard-details/${data.submissionId}/review/${resourceId}`}
+                                    className={styles.scoreLink}
+                                >
+                                    {data.score}
+                                </Link>
+                            )
+                        },
+                        type: 'element',
                     },
                     {
                         label: 'Screening Result',
@@ -210,13 +228,25 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
                             const val = (data.result || '').toUpperCase()
                             if (val === 'PASS') {
                                 return (
-                                    <span className={styles.resultPass}>Pass</span>
+                                    <span
+                                        className={classNames(styles.resultIcon, styles.resultIconPass)}
+                                        aria-label='Passed checkpoint screening'
+                                        title='Pass'
+                                    >
+                                        <IconOutline.CheckIcon />
+                                    </span>
                                 )
                             }
 
                             if (val === 'NO PASS' || val === 'FAIL') {
                                 return (
-                                    <span className={styles.resultFail}>Fail</span>
+                                    <span
+                                        className={classNames(styles.resultIcon, styles.resultIconFail)}
+                                        aria-label='Failed checkpoint screening'
+                                        title='Fail'
+                                    >
+                                        <IconOutline.XIcon />
+                                    </span>
                                 )
                             }
 
@@ -279,8 +309,31 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
             return [
                 ...baseColumns,
                 {
-                    label: 'Checkpoint Review',
-                    propertyName: 'screenerHandle',
+                    label: 'Review Score',
+                    propertyName: 'score',
+                    renderer: (data: Screening) => {
+                        const hasNumericScore = data.score && data.score !== 'Pending'
+                        const resourceId = data.screenerId
+                        const canViewScorecard = hasNumericScore && resourceId
+
+                        if (!canViewScorecard) {
+                            return <span>{data.score}</span>
+                        }
+
+                        return (
+                            <Link
+                                to={`./../scorecard-details/${data.submissionId}/review/${resourceId}`}
+                                className={styles.scoreLink}
+                            >
+                                {data.score}
+                            </Link>
+                        )
+                    },
+                    type: 'element',
+                },
+                {
+                    label: 'Checkpoint Reviewer',
+                    propertyName: 'checkpointReviewer',
                     renderer: (data: Screening) => (data.screener?.id ? (
                         <a
                             href={getHandleUrl(data.screener)}
@@ -308,11 +361,6 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
                         </span>
                     )),
                     type: 'element',
-                },
-                {
-                    label: 'Review Score',
-                    propertyName: 'score',
-                    type: 'text',
                 },
             ]
         },

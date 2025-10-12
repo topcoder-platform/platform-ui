@@ -131,7 +131,14 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
             }
         } = {}
         forEach(reviewInfo?.reviewItems ?? [], (item, index) => {
-            result[item.scorecardQuestionId] = {
+            const normalizedId = normalizeScorecardQuestionId(
+                item.scorecardQuestionId,
+            )
+            if (!normalizedId) {
+                return
+            }
+
+            result[normalizedId] = {
                 index,
                 item,
             }
@@ -274,8 +281,13 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
             = reviewFormDatas.length > 0
                 ? Math.round(
                     (filter(reviewFormDatas, review => {
-                        mapingResult[review.scorecardQuestionId]
-                            = review.initialAnswer
+                        const normalizedId = normalizeScorecardQuestionId(
+                            review.scorecardQuestionId,
+                        )
+                        if (normalizedId) {
+                            mapingResult[normalizedId] = review.initialAnswer
+                        }
+
                         return !!review.initialAnswer
                     }).length
                     * 100)
@@ -296,8 +308,16 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
                                     section.questions ?? [],
                                     (questionResult, question) => {
                                         let questionPoint = 0
+                                        const normalizedQuestionId
+                                            = normalizeScorecardQuestionId(
+                                                question.id as string,
+                                            )
                                         const initialAnswer
-                                            = mapingResult[question.id as string]
+                                            = normalizedQuestionId
+                                                ? mapingResult[
+                                                    normalizedQuestionId
+                                                ]
+                                                : undefined
                                         if (
                                             question.type === 'YES_NO'
                                             && initialAnswer === 'Yes'
@@ -459,10 +479,16 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
                                                             question,
                                                             questionIndex,
                                                         ) => {
+                                                            const normalizedQuestionId
+                                                                = normalizeScorecardQuestionId(
+                                                                    question.id as string,
+                                                                )
                                                             const reviewItemInfo
-                                                                = mappingReviewInfo[
-                                                                    question.id as string
-                                                                ]
+                                                                = normalizedQuestionId
+                                                                    ? mappingReviewInfo[
+                                                                        normalizedQuestionId
+                                                                    ]
+                                                                    : undefined
                                                             if (
                                                                 !reviewItemInfo
                                                             ) {
@@ -673,6 +699,19 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
 }
 
 export default ScorecardDetails
+
+function normalizeScorecardQuestionId(
+    id?: string | null,
+): string | undefined {
+    if (id === undefined || id === null) {
+        return undefined
+    }
+
+    const normalized = `${id}`.trim()
+        .toLowerCase()
+
+    return normalized || undefined
+}
 
 // Helpers extracted to tame complexity and satisfy lint rules
 function normString(s?: string): string {

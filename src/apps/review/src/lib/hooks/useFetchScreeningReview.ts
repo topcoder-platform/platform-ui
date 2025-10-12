@@ -1,4 +1,4 @@
-import { every, filter, find, forEach } from 'lodash'
+import { every, filter, forEach } from 'lodash'
 import { useContext, useEffect, useMemo } from 'react'
 import useSWR, { SWRResponse } from 'swr'
 
@@ -9,6 +9,7 @@ import { handleError } from '~/libs/shared'
 import { REVIEWER, SUBMITTER } from '../../config/index.config'
 import { ChallengeDetailContext, ReviewAppContext } from '../contexts'
 import {
+    BackendPhase,
     BackendResource,
     BackendReview,
     BackendSubmission,
@@ -31,6 +32,12 @@ import { useRole, useRoleProps } from './useRole'
 import { useSubmissionDownloadAccess } from './useSubmissionDownloadAccess'
 import type { UseSubmissionDownloadAccessResult } from './useSubmissionDownloadAccess'
 
+type ReviewerPhaseConfig = {
+    scorecardId?: string
+    phaseId?: string | number
+    type?: string
+}
+
 // Local helpers
 function getNumericScore(review: BackendReview | undefined): number | undefined {
     if (!review) return undefined
@@ -41,7 +48,7 @@ function getNumericScore(review: BackendReview | undefined): number | undefined 
 
 function scoreToDisplay(numericScore: number | undefined, fallback: string | undefined): string {
     if (typeof numericScore === 'number') {
-        return Number.isInteger(numericScore) ? `${numericScore}` : numericScore.toFixed(2)
+        return numericScore.toFixed(2)
     }
 
     return fallback ?? 'Pending'
@@ -59,18 +66,118 @@ function determinePassFail(
     return baseResult
 }
 
-function findMyAssignment(
-    challengeReviews: BackendReview[] | undefined,
-    submissionId: string,
-    myResourceId?: string,
-    scorecardId?: string,
-): BackendReview | undefined {
-    if (!myResourceId || !challengeReviews || !scorecardId) return undefined
-    return challengeReviews.find(rv => (
-        rv.submissionId === submissionId
-        && rv.resourceId === myResourceId
-        && rv.scorecardId === scorecardId
-    ))
+function collectPhaseIdsForName(
+    phases: BackendPhase[] | undefined,
+    reviewers: ReviewerPhaseConfig[] | undefined,
+    phaseName: string,
+): Set<string> {
+    const normalizedPhaseName = phaseName.toLowerCase()
+    const ids = new Set<string>()
+
+    phases?.forEach(phase => {
+        if ((phase.name || '').toLowerCase() === normalizedPhaseName) {
+            if (phase.phaseId) {
+                ids.add(`${phase.phaseId}`)
+            }
+
+            if (phase.id) {
+                ids.add(`${phase.id}`)
+            }
+        }
+    })
+
+    reviewers?.forEach(reviewer => {
+        const matchesType = (reviewer.type || '').toLowerCase() === normalizedPhaseName
+        const hasPhaseId = reviewer.phaseId !== undefined && reviewer.phaseId !== null
+        if (matchesType && hasPhaseId) {
+            ids.add(`${reviewer.phaseId}`)
+        }
+    })
+
+    return ids
+}
+
+function resolvePhaseMeta(
+    phaseName: string,
+    phases: BackendPhase[] | undefined,
+    reviewers: ReviewerPhaseConfig[] | undefined,
+    reviews: BackendReview[] | undefined,
+): { scorecardId?: string; phaseIds: Set<string> } {
+    const normalizedPhaseName = phaseName.toLowerCase()
+    const phaseIds = collectPhaseIdsForName(phases, reviewers, phaseName)
+
+    const reviewMatch = reviews?.find(review => {
+        if (!review?.scorecardId) {
+            return false
+        }
+
+        const reviewPhaseId = review.phaseId ? `${review.phaseId}` : undefined
+        if (reviewPhaseId && phaseIds.has(reviewPhaseId)) {
+            return true
+        }
+
+        return false
+    })
+
+    if (reviewMatch?.scorecardId) {
+        if (reviewMatch.phaseId) {
+            phaseIds.add(`${reviewMatch.phaseId}`)
+        }
+
+        return { phaseIds, scorecardId: reviewMatch.scorecardId }
+    }
+
+    const reviewerMatch = reviewers?.find(reviewer => {
+        if (!reviewer?.scorecardId) {
+            return false
+        }
+
+        const reviewerPhaseId = reviewer.phaseId !== undefined && reviewer.phaseId !== null
+            ? `${reviewer.phaseId}`
+            : undefined
+        if (reviewerPhaseId && phaseIds.has(reviewerPhaseId)) {
+            return true
+        }
+
+        return (reviewer.type || '').toLowerCase() === normalizedPhaseName
+    })
+
+    if (reviewerMatch?.scorecardId) {
+        if (reviewerMatch.phaseId !== undefined && reviewerMatch.phaseId !== null) {
+            phaseIds.add(`${reviewerMatch.phaseId}`)
+        }
+
+        return { phaseIds, scorecardId: reviewerMatch.scorecardId }
+    }
+
+    const matchingPhase = phases?.find(
+        phase => (phase.name || '').toLowerCase() === normalizedPhaseName,
+    )
+    const constraintValue = matchingPhase
+        ? matchingPhase.constraints?.find(constraint => constraint.name === 'Scorecard')?.value
+        : undefined
+
+    if (constraintValue) {
+        return { phaseIds, scorecardId: `${constraintValue}` }
+    }
+
+    return { phaseIds }
+}
+
+function reviewMatchesPhase(
+    review: BackendReview | undefined,
+    scorecardId: string | undefined,
+    phaseIds: Set<string>,
+): boolean {
+    if (!review) {
+        return false
+    }
+
+    const matchesScorecard = Boolean(scorecardId && review.scorecardId === scorecardId)
+    const reviewPhaseId = review.phaseId ? `${review.phaseId}` : undefined
+    const matchesPhase = Boolean(reviewPhaseId && phaseIds.has(reviewPhaseId))
+
+    return matchesScorecard || matchesPhase
 }
 
 export interface useFetchScreeningReviewProps {
@@ -239,36 +346,42 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
         ],
     )
 
-    // Resolve scorecard ids for Screening and Checkpoint Review phases (if present)
-    const screeningScorecardId = useMemo<string | undefined>(() => {
-        const screeningPhase = challengeInfo?.phases?.find(
-            p => (p.name || '').toLowerCase() === 'screening',
-        )
-        const scorecardConstraint = screeningPhase
-            ? find(screeningPhase.constraints ?? [], c => c.name === 'Scorecard')
-            : undefined
-        return scorecardConstraint ? `${scorecardConstraint.value}` : undefined
-    }, [challengeInfo?.phases])
+    // Resolve scorecard ids and phase ids for Screening / Checkpoint phases
+    const screeningPhaseMeta = useMemo(
+        () => resolvePhaseMeta(
+            'Screening',
+            challengeInfo?.phases,
+            challengeInfo?.reviewers,
+            challengeReviews,
+        ),
+        [challengeInfo?.phases, challengeInfo?.reviewers, challengeReviews],
+    )
+    const screeningScorecardId = screeningPhaseMeta.scorecardId
+    const screeningPhaseIds = screeningPhaseMeta.phaseIds
 
-    const checkpointScreeningScorecardId = useMemo<string | undefined>(() => {
-        const cpScreeningPhase = challengeInfo?.phases?.find(
-            p => (p.name || '').toLowerCase() === 'checkpoint screening',
-        )
-        const scorecardConstraint = cpScreeningPhase
-            ? find(cpScreeningPhase.constraints ?? [], c => c.name === 'Scorecard')
-            : undefined
-        return scorecardConstraint ? `${scorecardConstraint.value}` : undefined
-    }, [challengeInfo?.phases])
+    const checkpointScreeningPhaseMeta = useMemo(
+        () => resolvePhaseMeta(
+            'Checkpoint Screening',
+            challengeInfo?.phases,
+            challengeInfo?.reviewers,
+            challengeReviews,
+        ),
+        [challengeInfo?.phases, challengeInfo?.reviewers, challengeReviews],
+    )
+    const checkpointScreeningScorecardId = checkpointScreeningPhaseMeta.scorecardId
+    const checkpointScreeningPhaseIds = checkpointScreeningPhaseMeta.phaseIds
 
-    const checkpointReviewScorecardId = useMemo<string | undefined>(() => {
-        const cpReviewPhase = challengeInfo?.phases?.find(
-            p => (p.name || '').toLowerCase() === 'checkpoint review',
-        )
-        const scorecardConstraint = cpReviewPhase
-            ? find(cpReviewPhase.constraints ?? [], c => c.name === 'Scorecard')
-            : undefined
-        return scorecardConstraint ? `${scorecardConstraint.value}` : undefined
-    }, [challengeInfo?.phases])
+    const checkpointReviewPhaseMeta = useMemo(
+        () => resolvePhaseMeta(
+            'Checkpoint Review',
+            challengeInfo?.phases,
+            challengeInfo?.reviewers,
+            challengeReviews,
+        ),
+        [challengeInfo?.phases, challengeInfo?.reviewers, challengeReviews],
+    )
+    const checkpointReviewScorecardId = checkpointReviewPhaseMeta.scorecardId
+    const checkpointReviewPhaseIds = checkpointReviewPhaseMeta.phaseIds
 
     // Fetch minimumPassingScore for screening and checkpoint review scorecards
     type ScorecardBase = { id: string; minimumPassingScore: number | null }
@@ -358,9 +471,9 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
     const screening = useMemo(
         () => {
             const screeningReviewsBySubmission = new Map<string, BackendReview>()
-            if (challengeReviews && screeningScorecardId) {
+            if (challengeReviews && challengeReviews.length) {
                 forEach(challengeReviews, rv => {
-                    if (rv && rv.scorecardId === screeningScorecardId) {
+                    if (reviewMatchesPhase(rv, screeningScorecardId, screeningPhaseIds)) {
                         screeningReviewsBySubmission.set(rv.submissionId, rv)
                     }
                 })
@@ -386,11 +499,11 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
                 const result = determinePassFail(numericScore, minPass, base.result)
 
                 const myAssignment
-                    = (myScreenerResourceId && challengeReviews && screeningScorecardId)
+                    = (myScreenerResourceId && challengeReviews)
                         ? challengeReviews.find(rv => (
                             rv.submissionId === item.id
                             && rv.resourceId === myScreenerResourceId
-                            && rv.scorecardId === screeningScorecardId
+                            && reviewMatchesPhase(rv, screeningScorecardId, screeningPhaseIds)
                         ))
                         : undefined
 
@@ -412,6 +525,7 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
             challengeReviews,
             resourceMemberIdMapping,
             screeningScorecardBase?.minimumPassingScore,
+            screeningPhaseIds,
             screeningScorecardId,
             contestSubmissions,
         ],
@@ -420,9 +534,9 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
     // Build checkpoint rows if checkpoint submissions and reviews exist
     const checkpoint = useMemo(() => {
         const checkpointReviewsBySubmission = new Map<string, BackendReview>()
-        if (challengeReviews && checkpointScreeningScorecardId) {
+        if (challengeReviews && challengeReviews.length) {
             forEach(challengeReviews, rv => {
-                if (rv && rv.scorecardId === checkpointScreeningScorecardId) {
+                if (reviewMatchesPhase(rv, checkpointScreeningScorecardId, checkpointScreeningPhaseIds)) {
                     checkpointReviewsBySubmission.set(rv.submissionId, rv)
                 }
             })
@@ -445,18 +559,8 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
             .map(item => {
                 const base = convertBackendSubmissionToScreening(item)
                 const matchedReview = checkpointReviewsBySubmission.get(item.id)
-                const numericScore: number | undefined = matchedReview
-                    ? (Number.isFinite(matchedReview.finalScore)
-                        ? matchedReview.finalScore
-                        : Number.isFinite(matchedReview.initialScore)
-                            ? matchedReview.initialScore
-                            : undefined)
-                    : undefined
-                const scoreDisplay = typeof numericScore === 'number'
-                    ? (Number.isInteger(numericScore)
-                        ? `${numericScore}`
-                        : numericScore.toFixed(2))
-                    : 'Pending'
+                const numericScore = getNumericScore(matchedReview)
+                const scoreDisplay = scoreToDisplay(numericScore, base.score)
 
                 let result = base.result
                 let screenerId: string | undefined = base.screenerId
@@ -484,11 +588,11 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
 
                 // Find a pending/in-progress assignment for current viewer (if any)
                 const myAssignment
-                    = (myCheckpointScreenerResourceId && challengeReviews && checkpointScreeningScorecardId)
+                    = (myCheckpointScreenerResourceId && challengeReviews)
                         ? challengeReviews.find(rv => (
                             rv.submissionId === item.id
                         && rv.resourceId === myCheckpointScreenerResourceId
-                        && rv.scorecardId === checkpointScreeningScorecardId
+                        && reviewMatchesPhase(rv, checkpointScreeningScorecardId, checkpointScreeningPhaseIds)
                         ))
                         : undefined
 
@@ -507,6 +611,7 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
         challengeReviews,
         checkpointScreeningScorecardId,
         checkpointScreeningScorecardBase?.minimumPassingScore,
+        checkpointScreeningPhaseIds,
         resourceMemberIdMapping,
         resources,
         myResources,
@@ -516,15 +621,21 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
     // Build checkpoint review rows if checkpoint review submissions and reviews exist
     const checkpointReview = useMemo(() => {
         const checkpointReviewsBySubmission = new Map<string, BackendReview>()
-        if (challengeReviews && checkpointReviewScorecardId) {
+        if (challengeReviews && challengeReviews.length) {
             forEach(challengeReviews, rv => {
-                if (rv && rv.scorecardId === checkpointReviewScorecardId) {
+                if (reviewMatchesPhase(rv, checkpointReviewScorecardId, checkpointReviewPhaseIds)) {
                     checkpointReviewsBySubmission.set(rv.submissionId, rv)
                 }
             })
         }
 
         const minPass = checkpointReviewScorecardBase?.minimumPassingScore ?? undefined
+
+        const checkpointReviewerResources = (resources ?? [])
+            .filter(r => (r.roleName || '').toLowerCase() === 'checkpoint reviewer')
+        const fallbackCheckpointReviewer = checkpointReviewerResources.length === 1
+            ? checkpointReviewerResources[0]
+            : undefined
 
         // Current viewer's Checkpoint Reviewer resource id (if they have this role)
         const myCheckpointReviewerResourceId = (myResources ?? [])
@@ -542,12 +653,39 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
                 const screenerId = matchedReview?.resourceId ?? base.screenerId
                 const result = determinePassFail(numericScore, minPass, base.result)
 
-                const myAssignment = findMyAssignment(
-                    challengeReviews,
-                    item.id,
-                    myCheckpointReviewerResourceId,
-                    checkpointReviewScorecardId,
-                )
+                const myAssignment
+                    = (myCheckpointReviewerResourceId && challengeReviews)
+                        ? challengeReviews.find(rv => (
+                            rv.submissionId === item.id
+                            && rv.resourceId === myCheckpointReviewerResourceId
+                            && reviewMatchesPhase(rv, checkpointReviewScorecardId, checkpointReviewPhaseIds)
+                        ))
+                        : undefined
+
+                const reviewerDisplay = ((): BackendResource => {
+                    if (screenerId) {
+                        const resourceMatch = (resources ?? []).find(x => x.id === screenerId)
+                        if (resourceMatch) {
+                            return resourceMatch
+                        }
+
+                        if (matchedReview?.reviewerHandle) {
+                            return {
+                                handleColor: '#2a2a2a',
+                                memberHandle: matchedReview.reviewerHandle,
+                            } as BackendResource
+                        }
+                    }
+
+                    if (fallbackCheckpointReviewer) {
+                        return fallbackCheckpointReviewer
+                    }
+
+                    return {
+                        handleColor: '#2a2a2a',
+                        memberHandle: 'Not assigned',
+                    } as BackendResource
+                })()
 
                 return {
                     ...base,
@@ -555,10 +693,8 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
                     myReviewStatus: myAssignment?.status ?? undefined,
                     result,
                     score: scoreDisplay,
-                    screener: screenerId
-                        ? resourceMemberIdMapping[screenerId]
-                        : ({ handleColor: '#2a2a2a', memberHandle: 'Not assigned' } as BackendResource),
-                    screenerId,
+                    screener: reviewerDisplay,
+                    screenerId: reviewerDisplay?.id || screenerId,
                     userInfo: resourceMemberIdMapping[base.memberId],
                 }
             })
@@ -566,7 +702,9 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
         challengeReviews,
         checkpointReviewScorecardId,
         checkpointReviewScorecardBase?.minimumPassingScore,
+        checkpointReviewPhaseIds,
         myResources,
+        resources,
         resourceMemberIdMapping,
         visibleChallengeSubmissions,
     ])
