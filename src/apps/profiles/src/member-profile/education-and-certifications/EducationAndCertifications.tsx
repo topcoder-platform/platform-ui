@@ -90,7 +90,7 @@ const EducationAndCertifications: FC<EducationAndCertificationsProps> = (props: 
                     (memberEducation?.length as number) > 0 && (
                         memberEducation?.map((education: UserTrait) => (
                             <EducationCard
-                                key={`${education.schoolCollegeName}-${education.major}`}
+                                key={`${education.collegeName}-${education.degree}`}
                                 education={education}
                             />
                         ))
