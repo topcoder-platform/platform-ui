@@ -34,12 +34,13 @@ export const SubmissionBarInfo: FC<Props> = (props: Props) => {
         [resourceMemberIdMapping, props.submission],
     )
     const { myChallengeRoles }: useRoleProps = useRole()
+    const submissionIdValue = props.submission?.id ?? submissionId
     const uiItems = useMemo(() => [
         {
             icon: 'icon-file',
             title: 'Submission ID',
             type: 'link',
-            value: submissionId,
+            value: submissionIdValue,
         },
         {
             icon: 'icon-handle',
@@ -62,7 +63,7 @@ export const SubmissionBarInfo: FC<Props> = (props: Props) => {
             type: 'link',
             value: useInfo?.memberHandle ?? '',
         },
-    ], [myChallengeRoles, submissionId, useInfo])
+    ], [myChallengeRoles, submissionIdValue, useInfo])
 
     return (
         <div className={classNames(styles.container, props.className)}>

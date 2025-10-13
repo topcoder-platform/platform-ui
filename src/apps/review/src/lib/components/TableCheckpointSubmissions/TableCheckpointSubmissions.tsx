@@ -309,7 +309,7 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
             }
 
             // mode === 'review'
-            return [
+            const reviewColumns: TableColumn<Screening>[] = [
                 ...baseColumns,
                 {
                     label: 'Review Score',
@@ -365,6 +365,54 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
                     )),
                     type: 'element',
                 },
+            ]
+
+            const hasAnyMyAssignment = (props.datas || []).some(d => !!d.myReviewResourceId)
+            if (!hasAnyMyAssignment) {
+                return reviewColumns
+            }
+
+            const actionColumn: TableColumn<Screening> = {
+                label: 'Action',
+                propertyName: 'action',
+                renderer: (data: Screening) => {
+                    const status = (data.myReviewStatus || '').toUpperCase()
+                    if (['COMPLETED', 'SUBMITTED'].includes(status)) {
+                        return (
+                            <div
+                                aria-label='Review completed'
+                                className={styles.completedAction}
+                                title='Review completed'
+                            >
+                                <span className={styles.completedIcon} aria-hidden='true'>
+                                    <IconOutline.CheckIcon />
+                                </span>
+                                <span className={styles.completedPill}>Review Complete</span>
+                            </div>
+                        )
+                    }
+
+                    const reviewId = data.myReviewId
+                    if (!reviewId) {
+                        return undefined
+                    }
+
+                    return (
+                        <Link
+                            to={`./../review/${reviewId}`}
+                            className={classNames(styles.submit, 'last-element')}
+                        >
+                            <i className='icon-upload' />
+                            Complete Review
+                        </Link>
+                    )
+                },
+                type: 'element',
+            }
+
+            return [
+                ...reviewColumns,
+                actionColumn,
             ]
         },
         [

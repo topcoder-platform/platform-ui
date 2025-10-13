@@ -774,10 +774,6 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                 const finishedAppeals = reviewDetail?.finishedAppeals ?? 0
                 const unresolvedAppeals = reviewDetail?.unresolvedAppeals
                     ?? Math.max(totalAppeals - finishedAppeals, 0)
-                const primaryAppealsCount = tab === 'Appeals Response'
-                    ? finishedAppeals
-                    : unresolvedAppeals
-
                 if (!totalAppeals && (reviewInfo.status ?? '').toUpperCase() !== 'COMPLETED') {
                     return (
                         <span className={styles.notReviewed}>
@@ -785,6 +781,19 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                         </span>
                     )
                 }
+
+                if (tab === 'Appeals Response') {
+                    return (
+                        <Link
+                            to={`./../review/${reviewInfo.id}`}
+                            className={styles.appealsLink}
+                        >
+                            <span className={styles.textBlue}>{totalAppeals}</span>
+                        </Link>
+                    )
+                }
+
+                const primaryAppealsCount = unresolvedAppeals
 
                 return (
                     <Link
@@ -1326,6 +1335,19 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
 
                 if (!hasAppeals && reviewStatus !== 'COMPLETED') {
                     return undefined
+                }
+
+                if (tab === 'Appeals Response') {
+                    return (
+                        <Link
+                            to={`./../review/${reviewId}`}
+                            className={styles.appealsLink}
+                        >
+                            <span className={styles.textBlue}>
+                                {appealInfo.totalAppeals}
+                            </span>
+                        </Link>
+                    )
                 }
 
                 return (

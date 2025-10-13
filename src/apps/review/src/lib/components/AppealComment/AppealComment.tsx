@@ -174,7 +174,7 @@ export const AppealComment: FC<Props> = (props: Props) => {
                     onSubmit={handleSubmit(onSubmit)}
                 >
                     <div className={styles.blockReaponseAppealHeader}>
-                        <label>Respond Appeal</label>
+                        <label>Respond to Appeal</label>
 
                         <Select
                             className={classNames('react-select-container')}
@@ -223,7 +223,7 @@ export const AppealComment: FC<Props> = (props: Props) => {
                             type='submit'
                             disabled={isSavingAppealResponse}
                         >
-                            Submit Appeal
+                            Submit Response
                         </button>
                         <button
                             type='button'

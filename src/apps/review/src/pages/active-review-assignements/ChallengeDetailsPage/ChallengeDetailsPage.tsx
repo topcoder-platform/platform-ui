@@ -958,6 +958,9 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         myResources,
         mappingReviewAppeal,
         phaseOrderingOptions,
+        screening,
+        checkpoint,
+        checkpointReview,
     ])
 
     // Add completion indicators for active challenges on relevant tabs
@@ -1074,6 +1077,9 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         mappingReviewAppeal,
         challengeInfo,
         approvalReviews,
+        screening,
+        checkpoint,
+        checkpointReview,
     ])
 
     // Determine if current user should see the Resources section

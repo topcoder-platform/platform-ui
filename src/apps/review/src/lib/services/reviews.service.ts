@@ -505,7 +505,7 @@ export const updateAppealResponse = async (
     appealResponseId: string,
     data: BackendRequestAppealResponse,
 ): Promise<BackendAppealResponse> => {
-    const result = await xhrPostAsync<
+    const result = await xhrPatchAsync<
         BackendRequestAppealResponse,
         BackendAppealResponse
     >(`${EnvironmentConfig.API.V6}/appeals/response/${appealResponseId}`, data)
