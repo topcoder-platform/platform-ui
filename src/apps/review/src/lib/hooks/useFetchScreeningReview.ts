@@ -32,6 +32,52 @@ import { useRole, useRoleProps } from './useRole'
 import { useSubmissionDownloadAccess } from './useSubmissionDownloadAccess'
 import type { UseSubmissionDownloadAccessResult } from './useSubmissionDownloadAccess'
 
+/**
+ * DEBUG_CHECKPOINT_PHASES instrumentation coordinates verbose logging for checkpoint screening analysis.
+ * Set `DEBUG_CHECKPOINT_PHASES=true` in the environment configuration to enable this diagnostic output.
+ * When enabled the hook logs:
+ * - Phase metadata resolution: scorecard ids, phase ids, and which data source satisfied the lookup.
+ * - Review matching decisions: every invocation of `reviewMatchesPhase` with criterion-level outcomes.
+ * - Checkpoint collection: detailed review-to-submission mappings for Screening and Review checkpoints.
+ * - Cross-tab validation: overlaps or mismatches between checkpoint and checkpoint review datasets.
+ * Use these logs to trace why a review appears on a specific tab and to spot substring collisions.
+ * Known caveat: substring matching inside `reviewMatchesPhase` can miscategorize phases with similar names.
+ */
+const DEBUG_CHECKPOINT_PHASES = Boolean(
+    (EnvironmentConfig as unknown as { DEBUG_CHECKPOINT_PHASES?: boolean }).DEBUG_CHECKPOINT_PHASES,
+)
+
+const LOG_PREFIX = '[useFetchScreeningReview]'
+const MAX_DEBUG_METADATA_LENGTH = 200
+
+function truncateForLog(value: string | undefined, maxLength: number = MAX_DEBUG_METADATA_LENGTH): string {
+    if (!value) {
+        return ''
+    }
+
+    if (value.length <= maxLength) {
+        return value
+    }
+
+    return `${value.slice(0, maxLength)}...`
+}
+
+function debugLog(namespace: string, payload: unknown): void {
+    if (!DEBUG_CHECKPOINT_PHASES) {
+        return
+    }
+
+    console.debug(`${LOG_PREFIX} ${namespace}`, payload)
+}
+
+function warnLog(namespace: string, payload: unknown): void {
+    if (!DEBUG_CHECKPOINT_PHASES) {
+        return
+    }
+
+    console.warn(`${LOG_PREFIX} ${namespace}`, payload)
+}
+
 type ReviewerPhaseConfig = {
     scorecardId?: string
     phaseId?: string | number
@@ -233,6 +279,27 @@ function resolvePhaseMeta(
         phase => (phase.name || '').toLowerCase() === normalizedPhaseName,
     ) ?? []
 
+    const matchingReviewers = reviewers?.filter(reviewer => (
+        (reviewer.type || '').toLowerCase() === normalizedPhaseName
+    )) ?? []
+
+    const logResolution = (
+        source: string,
+        resolvedScorecardId: string | undefined,
+        extra: Record<string, unknown> = {},
+    ): void => {
+        debugLog('resolvePhaseMeta', {
+            legacyScorecardId: legacyScorecardId ? `${legacyScorecardId}` : undefined,
+            matchingPhaseCount: matchingPhases.length,
+            matchingReviewerCount: matchingReviewers.length,
+            phaseIds: Array.from(phaseIds.values()),
+            phaseName,
+            resolvedScorecardId,
+            scorecardSource: source,
+            ...extra,
+        })
+    }
+
     matchingPhases.forEach(phase => {
         if (phase.phaseId) {
             phaseIds.add(`${phase.phaseId}`)
@@ -285,6 +352,10 @@ function resolvePhaseMeta(
     })
 
     if (reviewMatch?.scorecardId) {
+        logResolution('reviewMatch', reviewMatch.scorecardId, {
+            matchedReviewId: reviewMatch.id,
+            matchedReviewPhaseId: reviewMatch.phaseId,
+        })
         return { phaseIds, scorecardId: reviewMatch.scorecardId }
     }
 
@@ -305,6 +376,9 @@ function resolvePhaseMeta(
     })
 
     if (reviewerMatch?.scorecardId) {
+        logResolution('reviewerMatch', reviewerMatch.scorecardId, {
+            matchedReviewer: reviewerMatch,
+        })
         return { phaseIds, scorecardId: reviewerMatch.scorecardId }
     }
 
@@ -313,30 +387,40 @@ function resolvePhaseMeta(
         .find(value => value !== undefined && value !== null)
 
     if (constraintValue) {
-        return { phaseIds, scorecardId: `${constraintValue}` }
+        const scorecardId = `${constraintValue}`
+        logResolution('phaseConstraint', scorecardId)
+        return { phaseIds, scorecardId }
     }
 
     if (legacyScorecardId) {
-        return { phaseIds, scorecardId: `${legacyScorecardId}` }
+        const scorecardId = `${legacyScorecardId}`
+        logResolution('legacyScorecard', scorecardId)
+        return { phaseIds, scorecardId }
     }
 
     const fallbackReviewWithScorecard = reviews?.find(review => {
-        if (!review?.scorecardId) {
-            return false
+        if (!review?.scorecardId) return false
+        const reviewType = (review.typeId || '').trim()
+            .toLowerCase()
+        const typeMatches = reviewType === normalizedPhaseName
+        const metaMatches = metadataMatchesPhase(review.metadata, normalizedPhaseName)
+        const accept = typeMatches || metaMatches
+        if (accept && review.phaseId) {
+            phaseIds.add(`${review.phaseId}`)
         }
 
-        const reviewPhaseId = review.phaseId ? `${review.phaseId}` : undefined
-        if (reviewPhaseId) {
-            phaseIds.add(reviewPhaseId)
-        }
-
-        return true
+        return accept
     })
 
     if (fallbackReviewWithScorecard?.scorecardId) {
+        logResolution('fallbackReview', fallbackReviewWithScorecard.scorecardId, {
+            matchedReviewId: fallbackReviewWithScorecard.id,
+            matchedReviewPhaseId: fallbackReviewWithScorecard.phaseId,
+        })
         return { phaseIds, scorecardId: fallbackReviewWithScorecard.scorecardId }
     }
 
+    logResolution('noScorecardResolved', undefined)
     return { phaseIds }
 }
 
@@ -360,6 +444,238 @@ function normalizeReviewMetadata(metadata: BackendReview['metadata']): string {
     return ''
 }
 
+type MetadataPhaseMatch = {
+    source: 'jsonField' | 'stringExact' | 'stringBoundary'
+    key?: string
+}
+
+function escapeRegexLiteral(value: string): string {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+function findMetadataPhaseMatch(
+    metadata: BackendReview['metadata'],
+    normalizedPhaseName: string,
+): MetadataPhaseMatch | undefined {
+    if (!metadata) {
+        return undefined
+    }
+
+    const target = normalizedPhaseName.trim()
+    if (!target) {
+        return undefined
+    }
+
+    const metadataObject = parseReviewMetadataObject(metadata)
+    if (metadataObject) {
+        const candidateKeys = ['phaseName', 'phaseType', 'reviewType', 'type'] as const
+        for (const key of candidateKeys) {
+            const value = metadataObject[key]
+            if (typeof value === 'string') {
+                if (value.trim()
+                    .toLowerCase() === target) {
+                    return {
+                        key,
+                        source: 'jsonField',
+                    }
+                }
+            }
+
+            if (Array.isArray(value)) {
+                const matched = value.some(item => typeof item === 'string'
+                    && item.trim()
+                        .toLowerCase() === target)
+                if (matched) {
+                    return {
+                        key,
+                        source: 'jsonField',
+                    }
+                }
+            }
+        }
+
+        return undefined
+    }
+
+    if (typeof metadata === 'string') {
+        const normalizedMetadata = metadata.trim()
+            .toLowerCase()
+        if (!normalizedMetadata) {
+            return undefined
+        }
+
+        if (normalizedMetadata === target) {
+            return { source: 'stringExact' }
+        }
+
+        const escapedTarget = escapeRegexLiteral(target)
+            .replace(/ /g, '\\ ')
+        const sepInsensitive = new RegExp(`\\b${escapedTarget.replace(/\\ /g, '[-_\\s]+')}\\b`)
+        if (sepInsensitive.test(normalizedMetadata)) {
+            return { source: 'stringBoundary' }
+        }
+    }
+
+    return undefined
+}
+
+function metadataMatchesPhase(
+    metadata: BackendReview['metadata'],
+    normalizedPhaseName: string,
+): boolean {
+    return Boolean(findMetadataPhaseMatch(metadata, normalizedPhaseName))
+}
+
+type MetadataPhaseMatchDetail = ReturnType<typeof findMetadataPhaseMatch>
+
+function getNormalizedLowerCase(value?: string | null): string | undefined {
+    if (typeof value !== 'string') {
+        return undefined
+    }
+
+    const trimmedValue = value.trim()
+    return trimmedValue ? trimmedValue.toLowerCase() : undefined
+}
+
+function buildMetadataCriteria(detail: MetadataPhaseMatchDetail): string[] {
+    if (!detail) {
+        return []
+    }
+
+    if (detail.source === 'jsonField' && detail.key) {
+        return [`metadataField:${detail.key}`]
+    }
+
+    if (detail.source === 'stringExact') {
+        return ['metadataExactString']
+    }
+
+    if (detail.source === 'stringBoundary') {
+        return ['metadataWordBoundary']
+    }
+
+    return ['metadataPhaseMatch']
+}
+
+function resolveReviewPhaseId(review: BackendReview): string | undefined {
+    if (review.phaseId === null || review.phaseId === undefined) {
+        return undefined
+    }
+
+    return `${review.phaseId}`
+}
+
+function collectMatchedCriteria({
+    matchesPhase,
+    matchesScorecard,
+    matchesTypeExact,
+    metadataCriteria,
+}: {
+    matchesPhase: boolean
+    matchesScorecard: boolean
+    matchesTypeExact: boolean
+    metadataCriteria: string[]
+}): string[] {
+    const criteria: string[] = []
+
+    if (matchesScorecard) {
+        criteria.push('scorecardId')
+    }
+
+    if (matchesPhase) {
+        criteria.push('phaseId')
+    }
+
+    if (matchesTypeExact) {
+        criteria.push('typeIdExact')
+    }
+
+    criteria.push(...metadataCriteria)
+
+    return criteria
+}
+
+function logMissingReview(
+    phaseIds: Set<string>,
+    phaseName: string | undefined,
+    scorecardId: string | undefined,
+): void {
+    debugLog('reviewMatchesPhase.start', {
+        phaseIds: Array.from(phaseIds.values()),
+        phaseName,
+        reason: 'reviewMissing',
+        reviewId: undefined,
+        scorecardIdBeingChecked: scorecardId,
+    })
+    debugLog('reviewMatchesPhase.summary', {
+        matchedCriteria: [],
+        matchReason: 'none',
+        result: false,
+        reviewId: undefined,
+    })
+}
+
+function handleNoPhaseMatch(
+    review: BackendReview,
+    matchesPhase: boolean,
+    matchesScorecard: boolean,
+): boolean {
+    const matchedCriteria = [
+        matchesScorecard ? 'scorecardId' : undefined,
+        matchesPhase ? 'phaseId' : undefined,
+    ].filter(Boolean) as string[]
+    const result = matchedCriteria.length > 0
+
+    debugLog('reviewMatchesPhase.criteria', {
+        matchesMetadata: false,
+        matchesPhase,
+        matchesPhaseName: false,
+        matchesScorecard,
+        matchesTypeExact: false,
+        metadataMatchDetail: undefined,
+    })
+    debugLog('reviewMatchesPhase.summary', {
+        matchedCriteria,
+        matchReason: matchedCriteria[0] ?? 'none',
+        result,
+        reviewId: review.id,
+    })
+
+    return result
+}
+
+function enforceExactPhaseNameMatch({
+    normalizedPhaseName,
+    normalizedReviewPhaseName,
+    review,
+    reviewPhaseName,
+}: {
+    normalizedPhaseName: string
+    normalizedReviewPhaseName: string
+    review: BackendReview
+    reviewPhaseName: string
+}): boolean {
+    const matchesPhaseName = normalizedReviewPhaseName === normalizedPhaseName
+    const matchedCriteria = matchesPhaseName ? ['phaseName'] : []
+
+    debugLog('reviewMatchesPhase.phaseNameExactMatchRequired', {
+        matchesPhaseName,
+        normalizedPhaseName,
+        normalizedReviewPhaseName,
+        reviewId: review.id,
+        reviewPhaseName: truncateForLog(reviewPhaseName),
+    })
+    debugLog('reviewMatchesPhase.summary', {
+        earlyReturnReason: 'phaseNameExactMatchRequired',
+        matchedCriteria,
+        matchReason: matchedCriteria[0] ?? 'none',
+        result: matchesPhaseName,
+        reviewId: review.id,
+    })
+
+    return matchesPhaseName
+}
+
 function reviewMatchesPhase(
     review: BackendReview | undefined,
     scorecardId: string | undefined,
@@ -367,34 +683,78 @@ function reviewMatchesPhase(
     phaseName?: string,
 ): boolean {
     if (!review) {
+        logMissingReview(phaseIds, phaseName, scorecardId)
         return false
     }
 
+    const metadataString = normalizeReviewMetadata(review.metadata)
+    const reviewPhaseId = resolveReviewPhaseId(review)
     const matchesScorecard = Boolean(scorecardId && review.scorecardId === scorecardId)
-    const reviewPhaseId = review.phaseId ? `${review.phaseId}` : undefined
     const matchesPhase = Boolean(reviewPhaseId && phaseIds.has(reviewPhaseId))
 
-    if (matchesScorecard || matchesPhase) {
-        return true
+    debugLog('reviewMatchesPhase.start', {
+        matchingStrategy: 'exactPhaseMatching',
+        phaseIds: Array.from(phaseIds.values()),
+        phaseName,
+        reviewId: review.id,
+        reviewProperties: {
+            metadata: truncateForLog(metadataString),
+            phaseId: review.phaseId,
+            scorecardId: review.scorecardId,
+            typeId: review.typeId,
+        },
+        scorecardIdBeingChecked: scorecardId,
+    })
+
+    const normalizedPhaseName = getNormalizedLowerCase(phaseName)
+    if (!normalizedPhaseName) {
+        return handleNoPhaseMatch(review, matchesPhase, matchesScorecard)
     }
 
-    if (!phaseName) {
-        return false
+    const reviewPhaseName = (review as { phaseName?: string | null }).phaseName ?? undefined
+    const normalizedReviewPhaseName = getNormalizedLowerCase(reviewPhaseName)
+    if (normalizedReviewPhaseName) {
+        return enforceExactPhaseNameMatch({
+            normalizedPhaseName,
+            normalizedReviewPhaseName,
+            review,
+            reviewPhaseName: reviewPhaseName as string,
+        })
     }
 
-    const normalizedPhaseName = phaseName.toLowerCase()
-    const reviewPhaseName = (review as { phaseName?: string | null }).phaseName
-    if (typeof reviewPhaseName === 'string' && reviewPhaseName.trim()
-        .toLowerCase() === normalizedPhaseName) {
-        return true
-    }
+    const reviewType = getNormalizedLowerCase(review.typeId ?? undefined)
+    const matchesTypeExact = Boolean(reviewType && reviewType === normalizedPhaseName)
+    const metadataMatchDetail = findMetadataPhaseMatch(review.metadata, normalizedPhaseName)
+    const matchesMetadata = Boolean(metadataMatchDetail)
+    const metadataCriteria = buildMetadataCriteria(metadataMatchDetail)
 
-    const reviewType = (review.typeId || '').toLowerCase()
-    const metadataString = normalizeReviewMetadata(review.metadata)
-    const metadata = metadataString.toLowerCase()
+    const matchedCriteria = collectMatchedCriteria({
+        matchesPhase,
+        matchesScorecard,
+        matchesTypeExact,
+        metadataCriteria,
+    })
 
-    return reviewType.includes(normalizedPhaseName)
-        || metadata.includes(normalizedPhaseName)
+    const result = matchedCriteria.length > 0
+    const primaryMatchReason = matchedCriteria[0] ?? 'none'
+
+    debugLog('reviewMatchesPhase.criteria', {
+        matchesMetadata,
+        matchesPhase,
+        matchesPhaseName: false,
+        matchesScorecard,
+        matchesTypeExact,
+        metadataMatchDetail,
+    })
+
+    debugLog('reviewMatchesPhase.summary', {
+        matchedCriteria,
+        matchReason: primaryMatchReason,
+        result,
+        reviewId: review.id,
+    })
+
+    return result
 }
 
 export interface useFetchScreeningReviewProps {
@@ -486,9 +846,7 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
         [visibleChallengeSubmissions],
     )
 
-    const debugCheckpointPhases = Boolean(
-        (EnvironmentConfig as unknown as { DEBUG_CHECKPOINT_PHASES?: boolean }).DEBUG_CHECKPOINT_PHASES,
-    )
+    const debugCheckpointPhases = DEBUG_CHECKPOINT_PHASES
 
     // Subsets by submission type for tab-specific displays
     const contestSubmissions = useMemo(
@@ -845,16 +1203,55 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
     // Build checkpoint rows if checkpoint submissions and reviews exist
     const checkpoint = useMemo(() => {
         const checkpointReviewsBySubmission = new Map<string, BackendReview>()
+        const matchedReviewDebugRows: Array<{
+            metadataPreview: string
+            phaseId: string | number | undefined
+            reviewId: string | undefined
+            scorecardId: string | undefined
+            submissionId: string
+            typeId: string | undefined
+        }> = []
+
+        const totalReviewsEvaluated = challengeReviews?.length ?? 0
+
         if (challengeReviews && challengeReviews.length) {
             forEach(challengeReviews, rv => {
-                if (reviewMatchesPhase(
+                const matches = reviewMatchesPhase(
                     rv,
                     checkpointScreeningScorecardId,
                     checkpointScreeningPhaseIds,
                     'Checkpoint Screening',
-                )) {
+                )
+
+                if (matches) {
                     checkpointReviewsBySubmission.set(rv.submissionId, rv)
+                    if (debugCheckpointPhases) {
+                        matchedReviewDebugRows.push({
+                            metadataPreview: truncateForLog(normalizeReviewMetadata(rv.metadata)),
+                            phaseId: rv.phaseId,
+                            reviewId: rv.id,
+                            scorecardId: rv.scorecardId,
+                            submissionId: rv.submissionId,
+                            typeId: rv.typeId ?? undefined,
+                        })
+                    }
                 }
+            })
+        }
+
+        if (debugCheckpointPhases) {
+            debugLog('checkpointScreening.matches', {
+                matchedReviewCount: matchedReviewDebugRows.length,
+                matchedReviews: matchedReviewDebugRows,
+                reviewMapBySubmission: Array.from(checkpointReviewsBySubmission.entries())
+                    .map(([submissionId, review]) => ({
+                        phaseId: review?.phaseId,
+                        reviewId: review?.id,
+                        scorecardId: review?.scorecardId,
+                        submissionId,
+                        typeId: review?.typeId,
+                    })),
+                totalReviewsEvaluated,
             })
         }
 
@@ -868,9 +1265,11 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
         const myCheckpointScreenerResourceId = (myResources ?? [])
             .find(r => (r.roleName || '').toLowerCase() === 'checkpoint screener')?.id
 
-        return visibleChallengeSubmissions
+        const checkpointSubmissions = visibleChallengeSubmissions
             .filter(s => (s.type || '').toUpperCase()
                 .includes('CHECKPOINT'))
+
+        const checkpointRows = checkpointSubmissions
             // eslint-disable-next-line complexity
             .map(item => {
                 const base = convertBackendSubmissionToScreening(item)
@@ -938,11 +1337,35 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
                     userInfo: resourceMemberIdMapping[base.memberId],
                 }
             })
+
+        if (debugCheckpointPhases) {
+            debugLog('checkpointScreening.results', {
+                checkpointRowCount: checkpointRows.length,
+                matchedReviewsSummary: Array.from(checkpointReviewsBySubmission.entries())
+                    .map(([submissionId, review]) => ({
+                        phaseId: review?.phaseId,
+                        reviewId: review?.id,
+                        scorecardId: review?.scorecardId,
+                        submissionId,
+                        typeId: review?.typeId,
+                    })),
+                rows: checkpointRows.map(row => ({
+                    result: row.result,
+                    reviewId: row.reviewId,
+                    score: row.score,
+                    screenerId: row.screenerId,
+                    submissionId: row.submissionId,
+                })),
+            })
+        }
+
+        return checkpointRows
     }, [
         challengeReviews,
         checkpointScreeningScorecardId,
         checkpointScreeningScorecardBase?.minimumPassingScore,
         checkpointScreeningPhaseIds,
+        debugCheckpointPhases,
         resourceMemberIdMapping,
         resources,
         myResources,
@@ -952,16 +1375,55 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
     // Build checkpoint review rows if checkpoint review submissions and reviews exist
     const checkpointReview = useMemo(() => {
         const checkpointReviewsBySubmission = new Map<string, BackendReview>()
+        const matchedReviewDebugRows: Array<{
+            metadataPreview: string
+            phaseId: string | number | undefined
+            reviewId: string | undefined
+            scorecardId: string | undefined
+            submissionId: string
+            typeId: string | undefined
+        }> = []
+
+        const totalReviewsEvaluated = challengeReviews?.length ?? 0
+
         if (challengeReviews && challengeReviews.length) {
             forEach(challengeReviews, rv => {
-                if (reviewMatchesPhase(
+                const matches = reviewMatchesPhase(
                     rv,
                     checkpointReviewScorecardId,
                     checkpointReviewPhaseIds,
                     'Checkpoint Review',
-                )) {
+                )
+
+                if (matches) {
                     checkpointReviewsBySubmission.set(rv.submissionId, rv)
+                    if (debugCheckpointPhases) {
+                        matchedReviewDebugRows.push({
+                            metadataPreview: truncateForLog(normalizeReviewMetadata(rv.metadata)),
+                            phaseId: rv.phaseId,
+                            reviewId: rv.id,
+                            scorecardId: rv.scorecardId,
+                            submissionId: rv.submissionId,
+                            typeId: rv.typeId ?? undefined,
+                        })
+                    }
                 }
+            })
+        }
+
+        if (debugCheckpointPhases) {
+            debugLog('checkpointReview.matches', {
+                matchedReviewCount: matchedReviewDebugRows.length,
+                matchedReviews: matchedReviewDebugRows,
+                reviewMapBySubmission: Array.from(checkpointReviewsBySubmission.entries())
+                    .map(([submissionId, review]) => ({
+                        phaseId: review?.phaseId,
+                        reviewId: review?.id,
+                        scorecardId: review?.scorecardId,
+                        submissionId,
+                        typeId: review?.typeId,
+                    })),
+                totalReviewsEvaluated,
             })
         }
 
@@ -977,90 +1439,247 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
         const myCheckpointReviewerResourceId = (myResources ?? [])
             .find(r => (r.roleName || '').toLowerCase() === 'checkpoint reviewer')?.id
 
-        return visibleChallengeSubmissions
+        const checkpointSubmissions = visibleChallengeSubmissions
             .filter(s => (s.type || '').toUpperCase()
                 .includes('CHECKPOINT'))
-            .map(item => {
-                const base = convertBackendSubmissionToScreening(item)
-                const matchedReview = checkpointReviewsBySubmission.get(item.id)
-                let numericScore = getNumericScore(matchedReview)
 
-                if (numericScore === undefined && matchedReview) {
-                    const reviewStatus = (matchedReview.status || '').toUpperCase()
-                    if (reviewStatus === 'COMPLETED' || reviewStatus === 'SUBMITTED') {
-                        const submissionScore = parseSubmissionScore(item.screeningScore)
-                        if (submissionScore !== undefined) {
-                            numericScore = submissionScore
-                        }
+        const checkpointReviewRows = checkpointSubmissions.map(item => {
+            const base = convertBackendSubmissionToScreening(item)
+            const matchedReview = checkpointReviewsBySubmission.get(item.id)
+            let numericScore = getNumericScore(matchedReview)
+
+            if (numericScore === undefined && matchedReview) {
+                const reviewStatus = (matchedReview.status || '').toUpperCase()
+                if (reviewStatus === 'COMPLETED' || reviewStatus === 'SUBMITTED') {
+                    const submissionScore = parseSubmissionScore(item.screeningScore)
+                    if (submissionScore !== undefined) {
+                        numericScore = submissionScore
+                    }
+                }
+            }
+
+            const scoreDisplay = scoreToDisplay(numericScore, 'Pending')
+
+            const screenerId = matchedReview?.resourceId ?? base.screenerId
+            const result = determinePassFail(numericScore, minPass, base.result, matchedReview?.metadata)
+
+            const myAssignment
+                = (myCheckpointReviewerResourceId && challengeReviews)
+                    ? challengeReviews.find(rv => (
+                        rv.submissionId === item.id
+                        && rv.resourceId === myCheckpointReviewerResourceId
+                    && reviewMatchesPhase(
+                        rv,
+                        checkpointReviewScorecardId,
+                        checkpointReviewPhaseIds,
+                        'Checkpoint Review',
+                    )
+                    ))
+                    : undefined
+
+            const reviewerDisplay = ((): BackendResource => {
+                if (screenerId) {
+                    const resourceMatch = (resources ?? []).find(x => x.id === screenerId)
+                    if (resourceMatch) {
+                        return resourceMatch
+                    }
+
+                    if (matchedReview?.reviewerHandle) {
+                        return {
+                            handleColor: '#2a2a2a',
+                            memberHandle: matchedReview.reviewerHandle,
+                        } as BackendResource
                     }
                 }
 
-                const scoreDisplay = scoreToDisplay(numericScore, 'Pending')
-
-                const screenerId = matchedReview?.resourceId ?? base.screenerId
-                const result = determinePassFail(numericScore, minPass, base.result, matchedReview?.metadata)
-
-                const myAssignment
-                    = (myCheckpointReviewerResourceId && challengeReviews)
-                        ? challengeReviews.find(rv => (
-                            rv.submissionId === item.id
-                            && rv.resourceId === myCheckpointReviewerResourceId
-                        && reviewMatchesPhase(
-                            rv,
-                            checkpointReviewScorecardId,
-                            checkpointReviewPhaseIds,
-                            'Checkpoint Review',
-                        )
-                        ))
-                        : undefined
-
-                const reviewerDisplay = ((): BackendResource => {
-                    if (screenerId) {
-                        const resourceMatch = (resources ?? []).find(x => x.id === screenerId)
-                        if (resourceMatch) {
-                            return resourceMatch
-                        }
-
-                        if (matchedReview?.reviewerHandle) {
-                            return {
-                                handleColor: '#2a2a2a',
-                                memberHandle: matchedReview.reviewerHandle,
-                            } as BackendResource
-                        }
-                    }
-
-                    if (fallbackCheckpointReviewer) {
-                        return fallbackCheckpointReviewer
-                    }
-
-                    return {
-                        handleColor: '#2a2a2a',
-                        memberHandle: 'Not assigned',
-                    } as BackendResource
-                })()
+                if (fallbackCheckpointReviewer) {
+                    return fallbackCheckpointReviewer
+                }
 
                 return {
-                    ...base,
-                    myReviewId: myAssignment?.id,
-                    myReviewResourceId: myAssignment?.resourceId,
-                    myReviewStatus: myAssignment?.status ?? undefined,
-                    result,
-                    reviewId: matchedReview?.id,
-                    score: scoreDisplay,
-                    screener: reviewerDisplay,
-                    screenerId: reviewerDisplay?.id || screenerId,
-                    userInfo: resourceMemberIdMapping[base.memberId],
-                }
+                    handleColor: '#2a2a2a',
+                    memberHandle: 'Not assigned',
+                } as BackendResource
+            })()
+
+            return {
+                ...base,
+                myReviewId: myAssignment?.id,
+                myReviewResourceId: myAssignment?.resourceId,
+                myReviewStatus: myAssignment?.status ?? undefined,
+                result,
+                reviewId: matchedReview?.id,
+                score: scoreDisplay,
+                screener: reviewerDisplay,
+                screenerId: reviewerDisplay?.id || screenerId,
+                userInfo: resourceMemberIdMapping[base.memberId],
+            }
+        })
+
+        if (debugCheckpointPhases) {
+            debugLog('checkpointReview.results', {
+                checkpointReviewRowCount: checkpointReviewRows.length,
+                matchedReviewsSummary: Array.from(checkpointReviewsBySubmission.entries())
+                    .map(([submissionId, review]) => ({
+                        phaseId: review?.phaseId,
+                        reviewId: review?.id,
+                        scorecardId: review?.scorecardId,
+                        submissionId,
+                        typeId: review?.typeId,
+                    })),
+                rows: checkpointReviewRows.map(row => ({
+                    result: row.result,
+                    reviewId: row.reviewId,
+                    score: row.score,
+                    screenerId: row.screenerId,
+                    submissionId: row.submissionId,
+                })),
             })
+        }
+
+        return checkpointReviewRows
     }, [
         challengeReviews,
         checkpointReviewScorecardId,
         checkpointReviewScorecardBase?.minimumPassingScore,
         checkpointReviewPhaseIds,
+        debugCheckpointPhases,
         myResources,
         resources,
         resourceMemberIdMapping,
         visibleChallengeSubmissions,
+    ])
+
+    useEffect(() => {
+        if (!debugCheckpointPhases) {
+            return
+        }
+
+        const reviewById = new Map<string, BackendReview>()
+        if (challengeReviews && challengeReviews.length) {
+            forEach(challengeReviews, reviewItem => {
+                if (reviewItem?.id) {
+                    reviewById.set(reviewItem.id, reviewItem)
+                }
+            })
+        }
+
+        const checkpointReviewIds = new Set(
+            checkpoint
+                .map(item => item.reviewId)
+                .filter((id): id is string => Boolean(id)),
+        )
+        const checkpointReviewTabIds = new Set(
+            checkpointReview
+                .map(item => item.reviewId)
+                .filter((id): id is string => Boolean(id)),
+        )
+
+        const overlappingReviewIds = Array.from(checkpointReviewIds)
+            .filter(id => checkpointReviewTabIds.has(id))
+
+        const miscategorizedCheckpoint = checkpoint
+            .map(entry => {
+                const review = entry.reviewId ? reviewById.get(entry.reviewId) : undefined
+                return { entry, review }
+            })
+            .filter(({ review }: { review: BackendReview | undefined }) => (
+                Boolean(review && (review.typeId || '').toLowerCase()
+                    .includes('checkpoint review'))
+            ))
+
+        const miscategorizedCheckpointReview = checkpointReview
+            .map(entry => {
+                const review = entry.reviewId ? reviewById.get(entry.reviewId) : undefined
+                return { entry, review }
+            })
+            .filter(({ review }: { review: BackendReview | undefined }) => (
+                Boolean(review && (review.typeId || '').toLowerCase()
+                    .includes('checkpoint screening'))
+            ))
+
+        const formatReviewDetails = (
+            review: BackendReview | undefined,
+        ): Record<string, unknown> | undefined => (
+            review
+                ? {
+                    id: review.id,
+                    metadataPreview: truncateForLog(normalizeReviewMetadata(review.metadata)),
+                    phaseId: review.phaseId,
+                    scorecardId: review.scorecardId,
+                    typeId: review.typeId ?? undefined,
+                }
+                : undefined
+        )
+
+        const payload: Record<string, unknown> = {
+            checkpointMismatches: miscategorizedCheckpoint.map(
+                ({ entry, review }: { entry: Screening; review: BackendReview | undefined }) => ({
+                    checkpointEntry: {
+                        result: entry.result,
+                        reviewId: entry.reviewId,
+                        submissionId: entry.submissionId,
+                    },
+                    review: formatReviewDetails(review),
+                }),
+            ),
+            checkpointReviewMismatches: miscategorizedCheckpointReview.map(
+                ({ entry, review }: { entry: Screening; review: BackendReview | undefined }) => ({
+                    checkpointReviewEntry: {
+                        result: entry.result,
+                        reviewId: entry.reviewId,
+                        submissionId: entry.submissionId,
+                    },
+                    review: formatReviewDetails(review),
+                }),
+            ),
+            overlappingReviewCount: overlappingReviewIds.length,
+            overlappingReviewIds,
+            totalCheckpointEntries: checkpoint.length,
+            totalCheckpointReviewEntries: checkpointReview.length,
+        }
+
+        const recommendations: string[] = []
+
+        miscategorizedCheckpoint.forEach(({ review }: { review: BackendReview | undefined }) => {
+            if (review?.id) {
+                recommendations.push(
+                    `Review ${review.id} (typeId: ${review.typeId ?? 'unknown'}) appears in checkpoint data `
+                    + 'but matches Checkpoint Review criteria.',
+                )
+            }
+        })
+
+        miscategorizedCheckpointReview.forEach(({ review }: { review: BackendReview | undefined }) => {
+            if (review?.id) {
+                recommendations.push(
+                    `Review ${review.id} (typeId: ${review.typeId ?? 'unknown'}) appears in checkpoint review data `
+                    + 'but matches Checkpoint Screening criteria.',
+                )
+            }
+        })
+
+        if (recommendations.length) {
+            payload.recommendations = recommendations
+        }
+
+        if (
+            overlappingReviewIds.length
+            || miscategorizedCheckpoint.length
+            || miscategorizedCheckpointReview.length
+        ) {
+            warnLog('checkpointCrossReference', payload)
+        } else {
+            debugLog('checkpointCrossReference', {
+                ...payload,
+                message: 'Checkpoint and Checkpoint Review data sets are distinct with no misclassifications detected.',
+            })
+        }
+    }, [
+        challengeReviews,
+        checkpoint,
+        checkpointReview,
+        debugCheckpointPhases,
     ])
 
     // get review data from challenge submissions

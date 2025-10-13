@@ -585,7 +585,10 @@ export const ScorecardQuestionView: FC<Props> = (props: Props) => {
     const scorecardQuestion = props.scorecardQuestion
     const sectionIndex = props.sectionIndex
     const setIsExpand = props.setIsExpand
-    const { actionChallengeRole }: useRoleProps = useRole()
+    const {
+        actionChallengeRole,
+        myChallengeResources,
+    }: useRoleProps = useRole()
     const { loginUserInfo }: ReviewAppContextModel = useContext(ReviewAppContext)
     const { width: screenWidth }: WindowSize = useWindowSize()
     const isMobile = useMemo(() => screenWidth <= 745, [screenWidth])
@@ -670,18 +673,32 @@ export const ScorecardQuestionView: FC<Props> = (props: Props) => {
         selectedScore,
     ])
 
+    const reviewerResourceId = reviewInfo?.resourceId
+
+    // Owning the specific reviewer resource proves the current member is assigned this review
+    const hasReviewerResource = useMemo(
+        () => Boolean(
+            reviewerResourceId
+            && myChallengeResources.some(
+                resource => resource.id === reviewerResourceId,
+            ),
+        ),
+        [myChallengeResources, reviewerResourceId],
+    )
+
     const canRespondToAppeal = useMemo(() => {
-        if (!loginUserInfo?.handle || !reviewerHandle) {
+        if (!hasReviewerResource) {
             return false
         }
 
-        if (actionChallengeRole !== REVIEWER) {
-            return false
+        const currentHandle = loginUserInfo?.handle
+        if (!currentHandle || !reviewerHandle) {
+            return true
         }
 
-        return loginUserInfo.handle.toLowerCase()
+        return currentHandle.toLowerCase()
             === reviewerHandle.toLowerCase()
-    }, [actionChallengeRole, loginUserInfo?.handle, reviewerHandle])
+    }, [hasReviewerResource, loginUserInfo?.handle, reviewerHandle])
 
     const finalAnswer = useMemo(
         () => getFormattedAnswer(reviewItem),

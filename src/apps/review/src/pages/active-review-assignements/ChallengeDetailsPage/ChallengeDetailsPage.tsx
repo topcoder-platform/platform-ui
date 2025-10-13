@@ -2,7 +2,7 @@
  * Challenge Details Page.
  */
 import { kebabCase, startCase, toLower, toUpper, trim } from 'lodash'
-import { FC, FocusEvent, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { ChangeEvent, FC, FocusEvent, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { useSWRConfig } from 'swr'
@@ -536,8 +536,9 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
     const [extendMinutes, setExtendMinutes] = useState<string>('')
     const [extendError, setExtendError] = useState<string | undefined>()
     const [reopenTarget, setReopenTarget] = useState<{ id: string; name: string; duration?: number }>()
-    const [reopenDuration, setReopenDuration] = useState<string>('')
-    const [reopenDurationError, setReopenDurationError] = useState<string | undefined>()
+    const [reopenHours, setReopenHours] = useState<string>('')
+    const [reopenMinutes, setReopenMinutes] = useState<string>('')
+    const [reopenError, setReopenError] = useState<string | undefined>()
 
     // eslint-disable-next-line complexity
     useEffect(() => {
@@ -1195,14 +1196,14 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         payload: UpdateChallengePhaseRequest,
         messages: { success: string; error: string; toastId: string },
     ): Promise<boolean> => {
-        if (!phaseId) {
+        if (!phaseId || !challengeId) {
             return false
         }
 
         setPhaseActionLoading(phaseId, true)
 
         try {
-            await updateChallengePhase(phaseId, payload)
+            await updateChallengePhase(challengeId, phaseId, payload)
 
             if (challengeInfoCacheKey) {
                 await mutate(challengeInfoCacheKey)
@@ -1223,7 +1224,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         } finally {
             setPhaseActionLoading(phaseId, false)
         }
-    }, [challengeInfoCacheKey, mutate, setPhaseActionLoading])
+    }, [challengeId, challengeInfoCacheKey, mutate, setPhaseActionLoading])
 
     const openExtendModal = useCallback((
         phaseId: string,
@@ -1329,23 +1330,42 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         phaseName: string,
         duration?: number,
     ) => {
-        setReopenTarget({ duration, id: phaseId, name: phaseName })
-        setReopenDuration(typeof duration === 'number' ? String(duration) : '')
-        setReopenDurationError(undefined)
+        const safeDuration = typeof duration === 'number' && Number.isFinite(duration)
+            ? Math.max(duration, 0)
+            : 0
+        const hours = Math.floor(safeDuration / SECONDS_PER_HOUR)
+        const minutes = Math.floor((safeDuration % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE)
+
+        setReopenTarget({
+            duration: safeDuration,
+            id: phaseId,
+            name: phaseName,
+        })
+        setReopenHours(String(hours))
+        setReopenMinutes(String(minutes))
+        setReopenError(undefined)
     }, [])
 
     const closeReopenModal = useCallback(() => {
         setReopenTarget(undefined)
-        setReopenDuration('')
-        setReopenDurationError(undefined)
+        setReopenHours('')
+        setReopenMinutes('')
+        setReopenError(undefined)
     }, [])
 
-    const handleReopenDurationChange = useCallback((event: FocusEvent<HTMLInputElement>) => {
-        setReopenDuration(event.currentTarget.value)
-        if (reopenDurationError) {
-            setReopenDurationError(undefined)
+    const handleReopenHoursChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
+        setReopenHours(event.currentTarget.value)
+        if (reopenError) {
+            setReopenError(undefined)
         }
-    }, [reopenDurationError])
+    }, [reopenError])
+
+    const handleReopenMinutesChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
+        setReopenMinutes(event.currentTarget.value)
+        if (reopenError) {
+            setReopenError(undefined)
+        }
+    }, [reopenError])
 
     const timelineRowsWithActions = useMemo<ChallengeTimelineRow[]>(() => {
         if (!canManagePhases) {
@@ -1449,22 +1469,31 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
             return
         }
 
-        const trimmedDuration = reopenDuration.trim()
-        if (!trimmedDuration) {
-            setReopenDurationError('Duration is required.')
+        const parsedHours = parseNonNegativeInteger(reopenHours)
+        const parsedMinutes = parseNonNegativeInteger(reopenMinutes)
+
+        if (
+            parsedHours === undefined
+            || parsedMinutes === undefined
+            || parsedMinutes >= MINUTES_PER_HOUR
+        ) {
+            setReopenError('Enter valid non-negative hours and minutes. Minutes must be below 60.')
             return
         }
 
-        const parsedDuration = Number(trimmedDuration)
-        if (!Number.isFinite(parsedDuration) || parsedDuration <= 0) {
-            setReopenDurationError('Duration must be a positive number.')
+        const totalSeconds = ((parsedHours * MINUTES_PER_HOUR) + parsedMinutes) * SECONDS_PER_MINUTE
+
+        if (totalSeconds <= 0) {
+            setReopenError('Duration must be greater than zero.')
             return
         }
+
+        setReopenError(undefined)
 
         const didSucceed = await handlePhaseUpdate(
             reopenTarget.id,
             {
-                duration: parsedDuration,
+                duration: totalSeconds,
                 isOpen: true,
             },
             {
@@ -1480,7 +1509,8 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
     }, [
         closeReopenModal,
         handlePhaseUpdate,
-        reopenDuration,
+        reopenHours,
+        reopenMinutes,
         reopenTarget,
     ])
 
@@ -1685,20 +1715,33 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
             >
                 <div className={styles.reopenModalContent}>
                     <div className={styles.reopenModalTitle}>
-                        How long should the phase be extended for
+                        Set Duration for Reopened Phase
                     </div>
-                    <InputText
-                        name='reopen-duration'
-                        label='Duration'
-                        type='number'
-                        value={reopenDuration}
-                        forceUpdateValue
-                        placeholder='Enter duration'
-                        onChange={handleReopenDurationChange}
-                        error={reopenDurationError}
-                        classNameWrapper={styles.reopenModalInput}
-                        disabled={isReopenSubmitting}
-                    />
+                    <div className={styles.phaseDurationInputs}>
+                        <InputText
+                            name='reopen-hours'
+                            label='Hours'
+                            type='number'
+                            value={reopenHours}
+                            forceUpdateValue
+                            placeholder='0'
+                            onChange={handleReopenHoursChange}
+                            classNameWrapper={styles.reopenModalInput}
+                            disabled={isReopenSubmitting}
+                        />
+                        <InputText
+                            name='reopen-minutes'
+                            label='Minutes'
+                            type='number'
+                            value={reopenMinutes}
+                            forceUpdateValue
+                            placeholder='0'
+                            onChange={handleReopenMinutesChange}
+                            error={reopenError}
+                            classNameWrapper={styles.reopenModalInput}
+                            disabled={isReopenSubmitting}
+                        />
+                    </div>
                     <div className={styles.reopenModalActions}>
                         <Button
                             secondary
