@@ -4,7 +4,10 @@ import moment from 'moment'
 
 import { UserTrait } from '~/libs/core'
 
+import { getIndustryOptionLabels } from '../WorkExperience.utils'
+
 import styles from './WorkExpirenceCard.module.scss'
+
 
 interface WorkExpirenceCardProps {
     work: UserTrait
@@ -17,7 +20,7 @@ const WorkExpirenceCard: FC<WorkExpirenceCardProps> = (props: WorkExpirenceCardP
             <div className={styles.workExpirenceCardHeaderLeft}>
                 <p className='body-main-bold'>
                     {props.work.position}
-                    {props.work.industry ? `, ${props.work.industry}` : undefined}
+                    {props.work.industry ? `, ${getIndustryOptionLabels(props.work.industry)}` : undefined}
                 </p>
                 <p>
                     {props.work.company}

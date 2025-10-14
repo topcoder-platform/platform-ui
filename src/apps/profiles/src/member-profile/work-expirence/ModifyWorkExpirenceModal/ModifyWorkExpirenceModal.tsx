@@ -14,6 +14,7 @@ import {
 import { INDUSTRIES_OPTIONS } from '~/libs/shared'
 
 import { WorkExpirenceCard } from '../WorkExpirenceCard'
+import { getIndustryOptionLabels, getIndustryOptionValues } from '../WorkExperience.utils'
 
 import styles from './ModifyWorkExpirenceModal.module.scss'
 
@@ -58,8 +59,8 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
 
     const industryOptions: any = sortBy(INDUSTRIES_OPTIONS)
         .map(v => ({
-            label: v,
-            value: v,
+            label: getIndustryOptionLabels(v),
+            value: getIndustryOptionValues(v),
         }))
 
     function handleModifyWorkExpirenceSave(): void {
