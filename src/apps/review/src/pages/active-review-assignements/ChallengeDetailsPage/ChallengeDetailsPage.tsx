@@ -1567,7 +1567,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                             <ChallengePhaseInfo
                                 challengeInfo={challengeInfo}
                                 reviewProgress={reviewProgress}
-                                reviewinProgress={reviewInProgress}
+                                reviewInProgress={reviewInProgress}
                                 variant={isPastReviewDetail ? 'past' : 'active'}
                             />
                         )}

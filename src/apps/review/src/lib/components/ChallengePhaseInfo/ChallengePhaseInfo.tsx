@@ -19,7 +19,7 @@ interface Props {
     className?: string
     challengeInfo: ChallengeInfo
     reviewProgress: number
-    reviewinProgress: boolean
+    reviewInProgress: boolean
     variant?: 'active' | 'past'
 }
 
@@ -113,7 +113,7 @@ export const ChallengePhaseInfo: FC<Props> = (props: Props) => {
     const uiItems = useMemo(() => {
         const data = props.challengeInfo
         const variant = props.variant ?? 'active'
-        const reviewInProgress = props.reviewinProgress
+        const reviewInProgress = props.reviewInProgress
 
         const items: any[] = []
 
@@ -188,7 +188,7 @@ export const ChallengePhaseInfo: FC<Props> = (props: Props) => {
         myChallengeRoles,
         props.challengeInfo,
         props.reviewProgress,
-        props.reviewinProgress,
+        props.reviewInProgress,
         props.variant,
         hasPayment,
         paymentAmount,
