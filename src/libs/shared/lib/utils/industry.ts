@@ -1,5 +1,5 @@
 export const IndustryEnumToLabel: {
-    [key: string]: string
+  [key: string]: string
 } = {
     ConsumerGoods: 'Consumer goods',
     PublicSector: 'Public sector',
@@ -8,7 +8,7 @@ export const IndustryEnumToLabel: {
 }
 
 export const IndustryLabelToEnum: {
-    [key: string]: string
+  [key: string]: string
 } = {
     'Consumer goods': 'ConsumerGoods',
     'Public sector': 'PublicSector',

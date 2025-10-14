@@ -3,8 +3,7 @@ import classNames from 'classnames'
 import moment from 'moment'
 
 import { UserTrait } from '~/libs/core'
-
-import { getIndustryOptionLabels } from '../WorkExperience.utils'
+import { getIndustryOptionLabels } from '~/libs/shared'
 
 import styles from './WorkExpirenceCard.module.scss'
 

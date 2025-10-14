@@ -11,10 +11,9 @@ import {
     UserTraitCategoryNames,
     UserTraitIds,
 } from '~/libs/core'
-import { INDUSTRIES_OPTIONS } from '~/libs/shared'
+import { getIndustryOptionLabels, getIndustryOptionValues, INDUSTRIES_OPTIONS } from '~/libs/shared'
 
 import { WorkExpirenceCard } from '../WorkExpirenceCard'
-import { getIndustryOptionLabels, getIndustryOptionValues } from '../WorkExperience.utils'
 
 import styles from './ModifyWorkExpirenceModal.module.scss'
 
