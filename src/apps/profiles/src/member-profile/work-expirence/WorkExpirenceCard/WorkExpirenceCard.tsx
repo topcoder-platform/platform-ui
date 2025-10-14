@@ -3,6 +3,7 @@ import classNames from 'classnames'
 import moment from 'moment'
 
 import { UserTrait } from '~/libs/core'
+import { getIndustryOptionLabel } from '~/libs/shared'
 
 import styles from './WorkExpirenceCard.module.scss'
 
@@ -17,7 +18,7 @@ const WorkExpirenceCard: FC<WorkExpirenceCardProps> = (props: WorkExpirenceCardP
             <div className={styles.workExpirenceCardHeaderLeft}>
                 <p className='body-main-bold'>
                     {props.work.position}
-                    {props.work.industry ? `, ${props.work.industry}` : undefined}
+                    {props.work.industry ? `, ${getIndustryOptionLabel(props.work.industry)}` : undefined}
                 </p>
                 <p>
                     {props.work.company}
