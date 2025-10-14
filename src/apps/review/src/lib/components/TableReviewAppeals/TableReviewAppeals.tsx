@@ -21,6 +21,7 @@ import { MobileTableColumn } from '~/apps/admin/src/lib/models/MobileTableColumn
 import { EnvironmentConfig } from '~/config'
 import { copyTextToClipboard, handleError, useWindowSize, WindowSize } from '~/libs/shared'
 import { IconOutline, Table, TableColumn, Tooltip } from '~/libs/ui'
+import { getRatingColor } from '~/libs/core'
 
 import { APPROVAL, REVIEWER, WITHOUT_APPEAL } from '../../../config/index.config'
 import { ChallengeDetailContext, ReviewAppContext } from '../../contexts'
@@ -65,6 +66,24 @@ interface Props {
 
 type SubmissionRow = SubmissionInfo & {
     aggregated?: AggregatedSubmissionReviews
+}
+
+const resolveRatingValue = (value: number | string | null | undefined): number | undefined => {
+    if (typeof value === 'number' && Number.isFinite(value)) {
+        return value
+    }
+
+    if (typeof value === 'string') {
+        const trimmed = value.trim()
+        if (!trimmed.length) {
+            return undefined
+        }
+
+        const parsed = Number.parseFloat(trimmed)
+        return Number.isFinite(parsed) ? parsed : undefined
+    }
+
+    return undefined
 }
 
 function createReopenActionButtons(
@@ -529,7 +548,7 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
     // eslint-disable-next-line complexity
     const columns = useMemo<TableColumn<SubmissionRow>[]>(() => {
         const submissionColumn: TableColumn<SubmissionRow> = {
-            className: classNames(styles.textBlue, styles.submissionColumn),
+            className: styles.submissionColumn,
             columnId: 'submission-id',
             label: 'Submission ID',
             propertyName: 'id',
@@ -550,7 +569,7 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
 
                             downloadSubmission(data.id)
                         }}
-                        className={classNames(styles.textBlue, styles.linkButton)}
+                        className={styles.textBlue}
                         disabled={isButtonDisabled}
                         type='button'
                     >
@@ -614,19 +633,32 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                     columnId: 'handle-aggregated',
                     label: 'Handle',
                     propertyName: 'handle',
-                    renderer: (data: SubmissionRow) => (
-                        <a
-                            href={getHandleUrl(data.userInfo)}
-                            target='_blank'
-                            rel='noreferrer'
-                            style={{ color: data.aggregated?.submitterHandleColor }}
-                            onClick={function onClick() {
-                                window.open(getHandleUrl(data.userInfo), '_blank')
-                            }}
-                        >
-                            {data.aggregated?.submitterHandle ?? data.userInfo?.memberHandle ?? ''}
-                        </a>
-                    ),
+                    renderer: (data: SubmissionRow) => {
+                        const aggregatedRating = resolveRatingValue(data.aggregated?.submitterMaxRating)
+                        const reviewRating = resolveRatingValue(data.review?.submitterMaxRating)
+                        const userRating = resolveRatingValue(data.userInfo?.maxRating)
+                        const computedColor = data.aggregated?.submitterHandleColor
+                            ?? data.review?.submitterHandleColor
+                            ?? (aggregatedRating !== undefined ? getRatingColor(aggregatedRating) : undefined)
+                            ?? (reviewRating !== undefined ? getRatingColor(reviewRating) : undefined)
+                            ?? data.userInfo?.handleColor
+                            ?? (userRating !== undefined ? getRatingColor(userRating) : undefined)
+                            ?? '#2a2a2a'
+
+                        return (
+                            <a
+                                href={getHandleUrl(data.userInfo)}
+                                target='_blank'
+                                rel='noreferrer'
+                                style={{ color: computedColor }}
+                                onClick={function onClick() {
+                                    window.open(getHandleUrl(data.userInfo), '_blank')
+                                }}
+                            >
+                                {data.aggregated?.submitterHandle ?? data.userInfo?.memberHandle ?? ''}
+                            </a>
+                        )
+                    },
                     type: 'element',
                 }
 
@@ -771,9 +803,6 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                 }
 
                 const totalAppeals = reviewDetail?.totalAppeals ?? 0
-                const finishedAppeals = reviewDetail?.finishedAppeals ?? 0
-                const unresolvedAppeals = reviewDetail?.unresolvedAppeals
-                    ?? Math.max(totalAppeals - finishedAppeals, 0)
                 if (!totalAppeals && (reviewInfo.status ?? '').toUpperCase() !== 'COMPLETED') {
                     return (
                         <span className={styles.notReviewed}>
@@ -793,22 +822,12 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                     )
                 }
 
-                const primaryAppealsCount = unresolvedAppeals
-
                 return (
                     <Link
                         to={`./../review/${reviewInfo.id}`}
                         className={styles.appealsLink}
                     >
-                        [
-                        {' '}
-                        <span className={styles.textBlue}>{primaryAppealsCount}</span>
-                        {' '}
-                        /
-                        {' '}
                         <span className={styles.textBlue}>{totalAppeals}</span>
-                        {' '}
-                        ]
                     </Link>
                 )
             }
@@ -1009,24 +1028,34 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                 columnId: 'handle',
                 label: 'Handle',
                 propertyName: 'handle',
-                renderer: (data: SubmissionRow) => (
-                    <a
-                        href={getHandleUrl(data.userInfo)}
-                        target='_blank'
-                        rel='noreferrer'
-                        style={{
-                            color: data.userInfo?.handleColor,
-                        }}
-                        onClick={function onClick() {
-                            window.open(
-                                getHandleUrl(data.userInfo),
-                                '_blank',
-                            )
-                        }}
-                    >
-                        {data.userInfo?.memberHandle ?? ''}
-                    </a>
-                ),
+                renderer: (data: SubmissionRow) => {
+                    const reviewRating = resolveRatingValue(data.review?.submitterMaxRating)
+                    const userRating = resolveRatingValue(data.userInfo?.maxRating)
+                    const computedColor = data.review?.submitterHandleColor
+                        ?? data.userInfo?.handleColor
+                        ?? (reviewRating !== undefined ? getRatingColor(reviewRating) : undefined)
+                        ?? (userRating !== undefined ? getRatingColor(userRating) : undefined)
+                        ?? '#2a2a2a'
+
+                    return (
+                        <a
+                            href={getHandleUrl(data.userInfo)}
+                            target='_blank'
+                            rel='noreferrer'
+                            style={{
+                                color: computedColor,
+                            }}
+                            onClick={function onClick() {
+                                window.open(
+                                    getHandleUrl(data.userInfo),
+                                    '_blank',
+                                )
+                            }}
+                        >
+                            {data.userInfo?.memberHandle ?? ''}
+                        </a>
+                    )
+                },
                 type: 'element',
             }
 
@@ -1351,22 +1380,14 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                 }
 
                 return (
-                    <>
-                        [
-                        <Link
-                            to={`./../review/${reviewId}`}
-                            className={styles.appealsLink}
-                        >
-                            <span className={styles.textBlue}>{appealInfo.finishAppeals}</span>
-                            {' '}
-                            /
-                            {' '}
-                            <span className={styles.textBlue}>
-                                {appealInfo.totalAppeals}
-                            </span>
-                        </Link>
-                        ]
-                    </>
+                    <Link
+                        to={`./../review/${reviewId}`}
+                        className={styles.appealsLink}
+                    >
+                        <span className={styles.textBlue}>
+                            {appealInfo.totalAppeals}
+                        </span>
+                    </Link>
                 )
             },
             type: 'element',

@@ -47,6 +47,37 @@ interface AggregateSubmissionReviewsParams {
     reviewers: BackendResource[]
 }
 
+const normalizeRatingValue = (value: number | string | null | undefined): number | undefined => {
+    if (typeof value === 'number' && Number.isFinite(value)) {
+        return value
+    }
+
+    if (typeof value === 'string') {
+        const trimmed = value.trim()
+        if (!trimmed.length) {
+            return undefined
+        }
+
+        const parsed = Number.parseFloat(trimmed)
+        return Number.isFinite(parsed) ? parsed : undefined
+    }
+
+    return undefined
+}
+
+function resolveHandleColor(
+    explicitColor: string | undefined,
+    handle: string | undefined,
+    maxRating: number | string | undefined | null,
+): string | undefined {
+    const normalizedRating = normalizeRatingValue(maxRating)
+
+    return explicitColor
+        ?? (handle && normalizedRating !== undefined
+            ? getRatingColor(normalizedRating)
+            : undefined)
+}
+
 /* eslint-disable complexity */
 /* eslint-disable no-console */
 export function aggregateSubmissionReviews({
@@ -75,8 +106,7 @@ export function aggregateSubmissionReviews({
                 submission,
                 submitterHandle: submission.review?.submitterHandle ?? undefined,
                 submitterHandleColor: submission.review?.submitterHandleColor ?? undefined,
-                submitterMaxRating: submission.review?.submitterMaxRating
-                    ?? undefined,
+                submitterMaxRating: normalizeRatingValue(submission.review?.submitterMaxRating),
             })
         }
 
@@ -124,17 +154,23 @@ export function aggregateSubmissionReviews({
             reviewerHandleByResourceId[resourceId] = finalReviewerHandle
         }
 
-        const finalReviewerHandleColor = reviewInfo?.reviewerHandleColor
-            ?? matchingReviewResult?.reviewerHandleColor
-            ?? reviewerInfo?.handleColor
-        const finalReviewerMaxRating = reviewInfo?.reviewerMaxRating
-            ?? matchingReviewResult?.reviewerMaxRating
-            ?? reviewerInfo?.rating
+        const finalReviewerMaxRating = normalizeRatingValue(
+            reviewInfo?.reviewerMaxRating
+                ?? matchingReviewResult?.reviewerMaxRating
+                ?? reviewerInfo?.rating,
+        )
+        const finalReviewerHandleColor = resolveHandleColor(
+            reviewInfo?.reviewerHandleColor
+                ?? matchingReviewResult?.reviewerHandleColor
+                ?? reviewerInfo?.handleColor,
+            finalReviewerHandle,
+            finalReviewerMaxRating,
+        )
 
         if (reviewInfo?.submitterHandle) {
             group.submitterHandle = reviewInfo.submitterHandle
             group.submitterHandleColor = reviewInfo.submitterHandleColor
-            group.submitterMaxRating = reviewInfo.submitterMaxRating
+            group.submitterMaxRating = normalizeRatingValue(reviewInfo.submitterMaxRating)
         }
 
         if (process.env.NODE_ENV !== 'production') {
@@ -293,15 +329,16 @@ export function aggregateSubmissionReviews({
         const submitterHandle = group.submitterHandle
             ?? group.submission.review?.submitterHandle
             ?? undefined
-        const submitterMaxRating = group.submitterMaxRating
-            ?? group.submission.review?.submitterMaxRating
-            ?? undefined
-        const submitterHandleColor = group.submitterHandleColor
-            ?? group.submission.review?.submitterHandleColor
-            ?? (submitterHandle
-                && typeof submitterMaxRating === 'number'
-                ? getRatingColor(submitterMaxRating)
-                : undefined)
+        const submitterMaxRating = normalizeRatingValue(
+            group.submitterMaxRating
+                ?? group.submission.review?.submitterMaxRating
+                ?? undefined,
+        )
+        const submitterHandleColor = resolveHandleColor(
+            group.submitterHandleColor ?? group.submission.review?.submitterHandleColor,
+            submitterHandle,
+            submitterMaxRating,
+        )
 
         aggregatedRows.push({
             ...group,
