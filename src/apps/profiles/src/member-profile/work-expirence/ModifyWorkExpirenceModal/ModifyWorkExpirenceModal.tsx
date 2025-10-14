@@ -11,7 +11,7 @@ import {
     UserTraitCategoryNames,
     UserTraitIds,
 } from '~/libs/core'
-import { getIndustryOptionLabels, getIndustryOptionValues, INDUSTRIES_OPTIONS } from '~/libs/shared'
+import { getIndustryOptionLabel, getIndustryOptionValue, INDUSTRIES_OPTIONS } from '~/libs/shared'
 
 import { WorkExpirenceCard } from '../WorkExpirenceCard'
 
@@ -58,8 +58,8 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
 
     const industryOptions: any = sortBy(INDUSTRIES_OPTIONS)
         .map(v => ({
-            label: getIndustryOptionLabels(v),
-            value: getIndustryOptionValues(v),
+            label: getIndustryOptionLabel(v),
+            value: getIndustryOptionValue(v),
         }))
 
     function handleModifyWorkExpirenceSave(): void {
