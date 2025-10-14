@@ -8,7 +8,6 @@ import { getIndustryOptionLabels } from '../WorkExperience.utils'
 
 import styles from './WorkExpirenceCard.module.scss'
 
-
 interface WorkExpirenceCardProps {
     work: UserTrait
     isModalView?: boolean

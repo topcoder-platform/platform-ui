@@ -1,10 +1,10 @@
 export const IndustryEnumToLabel: {
     [key: string]: string
 } = {
-    'ConsumerGoods': 'Consumer goods',
-    'PublicSector': 'Public sector',
-    'TechAndTechnologyService': 'Tech & technology services',
-    'TravelAndHospitality' : 'Travel & hospitality',
+    ConsumerGoods: 'Consumer goods',
+    PublicSector: 'Public sector',
+    TechAndTechnologyService: 'Tech & technology services',
+    TravelAndHospitality: 'Travel & hospitality',
 }
 
 export const IndustryLabelToEnum: {
@@ -16,8 +16,7 @@ export const IndustryLabelToEnum: {
     'Travel & hospitality': 'TravelAndHospitality',
 }
 
-
-export const getIndustryOptionValues = (v: string) => {
+export const getIndustryOptionValues = (v: string): string => {
     const values = Object.values(IndustryEnumToLabel)
     const keys = Object.keys(IndustryEnumToLabel)
     if (values.includes(v)) {
@@ -31,7 +30,7 @@ export const getIndustryOptionValues = (v: string) => {
     return v
 }
 
-export const getIndustryOptionLabels = (v: string) => {
+export const getIndustryOptionLabels = (v: string): string => {
     const keys = Object.keys(IndustryEnumToLabel)
     if (keys.includes(v)) {
         return IndustryEnumToLabel[v]
