@@ -170,6 +170,73 @@ function extractOutcomeFromMetadata(metadata: BackendReview['metadata']): Screen
     return undefined
 }
 
+type SubmissionLookupArgs = {
+    review: BackendReview
+    submissionsById: Map<string, BackendSubmission>
+    submissionsByLegacyId: Map<string, BackendSubmission>
+}
+
+function resolveSubmissionForReview({
+    review,
+    submissionsById,
+    submissionsByLegacyId,
+}: SubmissionLookupArgs): BackendSubmission | undefined {
+    if (review.submissionId) {
+        const submission = submissionsById.get(review.submissionId)
+        if (submission) {
+            return submission
+        }
+    }
+
+    if (review.legacySubmissionId) {
+        const legacyKey = `${review.legacySubmissionId}`
+        const submission = submissionsByLegacyId.get(legacyKey)
+        if (submission) {
+            return submission
+        }
+    }
+
+    return undefined
+}
+
+type SubmissionIdResolutionArgs = {
+    baseSubmissionInfo?: SubmissionInfo
+    defaultId: string
+    matchingSubmission?: BackendSubmission
+    review: BackendReview
+}
+
+function resolveFallbackSubmissionId({
+    baseSubmissionInfo,
+    defaultId,
+    matchingSubmission,
+    review,
+}: SubmissionIdResolutionArgs): string | undefined {
+    return review.submissionId
+        ?? baseSubmissionInfo?.id
+        ?? (review.legacySubmissionId ? `${review.legacySubmissionId}` : undefined)
+        ?? review.id
+        ?? matchingSubmission?.id
+        ?? defaultId
+}
+
+type SubmitterMemberIdResolutionArgs = {
+    baseSubmissionInfo?: SubmissionInfo
+    matchingSubmission?: BackendSubmission
+    memberId: string
+}
+
+function resolveSubmitterMemberId({
+    baseSubmissionInfo,
+    matchingSubmission,
+    memberId,
+}: SubmitterMemberIdResolutionArgs): string {
+    return memberId
+        || baseSubmissionInfo?.memberId
+        || matchingSubmission?.memberId
+        || ''
+}
+
 // Local helpers
 function getNumericScore(review: BackendReview | undefined): number | undefined {
     if (!review) return undefined
@@ -843,6 +910,35 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
 
     const visibleLegacySubmissionIds = useMemo(
         () => new Set(visibleChallengeSubmissions.map(submission => submission.legacySubmissionId)),
+        [visibleChallengeSubmissions],
+    )
+
+    const visibleSubmissionsById = useMemo(
+        () => visibleChallengeSubmissions.reduce<Map<string, BackendSubmission>>(
+            (accumulator, submission) => {
+                if (submission.id) {
+                    accumulator.set(submission.id, submission)
+                }
+
+                return accumulator
+            },
+            new Map<string, BackendSubmission>(),
+        ),
+        [visibleChallengeSubmissions],
+    )
+
+    const visibleSubmissionsByLegacyId = useMemo(
+        () => visibleChallengeSubmissions.reduce<Map<string, BackendSubmission>>(
+            (accumulator, submission) => {
+                const legacyId = submission.legacySubmissionId
+                if (legacyId) {
+                    accumulator.set(`${legacyId}`, submission)
+                }
+
+                return accumulator
+            },
+            new Map<string, BackendSubmission>(),
+        ),
         [visibleChallengeSubmissions],
     )
 
@@ -1682,13 +1778,46 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
         debugCheckpointPhases,
     ])
 
+    const submitterReviewEntries = useMemo<BackendReview[]>(() => {
+        if (actionChallengeRole !== SUBMITTER) {
+            return challengeReviews ?? []
+        }
+
+        if (challengeReviews && challengeReviews.length) {
+            return challengeReviews
+        }
+
+        const fallbackReviews: BackendReview[] = []
+        forEach(visibleChallengeSubmissions, submission => {
+            forEach(submission.review, reviewItem => {
+                if (reviewItem?.id) {
+                    fallbackReviews.push({
+                        ...reviewItem,
+                        legacySubmissionId: reviewItem.legacySubmissionId || submission.legacySubmissionId,
+                        submissionId: reviewItem.submissionId || submission.id,
+                    })
+                }
+            })
+        })
+
+        if (fallbackReviews.length) {
+            return fallbackReviews
+        }
+
+        return challengeReviews ?? []
+    }, [
+        actionChallengeRole,
+        challengeReviews,
+        visibleChallengeSubmissions,
+    ])
+
     // get review data from challenge submissions
     const submitterReviews = useMemo(() => {
         if (actionChallengeRole !== SUBMITTER) {
             return []
         }
 
-        if (!challengeReviews) {
+        if (!submitterReviewEntries.length) {
             return []
         }
 
@@ -1699,18 +1828,70 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
             ? resourceMemberIdMapping[memberId]
             : undefined
 
-        return challengeReviews.map(reviewItem => ({
-            id: reviewItem.submissionId,
-            memberId,
-            review: convertBackendReviewToReviewInfo(reviewItem),
-            reviews: [convertBackendReviewToReviewResult(reviewItem)],
-            userInfo,
-        }))
+        const resolvedReviews = submitterReviewEntries
+            .map((reviewItem, index) => {
+                const matchingSubmission = resolveSubmissionForReview({
+                    review: reviewItem,
+                    submissionsById: visibleSubmissionsById,
+                    submissionsByLegacyId: visibleSubmissionsByLegacyId,
+                })
+
+                const submissionWithReview: BackendSubmission | undefined = matchingSubmission
+                    ? {
+                        ...matchingSubmission,
+                        review: [reviewItem],
+                    }
+                    : undefined
+
+                const baseSubmissionInfo = submissionWithReview
+                    ? convertBackendSubmissionToSubmissionInfo(submissionWithReview)
+                    : undefined
+
+                const fallbackId = resolveFallbackSubmissionId({
+                    baseSubmissionInfo,
+                    defaultId: `${memberId || 'submission'}-${index}`,
+                    matchingSubmission,
+                    review: reviewItem,
+                })
+
+                if (!fallbackId) {
+                    return undefined
+                }
+
+                const resolvedMemberId = resolveSubmitterMemberId({
+                    baseSubmissionInfo,
+                    matchingSubmission,
+                    memberId,
+                })
+
+                const reviewInfo = convertBackendReviewToReviewInfo(reviewItem)
+                const reviewResult = convertBackendReviewToReviewResult(reviewItem)
+
+                return {
+                    ...baseSubmissionInfo,
+                    id: fallbackId,
+                    isLatest: baseSubmissionInfo?.isLatest
+                        ?? matchingSubmission?.isLatest
+                        ?? true,
+                    memberId: resolvedMemberId,
+                    review: reviewInfo,
+                    reviews: [reviewResult],
+                    submittedDate: baseSubmissionInfo?.submittedDate,
+                    submittedDateString: baseSubmissionInfo?.submittedDateString,
+                    userInfo,
+                    virusScan: baseSubmissionInfo?.virusScan,
+                } as SubmissionInfo
+            })
+            .filter((entry): entry is SubmissionInfo => Boolean(entry))
+
+        return resolvedReviews
     }, [
         actionChallengeRole,
-        challengeReviews,
         loginUserInfo?.userId,
         resourceMemberIdMapping,
+        visibleSubmissionsById,
+        visibleSubmissionsByLegacyId,
+        submitterReviewEntries,
     ])
 
     const review = useMemo(() => {
@@ -1850,14 +2031,20 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
     }, [challengeInfo?.phases, challengeReviews, resourceMemberIdMapping, visibleChallengeSubmissions])
 
     useEffect(() => {
-        forEach(review, item => {
+        const reviewSources: SubmissionInfo[] = actionChallengeRole === SUBMITTER
+            ? submitterReviews
+            : review
+        const processed = new Set<string>()
+
+        forEach<SubmissionInfo>(reviewSources, item => {
             const reviewId = item.review?.id
 
-            if (reviewId) {
+            if (reviewId && !processed.has(reviewId)) {
                 loadResourceAppeal(reviewId)
+                processed.add(reviewId)
             }
         })
-    }, [loadResourceAppeal, review])
+    }, [actionChallengeRole, loadResourceAppeal, review, submitterReviews])
 
     // get review progress from challenge review
     const reviewProgress = useMemo(() => {
@@ -1865,16 +2052,31 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
             return 0
         }
 
-        const submittedReviewSubmissions = filter(review, item => {
+        const completedReviews = filter(review, item => {
+            const committed = item.review?.committed
+            if (typeof committed === 'boolean') {
+                return committed
+            }
+
+            const status = item.review?.status
+            if (typeof status === 'string' && status.trim()) {
+                return status.trim()
+                    .toUpperCase() === 'COMPLETED'
+            }
+
             if (!item.reviews?.length) {
                 return false
             }
 
-            return every(item.reviews, reviewResult => !!reviewResult.score)
+            return every(
+                item.reviews,
+                reviewResult => typeof reviewResult.score === 'number'
+                    && Number.isFinite(reviewResult.score),
+            )
         })
 
         return Math.round(
-            (submittedReviewSubmissions.length * 100) / review.length,
+            (completedReviews.length * 100) / review.length,
         )
     }, [review])
 

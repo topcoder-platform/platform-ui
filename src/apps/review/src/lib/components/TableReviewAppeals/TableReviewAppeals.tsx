@@ -325,6 +325,11 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
 
     const canViewHistory = hasAdminRole || hasCopilotRole || isTopcoderAdmin
 
+    const shouldShowAggregatedReviewScore = useMemo(
+        () => !(hasReviewerRole && !hasCopilotRole && !hasAdminRole && !isTopcoderAdmin),
+        [hasAdminRole, hasCopilotRole, hasReviewerRole, isTopcoderAdmin],
+    )
+
     // Aggregated view groups one row per submission and shows reviewer columns + average score.
     const isAggregatedView = useMemo(() => {
         if (tab === 'Appeals' || tab === 'Review') {
@@ -860,7 +865,7 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                 submissionColumn,
                 ...(handleColumnAgg ? [handleColumnAgg] : []),
                 reviewDateColumn,
-                reviewScoreColumn,
+                ...(shouldShowAggregatedReviewScore ? [reviewScoreColumn] : []),
             ]
 
             for (let index = 0; index < maxReviewCount; index += 1) {

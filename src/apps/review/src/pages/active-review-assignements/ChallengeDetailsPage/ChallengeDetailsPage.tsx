@@ -786,8 +786,9 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
     // eslint-disable-next-line complexity
     useEffect(() => {
         if (!challengeInfo) return
+        const challengePhases = challengeInfo.phases ?? []
         const items = buildPhaseTabs(
-            challengeInfo.phases ?? [],
+            challengePhases,
             challengeInfo.status,
             phaseOrderingOptions,
         )
@@ -798,14 +799,13 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
             return
         }
 
-        // Determine phase ids by type for quick lookup
-        const phasesByName = new Map<string, string[]>();
-        (challengeInfo?.phases ?? []).forEach((p: { id?: string; name?: string }) => {
-            const n = (p.name || '').trim()
-                .toLowerCase()
-            const ids = phasesByName.get(n) || []
-            if (p.id) ids.push(p.id)
-            phasesByName.set(n, ids)
+        // Map tab labels to the corresponding phase so we can check whether it is currently open
+        const tabPhaseMap = new Map<string, PhaseLike | undefined>()
+        items.forEach(tab => {
+            tabPhaseMap.set(
+                tab.value,
+                findPhaseByTabLabel(challengePhases, tab.value, phaseOrderingOptions),
+            )
         })
 
         const myReviewerResourceIds = new Set(
@@ -876,6 +876,11 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         const flagged = items.map(it => {
             const label = it.value.trim()
                 .toLowerCase()
+            const phaseForTab = tabPhaseMap.get(it.value)
+            if (!phaseForTab?.isOpen) {
+                return it
+            }
+
             if (label === 'review' && pendingReview) {
                 return { ...it, warning: true }
             }
@@ -917,6 +922,11 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                     const normalized = it.value
                         .trim()
                         .toLowerCase()
+                    const phaseForTab = tabPhaseMap.get(it.value)
+                    if (!phaseForTab?.isOpen) {
+                        return it
+                    }
+
                     return normalized === 'appeals response'
                         ? { ...it, warning: true }
                         : it
@@ -940,6 +950,10 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                         const normalizedValue = it.value
                             .trim()
                             .toLowerCase()
+                        const phaseForTab = tabPhaseMap.get(it.value)
+                        if (!phaseForTab?.isOpen) {
+                            return it
+                        }
 
                         return normalizedValue === 'appeals'
                             ? { ...it, warning: true }

@@ -86,6 +86,10 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
         () => (props.tab || '').toLowerCase() === 'submission',
         [props.tab],
     )
+    const isAppealsTab = useMemo(
+        () => (props.tab || '').toLowerCase() === 'appeals',
+        [props.tab],
+    )
     const challengeStatus = challengeInfo?.status?.toUpperCase()
     const isChallengeCompleted = challengeStatus === 'COMPLETED'
 
@@ -216,11 +220,11 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
         [challengeInfo],
     )
 
-    const shouldShowAppealsColumn = useMemo(() => {
-        const tabName = (props.tab || '').toLowerCase()
-        // Only show Appeals columns on the "Appeals" tab for submitters
-        return allowsAppeals && tabName === 'appeals'
-    }, [allowsAppeals, props.tab])
+    // Only show Appeals columns on the "Appeals" tab for submitters
+    const shouldShowAppealsColumn = useMemo(
+        () => allowsAppeals && isAppealsTab,
+        [allowsAppeals, isAppealsTab],
+    )
 
     const aggregatedRows = useMemo(
         () => aggregateSubmissionReviews({
@@ -434,7 +438,7 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
                 }
 
                 // On Appeals tab, make the average score clickable to a review page
-                if ((props.tab || '').toLowerCase() === 'appeals') {
+                if (isAppealsTab) {
                     const reviewDetail = data.aggregated?.reviews?.[0]
                     const reviewId = reviewDetail?.reviewInfo?.id || reviewDetail?.reviewId
                     if (reviewId) {
@@ -553,7 +557,6 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
             }
 
             const totalAppeals = reviewDetail?.totalAppeals ?? 0
-            const unresolvedAppeals = reviewDetail?.unresolvedAppeals ?? 0
 
             if (!totalAppeals && (reviewInfo.status ?? '').toUpperCase() !== 'COMPLETED') {
                 return (
@@ -571,15 +574,7 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
                     )}
                     to={`./../review/${reviewId}`}
                 >
-                    [
-                    {' '}
-                    <span className={styles.textBlue}>{unresolvedAppeals}</span>
-                    {' '}
-                    /
-                    {' '}
                     <span className={styles.textBlue}>{totalAppeals}</span>
-                    {' '}
-                    ]
                 </Link>
             )
         }
@@ -623,9 +618,7 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
             }
         }
 
-        const shouldShowAppealAction = (props.tab || '').toLowerCase() === 'appeals'
-            && isAppealsPhase(challengeInfo)
-        const shouldRenderActionsColumn = shouldShowAppealAction || hasHistoryEntries
+        const shouldRenderActionsColumn = !isAppealsTab && hasHistoryEntries
 
         if (shouldRenderActionsColumn) {
             aggregatedColumns.push({
@@ -634,25 +627,6 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
                 label: 'Actions',
                 renderer: (data: SubmissionRow) => {
                     const actionEntries: Array<{ key: string; element: JSX.Element }> = []
-
-                    if (shouldShowAppealAction) {
-                        const reviewDetail = (data.aggregated?.reviews || []).find(r => r.reviewInfo?.id)
-                        const reviewId = reviewDetail?.reviewInfo?.id || reviewDetail?.reviewId
-
-                        if (reviewId) {
-                            actionEntries.push({
-                                element: (
-                                    <Link
-                                        to={`./../review/${reviewId}`}
-                                        className={classNames(styles.textBlue, 'last-element')}
-                                    >
-                                        Appeal
-                                    </Link>
-                                ),
-                                key: 'appeal-action',
-                            })
-                        }
-                    }
 
                     const historyKeyForRow = getSubmissionHistoryKey(data.memberId, data.id)
                     const rowHistory = historyByMember.get(historyKeyForRow) ?? []
@@ -714,7 +688,7 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
         restrictionMessage,
         challengeInfo,
         isSubmissionTab,
-        props.tab,
+        isAppealsTab,
     ])
 
     const columnsMobile = useMemo<MobileTableColumn<SubmissionRow>[][]>(
