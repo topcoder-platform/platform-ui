@@ -31,7 +31,7 @@ import {
 import { BreadCrumbData, ChallengeDetailContextModel } from '../../../lib/models'
 import { SubmissionBarInfo } from '../../../lib/components/SubmissionBarInfo'
 import { ChallengeLinksForAdmin } from '../../../lib/components/ChallengeLinksForAdmin'
-import { ADMIN, COPILOT } from '../../../config/index.config'
+import { ADMIN, COPILOT, MANAGER } from '../../../config/index.config'
 import { useIsEditReview, useIsEditReviewProps } from '../../../lib/hooks/useIsEditReview'
 import { activeReviewAssigmentsRouteId, rootRoute } from '../../../config/routes.config'
 
@@ -319,6 +319,13 @@ export const ScorecardDetailsPage: FC<Props> = (props: Props) => {
         [myChallengeRoles],
     )
 
+    const hasChallengeManagerRole = useMemo(
+        () => myChallengeResources.some(
+            resource => resource.roleName?.toLowerCase() === MANAGER.toLowerCase(),
+        ),
+        [myChallengeResources],
+    )
+
     const hasChallengeCopilotRole = useMemo(
         () => myChallengeResources.some(
             resource => resource.roleName?.toLowerCase() === COPILOT.toLowerCase(),
@@ -331,11 +338,13 @@ export const ScorecardDetailsPage: FC<Props> = (props: Props) => {
             reviewInfo?.committed
             && (hasChallengeAdminRole
                 || hasTopcoderAdminRole
+                || hasChallengeManagerRole
                 || hasChallengeCopilotRole),
         ),
         [
             hasChallengeAdminRole,
             hasChallengeCopilotRole,
+            hasChallengeManagerRole,
             hasTopcoderAdminRole,
             reviewInfo?.committed,
         ],
@@ -381,18 +390,21 @@ export const ScorecardDetailsPage: FC<Props> = (props: Props) => {
                 <>
                     <div className={styles.summary}>
                         <SubmissionBarInfo submission={submissionInfo} />
-                        {actionChallengeRole === ADMIN || actionChallengeRole === COPILOT ? (
-                            <ChallengeLinksForAdmin
-                                isSavingReview={isSavingReview}
-                                saveReviewInfo={saveReviewInfo}
-                                reviewInfo={reviewInfo}
-                                canEditScorecard={canEditScorecard}
-                                isManagerEdit={isManagerEdit}
-                                onToggleManagerEdit={toggleManagerEdit}
-                            />
-                        ) : (
-                            <ChallengeLinks />
-                        )}
+                        {actionChallengeRole === ADMIN
+                         || actionChallengeRole === COPILOT
+                         || actionChallengeRole === MANAGER
+                            ? (
+                                <ChallengeLinksForAdmin
+                                    isSavingReview={isSavingReview}
+                                    saveReviewInfo={saveReviewInfo}
+                                    reviewInfo={reviewInfo}
+                                    canEditScorecard={canEditScorecard}
+                                    isManagerEdit={isManagerEdit}
+                                    onToggleManagerEdit={toggleManagerEdit}
+                                />
+                            ) : (
+                                <ChallengeLinks />
+                            )}
                     </div>
 
                     <ScorecardDetails
