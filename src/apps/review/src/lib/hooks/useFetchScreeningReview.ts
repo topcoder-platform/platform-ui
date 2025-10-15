@@ -946,7 +946,10 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
 
     // Subsets by submission type for tab-specific displays
     const contestSubmissions = useMemo(
-        () => visibleChallengeSubmissions.filter(s => (s.type || '').toUpperCase() === 'CONTEST_SUBMISSION'),
+        () => visibleChallengeSubmissions.filter(s => {
+            const submissionType = s.type?.trim()
+            return submissionType?.toUpperCase() === 'CONTEST_SUBMISSION'
+        }),
         [visibleChallengeSubmissions],
     )
     const finalFixSubmissions = useMemo(
@@ -958,21 +961,48 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
     const reviewerIds = useMemo(() => {
         let results: string[] = []
 
+        const normalizeRoleName = (roleName?: string | null): string | undefined => roleName
+            ?.trim()
+            .toLowerCase()
+
         if (challengeReviewers && challengeReviewers.length) {
+            const reviewerRoleResources = filter(
+                challengeReviewers,
+                reviewer => normalizeRoleName(reviewer.roleName) === 'reviewer',
+            )
+
             results = (
                 actionChallengeRole === REVIEWER
                     ? filter(
-                        challengeReviewers,
+                        reviewerRoleResources,
                         reviewer => reviewer.memberId === `${loginUserInfo?.userId}`,
                     )
-                    : challengeReviewers
+                    : reviewerRoleResources
             ).map(reviewer => reviewer.id)
         }
 
         if (!results.length) {
+            const reviewerResourceIds = new Set(
+                (resources ?? [])
+                    .filter(resource => normalizeRoleName(resource.roleName) === 'reviewer')
+                    .map(resource => resource.id)
+                    .filter((id): id is string => Boolean(id)),
+            )
+
             forEach(visibleChallengeSubmissions, challengeSubmission => {
                 forEach(challengeSubmission.review, review => {
-                    results.push(review.resourceId)
+                    const resourceId = review.resourceId
+                    if (!resourceId) {
+                        return
+                    }
+
+                    if (reviewerResourceIds.size && !reviewerResourceIds.has(resourceId)) {
+                        return
+                    }
+
+                    if (!results.includes(resourceId)) {
+                        results.push(resourceId)
+                    }
                 })
             })
         }
@@ -984,6 +1014,7 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
         visibleChallengeSubmissions,
         actionChallengeRole,
         loginUserInfo,
+        resources,
     ])
 
     // fetch appeal response
@@ -1840,6 +1871,11 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
                     submissionsById: visibleSubmissionsById,
                     submissionsByLegacyId: visibleSubmissionsByLegacyId,
                 })
+
+                const submissionType = matchingSubmission?.type?.trim()
+                if (submissionType?.toUpperCase() !== 'CONTEST_SUBMISSION') {
+                    return undefined
+                }
 
                 const submissionWithReview: BackendSubmission | undefined = matchingSubmission
                     ? {
