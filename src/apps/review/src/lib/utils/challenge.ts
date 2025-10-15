@@ -101,9 +101,10 @@ function normalizeLimitMetadataValue(rawValue: unknown): unknown {
 }
 
 function evaluateStringLimit(value: string): boolean {
+    console.log('evaluateStringLimit', value)
     const trimmed = value.trim()
     if (!trimmed) {
-        return false
+        return true
     }
 
     if (hasPositiveNumeric(trimmed)) {
@@ -120,7 +121,7 @@ function evaluateStringLimit(value: string): boolean {
         return boolFlag
     }
 
-    return false
+    return true
 }
 
 function evaluateObjectLimit(candidate: Record<string, unknown>): boolean {
@@ -146,13 +147,13 @@ function evaluateObjectLimit(candidate: Record<string, unknown>): boolean {
         return limitFlag
     }
 
-    return false
+    return true
 }
 
 export function challengeHasSubmissionLimit(challengeInfo?: ChallengeInfo): boolean {
     const rawValue = findSubmissionLimitMetadata(challengeInfo?.metadata)
     if (rawValue === undefined || rawValue === null) {
-        return false
+        return true
     }
 
     const normalized = normalizeLimitMetadataValue(rawValue)
@@ -173,9 +174,5 @@ export function challengeHasSubmissionLimit(challengeInfo?: ChallengeInfo): bool
         return evaluateObjectLimit(normalized as Record<string, unknown>)
     }
 
-    return false
-}
-
-export function shouldRestrictToLatestSubmissions(challengeInfo?: ChallengeInfo): boolean {
-    return !challengeHasSubmissionLimit(challengeInfo)
+    return true
 }

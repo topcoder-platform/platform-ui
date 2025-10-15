@@ -38,11 +38,12 @@ import {
     AggregatedReviewDetail,
     AggregatedSubmissionReviews,
     aggregateSubmissionReviews,
+    challengeHasSubmissionLimit,
     getHandleUrl,
     getSubmissionHistoryKey,
+    hasIsLatestFlag,
     isReviewPhase,
     partitionSubmissionHistory,
-    shouldRestrictToLatestSubmissions,
     SubmissionHistoryPartition,
 } from '../../utils'
 import { ConfirmModal } from '../ConfirmModal'
@@ -211,9 +212,8 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
         historyByMember,
     }: SubmissionHistoryPartition = submissionHistory
     const hasHistoryEntries = useMemo(
-        () => isSubmissionTab && Array.from(historyByMember.values())
-            .some(list => list.length > 0),
-        [historyByMember, isSubmissionTab],
+        () => isSubmissionTab && hasIsLatestFlag(datas),
+        [datas, isSubmissionTab],
     )
 
     const submissionMetaById = useMemo(() => {
@@ -237,7 +237,7 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
     )
 
     const restrictToLatest = useMemo(
-        () => shouldRestrictToLatestSubmissions(challengeInfo),
+        () => challengeHasSubmissionLimit(challengeInfo),
         [challengeInfo],
     )
 

@@ -74,7 +74,7 @@ export function convertBackendSubmissionToScreening(
         challengeId: data.challengeId,
         createdAt,
         createdAtString,
-        isLatest: data.isLatest ?? false,
+        isLatest: data.isLatest,
         memberId: data.memberId,
         result,
         score: data.screeningScore ?? 'Pending',

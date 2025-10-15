@@ -17,6 +17,10 @@ export function getSubmissionHistoryKey(
     return `__unknown__::${submissionId}`
 }
 
+export function hasIsLatestFlag<T extends { isLatest?: boolean }>(submissions: T[]): boolean {
+    return submissions.some(submission => submission.isLatest !== undefined)
+}
+
 function getSubmissionTimestamp(submission: SubmissionInfo): number {
     const candidates: Array<Date | undefined> = []
 

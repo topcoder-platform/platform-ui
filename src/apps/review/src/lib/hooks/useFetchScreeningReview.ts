@@ -1539,12 +1539,16 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
             .filter(s => (s.type || '').toUpperCase()
                 .includes('CHECKPOINT'))
 
-        const checkpointReviewRows = checkpointSubmissions.map(item => {
-            const base = convertBackendSubmissionToScreening(item)
+        const checkpointReviewRows = checkpointSubmissions.reduce<Screening[]>((rows, item) => {
             const matchedReview = checkpointReviewsBySubmission.get(item.id)
+            if (!matchedReview) {
+                return rows
+            }
+
+            const base = convertBackendSubmissionToScreening(item)
             let numericScore = getNumericScore(matchedReview)
 
-            if (numericScore === undefined && matchedReview) {
+            if (numericScore === undefined) {
                 const reviewStatus = (matchedReview.status || '').toUpperCase()
                 if (reviewStatus === 'COMPLETED' || reviewStatus === 'SUBMITTED') {
                     const submissionScore = parseSubmissionScore(item.screeningScore)
@@ -1556,20 +1560,20 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
 
             const scoreDisplay = scoreToDisplay(numericScore, 'Pending')
 
-            const screenerId = matchedReview?.resourceId ?? base.screenerId
-            const result = determinePassFail(numericScore, minPass, base.result, matchedReview?.metadata)
+            const screenerId = matchedReview.resourceId ?? base.screenerId
+            const result = determinePassFail(numericScore, minPass, base.result, matchedReview.metadata)
 
             const myAssignment
                 = (myCheckpointReviewerResourceId && challengeReviews)
                     ? challengeReviews.find(rv => (
                         rv.submissionId === item.id
                         && rv.resourceId === myCheckpointReviewerResourceId
-                    && reviewMatchesPhase(
-                        rv,
-                        checkpointReviewScorecardId,
-                        checkpointReviewPhaseIds,
-                        'Checkpoint Review',
-                    )
+                        && reviewMatchesPhase(
+                            rv,
+                            checkpointReviewScorecardId,
+                            checkpointReviewPhaseIds,
+                            'Checkpoint Review',
+                        )
                     ))
                     : undefined
 
@@ -1580,7 +1584,7 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
                         return resourceMatch
                     }
 
-                    if (matchedReview?.reviewerHandle) {
+                    if (matchedReview.reviewerHandle) {
                         return {
                             handleColor: '#2a2a2a',
                             memberHandle: matchedReview.reviewerHandle,
@@ -1598,19 +1602,21 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
                 } as BackendResource
             })()
 
-            return {
+            rows.push({
                 ...base,
                 myReviewId: myAssignment?.id,
                 myReviewResourceId: myAssignment?.resourceId,
                 myReviewStatus: myAssignment?.status ?? undefined,
                 result,
-                reviewId: matchedReview?.id,
+                reviewId: matchedReview.id,
                 score: scoreDisplay,
                 screener: reviewerDisplay,
                 screenerId: reviewerDisplay?.id || screenerId,
                 userInfo: resourceMemberIdMapping[base.memberId],
-            }
-        })
+            })
+
+            return rows
+        }, [])
 
         if (debugCheckpointPhases) {
             debugLog('checkpointReview.results', {

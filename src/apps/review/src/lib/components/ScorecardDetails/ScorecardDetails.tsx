@@ -118,6 +118,7 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
     const { mutate }: { mutate: (key: any, data?: any, opts?: any) => Promise<any> } = useSWRConfig()
     const [isExpand, setIsExpand] = useState<{ [key: string]: boolean }>({})
     const [isShowSaveAsDraftModal, setIsShowSaveAsDraftModal] = useState(false)
+    const [shouldRedirectAfterDraft, setShouldRedirectAfterDraft] = useState(false)
     const mappingReviewInfo = useMemo<{
         [key: string]: {
             item: ReviewItemInfo
@@ -166,6 +167,54 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
     useEffect(() => {
         changeHandle(isDirty)
     }, [isDirty, changeHandle])
+
+    const redirectToCurrentPhaseTab = useCallback(async () => {
+        if (!challengeId) {
+            return
+        }
+
+        const challengeDetailsRoute
+            = `${rootRoute}/${activeReviewAssigmentsRouteId}/${challengeId}/challenge-details`
+
+        try {
+            await mutate(
+                (key: unknown) => (
+                    typeof key === 'string'
+                    && key.startsWith(`reviewBaseUrl/reviews/${challengeId}/`)
+                ),
+            )
+            await mutate(`reviewBaseUrl/submissions/${challengeId}`)
+        } catch {
+            // no-op: navigation should still occur even if revalidation fails
+        }
+
+        const tabFromPhase = computeTabFromPhase(
+            (challengeInfo?.phases || []) as Array<{
+                id?: string
+                name?: string
+                scheduledStartDate?: string
+                actualStartDate?: string
+            }>,
+            reviewInfo?.phaseId,
+            challengeInfo?.type?.name,
+            challengeInfo?.type?.abbreviation,
+        )
+        const hasIterativePhase = (challengeInfo?.phases || [])
+            .some(p => (p?.name || '').toString()
+                .toLowerCase()
+                .startsWith('iterative review'))
+        const tabSlug = tabFromPhase || (hasIterativePhase ? 'iterative-review' : 'review')
+
+        navigate(`${challengeDetailsRoute}?tab=${tabSlug}`)
+    }, [
+        challengeId,
+        challengeInfo?.phases,
+        challengeInfo?.type?.abbreviation,
+        challengeInfo?.type?.name,
+        mutate,
+        navigate,
+        reviewInfo?.phaseId,
+    ])
 
     const errorMessageTop
         = isEmpty(errors) || isEmpty(isTouched)
@@ -217,58 +266,18 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
             getValues(),
             true,
             totalScore,
-            async () => {
+            () => {
                 reset(data)
-                if (challengeId) {
-                    const challengeDetailsRoute
-                        = `${rootRoute}/${activeReviewAssigmentsRouteId}/${challengeId}/challenge-details`
-
-                    // Proactively revalidate any cached review lists for this challenge
-                    // so the score/status reflect immediately on return.
-                    try {
-                        await mutate(
-                            (key: unknown) => (
-                                typeof key === 'string'
-                                && key.startsWith(`reviewBaseUrl/reviews/${challengeId}/`)
-                            ),
-                        )
-                        // Also refresh the submissions list cache so any
-                        // reviewResourceMapping/states used as fallbacks are up-to-date.
-                        await mutate(`reviewBaseUrl/submissions/${challengeId}`)
-                    } catch {}
-
-                    const tabFromPhase = computeTabFromPhase(
-                        (challengeInfo?.phases || []) as Array<{
-                            id?: string
-                            name?: string
-                            scheduledStartDate?: string
-                            actualStartDate?: string
-                        }>,
-                        reviewInfo?.phaseId,
-                        challengeInfo?.type?.name,
-                        challengeInfo?.type?.abbreviation,
-                    )
-                    const hasIterativePhase = (challengeInfo?.phases || [])
-                        .some(p => (p?.name || '').toString()
-                            .toLowerCase()
-                            .startsWith('iterative review'))
-                    const tabSlug = tabFromPhase || (hasIterativePhase ? 'iterative-review' : 'review')
-                    navigate(`${challengeDetailsRoute}?tab=${tabSlug}`)
-                }
+                redirectToCurrentPhaseTab()
+                    .catch(() => undefined)
             },
         )
     }, [
-        challengeId,
-        challengeInfo?.phases,
-        challengeInfo?.type?.abbreviation,
-        challengeInfo?.type?.name,
         getValues,
         isDirty,
-        navigate,
-        mutate,
+        redirectToCurrentPhaseTab,
         reset,
         saveReviewInfo,
-        reviewInfo?.phaseId,
         totalScore,
     ])
 
@@ -416,7 +425,12 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
 
     const closeHandel = useCallback(() => {
         setIsShowSaveAsDraftModal(false)
-    }, [])
+        if (shouldRedirectAfterDraft) {
+            setShouldRedirectAfterDraft(false)
+            redirectToCurrentPhaseTab()
+                .catch(() => undefined)
+        }
+    }, [redirectToCurrentPhaseTab, shouldRedirectAfterDraft])
 
     return isLoading ? (<TableLoading />) : (
         <div className={classNames(styles.container, className)}>
@@ -645,6 +659,7 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
                                             totalScore,
                                             () => {
                                                 setIsShowSaveAsDraftModal(true)
+                                                setShouldRedirectAfterDraft(true)
                                                 reset(getValues())
                                             },
                                         )
@@ -814,13 +829,7 @@ function computeTabFromPhase(
             counts.set(raw, n + 1)
             const label = n === 0 ? raw : `${raw} ${n + 1}`
             if (p.id === targetPhaseId) {
-                // Only return a tab for Iterative Review phases to avoid
-                // changing non-iterative redirects.
-                if (isIterativeReview(raw)) {
-                    return kebabCase(label)
-                }
-
-                return undefined
+                return kebabCase(label)
             }
         }
     }

@@ -17,6 +17,7 @@ import {
 } from '../../hooks/useFetchChallengeResults'
 import { ITERATIVE_REVIEW, SUBMITTER } from '../../../config/index.config'
 import { TableNoRecord } from '../TableNoRecord'
+import { hasIsLatestFlag } from '../../utils'
 
 import TabContentApproval from './TabContentApproval'
 import TabContentCheckpoint from './TabContentCheckpoint'
@@ -106,9 +107,8 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
                     }
 
                     if (['submission / screening', 'submission', 'screening'].includes(selectedTabLower)) {
-                        const restrictScreeningToLatest = ['screening', 'submission / screening', 'submission']
-                            .includes(selectedTabLower)
-                        const screeningRows = restrictScreeningToLatest
+                        const hasLatestFlag = hasIsLatestFlag(props.screening)
+                        const screeningRows = hasLatestFlag
                             ? props.screening.filter(submission => submission.isLatest === true)
                             : props.screening
 

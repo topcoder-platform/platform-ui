@@ -37,6 +37,97 @@ import { activeReviewAssigmentsRouteId, rootRoute } from '../../../config/routes
 
 import styles from './ScorecardDetailsPage.module.scss'
 
+type CheckpointPhaseType = 'checkpoint screening' | 'checkpoint review'
+
+const detectCheckpointPhaseType = (value?: unknown): CheckpointPhaseType | undefined => {
+    if (value === undefined || value === null) {
+        return undefined
+    }
+
+    const normalized = `${value}`
+        .trim()
+        .toLowerCase()
+
+    if (!normalized) {
+        return undefined
+    }
+
+    if (normalized.includes('checkpoint screening')) {
+        return 'checkpoint screening'
+    }
+
+    if (normalized.includes('checkpoint review')) {
+        return 'checkpoint review'
+    }
+
+    return undefined
+}
+
+type ReviewerConfig = {
+    phaseId?: unknown
+    scorecardId?: unknown
+    type?: unknown
+}
+
+type ChallengePhaseSummary = {
+    id?: unknown
+    name?: unknown
+}
+
+const detectCheckpointTypeFromReviewerConfig = (
+    reviewerConfigs: ReviewerConfig[] | undefined,
+    normalizedPhaseId?: string,
+    normalizedScorecardId?: string,
+): CheckpointPhaseType | undefined => {
+    if (!reviewerConfigs?.length) {
+        return undefined
+    }
+
+    const matchedConfig = reviewerConfigs.find(config => (
+        (normalizedPhaseId && `${config.phaseId}` === normalizedPhaseId)
+        || (normalizedScorecardId && `${config.scorecardId}` === normalizedScorecardId)
+    ))
+
+    return detectCheckpointPhaseType(matchedConfig?.type)
+}
+
+const detectCheckpointTypeFromMetadata = (
+    metadata: unknown,
+): CheckpointPhaseType | undefined => {
+    if (!metadata || typeof metadata !== 'object') {
+        return undefined
+    }
+
+    const metadataRecord = metadata as Record<string, unknown>
+    const metadataKeys = ['type', 'reviewType', 'scorecardType', 'phaseName', 'name']
+
+    for (const key of metadataKeys) {
+        const rawValue = metadataRecord[key]
+        if (typeof rawValue === 'string') {
+            const detected = detectCheckpointPhaseType(rawValue)
+            if (detected) {
+                return detected
+            }
+        }
+    }
+
+    return undefined
+}
+
+const detectCheckpointTypeFromPhases = (
+    phases: ChallengePhaseSummary[] | undefined,
+    targetPhaseId?: unknown,
+): CheckpointPhaseType | undefined => {
+    if (!phases?.length || targetPhaseId === undefined || targetPhaseId === null) {
+        return undefined
+    }
+
+    const normalizedTargetPhaseId = `${targetPhaseId}`
+    const matchedPhase = phases.find(phase => `${phase.id}` === normalizedTargetPhaseId)
+
+    return detectCheckpointPhaseType(matchedPhase?.name)
+}
+
 interface Props {
     className?: string
 }
@@ -92,9 +183,73 @@ export const ScorecardDetailsPage: FC<Props> = (props: Props) => {
         [reviewInfo?.committed, reviewInfo?.status],
     )
 
+    const checkpointReviewType = useMemo<CheckpointPhaseType | undefined>(() => {
+        const reviewerConfigs = challengeInfo?.reviewers ?? []
+        const normalizedPhaseId = reviewInfo?.phaseId ? `${reviewInfo.phaseId}` : undefined
+        const normalizedScorecardId = reviewInfo?.scorecardId ? `${reviewInfo.scorecardId}` : undefined
+
+        return detectCheckpointTypeFromReviewerConfig(
+            reviewerConfigs as ReviewerConfig[],
+            normalizedPhaseId,
+            normalizedScorecardId,
+        )
+            || detectCheckpointTypeFromMetadata(reviewInfo?.metadata)
+            || detectCheckpointTypeFromPhases(
+                challengeInfo?.phases as ChallengePhaseSummary[],
+                reviewInfo?.phaseId,
+            )
+            || detectCheckpointPhaseType(scorecardInfo?.name)
+            || undefined
+    }, [
+        challengeInfo?.phases,
+        challengeInfo?.reviewers,
+        reviewInfo?.metadata,
+        reviewInfo?.phaseId,
+        reviewInfo?.scorecardId,
+        scorecardInfo?.name,
+    ])
+
+    const currentPhaseCheckpointType = useMemo(
+        () => detectCheckpointPhaseType(challengeInfo?.currentPhase),
+        [challengeInfo?.currentPhase],
+    )
+
+    const isCheckpointEditAllowed = useMemo(() => {
+        if (!checkpointReviewType || !reviewInfo?.resourceId) {
+            return false
+        }
+
+        const myResource = myChallengeResources.find(resource => resource.id === reviewInfo.resourceId)
+        if (!myResource) {
+            return false
+        }
+
+        const normalizedRoleName = typeof myResource.roleName === 'string'
+            ? myResource.roleName.trim()
+                .toLowerCase()
+            : ''
+
+        if (checkpointReviewType === 'checkpoint screening') {
+            return currentPhaseCheckpointType === 'checkpoint screening'
+                && normalizedRoleName === 'checkpoint screener'
+        }
+
+        if (checkpointReviewType === 'checkpoint review') {
+            return currentPhaseCheckpointType === 'checkpoint review'
+                && normalizedRoleName === 'checkpoint reviewer'
+        }
+
+        return false
+    }, [
+        checkpointReviewType,
+        currentPhaseCheckpointType,
+        myChallengeResources,
+        reviewInfo?.resourceId,
+    ])
+
     const isEdit = useMemo(
-        () => isEditPhase && !isReviewCompleted,
-        [isEditPhase, isReviewCompleted],
+        () => (isEditPhase || isCheckpointEditAllowed) && !isReviewCompleted,
+        [isCheckpointEditAllowed, isEditPhase, isReviewCompleted],
     )
 
     const reviewBreadcrumbLabel = useMemo(

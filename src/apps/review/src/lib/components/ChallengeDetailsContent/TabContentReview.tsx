@@ -8,6 +8,7 @@ import { TableLoading } from '~/apps/admin/src/lib'
 import { IsRemovingType } from '~/apps/admin/src/lib/models'
 
 import { MappingReviewAppeal, SubmissionInfo } from '../../models'
+import { hasIsLatestFlag } from '../../utils'
 import { TableNoRecord } from '../TableNoRecord'
 import { TableReviewAppeals } from '../TableReviewAppeals'
 import { useRole, useRoleProps } from '../../hooks'
@@ -33,19 +34,23 @@ export const TabContentReview: FC<Props> = (props: Props) => {
     const selectedTab = props.selectedTab
     const reviews = props.reviews
     const submitterReviews = props.submitterReviews
-    const restrictToLatest = ['review', 'screening', 'appeals', 'appeals response']
-        .includes((selectedTab || '').toLowerCase())
     const filteredReviews = useMemo(
-        () => (restrictToLatest
-            ? reviews.filter(submission => submission.isLatest === true)
-            : reviews),
-        [restrictToLatest, reviews],
+        () => {
+            const hasLatestFlag = hasIsLatestFlag(reviews)
+            return hasLatestFlag
+                ? reviews.filter(submission => submission.isLatest === true)
+                : reviews
+        },
+        [reviews],
     )
     const filteredSubmitterReviews = useMemo(
-        () => (restrictToLatest
-            ? submitterReviews.filter(submission => submission.isLatest === true)
-            : submitterReviews),
-        [restrictToLatest, submitterReviews],
+        () => {
+            const hasLatestFlag = hasIsLatestFlag(submitterReviews)
+            return hasLatestFlag
+                ? submitterReviews.filter(submission => submission.isLatest === true)
+                : submitterReviews
+        },
+        [submitterReviews],
     )
     const firstSubmissions = useMemo(
         () => maxBy(filteredReviews, 'review.initialScore'),

@@ -28,7 +28,9 @@ import {
     AggregatedReviewDetail,
     AggregatedSubmissionReviews,
     aggregateSubmissionReviews,
+    challengeHasSubmissionLimit,
     getSubmissionHistoryKey,
+    hasIsLatestFlag,
     isAppealsPhase,
     isAppealsResponsePhase,
     partitionSubmissionHistory,
@@ -99,6 +101,7 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
     )
     const {
         latestSubmissions,
+        latestSubmissionIds,
         historyByMember,
     }: SubmissionHistoryPartition = submissionHistory
 
@@ -122,6 +125,11 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
     const resolveSubmissionMeta = useCallback(
         (submissionId: string): SubmissionInfo | undefined => submissionMetaById.get(submissionId),
         [submissionMetaById],
+    )
+
+    const restrictToLatest = useMemo(
+        () => challengeHasSubmissionLimit(challengeInfo),
+        [challengeInfo],
     )
 
     const [historyKey, setHistoryKey] = useState<string | undefined>(undefined)
@@ -149,9 +157,8 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
     )
 
     const hasHistoryEntries = useMemo(
-        () => isSubmissionTab && Array.from(historyByMember.values())
-            .some(list => list.length > 0),
-        [historyByMember, isSubmissionTab],
+        () => isSubmissionTab && hasIsLatestFlag(datas),
+        [datas, isSubmissionTab],
     )
 
     const getHistoryRestriction = useCallback(
@@ -226,13 +233,18 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
         [allowsAppeals, isAppealsTab],
     )
 
+    const submissionsForAggregation = useMemo(
+        () => (restrictToLatest ? latestSubmissions : datas),
+        [datas, latestSubmissions, restrictToLatest],
+    )
+
     const aggregatedRows = useMemo(
         () => aggregateSubmissionReviews({
             mappingReviewAppeal,
             reviewers,
-            submissions: latestSubmissions,
+            submissions: submissionsForAggregation,
         }),
-        [latestSubmissions, mappingReviewAppeal, reviewers],
+        [mappingReviewAppeal, reviewers, submissionsForAggregation],
     )
 
     const aggregatedSubmissionRows = useMemo<SubmissionRow[]>(
@@ -629,8 +641,14 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
                     const actionEntries: Array<{ key: string; element: JSX.Element }> = []
 
                     const historyKeyForRow = getSubmissionHistoryKey(data.memberId, data.id)
-                    const rowHistory = historyByMember.get(historyKeyForRow) ?? []
-                    if (isSubmissionTab && rowHistory.length > 0) {
+                    const rowHistoryEntries = historyByMember.get(historyKeyForRow) ?? []
+                    const isLatestSubmissionRow = latestSubmissionIds.has(data.id)
+                    const relevantHistory = restrictToLatest || isLatestSubmissionRow
+                        ? rowHistoryEntries
+                        : []
+                    const filteredHistory = relevantHistory.filter(entry => entry.id !== data.id)
+
+                    if (isSubmissionTab && filteredHistory.length > 0) {
                         actionEntries.push({
                             element: (
                                 <button
@@ -686,6 +704,8 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
         openHistoryModal,
         shouldShowAppealsColumn,
         restrictionMessage,
+        latestSubmissionIds,
+        restrictToLatest,
         challengeInfo,
         isSubmissionTab,
         isAppealsTab,

@@ -25,6 +25,7 @@ import { SubmissionHistoryModal } from '../SubmissionHistoryModal'
 import {
     getHandleUrl,
     getSubmissionHistoryKey,
+    hasIsLatestFlag,
     partitionSubmissionHistory,
     SubmissionHistoryPartition,
 } from '../../utils'
@@ -121,9 +122,8 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
     const { historyByMember }: SubmissionHistoryPartition = submissionHistory
 
     const hasHistoryEntries = useMemo(
-        () => Array.from(historyByMember.values())
-            .some(list => list.length > 0),
-        [historyByMember],
+        () => hasIsLatestFlag(primarySubmissionInfos),
+        [primarySubmissionInfos],
     )
 
     const [historyKey, setHistoryKey] = useState<string | undefined>(undefined)
