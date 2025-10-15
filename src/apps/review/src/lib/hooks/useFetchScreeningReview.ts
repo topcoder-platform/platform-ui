@@ -604,6 +604,15 @@ function getNormalizedLowerCase(value?: string | null): string | undefined {
     return trimmedValue ? trimmedValue.toLowerCase() : undefined
 }
 
+function isPhaseAllowedForReview(phaseName?: string | null): boolean {
+    const normalized = getNormalizedLowerCase(phaseName)
+    if (!normalized) {
+        return true
+    }
+
+    return normalized === 'review'
+}
+
 function buildMetadataCriteria(detail: MetadataPhaseMatchDetail): string[] {
     if (!detail) {
         return []
@@ -852,6 +861,7 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
 
     const {
         loginUserInfo,
+        resourceRoleReviewer,
     }: ReviewAppContextModel = useContext(ReviewAppContext)
 
     // get challenge info from challenge detail context
@@ -965,10 +975,19 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
             ?.trim()
             .toLowerCase()
 
+        const reviewerRoleId = resourceRoleReviewer?.id
+
         if (challengeReviewers && challengeReviewers.length) {
             const reviewerRoleResources = filter(
                 challengeReviewers,
-                reviewer => normalizeRoleName(reviewer.roleName) === 'reviewer',
+                reviewer => {
+                    const normalizedRoleName = normalizeRoleName(reviewer.roleName)
+                    const matchesRoleName = normalizedRoleName === 'reviewer'
+                    const matchesRoleId = !normalizedRoleName && reviewerRoleId
+                        ? reviewer.roleId === reviewerRoleId
+                        : false
+                    return matchesRoleName || matchesRoleId
+                },
             )
 
             results = (
@@ -984,13 +1003,24 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
         if (!results.length) {
             const reviewerResourceIds = new Set(
                 (resources ?? [])
-                    .filter(resource => normalizeRoleName(resource.roleName) === 'reviewer')
+                    .filter(resource => {
+                        const normalizedRoleName = normalizeRoleName(resource.roleName)
+                        const matchesRoleName = normalizedRoleName === 'reviewer'
+                        const matchesRoleId = !normalizedRoleName && reviewerRoleId
+                            ? resource.roleId === reviewerRoleId
+                            : false
+                        return matchesRoleName || matchesRoleId
+                    })
                     .map(resource => resource.id)
                     .filter((id): id is string => Boolean(id)),
             )
 
             forEach(visibleChallengeSubmissions, challengeSubmission => {
                 forEach(challengeSubmission.review, review => {
+                    if (!isPhaseAllowedForReview(review.phaseName)) {
+                        return
+                    }
+
                     const resourceId = review.resourceId
                     if (!resourceId) {
                         return
@@ -1015,6 +1045,7 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
         actionChallengeRole,
         loginUserInfo,
         resources,
+        resourceRoleReviewer,
     ])
 
     // fetch appeal response
@@ -1039,7 +1070,8 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
         `reviewBaseUrl/reviews/${challengeId}/${reviewerKey}`,
         {
             fetcher: () => fetchChallengeReviews(challengeId ?? ''),
-            isPaused: () => !challengeId || !reviewerIds.length,
+            isPaused: () => !challengeId
+                || (!reviewerIds.length && actionChallengeRole !== SUBMITTER),
         },
     )
 
@@ -1819,13 +1851,46 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
             return challengeReviews ?? []
         }
 
+        const allowedReviewerIds = reviewerIds.length ? new Set(reviewerIds) : undefined
+
         if (challengeReviews && challengeReviews.length) {
-            return challengeReviews
+            const filteredReviews = (challengeReviews ?? []).filter(review => {
+                if (!review) {
+                    return false
+                }
+
+                if (!isPhaseAllowedForReview(review.phaseName)) {
+                    return false
+                }
+
+                if (allowedReviewerIds?.size) {
+                    return Boolean(
+                        review.resourceId && allowedReviewerIds.has(review.resourceId),
+                    )
+                }
+
+                return true
+            })
+
+            if (filteredReviews.length) {
+                return filteredReviews
+            }
         }
 
         const fallbackReviews: BackendReview[] = []
         forEach(visibleChallengeSubmissions, submission => {
             forEach(submission.review, reviewItem => {
+                if (!isPhaseAllowedForReview(reviewItem?.phaseName)) {
+                    return
+                }
+
+                const resourceId = reviewItem?.resourceId
+                if (allowedReviewerIds?.size) {
+                    if (!resourceId || !allowedReviewerIds.has(resourceId)) {
+                        return
+                    }
+                }
+
                 if (reviewItem?.id) {
                     fallbackReviews.push({
                         ...reviewItem,
@@ -1840,11 +1905,16 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
             return fallbackReviews
         }
 
-        return challengeReviews ?? []
+        const filteredByPhase = (challengeReviews ?? []).filter(review => (
+            review ? isPhaseAllowedForReview(review.phaseName) : false
+        ))
+
+        return filteredByPhase
     }, [
         actionChallengeRole,
         challengeReviews,
         visibleChallengeSubmissions,
+        reviewerIds,
     ])
 
     // get review data from challenge submissions

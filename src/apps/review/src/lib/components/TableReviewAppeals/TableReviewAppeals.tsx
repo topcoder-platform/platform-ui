@@ -29,7 +29,6 @@ import { useRole, useRoleProps, useSubmissionDownloadAccess } from '../../hooks'
 import type { UseSubmissionDownloadAccessResult } from '../../hooks/useSubmissionDownloadAccess'
 import {
     ChallengeDetailContextModel,
-    ChallengeInfo,
     MappingReviewAppeal,
     ReviewAppContextModel,
     SubmissionInfo,
@@ -92,18 +91,14 @@ function createReopenActionButtons(
     aggregatedReviews: AggregatedReviewDetail[] | undefined,
     {
         canManageCompletedReviews,
-        getLatestChallengeInfo,
         isReopening,
         openReopenDialog,
         pendingReopen,
-        setIsReviewPhaseClosedModalOpen,
     }: {
         canManageCompletedReviews: boolean
-        getLatestChallengeInfo: () => Promise<ChallengeInfo | undefined>
         isReopening: boolean
         openReopenDialog: (submission: SubmissionRow, review: AggregatedReviewDetail) => void
         pendingReopen: { review?: AggregatedReviewDetail } | undefined
-        setIsReviewPhaseClosedModalOpen: (isOpen: boolean) => void
     },
 ): JSX.Element[] {
     if (!canManageCompletedReviews) {
@@ -126,14 +121,7 @@ function createReopenActionButtons(
 
         const isTargetReview = pendingReopen?.review?.reviewInfo?.id === reviewInfo.id
 
-        async function handleReopenClick(): Promise<void> {
-            const latestChallengeInfo = await getLatestChallengeInfo()
-
-            if (!isReviewPhase(latestChallengeInfo)) {
-                setIsReviewPhaseClosedModalOpen(true)
-                return
-            }
-
+        function handleReopenClick(): void {
             openReopenDialog(submission, {
                 ...rv,
                 reviewInfo,
@@ -426,11 +414,6 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
         submission?: SubmissionRow
         isOwnReview?: boolean
     } | undefined>(undefined)
-    const [
-        isReviewPhaseClosedModalOpen,
-        setIsReviewPhaseClosedModalOpen,
-    ] = useState(false)
-
     const myResourceIds = useMemo(
         () => new Set(myResources.map(resource => resource.id)),
         [myResources],
@@ -459,25 +442,6 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
         ],
     )
 
-    const getLatestChallengeInfo = useCallback(async (): Promise<ChallengeInfo | undefined> => {
-        const challengeId = challengeInfo?.id
-
-        if (!challengeId) {
-            return challengeInfo
-        }
-
-        try {
-            const updatedChallengeInfo = await mutate(
-                `challengeBaseUrl/challenges/${challengeId}`,
-            ) as ChallengeInfo | undefined
-
-            return updatedChallengeInfo ?? challengeInfo
-        } catch (error) {
-            handleError(error)
-            return challengeInfo
-        }
-    }, [challengeInfo])
-
     const openReopenDialog = useCallback((submission: SubmissionRow, review: AggregatedReviewDetail) => {
         const resourceId = review.reviewInfo?.resourceId
             ?? review.resourceId
@@ -494,11 +458,6 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
         setPendingReopen(undefined)
     }, [])
 
-    const closeReviewPhaseClosedModal = useCallback(() => {
-        setIsReviewPhaseClosedModalOpen(false)
-        window.location.reload()
-    }, [])
-
     const handleConfirmReopen = useCallback(async () => {
         const reviewId = pendingReopen?.review?.reviewInfo?.id
 
@@ -510,7 +469,7 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
         setIsReopening(true)
 
         try {
-            await updateReview(reviewId, { status: 'IN_PROGRESS' })
+            await updateReview(reviewId, { committed: false, status: 'PENDING' })
             toast.success('Scorecard reopened.')
             closeReopenDialog()
 
@@ -700,8 +659,10 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                 label: 'Review Score',
                 renderer: (data: SubmissionRow) => {
                     const scoreDisplay = data.aggregated?.averageFinalScoreDisplay
-                    const isReviewInProgress = data.review?.status === 'IN_PROGRESS'
-                    if (!scoreDisplay || isReviewInProgress) {
+                    const reviewStatus = (data.review?.status ?? '').toUpperCase()
+                    const isReviewPending = ['IN_PROGRESS', 'PENDING'].includes(reviewStatus)
+
+                    if (!scoreDisplay || isReviewPending) {
                         return (
                             <span className={styles.statusBadgePending}>
                                 Pending Review
@@ -985,11 +946,9 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                             data.aggregated?.reviews,
                             {
                                 canManageCompletedReviews,
-                                getLatestChallengeInfo,
                                 isReopening,
                                 openReopenDialog,
                                 pendingReopen,
-                                setIsReviewPhaseClosedModalOpen,
                             },
                         )
 
@@ -1511,8 +1470,6 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
         historyByMember,
         shouldShowHistoryActions,
         myResources,
-        getLatestChallengeInfo,
-        setIsReviewPhaseClosedModalOpen,
     ])
 
     /* eslint-enable indent, padding-line-between-statements */
@@ -1622,16 +1579,6 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                         ? REOPEN_MESSAGE_SELF
                         : REOPEN_MESSAGE_OTHER}
                 </div>
-            </ConfirmModal>
-            <ConfirmModal
-                title='Review Phase Closed'
-                open={isReviewPhaseClosedModalOpen}
-                onClose={closeReviewPhaseClosedModal}
-                onConfirm={closeReviewPhaseClosedModal}
-                withoutCancel
-                action='OK'
-            >
-                <div>Review is no longer open for this challenge</div>
             </ConfirmModal>
         </TableWrapper>
     )
