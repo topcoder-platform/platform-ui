@@ -29,8 +29,10 @@ import { ChallengeDetailContext, ReviewAppContext } from '../../contexts'
 import { getHandleUrl, isReviewPhase } from '../../utils'
 import { TableWrapper } from '../TableWrapper'
 import { ProgressBar } from '../ProgressBar'
-import { useSubmissionDownloadAccess } from '../../hooks'
+import { useRole, useSubmissionDownloadAccess } from '../../hooks'
+import type { useRoleProps } from '../../hooks'
 import type { UseSubmissionDownloadAccessResult } from '../../hooks/useSubmissionDownloadAccess'
+import { SUBMITTER } from '../../../config/index.config'
 // no-op
 
 import styles from './TableIterativeReview.module.scss'
@@ -113,6 +115,115 @@ const hasActiveReview = (review: ReviewInfo | undefined): boolean => (
     Boolean(review?.id)
 )
 
+const DOWNLOAD_OWN_SUBMISSION_TOOLTIP = 'You can only download your own submissions.'
+const VIEW_OWN_SCORECARD_TOOLTIP = 'You can only view scorecards for your own submissions.'
+
+interface CompletedReviewRenderParams {
+    canAccessReview: boolean
+    outcomeLabel?: string
+    reviewId?: string
+    reviewPath?: string
+    reviewScore?: number
+}
+
+const renderCompletedReviewCell = ({
+    canAccessReview,
+    outcomeLabel,
+    reviewId,
+    reviewPath,
+    reviewScore,
+}: CompletedReviewRenderParams): JSX.Element | undefined => {
+    if (reviewScore !== undefined) {
+        const normalisedOutcome = outcomeLabel?.toLowerCase()
+        const isPassOutcome = normalisedOutcome === 'pass'
+        const isFailOutcome = normalisedOutcome === 'fail'
+        const outcomeIndicator = isPassOutcome ? (
+            <span
+                className={classNames(styles.statusIcon, styles.passIcon)}
+                aria-label='Pass'
+            >
+                <IconOutline.CheckCircleIcon aria-hidden />
+            </span>
+        ) : isFailOutcome ? (
+            <span
+                className={classNames(styles.statusIcon, styles.failIcon)}
+                aria-label='Fail'
+            >
+                <IconOutline.XCircleIcon aria-hidden />
+            </span>
+        ) : undefined
+        const scoreDisplay = formatScore(reviewScore)
+        const scoreElement = canAccessReview && reviewPath ? (
+            <Link
+                to={reviewPath}
+                className={styles.scoreLink}
+            >
+                {scoreDisplay}
+            </Link>
+        ) : (
+            <span className={styles.scoreLink}>
+                {scoreDisplay}
+            </span>
+        )
+        const renderedScoreElement = !canAccessReview && reviewPath ? (
+            <Tooltip
+                content={VIEW_OWN_SCORECARD_TOOLTIP}
+                triggerOn='click-hover'
+            >
+                <span className={styles.tooltipTrigger}>
+                    {scoreElement}
+                </span>
+            </Tooltip>
+        ) : (
+            scoreElement
+        )
+
+        return (
+            <div className={styles.reviewCell}>
+                <div className={styles.scoreRow}>
+                    {outcomeIndicator}
+                    {renderedScoreElement}
+                </div>
+                {!outcomeIndicator && outcomeLabel ? (
+                    <span className={styles.outcome}>
+                        {outcomeLabel}
+                    </span>
+                ) : undefined}
+            </div>
+        )
+    }
+
+    if (!reviewId || !reviewPath) {
+        return undefined
+    }
+
+    const viewScorecardContent = canAccessReview ? (
+        <Link
+            to={reviewPath}
+            className={styles.scoreLink}
+        >
+            View Scorecard
+        </Link>
+    ) : (
+        <span className={styles.scoreLink}>
+            View Scorecard
+        </span>
+    )
+
+    return !canAccessReview ? (
+        <Tooltip
+            content={VIEW_OWN_SCORECARD_TOOLTIP}
+            triggerOn='click-hover'
+        >
+            <span className={styles.tooltipTrigger}>
+                {viewScorecardContent}
+            </span>
+        </Tooltip>
+    ) : (
+        viewScorecardContent
+    )
+}
+
 export const TableIterativeReview: FC<Props> = (props: Props) => {
     const className = props.className
     const datas = props.datas
@@ -132,6 +243,16 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
     const { width: screenWidth }: WindowSize = useWindowSize()
     const isTablet = useMemo(() => screenWidth <= 744, [screenWidth])
     const { loginUserInfo }: ReviewAppContextModel = useContext(ReviewAppContext)
+    const { actionChallengeRole, myChallengeResources }: useRoleProps = useRole()
+    const isSubmitterView = actionChallengeRole === SUBMITTER
+    const ownedMemberIds: Set<string> = useMemo(
+        (): Set<string> => new Set(
+            myChallengeResources
+                .map(resource => resource.memberId)
+                .filter((memberId): memberId is string => Boolean(memberId)),
+        ),
+        [myChallengeResources],
+    )
 
     const isAdmin = useMemo(
         () => loginUserInfo?.roles?.some(
@@ -181,13 +302,16 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
             label: 'Submission ID',
             propertyName: 'id',
             renderer: (data: SubmissionInfo) => {
+                const isOwnedSubmission = data.memberId
+                    ? ownedMemberIds.has(data.memberId)
+                    : false
+                const isOwnershipRestricted = isSubmitterView && !isOwnedSubmission
                 const isRestrictedForMember = isSubmissionDownloadRestrictedForMember(
                     data.memberId,
                 )
-                const tooltipMessage = getRestrictionMessageForMember(
+                const memberRestrictionMessage = getRestrictionMessageForMember(
                     data.memberId,
-                ) ?? restrictionMessage
-
+                )
                 const failedScan = (data as SubmissionInfo).virusScan === false
                 const isButtonDisabled = Boolean(
                     isDownloading[data.id]
@@ -198,7 +322,11 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
                 const downloadButton = (
                     <button
                         onClick={function onClick() {
-                            if (isRestrictedForMember || failedScan) {
+                            if (
+                                isRestrictedForMember
+                                || failedScan
+                                || isOwnershipRestricted
+                            ) {
                                 return
                             }
 
@@ -228,21 +356,36 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
                     })
                 }
 
-                const shouldShowTooltip = isRestrictedForMember
-                    || isSubmissionDownloadRestricted
-                    || failedScan
+                let tooltipContent: string | undefined
+                if (failedScan) {
+                    tooltipContent = 'Submission failed virus scan'
+                } else if (isRestrictedForMember) {
+                    tooltipContent = memberRestrictionMessage ?? restrictionMessage
+                } else if (isOwnershipRestricted) {
+                    tooltipContent = DOWNLOAD_OWN_SUBMISSION_TOOLTIP
+                } else if (isSubmissionDownloadRestricted && restrictionMessage) {
+                    tooltipContent = restrictionMessage
+                }
 
-                const renderedDownloadButton = shouldShowTooltip ? (
+                const downloadControl = isOwnershipRestricted ? (
+                    <span className={styles.textBlue}>
+                        {data.id}
+                    </span>
+                ) : (
+                    downloadButton
+                )
+
+                const renderedDownloadButton = tooltipContent ? (
                     <Tooltip
-                        content={failedScan ? 'Submission failed virus scan' : tooltipMessage}
+                        content={tooltipContent}
                         triggerOn='click-hover'
                     >
                         <span className={styles.tooltipTrigger}>
-                            {downloadButton}
+                            {downloadControl}
                         </span>
                     </Tooltip>
                 ) : (
-                    downloadButton
+                    downloadControl
                 )
 
                 return (
@@ -270,6 +413,8 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
             downloadSubmission,
             isDownloading,
             restrictionMessage,
+            isSubmitterView,
+            ownedMemberIds,
         ],
     )
 
@@ -310,6 +455,10 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
             label: columnLabel,
             renderer: (data: SubmissionInfo) => {
                 const review = data.review
+                const isOwnedSubmission = data.memberId
+                    ? ownedMemberIds.has(data.memberId)
+                    : false
+                const canAccessReview = !isSubmitterView || isOwnedSubmission
 
                 if (!hasActiveReview(review)) {
                     return (
@@ -325,64 +474,17 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
                     (review?.metadata as ScoreMetadata | undefined)?.outcome,
                 )
                 const reviewId = review?.id
+                const reviewPath = reviewId ? `./../review/${reviewId}` : undefined
+                const isCompleted = ['COMPLETED', 'SUBMITTED'].includes(status)
 
-                if (['COMPLETED', 'SUBMITTED'].includes(status) && reviewScore !== undefined) {
-                    if (!reviewId) {
-                        return undefined
-                    }
-
-                    const normalisedOutcome = outcomeLabel?.toLowerCase()
-                    const isPassOutcome = normalisedOutcome === 'pass'
-                    const isFailOutcome = normalisedOutcome === 'fail'
-                    const outcomeIndicator = isPassOutcome ? (
-                        <span
-                            className={classNames(styles.statusIcon, styles.passIcon)}
-                            aria-label='Pass'
-                        >
-                            <IconOutline.CheckCircleIcon aria-hidden />
-                        </span>
-                    ) : isFailOutcome ? (
-                        <span
-                            className={classNames(styles.statusIcon, styles.failIcon)}
-                            aria-label='Fail'
-                        >
-                            <IconOutline.XCircleIcon aria-hidden />
-                        </span>
-                    ) : undefined
-
-                    return (
-                        <div className={styles.reviewCell}>
-                            <div className={styles.scoreRow}>
-                                {outcomeIndicator}
-                                <Link
-                                    to={`./../review/${reviewId}`}
-                                    className={styles.scoreLink}
-                                >
-                                    {formatScore(reviewScore)}
-                                </Link>
-                            </div>
-                            {!outcomeIndicator && outcomeLabel ? (
-                                <span className={styles.outcome}>
-                                    {outcomeLabel}
-                                </span>
-                            ) : undefined}
-                        </div>
-                    )
-                }
-
-                if (['COMPLETED', 'SUBMITTED'].includes(status)) {
-                    if (!reviewId) {
-                        return undefined
-                    }
-
-                    return (
-                        <Link
-                            to={`./../review/${reviewId}`}
-                            className={styles.scoreLink}
-                        >
-                            View Scorecard
-                        </Link>
-                    )
+                if (isCompleted) {
+                    return renderCompletedReviewCell({
+                        canAccessReview,
+                        outcomeLabel,
+                        reviewId,
+                        reviewPath,
+                        reviewScore,
+                    })
                 }
 
                 if (review?.reviewProgress) {
@@ -412,7 +514,7 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
             },
             type: 'element',
         }),
-        [columnLabel],
+        [columnLabel, isSubmitterView, ownedMemberIds],
     )
 
     const reviewDateColumn: TableColumn<SubmissionInfo> = useMemo(

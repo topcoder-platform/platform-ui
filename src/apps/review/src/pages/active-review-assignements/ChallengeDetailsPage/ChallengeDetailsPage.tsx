@@ -46,7 +46,13 @@ import {
     SelectOption,
 } from '../../../lib/models'
 import { REVIEWER, SUBMITTER, TAB, TABLE_DATE_FORMAT } from '../../../config/index.config'
-import { isAppealsPhase, isAppealsResponsePhase } from '../../../lib/utils'
+import {
+    buildPhaseTabs,
+    findPhaseByTabLabel,
+    isAppealsPhase,
+    isAppealsResponsePhase,
+} from '../../../lib/utils'
+import type { PhaseLike, PhaseOrderingOptions } from '../../../lib/utils'
 import {
     activeReviewAssigmentsRouteId,
     pastReviewAssignmentsRouteId,
@@ -58,19 +64,6 @@ import styles from './ChallengeDetailsPage.module.scss'
 interface Props {
     className?: string
 }
-
-type PhaseLike = Pick<
-    BackendPhase,
-    | 'id'
-    | 'phaseId'
-    | 'name'
-    | 'isOpen'
-    | 'duration'
-    | 'scheduledStartDate'
-    | 'actualStartDate'
-    | 'scheduledEndDate'
-    | 'actualEndDate'
->
 
 const MINUTES_PER_HOUR = 60
 const SECONDS_PER_MINUTE = 60
@@ -91,19 +84,6 @@ const parseNonNegativeInteger = (value: string): number | undefined => {
 }
 
 // Helpers to keep UI hooks simple and under complexity limits
-
-// helpers for label handling
-
-const insertTabIfMissing = (
-    tabs: SelectOption[],
-    value: string,
-    label: string,
-    insertIdx: number,
-): void => {
-    if (!tabs.some(t => t.value === value)) {
-        tabs.splice(insertIdx, 0, { label, value })
-    }
-}
 
 // Compute a Set of this member's reviewer resource IDs (excluding iterative roles)
 const getReviewerResourceIds = (myResources?: Array<{ id?: string; roleName?: string }> | null): Set<string> => new Set(
@@ -240,229 +220,6 @@ const computePhaseCompletionFromScreenings = (
     }
 
     return { hasAnyAssignment, hasAnyPending }
-}
-
-// Build tabs directly from the challenge phases (one tab per phase)
-const buildPhaseTabs = (
-    phases: Array<PhaseLike>,
-    status?: string,
-    opts?: { isF2F?: boolean; isTask?: boolean },
-): SelectOption[] => {
-    // Helper: normalize name for comparisons
-    const norm = (s?: string): string => (s || '')
-        .trim()
-        .toLowerCase()
-
-    const isExactRegistration = (name?: string): boolean => norm(name) === 'registration'
-    const isExactSubmission = (name?: string): boolean => norm(name) === 'submission'
-    const isIterativeReview = (name?: string): boolean => {
-        const n = norm(name)
-        return n.includes('iterative review')
-    }
-
-    // Common date-based comparator used as a fallback
-    const dateComparator = (a: typeof phases[number], b: typeof phases[number]): number => {
-        const aStart = new Date(a.actualStartDate || a.scheduledStartDate || '')
-            .getTime()
-        const bStart = new Date(b.actualStartDate || b.scheduledStartDate || '')
-            .getTime()
-        if (!Number.isNaN(aStart) && !Number.isNaN(bStart)) {
-            if (aStart !== bStart) return aStart - bStart
-            // Tie-breaker when both open at the same time: Registration before Submission
-            const aReg = isExactRegistration(a.name)
-            const bReg = isExactRegistration(b.name)
-            const aSub = isExactSubmission(a.name)
-            const bSub = isExactSubmission(b.name)
-            if (aReg && bSub) return -1
-            if (aSub && bReg) return 1
-        }
-
-        return 0
-    }
-
-    // When checkpoint phases exist, enforce a specific visual order for tabs
-    const explicitOrderList = [
-        'registration',
-        'checkpoint submission',
-        'checkpoint screening',
-        'checkpoint review',
-        'submission',
-        'screening',
-        'review',
-        'approval',
-    ]
-    const explicitOrder = new Map<string, number>(
-        explicitOrderList.map((n, i) => [n, i]),
-    )
-    const hasCheckpointPhases = phases.some(p => {
-        const n = norm(p.name)
-        return n === 'checkpoint submission' || n === 'checkpoint screening' || n === 'checkpoint review'
-    })
-
-    let sorted = [...phases].sort((a, b) => {
-        const aName = norm(a.name)
-        const bName = norm(b.name)
-
-        if (hasCheckpointPhases) {
-            const aRank = explicitOrder.has(aName) ? (explicitOrder.get(aName) as number) : Number.POSITIVE_INFINITY
-            const bRank = explicitOrder.has(bName) ? (explicitOrder.get(bName) as number) : Number.POSITIVE_INFINITY
-
-            if (aRank !== bRank) return aRank - bRank
-            // If both are outside the explicit list, or same rank, fall back to date ordering
-            return dateComparator(a, b)
-        }
-
-        // Default behavior (no checkpoint phases): date ordering with tie-breakers
-        return dateComparator(a, b)
-    })
-
-    // For First2Finish and Task: show any Iterative Review phases AFTER Registration and Submission.
-    if (opts?.isF2F || opts?.isTask) {
-        const iterative = sorted.filter(p => isIterativeReview(p.name))
-        if (iterative.length) {
-            const remaining = sorted.filter(p => !isIterativeReview(p.name))
-            const regIdx = remaining.findIndex(p => isExactRegistration(p.name))
-            const subIdx = remaining.findIndex(p => isExactSubmission(p.name))
-            const afterIdx = Math.max(regIdx, subIdx)
-            if (afterIdx >= 0 && afterIdx < remaining.length) {
-                sorted = [
-                    ...remaining.slice(0, afterIdx + 1),
-                    ...iterative,
-                    ...remaining.slice(afterIdx + 1),
-                ]
-            } else {
-                // If Registration/Submission not found for any reason, keep original order
-                sorted = [...remaining, ...iterative]
-            }
-        }
-    }
-
-    // Add numbering for duplicate phase names (e.g., Iterative Review 2, 3, ...)
-    const counts = new Map<string, number>()
-    const nextLabel = (name: string): string => {
-        const n = counts.get(name) || 0
-        counts.set(name, n + 1)
-        if (n === 0) return name
-        return `${name} ${n + 1}`
-    }
-
-    const items: SelectOption[] = []
-    sorted.forEach(p => {
-        const raw = p?.name?.trim() || ''
-        if (!raw) return
-        const label = nextLabel(raw)
-        items.push({ label, value: label })
-    })
-
-    // Preserve Winners tab at the end only for completed challenges
-    const normalizedStatus = (status || '').toUpperCase()
-    const showWinnersTab = normalizedStatus.startsWith('COMPLETED')
-    if (showWinnersTab) {
-        insertTabIfMissing(items, 'Winners', 'Winners', items.length)
-    }
-
-    return items
-}
-
-// Map the tab label to its corresponding phase (same ordering/labeling as buildPhaseTabs)
-const findPhaseByTabLabel = (
-    phases: Array<PhaseLike>,
-    label: string,
-    opts?: { isF2F?: boolean; isTask?: boolean },
-): PhaseLike | undefined => {
-    const norm = (s?: string): string => (s || '').trim()
-        .toLowerCase()
-    const isExactRegistration = (name?: string): boolean => norm(name) === 'registration'
-    const isExactSubmission = (name?: string): boolean => norm(name) === 'submission'
-    const isIterativeReview = (name?: string): boolean => norm(name)
-        .includes('iterative review')
-
-    // Shared date-based comparator fallback
-    const dateComparator = (a: typeof phases[number], b: typeof phases[number]): number => {
-        const aStart = new Date(a.actualStartDate || a.scheduledStartDate || '')
-            .getTime()
-        const bStart = new Date(b.actualStartDate || b.scheduledStartDate || '')
-            .getTime()
-        if (!Number.isNaN(aStart) && !Number.isNaN(bStart)) {
-            if (aStart !== bStart) return aStart - bStart
-            const aReg = isExactRegistration(a.name)
-            const bReg = isExactRegistration(b.name)
-            const aSub = isExactSubmission(a.name)
-            const bSub = isExactSubmission(b.name)
-            if (aReg && bSub) return -1
-            if (aSub && bReg) return 1
-        }
-
-        return 0
-    }
-
-    // Keep ordering logic aligned with buildPhaseTabs when checkpoint phases exist
-    const explicitOrderList = [
-        'registration',
-        'checkpoint submission',
-        'checkpoint screening',
-        'checkpoint review',
-        'submission',
-        'screening',
-        'review',
-        'approval',
-    ]
-    const explicitOrder = new Map<string, number>(explicitOrderList.map((n, i) => [n, i]))
-    const hasCheckpointPhases = phases.some(p => {
-        const n = norm(p.name)
-        return n === 'checkpoint submission' || n === 'checkpoint screening' || n === 'checkpoint review'
-    })
-
-    let sorted = [...phases].sort((a, b) => {
-        const aName = norm(a.name)
-        const bName = norm(b.name)
-        if (hasCheckpointPhases) {
-            const aRank = explicitOrder.has(aName) ? (explicitOrder.get(aName) as number) : Number.POSITIVE_INFINITY
-            const bRank = explicitOrder.has(bName) ? (explicitOrder.get(bName) as number) : Number.POSITIVE_INFINITY
-            if (aRank !== bRank) return aRank - bRank
-
-            return dateComparator(a, b)
-        }
-
-        return dateComparator(a, b)
-    })
-
-    if (opts?.isF2F || opts?.isTask) {
-        const iterative = sorted.filter(p => isIterativeReview(p.name))
-        if (iterative.length) {
-            const remaining = sorted.filter(p => !isIterativeReview(p.name))
-            const regIdx = remaining.findIndex(p => isExactRegistration(p.name))
-            const subIdx = remaining.findIndex(p => isExactSubmission(p.name))
-            const afterIdx = Math.max(regIdx, subIdx)
-            if (afterIdx >= 0 && afterIdx < remaining.length) {
-                sorted = [
-                    ...remaining.slice(0, afterIdx + 1),
-                    ...iterative,
-                    ...remaining.slice(afterIdx + 1),
-                ]
-            } else {
-                sorted = [...remaining, ...iterative]
-            }
-        }
-    }
-
-    const counts = new Map<string, number>()
-    const labelFor = (rawName: string): string => {
-        const n = counts.get(rawName) || 0
-        counts.set(rawName, n + 1)
-        if (n === 0) return rawName
-        return `${rawName} ${n + 1}`
-    }
-
-    for (const p of sorted) {
-        const raw = p?.name?.trim() || ''
-        if (raw) {
-            const computedLabel = labelFor(raw)
-            if (computedLabel === label) return p
-        }
-    }
-
-    return undefined
 }
 
 // (Phase dates display removed)
@@ -759,7 +516,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         return pills
     }, [challengeInfo?.track?.name, challengeInfo?.type?.name])
 
-    const phaseOrderingOptions = useMemo(() => {
+    const phaseOrderingOptions = useMemo<PhaseOrderingOptions>(() => {
         const typeName = challengeInfo?.type?.name?.toLowerCase?.() || ''
         const typeAbbrev = challengeInfo?.type?.abbreviation?.toLowerCase?.() || ''
         const simplifiedType = typeName.replace(/\s|-/g, '')

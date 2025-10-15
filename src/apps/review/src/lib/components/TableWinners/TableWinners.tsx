@@ -1,7 +1,7 @@
 /**
  * Table Winners.
  */
-import { FC, useMemo } from 'react'
+import { FC, useContext, useMemo } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import _ from 'lodash'
 import classNames from 'classnames'
@@ -12,10 +12,15 @@ import { TableMobile } from '~/apps/admin/src/lib/components/common/TableMobile'
 import { Table, TableColumn, Tooltip } from '~/libs/ui'
 import { IsRemovingType } from '~/apps/admin/src/lib/models'
 
-import { ProjectResult } from '../../models'
+import {
+    ChallengeDetailContextModel,
+    ProjectResult,
+} from '../../models'
 import { TableWrapper } from '../TableWrapper'
 import { ORDINAL_SUFFIX } from '../../../config/index.config'
-import { getHandleUrl } from '../../utils'
+import { ChallengeDetailContext } from '../../contexts'
+import { buildPhaseTabs, getHandleUrl } from '../../utils'
+import type { PhaseOrderingOptions } from '../../utils'
 import { useSubmissionDownloadAccess } from '../../hooks'
 import type { UseSubmissionDownloadAccessResult } from '../../hooks/useSubmissionDownloadAccess'
 
@@ -36,13 +41,57 @@ export const TableWinners: FC<Props> = (props: Props) => {
     const { width: screenWidth }: WindowSize = useWindowSize()
     const isTablet = useMemo(() => screenWidth <= 744, [screenWidth])
     const location = useLocation()
+    const { challengeInfo }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
+
+    const phaseOrderingOptions = useMemo<PhaseOrderingOptions>(() => {
+        const typeName = challengeInfo?.type?.name?.toLowerCase?.() || ''
+        const typeAbbrev = challengeInfo?.type?.abbreviation?.toLowerCase?.() || ''
+        const simplifiedType = typeName.replace(/\s|-/g, '')
+
+        return {
+            isF2F: typeAbbrev === 'f2f' || simplifiedType === 'first2finish',
+            isTask: typeAbbrev === 'task' || typeAbbrev === 'tsk' || simplifiedType === 'task',
+        }
+    }, [challengeInfo?.type?.abbreviation, challengeInfo?.type?.name])
+
     const reviewTabUrl = useMemo(() => {
         const searchParams = new URLSearchParams(location.search)
-        searchParams.set('tab', 'review')
+        const challengePhases = challengeInfo?.phases ?? []
+        let targetSlug: string | undefined
+
+        if (challengePhases.length) {
+            const tabs = buildPhaseTabs(
+                challengePhases,
+                challengeInfo?.status,
+                phaseOrderingOptions,
+            )
+            const normalize = (value: string): string => value.trim()
+                .toLowerCase()
+            const reviewTab = tabs.find(tab => normalize(tab.value) === 'review')
+
+            if (reviewTab) {
+                targetSlug = _.kebabCase(reviewTab.value)
+            } else {
+                const iterativeTabs = tabs.filter(tab => normalize(tab.value)
+                    .startsWith('iterative review'))
+                if (iterativeTabs.length) {
+                    targetSlug = _.kebabCase(iterativeTabs[iterativeTabs.length - 1].value)
+                }
+            }
+        }
+
+        const slug = targetSlug ?? 'review'
+        searchParams.set('tab', slug)
         const queryString = searchParams.toString()
 
         return `${location.pathname}${queryString ? `?${queryString}` : ''}`
-    }, [location.pathname, location.search])
+    }, [
+        challengeInfo?.phases,
+        challengeInfo?.status,
+        location.pathname,
+        location.search,
+        phaseOrderingOptions,
+    ])
 
     const {
         restrictionMessage,

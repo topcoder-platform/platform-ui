@@ -3,7 +3,7 @@ import { useContext, useEffect, useMemo } from 'react'
 import useSWR, { SWRResponse } from 'swr'
 
 import { EnvironmentConfig } from '~/config'
-import { xhrGetAsync } from '~/libs/core'
+import { getRatingColor, xhrGetAsync } from '~/libs/core'
 import { handleError } from '~/libs/shared'
 
 import { REVIEWER, SUBMITTER } from '../../config/index.config'
@@ -223,17 +223,14 @@ function resolveFallbackSubmissionId({
 type SubmitterMemberIdResolutionArgs = {
     baseSubmissionInfo?: SubmissionInfo
     matchingSubmission?: BackendSubmission
-    memberId: string
 }
 
 function resolveSubmitterMemberId({
     baseSubmissionInfo,
     matchingSubmission,
-    memberId,
 }: SubmitterMemberIdResolutionArgs): string {
-    return memberId
+    return matchingSubmission?.memberId
         || baseSubmissionInfo?.memberId
-        || matchingSubmission?.memberId
         || ''
 }
 
@@ -299,6 +296,21 @@ function determinePassFail(
     }
 
     return baseResult
+}
+
+function buildResourceFromReviewHandle(review: BackendReview | undefined): BackendResource | undefined {
+    if (!review?.reviewerHandle) {
+        return undefined
+    }
+
+    const rating = typeof review.reviewerMaxRating === 'number'
+        ? review.reviewerMaxRating
+        : undefined
+
+    return {
+        handleColor: getRatingColor(rating),
+        memberHandle: review.reviewerHandle,
+    } as BackendResource
 }
 
 function collectPhaseIdsForName(
@@ -892,9 +904,30 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
         shouldRestrictSubmitterToOwnSubmission,
     }: UseSubmissionDownloadAccessResult = useSubmissionDownloadAccess()
 
+    const submitterCanViewAllSubmissions = useMemo(() => {
+        if (actionChallengeRole !== SUBMITTER) {
+            return false
+        }
+
+        const rawTypeName = (challengeInfo?.type?.name || '').toString()
+        const rawTrackName = (challengeInfo?.track?.name || '').toString()
+        const typeName = rawTypeName.toLowerCase()
+        const trackName = rawTrackName.toLowerCase()
+
+        return typeName === 'first2finish'
+            || trackName === 'first2finish'
+            || typeName === 'topgear task'
+            || trackName === 'topgear task'
+    }, [actionChallengeRole, challengeInfo?.track?.name, challengeInfo?.type?.name])
+
+    const shouldFilterVisibleSubmissionsToOwn = useMemo(
+        () => shouldRestrictSubmitterToOwnSubmission && !submitterCanViewAllSubmissions,
+        [shouldRestrictSubmitterToOwnSubmission, submitterCanViewAllSubmissions],
+    )
+
     const visibleChallengeSubmissions = useMemo<BackendSubmission[]>(
         () => {
-            if (!shouldRestrictSubmitterToOwnSubmission) {
+            if (!shouldFilterVisibleSubmissionsToOwn) {
                 return allChallengeSubmissions
             }
 
@@ -909,7 +942,7 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
         [
             allChallengeSubmissions,
             currentMemberId,
-            shouldRestrictSubmitterToOwnSubmission,
+            shouldFilterVisibleSubmissionsToOwn,
         ],
     )
 
@@ -1081,7 +1114,7 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
                 return challengeReviewsData
             }
 
-            if (!shouldRestrictSubmitterToOwnSubmission) {
+            if (!shouldFilterVisibleSubmissionsToOwn) {
                 return challengeReviewsData
             }
 
@@ -1100,7 +1133,7 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
         },
         [
             challengeReviewsData,
-            shouldRestrictSubmitterToOwnSubmission,
+            shouldFilterVisibleSubmissionsToOwn,
             visibleSubmissionIds,
             visibleLegacySubmissionIds,
             debugCheckpointPhases,
@@ -1316,11 +1349,22 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
             // eslint-disable-next-line complexity
             return contestSubmissions.map(item => {
                 const base = convertBackendSubmissionToScreening(item)
-                const matchedReview = screeningReviewsBySubmission.get(item.id)
+                let matchedReview = screeningReviewsBySubmission.get(item.id)
+                if (!matchedReview && item.reviewResourceMapping) {
+                    matchedReview = Object.values(item.reviewResourceMapping)
+                        .find(review => reviewMatchesPhase(
+                            review,
+                            screeningScorecardId,
+                            screeningPhaseIds,
+                            'Screening',
+                        ))
+                }
+
                 const numericScore = getNumericScore(matchedReview)
                 const scoreDisplay = scoreToDisplay(numericScore, base.score)
 
-                const screenerId = matchedReview?.resourceId ?? base.screenerId
+                const reviewForHandle = matchedReview
+                const resolvedScreenerId = reviewForHandle?.resourceId ?? base.screenerId
                 const result = determinePassFail(numericScore, minPass, base.result, matchedReview?.metadata)
 
                 const myAssignment
@@ -1332,6 +1376,33 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
                         ))
                         : undefined
 
+                const defaultScreener = {
+                    handleColor: '#2a2a2a',
+                    memberHandle: 'Not assigned',
+                } as BackendResource
+
+                const screenerDisplay = (() => {
+                    if (resolvedScreenerId) {
+                        const resourceMatch = (resources ?? []).find(resource => resource.id === resolvedScreenerId)
+                        if (resourceMatch) {
+                            return resourceMatch
+                        }
+
+                        const assignmentReview = item.reviewResourceMapping?.[resolvedScreenerId]
+                        const handleFromAssignment = buildResourceFromReviewHandle(assignmentReview)
+                        if (handleFromAssignment) {
+                            return handleFromAssignment
+                        }
+                    }
+
+                    const handleFromMatchedReview = buildResourceFromReviewHandle(reviewForHandle)
+                    if (handleFromMatchedReview) {
+                        return handleFromMatchedReview
+                    }
+
+                    return defaultScreener
+                })()
+
                 return {
                     ...base,
                     myReviewId: myAssignment?.id,
@@ -1340,10 +1411,8 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
                     result,
                     reviewId: matchedReview?.id,
                     score: scoreDisplay,
-                    screener: screenerId
-                        ? resourceMemberIdMapping[screenerId]
-                        : ({ handleColor: '#2a2a2a', memberHandle: 'Not assigned' } as BackendResource),
-                    screenerId,
+                    screener: screenerDisplay,
+                    screenerId: screenerDisplay?.id ?? resolvedScreenerId,
                     userInfo: resourceMemberIdMapping[base.memberId],
                 }
             })
@@ -1355,6 +1424,7 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
             screeningPhaseIds,
             screeningScorecardId,
             contestSubmissions,
+            resources,
         ],
     )
 
@@ -1930,10 +2000,6 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
         const memberId = loginUserInfo?.userId
             ? `${loginUserInfo.userId}`
             : ''
-        const userInfo = memberId
-            ? resourceMemberIdMapping[memberId]
-            : undefined
-
         const resolvedReviews = submitterReviewEntries
             .map((reviewItem, index) => {
                 const matchingSubmission = resolveSubmissionForReview({
@@ -1972,7 +2038,6 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
                 const resolvedMemberId = resolveSubmitterMemberId({
                     baseSubmissionInfo,
                     matchingSubmission,
-                    memberId,
                 })
 
                 const reviewInfo = convertBackendReviewToReviewInfo(reviewItem)
@@ -1989,7 +2054,9 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
                     reviews: [reviewResult],
                     submittedDate: baseSubmissionInfo?.submittedDate,
                     submittedDateString: baseSubmissionInfo?.submittedDateString,
-                    userInfo,
+                    userInfo: resolvedMemberId
+                        ? resourceMemberIdMapping[resolvedMemberId]
+                        : undefined,
                     virusScan: baseSubmissionInfo?.virusScan,
                 } as SubmissionInfo
             })

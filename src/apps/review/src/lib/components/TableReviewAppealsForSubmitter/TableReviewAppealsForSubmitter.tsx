@@ -60,11 +60,15 @@ type SubmissionRow = SubmissionInfo & {
     aggregated?: AggregatedSubmissionReviews
 }
 
+const DOWNLOAD_OWN_SUBMISSION_TOOLTIP = 'You can only download your own submissions.'
+const VIEW_OWN_SCORECARD_TOOLTIP = 'You can only view scorecards for your own submissions.'
+
 export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
     // get challenge info from challenge detail context
     const {
         challengeInfo,
         reviewers,
+        myResources,
     }: ChallengeDetailContextModel = useContext(
         ChallengeDetailContext,
     )
@@ -94,6 +98,14 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
     )
     const challengeStatus = challengeInfo?.status?.toUpperCase()
     const isChallengeCompleted = challengeStatus === 'COMPLETED'
+    const ownedMemberIds: Set<string> = useMemo(
+        (): Set<string> => new Set(
+            myResources
+                .map(resource => resource.memberId)
+                .filter((memberId): memberId is string => Boolean(memberId)),
+        ),
+        [myResources],
+    )
 
     const submissionTypes = useMemo(
         () => new Set(
@@ -346,17 +358,26 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
             label: 'Submission ID',
             propertyName: 'id',
             renderer: (data: SubmissionRow) => {
+                const isOwnedSubmission = data.memberId
+                    ? ownedMemberIds.has(data.memberId)
+                    : false
+                const isOwnershipRestricted = !isOwnedSubmission
                 const failedScan = data.virusScan === false
                 const isButtonDisabled = Boolean(
                     isDownloading[data.id]
                     || isSubmissionDownloadRestricted
-                    || failedScan,
+                    || failedScan
+                    || isOwnershipRestricted,
                 )
 
                 const downloadButton = (
                     <button
                         onClick={function onClick() {
-                            if (isSubmissionDownloadRestricted || failedScan) {
+                            if (
+                                isSubmissionDownloadRestricted
+                                || failedScan
+                                || isOwnershipRestricted
+                            ) {
                                 return
                             }
 
@@ -386,17 +407,31 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
                     })
                 }
 
-                const tooltipContent = failedScan
-                    ? 'Submission failed virus scan'
-                    : restrictionMessage
-                const renderedDownloadButton = isSubmissionDownloadRestricted || failedScan ? (
+                let tooltipContent: string | undefined
+                if (failedScan) {
+                    tooltipContent = 'Submission failed virus scan'
+                } else if (isOwnershipRestricted) {
+                    tooltipContent = DOWNLOAD_OWN_SUBMISSION_TOOLTIP
+                } else if (isSubmissionDownloadRestricted && restrictionMessage) {
+                    tooltipContent = restrictionMessage
+                }
+
+                const downloadControl = isOwnershipRestricted ? (
+                    <span className={styles.textBlue}>
+                        {data.id}
+                    </span>
+                ) : (
+                    downloadButton
+                )
+
+                const renderedDownloadButton = tooltipContent ? (
                     <Tooltip content={tooltipContent} triggerOn='click-hover'>
                         <span className={styles.tooltipTrigger}>
-                            {downloadButton}
+                            {downloadControl}
                         </span>
                     </Tooltip>
                 ) : (
-                    downloadButton
+                    downloadControl
                 )
 
                 return (
@@ -471,6 +506,10 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
             columnId: 'review-score',
             label: 'Review Score',
             renderer: (data: SubmissionRow) => {
+                const isOwnedSubmission = data.memberId
+                    ? ownedMemberIds.has(data.memberId)
+                    : false
+
                 if (!canDisplayScores(data)) {
                     return (
                         <span className={styles.notReviewed}>
@@ -493,13 +532,30 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
                     const reviewDetail = data.aggregated?.reviews?.[0]
                     const reviewId = reviewDetail?.reviewInfo?.id || reviewDetail?.reviewId
                     if (reviewId) {
-                        return (
+                        const scoreElement = isOwnedSubmission ? (
                             <Link
                                 to={`./../review/${reviewId}`}
                                 className={styles.textBlue}
                             >
                                 {scoreDisplay}
                             </Link>
+                        ) : (
+                            <span className={styles.textBlue}>
+                                {scoreDisplay}
+                            </span>
+                        )
+
+                        return !isOwnedSubmission ? (
+                            <Tooltip
+                                content={VIEW_OWN_SCORECARD_TOOLTIP}
+                                triggerOn='click-hover'
+                            >
+                                <span className={styles.tooltipTrigger}>
+                                    {scoreElement}
+                                </span>
+                            </Tooltip>
+                        ) : (
+                            scoreElement
                         )
                     }
                 }
@@ -679,6 +735,9 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
                 renderer: (data: SubmissionRow) => {
                     const actionEntries: Array<{ key: string; element: JSX.Element }> = []
 
+                    const isOwnedSubmission = data.memberId
+                        ? ownedMemberIds.has(data.memberId)
+                        : false
                     const historyKeyForRow = getSubmissionHistoryKey(data.memberId, data.id)
                     const rowHistoryEntries = historyByMember.get(historyKeyForRow) ?? []
                     const isLatestSubmissionRow = latestSubmissionIds.has(data.id)
@@ -687,7 +746,7 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
                         : []
                     const filteredHistory = relevantHistory.filter(entry => entry.id !== data.id)
 
-                    if (isSubmissionTab && filteredHistory.length > 0) {
+                    if (isSubmissionTab && isOwnedSubmission && filteredHistory.length > 0) {
                         actionEntries.push({
                             element: (
                                 <button
@@ -748,6 +807,7 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
         challengeInfo,
         isSubmissionTab,
         isAppealsTab,
+        ownedMemberIds,
     ])
 
     const columnsMobile = useMemo<MobileTableColumn<SubmissionRow>[][]>(
