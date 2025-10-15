@@ -29,8 +29,6 @@ import { fetchChallengeReviews } from '../services'
 import { useFetchAppealQueue, useFetchAppealQueueProps } from './useFetchAppealQueue'
 import { useFetchChallengeSubmissions, useFetchChallengeSubmissionsProps } from './useFetchChallengeSubmissions'
 import { useRole, useRoleProps } from './useRole'
-import { useSubmissionDownloadAccess } from './useSubmissionDownloadAccess'
-import type { UseSubmissionDownloadAccessResult } from './useSubmissionDownloadAccess'
 
 /**
  * DEBUG_CHECKPOINT_PHASES instrumentation coordinates verbose logging for checkpoint screening analysis.
@@ -899,61 +897,9 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
         isLoading,
     }: useFetchChallengeSubmissionsProps = useFetchChallengeSubmissions(challengeId)
 
-    const {
-        currentMemberId,
-        shouldRestrictSubmitterToOwnSubmission,
-    }: UseSubmissionDownloadAccessResult = useSubmissionDownloadAccess()
-
-    const submitterCanViewAllSubmissions = useMemo(() => {
-        if (actionChallengeRole !== SUBMITTER) {
-            return false
-        }
-
-        const rawTypeName = (challengeInfo?.type?.name || '').toString()
-        const rawTrackName = (challengeInfo?.track?.name || '').toString()
-        const typeName = rawTypeName.toLowerCase()
-        const trackName = rawTrackName.toLowerCase()
-
-        return typeName === 'first2finish'
-            || trackName === 'first2finish'
-            || typeName === 'topgear task'
-            || trackName === 'topgear task'
-    }, [actionChallengeRole, challengeInfo?.track?.name, challengeInfo?.type?.name])
-
-    const shouldFilterVisibleSubmissionsToOwn = useMemo(
-        () => shouldRestrictSubmitterToOwnSubmission && !submitterCanViewAllSubmissions,
-        [shouldRestrictSubmitterToOwnSubmission, submitterCanViewAllSubmissions],
-    )
-
     const visibleChallengeSubmissions = useMemo<BackendSubmission[]>(
-        () => {
-            if (!shouldFilterVisibleSubmissionsToOwn) {
-                return allChallengeSubmissions
-            }
-
-            if (!currentMemberId) {
-                return []
-            }
-
-            return allChallengeSubmissions.filter(
-                submission => submission.memberId === currentMemberId,
-            )
-        },
-        [
-            allChallengeSubmissions,
-            currentMemberId,
-            shouldFilterVisibleSubmissionsToOwn,
-        ],
-    )
-
-    const visibleSubmissionIds = useMemo(
-        () => new Set(visibleChallengeSubmissions.map(submission => submission.id)),
-        [visibleChallengeSubmissions],
-    )
-
-    const visibleLegacySubmissionIds = useMemo(
-        () => new Set(visibleChallengeSubmissions.map(submission => submission.legacySubmissionId)),
-        [visibleChallengeSubmissions],
+        () => allChallengeSubmissions,
+        [allChallengeSubmissions],
     )
 
     const visibleSubmissionsById = useMemo(
@@ -1109,35 +1055,8 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
     )
 
     const challengeReviews = useMemo(
-        () => {
-            if (!challengeReviewsData) {
-                return challengeReviewsData
-            }
-
-            if (!shouldFilterVisibleSubmissionsToOwn) {
-                return challengeReviewsData
-            }
-
-            const filtered = challengeReviewsData.filter(reviewItem => (
-                visibleSubmissionIds.has(reviewItem.submissionId)
-                || visibleLegacySubmissionIds.has(reviewItem.legacySubmissionId)
-            ))
-
-            if (debugCheckpointPhases && filtered.length !== challengeReviewsData.length) {
-                console.debug('[useFetchScreeningReview] submitter review filter applied', {
-                    filteredOut: challengeReviewsData.length - filtered.length,
-                })
-            }
-
-            return filtered
-        },
-        [
-            challengeReviewsData,
-            shouldFilterVisibleSubmissionsToOwn,
-            visibleSubmissionIds,
-            visibleLegacySubmissionIds,
-            debugCheckpointPhases,
-        ],
+        () => challengeReviewsData,
+        [challengeReviewsData],
     )
 
     // Resolve scorecard ids and phase ids for Screening / Checkpoint phases
