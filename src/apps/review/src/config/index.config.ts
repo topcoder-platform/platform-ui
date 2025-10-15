@@ -65,6 +65,7 @@ export const REVIEWER = 'Reviewer'
 export const SUBMITTER = 'Submitter'
 export const COPILOT = 'Copilot'
 export const ADMIN = 'Admin'
+export const MANAGER = 'Manager'
 
 export const MOCKHANDLE = 'stevenfrog'
 export const REVIEWCOUNT = 3
