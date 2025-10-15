@@ -336,22 +336,33 @@ export const ScorecardDetailsPage: FC<Props> = (props: Props) => {
         [myChallengeResources],
     )
 
-    const canEditScorecard = useMemo(
-        () => Boolean(
+    const canEditScorecard = useMemo(() => {
+        const challengeStatus = (challengeInfo?.status ?? '')
+            .toString()
+            .trim()
+            .toUpperCase()
+        const isChallengeClosed = challengeStatus.includes('COMPLETED')
+            || challengeStatus.startsWith('CANCELLED')
+
+        if (isChallengeClosed) {
+            return false
+        }
+
+        return Boolean(
             reviewInfo?.committed
             && (hasChallengeAdminRole
                 || hasTopcoderAdminRole
                 || hasChallengeManagerRole
                 || hasChallengeCopilotRole),
-        ),
-        [
-            hasChallengeAdminRole,
-            hasChallengeCopilotRole,
-            hasChallengeManagerRole,
-            hasTopcoderAdminRole,
-            reviewInfo?.committed,
-        ],
-    )
+        )
+    }, [
+        challengeInfo?.status,
+        hasChallengeAdminRole,
+        hasChallengeCopilotRole,
+        hasChallengeManagerRole,
+        hasTopcoderAdminRole,
+        reviewInfo?.committed,
+    ])
 
     // Redirect: if user is on a past-challenges route but the challenge is ACTIVE,
     // send them to the corresponding active-challenges route, preserving the rest of the path and query.
