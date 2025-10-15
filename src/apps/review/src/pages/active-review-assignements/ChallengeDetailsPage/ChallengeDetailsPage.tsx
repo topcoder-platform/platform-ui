@@ -510,6 +510,8 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         () => location.pathname.includes(`/${pastReviewAssignmentsRouteId}/`),
         [location.pathname],
     )
+    const latestReview = review.find(r => r.isLatest)
+    const reviewInProgress = latestReview?.review?.status === 'IN_PROGRESS'
     const currentUserResource = useMemo<BackendResource | undefined>(() => myResources
         .find(resource => typeof resource.phaseChangeNotifications === 'boolean')
         ?? myResources[0], [myResources])
@@ -1579,6 +1581,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                             <ChallengePhaseInfo
                                 challengeInfo={challengeInfo}
                                 reviewProgress={reviewProgress}
+                                reviewInProgress={reviewInProgress}
                                 variant={isPastReviewDetail ? 'past' : 'active'}
                             />
                         )}

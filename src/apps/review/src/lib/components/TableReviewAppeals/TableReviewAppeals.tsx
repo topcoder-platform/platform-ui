@@ -690,7 +690,8 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                 label: 'Review Score',
                 renderer: (data: SubmissionRow) => {
                     const scoreDisplay = data.aggregated?.averageFinalScoreDisplay
-                    if (!scoreDisplay) {
+                    const isReviewInProgress = data.review?.status === 'IN_PROGRESS'
+                    if (!scoreDisplay || isReviewInProgress) {
                         return (
                             <span className={styles.statusBadgePending}>
                                 Pending Review
