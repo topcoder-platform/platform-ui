@@ -99,6 +99,60 @@
     }
 }
 
+.actionsContainer {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-2;
+}
+
+.submit {
+    align-items: center;
+    display: flex;
+    font-weight: 700;
+
+    & > i {
+        margin-right: $sp-2;
+    }
+}
+
+.completedAction {
+    align-items: center;
+    display: flex;
+    justify-content: center;
+}
+
+.completedIcon {
+    align-items: center;
+    background-color: #2fa152;
+    border-radius: 50%;
+    color: #fff;
+    display: flex;
+    height: 20px;
+    justify-content: center;
+    line-height: 1;
+    width: 20px;
+
+    svg {
+        width: 14px;
+        height: 14px;
+        color: #fff;
+    }
+}
+
+.completedPill {
+    align-items: center;
+    background-color: $green-25;
+    border-radius: 999px;
+    color: $green-140;
+    display: inline-flex;
+    font-size: 12px;
+    font-weight: 700;
+    justify-content: center;
+    margin-left: $sp-2;
+    padding: $sp-1 $sp-2;
+    white-space: nowrap;
+}
+
 .resultPill {
     display: inline-flex;
     align-items: center;

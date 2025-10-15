@@ -10,6 +10,7 @@ import {
     useState,
 } from 'react'
 import { toast } from 'react-toastify'
+import { Link } from 'react-router-dom'
 import _ from 'lodash'
 import classNames from 'classnames'
 
@@ -37,10 +38,359 @@ import styles from './TableSubmissionScreening.module.scss'
 
 interface Props {
     className?: string
-    datas: Screening[]
+    screenings: Screening[]
     isDownloading: IsRemovingType
     downloadSubmission: (submissionId: string) => void
     hideHandleColumn?: boolean
+}
+
+interface SubmissionColumnConfig {
+    downloadSubmission: (submissionId: string) => void
+    getRestrictionMessageForMember: (memberId?: string) => string | undefined
+    isDownloading: IsRemovingType
+    isSubmissionDownloadRestrictedForMember: (memberId?: string) => boolean
+    restrictionMessage?: string
+}
+
+interface BaseColumnsConfig {
+    handleColumn?: TableColumn<Screening>
+    submissionColumn: TableColumn<Screening>
+    submissionDateColumn: TableColumn<Screening>
+    virusScanColumn: TableColumn<Screening>
+}
+
+interface ActionRenderer {
+    key: string
+    render: (isLast: boolean) => JSX.Element
+}
+
+interface ActionColumnConfig {
+    hasAnyScreeningAssignment: boolean
+    onHistoryClick: (event: MouseEvent<HTMLButtonElement>) => void
+    shouldShowHistoryActions: boolean
+}
+
+const createSubmissionColumn = (config: SubmissionColumnConfig): TableColumn<Screening> => ({
+    className: styles.submissionColumn,
+    label: 'Submission ID',
+    propertyName: 'submissionId',
+    renderer: (data: Screening) => {
+        const isRestrictedBase = config.isSubmissionDownloadRestrictedForMember(data.memberId)
+        const failedScan = data.virusScan === false
+        const isRestrictedForRow = isRestrictedBase || failedScan
+        const tooltipMessage = failedScan
+            ? 'Submission failed virus scan'
+            : (config.getRestrictionMessageForMember(data.memberId) ?? config.restrictionMessage)
+        const isButtonDisabled = Boolean(
+            config.isDownloading[data.submissionId]
+            || isRestrictedForRow,
+        )
+
+        const downloadButton = (
+            <button
+                onClick={function onClick() {
+                    if (isRestrictedForRow) {
+                        return
+                    }
+
+                    config.downloadSubmission(data.submissionId)
+                }}
+                className={styles.textBlue}
+                disabled={isButtonDisabled}
+                type='button'
+            >
+                {data.submissionId}
+            </button>
+        )
+
+        async function handleCopySubmissionId(
+            event: MouseEvent<HTMLButtonElement>,
+        ): Promise<void> {
+            event.stopPropagation()
+            event.preventDefault()
+
+            if (!data.submissionId) {
+                return
+            }
+
+            await copyTextToClipboard(data.submissionId)
+            toast.success('Submission ID copied to clipboard', {
+                toastId: `challenge-submission-id-copy-${data.submissionId}`,
+            })
+        }
+
+        const renderedDownloadButton = isRestrictedForRow ? (
+            <Tooltip content={tooltipMessage} triggerOn='click-hover'>
+                <span className={styles.tooltipTrigger}>
+                    {downloadButton}
+                </span>
+            </Tooltip>
+        ) : (
+            downloadButton
+        )
+
+        return (
+            <span className={styles.submissionCell}>
+                {renderedDownloadButton}
+                <button
+                    type='button'
+                    className={styles.copyButton}
+                    aria-label='Copy submission ID'
+                    title='Copy submission ID'
+                    onClick={handleCopySubmissionId}
+                    disabled={!data.submissionId}
+                >
+                    <IconOutline.DocumentDuplicateIcon />
+                </button>
+            </span>
+        )
+    },
+    type: 'element',
+})
+
+const createHandleColumn = (hideHandleColumn: boolean | undefined): TableColumn<Screening> | undefined => {
+    if (hideHandleColumn) {
+        return undefined
+    }
+
+    return {
+        label: 'Handle',
+        propertyName: 'handle',
+        renderer: (data: Screening) => (
+            <a
+                href={getHandleUrl(data.userInfo)}
+                target='_blank'
+                rel='noreferrer'
+                style={{
+                    color: data.userInfo?.handleColor,
+                }}
+                onClick={function onClick() {
+                    window.open(
+                        getHandleUrl(data.userInfo),
+                        '_blank',
+                    )
+                }}
+            >
+                {data.userInfo?.memberHandle ?? ''}
+            </a>
+        ),
+        type: 'element',
+    }
+}
+
+const createVirusScanColumn = (): TableColumn<Screening> => ({
+    label: 'Virus Scan',
+    propertyName: 'virusScan',
+    renderer: (data: Screening) => {
+        if (data.virusScan === true) {
+            return (
+                <span className={styles.virusOkIcon} title='Scan passed' aria-label='Scan passed'>
+                    <IconOutline.CheckCircleIcon />
+                </span>
+            )
+        }
+
+        if (data.virusScan === false) {
+            return (
+                <span className={styles.virusWarnIcon} title='Scan failed' aria-label='Scan failed'>
+                    <IconOutline.ExclamationIcon />
+                </span>
+            )
+        }
+
+        return <span>-</span>
+    },
+    type: 'element',
+})
+
+const createBaseColumns = ({
+    handleColumn,
+    submissionColumn,
+    submissionDateColumn,
+    virusScanColumn,
+}: BaseColumnsConfig): TableColumn<Screening>[] => [
+    submissionColumn,
+    ...(handleColumn ? [handleColumn] : []),
+    submissionDateColumn,
+    virusScanColumn,
+]
+
+const createScreeningColumns = (): TableColumn<Screening>[] => [
+    {
+        label: 'Screener',
+        propertyName: 'screenerHandle',
+        renderer: (data: Screening) => (data.screener?.id ? (
+            <a
+                href={getHandleUrl(data.screener)}
+                target='_blank'
+                rel='noreferrer'
+                style={{
+                    color: data.screener?.handleColor,
+                }}
+                onClick={function onClick() {
+                    window.open(
+                        getHandleUrl(data.screener),
+                        '_blank',
+                    )
+                }}
+            >
+                {data.screener?.memberHandle ?? ''}
+            </a>
+        ) : (
+            <span
+                style={{
+                    color: data.screener?.handleColor,
+                }}
+            >
+                {data.screener?.memberHandle ?? ''}
+            </span>
+        )),
+        type: 'element',
+    },
+    {
+        label: 'Screening Score',
+        propertyName: 'score',
+        type: 'text',
+    },
+    {
+        label: 'Screening Result',
+        propertyName: 'result',
+        renderer: (data: Screening) => {
+            const val = (data.result || '').toUpperCase()
+            if (val === 'PASS') {
+                return (
+                    <span className={styles.resultPass}>Pass</span>
+                )
+            }
+
+            if (val === 'NO PASS' || val === 'FAIL') {
+                return (
+                    <span className={styles.resultFail}>Fail</span>
+                )
+            }
+
+            return <span>-</span>
+        },
+        type: 'element',
+    },
+]
+
+const createActionColumn = ({
+    hasAnyScreeningAssignment,
+    onHistoryClick,
+    shouldShowHistoryActions,
+}: ActionColumnConfig): TableColumn<Screening> | undefined => {
+    if (!shouldShowHistoryActions && !hasAnyScreeningAssignment) {
+        return undefined
+    }
+
+    return {
+        className: styles.textBlue,
+        label: 'Actions',
+        propertyName: 'actions',
+        renderer: (data: Screening) => {
+            const actionRenderers: ActionRenderer[] = []
+
+            if (data.myReviewResourceId) {
+                const status = (data.myReviewStatus ?? '').toUpperCase()
+                if (['COMPLETED', 'SUBMITTED'].includes(status)) {
+                    actionRenderers.push({
+                        key: `completed-${data.submissionId}`,
+                        render: () => (
+                            <div
+                                aria-label='Screening completed'
+                                className={styles.completedAction}
+                                title='Screening completed'
+                            >
+                                <span className={styles.completedIcon} aria-hidden='true'>
+                                    <IconOutline.CheckIcon />
+                                </span>
+                                <span className={styles.completedPill}>Screening Complete</span>
+                            </div>
+                        ),
+                    })
+                } else if (data.myReviewId) {
+                    actionRenderers.push({
+                        key: `complete-${data.myReviewId}`,
+                        render: isLast => (
+                            <Link
+                                to={`./../review/${data.myReviewId}`}
+                                className={classNames(
+                                    styles.submit,
+                                    { 'last-element': isLast },
+                                )}
+                            >
+                                <i className='icon-upload' />
+                                Complete Screening
+                            </Link>
+                        ),
+                    })
+                }
+            }
+
+            if (shouldShowHistoryActions) {
+                const historyKeyForRow = getSubmissionHistoryKey(data.memberId, data.submissionId)
+                actionRenderers.push({
+                    key: `history-${historyKeyForRow}`,
+                    render: isLast => (
+                        <button
+                            type='button'
+                            className={classNames(
+                                styles.historyButton,
+                                { 'last-element': isLast },
+                            )}
+                            data-member-id={data.memberId ?? ''}
+                            data-submission-id={data.submissionId}
+                            onClick={onHistoryClick}
+                        >
+                            View Submission History
+                        </button>
+                    ),
+                })
+            }
+
+            if (actionRenderers.length === 0) {
+                return <span>--</span>
+            }
+
+            if (actionRenderers.length === 1) {
+                return actionRenderers[0].render(true)
+            }
+
+            return (
+                <div className={styles.actionsContainer}>
+                    {actionRenderers.map((action, index) => (
+                        <div key={action.key}>
+                            {action.render(index === actionRenderers.length - 1)}
+                        </div>
+                    ))}
+                </div>
+            )
+        },
+        type: 'element',
+    }
+}
+
+const appendActionColumn = (
+    columns: TableColumn<Screening>[],
+    actionColumn?: TableColumn<Screening>,
+): TableColumn<Screening>[] => (actionColumn ? [...columns, actionColumn] : columns)
+
+const normalizeCreatedAt = (
+    value: Date | string | undefined,
+): Date | undefined => {
+    if (value instanceof Date && !Number.isNaN(value.getTime())) {
+        return value
+    }
+
+    if (typeof value === 'string' && value) {
+        const parsed = new Date(value)
+        if (!Number.isNaN(parsed.getTime())) {
+            return parsed
+        }
+    }
+
+    return undefined
 }
 
 export const TableSubmissionScreening: FC<Props> = (props: Props) => {
@@ -50,7 +400,6 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
         ChallengeDetailContext,
     )
     const {
-        isSubmissionDownloadRestricted,
         restrictionMessage,
         isSubmissionDownloadRestrictedForMember,
         getRestrictionMessageForMember,
@@ -61,52 +410,80 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
         ) ?? false,
         [challengeInfo?.phases],
     )
+    const submissionTypes = useMemo(
+        () => new Set(
+            props.screenings
+                .map(screening => screening.type)
+                .filter((type): type is string => Boolean(type)),
+        ),
+        [props.screenings],
+    )
+
+    const fallbackSubmissionIds = useMemo(
+        () => new Set(
+            props.screenings
+                .map(screening => screening.submissionId)
+                .filter((id): id is string => Boolean(id)),
+        ),
+        [props.screenings],
+    )
+
+    const filteredChallengeSubmissions = useMemo(
+        () => {
+            const challengeSubmissions = challengeInfo?.submissions ?? []
+            if (submissionTypes.size > 0) {
+                return challengeSubmissions.filter(
+                    submission => submission.type && submissionTypes.has(submission.type),
+                )
+            }
+
+            return challengeSubmissions.filter(
+                submission => submission.id && fallbackSubmissionIds.has(submission.id),
+            )
+        },
+        [challengeInfo?.submissions, fallbackSubmissionIds, submissionTypes],
+    )
+
     const submissionMetaById = useMemo(() => {
         const map = new Map<string, SubmissionInfo>()
-        const challengeSubmissions = challengeInfo?.submissions ?? []
 
-        challengeSubmissions.forEach(submission => {
-            if (submission?.id) {
-                map.set(submission.id, submission)
+        filteredChallengeSubmissions.forEach(submission => {
+            if (!submission?.id) {
+                return
             }
+
+            map.set(submission.id, submission)
         })
 
-        props.datas.forEach(screening => {
+        props.screenings.forEach(screening => {
             const submissionId = screening.submissionId
             if (!submissionId) {
                 return
             }
 
             const existing = map.get(submissionId)
-            let createdAt: Date | undefined
-            if (screening.createdAt instanceof Date && !Number.isNaN(screening.createdAt.getTime())) {
-                createdAt = screening.createdAt
-            } else if (typeof screening.createdAt === 'string' && screening.createdAt) {
-                const parsed = new Date(screening.createdAt)
-                if (!Number.isNaN(parsed.getTime())) {
-                    createdAt = parsed
-                }
-            }
+            const createdAt = normalizeCreatedAt(screening.createdAt) ?? existing?.submittedDate
 
             map.set(submissionId, {
                 ...existing,
                 id: existing?.id ?? submissionId,
                 isLatest: screening.isLatest ?? existing?.isLatest,
                 memberId: screening.memberId ?? existing?.memberId ?? '',
-                submittedDate: createdAt ?? existing?.submittedDate,
+                submittedDate: createdAt,
                 submittedDateString: screening.createdAtString ?? existing?.submittedDateString,
+                type: screening.type ?? existing?.type,
                 virusScan: screening.virusScan ?? existing?.virusScan,
             })
         })
 
         return map
-    }, [challengeInfo?.submissions, props.datas])
+    }, [filteredChallengeSubmissions, props.screenings])
 
     const primarySubmissionInfos = useMemo<SubmissionInfo[]>(
-        () => props.datas
+        () => props.screenings
             .map(screening => submissionMetaById.get(screening.submissionId))
             .filter((submission): submission is SubmissionInfo => Boolean(submission)),
-        [props.datas, submissionMetaById],
+        [props.screenings, submissionMetaById],
     )
 
     const historySourceSubmissions = useMemo<SubmissionInfo[]>(
@@ -121,9 +498,14 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
 
     const { historyByMember }: SubmissionHistoryPartition = submissionHistory
 
-    const hasHistoryEntries = useMemo(
+    const shouldShowHistoryActions = useMemo(
         () => hasIsLatestFlag(primarySubmissionInfos),
         [primarySubmissionInfos],
+    )
+
+    const hasAnyScreeningAssignment = useMemo(
+        () => props.screenings.some(screening => Boolean(screening.myReviewResourceId)),
+        [props.screenings],
     )
 
     const [historyKey, setHistoryKey] = useState<string | undefined>(undefined)
@@ -184,263 +566,74 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
         (submissionId: string): SubmissionInfo | undefined => submissionMetaById.get(submissionId),
         [submissionMetaById],
     )
+    const submissionColumn = useMemo(
+        () => createSubmissionColumn({
+            downloadSubmission: props.downloadSubmission,
+            getRestrictionMessageForMember,
+            isDownloading: props.isDownloading,
+            isSubmissionDownloadRestrictedForMember,
+            restrictionMessage,
+        }),
+        [
+            props.downloadSubmission,
+            props.isDownloading,
+            getRestrictionMessageForMember,
+            isSubmissionDownloadRestrictedForMember,
+            restrictionMessage,
+        ],
+    )
+
+    const handleColumn = useMemo(
+        () => createHandleColumn(props.hideHandleColumn),
+        [props.hideHandleColumn],
+    )
+
+    const submissionDateColumn = useMemo<TableColumn<Screening>>(
+        () => ({
+            label: 'Submission Date',
+            propertyName: 'createdAt',
+            renderer: (data: Screening) => (
+                <span>{data.createdAtString}</span>
+            ),
+            type: 'element',
+        }),
+        [],
+    )
+
+    const virusScanColumn = useMemo<TableColumn<Screening>>(createVirusScanColumn, [])
+
+    const baseColumns = useMemo(
+        () => createBaseColumns({
+            handleColumn,
+            submissionColumn,
+            submissionDateColumn,
+            virusScanColumn,
+        }),
+        [handleColumn, submissionColumn, submissionDateColumn, virusScanColumn],
+    )
+
+    const screeningColumns = useMemo<TableColumn<Screening>[]>(createScreeningColumns, [])
+
+    const actionColumn = useMemo(
+        () => createActionColumn({
+            hasAnyScreeningAssignment,
+            onHistoryClick: handleHistoryButtonClick,
+            shouldShowHistoryActions,
+        }),
+        [hasAnyScreeningAssignment, handleHistoryButtonClick, shouldShowHistoryActions],
+    )
+
     const columns = useMemo<TableColumn<Screening>[]>(
         () => {
-            const submissionColumn: TableColumn<Screening> = {
-                className: styles.submissionColumn,
-                label: 'Submission ID',
-                propertyName: 'submissionId',
-                renderer: (data: Screening) => {
-                    const isRestrictedBase = isSubmissionDownloadRestrictedForMember(data.memberId)
-                    const failedScan = data.virusScan === false
-                    const isRestrictedForRow = isRestrictedBase || failedScan
-                    const tooltipMessage = failedScan
-                        ? 'Submission failed virus scan'
-                        : (getRestrictionMessageForMember(data.memberId) ?? restrictionMessage)
-                    const isButtonDisabled = Boolean(
-                        props.isDownloading[data.submissionId]
-                        || isRestrictedForRow,
-                    )
-
-                    const downloadButton = (
-                        <button
-                            onClick={function onClick() {
-                                if (isRestrictedForRow) {
-                                    return
-                                }
-
-                                props.downloadSubmission(data.submissionId)
-                            }}
-                            className={styles.textBlue}
-                            disabled={isButtonDisabled}
-                            type='button'
-                        >
-                            {data.submissionId}
-                        </button>
-                    )
-
-                    async function handleCopySubmissionId(
-                        event: MouseEvent<HTMLButtonElement>,
-                    ): Promise<void> {
-                        event.stopPropagation()
-                        event.preventDefault()
-
-                        if (!data.submissionId) {
-                            return
-                        }
-
-                        await copyTextToClipboard(data.submissionId)
-                        toast.success('Submission ID copied to clipboard', {
-                            toastId: `challenge-submission-id-copy-${data.submissionId}`,
-                        })
-                    }
-
-                    const renderedDownloadButton = isRestrictedForRow ? (
-                        <Tooltip content={tooltipMessage} triggerOn='click-hover'>
-                            <span className={styles.tooltipTrigger}>
-                                {downloadButton}
-                            </span>
-                        </Tooltip>
-                    ) : (
-                        downloadButton
-                    )
-
-                    return (
-                        <span className={styles.submissionCell}>
-                            {renderedDownloadButton}
-                            <button
-                                type='button'
-                                className={styles.copyButton}
-                                aria-label='Copy submission ID'
-                                title='Copy submission ID'
-                                onClick={handleCopySubmissionId}
-                                disabled={!data.submissionId}
-                            >
-                                <IconOutline.DocumentDuplicateIcon />
-                            </button>
-                        </span>
-                    )
-                },
-                type: 'element',
-            }
-
-            const handleColumn: TableColumn<Screening> | undefined = props.hideHandleColumn
-                ? undefined
-                : {
-                    label: 'Handle',
-                    propertyName: 'handle',
-                    renderer: (data: Screening) => (
-                        <a
-                            href={getHandleUrl(data.userInfo)}
-                            target='_blank'
-                            rel='noreferrer'
-                            style={{
-                                color: data.userInfo?.handleColor,
-                            }}
-                            onClick={function onClick() {
-                                window.open(
-                                    getHandleUrl(data.userInfo),
-                                    '_blank',
-                                )
-                            }}
-                        >
-                            {data.userInfo?.memberHandle ?? ''}
-                        </a>
-                    ),
-                    type: 'element',
-                }
-
-            const submissionDateColumn: TableColumn<Screening> = {
-                label: 'Submission Date',
-                propertyName: 'createdAt',
-                renderer: (data: Screening) => (
-                    <span>{data.createdAtString}</span>
-                ),
-                type: 'element',
-            }
-
-            const virusScanColumn: TableColumn<Screening> = {
-                label: 'Virus Scan',
-                propertyName: 'virusScan',
-                renderer: (data: Screening) => {
-                    if (data.virusScan === true) {
-                        return (
-                            <span className={styles.virusOkIcon} title='Scan passed' aria-label='Scan passed'>
-                                <IconOutline.CheckCircleIcon />
-                            </span>
-                        )
-                    }
-
-                    if (data.virusScan === false) {
-                        return (
-                            <span className={styles.virusWarnIcon} title='Scan failed' aria-label='Scan failed'>
-                                <IconOutline.ExclamationIcon />
-                            </span>
-                        )
-                    }
-
-                    return <span>-</span>
-                },
-                type: 'element',
-            }
-
-            const baseColumns: TableColumn<Screening>[] = [
-                submissionColumn,
-                ...(handleColumn ? [handleColumn] : []),
-                submissionDateColumn,
-                virusScanColumn,
-            ]
-
-            const actionColumn: TableColumn<Screening> | undefined = hasHistoryEntries
-                ? {
-                    className: styles.textBlue,
-                    label: 'Actions',
-                    propertyName: 'actions',
-                    renderer: (data: Screening) => {
-                        const historyKeyForRow = getSubmissionHistoryKey(data.memberId, data.submissionId)
-                        const rowHistory = historyByMember.get(historyKeyForRow) ?? []
-                        if (rowHistory.length === 0) {
-                            return <span>--</span>
-                        }
-
-                        return (
-                            <button
-                                type='button'
-                                className={classNames(styles.historyButton, 'last-element')}
-                                data-member-id={data.memberId ?? ''}
-                                data-submission-id={data.submissionId}
-                                onClick={handleHistoryButtonClick}
-                            >
-                                View Submission History
-                            </button>
-                        )
-                    },
-                    type: 'element',
-                }
-                : undefined
-
-            const baseColumnsWithActions = actionColumn
-                ? [...baseColumns, actionColumn]
-                : baseColumns
-
+            const base = [...baseColumns]
             if (!hasScreeningPhase) {
-                return baseColumnsWithActions
+                return appendActionColumn(base, actionColumn)
             }
 
-            const screeningColumns: TableColumn<Screening>[] = [
-                ...baseColumns,
-                {
-                    label: 'Screener',
-                    propertyName: 'screenerHandle',
-                    renderer: (data: Screening) => (data.screener?.id ? (
-                        <a
-                            href={getHandleUrl(data.screener)}
-                            target='_blank'
-                            rel='noreferrer'
-                            style={{
-                                color: data.screener?.handleColor,
-                            }}
-                            onClick={function onClick() {
-                                window.open(
-                                    getHandleUrl(data.screener),
-                                    '_blank',
-                                )
-                            }}
-                        >
-                            {data.screener?.memberHandle ?? ''}
-                        </a>
-                    ) : (
-                        <span
-                            style={{
-                                color: data.screener?.handleColor,
-                            }}
-                        >
-                            {data.screener?.memberHandle ?? ''}
-                        </span>
-                    )),
-                    type: 'element',
-                },
-                {
-                    label: 'Screening Score',
-                    propertyName: 'score',
-                    type: 'text',
-                },
-                {
-                    label: 'Screening Result',
-                    propertyName: 'result',
-                    renderer: (data: Screening) => {
-                        const val = (data.result || '').toUpperCase()
-                        if (val === 'PASS') {
-                            return (
-                                <span className={styles.resultPass}>Pass</span>
-                            )
-                        }
-
-                        if (val === 'NO PASS' || val === 'FAIL') {
-                            return (
-                                <span className={styles.resultFail}>Fail</span>
-                            )
-                        }
-
-                        return <span>-</span>
-                    },
-                    type: 'element',
-                },
-            ]
-
-            return actionColumn ? [...screeningColumns, actionColumn] : screeningColumns
+            const withScreening = [...base, ...screeningColumns]
+            return appendActionColumn(withScreening, actionColumn)
         },
-        [
-            props,
-            hasScreeningPhase,
-            isSubmissionDownloadRestricted,
-            restrictionMessage,
-            isSubmissionDownloadRestrictedForMember,
-            getRestrictionMessageForMember,
-            hasHistoryEntries,
-            historyByMember,
-            handleHistoryButtonClick,
-        ],
+        [actionColumn, baseColumns, hasScreeningPhase, screeningColumns],
     )
 
     const columnsMobile = useMemo<MobileTableColumn<Screening>[][]>(
@@ -477,11 +670,11 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
             )}
         >
             {isTablet ? (
-                <TableMobile columns={columnsMobile} data={props.datas} />
+                <TableMobile columns={columnsMobile} data={props.screenings} />
             ) : (
                 <Table
                     columns={columns}
-                    data={props.datas}
+                    data={props.screenings}
                     disableSorting
                     onToggleSort={_.noop}
                     removeDefaultSort

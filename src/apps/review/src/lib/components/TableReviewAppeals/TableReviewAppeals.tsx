@@ -202,23 +202,33 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
     const isSubmissionTab = (tab || '').toLowerCase() === 'submission'
     const wrapperClassName = props.className
 
+    const submissionTypes = new Set(
+        datas
+            .map(d => d.type)
+            .filter((t): t is string => Boolean(t)),
+    )
+    const filteredChallengeSubmissions = submissionTypes.size
+        ? (challengeInfo?.submissions ?? [])
+            .filter(s => s.type && submissionTypes.has(s.type))
+        : (challengeInfo?.submissions ?? [])
+
     const submissionHistory = useMemo<SubmissionHistoryPartition>(
-        () => partitionSubmissionHistory(datas, challengeInfo?.submissions),
-        [challengeInfo?.submissions, datas],
+        () => partitionSubmissionHistory(datas, filteredChallengeSubmissions),
+        [datas, filteredChallengeSubmissions],
     )
     const {
         latestSubmissions,
         latestSubmissionIds,
         historyByMember,
     }: SubmissionHistoryPartition = submissionHistory
-    const hasHistoryEntries = useMemo(
+    const shouldShowHistoryActions = useMemo(
         () => isSubmissionTab && hasIsLatestFlag(datas),
         [datas, isSubmissionTab],
     )
 
     const submissionMetaById = useMemo(() => {
-        const map = new Map<string, SubmissionInfo>();
-        (challengeInfo?.submissions ?? []).forEach(submission => {
+        const map = new Map<string, SubmissionInfo>()
+        filteredChallengeSubmissions.forEach(submission => {
             if (submission?.id) {
                 map.set(submission.id, submission)
             }
@@ -229,7 +239,7 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
             }
         })
         return map
-    }, [challengeInfo?.submissions, datas])
+    }, [datas, filteredChallengeSubmissions])
 
     const resolveSubmissionMeta = useCallback(
         (submissionId: string): SubmissionInfo | undefined => submissionMetaById.get(submissionId),
@@ -1289,7 +1299,7 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
         const historyOnlyColumn: TableColumn<SubmissionRow> | undefined = (!actionColumns.length
             && canViewHistory
             && isSubmissionTab
-            && hasHistoryEntries)
+            && shouldShowHistoryActions)
             ? {
                 className: styles.textBlue,
                 columnId: 'submission-history',
@@ -1498,7 +1508,7 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
         tab,
         restrictionMessage,
         historyByMember,
-        hasHistoryEntries,
+        shouldShowHistoryActions,
         myResources,
         getLatestChallengeInfo,
         setIsReviewPhaseClosedModalOpen,

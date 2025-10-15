@@ -43,6 +43,10 @@ export interface SubmissionInfo {
      * Indicates whether this submission is the latest for the member.
      */
     isLatest?: boolean
+    /**
+     * Submission type (e.g. CONTEST_SUBMISSION, CHECKPOINT_SUBMISSION).
+     */
+    type?: string
 }
 
 /**
@@ -92,7 +96,7 @@ export function convertBackendSubmissionToSubmissionInfo(
     return {
         aggregateScore,
         id: data.id,
-        isLatest: data.isLatest ?? false,
+        isLatest: data.isLatest,
         memberId: data.memberId,
         review:
             data.review && data.review[0]
@@ -101,6 +105,7 @@ export function convertBackendSubmissionToSubmissionInfo(
         reviews: data.review.map(convertBackendReviewToReviewResult),
         submittedDate,
         submittedDateString,
+        type: data.type,
         virusScan: data.virusScan,
     }
 }

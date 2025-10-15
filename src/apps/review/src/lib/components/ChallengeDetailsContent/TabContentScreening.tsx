@@ -37,7 +37,7 @@ export const TabContentScreening: FC<Props> = (props: Props) => {
 
     return (
         <TableSubmissionScreening
-            datas={props.screening}
+            screenings={props.screening}
             isDownloading={props.isDownloading}
             downloadSubmission={props.downloadSubmission}
             hideHandleColumn={hideHandleColumn}

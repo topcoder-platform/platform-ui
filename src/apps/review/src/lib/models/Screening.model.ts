@@ -44,6 +44,10 @@ export interface Screening {
      * The review id associated with this screening entry (if available).
      */
     reviewId?: string
+    /**
+     * Submission type (e.g. CONTEST_SUBMISSION, CHECKPOINT_SUBMISSION).
+     */
+    type?: string
 }
 
 /**
@@ -80,6 +84,7 @@ export function convertBackendSubmissionToScreening(
         score: data.screeningScore ?? 'Pending',
         screenerId: '',
         submissionId: data.id,
+        type: data.type,
         virusScan: data.virusScan,
     }
 }

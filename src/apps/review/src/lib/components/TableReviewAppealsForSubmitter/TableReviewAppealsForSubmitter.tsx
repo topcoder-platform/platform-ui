@@ -95,9 +95,38 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
     const challengeStatus = challengeInfo?.status?.toUpperCase()
     const isChallengeCompleted = challengeStatus === 'COMPLETED'
 
+    const submissionTypes = useMemo(
+        () => new Set(
+            datas
+                .map(submission => submission.type)
+                .filter((type): type is string => Boolean(type)),
+        ),
+        [datas],
+    )
+
+    const filteredAll = useMemo<SubmissionInfo[]>(
+        () => {
+            const allSubmissions = challengeInfo?.submissions ?? []
+            const typedFiltered = allSubmissions.filter(
+                submission => submission.type && submissionTypes.has(submission.type),
+            )
+            const fallbackIds = new Set(
+                datas
+                    .map(submission => submission.id)
+                    .filter((id): id is string => Boolean(id)),
+            )
+            const filtered = allSubmissions.filter(
+                submission => submission.id && fallbackIds.has(submission.id),
+            )
+
+            return submissionTypes.size ? typedFiltered : filtered
+        },
+        [challengeInfo?.submissions, datas, submissionTypes],
+    )
+
     const submissionHistory = useMemo<SubmissionHistoryPartition>(
-        () => partitionSubmissionHistory(datas, challengeInfo?.submissions),
-        [challengeInfo?.submissions, datas],
+        () => partitionSubmissionHistory(datas, filteredAll),
+        [datas, filteredAll],
     )
     const {
         latestSubmissions,
@@ -107,20 +136,30 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
 
     const submissionMetaById = useMemo(() => {
         const map = new Map<string, SubmissionInfo>()
-        const challengeSubmissions = challengeInfo?.submissions ?? []
-
-        challengeSubmissions.forEach(submission => {
+        filteredAll.forEach(submission => {
             if (submission?.id) {
                 map.set(submission.id, submission)
             }
         })
         datas.forEach(submission => {
-            if (submission?.id && !map.has(submission.id)) {
-                map.set(submission.id, submission)
+            if (!submission?.id) {
+                return
             }
+
+            const existing = map.get(submission.id)
+            if (existing) {
+                map.set(submission.id, {
+                    ...existing,
+                    ...submission,
+                    type: submission.type ?? existing?.type,
+                })
+                return
+            }
+
+            map.set(submission.id, { ...submission, type: submission.type })
         })
         return map
-    }, [challengeInfo?.submissions, datas])
+    }, [datas, filteredAll])
 
     const resolveSubmissionMeta = useCallback(
         (submissionId: string): SubmissionInfo | undefined => submissionMetaById.get(submissionId),
@@ -156,7 +195,7 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
         [historyByMember],
     )
 
-    const hasHistoryEntries = useMemo(
+    const shouldShowHistoryActions = useMemo(
         () => isSubmissionTab && hasIsLatestFlag(datas),
         [datas, isSubmissionTab],
     )
@@ -630,7 +669,7 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
             }
         }
 
-        const shouldRenderActionsColumn = !isAppealsTab && hasHistoryEntries
+        const shouldRenderActionsColumn = !isAppealsTab && shouldShowHistoryActions
 
         if (shouldRenderActionsColumn) {
             aggregatedColumns.push({
@@ -694,7 +733,7 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
     }, [
         allowsAppeals,
         canDisplayScores,
-        hasHistoryEntries,
+        shouldShowHistoryActions,
         downloadSubmission,
         historyByMember,
         isSubmissionDownloadRestricted,

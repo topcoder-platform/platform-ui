@@ -1249,7 +1249,6 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
                     const n = (r.roleName || '').toLowerCase()
                     return n.includes('screener') && !n.includes('checkpoint')
                 })?.id
-
             // Only show CONTEST_SUBMISSION on Submission/Screening tabs
             // eslint-disable-next-line complexity
             return contestSubmissions.map(item => {
