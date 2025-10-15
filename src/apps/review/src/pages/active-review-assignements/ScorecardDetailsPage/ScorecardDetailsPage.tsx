@@ -272,6 +272,7 @@ export const ScorecardDetailsPage: FC<Props> = (props: Props) => {
             ?? reviewId,
         [reviewId, reviewInfo?.submissionId, submissionInfo?.id],
     )
+    const containsPastChallenges = location.pathname.indexOf('/past-challenges/')
 
     const breadCrumb = useMemo<BreadCrumbData[]>(() => [
         {
@@ -283,7 +284,9 @@ export const ScorecardDetailsPage: FC<Props> = (props: Props) => {
             fallback: './../../../../challenge-details',
             index: 2,
             label: challengeInfo?.name,
-            path: -1,
+            path: containsPastChallenges > -1
+                ? `${rootRoute}/past-challenges/${challengeInfo?.id}/challenge-details`
+                : `${rootRoute}/active-challenges/${challengeInfo?.id}/challenge-details`,
         },
         {
             index: 3,

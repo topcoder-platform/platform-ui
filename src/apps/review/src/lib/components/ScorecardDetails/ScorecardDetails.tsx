@@ -418,7 +418,13 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
             // no-op: navigation should still occur even if revalidation fails
         }
 
-        navigate(-1, {
+        const pastPrefix = '/past-challenges/'
+        // eslint-disable-next-line no-restricted-globals
+        const idx = location.pathname.indexOf(pastPrefix)
+        const url = idx > -1
+            ? `${rootRoute}/past-challenges/${challengeInfo?.id}/challenge-details`
+            : `${rootRoute}/active-challenges/${challengeInfo?.id}/challenge-details`
+        navigate(url, {
             fallback: './../../../../challenge-details',
         })
     }, [challengeId, mutate, navigate])
