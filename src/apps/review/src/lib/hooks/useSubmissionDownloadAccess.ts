@@ -11,7 +11,7 @@ import { ChallengeDetailContext, ReviewAppContext } from '../contexts'
 export const SUBMISSION_DOWNLOAD_RESTRICTION_MESSAGE
     = 'Submissions are available once the submission phase closes.'
 export const SUBMISSION_DOWNLOAD_SUBMITTER_RESTRICTION_MESSAGE
-    = 'You can download only your own submissions until the challenge completes.'
+    = 'You can download only your own submissions until the challenge completes or fails review.'
 
 export interface UseSubmissionDownloadAccessResult {
     isSubmissionPhaseOpen: boolean
@@ -42,7 +42,8 @@ export function useSubmissionDownloadAccess(): UseSubmissionDownloadAccessResult
     )
 
     const challengeStatus = challengeInfo?.status?.toLowerCase()
-    const isChallengeCompleted = challengeStatus === 'completed'
+    const isChallengeClosedForDownload = ['completed', 'cancelled_failed_review']
+        .includes(challengeStatus ?? '')
 
     const isSubmissionPhaseOpen = useMemo(
         () => challengeInfo?.phases?.some(
@@ -96,13 +97,13 @@ export function useSubmissionDownloadAccess(): UseSubmissionDownloadAccessResult
     const shouldRestrictSubmitterToOwnSubmission = useMemo(
         () => hasSubmitterRole
             && !(hasCopilotRole || isAdmin)
-            && !isChallengeCompleted
+            && !isChallengeClosedForDownload
             && !hasIterativeReviewerRole,
         [
             hasSubmitterRole,
             hasCopilotRole,
             isAdmin,
-            isChallengeCompleted,
+            isChallengeClosedForDownload,
             hasIterativeReviewerRole,
         ],
     )

@@ -115,7 +115,8 @@ const hasActiveReview = (review: ReviewInfo | undefined): boolean => (
     Boolean(review?.id)
 )
 
-const DOWNLOAD_OWN_SUBMISSION_TOOLTIP = 'You can only download your own submissions.'
+const DOWNLOAD_OWN_SUBMISSION_TOOLTIP
+    = 'You can download only your own submissions until the challenge completes or fails review.'
 const VIEW_OWN_SCORECARD_TOOLTIP = 'You can only view scorecards for your own submissions.'
 
 interface CompletedReviewRenderParams {
@@ -239,6 +240,7 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
         restrictionMessage,
         isSubmissionDownloadRestrictedForMember,
         getRestrictionMessageForMember,
+        shouldRestrictSubmitterToOwnSubmission,
     }: UseSubmissionDownloadAccessResult = useSubmissionDownloadAccess()
     const { width: screenWidth }: WindowSize = useWindowSize()
     const isTablet = useMemo(() => screenWidth <= 744, [screenWidth])
@@ -305,7 +307,9 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
                 const isOwnedSubmission = data.memberId
                     ? ownedMemberIds.has(data.memberId)
                     : false
-                const isOwnershipRestricted = isSubmitterView && !isOwnedSubmission
+                const isOwnershipRestricted = shouldRestrictSubmitterToOwnSubmission
+                    && isSubmitterView
+                    && !isOwnedSubmission
                 const isRestrictedForMember = isSubmissionDownloadRestrictedForMember(
                     data.memberId,
                 )
@@ -414,6 +418,7 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
             isDownloading,
             restrictionMessage,
             isSubmitterView,
+            shouldRestrictSubmitterToOwnSubmission,
             ownedMemberIds,
         ],
     )

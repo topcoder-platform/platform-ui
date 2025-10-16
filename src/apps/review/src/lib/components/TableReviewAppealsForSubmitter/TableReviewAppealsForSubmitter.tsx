@@ -60,7 +60,8 @@ type SubmissionRow = SubmissionInfo & {
     aggregated?: AggregatedSubmissionReviews
 }
 
-const DOWNLOAD_OWN_SUBMISSION_TOOLTIP = 'You can only download your own submissions.'
+const DOWNLOAD_OWN_SUBMISSION_TOOLTIP
+    = 'You can download only your own submissions until the challenge completes or fails review.'
 const VIEW_OWN_SCORECARD_TOOLTIP = 'You can only view scorecards for your own submissions.'
 
 export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
@@ -77,6 +78,7 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
         isSubmissionDownloadRestricted,
         isSubmissionDownloadRestrictedForMember,
         restrictionMessage,
+        shouldRestrictSubmitterToOwnSubmission,
     }: UseSubmissionDownloadAccessResult = useSubmissionDownloadAccess()
     const challengeType = challengeInfo?.type
     const challengeTrack = challengeInfo?.track
@@ -361,20 +363,26 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
                 const isOwnedSubmission = data.memberId
                     ? ownedMemberIds.has(data.memberId)
                     : false
-                const isOwnershipRestricted = !isOwnedSubmission
+                const isOwnershipRestricted = shouldRestrictSubmitterToOwnSubmission
+                    && !isOwnedSubmission
+                const isRestrictedForMember = isSubmissionDownloadRestrictedForMember(
+                    data.memberId,
+                )
+                const memberRestrictionMessage = getRestrictionMessageForMember(
+                    data.memberId,
+                )
                 const failedScan = data.virusScan === false
                 const isButtonDisabled = Boolean(
                     isDownloading[data.id]
-                    || isSubmissionDownloadRestricted
-                    || failedScan
-                    || isOwnershipRestricted,
+                    || isRestrictedForMember
+                    || failedScan,
                 )
 
                 const downloadButton = (
                     <button
                         onClick={function onClick() {
                             if (
-                                isSubmissionDownloadRestricted
+                                isRestrictedForMember
                                 || failedScan
                                 || isOwnershipRestricted
                             ) {
@@ -410,6 +418,10 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
                 let tooltipContent: string | undefined
                 if (failedScan) {
                     tooltipContent = 'Submission failed virus scan'
+                } else if (isRestrictedForMember) {
+                    tooltipContent = memberRestrictionMessage
+                        ?? restrictionMessage
+                        ?? DOWNLOAD_OWN_SUBMISSION_TOOLTIP
                 } else if (isOwnershipRestricted) {
                     tooltipContent = DOWNLOAD_OWN_SUBMISSION_TOOLTIP
                 } else if (isSubmissionDownloadRestricted && restrictionMessage) {
@@ -532,30 +544,33 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
                     const reviewDetail = data.aggregated?.reviews?.[0]
                     const reviewId = reviewDetail?.reviewInfo?.id || reviewDetail?.reviewId
                     if (reviewId) {
-                        const scoreElement = isOwnedSubmission ? (
+                        const canViewScorecard = isChallengeCompleted || isOwnedSubmission
+                        const scoreContent = (
+                            <span className={styles.textBlue}>
+                                {scoreDisplay}
+                            </span>
+                        )
+
+                        if (!canViewScorecard) {
+                            return (
+                                <Tooltip
+                                    content={VIEW_OWN_SCORECARD_TOOLTIP}
+                                    triggerOn='click-hover'
+                                >
+                                    <span className={styles.tooltipTrigger}>
+                                        {scoreContent}
+                                    </span>
+                                </Tooltip>
+                            )
+                        }
+
+                        return (
                             <Link
                                 to={`./../review/${reviewId}`}
                                 className={styles.textBlue}
                             >
                                 {scoreDisplay}
                             </Link>
-                        ) : (
-                            <span className={styles.textBlue}>
-                                {scoreDisplay}
-                            </span>
-                        )
-
-                        return !isOwnedSubmission ? (
-                            <Tooltip
-                                content={VIEW_OWN_SCORECARD_TOOLTIP}
-                                triggerOn='click-hover'
-                            >
-                                <span className={styles.tooltipTrigger}>
-                                    {scoreElement}
-                                </span>
-                            </Tooltip>
-                        ) : (
-                            scoreElement
                         )
                     }
                 }
@@ -635,6 +650,29 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
             const formattedScore = typeof finalScore === 'number' && Number.isFinite(finalScore)
                 ? finalScore.toFixed(2)
                 : undefined
+            const isOwnedSubmission = data.memberId
+                ? ownedMemberIds.has(data.memberId)
+                : false
+            const canViewScorecard = isChallengeCompleted || isOwnedSubmission
+            const scoreContent = (
+                <span className={styles.textBlue}>
+                    {formattedScore ?? '--'}
+                </span>
+            )
+
+            if (!canViewScorecard) {
+                return (
+                    <Tooltip
+                        content={VIEW_OWN_SCORECARD_TOOLTIP}
+                        triggerOn='click-hover'
+                    >
+                        <span className={styles.tooltipTrigger}>
+                            {scoreContent}
+                        </span>
+                    </Tooltip>
+                )
+            }
+
             return (
                 <Link
                     to={`./../review/${reviewId}`}
@@ -673,6 +711,35 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
                 )
             }
 
+            const isOwnedSubmission = data.memberId
+                ? ownedMemberIds.has(data.memberId)
+                : false
+            const canViewScorecard = isChallengeCompleted || isOwnedSubmission
+            const appealsContent = (
+                <span className={styles.textBlue}>
+                    {totalAppeals}
+                </span>
+            )
+
+            if (!canViewScorecard) {
+                return (
+                    <Tooltip
+                        content={VIEW_OWN_SCORECARD_TOOLTIP}
+                        triggerOn='click-hover'
+                    >
+                        <span
+                            className={classNames(
+                                styles.tooltipTrigger,
+                                styles.appealsLink,
+                                'last-element',
+                            )}
+                        >
+                            {appealsContent}
+                        </span>
+                    </Tooltip>
+                )
+            }
+
             return (
                 <Link
                     className={classNames(
@@ -681,7 +748,7 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
                     )}
                     to={`./../review/${reviewId}`}
                 >
-                    <span className={styles.textBlue}>{totalAppeals}</span>
+                    {appealsContent}
                 </Link>
             )
         }
@@ -794,8 +861,10 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
         canDisplayScores,
         shouldShowHistoryActions,
         downloadSubmission,
+        getRestrictionMessageForMember,
         historyByMember,
         isSubmissionDownloadRestricted,
+        isSubmissionDownloadRestrictedForMember,
         isDownloading,
         isChallengeCompleted,
         maxReviewCount,
@@ -808,6 +877,7 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
         isSubmissionTab,
         isAppealsTab,
         ownedMemberIds,
+        shouldRestrictSubmitterToOwnSubmission,
     ])
 
     const columnsMobile = useMemo<MobileTableColumn<SubmissionRow>[][]>(
