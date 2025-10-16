@@ -2,10 +2,10 @@ import { FC } from 'react'
 
 import { Notification } from '~/libs/ui'
 
-import { useNotification } from './Notifications.context';
+import { NotificationContextType, useNotification } from './Notifications.context'
 
 const NotificationsContainer: FC = () => {
-    const { notifications, removeNotification } = useNotification();
+    const { notifications, removeNotification }: NotificationContextType = useNotification()
 
     return (
         <div>

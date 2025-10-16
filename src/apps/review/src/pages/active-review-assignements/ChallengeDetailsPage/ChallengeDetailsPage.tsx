@@ -13,6 +13,7 @@ import { TableLoading } from '~/apps/admin/src/lib'
 import { handleError } from '~/apps/admin/src/lib/utils'
 import { EnvironmentConfig } from '~/config'
 import { BaseModal, Button, InputCheckbox, InputText } from '~/libs/ui'
+import { NotificationContextType, useNotification } from '~/libs/shared'
 
 import {
     useFetchScreeningReview,
@@ -60,7 +61,6 @@ import {
 } from '../../../config/routes.config'
 
 import styles from './ChallengeDetailsPage.module.scss'
-import { useNotification } from '~/libs/shared'
 
 interface Props {
     className?: string
@@ -227,7 +227,7 @@ const computePhaseCompletionFromScreenings = (
 
 // eslint-disable-next-line complexity
 export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
-    const { showBannerNotification, removeNotification } = useNotification();
+    const { showBannerNotification, removeNotification }: NotificationContextType = useNotification()
     const [searchParams, setSearchParams] = useSearchParams()
     const location = useLocation()
     const navigate = useNavigate()
@@ -1328,10 +1328,12 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
     useEffect(() => {
         const notification = showBannerNotification({
             id: 'ai-review-scores-warning',
-            message: 'AI Review Scores are advisory only to provide immediate, educational, and actionable feedback to members. AI Review Scores are not influence winner selection.',
+            message: `AI Review Scores are advisory only to provide immediate,
+                educational, and actionable feedback to members.
+                AI Review Scores are not influence winner selection.`,
         })
-      return () => notification && removeNotification(notification.id);
-    }, [showBannerNotification]);
+        return () => notification && removeNotification(notification.id)
+    }, [showBannerNotification])
 
     return (
         <PageWrapper

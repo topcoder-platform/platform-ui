@@ -1,4 +1,4 @@
-import { FC } from 'react'
+import { FC, useCallback } from 'react'
 
 import { NotificationBanner } from './banner'
 
@@ -8,12 +8,20 @@ interface NotificationProps {
 }
 
 const Notification: FC<NotificationProps> = props => {
+    const handleClose = useCallback((save?: boolean) => {
+        props.onClose(props.notification.id, save)
+    }, [props.onClose])
 
     if (props.notification.type === 'banner') {
-        return <NotificationBanner content={props.notification.message} onClose={(save?: boolean) => props.onClose(props.notification.id, save)} />
+        return (
+            <NotificationBanner
+                content={props.notification.message}
+                onClose={handleClose}
+            />
+        )
     }
 
-    return null;
+    return <></>
 }
 
 export default Notification

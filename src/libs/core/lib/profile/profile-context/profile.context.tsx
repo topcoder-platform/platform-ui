@@ -12,6 +12,6 @@ export const defaultProfileContextData: ProfileContextData = {
 
 const profileContext: Context<ProfileContextData> = createContext(defaultProfileContextData)
 
-export const useProfileContext = () => useContext(profileContext);
+export const useProfileContext = (): ProfileContextData => useContext(profileContext)
 
 export default profileContext

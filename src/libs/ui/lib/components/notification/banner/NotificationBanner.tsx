@@ -1,7 +1,8 @@
 import { FC, ReactNode, useCallback } from 'react'
 
-import styles from './NotificationBanner.module.scss'
 import { InformationCircleIcon, XCircleIcon } from '@heroicons/react/outline'
+
+import styles from './NotificationBanner.module.scss'
 
 interface NotificationBannerProps {
     persistent?: boolean
@@ -11,6 +12,9 @@ interface NotificationBannerProps {
 }
 
 const NotificationBanner: FC<NotificationBannerProps> = props => {
+    const handleClose = useCallback(() => {
+        props.onClose?.(true)
+    }, [props.onClose])
 
     return (
         <div className={styles.wrap}>
@@ -24,7 +28,7 @@ const NotificationBanner: FC<NotificationBannerProps> = props => {
                 {props.content}
 
                 {!props.persistent && (
-                    <div className={styles.close} onClick={() => props.onClose?.(true)}>
+                    <div className={styles.close} onClick={handleClose}>
                         <XCircleIcon className='icon-xl' />
                     </div>
                 )}

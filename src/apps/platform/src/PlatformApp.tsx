@@ -1,7 +1,7 @@
 import { FC } from 'react'
 import { toast, ToastContainer } from 'react-toastify'
 
-import { useViewportUnitsFix, NotificationsContainer } from '~/libs/shared'
+import { NotificationsContainer, useViewportUnitsFix } from '~/libs/shared'
 
 import { AppFooter } from './components/app-footer'
 import { AppHeader } from './components/app-header'
