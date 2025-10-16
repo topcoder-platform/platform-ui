@@ -1,19 +1,24 @@
 /**
  * Challenge Phase Info.
  */
-import { FC, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import type { FC, ReactNode } from 'react'
+import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import classNames from 'classnames'
+import moment from 'moment'
 
 import { EnvironmentConfig } from '~/config'
 
-import type { ChallengeInfo, ReviewAppContextModel } from '../../models'
+import type { BackendResource, ChallengeInfo, ReviewAppContextModel } from '../../models'
 import type { WinningDetailDto } from '../../services'
 import { ChallengeDetailContext, ReviewAppContext } from '../../contexts'
 import { useRole, useRoleProps } from '../../hooks'
 import { fetchWinningsByExternalId } from '../../services'
 import { ProgressBar } from '../ProgressBar'
+import { SUBMITTER, TABLE_DATE_FORMAT } from '../../../config/index.config'
 
 import styles from './ChallengePhaseInfo.module.scss'
+
+const PROGRESS_TYPE = 'progress' as const
 
 interface Props {
     className?: string
@@ -23,24 +28,69 @@ interface Props {
     variant?: 'active' | 'past'
 }
 
+interface ChallengePhaseDisplayItem {
+    icon?: string
+    status?: string
+    style?: Record<string, unknown>
+    title: string
+    type?: undefined
+    value: ReactNode
+}
+
+interface ChallengePhaseProgressItem {
+    title: string
+    type: typeof PROGRESS_TYPE
+    value: number
+}
+
+type ChallengePhaseItem = ChallengePhaseDisplayItem | ChallengePhaseProgressItem
+
+type ChallengeVariant = 'active' | 'past'
+
 export const ChallengePhaseInfo: FC<Props> = (props: Props) => {
     const { myChallengeRoles }: useRoleProps = useRole()
-    const { challengeId }: { challengeId?: string } = useContext(ChallengeDetailContext)
+    const {
+        challengeId,
+        resources,
+    }: { challengeId?: string; resources: BackendResource[] } = useContext(ChallengeDetailContext)
     const { loginUserInfo }: ReviewAppContextModel = useContext(ReviewAppContext)
     const [paymentAmount, setPaymentAmount] = useState<string | undefined>(undefined)
     const [hasPayment, setHasPayment] = useState(false)
     const [isLoadingPayment, setIsLoadingPayment] = useState(false)
-    const PROGRESS_TYPE = 'progress'
 
     const isTopgearTask = useMemo(() => {
         const t = (props.challengeInfo?.type?.name || '').toLowerCase()
         return t === 'topgear task'
     }, [props.challengeInfo?.type?.name])
 
-    const walletUrl = useMemo(
-        () => `https://wallet.${EnvironmentConfig.TC_DOMAIN}`,
-        [],
-    )
+    const isTask = useMemo(() => {
+        const abbreviation = (props.challengeInfo?.type?.abbreviation || '').toUpperCase()
+        const name = (props.challengeInfo?.type?.name || '').toLowerCase()
+        return abbreviation === 'TSK' || name === 'task'
+    }, [props.challengeInfo?.type?.abbreviation, props.challengeInfo?.type?.name])
+
+    const submitterHandle = useMemo(() => {
+        if (!Array.isArray(resources)) return 'N/A'
+
+        const match = resources.find(resource => {
+            const role = resource?.roleName?.toLowerCase() || ''
+            return role.includes(SUBMITTER.toLowerCase())
+        })
+
+        return match?.memberHandle || 'N/A'
+    }, [resources])
+
+    const formattedStartDate = useMemo(() => {
+        const startDate = props.challengeInfo?.startDate
+        if (!startDate) return 'N/A'
+
+        const m = moment(startDate)
+        if (!m.isValid()) return 'N/A'
+
+        return m
+            .local()
+            .format(TABLE_DATE_FORMAT)
+    }, [props.challengeInfo?.startDate])
 
     const formatCurrency = useCallback((amount: number | string, currency?: string): string => {
         const n = typeof amount === 'number' ? amount : Number(amount)
@@ -54,10 +104,63 @@ export const ChallengePhaseInfo: FC<Props> = (props: Props) => {
         return nf.format(n)
     }, [])
 
+    const taskPaymentFromPrizeSets = useMemo(() => {
+        if (!isTask) return undefined
+
+        const prizeSets = props.challengeInfo?.prizeSets
+        if (!Array.isArray(prizeSets)) return undefined
+
+        const placementPrizeSet = prizeSets.find(prizeSet => prizeSet?.type === 'PLACEMENT')
+        if (!placementPrizeSet || !Array.isArray(placementPrizeSet.prizes) || !placementPrizeSet.prizes.length) {
+            return undefined
+        }
+
+        const [firstPrize] = placementPrizeSet.prizes
+        if (typeof firstPrize?.value !== 'number' || typeof firstPrize?.type !== 'string') {
+            return undefined
+        }
+
+        return {
+            currency: firstPrize.type,
+            value: firstPrize.value,
+        }
+    }, [isTask, props.challengeInfo?.prizeSets])
+
+    const formattedTaskPayment = useMemo(() => {
+        if (!taskPaymentFromPrizeSets) return undefined
+        return formatCurrency(taskPaymentFromPrizeSets.value, taskPaymentFromPrizeSets.currency)
+    }, [taskPaymentFromPrizeSets, formatCurrency])
+
+    const walletUrl = useMemo(
+        () => `https://wallet.${EnvironmentConfig.TC_DOMAIN}`,
+        [],
+    )
+
+    const formattedNonTaskPayment = useMemo(() => {
+        const variant = props.variant ?? 'active'
+        if (!shouldShowPayment(
+            variant,
+            hasPayment,
+            Boolean(paymentAmount),
+            isLoadingPayment,
+            isTopgearTask,
+        )) {
+            return undefined
+        }
+
+        return paymentAmount
+    }, [
+        props.variant,
+        hasPayment,
+        paymentAmount,
+        isLoadingPayment,
+        isTopgearTask,
+    ])
+
     useEffect(() => {
         const run = async (): Promise<void> => {
             const isPast = (props.variant ?? 'active') === 'past'
-            if (!isPast || isTopgearTask) return
+            if (isTask || (!isPast && !isTopgearTask)) return
             if (!challengeId || !loginUserInfo?.userId) return
             setIsLoadingPayment(true)
             setHasPayment(false)
@@ -109,91 +212,48 @@ export const ChallengePhaseInfo: FC<Props> = (props: Props) => {
         }
 
         run()
-    }, [challengeId, loginUserInfo?.userId, props.variant, isTopgearTask, formatCurrency])
+    }, [challengeId, loginUserInfo?.userId, props.variant, isTopgearTask, isTask, formatCurrency])
     const uiItems = useMemo(() => {
         const data = props.challengeInfo
-        const variant = props.variant ?? 'active'
+        const variant: ChallengeVariant = props.variant ?? 'active'
         const reviewInProgress = props.reviewInProgress
 
-        const items: any[] = []
-
-        if (variant === 'active') {
-            const phaseLabel = computeIterativeReviewLabel(data) || data.currentPhase || 'N/A'
-
-            items.push({
-                icon: 'icon-review',
-                title: 'Phase',
-                value: phaseLabel,
-            })
-        }
-
-        items.push({
-            icon: 'icon-handle',
-            title: 'My Role',
-            value: (
-                <div className={styles.blockMyRoles}>
-                    {myChallengeRoles.map(item => (
-                        <span key={item}>{item}</span>
-                    ))}
-                </div>
-            ),
-        })
-
-        items.push({
-            icon: 'icon-event',
-            title: variant === 'past' ? 'Challenge End Date' : 'Phase End Date',
-            value: variant === 'past'
-                ? getChallengeEndDateValue(data)
-                : data.currentPhaseEndDateString || '-',
-        })
-
-        if (shouldShowPayment(variant, hasPayment, Boolean(paymentAmount), isLoadingPayment, isTopgearTask)) {
-            items.push({
-                icon: 'icon-dollar',
-                title: 'Payment',
-                value: (
-                    <a
-                        href={walletUrl}
-                        target='_blank'
-                        rel='noreferrer noopener'
-                    >
-                        {paymentAmount}
-                    </a>
-                ),
-            })
-        }
-
-        if (variant === 'active') {
-            items.push({
-                icon: 'icon-timer',
-                status: data.timeLeftStatus,
-                style: {
-                    color: data.timeLeftColor,
-                },
-                title: 'Time Left',
-                value: data.timeLeft || '-',
-            })
-
-            if (!reviewInProgress) {
-                items.push({
-                    title: 'Review Progress',
-                    type: PROGRESS_TYPE,
-                    value: props.reviewProgress,
-                })
-            }
-        }
-
-        return items
+        return [
+            ...createPhaseItems(variant, data),
+            createRolesItem(myChallengeRoles),
+            ...createTaskItems({
+                formattedStartDate,
+                formattedTaskPayment,
+                isTask,
+                submitterHandle,
+                walletUrl,
+            }),
+            ...createNonTaskItems({
+                data,
+                formattedNonTaskPayment,
+                isTask,
+                variant,
+                walletUrl,
+            }),
+            ...createActiveItems({
+                data,
+                progressType: PROGRESS_TYPE,
+                reviewInProgress,
+                reviewProgress: props.reviewProgress,
+                variant,
+            }),
+        ]
     }, [
+        formattedNonTaskPayment,
+        formattedStartDate,
+        formattedTaskPayment,
+        isTask,
         myChallengeRoles,
         props.challengeInfo,
         props.reviewProgress,
         props.reviewInProgress,
         props.variant,
-        hasPayment,
-        paymentAmount,
-        isLoadingPayment,
-        isTopgearTask,
+        submitterHandle,
         walletUrl,
     ])
     return (
@@ -250,7 +310,143 @@ export const ChallengePhaseInfo: FC<Props> = (props: Props) => {
 
 export default ChallengePhaseInfo
 
-// Helpers extracted to keep render-useMemo complexity low
+function createPhaseItems(variant: ChallengeVariant, data: ChallengeInfo): ChallengePhaseItem[] {
+    if (variant !== 'active') {
+        return []
+    }
+
+    return [{
+        icon: 'icon-review',
+        title: 'Phase',
+        value: computeIterativeReviewLabel(data) || data.currentPhase || 'N/A',
+    }]
+}
+
+function createRolesItem(myChallengeRoles: string[]): ChallengePhaseItem {
+    return {
+        icon: 'icon-handle',
+        title: 'My Role',
+        value: (
+            <div className={styles.blockMyRoles}>
+                {myChallengeRoles.map(item => (
+                    <span key={item}>{item}</span>
+                ))}
+            </div>
+        ),
+    }
+}
+
+function createTaskItems(config: {
+    formattedStartDate: string
+    formattedTaskPayment?: string
+    isTask: boolean
+    submitterHandle: string
+    walletUrl: string
+}): ChallengePhaseItem[] {
+    if (!config.isTask) {
+        return []
+    }
+
+    const items: ChallengePhaseItem[] = [{
+        icon: 'icon-handle',
+        title: 'Assignee',
+        value: config.submitterHandle,
+    }, {
+        icon: 'icon-event',
+        title: 'Create Date',
+        value: config.formattedStartDate,
+    }]
+
+    if (config.formattedTaskPayment) {
+        items.push({
+            icon: 'icon-dollar',
+            title: 'Payment',
+            value: (
+                <a
+                    href={config.walletUrl}
+                    target='_blank'
+                    rel='noreferrer noopener'
+                >
+                    {config.formattedTaskPayment}
+                </a>
+            ),
+        })
+    }
+
+    return items
+}
+
+function createNonTaskItems(config: {
+    data: ChallengeInfo
+    formattedNonTaskPayment?: string
+    isTask: boolean
+    variant: ChallengeVariant
+    walletUrl: string
+}): ChallengePhaseItem[] {
+    if (config.isTask) {
+        return []
+    }
+
+    const items: ChallengePhaseItem[] = [{
+        icon: 'icon-event',
+        title: config.variant === 'past' ? 'Challenge End Date' : 'Phase End Date',
+        value: config.variant === 'past'
+            ? getChallengeEndDateValue(config.data)
+            : config.data.currentPhaseEndDateString || '-',
+    }]
+
+    if (config.formattedNonTaskPayment) {
+        items.push({
+            icon: 'icon-dollar',
+            title: 'Payment',
+            value: (
+                <a
+                    href={config.walletUrl}
+                    target='_blank'
+                    rel='noreferrer noopener'
+                >
+                    {config.formattedNonTaskPayment}
+                </a>
+            ),
+        })
+    }
+
+    return items
+}
+
+function createActiveItems(config: {
+    data: ChallengeInfo
+    progressType: typeof PROGRESS_TYPE
+    reviewInProgress: boolean
+    reviewProgress: number
+    variant: ChallengeVariant
+}): ChallengePhaseItem[] {
+    if (config.variant !== 'active') {
+        return []
+    }
+
+    const items: ChallengePhaseItem[] = [{
+        icon: 'icon-timer',
+        status: config.data.timeLeftStatus,
+        style: {
+            color: config.data.timeLeftColor,
+        },
+        title: 'Time Left',
+        value: config.data.timeLeft || '-',
+    }]
+
+    if (!config.reviewInProgress) {
+        items.push({
+            title: 'Review Progress',
+            type: config.progressType,
+            value: config.reviewProgress,
+        })
+    }
+
+    return items
+}
+
+// Helpers extracted to keep component complexity manageable
 function isIterativePhaseName(name?: string): boolean {
     return typeof name === 'string' && name.trim()
         .toLowerCase()

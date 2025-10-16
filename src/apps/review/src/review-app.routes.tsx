@@ -88,6 +88,17 @@ export const reviewRoutes: ReadonlyArray<PlatformRoute> = [
                 ),
                 route: 'challenges/:challengeId',
             },
+            // Shortcut: /review/:challengeId
+            // -> /review/active-challenges/:challengeId/challenge-details
+            {
+                authRequired: true,
+                element: (
+                    <Rewrite
+                        to={`${activeReviewAssigmentsRouteId}/:challengeId/challenge-details`}
+                    />
+                ),
+                route: ':challengeId',
+            },
             // Active Challenges Module
             {
                 children: [
