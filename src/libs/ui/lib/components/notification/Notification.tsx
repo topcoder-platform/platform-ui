@@ -15,7 +15,7 @@ interface NotificationProps {
 const Notification: FC<NotificationProps> = props => {
     const handleClose = useCallback((save?: boolean) => {
         props.onClose(props.notification.id, save)
-    }, [props.onClose])
+    }, [props.onClose, props.notification.id])
 
     if (props.notification.type === 'banner') {
         return (

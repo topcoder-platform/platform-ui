@@ -5,11 +5,11 @@ import NotificationBanner from './NotificationBanner'
 const meta: Meta<typeof NotificationBanner> = {
     argTypes: {
         content: {
-            description: 'Content displayed inside the tooltip',
+            description: 'Content displayed inside the notification banner',
         },
         persistent: {
             defaultValue: false,
-            description: 'Set to true to allow clicks inside the tooltip',
+            description: 'Set to true to hide the close icon button',
         },
     },
     component: NotificationBanner,
