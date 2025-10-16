@@ -1,0 +1,26 @@
+@import '../../../styles/includes';
+
+.wrap {
+    background: #60267D;
+    color: $tc-white;
+
+    .inner {
+        max-width: $xxl-min;
+        padding: $sp-3 0;
+        @include pagePaddings;
+        margin: 0 auto;
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        @include ltemd {
+            display: block;
+            position: relative;
+        }
+    }
+}
+
+.close {
+    cursor: pointer;
+    color: $tc-white;
+}

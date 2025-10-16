@@ -1,4 +1,4 @@
-import { Context, createContext } from 'react'
+import { Context, createContext, useContext } from 'react'
 
 import { ProfileContextData } from './profile-context-data.model'
 
@@ -11,5 +11,7 @@ export const defaultProfileContextData: ProfileContextData = {
 }
 
 const profileContext: Context<ProfileContextData> = createContext(defaultProfileContextData)
+
+export const useProfileContext = () => useContext(profileContext);
 
 export default profileContext

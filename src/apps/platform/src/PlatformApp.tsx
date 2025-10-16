@@ -1,7 +1,7 @@
 import { FC } from 'react'
 import { toast, ToastContainer } from 'react-toastify'
 
-import { useViewportUnitsFix } from '~/libs/shared'
+import { useViewportUnitsFix, NotificationsContainer } from '~/libs/shared'
 
 import { AppFooter } from './components/app-footer'
 import { AppHeader } from './components/app-header'
@@ -14,6 +14,7 @@ const PlatformApp: FC<{}> = () => {
     return (
         <Providers>
             <AppHeader />
+            <NotificationsContainer />
             <div className='root-container'>
                 <PlatformRouter />
             </div>
