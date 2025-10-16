@@ -241,6 +241,8 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         isLoadingChallengeResources,
         resources,
         myResources,
+        challengeSubmissions,
+        isLoadingChallengeSubmissions,
     }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
     const { loginUserInfo }: ReviewAppContextModel = useContext(ReviewAppContext)
     const { actionChallengeRole }: useRoleProps = useRole()
@@ -260,6 +262,25 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         mappingReviewAppeal,
         submitterReviews,
     }: useFetchScreeningReviewProps = useFetchScreeningReview()
+
+    const userSubmissions = useMemo(
+        () => {
+            if (isLoadingChallengeSubmissions) {
+                return []
+            }
+
+            const userId = loginUserInfo?.userId
+
+            if (typeof userId === 'undefined' || userId === null) {
+                return []
+            }
+
+            const memberId = String(userId)
+
+            return challengeSubmissions.filter(submission => submission.memberId === memberId)
+        },
+        [challengeSubmissions, isLoadingChallengeSubmissions, loginUserInfo?.userId],
+    )
 
     const [tabItems, setTabItems] = useState<SelectOption[]>([])
     const [selectedTab, setSelectedTab] = useState<string>('')
@@ -1375,6 +1396,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                             selectedTab={selectedTab}
                             isLoadingSubmission={isLoadingSubmission}
                             screening={screening}
+                            submissions={userSubmissions}
                             checkpoint={checkpoint}
                             checkpointReview={checkpointReview}
                             review={review}

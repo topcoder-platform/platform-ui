@@ -42,6 +42,7 @@ interface Props {
     isDownloading: IsRemovingType
     downloadSubmission: (submissionId: string) => void
     hideHandleColumn?: boolean
+    showScreeningColumns?: boolean
 }
 
 interface SubmissionColumnConfig {
@@ -404,12 +405,7 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
         isSubmissionDownloadRestrictedForMember,
         getRestrictionMessageForMember,
     }: UseSubmissionDownloadAccessResult = useSubmissionDownloadAccess()
-    const hasScreeningPhase = useMemo(
-        () => challengeInfo?.phases?.some(
-            phase => phase.name?.toLowerCase() === 'screening',
-        ) ?? false,
-        [challengeInfo?.phases],
-    )
+    const showScreeningColumns = props.showScreeningColumns ?? true
     const submissionTypes = useMemo(
         () => new Set(
             props.screenings
@@ -626,14 +622,14 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
     const columns = useMemo<TableColumn<Screening>[]>(
         () => {
             const base = [...baseColumns]
-            if (!hasScreeningPhase) {
+            if (!showScreeningColumns) {
                 return appendActionColumn(base, actionColumn)
             }
 
             const withScreening = [...base, ...screeningColumns]
             return appendActionColumn(withScreening, actionColumn)
         },
-        [actionColumn, baseColumns, hasScreeningPhase, screeningColumns],
+        [actionColumn, baseColumns, screeningColumns, showScreeningColumns],
     )
 
     const columnsMobile = useMemo<MobileTableColumn<Screening>[][]>(

@@ -1,4 +1,5 @@
 import { BackendResource } from './BackendResource.model'
+import { BackendSubmission } from './BackendSubmission.model'
 import { ChallengeInfo } from './ChallengeInfo.model'
 
 /**
@@ -9,6 +10,8 @@ export interface ChallengeDetailContextModel {
     isLoadingChallengeInfo: boolean
     isLoadingChallengeResources: boolean
     challengeInfo?: ChallengeInfo
+    challengeSubmissions: BackendSubmission[]
+    isLoadingChallengeSubmissions: boolean
     myResources: BackendResource[]
     myRoles: string[]
     resources: BackendResource[]

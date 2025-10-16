@@ -244,7 +244,7 @@ function getNumericScore(review: BackendReview | undefined): number | undefined 
 
     const metadataObject = parseReviewMetadataObject(review.metadata)
     if (metadataObject) {
-        const metadataScoreKeys = ['score', 'finalScore', 'initialScore', 'rawScore']
+        const metadataScoreKeys = ['score', 'aggregateScore', 'finalScore', 'initialScore', 'rawScore']
         for (const key of metadataScoreKeys) {
             const numeric = parseFiniteNumber(metadataObject[key])
             if (numeric !== undefined) {
@@ -1279,8 +1279,20 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
                         ))
                 }
 
-                const numericScore = getNumericScore(matchedReview)
-                const scoreDisplay = scoreToDisplay(numericScore, base.score)
+                let numericScore = getNumericScore(matchedReview)
+                let scoreDisplay = scoreToDisplay(numericScore, base.score)
+
+                if (
+                    numericScore === undefined
+                    && matchedReview
+                    && ['COMPLETED', 'SUBMITTED'].includes((matchedReview.status || '').toUpperCase())
+                ) {
+                    const submissionScore = parseSubmissionScore(item.screeningScore)
+                    if (submissionScore !== undefined) {
+                        numericScore = submissionScore
+                        scoreDisplay = scoreToDisplay(numericScore, base.score)
+                    }
+                }
 
                 const reviewForHandle = matchedReview
                 const resolvedScreenerId = reviewForHandle?.resourceId ?? base.screenerId

@@ -18,10 +18,12 @@ interface Props {
     isDownloading: IsRemovingType
     downloadSubmission: (submissionId: string) => void
     isActiveChallenge: boolean
+    showScreeningColumns?: boolean
 }
 
 export const TabContentScreening: FC<Props> = (props: Props) => {
     const { actionChallengeRole }: useRoleProps = useRole()
+    const showScreeningColumns: boolean = props.showScreeningColumns ?? true
     const hideHandleColumn = props.isActiveChallenge
         && actionChallengeRole === REVIEWER
 
@@ -41,6 +43,7 @@ export const TabContentScreening: FC<Props> = (props: Props) => {
             isDownloading={props.isDownloading}
             downloadSubmission={props.downloadSubmission}
             hideHandleColumn={hideHandleColumn}
+            showScreeningColumns={showScreeningColumns}
         />
     )
 }

@@ -22,8 +22,10 @@ export const ChallengeDetailContext: Context<ChallengeDetailContextModel>
     = createContext<ChallengeDetailContextModel>({
         challengeId: undefined,
         challengeInfo: undefined,
+        challengeSubmissions: [],
         isLoadingChallengeInfo: false,
         isLoadingChallengeResources: false,
+        isLoadingChallengeSubmissions: false,
         myResources: [],
         myRoles: [],
         registrants: [],
@@ -81,8 +83,10 @@ export const ChallengeDetailContextProvider: FC<PropsWithChildren> = props => {
         () => ({
             challengeId,
             challengeInfo: enrichedChallengeInfo,
+            challengeSubmissions,
             isLoadingChallengeInfo: isLoadingChallengeInfoCombined,
             isLoadingChallengeResources,
+            isLoadingChallengeSubmissions,
             myResources,
             myRoles,
             registrants,
@@ -93,8 +97,10 @@ export const ChallengeDetailContextProvider: FC<PropsWithChildren> = props => {
         [
             challengeId,
             enrichedChallengeInfo,
+            challengeSubmissions,
             isLoadingChallengeInfoCombined,
             isLoadingChallengeResources,
+            isLoadingChallengeSubmissions,
             myResources,
             myRoles,
             registrants,

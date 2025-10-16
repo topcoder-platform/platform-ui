@@ -545,11 +545,6 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
                     const reviewId = reviewDetail?.reviewInfo?.id || reviewDetail?.reviewId
                     if (reviewId) {
                         const canViewScorecard = isChallengeCompleted || isOwnedSubmission
-                        const scoreContent = (
-                            <span className={styles.textBlue}>
-                                {scoreDisplay}
-                            </span>
-                        )
 
                         if (!canViewScorecard) {
                             return (
@@ -558,7 +553,9 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
                                     triggerOn='click-hover'
                                 >
                                     <span className={styles.tooltipTrigger}>
-                                        {scoreContent}
+                                        <span className={styles.textBlue}>
+                                            {scoreDisplay}
+                                        </span>
                                     </span>
                                 </Tooltip>
                             )
