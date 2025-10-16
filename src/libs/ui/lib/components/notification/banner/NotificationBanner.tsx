@@ -1,6 +1,8 @@
 import { FC, ReactNode, useCallback } from 'react'
 
-import { InformationCircleIcon, XCircleIcon } from '@heroicons/react/outline'
+import { InformationCircleIcon } from '@heroicons/react/outline'
+
+import { IconOutline } from '../../svgs'
 
 import styles from './NotificationBanner.module.scss'
 
@@ -20,7 +22,7 @@ const NotificationBanner: FC<NotificationBannerProps> = props => {
         <div className={styles.wrap}>
             <div className={styles.inner}>
                 {props.icon || (
-                    <div>
+                    <div className={styles.icon}>
                         <InformationCircleIcon className='icon-xl' />
                     </div>
                 )}
@@ -29,7 +31,7 @@ const NotificationBanner: FC<NotificationBannerProps> = props => {
 
                 {!props.persistent && (
                     <div className={styles.close} onClick={handleClose}>
-                        <XCircleIcon className='icon-xl' />
+                        <IconOutline.XIcon className='icon-lg' />
                     </div>
                 )}
             </div>

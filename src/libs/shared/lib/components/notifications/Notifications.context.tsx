@@ -9,6 +9,7 @@ export type NotificationType = 'success' | 'error' | 'info' | 'warning' | 'banne
 export interface Notification {
     id: string;
     type: NotificationType;
+    icon?: ReactNode
     message: string;
     duration?: number; // in ms
 }
