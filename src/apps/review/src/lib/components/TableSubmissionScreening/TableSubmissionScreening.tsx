@@ -36,6 +36,8 @@ import type { UseSubmissionDownloadAccessResult } from '../../hooks/useSubmissio
 
 import styles from './TableSubmissionScreening.module.scss'
 
+const VIEW_OWN_SCORECARD_TOOLTIP = 'You can only view scorecards for your own submissions.'
+
 interface Props {
     className?: string
     screenings: Screening[]
@@ -216,11 +218,11 @@ const createBaseColumns = ({
     virusScanColumn,
 ]
 
-const createScreeningColumns = (): TableColumn<Screening>[] => [
+const createScreeningColumns = (currentMemberId?: string): TableColumn<Screening>[] => [
     {
         label: 'Screener',
         propertyName: 'screenerHandle',
-        renderer: (data: Screening) => (data.screener?.id ? (
+        renderer: (data: Screening) => (data.screener?.memberHandle ? (
             <a
                 href={getHandleUrl(data.screener)}
                 target='_blank'
@@ -251,7 +253,35 @@ const createScreeningColumns = (): TableColumn<Screening>[] => [
     {
         label: 'Screening Score',
         propertyName: 'score',
-        type: 'text',
+        renderer: (data: Screening) => {
+            const scoreValue = data.score ?? '-'
+
+            if (!data.reviewId) {
+                return <span>{scoreValue}</span>
+            }
+
+            const canViewScorecard = Boolean(data.memberId && data.memberId === currentMemberId)
+
+            if (!canViewScorecard) {
+                return (
+                    <Tooltip content={VIEW_OWN_SCORECARD_TOOLTIP} triggerOn='click-hover'>
+                        <span className={styles.tooltipTrigger}>
+                            <span className={styles.textBlue}>{scoreValue}</span>
+                        </span>
+                    </Tooltip>
+                )
+            }
+
+            return (
+                <Link
+                    to={`./../review/${data.reviewId}`}
+                    className={styles.textBlue}
+                >
+                    {scoreValue}
+                </Link>
+            )
+        },
+        type: 'element',
     },
     {
         label: 'Screening Result',
@@ -404,6 +434,7 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
         restrictionMessage,
         isSubmissionDownloadRestrictedForMember,
         getRestrictionMessageForMember,
+        currentMemberId,
     }: UseSubmissionDownloadAccessResult = useSubmissionDownloadAccess()
     const showScreeningColumns = props.showScreeningColumns ?? true
     const submissionTypes = useMemo(
@@ -608,7 +639,10 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
         [handleColumn, submissionColumn, submissionDateColumn, virusScanColumn],
     )
 
-    const screeningColumns = useMemo<TableColumn<Screening>[]>(createScreeningColumns, [])
+    const screeningColumns = useMemo<TableColumn<Screening>[]>(
+        () => createScreeningColumns(currentMemberId),
+        [currentMemberId],
+    )
 
     const actionColumn = useMemo(
         () => createActionColumn({
