@@ -232,6 +232,7 @@ workflows:
                               - feat/system-admin
                               - feat/v6
                               - pm-2074_1
+                              - feat/ai-workflows
 
             - deployQa:
                   context: org-global
