@@ -77,6 +77,7 @@ interface BaseColumnsConfig {
 
 interface ScreeningColumnConfig {
     canViewScorecard: (entry: Screening) => boolean
+    shouldMaskScore: (entry: Screening) => boolean
 }
 
 interface ActionRenderer {
@@ -86,6 +87,7 @@ interface ActionRenderer {
 
 interface ActionColumnConfig {
     hasAnyScreeningAssignment: boolean
+    historyByMember: Map<string, SubmissionInfo[]>
     onHistoryClick: (event: MouseEvent<HTMLButtonElement>) => void
     shouldShowHistoryActions: boolean
     canShowReopenActions: boolean
@@ -110,6 +112,7 @@ interface ReopenActionConfig {
 
 interface HistoryActionConfig {
     data: Screening
+    historyByMember: Map<string, SubmissionInfo[]>
     onHistoryClick: (event: MouseEvent<HTMLButtonElement>) => void
     shouldShowHistoryActions: boolean
 }
@@ -357,6 +360,7 @@ const createReopenAction = ({
 
 const createHistoryAction = ({
     data,
+    historyByMember,
     onHistoryClick,
     shouldShowHistoryActions,
 }: HistoryActionConfig): ActionRenderer | undefined => {
@@ -365,6 +369,11 @@ const createHistoryAction = ({
     }
 
     const historyKeyForRow = getSubmissionHistoryKey(data.memberId, data.submissionId)
+    const historyEntries = historyByMember.get(historyKeyForRow) ?? []
+    if (!historyEntries.length) {
+        return undefined
+    }
+
     return {
         key: `history-${historyKeyForRow}`,
         render: isLast => (
@@ -398,6 +407,7 @@ const createBaseColumns = ({
 
 const createScreeningColumns = ({
     canViewScorecard,
+    shouldMaskScore,
 }: ScreeningColumnConfig): TableColumn<Screening>[] => [
     {
         label: 'Screener',
@@ -434,9 +444,10 @@ const createScreeningColumns = ({
         label: 'Screening Score',
         propertyName: 'score',
         renderer: (data: Screening) => {
-            const scoreValue = data.score ?? '-'
+            const maskScore = shouldMaskScore(data)
+            const scoreValue = maskScore ? '--' : (data.score ?? '-')
 
-            if (!data.reviewId) {
+            if (!data.reviewId || maskScore) {
                 return <span>{scoreValue}</span>
             }
 
@@ -488,6 +499,7 @@ const createScreeningColumns = ({
 
 const createActionColumn = ({
     hasAnyScreeningAssignment,
+    historyByMember,
     onHistoryClick,
     shouldShowHistoryActions,
     canShowReopenActions,
@@ -527,6 +539,7 @@ const createActionColumn = ({
 
             const historyAction = createHistoryAction({
                 data,
+                historyByMember,
                 onHistoryClick,
                 shouldShowHistoryActions,
             })
@@ -599,6 +612,11 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
 
     const hasCopilotRole = useMemo(
         () => normalisedRoles.some(role => role.includes('copilot')),
+        [normalisedRoles],
+    )
+
+    const hasSubmitterRole = useMemo(
+        () => normalisedRoles.some(role => role.includes('submitter')),
         [normalisedRoles],
     )
 
@@ -956,11 +974,52 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
         ],
     )
 
+    const shouldMaskScoreForRow = useCallback(
+        (entry: Screening): boolean => {
+            if (!hasSubmitterRole) {
+                return false
+            }
+
+            if (canViewAllScorecards) {
+                return false
+            }
+
+            if (!currentMemberId) {
+                return false
+            }
+
+            if (entry.memberId && entry.memberId === currentMemberId) {
+                return false
+            }
+
+            if (canViewScorecardForRow(entry)) {
+                return false
+            }
+
+            const submissionType = (entry.type || '').toUpperCase()
+            if (!submissionType.includes('CHECKPOINT')) {
+                return false
+            }
+
+            return true
+        },
+        [
+            canViewAllScorecards,
+            canViewScorecardForRow,
+            currentMemberId,
+            hasSubmitterRole,
+        ],
+    )
+
     const screeningColumns = useMemo<TableColumn<Screening>[]>(
         () => createScreeningColumns({
             canViewScorecard: canViewScorecardForRow,
+            shouldMaskScore: shouldMaskScoreForRow,
         }),
-        [canViewScorecardForRow],
+        [
+            canViewScorecardForRow,
+            shouldMaskScoreForRow,
+        ],
     )
 
     const actionColumn = useMemo(
@@ -969,6 +1028,7 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
             canShowReopenActions,
             challengeInfo,
             hasAnyScreeningAssignment,
+            historyByMember,
             isReopening,
             myResourceIds,
             onHistoryClick: handleHistoryButtonClick,
@@ -981,6 +1041,7 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
             canReopenGlobally,
             canShowReopenActions,
             hasAnyScreeningAssignment,
+            historyByMember,
             myResourceIds,
             handleHistoryButtonClick,
             openReopenDialog,

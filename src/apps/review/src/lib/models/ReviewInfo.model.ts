@@ -52,6 +52,24 @@ const normalizeReviewerHandle = (handle?: string | null): string | undefined => 
     handle?.trim() || undefined
 )
 
+const normalizeScoreValue = (value: number | string | null | undefined): number | undefined => {
+    if (typeof value === 'number') {
+        return Number.isFinite(value) ? value : undefined
+    }
+
+    if (typeof value === 'string') {
+        const trimmed = value.trim()
+        if (!trimmed) {
+            return undefined
+        }
+
+        const parsed = Number.parseFloat(trimmed)
+        return Number.isFinite(parsed) ? parsed : undefined
+    }
+
+    return undefined
+}
+
 const calculateReviewItemInfoProgress = (items: ReviewItemInfo[]): number => {
     if (!items.length) {
         return 0
@@ -93,15 +111,30 @@ const parseReviewMetadata = (
 const formatDateStringWithFallback = (
     value: Date | undefined,
     fallback: string | Date | undefined,
-): string | undefined => (
-    value
-        ? moment(value)
+): string | undefined => {
+    if (value) {
+        return moment(value)
             .local()
             .format(TABLE_DATE_FORMAT)
-        : typeof fallback === 'string'
-            ? fallback
-            : undefined
-)
+    }
+
+    if (fallback instanceof Date) {
+        return moment(fallback)
+            .local()
+            .format(TABLE_DATE_FORMAT)
+    }
+
+    if (typeof fallback === 'string') {
+        const parsed = moment(fallback)
+        if (parsed.isValid()) {
+            return parsed
+                .local()
+                .format(TABLE_DATE_FORMAT)
+        }
+    }
+
+    return undefined
+}
 
 const resolveRatingColor = (
     rating: number | undefined,
@@ -240,14 +273,16 @@ export function convertBackendReviewToReviewInfo(
     const submitterHandle = normalizeReviewerHandle(data.submitterHandle)
     const submitterMaxRating = data.submitterMaxRating ?? undefined
     const metadata = parseReviewMetadata(data.metadata)
+    const finalScore = normalizeScoreValue(data.finalScore)
+    const initialScore = normalizeScoreValue(data.initialScore)
 
     return {
         committed: data.committed,
         createdAt: createdAtDate ?? '',
         createdAtString: formatDateString(createdAtDate),
-        finalScore: data.finalScore,
+        finalScore,
         id: data.id,
-        initialScore: data.initialScore,
+        initialScore,
         metadata,
         phaseId: data.phaseId,
         resourceId: data.resourceId,

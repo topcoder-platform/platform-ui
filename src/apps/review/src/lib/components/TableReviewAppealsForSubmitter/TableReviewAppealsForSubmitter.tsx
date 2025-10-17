@@ -44,6 +44,7 @@ import {
 import { ChallengeDetailContext } from '../../contexts'
 import { useSubmissionDownloadAccess } from '../../hooks'
 import type { UseSubmissionDownloadAccessResult } from '../../hooks/useSubmissionDownloadAccess'
+import { PAST_CHALLENGE_STATUSES } from '../../utils/challengeStatus'
 
 import styles from './TableReviewAppealsForSubmitter.module.scss'
 
@@ -59,6 +60,8 @@ interface Props {
 type SubmissionRow = SubmissionInfo & {
     aggregated?: AggregatedSubmissionReviews
 }
+
+const PAST_CHALLENGE_STATUS_SET = new Set<string>([...PAST_CHALLENGE_STATUSES])
 
 const DOWNLOAD_OWN_SUBMISSION_TOOLTIP
     = 'You can download only your own submissions until the challenge completes or fails review.'
@@ -98,8 +101,9 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
         () => (props.tab || '').toLowerCase() === 'appeals',
         [props.tab],
     )
-    const challengeStatus = challengeInfo?.status?.toUpperCase()
+    const challengeStatus = (challengeInfo?.status ?? '').toUpperCase()
     const isChallengeCompleted = challengeStatus === 'COMPLETED'
+    const isPastChallengeStatus = PAST_CHALLENGE_STATUS_SET.has(challengeStatus)
     const ownedMemberIds: Set<string> = useMemo(
         (): Set<string> => new Set(
             myResources
@@ -318,6 +322,10 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
 
     const canDisplayScores = useCallback(
         (submission: SubmissionRow): boolean => {
+            if (isPastChallengeStatus) {
+                return true
+            }
+
             if (isChallengeCompleted) {
                 return true
             }
@@ -349,6 +357,7 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
             isAppealsWindowOpen,
             isChallengeCompleted,
             isFirst2FinishChallenge,
+            isPastChallengeStatus,
             isStandardChallenge,
         ],
     )

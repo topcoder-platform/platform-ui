@@ -2,7 +2,7 @@
  * Challenge Details Page.
  */
 import { kebabCase, startCase, toLower, toUpper, trim } from 'lodash'
-import { ChangeEvent, FC, FocusEvent, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { FC, FocusEvent, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { useSWRConfig } from 'swr'
@@ -12,7 +12,7 @@ import moment from 'moment'
 import { TableLoading } from '~/apps/admin/src/lib'
 import { handleError } from '~/apps/admin/src/lib/utils'
 import { EnvironmentConfig } from '~/config'
-import { BaseModal, Button, InputCheckbox, InputText } from '~/libs/ui'
+import { BaseModal, Button, InputCheckbox, InputDatePicker, InputText } from '~/libs/ui'
 
 import {
     useFetchScreeningReview,
@@ -63,24 +63,6 @@ import styles from './ChallengeDetailsPage.module.scss'
 
 interface Props {
     className?: string
-}
-
-const MINUTES_PER_HOUR = 60
-const SECONDS_PER_MINUTE = 60
-const SECONDS_PER_HOUR = MINUTES_PER_HOUR * SECONDS_PER_MINUTE
-
-const parseNonNegativeInteger = (value: string): number | undefined => {
-    const trimmedValue = value.trim()
-    if (!trimmedValue) {
-        return 0
-    }
-
-    const parsedValue = Number(trimmedValue)
-    if (!Number.isFinite(parsedValue) || parsedValue < 0 || !Number.isInteger(parsedValue)) {
-        return undefined
-    }
-
-    return parsedValue
 }
 
 // Helpers to keep UI hooks simple and under complexity limits
@@ -317,13 +299,25 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
     )
     const [isSavingPhaseNotifications, setIsSavingPhaseNotifications] = useState(false)
     const [phaseActionLoadingMap, setPhaseActionLoadingMap] = useState<Record<string, boolean>>({})
-    const [extendTarget, setExtendTarget] = useState<{ id: string; name: string; duration?: number }>()
-    const [extendHours, setExtendHours] = useState<string>('')
-    const [extendMinutes, setExtendMinutes] = useState<string>('')
+    const [extendTarget, setExtendTarget] = useState<{
+        id: string
+        name: string
+        duration?: number
+        actualStartDate?: string
+        scheduledStartDate?: string
+        actualEndDate?: string
+        scheduledEndDate?: string
+    }>()
+    const [extendSelectedEndDate, setExtendSelectedEndDate] = useState<Date | undefined>()
     const [extendError, setExtendError] = useState<string | undefined>()
-    const [reopenTarget, setReopenTarget] = useState<{ id: string; name: string; duration?: number }>()
-    const [reopenHours, setReopenHours] = useState<string>('')
-    const [reopenMinutes, setReopenMinutes] = useState<string>('')
+    const [reopenTarget, setReopenTarget] = useState<{
+        id: string
+        name: string
+        duration?: number
+        actualStartDate?: string
+        actualEndDate?: string
+    }>()
+    const [reopenSelectedEndDate, setReopenSelectedEndDate] = useState<Date | undefined>(undefined)
     const [reopenError, setReopenError] = useState<string | undefined>()
 
     // eslint-disable-next-line complexity
@@ -932,6 +926,32 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         return map
     }, [challengePhases])
 
+    const reopenEligiblePhaseIds = useMemo(() => {
+        const allowed = new Set<string>()
+        if (!challengePhases?.length) {
+            return allowed
+        }
+
+        challengePhases.forEach(phase => {
+            if (!phase?.isOpen || !phase.predecessor) {
+                return
+            }
+
+            allowed.add(phase.predecessor)
+
+            const predecessorPhase = phaseLookup.get(phase.predecessor)
+            if (predecessorPhase?.id) {
+                allowed.add(predecessorPhase.id)
+            }
+
+            if (predecessorPhase?.phaseId) {
+                allowed.add(predecessorPhase.phaseId)
+            }
+        })
+
+        return allowed
+    }, [challengePhases, phaseLookup])
+
     const timelineRows = useMemo<ChallengeTimelineRow[]>(() => {
         if (phaseOrderingOptions.isTask) {
             return []
@@ -1048,71 +1068,147 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         phaseName: string,
         duration?: number,
     ) => {
-        const safeDuration = typeof duration === 'number' && Number.isFinite(duration)
-            ? Math.max(duration, 0)
+        const phaseData = phaseLookup.get(phaseId)
+        const rawDuration = typeof phaseData?.duration === 'number'
+            ? phaseData.duration
+            : duration
+        const safeDuration = typeof rawDuration === 'number' && Number.isFinite(rawDuration)
+            ? Math.max(rawDuration, 0)
             : 0
-        const hours = Math.floor(safeDuration / SECONDS_PER_HOUR)
-        const minutes = Math.floor((safeDuration % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE)
+        const actualStartDate = phaseData?.actualStartDate
+        const scheduledStartDate = phaseData?.scheduledStartDate
+        const actualEndDate = phaseData?.actualEndDate
+        const scheduledEndDate = phaseData?.scheduledEndDate
+
+        const initialEndDate = (() => {
+            const endCandidates = [actualEndDate, scheduledEndDate]
+            for (const candidate of endCandidates) {
+                if (candidate) {
+                    const parsed = moment(candidate)
+                    if (parsed.isValid()) {
+                        return parsed.toDate()
+                    }
+                }
+            }
+
+            const startSource = actualStartDate ?? scheduledStartDate
+
+            if (startSource) {
+                const parsedStart = moment(startSource)
+                if (parsedStart.isValid()) {
+                    if (safeDuration > 0) {
+                        return parsedStart
+                            .clone()
+                            .add(safeDuration, 'seconds')
+                            .toDate()
+                    }
+
+                    return parsedStart
+                        .clone()
+                        .add(1, 'hour')
+                        .toDate()
+                }
+            }
+
+            return undefined
+        })()
 
         setExtendTarget({
+            actualEndDate,
+            actualStartDate,
             duration: safeDuration,
             id: phaseId,
             name: phaseName,
+            scheduledEndDate,
+            scheduledStartDate,
         })
-        setExtendHours(String(hours))
-        setExtendMinutes(String(minutes))
+        setExtendSelectedEndDate(initialEndDate)
         setExtendError(undefined)
-    }, [])
+    }, [phaseLookup])
 
     const closeExtendModal = useCallback(() => {
         setExtendTarget(undefined)
-        setExtendHours('')
-        setExtendMinutes('')
+        setExtendSelectedEndDate(undefined)
         setExtendError(undefined)
     }, [])
 
-    const handleExtendHoursChange = useCallback((event: FocusEvent<HTMLInputElement>) => {
-        setExtendHours(event.currentTarget.value)
+    const handleExtendEndDateChange = useCallback((date: Date | null) => {
+        setExtendSelectedEndDate(date ?? undefined)
         if (extendError) {
             setExtendError(undefined)
         }
     }, [extendError])
 
-    const handleExtendMinutesChange = useCallback((event: FocusEvent<HTMLInputElement>) => {
-        setExtendMinutes(event.currentTarget.value)
-        if (extendError) {
-            setExtendError(undefined)
+    const extendStartMoment = useMemo(() => {
+        const startSource = extendTarget?.actualStartDate ?? extendTarget?.scheduledStartDate
+        if (!startSource) {
+            return undefined
         }
-    }, [extendError])
+
+        const parsed = moment(startSource)
+        return parsed.isValid() ? parsed : undefined
+    }, [extendTarget?.actualStartDate, extendTarget?.scheduledStartDate])
+
+    const extendStartDateDisplay = useMemo(() => {
+        if (!extendStartMoment) {
+            return '-'
+        }
+
+        return extendStartMoment
+            .clone()
+            .local()
+            .format(TABLE_DATE_FORMAT)
+    }, [extendStartMoment])
+
+    const extendStartDate = useMemo(() => {
+        if (!extendStartMoment) {
+            return undefined
+        }
+
+        return extendStartMoment.toDate()
+    }, [extendStartMoment])
 
     const handleExtendSubmit = useCallback(async () => {
         if (!extendTarget) {
             return
         }
 
-        const parsedHours = parseNonNegativeInteger(extendHours)
-        const parsedMinutes = parseNonNegativeInteger(extendMinutes)
-
-        if (
-            parsedHours === undefined
-            || parsedMinutes === undefined
-            || parsedMinutes >= MINUTES_PER_HOUR
-        ) {
-            setExtendError('Enter valid non-negative hours and minutes. Minutes must be below 60.')
+        const startSource = extendTarget.actualStartDate ?? extendTarget.scheduledStartDate
+        if (!startSource) {
+            setExtendError('Phase start date is not available. Please refresh and try again.')
             return
         }
 
-        const totalSeconds = ((parsedHours * MINUTES_PER_HOUR) + parsedMinutes) * SECONDS_PER_MINUTE
-
-        if (totalSeconds <= 0) {
-            setExtendError('Duration must be greater than zero.')
+        const startMoment = moment(startSource)
+        if (!startMoment.isValid()) {
+            setExtendError('Phase start date is not valid. Please refresh and try again.')
             return
         }
+
+        if (!extendSelectedEndDate) {
+            setExtendError('Select a new end date.')
+            return
+        }
+
+        const endMoment = moment(extendSelectedEndDate)
+        if (!endMoment.isValid()) {
+            setExtendError('Select a valid end date.')
+            return
+        }
+
+        const totalSecondsFloat = endMoment.diff(startMoment, 'seconds', true)
+
+        if (totalSecondsFloat <= 0) {
+            setExtendError('End date must be after the start date.')
+            return
+        }
+
+        const totalSeconds = Math.ceil(totalSecondsFloat)
 
         const currentDuration = extendTarget.duration ?? 0
 
         if (totalSeconds <= currentDuration) {
-            setExtendError('New duration must be longer than the current duration.')
+            setExtendError('New end date must extend the phase beyond the current duration.')
             return
         }
 
@@ -1136,8 +1232,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         }
     }, [
         closeExtendModal,
-        extendHours,
-        extendMinutes,
+        extendSelectedEndDate,
         extendTarget,
         handlePhaseUpdate,
     ])
@@ -1147,42 +1242,100 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         phaseName: string,
         duration?: number,
     ) => {
-        const safeDuration = typeof duration === 'number' && Number.isFinite(duration)
-            ? Math.max(duration, 0)
+        const phaseData = phaseLookup.get(phaseId)
+        const baseDuration = typeof phaseData?.duration === 'number'
+            ? phaseData.duration
+            : duration
+        const safeDuration = typeof baseDuration === 'number' && Number.isFinite(baseDuration)
+            ? Math.max(baseDuration, 0)
             : 0
-        const hours = Math.floor(safeDuration / SECONDS_PER_HOUR)
-        const minutes = Math.floor((safeDuration % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE)
+        const actualStartDate = phaseData?.actualStartDate
+        const actualEndDate = phaseData?.actualEndDate
+
+        const initialEndDate: Date | undefined = (() => {
+            if (actualEndDate) {
+                const parsedActualEnd = moment(actualEndDate)
+                if (parsedActualEnd.isValid()) {
+                    return parsedActualEnd.toDate()
+                }
+            }
+
+            if (actualStartDate) {
+                const parsedActualStart = moment(actualStartDate)
+                if (parsedActualStart.isValid()) {
+                    if (safeDuration > 0) {
+                        return parsedActualStart
+                            .clone()
+                            .add(safeDuration, 'seconds')
+                            .toDate()
+                    }
+
+                    return parsedActualStart
+                        .clone()
+                        .add(1, 'hour')
+                        .toDate()
+                }
+            }
+
+            return undefined
+        })()
 
         setReopenTarget({
+            actualEndDate,
+            actualStartDate,
             duration: safeDuration,
             id: phaseId,
             name: phaseName,
         })
-        setReopenHours(String(hours))
-        setReopenMinutes(String(minutes))
+        setReopenSelectedEndDate(initialEndDate)
         setReopenError(undefined)
-    }, [])
+    }, [phaseLookup])
 
     const closeReopenModal = useCallback(() => {
         setReopenTarget(undefined)
-        setReopenHours('')
-        setReopenMinutes('')
+        setReopenSelectedEndDate(undefined)
         setReopenError(undefined)
     }, [])
 
-    const handleReopenHoursChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
-        setReopenHours(event.currentTarget.value)
+    const handleReopenEndDateChange = useCallback((date: Date | null) => {
+        setReopenSelectedEndDate(date ?? undefined)
         if (reopenError) {
             setReopenError(undefined)
         }
     }, [reopenError])
 
-    const handleReopenMinutesChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
-        setReopenMinutes(event.currentTarget.value)
-        if (reopenError) {
-            setReopenError(undefined)
+    const reopenStartMoment = useMemo(() => {
+        if (!reopenTarget?.actualStartDate) {
+            return undefined
         }
-    }, [reopenError])
+
+        const parsed = moment(reopenTarget.actualStartDate)
+        return parsed.isValid() ? parsed : undefined
+    }, [reopenTarget?.actualStartDate])
+
+    const reopenStartDateDisplay = useMemo(() => {
+        if (!reopenStartMoment) {
+            return '-'
+        }
+
+        return reopenStartMoment
+            .clone()
+            .local()
+            .format(TABLE_DATE_FORMAT)
+    }, [reopenStartMoment])
+
+    const reopenStartDate = useMemo(() => {
+        if (!reopenStartMoment) {
+            return undefined
+        }
+
+        return reopenStartMoment.toDate()
+    }, [reopenStartMoment])
+
+    const handleReadOnlyInputChange = useCallback((event: FocusEvent<HTMLInputElement>) => {
+        event.preventDefault()
+        event.stopPropagation()
+    }, [])
 
     const timelineRowsWithActions = useMemo<ChallengeTimelineRow[]>(() => {
         if (phaseOrderingOptions.isTask) {
@@ -1258,11 +1411,33 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                     })
                 }
             } else if (normalizedStatus === 'closed') {
-                actions.push({
-                    disabled: isLoading,
-                    label: 'Reopen',
-                    onClick: () => openReopenModal(phaseId, row.name, row.duration),
-                })
+                const canReopenPhase = (() => {
+                    if (!reopenEligiblePhaseIds.size) {
+                        return false
+                    }
+
+                    if (reopenEligiblePhaseIds.has(phaseId)) {
+                        return true
+                    }
+
+                    if (phaseData?.id && reopenEligiblePhaseIds.has(phaseData.id)) {
+                        return true
+                    }
+
+                    if (phaseData?.phaseId && reopenEligiblePhaseIds.has(phaseData.phaseId)) {
+                        return true
+                    }
+
+                    return false
+                })()
+
+                if (canReopenPhase) {
+                    actions.push({
+                        disabled: isLoading,
+                        label: 'Reopen',
+                        onClick: () => openReopenModal(phaseId, row.name, row.duration),
+                    })
+                }
             }
 
             if (!actions.length) {
@@ -1281,6 +1456,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         openReopenModal,
         phaseActionLoadingMap,
         phaseLookup,
+        reopenEligiblePhaseIds,
         timelineRows,
         phaseOrderingOptions,
     ])
@@ -1298,24 +1474,36 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
             return
         }
 
-        const parsedHours = parseNonNegativeInteger(reopenHours)
-        const parsedMinutes = parseNonNegativeInteger(reopenMinutes)
-
-        if (
-            parsedHours === undefined
-            || parsedMinutes === undefined
-            || parsedMinutes >= MINUTES_PER_HOUR
-        ) {
-            setReopenError('Enter valid non-negative hours and minutes. Minutes must be below 60.')
+        if (!reopenTarget.actualStartDate) {
+            setReopenError('Phase start date is not available. Please refresh and try again.')
             return
         }
 
-        const totalSeconds = ((parsedHours * MINUTES_PER_HOUR) + parsedMinutes) * SECONDS_PER_MINUTE
-
-        if (totalSeconds <= 0) {
-            setReopenError('Duration must be greater than zero.')
+        const startMoment = moment(reopenTarget.actualStartDate)
+        if (!startMoment.isValid()) {
+            setReopenError('Phase start date is not valid. Please refresh and try again.')
             return
         }
+
+        if (!reopenSelectedEndDate) {
+            setReopenError('Select a new end date.')
+            return
+        }
+
+        const endMoment = moment(reopenSelectedEndDate)
+        if (!endMoment.isValid()) {
+            setReopenError('Select a valid end date.')
+            return
+        }
+
+        const totalSecondsFloat = endMoment.diff(startMoment, 'seconds', true)
+
+        if (totalSecondsFloat <= 0) {
+            setReopenError('End date must be after the start date.')
+            return
+        }
+
+        const totalSeconds = Math.ceil(totalSecondsFloat)
 
         setReopenError(undefined)
 
@@ -1338,8 +1526,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
     }, [
         closeReopenModal,
         handlePhaseUpdate,
-        reopenHours,
-        reopenMinutes,
+        reopenSelectedEndDate,
         reopenTarget,
     ])
 
@@ -1485,27 +1672,28 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                     </div>
                     <div className={styles.phaseDurationInputs}>
                         <InputText
-                            name='extend-hours'
-                            label='Hours'
-                            type='number'
-                            value={extendHours}
+                            name='extend-start-date'
+                            label='Start Date'
+                            type='text'
+                            value={extendStartDateDisplay}
                             forceUpdateValue
-                            placeholder='0'
-                            onChange={handleExtendHoursChange}
+                            onChange={handleReadOnlyInputChange}
                             classNameWrapper={styles.reopenModalInput}
-                            disabled={isExtendSubmitting}
+                            disabled
+                            readonly
                         />
-                        <InputText
-                            name='extend-minutes'
-                            label='Minutes'
-                            type='number'
-                            value={extendMinutes}
-                            forceUpdateValue
-                            placeholder='0'
-                            onChange={handleExtendMinutesChange}
-                            error={extendError}
-                            classNameWrapper={styles.reopenModalInput}
+                        <InputDatePicker
+                            label='New End Date'
+                            date={extendSelectedEndDate}
+                            onChange={handleExtendEndDateChange}
                             disabled={isExtendSubmitting}
+                            error={extendError}
+                            showTimeSelect
+                            timeIntervals={15}
+                            timeCaption='Time'
+                            placeholder='Select end date'
+                            minDate={extendStartDate}
+                            classNameWrapper={styles.reopenModalInput}
                         />
                     </div>
                     <div className={styles.reopenModalActions}>
@@ -1543,27 +1731,28 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                     </div>
                     <div className={styles.phaseDurationInputs}>
                         <InputText
-                            name='reopen-hours'
-                            label='Hours'
-                            type='number'
-                            value={reopenHours}
+                            name='reopen-start-date'
+                            label='Start Date'
+                            type='text'
+                            value={reopenStartDateDisplay}
                             forceUpdateValue
-                            placeholder='0'
-                            onChange={handleReopenHoursChange}
+                            onChange={handleReadOnlyInputChange}
                             classNameWrapper={styles.reopenModalInput}
-                            disabled={isReopenSubmitting}
+                            disabled
+                            readonly
                         />
-                        <InputText
-                            name='reopen-minutes'
-                            label='Minutes'
-                            type='number'
-                            value={reopenMinutes}
-                            forceUpdateValue
-                            placeholder='0'
-                            onChange={handleReopenMinutesChange}
-                            error={reopenError}
-                            classNameWrapper={styles.reopenModalInput}
+                        <InputDatePicker
+                            label='New End Date'
+                            date={reopenSelectedEndDate}
+                            onChange={handleReopenEndDateChange}
                             disabled={isReopenSubmitting}
+                            error={reopenError}
+                            showTimeSelect
+                            timeIntervals={15}
+                            timeCaption='Time'
+                            placeholder='Select end date'
+                            minDate={reopenStartDate}
+                            classNameWrapper={styles.reopenModalInput}
                         />
                     </div>
                     <div className={styles.reopenModalActions}>

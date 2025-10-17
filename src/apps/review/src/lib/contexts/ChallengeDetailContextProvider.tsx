@@ -1,14 +1,11 @@
 /**
  * Context provider for challenge detail page
  */
-import { Context, createContext, FC, PropsWithChildren, useMemo } from 'react'
+import { FC, PropsWithChildren, useMemo } from 'react'
 import { useParams } from 'react-router-dom'
 
-import {
-    ChallengeDetailContextModel,
-    convertBackendSubmissionToSubmissionInfo,
-    SubmissionInfo,
-} from '../models'
+import { convertBackendSubmissionToSubmissionInfo } from '../models'
+import type { ChallengeDetailContextModel, SubmissionInfo } from '../models'
 import {
     useFetchChallengeInfo,
     useFetchChallengeInfoProps,
@@ -18,21 +15,7 @@ import {
     useFetchChallengeSubmissionsProps,
 } from '../hooks'
 
-export const ChallengeDetailContext: Context<ChallengeDetailContextModel>
-    = createContext<ChallengeDetailContextModel>({
-        challengeId: undefined,
-        challengeInfo: undefined,
-        challengeSubmissions: [],
-        isLoadingChallengeInfo: false,
-        isLoadingChallengeResources: false,
-        isLoadingChallengeSubmissions: false,
-        myResources: [],
-        myRoles: [],
-        registrants: [],
-        resourceMemberIdMapping: {},
-        resources: [],
-        reviewers: [],
-    })
+import { ChallengeDetailContext } from './ChallengeDetailContext'
 
 export const ChallengeDetailContextProvider: FC<PropsWithChildren> = props => {
     const { challengeId = '' }: { challengeId?: string } = useParams<{
@@ -79,7 +62,7 @@ export const ChallengeDetailContextProvider: FC<PropsWithChildren> = props => {
         [isLoadingChallengeInfo, isLoadingChallengeSubmissions],
     )
 
-    const value = useMemo(
+    const value = useMemo<ChallengeDetailContextModel>(
         () => ({
             challengeId,
             challengeInfo: enrichedChallengeInfo,

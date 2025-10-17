@@ -65,6 +65,24 @@ const normalizeRatingValue = (value: number | string | null | undefined): number
     return undefined
 }
 
+const normalizeScoreValue = (value: number | string | null | undefined): number | undefined => {
+    if (typeof value === 'number') {
+        return Number.isFinite(value) ? value : undefined
+    }
+
+    if (typeof value === 'string') {
+        const trimmed = value.trim()
+        if (!trimmed.length) {
+            return undefined
+        }
+
+        const parsed = Number.parseFloat(trimmed)
+        return Number.isFinite(parsed) ? parsed : undefined
+    }
+
+    return undefined
+}
+
 function resolveHandleColor(
     explicitColor: string | undefined,
     handle: string | undefined,
@@ -173,6 +191,10 @@ export function aggregateSubmissionReviews({
             group.submitterMaxRating = normalizeRatingValue(reviewInfo.submitterMaxRating)
         }
 
+        const finalScore = normalizeScoreValue(
+            reviewInfo?.finalScore ?? matchingReviewResult?.score,
+        )
+
         if (process.env.NODE_ENV !== 'production') {
             if (finalReviewerHandle) {
                 console.debug('[ReviewAggregation] Resolved reviewer handle', {
@@ -206,7 +228,7 @@ export function aggregateSubmissionReviews({
         const unresolvedAppeals = totalAppeals - finishedAppeals
 
         group.reviews.push({
-            finalScore: reviewInfo?.finalScore,
+            finalScore,
             finishedAppeals: appealInfo?.finishAppeals,
             resourceId,
             reviewDate,

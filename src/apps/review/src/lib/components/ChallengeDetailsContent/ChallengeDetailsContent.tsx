@@ -38,6 +38,14 @@ import TabContentScreening from './TabContentScreening'
 import TabContentSubmissions from './TabContentSubmissions'
 import TabContentWinners from './TabContentWinners'
 
+const normalizeType = (value?: string): string => (
+    value
+        ? value
+            .toLowerCase()
+            .replace(/[^a-z]/g, '')
+        : ''
+)
+
 interface Props {
     selectedTab: string
     isLoadingSubmission: boolean
@@ -183,6 +191,18 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
         const name = (selectedPhase.name || props.selectedTab || 'selected').toLowerCase()
         return `The ${name} phase hasn't opened yet.`
     }, [selectedPhase, props.selectedTab])
+    const postMortemReviewRows = useMemo(() => (
+        props.postMortemReviews.filter(
+            submission => normalizeType(submission.reviewTypeId)
+                .includes('postmortem'),
+        )
+    ), [props.postMortemReviews])
+    const postMortemSubmitterReviews = useMemo(() => (
+        props.submitterReviews.filter(
+            submission => normalizeType(submission.reviewTypeId)
+                .includes('postmortem'),
+        )
+    ), [props.submitterReviews])
 
     const renderSelectedTab = (): JSX.Element => {
         const selectedTabLower = (props.selectedTab || '').toLowerCase()
@@ -249,8 +269,8 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
         if (selectedTabLower === 'post-mortem') {
             return (
                 <TabContentIterativeReview
-                    reviews={props.postMortemReviews}
-                    submitterReviews={props.submitterReviews}
+                    reviews={postMortemReviewRows}
+                    submitterReviews={postMortemSubmitterReviews}
                     isLoadingReview={props.isLoadingSubmission}
                     isDownloading={isDownloadingSubmission}
                     downloadSubmission={downloadSubmission}

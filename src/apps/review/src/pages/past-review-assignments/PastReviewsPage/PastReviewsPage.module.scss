@@ -37,6 +37,14 @@
         flex-wrap: wrap;
     }
 
+    .searchRow {
+        width: 100%;
+        display: flex;
+        align-items: flex-end;
+        gap: $sp-4;
+        flex-wrap: wrap;
+    }
+
     .actions {
         display: flex;
         align-items: center;
@@ -63,8 +71,10 @@
     margin-bottom: $sp-10;
 }
 
-.searchInputWrapper :global(.label) {
-    margin-bottom: 0;
+.searchInputWrapper {
+    :global(.label) {
+        margin-bottom: 0;
+    }
 }
 
 .srOnly {

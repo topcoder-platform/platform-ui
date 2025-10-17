@@ -3,6 +3,7 @@
  */
 
 import {
+    MutableRefObject,
     useCallback,
     useRef,
     useState,
@@ -35,11 +36,60 @@ export interface useFetchPastReviewsProps {
 }
 
 type LoadPastReviewsInternalParams = Required<Pick<FetchPastReviewsParams, 'page' | 'perPage'>> & {
-    challengeTypeId?: string
-    challengeTrackId?: string
     challengeName?: string
+    challengeStatus?: string
+    challengeTrackId?: string
+    challengeTypeId?: string
     sortBy?: string
     sortOrder?: 'asc' | 'desc'
+}
+
+type FetchPastReviewsResponse = Awaited<ReturnType<typeof fetchPastReviews>>
+
+interface DerivedPastReviewsState {
+    pagination: PastReviewsPagination
+    startIndex: number
+}
+
+function buildRequestKey(params: LoadPastReviewsInternalParams): string {
+    return [
+        params.challengeTypeId ?? '',
+        params.challengeTrackId ?? '',
+        params.challengeName ?? '',
+        params.challengeStatus ?? '',
+        params.page,
+        params.perPage,
+        params.sortBy ?? '',
+        params.sortOrder ?? '',
+    ].join('|')
+}
+
+function executeWhenLatestRequest(
+    latestKeyRef: MutableRefObject<string>,
+    requestKey: string,
+    action: () => void,
+): void {
+    if (latestKeyRef.current === requestKey) {
+        action()
+    }
+}
+
+function derivePastReviewsState(
+    response: FetchPastReviewsResponse,
+    params: LoadPastReviewsInternalParams,
+): DerivedPastReviewsState {
+    const currentPage = response.meta?.page ?? params.page
+    const currentPerPage = response.meta?.perPage ?? params.perPage
+
+    return {
+        pagination: {
+            page: currentPage,
+            perPage: currentPerPage,
+            totalCount: response.meta?.totalCount ?? response.data.length,
+            totalPages: response.meta?.totalPages ?? 1,
+        },
+        startIndex: (currentPage - 1) * currentPerPage + 1,
+    }
 }
 
 function mergePastReviewParams(
@@ -54,15 +104,15 @@ function mergePastReviewParams(
 
     function assignFromNext<K extends keyof LoadPastReviewsInternalParams>(key: K): void {
         if (!next || !Object.prototype.hasOwnProperty.call(next, key)) return
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const value = (next as any)[key];
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (merged as any)[key] = value ?? undefined
+
+        const value = next[key as keyof FetchPastReviewsParams]
+        merged[key] = (value ?? undefined) as LoadPastReviewsInternalParams[K]
     }
 
-    assignFromNext('challengeTypeId')
-    assignFromNext('challengeTrackId')
     assignFromNext('challengeName')
+    assignFromNext('challengeStatus')
+    assignFromNext('challengeTrackId')
+    assignFromNext('challengeTypeId')
     assignFromNext('sortBy')
     assignFromNext('sortOrder')
 
@@ -92,6 +142,7 @@ export function useFetchPastReviews(): useFetchPastReviewsProps {
     const latestRequestKeyRef = useRef<string>('')
     const latestParamsRef = useRef<LoadPastReviewsInternalParams>({
         challengeName: undefined,
+        challengeStatus: undefined,
         challengeTrackId: undefined,
         challengeTypeId: undefined,
         page: 1,
@@ -109,43 +160,32 @@ export function useFetchPastReviews(): useFetchPastReviewsProps {
 
             latestParamsRef.current = mergedParams
 
-            const requestKey = [
-                mergedParams.challengeTypeId ?? '',
-                mergedParams.challengeTrackId ?? '',
-                mergedParams.challengeName ?? '',
-                mergedParams.page,
-                mergedParams.perPage,
-                mergedParams.sortBy ?? '',
-                mergedParams.sortOrder ?? '',
-            ].join('|')
+            const requestKey = buildRequestKey(mergedParams)
             latestRequestKeyRef.current = requestKey
             setIsLoading(true)
 
             try {
                 const response = await fetchPastReviews(mergedParams)
-                if (latestRequestKeyRef.current !== requestKey) {
-                    return
-                }
+                executeWhenLatestRequest(latestRequestKeyRef, requestKey, () => {
+                    const {
+                        pagination: nextPagination,
+                        startIndex,
+                    }: DerivedPastReviewsState = derivePastReviewsState(
+                        response,
+                        mergedParams,
+                    )
 
-                const currentPage = response.meta?.page ?? mergedParams.page
-                const currentPerPage = response.meta?.perPage ?? mergedParams.perPage
-                const startIndex = (currentPage - 1) * currentPerPage + 1
-
-                setPastReviews(transformAssignments(response.data, startIndex))
-                setPagination({
-                    page: currentPage,
-                    perPage: currentPerPage,
-                    totalCount: response.meta?.totalCount ?? response.data.length,
-                    totalPages: response.meta?.totalPages ?? 1,
+                    setPastReviews(transformAssignments(response.data, startIndex))
+                    setPagination(nextPagination)
                 })
             } catch (error) {
-                if (latestRequestKeyRef.current === requestKey) {
+                executeWhenLatestRequest(latestRequestKeyRef, requestKey, () => {
                     handleError(error)
-                }
+                })
             } finally {
-                if (latestRequestKeyRef.current === requestKey) {
+                executeWhenLatestRequest(latestRequestKeyRef, requestKey, () => {
                     setIsLoading(false)
-                }
+                })
             }
         },
         [],

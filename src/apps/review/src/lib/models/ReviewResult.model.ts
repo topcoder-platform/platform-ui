@@ -23,6 +23,24 @@ export interface ReviewResult {
     score: number
 }
 
+const normalizeScoreValue = (value: number | string | null | undefined): number | undefined => {
+    if (typeof value === 'number') {
+        return Number.isFinite(value) ? value : undefined
+    }
+
+    if (typeof value === 'string') {
+        const trimmed = value.trim()
+        if (!trimmed) {
+            return undefined
+        }
+
+        const parsed = Number.parseFloat(trimmed)
+        return Number.isFinite(parsed) ? parsed : undefined
+    }
+
+    return undefined
+}
+
 /**
  * Update review result to show in ui
  * @param data data from backend response
@@ -96,6 +114,6 @@ export function convertBackendReviewToReviewResult(
             ? getRatingColor(reviewerMaxRating)
             : '#2a2a2a',
         reviewerMaxRating,
-        score: data.finalScore,
+        score: normalizeScoreValue(data.finalScore) ?? 0,
     }
 }

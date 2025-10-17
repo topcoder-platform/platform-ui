@@ -37,6 +37,10 @@ import {
 import { ReviewAppContextModel } from '../../../lib/models'
 import { SelectOption } from '../../../lib/models/SelectOption.model'
 import { getAllowedTypeAbbreviationsByTrack } from '../../../lib/utils/challengeTypesByTrack'
+import {
+    CHALLENGE_STATUS_SELECT_ALL_OPTION,
+    PAST_CHALLENGE_STATUS_OPTIONS,
+} from '../../../lib/utils'
 
 import styles from './PastReviewsPage.module.scss'
 
@@ -75,6 +79,9 @@ export const PastReviewsPage: FC<Props> = (props: Props) => {
         SingleValue<SelectOption>
     >(CHALLENGE_TYPE_SELECT_ALL_OPTION)
     const [challengeName, setChallengeName] = useState<string>('')
+    const [challengeStatus, setChallengeStatus] = useState<SingleValue<SelectOption>>(
+        CHALLENGE_STATUS_SELECT_ALL_OPTION,
+    )
 
     const challengeTypeOptions = useMemo<SelectOption[]>(() => {
         const results: SelectOption[] = [CHALLENGE_TYPE_SELECT_ALL_OPTION]
@@ -107,6 +114,7 @@ export const PastReviewsPage: FC<Props> = (props: Props) => {
 
     const selectedChallengeTrackId = challengeTrack?.value || undefined
     const selectedChallengeTypeId = challengeType?.value || undefined
+    const selectedChallengeStatus = challengeStatus?.value || undefined
 
     // If the selected type is not allowed for the selected track, reset to All
     useEffect(() => {
@@ -124,6 +132,7 @@ export const PastReviewsPage: FC<Props> = (props: Props) => {
         if (challengeType && loginUserInfo) {
             loadPastReviews({
                 challengeName: challengeName || undefined,
+                challengeStatus: selectedChallengeStatus || undefined,
                 challengeTrackId: selectedChallengeTrackId || undefined,
                 challengeTypeId: selectedChallengeTypeId || undefined,
                 page: 1,
@@ -136,10 +145,12 @@ export const PastReviewsPage: FC<Props> = (props: Props) => {
         challengeTrack,
         challengeType,
         challengeName,
+        challengeStatus,
         loadPastReviews,
         loginUserInfo,
         selectedChallengeTrackId,
         selectedChallengeTypeId,
+        selectedChallengeStatus,
         sort,
     ])
 
@@ -147,6 +158,7 @@ export const PastReviewsPage: FC<Props> = (props: Props) => {
         (nextPage: number) => {
             loadPastReviews({
                 challengeName: challengeName || undefined,
+                challengeStatus: selectedChallengeStatus || undefined,
                 challengeTrackId: selectedChallengeTrackId || undefined,
                 challengeTypeId: selectedChallengeTypeId || undefined,
                 page: nextPage,
@@ -160,6 +172,7 @@ export const PastReviewsPage: FC<Props> = (props: Props) => {
             loadPastReviews,
             selectedChallengeTrackId,
             selectedChallengeTypeId,
+            selectedChallengeStatus,
             sort,
         ],
     )
@@ -182,8 +195,10 @@ export const PastReviewsPage: FC<Props> = (props: Props) => {
         setChallengeTrack(CHALLENGE_TYPE_SELECT_ALL_OPTION)
         setChallengeType(CHALLENGE_TYPE_SELECT_ALL_OPTION)
         setChallengeName('')
+        setChallengeStatus(CHALLENGE_STATUS_SELECT_ALL_OPTION)
         loadPastReviews({
             challengeName: undefined,
+            challengeStatus: undefined,
             challengeTrackId: undefined,
             challengeTypeId: undefined,
             page: 1,
@@ -200,22 +215,27 @@ export const PastReviewsPage: FC<Props> = (props: Props) => {
             breadCrumb={breadCrumb}
         >
             <div className={styles['filter-bar']}>
-                <div className={classNames(styles.filterGroup, styles.searchGroup)}>
-                    <InputText
-                        name='challengeName'
-                        type='text'
-                        placeholder='Search challenges...'
-                        value={challengeName}
-                        forceUpdateValue
-                        onChange={handleChallengeNameChange}
-                        className='react-select-container'
-                        classNameWrapper={styles.searchInputWrapper}
-                        label={(
-                            <span className={styles.srOnly}>
-                                Search by name
-                            </span>
-                        )}
-                    />
+                <div className={classNames(styles.filterRow, styles.searchRow)}>
+                    <div className={classNames(styles.filterGroup, styles.searchGroup)}>
+                        <label>
+                            Challenge Name
+                        </label>
+                        <InputText
+                            name='challengeName'
+                            type='text'
+                            placeholder='Search challenges...'
+                            value={challengeName}
+                            forceUpdateValue
+                            onChange={handleChallengeNameChange}
+                            className='react-select-container'
+                            classNameWrapper={styles.searchInputWrapper}
+                            label={(
+                                <span className={styles.srOnly}>
+                                    Search by name
+                                </span>
+                            )}
+                        />
+                    </div>
                 </div>
                 <div className={styles.filterRow}>
                     <div className={styles.filterGroup}>
@@ -239,6 +259,17 @@ export const PastReviewsPage: FC<Props> = (props: Props) => {
                             value={challengeType}
                             onChange={setChallengeType}
                             isLoading={isLoadingChallengeType}
+                            isDisabled={isLoadingPastReviews}
+                        />
+                    </div>
+                    <div className={styles.filterGroup}>
+                        <label>Challenge status</label>
+                        <Select
+                            className='react-select-container'
+                            classNamePrefix='select'
+                            options={PAST_CHALLENGE_STATUS_OPTIONS}
+                            value={challengeStatus}
+                            onChange={setChallengeStatus}
                             isDisabled={isLoadingPastReviews}
                         />
                     </div>

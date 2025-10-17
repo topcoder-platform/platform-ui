@@ -614,6 +614,11 @@ function getNormalizedLowerCase(value?: string | null): string | undefined {
     return trimmedValue ? trimmedValue.toLowerCase() : undefined
 }
 
+function getNormalizedAlphaLowerCase(value?: string | null): string | undefined {
+    const normalized = getNormalizedLowerCase(value)
+    return normalized ? normalized.replace(/[^a-z]/g, '') : undefined
+}
+
 function isPhaseAllowedForReview(phaseName?: string | null): boolean {
     const normalized = getNormalizedLowerCase(phaseName)
     if (!normalized) {
@@ -1456,19 +1461,39 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
                 }
 
                 const result = determinePassFail(numericScore, minPass, base.result, matchedReview?.metadata)
+                const defaultScreener = {
+                    handleColor: '#2a2a2a',
+                    memberHandle: 'Not assigned',
+                } as BackendResource
 
-                // Determine screener to display: review assignment screener -> challenge-level screener -> Not assigned
+                const assignmentReview = screenerId
+                    ? item.reviewResourceMapping?.[screenerId]
+                    : undefined
+                const handleFromAssignment = buildResourceFromReviewHandle(assignmentReview)
+                const handleFromMatchedReview = buildResourceFromReviewHandle(matchedReview)
+
+                // Prefer review assignment handle, then challenge-level screener, otherwise Not assigned.
                 const screenerDisplay = ((): BackendResource => {
                     if (screenerId) {
-                        const r = (resources ?? []).find(x => x.id === screenerId)
-                        if (r) return r
+                        const resourceMatch = (resources ?? []).find(x => x.id === screenerId)
+                        if (resourceMatch) {
+                            return resourceMatch
+                        }
+
+                        if (handleFromAssignment) {
+                            return handleFromAssignment
+                        }
                     }
 
-                    if (checkpointScreenerResource) return checkpointScreenerResource
-                    return {
-                        handleColor: '#2a2a2a',
-                        memberHandle: 'Not assigned',
-                    } as BackendResource
+                    if (handleFromMatchedReview) {
+                        return handleFromMatchedReview
+                    }
+
+                    if (checkpointScreenerResource) {
+                        return checkpointScreenerResource
+                    }
+
+                    return defaultScreener
                 })()
 
                 // Find a pending/in-progress assignment for current viewer (if any)
@@ -1990,6 +2015,7 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
                     memberId: resolvedMemberId,
                     review: reviewInfo,
                     reviews: [reviewResult],
+                    reviewTypeId: reviewItem.typeId ?? baseSubmissionInfo?.reviewTypeId,
                     submittedDate: baseSubmissionInfo?.submittedDate,
                     submittedDateString: baseSubmissionInfo?.submittedDateString,
                     userInfo: resolvedMemberId
@@ -2130,6 +2156,8 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
             if (!rv) return
             if (!postMortemPhaseIds.has(rv.phaseId)) return
             if (allowedReviewerIds.size > 0 && !allowedReviewerIds.has(rv.resourceId)) return
+            const normalizedType = getNormalizedAlphaLowerCase(rv.typeId)
+            if (!normalizedType || !normalizedType.includes('postmortem')) return
             const submission = submissionsById.get(rv.submissionId)
             if (!submission) return
 
@@ -2139,6 +2167,7 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
                 memberId: submission.memberId,
                 review: reviewInfo,
                 reviews: [convertBackendReviewToReviewResult(rv)],
+                reviewTypeId: rv.typeId ?? undefined,
                 userInfo: resourceMemberIdMapping[submission.memberId],
             })
         })

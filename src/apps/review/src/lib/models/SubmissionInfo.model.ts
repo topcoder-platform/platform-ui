@@ -24,6 +24,10 @@ export interface SubmissionInfo {
     review?: ReviewInfo
     reviews?: ReviewResult[]
     /**
+     * Backend review type identifier (e.g. 'Post-Mortem Review').
+     */
+    reviewTypeId?: string
+    /**
      * Aggregated final score from review summations when available.
      */
     aggregateScore?: number
@@ -103,6 +107,7 @@ export function convertBackendSubmissionToSubmissionInfo(
                 ? convertBackendReviewToReviewInfo(data.review[0])
                 : undefined,
         reviews: data.review.map(convertBackendReviewToReviewResult),
+        reviewTypeId: data.review?.[0]?.typeId ?? undefined,
         submittedDate,
         submittedDateString,
         type: data.type,

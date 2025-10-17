@@ -94,6 +94,7 @@ export interface FetchPastReviewsParams {
     challengeTypeId?: string
     challengeTrackId?: string
     challengeName?: string
+    challengeStatus?: string
     page?: number
     perPage?: number
     sortBy?: string
@@ -104,6 +105,7 @@ export const fetchPastReviews = async ({
     challengeTypeId,
     challengeTrackId,
     challengeName,
+    challengeStatus,
     page,
     perPage,
     sortBy,
@@ -114,6 +116,7 @@ export const fetchPastReviews = async ({
             ...(challengeTypeId ? { challengeTypeId } : {}),
             ...(challengeTrackId ? { challengeTrackId } : {}),
             ...(challengeName ? { challengeName } : {}),
+            ...(challengeStatus ? { challengeStatus } : {}),
             ...(page ? { page } : {}),
             ...(perPage ? { perPage } : {}),
             ...(sortBy ? { sortBy } : {}),
