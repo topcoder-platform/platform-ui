@@ -1230,8 +1230,15 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
 
                 if (phaseData?.predecessor) {
                     const predecessorPhase = phaseLookup.get(phaseData.predecessor)
-                    const predecessorCompleted = Boolean(predecessorPhase?.actualStartDate)
-                    if (!predecessorCompleted) {
+                    const predecessorIsClosed = predecessorPhase?.isOpen === false
+                    const predecessorHasActualStart = Boolean(predecessorPhase?.actualStartDate)
+                    const predecessorHasActualEnd = Boolean(predecessorPhase?.actualEndDate)
+                    // Allow opening the phase only when the predecessor has been opened and closed.
+                    if (
+                        !predecessorIsClosed
+                        || !predecessorHasActualStart
+                        || !predecessorHasActualEnd
+                    ) {
                         canOpenPhase = false
                     }
                 }

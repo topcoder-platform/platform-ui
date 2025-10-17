@@ -643,8 +643,8 @@ function buildMetadataCriteria(detail: MetadataPhaseMatchDetail): string[] {
     return ['metadataPhaseMatch']
 }
 
-function resolveReviewPhaseId(review: BackendReview): string | undefined {
-    if (review.phaseId === null || review.phaseId === undefined) {
+function resolveReviewPhaseId(review: BackendReview | undefined): string | undefined {
+    if (!review || review.phaseId === null || review.phaseId === undefined) {
         return undefined
     }
 
@@ -1342,6 +1342,7 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
                     myReviewStatus: myAssignment?.status ?? undefined,
                     result,
                     reviewId: matchedReview?.id,
+                    reviewPhaseId: resolveReviewPhaseId(matchedReview),
                     reviewStatus: matchedReview?.status ?? undefined,
                     score: scoreDisplay,
                     screener: screenerDisplay,
@@ -1492,6 +1493,7 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
                     myReviewStatus: myAssignment?.status ?? undefined,
                     result,
                     reviewId: matchedReview?.id,
+                    reviewPhaseId: resolveReviewPhaseId(matchedReview),
                     reviewStatus: matchedReview?.status ?? undefined,
                     score: scoreDisplay,
                     screener: screenerDisplay,
@@ -1675,6 +1677,7 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
                 myReviewStatus: myAssignment?.status ?? undefined,
                 result,
                 reviewId: matchedReview.id,
+                reviewPhaseId: resolveReviewPhaseId(matchedReview),
                 reviewStatus: matchedReview.status ?? undefined,
                 score: scoreDisplay,
                 screener: reviewerDisplay,

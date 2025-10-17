@@ -49,6 +49,10 @@ export interface Screening {
      */
     reviewId?: string
     /**
+     * The phase identifier associated with the linked review (if available).
+     */
+    reviewPhaseId?: string
+    /**
      * Submission type (e.g. CONTEST_SUBMISSION, CHECKPOINT_SUBMISSION).
      */
     type?: string

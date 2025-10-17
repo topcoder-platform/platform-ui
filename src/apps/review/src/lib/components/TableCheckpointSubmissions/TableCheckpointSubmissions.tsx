@@ -23,6 +23,7 @@ import {
 import { TableWrapper } from '../TableWrapper'
 import {
     getHandleUrl,
+    isReviewPhaseCurrentlyOpen,
     refreshChallengeReviewData,
     REOPEN_MESSAGE_OTHER,
     REOPEN_MESSAGE_SELF,
@@ -268,6 +269,10 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
 
             const computeReopenEligibility = (entry: Screening): { canReopen: boolean; isOwnReview: boolean } => {
                 if (!entry.reviewId) {
+                    return { canReopen: false, isOwnReview: false }
+                }
+
+                if (!isReviewPhaseCurrentlyOpen(challengeInfo, entry.reviewPhaseId)) {
                     return { canReopen: false, isOwnReview: false }
                 }
 
@@ -645,6 +650,7 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
             ]
         },
         [
+            challengeInfo,
             mode,
             datas,
             downloadSubmission,

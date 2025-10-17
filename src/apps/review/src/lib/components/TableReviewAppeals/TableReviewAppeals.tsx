@@ -41,6 +41,7 @@ import {
     getSubmissionHistoryKey,
     hasIsLatestFlag,
     isReviewPhase,
+    isReviewPhaseCurrentlyOpen,
     partitionSubmissionHistory,
     refreshChallengeReviewData,
     REOPEN_MESSAGE_OTHER,
@@ -89,6 +90,7 @@ const resolveRatingValue = (value: number | string | null | undefined): number |
 }
 
 function createReopenActionButtons(
+    challengeInfo: ChallengeDetailContextModel['challengeInfo'],
     submission: SubmissionRow,
     aggregatedReviews: AggregatedReviewDetail[] | undefined,
     {
@@ -118,6 +120,10 @@ function createReopenActionButtons(
         }
 
         if ((reviewInfo.status ?? '').toUpperCase() !== 'COMPLETED') {
+            return
+        }
+
+        if (!isReviewPhaseCurrentlyOpen(challengeInfo, reviewInfo.phaseId)) {
             return
         }
 
@@ -909,6 +915,7 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                                 )
 
                         const reopenButtons = createReopenActionButtons(
+                            challengeInfo,
                             data,
                             data.aggregated?.reviews,
                             {
@@ -1095,11 +1102,13 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
             hasReview,
             reviewId,
             reviewStatus,
+            reviewPhaseId,
         }: {
             actionLink?: JSX.Element
             hasReview: boolean
             reviewId?: string
             reviewStatus: string
+            reviewPhaseId?: string
         }): JSX.Element | undefined => {
             if (includes(['COMPLETED', 'SUBMITTED'], reviewStatus)) {
                 return renderReviewCompletedAction()
@@ -1110,6 +1119,10 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
             }
 
             if (!reviewStatus && hasReview && reviewId) {
+                if (!isReviewPhaseCurrentlyOpen(challengeInfo, reviewPhaseId)) {
+                    return undefined
+                }
+
                 return (
                     <Link
                         to={`./../review/${reviewId}`}
@@ -1185,6 +1198,7 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                         actionLink,
                         hasReview,
                         reviewId,
+                        reviewPhaseId: data.review?.phaseId,
                         reviewStatus,
                     })
 

@@ -223,14 +223,6 @@ const isSubmissionPhase = (name?: string): boolean => normalizePhaseName(name) =
 const isIterativeReviewPhase = (name?: string): boolean => normalizePhaseName(name)
     .includes('iterative review')
 
-const getPhaseStartMs = (phase: PhaseLike): number | undefined => {
-    const candidate = phase.actualStartDate || phase.scheduledStartDate
-    if (!candidate) return undefined
-    const ms = new Date(candidate)
-        .getTime()
-    return Number.isFinite(ms) ? ms : undefined
-}
-
 const orderPhasesForTabs = (
     phases: PhaseLike[],
     opts?: PhaseOrderingOptions,
@@ -257,9 +249,15 @@ const orderPhasesForTabs = (
 
     const findPredecessor = (phase: PhaseLike): PhaseLike | undefined => {
         if (!phase?.predecessor) return undefined
-        return phaseById.get(phase.predecessor)
-            || phaseByPhaseId.get(phase.predecessor)
-            || sanitized.find(candidate => candidate.phaseId === phase.predecessor || candidate.id === phase.predecessor)
+        const predecessorId = phase.predecessor
+        return (
+            phaseById.get(predecessorId)
+            || phaseByPhaseId.get(predecessorId)
+            || sanitized.find(candidate => (
+                candidate.phaseId === predecessorId
+                || candidate.id === predecessorId
+            ))
+        )
     }
 
     const addPhase = (phase: PhaseLike): void => {
@@ -392,4 +390,67 @@ export function findPhaseByTabLabel(
     }
 
     return undefined
+}
+
+const normalizePhaseIdentifier = (
+    value: unknown,
+): string | undefined => {
+    if (value === undefined || value === null) {
+        return undefined
+    }
+
+    const normalized = `${value}`.trim()
+    return normalized.length ? normalized : undefined
+}
+
+const collectOpenPhaseIdentifiers = (
+    challengeInfo?: ChallengeInfo,
+): Set<string> => {
+    const identifiers = new Set<string>()
+
+    const pushIdentifiers = (phase?: BackendPhase): void => {
+        if (!phase) return
+        const phaseId = normalizePhaseIdentifier(phase.phaseId)
+        const id = normalizePhaseIdentifier(phase.id)
+
+        if (phaseId) {
+            identifiers.add(phaseId)
+        }
+
+        if (id) {
+            identifiers.add(id)
+        }
+    }
+
+    (challengeInfo?.phases ?? []).forEach(phase => {
+        if (!phase?.isOpen) {
+            return
+        }
+
+        pushIdentifiers(phase)
+    })
+
+    const currentPhase = challengeInfo?.currentPhaseObject
+    if (currentPhase && currentPhase.isOpen !== false) {
+        pushIdentifiers(currentPhase)
+    }
+
+    return identifiers
+}
+
+export function isReviewPhaseCurrentlyOpen(
+    challengeInfo?: ChallengeInfo,
+    phaseId?: string | number | null,
+): boolean {
+    const normalized = normalizePhaseIdentifier(phaseId)
+    if (!normalized) {
+        return true
+    }
+
+    const openPhaseIdentifiers = collectOpenPhaseIdentifiers(challengeInfo)
+    if (!openPhaseIdentifiers.size) {
+        return false
+    }
+
+    return openPhaseIdentifiers.has(normalized)
 }

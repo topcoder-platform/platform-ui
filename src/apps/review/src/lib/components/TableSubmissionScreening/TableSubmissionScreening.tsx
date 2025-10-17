@@ -34,6 +34,7 @@ import {
     getHandleUrl,
     getSubmissionHistoryKey,
     hasIsLatestFlag,
+    isReviewPhaseCurrentlyOpen,
     partitionSubmissionHistory,
     refreshChallengeReviewData,
     REOPEN_MESSAGE_OTHER,
@@ -93,6 +94,24 @@ interface ActionColumnConfig {
     pendingReviewId?: string
     canReopenGlobally: boolean
     myResourceIds: Set<string>
+    challengeInfo?: ChallengeDetailContextModel['challengeInfo']
+}
+
+interface ReopenActionConfig {
+    data: Screening
+    canShowReopenActions: boolean
+    onRequestReopen: (entry: Screening, isOwnReview: boolean) => void
+    isReopening: boolean
+    pendingReviewId?: string
+    canReopenGlobally: boolean
+    myResourceIds: Set<string>
+    challengeInfo?: ChallengeDetailContextModel['challengeInfo']
+}
+
+interface HistoryActionConfig {
+    data: Screening
+    onHistoryClick: (event: MouseEvent<HTMLButtonElement>) => void
+    shouldShowHistoryActions: boolean
 }
 
 const createSubmissionColumn = (config: SubmissionColumnConfig): TableColumn<Screening> => ({
@@ -228,6 +247,143 @@ const createVirusScanColumn = (): TableColumn<Screening> => ({
     type: 'element',
 })
 
+const createMyReviewActions = (data: Screening): ActionRenderer[] => {
+    if (!data.myReviewResourceId) {
+        return []
+    }
+
+    const status = (data.myReviewStatus ?? '').toUpperCase()
+    if (['COMPLETED', 'SUBMITTED'].includes(status)) {
+        return [
+            {
+                key: `completed-${data.submissionId}`,
+                render: () => (
+                    <div
+                        aria-label='Screening completed'
+                        className={styles.completedAction}
+                        title='Screening completed'
+                    >
+                        <span className={styles.completedIcon} aria-hidden='true'>
+                            <IconOutline.CheckIcon />
+                        </span>
+                        <span className={styles.completedPill}>Screening Complete</span>
+                    </div>
+                ),
+            },
+        ]
+    }
+
+    if (!data.myReviewId) {
+        return []
+    }
+
+    return [
+        {
+            key: `complete-${data.myReviewId}`,
+            render: isLast => (
+                <Link
+                    to={`./../review/${data.myReviewId}`}
+                    className={classNames(
+                        styles.submit,
+                        { 'last-element': isLast },
+                    )}
+                >
+                    <i className='icon-upload' />
+                    Complete Screening
+                </Link>
+            ),
+        },
+    ]
+}
+
+const createReopenAction = ({
+    data,
+    canShowReopenActions,
+    onRequestReopen,
+    isReopening,
+    pendingReviewId,
+    canReopenGlobally,
+    myResourceIds,
+    challengeInfo,
+}: ReopenActionConfig): ActionRenderer | undefined => {
+    if (!canShowReopenActions) {
+        return undefined
+    }
+
+    const reviewId = data.reviewId
+    if (!reviewId) {
+        return undefined
+    }
+
+    if (!isReviewPhaseCurrentlyOpen(challengeInfo, data.reviewPhaseId)) {
+        return undefined
+    }
+
+    const derivedStatus = (data.reviewStatus ?? data.myReviewStatus ?? '').toUpperCase()
+    if (derivedStatus !== 'COMPLETED') {
+        return undefined
+    }
+
+    const candidateResourceIds = [
+        data.myReviewResourceId,
+        data.screenerId,
+    ].filter((id): id is string => Boolean(id))
+    const isOwnReview = candidateResourceIds.some(id => myResourceIds.has(id))
+
+    if (!canReopenGlobally && !isOwnReview) {
+        return undefined
+    }
+
+    return {
+        key: `reopen-${reviewId}`,
+        render: isLast => (
+            <button
+                type='button'
+                className={classNames(
+                    styles.submit,
+                    styles.textBlue,
+                    { 'last-element': isLast },
+                )}
+                // eslint-disable-next-line react/jsx-no-bind
+                onClick={() => onRequestReopen(data, isOwnReview)}
+                disabled={isReopening && pendingReviewId === reviewId}
+            >
+                <i className='icon-reopen' />
+                Reopen Review
+            </button>
+        ),
+    }
+}
+
+const createHistoryAction = ({
+    data,
+    onHistoryClick,
+    shouldShowHistoryActions,
+}: HistoryActionConfig): ActionRenderer | undefined => {
+    if (!shouldShowHistoryActions) {
+        return undefined
+    }
+
+    const historyKeyForRow = getSubmissionHistoryKey(data.memberId, data.submissionId)
+    return {
+        key: `history-${historyKeyForRow}`,
+        render: isLast => (
+            <button
+                type='button'
+                className={classNames(
+                    styles.historyButton,
+                    { 'last-element': isLast },
+                )}
+                data-member-id={data.memberId ?? ''}
+                data-submission-id={data.submissionId}
+                onClick={onHistoryClick}
+            >
+                View Submission History
+            </button>
+        ),
+    }
+}
+
 const createBaseColumns = ({
     handleColumn,
     submissionColumn,
@@ -340,6 +496,7 @@ const createActionColumn = ({
     pendingReviewId,
     canReopenGlobally,
     myResourceIds,
+    challengeInfo,
 }: ActionColumnConfig): TableColumn<Screening> | undefined => {
     if (!shouldShowHistoryActions && !hasAnyScreeningAssignment && !canShowReopenActions) {
         return undefined
@@ -352,97 +509,29 @@ const createActionColumn = ({
         renderer: (data: Screening) => {
             const actionRenderers: ActionRenderer[] = []
 
-            if (data.myReviewResourceId) {
-                const status = (data.myReviewStatus ?? '').toUpperCase()
-                if (['COMPLETED', 'SUBMITTED'].includes(status)) {
-                    actionRenderers.push({
-                        key: `completed-${data.submissionId}`,
-                        render: () => (
-                            <div
-                                aria-label='Screening completed'
-                                className={styles.completedAction}
-                                title='Screening completed'
-                            >
-                                <span className={styles.completedIcon} aria-hidden='true'>
-                                    <IconOutline.CheckIcon />
-                                </span>
-                                <span className={styles.completedPill}>Screening Complete</span>
-                            </div>
-                        ),
-                    })
-                } else if (data.myReviewId) {
-                    actionRenderers.push({
-                        key: `complete-${data.myReviewId}`,
-                        render: isLast => (
-                            <Link
-                                to={`./../review/${data.myReviewId}`}
-                                className={classNames(
-                                    styles.submit,
-                                    { 'last-element': isLast },
-                                )}
-                            >
-                                <i className='icon-upload' />
-                                Complete Screening
-                            </Link>
-                        ),
-                    })
-                }
+            actionRenderers.push(...createMyReviewActions(data))
+
+            const reopenAction = createReopenAction({
+                canReopenGlobally,
+                canShowReopenActions,
+                challengeInfo,
+                data,
+                isReopening,
+                myResourceIds,
+                onRequestReopen,
+                pendingReviewId,
+            })
+            if (reopenAction) {
+                actionRenderers.push(reopenAction)
             }
 
-            const derivedStatus = (data.reviewStatus ?? data.myReviewStatus ?? '').toUpperCase()
-            const reviewId = data.reviewId
-            const candidateResourceIds = [
-                data.myReviewResourceId,
-                data.screenerId,
-            ].filter((id): id is string => Boolean(id))
-            const isOwnReview = candidateResourceIds.some(id => myResourceIds.has(id))
-            const canReopenRow = canShowReopenActions && Boolean(
-                reviewId
-                && derivedStatus === 'COMPLETED'
-                && (canReopenGlobally || isOwnReview),
-            )
-
-            if (canReopenRow) {
-                actionRenderers.push({
-                    key: `reopen-${reviewId}`,
-                    render: isLast => (
-                        <button
-                            type='button'
-                            className={classNames(
-                                styles.submit,
-                                styles.textBlue,
-                                { 'last-element': isLast },
-                            )}
-                            // eslint-disable-next-line react/jsx-no-bind
-                            onClick={() => onRequestReopen(data, isOwnReview)}
-                            disabled={isReopening && pendingReviewId === reviewId}
-                        >
-                            <i className='icon-reopen' />
-                            Reopen Review
-                        </button>
-                    ),
-                })
-            }
-
-            if (shouldShowHistoryActions) {
-                const historyKeyForRow = getSubmissionHistoryKey(data.memberId, data.submissionId)
-                actionRenderers.push({
-                    key: `history-${historyKeyForRow}`,
-                    render: isLast => (
-                        <button
-                            type='button'
-                            className={classNames(
-                                styles.historyButton,
-                                { 'last-element': isLast },
-                            )}
-                            data-member-id={data.memberId ?? ''}
-                            data-submission-id={data.submissionId}
-                            onClick={onHistoryClick}
-                        >
-                            View Submission History
-                        </button>
-                    ),
-                })
+            const historyAction = createHistoryAction({
+                data,
+                onHistoryClick,
+                shouldShowHistoryActions,
+            })
+            if (historyAction) {
+                actionRenderers.push(historyAction)
             }
 
             if (actionRenderers.length === 0) {
@@ -878,6 +967,7 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
         () => createActionColumn({
             canReopenGlobally,
             canShowReopenActions,
+            challengeInfo,
             hasAnyScreeningAssignment,
             isReopening,
             myResourceIds,
@@ -887,6 +977,7 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
             shouldShowHistoryActions,
         }),
         [
+            challengeInfo,
             canReopenGlobally,
             canShowReopenActions,
             hasAnyScreeningAssignment,

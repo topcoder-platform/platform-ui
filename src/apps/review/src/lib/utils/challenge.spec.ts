@@ -6,15 +6,15 @@ const createPhase = (
     scheduledStartDate: string,
     overrides: Partial<PhaseLike> = {},
 ): PhaseLike => ({
-    id,
-    phaseId: overrides.phaseId ?? id,
-    name,
-    isOpen: overrides.isOpen ?? false,
-    duration: overrides.duration ?? 0,
-    scheduledStartDate,
-    actualStartDate: overrides.actualStartDate ?? scheduledStartDate,
-    scheduledEndDate: overrides.scheduledEndDate ?? scheduledStartDate,
     actualEndDate: overrides.actualEndDate ?? overrides.scheduledEndDate ?? scheduledStartDate,
+    actualStartDate: overrides.actualStartDate ?? scheduledStartDate,
+    duration: overrides.duration ?? 0,
+    id,
+    isOpen: overrides.isOpen ?? false,
+    name,
+    phaseId: overrides.phaseId ?? id,
+    scheduledEndDate: overrides.scheduledEndDate ?? scheduledStartDate,
+    scheduledStartDate,
 })
 
 describe('challenge phase tab helpers', () => {

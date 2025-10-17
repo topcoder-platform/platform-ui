@@ -39,6 +39,7 @@ import {
     hasIsLatestFlag,
     partitionSubmissionHistory,
 } from '../../utils'
+import type { SubmissionHistoryPartition } from '../../utils'
 import { TABLE_DATE_FORMAT } from '../../../config/index.config'
 
 import styles from './TabContentSubmissions.module.scss'
@@ -112,7 +113,7 @@ export const TabContentSubmissions: FC<Props> = props => {
         historyByMember,
         latestSubmissionIds,
         latestSubmissions,
-    } = submissionHistory
+    }: SubmissionHistoryPartition = submissionHistory
 
     const latestBackendSubmissions = useMemo<BackendSubmission[]>(
         () => latestSubmissions
@@ -389,7 +390,9 @@ export const TabContentSubmissions: FC<Props> = props => {
 
                         const historyKeyValue = getSubmissionHistoryKey(submission.memberId, submission.id)
                         const entries = historyByMember.get(historyKeyValue) ?? []
-                        const relevantHistory = entries.filter(historyEntry => historyEntry.id && historyEntry.id !== submission.id)
+                        const relevantHistory = entries.filter(
+                            historyEntry => historyEntry.id && historyEntry.id !== submission.id,
+                        )
 
                         if (!relevantHistory.length) {
                             return <span>--</span>
