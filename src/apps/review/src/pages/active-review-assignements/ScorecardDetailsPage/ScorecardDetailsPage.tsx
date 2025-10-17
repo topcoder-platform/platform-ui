@@ -166,6 +166,8 @@ export const ScorecardDetailsPage: FC<Props> = (props: Props) => {
         isSavingAppeal,
         isSavingAppealResponse,
         isSavingManagerComment,
+        isSubmitterPhaseLocked,
+        submitterLockedPhaseName,
         reviewInfo,
         scorecardInfo,
         submissionInfo,
@@ -185,6 +187,25 @@ export const ScorecardDetailsPage: FC<Props> = (props: Props) => {
             return Boolean(reviewInfo?.committed)
         },
         [reviewInfo?.committed, reviewInfo?.status],
+    )
+
+    const submitterLockedPhaseDisplay = useMemo(
+        () => {
+            if (!submitterLockedPhaseName) {
+                return 'This review phase'
+            }
+
+            const trimmed = submitterLockedPhaseName.trim()
+            if (!trimmed) {
+                return 'This review phase'
+            }
+
+            return trimmed.toLowerCase()
+                .endsWith('phase')
+                ? trimmed
+                : `${trimmed} phase`
+        },
+        [submitterLockedPhaseName],
     )
 
     const reviewPhaseType = useMemo<ReviewPhaseType | undefined>(() => {
@@ -421,25 +442,38 @@ export const ScorecardDetailsPage: FC<Props> = (props: Props) => {
                             )}
                     </div>
 
-                    <ScorecardDetails
-                        mappingAppeals={mappingAppeals}
-                        isEdit={isEdit}
-                        onCancelEdit={onCancelEdit}
-                        setIsChanged={setIsChanged}
-                        scorecardInfo={scorecardInfo}
-                        isLoading={isLoading}
-                        reviewInfo={reviewInfo}
-                        isManagerEdit={isManagerEdit}
-                        isSavingReview={isSavingReview}
-                        isSavingAppeal={isSavingAppeal}
-                        isSavingAppealResponse={isSavingAppealResponse}
-                        isSavingManagerComment={isSavingManagerComment}
-                        saveReviewInfo={saveReviewInfo}
-                        addAppeal={addAppeal}
-                        addAppealResponse={addAppealResponse}
-                        doDeleteAppeal={doDeleteAppeal}
-                        addManagerComment={addManagerComment}
-                    />
+                    {isSubmitterPhaseLocked ? (
+                        <div className={styles.lockedNotice}>
+                            <strong>
+                                {submitterLockedPhaseDisplay}
+                                {' '}
+                                is still in progress.
+                            </strong>
+                            <span>
+                                Feedback becomes available once the phase closes. Please check back later.
+                            </span>
+                        </div>
+                    ) : (
+                        <ScorecardDetails
+                            mappingAppeals={mappingAppeals}
+                            isEdit={isEdit}
+                            onCancelEdit={onCancelEdit}
+                            setIsChanged={setIsChanged}
+                            scorecardInfo={scorecardInfo}
+                            isLoading={isLoading}
+                            reviewInfo={reviewInfo}
+                            isManagerEdit={isManagerEdit}
+                            isSavingReview={isSavingReview}
+                            isSavingAppeal={isSavingAppeal}
+                            isSavingAppealResponse={isSavingAppealResponse}
+                            isSavingManagerComment={isSavingManagerComment}
+                            saveReviewInfo={saveReviewInfo}
+                            addAppeal={addAppeal}
+                            addAppealResponse={addAppealResponse}
+                            doDeleteAppeal={doDeleteAppeal}
+                            addManagerComment={addManagerComment}
+                        />
+                    )}
 
                     {isEdit && (
                         <ConfirmModal

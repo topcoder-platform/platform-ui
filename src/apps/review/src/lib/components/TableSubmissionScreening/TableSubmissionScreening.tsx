@@ -14,13 +14,19 @@ import { Link } from 'react-router-dom'
 import _ from 'lodash'
 import classNames from 'classnames'
 
+import { UserRole } from '~/libs/core'
 import { TableMobile } from '~/apps/admin/src/lib/components/common/TableMobile'
 import { IsRemovingType } from '~/apps/admin/src/lib/models'
 import { MobileTableColumn } from '~/apps/admin/src/lib/models/MobileTableColumn.model'
 import { copyTextToClipboard, useWindowSize, WindowSize } from '~/libs/shared'
 import { IconOutline, Table, TableColumn, Tooltip } from '~/libs/ui'
 
-import { ChallengeDetailContextModel, Screening, SubmissionInfo } from '../../models'
+import {
+    ChallengeDetailContextModel,
+    ReviewAppContextModel,
+    Screening,
+    SubmissionInfo,
+} from '../../models'
 import { TableWrapper } from '../TableWrapper'
 import { SubmissionHistoryModal } from '../SubmissionHistoryModal'
 import {
@@ -30,11 +36,13 @@ import {
     partitionSubmissionHistory,
     SubmissionHistoryPartition,
 } from '../../utils'
-import { ChallengeDetailContext } from '../../contexts'
+import { ChallengeDetailContext, ReviewAppContext } from '../../contexts'
 import { useSubmissionDownloadAccess } from '../../hooks'
 import type { UseSubmissionDownloadAccessResult } from '../../hooks/useSubmissionDownloadAccess'
 
 import styles from './TableSubmissionScreening.module.scss'
+
+const VIEW_OWN_SCORECARD_TOOLTIP = 'You can only view scorecards for your own submissions.'
 
 interface Props {
     className?: string
@@ -58,6 +66,11 @@ interface BaseColumnsConfig {
     submissionColumn: TableColumn<Screening>
     submissionDateColumn: TableColumn<Screening>
     virusScanColumn: TableColumn<Screening>
+}
+
+interface ScreeningColumnConfig {
+    canViewAllScorecards: boolean
+    currentMemberId?: string
 }
 
 interface ActionRenderer {
@@ -216,11 +229,14 @@ const createBaseColumns = ({
     virusScanColumn,
 ]
 
-const createScreeningColumns = (): TableColumn<Screening>[] => [
+const createScreeningColumns = ({
+    canViewAllScorecards,
+    currentMemberId,
+}: ScreeningColumnConfig): TableColumn<Screening>[] => [
     {
         label: 'Screener',
         propertyName: 'screenerHandle',
-        renderer: (data: Screening) => (data.screener?.id ? (
+        renderer: (data: Screening) => (data.screener?.memberHandle ? (
             <a
                 href={getHandleUrl(data.screener)}
                 target='_blank'
@@ -251,7 +267,36 @@ const createScreeningColumns = (): TableColumn<Screening>[] => [
     {
         label: 'Screening Score',
         propertyName: 'score',
-        type: 'text',
+        renderer: (data: Screening) => {
+            const scoreValue = data.score ?? '-'
+
+            if (!data.reviewId) {
+                return <span>{scoreValue}</span>
+            }
+
+            const canViewScorecard = canViewAllScorecards
+                || Boolean(data.memberId && data.memberId === currentMemberId)
+
+            if (!canViewScorecard) {
+                return (
+                    <Tooltip content={VIEW_OWN_SCORECARD_TOOLTIP} triggerOn='click-hover'>
+                        <span className={styles.tooltipTrigger}>
+                            <span className={styles.textBlue}>{scoreValue}</span>
+                        </span>
+                    </Tooltip>
+                )
+            }
+
+            return (
+                <Link
+                    to={`./../review/${data.reviewId}`}
+                    className={styles.textBlue}
+                >
+                    {scoreValue}
+                </Link>
+            )
+        },
+        type: 'element',
     },
     {
         label: 'Screening Result',
@@ -397,14 +442,39 @@ const normalizeCreatedAt = (
 export const TableSubmissionScreening: FC<Props> = (props: Props) => {
     const { width: screenWidth }: WindowSize = useWindowSize()
     const isTablet = useMemo(() => screenWidth <= 984, [screenWidth])
-    const { challengeInfo }: ChallengeDetailContextModel = useContext(
+    const { challengeInfo, myRoles }: ChallengeDetailContextModel = useContext(
         ChallengeDetailContext,
     )
+    const { loginUserInfo }: ReviewAppContextModel = useContext(ReviewAppContext)
     const {
         restrictionMessage,
         isSubmissionDownloadRestrictedForMember,
         getRestrictionMessageForMember,
+        currentMemberId,
     }: UseSubmissionDownloadAccessResult = useSubmissionDownloadAccess()
+
+    const normalisedRoles = useMemo(
+        () => (myRoles ?? []).map(role => role.toLowerCase()),
+        [myRoles],
+    )
+
+    const hasCopilotRole = useMemo(
+        () => normalisedRoles.some(role => role.includes('copilot')),
+        [normalisedRoles],
+    )
+
+    const isAdminUser = useMemo(
+        () => loginUserInfo?.roles?.some(
+            role => typeof role === 'string'
+                && role.toLowerCase() === UserRole.administrator,
+        ) ?? false,
+        [loginUserInfo?.roles],
+    )
+
+    const canViewAllScorecards = useMemo(
+        () => isAdminUser || hasCopilotRole,
+        [isAdminUser, hasCopilotRole],
+    )
     const showScreeningColumns = props.showScreeningColumns ?? true
     const submissionTypes = useMemo(
         () => new Set(
@@ -608,7 +678,13 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
         [handleColumn, submissionColumn, submissionDateColumn, virusScanColumn],
     )
 
-    const screeningColumns = useMemo<TableColumn<Screening>[]>(createScreeningColumns, [])
+    const screeningColumns = useMemo<TableColumn<Screening>[]>(
+        () => createScreeningColumns({
+            canViewAllScorecards,
+            currentMemberId,
+        }),
+        [canViewAllScorecards, currentMemberId],
+    )
 
     const actionColumn = useMemo(
         () => createActionColumn({

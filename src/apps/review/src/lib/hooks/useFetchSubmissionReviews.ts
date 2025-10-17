@@ -4,6 +4,7 @@
 
 import {
     Dispatch,
+    MutableRefObject,
     SetStateAction,
     useCallback,
     useContext,
@@ -22,6 +23,7 @@ import { handleError } from '~/apps/admin/src/lib/utils'
 import {
     AppealInfo,
     BackendAppealResponse,
+    BackendPhase,
     BackendRequestReviewItem,
     BackendReview,
     BackendReviewItem,
@@ -42,6 +44,7 @@ import {
     createReview,
     deleteAppeal,
     fetchAppeals,
+    fetchChallengeReviews,
     fetchReview,
     fetchScorecard,
     fetchSubmission,
@@ -54,9 +57,239 @@ import { ChallengeDetailContext } from '../contexts'
 import { BackendReviewItemCommentType } from '../models/BackendReviewItemComment.model'
 import { ReviewItemComment } from '../models/ReviewItemComment.model'
 import { SUBMITTER } from '../../config/index.config'
-import { isReviewPhase } from '../utils'
 
 import { useRole, useRoleProps } from './useRole'
+
+const hasSubmitterReviewDetails = (review?: BackendReview): boolean => {
+    if (!review) {
+        return false
+    }
+
+    const normalizedSubmissionId = `${review.submissionId ?? ''}`.trim()
+    const normalizedSubmitterHandle = `${review.submitterHandle ?? ''}`.trim()
+    const hasReviewItems = Array.isArray(review.reviewItems)
+        && review.reviewItems.length > 0
+
+    return Boolean(
+        normalizedSubmissionId
+        && normalizedSubmitterHandle
+        && hasReviewItems,
+    )
+}
+
+const needsSubmitterReviewFallback = (review?: BackendReview): boolean => !hasSubmitterReviewDetails(review)
+
+const normalizeId = (value: unknown): string | undefined => {
+    if (value === undefined || value === null) {
+        return undefined
+    }
+
+    const normalized = `${value}`.trim()
+    return normalized || undefined
+}
+
+const normalizeName = (value: unknown): string | undefined => {
+    const normalized = normalizeId(value)
+    return normalized ? normalized.toLowerCase() : undefined
+}
+
+type ReviewerConfigSummary = {
+    phaseId?: unknown
+    scorecardId?: unknown
+}
+
+const PHASE_METADATA_KEYS = ['phaseName', 'name', 'reviewPhase', 'reviewType'] as const
+
+const matchesPhaseIdentifier = (
+    phase: BackendPhase,
+    normalizedTarget: string,
+): boolean => (
+    normalizeId(phase.id) === normalizedTarget
+    || normalizeId(phase.phaseId) === normalizedTarget
+)
+
+const findPhaseByNormalizedId = (
+    phases: BackendPhase[] | undefined,
+    normalizedId: string | undefined,
+): BackendPhase | undefined => {
+    if (!normalizedId || !phases?.length) {
+        return undefined
+    }
+
+    return phases.find(phase => matchesPhaseIdentifier(phase, normalizedId))
+}
+
+const findPhaseUsingReviewerConfigs = (
+    phases: BackendPhase[] | undefined,
+    reviewerConfigs: ReviewerConfigSummary[] | undefined,
+    normalizedReviewPhaseId: string | undefined,
+    normalizedScorecardId: string | undefined,
+): BackendPhase | undefined => {
+    if (!phases?.length || !reviewerConfigs?.length) {
+        return undefined
+    }
+
+    const matchedConfig = reviewerConfigs.find(config => {
+        const normalizedPhaseId = normalizeId(config.phaseId)
+        if (normalizedReviewPhaseId && normalizedPhaseId === normalizedReviewPhaseId) {
+            return true
+        }
+
+        const normalizedConfigScorecardId = normalizeId(config.scorecardId)
+        return Boolean(
+            normalizedScorecardId
+            && normalizedConfigScorecardId === normalizedScorecardId,
+        )
+    })
+
+    if (!matchedConfig) {
+        return undefined
+    }
+
+    const normalizedConfigPhaseId = normalizeId(matchedConfig.phaseId)
+    return findPhaseByNormalizedId(phases, normalizedConfigPhaseId)
+}
+
+const findPhaseByNormalizedName = (
+    phases: BackendPhase[] | undefined,
+    normalizedName: string | undefined,
+): BackendPhase | undefined => {
+    if (!normalizedName || !phases?.length) {
+        return undefined
+    }
+
+    return phases.find(phase => normalizeName(phase.name) === normalizedName)
+}
+
+const findPhaseFromMetadata = (
+    phases: BackendPhase[] | undefined,
+    metadata: unknown,
+): BackendPhase | undefined => {
+    if (!phases?.length || !metadata || typeof metadata !== 'object') {
+        return undefined
+    }
+
+    const metadataRecord = metadata as Record<string, unknown>
+    for (const key of PHASE_METADATA_KEYS) {
+        const match = findPhaseByNormalizedName(
+            phases,
+            normalizeName(metadataRecord[key]),
+        )
+        if (match) {
+            return match
+        }
+    }
+
+    return undefined
+}
+
+const findMatchingPhaseForReview = (
+    phases: BackendPhase[] | undefined,
+    review: BackendReview | undefined,
+    reviewerConfigs: ReviewerConfigSummary[] | undefined,
+): BackendPhase | undefined => {
+    if (!phases?.length || !review) {
+        return undefined
+    }
+
+    const normalizedReviewPhaseId = normalizeId(review.phaseId)
+    const normalizedScorecardId = normalizeId(review.scorecardId)
+
+    const matchedByReviewId = findPhaseByNormalizedId(
+        phases,
+        normalizedReviewPhaseId,
+    )
+    if (matchedByReviewId) {
+        return matchedByReviewId
+    }
+
+    const matchedByReviewerConfig = findPhaseUsingReviewerConfigs(
+        phases,
+        reviewerConfigs,
+        normalizedReviewPhaseId,
+        normalizedScorecardId,
+    )
+    if (matchedByReviewerConfig) {
+        return matchedByReviewerConfig
+    }
+
+    const matchedByName = findPhaseByNormalizedName(
+        phases,
+        normalizeName(review.phaseName),
+    )
+    if (matchedByName) {
+        return matchedByName
+    }
+
+    return findPhaseFromMetadata(phases, review.metadata)
+}
+
+const cacheReviewIfComplete = (
+    cache: MutableRefObject<Record<string, BackendReview | undefined>>,
+    reviewId: string,
+    review: BackendReview | undefined,
+): void => {
+    if (!review || needsSubmitterReviewFallback(review)) {
+        return
+    }
+
+    cache.current[reviewId] = review
+}
+
+const fetchPrimaryReviewSafely = async (
+    reviewId: string,
+): Promise<{ error?: unknown; review?: BackendReview }> => {
+    try {
+        const review = await fetchReview(reviewId)
+        return { review }
+    } catch (error) {
+        return { error }
+    }
+}
+
+const fetchFallbackReviewSafely = async (
+    challengeId: string,
+    reviewId: string,
+    cache: MutableRefObject<Record<string, BackendReview | undefined>>,
+): Promise<{ error?: unknown; review?: BackendReview }> => {
+    if (!challengeId) {
+        return {}
+    }
+
+    const cached = cache.current[reviewId]
+    if (cached && !needsSubmitterReviewFallback(cached)) {
+        return { review: cached }
+    }
+
+    try {
+        const challengeReviews = await fetchChallengeReviews(challengeId)
+        const fallbackReview = challengeReviews.find(candidate => candidate.id === reviewId)
+        cacheReviewIfComplete(cache, reviewId, fallbackReview)
+        return { review: fallbackReview }
+    } catch (error) {
+        return { error }
+    }
+}
+
+const resolveReviewOrThrow = (
+    review: BackendReview | undefined,
+    primaryError?: unknown,
+    fallbackError?: unknown,
+): BackendReview => {
+    if (review) {
+        return review
+    }
+
+    if (primaryError) {
+        throw primaryError
+    }
+
+    if (fallbackError) {
+        throw fallbackError
+    }
+
+    throw new Error('Review not found')
+}
 
 export interface useFetchSubmissionReviewsProps {
     mappingAppeals: MappingAppeal
@@ -99,6 +332,8 @@ export interface useFetchSubmissionReviewsProps {
         reviewItem: ReviewItemInfo,
         success: () => void,
     ) => void
+    isSubmitterPhaseLocked: boolean
+    submitterLockedPhaseName?: string
 }
 
 /**
@@ -115,7 +350,10 @@ export function useFetchSubmissionReviews(): useFetchSubmissionReviewsProps {
         reviewId: string
     }>()
 
-    const { challengeInfo }: ChallengeDetailContextModel = useContext(
+    const {
+        challengeId: contextChallengeId,
+        challengeInfo,
+    }: ChallengeDetailContextModel = useContext(
         ChallengeDetailContext,
     )
 
@@ -124,6 +362,47 @@ export function useFetchSubmissionReviews(): useFetchSubmissionReviewsProps {
         [challengeInfo],
     )
     const [updatedReviewInfo, setUpdatedReviewInfo] = useState<ReviewInfo>()
+
+    const challengeIdentifier = challengeInfo?.id ?? contextChallengeId ?? ''
+    const shouldUseSubmitterFallback = actionChallengeRole === SUBMITTER
+        && Boolean(challengeIdentifier)
+    const fallbackReviewCacheRef = useRef<Record<string, BackendReview | undefined>>({})
+
+    const fetchReviewWithFallback = useCallback(async (): Promise<BackendReview> => {
+        if (!reviewId) {
+            throw new Error('Missing review identifier')
+        }
+
+        const primaryResult = await fetchPrimaryReviewSafely(reviewId)
+        const primaryReview = primaryResult.review
+        const primaryError = primaryResult.error
+
+        if (!shouldUseSubmitterFallback) {
+            return resolveReviewOrThrow(primaryReview, primaryError)
+        }
+
+        if (primaryReview && !needsSubmitterReviewFallback(primaryReview)) {
+            cacheReviewIfComplete(fallbackReviewCacheRef, reviewId, primaryReview)
+            return primaryReview
+        }
+
+        const fallbackResult = await fetchFallbackReviewSafely(
+            challengeIdentifier,
+            reviewId,
+            fallbackReviewCacheRef,
+        )
+        const fallbackReview = fallbackResult.review
+        const fallbackError = fallbackResult.error
+
+        const resolvedReview = fallbackReview ?? primaryReview
+        cacheReviewIfComplete(fallbackReviewCacheRef, reviewId, resolvedReview)
+
+        return resolveReviewOrThrow(resolvedReview, primaryError, fallbackError)
+    }, [
+        challengeIdentifier,
+        reviewId,
+        shouldUseSubmitterFallback,
+    ])
 
     // Use swr hooks for reviews info fetching
     const {
@@ -135,16 +414,49 @@ export function useFetchSubmissionReviews(): useFetchSubmissionReviewsProps {
             ? `EnvironmentConfig.API.V6/reviews/${reviewId}`
             : undefined,
         {
-            fetcher: () => fetchReview(reviewId),
-            isPaused: () => !reviewId
-                || (!!challengeInfo
-                && isReviewPhase(challengeInfo)
-                && actionChallengeRole === SUBMITTER),
+            fetcher: fetchReviewWithFallback,
+            isPaused: () => !reviewId,
         },
     )
 
     const submissionId = review?.submissionId ?? ''
     const resourceId = review?.resourceId ?? ''
+
+    const reviewPhase = useMemo(
+        () => findMatchingPhaseForReview(
+            challengeInfo?.phases,
+            review,
+            challengeInfo?.reviewers,
+        ),
+        [challengeInfo?.phases, challengeInfo?.reviewers, review],
+    )
+
+    const submitterPhaseGate = useMemo(
+        () => {
+            if (actionChallengeRole !== SUBMITTER) {
+                return {
+                    isLocked: false,
+                    phaseName: undefined as string | undefined,
+                }
+            }
+
+            const phaseName = reviewPhase?.name
+                ?? (typeof review?.phaseName === 'string' ? review?.phaseName : undefined)
+
+            if (!reviewPhase) {
+                return {
+                    isLocked: false,
+                    phaseName,
+                }
+            }
+
+            return {
+                isLocked: reviewPhase.isOpen === true,
+                phaseName,
+            }
+        },
+        [actionChallengeRole, review?.phaseName, reviewPhase],
+    )
 
     // Use swr hooks for appeals info fetching
     const mappingAppealsRef = useRef<MappingAppeal>({})
@@ -193,8 +505,8 @@ export function useFetchSubmissionReviews(): useFetchSubmissionReviewsProps {
             return challengeInfo.reviewers[0].scorecardId
         }
 
-        const reviewPhase = find(challengeInfo.phases, { name: 'Review' })
-        const scoreCardInfo = find(reviewPhase?.constraints ?? [], {
+        const reviewPhaseDefinition = find(challengeInfo.phases, { name: 'Review' })
+        const scoreCardInfo = find(reviewPhaseDefinition?.constraints ?? [], {
             name: 'Scorecard',
         })
         return `${scoreCardInfo?.value ?? ''}`
@@ -647,6 +959,7 @@ export function useFetchSubmissionReviews(): useFetchSubmissionReviewsProps {
         isSavingAppealResponse,
         isSavingManagerComment,
         isSavingReview,
+        isSubmitterPhaseLocked: submitterPhaseGate.isLocked,
         mappingAppeals,
         reviewInfo: updatedReviewInfo,
         saveReviewInfo,
@@ -654,6 +967,6 @@ export function useFetchSubmissionReviews(): useFetchSubmissionReviewsProps {
         scorecardInfo,
         setReviewInfo: setUpdatedReviewInfo,
         submissionInfo,
-
+        submitterLockedPhaseName: submitterPhaseGate.phaseName,
     }
 }

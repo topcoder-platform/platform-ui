@@ -568,6 +568,11 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
     // eslint-disable-next-line complexity
     useEffect(() => {
         if (!challengeInfo) return
+        if (phaseOrderingOptions.isTask) {
+            setTabItems(prev => (prev.length ? [] : prev))
+            return
+        }
+
         const challengePhases = challengeInfo.phases ?? []
         const items = buildPhaseTabs(
             challengePhases,
@@ -763,6 +768,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
     // eslint-disable-next-line complexity
     useEffect(() => {
         if (!challengeInfo || !tabItems.length || isPastReviewDetail) return
+        if (phaseOrderingOptions.isTask) return
 
         const norm = (s: string): string => s.trim()
             .toLowerCase()
@@ -876,6 +882,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         screening,
         checkpoint,
         checkpointReview,
+        phaseOrderingOptions,
     ])
 
     // Determine if current user should see the Resources section
@@ -922,6 +929,10 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
     }, [challengePhases])
 
     const timelineRows = useMemo<ChallengeTimelineRow[]>(() => {
+        if (phaseOrderingOptions.isTask) {
+            return []
+        }
+
         if (!challengePhases || challengePhases.length === 0) {
             return []
         }
@@ -1170,6 +1181,10 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
     }, [reopenError])
 
     const timelineRowsWithActions = useMemo<ChallengeTimelineRow[]>(() => {
+        if (phaseOrderingOptions.isTask) {
+            return []
+        }
+
         if (!canManagePhases) {
             return timelineRows
         }
@@ -1256,6 +1271,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         phaseActionLoadingMap,
         phaseLookup,
         timelineRows,
+        phaseOrderingOptions,
     ])
 
     const isExtendSubmitting = extendTarget
@@ -1378,66 +1394,59 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                         <ChallengeLinks />
                     </div>
 
-                    <div className={styles.blockContent}>
-                        <div className={styles.phaseHeader}>
-                            <span className={styles.textTitle}>Phases</span>
+                    {!phaseOrderingOptions.isTask ? (
+                        <div className={styles.blockContent}>
+                            <div className={styles.phaseHeader}>
+                                <span className={styles.textTitle}>Phases</span>
 
-                            {shouldShowPhaseNotificationToggle ? (
-                                <div className={styles.phaseNotificationToggle}>
-                                    <InputCheckbox
-                                        name='phase-notifications'
-                                        label='Phase Notifications'
-                                        checked={phaseNotificationsEnabled}
-                                        onChange={noop}
-                                        onClick={togglePhaseNotifications}
-                                        disabled={isPhaseNotificationToggleDisabled}
-                                    />
-                                </div>
-                            ) : undefined}
-                        </div>
+                                {shouldShowPhaseNotificationToggle ? (
+                                    <div className={styles.phaseNotificationToggle}>
+                                        <InputCheckbox
+                                            name='phase-notifications'
+                                            label='Phase Notifications'
+                                            checked={phaseNotificationsEnabled}
+                                            onChange={noop}
+                                            onClick={togglePhaseNotifications}
+                                            disabled={isPhaseNotificationToggleDisabled}
+                                        />
+                                    </div>
+                                ) : undefined}
+                            </div>
 
-                        <div className={styles.blockTabsContainer}>
-                            <Tabs
-                                items={tabItems}
-                                selected={selectedTab}
-                                onChange={switchTab}
+                            <div className={styles.blockTabsContainer}>
+                                <Tabs
+                                    items={tabItems}
+                                    selected={selectedTab}
+                                    onChange={switchTab}
+                                />
+                            </div>
+
+                            <ChallengeDetailsContent
+                                selectedTab={selectedTab}
+                                isLoadingSubmission={isLoadingSubmission}
+                                screening={screening}
+                                submissions={userSubmissions}
+                                checkpoint={checkpoint}
+                                checkpointReview={checkpointReview}
+                                review={review}
+                                submitterReviews={submitterReviews}
+                                approvalReviews={approvalReviews}
+                                postMortemReviews={postMortemReviews}
+                                mappingReviewAppeal={mappingReviewAppeal}
+                                isActiveChallenge={!isPastReviewDetail}
+                                selectedPhaseId={(() => {
+                                    const phase = findPhaseByTabLabel(
+                                        challengeInfo?.phases ?? [],
+                                        selectedTab,
+                                        phaseOrderingOptions,
+                                    )
+                                    return (phase as { id?: string } | undefined)?.id
+                                })()}
                             />
                         </div>
+                    ) : undefined}
 
-                        <ChallengeDetailsContent
-                            selectedTab={selectedTab}
-                            isLoadingSubmission={isLoadingSubmission}
-                            screening={screening}
-                            submissions={userSubmissions}
-                            checkpoint={checkpoint}
-                            checkpointReview={checkpointReview}
-                            review={review}
-                            submitterReviews={submitterReviews}
-                            approvalReviews={approvalReviews}
-                            postMortemReviews={postMortemReviews}
-                            mappingReviewAppeal={mappingReviewAppeal}
-                            isActiveChallenge={!isPastReviewDetail}
-                            selectedPhaseId={(() => {
-                                const phase = findPhaseByTabLabel(
-                                    challengeInfo?.phases ?? [],
-                                    selectedTab,
-                                    (() => {
-                                        const typeName = challengeInfo?.type?.name?.toLowerCase?.() || ''
-                                        const typeAbbrev = challengeInfo?.type?.abbreviation?.toLowerCase?.() || ''
-                                        const simplifiedType = typeName.replace(/\s|-/g, '')
-                                        const isF2F = typeAbbrev === 'f2f'
-                                            || simplifiedType === 'first2finish'
-                                        const isTask = ['task', 'tsk'].includes(typeAbbrev)
-                                            || simplifiedType === 'task'
-                                        return { isF2F, isTask }
-                                    })(),
-                                )
-                                return (phase as { id?: string } | undefined)?.id
-                            })()}
-                        />
-                    </div>
-
-                    {timelineRowsWithActions.length > 0 ? (
+                    {!phaseOrderingOptions.isTask && timelineRowsWithActions.length > 0 ? (
                         <div className={styles.blockContent}>
                             <span className={styles.textTitle}>Timeline</span>
                             <ChallengeTimeline

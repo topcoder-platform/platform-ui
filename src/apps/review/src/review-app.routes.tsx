@@ -66,6 +66,9 @@ const EditScorecardPage: LazyLoadedComponent = lazyLoad(
     'EditScorecardPage',
 )
 
+const activeChallengeDetailsRewriteTarget: string
+    = `${rootRoute || ''}/${activeReviewAssigmentsRouteId}/:challengeId/challenge-details`
+
 export const toolTitle: string = ToolTitle.review
 
 export const reviewRoutes: ReadonlyArray<PlatformRoute> = [
@@ -83,10 +86,21 @@ export const reviewRoutes: ReadonlyArray<PlatformRoute> = [
                 authRequired: true,
                 element: (
                     <Rewrite
-                        to={`${activeReviewAssigmentsRouteId}/:challengeId/challenge-details`}
+                        to={activeChallengeDetailsRewriteTarget}
                     />
                 ),
                 route: 'challenges/:challengeId',
+            },
+            // Shortcut: /review/:challengeId
+            // -> /review/active-challenges/:challengeId/challenge-details
+            {
+                authRequired: true,
+                element: (
+                    <Rewrite
+                        to={activeChallengeDetailsRewriteTarget}
+                    />
+                ),
+                route: ':challengeId',
             },
             // Active Challenges Module
             {

@@ -6,7 +6,7 @@ import { EnvironmentConfig } from '~/config'
 import { getRatingColor, xhrGetAsync } from '~/libs/core'
 import { handleError } from '~/libs/shared'
 
-import { REVIEWER, SUBMITTER } from '../../config/index.config'
+import { DESIGN, REVIEWER, SUBMITTER } from '../../config/index.config'
 import { ChallengeDetailContext, ReviewAppContext } from '../contexts'
 import {
     BackendPhase,
@@ -2161,7 +2161,17 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
             return 0
         }
 
-        const completedReviews = filter(review, item => {
+        const isDesignChallenge = challengeInfo?.track.name === DESIGN
+
+        const filteredReviews = isDesignChallenge
+            ? review
+            : review.filter(item => item.isLatest)
+
+        if (!filteredReviews.length) {
+            return 0
+        }
+
+        const completedReviews = filteredReviews.filter(item => {
             const committed = item.review?.committed
             if (typeof committed === 'boolean') {
                 return committed
@@ -2185,9 +2195,9 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
         })
 
         return Math.round(
-            (completedReviews.length * 100) / review.length,
+            (completedReviews.length * 100) / filteredReviews.length,
         )
-    }, [review])
+    }, [review, challengeInfo])
 
     useEffect(() => () => {
         cancelLoadResourceAppeal()
