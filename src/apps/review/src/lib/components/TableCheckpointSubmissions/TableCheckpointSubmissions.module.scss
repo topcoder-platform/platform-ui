@@ -129,6 +129,12 @@
     }
 }
 
+.actionsContainer {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-2;
+}
+
 .completedAction {
     align-items: center;
     display: flex;

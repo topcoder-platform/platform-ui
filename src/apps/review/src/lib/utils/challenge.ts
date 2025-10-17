@@ -187,6 +187,7 @@ export type PhaseLike = Pick<
     | 'id'
     | 'phaseId'
     | 'name'
+    | 'predecessor'
     | 'isOpen'
     | 'duration'
     | 'scheduledStartDate'
@@ -222,42 +223,104 @@ const isSubmissionPhase = (name?: string): boolean => normalizePhaseName(name) =
 const isIterativeReviewPhase = (name?: string): boolean => normalizePhaseName(name)
     .includes('iterative review')
 
-const comparePhaseDates = (
-    a: PhaseLike,
-    b: PhaseLike,
-): number => {
-    const aStart = new Date(a.actualStartDate || a.scheduledStartDate || '')
+const getPhaseStartMs = (phase: PhaseLike): number | undefined => {
+    const candidate = phase.actualStartDate || phase.scheduledStartDate
+    if (!candidate) return undefined
+    const ms = new Date(candidate)
         .getTime()
-    const bStart = new Date(b.actualStartDate || b.scheduledStartDate || '')
-        .getTime()
-
-    if (!Number.isNaN(aStart) && !Number.isNaN(bStart)) {
-        if (aStart !== bStart) {
-            return aStart - bStart
-        }
-
-        const aReg = isRegistrationPhase(a.name)
-        const bReg = isRegistrationPhase(b.name)
-        const aSub = isSubmissionPhase(a.name)
-        const bSub = isSubmissionPhase(b.name)
-
-        if (aReg && bSub) return -1
-        if (aSub && bReg) return 1
-    }
-
-    return 0
+    return Number.isFinite(ms) ? ms : undefined
 }
 
-const EXPLICIT_PHASE_ORDER = [
-    'registration',
-    'checkpoint submission',
-    'checkpoint screening',
-    'checkpoint review',
-    'submission',
-    'screening',
-    'review',
-    'approval',
-]
+const orderPhasesForTabs = (
+    phases: PhaseLike[],
+    opts?: PhaseOrderingOptions,
+): PhaseLike[] => {
+    if (!Array.isArray(phases)) return []
+
+    const sanitized = phases.filter(phase => Boolean(phase && typeof phase === 'object')) as PhaseLike[]
+
+    const phaseById = new Map<string, PhaseLike>()
+    const phaseByPhaseId = new Map<string, PhaseLike>()
+    sanitized.forEach(phase => {
+        if (phase.id) {
+            phaseById.set(phase.id, phase)
+        }
+
+        if (phase.phaseId && !phaseByPhaseId.has(phase.phaseId)) {
+            phaseByPhaseId.set(phase.phaseId, phase)
+        }
+    })
+
+    const ordered: PhaseLike[] = []
+    const visiting = new Set<PhaseLike>()
+    const visited = new Set<PhaseLike>()
+
+    const findPredecessor = (phase: PhaseLike): PhaseLike | undefined => {
+        if (!phase?.predecessor) return undefined
+        return phaseById.get(phase.predecessor)
+            || phaseByPhaseId.get(phase.predecessor)
+            || sanitized.find(candidate => candidate.phaseId === phase.predecessor || candidate.id === phase.predecessor)
+    }
+
+    const addPhase = (phase: PhaseLike): void => {
+        if (visited.has(phase)) return
+        if (visiting.has(phase)) {
+            visiting.delete(phase)
+            visited.add(phase)
+            if (!ordered.includes(phase)) {
+                ordered.push(phase)
+            }
+
+            return
+        }
+
+        visiting.add(phase)
+        const predecessor = findPredecessor(phase)
+        if (predecessor && predecessor !== phase) {
+            addPhase(predecessor)
+        }
+
+        visiting.delete(phase)
+        visited.add(phase)
+        if (!ordered.includes(phase)) {
+            ordered.push(phase)
+        }
+    }
+
+    sanitized.forEach(addPhase)
+
+    let orderedResult = [...ordered]
+
+    const registrationIdx = orderedResult.findIndex(phase => isRegistrationPhase(phase.name))
+    const submissionIdx = orderedResult.findIndex(phase => isSubmissionPhase(phase.name))
+
+    if (registrationIdx > -1 && submissionIdx > -1 && registrationIdx > submissionIdx) {
+        const [registrationPhase] = orderedResult.splice(registrationIdx, 1)
+        orderedResult.splice(submissionIdx, 0, registrationPhase)
+    }
+
+    if (opts?.isF2F || opts?.isTask) {
+        const iterative = orderedResult.filter(phase => isIterativeReviewPhase(phase.name))
+        if (iterative.length) {
+            const remaining = orderedResult.filter(phase => !isIterativeReviewPhase(phase.name))
+            const registrationIdxAfter = remaining.findIndex(phase => isRegistrationPhase(phase.name))
+            const submissionIdxAfter = remaining.findIndex(phase => isSubmissionPhase(phase.name))
+            const afterIdx = Math.max(registrationIdxAfter, submissionIdxAfter)
+
+            if (afterIdx >= 0 && afterIdx < remaining.length) {
+                orderedResult = [
+                    ...remaining.slice(0, afterIdx + 1),
+                    ...iterative,
+                    ...remaining.slice(afterIdx + 1),
+                ]
+            } else {
+                orderedResult = [...remaining, ...iterative]
+            }
+        }
+    }
+
+    return orderedResult
+}
 
 /**
  * Build tabs for challenge phases using a consistent ordering.
@@ -267,58 +330,6 @@ export function buildPhaseTabs(
     status?: string,
     opts?: PhaseOrderingOptions,
 ): SelectOption[] {
-    const explicitOrder = new Map<string, number>(
-        EXPLICIT_PHASE_ORDER.map((name, idx) => [name, idx]),
-    )
-    const hasCheckpointPhases = phases.some(phase => {
-        const normalized = normalizePhaseName(phase.name)
-        return normalized === 'checkpoint submission'
-            || normalized === 'checkpoint screening'
-            || normalized === 'checkpoint review'
-    })
-
-    let sortedPhases = [...phases].sort((a, b) => {
-        const aName = normalizePhaseName(a.name)
-        const bName = normalizePhaseName(b.name)
-
-        if (hasCheckpointPhases) {
-            const aRank = explicitOrder.has(aName)
-                ? (explicitOrder.get(aName) as number)
-                : Number.POSITIVE_INFINITY
-            const bRank = explicitOrder.has(bName)
-                ? (explicitOrder.get(bName) as number)
-                : Number.POSITIVE_INFINITY
-
-            if (aRank !== bRank) {
-                return aRank - bRank
-            }
-
-            return comparePhaseDates(a, b)
-        }
-
-        return comparePhaseDates(a, b)
-    })
-
-    if (opts?.isF2F || opts?.isTask) {
-        const iterative = sortedPhases.filter(phase => isIterativeReviewPhase(phase.name))
-        if (iterative.length) {
-            const remaining = sortedPhases.filter(phase => !isIterativeReviewPhase(phase.name))
-            const registrationIdx = remaining.findIndex(phase => isRegistrationPhase(phase.name))
-            const submissionIdx = remaining.findIndex(phase => isSubmissionPhase(phase.name))
-            const afterIdx = Math.max(registrationIdx, submissionIdx)
-
-            if (afterIdx >= 0 && afterIdx < remaining.length) {
-                sortedPhases = [
-                    ...remaining.slice(0, afterIdx + 1),
-                    ...iterative,
-                    ...remaining.slice(afterIdx + 1),
-                ]
-            } else {
-                sortedPhases = [...remaining, ...iterative]
-            }
-        }
-    }
-
     const labelCounts = new Map<string, number>()
     const nextLabel = (rawName: string): string => {
         const count = labelCounts.get(rawName) || 0
@@ -331,7 +342,8 @@ export function buildPhaseTabs(
     }
 
     const tabs: SelectOption[] = []
-    sortedPhases.forEach(phase => {
+    const orderedPhases = orderPhasesForTabs(phases, opts)
+    orderedPhases.forEach(phase => {
         const rawName = phase?.name?.trim() || ''
         if (!rawName) {
             return
@@ -357,58 +369,6 @@ export function findPhaseByTabLabel(
     label: string,
     opts?: PhaseOrderingOptions,
 ): PhaseLike | undefined {
-    const explicitOrder = new Map<string, number>(
-        EXPLICIT_PHASE_ORDER.map((name, idx) => [name, idx]),
-    )
-    const hasCheckpointPhases = phases.some(phase => {
-        const normalized = normalizePhaseName(phase.name)
-        return normalized === 'checkpoint submission'
-            || normalized === 'checkpoint screening'
-            || normalized === 'checkpoint review'
-    })
-
-    let sortedPhases = [...phases].sort((a, b) => {
-        const aName = normalizePhaseName(a.name)
-        const bName = normalizePhaseName(b.name)
-
-        if (hasCheckpointPhases) {
-            const aRank = explicitOrder.has(aName)
-                ? (explicitOrder.get(aName) as number)
-                : Number.POSITIVE_INFINITY
-            const bRank = explicitOrder.has(bName)
-                ? (explicitOrder.get(bName) as number)
-                : Number.POSITIVE_INFINITY
-
-            if (aRank !== bRank) {
-                return aRank - bRank
-            }
-
-            return comparePhaseDates(a, b)
-        }
-
-        return comparePhaseDates(a, b)
-    })
-
-    if (opts?.isF2F || opts?.isTask) {
-        const iterative = sortedPhases.filter(phase => isIterativeReviewPhase(phase.name))
-        if (iterative.length) {
-            const remaining = sortedPhases.filter(phase => !isIterativeReviewPhase(phase.name))
-            const registrationIdx = remaining.findIndex(phase => isRegistrationPhase(phase.name))
-            const submissionIdx = remaining.findIndex(phase => isSubmissionPhase(phase.name))
-            const afterIdx = Math.max(registrationIdx, submissionIdx)
-
-            if (afterIdx >= 0 && afterIdx < remaining.length) {
-                sortedPhases = [
-                    ...remaining.slice(0, afterIdx + 1),
-                    ...iterative,
-                    ...remaining.slice(afterIdx + 1),
-                ]
-            } else {
-                sortedPhases = [...remaining, ...iterative]
-            }
-        }
-    }
-
     const labelCounts = new Map<string, number>()
     const labelFor = (rawName: string): string => {
         const count = labelCounts.get(rawName) || 0
@@ -420,7 +380,8 @@ export function findPhaseByTabLabel(
         return `${rawName} ${count + 1}`
     }
 
-    for (const phase of sortedPhases) {
+    const orderedPhases = orderPhasesForTabs(phases, opts)
+    for (const phase of orderedPhases) {
         const rawName = phase?.name?.trim() || ''
         if (rawName) {
             const computedLabel = labelFor(rawName)

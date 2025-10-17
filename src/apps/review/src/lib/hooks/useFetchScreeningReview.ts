@@ -1045,6 +1045,7 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
     const {
         data: challengeReviewsData,
         error: fetchChallengeReviewsError,
+        isValidating: isValidatingChallengeReviews,
     }: SWRResponse<BackendReview[], Error> = useSWR<BackendReview[], Error>(
         `reviewBaseUrl/reviews/${challengeId}/${reviewerKey}`,
         {
@@ -1341,6 +1342,7 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
                     myReviewStatus: myAssignment?.status ?? undefined,
                     result,
                     reviewId: matchedReview?.id,
+                    reviewStatus: matchedReview?.status ?? undefined,
                     score: scoreDisplay,
                     screener: screenerDisplay,
                     screenerId: screenerDisplay?.id ?? resolvedScreenerId,
@@ -1490,6 +1492,7 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
                     myReviewStatus: myAssignment?.status ?? undefined,
                     result,
                     reviewId: matchedReview?.id,
+                    reviewStatus: matchedReview?.status ?? undefined,
                     score: scoreDisplay,
                     screener: screenerDisplay,
                     screenerId: screenerDisplay?.id || screenerId,
@@ -1672,6 +1675,7 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
                 myReviewStatus: myAssignment?.status ?? undefined,
                 result,
                 reviewId: matchedReview.id,
+                reviewStatus: matchedReview.status ?? undefined,
                 score: scoreDisplay,
                 screener: reviewerDisplay,
                 screenerId: reviewerDisplay?.id || screenerId,
@@ -2193,11 +2197,9 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
         cancelLoadResourceAppeal()
     }, [cancelLoadResourceAppeal])
 
-    const shouldAwaitSubmitterReviews = (
-        actionChallengeRole === SUBMITTER
-        && challengeReviews === undefined
-        && visibleChallengeSubmissions.length > 0
-    )
+    const shouldAwaitSubmitterReviews = actionChallengeRole === SUBMITTER
+        ? false
+        : (isValidatingChallengeReviews && visibleChallengeSubmissions.length > 0)
 
     return {
         approvalReviews,

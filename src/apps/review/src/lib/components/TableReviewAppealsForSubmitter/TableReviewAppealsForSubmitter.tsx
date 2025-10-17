@@ -731,7 +731,7 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
                                 'last-element',
                             )}
                         >
-                            {appealsContent}
+                            --
                         </span>
                     </Tooltip>
                 )

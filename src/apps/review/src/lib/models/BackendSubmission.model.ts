@@ -69,8 +69,13 @@ export function adjustBackendSubmission(
         }
     })
 
+    const normalizedMemberId = data.memberId === undefined || data.memberId === null
+        ? data.memberId
+        : String(data.memberId)
+
     return {
         ...data,
+        memberId: normalizedMemberId as typeof data.memberId,
         review: listOfValidReview,
         reviewResourceMapping,
     }

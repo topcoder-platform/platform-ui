@@ -11,7 +11,6 @@ import {
 } from 'react'
 import { Link } from 'react-router-dom'
 import { toast } from 'react-toastify'
-import { mutate } from 'swr'
 import _, { includes } from 'lodash'
 import classNames from 'classnames'
 
@@ -43,6 +42,9 @@ import {
     hasIsLatestFlag,
     isReviewPhase,
     partitionSubmissionHistory,
+    refreshChallengeReviewData,
+    REOPEN_MESSAGE_OTHER,
+    REOPEN_MESSAGE_SELF,
     SubmissionHistoryPartition,
 } from '../../utils'
 import { ConfirmModal } from '../ConfirmModal'
@@ -147,16 +149,6 @@ function createReopenActionButtons(
 
     return buttons
 }
-
-const REOPEN_MESSAGE_SELF = [
-    'The scorecard will be reopened and you will be able to edit it before submitting the scorecard again.',
-    'Are you sure you want to reopen the scorecard?',
-].join(' ')
-
-const REOPEN_MESSAGE_OTHER = [
-    'The scorecard will be reopened and the reviewer will be able to edit it before submitting the scorecard again.',
-    'Are you sure you want to reopen the scorecard?',
-].join(' ')
 
 export const TableReviewAppeals: FC<Props> = (props: Props) => {
     // get challenge info from challenge detail context
@@ -475,36 +467,7 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
 
             const challengeId = challengeInfo?.id
 
-            if (challengeId) {
-                const mutateKeys = new Set<string>()
-                const reviewerIdsAll = reviewers.map(reviewer => reviewer.id)
-                const reviewerKeyAll = reviewerIdsAll.slice()
-                    .sort()
-                    .join(',')
-                mutateKeys.add(`reviewBaseUrl/reviews/${challengeId}/${reviewerKeyAll}`)
-
-                const memberId = loginUserInfo?.userId
-                    ? `${loginUserInfo.userId}`
-                    : undefined
-
-                if (memberId) {
-                    const reviewerIdsSelf = reviewers
-                        .filter(reviewer => reviewer.memberId === memberId)
-                        .map(reviewer => reviewer.id)
-
-                    if (reviewerIdsSelf.length) {
-                        const reviewerKeySelf = reviewerIdsSelf.slice()
-                            .sort()
-                            .join(',')
-                        mutateKeys.add(`reviewBaseUrl/reviews/${challengeId}/${reviewerKeySelf}`)
-                    }
-                }
-
-                mutateKeys.add(`reviewBaseUrl/submissions/${challengeId}`)
-
-                await Promise.all(Array.from(mutateKeys)
-                    .map(key => mutate(key)))
-            }
+            await refreshChallengeReviewData(challengeId)
         } catch (error) {
             handleError(error)
         } finally {
@@ -877,7 +840,7 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                 // Per-review action columns removed in favor of a single combined Actions column below
             }
 
-            // Add a single combined Actions column
+            // Add a single combined Actions column (Review tab only)
             const myReviewerResourceIds = new Set(
                 myResources
                     .filter(r => (r.roleName || '')
@@ -888,7 +851,11 @@ export const TableReviewAppeals: FC<Props> = (props: Props) => {
                     .map(r => r.id),
             )
 
-            if ((myReviewerResourceIds.size > 0 || canManageCompletedReviews) && isReviewPhase(challengeInfo)) {
+            const shouldShowAggregatedActions = tab === 'Review'
+                && isReviewPhase(challengeInfo)
+                && (myReviewerResourceIds.size > 0 || canManageCompletedReviews)
+
+            if (shouldShowAggregatedActions) {
                 aggregatedColumns.push({
                     className: styles.textBlue,
                     columnId: 'actions',

@@ -18,6 +18,7 @@ import { UserRole } from '~/libs/core'
 import { TableMobile } from '~/apps/admin/src/lib/components/common/TableMobile'
 import { IsRemovingType } from '~/apps/admin/src/lib/models'
 import { MobileTableColumn } from '~/apps/admin/src/lib/models/MobileTableColumn.model'
+import { handleError } from '~/apps/admin/src/lib/utils'
 import { copyTextToClipboard, useWindowSize, WindowSize } from '~/libs/shared'
 import { IconOutline, Table, TableColumn, Tooltip } from '~/libs/ui'
 
@@ -34,9 +35,14 @@ import {
     getSubmissionHistoryKey,
     hasIsLatestFlag,
     partitionSubmissionHistory,
+    refreshChallengeReviewData,
+    REOPEN_MESSAGE_OTHER,
+    REOPEN_MESSAGE_SELF,
     SubmissionHistoryPartition,
 } from '../../utils'
 import { ChallengeDetailContext, ReviewAppContext } from '../../contexts'
+import { updateReview } from '../../services'
+import { ConfirmModal } from '../ConfirmModal'
 import { useSubmissionDownloadAccess } from '../../hooks'
 import type { UseSubmissionDownloadAccessResult } from '../../hooks/useSubmissionDownloadAccess'
 
@@ -69,8 +75,7 @@ interface BaseColumnsConfig {
 }
 
 interface ScreeningColumnConfig {
-    canViewAllScorecards: boolean
-    currentMemberId?: string
+    canViewScorecard: (entry: Screening) => boolean
 }
 
 interface ActionRenderer {
@@ -82,6 +87,12 @@ interface ActionColumnConfig {
     hasAnyScreeningAssignment: boolean
     onHistoryClick: (event: MouseEvent<HTMLButtonElement>) => void
     shouldShowHistoryActions: boolean
+    canShowReopenActions: boolean
+    onRequestReopen: (entry: Screening, isOwnReview: boolean) => void
+    isReopening: boolean
+    pendingReviewId?: string
+    canReopenGlobally: boolean
+    myResourceIds: Set<string>
 }
 
 const createSubmissionColumn = (config: SubmissionColumnConfig): TableColumn<Screening> => ({
@@ -230,8 +241,7 @@ const createBaseColumns = ({
 ]
 
 const createScreeningColumns = ({
-    canViewAllScorecards,
-    currentMemberId,
+    canViewScorecard,
 }: ScreeningColumnConfig): TableColumn<Screening>[] => [
     {
         label: 'Screener',
@@ -274,10 +284,9 @@ const createScreeningColumns = ({
                 return <span>{scoreValue}</span>
             }
 
-            const canViewScorecard = canViewAllScorecards
-                || Boolean(data.memberId && data.memberId === currentMemberId)
+            const canAccessScorecard = canViewScorecard(data)
 
-            if (!canViewScorecard) {
+            if (!canAccessScorecard) {
                 return (
                     <Tooltip content={VIEW_OWN_SCORECARD_TOOLTIP} triggerOn='click-hover'>
                         <span className={styles.tooltipTrigger}>
@@ -325,8 +334,14 @@ const createActionColumn = ({
     hasAnyScreeningAssignment,
     onHistoryClick,
     shouldShowHistoryActions,
+    canShowReopenActions,
+    onRequestReopen,
+    isReopening,
+    pendingReviewId,
+    canReopenGlobally,
+    myResourceIds,
 }: ActionColumnConfig): TableColumn<Screening> | undefined => {
-    if (!shouldShowHistoryActions && !hasAnyScreeningAssignment) {
+    if (!shouldShowHistoryActions && !hasAnyScreeningAssignment && !canShowReopenActions) {
         return undefined
     }
 
@@ -372,6 +387,41 @@ const createActionColumn = ({
                         ),
                     })
                 }
+            }
+
+            const derivedStatus = (data.reviewStatus ?? data.myReviewStatus ?? '').toUpperCase()
+            const reviewId = data.reviewId
+            const candidateResourceIds = [
+                data.myReviewResourceId,
+                data.screenerId,
+            ].filter((id): id is string => Boolean(id))
+            const isOwnReview = candidateResourceIds.some(id => myResourceIds.has(id))
+            const canReopenRow = canShowReopenActions && Boolean(
+                reviewId
+                && derivedStatus === 'COMPLETED'
+                && (canReopenGlobally || isOwnReview),
+            )
+
+            if (canReopenRow) {
+                actionRenderers.push({
+                    key: `reopen-${reviewId}`,
+                    render: isLast => (
+                        <button
+                            type='button'
+                            className={classNames(
+                                styles.submit,
+                                styles.textBlue,
+                                { 'last-element': isLast },
+                            )}
+                            // eslint-disable-next-line react/jsx-no-bind
+                            onClick={() => onRequestReopen(data, isOwnReview)}
+                            disabled={isReopening && pendingReviewId === reviewId}
+                        >
+                            <i className='icon-reopen' />
+                            Reopen Review
+                        </button>
+                    ),
+                })
             }
 
             if (shouldShowHistoryActions) {
@@ -442,7 +492,7 @@ const normalizeCreatedAt = (
 export const TableSubmissionScreening: FC<Props> = (props: Props) => {
     const { width: screenWidth }: WindowSize = useWindowSize()
     const isTablet = useMemo(() => screenWidth <= 984, [screenWidth])
-    const { challengeInfo, myRoles }: ChallengeDetailContextModel = useContext(
+    const { challengeInfo, myRoles, myResources }: ChallengeDetailContextModel = useContext(
         ChallengeDetailContext,
     )
     const { loginUserInfo }: ReviewAppContextModel = useContext(ReviewAppContext)
@@ -475,6 +525,21 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
         () => isAdminUser || hasCopilotRole,
         [isAdminUser, hasCopilotRole],
     )
+
+    const myResourceIds = useMemo(
+        () => new Set(
+            (myResources ?? [])
+                .map(resource => resource.id)
+                .filter((id): id is string => Boolean(id)),
+        ),
+        [myResources],
+    )
+
+    const canReopenGlobally = canViewAllScorecards
+    const challengeId = challengeInfo?.id
+    const challengeStatus = (challengeInfo?.status ?? '').toUpperCase()
+    const isChallengeClosedForReopen = challengeStatus === 'COMPLETED'
+        || challengeStatus.startsWith('CANCELLED')
     const showScreeningColumns = props.showScreeningColumns ?? true
     const submissionTypes = useMemo(
         () => new Set(
@@ -574,6 +639,50 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
         [props.screenings],
     )
 
+    const canShowReopenActions = useMemo(
+        () => {
+            if (!showScreeningColumns) {
+                return false
+            }
+
+            if (isChallengeClosedForReopen) {
+                return false
+            }
+
+            return props.screenings.some(screening => {
+                if (!screening.reviewId) {
+                    return false
+                }
+
+                const status = (screening.reviewStatus ?? screening.myReviewStatus ?? '').toUpperCase()
+                if (status !== 'COMPLETED') {
+                    return false
+                }
+
+                const candidateIds = [
+                    screening.myReviewResourceId,
+                    screening.screenerId,
+                ].filter((id): id is string => Boolean(id))
+
+                const isOwn = candidateIds.some(id => myResourceIds.has(id))
+                return canReopenGlobally || isOwn
+            })
+        },
+        [
+            isChallengeClosedForReopen,
+            showScreeningColumns,
+            props.screenings,
+            myResourceIds,
+            canReopenGlobally,
+        ],
+    )
+
+    const [pendingReopen, setPendingReopen] = useState<{
+        reviewId: string
+        isOwnReview: boolean
+    } | undefined>(undefined)
+    const [isReopening, setIsReopening] = useState(false)
+
     const [historyKey, setHistoryKey] = useState<string | undefined>(undefined)
 
     const historyEntriesForModal = useMemo<SubmissionInfo[]>(
@@ -597,6 +706,50 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
         },
         [historyByMember],
     )
+
+    const openReopenDialog = useCallback(
+        (entry: Screening, isOwnReview: boolean): void => {
+            if (!entry.reviewId) {
+                return
+            }
+
+            setPendingReopen({
+                isOwnReview,
+                reviewId: entry.reviewId,
+            })
+        },
+        [],
+    )
+
+    const closeReopenDialog = useCallback((): void => {
+        setPendingReopen(undefined)
+    }, [])
+
+    const handleConfirmReopen = useCallback(async (): Promise<void> => {
+        const reviewId = pendingReopen?.reviewId
+
+        if (!reviewId) {
+            closeReopenDialog()
+            return
+        }
+
+        setIsReopening(true)
+
+        try {
+            await updateReview(reviewId, { committed: false, status: 'PENDING' })
+            toast.success('Scorecard reopened.')
+            closeReopenDialog()
+            await refreshChallengeReviewData(challengeId)
+        } catch (error) {
+            handleError(error)
+        } finally {
+            setIsReopening(false)
+        }
+    }, [
+        pendingReopen?.reviewId,
+        closeReopenDialog,
+        challengeId,
+    ])
 
     const getHistoryRestriction = useCallback(
         (submission: SubmissionInfo): { message?: string; restricted: boolean } => {
@@ -678,21 +831,72 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
         [handleColumn, submissionColumn, submissionDateColumn, virusScanColumn],
     )
 
-    const screeningColumns = useMemo<TableColumn<Screening>[]>(
-        () => createScreeningColumns({
+    const canViewScorecardForRow = useCallback(
+        (entry: Screening): boolean => {
+            if (!entry.reviewId) {
+                return false
+            }
+
+            if (canViewAllScorecards) {
+                return true
+            }
+
+            if (
+                currentMemberId
+                && entry.memberId
+                && currentMemberId === entry.memberId
+            ) {
+                return true
+            }
+
+            if (entry.myReviewId && entry.reviewId === entry.myReviewId) {
+                return true
+            }
+
+            const reviewerResourceIds = [
+                entry.myReviewResourceId,
+                entry.screenerId,
+            ].filter((id): id is string => Boolean(id))
+
+            return reviewerResourceIds.some(id => myResourceIds.has(id))
+        },
+        [
             canViewAllScorecards,
             currentMemberId,
+            myResourceIds,
+        ],
+    )
+
+    const screeningColumns = useMemo<TableColumn<Screening>[]>(
+        () => createScreeningColumns({
+            canViewScorecard: canViewScorecardForRow,
         }),
-        [canViewAllScorecards, currentMemberId],
+        [canViewScorecardForRow],
     )
 
     const actionColumn = useMemo(
         () => createActionColumn({
+            canReopenGlobally,
+            canShowReopenActions,
             hasAnyScreeningAssignment,
+            isReopening,
+            myResourceIds,
             onHistoryClick: handleHistoryButtonClick,
+            onRequestReopen: openReopenDialog,
+            pendingReviewId: pendingReopen?.reviewId,
             shouldShowHistoryActions,
         }),
-        [hasAnyScreeningAssignment, handleHistoryButtonClick, shouldShowHistoryActions],
+        [
+            canReopenGlobally,
+            canShowReopenActions,
+            hasAnyScreeningAssignment,
+            myResourceIds,
+            handleHistoryButtonClick,
+            openReopenDialog,
+            pendingReopen?.reviewId,
+            isReopening,
+            shouldShowHistoryActions,
+        ],
     )
 
     const columns = useMemo<TableColumn<Screening>[]>(
@@ -762,6 +966,21 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
                 getRestriction={getHistoryRestriction}
                 getSubmissionMeta={resolveSubmissionMeta}
             />
+            <ConfirmModal
+                title='Reopen Scorecard Confirmation'
+                open={Boolean(pendingReopen)}
+                onClose={closeReopenDialog}
+                onConfirm={handleConfirmReopen}
+                cancelText='Cancel'
+                action='Confirm'
+                isLoading={isReopening}
+            >
+                <div>
+                    {pendingReopen?.isOwnReview
+                        ? REOPEN_MESSAGE_SELF
+                        : REOPEN_MESSAGE_OTHER}
+                </div>
+            </ConfirmModal>
         </TableWrapper>
     )
 }

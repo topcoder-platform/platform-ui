@@ -1,7 +1,7 @@
 /**
  * Table Checkpoint Submissions.
  */
-import { FC, MouseEvent, useMemo } from 'react'
+import { FC, MouseEvent, useCallback, useContext, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import _ from 'lodash'
@@ -12,10 +12,24 @@ import { IsRemovingType } from '~/apps/admin/src/lib/models'
 import { MobileTableColumn } from '~/apps/admin/src/lib/models/MobileTableColumn.model'
 import { copyTextToClipboard, useWindowSize, WindowSize } from '~/libs/shared'
 import { IconOutline, Table, TableColumn, Tooltip } from '~/libs/ui'
+import { UserRole } from '~/libs/core'
+import { handleError } from '~/apps/admin/src/lib/utils'
 
-import { Screening } from '../../models'
+import {
+    ChallengeDetailContextModel,
+    ReviewAppContextModel,
+    Screening,
+} from '../../models'
 import { TableWrapper } from '../TableWrapper'
-import { getHandleUrl } from '../../utils'
+import {
+    getHandleUrl,
+    refreshChallengeReviewData,
+    REOPEN_MESSAGE_OTHER,
+    REOPEN_MESSAGE_SELF,
+} from '../../utils'
+import { ChallengeDetailContext, ReviewAppContext } from '../../contexts'
+import { updateReview } from '../../services'
+import { ConfirmModal } from '../ConfirmModal'
 import { useSubmissionDownloadAccess } from '../../hooks'
 import type { UseSubmissionDownloadAccessResult } from '../../hooks/useSubmissionDownloadAccess'
 
@@ -33,6 +47,52 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
     const { width: screenWidth }: WindowSize = useWindowSize()
     const isTablet = useMemo(() => screenWidth <= 984, [screenWidth])
     const mode = props.mode ?? 'submission'
+    const datas: Screening[] | undefined = props.datas
+    const downloadSubmission = props.downloadSubmission
+    const isDownloading = props.isDownloading
+
+    const {
+        challengeInfo,
+        myResources,
+        myRoles,
+    }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
+    const { loginUserInfo }: ReviewAppContextModel = useContext(ReviewAppContext)
+
+    const normalisedRoles = useMemo(
+        () => (myRoles ?? []).map(role => role.toLowerCase()),
+        [myRoles],
+    )
+
+    const hasCopilotRole = useMemo(
+        () => normalisedRoles.some(role => role.includes('copilot')),
+        [normalisedRoles],
+    )
+
+    const isAdminUser = useMemo(
+        () => loginUserInfo?.roles?.some(
+            role => typeof role === 'string'
+                && role.toLowerCase() === UserRole.administrator,
+        ) ?? false,
+        [loginUserInfo?.roles],
+    )
+
+    const myResourceIds = useMemo(
+        () => new Set(
+            (myResources ?? [])
+                .map(resource => resource.id)
+                .filter((id): id is string => Boolean(id)),
+        ),
+        [myResources],
+    )
+
+    const canReopenGlobally = isAdminUser || hasCopilotRole
+    const challengeId = challengeInfo?.id
+
+    const [pendingReopen, setPendingReopen] = useState<{
+        reviewId: string
+        isOwnReview: boolean
+    } | undefined>(undefined)
+    const [isReopening, setIsReopening] = useState(false)
 
     const {
         isSubmissionDownloadRestricted,
@@ -41,9 +101,54 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
         getRestrictionMessageForMember,
     }: UseSubmissionDownloadAccessResult = useSubmissionDownloadAccess()
 
+    const openReopenDialog = useCallback(
+        (entry: Screening, isOwnReview: boolean): void => {
+            if (!entry.reviewId) {
+                return
+            }
+
+            setPendingReopen({
+                isOwnReview,
+                reviewId: entry.reviewId,
+            })
+        },
+        [],
+    )
+
+    const closeReopenDialog = useCallback((): void => {
+        setPendingReopen(undefined)
+    }, [])
+
+    const handleConfirmReopen = useCallback(async (): Promise<void> => {
+        const reviewId = pendingReopen?.reviewId
+
+        if (!reviewId) {
+            closeReopenDialog()
+            return
+        }
+
+        setIsReopening(true)
+
+        try {
+            await updateReview(reviewId, { committed: false, status: 'PENDING' })
+            toast.success('Scorecard reopened.')
+            closeReopenDialog()
+            await refreshChallengeReviewData(challengeId)
+        } catch (error) {
+            handleError(error)
+        } finally {
+            setIsReopening(false)
+        }
+    }, [
+        pendingReopen?.reviewId,
+        closeReopenDialog,
+        challengeId,
+    ])
+
     const columns = useMemo<TableColumn<Screening>[]>(
         () => {
-            const tableMode = props.mode ?? 'submission'
+            const tableMode = mode
+            const rows = datas ?? []
             const submissionColumn: TableColumn<Screening> = {
                 className: styles.submissionColumn,
                 label: 'Submission ID',
@@ -56,7 +161,7 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
                         ? 'Submission failed virus scan'
                         : (getRestrictionMessageForMember(data.memberId) ?? restrictionMessage)
                     const isButtonDisabled = Boolean(
-                        props.isDownloading[data.submissionId]
+                        isDownloading[data.submissionId]
                         || isRestrictedForRow,
                     )
 
@@ -67,7 +172,7 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
                                     return
                                 }
 
-                                props.downloadSubmission(data.submissionId)
+                                downloadSubmission(data.submissionId)
                             }}
                             className={styles.textBlue}
                             disabled={isButtonDisabled}
@@ -160,6 +265,28 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
                 handleColumn,
                 submissionDateColumn,
             ]
+
+            const computeReopenEligibility = (entry: Screening): { canReopen: boolean; isOwnReview: boolean } => {
+                if (!entry.reviewId) {
+                    return { canReopen: false, isOwnReview: false }
+                }
+
+                const status = (entry.reviewStatus ?? entry.myReviewStatus ?? '').toUpperCase()
+                if (status !== 'COMPLETED') {
+                    return { canReopen: false, isOwnReview: false }
+                }
+
+                const candidateIds = [
+                    entry.myReviewResourceId,
+                    entry.screenerId,
+                ].filter((id): id is string => Boolean(id))
+
+                const isOwnReview = candidateIds.some(id => myResourceIds.has(id))
+                return {
+                    canReopen: canReopenGlobally || isOwnReview,
+                    isOwnReview,
+                }
+            }
 
             if (tableMode === 'submission') {
                 return baseColumns
@@ -257,9 +384,9 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
                     },
                 ]
 
-                // Determine if an Action column is needed (current user has any checkpoint screening assignment)
-                const hasAnyMyAssignment = (props.datas || []).some(d => !!d.myReviewResourceId)
-                if (!hasAnyMyAssignment) {
+                const hasAnyMyAssignment = rows.some(row => Boolean(row.myReviewResourceId))
+                const canShowReopenActions = rows.some(row => computeReopenEligibility(row).canReopen)
+                if (!hasAnyMyAssignment && !canShowReopenActions) {
                     return screeningColumns
                 }
 
@@ -267,36 +394,86 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
                     label: 'Action',
                     propertyName: 'action',
                     renderer: (data: Screening) => {
+                        const actions: Array<{ key: string; render: (isLast: boolean) => JSX.Element }> = []
                         const status = (data.myReviewStatus || '').toUpperCase()
-                        if (['COMPLETED', 'SUBMITTED'].includes(status)) {
-                            return (
-                                <div
-                                    aria-label='Screening completed'
-                                    className={styles.completedAction}
-                                    title='Screening completed'
-                                >
-                                    <span className={styles.completedIcon} aria-hidden='true'>
-                                        <IconOutline.CheckIcon />
-                                    </span>
-                                    <span className={styles.completedPill}>Screening Complete</span>
-                                </div>
-                            )
+
+                        if (
+                            data.myReviewResourceId
+                        && ['COMPLETED', 'SUBMITTED'].includes(status)
+                        ) {
+                            actions.push({
+                                key: `completed-${data.submissionId}`,
+                                render: isLast => (
+                                    <div
+                                        aria-label='Screening completed'
+                                        className={classNames(styles.completedAction, { 'last-element': isLast })}
+                                        title='Screening completed'
+                                    >
+                                        <span className={styles.completedIcon} aria-hidden='true'>
+                                            <IconOutline.CheckIcon />
+                                        </span>
+                                        <span className={styles.completedPill}>Screening Complete</span>
+                                    </div>
+                                ),
+                            })
+                        } else if (data.myReviewId) {
+                            actions.push({
+                                key: `complete-${data.myReviewId}`,
+                                render: isLast => (
+                                    <Link
+                                        to={`./../review/${data.myReviewId}`}
+                                        className={classNames(styles.submit, { 'last-element': isLast })}
+                                    >
+                                        <i className='icon-upload' />
+                                        Complete Screening
+                                    </Link>
+                                ),
+                            })
                         }
 
-                        const reviewId = data.myReviewId
-                        if (!reviewId) {
-                            return undefined
+                        const reopenEligibility = computeReopenEligibility(data)
+                        const canReopen: boolean = reopenEligibility.canReopen
+                        const isOwnReview: boolean = reopenEligibility.isOwnReview
+                        if (canReopen) {
+                            actions.push({
+                                key: `reopen-${data.reviewId}`,
+                                render: isLast => (
+                                    <button
+                                        type='button'
+                                        className={classNames(
+                                            styles.submit,
+                                            styles.textBlue,
+                                            { 'last-element': isLast },
+                                        )}
+                                        // eslint-disable-next-line react/jsx-no-bind
+                                        onClick={() => openReopenDialog(data, isOwnReview)}
+                                        disabled={isReopening && pendingReopen?.reviewId === data.reviewId}
+                                    >
+                                        <i className='icon-reopen' />
+                                        Reopen Review
+                                    </button>
+                                ),
+                            })
                         }
 
-                        // Pending or In Progress (or empty but assignment exists)
+                        if (!actions.length) {
+                            return <span>--</span>
+                        }
+
                         return (
-                            <Link
-                                to={`./../review/${reviewId}`}
-                                className={classNames(styles.submit, 'last-element')}
-                            >
-                                <i className='icon-upload' />
-                                Complete Screening
-                            </Link>
+                            <div className={styles.actionsContainer}>
+                                {actions.map((action, index) => {
+                                    const isLast = index === actions.length - 1
+                                    return (
+                                        <div
+                                            key={action.key}
+                                            className={classNames({ 'last-element': isLast })}
+                                        >
+                                            {action.render(isLast)}
+                                        </div>
+                                    )
+                                })}
+                            </div>
                         )
                     },
                     type: 'element',
@@ -367,8 +544,9 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
                 },
             ]
 
-            const hasAnyMyAssignment = (props.datas || []).some(d => !!d.myReviewResourceId)
-            if (!hasAnyMyAssignment) {
+            const hasAnyMyAssignment = rows.some(row => Boolean(row.myReviewResourceId))
+            const canShowReopenActions = rows.some(row => computeReopenEligibility(row).canReopen)
+            if (!hasAnyMyAssignment && !canShowReopenActions) {
                 return reviewColumns
             }
 
@@ -376,35 +554,86 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
                 label: 'Action',
                 propertyName: 'action',
                 renderer: (data: Screening) => {
+                    const actions: Array<{ key: string; render: (isLast: boolean) => JSX.Element }> = []
                     const status = (data.myReviewStatus || '').toUpperCase()
-                    if (['COMPLETED', 'SUBMITTED'].includes(status)) {
-                        return (
-                            <div
-                                aria-label='Review completed'
-                                className={styles.completedAction}
-                                title='Review completed'
-                            >
-                                <span className={styles.completedIcon} aria-hidden='true'>
-                                    <IconOutline.CheckIcon />
-                                </span>
-                                <span className={styles.completedPill}>Review Complete</span>
-                            </div>
-                        )
+
+                    if (
+                        data.myReviewResourceId
+                    && ['COMPLETED', 'SUBMITTED'].includes(status)
+                    ) {
+                        actions.push({
+                            key: `completed-${data.submissionId}`,
+                            render: isLast => (
+                                <div
+                                    aria-label='Review completed'
+                                    className={classNames(styles.completedAction, { 'last-element': isLast })}
+                                    title='Review completed'
+                                >
+                                    <span className={styles.completedIcon} aria-hidden='true'>
+                                        <IconOutline.CheckIcon />
+                                    </span>
+                                    <span className={styles.completedPill}>Review Complete</span>
+                                </div>
+                            ),
+                        })
+                    } else if (data.myReviewId) {
+                        actions.push({
+                            key: `complete-${data.myReviewId}`,
+                            render: isLast => (
+                                <Link
+                                    to={`./../review/${data.myReviewId}`}
+                                    className={classNames(styles.submit, { 'last-element': isLast })}
+                                >
+                                    <i className='icon-upload' />
+                                    Complete Review
+                                </Link>
+                            ),
+                        })
                     }
 
-                    const reviewId = data.myReviewId
-                    if (!reviewId) {
-                        return undefined
+                    const reopenEligibility = computeReopenEligibility(data)
+                    const canReopen: boolean = reopenEligibility.canReopen
+                    const isOwnReview: boolean = reopenEligibility.isOwnReview
+                    if (canReopen) {
+                        actions.push({
+                            key: `reopen-${data.reviewId}`,
+                            render: isLast => (
+                                <button
+                                    type='button'
+                                    className={classNames(
+                                        styles.submit,
+                                        styles.textBlue,
+                                        { 'last-element': isLast },
+                                    )}
+                                    // eslint-disable-next-line react/jsx-no-bind
+                                    onClick={() => openReopenDialog(data, isOwnReview)}
+                                    disabled={isReopening && pendingReopen?.reviewId === data.reviewId}
+                                >
+                                    <i className='icon-reopen' />
+                                    Reopen Review
+                                </button>
+                            ),
+                        })
+                    }
+
+                    if (!actions.length) {
+                        return <span>--</span>
                     }
 
                     return (
-                        <Link
-                            to={`./../review/${reviewId}`}
-                            className={classNames(styles.submit, 'last-element')}
-                        >
-                            <i className='icon-upload' />
-                            Complete Review
-                        </Link>
+                        <div className={styles.actionsContainer}>
+                            {actions.map((action, index) => {
+                                const isLast = index === actions.length - 1
+                                return (
+                                    <div
+                                        key={action.key}
+                                        className={classNames({ 'last-element': isLast })}
+                                    >
+                                        {action.render(isLast)}
+                                    </div>
+                                )
+                            })}
+                        </div>
                     )
                 },
                 type: 'element',
@@ -416,11 +645,19 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
             ]
         },
         [
-            props,
+            mode,
+            datas,
+            downloadSubmission,
+            isDownloading,
             isSubmissionDownloadRestricted,
             restrictionMessage,
             isSubmissionDownloadRestrictedForMember,
             getRestrictionMessageForMember,
+            canReopenGlobally,
+            myResourceIds,
+            openReopenDialog,
+            isReopening,
+            pendingReopen?.reviewId,
         ],
     )
 
@@ -471,6 +708,21 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
                     removeDefaultSort
                 />
             )}
+            <ConfirmModal
+                title='Reopen Scorecard Confirmation'
+                open={Boolean(pendingReopen)}
+                onClose={closeReopenDialog}
+                onConfirm={handleConfirmReopen}
+                cancelText='Cancel'
+                action='Confirm'
+                isLoading={isReopening}
+            >
+                <div>
+                    {pendingReopen?.isOwnReview
+                        ? REOPEN_MESSAGE_SELF
+                        : REOPEN_MESSAGE_OTHER}
+                </div>
+            </ConfirmModal>
         </TableWrapper>
     )
 }

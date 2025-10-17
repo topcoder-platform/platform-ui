@@ -277,7 +277,13 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
 
             const memberId = String(userId)
 
-            return challengeSubmissions.filter(submission => submission.memberId === memberId)
+            return challengeSubmissions.filter(submission => {
+                if (submission?.memberId === undefined || submission?.memberId === null) {
+                    return false
+                }
+
+                return String(submission.memberId) === memberId
+            })
         },
         [challengeSubmissions, isLoadingChallengeSubmissions, loginUserInfo?.userId],
     )

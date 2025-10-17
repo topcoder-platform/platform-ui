@@ -37,6 +37,10 @@ export interface Screening {
      */
     myReviewStatus?: string
     /**
+     * Overall review status for the associated scorecard.
+     */
+    reviewStatus?: string
+    /**
      * Indicates whether this submission is the latest for the member.
      */
     isLatest?: boolean
