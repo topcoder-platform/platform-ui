@@ -237,6 +237,7 @@ export const ChallengePhaseInfo: FC<Props> = (props: Props) => {
             }),
             ...createActiveItems({
                 data,
+                isTask,
                 progressType: PROGRESS_TYPE,
                 reviewInProgress,
                 reviewProgress: props.reviewProgress,
@@ -420,8 +421,13 @@ function createActiveItems(config: {
     reviewInProgress: boolean
     reviewProgress: number
     variant: ChallengeVariant
+    isTask: boolean
 }): ChallengePhaseItem[] {
     if (config.variant !== 'active') {
+        return []
+    }
+
+    if (config.isTask) {
         return []
     }
 
