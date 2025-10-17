@@ -1330,7 +1330,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
             id: 'ai-review-scores-warning',
             message: `AI Review Scores are advisory only to provide immediate,
                 educational, and actionable feedback to members.
-                AI Review Scores are not influence winner selection.`,
+                AI Review Scores do not influence winner selection.`,
         })
         return () => notification && removeNotification(notification.id)
     }, [showBannerNotification])
