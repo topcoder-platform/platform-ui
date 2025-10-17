@@ -283,14 +283,14 @@ function determinePassFail(
         return numericScore >= minPass ? 'PASS' : 'NO PASS'
     }
 
-    const normalizedBase = (baseResult || '').toUpperCase()
-    if (normalizedBase === 'PASS' || normalizedBase === 'NO PASS') {
-        return normalizedBase as Screening['result']
-    }
-
     const outcomeFromMetadata = metadata ? extractOutcomeFromMetadata(metadata) : undefined
     if (outcomeFromMetadata) {
         return outcomeFromMetadata
+    }
+
+    const normalizedBase = (baseResult || '').toUpperCase()
+    if (normalizedBase === 'PASS' || normalizedBase === 'NO PASS') {
+        return normalizedBase as Screening['result']
     }
 
     return baseResult

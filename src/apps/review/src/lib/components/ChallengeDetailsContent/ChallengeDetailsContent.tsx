@@ -124,12 +124,19 @@ const renderSubmissionTab = ({
     downloadSubmission,
     isActiveChallenge,
 }: SubmissionTabParams): JSX.Element => {
-    const canShowSubmissionList = selectedTabLower !== 'screening' && submissions.length > 0
+    const shouldRestrictToContestSubmissions = isActiveChallenge
+        && selectedTabLower.startsWith('submission')
+    const visibleSubmissions = shouldRestrictToContestSubmissions
+        ? submissions.filter(
+            submission => normalizeType(submission.type) === 'contestsubmission',
+        )
+        : submissions
+    const canShowSubmissionList = selectedTabLower !== 'screening' && visibleSubmissions.length > 0
 
     if (canShowSubmissionList) {
         return (
             <TabContentSubmissions
-                submissions={submissions}
+                submissions={visibleSubmissions}
                 isLoading={isLoadingSubmission}
                 isDownloading={isDownloadingSubmission}
                 downloadSubmission={downloadSubmission}

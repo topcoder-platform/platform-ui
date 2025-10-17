@@ -548,20 +548,48 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
     }, [challengeInfo?.type?.abbreviation, challengeInfo?.type?.name])
 
     useEffect(() => {
+        if (!tabItems.length) return
+
+        const assignTab = (value: string | undefined): void => {
+            if (!value) return
+            setSelectedTab(value)
+            sessionStorage.setItem(TAB, value)
+        }
+
         const tab = searchParams.get('tab')
-        if (tabItems.length) {
-            if (tab) {
-                const tabId = tabItems.findIndex(item => kebabCase(item.value) === tab)
-                if (tabId > -1) {
-                    setSelectedTab(tabItems[tabId].value)
-                    sessionStorage.setItem(TAB, tabItems[tabId].value)
-                }
-            } else {
-                setSelectedTab(tabItems[0].value)
-                sessionStorage.setItem(TAB, tabItems[0].value)
+        if (tab) {
+            const match = tabItems.find(item => kebabCase(item.value) === tab)
+            if (match) {
+                assignTab(match.value)
+                return
             }
         }
-    }, [searchParams, tabItems])
+
+        if (!isPastReviewDetail) {
+            const challengePhases = challengeInfo?.phases ?? []
+            if (challengePhases.length) {
+                let openTabValue: string | undefined
+                tabItems.forEach(item => {
+                    const phase = findPhaseByTabLabel(challengePhases, item.value, phaseOrderingOptions)
+                    if (phase?.isOpen) {
+                        openTabValue = item.value
+                    }
+                })
+                if (openTabValue) {
+                    assignTab(openTabValue)
+                    return
+                }
+            }
+        }
+
+        assignTab(tabItems[0]?.value)
+    }, [
+        searchParams,
+        tabItems,
+        challengeInfo?.phases,
+        phaseOrderingOptions,
+        isPastReviewDetail,
+    ])
 
     // eslint-disable-next-line complexity
     useEffect(() => {

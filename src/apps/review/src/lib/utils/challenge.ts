@@ -220,8 +220,20 @@ const normalizePhaseName = (name?: string): string => (name || '')
 
 const isRegistrationPhase = (name?: string): boolean => normalizePhaseName(name) === 'registration'
 const isSubmissionPhase = (name?: string): boolean => normalizePhaseName(name) === 'submission'
+const isCheckpointSubmissionPhase = (name?: string): boolean => normalizePhaseName(name) === 'checkpoint submission'
+const isCheckpointScreeningPhase = (name?: string): boolean => normalizePhaseName(name) === 'checkpoint screening'
 const isIterativeReviewPhase = (name?: string): boolean => normalizePhaseName(name)
     .includes('iterative review')
+
+const getPhaseStartTimestamp = (phase: PhaseLike | undefined): number | undefined => {
+    if (!phase) return undefined
+    const startSource = phase.actualStartDate || phase.scheduledStartDate
+    if (!startSource) return undefined
+    const parsed = Date.parse(startSource)
+    if (Number.isNaN(parsed)) return undefined
+    const minutes = Math.floor(parsed / 60000)
+    return Number.isNaN(minutes) ? undefined : minutes
+}
 
 const orderPhasesForTabs = (
     phases: PhaseLike[],
@@ -296,6 +308,29 @@ const orderPhasesForTabs = (
         const [registrationPhase] = orderedResult.splice(registrationIdx, 1)
         orderedResult.splice(submissionIdx, 0, registrationPhase)
     }
+
+    const ensureRegistrationBeforePhase = (predicate: (phase: PhaseLike) => boolean): void => {
+        const currentRegistrationIdx = orderedResult.findIndex(phase => isRegistrationPhase(phase.name))
+        if (currentRegistrationIdx === -1) return
+
+        const targetIdx = orderedResult.findIndex(predicate)
+        if (targetIdx === -1) return
+        if (currentRegistrationIdx <= targetIdx) return
+
+        const registrationPhase = orderedResult[currentRegistrationIdx]
+        const targetPhase = orderedResult[targetIdx]
+        const registrationStart = getPhaseStartTimestamp(registrationPhase)
+        const targetStart = getPhaseStartTimestamp(targetPhase)
+
+        if (registrationStart !== undefined && registrationStart === targetStart) {
+            const [registrationEntry] = orderedResult.splice(currentRegistrationIdx, 1)
+            const insertionIdx = orderedResult.indexOf(targetPhase)
+            orderedResult.splice(insertionIdx < 0 ? 0 : insertionIdx, 0, registrationEntry)
+        }
+    }
+
+    ensureRegistrationBeforePhase(phase => isCheckpointSubmissionPhase(phase.name))
+    ensureRegistrationBeforePhase(phase => isCheckpointScreeningPhase(phase.name))
 
     if (opts?.isF2F || opts?.isTask) {
         const iterative = orderedResult.filter(phase => isIterativeReviewPhase(phase.name))

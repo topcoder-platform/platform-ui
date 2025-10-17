@@ -62,6 +62,54 @@ describe('challenge phase tab helpers', () => {
             .toBe('a')
     })
 
+    it('places Registration before Checkpoint Screening when the start times match', () => {
+        const phases: PhaseLike[] = [
+            createPhase('a', 'Checkpoint Screening', '2025-01-01T00:00:00Z'),
+            createPhase('b', 'Registration', '2025-01-01T00:00:00Z'),
+            createPhase('c', 'Submission', '2025-01-02T00:00:00Z'),
+        ]
+
+        const tabs = buildPhaseTabs(phases)
+        expect(tabs.map(tab => tab.value))
+            .toEqual([
+                'Registration',
+                'Checkpoint Screening',
+                'Submission',
+            ])
+
+        const registrationPhase = findPhaseByTabLabel(phases, 'Registration')
+        const checkpointPhase = findPhaseByTabLabel(phases, 'Checkpoint Screening')
+
+        expect(registrationPhase?.id)
+            .toBe('b')
+        expect(checkpointPhase?.id)
+            .toBe('a')
+    })
+
+    it('places Registration before Checkpoint Submission when the start times match', () => {
+        const phases: PhaseLike[] = [
+            createPhase('a', 'Checkpoint Submission', '2025-01-01T00:00:00Z'),
+            createPhase('b', 'Registration', '2025-01-01T00:00:00Z'),
+            createPhase('c', 'Checkpoint Screening', '2025-01-01T00:10:00Z'),
+        ]
+
+        const tabs = buildPhaseTabs(phases)
+        expect(tabs.map(tab => tab.value))
+            .toEqual([
+                'Registration',
+                'Checkpoint Submission',
+                'Checkpoint Screening',
+            ])
+
+        const registrationPhase = findPhaseByTabLabel(phases, 'Registration')
+        const checkpointPhase = findPhaseByTabLabel(phases, 'Checkpoint Submission')
+
+        expect(registrationPhase?.id)
+            .toBe('b')
+        expect(checkpointPhase?.id)
+            .toBe('a')
+    })
+
     it('keeps iterative review phases directly after submission for F2F challenges', () => {
         const phases: PhaseLike[] = [
             createPhase('1', 'Registration', '2025-01-01T00:00:00Z'),
@@ -80,5 +128,29 @@ describe('challenge phase tab helpers', () => {
                 'Iterative Review 2',
                 'Review',
             ])
+    })
+
+    it('ignores seconds when comparing phase start times', () => {
+        const phases: PhaseLike[] = [
+            createPhase('a', 'Checkpoint Screening', '2025-01-01T00:00:45Z'),
+            createPhase('b', 'Registration', '2025-01-01T00:00:05Z'),
+            createPhase('c', 'Submission', '2025-01-01T00:01:00Z'),
+        ]
+
+        const tabs = buildPhaseTabs(phases)
+        expect(tabs.map(tab => tab.value))
+            .toEqual([
+                'Registration',
+                'Checkpoint Screening',
+                'Submission',
+            ])
+
+        const registrationPhase = findPhaseByTabLabel(phases, 'Registration')
+        const checkpointPhase = findPhaseByTabLabel(phases, 'Checkpoint Screening')
+
+        expect(registrationPhase?.id)
+            .toBe('b')
+        expect(checkpointPhase?.id)
+            .toBe('a')
     })
 })

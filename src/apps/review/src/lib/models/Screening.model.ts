@@ -75,8 +75,12 @@ export function convertBackendSubmissionToScreening(
         : undefined
 
     let result: ScreeningResult = '-'
+    const status = (data.status ?? '')
+        .toString()
+        .toUpperCase()
+
     // update screening result base on the submission status
-    if (data.status.toString() === 'FAILED_SCREENING') {
+    if (status === 'FAILED_SCREENING' || status === 'FAILED_CHECKPOINT_SCREENING') {
         result = 'NO PASS'
     } else if (!!data.screeningScore) {
         result = 'PASS'

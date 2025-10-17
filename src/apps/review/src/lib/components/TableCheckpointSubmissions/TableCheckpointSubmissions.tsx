@@ -96,10 +96,10 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
     const [isReopening, setIsReopening] = useState(false)
 
     const {
-        isSubmissionDownloadRestricted,
         restrictionMessage,
         isSubmissionDownloadRestrictedForMember,
         getRestrictionMessageForMember,
+        currentMemberId,
     }: UseSubmissionDownloadAccessResult = useSubmissionDownloadAccess()
 
     const openReopenDialog = useCallback(
@@ -146,10 +146,53 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
         challengeId,
     ])
 
+    const hasReviewerRole = useMemo(
+        () => normalisedRoles.some(role => role.includes('reviewer')),
+        [normalisedRoles],
+    )
+
+    const hasSubmitterRole = useMemo(
+        () => normalisedRoles.some(role => role.includes('submitter')),
+        [normalisedRoles],
+    )
+
+    const shouldRestrictToOwnCheckpoint = useMemo(
+        () => hasSubmitterRole && !hasCopilotRole && !hasReviewerRole && !isAdminUser,
+        [
+            hasSubmitterRole,
+            hasCopilotRole,
+            hasReviewerRole,
+            isAdminUser,
+        ],
+    )
+
+    const visibleRows = useMemo<Screening[]>(
+        () => {
+            const baseRows = datas ?? []
+
+            if (!shouldRestrictToOwnCheckpoint || !currentMemberId) {
+                return baseRows
+            }
+
+            const normalizedMemberId = String(currentMemberId)
+
+            return baseRows.filter(row => {
+                const typeNormalized = (row.type || '').toUpperCase()
+                const isCheckpointSubmission = typeNormalized.includes('CHECKPOINT')
+                if (!isCheckpointSubmission) {
+                    return false
+                }
+
+                return String(row.memberId) === normalizedMemberId
+            })
+        },
+        [datas, shouldRestrictToOwnCheckpoint, currentMemberId],
+    )
+
     const columns = useMemo<TableColumn<Screening>[]>(
         () => {
             const tableMode = mode
-            const rows = datas ?? []
+            const rows = visibleRows
             const submissionColumn: TableColumn<Screening> = {
                 className: styles.submissionColumn,
                 label: 'Submission ID',
@@ -652,10 +695,9 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
         [
             challengeInfo,
             mode,
-            datas,
+            visibleRows,
             downloadSubmission,
             isDownloading,
-            isSubmissionDownloadRestricted,
             restrictionMessage,
             isSubmissionDownloadRestrictedForMember,
             getRestrictionMessageForMember,
@@ -692,7 +734,7 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
         [columns],
     )
 
-    const hasCheckpointData = (props.datas?.length ?? 0) > 0
+    const hasCheckpointData = visibleRows.length > 0
     const shouldShowEmptyState = !hasCheckpointData && (mode === 'screening' || mode === 'review')
 
     return (
@@ -704,11 +746,11 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
                     No checkpoint submissions yet
                 </p>
             ) : isTablet ? (
-                <TableMobile columns={columnsMobile} data={props.datas} />
+                <TableMobile columns={columnsMobile} data={visibleRows} />
             ) : (
                 <Table
                     columns={columns}
-                    data={props.datas}
+                    data={visibleRows}
                     disableSorting
                     onToggleSort={_.noop}
                     removeDefaultSort
