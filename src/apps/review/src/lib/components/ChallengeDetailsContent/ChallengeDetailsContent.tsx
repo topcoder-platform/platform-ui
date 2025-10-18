@@ -210,6 +210,80 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
                 .includes('postmortem'),
         )
     ), [props.submitterReviews])
+    const hasScreeningPhase = useMemo(
+        () => (challengeInfo?.phases ?? []).some(
+            phase => (phase.name || '').trim()
+                .toLowerCase() === 'screening',
+        ),
+        [challengeInfo?.phases],
+    )
+    const {
+        reviews: reviewTabReviews,
+        submitterReviews: reviewTabSubmitterReviews,
+    }: {
+        reviews: SubmissionInfo[]
+        submitterReviews: SubmissionInfo[]
+    } = useMemo(() => {
+        const shouldFilter = props.isActiveChallenge && hasScreeningPhase
+        if (!shouldFilter) {
+            return {
+                reviews: props.review,
+                submitterReviews: props.submitterReviews,
+            }
+        }
+
+        const passingSubmissionIds = new Set<string>()
+        props.screening.forEach(entry => {
+            if (!entry?.submissionId) {
+                return
+            }
+
+            const result = (entry.result || '').toUpperCase()
+            if (result === 'PASS') {
+                passingSubmissionIds.add(`${entry.submissionId}`)
+            }
+        })
+
+        if (passingSubmissionIds.size === 0) {
+            return {
+                reviews: [],
+                submitterReviews: [],
+            }
+        }
+
+        const matchesPassingScreening = (submission: SubmissionInfo): boolean => {
+            if (!submission) {
+                return false
+            }
+
+            const candidateIds: string[] = []
+            if (submission.id) {
+                candidateIds.push(`${submission.id}`)
+            }
+
+            const reviewSubmissionId = submission.review?.submissionId
+            if (reviewSubmissionId) {
+                candidateIds.push(`${reviewSubmissionId}`)
+            }
+
+            if (!candidateIds.length) {
+                return true
+            }
+
+            return candidateIds.some(id => passingSubmissionIds.has(id))
+        }
+
+        return {
+            reviews: props.review.filter(matchesPassingScreening),
+            submitterReviews: props.submitterReviews.filter(matchesPassingScreening),
+        }
+    }, [
+        hasScreeningPhase,
+        props.isActiveChallenge,
+        props.review,
+        props.submitterReviews,
+        props.screening,
+    ])
 
     const renderSelectedTab = (): JSX.Element => {
         const selectedTabLower = (props.selectedTab || '').toLowerCase()
@@ -304,8 +378,8 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
         return (
             <TabContentReview
                 selectedTab={props.selectedTab}
-                reviews={props.review}
-                submitterReviews={props.submitterReviews}
+                reviews={reviewTabReviews}
+                submitterReviews={reviewTabSubmitterReviews}
                 isLoadingReview={props.isLoadingSubmission}
                 isDownloading={isDownloadingSubmission}
                 downloadSubmission={downloadSubmission}

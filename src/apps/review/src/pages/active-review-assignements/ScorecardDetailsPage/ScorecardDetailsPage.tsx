@@ -37,7 +37,7 @@ import { activeReviewAssigmentsRouteId, rootRoute } from '../../../config/routes
 
 import styles from './ScorecardDetailsPage.module.scss'
 
-type ReviewPhaseType = 'screening' | 'checkpoint screening' | 'checkpoint review'
+type ReviewPhaseType = 'screening' | 'checkpoint screening' | 'checkpoint review' | 'approval'
 
 const detectReviewPhaseType = (value?: unknown): ReviewPhaseType | undefined => {
     if (value === undefined || value === null) {
@@ -62,6 +62,10 @@ const detectReviewPhaseType = (value?: unknown): ReviewPhaseType | undefined => 
 
     if (normalized.includes('screening')) {
         return 'screening'
+    }
+
+    if (normalized.includes('approval')) {
+        return 'approval'
     }
 
     return undefined
@@ -130,6 +134,41 @@ const detectReviewTypeFromPhases = (
     const matchedPhase = phases.find(phase => `${phase.id}` === normalizedTargetPhaseId)
 
     return detectReviewPhaseType(matchedPhase?.name)
+}
+
+const canRoleEditPhase = (
+    reviewPhaseType: ReviewPhaseType | undefined,
+    currentPhaseReviewType: ReviewPhaseType | undefined,
+    normalizedRoleName: string,
+): boolean => {
+    switch (reviewPhaseType) {
+        case 'checkpoint screening':
+            return currentPhaseReviewType === 'checkpoint screening'
+                && normalizedRoleName === 'checkpoint screener'
+        case 'checkpoint review':
+            return currentPhaseReviewType === 'checkpoint review'
+                && normalizedRoleName === 'checkpoint reviewer'
+        case 'screening': {
+            const isScreenerRole = (
+                normalizedRoleName.includes('screener')
+                || normalizedRoleName.includes('screening')
+            ) && !normalizedRoleName.includes('checkpoint')
+
+            return currentPhaseReviewType === 'screening'
+                && isScreenerRole
+        }
+
+        case 'approval': {
+            const isApproverRole = normalizedRoleName.includes('approver')
+                || normalizedRoleName.includes('approval')
+
+            return currentPhaseReviewType === 'approval'
+                && isApproverRole
+        }
+
+        default:
+            return false
+    }
 }
 
 interface Props {
@@ -254,27 +293,11 @@ export const ScorecardDetailsPage: FC<Props> = (props: Props) => {
                 .toLowerCase()
             : ''
 
-        if (reviewPhaseType === 'checkpoint screening') {
-            return currentPhaseReviewType === 'checkpoint screening'
-                && normalizedRoleName === 'checkpoint screener'
-        }
-
-        if (reviewPhaseType === 'checkpoint review') {
-            return currentPhaseReviewType === 'checkpoint review'
-                && normalizedRoleName === 'checkpoint reviewer'
-        }
-
-        if (reviewPhaseType === 'screening') {
-            const isScreenerRole = (
-                normalizedRoleName.includes('screener')
-                || normalizedRoleName.includes('screening')
-            ) && !normalizedRoleName.includes('checkpoint')
-
-            return currentPhaseReviewType === 'screening'
-                && isScreenerRole
-        }
-
-        return false
+        return canRoleEditPhase(
+            reviewPhaseType,
+            currentPhaseReviewType,
+            normalizedRoleName,
+        )
     }, [
         reviewPhaseType,
         currentPhaseReviewType,

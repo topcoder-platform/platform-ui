@@ -24,7 +24,13 @@ import {
 import { EnvironmentConfig } from '~/config'
 import { UserRole } from '~/libs/core'
 
-import { ChallengeDetailContextModel, ReviewAppContextModel, ReviewInfo, SubmissionInfo } from '../../models'
+import {
+    BackendResource,
+    ChallengeDetailContextModel,
+    ReviewAppContextModel,
+    ReviewInfo,
+    SubmissionInfo,
+} from '../../models'
 import { ChallengeDetailContext, ReviewAppContext } from '../../contexts'
 import { getHandleUrl, isReviewPhase } from '../../utils'
 import { TableWrapper } from '../TableWrapper'
@@ -95,7 +101,7 @@ const formatOutcome = (value: unknown): string | undefined => {
     return _.upperFirst(_.toLower(trimmed))
 }
 
-const formatStatusLabel = (status: string): string => {
+const formatStatusLabel = (status: string, pendingLabel = 'Pending Review'): string => {
     const trimmedStatus = status.trim()
     const normalised = trimmedStatus ? _.toUpper(trimmedStatus) : ''
 
@@ -103,7 +109,7 @@ const formatStatusLabel = (status: string): string => {
         case 'IN_PROGRESS':
             return 'In Progress'
         case 'PENDING':
-            return 'Pending Review'
+            return pendingLabel
         case 'QUEUED':
             return 'Queued'
         default:
@@ -232,7 +238,7 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
     const hideHandleColumn = props.hideHandleColumn
     const isDownloading = props.isDownloading
     const columnLabel = props.columnLabel || 'Iterative Review'
-    const { challengeInfo, myRoles }: ChallengeDetailContextModel = useContext(
+    const { challengeInfo, myRoles, resources }: ChallengeDetailContextModel = useContext(
         ChallengeDetailContext,
     )
     const {
@@ -256,6 +262,25 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
         [myChallengeResources],
     )
 
+    const myResourceIds: Set<string> = useMemo(
+        (): Set<string> => new Set(
+            (myChallengeResources ?? [])
+                .map(resource => resource.id)
+                .filter((resourceId): resourceId is string => Boolean(resourceId)),
+        ),
+        [myChallengeResources],
+    )
+
+    const resourcesById = useMemo<Record<string, BackendResource>>(() => {
+        const mapping: Record<string, BackendResource> = {};
+        (resources ?? []).forEach(resource => {
+            if (resource?.id) {
+                mapping[resource.id] = resource
+            }
+        })
+        return mapping
+    }, [resources])
+
     const isAdmin = useMemo(
         () => loginUserInfo?.roles?.some(
             role => typeof role === 'string'
@@ -277,6 +302,40 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
         [hasCopilotRole, isAdmin],
     )
 
+    const hasIterativeReviewerRole = useMemo(
+        () => (myRoles ?? [])
+            .some(role => (role || '')
+                .toLowerCase()
+                .includes('iterative reviewer')),
+        [myRoles],
+    )
+
+    const hasApproverRole = useMemo(
+        () => (myRoles ?? [])
+            .some(role => (role || '')
+                .toLowerCase()
+                .includes('approver')),
+        [myRoles],
+    )
+
+    const isActiveChallenge = useMemo(() => {
+        const status = (challengeInfo?.status ?? '')
+            .toString()
+            .toLowerCase()
+        return status === 'active' || status.includes('active ')
+    }, [challengeInfo?.status])
+
+    const isCurrentPhaseApproval = useMemo(
+        () => (
+            (challengeInfo?.currentPhaseObject?.name
+                ?? challengeInfo?.currentPhase
+                ?? '')
+        )
+            .toString()
+            .toLowerCase() === 'approval',
+        [challengeInfo?.currentPhase, challengeInfo?.currentPhaseObject?.name],
+    )
+
     const isF2FOrTopgearTask = useMemo(() => {
         const typeName = (challengeInfo?.type?.name || '').toString()
             .toLowerCase()
@@ -296,6 +355,14 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
             .toLowerCase()
         return typeName === 'first2finish' || trackName === 'first2finish'
     }, [challengeInfo?.type?.name, challengeInfo?.track?.name])
+
+    const isApproverResourceAssigned = useMemo(
+        () => (datas ?? []).some(entry => {
+            const resourceId = entry.review?.resourceId
+            return resourceId ? myResourceIds.has(resourceId) : false
+        }),
+        [datas, myResourceIds],
+    )
 
     const submissionColumn: TableColumn<SubmissionInfo> = useMemo(
         () => ({
@@ -423,6 +490,11 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
         ],
     )
 
+    const normalisedColumnLabel = (columnLabel || '')
+        .trim()
+        .toLowerCase()
+    const isApprovalColumn = normalisedColumnLabel === 'approval'
+
     const handleColumn: TableColumn<SubmissionInfo> | undefined = useMemo(() => {
         if (hideHandleColumn) {
             return undefined
@@ -464,6 +536,9 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
                     ? ownedMemberIds.has(data.memberId)
                     : false
                 const canAccessReview = !isSubmitterView || isOwnedSubmission
+                const pendingStatusLabel = isApprovalColumn
+                    ? 'Pending Approval'
+                    : 'Pending Review'
 
                 if (!hasActiveReview(review)) {
                     return (
@@ -506,7 +581,7 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
                 if (status) {
                     return (
                         <span className={styles.statusBadgePending}>
-                            {formatStatusLabel(status)}
+                            {formatStatusLabel(status, pendingStatusLabel)}
                         </span>
                     )
                 }
@@ -519,7 +594,7 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
             },
             type: 'element',
         }),
-        [columnLabel, isSubmitterView, ownedMemberIds],
+        [columnLabel, isApprovalColumn, isSubmitterView, ownedMemberIds],
     )
 
     const reviewDateColumn: TableColumn<SubmissionInfo> = useMemo(
@@ -555,6 +630,64 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
         [],
     )
 
+    const shouldShowApproverColumn = useMemo(
+        () => isApprovalColumn
+            && isActiveChallenge
+            && isCurrentPhaseApproval
+            && (isAdminOrCopilot || hasApproverRole || isApproverResourceAssigned),
+        [
+            hasApproverRole,
+            isActiveChallenge,
+            isAdminOrCopilot,
+            isApprovalColumn,
+            isApproverResourceAssigned,
+            isCurrentPhaseApproval,
+        ],
+    )
+
+    const approverColumn: TableColumn<SubmissionInfo> | undefined = useMemo(() => {
+        if (!shouldShowApproverColumn) {
+            return undefined
+        }
+
+        return {
+            columnId: 'approver',
+            label: 'Approver',
+            renderer: (data: SubmissionInfo) => {
+                const resourceId = data.review?.resourceId
+                const resource = resourceId ? resourcesById[resourceId] : undefined
+                const handle = resource?.memberHandle?.trim()
+                    ?? data.review?.reviewerHandle?.trim()
+
+                if (!handle) {
+                    return <span>--</span>
+                }
+
+                const color = resource?.handleColor
+                    ?? data.review?.reviewerHandleColor
+                    ?? '#2a2a2a'
+                const url = resource
+                    ? getHandleUrl(resource)
+                    : `${EnvironmentConfig.REVIEW.PROFILE_PAGE_URL}/${encodeURIComponent(handle)}`
+
+                return (
+                    <a
+                        href={url}
+                        target='_blank'
+                        rel='noreferrer'
+                        style={{ color }}
+                        onClick={function onClick() {
+                            window.open(url, '_blank')
+                        }}
+                    >
+                        {handle}
+                    </a>
+                )
+            },
+            type: 'element',
+        }
+    }, [shouldShowApproverColumn, resourcesById])
+
     const reviewerColumn: TableColumn<SubmissionInfo> = useMemo(
         () => ({
             columnId: 'reviewer',
@@ -587,14 +720,69 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
         [],
     )
 
-    const hasIterativeReviewerRole = useMemo(
-        () => (myRoles ?? [])
-            .some(role => role?.toLowerCase()
-                .includes('iterative reviewer')),
-        [myRoles],
-    )
-
     const actionColumn: TableColumn<SubmissionInfo> | undefined = useMemo(() => {
+        if (isApprovalColumn) {
+            const allowApproverActions = isActiveChallenge
+                && isCurrentPhaseApproval
+                && (hasApproverRole || isApproverResourceAssigned)
+
+            if (!allowApproverActions) {
+                return undefined
+            }
+
+            return {
+                columnId: 'action',
+                label: 'Action',
+                renderer: (data: SubmissionInfo) => {
+                    const review = data.review
+                    const reviewId = review?.id
+                    const resourceId = review?.resourceId
+
+                    if (!review || !reviewId || !resourceId || !myResourceIds.has(resourceId)) {
+                        return <span>--</span>
+                    }
+
+                    const status = (review.status || '')
+                        .toString()
+                        .toUpperCase()
+                    const normalizedLabel = (columnLabel || 'Approval').trim() || 'Approval'
+
+                    if (['COMPLETED', 'SUBMITTED'].includes(status)) {
+                        const pillText = `${normalizedLabel} Complete`
+                        return (
+                            <div
+                                aria-label='Review completed'
+                                className={classNames(styles.completedAction, 'last-element')}
+                                title='Review completed'
+                            >
+                                <span className={styles.completedIcon} aria-hidden='true'>
+                                    <IconOutline.CheckIcon />
+                                </span>
+                                <span className={styles.completedPill}>{pillText}</span>
+                            </div>
+                        )
+                    }
+
+                    if (['PENDING', 'IN_PROGRESS'].includes(status) || review?.reviewProgress || !status) {
+                        const actionLabel = `Complete ${normalizedLabel}`
+
+                        return (
+                            <Link
+                                to={`./../review/${reviewId}`}
+                                className={classNames(styles.submit, 'last-element')}
+                            >
+                                <i className='icon-upload' />
+                                {actionLabel}
+                            </Link>
+                        )
+                    }
+
+                    return <span>--</span>
+                },
+                type: 'element',
+            }
+        }
+
         // Show Action column to Iterative Reviewers during active review phase,
         // and for First2Finish also when iterative reviews are completed (past phase)
         if (!hasIterativeReviewerRole) {
@@ -662,13 +850,26 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
             },
             type: 'element',
         }
-    }, [challengeInfo, hasIterativeReviewerRole, isFirst2Finish, datas, columnLabel])
+    }, [
+        challengeInfo,
+        columnLabel,
+        datas,
+        hasApproverRole,
+        hasIterativeReviewerRole,
+        isActiveChallenge,
+        isApprovalColumn,
+        isApproverResourceAssigned,
+        isCurrentPhaseApproval,
+        isFirst2Finish,
+        myResourceIds,
+    ])
 
     const columns = useMemo<TableColumn<SubmissionInfo>[]>(() => {
         const baseColumns: TableColumn<SubmissionInfo>[] = [
             submissionColumn,
             ...(handleColumn ? [handleColumn] : []),
             reviewColumn,
+            ...(approverColumn ? [approverColumn] : []),
             reviewDateColumn,
         ]
 
@@ -679,6 +880,7 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
 
         return baseColumns
     }, [
+        approverColumn,
         handleColumn,
         isAdminOrCopilot,
         isF2FOrTopgearTask,

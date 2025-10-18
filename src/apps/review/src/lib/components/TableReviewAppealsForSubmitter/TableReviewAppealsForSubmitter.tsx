@@ -330,30 +330,31 @@ export const TableReviewAppealsForSubmitter: FC<Props> = (props: Props) => {
                 return true
             }
 
-            if (isFirst2FinishChallenge) {
-                const reviews = submission.aggregated?.reviews ?? []
-                if (!reviews.length) {
-                    return false
-                }
-
-                const allReviewsCompleted = reviews.every(review => {
+            const reviews = submission.aggregated?.reviews ?? []
+            const allReviewsCompleted = reviews.length > 0
+                && reviews.every(review => {
                     const status = (review.reviewInfo?.status ?? '').toUpperCase()
                     const committed = review.reviewInfo?.committed ?? false
 
-                    return committed
-                        || includes(['COMPLETED', 'SUBMITTED'], status)
+                    return committed || includes(['COMPLETED', 'SUBMITTED'], status)
                 })
 
+            if (isFirst2FinishChallenge) {
                 return allReviewsCompleted
             }
 
             if (isStandardChallenge) {
-                return isAppealsWindowOpen
+                if (allowsAppeals) {
+                    return isAppealsWindowOpen
+                }
+
+                return allReviewsCompleted
             }
 
             return true
         },
         [
+            allowsAppeals,
             isAppealsWindowOpen,
             isChallengeCompleted,
             isFirst2FinishChallenge,

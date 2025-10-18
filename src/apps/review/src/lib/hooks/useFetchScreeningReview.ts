@@ -946,11 +946,6 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
         }),
         [visibleChallengeSubmissions],
     )
-    const finalFixSubmissions = useMemo(
-        () => visibleChallengeSubmissions.filter(s => (s.type || '').toUpperCase() === 'STUDIO_FINAL_FIX_SUBMISSION'),
-        [visibleChallengeSubmissions],
-    )
-
     // Get list of reviewer ids
     const reviewerIds = useMemo(() => {
         let results: string[] = []
@@ -2112,28 +2107,50 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
             return []
         }
 
-        // Only map to STUDIO_FINAL_FIX_SUBMISSION submissions for Approval tab
-        const submissionsById = new Map(finalFixSubmissions.map(s => [s.id, s]))
         const result: SubmissionInfo[] = []
 
-        forEach(challengeReviews, rv => {
-            if (!rv) return
-            if (!approvalPhaseIds.has(rv.phaseId)) return
-            const submission = submissionsById.get(rv.submissionId)
-            if (!submission) return
+        forEach(challengeReviews, reviewEntry => {
+            if (!reviewEntry) {
+                return
+            }
 
-            const reviewInfo = convertBackendReviewToReviewInfo(rv)
+            if (!approvalPhaseIds.has(reviewEntry.phaseId)) {
+                return
+            }
+
+            const matchingSubmission = resolveSubmissionForReview({
+                review: reviewEntry,
+                submissionsById: visibleSubmissionsById,
+                submissionsByLegacyId: visibleSubmissionsByLegacyId,
+            })
+
+            if (!matchingSubmission) {
+                return
+            }
+
+            const submissionWithReview: BackendSubmission = {
+                ...matchingSubmission,
+                review: [reviewEntry],
+            }
+
+            const submissionInfo = convertBackendSubmissionToSubmissionInfo(submissionWithReview)
+
             result.push({
-                id: submission.id,
-                memberId: submission.memberId,
-                review: reviewInfo,
-                reviews: [convertBackendReviewToReviewResult(rv)],
-                userInfo: resourceMemberIdMapping[submission.memberId],
+                ...submissionInfo,
+                review: submissionInfo.review ?? convertBackendReviewToReviewInfo(reviewEntry),
+                reviews: [convertBackendReviewToReviewResult(reviewEntry)],
+                userInfo: resourceMemberIdMapping[submissionInfo.memberId],
             })
         })
 
         return result
-    }, [challengeInfo?.phases, challengeReviews, resourceMemberIdMapping, finalFixSubmissions])
+    }, [
+        challengeInfo?.phases,
+        challengeReviews,
+        resourceMemberIdMapping,
+        visibleSubmissionsById,
+        visibleSubmissionsByLegacyId,
+    ])
 
     // Build post-mortem reviews list (for Topgear Task challenges)
     const postMortemReviews = useMemo<SubmissionInfo[]>(() => {
