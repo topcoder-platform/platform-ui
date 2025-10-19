@@ -20,7 +20,7 @@ export interface ReviewResult {
     reviewerHandle: string
     reviewerHandleColor: string
     reviewerMaxRating?: number | null
-    score: number
+    score?: number
 }
 
 const normalizeScoreValue = (value: number | string | null | undefined): number | undefined => {
@@ -101,6 +101,7 @@ export function convertBackendReviewToReviewResult(
         : undefined
     const reviewerHandle = data.reviewerHandle?.trim() || undefined
     const reviewerMaxRating = data.reviewerMaxRating ?? undefined
+    const score = normalizeScoreValue(data.finalScore)
 
     return {
         appeals: [],
@@ -114,6 +115,6 @@ export function convertBackendReviewToReviewResult(
             ? getRatingColor(reviewerMaxRating)
             : '#2a2a2a',
         reviewerMaxRating,
-        score: normalizeScoreValue(data.finalScore) ?? 0,
+        score,
     }
 }

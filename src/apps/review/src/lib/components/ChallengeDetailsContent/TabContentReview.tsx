@@ -9,15 +9,18 @@ import { IsRemovingType } from '~/apps/admin/src/lib/models'
 
 import { MappingReviewAppeal, SubmissionInfo } from '../../models'
 import { hasIsLatestFlag } from '../../utils'
+import { TableAppeals } from '../TableAppeals'
+import { TableAppealsForSubmitter } from '../TableAppealsForSubmitter'
+import { TableAppealsResponse } from '../TableAppealsResponse'
 import { TableNoRecord } from '../TableNoRecord'
-import { TableReviewAppeals } from '../TableReviewAppeals'
+import { TableReview } from '../TableReview'
+import { TableReviewForSubmitter } from '../TableReviewForSubmitter'
 import { useRole, useRoleProps } from '../../hooks'
 import {
     APPROVAL,
     REVIEWER,
     SUBMITTER,
 } from '../../../config/index.config'
-import { TableReviewAppealsForSubmitter } from '../TableReviewAppealsForSubmitter'
 
 interface Props {
     selectedTab: string
@@ -69,29 +72,57 @@ export const TabContentReview: FC<Props> = (props: Props) => {
         return <TableLoading />
     }
 
+    if (selectedTab === 'Appeals Response') {
+        return (
+            <TableAppealsResponse
+                datas={reviews}
+                isDownloading={props.isDownloading}
+                downloadSubmission={props.downloadSubmission}
+                mappingReviewAppeal={props.mappingReviewAppeal}
+                hideHandleColumn={hideHandleColumn}
+            />
+        )
+    }
+
     // show no record message
     if (!reviewRows.length) {
         return <TableNoRecord message='No reviews yet' />
     }
 
-    return !isSubmitterView ? (
-        <TableReviewAppeals
+    if (selectedTab === 'Appeals') {
+        return isSubmitterView ? (
+            <TableAppealsForSubmitter
+                datas={filteredSubmitterReviews}
+                isDownloading={props.isDownloading}
+                downloadSubmission={props.downloadSubmission}
+                mappingReviewAppeal={props.mappingReviewAppeal}
+            />
+        ) : (
+            <TableAppeals
+                datas={filteredReviews}
+                isDownloading={props.isDownloading}
+                downloadSubmission={props.downloadSubmission}
+                mappingReviewAppeal={props.mappingReviewAppeal}
+                hideHandleColumn={hideHandleColumn}
+            />
+        )
+    }
+
+    return isSubmitterView ? (
+        <TableReviewForSubmitter
+            datas={filteredSubmitterReviews}
+            isDownloading={props.isDownloading}
+            downloadSubmission={props.downloadSubmission}
+            mappingReviewAppeal={props.mappingReviewAppeal}
+        />
+    ) : (
+        <TableReview
             datas={filteredReviews}
-            tab={selectedTab}
             firstSubmissions={firstSubmissions}
             isDownloading={props.isDownloading}
             downloadSubmission={props.downloadSubmission}
             mappingReviewAppeal={props.mappingReviewAppeal}
             hideHandleColumn={hideHandleColumn}
-            isActiveChallenge={props.isActiveChallenge}
-        />
-    ) : (
-        <TableReviewAppealsForSubmitter
-            datas={filteredSubmitterReviews}
-            isDownloading={props.isDownloading}
-            downloadSubmission={props.downloadSubmission}
-            mappingReviewAppeal={props.mappingReviewAppeal}
-            tab={selectedTab}
         />
     )
 }

@@ -10,6 +10,7 @@ import {
     ReviewInfo,
     SubmissionInfo,
 } from '../models'
+import { normalizeRatingValue } from './rating'
 
 export interface AggregatedReviewDetail {
     reviewInfo?: ReviewInfo
@@ -45,24 +46,6 @@ interface AggregateSubmissionReviewsParams {
     submissions: SubmissionInfo[]
     mappingReviewAppeal: MappingReviewAppeal
     reviewers: BackendResource[]
-}
-
-const normalizeRatingValue = (value: number | string | null | undefined): number | undefined => {
-    if (typeof value === 'number' && Number.isFinite(value)) {
-        return value
-    }
-
-    if (typeof value === 'string') {
-        const trimmed = value.trim()
-        if (!trimmed.length) {
-            return undefined
-        }
-
-        const parsed = Number.parseFloat(trimmed)
-        return Number.isFinite(parsed) ? parsed : undefined
-    }
-
-    return undefined
 }
 
 const normalizeScoreValue = (value: number | string | null | undefined): number | undefined => {

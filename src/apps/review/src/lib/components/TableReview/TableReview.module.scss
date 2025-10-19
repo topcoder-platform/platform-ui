@@ -3,6 +3,7 @@
 .container {
     display: flex;
     flex-direction: column;
+
     @include ltemd {
         &:global(.enhanced-table) {
             table {
@@ -36,9 +37,9 @@
 }
 
 .submissionColumn {
-    width: 180px;
-    min-width: 160px;
-    max-width: 200px;
+    width: 240px;
+    min-width: 220px;
+    max-width: 260px;
     white-space: nowrap;
 
     :global(.TableCell_blockCell) {
@@ -50,22 +51,6 @@
     display: inline-flex;
     align-items: flex-start;
     gap: $sp-2;
-}
-
-.linkButton {
-    background: none;
-    border: none;
-    padding: 0;
-    margin: 0;
-    font: inherit;
-    line-height: inherit;
-    color: $link-blue-dark;
-    cursor: pointer;
-
-    &:disabled {
-        opacity: 0.7;
-        pointer-events: none;
-    }
 }
 
 .copyButton {
@@ -95,60 +80,89 @@
     }
 }
 
-.blockPlacementContainer {
-    display: flex;
-    align-items: center;
-    gap: 6px;
+.notReviewed {
+    color: var(--GrayFontColor);
 }
 
-.blockPlacement {
-    background-color: #e0faf3;
-    border-radius: 50%;
-    width: 24px;
-    height: 24px;
+.submit {
+    display: flex;
+    align-items: center;
+    font-weight: 700;
+
+    & > i {
+        margin-right: $sp-2;
+    }
+}
+
+.actionButton {
+    display: inline-flex;
+    align-items: center;
+    gap: $sp-2;
+    padding: 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-weight: 700;
+
+    &:focus {
+        outline: 2px solid currentColor;
+        outline-offset: 2px;
+    }
+
+    &:disabled {
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+}
+
+.reviewerCell {
     white-space: nowrap;
-    font-size: 10px;
+    font-weight: 600;
+}
+
+.completedAction {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.completedIcon {
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--DarkBlue);
-    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: #2fa152;
+    color: #fff;
+    line-height: 1;
 
-    &.blockPlacement-1 {
-        background: #ffd84d;
-    }
-
-    &.blockPlacement-2 {
-        background: #c8c8c8;
-    }
-
-    &.blockPlacement-3 {
-        background: #efba9d;
+    svg {
+        width: 14px;
+        height: 14px;
+        color: #fff;
     }
 }
 
-.tableCellNoWrap {
-    white-space: nowrap;
-    text-align: left !important;
-}
-
-.spacing {
-    padding: 0 $sp-1;
-}
-
-.appealsLink {
-    padding: 0 $sp-1;
-}
-
-.reviewer {
+.completedPill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: $sp-2;
+    padding: $sp-1 $sp-2;
+    border-radius: 999px;
+    background-color: $green-25;
+    color: $green-140;
+    font-size: 12px;
     font-weight: 700;
+    white-space: nowrap;
 }
 
 .actionsCell {
     display: inline-flex;
+    align-items: center;
     flex-wrap: wrap;
     gap: $sp-2;
-    align-items: center;
 }
 
 .actionItem {
