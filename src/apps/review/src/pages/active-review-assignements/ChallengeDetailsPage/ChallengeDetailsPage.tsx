@@ -603,13 +603,25 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                 return 0
             })
 
-        const primaryIterative = sortedIterative[0]
-        const primaryIterativeId = normalizeId(primaryIterative?.id)
-
         const hasActualTimestamps = (phase: BackendPhase): boolean => Boolean(
             normalizeId(phase.actualStartDate)
             || normalizeId(phase.actualEndDate),
         )
+
+        const phaseHasActivity = (phase: BackendPhase): boolean => {
+            const candidateKeys = [
+                normalizeId(phase.id),
+                normalizeId(phase.phaseId),
+            ].filter(Boolean) as string[]
+
+            return candidateKeys.some(key => activityPhaseIds.has(key))
+        }
+
+        const primaryIterative = sortedIterative.find(phase => (
+            phase?.isOpen
+            || hasActualTimestamps(phase)
+            || phaseHasActivity(phase)
+        )) ?? sortedIterative[0]
 
         const shouldKeep = (phase: BackendPhase): boolean => {
             if (!isIterativeReviewPhaseName(phase?.name)) {
@@ -617,15 +629,6 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
             }
 
             if (primaryIterative && phase === primaryIterative) {
-                return true
-            }
-
-            const candidateKeys = [
-                normalizeId(phase.id),
-                normalizeId(phase.phaseId),
-            ].filter(Boolean) as string[]
-
-            if (primaryIterativeId && candidateKeys.includes(primaryIterativeId)) {
                 return true
             }
 
@@ -637,8 +640,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                 return true
             }
 
-            const hasActivity = candidateKeys.some(key => activityPhaseIds.has(key))
-            if (hasActivity) {
+            if (phaseHasActivity(phase)) {
                 return true
             }
 
@@ -1594,7 +1596,8 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
     ])
 
     const shouldShowTimelineSection = useMemo<boolean>(() => {
-        const { isTask = false, isTopgearTask = false } = phaseOrderingOptions
+        const isTask = phaseOrderingOptions.isTask === true
+        const isTopgearTask = phaseOrderingOptions.isTopgearTask === true
         return ((!isTask) || isTopgearTask) && timelineRowsWithActions.length > 0
     }, [phaseOrderingOptions, timelineRowsWithActions])
 
