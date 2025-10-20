@@ -38,9 +38,9 @@ import {
 import { ReviewAppContextModel } from '../../../lib/models'
 import { SelectOption } from '../../../lib/models/SelectOption.model'
 import { getAllowedTypeAbbreviationsByTrack } from '../../../lib/utils/challengeTypesByTrack'
+import { IconAiReview } from '../../../lib/assets/icons'
 
 import styles from './ActiveReviewsPage.module.scss'
-import { IconAiReview } from '../../../lib/assets/icons'
 
 interface Props {
     className?: string
@@ -197,13 +197,12 @@ export const ActiveReviewsPage: FC<Props> = (props: Props) => {
         })
     }, [loadActiveReviews, sort])
 
-
     useEffect(() => {
         const notification = showBannerNotification({
-            id: 'ai-review-icon-notification',
             icon: <IconAiReview />,
-            message: `Challenges with this icon indicates that an ​​AI
-                review has been completed in particular phase.`,
+            id: 'ai-review-icon-notification',
+            message: `Challenges with this icon indicate that
+                one or more AI reviews will be conducted for each member submission.`,
         })
         return () => notification && removeNotification(notification.id)
     }, [showBannerNotification])
