@@ -11,6 +11,7 @@ export interface GlobalConfig {
         URL: string
     },
     STANDARDIZED_SKILLS_API: string,
+    TC_FINANCE_API: string,
     AUTH: {
         ACCOUNTS_APP_CONNECTOR: string
     }
@@ -60,4 +61,5 @@ export interface GlobalConfig {
         SUBMISSION_SCAN_TOPIC: string
         AVSCAN_TOPIC: string
     }
+    TROLLEY_WIDGET_ORIGIN: string
 }
