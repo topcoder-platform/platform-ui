@@ -17,6 +17,7 @@ import classNames from 'classnames'
 import { Pagination, TableLoading } from '~/apps/admin/src/lib'
 import { Sort } from '~/apps/admin/src/platform/gamification-admin/src/game-lib'
 import { Button, IconOutline, InputText } from '~/libs/ui'
+import { NotificationContextType, useNotification } from '~/libs/shared'
 
 import { CHALLENGE_TYPE_SELECT_ALL_OPTION } from '../../../config/index.config'
 import {
@@ -39,6 +40,7 @@ import { SelectOption } from '../../../lib/models/SelectOption.model'
 import { getAllowedTypeAbbreviationsByTrack } from '../../../lib/utils/challengeTypesByTrack'
 
 import styles from './ActiveReviewsPage.module.scss'
+import { IconAiReview } from '../../../lib/assets/icons'
 
 interface Props {
     className?: string
@@ -50,6 +52,8 @@ const DEFAULT_SORT: Sort = {
 }
 
 export const ActiveReviewsPage: FC<Props> = (props: Props) => {
+    const { showBannerNotification, removeNotification }: NotificationContextType = useNotification()
+
     const {
         loginUserInfo,
     }: ReviewAppContextModel = useContext(ReviewAppContext)
@@ -192,6 +196,17 @@ export const ActiveReviewsPage: FC<Props> = (props: Props) => {
             sortOrder: sort?.direction,
         })
     }, [loadActiveReviews, sort])
+
+
+    useEffect(() => {
+        const notification = showBannerNotification({
+            id: 'ai-review-icon-notification',
+            icon: <IconAiReview />,
+            message: `Challenges with this icon indicates that an ​​AI
+                review has been completed in particular phase.`,
+        })
+        return () => notification && removeNotification(notification.id)
+    }, [showBannerNotification])
 
     return (
         <PageWrapper

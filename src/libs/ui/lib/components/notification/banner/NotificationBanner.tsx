@@ -21,11 +21,11 @@ const NotificationBanner: FC<NotificationBannerProps> = props => {
     return (
         <div className={styles.wrap}>
             <div className={styles.inner}>
-                {props.icon || (
-                    <div className={styles.icon}>
+                <div className={styles.icon}>
+                    {props.icon || (
                         <InformationCircleIcon className='icon-xl' />
-                    </div>
-                )}
+                    )}
+                </div>
 
                 {props.content}
 
