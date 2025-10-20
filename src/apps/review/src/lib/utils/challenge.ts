@@ -199,6 +199,7 @@ export type PhaseLike = Pick<
 export type PhaseOrderingOptions = {
     isF2F?: boolean
     isTask?: boolean
+    isTopgearTask?: boolean
 }
 
 const TAB_INSERTION_HELPERS = {

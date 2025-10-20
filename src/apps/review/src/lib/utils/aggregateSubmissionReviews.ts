@@ -1,3 +1,4 @@
+/* eslint-disable ordered-imports/ordered-imports */
 import { find, forEach, sumBy } from 'lodash'
 import moment from 'moment'
 
@@ -11,6 +12,7 @@ import {
     SubmissionInfo,
 } from '../models'
 import { normalizeRatingValue } from './rating'
+/* eslint-enable ordered-imports/ordered-imports */
 
 export interface AggregatedReviewDetail {
     reviewInfo?: ReviewInfo

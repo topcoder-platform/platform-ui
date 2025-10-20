@@ -12,6 +12,12 @@ interface UseScoreVisibilityParams {
     isStandardChallenge: boolean
 }
 
+export interface UseScoreVisibilityResult {
+    canDisplayScores: (submission: SubmissionRow) => boolean
+    isChallengeCompleted: boolean
+    isPastChallengeStatus: boolean
+}
+
 /**
  * Centralises score-visibility rules for submitters based on challenge configuration.
  */
@@ -21,23 +27,24 @@ export function useScoreVisibility({
     isAppealsWindowOpen,
     isFirst2FinishChallenge,
     isStandardChallenge,
-}: UseScoreVisibilityParams) {
-    const normalizedStatus = useMemo(
-        () => (challengeInfo?.status ?? '').trim().toUpperCase(),
+}: UseScoreVisibilityParams): UseScoreVisibilityResult {
+    const normalizedStatus = useMemo<string>(
+        () => (challengeInfo?.status ?? '').trim()
+            .toUpperCase(),
         [challengeInfo?.status],
     )
 
-    const isPastChallengeStatus = useMemo(
+    const isPastChallengeStatus = useMemo<boolean>(
         () => PAST_CHALLENGE_STATUSES.some(status => status === normalizedStatus),
         [normalizedStatus],
     )
 
-    const isChallengeCompleted = useMemo(
+    const isChallengeCompleted = useMemo<boolean>(
         () => normalizedStatus === 'COMPLETED',
         [normalizedStatus],
     )
 
-    const canDisplayScores = useCallback((submission: SubmissionRow): boolean => {
+    const canDisplayScores = useCallback<(submission: SubmissionRow) => boolean>((submission: SubmissionRow) => {
         if (isPastChallengeStatus) {
             return true
         }

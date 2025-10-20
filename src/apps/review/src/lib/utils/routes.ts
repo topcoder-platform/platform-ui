@@ -18,7 +18,8 @@ export function getReviewRoute(
             const matchedSegment = match[0]
             const matchIndex = match.index ?? pathname.indexOf(matchedSegment)
             const prefix = matchIndex > 0
-                ? pathname.slice(0, matchIndex).replace(/\/+$/, '')
+                ? pathname.slice(0, matchIndex)
+                    .replace(/\/+$/, '')
                 : ''
             const basePath = prefix
                 ? `${prefix}/${match[1]}/${match[2]}`

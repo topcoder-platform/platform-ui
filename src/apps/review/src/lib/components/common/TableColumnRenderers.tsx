@@ -1,7 +1,7 @@
 import type { MouseEvent } from 'react'
 import { Link } from 'react-router-dom'
-import classNames from 'classnames'
 import { toast } from 'react-toastify'
+import classNames from 'classnames'
 
 import { copyTextToClipboard } from '~/libs/shared'
 import { IconOutline, Tooltip } from '~/libs/ui'
@@ -12,6 +12,7 @@ import {
     VIRUS_SCAN_FAILED_MESSAGE,
 } from '../../utils/constants'
 import { getReviewRoute } from '../../utils/routes'
+
 import {
     formatScoreDisplay,
     getHandleColor,
@@ -31,6 +32,7 @@ export function renderSubmissionIdCell(
     submission: SubmissionRow,
     config: DownloadButtonConfig,
 ): JSX.Element {
+    const configWithDefaults: DownloadButtonConfig = config
     const {
         isDownloading,
         downloadSubmission,
@@ -42,7 +44,7 @@ export function renderSubmissionIdCell(
         ownedMemberIds,
         virusScanFailedMessage = VIRUS_SCAN_FAILED_MESSAGE,
         downloadOwnSubmissionTooltip = DOWNLOAD_OWN_SUBMISSION_TOOLTIP,
-    } = config
+    }: DownloadButtonConfig = configWithDefaults
 
     const isOwnedSubmission = submission.memberId
         ? ownedMemberIds.has(submission.memberId)
@@ -193,13 +195,14 @@ export function renderReviewScoreCell(
     submission: SubmissionRow,
     config: ScoreVisibilityConfig,
 ): JSX.Element {
+    const configWithDefaults: ScoreVisibilityConfig = config
     const {
         canDisplayScores,
         canViewScorecard,
         viewOwnScorecardTooltip = VIEW_OWN_SCORECARD_TOOLTIP,
         isAppealsTab,
         getReviewUrl,
-    } = config
+    }: ScoreVisibilityConfig = configWithDefaults
 
     if (!canDisplayScores(submission)) {
         return (
@@ -306,12 +309,13 @@ export function renderScoreCell(
     reviewIndex: number,
     config: ScoreVisibilityConfig,
 ): JSX.Element {
+    const configWithDefaults: ScoreVisibilityConfig = config
     const {
         canDisplayScores,
         canViewScorecard,
         viewOwnScorecardTooltip = VIEW_OWN_SCORECARD_TOOLTIP,
         getReviewUrl,
-    } = config
+    }: ScoreVisibilityConfig = configWithDefaults
 
     const reviewDetail = submission.aggregated?.reviews?.[reviewIndex]
 
@@ -380,11 +384,12 @@ export function renderAppealsCell(
     reviewIndex: number,
     config: ScoreVisibilityConfig,
 ): JSX.Element {
+    const configWithDefaults: ScoreVisibilityConfig = config
     const {
         canViewScorecard,
         viewOwnScorecardTooltip = VIEW_OWN_SCORECARD_TOOLTIP,
         getReviewUrl,
-    } = config
+    }: ScoreVisibilityConfig = configWithDefaults
 
     const reviewDetail = submission.aggregated?.reviews?.[reviewIndex]
 

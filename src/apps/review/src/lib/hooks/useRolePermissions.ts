@@ -8,42 +8,55 @@ import {
 } from '../contexts'
 import type {
     ChallengeDetailContextModel,
+    ChallengeRole,
     ReviewAppContextModel,
 } from '../models'
+
+import type { useRoleProps } from './useRole'
 import { useRole } from './useRole'
+
+export interface UseRolePermissionsResult {
+    actionChallengeRole: ChallengeRole
+    canManageCompletedReviews: boolean
+    hasCopilotRole: boolean
+    hasReviewerRole: boolean
+    hasSubmitterRole: boolean
+    isAdmin: boolean
+    ownedMemberIds: Set<string>
+}
 
 /**
  * Computes role-derived permissions shared across review table components.
  */
-export function useRolePermissions() {
+export function useRolePermissions(): UseRolePermissionsResult {
     const { myResources, myRoles }: ChallengeDetailContextModel = useContext(
         ChallengeDetailContext,
     )
     const { loginUserInfo }: ReviewAppContextModel = useContext(ReviewAppContext)
 
-    const { actionChallengeRole } = useRole()
+    const { actionChallengeRole }: useRoleProps = useRole()
 
-    const normalizedRoles = useMemo(
+    const normalizedRoles = useMemo<string[]>(
         () => myRoles.map(role => role.toLowerCase()),
         [myRoles],
     )
 
-    const hasReviewerRole = useMemo(
+    const hasReviewerRole = useMemo<boolean>(
         () => normalizedRoles.some(role => role.includes('reviewer')),
         [normalizedRoles],
     )
 
-    const hasCopilotRole = useMemo(
+    const hasCopilotRole = useMemo<boolean>(
         () => normalizedRoles.some(role => role.includes('copilot')),
         [normalizedRoles],
     )
 
-    const hasSubmitterRole = useMemo(
+    const hasSubmitterRole = useMemo<boolean>(
         () => normalizedRoles.some(role => role.includes('submitter')),
         [normalizedRoles],
     )
 
-    const isAdmin = useMemo(
+    const isAdmin = useMemo<boolean>(
         () => (loginUserInfo?.roles?.some(
             role => typeof role === 'string'
                 && role.toLowerCase() === UserRole.administrator,
@@ -55,8 +68,8 @@ export function useRolePermissions() {
         ],
     )
 
-    const ownedMemberIds = useMemo(
-        () => new Set(
+    const ownedMemberIds = useMemo<Set<string>>(
+        () => new Set<string>(
             myResources
                 .map(resource => resource?.memberId)
                 .filter((memberId): memberId is string => Boolean(memberId)),
@@ -64,7 +77,7 @@ export function useRolePermissions() {
         [myResources],
     )
 
-    const canManageCompletedReviews = useMemo(
+    const canManageCompletedReviews = useMemo<boolean>(
         () => isAdmin || hasCopilotRole,
         [hasCopilotRole, isAdmin],
     )

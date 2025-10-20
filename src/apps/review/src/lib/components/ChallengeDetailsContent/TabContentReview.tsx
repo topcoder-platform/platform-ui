@@ -2,7 +2,6 @@
  * Content of review tab.
  */
 import { FC, useMemo } from 'react'
-import { maxBy } from 'lodash'
 
 import { TableLoading } from '~/apps/admin/src/lib'
 import { IsRemovingType } from '~/apps/admin/src/lib/models'
@@ -54,10 +53,6 @@ export const TabContentReview: FC<Props> = (props: Props) => {
                 : submitterReviews
         },
         [submitterReviews],
-    )
-    const firstSubmissions = useMemo(
-        () => maxBy(filteredReviews, 'review.initialScore'),
-        [filteredReviews],
     )
     const { actionChallengeRole }: useRoleProps = useRole()
     const hideHandleColumn = props.isActiveChallenge
@@ -118,7 +113,6 @@ export const TabContentReview: FC<Props> = (props: Props) => {
     ) : (
         <TableReview
             datas={filteredReviews}
-            firstSubmissions={firstSubmissions}
             isDownloading={props.isDownloading}
             downloadSubmission={props.downloadSubmission}
             mappingReviewAppeal={props.mappingReviewAppeal}

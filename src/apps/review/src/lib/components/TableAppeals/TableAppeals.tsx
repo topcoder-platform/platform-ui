@@ -15,9 +15,12 @@ import { Table, TableColumn } from '~/libs/ui'
 import { WITHOUT_APPEAL } from '../../../config/index.config'
 import { ChallengeDetailContext } from '../../contexts'
 import { useSubmissionDownloadAccess } from '../../hooks/useSubmissionDownloadAccess'
+import type { UseSubmissionDownloadAccessResult } from '../../hooks/useSubmissionDownloadAccess'
 import { useRolePermissions } from '../../hooks/useRolePermissions'
+import type { UseRolePermissionsResult } from '../../hooks/useRolePermissions'
 import {
     ChallengeDetailContextModel,
+    ChallengeInfo,
     MappingReviewAppeal,
     SubmissionInfo,
 } from '../../models'
@@ -29,8 +32,8 @@ import { challengeHasSubmissionLimit } from '../../utils/challenge'
 import {
     renderAppealsCell,
     renderReviewDateCell,
-    renderReviewScoreCell,
     renderReviewerCell,
+    renderReviewScoreCell,
     renderScoreCell,
     renderSubmissionIdCell,
     renderSubmitterHandleCell,
@@ -40,6 +43,7 @@ import type {
     ScoreVisibilityConfig,
     SubmissionRow,
 } from '../common/types'
+import type { AggregatedSubmissionReviews } from '../../utils/aggregateSubmissionReviews'
 
 import styles from './TableAppeals.module.scss'
 
@@ -50,37 +54,36 @@ export interface TableAppealsProps {
     downloadSubmission: (submissionId: string) => void
     mappingReviewAppeal: MappingReviewAppeal
     hideHandleColumn?: boolean
-    isActiveChallenge?: boolean
 }
 
-export const TableAppeals: FC<TableAppealsProps> = ({
-    className,
-    datas,
-    isDownloading,
-    downloadSubmission,
-    mappingReviewAppeal,
-    hideHandleColumn,
-}) => {
+export const TableAppeals: FC<TableAppealsProps> = (props: TableAppealsProps) => {
+    const className: string | undefined = props.className
+    const datas: SubmissionInfo[] = props.datas
+    const downloadSubmission: (submissionId: string) => void = props.downloadSubmission
+    const hideHandleColumn: boolean | undefined = props.hideHandleColumn
+    const isDownloading: IsRemovingType = props.isDownloading
+    const mappingReviewAppeal: MappingReviewAppeal = props.mappingReviewAppeal
     const {
         challengeInfo,
         reviewers,
     }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
     const { width: screenWidth }: WindowSize = useWindowSize()
 
+    const downloadAccess: UseSubmissionDownloadAccessResult = useSubmissionDownloadAccess()
     const {
         getRestrictionMessageForMember,
         isSubmissionDownloadRestricted,
         isSubmissionDownloadRestrictedForMember,
         restrictionMessage,
-    } = useSubmissionDownloadAccess()
+    }: UseSubmissionDownloadAccessResult = downloadAccess
     const {
         hasCopilotRole,
         hasReviewerRole,
         isAdmin,
         ownedMemberIds,
-    } = useRolePermissions()
+    }: UseRolePermissionsResult = useRolePermissions()
 
-    const shouldShowAggregatedReviewScore = useMemo(
+    const shouldShowAggregatedReviewScore = useMemo<boolean>(
         () => !(
             hasReviewerRole
             && !hasCopilotRole
@@ -93,10 +96,10 @@ export const TableAppeals: FC<TableAppealsProps> = ({
         ],
     )
 
-    const challengeType = challengeInfo?.type
-    const challengeTrack = challengeInfo?.track
+    const challengeType: ChallengeInfo['type'] | undefined = challengeInfo?.type
+    const challengeTrack: ChallengeInfo['track'] | undefined = challengeInfo?.track
 
-    const hasAppealsPhase = useMemo(
+    const hasAppealsPhase = useMemo<boolean>(
         () => (challengeInfo?.phases ?? []).some(phase => {
             const normalizedName = phase?.name?.toLowerCase()
             return normalizedName === 'appeals'
@@ -105,7 +108,7 @@ export const TableAppeals: FC<TableAppealsProps> = ({
         [challengeInfo?.phases],
     )
 
-    const allowsAppeals = useMemo(
+    const allowsAppeals = useMemo<boolean>(
         () => hasAppealsPhase
             && !(
                 includes(WITHOUT_APPEAL, challengeType?.name)
@@ -118,7 +121,7 @@ export const TableAppeals: FC<TableAppealsProps> = ({
         ],
     )
 
-    const submissionTypes = useMemo(
+    const submissionTypes = useMemo<Set<string>>(
         () => new Set<string>(
             datas
                 .map(submission => submission.type)
@@ -127,7 +130,7 @@ export const TableAppeals: FC<TableAppealsProps> = ({
         [datas],
     )
 
-    const filteredChallengeSubmissions = useMemo(
+    const filteredChallengeSubmissions = useMemo<SubmissionInfo[]>(
         () => {
             const submissions = challengeInfo?.submissions ?? []
             if (!submissionTypes.size) {
@@ -140,23 +143,23 @@ export const TableAppeals: FC<TableAppealsProps> = ({
         [challengeInfo?.submissions, submissionTypes],
     )
 
-    const restrictToLatest = useMemo(
+    const restrictToLatest = useMemo<boolean>(
         () => challengeHasSubmissionLimit(challengeInfo),
         [challengeInfo],
     )
 
-    const submissionsForAggregation = useMemo(
+    const submissionsForAggregation = useMemo<SubmissionInfo[]>(
         () => (restrictToLatest
             ? datas.filter(submission => submission.isLatest)
             : datas),
         [datas, restrictToLatest],
     )
 
-    const aggregatedResults = useMemo(
+    const aggregatedResults = useMemo<AggregatedSubmissionReviews[]>(
         () => aggregateSubmissionReviews({
-            submissions: submissionsForAggregation,
             mappingReviewAppeal,
             reviewers: reviewers ?? [],
+            submissions: submissionsForAggregation,
         }),
         [mappingReviewAppeal, reviewers, submissionsForAggregation],
     )
@@ -203,7 +206,7 @@ export const TableAppeals: FC<TableAppealsProps> = ({
         restrictToLatest,
     ])
 
-    const maxReviewCount = useMemo(
+    const maxReviewCount = useMemo<number>(
         () => aggregatedResults.reduce(
             (maxCount, result) => {
                 const reviewCount = result.reviews?.length ?? 0
@@ -216,14 +219,14 @@ export const TableAppeals: FC<TableAppealsProps> = ({
 
     const downloadButtonConfig = useMemo<DownloadButtonConfig>(
         () => ({
-            isDownloading,
             downloadSubmission,
-            shouldRestrictSubmitterToOwnSubmission: false,
-            isSubmissionDownloadRestrictedForMember,
             getRestrictionMessageForMember,
+            isDownloading,
             isSubmissionDownloadRestricted,
-            restrictionMessage,
+            isSubmissionDownloadRestrictedForMember,
             ownedMemberIds,
+            restrictionMessage,
+            shouldRestrictSubmitterToOwnSubmission: false,
         }),
         [
             downloadSubmission,

@@ -10,11 +10,12 @@ import classNames from 'classnames'
 import { TableMobile } from '~/apps/admin/src/lib/components/common/TableMobile'
 import { MobileTableColumn } from '~/apps/admin/src/lib/models/MobileTableColumn.model'
 import { IsRemovingType } from '~/apps/admin/src/lib/models'
-import { useWindowSize } from '~/libs/shared'
+import { useWindowSize, WindowSize } from '~/libs/shared'
 import { Table, TableColumn } from '~/libs/ui'
 
 import {
     ChallengeDetailContextModel,
+    ChallengeInfo,
     MappingReviewAppeal,
     SubmissionInfo,
 } from '../../models'
@@ -23,8 +24,8 @@ import { TableWrapper } from '../TableWrapper'
 import {
     renderAppealsCell,
     renderReviewDateCell,
-    renderReviewScoreCell,
     renderReviewerCell,
+    renderReviewScoreCell,
     renderScoreCell,
     renderSubmissionIdCell,
     renderSubmitterHandleCell,
@@ -41,11 +42,18 @@ import {
     isAppealsResponsePhase,
     partitionSubmissionHistory,
 } from '../../utils'
+import type {
+    AggregatedSubmissionReviews,
+    SubmissionHistoryPartition,
+} from '../../utils'
 import {
     useRolePermissions,
     useScoreVisibility,
     useSubmissionDownloadAccess,
 } from '../../hooks'
+import type { UseRolePermissionsResult } from '../../hooks/useRolePermissions'
+import type { UseSubmissionDownloadAccessResult } from '../../hooks/useSubmissionDownloadAccess'
+import type { UseScoreVisibilityResult } from '../../hooks/useScoreVisibility'
 import {
     FIRST2FINISH,
     TRACK_CHALLENGE,
@@ -62,33 +70,52 @@ export interface TableAppealsForSubmitterProps {
     mappingReviewAppeal: MappingReviewAppeal
 }
 
-export const TableAppealsForSubmitter: FC<TableAppealsForSubmitterProps> = ({
-    className,
-    datas,
-    downloadSubmission,
-    isDownloading,
-    mappingReviewAppeal,
-}) => {
+export const TableAppealsForSubmitter: FC<TableAppealsForSubmitterProps> = (props: TableAppealsForSubmitterProps) => {
+    const className: string | undefined = props.className
+    const datas: SubmissionInfo[] = props.datas
+    const downloadSubmission: (submissionId: string) => void = props.downloadSubmission
+    const isDownloading: IsRemovingType = props.isDownloading
+    const mappingReviewAppeal: MappingReviewAppeal = props.mappingReviewAppeal
     const {
         challengeInfo,
         reviewers,
+        myResources,
     }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
 
+    const downloadAccess: UseSubmissionDownloadAccessResult = useSubmissionDownloadAccess()
     const {
         getRestrictionMessageForMember,
         isSubmissionDownloadRestricted,
         isSubmissionDownloadRestrictedForMember,
         restrictionMessage,
         shouldRestrictSubmitterToOwnSubmission,
-    } = useSubmissionDownloadAccess()
+    }: UseSubmissionDownloadAccessResult = downloadAccess
 
-    const { ownedMemberIds } = useRolePermissions()
-    const { width: screenWidth = 0 } = useWindowSize()
+    const {
+        ownedMemberIds: ownedMemberIdsFromRole,
+    }: UseRolePermissionsResult = useRolePermissions()
+    const { width: screenWidth = 0 }: WindowSize = useWindowSize()
 
-    const challengeType = challengeInfo?.type
-    const challengeTrack = challengeInfo?.track
+    const ownedMemberIds = useMemo<Set<string>>(() => {
+        if (ownedMemberIdsFromRole.size) {
+            return ownedMemberIdsFromRole
+        }
 
-    const hasAppealsPhase = useMemo(() => {
+        const fallbackSet = new Set<string>()
+        for (const resource of myResources ?? []) {
+            const memberId = resource?.memberId
+            if (memberId) {
+                fallbackSet.add(memberId)
+            }
+        }
+
+        return fallbackSet
+    }, [myResources, ownedMemberIdsFromRole])
+
+    const challengeType: ChallengeInfo['type'] | undefined = challengeInfo?.type
+    const challengeTrack: ChallengeInfo['track'] | undefined = challengeInfo?.track
+
+    const hasAppealsPhase = useMemo<boolean>(() => {
         const phases = challengeInfo?.phases ?? []
         return phases.some(phase => {
             const name = (phase?.name || '').toLowerCase()
@@ -96,7 +123,7 @@ export const TableAppealsForSubmitter: FC<TableAppealsForSubmitterProps> = ({
         })
     }, [challengeInfo?.phases])
 
-    const allowsAppeals = useMemo(
+    const allowsAppeals = useMemo<boolean>(
         () => hasAppealsPhase && !(
             includes(WITHOUT_APPEAL, challengeType?.name)
             || includes(WITHOUT_APPEAL, challengeTrack?.name)
@@ -104,26 +131,26 @@ export const TableAppealsForSubmitter: FC<TableAppealsForSubmitterProps> = ({
         [challengeTrack?.name, challengeType?.name, hasAppealsPhase],
     )
 
-    const isFirst2FinishChallenge = useMemo(
+    const isFirst2FinishChallenge = useMemo<boolean>(
         () => [challengeType?.name, challengeTrack?.name]
             .some(type => type === FIRST2FINISH),
         [challengeTrack?.name, challengeType?.name],
     )
 
-    const isStandardChallenge = useMemo(
+    const isStandardChallenge = useMemo<boolean>(
         () => [challengeType?.name, challengeTrack?.name]
             .some(type => type === TRACK_CHALLENGE),
         [challengeTrack?.name, challengeType?.name],
     )
 
-    const isAppealsWindowOpen = useMemo(
+    const isAppealsWindowOpen = useMemo<boolean>(
         () => isAppealsPhase(challengeInfo)
             || isAppealsResponsePhase(challengeInfo),
         [challengeInfo],
     )
 
-    const submissionTypes = useMemo(
-        () => new Set(
+    const submissionTypes = useMemo<Set<string>>(
+        () => new Set<string>(
             datas
                 .map(submission => submission.type)
                 .filter((type): type is string => Boolean(type)),
@@ -151,17 +178,17 @@ export const TableAppealsForSubmitter: FC<TableAppealsForSubmitterProps> = ({
         [challengeInfo?.submissions, datas, submissionTypes],
     )
 
-    const submissionHistory = useMemo(
+    const submissionHistory = useMemo<SubmissionHistoryPartition>(
         () => partitionSubmissionHistory(datas, filteredAll),
         [datas, filteredAll],
     )
 
-    const restrictToLatest = useMemo(
+    const restrictToLatest = useMemo<boolean>(
         () => challengeHasSubmissionLimit(challengeInfo),
         [challengeInfo],
     )
 
-    const submissionsForAggregation = useMemo(
+    const submissionsForAggregation = useMemo<SubmissionInfo[]>(
         () => {
             const sourceSubmissions = restrictToLatest
                 ? submissionHistory.latestSubmissions
@@ -198,11 +225,11 @@ export const TableAppealsForSubmitter: FC<TableAppealsForSubmitterProps> = ({
         [datas, filteredAll, restrictToLatest, submissionHistory],
     )
 
-    const aggregatedRows = useMemo(
+    const aggregatedRows = useMemo<AggregatedSubmissionReviews[]>(
         () => aggregateSubmissionReviews({
-            submissions: submissionsForAggregation,
             mappingReviewAppeal,
             reviewers,
+            submissions: submissionsForAggregation,
         }),
         [mappingReviewAppeal, reviewers, submissionsForAggregation],
     )
@@ -215,7 +242,7 @@ export const TableAppealsForSubmitter: FC<TableAppealsForSubmitterProps> = ({
         [aggregatedRows],
     )
 
-    const maxReviewCount = useMemo(
+    const maxReviewCount = useMemo<number>(
         () => aggregatedRows.reduce(
             (count, row) => Math.max(count, row.reviews.length),
             0,
@@ -226,9 +253,9 @@ export const TableAppealsForSubmitter: FC<TableAppealsForSubmitterProps> = ({
     const {
         canDisplayScores,
         isChallengeCompleted,
-    } = useScoreVisibility({
-        challengeInfo,
+    }: UseScoreVisibilityResult = useScoreVisibility({
         allowsAppeals,
+        challengeInfo,
         isAppealsWindowOpen,
         isFirst2FinishChallenge,
         isStandardChallenge,
@@ -254,12 +281,14 @@ export const TableAppealsForSubmitter: FC<TableAppealsForSubmitterProps> = ({
         shouldRestrictSubmitterToOwnSubmission,
     ])
 
-    const isOwned = useCallback(
-        (submission: SubmissionRow): boolean => (
+    const isOwned = useCallback<(
+        submission: SubmissionRow) => boolean
+        >(
+        (submission: SubmissionRow) => (
             submission.memberId ? ownedMemberIds.has(submission.memberId) : false
         ),
         [ownedMemberIds],
-    )
+        )
 
     const columns = useMemo<TableColumn<SubmissionRow>[]>(() => {
         const baseColumns: TableColumn<SubmissionRow>[] = []
@@ -359,29 +388,31 @@ export const TableAppealsForSubmitter: FC<TableAppealsForSubmitterProps> = ({
     ])
 
     const columnsMobile = useMemo<MobileTableColumn<SubmissionRow>[][]>(
-        () => columns.map(column => [
-            {
-                ...column,
-                className: '',
-                label: `${column.label as string} label`,
-                mobileType: 'label',
-                renderer: () => (
-                    <div>
-                        {column.label as string}
-                        :
-                    </div>
-                ),
-                type: 'element',
-            },
-            {
-                ...column,
-                mobileType: 'last-value',
-            },
-        ] as MobileTableColumn<SubmissionRow>[]),
+        () => columns.map(column => (
+            [
+                {
+                    ...column,
+                    className: '',
+                    label: `${column.label as string} label`,
+                    mobileType: 'label',
+                    renderer: () => (
+                        <div>
+                            {column.label as string}
+                            :
+                        </div>
+                    ),
+                    type: 'element',
+                },
+                {
+                    ...column,
+                    mobileType: 'last-value',
+                },
+            ] as MobileTableColumn<SubmissionRow>[]
+        )),
         [columns],
     )
 
-    const isTablet = useMemo(() => screenWidth <= 1120, [screenWidth])
+    const isTablet = useMemo<boolean>(() => screenWidth <= 1120, [screenWidth])
 
     return (
         <TableWrapper

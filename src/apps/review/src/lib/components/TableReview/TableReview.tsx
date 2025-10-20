@@ -19,8 +19,11 @@ import { IconOutline, Table, TableColumn } from '~/libs/ui'
 
 import { ChallengeDetailContext } from '../../contexts'
 import { useRole, useSubmissionDownloadAccess } from '../../hooks'
+import type { useRoleProps } from '../../hooks/useRole'
 import { useSubmissionHistory } from '../../hooks/useSubmissionHistory'
+import type { UseSubmissionHistoryResult } from '../../hooks/useSubmissionHistory'
 import { useRolePermissions } from '../../hooks/useRolePermissions'
+import type { UseRolePermissionsResult } from '../../hooks/useRolePermissions'
 import type { UseSubmissionDownloadAccessResult } from '../../hooks/useSubmissionDownloadAccess'
 import {
     ChallengeDetailContextModel,
@@ -28,7 +31,6 @@ import {
     SubmissionInfo,
 } from '../../models'
 import {
-    AggregatedReviewDetail,
     aggregateSubmissionReviews,
     challengeHasSubmissionLimit,
     isReviewPhase,
@@ -36,6 +38,10 @@ import {
     refreshChallengeReviewData,
     REOPEN_MESSAGE_OTHER,
     REOPEN_MESSAGE_SELF,
+} from '../../utils'
+import type {
+    AggregatedReviewDetail,
+    AggregatedSubmissionReviews,
 } from '../../utils'
 import { getSubmissionHistoryKey } from '../../utils/submissionHistory'
 import { updateReview } from '../../services'
@@ -45,25 +51,27 @@ import { ConfirmModal } from '../ConfirmModal'
 import { createSubmissionMetaMap } from '../common/columnUtils'
 import {
     renderReviewDateCell,
-    renderReviewScoreCell,
     renderReviewerCell,
+    renderReviewScoreCell,
     renderScoreCell,
     renderSubmissionIdCell,
     renderSubmitterHandleCell,
 } from '../common/TableColumnRenderers'
-import type { SubmissionRow } from '../common/types'
+import type {
+    DownloadButtonConfig,
+    ScoreVisibilityConfig,
+    SubmissionRow,
+} from '../common/types'
 
 import styles from './TableReview.module.scss'
 
 export interface TableReviewProps {
     className?: string
     datas: SubmissionInfo[]
-    firstSubmissions?: SubmissionInfo
     isDownloading: IsRemovingType
     downloadSubmission: (submissionId: string) => void
     mappingReviewAppeal: MappingReviewAppeal
     hideHandleColumn?: boolean
-    isActiveChallenge?: boolean
 }
 
 interface PendingReopenState {
@@ -140,22 +148,26 @@ function createReopenActionButtons(
     return buttons
 }
 
-export const TableReview: FC<TableReviewProps> = ({
-    className,
-    datas,
-    isDownloading,
-    downloadSubmission,
-    mappingReviewAppeal,
-    hideHandleColumn,
-}) => {
+export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
+    const className: string | undefined = props.className
+    const datas: SubmissionInfo[] = props.datas
+    const downloadSubmission: (submissionId: string) => void = props.downloadSubmission
+    const hideHandleColumn: boolean | undefined = props.hideHandleColumn
+    const isDownloading: IsRemovingType = props.isDownloading
+    const mappingReviewAppeal: MappingReviewAppeal = props.mappingReviewAppeal
     const {
         challengeInfo,
         reviewers,
-    myResources,
+        myResources,
     }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
     const { width: screenWidth }: WindowSize = useWindowSize()
-    const { actionChallengeRole } = useRole()
-    const { hasCopilotRole, isAdmin, ownedMemberIds, canManageCompletedReviews } = useRolePermissions()
+    const { actionChallengeRole }: useRoleProps = useRole()
+    const {
+        canManageCompletedReviews,
+        hasCopilotRole,
+        isAdmin,
+        ownedMemberIds,
+    }: UseRolePermissionsResult = useRolePermissions()
     const {
         getRestrictionMessageForMember,
         isSubmissionDownloadRestricted,
@@ -163,10 +175,10 @@ export const TableReview: FC<TableReviewProps> = ({
         restrictionMessage,
     }: UseSubmissionDownloadAccessResult = useSubmissionDownloadAccess()
 
-    const isTablet = useMemo(() => screenWidth <= 744, [screenWidth])
+    const isTablet = useMemo<boolean>(() => screenWidth <= 744, [screenWidth])
 
-    const submissionTypes = useMemo(
-        () => new Set(
+    const submissionTypes = useMemo<Set<string>>(
+        () => new Set<string>(
             datas
                 .map(submission => submission.type)
                 .filter((type): type is string => Boolean(type)),
@@ -174,7 +186,7 @@ export const TableReview: FC<TableReviewProps> = ({
         [datas],
     )
 
-    const filteredChallengeSubmissions = useMemo(
+    const filteredChallengeSubmissions = useMemo<SubmissionInfo[]>(
         () => {
             const challengeSubmissions = challengeInfo?.submissions ?? []
 
@@ -198,42 +210,47 @@ export const TableReview: FC<TableReviewProps> = ({
         latestSubmissions,
         openHistoryModal,
         shouldShowHistoryActions,
-    } = useSubmissionHistory({
+    }: UseSubmissionHistoryResult = useSubmissionHistory({
         datas,
         filteredAll: filteredChallengeSubmissions,
         isSubmissionTab: true,
     })
 
-    const restrictToLatest = useMemo(
+    const restrictToLatest = useMemo<boolean>(
         () => challengeHasSubmissionLimit(challengeInfo),
         [challengeInfo],
     )
 
-    const submissionMetaById = useMemo(
+    const submissionMetaById = useMemo<Map<string, SubmissionInfo>>(
         () => createSubmissionMetaMap(filteredChallengeSubmissions, datas),
         [datas, filteredChallengeSubmissions],
     )
 
-    const resolveSubmissionMeta = useCallback((submissionId: string) => (
-        submissionMetaById.get(submissionId)
-    ), [submissionMetaById])
+    const resolveSubmissionMeta = useCallback(
+        (submissionId: string): SubmissionInfo | undefined => submissionMetaById.get(submissionId),
+        [submissionMetaById],
+    )
 
-    const getHistoryRestriction = useCallback((submission: SubmissionInfo): RestrictionResult => {
-        const memberId = submission.memberId
-        const restricted = isSubmissionDownloadRestrictedForMember(memberId) || isSubmissionDownloadRestricted
-        const memberMessage = getRestrictionMessageForMember(memberId)
-        const message = memberMessage ?? restrictionMessage
+    const getHistoryRestriction = useCallback(
+        (submission: SubmissionInfo): RestrictionResult => {
+            const memberId = submission.memberId
+            const restricted = isSubmissionDownloadRestrictedForMember(memberId)
+                || isSubmissionDownloadRestricted
+            const memberMessage = getRestrictionMessageForMember(memberId)
+            const message = memberMessage ?? restrictionMessage
 
-        return {
-            restricted,
-            message,
-        }
-    }, [
-        getRestrictionMessageForMember,
-        isSubmissionDownloadRestricted,
-        isSubmissionDownloadRestrictedForMember,
-        restrictionMessage,
-    ])
+            return {
+                message,
+                restricted,
+            }
+        },
+        [
+            getRestrictionMessageForMember,
+            isSubmissionDownloadRestricted,
+            isSubmissionDownloadRestrictedForMember,
+            restrictionMessage,
+        ],
+    )
 
     const handleHistoryButtonClick = useCallback((event: MouseEvent<HTMLButtonElement>): void => {
         const submissionId = event.currentTarget.dataset.submissionId
@@ -246,8 +263,8 @@ export const TableReview: FC<TableReviewProps> = ({
         openHistoryModal(memberId || undefined, submissionId)
     }, [openHistoryModal])
 
-    const myReviewerResourceIds = useMemo(
-        () => new Set(
+    const myReviewerResourceIds = useMemo<Set<string>>(
+        () => new Set<string>(
             myResources
                 .filter(resource => {
                     const roleName = (resource.roleName || '').toLowerCase()
@@ -259,16 +276,21 @@ export const TableReview: FC<TableReviewProps> = ({
         [myResources],
     )
 
-    const submissionsForAggregation = useMemo(
+    const hasReviewRole = useMemo<boolean>(
+        () => myReviewerResourceIds.size > 0,
+        [myReviewerResourceIds],
+    )
+
+    const submissionsForAggregation = useMemo<SubmissionInfo[]>(
         () => (restrictToLatest ? latestSubmissions : datas),
         [datas, latestSubmissions, restrictToLatest],
     )
 
-    const aggregatedSubmissionRows = useMemo(() => (
+    const aggregatedSubmissionRows = useMemo<AggregatedSubmissionReviews[]>(() => (
         aggregateSubmissionReviews({
-            submissions: submissionsForAggregation,
             mappingReviewAppeal,
             reviewers,
+            submissions: submissionsForAggregation,
         })
     ), [mappingReviewAppeal, reviewers, submissionsForAggregation])
 
@@ -286,7 +308,7 @@ export const TableReview: FC<TableReviewProps> = ({
         return rows.filter(row => row.id && latestSubmissionIds.has(row.id))
     }, [aggregatedSubmissionRows, latestSubmissionIds, restrictToLatest])
 
-    const maxReviewCount = useMemo(
+    const maxReviewCount = useMemo<number>(
         () => aggregatedSubmissionRows.reduce(
             (max, aggregated) => Math.max(max, aggregated.reviews?.length ?? 0),
             0,
@@ -338,22 +360,22 @@ export const TableReview: FC<TableReviewProps> = ({
         }
     }, [challengeInfo?.id, closeReopenDialog, pendingReopen])
 
-    const tableKey = useMemo(
+    const tableKey = useMemo<string>(
         () => (actionChallengeRole ? `table-review-${actionChallengeRole}` : 'table-review'),
         [actionChallengeRole],
     )
 
-    const canViewHistory = useMemo(
+    const canViewHistory = useMemo<boolean>(
         () => isAdmin || hasCopilotRole,
         [isAdmin, hasCopilotRole],
     )
 
-    const shouldShowAggregatedActions = useMemo(
+    const shouldShowAggregatedActions = useMemo<boolean>(
         () => isReviewPhase(challengeInfo) && (myReviewerResourceIds.size > 0 || canManageCompletedReviews),
         [canManageCompletedReviews, challengeInfo, myReviewerResourceIds],
     )
 
-    const scoreVisibilityConfig = useMemo(
+    const scoreVisibilityConfig = useMemo<ScoreVisibilityConfig>(
         () => ({
             canDisplayScores: () => true,
             canViewScorecard: true,
@@ -362,22 +384,181 @@ export const TableReview: FC<TableReviewProps> = ({
         [],
     )
 
+    const downloadButtonConfig = useMemo<DownloadButtonConfig>(
+        () => ({
+            downloadSubmission,
+            getRestrictionMessageForMember,
+            isDownloading,
+            isSubmissionDownloadRestricted,
+            isSubmissionDownloadRestrictedForMember,
+            ownedMemberIds,
+            restrictionMessage,
+            shouldRestrictSubmitterToOwnSubmission: false,
+        }),
+        [
+            downloadSubmission,
+            getRestrictionMessageForMember,
+            isDownloading,
+            isSubmissionDownloadRestricted,
+            isSubmissionDownloadRestrictedForMember,
+            ownedMemberIds,
+            restrictionMessage,
+        ],
+    )
+
+    const renderActionsCell = useCallback<(submission: SubmissionRow) => JSX.Element>((submission: SubmissionRow) => {
+        const reviews = submission.aggregated?.reviews ?? []
+        const myReviewDetail = reviews.find(review => {
+            const resourceId = review.reviewInfo?.resourceId ?? review.resourceId
+            return resourceId ? myReviewerResourceIds.has(resourceId) : false
+        })
+        const actionEntries: Array<{ element: JSX.Element; wrapperKey: string }> = []
+
+        const appendAction = (element: JSX.Element | undefined, fallbackKey: string): void => {
+            if (!element) {
+                return
+            }
+
+            const elementKeyValue = typeof element.key === 'string' || typeof element.key === 'number'
+                ? String(element.key)
+                : fallbackKey
+            actionEntries.push({
+                element,
+                wrapperKey: `wrapper-${fallbackKey}-${elementKeyValue}`,
+            })
+        }
+
+        const buildPrimaryAction = (): JSX.Element | undefined => {
+            if (!hasReviewRole || !myReviewDetail) {
+                return undefined
+            }
+
+            const reviewInfo = myReviewDetail.reviewInfo
+            const status = (reviewInfo?.status ?? '').toUpperCase()
+
+            if (status === 'COMPLETED' || status === 'SUBMITTED') {
+                return (
+                    <div className={styles.completedAction} key='completed-indicator'>
+                        <span className={styles.completedIcon}>
+                            <IconOutline.CheckIcon />
+                        </span>
+                        <span className={styles.completedPill}>
+                            Review Complete
+                        </span>
+                    </div>
+                )
+            }
+
+            const reviewId = reviewInfo?.id ?? myReviewDetail.reviewId
+            if (reviewId) {
+                return (
+                    <Link
+                        key='complete-review'
+                        to={`./../review/${reviewId}`}
+                        className={styles.submit}
+                    >
+                        <i className='icon-upload' />
+                        Complete Review
+                    </Link>
+                )
+            }
+
+            return undefined
+        }
+
+        const historyKeyForRow = getSubmissionHistoryKey(submission.memberId, submission.id)
+        const rowHistory = historyByMember.get(historyKeyForRow) ?? []
+
+        const buildHistoryAction = (): JSX.Element | undefined => {
+            if (!canViewHistory || !shouldShowHistoryActions) {
+                return undefined
+            }
+
+            if (!rowHistory.length) {
+                return undefined
+            }
+
+            return (
+                <button
+                    key='view-submission-history'
+                    type='button'
+                    className={styles.historyButton}
+                    data-member-id={submission.memberId ?? ''}
+                    data-submission-id={submission.id}
+                    onClick={handleHistoryButtonClick}
+                >
+                    View Submission History
+                </button>
+            )
+        }
+
+        appendAction(buildPrimaryAction(), 'primary')
+
+        const reopenButtons = createReopenActionButtons(
+            challengeInfo,
+            submission,
+            reviews,
+            {
+                canManageCompletedReviews,
+                isReopening,
+                openReopenDialog,
+                pendingReopen,
+            },
+        )
+
+        reopenButtons.forEach(button => appendAction(button, 'reopen'))
+        appendAction(buildHistoryAction(), 'history')
+
+        if (!actionEntries.length) {
+            return (
+                <span className={styles.notReviewed}>
+                    --
+                </span>
+            )
+        }
+
+        if (actionEntries.length === 1) {
+            return actionEntries[0].element
+        }
+
+        const renderActionEntry = (entry: { element: JSX.Element; wrapperKey: string }): JSX.Element => (
+            <span
+                key={entry.wrapperKey}
+                className={styles.actionItem}
+            >
+                {entry.element}
+            </span>
+        )
+
+        return (
+            <span className={styles.actionsCell}>
+                {actionEntries.map(renderActionEntry)}
+            </span>
+        )
+    }, [
+        canManageCompletedReviews,
+        canViewHistory,
+        challengeInfo,
+        handleHistoryButtonClick,
+        hasReviewRole,
+        historyByMember,
+        isReopening,
+        myReviewerResourceIds,
+        openReopenDialog,
+        pendingReopen,
+        shouldShowHistoryActions,
+    ])
+
     const columns = useMemo<TableColumn<SubmissionRow>[]>(() => {
         const submissionIdColumn: TableColumn<SubmissionRow> = {
             className: styles.submissionColumn,
             columnId: 'submission-id',
             label: 'Submission ID',
             propertyName: 'id',
-            renderer: (submission: SubmissionRow) => renderSubmissionIdCell(submission, {
-                isDownloading,
-                downloadSubmission,
-                shouldRestrictSubmitterToOwnSubmission: false,
-                isSubmissionDownloadRestrictedForMember,
-                getRestrictionMessageForMember,
-                isSubmissionDownloadRestricted,
-                restrictionMessage,
-                ownedMemberIds,
-            }),
+            renderer: (submission: SubmissionRow) => renderSubmissionIdCell(
+                submission,
+                downloadButtonConfig,
+            ),
             type: 'element',
         }
 
@@ -430,124 +611,19 @@ export const TableReview: FC<TableReviewProps> = ({
                 className: styles.textBlue,
                 columnId: 'actions',
                 label: 'Actions',
-                renderer: (submission: SubmissionRow) => {
-                    const reviews = submission.aggregated?.reviews ?? []
-                    const myReviewDetail = reviews.find(review => {
-                        const resourceId = review.reviewInfo?.resourceId ?? review.resourceId
-                        return resourceId ? myReviewerResourceIds.has(resourceId) : false
-                    })
-
-                    const reviewId = myReviewDetail?.reviewInfo?.id ?? myReviewDetail?.reviewId
-                    const status = (myReviewDetail?.reviewInfo?.status ?? '').toUpperCase()
-                    const historyKeyForRow = getSubmissionHistoryKey(submission.memberId, submission.id)
-                    const rowHistory = historyByMember.get(historyKeyForRow) ?? []
-                    const hasReviewRole = myReviewerResourceIds.size > 0
-
-                    let primaryAction: JSX.Element | undefined
-                    if (hasReviewRole) {
-                        if (status === 'COMPLETED' || status === 'SUBMITTED') {
-                            primaryAction = (
-                                <div className={styles.completedAction} key='completed-indicator'>
-                                    <span className={styles.completedIcon}>
-                                        <IconOutline.CheckIcon />
-                                    </span>
-                                    <span className={styles.completedPill}>
-                                        Review Complete
-                                    </span>
-                                </div>
-                            )
-                        } else if (reviewId) {
-                            primaryAction = (
-                                <Link
-                                    key='complete-review'
-                                    to={`./../review/${reviewId}`}
-                                    className={styles.submit}
-                                >
-                                    <i className='icon-upload' />
-                                    Complete Review
-                                </Link>
-                            )
-                        }
-                    }
-
-                    const reopenButtons = createReopenActionButtons(
-                        challengeInfo,
-                        submission,
-                        reviews,
-                        {
-                            canManageCompletedReviews,
-                            isReopening,
-                            openReopenDialog,
-                            pendingReopen,
-                        },
-                    )
-
-                    let historyAction: JSX.Element | undefined
-                    if (canViewHistory && shouldShowHistoryActions && rowHistory.length > 0) {
-                        historyAction = (
-                            <button
-                                key='view-submission-history'
-                                type='button'
-                                className={styles.historyButton}
-                                data-member-id={submission.memberId ?? ''}
-                                data-submission-id={submission.id}
-                                onClick={handleHistoryButtonClick}
-                            >
-                                View Submission History
-                            </button>
-                        )
-                    }
-
-                    const actions = [primaryAction, historyAction, ...reopenButtons].filter(Boolean) as JSX.Element[]
-
-                    if (!actions.length) {
-                        return <span className={styles.notReviewed}>--</span>
-                    }
-
-                    if (actions.length === 1) {
-                        return actions[0] ?? null
-                    }
-
-                    return (
-                        <span className={styles.actionsCell}>
-                            {actions.map((action, index) => (
-                                <span
-                                    key={`action-${index}`}
-                                    className={styles.actionItem}
-                                >
-                                    {action}
-                                </span>
-                            ))}
-                        </span>
-                    )
-                },
+                renderer: renderActionsCell,
                 type: 'element',
             })
         }
 
         return baseColumns
     }, [
-        canManageCompletedReviews,
-        canViewHistory,
-        challengeInfo,
-        downloadSubmission,
-        getRestrictionMessageForMember,
-        handleHistoryButtonClick,
+        downloadButtonConfig,
         hideHandleColumn,
-        historyByMember,
-        isDownloading,
-        isSubmissionDownloadRestricted,
-        isSubmissionDownloadRestrictedForMember,
         maxReviewCount,
-        myReviewerResourceIds,
-        openReopenDialog,
-        ownedMemberIds,
-        pendingReopen,
-        restrictionMessage,
+        renderActionsCell,
         scoreVisibilityConfig,
         shouldShowAggregatedActions,
-        shouldShowHistoryActions,
-        isReopening,
     ])
 
     const columnsMobile = useMemo<MobileTableColumn<SubmissionRow>[][]>(

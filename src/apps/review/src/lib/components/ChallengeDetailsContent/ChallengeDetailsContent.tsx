@@ -73,16 +73,17 @@ const TabContentPlaceholder = (props: { message: string }): JSX.Element => (
 )
 
 const SUBMISSION_TAB_KEYS = new Set([
-    'submission',
-    'screening',
-    'submission / screening',
+    normalizeType('submission'),
+    normalizeType('screening'),
+    normalizeType('submission / screening'),
+    normalizeType('topgear submission'),
 ])
 
 const CHECKPOINT_TAB_KEYS = new Set([
-    'checkpoint',
-    'checkpoint submission',
-    'checkpoint screening',
-    'checkpoint review',
+    normalizeType('checkpoint'),
+    normalizeType('checkpoint submission'),
+    normalizeType('checkpoint screening'),
+    normalizeType('checkpoint review'),
 ])
 
 interface BuildScreeningRowsParams {
@@ -106,7 +107,7 @@ const buildScreeningRows = ({
 }
 
 interface SubmissionTabParams {
-    selectedTabLower: string
+    selectedTabNormalized: string
     submissions: BackendSubmission[]
     screeningRows: Screening[]
     isLoadingSubmission: boolean
@@ -116,7 +117,7 @@ interface SubmissionTabParams {
 }
 
 const renderSubmissionTab = ({
-    selectedTabLower,
+    selectedTabNormalized,
     submissions,
     screeningRows,
     isLoadingSubmission,
@@ -124,14 +125,21 @@ const renderSubmissionTab = ({
     downloadSubmission,
     isActiveChallenge,
 }: SubmissionTabParams): JSX.Element => {
+    const isSubmissionTab = selectedTabNormalized === 'submission'
+    const isTopgearSubmissionTab = selectedTabNormalized === 'topgearsubmission'
     const shouldRestrictToContestSubmissions = isActiveChallenge
-        && selectedTabLower.startsWith('submission')
+        && (
+            selectedTabNormalized.startsWith('submission')
+            || isTopgearSubmissionTab
+        )
     const visibleSubmissions = shouldRestrictToContestSubmissions
         ? submissions.filter(
             submission => normalizeType(submission.type) === 'contestsubmission',
         )
         : submissions
-    const canShowSubmissionList = selectedTabLower !== 'screening' && visibleSubmissions.length > 0
+    const canShowSubmissionList = !isTopgearSubmissionTab
+        && selectedTabNormalized !== 'screening'
+        && visibleSubmissions.length > 0
 
     if (canShowSubmissionList) {
         return (
@@ -151,7 +159,7 @@ const renderSubmissionTab = ({
             isDownloading={isDownloadingSubmission}
             downloadSubmission={downloadSubmission}
             isActiveChallenge={isActiveChallenge}
-            showScreeningColumns={selectedTabLower !== 'submission'}
+            showScreeningColumns={!isSubmissionTab && !isTopgearSubmissionTab}
         />
     )
 }
@@ -287,6 +295,7 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
 
     const renderSelectedTab = (): JSX.Element => {
         const selectedTabLower = (props.selectedTab || '').toLowerCase()
+        const selectedTabNormalized = normalizeType(props.selectedTab)
 
         if (selectedTabLower === 'registration') {
             return <TabContentRegistration />
@@ -298,19 +307,19 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
             screening: props.screening,
         })
 
-        if (SUBMISSION_TAB_KEYS.has(selectedTabLower)) {
+        if (SUBMISSION_TAB_KEYS.has(selectedTabNormalized)) {
             return renderSubmissionTab({
                 downloadSubmission,
                 isActiveChallenge: props.isActiveChallenge,
                 isDownloadingSubmission,
                 isLoadingSubmission: props.isLoadingSubmission,
                 screeningRows,
-                selectedTabLower,
+                selectedTabNormalized,
                 submissions: props.submissions,
             })
         }
 
-        if (CHECKPOINT_TAB_KEYS.has(selectedTabLower)) {
+        if (CHECKPOINT_TAB_KEYS.has(selectedTabNormalized)) {
             return (
                 <TabContentCheckpoint
                     checkpoint={props.checkpoint}

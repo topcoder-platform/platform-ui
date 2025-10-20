@@ -6,11 +6,23 @@ import {
     hasIsLatestFlag,
     partitionSubmissionHistory,
 } from '../utils/submissionHistory'
+import type { SubmissionHistoryPartition } from '../utils/submissionHistory'
 
 interface UseSubmissionHistoryParams {
     datas: SubmissionInfo[]
     filteredAll: SubmissionInfo[]
     isSubmissionTab: boolean
+}
+
+export interface UseSubmissionHistoryResult {
+    closeHistoryModal: () => void
+    historyByMember: Map<string, SubmissionInfo[]>
+    historyEntriesForModal: SubmissionInfo[]
+    historyKey: string | undefined
+    latestSubmissionIds: Set<string>
+    latestSubmissions: SubmissionInfo[]
+    openHistoryModal: (memberId: string | undefined, submissionId: string) => void
+    shouldShowHistoryActions: boolean
 }
 
 /**
@@ -20,8 +32,8 @@ export function useSubmissionHistory({
     datas,
     filteredAll,
     isSubmissionTab,
-}: UseSubmissionHistoryParams) {
-    const submissionHistory = useMemo(
+}: UseSubmissionHistoryParams): UseSubmissionHistoryResult {
+    const submissionHistory = useMemo<SubmissionHistoryPartition>(
         () => partitionSubmissionHistory(datas, filteredAll),
         [datas, filteredAll],
     )
@@ -30,21 +42,21 @@ export function useSubmissionHistory({
         latestSubmissions,
         latestSubmissionIds,
         historyByMember,
-    } = submissionHistory
+    }: SubmissionHistoryPartition = submissionHistory
 
-    const shouldShowHistoryActions = useMemo(
+    const shouldShowHistoryActions = useMemo<boolean>(
         () => isSubmissionTab && hasIsLatestFlag(datas),
         [datas, isSubmissionTab],
     )
 
     const [historyKey, setHistoryKey] = useState<string | undefined>(undefined)
 
-    const historyEntriesForModal = useMemo(
+    const historyEntriesForModal = useMemo<SubmissionInfo[]>(
         () => (historyKey ? historyByMember.get(historyKey) ?? [] : []),
         [historyByMember, historyKey],
     )
 
-    const openHistoryModal = useCallback(
+    const openHistoryModal: (memberId: string | undefined, submissionId: string) => void = useCallback(
         (memberId: string | undefined, submissionId: string): void => {
             const key = getSubmissionHistoryKey(memberId, submissionId)
             const entries = historyByMember.get(key)

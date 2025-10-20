@@ -44,6 +44,7 @@ import {
     ChallengeInfo,
     ReviewAppContextModel,
     SelectOption,
+    SubmissionInfo,
 } from '../../../lib/models'
 import { REVIEWER, SUBMITTER, TAB, TABLE_DATE_FORMAT } from '../../../config/index.config'
 import {
@@ -203,6 +204,11 @@ const computePhaseCompletionFromScreenings = (
 
     return { hasAnyAssignment, hasAnyPending }
 }
+
+const isIterativeReviewPhaseName = (name?: string): boolean => (name || '')
+    .toString()
+    .toLowerCase()
+    .includes('iterative review')
 
 // (Phase dates display removed)
 
@@ -541,11 +547,107 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         const typeName = challengeInfo?.type?.name?.toLowerCase?.() || ''
         const typeAbbrev = challengeInfo?.type?.abbreviation?.toLowerCase?.() || ''
         const simplifiedType = typeName.replace(/\s|-/g, '')
+        const isTopgearTask = simplifiedType === 'topgeartask'
         return {
             isF2F: typeAbbrev === 'f2f' || simplifiedType === 'first2finish',
-            isTask: typeAbbrev === 'task' || typeAbbrev === 'tsk' || simplifiedType === 'task',
+            isTask: !isTopgearTask && (typeAbbrev === 'task' || typeAbbrev === 'tsk' || simplifiedType === 'task'),
+            isTopgearTask,
         }
     }, [challengeInfo?.type?.abbreviation, challengeInfo?.type?.name])
+
+    const visibleChallengePhases = useMemo<BackendPhase[]>(() => {
+        const phases = challengeInfo?.phases ?? []
+        if (!phaseOrderingOptions.isTopgearTask || phases.length === 0) {
+            return phases
+        }
+
+        const normalizeId = (value: unknown): string | undefined => {
+            if (value === undefined || value === null) {
+                return undefined
+            }
+
+            const normalized = String(value)
+                .trim()
+            return normalized || undefined
+        }
+
+        const activityPhaseIds = new Set<string>()
+        const collectPhaseIds = (submissions?: SubmissionInfo[]): void => {
+            submissions?.forEach(submission => {
+                const phaseId = normalizeId(submission?.review?.phaseId)
+                if (phaseId) {
+                    activityPhaseIds.add(phaseId)
+                }
+            })
+        }
+
+        collectPhaseIds(review)
+        collectPhaseIds(submitterReviews)
+
+        const iterativePhases = phases.filter(phase => isIterativeReviewPhaseName(phase?.name))
+        if (!iterativePhases.length) {
+            return phases
+        }
+
+        const sortedIterative = iterativePhases
+            .slice()
+            .sort((a, b) => {
+                const startA = Date.parse(a.actualStartDate || a.scheduledStartDate || '')
+                const startB = Date.parse(b.actualStartDate || b.scheduledStartDate || '')
+                const validA = Number.isFinite(startA)
+                const validB = Number.isFinite(startB)
+                if (validA && validB && startA !== startB) {
+                    return startA - startB
+                }
+
+                return 0
+            })
+
+        const primaryIterative = sortedIterative[0]
+        const primaryIterativeId = normalizeId(primaryIterative?.id)
+
+        const hasActualTimestamps = (phase: BackendPhase): boolean => Boolean(
+            normalizeId(phase.actualStartDate)
+            || normalizeId(phase.actualEndDate),
+        )
+
+        const shouldKeep = (phase: BackendPhase): boolean => {
+            if (!isIterativeReviewPhaseName(phase?.name)) {
+                return true
+            }
+
+            if (primaryIterative && phase === primaryIterative) {
+                return true
+            }
+
+            const candidateKeys = [
+                normalizeId(phase.id),
+                normalizeId(phase.phaseId),
+            ].filter(Boolean) as string[]
+
+            if (primaryIterativeId && candidateKeys.includes(primaryIterativeId)) {
+                return true
+            }
+
+            if (phase.isOpen) {
+                return true
+            }
+
+            if (hasActualTimestamps(phase)) {
+                return true
+            }
+
+            const hasActivity = candidateKeys.some(key => activityPhaseIds.has(key))
+            if (hasActivity) {
+                return true
+            }
+
+            return false
+        }
+
+        const filtered = phases.filter(shouldKeep)
+        return filtered.length ? filtered : phases
+    }, [challengeInfo?.phases, phaseOrderingOptions.isTopgearTask, review, submitterReviews])
 
     useEffect(() => {
         if (!tabItems.length) return
@@ -566,7 +668,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         }
 
         if (!isPastReviewDetail) {
-            const challengePhases = challengeInfo?.phases ?? []
+            const challengePhases = visibleChallengePhases
             if (challengePhases.length) {
                 let openTabValue: string | undefined
                 tabItems.forEach(item => {
@@ -586,7 +688,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
     }, [
         searchParams,
         tabItems,
-        challengeInfo?.phases,
+        visibleChallengePhases,
         phaseOrderingOptions,
         isPastReviewDetail,
     ])
@@ -594,12 +696,12 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
     // eslint-disable-next-line complexity
     useEffect(() => {
         if (!challengeInfo) return
-        if (phaseOrderingOptions.isTask) {
+        if (phaseOrderingOptions.isTask && !phaseOrderingOptions.isTopgearTask) {
             setTabItems(prev => (prev.length ? [] : prev))
             return
         }
 
-        const challengePhases = challengeInfo.phases ?? []
+        const challengePhases = visibleChallengePhases
         const items = buildPhaseTabs(
             challengePhases,
             challengeInfo.status,
@@ -788,13 +890,15 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         screening,
         checkpoint,
         checkpointReview,
+        isPastReviewDetail,
+        visibleChallengePhases,
     ])
 
     // Add completion indicators for active challenges on relevant tabs
     // eslint-disable-next-line complexity
     useEffect(() => {
         if (!challengeInfo || !tabItems.length || isPastReviewDetail) return
-        if (phaseOrderingOptions.isTask) return
+        if (phaseOrderingOptions.isTask && !phaseOrderingOptions.isTopgearTask) return
 
         const norm = (s: string): string => s.trim()
             .toLowerCase()
@@ -981,17 +1085,17 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
     }, [challengePhases, phaseLookup])
 
     const timelineRows = useMemo<ChallengeTimelineRow[]>(() => {
-        if (phaseOrderingOptions.isTask) {
+        if (phaseOrderingOptions.isTask && !phaseOrderingOptions.isTopgearTask) {
             return []
         }
 
-        if (!challengePhases || challengePhases.length === 0) {
+        if (!visibleChallengePhases.length) {
             return []
         }
 
         const baseItems = buildPhaseTabs(
-            challengePhases,
-            challengeInfo.status,
+            visibleChallengePhases,
+            challengeInfo?.status,
             phaseOrderingOptions,
         )
         const seen = new Set<string>()
@@ -1009,7 +1113,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         const rows: ChallengeTimelineRow[] = []
         baseItems.forEach(item => {
             const phase = findPhaseByTabLabel(
-                challengePhases,
+                visibleChallengePhases,
                 item.value,
                 phaseOrderingOptions,
             )
@@ -1047,7 +1151,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         })
 
         return rows
-    }, [challengeInfo, challengePhases, phaseOrderingOptions])
+    }, [challengeInfo, phaseOrderingOptions, visibleChallengePhases])
 
     const setPhaseActionLoading = useCallback((phaseId: string, loading: boolean) => {
         setPhaseActionLoadingMap(prev => ({
@@ -1366,7 +1470,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
     }, [])
 
     const timelineRowsWithActions = useMemo<ChallengeTimelineRow[]>(() => {
-        if (phaseOrderingOptions.isTask) {
+        if (phaseOrderingOptions.isTask && !phaseOrderingOptions.isTopgearTask) {
             return []
         }
 
@@ -1489,6 +1593,11 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         phaseOrderingOptions,
     ])
 
+    const shouldShowTimelineSection = useMemo<boolean>(() => {
+        const { isTask = false, isTopgearTask = false } = phaseOrderingOptions
+        return ((!isTask) || isTopgearTask) && timelineRowsWithActions.length > 0
+    }, [phaseOrderingOptions, timelineRowsWithActions])
+
     const isExtendSubmitting = extendTarget
         ? Boolean(phaseActionLoadingMap[extendTarget.id])
         : false
@@ -1610,7 +1719,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                         <ChallengeLinks />
                     </div>
 
-                    {!phaseOrderingOptions.isTask ? (
+                    {(!phaseOrderingOptions.isTask || phaseOrderingOptions.isTopgearTask) ? (
                         <div className={styles.blockContent}>
                             <div className={styles.phaseHeader}>
                                 <span className={styles.textTitle}>Phases</span>
@@ -1652,7 +1761,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                                 isActiveChallenge={!isPastReviewDetail}
                                 selectedPhaseId={(() => {
                                     const phase = findPhaseByTabLabel(
-                                        challengeInfo?.phases ?? [],
+                                        visibleChallengePhases,
                                         selectedTab,
                                         phaseOrderingOptions,
                                     )
@@ -1662,7 +1771,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                         </div>
                     ) : undefined}
 
-                    {!phaseOrderingOptions.isTask && timelineRowsWithActions.length > 0 ? (
+                    {shouldShowTimelineSection ? (
                         <div className={styles.blockContent}>
                             <span className={styles.textTitle}>Timeline</span>
                             <ChallengeTimeline
