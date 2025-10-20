@@ -2,6 +2,13 @@ import { ReactComponent as IconArrowLeft } from './arrow-left.svg'
 import { ReactComponent as IconExternalLink } from './external-link.svg'
 import { ReactComponent as IconChevronDown } from './selector.svg'
 import { ReactComponent as IconError } from './icon-error.svg'
+import { ReactComponent as IconAiReview } from './icon-ai-review.svg'
+import { ReactComponent as IconSubmission } from './icon-phase-submission.svg'
+import { ReactComponent as IconRegistration } from './icon-phase-registration.svg'
+import { ReactComponent as IconReview } from './icon-phase-review.svg'
+import { ReactComponent as IconAppeal } from './icon-phase-appeal.svg'
+import { ReactComponent as IconAppealResponse } from './icon-phase-appeal-response.svg'
+import { ReactComponent as IconPhaseWinners } from './icon-phase-winners.svg'
 
 export * from './editor/bold'
 export * from './editor/code'
@@ -19,4 +26,24 @@ export * from './editor/table'
 export * from './editor/unordered-list'
 export * from './editor/upload-file'
 
-export { IconArrowLeft, IconExternalLink, IconChevronDown, IconError }
+export {
+    IconArrowLeft,
+    IconExternalLink,
+    IconChevronDown,
+    IconError,
+    IconAiReview,
+    IconSubmission,
+    IconReview,
+    IconAppeal,
+    IconAppealResponse,
+    IconPhaseWinners,
+}
+
+export const phasesIcons = {
+    appeal: IconAppeal,
+    appealResponse: IconAppealResponse,
+    'iterative review': IconReview,
+    registration: IconRegistration,
+    review: IconReview,
+    submission: IconSubmission,
+}

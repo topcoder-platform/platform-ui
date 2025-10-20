@@ -17,6 +17,7 @@ import {
 } from '../../models'
 import { TableWrapper } from '../TableWrapper'
 import { ProgressBar } from '../ProgressBar'
+import { IconAiReview, phasesIcons } from '../../assets/icons'
 
 import styles from './TableActiveReviews.module.scss'
 
@@ -253,11 +254,20 @@ export const TableActiveReviews: FC<Props> = (props: Props) => {
                         isSortable: true,
                         label: 'Phase',
                         propertyName: 'currentPhase',
-                        renderer: (data: ActiveReviewAssignment) => (
-                            <div className={styles.phase}>
-                                {data.currentPhase}
-                            </div>
-                        ),
+                        renderer: (data: ActiveReviewAssignment) => {
+                            const Icon = data.hasAsAIReview ? IconAiReview : (
+                                phasesIcons[data.currentPhase.toLowerCase() as keyof typeof phasesIcons]
+                            )
+
+                            return (
+                                <div className={styles.phase}>
+                                    {Icon && (
+                                        <Icon className={styles.mr2} />
+                                    )}
+                                    {data.currentPhase}
+                                </div>
+                            )
+                        },
                         type: 'element',
                     },
                     {

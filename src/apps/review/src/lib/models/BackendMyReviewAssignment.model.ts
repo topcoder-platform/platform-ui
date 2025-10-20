@@ -20,6 +20,7 @@ export interface BackendMyReviewAssignment {
     challengeEndDate: string | null
     currentPhaseName: string
     currentPhaseEndDate: string | null
+    hasAsAIReview: boolean;
     timeLeftInCurrentPhase: number | null
     resourceRoleName: string
     reviewProgress: number | null
