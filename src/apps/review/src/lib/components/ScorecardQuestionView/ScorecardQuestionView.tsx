@@ -411,7 +411,7 @@ function renderResponseCommentRow({
                         </span>
 
                         <MarkdownReview
-                            value={commentItem.content}
+                            value={commentItem.content.replace(/\n\n/g, '<br><br>')}
                             className={styles.mardownReview}
                         />
                     </div>
