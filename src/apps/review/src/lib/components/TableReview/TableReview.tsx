@@ -34,7 +34,6 @@ import {
     aggregateSubmissionReviews,
     challengeHasSubmissionLimit,
     isReviewPhase,
-    isReviewPhaseCurrentlyOpen,
     refreshChallengeReviewData,
     REOPEN_MESSAGE_OTHER,
     REOPEN_MESSAGE_SELF,
@@ -83,69 +82,6 @@ interface PendingReopenState {
 type RestrictionResult = {
     restricted: boolean
     message?: string
-}
-
-function createReopenActionButtons(
-    challengeInfo: ChallengeDetailContextModel['challengeInfo'],
-    submission: SubmissionRow,
-    aggregatedReviews: AggregatedReviewDetail[] | undefined,
-    {
-        canManageCompletedReviews,
-        isReopening,
-        openReopenDialog,
-        pendingReopen,
-    }: {
-        canManageCompletedReviews: boolean
-        isReopening: boolean
-        openReopenDialog: (submission: SubmissionRow, review: AggregatedReviewDetail) => void
-        pendingReopen: PendingReopenState | undefined
-    },
-): JSX.Element[] {
-    if (!canManageCompletedReviews) {
-        return []
-    }
-
-    const buttons: JSX.Element[] = []
-    const reviews = aggregatedReviews ?? []
-
-    reviews.forEach(review => {
-        const reviewInfo = review.reviewInfo
-        if (!reviewInfo?.id) {
-            return
-        }
-
-        if ((reviewInfo.status ?? '').toUpperCase() !== 'COMPLETED') {
-            return
-        }
-
-        if (!isReviewPhaseCurrentlyOpen(challengeInfo, reviewInfo.phaseId)) {
-            return
-        }
-
-        const isTargetReview = pendingReopen?.review?.reviewInfo?.id === reviewInfo.id
-
-        function handleReopenClick(): void {
-            openReopenDialog(submission, {
-                ...review,
-                reviewInfo,
-            } as AggregatedReviewDetail)
-        }
-
-        buttons.push(
-            <button
-                key={`reopen-${reviewInfo.id}`}
-                type='button'
-                className={classNames(styles.actionButton, styles.textBlue)}
-                onClick={handleReopenClick}
-                disabled={isReopening && isTargetReview}
-            >
-                <i className='icon-reopen' />
-                Reopen review
-            </button>,
-        )
-    })
-
-    return buttons
 }
 
 export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
@@ -493,20 +429,6 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
         }
 
         appendAction(buildPrimaryAction(), 'primary')
-
-        const reopenButtons = createReopenActionButtons(
-            challengeInfo,
-            submission,
-            reviews,
-            {
-                canManageCompletedReviews,
-                isReopening,
-                openReopenDialog,
-                pendingReopen,
-            },
-        )
-
-        reopenButtons.forEach(button => appendAction(button, 'reopen'))
         appendAction(buildHistoryAction(), 'history')
 
         if (!actionEntries.length) {
@@ -536,16 +458,11 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
             </span>
         )
     }, [
-        canManageCompletedReviews,
         canViewHistory,
-        challengeInfo,
         handleHistoryButtonClick,
         hasReviewRole,
         historyByMember,
-        isReopening,
         myReviewerResourceIds,
-        openReopenDialog,
-        pendingReopen,
         shouldShowHistoryActions,
     ])
 
@@ -600,7 +517,16 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
                 {
                     columnId: `score-${index}`,
                     label: `Score ${index + 1}`,
-                    renderer: (submission: SubmissionRow) => renderScoreCell(submission, index, scoreVisibilityConfig),
+                    renderer: (submission: SubmissionRow) => renderScoreCell(
+                        submission,
+                        index,
+                        scoreVisibilityConfig,
+                        challengeInfo,
+                        pendingReopen,
+                        canManageCompletedReviews,
+                        isReopening,
+                        openReopenDialog,
+                    ),
                     type: 'element',
                 },
             )
@@ -624,6 +550,11 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
         renderActionsCell,
         scoreVisibilityConfig,
         shouldShowAggregatedActions,
+        canManageCompletedReviews,
+        isReopening,
+        openReopenDialog,
+        challengeInfo,
+        pendingReopen,
     ])
 
     const columnsMobile = useMemo<MobileTableColumn<SubmissionRow>[][]>(

@@ -12,6 +12,8 @@ import {
     VIRUS_SCAN_FAILED_MESSAGE,
 } from '../../utils/constants'
 import { getReviewRoute } from '../../utils/routes'
+import { ChallengeDetailContextModel, ChallengeInfo } from '../../models'
+import { isReviewPhaseCurrentlyOpen } from '../../utils'
 
 import {
     formatScoreDisplay,
@@ -19,6 +21,7 @@ import {
     getProfileUrl,
 } from './columnUtils'
 import type {
+    AggregatedReviewDetail,
     DownloadButtonConfig,
     ScoreVisibilityConfig,
     SubmissionRow,
@@ -301,6 +304,76 @@ export function renderReviewerCell(
     )
 }
 
+interface PendingReopenState {
+    review?: AggregatedReviewDetail
+    submission?: SubmissionRow
+    isOwnReview?: boolean
+}
+
+function createReopenActionButtons(
+    challengeInfo: ChallengeDetailContextModel['challengeInfo'],
+    submission: SubmissionRow,
+    aggregatedReviews: AggregatedReviewDetail[] | undefined,
+    {
+        canManageCompletedReviews,
+        isReopening,
+        openReopenDialog,
+        pendingReopen,
+    }: {
+        canManageCompletedReviews: boolean
+        isReopening: boolean
+        openReopenDialog: (submission: SubmissionRow, review: AggregatedReviewDetail) => void
+        pendingReopen: PendingReopenState | undefined
+    },
+): JSX.Element[] {
+    if (!canManageCompletedReviews) {
+        return []
+    }
+
+    const buttons: JSX.Element[] = []
+    const reviews = aggregatedReviews ?? []
+
+    reviews.forEach(review => {
+        const reviewInfo = review.reviewInfo
+        if (!reviewInfo?.id) {
+            return
+        }
+
+        if ((reviewInfo.status ?? '').toUpperCase() !== 'COMPLETED') {
+            return
+        }
+
+        if (!isReviewPhaseCurrentlyOpen(challengeInfo, reviewInfo.phaseId)) {
+            return
+        }
+
+        const isTargetReview = pendingReopen?.review?.reviewInfo?.id === reviewInfo.id
+
+        function handleReopenClick(): void {
+            openReopenDialog(submission, {
+                ...review,
+                reviewInfo,
+            } as AggregatedReviewDetail)
+        }
+
+        buttons.push(
+            // eslint-disable-next-line jsx-a11y/control-has-associated-label
+            <button
+                key={`reopen-${reviewInfo.id}`}
+                type='button'
+                className={classNames(styles.actionButton, styles.textBlue)}
+                onClick={handleReopenClick}
+                disabled={isReopening && isTargetReview}
+                title='Reopen review'
+            >
+                <i className='icon-reopen' />
+            </button>,
+        )
+    })
+
+    return buttons
+}
+
 /**
  * Renders an individual review score, linking to the review detail when allowed.
  */
@@ -308,6 +381,11 @@ export function renderScoreCell(
     submission: SubmissionRow,
     reviewIndex: number,
     config: ScoreVisibilityConfig,
+    challengeInfo?: ChallengeInfo | undefined,
+    pendingReopen?: PendingReopenState | undefined,
+    canManageCompletedReviews?: boolean,
+    isReopening?: boolean,
+    openReopenDialog?: (submission: SubmissionRow, review: AggregatedReviewDetail) => void,
 ): JSX.Element {
     const configWithDefaults: ScoreVisibilityConfig = config
     const {
@@ -349,6 +427,20 @@ export function renderScoreCell(
     const formattedScore = formatScoreDisplay(reviewDetail.finalScore)
     const scoreLabel = formattedScore ?? '--'
 
+    const reopenButtons = createReopenActionButtons(
+        challengeInfo,
+        submission,
+        [reviewDetail], // pass single review in an array
+        {
+            canManageCompletedReviews: !!canManageCompletedReviews,
+            isReopening: !!isReopening,
+            openReopenDialog: openReopenDialog as (submission: SubmissionRow, review: AggregatedReviewDetail) => void,
+            pendingReopen,
+        },
+    )
+
+    const reopenButton = reopenButtons.length ? reopenButtons[0] : undefined
+
     if (!canViewScorecard) {
         return (
             <Tooltip
@@ -367,13 +459,18 @@ export function renderScoreCell(
     const reviewUrl = getReviewUrl ? getReviewUrl(reviewId) : getReviewRoute(reviewId)
 
     return (
-        <Link
-            to={reviewUrl}
-            className={styles.textBlue}
-        >
-            {scoreLabel}
-        </Link>
+        <div className={styles.scoreReopenBlock}>
+            <Link
+                to={reviewUrl}
+                className={styles.textBlue}
+            >
+                {scoreLabel}
+
+            </Link>
+            <span>{reopenButton}</span>
+        </div>
     )
+
 }
 
 /**
