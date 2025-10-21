@@ -31,5 +31,76 @@
             justify-content: space-around;
             align-items: center;
         }
+
     }
+}
+
+.taxes {
+    display: block;
+    line-height: 20px;
+    font-size: 14px;
+
+    + .taxes {
+        margin-top: 10px;
+    }
+
+    &.mt {
+        margin-top: 20px;
+    }
+}
+
+.processing {
+    border-radius: $sp-2;
+    background: $black-5;
+    border-left: 4px solid $purple-100;
+    padding: $sp-4;
+}
+
+.breakdown {
+    margin-top: $sp-8;
+}
+
+.breakdownList {
+    margin-top: $sp-4;
+    display: flex;
+    flex-direction: column;
+    gap: $sp-2;
+
+    li {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: $black-100;
+
+
+        @include ltelg {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+}
+
+.summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: $sp-4;
+
+    @include ltelg {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+.alert {
+    margin-top: $sp-6;
+    background: $orange-25;
+    border-radius: $sp-2;
+    padding: $sp-3;
+    color: $gold-3;
+}
+
+.taxesFooterRow {
+    margin-top: $sp-6;
+
 }
