@@ -1,11 +1,7 @@
-import { toast } from 'react-toastify'
 import OTPInput, { InputProps } from 'react-otp-input'
-import React, { FC } from 'react'
+import React, { FC, useEffect } from 'react'
 
-import { BaseModal, LinkButton, LoadingCircles } from '~/libs/ui'
-import { resendOtp, verifyOtp } from '~/apps/wallet/src/lib/services/wallet'
-
-import { OtpVerificationResponse } from '../../models/OtpVerificationResponse'
+import { BaseModal, LoadingCircles } from '~/libs/ui'
 
 import styles from './OtpModal.module.scss'
 
@@ -13,19 +9,17 @@ const RESEND_OTP_TIMEOUT = 60000
 
 interface OtpModalProps {
     isOpen: boolean
-    key: string
-    transactionId: string
+    error?: string;
     userEmail?: string
-    isBlob?: boolean
     onClose: () => void
-    onOtpVerified: (data: unknown) => void
+    onOtpEntered: (code: string) => void
 }
 
 const OtpModal: FC<OtpModalProps> = (props: OtpModalProps) => {
     const [otp, setOtp] = React.useState('')
     const [loading, setLoading] = React.useState(false)
-    const [error, setError] = React.useState('')
-    const [showResendButton, setShowResendButton] = React.useState(false)
+    const [error, setError] = React.useState<string>()
+    const [, setShowResendButton] = React.useState(false)
 
     // eslint-disable-next-line consistent-return
     React.useEffect(() => {
@@ -44,7 +38,7 @@ const OtpModal: FC<OtpModalProps> = (props: OtpModalProps) => {
         }
     }, [props.isOpen])
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (!props.isOpen) {
             setOtp('')
             setError('')
@@ -55,19 +49,15 @@ const OtpModal: FC<OtpModalProps> = (props: OtpModalProps) => {
         setOtp(code)
         if (code.length === 6) {
             setLoading(true)
-            verifyOtp(props.transactionId, code, props.isBlob)
-                .then((response: OtpVerificationResponse | Blob) => {
-                    setLoading(false)
-                    props.onOtpVerified(response)
-                })
-                .catch((err: Error) => {
-                    setLoading(false)
-                    setError(err.message)
-                })
+            props.onOtpEntered(code)
         } else if (code.length < 6) {
             setError('')
         }
     }
+
+    useEffect(() => {
+        setError(props.error)
+    }, [props.error])
 
     return (
         <BaseModal
@@ -81,11 +71,10 @@ const OtpModal: FC<OtpModalProps> = (props: OtpModalProps) => {
             <div className={styles['otp-modal']}>
                 {error && <p className={styles.error}>{error}</p>}
                 <p>
-                    For added security we’ve sent a 6-digit code to your
+                    For added security we&apos;ve sent a 6-digit code to your
                     {' '}
                     <strong className='body-main-bold'>{props.userEmail ?? '***@gmail.com'}</strong>
-                    {' '}
-                    email. The code
+                    &nbsp;email. The code
                     expires shortly, so please enter it soon.
                 </p>
                 <OTPInput
@@ -101,7 +90,7 @@ const OtpModal: FC<OtpModalProps> = (props: OtpModalProps) => {
 
                 <p>Can&apos;t find the code? Check your spam folder.</p>
                 {loading && <LoadingCircles />}
-                {!loading && showResendButton && (
+                {/* {!loading && showResendButton && (
                     <LinkButton
                         light={false}
                         label='Resend code'
@@ -131,7 +120,7 @@ const OtpModal: FC<OtpModalProps> = (props: OtpModalProps) => {
                             }
                         }}
                     />
-                )}
+                )} */}
             </div>
         </BaseModal>
     )

@@ -23,6 +23,7 @@ export interface GlobalConfig {
         URL: string
     },
     STANDARDIZED_SKILLS_API: string,
+    TC_FINANCE_API: string,
     AUTH: {
         ACCOUNTS_APP_CONNECTOR: string
     }
@@ -93,4 +94,5 @@ export interface GlobalConfig {
     },
     ADMIN_SSO_LOGIN_PROVIDERS: SSOLoginProviderConfig[]
     LOCAL_SERVICE_OVERRIDES?: LocalServiceOverride[]
+    TROLLEY_WIDGET_ORIGIN: string
 }

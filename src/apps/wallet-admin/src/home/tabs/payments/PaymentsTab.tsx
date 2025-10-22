@@ -8,13 +8,11 @@ import { Collapsible, ConfirmModal, LoadingCircles } from '~/libs/ui'
 import { UserProfile } from '~/libs/core'
 import { downloadBlob } from '~/libs/shared'
 
-import { editPayment, exportSearchResults, getMemberHandle, getPaymentMethods, getPayments, getTaxForms } from '../../../lib/services/wallet'
+import { editPayment, exportSearchResults, getMemberHandle, getPayments } from '../../../lib/services/wallet'
 import { Winning, WinningDetail } from '../../../lib/models/WinningDetail'
 import { FilterBar, formatIOSDateString, PaymentView } from '../../../lib'
 import { ConfirmFlowData } from '../../../lib/models/ConfirmFlowData'
 import { PaginationInfo } from '../../../lib/models/PaginationInfo'
-import { TaxForm } from '../../../lib/models/TaxForm'
-import { PaymentProvider } from '../../../lib/models/PaymentProvider'
 import PaymentEditForm from '../../../lib/components/payment-edit/PaymentEdit'
 import PaymentsTable from '../../../lib/components/payments-table/PaymentTable'
 
@@ -39,6 +37,10 @@ function formatStatus(status: string): string {
             return 'Cancel'
         case 'PROCESSING':
             return 'Processing'
+        case 'FAILED':
+            return 'Failed'
+        case 'RETURNED':
+            return 'Returned'
         default:
             return status.replaceAll('_', ' ')
     }
@@ -76,7 +78,8 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
         totalPages: 0,
     })
     const [editState, setEditState] = React.useState<{
-        netAmount?: number;
+        grossAmount?: number;
+        description?: string;
         releaseDate?: Date;
         paymentStatus?: string;
         auditNote?: string;
@@ -91,7 +94,8 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
 
     const handleValueUpdated = useCallback((updates: {
         auditNote?: string,
-        netAmount?: number,
+        description?: string,
+        grossAmount?: number,
         paymentStatus?: string,
         releaseDate?: Date,
     }) => {
@@ -102,7 +106,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
     }, [])
 
     const convertToWinnings = useCallback(
-        (payments: WinningDetail[], handleMap: Map<number, string>, userHasTaxFormSetup: Map<string, boolean>, userHasPaymentProvider: Map<string, boolean>): ReadonlyArray<Winning> => payments.map(payment => {
+        (payments: WinningDetail[], handleMap: Map<number, string>): ReadonlyArray<Winning> => payments.map(payment => {
             const now = new Date()
             const releaseDate = new Date(payment.releaseDate)
             const diffMs = releaseDate.getTime() - now.getTime()
@@ -129,10 +133,10 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
             }
 
             if (status === 'ON_HOLD') {
-                if (!userHasTaxFormSetup.get(payment.winnerId)) {
-                    status = 'On Hold (Tax Form)'
-                } else if (!userHasPaymentProvider.get(payment.winnerId)) {
+                if (!payment.paymentStatus?.payoutSetupComplete) {
                     status = 'On Hold (Payment Provider)'
+                } else if (!payment.paymentStatus?.taxFormSetupComplete) {
+                    status = 'On Hold (Tax Form)'
                 } else {
                     status = 'On Hold (Member)'
                 }
@@ -145,10 +149,10 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                 description: payment.description,
                 details: payment.details,
                 externalId: payment.externalId,
+                grossAmount: formatCurrency(payment.details[0].grossAmount, payment.details[0].currency),
+                grossAmountNumber: parseFloat(payment.details[0].grossAmount),
                 handle: handleMap.get(parseInt(payment.winnerId, 10)) ?? payment.winnerId,
                 id: payment.id,
-                netPayment: formatCurrency(payment.details[0].totalAmount, payment.details[0].currency),
-                netPaymentNumber: parseFloat(payment.details[0].totalAmount),
                 releaseDate: formattedReleaseDate,
                 releaseDateObj: releaseDate,
                 status,
@@ -169,30 +173,8 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
             const payments = await getPayments(pagination.pageSize, (pagination.currentPage - 1) * pagination.pageSize, filters)
             const winnerIds = payments.winnings.map(winning => winning.winnerId)
 
-            const onHoldUserIds = payments.winnings
-                .filter(winning => winning.details[0].status === 'ON_HOLD')
-                .map(winning => winning.winnerId)
-
-            const userHasTaxFormSetup: Map<string, boolean> = new Map()
-            const userHasPaymentProvider: Map<string, boolean> = new Map()
-
-            try {
-                const missingTaxForms = await getTaxForms(100, 0, onHoldUserIds)
-                const missingPaymentProviders = await getPaymentMethods(100, 0, onHoldUserIds)
-
-                missingTaxForms.forms.forEach((form: TaxForm) => {
-                    userHasTaxFormSetup.set(form.userId, form.status === 'ACTIVE')
-                })
-
-                missingPaymentProviders.paymentMethods.forEach((method: PaymentProvider) => {
-                    userHasPaymentProvider.set(method.userId, method.status === 'CONNECTED')
-                })
-            } catch (err) {
-                // Ignore errors
-            }
-
             const handleMap = await getMemberHandle(winnerIds)
-            const winningsData = convertToWinnings(payments.winnings, handleMap, userHasTaxFormSetup, userHasPaymentProvider)
+            const winningsData = convertToWinnings(payments.winnings, handleMap)
             setWinnings(winningsData)
             setPagination(payments.pagination)
         } catch (apiError) {
@@ -225,7 +207,8 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
         // Send to server only the fields that have changed
         const updateObj = {
             auditNote: currentEditState.auditNote !== undefined ? currentEditState.auditNote : undefined,
-            netAmount: currentEditState.netAmount !== undefined ? currentEditState.netAmount : undefined,
+            description: currentEditState.description !== undefined ? currentEditState.description : undefined,
+            grossAmount: currentEditState.grossAmount !== undefined ? currentEditState.grossAmount : undefined,
             paymentStatus: currentEditState.paymentStatus !== undefined ? currentEditState.paymentStatus : undefined,
             releaseDate: currentEditState.releaseDate !== undefined ? currentEditState.releaseDate : undefined,
         }
@@ -243,6 +226,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
 
         const updates: {
             auditNote?: string
+            description?: string
             paymentStatus?: 'ON_HOLD_ADMIN' | 'OWED' | 'CANCELLED'
             releaseDate?: string
             paymentAmount?: number
@@ -252,10 +236,11 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
             winningsId: paymentId,
         }
 
+        if (updateObj.description) updates.description = updateObj.description
         if (paymentStatus) updates.paymentStatus = paymentStatus
         if (paymentStatus !== 'CANCELLED') {
             if (updateObj.releaseDate !== undefined) updates.releaseDate = updateObj.releaseDate.toISOString()
-            if (updateObj.netAmount !== undefined) updates.paymentAmount = updateObj.netAmount
+            if (updateObj.grossAmount !== undefined) updates.paymentAmount = updateObj.grossAmount
         }
 
         toast.success('Updating payment', { position: toast.POSITION.BOTTOM_RIGHT })
@@ -307,7 +292,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
             title: 'Edit Payment',
         })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [handleValueUpdated, editState])
+    }, [handleValueUpdated, editState, fetchWinnings])
 
     const isEditingAllowed = (): boolean => props.profile.roles.includes('Payment Admin') || props.profile.roles.includes('Payment Editor')
 
@@ -363,6 +348,14 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                                         {
                                             label: 'Processing',
                                             value: 'PROCESSING',
+                                        },
+                                        {
+                                            label: 'Failed',
+                                            value: 'FAILED',
+                                        },
+                                        {
+                                            label: 'Returned',
+                                            value: 'RETURNED',
                                         },
                                     ],
                                     type: 'dropdown',

@@ -91,6 +91,13 @@ table {
 
         color: #333;
     }
+
+    .paymeBtn {
+        pointer-events: initial;
+        &[disabled] {
+            cursor: not-allowed;
+        }
+    }
 }
 
 @media (max-width: 768px) {

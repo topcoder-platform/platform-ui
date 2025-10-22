@@ -1,6 +1,5 @@
 export interface PaymentDetail {
     id: string
-    netAmount: string
     grossAmount: string
     totalAmount: string
     installmentNumber: number
@@ -14,7 +13,7 @@ export interface Winning {
     description: string
     type: string
     createDate: string
-    netPayment: string
+    grossPayment: string
     status: string
     releaseDate: string
     datePaid: string
