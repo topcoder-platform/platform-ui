@@ -39,7 +39,6 @@ const TCACertificatePreview: FC<TCACertificatePreviewProps> = (props: TCACertifi
                 certification={props.certification}
                 completedDate={props.completedDate ?? ''}
                 completionUuid={props.completionUuid}
-                displaySignature
                 tcHandle={props.tcHandle ?? ''}
                 userName={props.userName}
                 validateLink={props.validateLink}

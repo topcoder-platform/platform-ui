@@ -8,7 +8,6 @@ import { TCAcademyLogoWhiteSvg, TCLogoSvg } from '~/libs/ui'
 import { LearnConfig } from '../../../../config'
 import { TCACertificateType, TCACertification } from '../../../data-providers'
 import { CertificateBadgeIcon } from '../../dynamic-icons'
-import { DougSigSvg } from '../../svgs'
 
 import { CertificateBackground } from './certificate-background'
 import styles from './TCACertificate.module.scss'
@@ -17,7 +16,6 @@ interface TCACertificateProps {
     certification: TCACertification
     completionUuid?: null | string
     completedDate?: string
-    displaySignature?: boolean
     elRef?: MutableRefObject<HTMLElement | any>
     tcHandle?: string
     userName?: string
@@ -27,8 +25,6 @@ interface TCACertificateProps {
 const TCACertificate: FC<TCACertificateProps> = (props: TCACertificateProps) => {
     // TODO: add cross track theme/type support
     const certificateType: TCACertificateType = props.certification.certificationCategory?.track ?? 'DEV'
-
-    const displaySignature: boolean = props.displaySignature ?? true
 
     const completedDate: string = moment(props.completedDate || new Date())
         .format('MMM D, YYYY')
@@ -93,16 +89,6 @@ const TCACertificate: FC<TCACertificateProps> = (props: TCACertificateProps) => 
                                     <span className='ultra-small-medium'>{props.validateLink}</span>
                                 </div>
                             </div>
-                            {
-                                displaySignature && (
-                                    <div className={styles.sigWrap}>
-                                        <DougSigSvg />
-                                        <div className={styles.divider} />
-                                        <span>Doug Hanson</span>
-                                        <span>CEO, Topcoder</span>
-                                    </div>
-                                )
-                            }
                         </div>
                     )}
                 </div>
