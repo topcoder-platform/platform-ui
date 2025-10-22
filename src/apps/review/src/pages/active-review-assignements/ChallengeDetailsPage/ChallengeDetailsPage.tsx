@@ -91,9 +91,25 @@ const getApproverResourceIds = (myResources?: Array<{ id?: string; roleName?: st
         .filter(Boolean) as string[],
 )
 
+// Determine whether a review has been completed/committed
+const isReviewComplete = (
+    review?: { committed?: boolean; status?: string | null },
+): boolean => {
+    const status = (review?.status || '').toUpperCase()
+    if (status === 'COMPLETED') {
+        return true
+    }
+
+    if (typeof review?.committed === 'boolean') {
+        return review.committed
+    }
+
+    return false
+}
+
 // Determine review completion flags for tabs (any assignment and any pending)
 const computeReviewCompletion = (
-    review: Array<{ review?: { id?: string; status?: string | null; resourceId?: string } }> | undefined,
+    review: Array<{ review?: { committed?: boolean; status?: string | null; resourceId?: string } }> | undefined,
     reviewerIds: Set<string>,
 ): { hasAnyReviewAssignment: boolean; hasAnyPendingReview: boolean } => {
     let hasAnyReviewAssignment = false
@@ -102,13 +118,10 @@ const computeReviewCompletion = (
     if (reviewerIds.size > 0) {
         for (const s of review || []) {
             const r = s.review
-            const isMine = Boolean(r?.id)
-                && Boolean(r?.resourceId)
-                && reviewerIds.has(r?.resourceId as string)
+            const isMine = Boolean(r?.resourceId) && reviewerIds.has(r?.resourceId as string)
             if (isMine) {
                 hasAnyReviewAssignment = true
-                const status = (r?.status || '').toUpperCase()
-                if (status !== 'COMPLETED') {
+                if (!isReviewComplete(r)) {
                     hasAnyPendingReview = true
                 }
             }
@@ -753,17 +766,18 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         )
 
         // Pending state per phase
-        const pendingReview = (() => {
-            if (myReviewerResourceIds.size === 0) return false
-            // Treat not-started (no id) or non-COMPLETED as pending
-            return (review || []).some(s => {
-                const r = s.review
-                if (!r) return false
-                if (!r.resourceId || !myReviewerResourceIds.has(r.resourceId)) return false
-                const status = (r.status || '').toUpperCase()
-                return status !== 'COMPLETED'
-            })
-        })()
+        const {
+            hasAnyPendingReview: pendingReview,
+        }: { hasAnyPendingReview: boolean } = computeReviewCompletion(
+            review,
+            myReviewerResourceIds,
+        )
+        const {
+            hasAnyPendingReview: pendingPostMortem,
+        }: { hasAnyPendingReview: boolean } = computeReviewCompletion(
+            postMortemReviews,
+            myReviewerResourceIds,
+        )
 
         const pendingScreening = (() => {
             if (myScreenerResourceIds.size === 0) return false
@@ -811,6 +825,10 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
             }
 
             if (label === 'checkpoint review' && pendingCheckpointReview) {
+                return { ...it, warning: true }
+            }
+
+            if (label === 'post-mortem' && pendingPostMortem) {
                 return { ...it, warning: true }
             }
 
@@ -894,6 +912,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         checkpointReview,
         isPastReviewDetail,
         visibleChallengePhases,
+        postMortemReviews,
     ])
 
     // Add completion indicators for active challenges on relevant tabs
@@ -912,6 +931,13 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
             hasAnyPendingReview,
         }: { hasAnyReviewAssignment: boolean; hasAnyPendingReview: boolean } = computeReviewCompletion(
             review,
+            reviewerIds,
+        )
+        const {
+            hasAnyReviewAssignment: hasAnyPostMortemAssignment,
+            hasAnyPendingReview: hasAnyPendingPostMortem,
+        }: { hasAnyReviewAssignment: boolean; hasAnyPendingReview: boolean } = computeReviewCompletion(
+            postMortemReviews,
             reviewerIds,
         )
         const {
@@ -979,6 +1005,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
             ...((hasAnyCheckpointReviewAssignment && !hasAnyPendingCheckpointReview)
                 ? ['checkpoint review']
                 : []),
+            ...((hasAnyPostMortemAssignment && !hasAnyPendingPostMortem) ? ['post-mortem'] : []),
         ])
 
         const isCompletedLabel = (label: string): boolean => (
@@ -1015,6 +1042,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         checkpoint,
         checkpointReview,
         phaseOrderingOptions,
+        postMortemReviews,
     ])
 
     // Determine if current user should see the Resources section

@@ -47,6 +47,7 @@ export const TabContentPostMortem: FC<Props> = (props: Props) => {
             downloadSubmission={props.downloadSubmission}
             hideHandleColumn={hideHandleColumn}
             columnLabel='Post-Mortem'
+            hideSubmissionColumn
         />
     )
 }

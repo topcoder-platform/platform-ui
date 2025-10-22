@@ -620,12 +620,14 @@ function getNormalizedAlphaLowerCase(value?: string | null): string | undefined 
 }
 
 function isPhaseAllowedForReview(phaseName?: string | null): boolean {
-    const normalized = getNormalizedLowerCase(phaseName)
-    if (!normalized) {
+    const normalizedAlpha = getNormalizedAlphaLowerCase(phaseName)
+    if (!normalizedAlpha) {
         return true
     }
 
-    return normalized === 'review'
+    return normalizedAlpha === 'review'
+        || normalizedAlpha === 'postmortem'
+        || normalizedAlpha === 'approval'
 }
 
 function buildMetadataCriteria(detail: MetadataPhaseMatchDetail): string[] {
@@ -953,6 +955,30 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
         const normalizeRoleName = (roleName?: string | null): string | undefined => roleName
             ?.trim()
             .toLowerCase()
+        const isReviewerRoleName = (normalizedRoleName?: string): boolean => {
+            if (!normalizedRoleName) {
+                return false
+            }
+
+            const alphaOnly = normalizedRoleName.replace(/[^a-z]/g, '')
+            if (!alphaOnly) {
+                return false
+            }
+
+            if (alphaOnly.includes('postmortem')) {
+                return true
+            }
+
+            if (alphaOnly.includes('reviewer')) {
+                return true
+            }
+
+            if (alphaOnly.includes('interview')) {
+                return false
+            }
+
+            return alphaOnly.includes('review') && !alphaOnly.includes('appeal')
+        }
 
         const reviewerRoleId = resourceRoleReviewer?.id
 
@@ -961,7 +987,7 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
                 challengeReviewers,
                 reviewer => {
                     const normalizedRoleName = normalizeRoleName(reviewer.roleName)
-                    const matchesRoleName = normalizedRoleName === 'reviewer'
+                    const matchesRoleName = isReviewerRoleName(normalizedRoleName)
                     const matchesRoleId = !normalizedRoleName && reviewerRoleId
                         ? reviewer.roleId === reviewerRoleId
                         : false
@@ -976,47 +1002,51 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
                         reviewer => reviewer.memberId === `${loginUserInfo?.userId}`,
                     )
                     : reviewerRoleResources
-            ).map(reviewer => reviewer.id)
-        }
-
-        if (!results.length) {
-            const reviewerResourceIds = new Set(
-                (resources ?? [])
-                    .filter(resource => {
-                        const normalizedRoleName = normalizeRoleName(resource.roleName)
-                        const matchesRoleName = normalizedRoleName === 'reviewer'
-                        const matchesRoleId = !normalizedRoleName && reviewerRoleId
-                            ? resource.roleId === reviewerRoleId
-                            : false
-                        return matchesRoleName || matchesRoleId
-                    })
-                    .map(resource => resource.id)
-                    .filter((id): id is string => Boolean(id)),
             )
-
-            forEach(visibleChallengeSubmissions, challengeSubmission => {
-                forEach(challengeSubmission.review, review => {
-                    if (!isPhaseAllowedForReview(review.phaseName)) {
-                        return
-                    }
-
-                    const resourceId = review.resourceId
-                    if (!resourceId) {
-                        return
-                    }
-
-                    if (reviewerResourceIds.size && !reviewerResourceIds.has(resourceId)) {
-                        return
-                    }
-
-                    if (!results.includes(resourceId)) {
-                        results.push(resourceId)
-                    }
-                })
-            })
+                .map(reviewer => reviewer.id)
+                .filter((id): id is string => typeof id === 'string' && id.trim().length > 0)
         }
 
-        return results
+        const fallbackResults = new Set<string>(results)
+
+        const reviewerResourceIds = new Set(
+            (resources ?? [])
+                .filter(resource => {
+                    const normalizedRoleName = normalizeRoleName(resource.roleName)
+                    const matchesRoleName = isReviewerRoleName(normalizedRoleName)
+                    const matchesRoleId = !normalizedRoleName && reviewerRoleId
+                        ? resource.roleId === reviewerRoleId
+                        : false
+                    const matchesCurrentReviewer = actionChallengeRole !== REVIEWER
+                        || `${resource.memberId ?? ''}` === `${loginUserInfo?.userId ?? ''}`
+                    return (matchesRoleName || matchesRoleId) && matchesCurrentReviewer
+                })
+                .map(resource => resource.id)
+                .filter((id): id is string => typeof id === 'string' && id.trim().length > 0),
+        )
+
+        reviewerResourceIds.forEach(id => fallbackResults.add(id))
+
+        forEach(visibleChallengeSubmissions, challengeSubmission => {
+            forEach(challengeSubmission.review, review => {
+                if (!isPhaseAllowedForReview(review.phaseName)) {
+                    return
+                }
+
+                const resourceId = review.resourceId
+                if (!resourceId) {
+                    return
+                }
+
+                if (reviewerResourceIds.size && !reviewerResourceIds.has(resourceId)) {
+                    return
+                }
+
+                fallbackResults.add(resourceId)
+            })
+        })
+
+        return Array.from(fallbackResults)
 
     }, [
         challengeReviewers,

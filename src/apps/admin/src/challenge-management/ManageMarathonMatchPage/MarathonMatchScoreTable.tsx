@@ -211,7 +211,7 @@ export const MarathonMatchScoreTable: FC<Props> = props => {
 
                     return <span className={styles.noScore}>N/A</span>
                 },
-                type: 'element',
+                type: 'numberElement',
             },
             {
                 defaultSortDirection: 'desc',
@@ -231,7 +231,7 @@ export const MarathonMatchScoreTable: FC<Props> = props => {
                         </span>
                     )
                 },
-                type: 'element',
+                type: 'date',
             },
             {
                 label: '',

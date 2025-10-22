@@ -12,4 +12,5 @@ export interface SubmissionReviewSummation {
     submitterId?: number | null
     submitterHandle?: string | null
     submitterMaxRating?: number | null
+    metadata?: unknown | null
 }

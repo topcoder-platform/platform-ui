@@ -94,6 +94,10 @@ export const TabContentIterativeReview: FC<Props> = (props: Props) => {
         return <TableNoRecord message={emptyMessage} />
     }
 
+    const shouldHideSubmissionColumn = (props.columnLabel || '')
+        .trim()
+        .toLowerCase() === 'post-mortem'
+
     return (
         <TableIterativeReview
             datas={reviewRows}
@@ -101,6 +105,7 @@ export const TabContentIterativeReview: FC<Props> = (props: Props) => {
             downloadSubmission={props.downloadSubmission}
             hideHandleColumn={hideHandleColumn}
             columnLabel={props.columnLabel}
+            hideSubmissionColumn={shouldHideSubmissionColumn}
         />
     )
 }

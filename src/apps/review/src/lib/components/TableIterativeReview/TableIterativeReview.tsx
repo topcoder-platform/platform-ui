@@ -50,6 +50,7 @@ interface Props {
     downloadSubmission: (submissionId: string) => void
     hideHandleColumn?: boolean
     columnLabel?: string
+    hideSubmissionColumn?: boolean
 }
 
 interface ScoreMetadata {
@@ -479,6 +480,7 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
     const datas = props.datas
     const downloadSubmission = props.downloadSubmission
     const hideHandleColumn = props.hideHandleColumn
+    const hideSubmissionColumn = props.hideSubmissionColumn ?? false
     const isDownloading = props.isDownloading
     const columnLabel = props.columnLabel || 'Iterative Review'
     const { challengeInfo, myRoles, resources }: ChallengeDetailContextModel = useContext(
@@ -1216,9 +1218,15 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
     ])
 
     const columns = useMemo<TableColumn<SubmissionInfo>[]>(() => {
-        const baseColumns: TableColumn<SubmissionInfo>[] = [
-            isPostMortemColumn ? postMortemSubmissionColumn : submissionColumn,
-        ]
+        const baseColumns: TableColumn<SubmissionInfo>[] = []
+
+        if (!hideSubmissionColumn) {
+            baseColumns.push(
+                isPostMortemColumn
+                    ? postMortemSubmissionColumn
+                    : submissionColumn,
+            )
+        }
 
         if (!isPostMortemColumn && handleColumn) {
             baseColumns.push(handleColumn)
@@ -1242,6 +1250,7 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
     }, [
         approverColumn,
         handleColumn,
+        hideSubmissionColumn,
         isAdminOrCopilot,
         isF2FOrTopgearTask,
         isPostMortemColumn,
