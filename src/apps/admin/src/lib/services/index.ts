@@ -1,4 +1,5 @@
 export * from './challenge-management.service'
+export * from './challenges.service'
 export * from './user.service'
 export * from './roles.service'
 export * from './groups.service'

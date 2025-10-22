@@ -6,13 +6,22 @@ import { xhrDeleteAsync, xhrGetAsync } from '~/libs/core'
 
 import {
     ApiV5ResponseSuccess,
-    PaginatedResponseV6,
     SubmissionReviewSummation,
 } from '../models'
 
 const REVIEW_SUMMATIONS_PER_PAGE = 500
 
-type ReviewSummationsResponse = PaginatedResponseV6<SubmissionReviewSummation>
+interface ReviewSummationsResponse {
+    data?: SubmissionReviewSummation[]
+    meta?: {
+        totalPages?: number
+        page?: number
+        perPage?: number
+    }
+    totalPages?: number
+    page?: number
+    perPage?: number
+}
 
 /**
  * Fetch review summations of a challenge with pagination support
@@ -43,7 +52,9 @@ export const fetchReviewSummations = async (
         = await xhrGetAsync<ReviewSummationsResponse>(makeQuery(1))
     reviewSummations.push(...(firstResponse?.data ?? []))
 
-    const totalPages = firstResponse?.totalPages ?? 1
+    const totalPages = firstResponse?.meta?.totalPages
+        ?? firstResponse?.totalPages
+        ?? 1
 
     if (totalPages > 1) {
         const pages = Array.from({ length: totalPages - 1 }, (_, index) => index + 2)
@@ -56,7 +67,10 @@ export const fetchReviewSummations = async (
         }
     }
 
-    return reviewSummations
+    return reviewSummations.map(item => ({
+        ...item,
+        memberId: item.memberId ?? item.submitterId ?? undefined,
+    }))
 }
 
 /**

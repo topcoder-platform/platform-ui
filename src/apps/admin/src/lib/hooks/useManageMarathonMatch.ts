@@ -31,18 +31,27 @@ export interface useManageMarathonMatchProps {
 
 const getLatestSubmissions = (
     memberSubmissions: MemberSubmission[],
-): Submission[] => {
-    const latestSubmissions: Submission[] = []
-    memberSubmissions.forEach(memberSubmission => {
-        memberSubmission.submissions.forEach(submission => {
-            if ((submission as Submission & { isLatest?: boolean }).isLatest === true) {
-                latestSubmissions.push(submission)
-            }
-        })
-    })
+): Submission[] => memberSubmissions.reduce<Submission[]>((results, memberSubmission) => {
+    if (!memberSubmission?.submissions?.length) {
+        return results
+    }
 
-    return latestSubmissions
-}
+    const explicitLatest = memberSubmission.submissions.filter(
+        submission => (submission as Submission & { isLatest?: boolean }).isLatest === true,
+    )
+
+    if (explicitLatest.length) {
+        results.push(...explicitLatest)
+        return results
+    }
+
+    const [mostRecent] = memberSubmission.submissions
+    if (mostRecent) {
+        results.push(mostRecent)
+    }
+
+    return results
+}, [])
 
 /**
  * Manage marathon match state
@@ -58,21 +67,22 @@ export function useManageMarathonMatch(
     const [submissions, setSubmissions] = useState<Submission[]>([])
     const [error, setError] = useState<Error | undefined>()
 
-    const isLoadingRef = useRef(false)
+    const latestChallengeIdRef = useRef<string | undefined>()
+    const requestSequenceRef = useRef(0)
 
     useEffect(() => {
         if (!challengeId) {
             setReviewSummations([])
             setSubmissions([])
             setError(undefined)
+            setIsLoading(false)
+            latestChallengeIdRef.current = undefined
             return
         }
 
-        if (isLoadingRef.current) {
-            return
-        }
-
-        isLoadingRef.current = true
+        latestChallengeIdRef.current = challengeId
+        const requestSequence = requestSequenceRef.current + 1
+        requestSequenceRef.current = requestSequence
         setIsLoading(true)
         setError(undefined)
 
@@ -81,10 +91,20 @@ export function useManageMarathonMatch(
             fetchSubmissionsOfChallenge(challengeId),
         ])
             .then(([summations, memberSubmissions]) => {
+                if (requestSequence !== requestSequenceRef.current
+                    || latestChallengeIdRef.current !== challengeId) {
+                    return
+                }
+
                 setReviewSummations(summations)
                 setSubmissions(getLatestSubmissions(memberSubmissions))
             })
             .catch(err => {
+                if (requestSequence !== requestSequenceRef.current
+                    || latestChallengeIdRef.current !== challengeId) {
+                    return
+                }
+
                 handleError(err)
                 const normalizedError = err instanceof Error
                     ? err
@@ -94,8 +114,9 @@ export function useManageMarathonMatch(
                 setSubmissions([])
             })
             .finally(() => {
-                isLoadingRef.current = false
-                setIsLoading(false)
+                if (requestSequence === requestSequenceRef.current) {
+                    setIsLoading(false)
+                }
             })
     }, [challengeId])
 
@@ -104,15 +125,24 @@ export function useManageMarathonMatch(
         [reviewSummations],
     )
 
+    const finalSummationsMap = useMemo(() => {
+        const map = new Map<string, SubmissionReviewSummation>()
+
+        reviewSummations.forEach(item => {
+            if (item.isFinal === true && item.submissionId) {
+                map.set(item.submissionId, item)
+            }
+        })
+
+        return map
+    }, [reviewSummations])
+
     const finalScoresData = useMemo(
         () => submissions.map(submission => ({
-            reviewSummation: reviewSummations.find(
-                item => item.isFinal === true
-                    && item.submissionId === submission.id,
-            ),
+            reviewSummation: finalSummationsMap.get(submission.id),
             submission,
         })),
-        [reviewSummations, submissions],
+        [finalSummationsMap, submissions],
     )
 
     return {

@@ -1,5 +1,31 @@
+@import '@libs/ui/styles/includes';
+
 .container {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: $sp-6;
+}
+
+.headerButtons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $sp-3;
+    justify-content: flex-end;
+}
+
+.tableSection {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-3;
+}
+
+.sectionHeading {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.errorMessage {
+    color: $red-110;
+    font-weight: 500;
 }
