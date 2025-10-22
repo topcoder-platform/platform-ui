@@ -144,7 +144,14 @@ export function renderSubmissionIdCell(
  * Renders the submitter handle including rating-based color and profile link.
  */
 export function renderSubmitterHandleCell(submission: SubmissionRow): JSX.Element {
-    const submitterHandle = submission.aggregated?.submitterHandle?.trim()
+    const aggregated = submission.aggregated
+    const submitterHandle = [
+        aggregated?.submitterHandle,
+        submission.review?.submitterHandle,
+        submission.userInfo?.memberHandle,
+    ]
+        .map(handle => handle?.trim())
+        .find((handle): handle is string => Boolean(handle))
 
     if (!submitterHandle) {
         return (
@@ -154,8 +161,12 @@ export function renderSubmitterHandleCell(submission: SubmissionRow): JSX.Elemen
         )
     }
 
-    const explicitColor = submission.aggregated?.submitterHandleColor
-    const maxRating = submission.aggregated?.submitterMaxRating ?? undefined
+    const explicitColor = aggregated?.submitterHandleColor
+        ?? submission.review?.submitterHandleColor
+        ?? submission.userInfo?.handleColor
+    const maxRating = aggregated?.submitterMaxRating
+        ?? submission.review?.submitterMaxRating
+        ?? submission.userInfo?.maxRating
     const resolvedColor = getHandleColor(explicitColor, submitterHandle, maxRating) ?? '#2a2a2a'
     const profileUrl = getProfileUrl(submitterHandle)
 

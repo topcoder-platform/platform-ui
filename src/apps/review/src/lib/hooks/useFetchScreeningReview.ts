@@ -2169,28 +2169,53 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
         const allowedReviewerIds = new Set(reviewerIds)
         const result: SubmissionInfo[] = []
 
-        forEach(challengeReviews, rv => {
-            if (!rv) return
-            if (!postMortemPhaseIds.has(rv.phaseId)) return
-            if (allowedReviewerIds.size > 0 && !allowedReviewerIds.has(rv.resourceId)) return
-            const normalizedType = getNormalizedAlphaLowerCase(rv.typeId)
-            if (!normalizedType || !normalizedType.includes('postmortem')) return
-            const submission = submissionsById.get(rv.submissionId)
-            if (!submission) return
+        const shouldIncludeReview = (candidate: BackendReview | undefined): boolean => {
+            if (!candidate) {
+                return false
+            }
 
+            if (!postMortemPhaseIds.has(candidate.phaseId)) {
+                return false
+            }
+
+            if (allowedReviewerIds.size > 0 && !allowedReviewerIds.has(candidate.resourceId)) {
+                return false
+            }
+
+            const normalizedType = getNormalizedAlphaLowerCase(candidate.typeId)
+            const normalizedPhaseName = getNormalizedAlphaLowerCase(candidate.phaseName)
+
+            return Boolean(
+                normalizedType?.includes('postmortem')
+                    || normalizedPhaseName?.includes('postmortem'),
+            )
+        }
+
+        forEach(challengeReviews, rv => {
+            if (!shouldIncludeReview(rv)) return
+            const submission = rv.submissionId ? submissionsById.get(rv.submissionId) : undefined
             const reviewInfo = convertBackendReviewToReviewInfo(rv)
+            const reviewResult = convertBackendReviewToReviewResult(rv)
+            const resolvedSubmissionId = submission?.id
+                ?? (rv.submissionId ? `${rv.submissionId}` : rv.id)
+                ?? `${rv.resourceId ?? 'post-mortem'}`
+            const resolvedMemberId = submission?.memberId ?? 'post-mortem'
+            const resolvedUserInfo = submission
+                ? resourceMemberIdMapping[submission.memberId]
+                : undefined
+
             result.push({
-                id: submission.id,
-                memberId: submission.memberId,
+                id: resolvedSubmissionId,
+                memberId: resolvedMemberId,
                 review: reviewInfo,
-                reviews: [convertBackendReviewToReviewResult(rv)],
-                reviewTypeId: rv.typeId ?? undefined,
-                userInfo: resourceMemberIdMapping[submission.memberId],
+                reviews: [reviewResult],
+                reviewTypeId: rv.typeId ?? 'post-mortem',
+                userInfo: resolvedUserInfo,
             })
         })
 
         return result
-    }, [challengeInfo?.phases, challengeReviews, resourceMemberIdMapping, visibleChallengeSubmissions])
+    }, [challengeInfo?.phases, challengeReviews, resourceMemberIdMapping, reviewerIds, visibleChallengeSubmissions])
 
     useEffect(() => {
         const reviewSources: SubmissionInfo[] = actionChallengeRole === SUBMITTER

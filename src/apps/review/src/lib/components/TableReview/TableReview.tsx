@@ -18,7 +18,7 @@ import { handleError, useWindowSize, WindowSize } from '~/libs/shared'
 import { IconOutline, Table, TableColumn } from '~/libs/ui'
 
 import { ChallengeDetailContext } from '../../contexts'
-import { useRole, useSubmissionDownloadAccess } from '../../hooks'
+import { useRole, useScorecardPassingScores, useSubmissionDownloadAccess } from '../../hooks'
 import type { useRoleProps } from '../../hooks/useRole'
 import { useSubmissionHistory } from '../../hooks/useSubmissionHistory'
 import type { UseSubmissionHistoryResult } from '../../hooks/useSubmissionHistory'
@@ -62,6 +62,7 @@ import type {
     ScoreVisibilityConfig,
     SubmissionRow,
 } from '../common/types'
+import { resolveSubmissionReviewResult } from '../common/reviewResult'
 
 import styles from './TableReview.module.scss'
 
@@ -293,6 +294,28 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
             submissions: submissionsForAggregation,
         })
     ), [mappingReviewAppeal, reviewers, submissionsForAggregation])
+
+    const scorecardIds = useMemo<Set<string>>(() => {
+        const ids = new Set<string>()
+
+        aggregatedSubmissionRows.forEach(aggregated => {
+            const primary = aggregated.submission?.review?.scorecardId?.trim()
+            if (primary) {
+                ids.add(primary)
+            }
+
+            aggregated.reviews?.forEach(review => {
+                const derived = review.reviewInfo?.scorecardId?.trim()
+                if (derived) {
+                    ids.add(derived)
+                }
+            })
+        })
+
+        return ids
+    }, [aggregatedSubmissionRows])
+
+    const minimumPassingScoreByScorecardId = useScorecardPassingScores(scorecardIds)
 
     const aggregatedRows = useMemo<SubmissionRow[]>(() => {
         const rows = aggregatedSubmissionRows.map(aggregated => ({
@@ -587,6 +610,33 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
                 renderer: (submission: SubmissionRow) => renderReviewScoreCell(submission, scoreVisibilityConfig),
                 type: 'element',
             },
+            {
+                columnId: 'review-result',
+                label: 'Review Result',
+                renderer: (submission: SubmissionRow) => {
+                    const result = resolveSubmissionReviewResult(submission, {
+                        minimumPassingScoreByScorecardId,
+                    })
+                    if (result === 'PASS') {
+                        return (
+                            <span className={styles.resultPass}>
+                                Pass
+                            </span>
+                        )
+                    }
+
+                    if (result === 'FAIL') {
+                        return (
+                            <span className={styles.resultFail}>
+                                Fail
+                            </span>
+                        )
+                    }
+
+                    return <span>--</span>
+                },
+                type: 'element',
+            },
         )
 
         for (let index = 0; index < maxReviewCount; index += 1) {
@@ -621,6 +671,7 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
         downloadButtonConfig,
         hideHandleColumn,
         maxReviewCount,
+        minimumPassingScoreByScorecardId,
         renderActionsCell,
         scoreVisibilityConfig,
         shouldShowAggregatedActions,

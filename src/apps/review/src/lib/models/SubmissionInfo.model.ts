@@ -32,6 +32,10 @@ export interface SubmissionInfo {
      */
     aggregateScore?: number
     /**
+     * Indicates whether the latest review summation meets the passing threshold.
+     */
+    isPassingReview?: boolean
+    /**
      * The date/time when the submission was created.
      */
     submittedDate?: string | Date
@@ -86,7 +90,11 @@ export function convertBackendSubmissionToSubmissionInfo(
             .local()
             .format(TABLE_DATE_FORMAT)
         : undefined
-    const aggregateScoreRaw = data.reviewSummation?.[0]?.aggregateScore
+    const reviewSummations = Array.isArray(data.reviewSummation) ? data.reviewSummation : []
+    const preferredSummation = reviewSummations.find(
+        entry => entry?.isFinal === true,
+    ) ?? reviewSummations[0]
+    const aggregateScoreRaw = preferredSummation?.aggregateScore
     const aggregateScoreParsed = typeof aggregateScoreRaw === 'number'
         ? aggregateScoreRaw
         : typeof aggregateScoreRaw === 'string'
@@ -96,11 +104,16 @@ export function convertBackendSubmissionToSubmissionInfo(
         && Number.isFinite(aggregateScoreParsed)
         ? aggregateScoreParsed
         : undefined
+    const isPassingReviewRaw = preferredSummation?.isPassing
+    const isPassingReview = typeof isPassingReviewRaw === 'boolean'
+        ? isPassingReviewRaw
+        : undefined
 
     return {
         aggregateScore,
         id: data.id,
         isLatest: data.isLatest,
+        isPassingReview,
         memberId: data.memberId,
         review:
             data.review && data.review[0]

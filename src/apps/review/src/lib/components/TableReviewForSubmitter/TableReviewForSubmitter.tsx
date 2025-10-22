@@ -46,6 +46,7 @@ import {
 import type { AggregatedSubmissionReviews } from '../../utils'
 import {
     useRolePermissions,
+    useScorecardPassingScores,
     useScoreVisibility,
     useSubmissionDownloadAccess,
     useSubmissionHistory,
@@ -59,6 +60,7 @@ import {
     TRACK_CHALLENGE,
     WITHOUT_APPEAL,
 } from '../../../config/index.config'
+import { resolveSubmissionReviewResult } from '../common/reviewResult'
 
 import styles from './TableReviewForSubmitter.module.scss'
 
@@ -286,6 +288,28 @@ export const TableReviewForSubmitter: FC<TableReviewForSubmitterProps> = (props:
         [aggregatedRows],
     )
 
+    const scorecardIds = useMemo<Set<string>>(() => {
+        const ids = new Set<string>()
+
+        aggregatedRows.forEach(row => {
+            const primary = row.submission?.review?.scorecardId?.trim()
+            if (primary) {
+                ids.add(primary)
+            }
+
+            row.reviews.forEach(review => {
+                const derived = review.reviewInfo?.scorecardId?.trim()
+                if (derived) {
+                    ids.add(derived)
+                }
+            })
+        })
+
+        return ids
+    }, [aggregatedRows])
+
+    const minimumPassingScoreByScorecardId = useScorecardPassingScores(scorecardIds)
+
     const maxReviewCount = useMemo<number>(
         () => aggregatedRows.reduce(
             (max, row) => Math.max(max, row.reviews.length),
@@ -363,6 +387,34 @@ export const TableReviewForSubmitter: FC<TableReviewForSubmitterProps> = (props:
                 }
 
                 return renderReviewScoreCell(submission, scoreConfig)
+            },
+            type: 'element',
+        })
+
+        columnsList.push({
+            columnId: 'review-result',
+            label: 'Review Result',
+            renderer: submission => {
+                const result = resolveSubmissionReviewResult(submission, {
+                    minimumPassingScoreByScorecardId,
+                })
+                if (result === 'PASS') {
+                    return (
+                        <span className={styles.resultPass}>
+                            Pass
+                        </span>
+                    )
+                }
+
+                if (result === 'FAIL') {
+                    return (
+                        <span className={styles.resultFail}>
+                            Fail
+                        </span>
+                    )
+                }
+
+                return <span>--</span>
             },
             type: 'element',
         })
@@ -447,6 +499,7 @@ export const TableReviewForSubmitter: FC<TableReviewForSubmitterProps> = (props:
         isChallengeCompleted,
         latestSubmissionIds,
         maxReviewCount,
+        minimumPassingScoreByScorecardId,
         isOwned,
         restrictToLatest,
         shouldShowHistoryActions,

@@ -46,6 +46,28 @@ const normalizeType = (value?: string): string => (
         : ''
 )
 
+const EXCLUDED_REVIEW_TYPES = [
+    'approval',
+    'checkpoint',
+    'iterative',
+    'postmortem',
+    'screening',
+    'specification',
+] as const
+
+const shouldIncludeInReviewPhase = (submission?: SubmissionInfo): boolean => {
+    if (!submission) {
+        return false
+    }
+
+    const normalizedType = normalizeType(submission.reviewTypeId)
+    if (!normalizedType) {
+        return true
+    }
+
+    return !EXCLUDED_REVIEW_TYPES.some(fragment => normalizedType.includes(fragment))
+}
+
 interface Props {
     selectedTab: string
     isLoadingSubmission: boolean
@@ -206,18 +228,18 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
         const name = (selectedPhase.name || props.selectedTab || 'selected').toLowerCase()
         return `The ${name} phase hasn't opened yet.`
     }, [selectedPhase, props.selectedTab])
-    const postMortemReviewRows = useMemo(() => (
-        props.postMortemReviews.filter(
+    const postMortemReviewRows = useMemo(
+        () => props.postMortemReviews,
+        [props.postMortemReviews],
+    )
+    const postMortemSubmitterReviews = useMemo(() => {
+        const filtered = props.submitterReviews.filter(
             submission => normalizeType(submission.reviewTypeId)
                 .includes('postmortem'),
         )
-    ), [props.postMortemReviews])
-    const postMortemSubmitterReviews = useMemo(() => (
-        props.submitterReviews.filter(
-            submission => normalizeType(submission.reviewTypeId)
-                .includes('postmortem'),
-        )
-    ), [props.submitterReviews])
+
+        return filtered.length ? filtered : props.postMortemReviews
+    }, [props.postMortemReviews, props.submitterReviews])
     const hasScreeningPhase = useMemo(
         () => (challengeInfo?.phases ?? []).some(
             phase => (phase.name || '').trim()
@@ -235,8 +257,8 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
         const shouldFilter = props.isActiveChallenge && hasScreeningPhase
         if (!shouldFilter) {
             return {
-                reviews: props.review,
-                submitterReviews: props.submitterReviews,
+                reviews: props.review.filter(shouldIncludeInReviewPhase),
+                submitterReviews: props.submitterReviews.filter(shouldIncludeInReviewPhase),
             }
         }
 
@@ -282,8 +304,12 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
         }
 
         return {
-            reviews: props.review.filter(matchesPassingScreening),
-            submitterReviews: props.submitterReviews.filter(matchesPassingScreening),
+            reviews: props.review
+                .filter(matchesPassingScreening)
+                .filter(shouldIncludeInReviewPhase),
+            submitterReviews: props.submitterReviews
+                .filter(matchesPassingScreening)
+                .filter(shouldIncludeInReviewPhase),
         }
     }, [
         hasScreeningPhase,

@@ -404,24 +404,16 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
                             const val = (data.result || '').toUpperCase()
                             if (val === 'PASS') {
                                 return (
-                                    <span
-                                        className={classNames(styles.resultIcon, styles.resultIconPass)}
-                                        aria-label='Passed checkpoint screening'
-                                        title='Pass'
-                                    >
-                                        <IconOutline.CheckIcon />
+                                    <span className={styles.resultPass}>
+                                        Pass
                                     </span>
                                 )
                             }
 
                             if (val === 'NO PASS' || val === 'FAIL') {
                                 return (
-                                    <span
-                                        className={classNames(styles.resultIcon, styles.resultIconFail)}
-                                        aria-label='Failed checkpoint screening'
-                                        title='Fail'
-                                    >
-                                        <IconOutline.XIcon />
+                                    <span className={styles.resultFail}>
+                                        Fail
                                     </span>
                                 )
                             }

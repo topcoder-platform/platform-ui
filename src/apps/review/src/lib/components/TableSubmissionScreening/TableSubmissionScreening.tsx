@@ -86,6 +86,7 @@ interface ActionRenderer {
 }
 
 interface ActionColumnConfig {
+    allowCompleteScreeningAction: boolean
     hasAnyScreeningAssignment: boolean
     historyByMember: Map<string, SubmissionInfo[]>
     onHistoryClick: (event: MouseEvent<HTMLButtonElement>) => void
@@ -250,7 +251,10 @@ const createVirusScanColumn = (): TableColumn<Screening> => ({
     type: 'element',
 })
 
-const createMyReviewActions = (data: Screening): ActionRenderer[] => {
+const createMyReviewActions = (
+    data: Screening,
+    options: { allowCompleteScreeningAction: boolean },
+): ActionRenderer[] => {
     if (!data.myReviewResourceId) {
         return []
     }
@@ -274,6 +278,10 @@ const createMyReviewActions = (data: Screening): ActionRenderer[] => {
                 ),
             },
         ]
+    }
+
+    if (!options.allowCompleteScreeningAction) {
+        return []
     }
 
     if (!data.myReviewId) {
@@ -498,6 +506,7 @@ const createScreeningColumns = ({
 ]
 
 const createActionColumn = ({
+    allowCompleteScreeningAction,
     hasAnyScreeningAssignment,
     historyByMember,
     onHistoryClick,
@@ -521,7 +530,10 @@ const createActionColumn = ({
         renderer: (data: Screening) => {
             const actionRenderers: ActionRenderer[] = []
 
-            actionRenderers.push(...createMyReviewActions(data))
+            actionRenderers.push(...createMyReviewActions(
+                data,
+                { allowCompleteScreeningAction },
+            ))
 
             const reopenAction = createReopenAction({
                 canReopenGlobally,
@@ -1024,6 +1036,7 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
 
     const actionColumn = useMemo(
         () => createActionColumn({
+            allowCompleteScreeningAction: showScreeningColumns,
             canReopenGlobally,
             canShowReopenActions,
             challengeInfo,

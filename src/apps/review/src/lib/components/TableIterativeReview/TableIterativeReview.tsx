@@ -54,7 +54,77 @@ interface Props {
 
 interface ScoreMetadata {
     outcome?: unknown
+    result?: unknown
+    status?: unknown
     score?: unknown
+    isPassing?: unknown
+    passing?: unknown
+    passed?: unknown
+}
+
+const POST_MORTEM_OUTCOME_KEYS = ['outcome', 'result', 'status']
+const POST_MORTEM_PASS_KEYS = ['isPassing', 'passing', 'passed']
+const PASS_KEYWORDS = new Set(['pass', 'passed', 'yes', 'true', 'y'])
+const FAIL_KEYWORDS = new Set(['fail', 'failed', 'no pass', 'no-pass', 'nopass', 'false', 'no', 'n'])
+
+const normaliseAlphaKey = (value: string): string => value.replace(/[^a-z]/g, '')
+
+const normaliseOutcomeValue = (value: unknown): 'Pass' | 'Fail' | undefined => {
+    if (typeof value === 'boolean') {
+        return value ? 'Pass' : 'Fail'
+    }
+
+    if (typeof value !== 'string') {
+        return undefined
+    }
+
+    const trimmed = value.trim()
+    if (!trimmed) {
+        return undefined
+    }
+
+    const lower = trimmed.toLowerCase()
+    if (PASS_KEYWORDS.has(lower)) {
+        return 'Pass'
+    }
+
+    if (FAIL_KEYWORDS.has(lower)) {
+        return 'Fail'
+    }
+
+    return undefined
+}
+
+const parseMetadataObject = (
+    metadata: ScoreMetadata | string | null | undefined,
+): Record<string, unknown> | undefined => {
+    if (!metadata) {
+        return undefined
+    }
+
+    if (typeof metadata === 'object') {
+        return metadata as Record<string, unknown>
+    }
+
+    if (typeof metadata === 'string') {
+        const trimmed = metadata.trim()
+        if (!trimmed) {
+            return undefined
+        }
+
+        try {
+            const parsed = JSON.parse(trimmed)
+            if (parsed && typeof parsed === 'object') {
+                return parsed as Record<string, unknown>
+            }
+        } catch {
+            // Fall through to treat as raw outcome string
+        }
+
+        return { outcome: trimmed }
+    }
+
+    return undefined
 }
 
 const toFiniteNumber = (value: unknown): number | undefined => {
@@ -81,6 +151,55 @@ const getReviewScore = (review: ReviewInfo | undefined): number | undefined => {
     const initialScore = toFiniteNumber(review.initialScore)
 
     return metadataScore ?? finalScore ?? initialScore ?? undefined
+}
+
+const resolvePostMortemOutcome = (submission: SubmissionInfo): 'Pass' | 'Fail' | undefined => {
+    const review = submission.review
+    if (!review) {
+        return undefined
+    }
+
+    const metadataObject = parseMetadataObject(review.metadata as ScoreMetadata | string | undefined)
+
+    if (metadataObject) {
+        for (const key of POST_MORTEM_OUTCOME_KEYS) {
+            const value = metadataObject[key]
+            const outcome = normaliseOutcomeValue(value)
+            if (outcome) {
+                return outcome
+            }
+        }
+
+        for (const key of POST_MORTEM_PASS_KEYS) {
+            const value = metadataObject[key]
+            const outcome = normaliseOutcomeValue(value)
+            if (outcome) {
+                return outcome
+            }
+        }
+    }
+
+    const directOutcome = normaliseOutcomeValue(review.metadata)
+    if (directOutcome) {
+        return directOutcome
+    }
+
+    if (typeof submission.isPassingReview === 'boolean') {
+        return submission.isPassingReview ? 'Pass' : 'Fail'
+    }
+
+    const reviewScore = getReviewScore(review)
+    if (typeof reviewScore === 'number') {
+        if (reviewScore > 0) {
+            return 'Pass'
+        }
+
+        if (reviewScore === 0) {
+            return 'Fail'
+        }
+    }
+
+    return undefined
 }
 
 const formatScore = (score: number): string => (
@@ -139,7 +258,7 @@ const renderCompletedReviewCell = ({
     reviewId,
     reviewPath,
     reviewScore,
-}: CompletedReviewRenderParams): JSX.Element | undefined => {
+}: CompletedReviewRenderParams): JSX.Element => {
     if (reviewScore !== undefined) {
         const normalisedOutcome = outcomeLabel?.toLowerCase()
         const isPassOutcome = normalisedOutcome === 'pass'
@@ -201,7 +320,7 @@ const renderCompletedReviewCell = ({
     }
 
     if (!reviewId || !reviewPath) {
-        return undefined
+        return <></>
     }
 
     const viewScorecardContent = canAccessReview ? (
@@ -228,6 +347,130 @@ const renderCompletedReviewCell = ({
         </Tooltip>
     ) : (
         viewScorecardContent
+    )
+}
+
+interface RenderStandardReviewParams {
+    canAccessReview: boolean
+    data: SubmissionInfo
+    pendingStatusLabel: string
+}
+
+const renderStandardReviewCell = ({
+    canAccessReview,
+    data,
+    pendingStatusLabel,
+}: RenderStandardReviewParams): JSX.Element => {
+    const review = data.review
+
+    if (!hasActiveReview(review)) {
+        return (
+            <span className={styles.pendingText}>
+                Pending
+            </span>
+        )
+    }
+
+    const status = (review?.status ?? '').toUpperCase()
+    const reviewScore = getReviewScore(review)
+    const outcomeLabel = formatOutcome(
+        (review?.metadata as ScoreMetadata | undefined)?.outcome,
+    )
+    const reviewId = review?.id
+    const reviewPath = reviewId ? `./../review/${reviewId}` : undefined
+    const isCompleted = ['COMPLETED', 'SUBMITTED'].includes(status)
+
+    if (isCompleted) {
+        return renderCompletedReviewCell({
+            canAccessReview,
+            outcomeLabel,
+            reviewId,
+            reviewPath,
+            reviewScore,
+        })
+    }
+
+    if (review?.reviewProgress) {
+        return (
+            <div className={styles.reviewCell}>
+                <ProgressBar progress={review.reviewProgress} />
+                <span className={styles.statusBadgePending}>
+                    In Progress
+                </span>
+            </div>
+        )
+    }
+
+    if (status) {
+        return (
+            <span className={styles.statusBadgePending}>
+                {formatStatusLabel(status, pendingStatusLabel)}
+            </span>
+        )
+    }
+
+    return (
+        <span className={styles.pendingText}>
+            Pending
+        </span>
+    )
+}
+
+const renderPostMortemReviewCell = (data: SubmissionInfo): JSX.Element => {
+    const review = data.review
+
+    if (!hasActiveReview(review)) {
+        return (
+            <span className={styles.pendingText}>
+                --
+            </span>
+        )
+    }
+
+    const status = (review?.status ?? '').toUpperCase()
+    if (status !== 'COMPLETED') {
+        return (
+            <span className={styles.pendingText}>
+                --
+            </span>
+        )
+    }
+
+    const outcomeLabel = resolvePostMortemOutcome(data)
+    if (!outcomeLabel) {
+        return (
+            <span className={styles.pendingText}>
+                --
+            </span>
+        )
+    }
+
+    const isPassOutcome = outcomeLabel === 'Pass'
+
+    return (
+        <div className={styles.postMortemResult}>
+            <span
+                className={classNames(
+                    styles.statusIcon,
+                    isPassOutcome ? styles.passIcon : styles.failIcon,
+                )}
+                aria-label={outcomeLabel}
+            >
+                {isPassOutcome ? (
+                    <IconOutline.CheckCircleIcon aria-hidden />
+                ) : (
+                    <IconOutline.XCircleIcon aria-hidden />
+                )}
+            </span>
+            <span
+                className={classNames(
+                    styles.postMortemOutcomeLabel,
+                    isPassOutcome ? styles.passText : styles.failText,
+                )}
+            >
+                {outcomeLabel}
+            </span>
+        </div>
     )
 }
 
@@ -289,12 +532,19 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
         [loginUserInfo?.roles],
     )
 
-    const hasCopilotRole = useMemo(
+    const normalizedRoles = useMemo(
         () => (myRoles ?? [])
-            .some(role => (role || '')
-                .toLowerCase()
-                .includes('copilot')),
+            .map(role => (role || '').toLowerCase()),
         [myRoles],
+    )
+
+    const hasCopilotRole = useMemo(
+        () => normalizedRoles
+            .some(role => {
+                const normalized = normaliseAlphaKey(role)
+                return normalized.includes('copilot')
+            }),
+        [normalizedRoles],
     )
 
     const isAdminOrCopilot = useMemo(
@@ -303,19 +553,30 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
     )
 
     const hasIterativeReviewerRole = useMemo(
-        () => (myRoles ?? [])
-            .some(role => (role || '')
-                .toLowerCase()
-                .includes('iterative reviewer')),
-        [myRoles],
+        () => normalizedRoles
+            .some(role => {
+                const normalized = normaliseAlphaKey(role)
+                return normalized.includes('iterativereviewer')
+            }),
+        [normalizedRoles],
+    )
+
+    const hasPostMortemReviewerRole = useMemo(
+        () => normalizedRoles
+            .some(role => {
+                const normalized = normaliseAlphaKey(role)
+                return normalized.includes('postmortemreviewer')
+            }),
+        [normalizedRoles],
     )
 
     const hasApproverRole = useMemo(
-        () => (myRoles ?? [])
-            .some(role => (role || '')
-                .toLowerCase()
-                .includes('approver')),
-        [myRoles],
+        () => normalizedRoles
+            .some(role => {
+                const normalized = normaliseAlphaKey(role)
+                return normalized.includes('approver')
+            }),
+        [normalizedRoles],
     )
 
     const isActiveChallenge = useMemo(() => {
@@ -363,6 +624,13 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
         }),
         [datas, myResourceIds],
     )
+
+    const normalisedColumnLabel = (columnLabel || '')
+        .trim()
+        .toLowerCase()
+    const columnLabelKey = normaliseAlphaKey(normalisedColumnLabel)
+    const isPostMortemColumn = columnLabelKey === 'postmortem'
+    const isApprovalColumn = columnLabelKey === 'approval'
 
     const submissionColumn: TableColumn<SubmissionInfo> = useMemo(
         () => ({
@@ -490,10 +758,21 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
         ],
     )
 
-    const normalisedColumnLabel = (columnLabel || '')
-        .trim()
-        .toLowerCase()
-    const isApprovalColumn = normalisedColumnLabel === 'approval'
+    const postMortemSubmissionColumn: TableColumn<SubmissionInfo> = useMemo(
+        () => ({
+            className: styles.submissionColumn,
+            columnId: 'submission-id',
+            label: 'Submission',
+            propertyName: 'id',
+            renderer: () => (
+                <span className={styles.submissionLabel}>
+                    Post-Mortem
+                </span>
+            ),
+            type: 'element',
+        }),
+        [],
+    )
 
     const handleColumn: TableColumn<SubmissionInfo> | undefined = useMemo(() => {
         if (hideHandleColumn) {
@@ -529,9 +808,14 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
     const reviewColumn: TableColumn<SubmissionInfo> = useMemo(
         () => ({
             columnId: 'iterative-review',
-            label: columnLabel,
+            label: isPostMortemColumn
+                ? 'Post-Mortem Result'
+                : (columnLabel || 'Iterative Review'),
             renderer: (data: SubmissionInfo) => {
-                const review = data.review
+                if (isPostMortemColumn) {
+                    return renderPostMortemReviewCell(data)
+                }
+
                 const isOwnedSubmission = data.memberId
                     ? ownedMemberIds.has(data.memberId)
                     : false
@@ -539,62 +823,15 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
                 const pendingStatusLabel = isApprovalColumn
                     ? 'Pending Approval'
                     : 'Pending Review'
-
-                if (!hasActiveReview(review)) {
-                    return (
-                        <span className={styles.pendingText}>
-                            Pending
-                        </span>
-                    )
-                }
-
-                const status = (review?.status ?? '').toUpperCase()
-                const reviewScore = getReviewScore(review)
-                const outcomeLabel = formatOutcome(
-                    (review?.metadata as ScoreMetadata | undefined)?.outcome,
-                )
-                const reviewId = review?.id
-                const reviewPath = reviewId ? `./../review/${reviewId}` : undefined
-                const isCompleted = ['COMPLETED', 'SUBMITTED'].includes(status)
-
-                if (isCompleted) {
-                    return renderCompletedReviewCell({
-                        canAccessReview,
-                        outcomeLabel,
-                        reviewId,
-                        reviewPath,
-                        reviewScore,
-                    })
-                }
-
-                if (review?.reviewProgress) {
-                    return (
-                        <div className={styles.reviewCell}>
-                            <ProgressBar progress={review.reviewProgress} />
-                            <span className={styles.statusBadgePending}>
-                                In Progress
-                            </span>
-                        </div>
-                    )
-                }
-
-                if (status) {
-                    return (
-                        <span className={styles.statusBadgePending}>
-                            {formatStatusLabel(status, pendingStatusLabel)}
-                        </span>
-                    )
-                }
-
-                return (
-                    <span className={styles.pendingText}>
-                        Pending
-                    </span>
-                )
+                return renderStandardReviewCell({
+                    canAccessReview,
+                    data,
+                    pendingStatusLabel,
+                })
             },
             type: 'element',
         }),
-        [columnLabel, isApprovalColumn, isSubmitterView, ownedMemberIds],
+        [columnLabel, isApprovalColumn, isPostMortemColumn, isSubmitterView, ownedMemberIds],
     )
 
     const reviewDateColumn: TableColumn<SubmissionInfo> = useMemo(
@@ -691,8 +928,66 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
     const reviewerColumn: TableColumn<SubmissionInfo> = useMemo(
         () => ({
             columnId: 'reviewer',
-            label: 'Reviewer',
+            label: isPostMortemColumn ? 'Post-Mortem Reviewer' : 'Reviewer',
             renderer: (data: SubmissionInfo) => {
+                if (isPostMortemColumn) {
+                    const reviewerEntries = (data.reviews ?? [])
+                        .map(reviewResult => {
+                            const handle = reviewResult.reviewerHandle?.trim()
+                            if (!handle) {
+                                return undefined
+                            }
+
+                            return {
+                                color: reviewResult.reviewerHandleColor ?? '#2a2a2a',
+                                handle,
+                            }
+                        })
+                        .filter(
+                            (entry): entry is { handle: string; color: string } => Boolean(entry),
+                        )
+
+                    const seenHandles = new Set<string>()
+                    const uniqueReviewers = reviewerEntries.filter(entry => {
+                        const key = entry.handle.toLowerCase()
+                        if (seenHandles.has(key)) {
+                            return false
+                        }
+
+                        seenHandles.add(key)
+                        return true
+                    })
+
+                    if (uniqueReviewers.length) {
+                        const profileUrlBase = EnvironmentConfig.REVIEW.PROFILE_PAGE_URL
+
+                        return (
+                            <span className={styles.reviewerList}>
+                                {uniqueReviewers.map((entry, index) => {
+                                    const url = `${profileUrlBase}/${encodeURIComponent(entry.handle)}`
+                                    const isLast = index === uniqueReviewers.length - 1
+                                    return (
+                                        <span key={entry.handle}>
+                                            <a
+                                                href={url}
+                                                target='_blank'
+                                                rel='noreferrer'
+                                                style={{ color: entry.color }}
+                                                onClick={function onClick() {
+                                                    window.open(url, '_blank')
+                                                }}
+                                            >
+                                                {entry.handle}
+                                            </a>
+                                            {!isLast ? ', ' : ''}
+                                        </span>
+                                    )
+                                })}
+                            </span>
+                        )
+                    }
+                }
+
                 const handle = data.review?.reviewerHandle?.trim()
                 const color = data.review?.reviewerHandleColor ?? '#2a2a2a'
 
@@ -717,7 +1012,7 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
             },
             type: 'element',
         }),
-        [],
+        [isPostMortemColumn],
     )
 
     const actionColumn: TableColumn<SubmissionInfo> | undefined = useMemo(() => {
@@ -778,6 +1073,60 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
                     }
 
                     return <span>--</span>
+                },
+                type: 'element',
+            }
+        }
+
+        if (isPostMortemColumn) {
+            if (!hasPostMortemReviewerRole) {
+                return undefined
+            }
+
+            return {
+                columnId: 'action',
+                label: 'Action',
+                renderer: (data: SubmissionInfo) => {
+                    const review = data.review
+                    const reviewId = review?.id
+                    const resourceId = review?.resourceId
+
+                    if (!review || !reviewId || !resourceId || !myResourceIds.has(resourceId)) {
+                        return <span>--</span>
+                    }
+
+                    const status = (review.status || '')
+                        .toString()
+                        .toUpperCase()
+
+                    if (status === 'COMPLETED') {
+                        return (
+                            <div
+                                aria-label='Review completed'
+                                className={classNames(styles.completedAction, 'last-element')}
+                                title='Review completed'
+                            >
+                                <span className={styles.completedIcon} aria-hidden='true'>
+                                    <IconOutline.CheckIcon />
+                                </span>
+                                <span className={styles.completedPill}>Post-Mortem Complete</span>
+                            </div>
+                        )
+                    }
+
+                    if (!reviewId) {
+                        return <span>--</span>
+                    }
+
+                    return (
+                        <Link
+                            to={`./../review/${reviewId}`}
+                            className={classNames(styles.submit, 'last-element')}
+                        >
+                            <i className='icon-upload' />
+                            Complete Post-Mortem
+                        </Link>
+                    )
                 },
                 type: 'element',
             }
@@ -861,20 +1210,31 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
         isApproverResourceAssigned,
         isCurrentPhaseApproval,
         isFirst2Finish,
+        isPostMortemColumn,
+        hasPostMortemReviewerRole,
         myResourceIds,
     ])
 
     const columns = useMemo<TableColumn<SubmissionInfo>[]>(() => {
         const baseColumns: TableColumn<SubmissionInfo>[] = [
-            submissionColumn,
-            ...(handleColumn ? [handleColumn] : []),
+            isPostMortemColumn ? postMortemSubmissionColumn : submissionColumn,
+        ]
+
+        if (!isPostMortemColumn && handleColumn) {
+            baseColumns.push(handleColumn)
+        }
+
+        if (isPostMortemColumn) {
+            baseColumns.push(reviewerColumn)
+        }
+
+        baseColumns.push(
             reviewColumn,
             ...(approverColumn ? [approverColumn] : []),
             reviewDateColumn,
-        ]
+        )
 
-        // For First2Finish or Topgear Task, show Reviewer column to Admins/Copilots
-        if (isAdminOrCopilot && isF2FOrTopgearTask) {
+        if (!isPostMortemColumn && isAdminOrCopilot && isF2FOrTopgearTask) {
             baseColumns.push(reviewerColumn)
         }
 
@@ -884,6 +1244,8 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
         handleColumn,
         isAdminOrCopilot,
         isF2FOrTopgearTask,
+        isPostMortemColumn,
+        postMortemSubmissionColumn,
         reviewColumn,
         reviewDateColumn,
         reviewerColumn,

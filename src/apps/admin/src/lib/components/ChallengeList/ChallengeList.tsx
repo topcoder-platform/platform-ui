@@ -21,6 +21,7 @@ import {
 import { useEventCallback } from '../../hooks'
 import { Challenge, ChallengeFilterCriteria, ChallengeType } from '../../models'
 import { Paging } from '../../models/challenge-management/Pagination'
+import { checkIsMM } from '../../utils/challenge'
 
 import { MobileListView } from './MobileListView'
 import styles from './ChallengeList.module.scss'
@@ -140,6 +141,7 @@ const Actions: FC<{
 }> = props => {
     const [openDropdown, setOpenDropdown] = useState(false)
     const navigate = useNavigate()
+    const isMM = useMemo(() => checkIsMM(props.challenge), [props.challenge])
     const goToManageUser = useEventCallback(() => {
         navigate(`${props.challenge.id}/manage-user`, {
             state: { previousChallengeListFilter: props.currentFilters },
@@ -212,6 +214,16 @@ const Actions: FC<{
                     >
                         Submissions
                     </li>
+                    {isMM && (
+                        <li
+                            onClick={function onClick() {
+                                navigate(`${props.challenge.id}/manage-marathon-match`)
+                                setOpenDropdown(false)
+                            }}
+                        >
+                            Marathon Match
+                        </li>
+                    )}
                 </ul>
             </DropdownMenu>
 
