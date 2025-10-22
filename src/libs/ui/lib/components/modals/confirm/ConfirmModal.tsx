@@ -17,10 +17,12 @@ export interface ConfirmModalProps extends ModalProps {
     size?: 'sm' | 'md' | 'lg'
     allowBodyScroll?: boolean
     isLoading?: boolean
+    isProcessing?: boolean
 }
 
 const ConfirmModal: FC<ConfirmModalProps> = (props: ConfirmModalProps) => {
     const isLoading = props.isLoading
+    const handleConfirm = useCallback((): void => props.onConfirm(), [props.onConfirm])
     const handleClose = useCallback(() => {
         if (!isLoading) {
             props.onClose?.()
@@ -52,13 +54,14 @@ const ConfirmModal: FC<ConfirmModalProps> = (props: ConfirmModalProps) => {
                             disabled={props.isLoading}
                         />
                         <Button
-                            disabled={props.canSave === false || props.isLoading}
+                            disabled={props.canSave === false || props.isLoading || props.isProcessing}
                             primary
                             label={props.action || 'Confirm'}
-                            onClick={props.onConfirm}
+                            onClick={handleConfirm}
                             size='lg'
                             // eslint-disable-next-line jsx-a11y/tabindex-no-positive
                             tabIndex={2}
+                            loading={props.isProcessing}
                         />
                     </>
                 )

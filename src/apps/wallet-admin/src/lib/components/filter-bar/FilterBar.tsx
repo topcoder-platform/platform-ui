@@ -1,5 +1,5 @@
 /* eslint-disable react/jsx-no-bind */
-import React, { ChangeEvent } from 'react'
+import React, { ChangeEvent, useRef } from 'react'
 
 import { Button, IconOutline, InputSelect, InputText } from '~/libs/ui'
 import {
@@ -31,6 +31,7 @@ interface FilterBarProps {
 
 const FilterBar: React.FC<FilterBarProps> = (props: FilterBarProps) => {
     const [selectedValue, setSelectedValue] = React.useState<Map<string, string | any[]>>(new Map())
+    const selectedMembers = useRef<MembersAutocompeteResult[]>([])
 
     const renderDropdown = (index: number, filter: Filter): JSX.Element => (
         <InputSelect
@@ -55,10 +56,12 @@ const FilterBar: React.FC<FilterBarProps> = (props: FilterBarProps) => {
             className={styles.filterInput}
             placeholder={filter.label}
             onChange={(event: Array<MembersAutocompeteResult>) => {
+                selectedMembers.current = event
                 setSelectedValue(new Map(selectedValue.set(filter.key, event)))
                 props.onFilterChange(filter.key, event.map(member => member.userId))
             }}
             tabIndex={index}
+            value={selectedMembers.current}
         />
     )
 
@@ -124,6 +127,7 @@ const FilterBar: React.FC<FilterBarProps> = (props: FilterBarProps) => {
                 size='lg'
                 disabled={selectedValue.size === 0}
                 onClick={() => {
+                    selectedMembers.current = []
                     setSelectedValue(new Map())
                     props.onResetFilters?.()
                 }}
