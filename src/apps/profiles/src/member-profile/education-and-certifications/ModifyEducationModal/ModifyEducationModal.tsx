@@ -276,7 +276,7 @@ const ModifyEducationModal: FC<ModifyEducationModalProps> = (props: ModifyEducat
                             dirty
                             error={formErrors.endYear}
                             name='endYear'
-                            label='End Year or Expected hhhh'
+                            label='End Year or Expected'
                             placeholder='Select a year'
                             tabIndex={0}
                         />
