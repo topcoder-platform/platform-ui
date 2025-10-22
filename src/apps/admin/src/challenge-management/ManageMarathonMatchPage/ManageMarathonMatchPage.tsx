@@ -4,12 +4,12 @@ import {
     useMemo,
     useState,
 } from 'react'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import _ from 'lodash'
 import classNames from 'classnames'
 
-import { Button, LinkButton } from '~/libs/ui'
+import { Button, LinkButton, ProgressBar } from '~/libs/ui'
 
 import {
     ActionLoading,
@@ -17,6 +17,7 @@ import {
     TableLoading,
     TableNoRecord,
 } from '../../lib'
+import { ConfirmModal } from '../../lib/components'
 import {
     useDownloadSubmission,
     useDownloadSubmissionProps,
@@ -28,6 +29,7 @@ import {
 import { IsRemovingType } from '../../lib/models'
 import { removeReviewSummations } from '../../lib/services/reviews.service'
 import { removeSubmission } from '../../lib/services/submissions.service'
+import { closeMarathonMatch } from '../../lib/services/challenges.service'
 import { handleError } from '../../lib/utils'
 
 import { MarathonMatchScoreTable } from './MarathonMatchScoreTable'
@@ -40,12 +42,14 @@ interface Props {
 export const ManageMarathonMatchPage: FC<Props> = (props: Props) => {
     const { challengeId = '' }: { challengeId?: string }
         = useParams<{ challengeId: string }>()
+    const navigate = useNavigate()
 
     const {
         error,
         finalScoresData,
         isLoading,
         provisionalScores,
+        submissions,
     }: useManageMarathonMatchProps = useManageMarathonMatch(challengeId)
 
     const {
@@ -73,6 +77,21 @@ export const ManageMarathonMatchPage: FC<Props> = (props: Props) => {
         () => _.some(isRemovingReviewSummations, value => value === true),
         [isRemovingReviewSummations],
     )
+
+    const [showRunAllTestsConfirm, setShowRunAllTestsConfirm]
+        = useState<boolean>(false)
+    const [showCloseConfirm, setShowCloseConfirm]
+        = useState<boolean>(false)
+    const [showCloseError, setShowCloseError]
+        = useState<boolean>(false)
+    const [isRunningAllTests, setIsRunningAllTests]
+        = useState<boolean>(false)
+    const [runAllTestsProgress, setRunAllTestsProgress] = useState<{ current: number; total: number }>({
+        current: 0,
+        total: 0,
+    })
+    const [isClosingChallenge, setIsClosingChallenge]
+        = useState<boolean>(false)
 
     const doRemoveSubmission = useCallback(
         (submissionId: string) => {
@@ -130,18 +149,119 @@ export const ManageMarathonMatchPage: FC<Props> = (props: Props) => {
         [],
     )
 
+    const handleRunAllSystemTests = useCallback(() => {
+        setShowRunAllTestsConfirm(true)
+    }, [])
+
+    const dismissRunAllTestsConfirm = useCallback(() => {
+        setShowRunAllTestsConfirm(false)
+    }, [])
+
+    const noop = useCallback(() => undefined, [])
+
+    const handleConfirmRunAllTests = useCallback(async () => {
+        const submissionIds = submissions
+            .map(submission => submission.id)
+            .filter(Boolean)
+
+        setShowRunAllTestsConfirm(false)
+        if (!submissionIds.length) {
+            toast.info('No submissions available for system tests', {
+                toastId: 'Run all system tests',
+            })
+            return
+        }
+
+        setIsRunningAllTests(true)
+        setRunAllTestsProgress({ current: 0, total: submissionIds.length })
+
+        let hasError = false
+
+        for (let index = 0; index < submissionIds.length; index += 1) {
+            const submissionId = submissionIds[index]
+
+            try {
+                // Ensure sequential updates for progress tracking
+                // eslint-disable-next-line no-await-in-loop
+                await doPostBusEvent(submissionId, 'system', { silent: true })
+            } catch (err) {
+                hasError = true
+                handleError(err)
+            } finally {
+                setRunAllTestsProgress({
+                    current: index + 1,
+                    total: submissionIds.length,
+                })
+            }
+        }
+
+        setIsRunningAllTests(false)
+
+        if (hasError) {
+            toast.error('Some system tests failed to queue. Please review the errors and retry as needed.', {
+                toastId: 'Run all system tests error',
+            })
+            return
+        }
+
+        toast.success('All system tests have been queued successfully', {
+            toastId: 'Run all system tests',
+        })
+    }, [doPostBusEvent, submissions])
+
+    const handleCloseChallenge = useCallback(() => {
+        const hasIncompleteFinalScores = finalScoresData.some(item => !item.reviewSummation)
+
+        if (hasIncompleteFinalScores) {
+            setShowCloseError(true)
+            return
+        }
+
+        setShowCloseConfirm(true)
+    }, [finalScoresData])
+
+    const dismissCloseConfirmModal = useCallback(() => {
+        setShowCloseConfirm(false)
+    }, [])
+
+    const dismissCloseErrorModal = useCallback(() => {
+        setShowCloseError(false)
+    }, [])
+
+    const handleConfirmCloseChallenge = useCallback(async () => {
+        setIsClosingChallenge(true)
+        setShowCloseConfirm(false)
+
+        try {
+            await closeMarathonMatch(challengeId)
+            toast.success('Challenge closed successfully', {
+                toastId: 'Close marathon match challenge',
+            })
+            // TODO: Confirm the appropriate post-close destination once the navigation flow is finalized.
+            navigate('../..')
+        } catch (err) {
+            handleError(err)
+        } finally {
+            setIsClosingChallenge(false)
+        }
+    }, [challengeId, navigate])
+
     const isActionInProgress = useMemo(
         () => (
             isDownloadingSubmissionBool
             || isRemovingSubmissionBool
             || isRunningTestBool
             || isRemovingReviewSummationsBool
+            || isRunningAllTests
+            || isClosingChallenge
         ),
         [
             isDownloadingSubmissionBool,
             isRemovingReviewSummationsBool,
             isRemovingSubmissionBool,
             isRunningTestBool,
+            isClosingChallenge,
+            isRunningAllTests,
         ],
     )
 
@@ -217,10 +337,19 @@ export const ManageMarathonMatchPage: FC<Props> = (props: Props) => {
             className={classNames(styles.container, props.className)}
             headerActions={(
                 <div className={styles.headerButtons}>
-                    <Button primary size='lg' disabled>
+                    <Button
+                        primary
+                        size='lg'
+                        disabled={isRunningAllTests || isClosingChallenge}
+                        onClick={handleRunAllSystemTests}
+                    >
                         Run all system tests
                     </Button>
-                    <Button size='lg' disabled>
+                    <Button
+                        size='lg'
+                        disabled={isRunningAllTests || isClosingChallenge}
+                        onClick={handleCloseChallenge}
+                    >
                         Close challenge
                     </Button>
                     <LinkButton primary light to='./../..' size='lg'>
@@ -231,7 +360,89 @@ export const ManageMarathonMatchPage: FC<Props> = (props: Props) => {
         >
             {pageContent}
 
-            {isActionInProgress && <ActionLoading />}
+            {isActionInProgress && !isRunningAllTests && <ActionLoading />}
+
+            {showRunAllTestsConfirm && (
+                <ConfirmModal
+                    open={showRunAllTestsConfirm}
+                    onClose={dismissRunAllTestsConfirm}
+                    onConfirm={handleConfirmRunAllTests}
+                    title='Run All System Tests'
+                    action='Run Tests'
+                >
+                    <p>
+                        Are you sure you want to run system tests for this challenge?
+                        {' '}
+                        This will overwrite any existing system tests run for these submissions.
+                    </p>
+                    <p>
+                        {submissions.length}
+                        {' '}
+                        submission(s) will be tested.
+                    </p>
+                </ConfirmModal>
+            )}
+
+            {isRunningAllTests && (
+                <ConfirmModal
+                    open={isRunningAllTests}
+                    onClose={noop}
+                    onConfirm={noop}
+                    title='Running System Tests'
+                    showButtons={false}
+                >
+                    <p>
+                        Queueing system tests:
+                        {' '}
+                        {runAllTestsProgress.current}
+                        {' '}
+                        of
+                        {' '}
+                        {runAllTestsProgress.total}
+                    </p>
+                    <ProgressBar
+                        progress={runAllTestsProgress.total > 0
+                            ? runAllTestsProgress.current / runAllTestsProgress.total
+                            : 0}
+                    />
+                </ConfirmModal>
+            )}
+
+            {showCloseConfirm && (
+                <ConfirmModal
+                    open={showCloseConfirm}
+                    onClose={dismissCloseConfirmModal}
+                    onConfirm={handleConfirmCloseChallenge}
+                    title='Close Challenge'
+                    action='Close'
+                    isLoading={isClosingChallenge}
+                >
+                    Are you sure you want to close this challenge?
+                    {' '}
+                    This will finalize the results and determine winners based on final scores.
+                </ConfirmModal>
+            )}
+
+            {showCloseError && (
+                <ConfirmModal
+                    open={showCloseError}
+                    onClose={dismissCloseErrorModal}
+                    onConfirm={dismissCloseErrorModal}
+                    title='Cannot Close Challenge'
+                    showButtons={false}
+                >
+                    <p>Final system tests are not complete. Please wait until all tests have finished and try again.</p>
+                    <div>
+                        <Button
+                            primary
+                            size='lg'
+                            onClick={dismissCloseErrorModal}
+                        >
+                            OK
+                        </Button>
+                    </div>
+                </ConfirmModal>
+            )}
         </PageWrapper>
     )
 }

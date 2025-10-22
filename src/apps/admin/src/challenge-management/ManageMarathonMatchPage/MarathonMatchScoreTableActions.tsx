@@ -11,6 +11,7 @@ import { Button } from '~/libs/ui'
 
 import { DropdownMenu } from '../../lib/components/common/DropdownMenu'
 import { useEventCallback } from '../../lib/hooks'
+import type { DoPostBusEvent } from '../../lib/hooks'
 import { IsRemovingType } from '../../lib/models'
 
 interface Props {
@@ -18,7 +19,7 @@ interface Props {
     reviewSummationId?: string
     testType: 'provisional' | 'system'
     isRunningTest: IsRemovingType
-    doPostBusEvent: (submissionId: string, testType: string) => void
+    doPostBusEvent: DoPostBusEvent
     isRemovingSubmission: IsRemovingType
     setShowConfirmDeleteDialog: Dispatch<SetStateAction<string | undefined>>
     doRemoveReviewSummations?: (reviewSummationId: string) => void
@@ -61,6 +62,7 @@ export const MarathonMatchScoreTableActions: FC<Props> = (props: Props) => {
 
         setOpenDropdown(false)
         props.doPostBusEvent(props.submissionId, props.testType)
+            .catch(() => undefined)
     }
 
     function handleDeleteSubmission(): void {

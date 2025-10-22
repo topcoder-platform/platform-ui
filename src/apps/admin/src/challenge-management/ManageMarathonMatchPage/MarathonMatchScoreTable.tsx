@@ -18,6 +18,7 @@ import {
     Submission,
     SubmissionReviewSummation,
 } from '../../lib/models'
+import type { DoPostBusEvent } from '../../lib/hooks'
 
 import { MarathonMatchScoreTableActions } from './MarathonMatchScoreTableActions'
 import styles from './MarathonMatchScoreTable.module.scss'
@@ -60,7 +61,7 @@ interface Props {
     isFinalScores?: boolean
     testType: 'provisional' | 'system'
     isRunningTest: IsRemovingType
-    doPostBusEvent: (submissionId: string, testType: string) => void
+    doPostBusEvent: DoPostBusEvent
     isRemovingSubmission: IsRemovingType
     doRemoveSubmission: (submissionId: string) => void
     doRemoveReviewSummations?: (reviewSummationId: string) => void
