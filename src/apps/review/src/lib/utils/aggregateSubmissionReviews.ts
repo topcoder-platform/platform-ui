@@ -103,13 +103,27 @@ export function aggregateSubmissionReviews({
 
     forEach(submissions, submission => {
         if (!grouped.has(submission.id)) {
+            const reviewSubmitterHandle = submission.review?.submitterHandle?.trim()
+            const userInfoHandle = submission.userInfo?.memberHandle?.trim()
+            const initialSubmitterHandle = reviewSubmitterHandle
+                ?? userInfoHandle
+                ?? undefined
+            const initialSubmitterColor = submission.review?.submitterHandleColor
+                ?? submission.userInfo?.handleColor
+                ?? undefined
+            const initialSubmitterMaxRating = normalizeRatingValue(
+                submission.review?.submitterMaxRating
+                    ?? submission.userInfo?.maxRating
+                    ?? submission.userInfo?.rating,
+            )
+
             grouped.set(submission.id, {
                 id: submission.id,
                 reviews: [],
                 submission,
-                submitterHandle: submission.review?.submitterHandle ?? undefined,
-                submitterHandleColor: submission.review?.submitterHandleColor ?? undefined,
-                submitterMaxRating: normalizeRatingValue(submission.review?.submitterMaxRating),
+                submitterHandle: initialSubmitterHandle,
+                submitterHandleColor: initialSubmitterColor,
+                submitterMaxRating: initialSubmitterMaxRating,
             })
         }
 
@@ -170,10 +184,20 @@ export function aggregateSubmissionReviews({
             finalReviewerMaxRating,
         )
 
-        if (reviewInfo?.submitterHandle) {
-            group.submitterHandle = reviewInfo.submitterHandle
-            group.submitterHandleColor = reviewInfo.submitterHandleColor
-            group.submitterMaxRating = normalizeRatingValue(reviewInfo.submitterMaxRating)
+        if (reviewInfo) {
+            const trimmedSubmitterHandle = reviewInfo.submitterHandle?.trim()
+            if (trimmedSubmitterHandle) {
+                group.submitterHandle = trimmedSubmitterHandle
+            }
+
+            if (reviewInfo.submitterHandleColor) {
+                group.submitterHandleColor = reviewInfo.submitterHandleColor
+            }
+
+            const normalizedSubmitterMaxRating = normalizeRatingValue(reviewInfo.submitterMaxRating)
+            if (normalizedSubmitterMaxRating !== undefined) {
+                group.submitterMaxRating = normalizedSubmitterMaxRating
+            }
         }
 
         const finalScore = normalizeScoreValue(
@@ -334,15 +358,20 @@ export function aggregateSubmissionReviews({
             : undefined
 
         const submitterHandle = group.submitterHandle
-            ?? group.submission.review?.submitterHandle
+            ?? group.submission.review?.submitterHandle?.trim()
+            ?? group.submission.userInfo?.memberHandle?.trim()
             ?? undefined
         const submitterMaxRating = normalizeRatingValue(
             group.submitterMaxRating
                 ?? group.submission.review?.submitterMaxRating
+                ?? group.submission.userInfo?.maxRating
+                ?? group.submission.userInfo?.rating
                 ?? undefined,
         )
         const submitterHandleColor = resolveHandleColor(
-            group.submitterHandleColor ?? group.submission.review?.submitterHandleColor,
+            group.submitterHandleColor
+                ?? group.submission.review?.submitterHandleColor
+                ?? group.submission.userInfo?.handleColor,
             submitterHandle,
             submitterMaxRating,
         )

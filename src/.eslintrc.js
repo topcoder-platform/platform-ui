@@ -1,3 +1,8 @@
+const path = require('path');
+
+const tsconfigPath = path.resolve(__dirname, '../tsconfig.json');
+const tsconfigRoot = path.resolve(__dirname, '..');
+
 module.exports = {
   root: true,
   overrides: [
@@ -25,8 +30,8 @@ module.exports = {
       parser: '@typescript-eslint/parser',
       parserOptions: {
         useJSXTextNode: true,
-        project: './tsconfig.json',
-        tsconfigRootDir: '.',
+        project: tsconfigPath,
+        tsconfigRootDir: tsconfigRoot,
         tsx: true,
         jsx: true,
         sourceType: 'module',
@@ -40,7 +45,19 @@ module.exports = {
       ],
       settings: {
         'import/resolver': {
-          typescript: {},
+          typescript: {
+            project: tsconfigPath,
+          },
+          node: {
+            extensions: [
+              '.js',
+              '.jsx',
+              '.ts',
+              '.tsx',
+              '.d.ts',
+              '.json',
+            ],
+          },
         },
       },
       rules: {

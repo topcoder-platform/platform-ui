@@ -590,7 +590,7 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
         if (!hideHandleColumn) {
             baseColumns.push({
                 columnId: 'handle-aggregated',
-                label: 'Handle',
+                label: 'Submitter',
                 propertyName: 'handle',
                 renderer: renderSubmitterHandleCell,
                 type: 'element',

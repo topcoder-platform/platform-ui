@@ -145,10 +145,12 @@ export function renderSubmissionIdCell(
  */
 export function renderSubmitterHandleCell(submission: SubmissionRow): JSX.Element {
     const aggregated = submission.aggregated
+    const aggregatedSubmission = aggregated?.submission
+    const fallbackUserInfo = submission.userInfo ?? aggregatedSubmission?.userInfo
     const submitterHandle = [
         aggregated?.submitterHandle,
         submission.review?.submitterHandle,
-        submission.userInfo?.memberHandle,
+        fallbackUserInfo?.memberHandle,
     ]
         .map(handle => handle?.trim())
         .find((handle): handle is string => Boolean(handle))
@@ -163,10 +165,11 @@ export function renderSubmitterHandleCell(submission: SubmissionRow): JSX.Elemen
 
     const explicitColor = aggregated?.submitterHandleColor
         ?? submission.review?.submitterHandleColor
-        ?? submission.userInfo?.handleColor
+        ?? fallbackUserInfo?.handleColor
     const maxRating = aggregated?.submitterMaxRating
         ?? submission.review?.submitterMaxRating
-        ?? submission.userInfo?.maxRating
+        ?? fallbackUserInfo?.maxRating
+        ?? fallbackUserInfo?.rating
     const resolvedColor = getHandleColor(explicitColor, submitterHandle, maxRating) ?? '#2a2a2a'
     const profileUrl = getProfileUrl(submitterHandle)
 
@@ -479,7 +482,7 @@ export function renderRemainingCell(
 ): JSX.Element {
     const reviewDetail = submission.aggregated?.reviews?.[reviewIndex]
 
-    if (!reviewDetail) {
+    if (!reviewDetail || (!reviewDetail.reviewInfo && !reviewDetail.reviewId)) {
         return (
             <span className={styles.notReviewed}>
                 --

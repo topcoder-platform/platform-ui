@@ -108,6 +108,8 @@ export function convertBackendSubmissionToSubmissionInfo(
     const isPassingReview = typeof isPassingReviewRaw === 'boolean'
         ? isPassingReviewRaw
         : undefined
+    const reviewEntries = Array.isArray(data.review) ? data.review : []
+    const primaryReview = reviewEntries[0]
 
     return {
         aggregateScore,
@@ -116,11 +118,11 @@ export function convertBackendSubmissionToSubmissionInfo(
         isPassingReview,
         memberId: data.memberId,
         review:
-            data.review && data.review[0]
-                ? convertBackendReviewToReviewInfo(data.review[0])
+            primaryReview
+                ? convertBackendReviewToReviewInfo(primaryReview)
                 : undefined,
-        reviews: data.review.map(convertBackendReviewToReviewResult),
-        reviewTypeId: data.review?.[0]?.typeId ?? undefined,
+        reviews: reviewEntries.map(convertBackendReviewToReviewResult),
+        reviewTypeId: primaryReview?.typeId ?? undefined,
         submittedDate,
         submittedDateString,
         type: data.type,

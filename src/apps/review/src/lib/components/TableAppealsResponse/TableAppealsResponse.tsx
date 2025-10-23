@@ -323,7 +323,7 @@ export const TableAppealsResponse: FC<TableAppealsResponseProps> = (props: Table
         if (!hideHandleColumn) {
             baseColumns.push({
                 columnId: 'handle-aggregated',
-                label: 'Handle',
+                label: 'Submitter',
                 propertyName: 'handle',
                 renderer: renderSubmitterHandleCell,
                 type: 'element',

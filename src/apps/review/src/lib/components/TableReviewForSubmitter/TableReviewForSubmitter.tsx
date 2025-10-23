@@ -444,7 +444,9 @@ export const TableReviewForSubmitter: FC<TableReviewForSubmitterProps> = (props:
             })
         }
 
-        if (shouldShowHistoryActions) {
+        const showActionsColumn = shouldShowHistoryActions && !shouldRestrictSubmitterToOwnSubmission
+
+        if (showActionsColumn) {
             columnsList.push({
                 columnId: 'actions',
                 label: 'Actions',
@@ -503,6 +505,7 @@ export const TableReviewForSubmitter: FC<TableReviewForSubmitterProps> = (props:
         isOwned,
         restrictToLatest,
         shouldShowHistoryActions,
+        shouldRestrictSubmitterToOwnSubmission,
     ])
 
     const columnsMobile = useMemo<MobileTableColumn<SubmissionRow>[][]>(

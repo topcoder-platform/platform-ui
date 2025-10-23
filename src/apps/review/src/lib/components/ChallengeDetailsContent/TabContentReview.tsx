@@ -15,10 +15,13 @@ import {
     ChallengeDetailContext,
 } from '../../contexts'
 import {
+    BackendResource,
     BackendSubmission,
     ChallengeDetailContextModel,
     convertBackendSubmissionToSubmissionInfo,
     MappingReviewAppeal,
+    ReviewInfo,
+    ReviewResult,
     SubmissionInfo,
 } from '../../models'
 import { hasIsLatestFlag } from '../../utils'
@@ -54,10 +57,227 @@ export const TabContentReview: FC<Props> = (props: Props) => {
         challengeInfo,
         challengeSubmissions: backendChallengeSubmissions,
         myResources,
+        resourceMemberIdMapping,
+        resources,
     }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
     const challengeSubmissions = useMemo<SubmissionInfo[]>(
         () => challengeInfo?.submissions ?? [],
         [challengeInfo?.submissions],
+    )
+    const myOwnedMemberIds = useMemo<Set<string>>(
+        () => {
+            const ids = new Set<string>()
+            const ownedResources = myResources ?? []
+
+            ownedResources.forEach(resource => {
+                const memberId = resource?.memberId
+                if (memberId === undefined || memberId === null) {
+                    return
+                }
+
+                const normalized = `${memberId}`.trim()
+                if (normalized.length) {
+                    ids.add(normalized)
+                }
+            })
+            return ids
+        },
+        [myResources],
+    )
+    const myOwnedSubmissionIds = useMemo<Set<string>>(
+        () => {
+            if (!myOwnedMemberIds.size) {
+                return new Set<string>()
+            }
+
+            const ids = new Set<string>()
+            challengeSubmissions.forEach(submission => {
+                if (!submission) {
+                    return
+                }
+
+                const submissionId = (submission.id ?? '').trim()
+                if (!submissionId.length) {
+                    return
+                }
+
+                const ownerId = submission.memberId
+                    ? `${submission.memberId}`.trim()
+                    : ''
+                if (ownerId.length && myOwnedMemberIds.has(ownerId)) {
+                    ids.add(submissionId)
+                }
+            })
+            return ids
+        },
+        [challengeSubmissions, myOwnedMemberIds],
+    )
+    const resourceByResourceId = useMemo<Map<string, BackendResource>>(
+        () => {
+            const mapping = new Map<string, BackendResource>()
+            const adminResources = resources ?? []
+
+            adminResources.forEach(resource => {
+                if (!resource?.id) {
+                    return
+                }
+
+                mapping.set(resource.id, resource)
+            })
+            return mapping
+        },
+        [resources],
+    )
+    const enhanceSubmissionForSubmitter = useCallback(
+        (submission: SubmissionInfo): SubmissionInfo => {
+            const memberId = submission.memberId ? `${submission.memberId}`.trim() : ''
+            const submitterResource = memberId.length
+                ? resourceMemberIdMapping?.[memberId]
+                : undefined
+
+            const resolveReviewerUpdate = (reviewInfo: ReviewInfo): Partial<ReviewInfo> | undefined => {
+                const trimmedHandle = reviewInfo.reviewerHandle?.trim()
+
+                if (trimmedHandle) {
+                    if (trimmedHandle === reviewInfo.reviewerHandle) {
+                        return undefined
+                    }
+
+                    return {
+                        reviewerHandle: trimmedHandle,
+                    }
+                }
+
+                if (!reviewInfo.resourceId) {
+                    return undefined
+                }
+
+                const reviewerResource = resourceByResourceId.get(reviewInfo.resourceId)
+                if (!reviewerResource?.memberHandle) {
+                    return undefined
+                }
+
+                const rating = typeof reviewerResource.maxRating === 'number'
+                    ? reviewerResource.maxRating
+                    : typeof reviewerResource.rating === 'number'
+                        ? reviewerResource.rating
+                        : undefined
+
+                return {
+                    reviewerHandle: reviewerResource.memberHandle,
+                    reviewerHandleColor: reviewerResource.handleColor ?? reviewInfo.reviewerHandleColor,
+                    reviewerMaxRating: rating ?? reviewInfo.reviewerMaxRating,
+                }
+            }
+
+            const resolveSubmitterUpdate = (reviewInfo: ReviewInfo): Partial<ReviewInfo> | undefined => {
+                const trimmedHandle = reviewInfo.submitterHandle?.trim()
+
+                if (trimmedHandle) {
+                    if (trimmedHandle === reviewInfo.submitterHandle) {
+                        return undefined
+                    }
+
+                    return {
+                        submitterHandle: trimmedHandle,
+                    }
+                }
+
+                if (!submitterResource?.memberHandle) {
+                    return undefined
+                }
+
+                const rating = typeof submitterResource.maxRating === 'number'
+                    ? submitterResource.maxRating
+                    : typeof submitterResource.rating === 'number'
+                        ? submitterResource.rating
+                        : undefined
+
+                return {
+                    submitterHandle: submitterResource.memberHandle,
+                    submitterHandleColor: submitterResource.handleColor ?? reviewInfo.submitterHandleColor,
+                    submitterMaxRating: rating ?? reviewInfo.submitterMaxRating,
+                }
+            }
+
+            const ensureReviewInfoHandles = (reviewInfo?: ReviewInfo): ReviewInfo | undefined => {
+                if (!reviewInfo) {
+                    return reviewInfo
+                }
+
+                const reviewerUpdate = resolveReviewerUpdate(reviewInfo)
+                const submitterUpdate = resolveSubmitterUpdate(reviewInfo)
+
+                if (!reviewerUpdate && !submitterUpdate) {
+                    return reviewInfo
+                }
+
+                return {
+                    ...reviewInfo,
+                    ...reviewerUpdate,
+                    ...submitterUpdate,
+                }
+            }
+
+            const ensureReviewResultHandles = (reviewResult: ReviewResult): ReviewResult => {
+                const reviewerHandle = reviewResult.reviewerHandle?.trim()
+                if (reviewerHandle) {
+                    if (reviewerHandle === reviewResult.reviewerHandle) {
+                        return reviewResult
+                    }
+
+                    return {
+                        ...reviewResult,
+                        reviewerHandle,
+                    }
+                }
+
+                if (!reviewResult.resourceId) {
+                    return reviewResult
+                }
+
+                const reviewerResource = resourceByResourceId.get(reviewResult.resourceId)
+                if (!reviewerResource?.memberHandle) {
+                    return reviewResult
+                }
+
+                const rating = typeof reviewerResource.maxRating === 'number'
+                    ? reviewerResource.maxRating
+                    : typeof reviewerResource.rating === 'number'
+                        ? reviewerResource.rating
+                        : undefined
+
+                return {
+                    ...reviewResult,
+                    reviewerHandle: reviewerResource.memberHandle,
+                    reviewerHandleColor: reviewerResource.handleColor ?? reviewResult.reviewerHandleColor,
+                    reviewerMaxRating: rating ?? reviewResult.reviewerMaxRating,
+                }
+            }
+
+            const patchedReview = ensureReviewInfoHandles(submission.review)
+            const patchedReviewResults = submission.reviews
+                ? submission.reviews.map(ensureReviewResultHandles)
+                : submission.reviews
+
+            const resolvedUserInfo = submission.userInfo ?? submitterResource
+
+            if (
+                patchedReview === submission.review
+                && patchedReviewResults === submission.reviews
+                && resolvedUserInfo === submission.userInfo
+            ) {
+                return submission
+            }
+
+            return {
+                ...submission,
+                review: patchedReview,
+                reviews: patchedReviewResults,
+                userInfo: resolvedUserInfo,
+            }
+        },
+        [resourceByResourceId, resourceMemberIdMapping],
     )
     const myReviewerResourceIds = useMemo<Set<string>>(
         () => new Set(
@@ -140,27 +360,83 @@ export const TabContentReview: FC<Props> = (props: Props) => {
             providedReviews,
         ],
     )
+    const resolvedReviewsWithSubmitter = useMemo(
+        () => resolvedReviews.map(enhanceSubmissionForSubmitter),
+        [enhanceSubmissionForSubmitter, resolvedReviews],
+    )
     const resolvedSubmitterReviews = useMemo(
-        () => (providedSubmitterReviews.length
-            ? providedSubmitterReviews
-            : providedSubmitterReviews),
-        [providedSubmitterReviews],
+        () => {
+            if (providedSubmitterReviews.length) {
+                return providedSubmitterReviews
+            }
+
+            if (!myOwnedMemberIds.size && !myOwnedSubmissionIds.size) {
+                return providedSubmitterReviews
+            }
+
+            const source = challengeSubmissions.length
+                ? challengeSubmissions
+                : resolvedReviews.length
+                    ? resolvedReviews
+                    : providedReviews
+
+            if (!source.length) {
+                return providedSubmitterReviews
+            }
+
+            const fallback = source.filter(submission => {
+                if (!submission) {
+                    return false
+                }
+
+                const submissionMemberId = submission.memberId
+                    ? `${submission.memberId}`.trim()
+                    : ''
+                if (submissionMemberId.length && myOwnedMemberIds.has(submissionMemberId)) {
+                    return true
+                }
+
+                const submissionId = (submission.id ?? '').trim()
+                if (submissionId.length && myOwnedSubmissionIds.has(submissionId)) {
+                    return true
+                }
+
+                const reviewSubmissionId = (submission.review?.submissionId ?? '').trim()
+                if (reviewSubmissionId.length && myOwnedSubmissionIds.has(reviewSubmissionId)) {
+                    return true
+                }
+
+                return false
+            })
+                .map(enhanceSubmissionForSubmitter)
+
+            return fallback.length ? fallback : providedSubmitterReviews
+        },
+        [
+            challengeSubmissions,
+            enhanceSubmissionForSubmitter,
+            myOwnedMemberIds,
+            myOwnedSubmissionIds,
+            providedReviews,
+            providedSubmitterReviews,
+            resolvedReviews,
+        ],
     )
     const filteredReviews = useMemo(
         () => {
-            if (!resolvedReviews.length) {
-                return resolvedReviews
+            if (!resolvedReviewsWithSubmitter.length) {
+                return resolvedReviewsWithSubmitter
             }
 
-            const hasLatestFlag = hasIsLatestFlag(resolvedReviews)
+            const hasLatestFlag = hasIsLatestFlag(resolvedReviewsWithSubmitter)
             if (!hasLatestFlag) {
-                return resolvedReviews
+                return resolvedReviewsWithSubmitter
             }
 
-            const latestOnly = resolvedReviews.filter(submission => submission.isLatest === true)
-            return latestOnly.length ? latestOnly : resolvedReviews
+            const latestOnly = resolvedReviewsWithSubmitter.filter(submission => submission.isLatest === true)
+            return latestOnly.length ? latestOnly : resolvedReviewsWithSubmitter
         },
-        [resolvedReviews],
+        [resolvedReviewsWithSubmitter],
     )
     const filteredSubmitterReviews = useMemo(
         () => {
@@ -194,7 +470,7 @@ export const TabContentReview: FC<Props> = (props: Props) => {
     if (selectedTab === 'Appeals Response') {
         return (
             <TableAppealsResponse
-                datas={resolvedReviews}
+                datas={resolvedReviewsWithSubmitter}
                 isDownloading={props.isDownloading}
                 downloadSubmission={props.downloadSubmission}
                 mappingReviewAppeal={props.mappingReviewAppeal}
