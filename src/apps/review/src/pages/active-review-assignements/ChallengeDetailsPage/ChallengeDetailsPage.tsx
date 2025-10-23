@@ -55,7 +55,7 @@ import {
 } from '../../../lib/utils'
 import type { PhaseLike, PhaseOrderingOptions } from '../../../lib/utils'
 import {
-    activeReviewAssigmentsRouteId,
+    activeReviewAssignmentsRouteId,
     pastReviewAssignmentsRouteId,
     rootRoute,
 } from '../../../config/routes.config'
@@ -413,7 +413,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
 
     const listRouteId = isPastReviewDetail
         ? pastReviewAssignmentsRouteId
-        : activeReviewAssigmentsRouteId
+        : activeReviewAssignmentsRouteId
     const listLabel = isPastReviewDetail
         ? 'My Past Challenges'
         : 'Active Challenges'
@@ -455,7 +455,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         }
 
         const pastPrefix = `/${pastReviewAssignmentsRouteId}/`
-        const activePrefix = `/${activeReviewAssigmentsRouteId}/`
+        const activePrefix = `/${activeReviewAssignmentsRouteId}/`
         const idx = location.pathname.indexOf(pastPrefix)
         if (idx < 0) {
             return

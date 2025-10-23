@@ -33,7 +33,7 @@ import { SubmissionBarInfo } from '../../../lib/components/SubmissionBarInfo'
 import { ChallengeLinksForAdmin } from '../../../lib/components/ChallengeLinksForAdmin'
 import { ADMIN, COPILOT, MANAGER } from '../../../config/index.config'
 import { useIsEditReview, useIsEditReviewProps } from '../../../lib/hooks/useIsEditReview'
-import { activeReviewAssigmentsRouteId, rootRoute } from '../../../config/routes.config'
+import { activeReviewAssignmentsRouteId, rootRoute } from '../../../config/routes.config'
 
 import styles from './ScorecardDetailsPage.module.scss'
 
@@ -332,7 +332,7 @@ export const ScorecardDetailsPage: FC<Props> = (props: Props) => {
         {
             index: 1,
             label: 'Active Challenges',
-            path: `${rootRoute}/${activeReviewAssigmentsRouteId}/`,
+            path: `${rootRoute}/${activeReviewAssignmentsRouteId}/`,
         },
         {
             fallback: './../../../../challenge-details',
