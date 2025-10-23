@@ -1150,6 +1150,11 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
 
             if (!phase) return
 
+            const displayName = item.label
+                || item.value
+                || phase.name
+                || 'Unnamed Phase'
+
             const uniqueKey = phase.id
                 || `${phase.name}-${phase.scheduledStartDate}-${phase.actualStartDate}`
             if (seen.has(uniqueKey)) {
@@ -1174,7 +1179,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                 duration: typeof phase.duration === 'number' ? phase.duration : undefined,
                 end: formatDate(endSource),
                 id: phase.id || phase.phaseId,
-                name: phase.name || 'Unnamed Phase',
+                name: displayName,
                 start: formatDate(startSource),
                 status,
             })
