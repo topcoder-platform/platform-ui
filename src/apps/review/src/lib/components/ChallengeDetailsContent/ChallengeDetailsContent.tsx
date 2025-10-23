@@ -342,8 +342,10 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
 
         if (passingSubmissionIds.size === 0) {
             return {
-                reviews: [],
-                submitterReviews: [],
+                reviews: props.review
+                    .filter(passesReviewTabGuards),
+                submitterReviews: props.submitterReviews
+                    .filter(passesReviewTabGuards),
             }
         }
 

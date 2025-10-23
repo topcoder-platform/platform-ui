@@ -15,7 +15,21 @@ import type {
  * @returns true if challenge is in the review phase
  */
 export function isReviewPhase(challengeInfo?: ChallengeInfo): boolean {
-    return (challengeInfo?.currentPhase ?? '').indexOf('Review') >= 0
+    const phaseName = (challengeInfo?.currentPhase ?? '')
+        .toString()
+        .trim()
+        .toLowerCase()
+
+    if (!phaseName) {
+        return false
+    }
+
+    return (
+        phaseName.includes('review')
+        || phaseName.includes('post-mortem')
+        || phaseName.includes('post mortem')
+        || phaseName.includes('postmortem')
+    )
 }
 
 /**

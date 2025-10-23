@@ -1,12 +1,24 @@
 /**
  * Content of review tab.
  */
-import { FC, useMemo } from 'react'
+import {
+    FC,
+    useCallback,
+    useContext,
+    useMemo,
+} from 'react'
 
 import { TableLoading } from '~/apps/admin/src/lib'
 import { IsRemovingType } from '~/apps/admin/src/lib/models'
 
-import { MappingReviewAppeal, SubmissionInfo } from '../../models'
+import {
+    ChallengeDetailContext,
+} from '../../contexts'
+import {
+    ChallengeDetailContextModel,
+    MappingReviewAppeal,
+    SubmissionInfo,
+} from '../../models'
 import { hasIsLatestFlag } from '../../utils'
 import { TableAppeals } from '../TableAppeals'
 import { TableAppealsForSubmitter } from '../TableAppealsForSubmitter'
@@ -34,25 +46,102 @@ interface Props {
 
 export const TabContentReview: FC<Props> = (props: Props) => {
     const selectedTab = props.selectedTab
-    const reviews = props.reviews
-    const submitterReviews = props.submitterReviews
+    const providedReviews = props.reviews
+    const providedSubmitterReviews = props.submitterReviews
+    const {
+        challengeInfo,
+        myResources,
+    }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
+    const challengeSubmissions = challengeInfo?.submissions ?? []
+    const myReviewerResourceIds = useMemo<Set<string>>(
+        () => new Set(
+            (myResources ?? [])
+                .filter(resource => {
+                    const roleName = (resource.roleName || '').toLowerCase()
+                    return roleName.includes('reviewer') && !roleName.includes('iterative')
+                })
+                .map(resource => resource.id)
+                .filter((id): id is string => typeof id === 'string' && id.trim().length > 0),
+        ),
+        [myResources],
+    )
+    const hasReviewerAssignment = useCallback(
+        (submission: SubmissionInfo): boolean => {
+            const resourceIds = myReviewerResourceIds
+            const primaryResourceId = submission.review?.resourceId
+            if (primaryResourceId && resourceIds.has(primaryResourceId)) {
+                return true
+            }
+
+            if (Array.isArray(submission.reviews)) {
+                for (const review of submission.reviews) {
+                    const reviewResourceId = review.resourceId
+                    if (reviewResourceId && resourceIds.has(reviewResourceId)) {
+                        return true
+                    }
+                }
+            }
+
+            return resourceIds.size === 0 && Boolean(primaryResourceId)
+        },
+        [myReviewerResourceIds],
+    )
+    const resolvedReviews = useMemo(
+        () => {
+            if (providedReviews.length) {
+                return providedReviews
+            }
+
+            if (!challengeSubmissions.length) {
+                return providedReviews
+            }
+
+            const fallback = challengeSubmissions.filter(hasReviewerAssignment)
+            return fallback.length ? fallback : providedReviews
+        },
+        [
+            challengeSubmissions,
+            hasReviewerAssignment,
+            providedReviews,
+        ],
+    )
+    const resolvedSubmitterReviews = useMemo(
+        () => (providedSubmitterReviews.length
+            ? providedSubmitterReviews
+            : providedSubmitterReviews),
+        [providedSubmitterReviews],
+    )
     const filteredReviews = useMemo(
         () => {
-            const hasLatestFlag = hasIsLatestFlag(reviews)
-            return hasLatestFlag
-                ? reviews.filter(submission => submission.isLatest === true)
-                : reviews
+            if (!resolvedReviews.length) {
+                return resolvedReviews
+            }
+
+            const hasLatestFlag = hasIsLatestFlag(resolvedReviews)
+            if (!hasLatestFlag) {
+                return resolvedReviews
+            }
+
+            const latestOnly = resolvedReviews.filter(submission => submission.isLatest === true)
+            return latestOnly.length ? latestOnly : resolvedReviews
         },
-        [reviews],
+        [resolvedReviews],
     )
     const filteredSubmitterReviews = useMemo(
         () => {
-            const hasLatestFlag = hasIsLatestFlag(submitterReviews)
-            return hasLatestFlag
-                ? submitterReviews.filter(submission => submission.isLatest === true)
-                : submitterReviews
+            if (!resolvedSubmitterReviews.length) {
+                return resolvedSubmitterReviews
+            }
+
+            const hasLatestFlag = hasIsLatestFlag(resolvedSubmitterReviews)
+            if (!hasLatestFlag) {
+                return resolvedSubmitterReviews
+            }
+
+            const latestOnly = resolvedSubmitterReviews.filter(submission => submission.isLatest === true)
+            return latestOnly.length ? latestOnly : resolvedSubmitterReviews
         },
-        [submitterReviews],
+        [resolvedSubmitterReviews],
     )
     const { actionChallengeRole }: useRoleProps = useRole()
     const hideHandleColumn = props.isActiveChallenge
@@ -70,7 +159,7 @@ export const TabContentReview: FC<Props> = (props: Props) => {
     if (selectedTab === 'Appeals Response') {
         return (
             <TableAppealsResponse
-                datas={reviews}
+                datas={resolvedReviews}
                 isDownloading={props.isDownloading}
                 downloadSubmission={props.downloadSubmission}
                 mappingReviewAppeal={props.mappingReviewAppeal}

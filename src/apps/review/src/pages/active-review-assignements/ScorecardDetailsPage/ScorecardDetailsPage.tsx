@@ -37,7 +37,7 @@ import { activeReviewAssigmentsRouteId, rootRoute } from '../../../config/routes
 
 import styles from './ScorecardDetailsPage.module.scss'
 
-type ReviewPhaseType = 'screening' | 'checkpoint screening' | 'checkpoint review' | 'approval'
+type ReviewPhaseType = 'screening' | 'checkpoint screening' | 'checkpoint review' | 'post-mortem' | 'approval'
 
 const detectReviewPhaseType = (value?: unknown): ReviewPhaseType | undefined => {
     if (value === undefined || value === null) {
@@ -60,6 +60,14 @@ const detectReviewPhaseType = (value?: unknown): ReviewPhaseType | undefined => 
         return 'checkpoint review'
     }
 
+    if (
+        normalized.includes('post-mortem')
+        || normalized.includes('post mortem')
+        || normalized.includes('postmortem')
+    ) {
+        return 'post-mortem'
+    }
+
     if (normalized.includes('screening')) {
         return 'screening'
     }
@@ -80,6 +88,29 @@ type ReviewerConfig = {
 type ChallengePhaseSummary = {
     id?: unknown
     name?: unknown
+}
+
+type RoleMatcher = (normalizedRoleName: string) => boolean
+
+const PHASE_ROLE_MATCHERS: Partial<Record<ReviewPhaseType, RoleMatcher>> = {
+    approval: normalizedRoleName => (
+        normalizedRoleName.includes('approver')
+        || normalizedRoleName.includes('approval')
+    ),
+    'checkpoint review': normalizedRoleName => normalizedRoleName === 'checkpoint reviewer',
+    'checkpoint screening': normalizedRoleName => normalizedRoleName === 'checkpoint screener',
+    'post-mortem': normalizedRoleName => (
+        normalizedRoleName.includes('post-mortem')
+        || normalizedRoleName.includes('post mortem')
+        || normalizedRoleName.includes('postmortem')
+    ),
+    screening: normalizedRoleName => (
+        (
+            normalizedRoleName.includes('screener')
+            || normalizedRoleName.includes('screening')
+        )
+        && !normalizedRoleName.includes('checkpoint')
+    ),
 }
 
 const detectReviewTypeFromReviewerConfig = (
@@ -141,34 +172,13 @@ const canRoleEditPhase = (
     currentPhaseReviewType: ReviewPhaseType | undefined,
     normalizedRoleName: string,
 ): boolean => {
-    switch (reviewPhaseType) {
-        case 'checkpoint screening':
-            return currentPhaseReviewType === 'checkpoint screening'
-                && normalizedRoleName === 'checkpoint screener'
-        case 'checkpoint review':
-            return currentPhaseReviewType === 'checkpoint review'
-                && normalizedRoleName === 'checkpoint reviewer'
-        case 'screening': {
-            const isScreenerRole = (
-                normalizedRoleName.includes('screener')
-                || normalizedRoleName.includes('screening')
-            ) && !normalizedRoleName.includes('checkpoint')
-
-            return currentPhaseReviewType === 'screening'
-                && isScreenerRole
-        }
-
-        case 'approval': {
-            const isApproverRole = normalizedRoleName.includes('approver')
-                || normalizedRoleName.includes('approval')
-
-            return currentPhaseReviewType === 'approval'
-                && isApproverRole
-        }
-
-        default:
-            return false
+    if (!reviewPhaseType || currentPhaseReviewType !== reviewPhaseType) {
+        return false
     }
+
+    const matcher = PHASE_ROLE_MATCHERS[reviewPhaseType]
+
+    return matcher ? matcher(normalizedRoleName) : false
 }
 
 interface Props {
