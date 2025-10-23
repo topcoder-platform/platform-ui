@@ -205,7 +205,7 @@ export const ActiveReviewsPage: FC<Props> = (props: Props) => {
                 one or more AI reviews will be conducted for each member submission.`,
         })
         return () => notification && removeNotification(notification.id)
-    }, [showBannerNotification])
+    }, [showBannerNotification, removeNotification])
 
     return (
         <PageWrapper

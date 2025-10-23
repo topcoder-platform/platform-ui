@@ -9,7 +9,7 @@ export interface ActiveReviewAssignment {
     currentPhaseEndDateString?: string
     challengeEndDate?: string | Date | null
     challengeEndDateString?: string
-    hasAsAIReview: boolean;
+    hasAIReview: boolean;
     timeLeft?: string
     timeLeftColor?: string
     timeLeftStatus?: string

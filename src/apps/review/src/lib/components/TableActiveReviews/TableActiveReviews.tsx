@@ -255,7 +255,7 @@ export const TableActiveReviews: FC<Props> = (props: Props) => {
                         label: 'Phase',
                         propertyName: 'currentPhase',
                         renderer: (data: ActiveReviewAssignment) => {
-                            const Icon = data.hasAsAIReview ? IconAiReview : (
+                            const Icon = data.hasAIReview ? IconAiReview : (
                                 phasesIcons[data.currentPhase.toLowerCase() as keyof typeof phasesIcons]
                             )
 
