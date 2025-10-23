@@ -15,7 +15,9 @@ import {
     ChallengeDetailContext,
 } from '../../contexts'
 import {
+    BackendSubmission,
     ChallengeDetailContextModel,
+    convertBackendSubmissionToSubmissionInfo,
     MappingReviewAppeal,
     SubmissionInfo,
 } from '../../models'
@@ -50,9 +52,13 @@ export const TabContentReview: FC<Props> = (props: Props) => {
     const providedSubmitterReviews = props.submitterReviews
     const {
         challengeInfo,
+        challengeSubmissions: backendChallengeSubmissions,
         myResources,
     }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
-    const challengeSubmissions = challengeInfo?.submissions ?? []
+    const challengeSubmissions = useMemo<SubmissionInfo[]>(
+        () => challengeInfo?.submissions ?? [],
+        [challengeInfo?.submissions],
+    )
     const myReviewerResourceIds = useMemo<Set<string>>(
         () => new Set(
             (myResources ?? [])
@@ -92,6 +98,33 @@ export const TabContentReview: FC<Props> = (props: Props) => {
                 return providedReviews
             }
 
+            const fallbackFromBackend: SubmissionInfo[] = []
+
+            if (backendChallengeSubmissions.length && myReviewerResourceIds.size) {
+                backendChallengeSubmissions.forEach(submission => {
+                    const matchingReviews = (submission.review ?? []).filter(review => (
+                        Boolean(review?.resourceId) && myReviewerResourceIds.has(review.resourceId)
+                    ))
+
+                    matchingReviews.forEach(review => {
+                        const submissionForReviewer: BackendSubmission = {
+                            ...submission,
+                            review: [review],
+                            reviewResourceMapping: {
+                                [review.resourceId]: review,
+                            },
+                        }
+                        fallbackFromBackend.push(
+                            convertBackendSubmissionToSubmissionInfo(submissionForReviewer),
+                        )
+                    })
+                })
+            }
+
+            if (fallbackFromBackend.length) {
+                return fallbackFromBackend
+            }
+
             if (!challengeSubmissions.length) {
                 return providedReviews
             }
@@ -100,8 +133,10 @@ export const TabContentReview: FC<Props> = (props: Props) => {
             return fallback.length ? fallback : providedReviews
         },
         [
+            backendChallengeSubmissions,
             challengeSubmissions,
             hasReviewerAssignment,
+            myReviewerResourceIds,
             providedReviews,
         ],
     )
