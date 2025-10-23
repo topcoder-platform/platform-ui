@@ -22,7 +22,7 @@ const EducationCard: FC<EducationCardProps> = (props: EducationCardProps) => (
                 </p>
             </div>
             {
-                props.education.timePeriodFrom || props.education.timePeriodTo ? (
+                props.education.endYear ? (
                     <div className={styles.educationCardHeaderRight}>
                         <p>
                             {props.education.endYear}
