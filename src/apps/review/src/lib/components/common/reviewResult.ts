@@ -1,4 +1,4 @@
-import type { SubmissionRow } from './types'
+import type { AggregatedReviewDetail, SubmissionRow } from './types'
 
 export type ReviewOutcome = 'PASS' | 'FAIL'
 
@@ -37,6 +37,71 @@ const OUTCOME_KEYS = [
 ]
 
 type MetadataObject = Record<string, unknown>
+
+const COMPLETED_REVIEW_STATUSES = new Set(['COMPLETED', 'SUBMITTED'])
+
+const normalizeStatusString = (value: unknown): string | undefined => {
+    if (typeof value !== 'string') {
+        return undefined
+    }
+
+    const normalized = value.trim()
+        .toUpperCase()
+    return normalized.length ? normalized : undefined
+}
+
+const isAggregatedReviewDetailCompleted = (detail: AggregatedReviewDetail): boolean => {
+    const statusCandidates = [
+        detail.status,
+        detail.reviewInfo?.status,
+    ]
+
+    for (const candidate of statusCandidates) {
+        const normalized = normalizeStatusString(candidate)
+        if (normalized) {
+            return COMPLETED_REVIEW_STATUSES.has(normalized)
+        }
+    }
+
+    const committedCandidates = [
+        detail.reviewInfo?.committed,
+    ]
+
+    if (committedCandidates.some(value => value === false)) {
+        return false
+    }
+
+    if (committedCandidates.some(value => value === true)) {
+        return true
+    }
+
+    const finalScoreCandidates = [
+        detail.finalScore,
+        detail.reviewInfo?.finalScore,
+    ]
+
+    return finalScoreCandidates.some(value => typeof value === 'number' && Number.isFinite(value))
+}
+
+const shouldDeferAggregatedOutcome = (submission: SubmissionRow): boolean => {
+    const aggregatedReviews = submission.aggregated?.reviews
+    if (!aggregatedReviews || aggregatedReviews.length === 0) {
+        return false
+    }
+
+    const assignedReviews = aggregatedReviews.filter(review => (
+        Boolean(review.resourceId)
+        || Boolean(review.reviewInfo?.resourceId)
+        || Boolean(review.reviewId)
+        || Boolean(review.reviewerHandle ?? review.reviewInfo?.reviewerHandle)
+    ))
+
+    if (assignedReviews.length <= 1) {
+        return false
+    }
+
+    return !assignedReviews.every(isAggregatedReviewDetailCompleted)
+}
 
 const isRecord = (value: unknown): value is MetadataObject => (
     typeof value === 'object'
@@ -316,6 +381,10 @@ export function resolveSubmissionReviewResult(
         minimumPassingScoreByScorecardId,
         defaultMinimumPassingScore,
     }: ResolveSubmissionReviewResultOptions = options
+
+    if (shouldDeferAggregatedOutcome(submission)) {
+        return undefined
+    }
 
     const metadataCandidates = collectMetadataCandidates(submission)
 
