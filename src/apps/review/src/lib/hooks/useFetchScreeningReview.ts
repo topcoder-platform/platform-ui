@@ -1311,15 +1311,17 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
                     return
                 }
 
-                if (!reviewerIds.includes(reviewItem.resourceId)) {
+                const resourceId = reviewItem.resourceId
+                const submissionId = reviewItem.submissionId
+                if (!resourceId || !submissionId) {
                     return
                 }
 
-                if (!mapping[reviewItem.submissionId]) {
-                    mapping[reviewItem.submissionId] = {}
+                if (!mapping[submissionId]) {
+                    mapping[submissionId] = {}
                 }
 
-                mapping[reviewItem.submissionId][reviewItem.resourceId] = reviewItem
+                mapping[submissionId][resourceId] = reviewItem
             })
 
             return mapping

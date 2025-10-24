@@ -42,6 +42,9 @@ export interface AggregatedSubmissionReviews {
     submitterHandle?: string
     submitterHandleColor?: string
     submitterMaxRating?: number | null
+    reviewerHandles?: Record<string, string | undefined>
+    reviewerHandleColors?: Record<string, string | undefined>
+    reviewerMaxRatings?: Record<string, number | undefined>
 }
 
 interface AggregateSubmissionReviewsParams {
@@ -143,10 +146,6 @@ export function aggregateSubmissionReviews({
         }
 
         const seenReviewIds = seenReviewIdsBySubmission.get(submission.id) ?? new Set<string>()
-        if (seenReviewIds.has(reviewId)) {
-            return
-        }
-
         const reviewerInfo = resourceId ? reviewerByResourceId[resourceId] : undefined
         if (resourceId) {
             discoveredResourceIds.add(resourceId)
@@ -163,11 +162,15 @@ export function aggregateSubmissionReviews({
         const reviewHandle = reviewInfo?.reviewerHandle?.trim() || undefined
         const resultHandle = matchingReviewResult?.reviewerHandle?.trim() || undefined
         const resourceHandle = reviewerInfo?.memberHandle?.trim() || undefined
-        const finalReviewerHandle = reviewHandle
+        const candidateReviewerHandle = reviewHandle
             ?? resultHandle
             ?? resourceHandle
-        if (resourceId && !reviewerHandleByResourceId[resourceId]) {
-            reviewerHandleByResourceId[resourceId] = finalReviewerHandle
+        const fallbackMappedHandle = resourceId ? reviewerHandleByResourceId[resourceId]?.trim() : undefined
+        const resolvedReviewerHandle = candidateReviewerHandle
+            ?? fallbackMappedHandle
+
+        if (resourceId && resolvedReviewerHandle) {
+            reviewerHandleByResourceId[resourceId] = resolvedReviewerHandle
         }
 
         const finalReviewerMaxRating = normalizeRatingValue(
@@ -179,7 +182,7 @@ export function aggregateSubmissionReviews({
             reviewInfo?.reviewerHandleColor
                 ?? matchingReviewResult?.reviewerHandleColor
                 ?? reviewerInfo?.handleColor,
-            finalReviewerHandle,
+            resolvedReviewerHandle ?? fallbackMappedHandle,
             finalReviewerMaxRating,
         )
 
@@ -203,11 +206,34 @@ export function aggregateSubmissionReviews({
             reviewInfo?.finalScore ?? matchingReviewResult?.score,
         )
 
+        let normalizedReviewInfo: ReviewInfo | undefined = reviewInfo
+        if (reviewInfo) {
+            const needsHandle = !reviewInfo.reviewerHandle?.trim() && resolvedReviewerHandle
+            const needsColor = !reviewInfo.reviewerHandleColor && finalReviewerHandleColor
+            const needsMaxRating = (reviewInfo.reviewerMaxRating === undefined || reviewInfo.reviewerMaxRating === null)
+                && finalReviewerMaxRating !== undefined
+
+            if (needsHandle || needsColor || needsMaxRating) {
+                normalizedReviewInfo = {
+                    ...reviewInfo,
+                    reviewerHandle: needsHandle
+                        ? resolvedReviewerHandle ?? reviewInfo.reviewerHandle
+                        : reviewInfo.reviewerHandle,
+                    reviewerHandleColor: needsColor
+                        ? finalReviewerHandleColor ?? reviewInfo.reviewerHandleColor
+                        : reviewInfo.reviewerHandleColor,
+                    reviewerMaxRating: needsMaxRating
+                        ? finalReviewerMaxRating ?? reviewInfo.reviewerMaxRating
+                        : reviewInfo.reviewerMaxRating,
+                }
+            }
+        }
+
         if (process.env.NODE_ENV !== 'production') {
-            if (finalReviewerHandle) {
+            if (resolvedReviewerHandle) {
                 console.debug('[ReviewAggregation] Resolved reviewer handle', {
                     resourceHandle: reviewerInfo?.memberHandle,
-                    reviewerHandle: finalReviewerHandle,
+                    reviewerHandle: resolvedReviewerHandle,
                     reviewId,
                     reviewInfoHandle: reviewInfo?.reviewerHandle,
                     reviewResultHandle: matchingReviewResult?.reviewerHandle,
@@ -221,7 +247,7 @@ export function aggregateSubmissionReviews({
             } else {
                 console.debug('[ReviewAggregation] Missing reviewer handle', {
                     resourceHandle: reviewerInfo?.memberHandle,
-                    reviewerHandle: finalReviewerHandle,
+                    reviewerHandle: resolvedReviewerHandle,
                     reviewId,
                     reviewInfoHandle: reviewInfo?.reviewerHandle,
                     reviewResultHandle: matchingReviewResult?.reviewerHandle,
@@ -235,23 +261,93 @@ export function aggregateSubmissionReviews({
         const totalAppeals = appealInfo?.totalAppeals ?? 0
         const unresolvedAppeals = totalAppeals - finishedAppeals
 
-        group.reviews.push({
+        const existingDetail = group.reviews.find(detail => {
+            const detailReviewId = detail.reviewInfo?.id ?? detail.reviewId
+            return detailReviewId === reviewId
+        })
+
+        const reviewerHandleForDetail = resolvedReviewerHandle ?? fallbackMappedHandle
+
+        const newDetail: AggregatedReviewDetail = {
             finalScore,
             finishedAppeals: appealInfo?.finishAppeals,
             resourceId,
             reviewDate,
             reviewDateString,
-            reviewerHandle: finalReviewerHandle,
+            reviewerHandle: reviewerHandleForDetail,
             reviewerHandleColor: finalReviewerHandleColor,
             reviewerMaxRating: finalReviewerMaxRating,
             reviewId,
-            reviewInfo,
-            reviewProgress: reviewInfo?.reviewProgress,
-            status: reviewInfo?.status,
+            reviewInfo: normalizedReviewInfo,
+            reviewProgress: normalizedReviewInfo?.reviewProgress,
+            status: normalizedReviewInfo?.status,
             totalAppeals,
             unresolvedAppeals,
-        })
+        }
 
+        if (existingDetail) {
+            if (finalScore !== undefined) {
+                existingDetail.finalScore = finalScore
+            }
+
+            if (appealInfo?.finishAppeals !== undefined) {
+                existingDetail.finishedAppeals = appealInfo.finishAppeals
+            }
+
+            if (reviewDate) {
+                existingDetail.reviewDate = reviewDate
+            }
+
+            if (reviewDateString) {
+                existingDetail.reviewDateString = reviewDateString
+            }
+
+            if (reviewerHandleForDetail) {
+                existingDetail.reviewerHandle = reviewerHandleForDetail
+                if (resourceId && !reviewerHandleByResourceId[resourceId]) {
+                    reviewerHandleByResourceId[resourceId] = reviewerHandleForDetail
+                }
+            }
+
+            if (finalReviewerHandleColor) {
+                existingDetail.reviewerHandleColor = finalReviewerHandleColor
+            }
+
+            if (finalReviewerMaxRating !== undefined) {
+                existingDetail.reviewerMaxRating = finalReviewerMaxRating
+            }
+
+            if (normalizedReviewInfo) {
+                existingDetail.reviewInfo = existingDetail.reviewInfo
+                    ? {
+                        ...existingDetail.reviewInfo,
+                        ...normalizedReviewInfo,
+                        reviewerHandle: normalizedReviewInfo.reviewerHandle
+                            ?? existingDetail.reviewInfo.reviewerHandle,
+                        reviewerHandleColor: normalizedReviewInfo.reviewerHandleColor
+                            ?? existingDetail.reviewInfo.reviewerHandleColor,
+                        reviewerMaxRating: normalizedReviewInfo.reviewerMaxRating
+                            ?? existingDetail.reviewInfo.reviewerMaxRating,
+                    }
+                    : normalizedReviewInfo
+            }
+
+            if (normalizedReviewInfo?.reviewProgress !== undefined) {
+                existingDetail.reviewProgress = normalizedReviewInfo.reviewProgress
+            }
+
+            if (normalizedReviewInfo?.status !== undefined) {
+                existingDetail.status = normalizedReviewInfo.status
+            }
+
+            existingDetail.totalAppeals = totalAppeals
+            existingDetail.unresolvedAppeals = unresolvedAppeals
+            seenReviewIds.add(reviewId)
+            seenReviewIdsBySubmission.set(submission.id, seenReviewIds)
+            return
+        }
+
+        group.reviews.push(newDetail)
         seenReviewIds.add(reviewId)
         seenReviewIdsBySubmission.set(submission.id, seenReviewIds)
     })
@@ -375,12 +471,87 @@ export function aggregateSubmissionReviews({
             submitterMaxRating,
         )
 
+        const reviewerHandlesForGroup: Record<string, string | undefined> = {}
+        const reviewerHandleColorsForGroup: Record<string, string | undefined> = {}
+        const reviewerMaxRatingsForGroup: Record<string, number | undefined> = {}
+
+        group.reviews.forEach(review => {
+            const resourceKey = review.resourceId
+                ?? review.reviewInfo?.resourceId
+            if (!resourceKey) {
+                return
+            }
+
+            const handleCandidates = [
+                review.reviewerHandle,
+                review.reviewInfo?.reviewerHandle,
+                reviewerHandleByResourceId[resourceKey],
+            ]
+                .map(candidate => candidate?.trim())
+                .filter((candidate): candidate is string => Boolean(candidate))
+
+            const resolvedHandleCandidate: string | undefined = handleCandidates[0]
+
+            if (resolvedHandleCandidate && !reviewerHandlesForGroup[resourceKey]) {
+                reviewerHandlesForGroup[resourceKey] = resolvedHandleCandidate
+            }
+
+            const ratingCandidates = [
+                review.reviewerMaxRating,
+                review.reviewInfo?.reviewerMaxRating,
+                normalizeRatingValue(reviewerByResourceId[resourceKey]?.maxRating),
+                normalizeRatingValue(reviewerByResourceId[resourceKey]?.rating),
+            ]
+                .filter((value): value is number => typeof value === 'number' && Number.isFinite(value))
+
+            const resolvedRating: number | undefined = ratingCandidates[0]
+            if (resolvedRating !== undefined && reviewerMaxRatingsForGroup[resourceKey] === undefined) {
+                reviewerMaxRatingsForGroup[resourceKey] = resolvedRating
+            }
+
+            const colorCandidates = [
+                review.reviewerHandleColor,
+                review.reviewInfo?.reviewerHandleColor,
+                reviewerByResourceId[resourceKey]?.handleColor,
+            ]
+                .map(candidate => (typeof candidate === 'string' ? candidate.trim() : undefined))
+                .filter((candidate): candidate is string => Boolean(candidate))
+
+            let resolvedColor: string | undefined = colorCandidates[0]
+            if (!resolvedColor && resolvedHandleCandidate) {
+                resolvedColor = resolveHandleColor(
+                    undefined,
+                    resolvedHandleCandidate,
+                    resolvedRating,
+                )
+            }
+
+            if (resolvedColor && !reviewerHandleColorsForGroup[resourceKey]) {
+                reviewerHandleColorsForGroup[resourceKey] = resolvedColor
+            }
+
+            if (resolvedHandleCandidate && !review.reviewerHandle) {
+                review.reviewerHandle = resolvedHandleCandidate
+            }
+
+            if (resolvedColor && !review.reviewerHandleColor) {
+                review.reviewerHandleColor = resolvedColor
+            }
+
+            if (resolvedRating !== undefined && review.reviewerMaxRating === undefined) {
+                review.reviewerMaxRating = resolvedRating
+            }
+        })
+
         aggregatedRows.push({
             ...group,
             averageFinalScore,
             averageFinalScoreDisplay,
             latestReviewDate,
             latestReviewDateString,
+            reviewerHandleColors: reviewerHandleColorsForGroup,
+            reviewerHandles: reviewerHandlesForGroup,
+            reviewerMaxRatings: reviewerMaxRatingsForGroup,
             submitterHandle,
             submitterHandleColor,
             submitterMaxRating,

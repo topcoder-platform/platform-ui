@@ -12,7 +12,14 @@ import {
     VIRUS_SCAN_FAILED_MESSAGE,
 } from '../../utils/constants'
 import { getReviewRoute } from '../../utils/routes'
-import { ChallengeDetailContextModel, ChallengeInfo } from '../../models'
+import {
+    ChallengeDetailContextModel,
+    ChallengeInfo,
+} from '../../models'
+import type {
+    ReviewInfo,
+    ReviewResult,
+} from '../../models'
 import { isReviewPhaseCurrentlyOpen } from '../../utils'
 
 import {
@@ -295,6 +302,116 @@ export function renderReviewScoreCell(
     return <span>{rawScoreDisplay}</span>
 }
 
+interface ReviewerDisplayData {
+    color: string
+    handle?: string
+    name: string
+    profileUrl?: string
+}
+
+function findByResourceId<T extends { resourceId?: string | null }>(
+    items: T[],
+    resourceId: string | undefined,
+): T | undefined {
+    if (!resourceId) {
+        return undefined
+    }
+
+    return items.find(item => item.resourceId === resourceId)
+}
+
+function getValueFromMap<T>(
+    map: Record<string, T | undefined> | undefined,
+    resourceId: string | undefined,
+): T | undefined {
+    if (!map || !resourceId) {
+        return undefined
+    }
+
+    return map[resourceId]
+}
+
+function pickFirstNonEmptyString(values: Array<string | null | undefined>): string | undefined {
+    for (const value of values) {
+        const trimmed = value?.trim()
+        if (trimmed) {
+            return trimmed
+        }
+    }
+
+    return undefined
+}
+
+function pickFirstNumber(values: Array<number | null | undefined>): number | undefined {
+    for (const value of values) {
+        if (typeof value === 'number') {
+            return value
+        }
+    }
+
+    return undefined
+}
+
+function buildReviewerDisplayData(
+    submission: SubmissionRow,
+    reviewDetail: AggregatedReviewDetail,
+): ReviewerDisplayData {
+    const aggregatedSubmission = submission.aggregated?.submission
+    const resourceId = reviewDetail.reviewInfo?.resourceId ?? reviewDetail.resourceId
+    const candidateReviewInfos: ReviewInfo[] = [
+        reviewDetail.reviewInfo,
+        aggregatedSubmission?.review,
+        submission.review,
+    ].filter((info): info is ReviewInfo => Boolean(info))
+    const candidateReviewResults: ReviewResult[] = [
+        ...(submission.reviews ?? []),
+        ...(aggregatedSubmission?.reviews ?? []),
+    ].filter((result): result is ReviewResult => Boolean(result))
+
+    const matchingInfo = findByResourceId(candidateReviewInfos, resourceId)
+    const matchingResult = findByResourceId(candidateReviewResults, resourceId)
+
+    const reviewerHandle = pickFirstNonEmptyString([
+        reviewDetail.reviewerHandle,
+        reviewDetail.reviewInfo?.reviewerHandle,
+        matchingInfo?.reviewerHandle,
+        matchingResult?.reviewerHandle,
+        getValueFromMap(submission.aggregated?.reviewerHandles, resourceId),
+    ])
+
+    const reviewerMaxRating = pickFirstNumber([
+        reviewDetail.reviewerMaxRating,
+        reviewDetail.reviewInfo?.reviewerMaxRating ?? undefined,
+        matchingInfo?.reviewerMaxRating ?? undefined,
+        matchingResult?.reviewerMaxRating ?? undefined,
+        getValueFromMap(submission.aggregated?.reviewerMaxRatings, resourceId),
+    ])
+
+    const explicitColor = pickFirstNonEmptyString([
+        reviewDetail.reviewerHandleColor,
+        reviewDetail.reviewInfo?.reviewerHandleColor,
+        matchingInfo?.reviewerHandleColor,
+        matchingResult?.reviewerHandleColor,
+        getValueFromMap(submission.aggregated?.reviewerHandleColors, resourceId),
+    ])
+
+    const color = getHandleColor(
+        explicitColor,
+        reviewerHandle,
+        reviewerMaxRating,
+    ) ?? '#2a2a2a'
+
+    const name = reviewerHandle ?? 'Not assigned'
+    const profileUrl = reviewerHandle ? getProfileUrl(reviewerHandle) : undefined
+
+    return {
+        color,
+        handle: reviewerHandle,
+        name,
+        profileUrl,
+    }
+}
+
 /**
  * Renders a reviewer cell for the given review index.
  */
@@ -312,29 +429,27 @@ export function renderReviewerCell(
         )
     }
 
-    const reviewerHandle = reviewDetail.reviewerHandle?.trim()
-    const reviewerColor = getHandleColor(
-        reviewDetail.reviewerHandleColor,
-        reviewerHandle,
-        reviewDetail.reviewerMaxRating,
-    ) ?? '#2a2a2a'
-    const reviewerName = reviewerHandle || 'Not assigned'
-    const reviewerProfileUrl = reviewerHandle ? getProfileUrl(reviewerHandle) : undefined
+    const {
+        color,
+        handle,
+        name,
+        profileUrl,
+    }: ReviewerDisplayData = buildReviewerDisplayData(submission, reviewDetail)
 
     return (
         <span className={styles.reviewer}>
-            {reviewerProfileUrl ? (
+            {profileUrl ? (
                 <a
-                    href={reviewerProfileUrl}
-                    style={{ color: reviewerColor }}
+                    href={profileUrl}
+                    style={{ color }}
                     target='_blank'
                     rel='noreferrer'
                 >
-                    {reviewerHandle}
+                    {handle}
                 </a>
             ) : (
-                <span style={{ color: reviewerColor }}>
-                    {reviewerName}
+                <span style={{ color }}>
+                    {name}
                 </span>
             )}
         </span>
