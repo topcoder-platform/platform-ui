@@ -229,6 +229,29 @@ export function renderReviewScoreCell(
         )
     }
 
+    const aggregatedReviews = submission.aggregated?.reviews ?? []
+    const hasIncompleteReview = aggregatedReviews.some(review => {
+        const statusRaw = review.reviewInfo?.status ?? review.status
+        const normalizedStatus = typeof statusRaw === 'string'
+            ? statusRaw
+                .trim()
+                .toUpperCase()
+            : ''
+        if (!normalizedStatus) {
+            return true
+        }
+
+        return normalizedStatus !== 'COMPLETED'
+    })
+
+    if (!aggregatedReviews.length || hasIncompleteReview) {
+        return (
+            <span className={styles.notReviewed}>
+                --
+            </span>
+        )
+    }
+
     const rawScoreDisplay = submission.aggregated?.averageFinalScoreDisplay
     if (!rawScoreDisplay) {
         return (

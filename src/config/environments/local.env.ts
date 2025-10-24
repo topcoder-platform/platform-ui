@@ -3,7 +3,7 @@ import type { LocalServiceOverride } from './global-config.model'
 export * from './default.env'
 
 export const TC_FINANCE_API = 'http://localhost:3009/v6/finance'
-
+export const DEBUG_CHECKPOINT_PHASES = true
 export const LOCAL_SERVICE_OVERRIDES: LocalServiceOverride[] = [
     { prefix: '/v5/billing-accounts', target: 'http://localhost:3010' },
     { prefix: '/v6/billing-accounts', target: 'http://localhost:3010' },

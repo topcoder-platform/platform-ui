@@ -30,5 +30,9 @@ export const refreshChallengeReviewData = async (challengeId?: string): Promise<
             && key.startsWith(`reviewBaseUrl/reviews/${challengeId}/`)
         )),
         mutate(`reviewBaseUrl/submissions/${challengeId}`),
+        mutate((key: unknown) => (
+            typeof key === 'string'
+            && key.startsWith(`challengeBaseUrl/challenges/${challengeId}`)
+        )),
     ])
 }

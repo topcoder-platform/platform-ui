@@ -14,6 +14,7 @@ import classNames from 'classnames'
 import { TableMobile } from '~/apps/admin/src/lib/components/common/TableMobile'
 import { IsRemovingType } from '~/apps/admin/src/lib/models'
 import { MobileTableColumn } from '~/apps/admin/src/lib/models/MobileTableColumn.model'
+import { getRatingColor } from '~/libs/core'
 import { handleError, useWindowSize, WindowSize } from '~/libs/shared'
 import { IconOutline, Table, TableColumn } from '~/libs/ui'
 
@@ -34,6 +35,7 @@ import {
     aggregateSubmissionReviews,
     challengeHasSubmissionLimit,
     isReviewPhase,
+    isReviewPhaseCurrentlyOpen,
     refreshChallengeReviewData,
     REOPEN_MESSAGE_OTHER,
     REOPEN_MESSAGE_SELF,
@@ -223,6 +225,24 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
         [datas, latestSubmissions, restrictToLatest],
     )
 
+    if (process.env.NODE_ENV !== 'production') {
+        try {
+            console.debug('[TableReview] submissionsForAggregation', submissionsForAggregation.map(submission => ({
+                id: submission.id,
+                reviewResourceId: submission.review?.resourceId,
+                reviewHandle: submission.review?.reviewerHandle,
+                reviewId: submission.review?.id,
+                reviews: submission.reviews?.map(review => ({
+                    resourceId: review.resourceId,
+                    reviewerHandle: review.reviewerHandle,
+                    score: review.score,
+                })),
+            })))
+        } catch {
+            // ignore logging issues
+        }
+    }
+
     const aggregatedSubmissionRows = useMemo<AggregatedSubmissionReviews[]>(() => (
         aggregateSubmissionReviews({
             mappingReviewAppeal,
@@ -274,6 +294,70 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
         ),
         [aggregatedSubmissionRows],
     )
+    interface ReviewerColumnMetadata {
+        label: string
+        renderLabel?: () => JSX.Element
+    }
+    const reviewerColumnMetadata = useMemo<ReviewerColumnMetadata[]>(() => (
+        Array.from({ length: maxReviewCount }, (unused, index) => {
+            const reviewerDetails = aggregatedSubmissionRows
+                .map(aggregated => aggregated.reviews?.[index])
+                .filter((detail): detail is AggregatedReviewDetail => Boolean(detail))
+
+            const resolvedHandle = reviewerDetails
+                .map(detail => detail.reviewerHandle?.trim()
+                    || detail.reviewInfo?.reviewerHandle?.trim()
+                    || undefined)
+                .find((handle): handle is string => Boolean(handle))
+
+            if (!resolvedHandle) {
+                return {
+                    label: `Reviewer ${index + 1}`,
+                }
+            }
+
+            const resolvedRating = reviewerDetails
+                .map(detail => detail.reviewerMaxRating
+                    ?? detail.reviewInfo?.reviewerMaxRating
+                    ?? undefined)
+                .find((rating): rating is number => (
+                    typeof rating === 'number'
+                    && Number.isFinite(rating)
+                ))
+
+            const resolvedColor = reviewerDetails
+                .map(detail => detail.reviewerHandleColor
+                    ?? detail.reviewInfo?.reviewerHandleColor
+                    ?? undefined)
+                .find((color): color is string => Boolean(color))
+
+            const ratingDisplay = resolvedRating !== undefined
+                ? Math.round(resolvedRating)
+                : undefined
+            const baseLabel = ratingDisplay !== undefined
+                ? `${resolvedHandle} (${ratingDisplay})`
+                : resolvedHandle
+
+            const renderLabel = (): JSX.Element => {
+                const color = resolvedColor
+                    ?? (resolvedRating !== undefined
+                        ? getRatingColor(resolvedRating)
+                        : undefined)
+                    ?? '#2a2a2a'
+
+                return (
+                    <span style={{ color }}>
+                        {baseLabel}
+                    </span>
+                )
+            }
+
+            return {
+                label: baseLabel,
+                renderLabel,
+            }
+        })
+    ), [aggregatedSubmissionRows, maxReviewCount])
 
     const [isReopening, setIsReopening] = useState(false)
     const [pendingReopen, setPendingReopen] = useState<PendingReopenState | undefined>(undefined)
@@ -388,14 +472,14 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
         }
 
         const buildPrimaryAction = (): JSX.Element | undefined => {
-            if (!hasReviewRole || !myReviewDetail) {
+            if (!myReviewDetail) {
                 return undefined
             }
 
             const reviewInfo = myReviewDetail.reviewInfo
             const status = (reviewInfo?.status ?? '').toUpperCase()
 
-            if (status === 'COMPLETED' || status === 'SUBMITTED') {
+            if (hasReviewRole && (status === 'COMPLETED' || status === 'SUBMITTED')) {
                 return (
                     <div className={styles.completedAction} key='completed-indicator'>
                         <span className={styles.completedIcon}>
@@ -406,6 +490,10 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
                         </span>
                     </div>
                 )
+            }
+
+            if (!hasReviewRole) {
+                return undefined
             }
 
             const reviewId = reviewInfo?.id ?? myReviewDetail.reviewId
@@ -423,6 +511,50 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
             }
 
             return undefined
+        }
+
+        const buildReopenAction = (): JSX.Element | undefined => {
+            if (!myReviewDetail?.reviewInfo?.id) {
+                return undefined
+            }
+
+            const reviewDetail = myReviewDetail
+            const reviewInfo = reviewDetail.reviewInfo!
+            const status = (reviewInfo.status ?? '').toUpperCase()
+            if (status !== 'COMPLETED') {
+                return undefined
+            }
+
+            if (!isReviewPhaseCurrentlyOpen(challengeInfo, reviewInfo.phaseId)) {
+                return undefined
+            }
+
+            const resourceId = reviewInfo.resourceId ?? reviewDetail.resourceId
+            const isOwnReview = resourceId ? myReviewerResourceIds.has(resourceId) : false
+
+            if (!canManageCompletedReviews && !isOwnReview) {
+                return undefined
+            }
+
+            const reviewId = reviewInfo.id
+            const isPendingReopen = pendingReopen?.review?.reviewInfo?.id === reviewId
+
+            function handleReopenClick(): void {
+                openReopenDialog(submission, reviewDetail)
+            }
+
+            return (
+                <button
+                    key='reopen-review'
+                    type='button'
+                    className={classNames(styles.submit, styles.textBlue)}
+                    onClick={handleReopenClick}
+                    disabled={isReopening && isPendingReopen}
+                >
+                    <i className='icon-reopen' />
+                    Reopen Review
+                </button>
+            )
         }
 
         const historyKeyForRow = getSubmissionHistoryKey(submission.memberId, submission.id)
@@ -453,6 +585,7 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
 
         appendAction(buildPrimaryAction(), 'primary')
         appendAction(buildHistoryAction(), 'history')
+        appendAction(buildReopenAction(), 'reopen')
 
         if (!actionEntries.length) {
             return (
@@ -481,11 +614,16 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
             </span>
         )
     }, [
+        canManageCompletedReviews,
         canViewHistory,
+        challengeInfo,
         handleHistoryButtonClick,
         hasReviewRole,
         historyByMember,
+        isReopening,
         myReviewerResourceIds,
+        openReopenDialog,
+        pendingReopen,
         shouldShowHistoryActions,
     ])
 
@@ -557,10 +695,13 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
         )
 
         for (let index = 0; index < maxReviewCount; index += 1) {
+            const metadata = reviewerColumnMetadata[index] ?? {
+                label: `Reviewer ${index + 1}`,
+            }
             baseColumns.push(
                 {
                     columnId: `reviewer-${index}`,
-                    label: `Reviewer ${index + 1}`,
+                    label: metadata.renderLabel ?? metadata.label,
                     renderer: (submission: SubmissionRow) => renderReviewerCell(submission, index),
                     type: 'element',
                 },
@@ -606,11 +747,48 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
         openReopenDialog,
         challengeInfo,
         pendingReopen,
+        reviewerColumnMetadata,
     ])
 
     const columnsMobile = useMemo<MobileTableColumn<SubmissionRow>[][]>(
         () => columns.map(column => {
-            if (column.label === 'Action' || column.label === 'Actions') {
+            const resolveLabelString = (): string => {
+                if (typeof column.label === 'string') {
+                    return column.label
+                }
+
+                if (typeof column.label === 'function') {
+                    const labelResult = column.label()
+                    if (typeof labelResult === 'string') {
+                        return labelResult
+                    }
+
+                    const columnId = column.columnId ?? ''
+                    if (columnId.startsWith('reviewer-')) {
+                        const reviewerIndexRaw = columnId.split('-')[1]
+                        const reviewerIndex = reviewerIndexRaw
+                            ? Number.parseInt(reviewerIndexRaw, 10)
+                            : NaN
+                        if (!Number.isNaN(reviewerIndex)) {
+                            return reviewerColumnMetadata[reviewerIndex]?.label
+                                ?? `Reviewer ${reviewerIndex + 1}`
+                        }
+
+                        return 'Reviewer'
+                    }
+
+                    return ''
+                }
+
+                return column.label ?? ''
+            }
+
+            const resolvedLabel = resolveLabelString()
+            const labelForAction = typeof column.label === 'string'
+                ? column.label
+                : resolvedLabel
+
+            if (labelForAction === 'Action' || labelForAction === 'Actions') {
                 return [
                     {
                         ...column,
@@ -620,15 +798,17 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
                 ]
             }
 
+            const labelText = resolvedLabel || ''
+
             return [
                 {
                     ...column,
                     className: '',
-                    label: `${column.label as string} label`,
+                    label: labelText ? `${labelText} label` : 'label',
                     mobileType: 'label',
                     renderer: () => (
                         <div>
-                            {column.label as string}
+                            {labelText}
                             :
                         </div>
                     ),
@@ -640,7 +820,7 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
                 },
             ] as MobileTableColumn<SubmissionRow>[]
         }),
-        [columns],
+        [columns, reviewerColumnMetadata],
     )
 
     return (

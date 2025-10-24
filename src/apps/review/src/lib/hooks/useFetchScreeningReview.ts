@@ -980,7 +980,49 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
             return alphaOnly.includes('review') && !alphaOnly.includes('appeal')
         }
 
-        const reviewerRoleId = resourceRoleReviewer?.id
+        const reviewerRoleIds = new Set<string>()
+        const appendRoleId = (roleId?: string | null): void => {
+            if (typeof roleId !== 'string') {
+                return
+            }
+
+            const normalized = roleId.trim()
+            if (!normalized) {
+                return
+            }
+
+            reviewerRoleIds.add(normalized)
+        }
+
+        appendRoleId(resourceRoleReviewer?.id)
+
+        if (challengeReviewers) {
+            challengeReviewers.forEach(reviewer => appendRoleId(reviewer.roleId))
+        }
+
+        if (resources) {
+            resources.forEach(resource => {
+                const normalizedRoleName = normalizeRoleName(resource.roleName)
+                if (isReviewerRoleName(normalizedRoleName)) {
+                    appendRoleId(resource.roleId)
+                }
+            })
+        }
+
+        const roleIdMatches = (roleId?: string | null): boolean => {
+            if (!roleId) {
+                return false
+            }
+
+            const normalized = `${roleId}`.trim()
+            if (!normalized) {
+                return false
+            }
+
+            return reviewerRoleIds.size
+                ? reviewerRoleIds.has(normalized)
+                : normalized === (resourceRoleReviewer?.id ?? '')
+        }
 
         if (challengeReviewers && challengeReviewers.length) {
             const reviewerRoleResources = filter(
@@ -988,9 +1030,7 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
                 reviewer => {
                     const normalizedRoleName = normalizeRoleName(reviewer.roleName)
                     const matchesRoleName = isReviewerRoleName(normalizedRoleName)
-                    const matchesRoleId = !normalizedRoleName && reviewerRoleId
-                        ? reviewer.roleId === reviewerRoleId
-                        : false
+                    const matchesRoleId = roleIdMatches(reviewer.roleId)
                     return matchesRoleName || matchesRoleId
                 },
             )
@@ -1014,9 +1054,7 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
                 .filter(resource => {
                     const normalizedRoleName = normalizeRoleName(resource.roleName)
                     const matchesRoleName = isReviewerRoleName(normalizedRoleName)
-                    const matchesRoleId = !normalizedRoleName && reviewerRoleId
-                        ? resource.roleId === reviewerRoleId
-                        : false
+                    const matchesRoleId = roleIdMatches(resource.roleId)
                     const matchesCurrentReviewer = actionChallengeRole !== REVIEWER
                         || `${resource.memberId ?? ''}` === `${loginUserInfo?.userId ?? ''}`
                     return (matchesRoleName || matchesRoleId) && matchesCurrentReviewer
@@ -1027,18 +1065,21 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
 
         reviewerResourceIds.forEach(id => fallbackResults.add(id))
 
+        const shouldRestrictToKnownResources = reviewerResourceIds.size > 0
+            && actionChallengeRole === REVIEWER
+
         forEach(visibleChallengeSubmissions, challengeSubmission => {
             forEach(challengeSubmission.review, review => {
-                if (!isPhaseAllowedForReview(review.phaseName)) {
+                if (!isPhaseAllowedForReview(review?.phaseName)) {
                     return
                 }
 
-                const resourceId = review.resourceId
+                const resourceId = review?.resourceId
                 if (!resourceId) {
                     return
                 }
 
-                if (reviewerResourceIds.size && !reviewerResourceIds.has(resourceId)) {
+                if (shouldRestrictToKnownResources && !reviewerResourceIds.has(resourceId)) {
                     return
                 }
 
@@ -1046,7 +1087,15 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
             })
         })
 
-        return Array.from(fallbackResults)
+        const resolvedReviewerIds = Array.from(fallbackResults)
+
+        debugLog('reviewerIds', {
+            challengeId,
+            reviewerCount: resolvedReviewerIds.length,
+            reviewerIds: resolvedReviewerIds,
+        })
+
+        return resolvedReviewerIds
 
     }, [
         challengeReviewers,
@@ -1055,6 +1104,7 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
         loginUserInfo,
         resources,
         resourceRoleReviewer,
+        challengeId,
     ])
 
     // fetch appeal response
@@ -1275,6 +1325,23 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
         },
         [challengeReviews, reviewerIds],
     )
+
+    const reviewAssignmentSummary = useMemo(
+        () => Object.entries(reviewAssignmentsBySubmission)
+            .map(
+                ([submissionId, reviewerMapping]) => ({
+                    reviewerIds: Object.keys(reviewerMapping),
+                    submissionId,
+                }),
+            ),
+        [reviewAssignmentsBySubmission],
+    )
+
+    debugLog('reviewAssignments', {
+        assignments: reviewAssignmentSummary,
+        challengeId,
+        submissionCount: reviewAssignmentSummary.length,
+    })
 
     // get screening data from challenge submissions
     const screening = useMemo(
@@ -2065,7 +2132,26 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
         const validReviews: BackendSubmission[] = []
         // Only show CONTEST_SUBMISSION on Review tabs
         forEach(contestSubmissions, challengeSubmission => {
-            forEach(reviewerIds, reviewerId => {
+            const normalizedReviewerIds = new Set<string>()
+            const combinedReviewerIds: string[] = []
+            const appendReviewerId = (value?: string | null): void => {
+                if (typeof value !== 'string') {
+                    return
+                }
+
+                const normalized = value.trim()
+                if (!normalized || normalizedReviewerIds.has(normalized)) {
+                    return
+                }
+
+                normalizedReviewerIds.add(normalized)
+                combinedReviewerIds.push(normalized)
+            }
+
+            reviewerIds.forEach(appendReviewerId)
+            forEach(challengeSubmission.review, reviewEntry => appendReviewerId(reviewEntry?.resourceId))
+
+            forEach(combinedReviewerIds, reviewerId => {
                 const matchingReview
                     = challengeSubmission.reviewResourceMapping?.[reviewerId]
                 const assignmentReview
@@ -2074,21 +2160,19 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
                 let reviewForResource = matchingReview
 
                 if (assignmentReview) {
-                    if (reviewForResource) {
-                        reviewForResource = {
-                            ...reviewForResource,
-                            committed: assignmentReview.committed,
-                            id: assignmentReview.id,
-                            reviewerHandle: assignmentReview.reviewerHandle,
-                            reviewerMaxRating: assignmentReview.reviewerMaxRating,
-                            status: assignmentReview.status,
-                            submissionId: assignmentReview.submissionId,
-                        }
-                    } else {
-                        reviewForResource = {
-                            ...assignmentReview,
-                            reviewItems: assignmentReview.reviewItems ?? [],
-                        }
+                    const existingReviewItems = reviewForResource?.reviewItems
+                    reviewForResource = {
+                        ...(reviewForResource ?? {}),
+                        ...assignmentReview,
+                        resourceId: assignmentReview.resourceId
+                            ?? reviewForResource?.resourceId
+                            ?? reviewerId,
+                        reviewItems: existingReviewItems?.length
+                            ? existingReviewItems
+                            : assignmentReview.reviewItems ?? [],
+                        submissionId: assignmentReview.submissionId
+                            ?? reviewForResource?.submissionId
+                            ?? challengeSubmission.id,
                     }
                 }
 
@@ -2100,6 +2184,19 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
                     }
                     reviewForResource = emptyReview
                 }
+
+                debugLog('reviewEntry', {
+                    challengeId,
+                    finalScore: reviewForResource?.finalScore,
+                    origin: assignmentReview
+                        ? (matchingReview ? 'assignment+existing' : 'assignment')
+                        : (matchingReview ? 'existing' : 'empty'),
+                    reviewerHandle: reviewForResource?.reviewerHandle,
+                    reviewerId,
+                    reviewId: reviewForResource?.id,
+                    status: reviewForResource?.status,
+                    submissionId: challengeSubmission.id,
+                })
 
                 validReviews.push({
                     ...challengeSubmission,
@@ -2113,6 +2210,16 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
         })
         return validReviews.map(item => {
             const result = convertBackendSubmissionToSubmissionInfo(item)
+
+            debugLog('reviewSubmissionInfo', {
+                challengeId,
+                submissionId: result.id,
+                reviewerId: result.review?.resourceId,
+                reviewerHandle: result.review?.reviewerHandle,
+                reviewId: result.review?.id,
+                finalScore: result.review?.finalScore,
+            })
+
             return {
                 ...result,
                 userInfo: resourceMemberIdMapping[result.memberId],

@@ -135,7 +135,23 @@ export function aggregateSubmissionReviews({
         const reviewInfo: ReviewInfo | undefined = submission.review
         const reviewId = reviewInfo?.id
         const resourceId = reviewInfo?.resourceId
+        const matchingReviewResult = resourceId
+            ? find(submission.reviews, reviewResult => reviewResult.resourceId === resourceId)
+            : undefined
         if (!reviewId) {
+            if (process.env.NODE_ENV !== 'production') {
+                try {
+                    console.debug('[aggregateSubmissionReviews] skipped review without id', {
+                        resourceId,
+                        reviewInfo,
+                        reviewResult: matchingReviewResult,
+                        submissionId: submission.id,
+                    })
+                } catch {
+                    // ignore logging failures
+                }
+            }
+
             return
         }
 
@@ -156,10 +172,6 @@ export function aggregateSubmissionReviews({
                 : undefined
         const reviewDateString = reviewInfo?.reviewDateString
             ?? reviewInfo?.updatedAtString
-
-        const matchingReviewResult = resourceId
-            ? find(submission.reviews, reviewResult => reviewResult.resourceId === resourceId)
-            : undefined
 
         const reviewHandle = reviewInfo?.reviewerHandle?.trim() || undefined
         const resultHandle = matchingReviewResult?.reviewerHandle?.trim() || undefined
@@ -387,6 +399,24 @@ export function aggregateSubmissionReviews({
             submitterMaxRating,
         })
     })
+
+    if (process.env.NODE_ENV !== 'production') {
+        try {
+            console.debug('[aggregateSubmissionReviews] summaries', aggregatedRows.map(row => ({
+                reviews: row.reviews.map(review => ({
+                    finalScore: review.finalScore
+                        ?? review.reviewInfo?.finalScore,
+                    resourceId: review.resourceId,
+                    reviewerHandle: review.reviewerHandle
+                        ?? review.reviewInfo?.reviewerHandle,
+                    reviewId: review.reviewId ?? review.reviewInfo?.id,
+                })),
+                submissionId: row.id,
+            })))
+        } catch {
+            // ignore logging errors
+        }
+    }
 
     return aggregatedRows
 }
