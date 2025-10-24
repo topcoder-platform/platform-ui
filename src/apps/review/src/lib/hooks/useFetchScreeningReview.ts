@@ -25,6 +25,7 @@ import {
     SubmissionInfo,
 } from '../models'
 import { fetchChallengeReviews } from '../services'
+import { registerChallengeReviewKey } from '../utils/reviewCacheRegistry'
 
 import { useFetchAppealQueue, useFetchAppealQueueProps } from './useFetchAppealQueue'
 import { useFetchChallengeSubmissions, useFetchChallengeSubmissionsProps } from './useFetchChallengeSubmissions'
@@ -1087,15 +1088,7 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
             })
         })
 
-        const resolvedReviewerIds = Array.from(fallbackResults)
-
-        debugLog('reviewerIds', {
-            challengeId,
-            reviewerCount: resolvedReviewerIds.length,
-            reviewerIds: resolvedReviewerIds,
-        })
-
-        return resolvedReviewerIds
+        return Array.from(fallbackResults)
 
     }, [
         challengeReviewers,
@@ -1134,6 +1127,14 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
                 || (!reviewerIds.length && actionChallengeRole !== SUBMITTER),
         },
     )
+
+    useEffect(() => {
+        if (!challengeId) {
+            return
+        }
+
+        registerChallengeReviewKey(challengeId, `reviewBaseUrl/reviews/${challengeId}/${reviewerKey}`)
+    }, [challengeId, reviewerKey])
 
     const challengeReviews = useMemo(
         () => challengeReviewsData,
@@ -1325,23 +1326,6 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
         },
         [challengeReviews, reviewerIds],
     )
-
-    const reviewAssignmentSummary = useMemo(
-        () => Object.entries(reviewAssignmentsBySubmission)
-            .map(
-                ([submissionId, reviewerMapping]) => ({
-                    reviewerIds: Object.keys(reviewerMapping),
-                    submissionId,
-                }),
-            ),
-        [reviewAssignmentsBySubmission],
-    )
-
-    debugLog('reviewAssignments', {
-        assignments: reviewAssignmentSummary,
-        challengeId,
-        submissionCount: reviewAssignmentSummary.length,
-    })
 
     // get screening data from challenge submissions
     const screening = useMemo(
@@ -2185,19 +2169,6 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
                     reviewForResource = emptyReview
                 }
 
-                debugLog('reviewEntry', {
-                    challengeId,
-                    finalScore: reviewForResource?.finalScore,
-                    origin: assignmentReview
-                        ? (matchingReview ? 'assignment+existing' : 'assignment')
-                        : (matchingReview ? 'existing' : 'empty'),
-                    reviewerHandle: reviewForResource?.reviewerHandle,
-                    reviewerId,
-                    reviewId: reviewForResource?.id,
-                    status: reviewForResource?.status,
-                    submissionId: challengeSubmission.id,
-                })
-
                 validReviews.push({
                     ...challengeSubmission,
                     review: [reviewForResource],
@@ -2210,15 +2181,6 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
         })
         return validReviews.map(item => {
             const result = convertBackendSubmissionToSubmissionInfo(item)
-
-            debugLog('reviewSubmissionInfo', {
-                challengeId,
-                submissionId: result.id,
-                reviewerId: result.review?.resourceId,
-                reviewerHandle: result.review?.reviewerHandle,
-                reviewId: result.review?.id,
-                finalScore: result.review?.finalScore,
-            })
 
             return {
                 ...result,

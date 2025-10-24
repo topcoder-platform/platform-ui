@@ -1,4 +1,7 @@
 import { mutate } from 'swr'
+import qs from 'qs'
+
+import { getChallengeReviewKeys } from './reviewCacheRegistry'
 
 /**
  * Confirmation text shown when reopening your own scorecard.
@@ -24,15 +27,21 @@ export const refreshChallengeReviewData = async (challengeId?: string): Promise<
         return
     }
 
-    await Promise.all([
-        mutate((key: unknown) => (
-            typeof key === 'string'
-            && key.startsWith(`reviewBaseUrl/reviews/${challengeId}/`)
-        )),
-        mutate(`reviewBaseUrl/submissions/${challengeId}`),
-        mutate((key: unknown) => (
-            typeof key === 'string'
-            && key.startsWith(`challengeBaseUrl/challenges/${challengeId}`)
-        )),
+    const registeredReviewKeys = getChallengeReviewKeys(challengeId)
+    const reviewListKey = `reviewBaseUrl/reviews?${qs.stringify({
+        challengeId,
+        page: 1,
+        perPage: 1000,
+    })}`
+
+    const keysToRevalidate = new Set<string>([
+        ...registeredReviewKeys,
+        reviewListKey,
+        `reviewBaseUrl/challengeReviews/${challengeId}`,
+        `reviewBaseUrl/submissions/${challengeId}`,
+        `challengeBaseUrl/challenges/${challengeId}`,
     ])
+
+    await Promise.all(Array.from(keysToRevalidate)
+        .map(key => mutate(key)))
 }

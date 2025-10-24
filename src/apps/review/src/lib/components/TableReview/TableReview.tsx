@@ -14,7 +14,6 @@ import classNames from 'classnames'
 import { TableMobile } from '~/apps/admin/src/lib/components/common/TableMobile'
 import { IsRemovingType } from '~/apps/admin/src/lib/models'
 import { MobileTableColumn } from '~/apps/admin/src/lib/models/MobileTableColumn.model'
-import { getRatingColor } from '~/libs/core'
 import { handleError, useWindowSize, WindowSize } from '~/libs/shared'
 import { IconOutline, Table, TableColumn } from '~/libs/ui'
 
@@ -225,24 +224,6 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
         [datas, latestSubmissions, restrictToLatest],
     )
 
-    if (process.env.NODE_ENV !== 'production') {
-        try {
-            console.debug('[TableReview] submissionsForAggregation', submissionsForAggregation.map(submission => ({
-                id: submission.id,
-                reviewResourceId: submission.review?.resourceId,
-                reviewHandle: submission.review?.reviewerHandle,
-                reviewId: submission.review?.id,
-                reviews: submission.reviews?.map(review => ({
-                    resourceId: review.resourceId,
-                    reviewerHandle: review.reviewerHandle,
-                    score: review.score,
-                })),
-            })))
-        } catch {
-            // ignore logging issues
-        }
-    }
-
     const aggregatedSubmissionRows = useMemo<AggregatedSubmissionReviews[]>(() => (
         aggregateSubmissionReviews({
             mappingReviewAppeal,
@@ -299,65 +280,10 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
         renderLabel?: () => JSX.Element
     }
     const reviewerColumnMetadata = useMemo<ReviewerColumnMetadata[]>(() => (
-        Array.from({ length: maxReviewCount }, (unused, index) => {
-            const reviewerDetails = aggregatedSubmissionRows
-                .map(aggregated => aggregated.reviews?.[index])
-                .filter((detail): detail is AggregatedReviewDetail => Boolean(detail))
-
-            const resolvedHandle = reviewerDetails
-                .map(detail => detail.reviewerHandle?.trim()
-                    || detail.reviewInfo?.reviewerHandle?.trim()
-                    || undefined)
-                .find((handle): handle is string => Boolean(handle))
-
-            if (!resolvedHandle) {
-                return {
-                    label: `Reviewer ${index + 1}`,
-                }
-            }
-
-            const resolvedRating = reviewerDetails
-                .map(detail => detail.reviewerMaxRating
-                    ?? detail.reviewInfo?.reviewerMaxRating
-                    ?? undefined)
-                .find((rating): rating is number => (
-                    typeof rating === 'number'
-                    && Number.isFinite(rating)
-                ))
-
-            const resolvedColor = reviewerDetails
-                .map(detail => detail.reviewerHandleColor
-                    ?? detail.reviewInfo?.reviewerHandleColor
-                    ?? undefined)
-                .find((color): color is string => Boolean(color))
-
-            const ratingDisplay = resolvedRating !== undefined
-                ? Math.round(resolvedRating)
-                : undefined
-            const baseLabel = ratingDisplay !== undefined
-                ? `${resolvedHandle} (${ratingDisplay})`
-                : resolvedHandle
-
-            const renderLabel = (): JSX.Element => {
-                const color = resolvedColor
-                    ?? (resolvedRating !== undefined
-                        ? getRatingColor(resolvedRating)
-                        : undefined)
-                    ?? '#2a2a2a'
-
-                return (
-                    <span style={{ color }}>
-                        {baseLabel}
-                    </span>
-                )
-            }
-
-            return {
-                label: baseLabel,
-                renderLabel,
-            }
-        })
-    ), [aggregatedSubmissionRows, maxReviewCount])
+        Array.from({ length: maxReviewCount }, (_unused, index) => ({
+            label: `Reviewer ${index + 1}`,
+        }))
+    ), [maxReviewCount])
 
     const [isReopening, setIsReopening] = useState(false)
     const [pendingReopen, setPendingReopen] = useState<PendingReopenState | undefined>(undefined)

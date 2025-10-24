@@ -247,71 +247,9 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
         ),
         [challengeInfo?.phases],
     )
-    const disallowedReviewSets = useMemo<{
-        disallowedReviewIds: Set<string>
-        disallowedReviewPhaseIds: Set<string>
-    }>(
-        () => {
-            const reviewIds = new Set<string>()
-            const phaseIds = new Set<string>()
-            const addReviewId = (id?: string): void => {
-                if (id) {
-                    reviewIds.add(id)
-                }
-            }
-
-            const addPhaseId = (id?: string): void => {
-                if (id) {
-                    phaseIds.add(id)
-                }
-            }
-
-            props.screening.forEach(entry => {
-                addReviewId(entry.reviewId)
-                addPhaseId(entry.reviewPhaseId)
-            })
-            props.checkpoint.forEach(entry => {
-                addReviewId(entry.reviewId)
-                addPhaseId(entry.reviewPhaseId)
-            })
-            props.checkpointReview.forEach(entry => {
-                addReviewId(entry.reviewId)
-                addPhaseId(entry.reviewPhaseId)
-            })
-
-            return {
-                disallowedReviewIds: reviewIds,
-                disallowedReviewPhaseIds: phaseIds,
-            }
-        },
-        [props.screening, props.checkpoint, props.checkpointReview],
-    )
-    const {
-        disallowedReviewIds,
-        disallowedReviewPhaseIds,
-    }: {
-        disallowedReviewIds: Set<string>
-        disallowedReviewPhaseIds: Set<string>
-    } = disallowedReviewSets
     const passesReviewTabGuards: (submission: SubmissionInfo) => boolean = useMemo(
-        () => (submission: SubmissionInfo): boolean => {
-            if (!shouldIncludeInReviewPhase(submission)) {
-                return false
-            }
-
-            const reviewId = submission.review?.id
-            if (reviewId && disallowedReviewIds.has(reviewId)) {
-                return false
-            }
-
-            const reviewPhaseId = submission.review?.phaseId
-            if (reviewPhaseId && disallowedReviewPhaseIds.has(reviewPhaseId)) {
-                return false
-            }
-
-            return true
-        },
-        [disallowedReviewIds, disallowedReviewPhaseIds],
+        () => (submission: SubmissionInfo): boolean => shouldIncludeInReviewPhase(submission),
+        [],
     )
     const {
         reviews: reviewTabReviews,
