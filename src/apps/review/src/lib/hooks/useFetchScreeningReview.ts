@@ -32,22 +32,51 @@ import { useFetchChallengeSubmissions, useFetchChallengeSubmissionsProps } from 
 import { useRole, useRoleProps } from './useRole'
 
 /**
- * DEBUG_CHECKPOINT_PHASES instrumentation coordinates verbose logging for checkpoint screening analysis.
- * Set `DEBUG_CHECKPOINT_PHASES=true` in the environment configuration to enable this diagnostic output.
- * When enabled the hook logs:
- * - Phase metadata resolution: scorecard ids, phase ids, and which data source satisfied the lookup.
- * - Review matching decisions: every invocation of `reviewMatchesPhase` with criterion-level outcomes.
- * - Checkpoint collection: detailed review-to-submission mappings for Screening and Review checkpoints.
- * - Cross-tab validation: overlaps or mismatches between checkpoint and checkpoint review datasets.
- * Use these logs to trace why a review appears on a specific tab and to spot substring collisions.
- * Known caveat: substring matching inside `reviewMatchesPhase` can miscategorize phases with similar names.
+ * DEBUG_CHECKPOINT_PHASES instrumentation coordinates additional checkpoint screening diagnostics.
+ * Historically the flag enabled verbose console logging, but the logging side effects have been removed.
+ * The flag remains so that ad-hoc debugging can still be enabled without forking behaviour for end users.
  */
 const DEBUG_CHECKPOINT_PHASES = Boolean(
     (EnvironmentConfig as unknown as { DEBUG_CHECKPOINT_PHASES?: boolean }).DEBUG_CHECKPOINT_PHASES,
 )
 
-const LOG_PREFIX = '[useFetchScreeningReview]'
 const MAX_DEBUG_METADATA_LENGTH = 200
+const MAX_CHECKPOINT_DEBUG_ENTRIES = 60
+const CHECKPOINT_DEBUG_EXPORT_KEY = '__TC_REVIEW_SCREENING_DEBUG__'
+
+type CheckpointDebugEntry = {
+    level: 'debug' | 'warn'
+    namespace: string
+    payload: unknown
+}
+
+const checkpointDebugEntries: CheckpointDebugEntry[] = []
+
+function exportCheckpointLogs(): void {
+    if (typeof globalThis !== 'object') {
+        return
+    }
+
+    const globalTarget = globalThis as Record<string, unknown>
+    globalTarget[CHECKPOINT_DEBUG_EXPORT_KEY] = [...checkpointDebugEntries]
+}
+
+function recordCheckpointLog(
+    level: CheckpointDebugEntry['level'],
+    namespace: string,
+    payload: unknown,
+): void {
+    if (!DEBUG_CHECKPOINT_PHASES) {
+        return
+    }
+
+    checkpointDebugEntries.push({ level, namespace, payload })
+    if (checkpointDebugEntries.length > MAX_CHECKPOINT_DEBUG_ENTRIES) {
+        checkpointDebugEntries.shift()
+    }
+
+    exportCheckpointLogs()
+}
 
 function truncateForLog(value: string | undefined, maxLength: number = MAX_DEBUG_METADATA_LENGTH): string {
     if (!value) {
@@ -62,19 +91,11 @@ function truncateForLog(value: string | undefined, maxLength: number = MAX_DEBUG
 }
 
 function debugLog(namespace: string, payload: unknown): void {
-    if (!DEBUG_CHECKPOINT_PHASES) {
-        return
-    }
-
-    console.debug(`${LOG_PREFIX} ${namespace}`, payload)
+    recordCheckpointLog('debug', namespace, payload)
 }
 
 function warnLog(namespace: string, payload: unknown): void {
-    if (!DEBUG_CHECKPOINT_PHASES) {
-        return
-    }
-
-    console.warn(`${LOG_PREFIX} ${namespace}`, payload)
+    recordCheckpointLog('warn', namespace, payload)
 }
 
 type ReviewerPhaseConfig = {
@@ -851,6 +872,95 @@ function reviewMatchesPhase(
     return result
 }
 
+type ReviewResolutionParams = {
+    assignmentReview?: BackendReview
+    challengeSubmission: BackendSubmission
+    matchingReview?: BackendReview
+    reviewerId: string
+}
+
+type BuildReviewForResourceParams = ReviewResolutionParams & {
+    challengeReviewById: Map<string, BackendReview>
+}
+
+const pickNormalizedString = (value?: string | null): string | undefined => {
+    if (typeof value !== 'string') {
+        return undefined
+    }
+
+    const trimmed = value.trim()
+    return trimmed.length > 0 ? trimmed : undefined
+}
+
+function resolveBaseReviewForResource({
+    assignmentReview,
+    challengeSubmission,
+    matchingReview,
+    reviewerId,
+}: ReviewResolutionParams): BackendReview {
+    let reviewForResource = matchingReview
+
+    if (assignmentReview) {
+        const existingReviewItems = reviewForResource?.reviewItems
+        reviewForResource = {
+            ...(reviewForResource ?? {}),
+            ...assignmentReview,
+            resourceId: assignmentReview.resourceId
+                ?? reviewForResource?.resourceId
+                ?? reviewerId,
+            reviewItems: existingReviewItems?.length
+                ? existingReviewItems
+                : assignmentReview.reviewItems ?? [],
+            submissionId: assignmentReview.submissionId
+                ?? reviewForResource?.submissionId
+                ?? challengeSubmission.id,
+        }
+    }
+
+    if (reviewForResource) {
+        return reviewForResource
+    }
+
+    return {
+        ...createEmptyBackendReview(),
+        resourceId: reviewerId,
+        submissionId: challengeSubmission.id,
+    }
+}
+
+function applyCanonicalDetails(
+    reviewForResource: BackendReview,
+    challengeReviewById: Map<string, BackendReview>,
+): BackendReview {
+    const canonicalReview = reviewForResource.id
+        ? challengeReviewById.get(reviewForResource.id)
+        : undefined
+
+    const preferredPhaseName = pickNormalizedString(reviewForResource.phaseName)
+        ?? pickNormalizedString(canonicalReview?.phaseName)
+    const preferredTypeId = pickNormalizedString(reviewForResource.typeId)
+        ?? pickNormalizedString(canonicalReview?.typeId)
+
+    const normalizedReview: BackendReview = {
+        ...reviewForResource,
+    }
+
+    if (preferredPhaseName) {
+        normalizedReview.phaseName = preferredPhaseName
+    }
+
+    if (preferredTypeId) {
+        normalizedReview.typeId = preferredTypeId
+    }
+
+    return normalizedReview
+}
+
+function buildReviewForResource(params: BuildReviewForResourceParams): BackendReview {
+    const baseReview = resolveBaseReviewForResource(params)
+    return applyCanonicalDetails(baseReview, params.challengeReviewById)
+}
+
 export interface useFetchScreeningReviewProps {
     mappingReviewAppeal: MappingReviewAppeal // from review id to appeal info
     // screening data
@@ -1141,6 +1251,19 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
         [challengeReviewsData],
     )
 
+    const challengeReviewById = useMemo(() => {
+        const map = new Map<string, BackendReview>()
+        if (challengeReviews && challengeReviews.length) {
+            forEach(challengeReviews, reviewEntry => {
+                if (reviewEntry?.id) {
+                    map.set(reviewEntry.id, reviewEntry)
+                }
+            })
+        }
+
+        return map
+    }, [challengeReviews])
+
     // Resolve scorecard ids and phase ids for Screening / Checkpoint phases
     const screeningPhaseMeta = useMemo(
         () => resolvePhaseMeta(
@@ -1195,53 +1318,6 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
     )
     const checkpointReviewScorecardId = checkpointReviewPhaseMeta.scorecardId
     const checkpointReviewPhaseIds = checkpointReviewPhaseMeta.phaseIds
-
-    useEffect(() => {
-        if (!debugCheckpointPhases) {
-            return
-        }
-
-        const summary = (
-            scorecardId: string | undefined,
-            phaseIds: Set<string>,
-            label: string,
-        ): {
-            label: string
-            matches: number
-            phaseIds: string[]
-            scorecardId: string | undefined
-        } => ({
-            label,
-            matches: (challengeReviews ?? []).filter(review => (
-                reviewMatchesPhase(review, scorecardId, phaseIds, label)
-            )).length,
-            phaseIds: Array.from(phaseIds.values()),
-            scorecardId,
-        })
-
-        console.debug('[useFetchScreeningReview] phase meta', {
-            checkpointReview: summary(
-                checkpointReviewScorecardId,
-                checkpointReviewPhaseIds,
-                'Checkpoint Review',
-            ),
-            checkpointScreening: summary(
-                checkpointScreeningScorecardId,
-                checkpointScreeningPhaseIds,
-                'Checkpoint Screening',
-            ),
-            screening: summary(screeningScorecardId, screeningPhaseIds, 'Screening'),
-        })
-    }, [
-        checkpointReviewPhaseIds,
-        checkpointReviewScorecardId,
-        checkpointScreeningPhaseIds,
-        checkpointScreeningScorecardId,
-        challengeReviews,
-        debugCheckpointPhases,
-        screeningPhaseIds,
-        screeningScorecardId,
-    ])
 
     // Fetch minimumPassingScore for screening and checkpoint review scorecards
     type ScorecardBase = { id: string; minimumPassingScore: number | null }
@@ -2143,40 +2219,20 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
                 const assignmentReview
                     = reviewAssignmentsBySubmission[challengeSubmission.id]?.[reviewerId]
 
-                let reviewForResource = matchingReview
-
-                if (assignmentReview) {
-                    const existingReviewItems = reviewForResource?.reviewItems
-                    reviewForResource = {
-                        ...(reviewForResource ?? {}),
-                        ...assignmentReview,
-                        resourceId: assignmentReview.resourceId
-                            ?? reviewForResource?.resourceId
-                            ?? reviewerId,
-                        reviewItems: existingReviewItems?.length
-                            ? existingReviewItems
-                            : assignmentReview.reviewItems ?? [],
-                        submissionId: assignmentReview.submissionId
-                            ?? reviewForResource?.submissionId
-                            ?? challengeSubmission.id,
-                    }
-                }
-
-                if (!reviewForResource) {
-                    const emptyReview = {
-                        ...createEmptyBackendReview(),
-                        resourceId: reviewerId,
-                        submissionId: challengeSubmission.id,
-                    }
-                    reviewForResource = emptyReview
-                }
+                const normalizedReviewForResource = buildReviewForResource({
+                    assignmentReview,
+                    challengeReviewById,
+                    challengeSubmission,
+                    matchingReview,
+                    reviewerId,
+                })
 
                 validReviews.push({
                     ...challengeSubmission,
-                    review: [reviewForResource],
+                    review: [normalizedReviewForResource],
                     reviewResourceMapping: {
                         ...(challengeSubmission.reviewResourceMapping ?? {}),
-                        [reviewerId]: reviewForResource,
+                        [reviewerId]: normalizedReviewForResource,
                     },
                 })
             })
@@ -2190,6 +2246,7 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
             }
         })
     }, [
+        challengeReviewById,
         contestSubmissions,
         resourceMemberIdMapping,
         reviewerIds,

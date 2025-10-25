@@ -186,6 +186,8 @@ export interface ReviewInfo {
     reviewProgress?: number // this field is calculated at frontend
     scorecardId: string
     phaseId?: string
+    phaseName?: string
+    reviewType?: string
     metadata?: Record<string, unknown>
     resourceId: string
     submissionId?: string
@@ -285,6 +287,7 @@ export function convertBackendReviewToReviewInfo(
         initialScore,
         metadata,
         phaseId: data.phaseId,
+        phaseName: typeof data.phaseName === 'string' ? data.phaseName : undefined,
         resourceId: data.resourceId,
         reviewDate,
         reviewDateString: formatOptionalDateString(reviewDate),
@@ -295,6 +298,7 @@ export function convertBackendReviewToReviewInfo(
         reviewerMaxRating,
         reviewItems: reviewItemsInfo,
         reviewProgress: calculateReviewProgress(reviewItems),
+        reviewType: typeof data.reviewType === 'string' ? data.reviewType : undefined,
         scorecardId: data.scorecardId ?? '',
         status: data.status,
         submissionId: data.submissionId,
