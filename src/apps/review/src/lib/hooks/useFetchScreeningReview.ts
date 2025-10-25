@@ -6,7 +6,14 @@ import { EnvironmentConfig } from '~/config'
 import { getRatingColor, xhrGetAsync } from '~/libs/core'
 import { handleError } from '~/libs/shared'
 
-import { DESIGN, REVIEWER, SUBMITTER } from '../../config/index.config'
+import {
+    ADMIN,
+    COPILOT,
+    DESIGN,
+    MANAGER,
+    REVIEWER,
+    SUBMITTER,
+} from '../../config/index.config'
 import { ChallengeDetailContext, ReviewAppContext } from '../contexts'
 import {
     BackendPhase,
@@ -1225,6 +1232,37 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
         [reviewerIds],
     )
 
+    const shouldForceReviewFetch = useMemo(
+        () => {
+            const normalizedActionRole = actionChallengeRole ?? ''
+
+            if (
+                normalizedActionRole === SUBMITTER
+                || normalizedActionRole === REVIEWER
+                || normalizedActionRole === COPILOT
+                || normalizedActionRole === ADMIN
+                || normalizedActionRole === MANAGER
+            ) {
+                return true
+            }
+
+            return (myResources ?? []).some(resource => {
+                const normalizedRoleName = (resource.roleName ?? '').toLowerCase()
+
+                if (!normalizedRoleName) {
+                    return false
+                }
+
+                return normalizedRoleName.includes('screener')
+                    || normalizedRoleName.includes('reviewer')
+                    || normalizedRoleName.includes('copilot')
+                    || normalizedRoleName.includes('admin')
+                    || normalizedRoleName.includes('manager')
+            })
+        },
+        [actionChallengeRole, myResources],
+    )
+
     const {
         data: challengeReviewsData,
         error: fetchChallengeReviewsError,
@@ -1234,7 +1272,7 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
         {
             fetcher: () => fetchChallengeReviews(challengeId ?? ''),
             isPaused: () => !challengeId
-                || (!reviewerIds.length && actionChallengeRole !== SUBMITTER),
+                || (!reviewerIds.length && !shouldForceReviewFetch),
         },
     )
 
@@ -1518,6 +1556,7 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
             screeningScorecardId,
             contestSubmissions,
             resources,
+            myResources,
         ],
     )
 
