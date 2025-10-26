@@ -264,29 +264,9 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         submitterReviews,
     }: useFetchScreeningReviewProps = useFetchScreeningReview()
 
-    const userSubmissions = useMemo(
-        () => {
-            if (isLoadingChallengeSubmissions) {
-                return []
-            }
-
-            const userId = loginUserInfo?.userId
-
-            if (typeof userId === 'undefined' || userId === null) {
-                return []
-            }
-
-            const memberId = String(userId)
-
-            return challengeSubmissions.filter(submission => {
-                if (submission?.memberId === undefined || submission?.memberId === null) {
-                    return false
-                }
-
-                return String(submission.memberId) === memberId
-            })
-        },
-        [challengeSubmissions, isLoadingChallengeSubmissions, loginUserInfo?.userId],
+    const visibleSubmissions = useMemo(
+        () => (isLoadingChallengeSubmissions ? [] : challengeSubmissions),
+        [challengeSubmissions, isLoadingChallengeSubmissions],
     )
 
     const [tabItems, setTabItems] = useState<SelectOption[]>([])
@@ -1786,7 +1766,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                                 selectedTab={selectedTab}
                                 isLoadingSubmission={isLoadingSubmission}
                                 screening={screening}
-                                submissions={userSubmissions}
+                                submissions={visibleSubmissions}
                                 checkpoint={checkpoint}
                                 checkpointReview={checkpointReview}
                                 review={review}

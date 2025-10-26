@@ -224,8 +224,6 @@ export function renderReviewScoreCell(
         canDisplayScores,
         canViewScorecard,
         viewOwnScorecardTooltip = VIEW_OWN_SCORECARD_TOOLTIP,
-        isAppealsTab,
-        getReviewUrl,
     }: ScoreVisibilityConfig = configWithDefaults
 
     if (!canDisplayScores(submission)) {
@@ -281,22 +279,6 @@ export function renderReviewScoreCell(
                 </span>
             </Tooltip>
         )
-    }
-
-    if (isAppealsTab) {
-        const reviewDetail = submission.aggregated?.reviews?.[0]
-        const reviewId = reviewDetail?.reviewInfo?.id || reviewDetail?.reviewId
-        if (reviewId) {
-            const reviewUrl = getReviewUrl ? getReviewUrl(reviewId) : getReviewRoute(reviewId)
-            return (
-                <Link
-                    to={reviewUrl}
-                    className={styles.textBlue}
-                >
-                    {rawScoreDisplay}
-                </Link>
-            )
-        }
     }
 
     return <span>{rawScoreDisplay}</span>

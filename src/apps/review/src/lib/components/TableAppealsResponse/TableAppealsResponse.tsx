@@ -105,6 +105,7 @@ export const TableAppealsResponse: FC<TableAppealsResponseProps> = (props: Table
     const canViewAsReviewer = hasReviewerRole
     const canViewAsSubmitter = hasSubmitterRole
     const canRender = canViewAllAppeals || canViewAsReviewer || canViewAsSubmitter
+    const canRespondToAppeals = hasReviewerRole
 
     const isAppealsResponsePhaseOpen = useMemo<boolean>(
         () => (challengeInfo?.phases ?? []).some(phase => phase?.name?.toLowerCase() === 'appeals response'
@@ -135,6 +136,18 @@ export const TableAppealsResponse: FC<TableAppealsResponseProps> = (props: Table
             challengeType?.name,
             hasAppealsPhase,
         ],
+    )
+
+    const normalizedChallengeStatus = useMemo<string>(
+        () => (challengeInfo?.status ?? '')
+            .trim()
+            .toUpperCase(),
+        [challengeInfo?.status],
+    )
+
+    const submitterCanViewAllRows = useMemo<boolean>(
+        () => normalizedChallengeStatus.startsWith('COMPLETED'),
+        [normalizedChallengeStatus],
     )
 
     const submissionTypes = useMemo<Set<string>>(
@@ -224,6 +237,10 @@ export const TableAppealsResponse: FC<TableAppealsResponseProps> = (props: Table
             return aggregatedRows
         }
 
+        if (canViewAsSubmitter && submitterCanViewAllRows) {
+            return aggregatedRows
+        }
+
         const matchesSubmitter = (row: SubmissionRow): boolean => {
             if (!canViewAsSubmitter) {
                 return false
@@ -260,6 +277,7 @@ export const TableAppealsResponse: FC<TableAppealsResponseProps> = (props: Table
         canViewAsSubmitter,
         myReviewerResourceIds,
         ownedMemberIds,
+        submitterCanViewAllRows,
     ])
 
     const maxReviewCount = useMemo<number>(
@@ -401,7 +419,7 @@ export const TableAppealsResponse: FC<TableAppealsResponseProps> = (props: Table
             }
         }
 
-        if (isAppealsResponsePhaseOpen) {
+        if (isAppealsResponsePhaseOpen && canRespondToAppeals) {
             baseColumns.push({
                 columnId: 'actions',
                 label: 'Actions',
@@ -465,6 +483,7 @@ export const TableAppealsResponse: FC<TableAppealsResponseProps> = (props: Table
         allowsAppeals,
         downloadButtonConfig,
         hideHandleColumn,
+        canRespondToAppeals,
         isAppealsResponsePhaseOpen,
         maxReviewCount,
         scoreVisibilityConfig,
