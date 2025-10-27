@@ -1,4 +1,8 @@
 name: Trivy Scanner
+
+permissions:
+  contents: read
+  security-events: write
 on:
   push:
     branches:
@@ -16,15 +20,15 @@ jobs:
       - name: Run Trivy scanner in repo mode
         uses: aquasecurity/trivy-action@0.33.1
         with:
-          scan-type: 'fs'
+          scan-type: "fs"
           ignore-unfixed: true
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-          severity: 'CRITICAL,HIGH,UNKNOWN'
+          format: "sarif"
+          output: "trivy-results.sarif"
+          severity: "CRITICAL,HIGH,UNKNOWN"
           scanners: vuln,secret,misconfig,license
           github-pat: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: 'trivy-results.sarif'
+          sarif_file: "trivy-results.sarif"
