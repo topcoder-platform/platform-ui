@@ -15,7 +15,6 @@ import {
     ChallengeDetailContext,
 } from '../../contexts'
 import {
-    BackendPhase,
     BackendResource,
     BackendSubmission,
     ChallengeDetailContextModel,
@@ -38,6 +37,7 @@ import {
     REVIEWER,
     SUBMITTER,
 } from '../../../config/index.config'
+import { shouldIncludeInReviewPhase } from '../../utils/reviewPhaseGuards'
 
 interface Props {
     selectedTab: string
@@ -316,7 +316,7 @@ export const TabContentReview: FC<Props> = (props: Props) => {
     const resolvedReviews = useMemo(
         () => {
             if (providedReviews.length) {
-                return providedReviews.filter(submission => shouldDisplayOnReviewTab(
+                return providedReviews.filter(submission => shouldIncludeInReviewPhase(
                     submission,
                     challengeInfo?.phases,
                 ))
@@ -339,7 +339,7 @@ export const TabContentReview: FC<Props> = (props: Props) => {
                             },
                         }
                         const converted = convertBackendSubmissionToSubmissionInfo(submissionForReviewer)
-                        if (shouldDisplayOnReviewTab(converted, challengeInfo?.phases)) {
+                        if (shouldIncludeInReviewPhase(converted, challengeInfo?.phases)) {
                             fallbackFromBackend.push(converted)
                         }
                     })
@@ -355,13 +355,13 @@ export const TabContentReview: FC<Props> = (props: Props) => {
             }
 
             const fallback = challengeSubmissions.filter(hasReviewerAssignment)
-            const filteredFallback = fallback.filter(submission => shouldDisplayOnReviewTab(
+            const filteredFallback = fallback.filter(submission => shouldIncludeInReviewPhase(
                 submission,
                 challengeInfo?.phases,
             ))
             return filteredFallback.length
                 ? filteredFallback
-                : providedReviews.filter(submission => shouldDisplayOnReviewTab(
+                : providedReviews.filter(submission => shouldIncludeInReviewPhase(
                     submission,
                     challengeInfo?.phases,
                 ))
@@ -404,7 +404,7 @@ export const TabContentReview: FC<Props> = (props: Props) => {
                     return false
                 }
 
-                if (!shouldDisplayOnReviewTab(submission, challengeInfo?.phases)) {
+                if (!shouldIncludeInReviewPhase(submission, challengeInfo?.phases)) {
                     return false
                 }
 
@@ -433,7 +433,7 @@ export const TabContentReview: FC<Props> = (props: Props) => {
                 return fallback
             }
 
-            return providedSubmitterReviews.filter(submission => shouldDisplayOnReviewTab(
+            return providedSubmitterReviews.filter(submission => shouldIncludeInReviewPhase(
                 submission,
                 challengeInfo?.phases,
             ))
@@ -549,60 +549,3 @@ export const TabContentReview: FC<Props> = (props: Props) => {
 }
 
 export default TabContentReview
-function normalizeReviewType(value?: string | null): string {
-    if (!value) {
-        return ''
-    }
-
-    return value
-        .toLowerCase()
-        .replace(/[^a-z]/g, '')
-}
-
-const EXCLUDED_REVIEW_TYPE_FRAGMENTS = [
-    'approval',
-    'checkpoint',
-    'iterative',
-    'postmortem',
-    'screening',
-    'specification',
-] as const
-
-function shouldDisplayOnReviewTab(
-    submission: SubmissionInfo,
-    phases?: BackendPhase[],
-): boolean {
-    const normalized = new Set<string>()
-    const register = (candidate?: string | null): void => {
-        const normalizedCandidate = normalizeReviewType(candidate)
-        if (normalizedCandidate) {
-            normalized.add(normalizedCandidate)
-        }
-    }
-
-    register(submission.reviewTypeId)
-    register(submission.review?.reviewType)
-    register(submission.review?.phaseName)
-
-    const phaseId = submission.review?.phaseId
-    if (phaseId && phases?.length) {
-        const normalizedPhaseId = `${phaseId}`.trim()
-            .toLowerCase()
-        const matchingPhase = phases.find(phase => (
-            (phase.id && phase.id.toLowerCase() === normalizedPhaseId)
-            || (phase.phaseId && phase.phaseId.toLowerCase() === normalizedPhaseId)
-        ))
-        if (matchingPhase?.name) {
-            register(matchingPhase.name)
-        }
-    }
-
-    if (!normalized.size) {
-        return true
-    }
-
-    return !Array.from(normalized)
-        .some(candidate => (
-            EXCLUDED_REVIEW_TYPE_FRAGMENTS.some(fragment => candidate.includes(fragment))
-        ))
-}

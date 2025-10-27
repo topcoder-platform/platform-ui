@@ -63,6 +63,7 @@ import type {
     SubmissionRow,
 } from '../common/types'
 import { resolveSubmissionReviewResult } from '../common/reviewResult'
+import { shouldIncludeInReviewPhase } from '../../utils/reviewPhaseGuards'
 
 import styles from './TableReview.module.scss'
 
@@ -114,14 +115,21 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
     }: UseSubmissionDownloadAccessResult = useSubmissionDownloadAccess()
 
     const isTablet = useMemo<boolean>(() => screenWidth <= 744, [screenWidth])
+    const reviewPhaseDatas = useMemo<SubmissionInfo[]>(
+        () => datas.filter(submission => shouldIncludeInReviewPhase(
+            submission,
+            challengeInfo?.phases,
+        )),
+        [challengeInfo?.phases, datas],
+    )
 
     const submissionTypes = useMemo<Set<string>>(
         () => new Set<string>(
-            datas
+            reviewPhaseDatas
                 .map(submission => submission.type)
                 .filter((type): type is string => Boolean(type)),
         ),
-        [datas],
+        [reviewPhaseDatas],
     )
 
     const filteredChallengeSubmissions = useMemo<SubmissionInfo[]>(
@@ -149,7 +157,7 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
         openHistoryModal,
         shouldShowHistoryActions,
     }: UseSubmissionHistoryResult = useSubmissionHistory({
-        datas,
+        datas: reviewPhaseDatas,
         filteredAll: filteredChallengeSubmissions,
         isSubmissionTab: true,
     })
@@ -160,8 +168,8 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
     )
 
     const submissionMetaById = useMemo<Map<string, SubmissionInfo>>(
-        () => createSubmissionMetaMap(filteredChallengeSubmissions, datas),
-        [datas, filteredChallengeSubmissions],
+        () => createSubmissionMetaMap(filteredChallengeSubmissions, reviewPhaseDatas),
+        [filteredChallengeSubmissions, reviewPhaseDatas],
     )
 
     const resolveSubmissionMeta = useCallback(
@@ -220,8 +228,8 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
     )
 
     const submissionsForAggregation = useMemo<SubmissionInfo[]>(
-        () => (restrictToLatest ? latestSubmissions : datas),
-        [datas, latestSubmissions, restrictToLatest],
+        () => (restrictToLatest ? latestSubmissions : reviewPhaseDatas),
+        [latestSubmissions, restrictToLatest, reviewPhaseDatas],
     )
 
     const aggregatedSubmissionRows = useMemo<AggregatedSubmissionReviews[]>(() => (

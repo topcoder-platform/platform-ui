@@ -7,7 +7,6 @@ import { ActionLoading } from '~/apps/admin/src/lib'
 
 import { ChallengeDetailContext } from '../../contexts'
 import {
-    BackendPhase,
     BackendSubmission,
     ChallengeInfo,
     MappingReviewAppeal,
@@ -29,6 +28,7 @@ import {
 import { ITERATIVE_REVIEW, SUBMITTER } from '../../../config/index.config'
 import { TableNoRecord } from '../TableNoRecord'
 import { hasIsLatestFlag } from '../../utils'
+import { shouldIncludeInReviewPhase } from '../../utils/reviewPhaseGuards'
 
 import TabContentApproval from './TabContentApproval'
 import TabContentCheckpoint from './TabContentCheckpoint'
@@ -46,122 +46,6 @@ const normalizeType = (value?: string): string => (
             .replace(/[^a-z]/g, '')
         : ''
 )
-
-const resolvePhaseNameFromId = (
-    phaseId?: string,
-    phases?: BackendPhase[],
-): string | undefined => {
-    if (!phaseId || !Array.isArray(phases)) {
-        return undefined
-    }
-
-    const normalizedPhaseId = `${phaseId}`.trim()
-        .toLowerCase()
-    if (!normalizedPhaseId) {
-        return undefined
-    }
-
-    const matchingPhase = phases.find(phase => {
-        const candidates = [phase.id, phase.phaseId]
-
-        return candidates.some(candidate => (
-            typeof candidate === 'string'
-            && candidate.trim()
-                .toLowerCase() === normalizedPhaseId
-        ))
-    })
-
-    return matchingPhase?.name
-}
-
-const EXCLUDED_REVIEW_TYPES = [
-    'approval',
-    'checkpoint',
-    'iterative',
-    'postmortem',
-    'screening',
-    'specification',
-] as const
-
-const shouldIncludeInReviewPhase = (
-    submission?: SubmissionInfo,
-    phases?: BackendPhase[],
-): boolean => {
-    if (!submission) {
-        return false
-    }
-
-    const normalizedCandidates = new Set<string>()
-    const registerCandidate = (candidate?: string | null): void => {
-        if (typeof candidate !== 'string') {
-            return
-        }
-
-        const normalized = normalizeType(candidate)
-        if (normalized) {
-            normalizedCandidates.add(normalized)
-        }
-    }
-
-    registerCandidate(submission.reviewTypeId)
-    registerCandidate(submission.review?.phaseName)
-    registerCandidate(submission.review?.reviewType)
-    registerCandidate(resolvePhaseNameFromId(submission.review?.phaseId, phases))
-
-    const metadata = submission.review?.metadata
-    if (metadata && typeof metadata === 'object') {
-        const metadataHints: unknown[] = [
-            (metadata as { type?: unknown }).type,
-            (metadata as { reviewType?: unknown }).reviewType,
-            (metadata as { review_type?: unknown }).review_type,
-            (metadata as { phase?: unknown }).phase,
-            (metadata as { phaseName?: unknown }).phaseName,
-            (metadata as { reviewPhase?: unknown }).reviewPhase,
-        ]
-
-        metadataHints.forEach(hint => {
-            if (typeof hint === 'string') {
-                registerCandidate(hint)
-            }
-        })
-    }
-
-    if (!normalizedCandidates.size) {
-        if (process.env.NODE_ENV !== 'production') {
-            // eslint-disable-next-line no-console
-            console.debug('[ReviewTab] shouldIncludeInReviewPhase', {
-                normalizedCandidates: [],
-                reviewPhaseName: submission.review?.phaseName,
-                reviewType: submission.review?.reviewType,
-                reviewTypeId: submission.reviewTypeId,
-                submissionId: submission.id ?? submission.review?.submissionId,
-                verdict: 'included (no candidates)',
-            })
-        }
-
-        return true
-    }
-
-    const normalizedCandidateList = Array.from(normalizedCandidates)
-    const isExcluded = normalizedCandidateList
-        .some(normalizedType => (
-            EXCLUDED_REVIEW_TYPES.some(fragment => normalizedType.includes(fragment))
-        ))
-
-    if (process.env.NODE_ENV !== 'production') {
-        // eslint-disable-next-line no-console
-        console.debug('[ReviewTab] shouldIncludeInReviewPhase', {
-            normalizedCandidates: normalizedCandidateList,
-            reviewPhaseName: submission.review?.phaseName,
-            reviewType: submission.review?.reviewType,
-            reviewTypeId: submission.reviewTypeId,
-            submissionId: submission.id ?? submission.review?.submissionId,
-            verdict: isExcluded ? 'excluded' : 'included',
-        })
-    }
-
-    return !isExcluded
-}
 
 interface Props {
     selectedTab: string
@@ -244,11 +128,9 @@ const renderSubmissionTab = ({
 }: SubmissionTabParams): JSX.Element => {
     const isSubmissionTab = selectedTabNormalized === 'submission'
     const isTopgearSubmissionTab = selectedTabNormalized === 'topgearsubmission'
-    const shouldRestrictToContestSubmissions = isActiveChallenge
-        && (
-            selectedTabNormalized.startsWith('submission')
-            || isTopgearSubmissionTab
-        )
+    const shouldRestrictToContestSubmissions = selectedTabNormalized
+        .startsWith('submission')
+        || isTopgearSubmissionTab
     const visibleSubmissions = shouldRestrictToContestSubmissions
         ? submissions.filter(
             submission => normalizeType(submission.type) === 'contestsubmission',

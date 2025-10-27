@@ -15,15 +15,20 @@ import classNames from 'classnames'
 import { TableMobile } from '~/apps/admin/src/lib/components/common/TableMobile'
 import { IsRemovingType } from '~/apps/admin/src/lib/models'
 import { MobileTableColumn } from '~/apps/admin/src/lib/models/MobileTableColumn.model'
-import { IconOutline, Table, TableColumn, Tooltip } from '~/libs/ui'
+import { EnvironmentConfig } from '~/config'
+import { UserRole } from '~/libs/core'
 import {
     copyTextToClipboard,
     useWindowSize,
     WindowSize,
 } from '~/libs/shared'
-import { EnvironmentConfig } from '~/config'
-import { UserRole } from '~/libs/core'
+import { IconOutline, Table, TableColumn, Tooltip } from '~/libs/ui'
 
+import { SUBMITTER } from '../../../config/index.config'
+import { ChallengeDetailContext, ReviewAppContext } from '../../contexts'
+import type { useRoleProps } from '../../hooks'
+import { useRole, useScorecardPassingScores, useSubmissionDownloadAccess } from '../../hooks'
+import type { UseSubmissionDownloadAccessResult } from '../../hooks/useSubmissionDownloadAccess'
 import {
     BackendResource,
     ChallengeDetailContextModel,
@@ -31,15 +36,11 @@ import {
     ReviewInfo,
     SubmissionInfo,
 } from '../../models'
-import { ChallengeDetailContext, ReviewAppContext } from '../../contexts'
 import { getHandleUrl, isReviewPhase } from '../../utils'
-import { TableWrapper } from '../TableWrapper'
+import type { SubmissionRow } from '../common/types'
+import { resolveSubmissionReviewResult } from '../common/reviewResult'
 import { ProgressBar } from '../ProgressBar'
-import { useRole, useSubmissionDownloadAccess } from '../../hooks'
-import type { useRoleProps } from '../../hooks'
-import type { UseSubmissionDownloadAccessResult } from '../../hooks/useSubmissionDownloadAccess'
-import { SUBMITTER } from '../../../config/index.config'
-// no-op
+import { TableWrapper } from '../TableWrapper'
 
 import styles from './TableIterativeReview.module.scss'
 
@@ -507,6 +508,21 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
         [myChallengeResources],
     )
 
+    const scorecardIds = useMemo<Set<string>>(() => {
+        const ids = new Set<string>()
+
+        for (const entry of datas ?? []) {
+            const scorecardId = entry.review?.scorecardId?.trim()
+            if (scorecardId) {
+                ids.add(scorecardId)
+            }
+        }
+
+        return ids
+    }, [datas])
+
+    const minimumPassingScoreByScorecardId = useScorecardPassingScores(scorecardIds)
+
     const myResourceIds: Set<string> = useMemo(
         (): Set<string> => new Set(
             (myChallengeResources ?? [])
@@ -868,6 +884,60 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
         }),
         [],
     )
+
+    const approvalResultColumn: TableColumn<SubmissionInfo> | undefined = useMemo(() => {
+        if (!isApprovalColumn) {
+            return undefined
+        }
+
+        return {
+            columnId: 'approval-result',
+            label: 'Approval Result',
+            renderer: (data: SubmissionInfo) => {
+                const review = data.review
+                const status = (review?.status ?? '').toUpperCase()
+                const hasReview = hasActiveReview(review)
+                const isCompleted = ['COMPLETED', 'SUBMITTED'].includes(status)
+                const outcome = resolveSubmissionReviewResult(
+                    data as SubmissionRow,
+                    {
+                        minimumPassingScoreByScorecardId,
+                    },
+                )
+
+                if (outcome === 'PASS') {
+                    return (
+                        <span className={styles.resultPass}>
+                            Pass
+                        </span>
+                    )
+                }
+
+                if (outcome === 'FAIL') {
+                    return (
+                        <span className={styles.resultFail}>
+                            Fail
+                        </span>
+                    )
+                }
+
+                if (!hasReview) {
+                    return <span>--</span>
+                }
+
+                if (!isCompleted) {
+                    return (
+                        <span className={styles.pendingText}>
+                            Pending
+                        </span>
+                    )
+                }
+
+                return <span>--</span>
+            },
+            type: 'element',
+        }
+    }, [isApprovalColumn, minimumPassingScoreByScorecardId])
 
     const shouldShowApproverColumn = useMemo(
         () => isApprovalColumn
@@ -1239,6 +1309,7 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
         baseColumns.push(
             reviewColumn,
             ...(approverColumn ? [approverColumn] : []),
+            ...(approvalResultColumn ? [approvalResultColumn] : []),
             reviewDateColumn,
         )
 
@@ -1254,6 +1325,7 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
         isAdminOrCopilot,
         isF2FOrTopgearTask,
         isPostMortemColumn,
+        approvalResultColumn,
         postMortemSubmissionColumn,
         reviewColumn,
         reviewDateColumn,
