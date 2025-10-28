@@ -12,7 +12,6 @@ import { TableIterativeReview } from '../TableIterativeReview'
 import { useRole, useRoleProps } from '../../hooks'
 import {
     REVIEWER,
-    SUBMITTER,
 } from '../../../config/index.config'
 import { ChallengeDetailContext } from '../../contexts'
 import { hasSubmitterPassedThreshold } from '../../utils/reviewScoring'
@@ -45,17 +44,13 @@ export const TabContentApproval: FC<Props> = (props: Props) => {
         [myResources],
     )
 
-    const isSubmitterOnly = actionChallengeRole === SUBMITTER
-        && approverResourceIds.size === 0
-    const rawRows = isSubmitterOnly ? props.submitterReviews : props.reviews
-
     const hasPassedApprovalThreshold = useMemo(
         () => hasSubmitterPassedThreshold(
-            rawRows ?? [],
+            props.submitterReviews ?? [],
             myMemberIds,
             props.approvalMinimumPassingScore,
         ),
-        [rawRows, myMemberIds, props.approvalMinimumPassingScore],
+        [props.submitterReviews, myMemberIds, props.approvalMinimumPassingScore],
     )
 
     const isChallengeCompleted = useMemo(
@@ -79,20 +74,20 @@ export const TabContentApproval: FC<Props> = (props: Props) => {
     )
     const approvalRows: SubmissionInfo[] = useMemo(
         () => {
-            if (!rawRows.length) {
+            if (!props.reviews.length) {
                 return []
             }
 
             if (approvalPhaseIds.size === 0) {
-                return rawRows
+                return props.reviews
             }
 
-            return rawRows.filter(row => {
+            return props.reviews.filter(row => {
                 const phaseId = row.review?.phaseId
                 return phaseId ? approvalPhaseIds.has(phaseId) : false
             })
         },
-        [rawRows, approvalPhaseIds],
+        [props.reviews, approvalPhaseIds],
     )
 
     const filteredApprovalRows = useMemo<SubmissionInfo[]>(
@@ -139,6 +134,8 @@ export const TabContentApproval: FC<Props> = (props: Props) => {
             downloadSubmission={props.downloadSubmission}
             hideHandleColumn={hideHandleColumn}
             columnLabel='Approval'
+            isChallengeCompleted={isChallengeCompleted}
+            hasPassedThreshold={hasPassedApprovalThreshold}
         />
     )
 }

@@ -37,17 +37,13 @@ export function useRolePermissions(): UseRolePermissionsResult {
 
     const {
         actionChallengeRole,
+        hasReviewerRole,
         isCopilotWithReviewerAssignments,
     }: useRoleProps = useRole()
 
     const normalizedRoles = useMemo<string[]>(
         () => myRoles.map(role => role.toLowerCase()),
         [myRoles],
-    )
-
-    const hasReviewerRole = useMemo<boolean>(
-        () => normalizedRoles.some(role => role.includes('reviewer')),
-        [normalizedRoles],
     )
 
     const hasCopilotRole = useMemo<boolean>(

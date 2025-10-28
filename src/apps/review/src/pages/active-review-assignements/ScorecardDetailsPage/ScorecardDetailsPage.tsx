@@ -37,7 +37,13 @@ import { activeReviewAssignmentsRouteId, rootRoute } from '../../../config/route
 
 import styles from './ScorecardDetailsPage.module.scss'
 
-type ReviewPhaseType = 'screening' | 'checkpoint screening' | 'checkpoint review' | 'post-mortem' | 'approval'
+type ReviewPhaseType =
+    | 'screening'
+    | 'checkpoint screening'
+    | 'checkpoint review'
+    | 'post-mortem'
+    | 'approval'
+    | 'review'
 
 const detectReviewPhaseType = (value?: unknown): ReviewPhaseType | undefined => {
     if (value === undefined || value === null) {
@@ -76,6 +82,10 @@ const detectReviewPhaseType = (value?: unknown): ReviewPhaseType | undefined => 
         return 'approval'
     }
 
+    if (normalized.includes('review')) {
+        return 'review'
+    }
+
     return undefined
 }
 
@@ -92,18 +102,26 @@ type ChallengePhaseSummary = {
 
 type RoleMatcher = (normalizedRoleName: string) => boolean
 
+const normalizeRoleName = (value: unknown): string => {
+    if (typeof value !== 'string') {
+        return ''
+    }
+
+    return value
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z]/g, '')
+}
+
 const PHASE_ROLE_MATCHERS: Partial<Record<ReviewPhaseType, RoleMatcher>> = {
     approval: normalizedRoleName => (
         normalizedRoleName.includes('approver')
         || normalizedRoleName.includes('approval')
     ),
-    'checkpoint review': normalizedRoleName => normalizedRoleName === 'checkpoint reviewer',
-    'checkpoint screening': normalizedRoleName => normalizedRoleName === 'checkpoint screener',
-    'post-mortem': normalizedRoleName => (
-        normalizedRoleName.includes('post-mortem')
-        || normalizedRoleName.includes('post mortem')
-        || normalizedRoleName.includes('postmortem')
-    ),
+    'checkpoint review': normalizedRoleName => normalizedRoleName === 'checkpointreviewer',
+    'checkpoint screening': normalizedRoleName => normalizedRoleName === 'checkpointscreener',
+    'post-mortem': normalizedRoleName => normalizedRoleName.includes('postmortem'),
+    review: normalizedRoleName => normalizedRoleName === 'reviewer',
     screening: normalizedRoleName => (
         (
             normalizedRoleName.includes('screener')
@@ -298,10 +316,7 @@ export const ScorecardDetailsPage: FC<Props> = (props: Props) => {
             return false
         }
 
-        const normalizedRoleName = typeof myResource.roleName === 'string'
-            ? myResource.roleName.trim()
-                .toLowerCase()
-            : ''
+        const normalizedRoleName = normalizeRoleName(myResource.roleName)
 
         return canRoleEditPhase(
             reviewPhaseType,

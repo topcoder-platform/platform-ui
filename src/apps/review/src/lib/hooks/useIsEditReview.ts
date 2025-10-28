@@ -5,7 +5,7 @@ import { ChallengeDetailContextModel } from '../models'
 import { ChallengeDetailContext } from '../contexts'
 import { isReviewPhase } from '../utils'
 
-import { useRole, useRoleProps } from './useRole'
+import { getRoleForContext, useRole, useRoleProps } from './useRole'
 
 /**
  * Manage readonly/edit mode in review
@@ -22,10 +22,15 @@ const useIsEditReview = (): useIsEditReviewProps => {
     const { challengeInfo }: ChallengeDetailContextModel = useContext(
         ChallengeDetailContext,
     )
-    const { actionChallengeRole }: useRoleProps = useRole()
+    const { actionChallengeRole, hasReviewerRole }: useRoleProps = useRole()
+
+    const reviewContextRole = useMemo(
+        () => getRoleForContext('review', { actionChallengeRole, hasReviewerRole }),
+        [actionChallengeRole, hasReviewerRole],
+    )
     const isEdit = useMemo(() => {
         if (
-            actionChallengeRole === REVIEWER
+            reviewContextRole === REVIEWER
             && challengeInfo
             && isReviewPhase(challengeInfo)
         ) {
@@ -33,7 +38,7 @@ const useIsEditReview = (): useIsEditReviewProps => {
         }
 
         return false
-    }, [actionChallengeRole, challengeInfo])
+    }, [challengeInfo, reviewContextRole])
 
     return {
         isEdit,

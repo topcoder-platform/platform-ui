@@ -201,6 +201,8 @@ export const TabContentIterativeReview: FC<Props> = (props: Props) => {
             hideHandleColumn={hideHandleColumn}
             columnLabel={props.columnLabel}
             hideSubmissionColumn={shouldHideSubmissionColumn}
+            isChallengeCompleted={isChallengeCompleted}
+            hasPassedThreshold={hasPassedPostMortemThreshold}
         />
     )
 }

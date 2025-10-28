@@ -55,6 +55,8 @@ interface Props {
     hideHandleColumn?: boolean
     columnLabel?: string
     hideSubmissionColumn?: boolean
+    isChallengeCompleted?: boolean
+    hasPassedThreshold?: boolean
 }
 
 interface ScoreMetadata {
@@ -841,7 +843,9 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
                 const isOwnedSubmission = data.memberId
                     ? ownedMemberIds.has(data.memberId)
                     : false
-                const canAccessReview = !isSubmitterView || isOwnedSubmission
+                const canAccessReview = !isSubmitterView
+                    || isOwnedSubmission
+                    || Boolean(props.isChallengeCompleted && props.hasPassedThreshold)
                 const pendingStatusLabel = isApprovalColumn
                     ? 'Pending Approval'
                     : 'Pending Review'
@@ -853,7 +857,15 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
             },
             type: 'element',
         }),
-        [columnLabel, isApprovalColumn, isPostMortemColumn, isSubmitterView, ownedMemberIds],
+        [
+            columnLabel,
+            isApprovalColumn,
+            isPostMortemColumn,
+            isSubmitterView,
+            ownedMemberIds,
+            props.isChallengeCompleted,
+            props.hasPassedThreshold,
+        ],
     )
 
     const reviewDateColumn: TableColumn<SubmissionInfo> = useMemo(

@@ -413,6 +413,17 @@ const createBaseColumns = ({
     virusScanColumn,
 ]
 
+const isInProgressStatus = (value: string | undefined): boolean => (
+    typeof value === 'string'
+    && value.trim()
+        .toUpperCase() === 'IN_PROGRESS'
+)
+
+const isScreeningReviewInProgress = (entry: Screening): boolean => (
+    isInProgressStatus(entry.reviewStatus)
+    || isInProgressStatus(entry.myReviewStatus)
+)
+
 const createScreeningColumns = ({
     canViewScorecard,
     shouldMaskScore,
@@ -486,6 +497,10 @@ const createScreeningColumns = ({
         label: 'Screening Result',
         propertyName: 'result',
         renderer: (data: Screening) => {
+            if (isScreeningReviewInProgress(data)) {
+                return <span>-</span>
+            }
+
             const val = (data.result || '').toUpperCase()
             if (val === 'PASS') {
                 return (

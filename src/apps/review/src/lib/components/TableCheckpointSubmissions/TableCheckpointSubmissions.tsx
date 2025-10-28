@@ -44,6 +44,17 @@ interface Props {
     mode?: 'submission' | 'screening' | 'review'
 }
 
+const isInProgressStatus = (value: string | undefined): boolean => (
+    typeof value === 'string'
+    && value.trim()
+        .toUpperCase() === 'IN_PROGRESS'
+)
+
+const isReviewRowInProgress = (entry: Screening): boolean => (
+    isInProgressStatus(entry.reviewStatus)
+    || isInProgressStatus(entry.myReviewStatus)
+)
+
 export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
     const { width: screenWidth }: WindowSize = useWindowSize()
     const isTablet = useMemo(() => screenWidth <= 984, [screenWidth])
@@ -362,6 +373,10 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
                         label: 'Screening Result',
                         propertyName: 'result',
                         renderer: (data: Screening) => {
+                            if (isReviewRowInProgress(data)) {
+                                return <span>-</span>
+                            }
+
                             const val = (data.result || '').toUpperCase()
                             if (val === 'PASS') {
                                 return (

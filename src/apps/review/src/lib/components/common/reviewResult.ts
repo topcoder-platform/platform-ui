@@ -39,6 +39,26 @@ const OUTCOME_KEYS = [
 type MetadataObject = Record<string, unknown>
 
 const COMPLETED_REVIEW_STATUSES = new Set(['COMPLETED', 'SUBMITTED'])
+const IN_PROGRESS_REVIEW_STATUS = 'IN_PROGRESS'
+
+const isReviewStatusInProgress = (value: unknown): boolean => (
+    typeof value === 'string'
+    && value.trim()
+        .toUpperCase() === IN_PROGRESS_REVIEW_STATUS
+)
+
+const hasInProgressReviewStatus = (submission: SubmissionRow): boolean => {
+    const candidates: Array<unknown> = [
+        submission.review?.status,
+    ]
+
+    submission.aggregated?.reviews?.forEach(reviewDetail => {
+        candidates.push(reviewDetail.status)
+        candidates.push(reviewDetail.reviewInfo?.status)
+    })
+
+    return candidates.some(isReviewStatusInProgress)
+}
 
 const normalizeStatusString = (value: unknown): string | undefined => {
     if (typeof value !== 'string') {
@@ -382,6 +402,10 @@ export function resolveSubmissionReviewResult(
         defaultMinimumPassingScore,
     }: ResolveSubmissionReviewResultOptions = options
 
+    if (hasInProgressReviewStatus(submission)) {
+        return undefined
+    }
+
     if (shouldDeferAggregatedOutcome(submission)) {
         return undefined
     }
@@ -414,29 +438,18 @@ export function resolveSubmissionReviewResult(
         ? (reviewScore >= minimumPassingScore ? 'PASS' : 'FAIL')
         : undefined
 
-    if (submission.isPassingReview === true) {
-        return 'PASS'
-    }
-
-    if (submission.isPassingReview === false) {
-        return 'FAIL'
+    const forcedOutcome = submission.isPassingReview
+    if (typeof forcedOutcome === 'boolean') {
+        return forcedOutcome ? 'PASS' : 'FAIL'
     }
 
     if (metadataOutcome === 'FAIL') {
         return 'FAIL'
     }
 
-    if (scoreOutcome === 'PASS') {
+    if (scoreOutcome === 'FAIL' && metadataOutcome === 'PASS') {
         return 'PASS'
     }
 
-    if (scoreOutcome === 'FAIL') {
-        return metadataOutcome === 'PASS' ? 'PASS' : 'FAIL'
-    }
-
-    if (metadataOutcome) {
-        return metadataOutcome
-    }
-
-    return scoreOutcome
+    return scoreOutcome ?? metadataOutcome
 }

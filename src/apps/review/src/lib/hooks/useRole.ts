@@ -20,12 +20,15 @@ export interface useRoleProps {
     hasCheckpointScreenerRole: boolean
     hasCheckpointReviewerRole: boolean
     hasScreenerRole: boolean
+    /** Indicates the user has at least one reviewer resource assignment. */
+    hasReviewerRole: boolean
     hasApproverRole: boolean
     hasPostMortemReviewerRole: boolean
     checkpointScreenerResourceIds: Set<string>
     checkpointReviewerResourceIds: Set<string>
     copilotReviewerResourceIds: Set<string>
     screenerResourceIds: Set<string>
+    reviewerResourceIds: Set<string>
     approverResourceIds: Set<string>
     postMortemReviewerResourceIds: Set<string>
     isCopilotWithReviewerAssignments: boolean
@@ -117,6 +120,20 @@ const useRole = (): useRoleProps => {
         [myResources],
     )
 
+    const reviewerResourceIds = useMemo<Set<string>>(
+        () => new Set(
+            (myResources ?? [])
+                .filter(resource => {
+                    const normalizedRoleName = resource.roleName
+                        ?.toLowerCase()
+                        .replace(/[^a-z]/g, '') ?? ''
+                    return normalizedRoleName === 'reviewer'
+                })
+                .map(resource => resource.id),
+        ),
+        [myResources],
+    )
+
     const approverResourceIds = useMemo<Set<string>>(
         () => new Set(
             (myResources ?? [])
@@ -173,6 +190,11 @@ const useRole = (): useRoleProps => {
         [screenerResourceIds],
     )
 
+    const hasReviewerRole = useMemo(
+        () => reviewerResourceIds.size > 0,
+        [reviewerResourceIds],
+    )
+
     const hasApproverRole = useMemo(
         () => approverResourceIds.size > 0,
         [approverResourceIds],
@@ -203,14 +225,44 @@ const useRole = (): useRoleProps => {
         hasCheckpointReviewerRole,
         hasCheckpointScreenerRole,
         hasPostMortemReviewerRole,
+        hasReviewerRole,
         hasScreenerRole,
         isCopilotWithReviewerAssignments,
         isPrivilegedRole,
         myChallengeResources: myResources,
         myChallengeRoles: displayRoles,
         postMortemReviewerResourceIds,
+        reviewerResourceIds,
         screenerResourceIds,
     }
 }
 
-export { useRole }
+type ContextRoleSource = Pick<useRoleProps, 'actionChallengeRole' | 'hasReviewerRole'>
+
+/**
+ * Determine the effective role for a given context without mutating the action role.
+ */
+const getRoleForContext = (
+    context: string | undefined,
+    { actionChallengeRole, hasReviewerRole }: ContextRoleSource,
+): ChallengeRole => {
+    if (context?.toLowerCase() === 'review' && hasReviewerRole) {
+        return 'Reviewer'
+    }
+
+    return actionChallengeRole
+}
+
+/**
+ * Hook wrapper around {@link getRoleForContext}.
+ */
+const useContextRole = (context?: string): ChallengeRole => {
+    const { actionChallengeRole, hasReviewerRole }: ContextRoleSource = useRole()
+
+    return useMemo(
+        () => getRoleForContext(context, { actionChallengeRole, hasReviewerRole }),
+        [actionChallengeRole, context, hasReviewerRole],
+    )
+}
+
+export { useRole, getRoleForContext, useContextRole }

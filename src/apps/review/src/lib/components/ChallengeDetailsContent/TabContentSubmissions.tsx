@@ -1,7 +1,14 @@
 /**
  * Tab content for submissions during the submission phase.
  */
-import { FC, MouseEvent, useContext, useMemo } from 'react'
+import {
+    FC,
+    MouseEvent,
+    useCallback,
+    useContext,
+    useMemo,
+    useState,
+} from 'react'
 import { toast } from 'react-toastify'
 import _ from 'lodash'
 import classNames from 'classnames'
@@ -22,11 +29,13 @@ import {
 } from '../../models'
 import { TableNoRecord } from '../TableNoRecord'
 import { TableWrapper } from '../TableWrapper'
+import { SubmissionHistoryModal } from '../SubmissionHistoryModal'
 import { useSubmissionDownloadAccess } from '../../hooks/useSubmissionDownloadAccess'
 import type { UseSubmissionDownloadAccessResult } from '../../hooks/useSubmissionDownloadAccess'
 import { ChallengeDetailContext } from '../../contexts'
 import {
     challengeHasSubmissionLimit,
+    getSubmissionHistoryKey,
     hasIsLatestFlag,
     partitionSubmissionHistory,
 } from '../../utils'
@@ -77,11 +86,29 @@ export const TabContentSubmissions: FC<Props> = props => {
         [props.submissions],
     )
 
+    const submissionInfoById = useMemo(
+        () => {
+            const map = new Map<string, SubmissionInfo>()
+            submissionInfos.forEach(submission => {
+                if (!submission?.id) {
+                    return
+                }
+
+                map.set(submission.id, submission)
+            })
+            return map
+        },
+        [submissionInfos],
+    )
+
     const submissionHistory = useMemo(
         () => partitionSubmissionHistory(submissionInfos, submissionInfos),
         [submissionInfos],
     )
-    const { latestSubmissions }: SubmissionHistoryPartition = submissionHistory
+    const {
+        latestSubmissions,
+        historyByMember,
+    }: SubmissionHistoryPartition = submissionHistory
 
     const latestBackendSubmissions = useMemo<BackendSubmission[]>(
         () => latestSubmissions
@@ -98,6 +125,80 @@ export const TabContentSubmissions: FC<Props> = props => {
     const hasLatestFlag = useMemo(
         () => hasIsLatestFlag(props.submissions),
         [props.submissions],
+    )
+
+    const shouldShowHistoryActions = useMemo(
+        () => historyByMember.size > 0,
+        [historyByMember],
+    )
+
+    const [historyKey, setHistoryKey] = useState<string | undefined>(undefined)
+
+    const historyEntriesForModal = useMemo<SubmissionInfo[]>(
+        () => (historyKey ? historyByMember.get(historyKey) ?? [] : []),
+        [historyByMember, historyKey],
+    )
+
+    const closeHistoryModal = useCallback((): void => {
+        setHistoryKey(undefined)
+    }, [])
+
+    const openHistoryModalForKey = useCallback(
+        (memberId: string | undefined, submissionId: string): void => {
+            if (!submissionId) {
+                return
+            }
+
+            const key = getSubmissionHistoryKey(memberId, submissionId)
+            const entries = historyByMember.get(key) ?? []
+            if (!entries.length) {
+                return
+            }
+
+            setHistoryKey(key)
+        },
+        [historyByMember],
+    )
+
+    const handleHistoryButtonClick = useCallback(
+        (event: MouseEvent<HTMLButtonElement>): void => {
+            const submissionId = event.currentTarget.dataset.submissionId
+            if (!submissionId) {
+                return
+            }
+
+            const memberId = event.currentTarget.dataset.memberId
+            openHistoryModalForKey(memberId || undefined, submissionId)
+        },
+        [openHistoryModalForKey],
+    )
+
+    const resolveSubmissionMeta = useCallback(
+        (submissionId: string): SubmissionInfo | undefined => submissionInfoById.get(submissionId),
+        [submissionInfoById],
+    )
+
+    const getHistoryRestriction = useCallback(
+        (submission: SubmissionInfo) => {
+            if (!submission.memberId) {
+                return { restricted: false }
+            }
+
+            const isRestricted = isSubmissionDownloadRestrictedForMember(submission.memberId)
+            if (!isRestricted) {
+                return { restricted: false }
+            }
+
+            return {
+                message: getRestrictionMessageForMember(submission.memberId) ?? restrictionMessage,
+                restricted: true,
+            }
+        },
+        [
+            getRestrictionMessageForMember,
+            isSubmissionDownloadRestrictedForMember,
+            restrictionMessage,
+        ],
     )
 
     const filteredSubmissions = useMemo<BackendSubmission[]>(
@@ -241,6 +342,37 @@ export const TabContentSubmissions: FC<Props> = props => {
                 },
             ]
 
+            if (shouldShowHistoryActions) {
+                baseColumns.push({
+                    label: 'Actions',
+                    propertyName: 'actions',
+                    renderer: (submission: BackendSubmission) => {
+                        if (!submission.id) {
+                            return <span>-</span>
+                        }
+
+                        const key = getSubmissionHistoryKey(submission.memberId, submission.id)
+                        const historyEntries = historyByMember.get(key) ?? []
+                        if (!historyEntries.length) {
+                            return <span>-</span>
+                        }
+
+                        return (
+                            <button
+                                type='button'
+                                className={styles.historyButton}
+                                data-submission-id={submission.id}
+                                data-member-id={submission.memberId ?? ''}
+                                onClick={handleHistoryButtonClick}
+                            >
+                                View Submission History
+                            </button>
+                        )
+                    },
+                    type: 'element',
+                })
+            }
+
             return baseColumns
         },
         [
@@ -249,6 +381,9 @@ export const TabContentSubmissions: FC<Props> = props => {
             restrictionMessage,
             props.downloadSubmission,
             props.isDownloading,
+            historyByMember,
+            handleHistoryButtonClick,
+            shouldShowHistoryActions,
         ],
     )
 
@@ -298,6 +433,16 @@ export const TabContentSubmissions: FC<Props> = props => {
                     removeDefaultSort
                 />
             )}
+
+            <SubmissionHistoryModal
+                open={Boolean(historyKey)}
+                onClose={closeHistoryModal}
+                submissions={historyEntriesForModal}
+                downloadSubmission={props.downloadSubmission}
+                isDownloading={props.isDownloading}
+                getRestriction={getHistoryRestriction}
+                getSubmissionMeta={resolveSubmissionMeta}
+            />
         </TableWrapper>
     )
 }

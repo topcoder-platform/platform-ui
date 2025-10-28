@@ -33,7 +33,9 @@ export const TabContentScreening: FC<Props> = (props: Props) => {
     const {
         actionChallengeRole,
         isPrivilegedRole,
+        hasReviewerRole,
         screenerResourceIds,
+        reviewerResourceIds,
     }: useRoleProps = useRole()
     const showScreeningColumns: boolean = props.showScreeningColumns ?? true
     const hideHandleColumn = props.isActiveChallenge
@@ -69,14 +71,20 @@ export const TabContentScreening: FC<Props> = (props: Props) => {
     const filteredScreening = useMemo<Screening[]>(
         () => {
             const baseRows = props.screening ?? []
+            const canSeeAll = isPrivilegedRole || hasReviewerRole
 
-            if (isPrivilegedRole || (isChallengeCompleted && hasPassedScreeningThreshold)) {
+            if (isChallengeCompleted && !canSeeAll && !hasPassedScreeningThreshold) {
+                return []
+            }
+
+            if (canSeeAll || (isChallengeCompleted && hasPassedScreeningThreshold)) {
                 return baseRows
             }
 
             return baseRows.filter(row => {
                 if (row.myReviewResourceId
-                    && screenerResourceIds.has(row.myReviewResourceId)) {
+                    && (screenerResourceIds.has(row.myReviewResourceId)
+                        || reviewerResourceIds.has(row.myReviewResourceId))) {
                     return true
                 }
 
@@ -90,9 +98,11 @@ export const TabContentScreening: FC<Props> = (props: Props) => {
         [
             props.screening,
             isPrivilegedRole,
+            hasReviewerRole,
             isChallengeCompleted,
             hasPassedScreeningThreshold,
             screenerResourceIds,
+            reviewerResourceIds,
             myMemberIds,
         ],
     )
