@@ -118,12 +118,14 @@ function resolvePhaseOrTypeMatch({
             return true
         }
 
-        debugLog('reviewMatchesPhase.phaseNameFallback', {
+        debugLog('reviewMatchesPhase.phaseNameMismatchRejected', {
             normalizedPhaseName,
             normalizedReviewPhaseName,
             reviewId: review.id,
             reviewPhaseName: truncateForLog(reviewPhaseName ?? ''),
         })
+
+        return false
     }
 
     if (normalizedReviewTypeAlpha && reviewType && normalizedPhaseNameForReviewType) {
@@ -351,14 +353,15 @@ const doesReviewMatchScorecard = (
 }
 
 /**
- * Determines whether a review matches the supplied phase context by evaluating scorecard,
- * phase identifier, phase name, type, and metadata criteria in priority order.
+ * Determines whether a review matches the supplied phase context. Reviews that include an explicit
+ * phase name must match the target phase name exactly; otherwise scorecard, phase identifier, type,
+ * and metadata criteria are evaluated in order.
  *
  * @param review - Review to evaluate.
  * @param scorecardId - Scorecard identifier associated with the target phase.
  * @param phaseIds - Set of phase identifiers collected for the target phase.
  * @param phaseName - Optional phase name for matching when available.
- * @returns True when the review satisfies any of the matching criteria.
+ * @returns True when the review satisfies the matching criteria with phase names taking precedence.
  */
 export function reviewMatchesPhase(
     review: BackendReview | undefined,
@@ -428,6 +431,8 @@ export function reviewMatchesPhase(
             normalizedReviewPhaseName,
             reviewId: review.id,
         })
+
+        return false
     }
 
     const reviewTypeId = getNormalizedLowerCase(review.typeId ?? undefined)

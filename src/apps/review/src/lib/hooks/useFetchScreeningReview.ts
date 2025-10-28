@@ -1149,6 +1149,7 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
                     myReviewId: myAssignment?.id,
                     myReviewResourceId: myAssignment?.resourceId,
                     myReviewStatus: myAssignment?.status ?? undefined,
+                    phaseName: matchedReview?.phaseName ?? undefined,
                     result,
                     reviewId: matchedReview?.id,
                     reviewPhaseId: resolveReviewPhaseId(matchedReview),
