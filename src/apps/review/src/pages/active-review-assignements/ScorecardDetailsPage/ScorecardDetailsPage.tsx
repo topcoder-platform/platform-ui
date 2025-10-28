@@ -45,48 +45,86 @@ type ReviewPhaseType =
     | 'approval'
     | 'review'
 
-const detectReviewPhaseType = (value?: unknown): ReviewPhaseType | undefined => {
-    if (value === undefined || value === null) {
-        return undefined
-    }
+const isNil = (value: unknown): value is null | undefined => value === null || value === undefined
 
-    const normalized = `${value}`
-        .trim()
+const POST_MORTEM_KEYWORDS = ['post-mortem', 'post mortem', 'postmortem']
+
+type PhaseStringMatcher = {
+    match: (source: string) => boolean
+    phase: ReviewPhaseType
+}
+
+const PHASE_STRING_MATCHERS: PhaseStringMatcher[] = [
+    {
+        match: source => source.includes('checkpoint screening'),
+        phase: 'checkpoint screening',
+    },
+    {
+        match: source => source.includes('checkpoint review'),
+        phase: 'checkpoint review',
+    },
+    {
+        match: source => POST_MORTEM_KEYWORDS.some(keyword => source.includes(keyword)),
+        phase: 'post-mortem',
+    },
+    {
+        match: source => source.includes('screening') && !source.includes('checkpoint'),
+        phase: 'screening',
+    },
+    {
+        match: source => source.includes('approval'),
+        phase: 'approval',
+    },
+    {
+        match: source => source.includes('review'),
+        phase: 'review',
+    },
+]
+
+const detectPhaseTypeFromString = (value: string): ReviewPhaseType | undefined => {
+    const normalized = value.trim()
         .toLowerCase()
-
     if (!normalized) {
         return undefined
     }
 
-    if (normalized.includes('checkpoint screening')) {
-        return 'checkpoint screening'
-    }
-
-    if (normalized.includes('checkpoint review')) {
-        return 'checkpoint review'
-    }
-
-    if (
-        normalized.includes('post-mortem')
-        || normalized.includes('post mortem')
-        || normalized.includes('postmortem')
-    ) {
-        return 'post-mortem'
-    }
-
-    if (normalized.includes('screening')) {
-        return 'screening'
-    }
-
-    if (normalized.includes('approval')) {
-        return 'approval'
-    }
-
-    if (normalized.includes('review')) {
-        return 'review'
+    for (const matcher of PHASE_STRING_MATCHERS) {
+        if (matcher.match(normalized)) {
+            return matcher.phase
+        }
     }
 
     return undefined
+}
+
+const detectPhaseTypeFromObject = (value: Record<string, unknown>): ReviewPhaseType | undefined => {
+    const candidateKeys: Array<keyof typeof value> = [
+        'name',
+        'phaseName',
+        'phase',
+        'type',
+    ].filter(key => key in value) as Array<keyof typeof value>
+
+    for (const key of candidateKeys) {
+        const detected = detectReviewPhaseType(value[key])
+        if (detected) {
+            return detected
+        }
+    }
+
+    return undefined
+}
+
+function detectReviewPhaseType(value?: unknown): ReviewPhaseType | undefined {
+    if (isNil(value)) {
+        return undefined
+    }
+
+    if (typeof value === 'object') {
+        return detectPhaseTypeFromObject(value as Record<string, unknown>)
+    }
+
+    return detectPhaseTypeFromString(`${value}`)
 }
 
 type ReviewerConfig = {
@@ -280,17 +318,22 @@ export const ScorecardDetailsPage: FC<Props> = (props: Props) => {
         const normalizedPhaseId = reviewInfo?.phaseId ? `${reviewInfo.phaseId}` : undefined
         const normalizedScorecardId = reviewInfo?.scorecardId ? `${reviewInfo.scorecardId}` : undefined
 
-        return detectReviewTypeFromReviewerConfig(
+        const metadataDerived = detectReviewTypeFromMetadata(reviewInfo?.metadata)
+        const phaseDerived = detectReviewTypeFromPhases(
+            challengeInfo?.phases as ChallengePhaseSummary[],
+            reviewInfo?.phaseId,
+        )
+        const reviewerDerived = detectReviewTypeFromReviewerConfig(
             reviewerConfigs as ReviewerConfig[],
             normalizedPhaseId,
             normalizedScorecardId,
         )
-            || detectReviewTypeFromMetadata(reviewInfo?.metadata)
-            || detectReviewTypeFromPhases(
-                challengeInfo?.phases as ChallengePhaseSummary[],
-                reviewInfo?.phaseId,
-            )
-            || detectReviewPhaseType(scorecardInfo?.name)
+        const scorecardDerived = detectReviewPhaseType(scorecardInfo?.name)
+
+        return metadataDerived
+            || phaseDerived
+            || reviewerDerived
+            || scorecardDerived
             || undefined
     }, [
         challengeInfo?.phases,

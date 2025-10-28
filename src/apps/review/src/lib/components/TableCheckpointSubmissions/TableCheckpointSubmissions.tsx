@@ -350,20 +350,24 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
                         label: 'Screening Score',
                         propertyName: 'score',
                         renderer: (data: Screening) => {
-                            const hasNumericScore = data.score && data.score !== 'Pending'
                             const reviewId = data.reviewId
-                            const canViewScorecard = hasNumericScore && reviewId
+                            const scoreLabel = data.score ?? 'Pending'
 
-                            if (!canViewScorecard) {
-                                return <span>{data.score}</span>
+                            if (!reviewId) {
+                                return <span>{scoreLabel}</span>
                             }
 
                             return (
                                 <Link
                                     to={`./../review/${reviewId}`}
-                                    className={styles.scoreLink}
+                                    className={classNames(
+                                        styles.scoreLink,
+                                        {
+                                            [styles.pendingScore]: !data.score || data.score === 'Pending',
+                                        },
+                                    )}
                                 >
-                                    {data.score}
+                                    {scoreLabel}
                                 </Link>
                             )
                         },
@@ -508,20 +512,24 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
                     label: 'Review Score',
                     propertyName: 'score',
                     renderer: (data: Screening) => {
-                        const hasNumericScore = data.score && data.score !== 'Pending'
                         const reviewId = data.reviewId
-                        const canViewScorecard = hasNumericScore && reviewId
+                        const scoreLabel = data.score ?? 'Pending'
 
-                        if (!canViewScorecard) {
-                            return <span>{data.score}</span>
+                        if (!reviewId) {
+                            return <span>{scoreLabel}</span>
                         }
 
                         return (
                             <Link
                                 to={`./../review/${reviewId}`}
-                                className={styles.scoreLink}
+                                className={classNames(
+                                    styles.scoreLink,
+                                    {
+                                        [styles.pendingScore]: !data.score || data.score === 'Pending',
+                                    },
+                                )}
                             >
-                                {data.score}
+                                {scoreLabel}
                             </Link>
                         )
                     },
@@ -530,30 +538,30 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
                 {
                     label: 'Checkpoint Reviewer',
                     propertyName: 'checkpointReviewer',
-                    renderer: (data: Screening) => (data.screener?.id ? (
+                    renderer: (data: Screening) => (data.checkpointReviewer?.id ? (
                         <a
-                            href={getHandleUrl(data.screener)}
+                            href={getHandleUrl(data.checkpointReviewer)}
                             target='_blank'
                             rel='noreferrer'
                             style={{
-                                color: data.screener?.handleColor,
+                                color: data.checkpointReviewer?.handleColor,
                             }}
                             onClick={function onClick() {
                                 window.open(
-                                    getHandleUrl(data.screener),
+                                    getHandleUrl(data.checkpointReviewer),
                                     '_blank',
                                 )
                             }}
                         >
-                            {data.screener?.memberHandle ?? ''}
+                            {data.checkpointReviewer?.memberHandle ?? ''}
                         </a>
                     ) : (
                         <span
                             style={{
-                                color: data.screener?.handleColor,
+                                color: data.checkpointReviewer?.handleColor,
                             }}
                         >
-                            {data.screener?.memberHandle ?? ''}
+                            {data.checkpointReviewer?.memberHandle ?? ''}
                         </span>
                     )),
                     type: 'element',

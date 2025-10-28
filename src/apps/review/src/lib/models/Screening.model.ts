@@ -14,6 +14,7 @@ export interface Screening {
     createdAtString?: string // this field is calculated at frontend
     screenerId?: string
     screener?: BackendResource // this field is calculated at frontend
+    checkpointReviewer?: BackendResource // optional dedicated checkpoint reviewer handle
     score: string
     result: ScreeningResult
     memberId: string

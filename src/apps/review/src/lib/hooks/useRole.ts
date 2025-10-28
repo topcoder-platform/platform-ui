@@ -70,9 +70,17 @@ const useRole = (): useRoleProps => {
         }
 
         const normalizedRoles = myRoles.map(role => role.toLowerCase())
-        const matchedRole = ['Submitter', 'Copilot', 'Manager', 'Admin', 'Reviewer'].find(
-            item => normalizedRoles.some(role => role.includes(item.toLowerCase())),
-        ) as ChallengeRole | undefined
+        const rolePriority: ChallengeRole[] = [
+            'Admin',
+            'Manager',
+            'Copilot',
+            'Reviewer',
+            'Submitter',
+        ]
+
+        const matchedRole = rolePriority.find(item => (
+            normalizedRoles.some(role => role.includes(item.toLowerCase()))
+        )) as ChallengeRole | undefined
 
         if (matchedRole) {
             return matchedRole
