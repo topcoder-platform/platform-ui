@@ -8,7 +8,7 @@ import type {
 } from './global-config.model'
 
 function parseSSOLoginProviders(
-    raw: string | undefined
+    raw: string | undefined,
 ): SSOLoginProviderConfig[] {
     if (!raw) {
         return []
@@ -25,7 +25,7 @@ function parseSSOLoginProviders(
 
 export const ENV = getReactEnv<'prod' | 'dev' | 'qa' | 'local'>(
     'HOST_ENV',
-    'dev'
+    'dev',
 )
 
 export const TC_DOMAIN: string = get(
@@ -36,7 +36,7 @@ export const TC_DOMAIN: string = get(
         qa: 'topcoder-qa.com',
     },
     ENV,
-    'topcoder.com'
+    'topcoder.com',
 )
 
 export const TOPCODER_URL: string = `https://www.${TC_DOMAIN}`
@@ -63,7 +63,7 @@ export const AUTH = {
 export const LOGGING = {
     PUBLIC_TOKEN: getReactEnv<string | undefined>(
         'DATADOG_PUBLIC_TOKEN',
-        undefined
+        undefined,
     ),
     SERVICE: 'platform-ui',
 }
@@ -78,11 +78,11 @@ export const VANILLA_FORUM = {
     V2_URL: 'https://vanilla.topcoder-dev.com/api/v2',
 }
 
-const ADMIN_SSO_LOGIN_PROVIDERS_ENV =
-    '[{"ssoLoginProviderId":1,"name":"okta-customer","type":"samlp"}]'
+const ADMIN_SSO_LOGIN_PROVIDERS_ENV
+    = '[{"ssoLoginProviderId":1,"name":"okta-customer","type":"samlp"}]'
 
-export const ADMIN_SSO_LOGIN_PROVIDERS: SSOLoginProviderConfig[] =
-    parseSSOLoginProviders(ADMIN_SSO_LOGIN_PROVIDERS_ENV)
+export const ADMIN_SSO_LOGIN_PROVIDERS: SSOLoginProviderConfig[]
+    = parseSSOLoginProviders(ADMIN_SSO_LOGIN_PROVIDERS_ENV)
 
 export const LOCAL_SERVICE_OVERRIDES: LocalServiceOverride[] = []
 
@@ -90,7 +90,7 @@ export const STRIPE = {
     API_KEY: getReactEnv<string>('STRIPE_API_KEY', ''),
     API_VERSION: getReactEnv<string | undefined>(
         'STRIPE_API_VERSION',
-        undefined
+        undefined,
     ),
 }
 
@@ -103,18 +103,18 @@ export const URLS = {
 
 export const MEMBER_VERIFY_LOOKER = getReactEnv<number>(
     'MEMBER_VERIFY_LOOKER',
-    3322
+    3322,
 )
 
 export const ENABLE_TCA_CERT_MONETIZATION = false
 
-export const TERMS_URL =
-    'https://www.topcoder-dev.com/challenges/terms/detail/317cd8f9-d66c-4f2a-8774-63c612d99cd4'
+export const TERMS_URL
+    = 'https://www.topcoder-dev.com/challenges/terms/detail/317cd8f9-d66c-4f2a-8774-63c612d99cd4'
 export const PRIVACY_POLICY_URL = `${TOPCODER_URL}/policy`
 
 export const GAMIFICATION_ORG_ID = getReactEnv<string>(
     'GAMIFICATION_ORG_ID',
-    undefined
+    undefined,
 )
 
 // TODO: Revert this.  This was done because prod was restricting this and no one was available to fix the config
@@ -124,21 +124,21 @@ export const RESTRICT_TALENT_SEARCH = false
 export const USERFLOW_SURVEYS = {
     ACCOUNT_SETTINGS: getReactEnv<string>(
         'USERFLOW_SURVEY_ACCOUNT_SETTINGS',
-        '3e704fe0-dff4-4af4-abee-383ed162729e'
+        '3e704fe0-dff4-4af4-abee-383ed162729e',
     ),
     PROFILES: getReactEnv<string>(
         'USERFLOW_SURVEY_PROFILES',
-        '5cfae36f-0700-41c4-8938-0add4037acb2'
+        '5cfae36f-0700-41c4-8938-0add4037acb2',
     ),
     TALENTSEARCH: getReactEnv<string>(
         'USERFLOW_SURVEY_TALENTSEARCH',
-        'd1030c93-dd36-4ae0-b5d0-95004b8e9d32'
+        'd1030c93-dd36-4ae0-b5d0-95004b8e9d32',
     ),
 }
 
 export const TROLLEY_WIDGET_ORIGIN = getReactEnv<string>(
     'TROLLEY_WIDGET_ORIGIN',
-    'https://widget.trolley.com'
+    'https://widget.trolley.com',
 )
 
 export const ADMIN = {
@@ -161,8 +161,8 @@ export const ADMIN = {
 
 const REVIEW_OPPORTUNITIES_URL_DEFAULT = getReactEnv<string>(
     'REVIEW_OPPORTUNITIES_URL',
-    'https://www.topcoder-dev.com/challenges/?bucket=reviewOpportunities&' +
-        'tracks[DS]=true&tracks[Des]=true&tracks[Dev]=true&tracks[QA]=true'
+    'https://www.topcoder-dev.com/challenges/?bucket=reviewOpportunities&'
+        + 'tracks[DS]=true&tracks[Des]=true&tracks[Dev]=true&tracks[QA]=true',
 )
 
 export const REVIEW = {
@@ -173,11 +173,11 @@ export const REVIEW = {
 
 const FILESTACK_SECURITY_POLICY = getReactEnv<string | undefined>(
     'FILESTACK_SECURITY_POLICY',
-    undefined
+    undefined,
 )
 const FILESTACK_SECURITY_SIGNATURE = getReactEnv<string | undefined>(
     'FILESTACK_SECURITY_SIGNATURE',
-    undefined
+    undefined,
 )
 
 export const FILESTACK = {
@@ -185,21 +185,21 @@ export const FILESTACK = {
     CNAME: getReactEnv<string>('FILESTACK_CNAME', 'filestackapi.com'),
     CONTAINER: getReactEnv<string>(
         'FILESTACK_CONTAINER',
-        'tc-challenge-v5-dev'
+        'tc-challenge-v5-dev',
     ),
     PATH_PREFIX: getReactEnv<string>('FILESTACK_PATH_PREFIX', 'v6-review-app'),
     PROGRESS_INTERVAL: getReactEnv<number>(
         'FILESTACK_UPLOAD_PROGRESS_INTERVAL',
-        100
+        100,
     ),
     REGION: getReactEnv<string>('FILESTACK_REGION', 'us-east-1'),
     RETRY: getReactEnv<number>('FILESTACK_UPLOAD_RETRY', 2),
     SECURITY:
         FILESTACK_SECURITY_POLICY && FILESTACK_SECURITY_SIGNATURE
             ? {
-                  POLICY: FILESTACK_SECURITY_POLICY,
-                  SIGNATURE: FILESTACK_SECURITY_SIGNATURE,
-              }
+                POLICY: FILESTACK_SECURITY_POLICY,
+                SIGNATURE: FILESTACK_SECURITY_SIGNATURE,
+            }
             : undefined,
     TIMEOUT: getReactEnv<number>('FILESTACK_UPLOAD_TIMEOUT', 30 * 60 * 1000),
 }
