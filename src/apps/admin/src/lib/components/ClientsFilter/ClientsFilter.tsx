@@ -31,7 +31,7 @@ const defaultValues: FormClientsFilter = {
     endDate: undefined,
     name: '',
     startDate: undefined,
-    status: '1',
+    status: 'ACTIVE',
 }
 
 export const ClientsFilter: FC<Props> = (props: Props) => {

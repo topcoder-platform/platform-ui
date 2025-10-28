@@ -79,6 +79,8 @@ export const FieldSingleSelectAsync: FC<Props> = (props: Props) => {
                 components={asyncSelectComponents}
                 className={classNames(props.className, styles.select)}
                 placeholder={props.placeholder ?? 'Enter'}
+                cacheOptions
+                defaultOptions={[]}
                 menuPortalTarget={document.body}
                 classNames={{
                     container: () => styles.select,

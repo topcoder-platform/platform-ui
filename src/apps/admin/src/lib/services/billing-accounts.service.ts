@@ -1,7 +1,6 @@
 /**
  * Billing accounts service
  */
-import _ from 'lodash'
 
 import { EnvironmentConfig } from '~/config'
 import {
@@ -13,11 +12,11 @@ import {
 
 import {
     adjustBillingAccountResponse,
-    ApiV3Response,
     BillingAccount,
     BillingAccountResource,
     FormEditBillingAccount,
     FormNewBillingAccountResource,
+    PaginatedResponseV6,
     RequestCommonDataType,
 } from '../models'
 import { createFilterPageSortQuery } from '../utils'
@@ -39,15 +38,18 @@ export const searchBillingAccounts = async (
     content: BillingAccount[]
     totalPages: number
 }> => {
-    const data = await xhrGetAsync<ApiV3Response<BillingAccount[]>>(
+    const response = await xhrGetAsync<PaginatedResponseV6<BillingAccount>>(
         `${
-            EnvironmentConfig.API.V3
+            EnvironmentConfig.API.V6
         }/billing-accounts?${createFilterPageSortQuery(criteria, pageAndSort)}`,
     )
-    const totalCount = data.result.metadata.totalCount
+
+    const totalPages = response.totalPages
+        || (response.perPage ? Math.ceil(response.total / response.perPage) : 1)
+
     return {
-        content: data.result.content.map(adjustBillingAccountResponse),
-        totalPages: Math.ceil(totalCount / pageAndSort.limit),
+        content: (response.data ?? []).map(adjustBillingAccountResponse),
+        totalPages: totalPages || 1,
     }
 }
 
@@ -58,12 +60,9 @@ export const searchBillingAccounts = async (
  */
 export const findAllBillingAccountResources = async (
     accountId: string,
-): Promise<BillingAccountResource[]> => {
-    const data = await xhrGetAsync<ApiV3Response<BillingAccount[]>>(
-        `${EnvironmentConfig.API.V3}/billing-accounts/${accountId}/users`,
-    )
-    return data.result.content
-}
+): Promise<BillingAccountResource[]> => xhrGetAsync<BillingAccountResource[]>(
+    `${EnvironmentConfig.API.V6}/billing-accounts/${accountId}/users`,
+)
 
 /**
  * Find billing account by id
@@ -74,10 +73,10 @@ export const findAllBillingAccountResources = async (
 export const findBillingAccountById = async (
     id: string,
 ): Promise<BillingAccount> => {
-    const data = await xhrGetAsync<ApiV3Response<BillingAccount>>(
-        `${EnvironmentConfig.API.V3}/billing-accounts/${id}`,
+    const data = await xhrGetAsync<BillingAccount>(
+        `${EnvironmentConfig.API.V6}/billing-accounts/${id}`,
     )
-    return adjustBillingAccountResponse(data.result.content)
+    return adjustBillingAccountResponse(data)
 }
 
 /**
@@ -91,7 +90,7 @@ export const deleteBillingAccountResource = async (
     resourceId: string,
 ): Promise<void> => {
     await xhrDeleteAsync<void>(
-        `${EnvironmentConfig.API.V3}/billing-accounts/${accountId}/users/${resourceId}`,
+        `${EnvironmentConfig.API.V6}/billing-accounts/${accountId}/users/${resourceId}`,
     )
 }
 
@@ -102,42 +101,39 @@ export const deleteBillingAccountResource = async (
  */
 const createBillingAccountRequestData = (
     data: FormEditBillingAccount,
-): {
-    param: RequestCommonDataType
-} => {
-    const requestData: RequestCommonDataType = {
-        clientId: data.client.id,
-        endDate: `${data.endDate.toISOString()
-            .substring(0, 16)}Z`,
-        salesTax: data.salesTax,
-        startDate: `${data.startDate.toISOString()
-            .substring(0, 16)}Z`,
-    }
-    if (data.paymentTerms) {
-        requestData.paymentTerms = {
-            id: data.paymentTerms,
-        }
-    }
+): RequestCommonDataType => {
+    const startDate = data.startDate
+        ? `${data.startDate.toISOString()
+            .substring(0, 16)}Z`
+        : undefined
+    const endDate = data.endDate
+        ? `${data.endDate.toISOString()
+            .substring(0, 16)}Z`
+        : undefined
 
-    _.forEach(
-        [
-            'name',
-            'companyId',
-            'status',
-            'budgetAmount',
-            'poNumber',
-            'subscriptionNumber',
-            'description',
-        ],
-        key => {
-            const value = (data as unknown as RequestCommonDataType)[key]
-            if (value !== null && value !== undefined) {
-                requestData[key] = value
-            }
-        },
-    )
     return {
-        param: requestData,
+        // Map UI fields to API in natural ascending key order
+        budget: data.budgetAmount,
+        clientId:
+            data.client?.id !== undefined && data.client?.id !== null
+                ? String(data.client.id)
+                : undefined,
+        description: data.description,
+        endDate,
+        markup: 0,
+        name: data.name,
+        paymentTerms:
+            data.paymentTerms !== undefined && data.paymentTerms !== null
+                ? String(data.paymentTerms)
+                : undefined,
+        poNumber: data.poNumber,
+        salesTax: data.salesTax,
+        startDate,
+        status: data.status,
+        subscriptionNumber:
+            data.subscriptionNumber !== undefined && data.subscriptionNumber !== null
+                ? String(data.subscriptionNumber)
+                : undefined,
     }
 }
 
@@ -148,17 +144,12 @@ const createBillingAccountRequestData = (
  */
 export const createBillingAccount = async (
     data: FormEditBillingAccount,
-): Promise<BillingAccount[]> => {
-    const resultData = await xhrPostAsync<
-        {
-            param: RequestCommonDataType
-        },
-        ApiV3Response<BillingAccount[]>
-    >(
-        `${EnvironmentConfig.API.V3}/billing-accounts`,
+): Promise<BillingAccount> => {
+    const resultData = await xhrPostAsync<RequestCommonDataType, BillingAccount>(
+        `${EnvironmentConfig.API.V6}/billing-accounts`,
         createBillingAccountRequestData(data),
     )
-    return resultData.result.content
+    return resultData
 }
 
 /**
@@ -170,23 +161,12 @@ export const createBillingAccount = async (
 export const editBillingAccount = async (
     accountId: string,
     data: FormEditBillingAccount,
-): Promise<{
-    original: BillingAccount
-    updated: BillingAccount
-}> => {
-    const resultData = await xhrPatchAsync<
-        {
-            param: RequestCommonDataType
-        },
-        ApiV3Response<{
-            original: BillingAccount
-            updated: BillingAccount
-        }>
-    >(
-        `${EnvironmentConfig.API.V3}/billing-accounts/${accountId}`,
+): Promise<BillingAccount> => {
+    const resultData = await xhrPatchAsync<RequestCommonDataType, BillingAccount>(
+        `${EnvironmentConfig.API.V6}/billing-accounts/${accountId}`,
         createBillingAccountRequestData(data),
     )
-    return resultData.result.content
+    return resultData
 }
 
 /**
@@ -203,11 +183,11 @@ export const createBillingAccountResource = async (
         {
             param: RequestCommonDataType
         },
-        ApiV3Response<BillingAccountResource>
-    >(`${EnvironmentConfig.API.V3}/billing-accounts/${accountId}/users`, {
+        BillingAccountResource
+    >(`${EnvironmentConfig.API.V6}/billing-accounts/${accountId}/users`, {
         param: {
             userId: data.userId,
         },
     })
-    return resultData.result.content
+    return resultData
 }

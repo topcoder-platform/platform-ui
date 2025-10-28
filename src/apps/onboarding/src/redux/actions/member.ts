@@ -14,6 +14,7 @@ import ConnectInfo from '../../models/ConnectInfo'
 import EducationInfo from '../../models/EducationInfo'
 import MemberAddress from '../../models/MemberAddress'
 import MemberInfo from '../../models/MemberInfo'
+import OnboardingChecklistInfo from '../../models/OnboardingChecklistInfo'
 import PersonalizationInfo from '../../models/PersonalizationInfo'
 import WorkInfo from '../../models/WorkInfo'
 
@@ -40,6 +41,14 @@ export const updatePersonalizations: (personalizations: PersonalizationInfo[]) =
         ...personalizations,
     ],
     type: ACTIONS.MEMBER.SET_PERSONALIZATIONS,
+})
+
+export const updateOnboardingChecklist: (onboardingChecklist: OnboardingChecklistInfo) => {
+    payload: OnboardingChecklistInfo
+    type: string
+} = (onboardingChecklist: OnboardingChecklistInfo) => ({
+    payload: onboardingChecklist,
+    type: ACTIONS.MEMBER.SET_ONBOARDING_CHECKLIST,
 })
 
 export const updateConnectInfo: any = (connectInfo: ConnectInfo) => ({
@@ -117,10 +126,10 @@ export const fetchMemberTraits: any = () => async (dispatch: any) => {
     if (workExpValue) {
         // workExpValue is array of works. fill it to state
         const works: WorkInfo[] = workExpValue.map((j: any, index: number) => {
-            const startDate: Date | undefined = dateTimeToDate(j.timePeriodFrom)
-            const endDate: Date | undefined = dateTimeToDate(j.timePeriodTo)
+            const startDate: Date | undefined = dateTimeToDate(j.startDate)
+            const endDate: Date | undefined = dateTimeToDate(j.endDate)
             return ({
-                company: j.company,
+                companyName: j.companyName,
                 currentlyWorking: j.working,
                 endDate,
                 id: index + 1,
@@ -142,10 +151,11 @@ export const fetchMemberTraits: any = () => async (dispatch: any) => {
             const startDate: Date | undefined = dateTimeToDate(e.timePeriodFrom)
             const endDate: Date | undefined = dateTimeToDate(e.timePeriodTo)
             return ({
-                collegeName: e.schoolCollegeName,
+                collegeName: e.collegeName,
                 endDate,
+                endYear: e.endYear,
                 id: index + 1,
-                major: e.major,
+                major: e.degree,
                 startDate,
             })
         })
@@ -160,11 +170,24 @@ export const fetchMemberTraits: any = () => async (dispatch: any) => {
         const personalizations: PersonalizationInfo[] = personalizationExpValue.map((e: any) => _.omitBy({
             ...e,
             availableForGigs: e.availableForGigs,
-            profileSelfTitle: e.profileSelfTitle,
+            profileSelfTitle: e.personalization?.[0]?.profileSelfTitle || e.profileSelfTitle,
             referAs: e.referAs,
             shortBio: e.shortBio,
         }, _.isUndefined))
         dispatch(updatePersonalizations(personalizations))
+    }
+
+    const onboardingChecklistExp: any = memberTraits.find(
+        (t: any) => t.traitId === UserTraitIds.onboardingChecklist,
+    )
+    const onboardingChecklistExpValue: any = onboardingChecklistExp?.traits?.data
+
+    if (onboardingChecklistExpValue) {
+        const profileCompletenessChecklist = onboardingChecklistExpValue
+            .find((item: any) => item.listItemType === 'profile_completed')
+        if (profileCompletenessChecklist) {
+            dispatch(updateOnboardingChecklist(profileCompletenessChecklist.metadata))
+        }
     }
 
     const connectInfoExp: any = memberTraits.find(
@@ -192,11 +215,13 @@ const createWorksPayloadData: any = (works: WorkInfo[]) => {
             currentlyWorking,
         }: any = work
         return {
-            company,
+            companyName: company || '',
+            // eslint-disable-next-line unicorn/no-null
+            endDate: endDate ? endDate.toISOString() : null,
             industry,
             position,
-            timePeriodFrom: startDate ? startDate.toISOString() : '',
-            timePeriodTo: endDate ? endDate.toISOString() : '',
+            // eslint-disable-next-line unicorn/no-null
+            startDate: startDate ? startDate.toISOString() : null,
             working: currentlyWorking,
         }
     })
@@ -206,9 +231,43 @@ const createWorksPayloadData: any = (works: WorkInfo[]) => {
         traitId: UserTraitIds.work,
         traits: {
             data,
+            traitId: UserTraitIds.work,
         },
     }
     return [payload]
+}
+
+const createOnboardingChecklistData: any = (onboardingChecklist: OnboardingChecklistInfo) => {
+    const isProfileInComplete = Object.values(onboardingChecklist)
+        .includes(false)
+    const payload: any = {
+        categoryName: UserTraitCategoryNames.onboardingChecklist,
+        traitId: UserTraitIds.onboardingChecklist,
+        traits: {
+            data: [{
+                date: new Date()
+                    .toISOString(),
+                listItemType: 'profile_completed',
+                message: isProfileInComplete ? 'Profile is incomplete' : 'Completed',
+                metadata: onboardingChecklist,
+                status: isProfileInComplete ? 'pending_at_user' : 'completed',
+            }],
+            traitId: UserTraitIds.onboardingChecklist,
+        },
+    }
+    return [payload]
+}
+
+export const createOnboardingChecklist: any = (
+    onboardingChecklist: OnboardingChecklistInfo,
+) => async (dispatch: any) => {
+    try {
+        const tokenInfo: TokenModel = await getAsyncToken()
+
+        await createMemberTraits(tokenInfo.handle || '', createOnboardingChecklistData(onboardingChecklist))
+        dispatch(updateOnboardingChecklist(onboardingChecklist))
+    } catch (error) {
+    }
 }
 
 export const updateMemberWorks: any = (works: WorkInfo[]) => async (dispatch: any) => {
@@ -242,14 +301,12 @@ const createEducationsPayloadData: any = (educations: EducationInfo[]) => {
         const {
             collegeName,
             major,
-            startDate,
-            endDate,
+            endYear,
         }: any = education
         return {
-            major,
-            schoolCollegeName: collegeName,
-            timePeriodFrom: startDate ? startDate.toISOString() : '',
-            timePeriodTo: endDate ? endDate.toISOString() : '',
+            collegeName,
+            degree: major,
+            endYear: parseInt(endYear, 10),
         }
     })
 
@@ -258,6 +315,7 @@ const createEducationsPayloadData: any = (educations: EducationInfo[]) => {
         traitId: UserTraitIds.education,
         traits: {
             data,
+            traitId: UserTraitIds.education,
         },
     }
     return [payload]
@@ -266,7 +324,6 @@ const createEducationsPayloadData: any = (educations: EducationInfo[]) => {
 export const updateMemberEducations: any = (educations: EducationInfo[]) => async (dispatch: any) => {
     try {
         const tokenInfo: TokenModel = await getAsyncToken()
-
         await updateMemberTraits(tokenInfo.handle || '', createEducationsPayloadData(educations))
         dispatch(updateEducations(educations))
     } catch (error) {
@@ -311,6 +368,7 @@ const createPersonalizationsPayloadData: any = (personalizations: Personalizatio
         traitId: UserTraitIds.personalization,
         traits: {
             data,
+            traitId: UserTraitIds.personalization,
         },
     }
     return [payload]
@@ -322,6 +380,18 @@ export const updateMemberPersonalizations: any = (personalizations: Personalizat
 
         await updateMemberTraits(tokenInfo.handle || '', createPersonalizationsPayloadData(personalizations))
         dispatch(updatePersonalizations(personalizations))
+    } catch (error) {
+    }
+}
+
+export const updateMemberOnboardingChecklist: any = (
+    onboardingChecklistInfo: OnboardingChecklistInfo,
+) => async (dispatch: any) => {
+    try {
+        const tokenInfo: TokenModel = await getAsyncToken()
+
+        await updateMemberTraits(tokenInfo.handle || '', createOnboardingChecklistData(onboardingChecklistInfo))
+        dispatch(updateOnboardingChecklist(onboardingChecklistInfo))
     } catch (error) {
     }
 }

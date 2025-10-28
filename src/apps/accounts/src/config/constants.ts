@@ -1,3 +1,4 @@
-import { EnvironmentConfig } from '~/config'
+// (removed) CES Survey/Userflow integrations
 
-export const CES_SURVEY_ID = EnvironmentConfig.USERFLOW_SURVEYS.ACCOUNT_SETTINGS
+// Mark this file as a module for TS isolatedModules
+export {}

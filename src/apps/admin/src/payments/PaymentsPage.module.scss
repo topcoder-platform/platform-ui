@@ -1,0 +1,104 @@
+.container {
+  padding: 16px;
+}
+
+.searchBlock {
+  display: flex;
+  gap: 16px;
+  align-items: center; // vertically center input and button
+  margin-bottom: 16px;
+}
+
+.searchInput {
+  width: 520px; // wider input wrapper
+  // Remove extra bottom margin added by shared Input wrapper to align with button vertically
+  :global(.input-el) {
+    margin-bottom: 0;
+  }
+}
+
+.actions {
+  display: flex;
+}
+
+.results {
+  margin-top: 8px;
+}
+
+.list {
+  border: 1px solid #e1e1e1;
+  border-radius: 6px;
+}
+
+.listItem {
+  padding: 10px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.listItem:last-child { border-bottom: 0; }
+
+.listItem.active { background: #f7fbff; }
+
+.title { font-weight: 600; }
+.meta { font-size: 12px; color: #666; }
+
+.paymentsBlock { margin-top: 24px; }
+.paymentsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.tableWrapper {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th, .table td {
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.noRecordFound { color: #888; margin: 8px 0; }
+
+.loadingSpinnerContainer {
+  position: relative;
+  height: 100px;
+  margin: 16px 0;
+
+  // Make page-level spinners appear centered without a gray overlay
+  .spinner {
+    background: none;
+  }
+}
+
+.modalForm {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+
+.blockActionLoading {
+  position: relative;
+  height: 64px;
+  margin-top: 8px;
+
+  .spinner {
+    background: none;
+  }
+}

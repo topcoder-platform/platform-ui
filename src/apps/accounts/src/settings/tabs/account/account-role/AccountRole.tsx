@@ -2,7 +2,6 @@ import { Dispatch, FC, SetStateAction, useState } from 'react'
 
 import { BaseModal, Button, Collapsible } from '~/libs/ui'
 import { authUrlLogout, updatePrimaryMemberRoleAsync, UserProfile } from '~/libs/core'
-import { triggerSurvey } from '~/apps/accounts/src/lib'
 
 import styles from './AccountRole.module.scss'
 
@@ -36,7 +35,6 @@ const AccountRole: FC<AccountRoleProps> = (props: AccountRoleProps) => {
                 .then(() => {
                     setMemberRole(newRole)
                     setIsRoleChangeConfirmed(true)
-                    triggerSurvey()
                 })
                 .finally(() => {
                     setIsUpdating(false)

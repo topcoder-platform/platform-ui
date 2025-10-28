@@ -216,7 +216,6 @@ const CopilotRequestsPage: FC = () => {
             type: 'text',
         },
         {
-            defaultSortDirection: 'desc',
             isDefaultSort: true,
             label: 'Created At',
             propertyName: 'createdAt',
@@ -241,7 +240,11 @@ const CopilotRequestsPage: FC = () => {
         setSize(size + 1)
     }
 
-    function onToggleSort(s: Sort): void {
+    function onToggleSort(s?: Sort): void {
+        if (!s) {
+            return
+        }
+
         setSort(s)
     }
 

@@ -1,15 +1,16 @@
 import { FC, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { format } from 'date-fns'
 
+import { Sort } from '~/apps/admin/src/platform/gamification-admin/src/game-lib'
 import { EnvironmentConfig } from '~/config'
 import { useWindowSize, WindowSize } from '~/libs/shared'
 import { Button, colWidthType, LinkButton, Table, type TableColumn } from '~/libs/ui'
-import { Sort } from '~/apps/admin/src/platform/gamification-admin/src/game-lib'
 
-import { Pagination } from '../common/Pagination'
 import { useEventCallback } from '../../hooks'
 import { ReviewFilterCriteria, ReviewSummary } from '../../models'
 import { Paging } from '../../models/challenge-management/Pagination'
+import { Pagination } from '../common/Pagination'
 
 import { MobileListView } from './MobileListView'
 import styles from './ReviewSummaryList.module.scss'
@@ -19,7 +20,7 @@ export interface ReviewListProps {
     paging: Paging
     currentFilters: ReviewFilterCriteria
     onPageChange: (page: number) => void
-    onToggleSort: (sort: Sort) => void
+    onToggleSort: (sort: Sort | undefined) => void
 }
 
 const Actions: FC<{
@@ -27,15 +28,25 @@ const Actions: FC<{
     currentFilters: ReviewFilterCriteria
 }> = props => {
     const navigate = useNavigate()
+    const targetId = props.review.challengeId || props.review.legacyChallengeId
+
     const goToManageReviewer = useEventCallback(() => {
-        navigate(`${props.review.legacyChallengeId}/manage-reviewer`, {
+        if (!targetId) {
+            return
+        }
+
+        navigate(`${targetId}/manage-reviewer`, {
             state: { previousReviewSummaryListFilter: props.currentFilters },
         })
     })
 
     return (
         <div className={styles.rowActions}>
-            <Button primary onClick={goToManageReviewer}>
+            <Button
+                primary
+                onClick={goToManageReviewer}
+                disabled={!targetId}
+            >
                 Manage Reviewers
             </Button>
         </div>
@@ -49,13 +60,23 @@ const ChallengeTitle: FC<{
         window.location.href = `${EnvironmentConfig.ADMIN.CHALLENGE_URL}/${props.review.legacyChallengeId}`
     })
 
+    const fullTitle = props.review.challengeName || ''
+    const maxLen = 60
+    const shortTitle = fullTitle.length > maxLen
+        ? `${fullTitle.slice(0, maxLen)}…`
+        : fullTitle
+
     return props.review.legacyChallengeId ? (
-        <LinkButton onClick={goToChallenge} className={styles.challengeTitleLink}>
-            {props.review.challengeName}
+        <LinkButton
+            onClick={goToChallenge}
+            className={styles.challengeTitleLink}
+            title={fullTitle}
+        >
+            {shortTitle}
         </LinkButton>
     ) : (
-        <span className={styles.challengeTitleText}>
-            {props.review.challengeName}
+        <span className={styles.challengeTitleText} title={fullTitle}>
+            {shortTitle}
         </span>
     )
 }
@@ -71,6 +92,7 @@ const ReviewSummaryList: FC<ReviewListProps> = props => {
             //     type: 'text',
             // },
             {
+                className: styles.challengeTitleColumn,
                 columnId: 'challengeName',
                 label: 'Challenge Title',
                 propertyName: 'challengeName',
@@ -79,45 +101,41 @@ const ReviewSummaryList: FC<ReviewListProps> = props => {
                 ),
                 type: 'element',
             },
-            {
-                columnId: 'legacyChallengeId',
-                label: 'Legacy ID',
-                propertyName: 'legacyChallengeId',
-                type: 'text',
-            },
+
             // {
             //     label: 'Current phase',
             //     propertyName: '',
             //     type: 'text',
             // },
-            {
-                columnId: 'challengeStatus',
-                label: 'Status',
-                propertyName: 'challengeStatus',
-                type: 'text',
-            },
+            // Status column removed to prevent table overflow
             // I think this column is important, and it exits in `admin-app`
             // but resp does not have it, so I just comment it here
-            // {
-            //     label: 'Submission End Date',
-            //     propertyName: 'submissionEndDate',
-            //     renderer: (review: ReviewSummary) => (
-            //         // eslint-disable-next-line jsx-a11y/anchor-is-valid
-            //         <div className={styles.submissionDate}>
-            //           {review.submissionEndDate}
-            //             {/* {format(
-            //                 new Date(review.submissionEndDate),
-            //                 'MMM dd, yyyy HH:mm'
-            //             )} */}
-            //         </div>
-            //     ),
-            //     type: 'element',
-            // },
+            {
+                label: 'Review Start Date',
+                propertyName: 'submissionEndDate',
+                renderer: (review: ReviewSummary) => (
+                    // eslint-disable-next-line jsx-a11y/anchor-is-valid
+                    <div className={styles.submissionDate}>
+                        {review.submissionEndDate
+                            ? format(
+                                new Date(review.submissionEndDate),
+                                'MMM dd, yyyy HH:mm',
+                            ) : 'N/A'}
+                    </div>
+                ),
+                type: 'element',
+            },
             {
                 columnId: 'OpenReviewOpp',
                 label: 'Open Review Opp',
                 renderer: (review: ReviewSummary) => (
-                    <div>{review.numberOfReviewerSpots - review.numberOfApprovedApplications}</div>
+                    <div>
+                        {Math.max(
+                            review.numberOfReviewerSpots
+                            - review.numberOfApprovedApplications,
+                            0,
+                        )}
+                    </div>
                 ),
                 type: 'element',
             },

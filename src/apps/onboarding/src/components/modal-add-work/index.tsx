@@ -4,7 +4,7 @@ import classNames from 'classnames'
 import moment from 'moment'
 
 import { Button, IconSolid, InputDatePicker, InputSelect, InputText, Tooltip } from '~/libs/ui'
-import { INDUSTRIES_OPTIONS } from '~/libs/shared'
+import { getIndustryOptionLabel, getIndustryOptionValue, INDUSTRIES_OPTIONS } from '~/libs/shared'
 
 import FormInputCheckbox from '../form-input-checkbox'
 import OnboardingBaseModal from '../onboarding-base-modal'
@@ -23,14 +23,14 @@ interface ModalAddWorkProps {
 
 const industryOptions: any = _.sortBy(INDUSTRIES_OPTIONS)
     .map(v => ({
-        label: v,
-        value: v,
+        label: getIndustryOptionLabel(v),
+        value: getIndustryOptionValue(v),
     }))
 
 const ModalAddWork: FC<ModalAddWorkProps> = (props: ModalAddWorkProps) => {
     const [workInfo, setWorkInfo] = useState(emptyWorkInfo())
     const [formErrors, setFormErrors] = useState<any>({
-        company: undefined,
+        companyName: undefined,
         endDate: undefined,
         position: undefined,
         startDate: undefined,
@@ -46,8 +46,8 @@ const ModalAddWork: FC<ModalAddWorkProps> = (props: ModalAddWorkProps) => {
 
     const validateField: any = () => {
         const errorTmp: any = {}
-        if (!workInfo.company) {
-            errorTmp.company = 'Required'
+        if (!workInfo.companyName) {
+            errorTmp.companyName = 'Required'
         }
 
         if (!workInfo.position) {
@@ -121,20 +121,20 @@ const ModalAddWork: FC<ModalAddWorkProps> = (props: ModalAddWorkProps) => {
             <div className={classNames(styles.modalContent, 'd-flex flex-column align-items-start mobile-gap-16')}>
                 <div className='full-width'>
                     <InputText
-                        name='company'
+                        name='companyName'
                         label='Company *'
-                        value={workInfo.company}
+                        value={workInfo.companyName}
                         onChange={function onChange(event: any) {
                             setWorkInfo({
                                 ...workInfo,
-                                company: event.target.value,
+                                companyName: event.target.value,
                             })
                         }}
                         placeholder='Enter company'
                         tabIndex={0}
                         type='text'
                         dirty
-                        error={formErrors.company}
+                        error={formErrors.companyName}
                     />
                 </div>
                 <div className='full-width'>

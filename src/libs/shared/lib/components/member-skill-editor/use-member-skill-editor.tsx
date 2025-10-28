@@ -61,10 +61,18 @@ export const useMemberSkillEditor = ({
             return
         }
 
-        const skillsData = skills.map(skill => ({
-            displayModeId: skill.displayMode.id,
-            id: skill.id,
-        }))
+        // Ensure we always have a valid displayModeId when saving
+        const skillsData = skills.map(skill => {
+            // If displayMode id is missing (e.g., user added before modes loaded),
+            // try to resolve it from the loaded display modes record by name
+            const resolvedDisplayMode = (displayModes as any)?.[skill.displayMode?.name]
+            const displayModeId = skill.displayMode?.id || resolvedDisplayMode?.id
+
+            return {
+                displayModeId,
+                id: skill.id,
+            }
+        })
 
         if (!isInitialized) {
             await createMemberSkills(profile.userId, skillsData)
@@ -73,7 +81,7 @@ export const useMemberSkillEditor = ({
         }
 
         await updateMemberSkills(profile.userId, skillsData)
-    }, [isInitialized, profile?.userId, skills])
+    }, [isInitialized, profile?.userId, skills, displayModes])
 
     // Handle user changes
 
@@ -93,13 +101,16 @@ export const useMemberSkillEditor = ({
     const handleAddSkill = useCallback((type: UserSkillDisplayModes, skillData: any): void => {
         const skill = skills.find(s => s.id === skillData.value)
 
+        // Fallback displayMode with name if ids not yet loaded
+        const modeRecord = (displayModes as any)?.[type] || { id: '', name: type }
+
         setSkills([...skills.filter(s => s.id !== skillData.value), {
             category: skillData.category,
             id: skillData.value,
             levels: [],
             name: skillData.label,
             ...skill,
-            displayMode: displayModes[type],
+            displayMode: modeRecord,
         }])
     }, [skills, displayModes])
 

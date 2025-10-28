@@ -1,0 +1,82 @@
+import { BackendReviewItem } from './BackendReviewItem.model'
+
+/**
+ * Backend model for review
+ */
+export interface BackendReview {
+    id: string
+    legacyId: string
+    resourceId: string
+    phaseId: string
+    submissionId: string
+    legacySubmissionId: string
+    scorecardId: string
+    committed: boolean
+    finalScore: number
+    initialScore: number
+    typeId: string | null
+    metadata: string | Record<string, unknown> | null
+    status: string | null
+    reviewDate: string | null
+    /**
+     * Optional phase name hint returned by the API.
+     * Used for matching reviews when phase metadata is incomplete.
+     */
+    phaseName?: string | null
+    createdAt: string
+    createdAtDate?: Date // this field is calculated at frontend
+    createdBy: string
+    reviewerHandle?: string | null
+    reviewerMaxRating?: number | null
+    submitterHandle?: string | null
+    submitterMaxRating?: number | null
+    reviewItems?: BackendReviewItem[]
+    updatedAt: string
+    updatedBy: string
+    reviewType?: string | null
+}
+
+export function createEmptyBackendReview(): BackendReview {
+    return {
+        committed: false,
+        createdAt: '',
+        createdBy: '',
+        finalScore: 0,
+        id: '',
+        initialScore: 0,
+        legacyId: '',
+        legacySubmissionId: '',
+        metadata: '',
+        phaseId: '',
+        phaseName: '',
+        resourceId: '',
+        reviewDate: '',
+        scorecardId: '',
+        status: '',
+        submissionId: '',
+        submitterHandle: '',
+        submitterMaxRating: undefined,
+        typeId: '',
+        updatedAt: '',
+        updatedBy: '',
+
+    }
+}
+
+/**
+ * Update submission info to show in ui
+ *
+ * @param data data from backend response
+ * @returns updated data
+ */
+export function adjustBackendReview(data: BackendReview): BackendReview {
+    const createdAt = data.createdAt
+    const createdAtDate: undefined | Date = createdAt
+        ? new Date(createdAt)
+        : undefined
+
+    return {
+        ...data,
+        createdAtDate,
+    }
+}

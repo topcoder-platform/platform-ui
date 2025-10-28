@@ -7,7 +7,6 @@ import { UserProfile } from '~/libs/core'
 import { EditMemberPropertyBtn } from '../../../components'
 import { OpenForGigsModifyModal } from '../OpenForGigsModifyModal'
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../../config'
-import { triggerSurvey } from '../../../lib'
 
 import styles from './OpenForGigs.module.scss'
 
@@ -46,7 +45,6 @@ const OpenForGigs: FC<OpenForGigsProps> = (props: OpenForGigsProps) => {
         setTimeout(() => {
             setIsEditMode(false)
             props.refreshProfile(props.profile.handle)
-            triggerSurvey()
         }, 1000)
     }
 

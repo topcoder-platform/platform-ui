@@ -1,0 +1,196 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+}
+
+.blockContent {
+    margin-top: 64px;
+    padding-bottom: 40px;
+    position: relative;
+}
+
+.textTitle {
+    color: var(--FontColor);
+    font-family: "Figtree", sans-serif;
+    font-size: 26px;
+    line-height: 30px;
+    font-weight: 700;
+}
+
+.phaseHeader {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    justify-content: space-between;
+}
+
+.phaseNotificationToggle {
+    display: flex;
+    align-items: center;
+}
+
+.blockTabsContainer {
+    margin-top: $sp-6;
+    margin-bottom: $sp-4;
+    overflow: hidden;
+    overflow-x: auto;
+    @include ltemd {
+        overflow: visible;
+    }
+}
+
+.phaseDates {
+    margin-bottom: $sp-3;
+    font-family: "Nunito Sans", sans-serif;
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--FontColor);
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.phaseDatesSep {
+    opacity: 0.6;
+}
+
+.blockReviewers {
+    display: flex;
+    gap: 40px;
+    align-items: center;
+    @include ltemd {
+        flex-wrap: wrap;
+        padding: 12px 8px;
+        justify-content: space-between;
+        gap: 6px;
+    }
+}
+
+.blockReviewer {
+    display: flex;
+    gap: 5px;
+    font-family: "Nunito Sans", sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    line-height: 19px;
+    @include ltemd {
+        flex-basis: 100%;
+    }
+    strong,
+    a {
+        white-space: nowrap;
+    }
+    strong {
+        color: var(--FontColor);
+    }
+}
+
+.summary {
+    align-items: center;
+    justify-content: space-between;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.statusPillRow {
+    margin-top: $sp-2;
+    margin-bottom: $sp-2;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: $sp-2;
+}
+
+.statusPill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: $sp-1 $sp-2;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+
+    &.completed {
+        background-color: $green-25;
+        color: $green-140;
+    }
+
+    &.cancelled {
+        background-color: $red-25;
+        color: $red-140;
+    }
+}
+
+.statusPillCompleted {
+    @extend .statusPill;
+    background-color: $green-25;
+    color: $green-140;
+}
+
+.statusPillCancelled {
+    @extend .statusPill;
+    background-color: $red-25;
+    color: $red-140;
+}
+
+.metaPill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: $sp-1 $sp-3;
+    border-radius: 999px;
+    background-color: $blue-25;
+    color: $blue-140;
+    font-family: "Nunito Sans", sans-serif;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.permissionDeniedMessage {
+    color: $red-140;
+   font-family: "Nunito Sans", sans-serif;
+   font-size: 16px;
+   font-weight: 700;
+   margin-top: 24px;
+}
+
+.reopenModal {
+    max-width: 480px;
+    width: 100%;
+}
+
+.reopenModalContent {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-4;
+    padding: $sp-4;
+}
+
+.reopenModalTitle {
+    font-family: "Figtree", sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--FontColor);
+}
+
+.reopenModalInput {
+    margin: 0;
+    flex: 1 1 100%;
+}
+
+.reopenModalActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: $sp-3;
+}
+
+.phaseDurationInputs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $sp-3;
+}

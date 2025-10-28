@@ -19,6 +19,17 @@ import { validateS3URI } from '../utils'
  * @param challengeId challenge id
  * @returns resolves to the submission list
  */
+interface SubmissionsListResponse {
+    data?: Submission[]
+    meta?: {
+        totalPages?: number
+        page?: number
+        perPage?: number
+    }
+}
+
+const SUBMISSIONS_PER_PAGE = 100
+
 export const fetchSubmissionsOfChallenge = async (
     challengeId: string,
 ): Promise<MemberSubmission[]> => {
@@ -26,10 +37,33 @@ export const fetchSubmissionsOfChallenge = async (
         return Promise.resolve([])
     }
 
-    const results = await xhrGetAsync<Submission[]>(
-        `${EnvironmentConfig.API.V5}/submissions?challengeId=${challengeId}`,
-    )
-    return adjustSubmissionsResponse(results)
+    const submissions: Submission[] = []
+
+    const makeQuery = (page: number): string => {
+        const base = `${EnvironmentConfig.API.V6}/submissions`
+        const params = new URLSearchParams({
+            challengeId,
+            page: String(page),
+            perPage: String(SUBMISSIONS_PER_PAGE),
+        })
+        return `${base}?${params.toString()}`
+    }
+
+    const firstResponse = await xhrGetAsync<SubmissionsListResponse>(makeQuery(1))
+    submissions.push(...(firstResponse?.data ?? []))
+    const totalPages = firstResponse?.meta?.totalPages ?? 1
+
+    if (totalPages > 1) {
+        const pages = Array.from({ length: totalPages - 1 }, (_, i) => i + 2)
+        const responses = await Promise.all(
+            pages.map(p => xhrGetAsync<SubmissionsListResponse>(makeQuery(p))),
+        )
+        for (const res of responses) {
+            submissions.push(...(res?.data ?? []))
+        }
+    }
+
+    return adjustSubmissionsResponse(submissions)
 }
 
 /**
@@ -41,7 +75,7 @@ export const removeSubmission = async (
     submissionId: string,
 ): Promise<ApiV5ResponseSuccess> => {
     const result = await xhrDeleteAsync<ApiV5ResponseSuccess>(
-        `${EnvironmentConfig.API.V5}/submissions/${submissionId}`,
+        `${EnvironmentConfig.API.V6}/submissions/${submissionId}`,
     )
     return result
 }
@@ -55,7 +89,7 @@ export const downloadSubmissionFile = async (
     submissionId: string,
 ): Promise<Blob> => {
     const results = await xhrGetBlobAsync<Blob>(
-        `${EnvironmentConfig.API.V5}/submissions/${submissionId}/download`,
+        `${EnvironmentConfig.API.V6}/submissions/${submissionId}/download`,
     )
     return results
 }
@@ -69,9 +103,14 @@ export const createAvScanSubmissionPayload = async (
     submissionInfo: Submission,
 ): Promise<RequestBusAPIAVScanPayload> => {
     const url = submissionInfo.url
+    if (!url) {
+        throw new Error('Submission url is not valid')
+    }
+
     const { isValid, key: fileName }: ValidateS3URIResult = validateS3URI(url)
+
     if (!isValid) {
-        throw new Error('Submission url is not a valid')
+        throw new Error('Submission url is not valid')
     }
 
     return {

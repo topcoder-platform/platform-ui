@@ -1,0 +1,81 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+    @include ltemd {
+        &:global(.enhanced-table) {
+            table {
+                tbody {
+                    tr:has(:global(.last-element)) {
+                        td {
+                            border-bottom: 0;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+.textBlue {
+    color: $link-blue-dark;
+
+    &:hover {
+        color: $link-blue-dark;
+    }
+
+    &:disabled {
+        opacity: 0.7;
+        pointer-events: none;
+    }
+}
+
+.blockPlacementContainer {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.blockPlacement {
+    background-color: #e0faf3;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    white-space: nowrap;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--DarkBlue);
+    flex-shrink: 0;
+
+    &.blockPlacement-1 {
+        background: #ffd84d;
+    }
+
+    &.blockPlacement-2 {
+        background: #c8c8c8;
+    }
+
+    &.blockPlacement-3 {
+        background: #efba9d;
+    }
+}
+
+.tableCellNoWrap {
+    white-space: nowrap;
+    text-align: left !important;
+}
+
+.spacing {
+    padding: 0 $sp-1;
+}
+
+.appealsLink {
+    padding: 0 $sp-1;
+}
+
+.tooltipTrigger {
+    display: inline-block;
+}

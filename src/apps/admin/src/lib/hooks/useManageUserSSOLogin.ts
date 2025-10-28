@@ -6,14 +6,8 @@ import { toast } from 'react-toastify'
 import _ from 'lodash'
 
 import { FormAddSSOLoginData } from '../models/FormAddSSOLoginData.model'
-import { SSOLoginProvider, SSOUserLogin, UserInfo } from '../models'
-import {
-    createSSOUserLogin,
-    deleteSSOUserLogin,
-    fetchSSOLoginProviders,
-    fetchSSOUserLogins,
-    updateSSOUserLogin,
-} from '../services'
+import { SSOUserLogin, UserInfo } from '../models'
+import { createSSOUserLogin, deleteSSOUserLogin, fetchSSOUserLogins, updateSSOUserLogin } from '../services'
 import { handleError } from '../utils'
 
 import { useOnComponentDidMount } from './useOnComponentDidMount'
@@ -25,7 +19,6 @@ import { useOnComponentDidMount } from './useOnComponentDidMount'
 type SSOUserLoginsState = {
     isLoading: boolean
     isAdding: boolean
-    providers: SSOLoginProvider[]
     ssoUserLogins: SSOUserLogin[]
     isRemoving: { [key: string]: boolean }
 }
@@ -59,7 +52,6 @@ type SSOUserLoginsReducerAction =
           type: typeof SSOUserLoginsActionType.FETCH_SSO_USER_LOGINS_DONE
           payload: {
               ssoUserLogins: SSOUserLogin[]
-              providers: SSOLoginProvider[]
           }
       }
     | {
@@ -93,7 +85,6 @@ const reducer = (
             return {
                 ...previousState,
                 isLoading: false,
-                providers: action.payload.providers,
                 ssoUserLogins: action.payload.ssoUserLogins,
             }
         }
@@ -222,7 +213,6 @@ export function useManageUserSSOLogin(
         isAdding: false,
         isLoading: false,
         isRemoving: {},
-        providers: [],
         ssoUserLogins: [],
     })
 
@@ -230,12 +220,11 @@ export function useManageUserSSOLogin(
         dispatch({
             type: SSOUserLoginsActionType.FETCH_SSO_USER_LOGINS_INIT,
         })
-        Promise.all([fetchSSOUserLogins(userInfo.id), fetchSSOLoginProviders()])
+        fetchSSOUserLogins(userInfo.id)
             .then(result => {
                 dispatch({
                     payload: {
-                        providers: result[1],
-                        ssoUserLogins: result[0],
+                        ssoUserLogins: result,
                     },
                     type: SSOUserLoginsActionType.FETCH_SSO_USER_LOGINS_DONE,
                 })

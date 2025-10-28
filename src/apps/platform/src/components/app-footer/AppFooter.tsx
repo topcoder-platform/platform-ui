@@ -1,7 +1,6 @@
 import { FC, MutableRefObject, useEffect, useRef } from 'react'
-import type { TcUniNavFn } from 'universal-navigation'
 
-declare let tcUniNav: TcUniNavFn
+import { getTcUniNav } from '../../utils'
 
 const APP_FOOTER_EL_ID: string = 'footer-nav-el'
 
@@ -22,7 +21,7 @@ const AppFooter: FC<{}> = () => {
             return
         }
 
-        tcUniNav(
+        getTcUniNav()?.(
             'init',
             APP_FOOTER_EL_ID,
             {

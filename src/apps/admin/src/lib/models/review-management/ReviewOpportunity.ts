@@ -1,12 +1,18 @@
+import { Reviewer } from './Reviewer'
+
 export interface ReviewOpportunity {
     /** Id */
-    id: number
+    id: string;
+    /** Challenge id */
+    challengeId: string;
     /** Open positions */
-    openPositions: number
+    openPositions: number;
     /** Start Date */
-    startDate: string
+    startDate: string;
     /** Number Of submissions */
-    submissions: number
+    submissions: number;
     /** Review type */
-    type: string
+    type: string;
+    /** Review applications */
+    applications: Reviewer[];
 }

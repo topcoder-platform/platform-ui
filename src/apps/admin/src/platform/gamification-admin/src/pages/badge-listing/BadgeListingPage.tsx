@@ -33,7 +33,11 @@ const BadgeListingPage: FC<Props> = (props: Props) => {
     const pageHandler: InfinitePageHandler<GameBadge> = useGetGameBadgesPage(sort)
     const navigate: NavigateFunction = useNavigate()
 
-    function onSortClick(newSort: Sort): void {
+    function onSortClick(newSort?: Sort): void {
+        if (!newSort) {
+            return
+        }
+
         setSort({ ...newSort })
     }
 

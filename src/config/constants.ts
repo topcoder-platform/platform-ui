@@ -10,7 +10,8 @@ export enum AppSubdomain {
     wallet = 'wallet',
     walletAdmin = 'wallet-admin',
     copilots = 'copilots',
-    admin = 'system-admin'
+    admin = 'system-admin',
+    review = 'review',
 }
 
 export enum ToolTitle {
@@ -25,7 +26,8 @@ export enum ToolTitle {
     wallet = 'Wallet',
     walletAdmin = 'Wallet Admin',
     copilots = 'Copilots',
-    admin = 'Admin'
+    admin = 'Admin',
+    review = 'Review',
 }
 
 export const PageSubheaderPortalId: string = 'page-subheader-portal-el'

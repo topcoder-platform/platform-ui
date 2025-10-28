@@ -1,8 +1,8 @@
 export enum ChallengeStatus {
-    New = 'New',
-    Draft = 'Draft',
-    Active = 'Active',
-    Completed = 'Completed',
+    New = 'NEW',
+    Draft = 'DRAFT',
+    Active = 'ACTIVE',
+    Completed = 'COMPLETED',
 }
 
 export type ChallengeType = {
@@ -25,11 +25,11 @@ export interface Challenge {
     /** Direct-app project ID. */
     legacyId: string
     /** Challenge type. */
-    type: ChallengeType['name']
+    type: ChallengeType
     /** Type UUID. */
     typeId: string
     /** Challenge track. */
-    track: ChallengeTrack['name']
+    track: ChallengeTrack
     legacy: {
         subTrack: string
     }
@@ -46,4 +46,8 @@ export interface Challenge {
     /** Challenge phases. */
     phases: Array<{ name: string; isOpen: boolean; scheduledEndDate: string }>
     tags: Array<string>
+    /** Challenge billing info. */
+    billing?: {
+        billingAccountId?: string | number
+    }
 }

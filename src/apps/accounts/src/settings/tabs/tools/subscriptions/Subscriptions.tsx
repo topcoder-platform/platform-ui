@@ -3,9 +3,9 @@ import { bind, isEmpty, reject, trim } from 'lodash'
 import { toast } from 'react-toastify'
 import classNames from 'classnames'
 
-import { updateMemberTraitsAsync, updateOrCreateMemberTraitsAsync, UserProfile, UserTrait } from '~/libs/core'
+import { createMemberTraitsAsync, updateMemberTraitsAsync, UserProfile, UserTrait, UserTraitIds } from '~/libs/core'
 import { Button, Collapsible, ConfirmModal, IconOutline, InputText } from '~/libs/ui'
-import { SettingSection, SubscriptionsIcon, triggerSurvey } from '~/apps/accounts/src/lib'
+import { SettingSection, SubscriptionsIcon } from '~/apps/accounts/src/lib'
 
 import styles from './Subscriptions.module.scss'
 
@@ -45,8 +45,18 @@ const Subscriptions: FC<SubscriptionsProps> = (props: SubscriptionsProps) => {
     const [itemToRemove, setItemToRemove]: [UserTrait | undefined, Dispatch<SetStateAction<UserTrait | undefined>>]
         = useState<UserTrait | undefined>()
 
+    const [isSaving, setIsSaving] = useState<boolean>(false)
+    const [isDeleting, setIsDeleting] = useState<boolean>(false)
+
     useEffect(() => {
-        setSubscriptionsTypesData(props.subscriptionsTrait?.traits.data)
+        const raw = props.subscriptionsTrait?.traits.data as any[] | undefined
+        if (!raw) {
+            setSubscriptionsTypesData(undefined)
+            return
+        }
+
+        const normalized = raw.map((t: any) => (typeof t === 'string' ? { name: t } : t))
+        setSubscriptionsTypesData(normalized)
     }, [props.subscriptionsTrait])
 
     function toggleRemoveConfirmation(): void {
@@ -77,6 +87,10 @@ const Subscriptions: FC<SubscriptionsProps> = (props: SubscriptionsProps) => {
     }
 
     function handleFormAction(): void {
+        if (isSaving) {
+            return
+        }
+
         // validate the form
         const sN: string = trim(selectedSubsctiptionName)
         const updatedFormErrors: { [key: string]: string } = {}
@@ -96,6 +110,7 @@ const Subscriptions: FC<SubscriptionsProps> = (props: SubscriptionsProps) => {
         }
 
         if (isEmpty(updatedFormErrors)) {
+            setIsSaving(true)
             // call the API to update the trait based on action type
             if (isEditMode) {
                 const updatedSubscriptionsTypesData: UserTrait[] = reject(
@@ -114,7 +129,8 @@ const Subscriptions: FC<SubscriptionsProps> = (props: SubscriptionsProps) => {
                             data: [
                                 ...updatedSubscriptionsTypesData || [],
                                 softwareTypeUpdate,
-                            ],
+                            ].map((t: any) => t.name),
+                            traitId: UserTraitIds.subscription,
                         },
                     }],
                 )
@@ -124,7 +140,6 @@ const Subscriptions: FC<SubscriptionsProps> = (props: SubscriptionsProps) => {
                             ...updatedSubscriptionsTypesData || [],
                             softwareTypeUpdate,
                         ])
-                        triggerSurvey()
                     })
                     .catch(() => {
                         toast.error('Error updating subscription')
@@ -132,9 +147,11 @@ const Subscriptions: FC<SubscriptionsProps> = (props: SubscriptionsProps) => {
                     .finally(() => {
                         resetForm()
                         setIsEditMode(false)
+                        setIsSaving(false)
                     })
             } else {
-                updateOrCreateMemberTraitsAsync(
+                const action = props.subscriptionsTrait ? updateMemberTraitsAsync : createMemberTraitsAsync
+                action(
                     props.profile.handle,
                     [{
                         categoryName: 'Subscription',
@@ -143,7 +160,8 @@ const Subscriptions: FC<SubscriptionsProps> = (props: SubscriptionsProps) => {
                             data: [
                                 ...subscriptionsTypesData || [],
                                 softwareTypeUpdate,
-                            ],
+                            ].map((t: any) => t.name),
+                            traitId: UserTraitIds.subscription,
                         },
                     }],
                 )
@@ -153,13 +171,13 @@ const Subscriptions: FC<SubscriptionsProps> = (props: SubscriptionsProps) => {
                             ...subscriptionsTypesData || [],
                             softwareTypeUpdate,
                         ])
-                        triggerSurvey()
                     })
                     .catch(() => {
                         toast.error('Error adding new subscription')
                     })
                     .finally(() => {
                         resetForm()
+                        setIsSaving(false)
                     })
             }
         }
@@ -174,32 +192,38 @@ const Subscriptions: FC<SubscriptionsProps> = (props: SubscriptionsProps) => {
     }
 
     function onRemoveItemConfirm(): void {
+        if (isDeleting) {
+            return
+        }
+
         const updatedSubscriptionsTypesData: UserTrait[] = reject(subscriptionsTypesData, (trait: UserTrait) => (
             trait.name === itemToRemove?.name
         )) || []
 
         resetForm()
 
+        setIsDeleting(true)
         updateMemberTraitsAsync(
             props.profile.handle,
             [{
                 categoryName: 'Subscription',
                 traitId: 'subscription',
                 traits: {
-                    data: updatedSubscriptionsTypesData,
+                    data: (updatedSubscriptionsTypesData || []).map((t: any) => t.name),
+                    traitId: UserTraitIds.subscription,
                 },
             }],
         )
             .then(() => {
                 toast.success('Subscription deleted successfully')
                 setSubscriptionsTypesData(updatedSubscriptionsTypesData)
-                triggerSurvey()
             })
             .catch(() => {
                 toast.error('Error deleting subscription')
             })
             .finally(() => {
                 toggleRemoveConfirmation()
+                setIsDeleting(false)
             })
     }
 
@@ -245,6 +269,7 @@ const Subscriptions: FC<SubscriptionsProps> = (props: SubscriptionsProps) => {
                 onClose={toggleRemoveConfirmation}
                 onConfirm={onRemoveItemConfirm}
                 open={removeConfirmationOpen}
+                isLoading={isDeleting}
             >
                 <div>
                     Are you sure you want to delete
@@ -279,6 +304,7 @@ const Subscriptions: FC<SubscriptionsProps> = (props: SubscriptionsProps) => {
                             link
                             label={`${isEditMode ? 'Edit' : 'Add'} Subscription to your List`}
                             onClick={handleFormAction}
+                            disabled={isSaving}
                         />
                         {isEditMode && (
                             <Button

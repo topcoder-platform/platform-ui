@@ -54,3 +54,13 @@
         vertical-align: middle;
     }
 }
+
+.emailCell {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.emailText {
+    word-break: break-all;
+}

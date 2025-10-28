@@ -6,7 +6,7 @@ import { TABLE_DATE_FORMAT } from '../../config/index.config'
  * Model for client info
  */
 export interface ClientInfo {
-    id: number
+    id: number | string
     name: string
     status: string
     startDate: Date
@@ -38,5 +38,9 @@ export function adjustClientInfoResponse(data: ClientInfo): ClientInfo {
                 .local()
                 .format(TABLE_DATE_FORMAT)
             : data.startDate,
+        status: data.status
+            ? data.status.toString()
+                .toUpperCase()
+            : data.status,
     }
 }

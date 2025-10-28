@@ -3,7 +3,7 @@ export const softwareTypes: Array<{
     value: string,
 }> = [{
     label: 'Developer Tools',
-    value: 'Developer Tools',
+    value: 'DeveloperTools',
 },
 {
     label: 'Browser',
@@ -15,7 +15,7 @@ export const softwareTypes: Array<{
 },
 {
     label: 'Graphics & Design',
-    value: 'Graphics & Design',
+    value: 'GraphAndDesign',
 },
 {
     label: 'Utilities',

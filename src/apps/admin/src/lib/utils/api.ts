@@ -8,9 +8,24 @@ import { ChallengeFilterCriteria, ReviewFilterCriteria } from '../models'
  * Handles api v5,v3 errors.
  */
 export const handleError = (error: any): void => {
+    const errorCode = _.get(error, 'data.code')
+        ?? _.get(error, 'response.data.code')
+        ?? error?.code
+
     let errMessage
-    const errorMessageV5 = _.get(error, 'data.message')
-    errMessage = errorMessageV5
+
+    if (errorCode === 'SUBMISSION_NOT_CLEAN') {
+        errMessage = [
+            'Submission is not available in clean storage, meaning it failed antivirus checks',
+            "or the antivirus checks haven't been run",
+        ].join(' ')
+    }
+
+    if (!errMessage) {
+        const errorMessageV5 = _.get(error, 'data.message')
+        errMessage = errorMessageV5
+    }
+
     if (!errMessage) {
         errMessage = _.get(error, 'response.data.result.content')
     }
@@ -61,7 +76,7 @@ export const createChallengeQueryString = (
 
     if (filterCriteria.status) filter += `&status=${filterCriteria.status}`
 
-    filter += '&sortBy=created&sortOrder=desc'
+    filter += '&sortBy=createdAt&sortOrder=desc'
 
     return filter
 }
@@ -69,17 +84,25 @@ export const createChallengeQueryString = (
 export const createReviewQueryString = (
     filterCriteria: ReviewFilterCriteria,
 ): string => {
-    let filter = ''
+    const params: string[] = []
 
     if (filterCriteria.page) {
-        filter += `page=${filterCriteria.page}`
+        params.push(`page=${filterCriteria.page}`)
     }
 
     if (filterCriteria.perPage) {
-        filter += `&perPage=${filterCriteria.perPage}`
+        params.push(`perPage=${filterCriteria.perPage}`)
     }
 
-    return filter
+    if (filterCriteria.sortBy) {
+        params.push(`sortBy=${filterCriteria.sortBy}`)
+    }
+
+    if (filterCriteria.order) {
+        params.push(`sortOrder=${filterCriteria.order}`)
+    }
+
+    return params.join('&')
 }
 
 export const replaceBrowserUrlQuery = (query: string): void => {
@@ -92,13 +115,130 @@ export const replaceBrowserUrlQuery = (query: string): void => {
  * @param obj query object
  * @returns query in string
  */
-function serialize(obj: { [key: string]: string | number | Date }): string {
-    const result: string[] = []
-    _.forOwn(obj, (value, key) => {
-        result.push(`${encodeURIComponent(key)}=${value}`)
-    })
+const STATUS_FILTER_MAP: Record<string, string> = {
+    0: 'INACTIVE',
+    1: 'ACTIVE',
+    ACTIVE: 'ACTIVE',
+    Active: 'ACTIVE',
+    active: 'ACTIVE',
+    INACTIVE: 'INACTIVE',
+    Inactive: 'INACTIVE',
+    inactive: 'INACTIVE',
+}
 
-    return result.join('&')
+type CriteriaValue = string | number | Date | undefined | null
+type Criteria = Record<string, CriteriaValue>
+type QueryParams = Record<string, string | number>
+type PageAndSort = {
+    limit: number
+    page: number
+    sort: string
+}
+
+// Date filter mapping:
+// - Start Date input should constrain both startDateFrom and endDateFrom
+// - End Date input should constrain both startDateTo and endDateTo
+const CRITERIA_DATE_KEYS: Record<string, { from: string; to: string }> = {
+    // End Date input -> upper bounds for both start and end
+    endDate: {
+        from: 'startDateTo',
+        to: 'endDateTo',
+    },
+    // Start Date input -> lower bounds for both start and end
+    startDate: {
+        from: 'startDateFrom',
+        to: 'endDateFrom',
+    },
+}
+
+const USER_CRITERIA_KEYS = new Set(['user', 'userId'])
+
+const shouldSkipCriteriaValue = (value: CriteriaValue): boolean => (
+    value === undefined
+    || value === null
+    || (typeof value === 'string' && value.trim() === '')
+)
+
+const resolveDateValue = (value: CriteriaValue): Date | undefined => {
+    if (value instanceof Date) {
+        return value
+    }
+
+    if (typeof value === 'string' || typeof value === 'number') {
+        const candidate = new Date(value)
+        return Number.isNaN(candidate.getTime()) ? undefined : candidate
+    }
+
+    return undefined
+}
+
+const applyDateCriteria = (
+    value: CriteriaValue,
+    target: { from: string; to: string },
+    params: QueryParams,
+): void => {
+    const dateValue = resolveDateValue(value)
+    if (!dateValue) {
+        return
+    }
+
+    const formatted = formatDateForQuery(dateValue)
+    params[target.from] = formatted
+    params[target.to] = formatted
+}
+
+const handleUserCriteria = (value: CriteriaValue, params: QueryParams): void => {
+    params.userId = `${value}`.trim()
+}
+
+const handleStatusCriteria = (value: CriteriaValue, params: QueryParams): void => {
+    const normalizedStatus = `${value}`.trim()
+    const mappedStatus = STATUS_FILTER_MAP[normalizedStatus] ?? normalizedStatus
+    params.status = mappedStatus
+}
+
+const assignDefaultCriteria = (
+    key: string,
+    value: CriteriaValue,
+    params: QueryParams,
+): void => {
+    if (value instanceof Date) {
+        params[key] = formatDateForQuery(value)
+        return
+    }
+
+    params[key] = `${value}`.trim()
+}
+
+const assignPagination = (params: QueryParams, pageAndSort: PageAndSort): void => {
+    if (pageAndSort.limit) {
+        params.perPage = pageAndSort.limit
+    }
+
+    if (pageAndSort.page) {
+        params.page = pageAndSort.page
+    }
+}
+
+const assignSortParams = (params: QueryParams, sort: string): void => {
+    const trimmedSort = sort.trim()
+    if (!trimmedSort) {
+        return
+    }
+
+    const sortMatch = trimmedSort.match(/^([^\s]+)(?:\s+(asc|desc))?$/i)
+    if (sortMatch?.[1]) {
+        params.sortBy = sortMatch[1]
+    }
+
+    if (sortMatch?.[2]) {
+        params.sortOrder = sortMatch[2].toLowerCase()
+    }
+}
+
+function formatDateForQuery(value: Date): string {
+    const isoString = value.toISOString()
+    return `${isoString.substring(0, 16)}Z`
 }
 
 /**
@@ -108,30 +248,38 @@ function serialize(obj: { [key: string]: string | number | Date }): string {
  * @returns string query
  */
 export const createFilterPageSortQuery = (
-    criteria: { [key: string]: string | number | Date | undefined | null },
-    pageAndSort: {
-        limit: number
-        page: number
-        sort: string
-    },
+    criteria: Criteria,
+    pageAndSort: PageAndSort,
 ): string => {
-    const params: { [key: string]: string | number | Date } = {}
-    Object.keys(criteria)
-        .forEach((key: string) => {
-            let value = criteria[key]
-            if (value) {
-                if (key === 'startDate' || key === 'endDate') {
-                    const iosString = (value as Date).toISOString()
-                    value = `${iosString.substring(0, 16)}Z`
-                }
+    const params: QueryParams = {}
 
-                params[key] = value
+    Object.entries(criteria)
+        .forEach(([key, rawValue]) => {
+            if (shouldSkipCriteriaValue(rawValue)) {
+                return
             }
+
+            const dateTarget = CRITERIA_DATE_KEYS[key]
+            if (dateTarget) {
+                applyDateCriteria(rawValue, dateTarget, params)
+                return
+            }
+
+            if (USER_CRITERIA_KEYS.has(key)) {
+                handleUserCriteria(rawValue, params)
+                return
+            }
+
+            if (key === 'status') {
+                handleStatusCriteria(rawValue, params)
+                return
+            }
+
+            assignDefaultCriteria(key, rawValue, params)
         })
-    return qs.stringify({
-        filter: serialize(params),
-        limit: pageAndSort.limit,
-        offset: (pageAndSort.page - 1) * 25,
-        sort: pageAndSort.sort,
-    })
+
+    assignPagination(params, pageAndSort)
+    assignSortParams(params, pageAndSort.sort)
+
+    return qs.stringify(params, { skipNulls: true })
 }

@@ -1,0 +1,28 @@
+.container {
+    display: flex;
+    flex-direction: column;
+}
+
+.summary {
+    align-items: center;
+    justify-content: space-between;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.lockedNotice {
+    margin-top: 24px;
+    padding: 24px;
+    border: 1px solid #d5d9de;
+    border-radius: 8px;
+    background-color: #f5f7fa;
+    color: #2a2a2a;
+    line-height: 1.5;
+    font-size: 14px;
+
+    strong {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 16px;
+    }
+}

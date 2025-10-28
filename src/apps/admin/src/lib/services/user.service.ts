@@ -1,9 +1,11 @@
 import _ from 'lodash'
 
 import { EnvironmentConfig } from '~/config'
+import type { PaginatedResponse } from '~/libs/core'
 import {
     xhrDeleteAsync,
     xhrGetAsync,
+    xhrGetPaginatedAsync,
     xhrPatchAsync,
     xhrPostAsync,
     xhrPutAsync,
@@ -14,7 +16,6 @@ import {
     adjustUserStatusHistoryResponse,
     ApiV3Response,
     MemberInfo,
-    SSOLoginProvider,
     SSOUserLogin,
     UserInfo,
     UserStatusHistory,
@@ -32,11 +33,29 @@ export const getMemberSuggestionsByHandle = async (
         return []
     }
 
-    type v3Response<T> = { result: { content: T } }
-    const data = await xhrGetAsync<
-        v3Response<Array<MemberInfo>>
-    >(`${EnvironmentConfig.API.V3}/members/_suggest/${handle}`)
-    return data.result.content
+    const sanitizedHandle = encodeURIComponent(handle.trim())
+
+    type MemberAutocompleteResponse = {
+        userId: number
+        handle: string
+        firstName?: string | null
+        lastName?: string | null
+        photoURL?: string | null
+        maxRating?: unknown
+    }
+
+    const response = await xhrGetAsync<MemberAutocompleteResponse[]>(
+        `${EnvironmentConfig.API.V6}/members/autocomplete/${sanitizedHandle}`,
+    )
+
+    return response.map(member => ({
+        firstName: member.firstName ?? undefined,
+        handle: member.handle,
+        lastName: member.lastName ?? undefined,
+        maxRating: member.maxRating,
+        photoURL: member.photoURL ?? undefined,
+        userId: member.userId,
+    }))
 }
 
 /**
@@ -52,7 +71,7 @@ export const getMembersByHandle = async (
     })
 
     return xhrGetAsync<Array<MemberInfo>>(
-        `${EnvironmentConfig.API.V5}/members?fields=userId,handle${qs}`,
+        `${EnvironmentConfig.API.V6}/members?fields=userId,handle${qs}`,
     )
 }
 
@@ -76,7 +95,20 @@ export const searchUsers = async (options?: {
         {
             fields:
                 opts.fields
-                || 'id,handle,email,active,emailActive,status,credential,firstName,lastName,createdAt,modifiedAt',
+                || [
+                    'id',
+                    'handle',
+                    'email',
+                    'active',
+                    'emailActive',
+                    'emailVerified',
+                    'status',
+                    'credential',
+                    'firstName',
+                    'lastName',
+                    'createdAt',
+                    'modifiedAt',
+                ].join(','),
             filter: opts.filter,
             limit: opts.limit,
         },
@@ -86,10 +118,65 @@ export const searchUsers = async (options?: {
             }
         },
     )
-    const result = await xhrGetAsync<ApiV3Response<UserInfo[]>>(
-        `${EnvironmentConfig.API.V3}/users?${query}`,
+    const users = await xhrGetAsync<UserInfo[]>(
+        `${EnvironmentConfig.API.V6}/users?${query}`,
     )
-    return result.result.content.map(adjustUserInfoResponse)
+    return users.map(adjustUserInfoResponse)
+}
+
+/**
+ * Search users with pagination metadata.
+ * @param options the search options including pagination.
+ * @returns resolves to paginated response of users
+ */
+export const searchUsersPaginated = async (options?: {
+    fields?: string
+    filter?: string
+    limit?: number
+    offset?: number
+}): Promise<PaginatedResponse<UserInfo[]>> => {
+    let query = ''
+    const opts: {
+        fields?: string
+        filter?: string
+        limit?: number
+        offset?: number
+    } = options || {}
+    _.forOwn(
+        {
+            fields:
+                opts.fields
+                || [
+                    'id',
+                    'handle',
+                    'email',
+                    'active',
+                    'emailActive',
+                    'emailVerified',
+                    'status',
+                    'credential',
+                    'firstName',
+                    'lastName',
+                    'createdAt',
+                    'modifiedAt',
+                ].join(','),
+            filter: opts.filter,
+            limit: opts.limit,
+            offset: opts.offset,
+        },
+        (value, key) => {
+            if (value !== undefined && value !== null && value !== '') {
+                query += `&${key}=${encodeURIComponent(String(value))}`
+            }
+        },
+    )
+    const response = await xhrGetPaginatedAsync<UserInfo[]>(
+        `${EnvironmentConfig.API.V6}/users?${query}`,
+    )
+    return {
+        ...response,
+        data: response.data.map(adjustUserInfoResponse),
+    }
 }
 
 /**
@@ -102,10 +189,15 @@ export const getProfile = async (handle: string): Promise<MemberInfo> => {
         return Promise.reject(new Error('Handle must be specified.'))
     }
 
-    const result = await xhrGetAsync<ApiV3Response<MemberInfo>>(
-        `${EnvironmentConfig.API.V3}/members/${handle}`,
+    const response = await xhrGetAsync<MemberInfo | ApiV3Response<MemberInfo>>(
+        `${EnvironmentConfig.API.V6}/members/${handle}`,
     )
-    return result.result.content
+
+    if ('result' in response) {
+        return response.result.content
+    }
+
+    return response
 }
 
 /**
@@ -123,11 +215,10 @@ export const updateUserEmail = async (
             email,
         },
     })
-    const result = await xhrPatchAsync<string, ApiV3Response<UserInfo>>(
-        `${EnvironmentConfig.API.V3}/users/${userId}/email`,
+    return xhrPatchAsync<string, UserInfo>(
+        `${EnvironmentConfig.API.V6}/users/${userId}/email`,
         payload,
     )
-    return result.result.content
 }
 
 /**
@@ -148,11 +239,11 @@ export const updateUserStatus = async (
         },
     })
     const param = comment ? `?comment=${encodeURIComponent(comment)}` : ''
-    const result = await xhrPatchAsync<string, ApiV3Response<UserInfo>>(
-        `${EnvironmentConfig.API.V3}/users/${userId}/status${param}`,
+    const result = await xhrPatchAsync<string, UserInfo>(
+        `${EnvironmentConfig.API.V6}/users/${userId}/status${param}`,
         payload,
     )
-    return adjustUserInfoResponse(result.result.content)
+    return adjustUserInfoResponse(result)
 }
 
 /**
@@ -163,10 +254,10 @@ export const updateUserStatus = async (
 export const fetchAchievements = async (
     userId: string,
 ): Promise<UserStatusHistory[]> => {
-    const result = await xhrGetAsync<ApiV3Response<UserStatusHistory[]>>(
-        `${EnvironmentConfig.API.V3}/users/${userId}/achievements`,
+    const history = await xhrGetAsync<UserStatusHistory[]>(
+        `${EnvironmentConfig.API.V6}/users/${userId}/achievements`,
     )
-    return result.result.content.map(adjustUserStatusHistoryResponse)
+    return history.map(adjustUserStatusHistoryResponse)
 }
 
 /**
@@ -177,10 +268,10 @@ export const fetchAchievements = async (
 export const findUserById = async (
     userId: string | number,
 ): Promise<UserInfo> => {
-    const result = await xhrGetAsync<ApiV3Response<UserInfo>>(
-        `${EnvironmentConfig.API.V3}/users/${userId}`,
+    const user = await xhrGetAsync<UserInfo>(
+        `${EnvironmentConfig.API.V6}/users/${userId}`,
     )
-    return adjustUserInfoResponse(result.result.content)
+    return adjustUserInfoResponse(user)
 }
 
 /**
@@ -190,23 +281,9 @@ export const findUserById = async (
  */
 export const fetchSSOUserLogins = async (
     userId: string | number,
-): Promise<SSOUserLogin[]> => {
-    const result = await xhrGetAsync<ApiV3Response<SSOUserLogin[]>>(
-        `${EnvironmentConfig.API.V3}/users/${userId}/SSOUserLogins`,
-    )
-    return result.result.content
-}
-
-/**
- * Fetch list of sso login provider.
- * @returns resolves to sso user logins
- */
-export const fetchSSOLoginProviders = async (): Promise<SSOLoginProvider[]> => {
-    const result = await xhrGetAsync<ApiV3Response<SSOLoginProvider[]>>(
-        `${EnvironmentConfig.API.V3}/ssoLoginProviders`,
-    )
-    return result.result.content
-}
+): Promise<SSOUserLogin[]> => xhrGetAsync<SSOUserLogin[]>(
+    `${EnvironmentConfig.API.V6}/users/${userId}/SSOUserLogins`,
+)
 
 /**
  * Create sso user login.
@@ -218,15 +295,15 @@ export const createSSOUserLogin = async (
     userId: string | number,
     userLogin: FormAddSSOLoginData,
 ): Promise<SSOUserLogin> => {
-    const result = await xhrPostAsync<
+    const response = await xhrPostAsync<
         {
             param: FormAddSSOLoginData
         },
-        ApiV3Response<SSOUserLogin>
-    >(`${EnvironmentConfig.API.V3}/users/${userId}/SSOUserLogin`, {
+        SSOUserLogin
+    >(`${EnvironmentConfig.API.V6}/users/${userId}/SSOUserLogin`, {
         param: userLogin,
     })
-    return result.result.content
+    return response
 }
 
 /**
@@ -239,15 +316,15 @@ export const updateSSOUserLogin = async (
     userId: string | number,
     userLogin: FormAddSSOLoginData,
 ): Promise<SSOUserLogin> => {
-    const result = await xhrPutAsync<
+    const response = await xhrPutAsync<
         {
             param: FormAddSSOLoginData
         },
-        ApiV3Response<SSOUserLogin>
-    >(`${EnvironmentConfig.API.V3}/users/${userId}/SSOUserLogin`, {
+        SSOUserLogin
+    >(`${EnvironmentConfig.API.V6}/users/${userId}/SSOUserLogin`, {
         param: userLogin,
     })
-    return result.result.content
+    return response
 }
 
 /**
@@ -260,8 +337,8 @@ export const deleteSSOUserLogin = async (
     userId: string | number,
     provider: string,
 ): Promise<SSOUserLogin> => {
-    const result = await xhrDeleteAsync<ApiV3Response<SSOUserLogin>>(
-        `${EnvironmentConfig.API.V3}/users/${userId}/SSOUserLogin?provider=${provider}`,
+    const response = await xhrDeleteAsync<SSOUserLogin>(
+        `${EnvironmentConfig.API.V6}/users/${userId}/SSOUserLogin?provider=${provider}`,
     )
-    return result.result.content
+    return response
 }

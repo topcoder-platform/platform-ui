@@ -23,11 +23,13 @@ export interface useTableFilterLocalProps<T> {
  * @param allDatas all table datas
  * @param defaultSort default sort
  * @param mappingSortField mapping from property field to sort field
+ * @param disablePagination should disable pagination
  */
 export function useTableFilterLocal<T>(
     allDatas: T[],
     defaultSort?: Sort,
     mappingSortField?: { [key: string]: string },
+    disablePagination?: boolean,
 ): useTableFilterLocalProps<T> {
     const [page, setPage] = useState(1)
     const [sort, setSort] = useState<Sort | undefined>(defaultSort)
@@ -109,6 +111,8 @@ export function useTableFilterLocal<T>(
         let datas = sortedDatas
         if (!datas.length) {
             setResults([])
+        } else if (disablePagination) {
+            setResults(datas)
         } else {
             const pageFrom0 = (page || 1) - 1
             const itemOffset

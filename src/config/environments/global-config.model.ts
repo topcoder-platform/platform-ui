@@ -1,3 +1,14 @@
+export interface SSOLoginProviderConfig {
+    ssoLoginProviderId: number
+    name: string
+    type: string
+}
+
+export interface LocalServiceOverride {
+    prefix: string
+    target: string
+}
+
 export interface GlobalConfig {
     TC_DOMAIN: string
     TOPCODER_URL: string
@@ -8,6 +19,7 @@ export interface GlobalConfig {
         V3: string
         V4: string
         V5: string
+        V6: string
         URL: string
     },
     STANDARDIZED_SKILLS_API: string,
@@ -15,7 +27,7 @@ export interface GlobalConfig {
     AUTH: {
         ACCOUNTS_APP_CONNECTOR: string
     }
-    ENV: 'dev' | 'prod' | 'qa'
+    ENV: 'dev' | 'prod' | 'qa' | 'local'
     LOGGING: {
         PUBLIC_TOKEN: string | undefined
         SERVICE: string
@@ -60,6 +72,27 @@ export interface GlobalConfig {
         AWS_QUARANTINE_BUCKET: string
         SUBMISSION_SCAN_TOPIC: string
         AVSCAN_TOPIC: string
-    }
+    },
+    REVIEW: {
+        CHALLENGE_PAGE_URL: string
+        PROFILE_PAGE_URL: string
+        OPPORTUNITIES_URL: string
+    },
+    FILESTACK: {
+        API_KEY: string
+        CNAME?: string
+        REGION: string
+        CONTAINER: string
+        PATH_PREFIX: string
+        SECURITY?: {
+            POLICY: string
+            SIGNATURE: string
+        },
+        RETRY: number
+        TIMEOUT: number
+        PROGRESS_INTERVAL: number
+    },
+    ADMIN_SSO_LOGIN_PROVIDERS: SSOLoginProviderConfig[]
+    LOCAL_SERVICE_OVERRIDES?: LocalServiceOverride[]
     TROLLEY_WIDGET_ORIGIN: string
 }

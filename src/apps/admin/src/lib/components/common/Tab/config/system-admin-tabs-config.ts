@@ -6,11 +6,11 @@ import {
     gamificationAdminRouteId,
     manageChallengeRouteId,
     manageReviewRouteId,
+    paymentsRouteId,
     permissionManagementRouteId,
     platformRouteId,
     termsRouteId,
-    userManagementRouteId,
-} from '~/apps/admin/src/config/routes.config'
+    userManagementRouteId } from '~/apps/admin/src/config/routes.config'
 import { platformSkillRouteId } from '~/apps/admin/src/platform/routes.config'
 
 export const SystemAdminTabsConfig: TabsNavItem[] = [
@@ -74,6 +74,10 @@ export const SystemAdminTabsConfig: TabsNavItem[] = [
         ],
         id: platformRouteId,
         title: 'Platform',
+    },
+    {
+        id: paymentsRouteId,
+        title: 'Payments',
     },
 ]
 

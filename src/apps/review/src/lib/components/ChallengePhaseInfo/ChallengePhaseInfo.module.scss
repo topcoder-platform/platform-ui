@@ -1,0 +1,82 @@
+@import "@libs/ui/styles/includes";
+
+.container {
+    display: flex;
+    gap: $sp-10;
+    margin-top: $sp-6;
+    flex-wrap: wrap;
+
+    @include ltelg {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 15px 30px;
+    }
+
+    @include ltesm {
+        grid-template-columns: 1fr;
+    }
+}
+
+.blockItem {
+    display: flex;
+    font-size: 14px;
+    line-height: 19px;
+
+    .circleWrapper {
+        align-items: center;
+        background-color: #E9ECEF;
+        border-radius: 50%;
+        height: 40px;
+        display: flex;
+        margin-right: $sp-4;
+        flex-shrink: 0;
+        justify-content: center;
+        width: 40px;
+    }
+
+    strong {
+        align-items: center;
+        color: var(--FontColor);
+        font-family: "Nunito Sans", sans-serif;
+        display: flex;
+        font-weight: 700;
+        line-height: 20px;
+        i {
+            margin-right: $sp-2;
+        }
+    }
+    span {
+        color: var(--GrayFontColor);
+        display: block;
+        font-family: "Nunito Sans", sans-serif;
+        line-height: 20px;
+    }
+}
+
+.progress {
+    display: block;
+    padding-top: 7px;
+    padding-left: $sp-4;
+    .progressText {
+        display: flex;
+        justify-content: space-between;
+        padding-top: 7px;
+    }
+}
+
+.blockMyRoles {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.textInfo {
+    span {
+        align-items: center;
+        color: var(--FontColor);
+        font-family: "Nunito Sans", sans-serif;
+        display: flex;
+        font-weight: 700;
+        line-height: 20px;
+    }
+}

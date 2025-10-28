@@ -41,7 +41,7 @@ import {
     getChallengeResources,
 } from '../../lib/services'
 import { createChallengeQueryString, handleError } from '../../lib/utils'
-import { useEventCallback } from '../../lib/hooks'
+import { useEventCallback, useFetchChallenge } from '../../lib/hooks'
 import { rootRoute } from '../../config/routes.config'
 
 import styles from './ManageUserPage.module.scss'
@@ -69,10 +69,14 @@ const BackToChallengeListButton: FC = () => {
  * Manage Users page.
  */
 export const ManageUserPage: FC = () => {
-    const pageTitle = 'Manage Users'
     const { challengeId = '' }: { challengeId?: string } = useParams<{
         challengeId: string
     }>()
+    const { challengeInfo }: ReturnType<typeof useFetchChallenge>
+        = useFetchChallenge(challengeId)
+    const pageTitle = challengeInfo?.name
+        ? `Manage users for ${challengeInfo.name}`
+        : 'Manage Users'
     const [filterCriteria, setFilterCriteria]: [
         ChallengeResourceFilterCriteria,
         Dispatch<SetStateAction<ChallengeResourceFilterCriteria>>,

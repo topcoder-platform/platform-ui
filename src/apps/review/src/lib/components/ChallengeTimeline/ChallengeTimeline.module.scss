@@ -1,0 +1,64 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    margin-top: $sp-4;
+    overflow-x: auto;
+}
+
+.phaseCell {
+    max-width: none;
+    white-space: normal;
+}
+
+.statusCell,
+.dateCell {
+    white-space: nowrap;
+}
+
+.actionsColumn {
+    white-space: nowrap;
+}
+
+.status {
+    align-items: center;
+    border-radius: 999px;
+    display: inline-flex;
+    font-size: 12px;
+    font-weight: 700;
+    justify-content: center;
+    min-width: 88px;
+    padding: 4px 12px;
+    text-transform: capitalize;
+}
+
+.statusOpen {
+    background-color: $green-25;
+    color: $green-140;
+}
+
+.statusClosed {
+    background-color: $black-10;
+    color: $black-80;
+}
+
+.statusPending {
+    background-color: $orange-25;
+    color: $orange-140;
+}
+
+.actionsList {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: $sp-2;
+    align-items: center;
+}
+
+.noActions {
+    color: $black-60;
+}
+
+@include ltemd {
+    .status {
+        min-width: auto;
+    }
+}

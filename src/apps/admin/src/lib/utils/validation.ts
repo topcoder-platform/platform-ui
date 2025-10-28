@@ -138,13 +138,13 @@ export const formAddBillingAccountSchema: Yup.ObjectSchema<FormEditBillingAccoun
     = Yup.object({
         budgetAmount: Yup.number()
             .transform(value => (Number.isNaN(value) ? undefined : value))
-            .optional()
+            .required('Budget amount is required.')
             .typeError('Invalid number.')
             .min(1, 'Budget amount must be greater than or equal 1.'),
         client: Yup.object()
             .shape({
-                id: Yup.number()
-                    .typeError('Invalid number.')
+                id: Yup.mixed<string | number>()
+                    .test('client-id-valid', 'Invalid id.', (v: any) => typeof v === 'string' || typeof v === 'number')
                     .required('Id is required.'),
                 name: Yup.string()
                     .required('Name is required.'),
@@ -195,8 +195,8 @@ export const formEditBillingAccountSchema: Yup.ObjectSchema<FormEditBillingAccou
             .min(1, 'Budget amount must be greater than or equal 1.'),
         client: Yup.object()
             .shape({
-                id: Yup.number()
-                    .typeError('Invalid number.')
+                id: Yup.mixed<string | number>()
+                    .test('client-id-valid', 'Invalid id.', (v: any) => typeof v === 'string' || typeof v === 'number')
                     .required('Id is required.'),
                 name: Yup.string()
                     .required('Name is required.'),

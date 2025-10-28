@@ -14,7 +14,6 @@ import {
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
 import { AddButton, EditMemberPropertyBtn, EmptySection } from '../../components'
 import { MemberTCAInfo } from '../tca-info'
-import { triggerSurvey } from '../../lib'
 
 import { ModifyEducationModal } from './ModifyEducationModal'
 import { EducationCard } from './EducationCard'
@@ -72,7 +71,6 @@ const EducationAndCertifications: FC<EducationAndCertificationsProps> = (props: 
             setIsEditMode(false)
             mutateTraits()
             props.refreshProfile(props.profile.handle)
-            triggerSurvey()
         }, 1000)
     }
 
@@ -92,7 +90,7 @@ const EducationAndCertifications: FC<EducationAndCertificationsProps> = (props: 
                     (memberEducation?.length as number) > 0 && (
                         memberEducation?.map((education: UserTrait) => (
                             <EducationCard
-                                key={`${education.schoolCollegeName}-${education.major}`}
+                                key={`${education.collegeName}-${education.degree}`}
                                 education={education}
                             />
                         ))

@@ -30,9 +30,12 @@ export interface UserRole {
  */
 export function adjustUserRoleResponse(data: UserRole): UserRole {
     const createdAt = data.createdAt ? new Date(data.createdAt) : data.createdAt
-    const modifiedAt = data.modifiedAt
-        ? new Date(data.modifiedAt)
-        : data.modifiedAt
+    // Backend may return updated* fields instead of modified*
+    const updatedAtRaw = (data as any).updatedAt
+    const updatedByRaw = (data as any).updatedBy
+    const modifiedAtSource: any = data.modifiedAt ?? updatedAtRaw
+    const modifiedBySource: any = data.modifiedBy ?? updatedByRaw
+    const modifiedAt = modifiedAtSource ? new Date(modifiedAtSource) : modifiedAtSource
     return {
         ...data,
         createdAt,
@@ -41,11 +44,17 @@ export function adjustUserRoleResponse(data: UserRole): UserRole {
                 .local()
                 .format(TABLE_DATE_FORMAT)
             : data.createdAt,
+        // Normalize to modified* so UI consistently renders
         modifiedAt,
         modifiedAtString: data.modifiedAt
             ? moment(data.modifiedAt)
                 .local()
                 .format(TABLE_DATE_FORMAT)
-            : data.modifiedAt,
+            : (modifiedAtSource
+                ? moment(modifiedAtSource)
+                    .local()
+                    .format(TABLE_DATE_FORMAT)
+                : data.modifiedAt),
+        modifiedBy: modifiedBySource,
     }
 }

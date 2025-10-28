@@ -20,9 +20,9 @@ import {
 } from '../models'
 import { createChallengeQueryString } from '../utils'
 
-const challengeBaseUrl = `${EnvironmentConfig.API.V5}`
-const resourceBaseUrl = `${EnvironmentConfig.API.V5}`
-const memberBaseUrl = `${EnvironmentConfig.API.V5}`
+const challengeBaseUrl = `${EnvironmentConfig.API.V6}`
+const resourceBaseUrl = `${EnvironmentConfig.API.V6}`
+const memberBaseUrl = `${EnvironmentConfig.API.V6}`
 
 /**
  * Searches the challenges using v5 api.
@@ -129,7 +129,7 @@ export const addChallengeResource = async (data: {
     challengeId: string
     memberHandle: string
     roleId: string
-}): Promise<unknown> => xhrPostAsync(`${EnvironmentConfig.API.V5}/resources`, data)
+}): Promise<unknown> => xhrPostAsync(`${resourceBaseUrl}/resources`, data)
 
 /**
  * Gets the challenge details by id.

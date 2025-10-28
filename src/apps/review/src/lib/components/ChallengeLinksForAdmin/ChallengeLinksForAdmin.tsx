@@ -1,0 +1,225 @@
+/**
+ * Challenge Links for Admin/Copilot.
+ */
+import {
+    FC,
+    useCallback,
+    useContext,
+    useMemo,
+    useState,
+} from 'react'
+import classNames from 'classnames'
+
+import { ConfirmModal } from '../ConfirmModal'
+import { DialogPayments } from '../DialogPayments'
+import { useAppNavigate } from '../../hooks'
+import {
+    ChallengeDetailContext,
+} from '../../contexts'
+import {
+    ChallengeDetailContextModel,
+    FormReviews,
+    ReviewInfo,
+} from '../../models'
+import { DialogContactManager } from '../DialogContactManager'
+import { filterResources, isReviewPhase } from '../../utils'
+import {
+    ADMIN,
+    COPILOT,
+    REVIEWER,
+    SUBMITTER,
+} from '../../../config/index.config'
+
+import styles from './ChallengeLinksForAdmin.module.scss'
+
+interface Props {
+    className?: string
+    isSavingReview: boolean
+    reviewInfo?: ReviewInfo
+    saveReviewInfo: (
+        updatedReview: FormReviews | undefined,
+        fullReview: FormReviews | undefined,
+        committed: boolean,
+        totalScore: number,
+        success: () => void,
+    ) => void
+    canEditScorecard?: boolean
+    isManagerEdit?: boolean
+    onToggleManagerEdit?: () => void
+}
+
+export const ChallengeLinksForAdmin: FC<Props> = (props: Props) => {
+    const [showCloseConfirmation, setShowCloseConfirmation] = useState(false)
+    const [showContactManager, setShowContactManager] = useState(false)
+    const [showPayments, setShowPayments] = useState(false)
+    const navigate = useAppNavigate()
+    const {
+        challengeInfo,
+        myResources,
+    }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
+
+    const canShowContactManagerButton = useMemo(
+        () => filterResources(
+            [SUBMITTER, REVIEWER, COPILOT, ADMIN],
+            myResources,
+        ).length > 0,
+        [myResources],
+    )
+
+    const canShowReopenButton = useMemo(() => {
+        if (!props.reviewInfo?.id) {
+            return false
+        }
+
+        const statusUpper = (challengeInfo?.status ?? '').toString()
+            .toUpperCase()
+        if (!statusUpper.startsWith('ACTIVE')) {
+            return false
+        }
+
+        if (statusUpper.includes('COMPLETED') || statusUpper.includes('CANCELLED')) {
+            return false
+        }
+
+        if (!isReviewPhase(challengeInfo)) {
+            return false
+        }
+
+        const currentPhaseId = challengeInfo?.currentPhaseObject?.id
+        const reviewPhaseId = props.reviewInfo?.phaseId
+        if (!currentPhaseId || !reviewPhaseId) {
+            return false
+        }
+
+        if (currentPhaseId !== reviewPhaseId) {
+            return false
+        }
+
+        if (challengeInfo?.currentPhaseObject?.isOpen === false) {
+            return false
+        }
+
+        return true
+    }, [
+        challengeInfo?.currentPhase,
+        challengeInfo?.currentPhaseObject?.id,
+        challengeInfo?.currentPhaseObject?.isOpen,
+        challengeInfo?.status,
+        props.reviewInfo?.id,
+        props.reviewInfo?.phaseId,
+    ])
+
+    const reopen = useCallback(() => {
+        setShowCloseConfirmation(true)
+    }, [])
+
+    return (
+        <>
+            <div className={classNames(styles.container, props.className)}>
+                {canShowContactManagerButton && (
+                    <button
+                        type='button'
+                        className='borderButton'
+                        onClick={function onClick() {
+                            setShowContactManager(true)
+                        }}
+                    >
+                        Contact Manager
+                    </button>
+                )}
+
+                {challengeInfo?.discussionsUrl && (
+                    <a
+                        href={challengeInfo.discussionsUrl}
+                        className='borderButton'
+                        target='_blank'
+                        rel='noreferrer'
+                    >
+                        Forum
+                    </a>
+                )}
+
+                {/* Payments available for Admin/Copilot (this component is only rendered for them) */}
+                <button
+                    type='button'
+                    className='borderButton'
+                    onClick={function onClick() {
+                        setShowPayments(true)
+                    }}
+                >
+                    Payments
+                </button>
+
+                {props.canEditScorecard && (
+                    <button
+                        type='button'
+                        className='borderButton'
+                        onClick={props.onToggleManagerEdit}
+                    >
+                        {props.isManagerEdit ? 'Exit Edit Mode' : 'Edit Scorecard'}
+                    </button>
+                )}
+
+                {canShowReopenButton && (
+                    <button
+                        disabled={props.isSavingReview}
+                        type='button'
+                        className='borderButton'
+                        onClick={reopen}
+                    >
+                        Reopen
+                    </button>
+                )}
+            </div>
+
+            {showContactManager && (
+                <DialogContactManager
+                    open
+                    setOpen={function setOpen(open: boolean) {
+                        setShowContactManager(open)
+                    }}
+                />
+            )}
+
+            {showPayments && (
+                <DialogPayments
+                    open
+                    setOpen={function setOpen(open: boolean) {
+                        setShowPayments(open)
+                    }}
+                />
+            )}
+
+            <ConfirmModal
+                title='Reopen Scorecard Confirmation'
+                action='Confirm'
+                onClose={function onClose() {
+                    setShowCloseConfirmation(false)
+                }}
+                onConfirm={function onConfirm() {
+                    props.saveReviewInfo(
+                        undefined,
+                        undefined,
+                        false,
+                        props.reviewInfo?.initialScore ?? 0,
+                        () => {
+                            navigate(-1, {
+                                fallback: './../../../../challenge-details',
+                            })
+                        },
+                    )
+                }}
+                open={showCloseConfirmation}
+                maxWidth='578px'
+            >
+                <div>
+                    The scorecard will be reopened and the reviewer will be able
+                    to edit it before submitting the scorecard again. Are you
+                    sure you want to reopen the scorecard?
+                </div>
+            </ConfirmModal>
+        </>
+    )
+}
+
+export default ChallengeLinksForAdmin

@@ -17,32 +17,39 @@ import { SubmissionReviewSummation } from './SubmissionReviewSummation.model'
  * Model for submission info
  */
 export interface Submission {
-    updatedBy: string
-    created: Date
-    legacySubmissionId: number
-    isFileSubmission: boolean
-    type: string
-    submittedDate: Date
+  id: string
+  type: string
+  status?: string
+  url: string | null
+  memberId: string | null
+  challengeId: string | null
+    legacySubmissionId?: string | null
+    legacyChallengeId?: number | string | null
+    legacyUploadId?: string | null
+    submissionPhaseId?: string | null
+    submittedDate: Date | string | null
     submittedDateString?: string // this field is calculated at frontend
-    url: string
-    challengeId: number
     createdBy: string
-    legacyChallengeId: number
+    created?: Date | string | null
+    createdAt?: Date | string | null
+    updatedBy: string | null
+    updated?: Date | string | null
+    updatedAt?: Date | string | null
+    fileType?: string | null
+    prizeId?: number | string | null
+    isFileSubmission?: boolean
     review: SubmissionReview[]
     reviewSummation?: SubmissionReviewSummation[]
-    id: string
-    submissionPhaseId: string
-    updated: Date
-    fileType: string
-    memberId: number
-    v5ChallengeId: string
     exampleScore?: number // this field is calculated at frontend
     provisionalScore?: number // this field is calculated at frontend
     finalScore?: number // this field is calculated at frontend
     provisionalRank?: number // this field is calculated at frontend
     finalRank?: number // this field is calculated at frontend
     hideToggleHistory?: boolean // this field is calculated at frontend
-    isTheLatestSubmission?: boolean // this field is calculated at frontend
+  isTheLatestSubmission?: boolean // this field is calculated at frontend
+  // Enriched fields from API (Admin/Copilot/M2M only)
+  submitterHandle?: string
+  submitterMaxRating?: number | null
 }
 
 /**
@@ -94,33 +101,43 @@ export function recalculateSubmissionRank(
 export function adjustSubmissionsResponse(
     submissions: Submission[],
 ): MemberSubmission[] {
-    const data: {
-        [key: number]: Submission[]
-    } = {}
-    const result: MemberSubmission[] = []
-
+    const grouped: Record<string, Submission[]> = {}
     _.each(submissions, submission => {
-        const { memberId }: Submission = submission
-        if (!data[memberId]) {
-            data[memberId] = []
+        if (!submission) {
+            return
         }
 
-        data[memberId].push(submission)
+        const memberKey = submission.memberId
+            ?? submission.createdBy
+            ?? submission.id
+        const key = String(memberKey)
+
+        if (!grouped[key]) {
+            grouped[key] = []
+        }
+
+        grouped[key].push(submission)
     })
 
-    _.each(data, (value, key) => {
+    const result: MemberSubmission[] = []
+
+    _.each(grouped, (value, key) => {
+        const sortedSubmissions = [...value].sort((a, b) => {
+            const submittedB = b.submittedDate
+                ? new Date(b.submittedDate)
+                : new Date(0)
+            const submittedA = a.submittedDate
+                ? new Date(a.submittedDate)
+                : new Date(0)
+
+            return submittedB.getTime() - submittedA.getTime()
+        })
+
         result.push({
             finalRank: undefined,
-            memberId: key as any,
+            memberId: sortedSubmissions[0]?.memberId ?? key,
             provisionalRank: undefined,
-            submissions: [
-                ...value.sort(
-                    (a, b) => new Date(b.submittedDate)
-                        .getTime()
-                    - new Date(a.submittedDate)
-                        .getTime(),
-                ),
-            ],
+            submissions: sortedSubmissions,
         })
     })
 
@@ -133,56 +150,111 @@ export function adjustSubmissionsResponse(
  * @returns updated data
  */
 export function adjustSubmissionResponse(data: Submission): Submission {
-    const validReviews = _.reject(data.review, [
-        'typeId',
-        EnvironmentConfig.ADMIN.AV_SCAN_SCORER_REVIEW_TYPE_ID,
-    ])
-    const provisionalReviews = _.filter(
-        validReviews,
-        item => !item.metadata || item.metadata.testType === 'provisional',
-    )
-    const exampleReviews = _.filter(
-        validReviews,
-        item => item.metadata?.testType === 'example',
-    )
+    const getNormalizedReviews = (
+        input: Submission,
+    ): {
+        example: SubmissionReview[]
+        normalized: SubmissionReview[]
+        provisional: SubmissionReview[]
+    } => {
+        const normalized = (input.review ?? []).map(
+            adjustSubmissionReviewResponse,
+        )
+        const valid = _.reject(normalized, [
+            'typeId',
+            EnvironmentConfig.ADMIN.AV_SCAN_SCORER_REVIEW_TYPE_ID,
+        ])
+        const provisional = _.filter(
+            valid,
+            item => !item.metadata || item.metadata.testType === 'provisional',
+        )
+        const example = _.filter(
+            valid,
+            item => item.metadata?.testType === 'example',
+        )
+
+        return { example, normalized, provisional }
+    }
+
+    const {
+        normalized: normalizedReviews,
+        provisional: provisionalReviews,
+        example: exampleReviews,
+    }: {
+        normalized: SubmissionReview[]
+        provisional: SubmissionReview[]
+        example: SubmissionReview[]
+    } = getNormalizedReviews(data)
+    const extractScore = (review?: SubmissionReview): number | undefined => {
+        if (!review) {
+            return undefined
+        }
+
+        const score = review.score ?? review.initialScore ?? review.finalScore
+
+        return score ?? undefined
+    }
+
     const finalScore = toFixed(
         _.get(data, 'reviewSummation[0].aggregateScore', undefined),
         5,
     )
     const provisionalScore = toFixed(
-        _.get(provisionalReviews, '[0].score', undefined),
+        extractScore(provisionalReviews[0]),
         5,
     )
     const exampleScore = toFixed(
-        _.get(exampleReviews, '[0].score', undefined),
+        extractScore(exampleReviews[0]),
         5,
     )
-    const created
-        = data.created && isStringObject(data.created)
-            ? new Date(data.created)
-            : data.created
-    const submittedDate
-        = data.submittedDate && isStringObject(data.submittedDate)
-            ? new Date(data.submittedDate)
-            : data.submittedDate
-    const updated
-        = data.updated && isStringObject(data.updated)
-            ? new Date(data.updated)
-            : data.updated
+
+    const toDate = (
+        value?: Date | string | null,
+    ): Date | string | undefined => {
+        if (value === undefined) {
+            return undefined
+        }
+
+        return isStringObject(value)
+            ? new Date(value as string)
+            : (value as Date | string | undefined)
+    }
+
+    const createdRaw = data.createdAt ?? data.created
+    const created = toDate(createdRaw)
+    const updatedRaw = data.updatedAt ?? data.updated
+    const updated = toDate(updatedRaw)
+    const submittedRaw = data.submittedDate
+    const submittedDateNormalized = toDate(submittedRaw)
+    const submittedDate = submittedDateNormalized ?? data.submittedDate
+    const submittedDateString = submittedRaw
+        ? moment(submittedRaw)
+            .local()
+            .format(TABLE_DATE_FORMAT)
+        : undefined
+
+    const memberId
+        = typeof data.memberId === 'string'
+            ? data.memberId.toString()
+            : data.memberId
+    const challengeId
+        = typeof data.challengeId === 'string'
+            ? data.challengeId.toString()
+            : data.challengeId
 
     return {
         ...data,
+        challengeId,
         created,
+        createdAt: createdRaw ?? undefined,
         exampleScore: exampleScore as number,
         finalScore: finalScore as number,
+        memberId,
         provisionalScore: provisionalScore as number,
-        review: (data.review ?? []).map(adjustSubmissionReviewResponse),
+        review: normalizedReviews,
         submittedDate,
-        submittedDateString: data.submittedDate
-            ? moment(data.submittedDate)
-                .local()
-                .format(TABLE_DATE_FORMAT)
-            : data.submittedDate,
+        submittedDateString,
         updated,
+        updatedAt: updatedRaw ?? undefined,
     }
 }

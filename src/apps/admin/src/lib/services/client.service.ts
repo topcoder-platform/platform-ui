@@ -1,13 +1,17 @@
 import _ from 'lodash'
 
 import { EnvironmentConfig } from '~/config'
-import { xhrGetAsync, xhrPatchAsync, xhrPostAsync } from '~/libs/core'
+import {
+    xhrGetAsync,
+    xhrPatchAsync,
+    xhrPostAsync,
+} from '~/libs/core'
 
 import {
     adjustClientInfoResponse,
-    ApiV3Response,
     ClientInfo,
     FormEditClient,
+    PaginatedResponseV6,
     RequestCommonDataType,
 } from '../models'
 import { createFilterPageSortQuery } from '../utils'
@@ -29,16 +33,18 @@ export const searchClients = async (
     content: ClientInfo[]
     totalPages: number
 }> => {
-    const data = await xhrGetAsync<ApiV3Response<ClientInfo[]>>(
-        `${EnvironmentConfig.API.V3}/clients?${createFilterPageSortQuery(
+    const response = await xhrGetAsync<PaginatedResponseV6<ClientInfo>>(
+        `${EnvironmentConfig.API.V6}/clients?${createFilterPageSortQuery(
             criteria,
             pageAndSort,
         )}`,
     )
-    const totalCount = data.result.metadata.totalCount
+    const totalPages = response.totalPages
+        || (response.perPage ? Math.ceil(response.total / response.perPage) : 1)
+
     return {
-        content: data.result.content.map(adjustClientInfoResponse),
-        totalPages: Math.ceil(totalCount / pageAndSort.limit),
+        content: (response.data ?? []).map(adjustClientInfoResponse),
+        totalPages: totalPages || 1,
     }
 }
 
@@ -50,16 +56,16 @@ export const searchClients = async (
 export const findClientById = async (
     clientId: number | string,
 ): Promise<ClientInfo> => {
-    const data = await xhrGetAsync<ApiV3Response<ClientInfo>>(
-        `${EnvironmentConfig.API.V3}/clients/${clientId}`,
+    const data = await xhrGetAsync<ClientInfo>(
+        `${EnvironmentConfig.API.V6}/clients/${clientId}`,
     )
-    return adjustClientInfoResponse(data.result.content)
+    return adjustClientInfoResponse(data)
 }
 
 /**
- * Create client request data
+ * Create client request data (for POST)
  * @param data client data
- * @returns request data
+ * @returns request body matching CreateClientRequestDto
  */
 const createClientRequestData = (
     data: FormEditClient,
@@ -78,9 +84,30 @@ const createClientRequestData = (
             requestData[key] = value
         }
     })
-    return {
-        param: requestData,
+    return { param: requestData }
+}
+
+/**
+ * Create client update data (for PATCH)
+ * @param data client data
+ * @returns request body matching UpdateClientDto
+ */
+const createClientPatchData = (
+    data: FormEditClient,
+): RequestCommonDataType => {
+    const requestData: RequestCommonDataType = {
+        endDate: `${data.endDate.toISOString()
+            .substring(0, 16)}Z`,
+        startDate: `${data.startDate.toISOString()
+            .substring(0, 16)}Z`,
     }
+    _.forEach(['name', 'codeName', 'status'], key => {
+        const value = (data as unknown as RequestCommonDataType)[key]
+        if (value !== null && value !== undefined) {
+            requestData[key] = value
+        }
+    })
+    return requestData
 }
 
 /**
@@ -95,9 +122,9 @@ export const createClient = async (
         {
             param: RequestCommonDataType
         },
-        ApiV3Response<ClientInfo>
-    >(`${EnvironmentConfig.API.V3}/clients`, createClientRequestData(data))
-    return resultData.result.content
+        ClientInfo
+    >(`${EnvironmentConfig.API.V6}/clients`, createClientRequestData(data))
+    return resultData
 }
 
 /**
@@ -110,14 +137,9 @@ export const editClient = async (
     clientId: string,
     data: FormEditClient,
 ): Promise<ClientInfo> => {
-    const resultData = await xhrPatchAsync<
-        {
-            param: RequestCommonDataType
-        },
-        ApiV3Response<ClientInfo>
-    >(
-        `${EnvironmentConfig.API.V3}/clients/${clientId}`,
-        createClientRequestData(data),
+    const resultData = await xhrPatchAsync<RequestCommonDataType, ClientInfo>(
+        `${EnvironmentConfig.API.V6}/clients/${clientId}`,
+        createClientPatchData(data),
     )
-    return resultData.result.content
+    return resultData
 }

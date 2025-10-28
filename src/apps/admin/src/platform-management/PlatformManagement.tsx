@@ -26,7 +26,7 @@ function useChildRoutes(): Array<JSX.Element> | undefined {
         () => adminRoutes[0].children
             ?.find(r => r.id === platformRouteId)
             ?.children?.map(getRouteElement),
-        [], // eslint-disable-line react-hooks/exhaustive-deps -- missing dependency: getRouteElement
+        [getRouteElement],
     )
     return childRoutes
 }

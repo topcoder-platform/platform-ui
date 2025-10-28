@@ -1,0 +1,56 @@
+@import "@libs/ui/styles/includes";
+
+.modal {
+}
+
+.tableWrap {
+  /* wrapper to opt-in to review app table reskin */
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.th,
+.td {
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--TableBorderColor);
+  color: var(--FontColor);
+  font-family: "Nunito Sans", sans-serif;
+  font-size: 14px;
+}
+
+.th {
+  font-weight: 700;
+  background: var(--invertButtonColor);
+}
+
+.headerRow {
+  background: var(--invertButtonColor);
+}
+
+.paidCell {
+  display: flex;
+  align-items: center;
+}
+
+.green {
+  color: #22c55e; /* green-500 */
+}
+
+.empty {
+  color: var(--GrayFontColor);
+}
+
+.error {
+  color: var(--RedError);
+  font-family: "Nunito Sans", sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.loadingWrap {
+  padding: $sp-4 0;
+}

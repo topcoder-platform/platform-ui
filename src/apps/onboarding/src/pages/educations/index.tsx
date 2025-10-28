@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import { connect } from 'react-redux'
 import _ from 'lodash'
 import classNames from 'classnames'
-import moment from 'moment'
 
 import { Button, IconOutline, PageDivider } from '~/libs/ui'
 
@@ -57,12 +56,10 @@ export const PageEducationsContent: FC<{
     }, [educations])
 
     const displayEducations = useMemo(() => (educations || []).map(educationItem => {
-        const endDate: Date | undefined = educationItem.endDate
-        const endDateString: string = endDate ? moment(endDate)
-            .format('YYYY') : ''
+        const endYear: string = educationItem.endYear as string
         return {
             ...educationItem,
-            dateDescription: endDateString || '',
+            dateDescription: endYear || '',
         }
     }), [educations])
 

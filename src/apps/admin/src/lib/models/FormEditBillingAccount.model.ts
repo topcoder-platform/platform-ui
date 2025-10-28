@@ -14,7 +14,7 @@ export interface FormEditBillingAccount {
     paymentTerms?: number
     salesTax?: number
     client: {
-        id: number
+        id: number | string
         name: string
     }
 }

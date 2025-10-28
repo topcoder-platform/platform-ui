@@ -8,7 +8,6 @@ import {
     useRef,
     useState,
 } from 'react'
-import { sortBy } from 'lodash'
 
 import { LoadingSpinner, PageTitle } from '~/libs/ui'
 import { Sort } from '~/apps/admin/src/platform/gamification-admin/src/game-lib'
@@ -53,6 +52,7 @@ export const ReviewManagementPage: FC = () => {
         searching,
         searched,
         totalReviews,
+        totalPages,
     }: ReturnType<typeof useSearch> = useSearch({ filterCriteria })
 
     const search = useEventCallback(() => {
@@ -107,12 +107,17 @@ export const ReviewManagementPage: FC = () => {
         setPageChangeEvent(true)
     })
 
-    const handleSortChange = useEventCallback((sort: Sort) => {
+    const handleSortChange = useEventCallback((sort?: Sort) => {
+        const sortToApply = sort ?? {
+            direction: filterCriteria.order,
+            fieldName: filterCriteria.sortBy,
+        }
+
         setFilterCriteria({
             ...filterCriteria,
-            order: sort.direction,
+            order: sortToApply.direction,
             page: 1,
-            sortBy: sort.fieldName,
+            sortBy: sortToApply.fieldName,
         })
         setSortChangeEvent(true)
     })
@@ -137,9 +142,13 @@ export const ReviewManagementPage: FC = () => {
                         reviews={reviews}
                         paging={{
                             page: filterCriteria.page,
-                            totalPages: Math.ceil(
-                                totalReviews / filterCriteria.perPage,
-                            ),
+                            totalPages: totalPages
+                                || (totalReviews > 0
+                                    ? Math.ceil(
+                                        totalReviews
+                                        / filterCriteria.perPage,
+                                    )
+                                    : 0),
                         }}
                         currentFilters={filterCriteria}
                         onPageChange={handlePageChange}
@@ -160,6 +169,7 @@ type SearchState = {
     searched: boolean
     totalReviews: number
     allReviews: ReviewSummary[]
+    totalPages: number
 }
 
 const SearchActionType = {
@@ -179,6 +189,7 @@ type SearchReducerAction =
           payload: {
               totalReviews: number
               allReviews: ReviewSummary[]
+              totalPages: number
           }
       }
 
@@ -193,6 +204,7 @@ const reducer = (
                 allReviews: [],
                 isLoading: true,
                 searched: false,
+                totalPages: 0,
                 totalReviews: 0,
             }
         }
@@ -203,6 +215,7 @@ const reducer = (
                 allReviews: action.payload.allReviews,
                 isLoading: false,
                 searched: true,
+                totalPages: action.payload.totalPages,
                 totalReviews: action.payload.totalReviews,
             }
         }
@@ -212,6 +225,7 @@ const reducer = (
                 ...previousState,
                 allReviews: [],
                 isLoading: false,
+                totalPages: 0,
                 totalReviews: 0,
             }
         }
@@ -222,14 +236,14 @@ const reducer = (
     }
 }
 
+type GetReviewOpportunitiesResponse = Awaited<
+    ReturnType<typeof getReviewOpportunities>
+>
+
 function getPageData(
     reviews: ReviewSummary[],
-    filterCriteria: ReviewFilterCriteria,
 ): ReviewSummary[] {
-    const total = reviews.length
-    const startIndex = (filterCriteria.page - 1) * filterCriteria.perPage
-    const endIndex = Math.min(startIndex + filterCriteria.perPage, total)
-    return reviews.slice(startIndex, endIndex)
+    return reviews
 }
 
 function useSearch({
@@ -242,78 +256,52 @@ function useSearch({
     searched: boolean
     searching: boolean
     totalReviews: number
+    totalPages: number
 } {
     const [state, dispatch] = useReducer(reducer, {
         allReviews: [],
         isLoading: false,
         searched: false,
+        totalPages: 0,
         totalReviews: 0,
     })
 
-    const sortData = useEventCallback(async (data?: ReviewSummary[]) => {
-        const toSortData = data || state.allReviews
-        let sortedList = []
-        if (filterCriteria.sortBy === 'submissionEndDate') {
-            sortedList = sortBy(
-                toSortData,
-                item => new Date(item.submissionEndDate),
-            )
-        } else {
-            sortedList = sortBy(toSortData, filterCriteria.sortBy)
-        }
-
-        if (filterCriteria.order === 'desc') {
-            sortedList = sortedList.reverse()
-        }
-
-        if (data) {
-            return sortedList
-        }
-
-        dispatch({
-            payload: {
-                allReviews: sortedList,
-                totalReviews: sortedList.length,
-            },
-            type: SearchActionType.SEARCH_DONE,
-        })
-
-        return getPageData(sortedList, filterCriteria)
-    })
-
-    const search = useEventCallback(async () => {
-        // If api search has done, just get page data from last api response
-        if (state.searched) {
-            return getPageData(state.allReviews, filterCriteria)
-        }
-
+    const fetchReviews = useEventCallback(async () => {
         dispatch({ type: SearchActionType.SEARCH_INIT })
         try {
-            const data: ReviewSummary[] = await getReviewOpportunities(
+            const response: GetReviewOpportunitiesResponse = await getReviewOpportunities(
                 filterCriteria,
             )
-            const total = data.length
+            const { content, metadata }: GetReviewOpportunitiesResponse = response
 
-            // const sortedList = await sortData(data)
+            const total = metadata?.total ?? content.length
+            const totalPages = metadata?.totalPages
+                ?? (total > 0
+                    ? Math.ceil(total / filterCriteria.perPage)
+                    : 0)
 
             dispatch({
-                payload: { allReviews: data, totalReviews: total },
+                payload: {
+                    allReviews: content,
+                    totalPages,
+                    totalReviews: total,
+                },
                 type: SearchActionType.SEARCH_DONE,
             })
-            return getPageData(data, filterCriteria)
+            return getPageData(content)
         } catch (error) {
             dispatch({ type: SearchActionType.SEARCH_FAILED })
             handleError(error)
             return []
         }
-
     })
 
     return {
-        search,
+        search: fetchReviews,
         searched: state.searched,
         searching: state.isLoading,
-        sortData,
+        sortData: fetchReviews,
+        totalPages: state.totalPages,
         totalReviews: state.totalReviews,
     }
 }

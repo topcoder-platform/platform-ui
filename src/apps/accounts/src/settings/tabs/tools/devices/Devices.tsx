@@ -5,11 +5,12 @@ import { toast } from 'react-toastify'
 import classNames from 'classnames'
 
 import {
+    createMemberTraitsAsync,
     updateMemberTraitsAsync,
-    updateOrCreateMemberTraitsAsync,
     useMemberDevicesLookup,
     UserProfile,
     UserTrait,
+    UserTraitIds,
 } from '~/libs/core'
 import { Button, Collapsible, ConfirmModal, IconOutline, InputSelect } from '~/libs/ui'
 import {
@@ -20,7 +21,6 @@ import {
     SettingSection,
     SmartphoneIcon,
     TabletIcon,
-    triggerSurvey,
     WearableIcon,
 } from '~/apps/accounts/src/lib'
 
@@ -100,6 +100,9 @@ const Devices: FC<DevicesProps> = (props: DevicesProps) => {
     ]
         = useState<any | undefined>()
 
+    const [isSaving, setIsSaving] = useState<boolean>(false)
+    const [isDeleting, setIsDeleting] = useState<boolean>(false)
+
     useEffect(() => {
         setDeviceTypesData(props.devicesTrait?.traits.data)
     }, [props.devicesTrait])
@@ -151,6 +154,10 @@ const Devices: FC<DevicesProps> = (props: DevicesProps) => {
     }
 
     function onRemoveItemConfirm(): void {
+        if (isDeleting) {
+            return
+        }
+
         const updatedDeviceTypesData: UserTrait[] = reject(deviceTypesData, (trait: UserTrait) => (
             trait.model === itemToRemove?.model
             && trait.deviceType === itemToRemove?.deviceType
@@ -159,6 +166,7 @@ const Devices: FC<DevicesProps> = (props: DevicesProps) => {
 
         resetForm()
 
+        setIsDeleting(true)
         updateMemberTraitsAsync(
             props.profile.handle,
             [{
@@ -166,19 +174,20 @@ const Devices: FC<DevicesProps> = (props: DevicesProps) => {
                 traitId: 'device',
                 traits: {
                     data: updatedDeviceTypesData,
+                    traitId: UserTraitIds.device,
                 },
             }],
         )
             .then(() => {
                 toast.success('Device deleted successfully')
                 setDeviceTypesData(updatedDeviceTypesData)
-                triggerSurvey()
             })
             .catch(() => {
                 toast.error('Error deleting Device')
             })
             .finally(() => {
                 toggleRemoveConfirmation()
+                setIsDeleting(false)
             })
     }
 
@@ -209,6 +218,10 @@ const Devices: FC<DevicesProps> = (props: DevicesProps) => {
     }
 
     function handleFormAction(): void {
+        if (isSaving) {
+            return
+        }
+
         const updatedFormErrors: { [key: string]: string } = {}
         const deviceUpdate: UserTrait = {
             deviceType: selectedDeviceType,
@@ -247,6 +260,7 @@ const Devices: FC<DevicesProps> = (props: DevicesProps) => {
         }
 
         if (isEmpty(updatedFormErrors)) {
+            setIsSaving(true)
             // call the API to update the trait based on action type
             if (isEditMode) {
                 const updatedDeviceTypesData: UserTrait[] = reject(
@@ -269,6 +283,7 @@ const Devices: FC<DevicesProps> = (props: DevicesProps) => {
                                 ...updatedDeviceTypesData || [],
                                 deviceUpdate,
                             ],
+                            traitId: UserTraitIds.device,
                         },
                     }],
                 )
@@ -278,7 +293,6 @@ const Devices: FC<DevicesProps> = (props: DevicesProps) => {
                             ...updatedDeviceTypesData || [],
                             deviceUpdate,
                         ])
-                        triggerSurvey()
                     })
                     .catch(() => {
                         toast.error('Error updating Device')
@@ -286,20 +300,26 @@ const Devices: FC<DevicesProps> = (props: DevicesProps) => {
                     .finally(() => {
                         resetForm()
                         setIsEditMode(false)
+                        setIsSaving(false)
                     })
             } else {
-                updateOrCreateMemberTraitsAsync(
+                const request = [{
+                    categoryName: 'Device',
+                    traitId: 'device',
+                    traits: {
+                        data: [
+                            ...deviceTypesData || [],
+                            deviceUpdate,
+                        ],
+                        traitId: UserTraitIds.device,
+                    },
+                }]
+
+                const action = props.devicesTrait ? updateMemberTraitsAsync : createMemberTraitsAsync
+
+                action(
                     props.profile.handle,
-                    [{
-                        categoryName: 'Device',
-                        traitId: 'device',
-                        traits: {
-                            data: [
-                                ...deviceTypesData || [],
-                                deviceUpdate,
-                            ],
-                        },
-                    }],
+                    request,
                 )
                     .then(() => {
                         toast.success('Device added successfully')
@@ -314,6 +334,7 @@ const Devices: FC<DevicesProps> = (props: DevicesProps) => {
                     .finally(() => {
                         resetForm()
                         setIsEditMode(false)
+                        setIsSaving(false)
                     })
             }
         }
@@ -369,6 +390,7 @@ const Devices: FC<DevicesProps> = (props: DevicesProps) => {
                 onClose={toggleRemoveConfirmation}
                 onConfirm={onRemoveItemConfirm}
                 open={removeConfirmationOpen}
+                isLoading={isDeleting}
             >
                 <div>
                     Are you sure you want to delete
@@ -445,6 +467,7 @@ const Devices: FC<DevicesProps> = (props: DevicesProps) => {
                             link
                             label={`${isEditMode ? 'Edit' : 'Add'} Device to your List`}
                             onClick={handleFormAction}
+                            disabled={isSaving}
                         />
                         {isEditMode && (
                             <Button
