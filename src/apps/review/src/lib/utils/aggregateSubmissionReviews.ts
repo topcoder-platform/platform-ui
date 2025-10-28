@@ -1,5 +1,5 @@
 /* eslint-disable ordered-imports/ordered-imports */
-import { find, forEach, sumBy } from 'lodash'
+import { forEach, sumBy } from 'lodash'
 import moment from 'moment'
 
 import { getRatingColor } from '~/libs/core'
@@ -9,6 +9,7 @@ import {
     BackendResource,
     MappingReviewAppeal,
     ReviewInfo,
+    ReviewResult,
     SubmissionInfo,
 } from '../models'
 import { normalizeRatingValue } from './rating'
@@ -84,6 +85,31 @@ function resolveHandleColor(
             : undefined)
 }
 
+const deriveReviewResultFromReviewInfo = (reviewInfo: ReviewInfo): ReviewResult => {
+    const reviewerHandle = reviewInfo.reviewerHandle?.trim() || undefined
+    const reviewerMaxRating = normalizeRatingValue(reviewInfo.reviewerMaxRating)
+    const reviewerHandleColor = resolveHandleColor(
+        reviewInfo.reviewerHandleColor,
+        reviewerHandle,
+        reviewerMaxRating,
+    ) ?? '#2a2a2a'
+
+    return {
+        appeals: [],
+        createdAt: reviewInfo.createdAt,
+        createdAtString: reviewInfo.createdAtString,
+        phaseName: reviewInfo.phaseName ?? undefined,
+        resourceId: reviewInfo.resourceId,
+        reviewDate: reviewInfo.reviewDate,
+        reviewDateString: reviewInfo.reviewDateString ?? reviewInfo.updatedAtString,
+        reviewerHandle: reviewerHandle ?? '',
+        reviewerHandleColor,
+        reviewerMaxRating,
+        reviewType: reviewInfo.reviewType ?? undefined,
+        score: normalizeScoreValue(reviewInfo.finalScore ?? reviewInfo.initialScore),
+    }
+}
+
 /* eslint-disable complexity */
 /* eslint-disable no-console */
 export function aggregateSubmissionReviews({
@@ -135,221 +161,328 @@ export function aggregateSubmissionReviews({
             return
         }
 
-        const reviewInfo: ReviewInfo | undefined = submission.review
-        const reviewId = reviewInfo?.id
-        const resourceId = reviewInfo?.resourceId
-        const matchingReviewResult = resourceId
-            ? find(submission.reviews, reviewResult => reviewResult.resourceId === resourceId)
-            : undefined
-        if (!reviewId) {
-            return
+        const reviewInfoByResourceId = new Map<string, ReviewInfo>()
+        const reviewInfoById = new Map<string, ReviewInfo>()
+
+        if (submission.review?.resourceId) {
+            reviewInfoByResourceId.set(submission.review.resourceId, submission.review)
         }
 
-        const seenReviewIds = seenReviewIdsBySubmission.get(submission.id) ?? new Set<string>()
-        const reviewerInfo = resourceId ? reviewerByResourceId[resourceId] : undefined
-        if (resourceId) {
-            discoveredResourceIds.add(resourceId)
+        if (submission.review?.id) {
+            reviewInfoById.set(submission.review.id, submission.review)
         }
 
-        const reviewDate = reviewInfo?.reviewDate
-            ? new Date(reviewInfo.reviewDate)
-            : reviewInfo?.updatedAt
-                ? new Date(reviewInfo.updatedAt)
-                : undefined
-        const reviewDateString = reviewInfo?.reviewDateString
-            ?? reviewInfo?.updatedAtString
-
-        const reviewHandle = reviewInfo?.reviewerHandle?.trim() || undefined
-        const resultHandle = matchingReviewResult?.reviewerHandle?.trim() || undefined
-        const resourceHandle = reviewerInfo?.memberHandle?.trim() || undefined
-        const candidateReviewerHandle = reviewHandle
-            ?? resultHandle
-            ?? resourceHandle
-        const fallbackMappedHandle = resourceId ? reviewerHandleByResourceId[resourceId]?.trim() : undefined
-        const resolvedReviewerHandle = candidateReviewerHandle
-            ?? fallbackMappedHandle
-
-        if (resourceId && resolvedReviewerHandle) {
-            reviewerHandleByResourceId[resourceId] = resolvedReviewerHandle
-        }
-
-        const finalReviewerMaxRating = normalizeRatingValue(
-            reviewInfo?.reviewerMaxRating
-                ?? matchingReviewResult?.reviewerMaxRating
-                ?? reviewerInfo?.rating,
-        )
-        const finalReviewerHandleColor = resolveHandleColor(
-            reviewInfo?.reviewerHandleColor
-                ?? matchingReviewResult?.reviewerHandleColor
-                ?? reviewerInfo?.handleColor,
-            resolvedReviewerHandle ?? fallbackMappedHandle,
-            finalReviewerMaxRating,
-        )
-
-        if (reviewInfo) {
-            const trimmedSubmitterHandle = reviewInfo.submitterHandle?.trim()
-            if (trimmedSubmitterHandle) {
-                group.submitterHandle = trimmedSubmitterHandle
+        const additionalReviewInfos = Array.isArray(submission.reviewInfos)
+            ? submission.reviewInfos
+            : []
+        additionalReviewInfos.forEach(info => {
+            if (info.id) {
+                reviewInfoById.set(info.id, info)
             }
 
-            if (reviewInfo.submitterHandleColor) {
-                group.submitterHandleColor = reviewInfo.submitterHandleColor
+            if (info.resourceId) {
+                reviewInfoByResourceId.set(info.resourceId, info)
             }
-
-            const normalizedSubmitterMaxRating = normalizeRatingValue(reviewInfo.submitterMaxRating)
-            if (normalizedSubmitterMaxRating !== undefined) {
-                group.submitterMaxRating = normalizedSubmitterMaxRating
-            }
-        }
-
-        const finalScore = normalizeScoreValue(
-            reviewInfo?.finalScore ?? matchingReviewResult?.score,
-        )
-
-        let normalizedReviewInfo: ReviewInfo | undefined = reviewInfo
-        if (reviewInfo) {
-            const needsHandle = !reviewInfo.reviewerHandle?.trim() && resolvedReviewerHandle
-            const needsColor = !reviewInfo.reviewerHandleColor && finalReviewerHandleColor
-            const needsMaxRating = (reviewInfo.reviewerMaxRating === undefined || reviewInfo.reviewerMaxRating === null)
-                && finalReviewerMaxRating !== undefined
-
-            if (needsHandle || needsColor || needsMaxRating) {
-                normalizedReviewInfo = {
-                    ...reviewInfo,
-                    reviewerHandle: needsHandle
-                        ? resolvedReviewerHandle ?? reviewInfo.reviewerHandle
-                        : reviewInfo.reviewerHandle,
-                    reviewerHandleColor: needsColor
-                        ? finalReviewerHandleColor ?? reviewInfo.reviewerHandleColor
-                        : reviewInfo.reviewerHandleColor,
-                    reviewerMaxRating: needsMaxRating
-                        ? finalReviewerMaxRating ?? reviewInfo.reviewerMaxRating
-                        : reviewInfo.reviewerMaxRating,
-                }
-            }
-        }
-
-        if (process.env.NODE_ENV !== 'production') {
-            if (resolvedReviewerHandle) {
-                console.debug('[ReviewAggregation] Resolved reviewer handle', {
-                    resourceHandle: reviewerInfo?.memberHandle,
-                    reviewerHandle: resolvedReviewerHandle,
-                    reviewId,
-                    reviewInfoHandle: reviewInfo?.reviewerHandle,
-                    reviewResultHandle: matchingReviewResult?.reviewerHandle,
-                    source: reviewHandle
-                        ? 'reviewInfo'
-                        : resultHandle
-                            ? 'reviewResult'
-                            : 'resourceMapping',
-                    submissionId: submission.id,
-                })
-            } else {
-                console.debug('[ReviewAggregation] Missing reviewer handle', {
-                    resourceHandle: reviewerInfo?.memberHandle,
-                    reviewerHandle: resolvedReviewerHandle,
-                    reviewId,
-                    reviewInfoHandle: reviewInfo?.reviewerHandle,
-                    reviewResultHandle: matchingReviewResult?.reviewerHandle,
-                    submissionId: submission.id,
-                })
-            }
-        }
-
-        const appealInfo = reviewId ? mappingReviewAppeal[reviewId] : undefined
-        const finishedAppeals = appealInfo?.finishAppeals ?? 0
-        const totalAppeals = appealInfo?.totalAppeals ?? 0
-        const unresolvedAppeals = totalAppeals - finishedAppeals
-
-        const existingDetail = group.reviews.find(detail => {
-            const detailReviewId = detail.reviewInfo?.id ?? detail.reviewId
-            return detailReviewId === reviewId
         })
 
-        const reviewerHandleForDetail = resolvedReviewerHandle ?? fallbackMappedHandle
+        const seenReviewIds = seenReviewIdsBySubmission.get(submission.id) ?? new Set<string>()
+        const reviewsToProcess: ReviewResult[] = Array.isArray(submission.reviews)
+            ? submission.reviews.slice()
+            : []
 
-        const newDetail: AggregatedReviewDetail = {
-            finalScore,
-            finishedAppeals: appealInfo?.finishAppeals,
-            resourceId,
-            reviewDate,
-            reviewDateString,
-            reviewerHandle: reviewerHandleForDetail,
-            reviewerHandleColor: finalReviewerHandleColor,
-            reviewerMaxRating: finalReviewerMaxRating,
-            reviewId,
-            reviewInfo: normalizedReviewInfo,
-            reviewProgress: normalizedReviewInfo?.reviewProgress,
-            status: normalizedReviewInfo?.status,
-            totalAppeals,
-            unresolvedAppeals,
+        if (!reviewsToProcess.length && submission.review) {
+            reviewsToProcess.push(deriveReviewResultFromReviewInfo(submission.review))
+        } else if (submission.review?.resourceId) {
+            const hasMatchingReview = reviewsToProcess.some(
+                review => review.resourceId === submission.review?.resourceId,
+            )
+            if (!hasMatchingReview) {
+                reviewsToProcess.push(deriveReviewResultFromReviewInfo(submission.review))
+            }
         }
 
-        if (existingDetail) {
-            if (finalScore !== undefined) {
-                existingDetail.finalScore = finalScore
+        forEach(reviewsToProcess, reviewResult => {
+            const resourceId = reviewResult.resourceId
+            const reviewResultId = reviewResult.id
+            const reviewInfoFromId = reviewResultId
+                ? reviewInfoById.get(reviewResultId)
+                : undefined
+            const reviewInfo = reviewInfoFromId
+                ?? (resourceId
+                    ? reviewInfoByResourceId.get(resourceId)
+                    : submission.review && !submission.review.resourceId
+                        ? submission.review
+                        : undefined)
+            const reviewId = reviewInfo?.id ?? reviewResultId
+            const reviewKey = reviewId ?? (resourceId ? `resource:${resourceId}` : undefined)
+
+            if (reviewKey && seenReviewIds.has(reviewKey)) {
+                return
             }
 
-            if (appealInfo?.finishAppeals !== undefined) {
-                existingDetail.finishedAppeals = appealInfo.finishAppeals
+            const reviewerInfo = resourceId ? reviewerByResourceId[resourceId] : undefined
+            if (resourceId) {
+                discoveredResourceIds.add(resourceId)
             }
 
-            if (reviewDate) {
-                existingDetail.reviewDate = reviewDate
+            const reviewDate = reviewInfo?.reviewDate
+                ? new Date(reviewInfo.reviewDate)
+                : reviewInfo?.updatedAt
+                    ? new Date(reviewInfo.updatedAt)
+                    : reviewResult.reviewDate instanceof Date
+                        ? reviewResult.reviewDate
+                        : reviewResult.reviewDate
+                            ? new Date(reviewResult.reviewDate)
+                            : undefined
+            const reviewDateString = reviewInfo?.reviewDateString
+                ?? reviewInfo?.updatedAtString
+                ?? reviewResult.reviewDateString
+
+            const reviewHandle = reviewInfo?.reviewerHandle?.trim() || undefined
+            const resultHandle = reviewResult.reviewerHandle?.trim() || undefined
+            const resourceHandle = reviewerInfo?.memberHandle?.trim() || undefined
+            const fallbackMappedHandle = resourceId ? reviewerHandleByResourceId[resourceId]?.trim() : undefined
+            const candidateReviewerHandle = reviewHandle
+                ?? resultHandle
+                ?? resourceHandle
+            const resolvedReviewerHandle = candidateReviewerHandle
+                ?? fallbackMappedHandle
+
+            if (resourceId && resolvedReviewerHandle) {
+                reviewerHandleByResourceId[resourceId] = resolvedReviewerHandle
             }
 
-            if (reviewDateString) {
-                existingDetail.reviewDateString = reviewDateString
-            }
+            const finalReviewerMaxRating = normalizeRatingValue(
+                reviewInfo?.reviewerMaxRating
+                    ?? reviewResult.reviewerMaxRating
+                    ?? reviewerInfo?.rating,
+            )
+            const finalReviewerHandleColor = resolveHandleColor(
+                reviewInfo?.reviewerHandleColor
+                    ?? reviewResult.reviewerHandleColor
+                    ?? reviewerInfo?.handleColor,
+                resolvedReviewerHandle ?? fallbackMappedHandle,
+                finalReviewerMaxRating,
+            )
 
-            if (reviewerHandleForDetail) {
-                existingDetail.reviewerHandle = reviewerHandleForDetail
-                if (resourceId && !reviewerHandleByResourceId[resourceId]) {
-                    reviewerHandleByResourceId[resourceId] = reviewerHandleForDetail
+            if (reviewInfo) {
+                const trimmedSubmitterHandle = reviewInfo.submitterHandle?.trim()
+                if (trimmedSubmitterHandle) {
+                    group.submitterHandle = trimmedSubmitterHandle
+                }
+
+                if (reviewInfo.submitterHandleColor) {
+                    group.submitterHandleColor = reviewInfo.submitterHandleColor
+                }
+
+                const normalizedSubmitterMaxRating = normalizeRatingValue(reviewInfo.submitterMaxRating)
+                if (normalizedSubmitterMaxRating !== undefined) {
+                    group.submitterMaxRating = normalizedSubmitterMaxRating
                 }
             }
 
-            if (finalReviewerHandleColor) {
-                existingDetail.reviewerHandleColor = finalReviewerHandleColor
-            }
+            const finalScore = normalizeScoreValue(
+                reviewResult.score
+                    ?? reviewInfo?.finalScore
+                    ?? reviewInfo?.initialScore,
+            )
 
-            if (finalReviewerMaxRating !== undefined) {
-                existingDetail.reviewerMaxRating = finalReviewerMaxRating
-            }
+            let normalizedReviewInfo: ReviewInfo | undefined = reviewInfo
+            if (reviewInfo) {
+                const needsHandle = !reviewInfo.reviewerHandle?.trim() && resolvedReviewerHandle
+                const needsColor = !reviewInfo.reviewerHandleColor && finalReviewerHandleColor
+                const needsMaxRating = (
+                    reviewInfo.reviewerMaxRating === undefined
+                    || reviewInfo.reviewerMaxRating === null
+                )
+                    && finalReviewerMaxRating !== undefined
 
-            if (normalizedReviewInfo) {
-                existingDetail.reviewInfo = existingDetail.reviewInfo
-                    ? {
-                        ...existingDetail.reviewInfo,
-                        ...normalizedReviewInfo,
-                        reviewerHandle: normalizedReviewInfo.reviewerHandle
-                            ?? existingDetail.reviewInfo.reviewerHandle,
-                        reviewerHandleColor: normalizedReviewInfo.reviewerHandleColor
-                            ?? existingDetail.reviewInfo.reviewerHandleColor,
-                        reviewerMaxRating: normalizedReviewInfo.reviewerMaxRating
-                            ?? existingDetail.reviewInfo.reviewerMaxRating,
+                if (needsHandle || needsColor || needsMaxRating) {
+                    normalizedReviewInfo = {
+                        ...reviewInfo,
+                        reviewerHandle: needsHandle
+                            ? resolvedReviewerHandle ?? reviewInfo.reviewerHandle
+                            : reviewInfo.reviewerHandle,
+                        reviewerHandleColor: needsColor
+                            ? finalReviewerHandleColor ?? reviewInfo.reviewerHandleColor
+                            : reviewInfo.reviewerHandleColor,
+                        reviewerMaxRating: needsMaxRating
+                            ? finalReviewerMaxRating ?? reviewInfo.reviewerMaxRating
+                            : reviewInfo.reviewerMaxRating,
                     }
-                    : normalizedReviewInfo
+                }
             }
 
-            if (normalizedReviewInfo?.reviewProgress !== undefined) {
-                existingDetail.reviewProgress = normalizedReviewInfo.reviewProgress
+            if (process.env.NODE_ENV !== 'production') {
+                if (resolvedReviewerHandle) {
+                    console.debug('[ReviewAggregation] Resolved reviewer handle', {
+                        resourceHandle: reviewerInfo?.memberHandle,
+                        reviewerHandle: resolvedReviewerHandle,
+                        reviewId,
+                        reviewInfoHandle: reviewInfo?.reviewerHandle,
+                        reviewResultHandle: resultHandle,
+                        source: reviewHandle
+                            ? 'reviewInfo'
+                            : resultHandle
+                                ? 'reviewResult'
+                                : 'resourceMapping',
+                        submissionId: submission.id,
+                    })
+                } else {
+                    console.debug('[ReviewAggregation] Missing reviewer handle', {
+                        resourceHandle: reviewerInfo?.memberHandle,
+                        reviewerHandle: resolvedReviewerHandle,
+                        reviewId,
+                        reviewInfoHandle: reviewInfo?.reviewerHandle,
+                        reviewResultHandle: resultHandle,
+                        submissionId: submission.id,
+                    })
+                }
+
+                console.debug('[ReviewAggregation] Processing review', {
+                    finalScore,
+                    resourceId,
+                    reviewerHandle: resolvedReviewerHandle,
+                    reviewId,
+                    submissionId: submission.id,
+                })
+
+                if (finalScore !== undefined) {
+                    console.debug('[ReviewAggregation] Review score resolved', {
+                        finalScore,
+                        resourceId,
+                        reviewId,
+                        submissionId: submission.id,
+                    })
+                } else {
+                    console.debug('[ReviewAggregation] Review score missing', {
+                        resourceId,
+                        reviewId,
+                        submissionId: submission.id,
+                    })
+                }
             }
 
-            if (normalizedReviewInfo?.status !== undefined) {
-                existingDetail.status = normalizedReviewInfo.status
+            const appealInfo = reviewId ? mappingReviewAppeal[reviewId] : undefined
+            const finishedAppeals = appealInfo?.finishAppeals ?? 0
+            const totalAppeals = appealInfo?.totalAppeals ?? 0
+            const unresolvedAppeals = totalAppeals - finishedAppeals
+
+            const existingDetail = group.reviews.find(detail => {
+                const detailReviewId = detail.reviewInfo?.id ?? detail.reviewId
+                if (detailReviewId && reviewId) {
+                    return detailReviewId === reviewId
+                }
+
+                if (!detailReviewId && !reviewId && resourceId) {
+                    const detailResourceId = detail.resourceId ?? detail.reviewInfo?.resourceId
+                    return detailResourceId === resourceId
+                }
+
+                return false
+            })
+
+            const reviewerHandleForDetail = resolvedReviewerHandle ?? fallbackMappedHandle
+            const resolvedStatus = normalizedReviewInfo?.status
+                ?? ((finalScore !== undefined && reviewDate)
+                    ? 'COMPLETED'
+                    : undefined)
+
+            const newDetail: AggregatedReviewDetail = {
+                finalScore,
+                finishedAppeals: appealInfo?.finishAppeals,
+                resourceId,
+                reviewDate,
+                reviewDateString,
+                reviewerHandle: reviewerHandleForDetail,
+                reviewerHandleColor: finalReviewerHandleColor,
+                reviewerMaxRating: finalReviewerMaxRating,
+                reviewId,
+                reviewInfo: normalizedReviewInfo,
+                reviewProgress: normalizedReviewInfo?.reviewProgress,
+                status: resolvedStatus,
+                totalAppeals,
+                unresolvedAppeals,
             }
 
-            existingDetail.totalAppeals = totalAppeals
-            existingDetail.unresolvedAppeals = unresolvedAppeals
-            seenReviewIds.add(reviewId)
+            if (existingDetail) {
+                if (finalScore !== undefined) {
+                    existingDetail.finalScore = finalScore
+                }
+
+                if (reviewId) {
+                    existingDetail.reviewId = reviewId
+                }
+
+                if (appealInfo?.finishAppeals !== undefined) {
+                    existingDetail.finishedAppeals = appealInfo.finishAppeals
+                }
+
+                if (reviewDate) {
+                    existingDetail.reviewDate = reviewDate
+                }
+
+                if (reviewDateString) {
+                    existingDetail.reviewDateString = reviewDateString
+                }
+
+                if (reviewerHandleForDetail) {
+                    existingDetail.reviewerHandle = reviewerHandleForDetail
+                    if (resourceId && !reviewerHandleByResourceId[resourceId]) {
+                        reviewerHandleByResourceId[resourceId] = reviewerHandleForDetail
+                    }
+                }
+
+                if (finalReviewerHandleColor) {
+                    existingDetail.reviewerHandleColor = finalReviewerHandleColor
+                }
+
+                if (finalReviewerMaxRating !== undefined) {
+                    existingDetail.reviewerMaxRating = finalReviewerMaxRating
+                }
+
+                if (normalizedReviewInfo) {
+                    existingDetail.reviewInfo = existingDetail.reviewInfo
+                        ? {
+                            ...existingDetail.reviewInfo,
+                            ...normalizedReviewInfo,
+                            reviewerHandle: normalizedReviewInfo.reviewerHandle
+                                ?? existingDetail.reviewInfo.reviewerHandle,
+                            reviewerHandleColor: normalizedReviewInfo.reviewerHandleColor
+                                ?? existingDetail.reviewInfo.reviewerHandleColor,
+                            reviewerMaxRating: normalizedReviewInfo.reviewerMaxRating
+                                ?? existingDetail.reviewInfo.reviewerMaxRating,
+                        }
+                        : normalizedReviewInfo
+                }
+
+                if (normalizedReviewInfo?.reviewProgress !== undefined) {
+                    existingDetail.reviewProgress = normalizedReviewInfo.reviewProgress
+                }
+
+                if (resolvedStatus !== undefined) {
+                    existingDetail.status = resolvedStatus
+                }
+
+                existingDetail.totalAppeals = totalAppeals
+                existingDetail.unresolvedAppeals = unresolvedAppeals
+
+                if (reviewKey) {
+                    seenReviewIds.add(reviewKey)
+                }
+
+                seenReviewIdsBySubmission.set(submission.id, seenReviewIds)
+                return
+            }
+
+            group.reviews.push(newDetail)
+
+            if (reviewKey) {
+                seenReviewIds.add(reviewKey)
+            }
+
             seenReviewIdsBySubmission.set(submission.id, seenReviewIds)
-            return
-        }
-
-        group.reviews.push(newDetail)
-        seenReviewIds.add(reviewId)
-        seenReviewIdsBySubmission.set(submission.id, seenReviewIds)
+        })
     })
 
     const aggregatedRows: AggregatedSubmissionReviews[] = []

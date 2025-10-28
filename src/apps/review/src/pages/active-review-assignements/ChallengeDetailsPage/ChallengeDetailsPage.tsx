@@ -653,22 +653,17 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
     useEffect(() => {
         if (!tabItems.length) return
 
-        const assignTab = (value: string | undefined): void => {
-            if (!value) return
-            setSelectedTab(value)
-            sessionStorage.setItem(TAB, value)
-        }
+        let nextTab: string | undefined
 
         const tab = searchParams.get('tab')
         if (tab) {
             const match = tabItems.find(item => kebabCase(item.value) === tab)
             if (match) {
-                assignTab(match.value)
-                return
+                nextTab = match.value
             }
         }
 
-        if (!isPastReviewDetail) {
+        if (!nextTab && !isPastReviewDetail) {
             const challengePhases = visibleChallengePhases
             if (challengePhases.length) {
                 let openTabValue: string | undefined
@@ -679,19 +674,26 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                     }
                 })
                 if (openTabValue) {
-                    assignTab(openTabValue)
-                    return
+                    nextTab = openTabValue
                 }
             }
         }
 
-        assignTab(tabItems[0]?.value)
+        if (!nextTab) {
+            nextTab = tabItems[0]?.value
+        }
+
+        if (nextTab && nextTab !== selectedTab) {
+            setSelectedTab(nextTab)
+            sessionStorage.setItem(TAB, nextTab)
+        }
     }, [
         searchParams,
         tabItems,
         visibleChallengePhases,
         phaseOrderingOptions,
         isPastReviewDetail,
+        selectedTab,
     ])
 
     // eslint-disable-next-line complexity

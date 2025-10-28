@@ -11,6 +11,7 @@ import { BackendReview } from './BackendReview.model'
  * Review result info
  */
 export interface ReviewResult {
+    id?: string
     appeals: AppealResult[]
     createdAt: string | Date
     createdAtString?: string // this field is calculated at frontend
@@ -111,6 +112,7 @@ export function convertBackendReviewToReviewResult(
         appeals: [],
         createdAt,
         createdAtString,
+        id: data.id,
         phaseName,
         resourceId: data.resourceId,
         reviewDate,
