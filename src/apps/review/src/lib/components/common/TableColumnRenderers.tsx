@@ -242,8 +242,11 @@ export function renderReviewScoreCell(
                 .trim()
                 .toUpperCase()
             : ''
+        const hasValidScore = typeof review.finalScore === 'number'
+            && Number.isFinite(review.finalScore)
+
         if (!normalizedStatus) {
-            return true
+            return !hasValidScore
         }
 
         return normalizedStatus !== 'COMPLETED'
@@ -540,9 +543,9 @@ export function renderScoreCell(
     }
 
     const reviewInfo = reviewDetail.reviewInfo
-    const reviewId = reviewInfo?.id || reviewDetail.reviewId
+    const reviewId = reviewInfo?.id ?? reviewDetail.reviewId
 
-    if (!reviewInfo || !reviewId) {
+    if (!reviewId) {
         return (
             <span className={styles.notReviewed}>
                 --

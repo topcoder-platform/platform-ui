@@ -22,6 +22,7 @@ export interface SubmissionInfo {
     memberId: string
     userInfo?: BackendResource // this field is calculated at frontend
     review?: ReviewInfo
+    reviewInfos?: ReviewInfo[]
     reviews?: ReviewResult[]
     /**
      * Backend review type identifier (e.g. 'Post-Mortem Review').
@@ -109,6 +110,9 @@ export function convertBackendSubmissionToSubmissionInfo(
         ? isPassingReviewRaw
         : undefined
     const reviewEntries = Array.isArray(data.review) ? data.review : []
+    const reviewInfos = reviewEntries.map(convertBackendReviewToReviewInfo)
+    const reviewResults = reviewEntries.map(convertBackendReviewToReviewResult)
+    const primaryReviewInfo = reviewInfos[0]
     const primaryReview = reviewEntries[0]
 
     return {
@@ -117,11 +121,9 @@ export function convertBackendSubmissionToSubmissionInfo(
         isLatest: data.isLatest,
         isPassingReview,
         memberId: data.memberId,
-        review:
-            primaryReview
-                ? convertBackendReviewToReviewInfo(primaryReview)
-                : undefined,
-        reviews: reviewEntries.map(convertBackendReviewToReviewResult),
+        review: primaryReviewInfo,
+        reviewInfos,
+        reviews: reviewResults,
         reviewTypeId: primaryReview?.typeId ?? undefined,
         submittedDate,
         submittedDateString,
