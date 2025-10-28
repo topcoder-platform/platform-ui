@@ -114,6 +114,16 @@
     }
 }
 
+.pendingScore {
+    color: var(--GrayFontColor);
+
+    &:hover,
+    &:focus {
+        color: $blue-120;
+        text-decoration: underline;
+    }
+}
+
 // Action column styles (mirrors TableIterativeReview)
 .submit {
     align-items: center;
