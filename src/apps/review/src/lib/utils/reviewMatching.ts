@@ -7,6 +7,7 @@ import type { BackendReview } from '../models'
 import {
     buildMetadataCriteria,
     findMetadataPhaseMatch,
+    getNormalizedAlphaLowerCase,
     getNormalizedLowerCase,
     type MetadataPhaseMatchDetail,
     normalizeReviewMetadata,
@@ -70,6 +71,54 @@ export function collectMatchedCriteria({
     criteria.push(...metadataCriteria)
 
     return criteria
+}
+
+interface ResolvePhaseMatchArguments {
+    matchesPhase: boolean
+    matchesScorecard: boolean
+    normalizedPhaseName?: string
+    normalizedPhaseNameForReviewType?: string
+    normalizedReviewPhaseName?: string
+    normalizedReviewTypeAlpha?: string
+    review: BackendReview
+    reviewPhaseName?: string | null
+    reviewType?: string | null
+}
+
+function resolvePhaseOrTypeMatch({
+    matchesPhase,
+    matchesScorecard,
+    normalizedPhaseName,
+    normalizedPhaseNameForReviewType,
+    normalizedReviewPhaseName,
+    normalizedReviewTypeAlpha,
+    review,
+    reviewPhaseName,
+    reviewType,
+}: ResolvePhaseMatchArguments): boolean | undefined {
+    if (!normalizedPhaseName) {
+        return handleNoPhaseMatch(review, matchesPhase, matchesScorecard)
+    }
+
+    if (normalizedReviewPhaseName) {
+        return enforceExactPhaseNameMatch({
+            normalizedPhaseName,
+            normalizedReviewPhaseName,
+            review,
+            reviewPhaseName: reviewPhaseName ?? '',
+        })
+    }
+
+    if (normalizedReviewTypeAlpha && reviewType && normalizedPhaseNameForReviewType) {
+        return enforceExactReviewTypeMatch({
+            normalizedPhaseName: normalizedPhaseNameForReviewType,
+            normalizedReviewType: normalizedReviewTypeAlpha,
+            review,
+            reviewType,
+        })
+    }
+
+    return undefined
 }
 
 /**
@@ -178,6 +227,47 @@ export function enforceExactPhaseNameMatch({
 }
 
 /**
+ * Enforces an exact match requirement when the review contains an explicit review type.
+ *
+ * @param normalizedPhaseName - Target phase name normalized using separator-insensitive rules.
+ * @param normalizedReviewType - Review type normalized using separator-insensitive rules.
+ * @param review - Review being evaluated.
+ * @param reviewType - Original review type string for logging purposes.
+ * @returns True when the normalized review type matches the phase name exactly.
+ */
+export function enforceExactReviewTypeMatch({
+    normalizedPhaseName,
+    normalizedReviewType,
+    review,
+    reviewType,
+}: {
+    normalizedPhaseName: string
+    normalizedReviewType: string
+    review: BackendReview
+    reviewType: string
+}): boolean {
+    const matchesReviewType = normalizedReviewType === normalizedPhaseName
+    const matchedCriteria = matchesReviewType ? ['reviewType'] : []
+
+    debugLog('reviewMatchesPhase.reviewTypeExactMatchRequired', {
+        matchesReviewType,
+        normalizedPhaseName,
+        normalizedReviewType,
+        reviewId: review.id,
+        reviewType: truncateForLog(reviewType),
+    })
+    debugLog('reviewMatchesPhase.summary', {
+        earlyReturnReason: 'reviewTypeExactMatchRequired',
+        matchedCriteria,
+        matchReason: matchedCriteria[0] ?? 'none',
+        result: matchesReviewType,
+        reviewId: review.id,
+    })
+
+    return matchesReviewType
+}
+
+/**
  * Determines whether a review matches the supplied phase context by evaluating scorecard,
  * phase identifier, phase name, type, and metadata criteria in priority order.
  *
@@ -219,31 +309,45 @@ export function reviewMatchesPhase(
     })
 
     const normalizedPhaseName = getNormalizedLowerCase(phaseName)
-    if (!normalizedPhaseName) {
-        return handleNoPhaseMatch(review, matchesPhase, matchesScorecard)
-    }
+    const normalizedPhaseNameForReviewType = getNormalizedAlphaLowerCase(phaseName)
 
     const reviewPhaseName = (review as { phaseName?: string | null }).phaseName ?? undefined
     const normalizedReviewPhaseName = getNormalizedLowerCase(reviewPhaseName)
-    if (normalizedReviewPhaseName) {
-        return enforceExactPhaseNameMatch({
-            normalizedPhaseName,
-            normalizedReviewPhaseName,
-            review,
-            reviewPhaseName: reviewPhaseName as string,
-        })
+    const reviewType = (review as { reviewType?: string | null }).reviewType ?? undefined
+    const normalizedReviewType = getNormalizedLowerCase(reviewType)
+    const normalizedReviewTypeAlpha = getNormalizedAlphaLowerCase(reviewType)
+
+    const phaseBasedMatch = resolvePhaseOrTypeMatch({
+        matchesPhase,
+        matchesScorecard,
+        normalizedPhaseName,
+        normalizedPhaseNameForReviewType,
+        normalizedReviewPhaseName,
+        normalizedReviewTypeAlpha,
+        review,
+        reviewPhaseName,
+        reviewType,
+    })
+
+    if (typeof phaseBasedMatch === 'boolean') {
+        return phaseBasedMatch
     }
 
     const reviewTypeId = getNormalizedLowerCase(review.typeId ?? undefined)
-    const reviewTypeName = getNormalizedLowerCase((review as { reviewType?: string | null }).reviewType ?? undefined)
     const matchesTypeExact = Boolean(reviewTypeId && reviewTypeId === normalizedPhaseName)
-    const matchesReviewTypeName = Boolean(reviewTypeName && reviewTypeName === normalizedPhaseName)
-    const metadataMatchDetail: MetadataPhaseMatchDetail = findMetadataPhaseMatch(
-        review.metadata,
-        normalizedPhaseName,
-    )
+    const metadataMatchDetail: MetadataPhaseMatchDetail = normalizedPhaseName
+        ? findMetadataPhaseMatch(
+            review.metadata,
+            normalizedPhaseName,
+        )
+        : undefined
     const matchesMetadata = Boolean(metadataMatchDetail)
     const metadataCriteria = buildMetadataCriteria(metadataMatchDetail)
+    const matchesReviewTypeName = Boolean(
+        normalizedReviewTypeAlpha
+        && normalizedPhaseNameForReviewType
+        && normalizedReviewTypeAlpha === normalizedPhaseNameForReviewType,
+    )
 
     const matchedCriteria = collectMatchedCriteria({
         matchesPhase,
@@ -265,7 +369,8 @@ export function reviewMatchesPhase(
         matchesTypeExact,
         metadataMatchDetail,
         reviewTypeId,
-        reviewTypeName,
+        reviewTypeName: normalizedReviewType,
+        reviewTypeNameAlpha: normalizedReviewTypeAlpha,
     })
 
     debugLog('reviewMatchesPhase.summary', {

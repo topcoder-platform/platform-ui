@@ -15,10 +15,12 @@ import {
     SUBMITTER,
 } from '../../../config/index.config'
 import { ChallengeDetailContext } from '../../contexts'
+import { hasSubmitterPassedThreshold } from '../../utils/reviewScoring'
 
 interface Props {
     reviews: SubmissionInfo[]
     submitterReviews: SubmissionInfo[]
+    approvalMinimumPassingScore?: number | null
     isLoadingReview: boolean
     isDownloading: IsRemovingType
     downloadSubmission: (submissionId: string) => void
@@ -26,15 +28,47 @@ interface Props {
 }
 
 export const TabContentApproval: FC<Props> = (props: Props) => {
-    const { actionChallengeRole }: useRoleProps = useRole()
+    const {
+        challengeInfo,
+        myResources = [],
+    }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
+    const {
+        actionChallengeRole,
+        approverResourceIds,
+        isPrivilegedRole,
+    }: useRoleProps = useRole()
     const hideHandleColumn = props.isActiveChallenge
         && actionChallengeRole === REVIEWER
 
-    const isSubmitterView = actionChallengeRole === SUBMITTER
-    const rawRows = isSubmitterView ? props.submitterReviews : props.reviews
+    const myMemberIds = useMemo<Set<string>>(
+        () => new Set((myResources ?? []).map(resource => resource.memberId)),
+        [myResources],
+    )
+
+    const isSubmitterOnly = actionChallengeRole === SUBMITTER
+        && approverResourceIds.size === 0
+    const rawRows = isSubmitterOnly ? props.submitterReviews : props.reviews
+
+    const hasPassedApprovalThreshold = useMemo(
+        () => hasSubmitterPassedThreshold(
+            rawRows ?? [],
+            myMemberIds,
+            props.approvalMinimumPassingScore,
+        ),
+        [rawRows, myMemberIds, props.approvalMinimumPassingScore],
+    )
+
+    const isChallengeCompleted = useMemo(
+        () => {
+            const normalizedStatus = (challengeInfo?.status ?? '').toUpperCase()
+            return normalizedStatus === 'COMPLETED'
+                || normalizedStatus === 'CANCELLED'
+                || normalizedStatus.startsWith('CANCELLED_')
+        },
+        [challengeInfo?.status],
+    )
 
     // Only show Approval-phase reviews on the Approval tab
-    const { challengeInfo }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
     const approvalPhaseIds = useMemo<Set<string>>(
         () => new Set(
             (challengeInfo?.phases ?? [])
@@ -61,17 +95,46 @@ export const TabContentApproval: FC<Props> = (props: Props) => {
         [rawRows, approvalPhaseIds],
     )
 
+    const filteredApprovalRows = useMemo<SubmissionInfo[]>(
+        () => {
+            if (isPrivilegedRole || (isChallengeCompleted && hasPassedApprovalThreshold)) {
+                return approvalRows
+            }
+
+            return approvalRows.filter(row => {
+                if (row.review?.resourceId
+                    && approverResourceIds.has(row.review.resourceId)) {
+                    return true
+                }
+
+                if (row.memberId && myMemberIds.has(row.memberId)) {
+                    return true
+                }
+
+                return false
+            })
+        },
+        [
+            approvalRows,
+            isPrivilegedRole,
+            isChallengeCompleted,
+            hasPassedApprovalThreshold,
+            approverResourceIds,
+            myMemberIds,
+        ],
+    )
+
     if (props.isLoadingReview) {
         return <TableLoading />
     }
 
-    if (!approvalRows.length) {
+    if (!filteredApprovalRows.length) {
         return <TableNoRecord message='No approvals yet' />
     }
 
     return (
         <TableIterativeReview
-            datas={approvalRows}
+            datas={filteredApprovalRows}
             isDownloading={props.isDownloading}
             downloadSubmission={props.downloadSubmission}
             hideHandleColumn={hideHandleColumn}

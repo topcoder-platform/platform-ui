@@ -21,10 +21,10 @@ const normalizeReviewPhaseHint = (value?: string | null): string => (
 )
 
 const resolvePhaseNameFromId = (
-    phaseId?: string,
+    phaseId?: string | number | null,
     phases?: BackendPhase[],
 ): string | undefined => {
-    if (!phaseId || !Array.isArray(phases)) {
+    if (phaseId === undefined || phaseId === null || !Array.isArray(phases)) {
         return undefined
     }
 
@@ -92,6 +92,68 @@ const collectReviewHints = (
     return normalizedCandidates
 }
 
+const normalizeReviewPhaseName = (value?: string | null): string => (
+    (value ?? '')
+        .trim()
+        .toLowerCase()
+)
+
+const hasReviewPhaseName = (
+    phaseName?: string | null,
+): boolean => normalizeReviewPhaseName(phaseName) === 'review'
+
+type ReviewPhaseCandidate = {
+    phaseId?: string | null
+    phaseName?: string | null
+    reviewType?: string | null
+}
+
+const hasReviewPhase = (
+    review: ReviewPhaseCandidate | undefined,
+    phases?: BackendPhase[],
+): boolean => {
+    if (!review) {
+        return false
+    }
+
+    if (hasReviewPhaseName(review.phaseName)) {
+        return true
+    }
+
+    if (hasReviewPhaseName(review.reviewType)) {
+        return true
+    }
+
+    const resolvedPhaseName = resolvePhaseNameFromId(review.phaseId, phases)
+    return hasReviewPhaseName(resolvedPhaseName)
+}
+
+export const isContestReviewPhaseSubmission = (
+    submission?: SubmissionInfo,
+    phases?: BackendPhase[],
+): boolean => {
+    if (!submission) {
+        return false
+    }
+
+    const submissionType = (submission.type ?? '')
+        .trim()
+        .toUpperCase()
+    if (submissionType !== 'CONTEST_SUBMISSION') {
+        return false
+    }
+
+    if (hasReviewPhase(submission.review, phases)) {
+        return true
+    }
+
+    if (Array.isArray(submission.reviews)) {
+        return submission.reviews.some(review => hasReviewPhase(review, phases))
+    }
+
+    return false
+}
+
 export const shouldIncludeInReviewPhase = (
     submission?: SubmissionInfo,
     phases?: BackendPhase[],
@@ -110,11 +172,11 @@ export const shouldIncludeInReviewPhase = (
                 reviewType: submission.review?.reviewType,
                 reviewTypeId: submission.reviewTypeId,
                 submissionId: submission.id ?? submission.review?.submissionId,
-                verdict: 'included (no candidates)',
+                verdict: 'excluded (no candidates)',
             })
         }
 
-        return true
+        return false
     }
 
     const normalizedCandidateList = Array.from(normalizedCandidates)

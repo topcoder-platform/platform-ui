@@ -252,15 +252,21 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
 
     // get challenge screening, review data
     const {
-        isLoading: isLoadingSubmission,
-        review,
-        reviewProgress,
-        screening,
+        approvalMinimumPassingScore,
+        approvalReviews,
         checkpoint,
         checkpointReview,
-        approvalReviews,
-        postMortemReviews,
+        checkpointReviewMinimumPassingScore,
+        checkpointScreeningMinimumPassingScore,
+        isLoading: isLoadingSubmission,
         mappingReviewAppeal,
+        postMortemMinimumPassingScore,
+        postMortemReviews,
+        review,
+        reviewMinimumPassingScore,
+        reviewProgress,
+        screening,
+        screeningMinimumPassingScore,
         submitterReviews,
     }: useFetchScreeningReviewProps = useFetchScreeningReview()
 
@@ -1766,13 +1772,19 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                                 selectedTab={selectedTab}
                                 isLoadingSubmission={isLoadingSubmission}
                                 screening={screening}
+                                screeningMinimumPassingScore={screeningMinimumPassingScore}
                                 submissions={visibleSubmissions}
                                 checkpoint={checkpoint}
+                                checkpointScreeningMinimumPassingScore={checkpointScreeningMinimumPassingScore}
                                 checkpointReview={checkpointReview}
+                                checkpointReviewMinimumPassingScore={checkpointReviewMinimumPassingScore}
                                 review={review}
+                                reviewMinimumPassingScore={reviewMinimumPassingScore}
                                 submitterReviews={submitterReviews}
                                 approvalReviews={approvalReviews}
+                                approvalMinimumPassingScore={approvalMinimumPassingScore}
                                 postMortemReviews={postMortemReviews}
+                                postMortemMinimumPassingScore={postMortemMinimumPassingScore}
                                 mappingReviewAppeal={mappingReviewAppeal}
                                 isActiveChallenge={!isPastReviewDetail}
                                 selectedPhaseId={(() => {

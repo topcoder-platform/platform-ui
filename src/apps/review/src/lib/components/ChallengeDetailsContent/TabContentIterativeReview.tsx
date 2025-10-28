@@ -1,12 +1,12 @@
 /**
  * Content of iterative review tab.
  */
-import { FC, useMemo } from 'react'
+import { FC, useContext, useMemo } from 'react'
 
 import { TableLoading } from '~/apps/admin/src/lib'
 import { IsRemovingType } from '~/apps/admin/src/lib/models'
 
-import { SubmissionInfo } from '../../models'
+import { ChallengeDetailContextModel, SubmissionInfo } from '../../models'
 import { TableNoRecord } from '../TableNoRecord'
 import { TableIterativeReview } from '../TableIterativeReview'
 import { useRole, useRoleProps } from '../../hooks'
@@ -14,10 +14,13 @@ import {
     REVIEWER,
     SUBMITTER,
 } from '../../../config/index.config'
+import { ChallengeDetailContext } from '../../contexts'
+import { hasSubmitterPassedThreshold } from '../../utils/reviewScoring'
 
 interface Props {
     reviews: SubmissionInfo[]
     submitterReviews: SubmissionInfo[]
+    postMortemMinimumPassingScore?: number | null
     isLoadingReview: boolean
     isDownloading: IsRemovingType
     downloadSubmission: (submissionId: string) => void
@@ -51,12 +54,58 @@ const getSubmissionPriority = (submission: SubmissionInfo): number => {
 }
 
 export const TabContentIterativeReview: FC<Props> = (props: Props) => {
-    const { actionChallengeRole }: useRoleProps = useRole()
+    const {
+        challengeInfo,
+        myResources = [],
+    }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
+    const {
+        actionChallengeRole,
+        isPrivilegedRole,
+        postMortemReviewerResourceIds,
+    }: useRoleProps = useRole()
     const hideHandleColumn = props.isActiveChallenge
         && actionChallengeRole === REVIEWER
 
-    const isSubmitterView = actionChallengeRole === SUBMITTER
-    const sourceRows = isSubmitterView ? props.submitterReviews : props.reviews
+    const myMemberIds = useMemo<Set<string>>(
+        () => new Set((myResources ?? []).map(resource => resource.memberId)),
+        [myResources],
+    )
+
+    const isChallengeCompleted = useMemo(
+        () => {
+            const normalizedStatus = (challengeInfo?.status ?? '').toUpperCase()
+            return normalizedStatus === 'COMPLETED'
+                || normalizedStatus === 'CANCELLED'
+                || normalizedStatus.startsWith('CANCELLED_')
+        },
+        [challengeInfo?.status],
+    )
+
+    const normalizedColumnLabel = useMemo(
+        () => (props.columnLabel ?? '')
+            .toLowerCase()
+            .replace(/[^a-z]/g, ''),
+        [props.columnLabel],
+    )
+    const isPostMortemPhase = useMemo(
+        () => normalizedColumnLabel === 'postmortem',
+        [normalizedColumnLabel],
+    )
+
+    const isSubmitterOnly = actionChallengeRole === SUBMITTER
+        && postMortemReviewerResourceIds.size === 0
+    const sourceRows = isPostMortemPhase && isSubmitterOnly
+        ? props.submitterReviews
+        : props.reviews
+
+    const hasPassedPostMortemThreshold = useMemo(
+        () => hasSubmitterPassedThreshold(
+            sourceRows ?? [],
+            myMemberIds,
+            props.postMortemMinimumPassingScore,
+        ),
+        [sourceRows, myMemberIds, props.postMortemMinimumPassingScore],
+    )
 
     const filteredRows = useMemo(() => {
         const phaseId = props.phaseIdFilter?.trim()
@@ -83,24 +132,56 @@ export const TabContentIterativeReview: FC<Props> = (props: Props) => {
         return Array.from(map.values())
     }, [filteredRows])
 
+    const filteredReviewRows = useMemo<SubmissionInfo[]>(
+        () => {
+            if (!isPostMortemPhase) {
+                return reviewRows
+            }
+
+            if (isPrivilegedRole || (isChallengeCompleted && (!isPostMortemPhase || hasPassedPostMortemThreshold))) {
+                return reviewRows
+            }
+
+            return reviewRows.filter(row => {
+                if (row.review?.resourceId
+                    && postMortemReviewerResourceIds.has(row.review.resourceId)) {
+                    return true
+                }
+
+                if (row.memberId && myMemberIds.has(row.memberId)) {
+                    return true
+                }
+
+                return false
+            })
+        },
+        [
+            reviewRows,
+            isPostMortemPhase,
+            isPrivilegedRole,
+            isChallengeCompleted,
+            hasPassedPostMortemThreshold,
+            postMortemReviewerResourceIds,
+            myMemberIds,
+        ],
+    )
+
     if (props.isLoadingReview) {
         return <TableLoading />
     }
 
-    if (!reviewRows.length) {
-        const emptyMessage = props.columnLabel === 'Post-Mortem'
+    if (!filteredReviewRows.length) {
+        const emptyMessage = isPostMortemPhase
             ? 'No post-mortem reviews yet'
             : 'No iterative reviews yet'
         return <TableNoRecord message={emptyMessage} />
     }
 
-    const shouldHideSubmissionColumn = (props.columnLabel || '')
-        .trim()
-        .toLowerCase() === 'post-mortem'
+    const shouldHideSubmissionColumn = isPostMortemPhase
 
     return (
         <TableIterativeReview
-            datas={reviewRows}
+            datas={filteredReviewRows}
             isDownloading={props.isDownloading}
             downloadSubmission={props.downloadSubmission}
             hideHandleColumn={hideHandleColumn}

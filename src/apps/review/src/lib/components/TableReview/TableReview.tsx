@@ -104,6 +104,7 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
     const {
         canManageCompletedReviews,
         hasCopilotRole,
+        isCopilotWithReviewerAssignments,
         isAdmin,
         ownedMemberIds,
     }: UseRolePermissionsResult = useRolePermissions()
@@ -406,14 +407,11 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
         }
 
         const buildPrimaryAction = (): JSX.Element | undefined => {
-            if (!myReviewDetail) {
-                return undefined
-            }
-
-            const reviewInfo = myReviewDetail.reviewInfo
+            const reviewInfo = myReviewDetail?.reviewInfo
             const status = (reviewInfo?.status ?? '').toUpperCase()
 
-            if (hasReviewRole && (status === 'COMPLETED' || status === 'SUBMITTED')) {
+            if ((hasReviewRole || isCopilotWithReviewerAssignments)
+                && (status === 'COMPLETED' || status === 'SUBMITTED')) {
                 return (
                     <div className={styles.completedAction} key='completed-indicator'>
                         <span className={styles.completedIcon}>
@@ -426,7 +424,11 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
                 )
             }
 
-            if (!hasReviewRole) {
+            if (!hasReviewRole && !isCopilotWithReviewerAssignments) {
+                return undefined
+            }
+
+            if (!myReviewDetail) {
                 return undefined
             }
 
@@ -554,6 +556,7 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
         handleHistoryButtonClick,
         hasReviewRole,
         historyByMember,
+        isCopilotWithReviewerAssignments,
         isReopening,
         myReviewerResourceIds,
         openReopenDialog,

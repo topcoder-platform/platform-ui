@@ -51,13 +51,19 @@ interface Props {
     selectedTab: string
     isLoadingSubmission: boolean
     screening: Screening[]
+    screeningMinimumPassingScore: number | null | undefined
     submissions: BackendSubmission[]
     checkpoint: Screening[]
+    checkpointScreeningMinimumPassingScore: number | null | undefined
     checkpointReview: Screening[]
+    checkpointReviewMinimumPassingScore: number | null | undefined
     review: SubmissionInfo[]
+    reviewMinimumPassingScore: number | null | undefined
     submitterReviews: SubmissionInfo[]
     approvalReviews: SubmissionInfo[]
+    approvalMinimumPassingScore: number | null | undefined
     postMortemReviews: SubmissionInfo[]
+    postMortemMinimumPassingScore: number | null | undefined
     mappingReviewAppeal: MappingReviewAppeal // from review id to appeal info
     isActiveChallenge: boolean
     selectedPhaseId?: string
@@ -80,11 +86,13 @@ const SUBMISSION_TAB_KEYS = new Set([
     normalizeType('topgear submission'),
 ])
 
+const CHECKPOINT_REVIEW_KEY = normalizeType('checkpoint review')
+const CHECKPOINT_SCREENING_KEY = normalizeType('checkpoint screening')
 const CHECKPOINT_TAB_KEYS = new Set([
     normalizeType('checkpoint'),
     normalizeType('checkpoint submission'),
-    normalizeType('checkpoint screening'),
-    normalizeType('checkpoint review'),
+    CHECKPOINT_SCREENING_KEY,
+    CHECKPOINT_REVIEW_KEY,
 ])
 
 interface BuildScreeningRowsParams {
@@ -98,19 +106,22 @@ const buildScreeningRows = ({
     actionChallengeRole,
     currentMemberId,
 }: BuildScreeningRowsParams): Screening[] => {
-    const filteredScreening = actionChallengeRole === SUBMITTER && currentMemberId
-        ? screening.filter(entry => entry.memberId === currentMemberId)
-        : screening
+    if (actionChallengeRole === SUBMITTER && currentMemberId) {
+        const mySubmissions = screening.filter(entry => entry.memberId === currentMemberId)
 
-    return hasIsLatestFlag(filteredScreening)
-        ? filteredScreening.filter(submission => submission.isLatest === true)
-        : filteredScreening
+        return hasIsLatestFlag(mySubmissions)
+            ? mySubmissions.filter(submission => submission.isLatest === true)
+            : mySubmissions
+    }
+
+    return screening
 }
 
 interface SubmissionTabParams {
     selectedTabNormalized: string
     submissions: BackendSubmission[]
     screeningRows: Screening[]
+    screeningMinimumPassingScore: number | null | undefined
     isLoadingSubmission: boolean
     isDownloadingSubmission: useDownloadSubmissionProps['isLoading']
     downloadSubmission: useDownloadSubmissionProps['downloadSubmission']
@@ -121,6 +132,7 @@ const renderSubmissionTab = ({
     selectedTabNormalized,
     submissions,
     screeningRows,
+    screeningMinimumPassingScore,
     isLoadingSubmission,
     isDownloadingSubmission,
     downloadSubmission,
@@ -154,6 +166,7 @@ const renderSubmissionTab = ({
     return (
         <TabContentScreening
             screening={screeningRows}
+            screeningMinimumPassingScore={screeningMinimumPassingScore}
             isLoadingScreening={isLoadingSubmission}
             isDownloading={isDownloadingSubmission}
             downloadSubmission={downloadSubmission}
@@ -326,6 +339,7 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
                 isActiveChallenge: props.isActiveChallenge,
                 isDownloadingSubmission,
                 isLoadingSubmission: props.isLoadingSubmission,
+                screeningMinimumPassingScore: props.screeningMinimumPassingScore,
                 screeningRows,
                 selectedTabNormalized,
                 submissions: props.submissions,
@@ -333,14 +347,22 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
         }
 
         if (CHECKPOINT_TAB_KEYS.has(selectedTabNormalized)) {
+            const checkpointMode: 'submission' | 'screening' | 'review' = selectedTabNormalized
+                .startsWith(CHECKPOINT_REVIEW_KEY)
+                ? 'review'
+                : selectedTabNormalized.startsWith(CHECKPOINT_SCREENING_KEY)
+                    ? 'screening'
+                    : 'submission'
             return (
                 <TabContentCheckpoint
                     checkpoint={props.checkpoint}
                     checkpointReview={props.checkpointReview}
+                    checkpointScreeningMinimumPassingScore={props.checkpointScreeningMinimumPassingScore}
+                    checkpointReviewMinimumPassingScore={props.checkpointReviewMinimumPassingScore}
                     isLoading={props.isLoadingSubmission}
                     isDownloading={isDownloadingSubmission}
                     downloadSubmission={downloadSubmission}
-                    selectedTab={props.selectedTab}
+                    mode={checkpointMode}
                 />
             )
         }
@@ -361,6 +383,7 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
                 <TabContentApproval
                     reviews={props.approvalReviews}
                     submitterReviews={props.submitterReviews}
+                    approvalMinimumPassingScore={props.approvalMinimumPassingScore}
                     isLoadingReview={props.isLoadingSubmission}
                     isDownloading={isDownloadingSubmission}
                     downloadSubmission={downloadSubmission}
@@ -374,6 +397,7 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
                 <TabContentIterativeReview
                     reviews={postMortemReviewRows}
                     submitterReviews={postMortemSubmitterReviews}
+                    postMortemMinimumPassingScore={props.postMortemMinimumPassingScore}
                     isLoadingReview={props.isLoadingSubmission}
                     isDownloading={isDownloadingSubmission}
                     downloadSubmission={downloadSubmission}
@@ -388,6 +412,7 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
                 <TabContentIterativeReview
                     reviews={props.review}
                     submitterReviews={props.submitterReviews}
+                    postMortemMinimumPassingScore={props.postMortemMinimumPassingScore}
                     isLoadingReview={props.isLoadingSubmission}
                     isDownloading={isDownloadingSubmission}
                     downloadSubmission={downloadSubmission}
@@ -402,6 +427,7 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
                 selectedTab={props.selectedTab}
                 reviews={reviewTabReviews}
                 submitterReviews={reviewTabSubmitterReviews}
+                reviewMinimumPassingScore={props.reviewMinimumPassingScore}
                 isLoadingReview={props.isLoadingSubmission}
                 isDownloading={isDownloadingSubmission}
                 downloadSubmission={downloadSubmission}

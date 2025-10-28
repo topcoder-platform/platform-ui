@@ -4,6 +4,7 @@
 import {
     FC,
     MouseEvent,
+    useCallback,
     useContext,
     useMemo,
 } from 'react'
@@ -28,6 +29,8 @@ import { SUBMITTER } from '../../../config/index.config'
 import { ChallengeDetailContext, ReviewAppContext } from '../../contexts'
 import type { useRoleProps } from '../../hooks'
 import { useRole, useScorecardPassingScores, useSubmissionDownloadAccess } from '../../hooks'
+import type { UseRolePermissionsResult } from '../../hooks/useRolePermissions'
+import { useRolePermissions } from '../../hooks/useRolePermissions'
 import type { UseSubmissionDownloadAccessResult } from '../../hooks/useSubmissionDownloadAccess'
 import {
     BackendResource,
@@ -498,6 +501,7 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
     const isTablet = useMemo(() => screenWidth <= 744, [screenWidth])
     const { loginUserInfo }: ReviewAppContextModel = useContext(ReviewAppContext)
     const { actionChallengeRole, myChallengeResources }: useRoleProps = useRole()
+    const { isCopilotWithReviewerAssignments }: UseRolePermissionsResult = useRolePermissions()
     const isSubmitterView = actionChallengeRole === SUBMITTER
     const ownedMemberIds: Set<string> = useMemo(
         (): Set<string> => new Set(
@@ -1087,6 +1091,144 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
         [isPostMortemColumn],
     )
 
+    const renderApprovalAction = useCallback((data: SubmissionInfo) => {
+        const review = data.review
+        const reviewId = review?.id
+        const resourceId = review?.resourceId
+
+        if (!review || !reviewId || !resourceId || !myResourceIds.has(resourceId)) {
+            return <span>--</span>
+        }
+
+        const status = (review.status || '')
+            .toString()
+            .toUpperCase()
+        const normalizedLabel = (columnLabel || 'Approval').trim() || 'Approval'
+
+        if (['COMPLETED', 'SUBMITTED'].includes(status)) {
+            const pillText = `${normalizedLabel} Complete`
+            return (
+                <div
+                    aria-label='Review completed'
+                    className={classNames(styles.completedAction, 'last-element')}
+                    title='Review completed'
+                >
+                    <span className={styles.completedIcon} aria-hidden='true'>
+                        <IconOutline.CheckIcon />
+                    </span>
+                    <span className={styles.completedPill}>{pillText}</span>
+                </div>
+            )
+        }
+
+        if (['PENDING', 'IN_PROGRESS'].includes(status) || review?.reviewProgress || !status) {
+            const actionLabel = `Complete ${normalizedLabel}`
+
+            return (
+                <Link
+                    to={`./../review/${reviewId}`}
+                    className={classNames(styles.submit, 'last-element')}
+                >
+                    <i className='icon-upload' />
+                    {actionLabel}
+                </Link>
+            )
+        }
+
+        return <span>--</span>
+    }, [columnLabel, myResourceIds])
+
+    const renderPostMortemAction = useCallback((data: SubmissionInfo) => {
+        const review = data.review
+        const reviewId = review?.id
+        const resourceId = review?.resourceId
+
+        if (!review || !reviewId || !resourceId || !myResourceIds.has(resourceId)) {
+            return <span>--</span>
+        }
+
+        const status = (review.status || '')
+            .toString()
+            .toUpperCase()
+
+        if (status === 'COMPLETED') {
+            return (
+                <div
+                    aria-label='Review completed'
+                    className={classNames(styles.completedAction, 'last-element')}
+                    title='Review completed'
+                >
+                    <span className={styles.completedIcon} aria-hidden='true'>
+                        <IconOutline.CheckIcon />
+                    </span>
+                    <span className={styles.completedPill}>Post-Mortem Complete</span>
+                </div>
+            )
+        }
+
+        return (
+            <Link
+                to={`./../review/${reviewId}`}
+                className={classNames(styles.submit, 'last-element')}
+            >
+                <i className='icon-upload' />
+                Complete Post-Mortem
+            </Link>
+        )
+    }, [myResourceIds])
+
+    const renderIterativeAction = useCallback((data: SubmissionInfo) => {
+        const review = data.review
+        const reviewId = review?.id
+        const status = (review?.status ?? '').toUpperCase()
+        const hasReview = Boolean(reviewId)
+        const resourceId = review?.resourceId
+
+        if (!resourceId || !myResourceIds.has(resourceId)) {
+            return undefined
+        }
+
+        if (['COMPLETED', 'SUBMITTED'].includes(status)) {
+            const normalized = (columnLabel || 'Iterative Review').trim()
+            const pillText = `${normalized} Complete`
+            return (
+                <div
+                    aria-label='Review completed'
+                    className={classNames(styles.completedAction, 'last-element')}
+                    title='Review completed'
+                >
+                    <span className={styles.completedIcon} aria-hidden='true'>
+                        <IconOutline.CheckIcon />
+                    </span>
+                    <span className={styles.completedPill}>{pillText}</span>
+                </div>
+            )
+        }
+
+        if (
+            ['PENDING', 'IN_PROGRESS'].includes(status)
+            || (!status && hasReview)
+            || review?.reviewProgress
+        ) {
+            if (!reviewId) {
+                return undefined
+            }
+
+            return (
+                <Link
+                    to={`./../review/${reviewId}`}
+                    className={classNames(styles.submit, 'last-element')}
+                >
+                    <i className='icon-upload' />
+                    Complete Review
+                </Link>
+            )
+        }
+
+        return undefined
+    }, [columnLabel, myResourceIds])
+
+    // eslint-disable-next-line complexity
     const actionColumn: TableColumn<SubmissionInfo> | undefined = useMemo(() => {
         if (isApprovalColumn) {
             const allowApproverActions = isActiveChallenge
@@ -1100,113 +1242,27 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
             return {
                 columnId: 'action',
                 label: 'Action',
-                renderer: (data: SubmissionInfo) => {
-                    const review = data.review
-                    const reviewId = review?.id
-                    const resourceId = review?.resourceId
-
-                    if (!review || !reviewId || !resourceId || !myResourceIds.has(resourceId)) {
-                        return <span>--</span>
-                    }
-
-                    const status = (review.status || '')
-                        .toString()
-                        .toUpperCase()
-                    const normalizedLabel = (columnLabel || 'Approval').trim() || 'Approval'
-
-                    if (['COMPLETED', 'SUBMITTED'].includes(status)) {
-                        const pillText = `${normalizedLabel} Complete`
-                        return (
-                            <div
-                                aria-label='Review completed'
-                                className={classNames(styles.completedAction, 'last-element')}
-                                title='Review completed'
-                            >
-                                <span className={styles.completedIcon} aria-hidden='true'>
-                                    <IconOutline.CheckIcon />
-                                </span>
-                                <span className={styles.completedPill}>{pillText}</span>
-                            </div>
-                        )
-                    }
-
-                    if (['PENDING', 'IN_PROGRESS'].includes(status) || review?.reviewProgress || !status) {
-                        const actionLabel = `Complete ${normalizedLabel}`
-
-                        return (
-                            <Link
-                                to={`./../review/${reviewId}`}
-                                className={classNames(styles.submit, 'last-element')}
-                            >
-                                <i className='icon-upload' />
-                                {actionLabel}
-                            </Link>
-                        )
-                    }
-
-                    return <span>--</span>
-                },
+                renderer: renderApprovalAction,
                 type: 'element',
             }
         }
 
         if (isPostMortemColumn) {
-            if (!hasPostMortemReviewerRole) {
+            if (!hasPostMortemReviewerRole && !isCopilotWithReviewerAssignments) {
                 return undefined
             }
 
             return {
                 columnId: 'action',
                 label: 'Action',
-                renderer: (data: SubmissionInfo) => {
-                    const review = data.review
-                    const reviewId = review?.id
-                    const resourceId = review?.resourceId
-
-                    if (!review || !reviewId || !resourceId || !myResourceIds.has(resourceId)) {
-                        return <span>--</span>
-                    }
-
-                    const status = (review.status || '')
-                        .toString()
-                        .toUpperCase()
-
-                    if (status === 'COMPLETED') {
-                        return (
-                            <div
-                                aria-label='Review completed'
-                                className={classNames(styles.completedAction, 'last-element')}
-                                title='Review completed'
-                            >
-                                <span className={styles.completedIcon} aria-hidden='true'>
-                                    <IconOutline.CheckIcon />
-                                </span>
-                                <span className={styles.completedPill}>Post-Mortem Complete</span>
-                            </div>
-                        )
-                    }
-
-                    if (!reviewId) {
-                        return <span>--</span>
-                    }
-
-                    return (
-                        <Link
-                            to={`./../review/${reviewId}`}
-                            className={classNames(styles.submit, 'last-element')}
-                        >
-                            <i className='icon-upload' />
-                            Complete Post-Mortem
-                        </Link>
-                    )
-                },
+                renderer: renderPostMortemAction,
                 type: 'element',
             }
         }
 
         // Show Action column to Iterative Reviewers during active review phase,
         // and for First2Finish also when iterative reviews are completed (past phase)
-        if (!hasIterativeReviewerRole) {
+        if (!hasIterativeReviewerRole && !isCopilotWithReviewerAssignments) {
             return undefined
         }
 
@@ -1223,68 +1279,25 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
         return {
             columnId: 'action',
             label: 'Action',
-            renderer: (data: SubmissionInfo) => {
-                const review = data.review
-                const reviewId = review?.id
-                const status = (review?.status ?? '').toUpperCase()
-                const hasReview = !!review?.id
-
-                // Completed or submitted
-                if (['COMPLETED', 'SUBMITTED'].includes(status)) {
-                    // Build a pill label based on the column label
-                    const normalized = (columnLabel || 'Iterative Review').trim()
-                    const pillText = `${normalized} Complete`
-                    return (
-                        <div
-                            aria-label='Review completed'
-                            className={classNames(styles.completedAction, 'last-element')}
-                            title='Review completed'
-                        >
-                            <span className={styles.completedIcon} aria-hidden='true'>
-                                <IconOutline.CheckIcon />
-                            </span>
-                            <span className={styles.completedPill}>{pillText}</span>
-                        </div>
-                    )
-                }
-
-                // Allow navigating to complete the review if pending or in progress
-                if (['PENDING', 'IN_PROGRESS'].includes(status) || (
-                    !status && hasReview
-                ) || review?.reviewProgress) {
-                    if (!reviewId) {
-                        return undefined
-                    }
-
-                    return (
-                        <Link
-                            to={`./../review/${reviewId}`}
-                            className={classNames(styles.submit, 'last-element')}
-                        >
-                            <i className='icon-upload' />
-                            Complete Review
-                        </Link>
-                    )
-                }
-
-                return undefined
-            },
+            renderer: renderIterativeAction,
             type: 'element',
         }
     }, [
         challengeInfo,
-        columnLabel,
         datas,
         hasApproverRole,
         hasIterativeReviewerRole,
+        hasPostMortemReviewerRole,
         isActiveChallenge,
         isApprovalColumn,
         isApproverResourceAssigned,
+        isCopilotWithReviewerAssignments,
         isCurrentPhaseApproval,
         isFirst2Finish,
         isPostMortemColumn,
-        hasPostMortemReviewerRole,
-        myResourceIds,
+        renderApprovalAction,
+        renderIterativeAction,
+        renderPostMortemAction,
     ])
 
     const columns = useMemo<TableColumn<SubmissionInfo>[]>(() => {

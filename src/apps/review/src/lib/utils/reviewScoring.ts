@@ -3,7 +3,7 @@
  */
 import { getRatingColor } from '~/libs/core'
 
-import type { BackendResource, BackendReview, Screening } from '../models'
+import type { BackendResource, BackendReview, Screening, SubmissionInfo } from '../models'
 
 import {
     extractOutcomeFromMetadata,
@@ -134,4 +134,52 @@ export function buildResourceFromReviewHandle(review: BackendReview | undefined)
         handleColor: getRatingColor(rating),
         memberHandle: review.reviewerHandle,
     } as BackendResource
+}
+
+const isScreeningSubmission = (
+    submission: Screening | SubmissionInfo,
+): submission is Screening => 'result' in submission
+
+const isReviewSubmission = (
+    submission: Screening | SubmissionInfo,
+): submission is SubmissionInfo => 'isPassingReview' in submission || 'aggregateScore' in submission
+
+export function hasSubmitterPassedThreshold(
+    submissions: Array<Screening | SubmissionInfo>,
+    myMemberIds: Set<string>,
+    minimumPassingScore: number | null | undefined,
+): boolean {
+    if (!submissions.length || myMemberIds.size === 0) {
+        return false
+    }
+
+    const ownedSubmissions = submissions.filter(submission => {
+        const memberId = submission?.memberId
+        return typeof memberId === 'string' && myMemberIds.has(memberId)
+    })
+
+    if (!ownedSubmissions.length) {
+        return false
+    }
+
+    const minScore = parseFiniteNumber(minimumPassingScore)
+
+    for (const submission of ownedSubmissions) {
+        if (isScreeningSubmission(submission)) {
+            if (typeof submission.result === 'string' && submission.result.toUpperCase() === 'PASS') {
+                return true
+            }
+        } else if (isReviewSubmission(submission)) {
+            if (submission.isPassingReview === true) {
+                return true
+            }
+
+            const aggregateScore = parseFiniteNumber(submission.aggregateScore)
+            if (aggregateScore !== undefined && minScore !== undefined && aggregateScore >= minScore) {
+                return true
+            }
+        }
+    }
+
+    return false
 }

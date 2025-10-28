@@ -99,7 +99,6 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
         restrictionMessage,
         isSubmissionDownloadRestrictedForMember,
         getRestrictionMessageForMember,
-        currentMemberId,
     }: UseSubmissionDownloadAccessResult = useSubmissionDownloadAccess()
 
     const openReopenDialog = useCallback(
@@ -146,47 +145,9 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
         challengeId,
     ])
 
-    const hasReviewerRole = useMemo(
-        () => normalisedRoles.some(role => role.includes('reviewer')),
-        [normalisedRoles],
-    )
-
-    const hasSubmitterRole = useMemo(
-        () => normalisedRoles.some(role => role.includes('submitter')),
-        [normalisedRoles],
-    )
-
-    const shouldRestrictToOwnCheckpoint = useMemo(
-        () => hasSubmitterRole && !hasCopilotRole && !hasReviewerRole && !isAdminUser,
-        [
-            hasSubmitterRole,
-            hasCopilotRole,
-            hasReviewerRole,
-            isAdminUser,
-        ],
-    )
-
     const visibleRows = useMemo<Screening[]>(
-        () => {
-            const baseRows = datas ?? []
-
-            if (!shouldRestrictToOwnCheckpoint || !currentMemberId) {
-                return baseRows
-            }
-
-            const normalizedMemberId = String(currentMemberId)
-
-            return baseRows.filter(row => {
-                const typeNormalized = (row.type || '').toUpperCase()
-                const isCheckpointSubmission = typeNormalized.includes('CHECKPOINT')
-                if (!isCheckpointSubmission) {
-                    return false
-                }
-
-                return String(row.memberId) === normalizedMemberId
-            })
-        },
-        [datas, shouldRestrictToOwnCheckpoint, currentMemberId],
+        () => datas ?? [],
+        [datas],
     )
 
     const columns = useMemo<TableColumn<Screening>[]>(

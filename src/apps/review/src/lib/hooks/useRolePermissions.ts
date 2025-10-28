@@ -22,6 +22,7 @@ export interface UseRolePermissionsResult {
     hasReviewerRole: boolean
     hasSubmitterRole: boolean
     isAdmin: boolean
+    isCopilotWithReviewerAssignments: boolean
     ownedMemberIds: Set<string>
 }
 
@@ -34,7 +35,10 @@ export function useRolePermissions(): UseRolePermissionsResult {
     )
     const { loginUserInfo }: ReviewAppContextModel = useContext(ReviewAppContext)
 
-    const { actionChallengeRole }: useRoleProps = useRole()
+    const {
+        actionChallengeRole,
+        isCopilotWithReviewerAssignments,
+    }: useRoleProps = useRole()
 
     const normalizedRoles = useMemo<string[]>(
         () => myRoles.map(role => role.toLowerCase()),
@@ -89,6 +93,7 @@ export function useRolePermissions(): UseRolePermissionsResult {
         hasReviewerRole,
         hasSubmitterRole,
         isAdmin,
+        isCopilotWithReviewerAssignments,
         ownedMemberIds,
     }
 }

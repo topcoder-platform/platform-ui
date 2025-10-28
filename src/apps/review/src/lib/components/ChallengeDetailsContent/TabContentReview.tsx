@@ -37,12 +37,17 @@ import {
     REVIEWER,
     SUBMITTER,
 } from '../../../config/index.config'
-import { shouldIncludeInReviewPhase } from '../../utils/reviewPhaseGuards'
+import {
+    isContestReviewPhaseSubmission,
+    shouldIncludeInReviewPhase,
+} from '../../utils/reviewPhaseGuards'
+import { hasSubmitterPassedThreshold } from '../../utils/reviewScoring'
 
 interface Props {
     selectedTab: string
     reviews: SubmissionInfo[]
     submitterReviews: SubmissionInfo[]
+    reviewMinimumPassingScore?: number | null
     isLoadingReview: boolean
     isDownloading: IsRemovingType
     downloadSubmission: (submissionId: string) => void
@@ -61,6 +66,7 @@ export const TabContentReview: FC<Props> = (props: Props) => {
         resourceMemberIdMapping,
         resources,
     }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
+    const { actionChallengeRole, isPrivilegedRole }: useRoleProps = useRole()
     const challengeSubmissions = useMemo<SubmissionInfo[]>(
         () => challengeInfo?.submissions ?? [],
         [challengeInfo?.submissions],
@@ -84,6 +90,35 @@ export const TabContentReview: FC<Props> = (props: Props) => {
             return ids
         },
         [myResources],
+    )
+    const isChallengeCompleted = useMemo(
+        () => {
+            const status = challengeInfo?.status
+            if (!status) {
+                return false
+            }
+
+            const normalizedStatus = `${status}`.trim()
+                .toUpperCase()
+            if (!normalizedStatus.length) {
+                return false
+            }
+
+            if (normalizedStatus === 'COMPLETED' || normalizedStatus === 'CANCELLED') {
+                return true
+            }
+
+            return normalizedStatus.startsWith('CANCELLED_')
+        },
+        [challengeInfo?.status],
+    )
+    const hasPassedReviewThreshold = useMemo(
+        () => hasSubmitterPassedThreshold(
+            providedReviews ?? [],
+            myOwnedMemberIds,
+            props.reviewMinimumPassingScore,
+        ),
+        [providedReviews, myOwnedMemberIds, props.reviewMinimumPassingScore],
     )
     const myOwnedSubmissionIds = useMemo<Set<string>>(
         () => {
@@ -309,68 +344,91 @@ export const TabContentReview: FC<Props> = (props: Props) => {
                 }
             }
 
-            return resourceIds.size === 0 && Boolean(primaryResourceId)
+            return false
         },
         [myReviewerResourceIds],
     )
-    const resolvedReviews = useMemo(
-        () => {
-            if (providedReviews.length) {
-                return providedReviews.filter(submission => shouldIncludeInReviewPhase(
-                    submission,
-                    challengeInfo?.phases,
-                ))
-            }
-
-            const fallbackFromBackend: SubmissionInfo[] = []
-
-            if (backendChallengeSubmissions.length && myReviewerResourceIds.size) {
-                backendChallengeSubmissions.forEach(submission => {
-                    const matchingReviews = (submission.review ?? []).filter(review => (
-                        Boolean(review?.resourceId) && myReviewerResourceIds.has(review.resourceId)
-                    ))
-
-                    matchingReviews.forEach(review => {
-                        const submissionForReviewer: BackendSubmission = {
-                            ...submission,
-                            review: [review],
-                            reviewResourceMapping: {
-                                [review.resourceId]: review,
-                            },
-                        }
-                        const converted = convertBackendSubmissionToSubmissionInfo(submissionForReviewer)
-                        if (shouldIncludeInReviewPhase(converted, challengeInfo?.phases)) {
-                            fallbackFromBackend.push(converted)
-                        }
-                    })
-                })
-            }
-
-            if (fallbackFromBackend.length) {
-                return fallbackFromBackend
-            }
-
-            if (!challengeSubmissions.length) {
-                return providedReviews
-            }
-
-            const fallback = challengeSubmissions.filter(hasReviewerAssignment)
-            const filteredFallback = fallback.filter(submission => shouldIncludeInReviewPhase(
+    const hasReviewPhaseReview = useCallback(
+        (submission: SubmissionInfo): boolean => (
+            isContestReviewPhaseSubmission(
                 submission,
                 challengeInfo?.phases,
-            ))
-            return filteredFallback.length
-                ? filteredFallback
-                : providedReviews.filter(submission => shouldIncludeInReviewPhase(
+            )
+        ),
+        [challengeInfo?.phases],
+    )
+    const resolvedReviews = useMemo(
+        () => {
+            const baseReviews = (() => {
+                if (providedReviews.length) {
+                    return providedReviews.filter(submission => shouldIncludeInReviewPhase(
+                        submission,
+                        challengeInfo?.phases,
+                    ))
+                }
+
+                const fallbackFromBackend: SubmissionInfo[] = []
+
+                if (backendChallengeSubmissions.length && myReviewerResourceIds.size) {
+                    backendChallengeSubmissions.forEach(submission => {
+                        const matchingReviews = (submission.review ?? []).filter(review => (
+                            Boolean(review?.resourceId) && myReviewerResourceIds.has(review.resourceId)
+                        ))
+
+                        matchingReviews.forEach(review => {
+                            const submissionForReviewer: BackendSubmission = {
+                                ...submission,
+                                review: [review],
+                                reviewResourceMapping: {
+                                    [review.resourceId]: review,
+                                },
+                            }
+                            const converted = convertBackendSubmissionToSubmissionInfo(submissionForReviewer)
+                            if (shouldIncludeInReviewPhase(converted, challengeInfo?.phases)) {
+                                fallbackFromBackend.push(converted)
+                            }
+                        })
+                    })
+                }
+
+                if (fallbackFromBackend.length) {
+                    return fallbackFromBackend
+                }
+
+                if (!challengeSubmissions.length) {
+                    return providedReviews
+                }
+
+                const fallback = challengeSubmissions.filter(hasReviewerAssignment)
+                const filteredFallback = fallback.filter(submission => shouldIncludeInReviewPhase(
                     submission,
                     challengeInfo?.phases,
                 ))
+                return filteredFallback.length
+                    ? filteredFallback
+                    : providedReviews.filter(submission => shouldIncludeInReviewPhase(
+                        submission,
+                        challengeInfo?.phases,
+                    ))
+            })()
+
+            const validReviewPhaseSubmissions = baseReviews.filter(hasReviewPhaseReview)
+
+            if (isPrivilegedRole || (isChallengeCompleted && hasPassedReviewThreshold)) {
+                return validReviewPhaseSubmissions
+            }
+
+            return validReviewPhaseSubmissions.filter(hasReviewerAssignment)
         },
         [
             backendChallengeSubmissions,
             challengeSubmissions,
             challengeInfo?.phases,
+            hasReviewPhaseReview,
             hasReviewerAssignment,
+            isChallengeCompleted,
+            isPrivilegedRole,
+            hasPassedReviewThreshold,
             myReviewerResourceIds,
             providedReviews,
         ],
@@ -391,8 +449,8 @@ export const TabContentReview: FC<Props> = (props: Props) => {
 
             const source = challengeSubmissions.length
                 ? challengeSubmissions
-                : resolvedReviews.length
-                    ? resolvedReviews
+                : providedSubmitterReviews.length
+                    ? providedSubmitterReviews
                     : providedReviews
 
             if (!source.length) {
@@ -405,6 +463,10 @@ export const TabContentReview: FC<Props> = (props: Props) => {
                 }
 
                 if (!shouldIncludeInReviewPhase(submission, challengeInfo?.phases)) {
+                    return false
+                }
+
+                if (!hasReviewPhaseReview(submission)) {
                     return false
                 }
 
@@ -433,20 +495,23 @@ export const TabContentReview: FC<Props> = (props: Props) => {
                 return fallback
             }
 
-            return providedSubmitterReviews.filter(submission => shouldIncludeInReviewPhase(
-                submission,
-                challengeInfo?.phases,
+            return providedSubmitterReviews.filter(submission => (
+                shouldIncludeInReviewPhase(
+                    submission,
+                    challengeInfo?.phases,
+                )
+                && hasReviewPhaseReview(submission)
             ))
         },
         [
             challengeSubmissions,
             enhanceSubmissionForSubmitter,
             challengeInfo?.phases,
+            hasReviewPhaseReview,
             myOwnedMemberIds,
             myOwnedSubmissionIds,
             providedReviews,
             providedSubmitterReviews,
-            resolvedReviews,
         ],
     )
     const filteredReviews = useMemo(
@@ -481,7 +546,6 @@ export const TabContentReview: FC<Props> = (props: Props) => {
         },
         [resolvedSubmitterReviews],
     )
-    const { actionChallengeRole }: useRoleProps = useRole()
     const hideHandleColumn = props.isActiveChallenge
         && actionChallengeRole === REVIEWER
 
