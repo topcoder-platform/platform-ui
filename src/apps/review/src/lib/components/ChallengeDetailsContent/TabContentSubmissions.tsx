@@ -41,10 +41,12 @@ import {
 } from '../../utils'
 import type { SubmissionHistoryPartition } from '../../utils'
 import { TABLE_DATE_FORMAT } from '../../../config/index.config'
+import { CollapsibleAiReviewsRow } from '../CollapsibleAiReviewsRow'
 
 import styles from './TabContentSubmissions.module.scss'
 
 interface Props {
+    aiReviewers?: { aiWorkflowId: string }[]
     submissions: BackendSubmission[]
     isLoading: boolean
     isDownloading: IsRemovingType
@@ -340,6 +342,17 @@ export const TabContentSubmissions: FC<Props> = props => {
                     },
                     type: 'element',
                 },
+                ...(!props.aiReviewers?.length ? [] : [{
+                    label: 'Reviewer',
+                    propertyName: 'submittedDate',
+                    renderer: (submission: BackendSubmission) => (
+                        <CollapsibleAiReviewsRow
+                            aiReviewers={props.aiReviewers!}
+                            submissionId={submission.id}
+                        />
+                    ),
+                    type: 'element',
+                } as TableColumn<BackendSubmission>]),
             ]
 
             if (shouldShowHistoryActions) {
@@ -442,6 +455,7 @@ export const TabContentSubmissions: FC<Props> = props => {
                 isDownloading={props.isDownloading}
                 getRestriction={getHistoryRestriction}
                 getSubmissionMeta={resolveSubmissionMeta}
+                aiReviewers={props.aiReviewers}
             />
         </TableWrapper>
     )

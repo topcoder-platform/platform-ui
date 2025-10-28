@@ -1,4 +1,4 @@
-import { FC, MouseEvent, useCallback, useMemo } from 'react'
+import { FC, Fragment, MouseEvent, useCallback, useMemo, useState } from 'react'
 import { toast } from 'react-toastify'
 import classNames from 'classnames'
 import moment from 'moment'
@@ -9,6 +9,7 @@ import { BaseModal, IconOutline, Tooltip } from '~/libs/ui'
 
 import { SubmissionInfo } from '../../models'
 import { TABLE_DATE_FORMAT } from '../../../config/index.config'
+import { AiReviewsTable } from '../AiReviewsTable'
 
 import styles from './SubmissionHistoryModal.module.scss'
 
@@ -29,6 +30,7 @@ export interface SubmissionHistoryModalProps {
      * when the provided submission entry is missing those fields.
      */
     getSubmissionMeta?: (submissionId: string) => SubmissionInfo | undefined
+    aiReviewers?: { aiWorkflowId: string }[]
 }
 
 function getTimestamp(submission: SubmissionInfo): number {
@@ -97,6 +99,9 @@ export const SubmissionHistoryModal: FC<SubmissionHistoryModalProps> = (props: S
             .sort((a, b) => getTimestamp(b) - getTimestamp(a)),
         [props.submissions],
     )
+
+    const [toggledRows, setToggledRows] = useState(new Set<string>())
+
     const resolvedMemberInfo = useMemo(() => {
         for (const submission of sortedSubmissions) {
             if (submission.userInfo?.memberHandle) {
@@ -171,6 +176,19 @@ export const SubmissionHistoryModal: FC<SubmissionHistoryModalProps> = (props: S
             .catch(() => undefined)
     }, [handleCopy])
 
+    const toggleRow = useCallback((rowId: string) => {
+        setToggledRows(previous => {
+            const next = new Set(previous)
+            if (next.has(rowId)) {
+                next.delete(rowId)
+            } else {
+                next.add(rowId)
+            }
+
+            return next
+        })
+    }, [])
+
     const renderHistoryRow = useCallback((submission: SubmissionInfo): JSX.Element => {
         const fallbackMeta = props.getSubmissionMeta?.(submission.id) ?? undefined
         const resolvedVirusScan = submission.virusScan ?? fallbackMeta?.virusScan
@@ -222,33 +240,69 @@ export const SubmissionHistoryModal: FC<SubmissionHistoryModalProps> = (props: S
             </button>
         )
 
+        function toggle(): void {
+            toggleRow(submission.id)
+        }
+
         return (
-            <tr key={submission.id}>
-                <td className={styles.cellSubmission}>
-                    <span className={styles.submissionCell}>
-                        {renderedDownloadButton}
-                        {copyButton}
-                    </span>
-                </td>
-                <td className={styles.cellDate}>
-                    {submittedDisplay}
-                </td>
-                <td className={styles.cellVirusScan}>
-                    {resolvedVirusScan === true ? (
-                        <span className={styles.virusOkIcon} title='Scan passed' aria-label='Scan passed'>
-                            <IconOutline.CheckCircleIcon />
+            <Fragment key={submission.id}>
+                <tr key={submission.id}>
+                    <td className={styles.cellSubmission}>
+                        <span className={styles.submissionCell}>
+                            {renderedDownloadButton}
+                            {copyButton}
                         </span>
-                    ) : resolvedVirusScan === false ? (
-                        <span className={styles.virusWarnIcon} title='Scan failed' aria-label='Scan failed'>
-                            <IconOutline.ExclamationIcon />
-                        </span>
-                    ) : (
-                        <span>-</span>
+                    </td>
+                    <td className={styles.cellDate}>
+                        {submittedDisplay}
+                    </td>
+                    <td className={styles.cellVirusScan}>
+                        {resolvedVirusScan === true ? (
+                            <span className={styles.virusOkIcon} title='Scan passed' aria-label='Scan passed'>
+                                <IconOutline.CheckCircleIcon />
+                            </span>
+                        ) : resolvedVirusScan === false ? (
+                            <span className={styles.virusWarnIcon} title='Scan failed' aria-label='Scan failed'>
+                                <IconOutline.ExclamationIcon />
+                            </span>
+                        ) : (
+                            <span>-</span>
+                        )}
+                    </td>
+                    {!!props.aiReviewers?.length && (
+                        <td className={styles.aiReviewers}>
+                            <span className={styles.reviewersDropown} onClick={toggle}>
+                                {props.aiReviewers.length}
+                                {' '}
+                                AI Reviewer
+                                {props.aiReviewers.length === 1 ? '' : 's'}
+                                <IconOutline.ChevronDownIcon className='icon-xl' />
+                            </span>
+                        </td>
                     )}
-                </td>
-            </tr>
+                </tr>
+                {toggledRows.has(submission.id) && (
+                    <tr>
+                        <td className={styles.aiReviewersTableRow} colSpan={4}>
+                            <div className={styles.aiReviewersTable}>
+                                <AiReviewsTable
+                                    reviewers={props.aiReviewers!}
+                                    submissionId={submission.id}
+                                />
+                            </div>
+                        </td>
+                    </tr>
+                )}
+            </Fragment>
         )
-    }, [handleCopy, props.downloadSubmission, props.getRestriction, props.getSubmissionMeta, props.isDownloading])
+    }, [
+        handleCopy,
+        props.downloadSubmission,
+        props.getRestriction,
+        props.getSubmissionMeta,
+        props.isDownloading,
+        toggledRows,
+    ])
 
     return (
         <BaseModal
@@ -268,6 +322,7 @@ export const SubmissionHistoryModal: FC<SubmissionHistoryModalProps> = (props: S
                                 <th className={styles.cellSubmission}>Submission ID</th>
                                 <th className={styles.cellDate}>Submitted</th>
                                 <th className={styles.cellVirusScan}>Virus Scan</th>
+                                <th className={styles.cellVirusScan}>Reviewer</th>
                             </tr>
                         </thead>
                         <tbody>
