@@ -181,6 +181,7 @@ export function isPhaseAllowedForReview(phaseName?: string | null): boolean {
     }
 
     return normalizedAlpha === 'review'
+        || normalizedAlpha === 'iterativereview'
         || normalizedAlpha === 'postmortem'
         || normalizedAlpha === 'approval'
 }

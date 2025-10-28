@@ -39,6 +39,7 @@ import { normalizeReviewMetadata } from '../utils/metadataMatching'
 import { resolvePhaseMeta } from '../utils/phaseResolution'
 import { buildReviewForResource } from '../utils/reviewBuilding'
 import { resolveReviewPhaseId, reviewMatchesPhase } from '../utils/reviewMatching'
+import { shouldIncludeInReviewPhase } from '../utils/reviewPhaseGuards'
 import {
     buildResourceFromReviewHandle,
     determinePassFail,
@@ -74,6 +75,18 @@ const isContestSubmission = (submission: BackendSubmission): boolean => (
 const isCheckpointSubmission = (submission: BackendSubmission): boolean => (
     normalizeSubmissionType(submission?.type) === SUBMISSION_TYPE_CHECKPOINT
 )
+
+const resolveCheckpointSubmissionScore = (
+    review: BackendReview,
+    submission: BackendSubmission,
+): number | undefined => {
+    const reviewStatus = (review.status || '').toUpperCase()
+    if (reviewStatus !== 'COMPLETED' && reviewStatus !== 'SUBMITTED') {
+        return undefined
+    }
+
+    return parseSubmissionScore(submission.screeningScore)
+}
 
 export interface useFetchScreeningReviewProps {
     mappingReviewAppeal: MappingReviewAppeal // from review id to appeal info
@@ -490,6 +503,24 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
     )
     const reviewScorecardId = reviewPhaseMeta.scorecardId
     const reviewPhaseIds = reviewPhaseMeta.phaseIds
+
+    const iterativeReviewPhaseMeta = useMemo(
+        () => resolvePhaseMeta(
+            'Iterative Review',
+            challengeInfo?.phases,
+            challengeInfo?.reviewers,
+            challengeReviews,
+            challengeLegacy?.reviewScorecardId,
+        ),
+        [
+            challengeInfo?.phases,
+            challengeInfo?.reviewers,
+            challengeReviews,
+            challengeLegacy?.reviewScorecardId,
+        ],
+    )
+    const iterativeReviewScorecardId = iterativeReviewPhaseMeta.scorecardId
+    const iterativeReviewPhaseIds = iterativeReviewPhaseMeta.phaseIds
 
     const approvalPhaseMeta = useMemo(
         () => resolvePhaseMeta(
@@ -1063,7 +1094,17 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
             .find(r => (r.roleName || '').toLowerCase() === 'checkpoint reviewer')?.id
 
         const checkpointReviewRows = checkpointSubmissions.reduce<Screening[]>((rows, item) => {
-            const matchedReview = checkpointReviewsBySubmission.get(item.id)
+            let matchedReview = checkpointReviewsBySubmission.get(item.id)
+            if (!matchedReview && item.reviewResourceMapping) {
+                matchedReview = Object.values(item.reviewResourceMapping)
+                    .find(review => reviewMatchesPhase(
+                        review,
+                        checkpointReviewScorecardId,
+                        checkpointReviewPhaseIds,
+                        'Checkpoint Review',
+                    ))
+            }
+
             if (!matchedReview) {
                 return rows
             }
@@ -1072,12 +1113,9 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
             let numericScore = getNumericScore(matchedReview)
 
             if (numericScore === undefined) {
-                const reviewStatus = (matchedReview.status || '').toUpperCase()
-                if (reviewStatus === 'COMPLETED' || reviewStatus === 'SUBMITTED') {
-                    const submissionScore = parseSubmissionScore(item.screeningScore)
-                    if (submissionScore !== undefined) {
-                        numericScore = submissionScore
-                    }
+                const submissionScore = resolveCheckpointSubmissionScore(matchedReview, item)
+                if (submissionScore !== undefined) {
+                    numericScore = submissionScore
                 }
             }
 
@@ -1486,30 +1524,37 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
                 combinedReviewerIds.push(normalized)
             }
 
-            reviewerIds.forEach(appendReviewerId)
-            forEach(challengeSubmission.review, reviewEntry => {
-                const matchesReviewPhase = reviewMatchesPhase(
-                    reviewEntry,
+            const matchesReviewPhase = (candidate: BackendReview | undefined): boolean => (
+                reviewMatchesPhase(
+                    candidate,
                     reviewScorecardId,
                     reviewPhaseIds,
                     'Review',
                 )
-                if (matchesReviewPhase) {
+                || reviewMatchesPhase(
+                    candidate,
+                    iterativeReviewScorecardId,
+                    iterativeReviewPhaseIds,
+                    'Iterative Review',
+                )
+            )
+
+            reviewerIds.forEach(appendReviewerId)
+            forEach(challengeSubmission.review, reviewEntry => {
+                if (matchesReviewPhase(reviewEntry)) {
                     appendReviewerId(reviewEntry?.resourceId)
                 }
             })
 
             forEach(combinedReviewerIds, reviewerId => {
                 const matchingReview = challengeSubmission.review?.find(
-                    r => r.resourceId === reviewerId && reviewMatchesPhase(
-                        r,
-                        reviewScorecardId,
-                        reviewPhaseIds,
-                        'Review',
-                    ),
+                    r => r.resourceId === reviewerId && matchesReviewPhase(r),
                 )
-                const assignmentReview
+                const assignmentReviewCandidate
                     = reviewAssignmentsBySubmission[challengeSubmission.id]?.[reviewerId]
+                const assignmentReview = matchesReviewPhase(assignmentReviewCandidate)
+                    ? assignmentReviewCandidate
+                    : undefined
 
                 const normalizedReviewForResource = buildReviewForResource({
                     assignmentReview,
@@ -1540,6 +1585,8 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
     }, [
         challengeReviewById,
         contestSubmissions,
+        iterativeReviewPhaseIds,
+        iterativeReviewScorecardId,
         resourceMemberIdMapping,
         reviewerIds,
         reviewAssignmentsBySubmission,
@@ -1688,11 +1735,19 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
             return 0
         }
 
-        const isDesignChallenge = challengeInfo?.track.name === DESIGN
+        const eligibleReviews = review.filter(submission => shouldIncludeInReviewPhase(
+            submission,
+            challengeInfo?.phases,
+        ))
+        if (!eligibleReviews.length) {
+            return 0
+        }
+
+        const isDesignChallenge = challengeInfo?.track?.name === DESIGN
 
         const filteredReviews = isDesignChallenge
-            ? review
-            : review.filter(item => item.isLatest)
+            ? eligibleReviews
+            : eligibleReviews.filter(item => item.isLatest)
 
         if (!filteredReviews.length) {
             return 0
@@ -1724,7 +1779,7 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
         return Math.round(
             (completedReviews.length * 100) / filteredReviews.length,
         )
-    }, [review, challengeInfo])
+    }, [review, challengeInfo?.phases, challengeInfo?.track?.name])
 
     useEffect(() => () => {
         cancelLoadResourceAppeal()

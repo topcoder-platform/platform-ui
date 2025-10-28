@@ -414,24 +414,24 @@ export function resolveSubmissionReviewResult(
         ? (reviewScore >= minimumPassingScore ? 'PASS' : 'FAIL')
         : undefined
 
-    if (scoreOutcome === 'PASS') {
-        return 'PASS'
-    }
-
-    if (
-        scoreOutcome === 'FAIL'
-        && submission.isPassingReview !== true
-        && metadataOutcome !== 'PASS'
-    ) {
-        return 'FAIL'
-    }
-
     if (submission.isPassingReview === true) {
         return 'PASS'
     }
 
     if (submission.isPassingReview === false) {
         return 'FAIL'
+    }
+
+    if (metadataOutcome === 'FAIL') {
+        return 'FAIL'
+    }
+
+    if (scoreOutcome === 'PASS') {
+        return 'PASS'
+    }
+
+    if (scoreOutcome === 'FAIL') {
+        return metadataOutcome === 'PASS' ? 'PASS' : 'FAIL'
     }
 
     if (metadataOutcome) {

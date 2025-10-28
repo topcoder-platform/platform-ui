@@ -16,6 +16,7 @@ import {
 } from '../../../config/index.config'
 import { ChallengeDetailContext } from '../../contexts'
 import { hasSubmitterPassedThreshold } from '../../utils/reviewScoring'
+import { shouldIncludeInReviewPhase } from '../../utils/reviewPhaseGuards'
 
 interface Props {
     reviews: SubmissionInfo[]
@@ -109,9 +110,22 @@ export const TabContentIterativeReview: FC<Props> = (props: Props) => {
 
     const filteredRows = useMemo(() => {
         const phaseId = props.phaseIdFilter?.trim()
-        if (!phaseId) return sourceRows
-        return sourceRows.filter(s => s.review?.phaseId === phaseId)
-    }, [sourceRows, props.phaseIdFilter])
+        if (phaseId) {
+            return sourceRows.filter(s => s.review?.phaseId === phaseId)
+        }
+
+        if (!isPostMortemPhase) {
+            const iterativeOnly = sourceRows.filter(submission => !shouldIncludeInReviewPhase(
+                submission,
+                challengeInfo?.phases,
+            ))
+            if (iterativeOnly.length) {
+                return iterativeOnly
+            }
+        }
+
+        return sourceRows
+    }, [sourceRows, props.phaseIdFilter, isPostMortemPhase, challengeInfo?.phases])
 
     const reviewRows = useMemo(() => {
         const map = new Map<string, SubmissionInfo>()
