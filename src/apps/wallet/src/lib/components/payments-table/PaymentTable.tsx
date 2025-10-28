@@ -2,13 +2,14 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 import React, { useEffect, useState } from 'react'
 
-import { Button, IconOutline } from '~/libs/ui'
+import { Button, IconOutline, Tooltip } from '~/libs/ui'
 
 import { Winning } from '../../models/WinningDetail'
 
 import styles from './PaymentTable.module.scss'
 
 interface PaymentTableProps {
+    minWithdrawAmount: number;
     payments: ReadonlyArray<Winning>;
     selectedPayments?: { [paymentId: string]: Winning };
     currentPage: number;
@@ -81,9 +82,11 @@ const PaymentsTable: React.FC<PaymentTableProps> = (props: PaymentTableProps) =>
     }
 
     const calculateTotal = () => Object.values(selectedPayments)
-        .reduce((acc, payment) => acc + parseFloat(payment.netPayment.replace(/[^0-9.-]+/g, '')), 0)
+        .reduce((acc, payment) => acc + parseFloat(payment.grossPayment.replace(/[^0-9.-]+/g, '')), 0)
 
     const total = calculateTotal()
+
+    const isPaymeDisabled = !total || total < props.minWithdrawAmount
 
     return (
         <>
@@ -94,7 +97,7 @@ const PaymentsTable: React.FC<PaymentTableProps> = (props: PaymentTableProps) =>
                             <th className='body-ultra-small-bold'>DESCRIPTION</th>
                             <th className='body-ultra-small-bold'>TYPE</th>
                             <th className='body-ultra-small-bold'>CREATE DATE</th>
-                            <th className='body-ultra-small-bold'>NET PAYMENT</th>
+                            <th className='body-ultra-small-bold'>PAYMENT</th>
                             <th className='body-ultra-small-bold'>STATUS</th>
                             <th className='body-ultra-small-bold'>RELEASE DATE</th>
                             <th className='body-ultra-small-bold'>DATE PAID</th>
@@ -118,7 +121,7 @@ const PaymentsTable: React.FC<PaymentTableProps> = (props: PaymentTableProps) =>
                                 <td className='body-small'>{payment.description}</td>
                                 <td className={`body-small-bold ${styles.capitalize}`}>{payment.type}</td>
                                 <td className='body-small-bold'>{payment.createDate}</td>
-                                <td className='body-small-bold'>{payment.netPayment}</td>
+                                <td className='body-small-bold'>{payment.grossPayment}</td>
                                 <td className={`body-small-bold ${styles.capitalize}`}>{payment.status}</td>
                                 <td>{payment.releaseDate}</td>
                                 <td>{payment.datePaid}</td>
@@ -191,15 +194,33 @@ const PaymentsTable: React.FC<PaymentTableProps> = (props: PaymentTableProps) =>
                         </div>
                     </>
                 )}
-                <Button
-                    primary
-                    onClick={() => {
-                        props.onPayMeClick(selectedPayments, total.toFixed(2))
-                    }}
-                    disabled={total === 0}
+                <Tooltip
+                    content={(
+                        <>
+                            Minimum withdrawal amounti is $
+                            {props.minWithdrawAmount}
+                            .
+                            <br />
+                            Please select more payments.
+                        </>
+                    )}
+                    disableTooltip={!isPaymeDisabled}
                 >
-                    PAY ME
-                </Button>
+                    <Button
+                        primary
+                        onClick={() => {
+                            if (isPaymeDisabled) {
+                                return
+                            }
+
+                            props.onPayMeClick(selectedPayments, total.toFixed(2))
+                        }}
+                        className={styles.paymeBtn}
+                        disabled={isPaymeDisabled}
+                    >
+                        PAY ME
+                    </Button>
+                </Tooltip>
             </div>
         </>
     )

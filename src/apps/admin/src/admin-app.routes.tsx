@@ -39,6 +39,10 @@ const ManageSubmissionPage: LazyLoadedComponent = lazyLoad(
     () => import('./challenge-management/ManageSubmissionPage'),
     'ManageSubmissionPage',
 )
+const ManageMarathonMatchPage: LazyLoadedComponent = lazyLoad(
+    () => import('./challenge-management/ManageMarathonMatchPage'),
+    'ManageMarathonMatchPage',
+)
 const UserManagementPage: LazyLoadedComponent = lazyLoad(
     () => import('./user-management/UserManagementPage'),
     'UserManagementPage',
@@ -180,6 +184,11 @@ export const adminRoutes: ReadonlyArray<PlatformRoute> = [
                         element: <ManageSubmissionPage />,
                         id: 'manage-resource',
                         route: ':challengeId/manage-submission',
+                    },
+                    {
+                        element: <ManageMarathonMatchPage />,
+                        id: 'manage-marathon-match',
+                        route: ':challengeId/manage-marathon-match',
                     },
                 ],
                 element: <ChallengeManagement />,

@@ -2,29 +2,20 @@
  * Context provider for review app
  */
 import {
-    Context,
-    createContext,
     FC,
     PropsWithChildren,
     useMemo,
     useState,
 } from 'react'
-import { noop } from 'lodash'
 
 import { tokenGetAsync, TokenModel } from '~/libs/core'
 import { useOnComponentDidMount } from '~/apps/admin/src/lib/hooks'
 
-import { ReviewAppContextModel } from '../models'
-import { useFetchChallengeRelativeDatas, useFetchChallengeRelativeDatasProps } from '../hooks'
+import { useFetchChallengeRelativeDatas } from '../hooks'
+import type { useFetchChallengeRelativeDatasProps } from '../hooks'
+import type { ReviewAppContextModel } from '../models'
 
-export const ReviewAppContext: Context<ReviewAppContextModel>
-    = createContext<ReviewAppContextModel>({
-        cancelLoadChallengeRelativeInfos: noop,
-        challengeRelativeInfosMapping: {},
-        loadChallengeRelativeInfos: noop,
-        loginUserInfo: undefined,
-        resourceRoleMapping: undefined,
-    })
+import { ReviewAppContext } from './ReviewAppContext'
 
 export const ReviewAppContextProvider: FC<PropsWithChildren> = props => {
     const [loginUserInfo, setLoginUserInfo] = useState<TokenModel | undefined>(undefined)
@@ -37,7 +28,7 @@ export const ReviewAppContextProvider: FC<PropsWithChildren> = props => {
         resourceRoleReviewer,
         resourceRoleSubmitter,
     }: useFetchChallengeRelativeDatasProps = useFetchChallengeRelativeDatas(loginUserInfo)
-    const value = useMemo(
+    const value = useMemo<ReviewAppContextModel>(
         () => ({
             cancelLoadChallengeRelativeInfos,
             challengeRelativeInfosMapping,

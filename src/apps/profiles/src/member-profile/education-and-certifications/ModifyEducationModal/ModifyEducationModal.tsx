@@ -39,10 +39,10 @@ const ModifyEducationModal: FC<ModifyEducationModalProps> = (props: ModifyEducat
         = useState<boolean>(props.education?.length === 0 || false)
 
     const [formValues, setFormValues]: [
-        { [key: string]: string | boolean | Date | undefined },
-        Dispatch<SetStateAction<{ [key: string]: string | boolean | Date | undefined }>>
+        { [key: string]: string | boolean | Date | number | undefined },
+        Dispatch<SetStateAction<{ [key: string]: string | boolean | Date | number | undefined }>>
     ]
-        = useState<{ [key: string]: string | boolean | Date | undefined }>({})
+        = useState<{ [key: string]: string | boolean | Date | number | undefined }>({})
 
     const [formErrors, setFormErrors]: [
         { [key: string]: string },
@@ -91,9 +91,14 @@ const ModifyEducationModal: FC<ModifyEducationModalProps> = (props: ModifyEducat
     }
 
     function handleFormValueChange(key: string, event: React.ChangeEvent<HTMLInputElement>): void {
+
+        const value = key === 'endYear'
+            ? Number(event.target.value)
+            : event.target.value
+
         setFormValues({
             ...formValues,
-            [key]: event.target.value,
+            [key]: value,
         })
     }
 
@@ -266,11 +271,11 @@ const ModifyEducationModal: FC<ModifyEducationModalProps> = (props: ModifyEducat
                         />
                         <InputSelect
                             options={yearOptions}
-                            value={`${getYear(formValues.endDate as Date)}`}
-                            onChange={bind(handleFormValueChange, this, 'endDate')}
+                            value={`${Number(formValues.endYear)}`}
+                            onChange={bind(handleFormValueChange, this, 'endYear')}
                             dirty
-                            error={formErrors.endDate}
-                            name='endDate'
+                            error={formErrors.endYear}
+                            name='endYear'
                             label='End Year or Expected'
                             placeholder='Select a year'
                             tabIndex={0}

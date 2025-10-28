@@ -9,6 +9,7 @@ import { Button } from '~/libs/ui'
 
 import { DropdownMenu } from '../common/DropdownMenu'
 import { useEventCallback } from '../../hooks'
+import type { DoPostBusEvent } from '../../hooks'
 import { IsRemovingType, Submission } from '../../models'
 
 interface Props {
@@ -16,7 +17,7 @@ interface Props {
     isRunningTest: IsRemovingType
     isRemovingSubmission: IsRemovingType
     isRemovingReviewSummations: IsRemovingType
-    doPostBusEvent: (submissionId: string, testType: string) => void
+    doPostBusEvent: DoPostBusEvent
     setShowConfirmDeleteSubmissionDialog: Dispatch<
         SetStateAction<Submission | undefined>
     >
@@ -62,6 +63,7 @@ export const SubmissionTableActions: FC<Props> = (props: Props) => {
                         onClick={function onClick() {
                             setOpenDropdown(false)
                             props.doPostBusEvent(props.data.id, 'system')
+                                .catch(() => undefined)
                         }}
                     >
                         Run System Test
@@ -75,6 +77,7 @@ export const SubmissionTableActions: FC<Props> = (props: Props) => {
                     onClick={function onClick() {
                         setOpenDropdown(false)
                         props.doPostBusEvent(props.data.id, 'provisional')
+                            .catch(() => undefined)
                     }}
                 >
                     Run Provisional Test

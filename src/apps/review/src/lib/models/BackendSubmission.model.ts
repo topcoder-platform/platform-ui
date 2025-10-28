@@ -59,7 +59,12 @@ export interface BackendSubmission {
 export function adjustBackendSubmission(
     data: BackendSubmission,
 ): BackendSubmission {
-    const review = orderBy(data.review.map(adjustBackendReview), ['createdAtDate'], ['desc'])
+    const rawReviewEntries = Array.isArray(data.review) ? data.review : []
+    const review = orderBy(
+        rawReviewEntries.map(adjustBackendReview),
+        ['createdAtDate'],
+        ['desc'],
+    )
     const listOfValidReview: BackendReview[] = []
     const reviewResourceMapping: { [resourceId: string]: BackendReview } = {}
     forEach(review, reviewItem => {
@@ -69,8 +74,13 @@ export function adjustBackendSubmission(
         }
     })
 
+    const normalizedMemberId = data.memberId === undefined || data.memberId === null
+        ? data.memberId
+        : String(data.memberId)
+
     return {
         ...data,
+        memberId: normalizedMemberId as typeof data.memberId,
         review: listOfValidReview,
         reviewResourceMapping,
     }

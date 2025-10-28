@@ -12,8 +12,52 @@ import {
     fetchAllResourceRoles,
     fetchChallengeResouces,
 } from '../services/resources.service'
-import { BackendResourceRole, BackendSubmission, ChallengeRealtiveInfosMapping } from '../models'
 import { fetchSubmissions } from '../services'
+import { BackendResourceRole, BackendSubmission, ChallengeRealtiveInfosMapping } from '../models'
+
+const FALLBACK_RESOURCE_ROLES: BackendResourceRole[] = [
+    {
+        fullReadAccess: false,
+        fullWriteAccess: false,
+        id: 'fd672cca-556e-4d16-b0a2-718218edd412',
+        isActive: true,
+        legacyId: 19,
+        name: 'Checkpoint Screener',
+        selfObtainable: false,
+    },
+    {
+        fullReadAccess: true,
+        fullWriteAccess: false,
+        id: '3970272b-85b4-48d8-8439-672b4f6031bd',
+        isActive: true,
+        legacyId: 20,
+        name: 'Checkpoint Reviewer',
+        selfObtainable: false,
+    },
+]
+
+const ensureResourceRoleMapping = (
+    mapping: { [key: string]: BackendResourceRole } | undefined,
+): { [key: string]: BackendResourceRole } => {
+    const base = { ...(mapping ?? {}) }
+
+    FALLBACK_RESOURCE_ROLES.forEach(role => {
+        const existing = base[role.id]
+        if (!existing) {
+            base[role.id] = role
+            return
+        }
+
+        if (!existing.name) {
+            base[role.id] = {
+                ...existing,
+                name: role.name,
+            }
+        }
+    })
+
+    return base
+}
 
 export interface useFetchChallengeRelativeDatasProps {
     challengeRelativeInfosMapping: ChallengeRealtiveInfosMapping // from challenge id to list of my role
@@ -57,20 +101,21 @@ export function useFetchChallengeRelativeDatas(
                 setResourceRoleReviewer(find(results.data, {
                     name: 'Reviewer',
                 }))
-                setResourceRoleMapping(
-                    reduce(
-                        results.data,
-                        (mappingResult, resourceRole: BackendResourceRole) => ({
-                            ...mappingResult,
-                            [resourceRole.id]: resourceRole,
-                        }),
-                        {},
-                    ),
-                )
+                const mapping = ensureResourceRoleMapping(reduce(
+                    results.data,
+                    (mappingResult, resourceRole: BackendResourceRole) => ({
+                        ...mappingResult,
+                        [resourceRole.id]: resourceRole,
+                    }),
+                    {},
+                ))
+
+                setResourceRoleMapping(mapping)
                 setIsLoadingResourceRoles(false)
             })
             .catch(e => {
                 handleError(e)
+                setResourceRoleMapping(current => ensureResourceRoleMapping(current))
                 setIsLoadingResourceRoles(false)
             })
     })

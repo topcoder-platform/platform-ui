@@ -81,36 +81,41 @@
     }
 }
 
-.resultIcon {
+.resultPill {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    background-color: $black-20;
-    color: $tc-white;
-    line-height: 1;
-    font-size: 0;
-
-    svg {
-        width: 14px;
-        height: 14px;
-        color: inherit;
-    }
+    padding: $sp-1 $sp-2;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
 }
 
-.resultIconPass {
-    background-color: $green-120;
+.resultPass {
+    @extend .resultPill;
+    background-color: $green-25;
+    color: $green-140;
 }
 
-.resultIconFail {
-    background-color: $red-120;
+.resultFail {
+    @extend .resultPill;
+    background-color: $red-25;
+    color: $red-140;
 }
 
 .scoreLink {
     color: $link-blue-dark;
     font-weight: 600;
+
+    &:hover,
+    &:focus {
+        color: $blue-120;
+        text-decoration: underline;
+    }
+}
+
+.pendingScore {
+    color: var(--GrayFontColor);
 
     &:hover,
     &:focus {
@@ -127,6 +132,12 @@
     & > i {
         margin-right: $sp-2;
     }
+}
+
+.actionsContainer {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-2;
 }
 
 .completedAction {

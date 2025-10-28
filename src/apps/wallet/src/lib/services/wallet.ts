@@ -1,43 +1,23 @@
+/* eslint-disable camelcase */
 import { AxiosError } from 'axios'
 
 import { EnvironmentConfig } from '~/config'
-import { xhrDeleteAsync, xhrGetAsync, xhrPostAsync, xhrPostAsyncWithBlobHandling } from '~/libs/core'
+import { xhrGetAsync, xhrPostAsync, xhrPostAsyncWithBlobHandling } from '~/libs/core'
 
 import { WalletDetails } from '../models/WalletDetails'
-import { PaymentProvider } from '../models/PaymentProvider'
 import { WinningDetail } from '../models/WinningDetail'
-import { TaxForm } from '../models/TaxForm'
 import { OtpVerificationResponse } from '../models/OtpVerificationResponse'
 import { TransactionResponse } from '../models/TransactionId'
 import { PaginationInfo } from '../models/PaginationInfo'
 import ApiResponse from '../models/ApiResponse'
 
-const baseUrl = `${EnvironmentConfig.API.V5}/payments`
+export const WALLET_API_BASE_URL = `${EnvironmentConfig.TC_FINANCE_API}`
 
 export async function getWalletDetails(): Promise<WalletDetails> {
-    const response = await xhrGetAsync<ApiResponse<WalletDetails>>(`${baseUrl}/wallet`)
+    const response = await xhrGetAsync<ApiResponse<WalletDetails>>(`${WALLET_API_BASE_URL}/wallet`)
 
     if (response.status === 'error') {
         throw new Error('Error fetching wallet details')
-    }
-
-    return response.data
-}
-
-export async function getUserPaymentProviders(): Promise<PaymentProvider[]> {
-    const response = await xhrGetAsync<ApiResponse<PaymentProvider[]>>(`${baseUrl}/user/payment-methods`)
-
-    if (response.status === 'error') {
-        throw new Error('Error fetching user payment providers')
-    }
-
-    return response.data
-}
-
-export async function getUserTaxFormDetails(): Promise<TaxForm[]> {
-    const response = await xhrGetAsync<ApiResponse<TaxForm[]>>(`${baseUrl}/user/tax-forms`)
-    if (response.status === 'error') {
-        throw new Error('Error fetching user tax form details')
     }
 
     return response.data
@@ -63,7 +43,7 @@ export async function getPayments(userId: string, limit: number, offset: number,
         ...filteredFilters,
     })
 
-    const url = `${baseUrl}/user/winnings`
+    const url = `${WALLET_API_BASE_URL}/user/winnings`
     const response = await xhrPostAsync<string, ApiResponse<{
         winnings: WinningDetail[],
         pagination: PaginationInfo
@@ -80,108 +60,20 @@ export async function getPayments(userId: string, limit: number, offset: number,
     return response.data
 }
 
-export async function setPaymentProvider(
-    type: string,
-): Promise<TransactionResponse> {
+export async function processWinningsPayments(
+    winningsIds: string[],
+    otpCode?: string,
+): Promise<{ processed: boolean }> {
     const body = JSON.stringify({
-        details: {},
-        setDefault: true,
-        type,
+        otpCode,
+        winningsIds,
     })
-
-    const url = `${baseUrl}/user/payment-method`
-    const response = await xhrPostAsync<string, ApiResponse<TransactionResponse>>(url, body)
-
-    if (response.status === 'error') {
-        throw new Error('Error setting payment provider')
-    }
-
-    return response.data
-}
-
-export async function confirmPaymentProvider(provider: string, code: string, transactionId: string): Promise<string> {
-    const body = JSON.stringify({
-        code,
-        provider,
-        transactionId,
-    })
-
-    const url = `${baseUrl}/payment-provider/paypal/confirm`
-    const response = await xhrPostAsync<string, ApiResponse<string>>(url, body)
-
-    if (response.status === 'error') {
-        throw new Error('Error confirming payment provider')
-    }
-
-    return response.data
-}
-
-export async function getPaymentProviderRegistrationLink(type: string): Promise<TransactionResponse> {
-    const url = `${baseUrl}/user/payment-method/${type}/registration-link`
-    const response = await xhrGetAsync<ApiResponse<TransactionResponse>>(url)
-
-    if (response.status === 'error') {
-        throw new Error('Error getting payment provider registration link')
-    }
-
-    return response.data
-}
-
-export async function removePaymentProvider(type: string): Promise<TransactionResponse> {
-    const url = `${baseUrl}/user/payment-method/${type}`
-    const response = await xhrDeleteAsync<ApiResponse<TransactionResponse>>(url)
-
-    if (response.status === 'error') {
-        throw new Error('Error getting payment provider registration link')
-    }
-
-    return response.data
-}
-
-export async function setupTaxForm(userId: string, taxForm: string): Promise<TransactionResponse> {
-    const body = JSON.stringify({
-        taxForm,
-        userId,
-    })
-
-    const url = `${baseUrl}/user/tax-form`
-    const response = await xhrPostAsync<string, ApiResponse<TransactionResponse>>(url, body)
-
-    if (response.status === 'error') {
-        throw new Error('Error setting tax form')
-    }
-
-    return response.data
-}
-
-export async function removeTaxForm(taxFormId: string): Promise<TransactionResponse> {
-    const url = `${baseUrl}/user/tax-forms/${taxFormId}`
-    const response = await xhrDeleteAsync<ApiResponse<TransactionResponse>>(url)
-
-    if (response.status === 'error') {
-        throw new Error('Error removing tax form')
-    }
-
-    return response.data
-}
-
-export async function getRecipientViewURL(): Promise<TransactionResponse> {
-    const url = `${baseUrl}/user/tax-form/view`
-    const response = await xhrGetAsync<ApiResponse<TransactionResponse>>(url)
-
-    if (response.status === 'error') {
-        throw new Error('Error removing tax form')
-    }
-
-    return response.data
-}
-
-export async function processPayments(paymentIds: string[]): Promise<{ processed: boolean }> {
-    const body = JSON.stringify({
-        paymentIds,
-    })
-    const url = `${baseUrl}/withdraw`
+    const url = `${WALLET_API_BASE_URL}/withdraw`
     const response = await xhrPostAsync<string, ApiResponse<{ processed: boolean }>>(url, body)
+
+    if (response.status === 'error' && response.error?.code?.startsWith('otp_')) {
+        throw response.error
+    }
 
     if (response.status === 'error') {
         throw new Error('Error processing payments')
@@ -197,7 +89,7 @@ export async function verifyOtp(transactionId: string, code: string, blob: boole
         transactionId,
     })
 
-    const url = `${baseUrl}/otp/verify`
+    const url = `${WALLET_API_BASE_URL}/otp/verify`
     try {
         // eslint-disable-next-line max-len
         const response = await xhrPostAsyncWithBlobHandling<string, ApiResponse<OtpVerificationResponse> | Blob>(url, body, {
@@ -223,7 +115,7 @@ export async function resendOtp(transactionId: string): Promise<TransactionRespo
         transactionId,
     })
 
-    const url = `${baseUrl}/otp/resend`
+    const url = `${WALLET_API_BASE_URL}/otp/resend`
     try {
         const response = await xhrPostAsync<string, ApiResponse<TransactionResponse>>(url, body)
 
@@ -239,4 +131,21 @@ export async function resendOtp(transactionId: string): Promise<TransactionRespo
 
         throw new Error('Failed to resend OTP.')
     }
+}
+
+/**
+ * Fetches the Trolley portal link from the server.
+ *
+ * @returns {Promise<string>} A promise that resolves to the Trolley portal link.
+ * @throws {Error} If the response does not contain a valid link.
+ */
+export async function getTrolleyPortalLink(): Promise<string> {
+    const url = `${WALLET_API_BASE_URL}/trolley/portal-link`
+    const response = await xhrGetAsync<{ link: string }>(url)
+
+    if (!response.link) {
+        throw new Error('Error fetching Trolley portal link')
+    }
+
+    return response.link
 }

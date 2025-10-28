@@ -41,7 +41,7 @@ import { IconError } from '../../assets/icons'
 import { ReviewItemComment } from '../../models/ReviewItemComment.model'
 import { ChallengeDetailContext } from '../../contexts'
 import {
-    activeReviewAssigmentsRouteId,
+    activeReviewAssignmentsRouteId,
     rootRoute,
 } from '../../../config/routes.config'
 
@@ -174,7 +174,7 @@ export const ScorecardDetails: FC<Props> = (props: Props) => {
         }
 
         const challengeDetailsRoute
-            = `${rootRoute}/${activeReviewAssigmentsRouteId}/${challengeId}/challenge-details`
+            = `${rootRoute}/${activeReviewAssignmentsRouteId}/${challengeId}/challenge-details`
 
         try {
             await mutate(

@@ -11,6 +11,7 @@ import { BackendReview } from './BackendReview.model'
  * Review result info
  */
 export interface ReviewResult {
+    id?: string
     appeals: AppealResult[]
     createdAt: string | Date
     createdAtString?: string // this field is calculated at frontend
@@ -20,7 +21,27 @@ export interface ReviewResult {
     reviewerHandle: string
     reviewerHandleColor: string
     reviewerMaxRating?: number | null
-    score: number
+    score?: number
+    phaseName?: string
+    reviewType?: string
+}
+
+const normalizeScoreValue = (value: number | string | null | undefined): number | undefined => {
+    if (typeof value === 'number') {
+        return Number.isFinite(value) ? value : undefined
+    }
+
+    if (typeof value === 'string') {
+        const trimmed = value.trim()
+        if (!trimmed) {
+            return undefined
+        }
+
+        const parsed = Number.parseFloat(trimmed)
+        return Number.isFinite(parsed) ? parsed : undefined
+    }
+
+    return undefined
 }
 
 /**
@@ -83,11 +104,16 @@ export function convertBackendReviewToReviewResult(
         : undefined
     const reviewerHandle = data.reviewerHandle?.trim() || undefined
     const reviewerMaxRating = data.reviewerMaxRating ?? undefined
+    const score = normalizeScoreValue(data.finalScore)
+    const phaseName = data.phaseName?.trim() || undefined
+    const reviewType = data.reviewType?.trim() || undefined
 
     return {
         appeals: [],
         createdAt,
         createdAtString,
+        id: data.id,
+        phaseName,
         resourceId: data.resourceId,
         reviewDate,
         reviewDateString,
@@ -96,6 +122,7 @@ export function convertBackendReviewToReviewResult(
             ? getRatingColor(reviewerMaxRating)
             : '#2a2a2a',
         reviewerMaxRating,
-        score: data.finalScore,
+        reviewType,
+        score,
     }
 }

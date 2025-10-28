@@ -2,7 +2,7 @@
  * Challenge Details Page.
  */
 import { kebabCase, startCase, toLower, toUpper, trim } from 'lodash'
-import { ChangeEvent, FC, FocusEvent, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { FC, FocusEvent, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { useSWRConfig } from 'swr'
@@ -12,7 +12,7 @@ import moment from 'moment'
 import { TableLoading } from '~/apps/admin/src/lib'
 import { handleError } from '~/apps/admin/src/lib/utils'
 import { EnvironmentConfig } from '~/config'
-import { BaseModal, Button, InputCheckbox, InputText } from '~/libs/ui'
+import { BaseModal, Button, InputCheckbox, InputDatePicker, InputText } from '~/libs/ui'
 import { NotificationContextType, useNotification } from '~/libs/shared'
 
 import {
@@ -45,6 +45,7 @@ import {
     ChallengeInfo,
     ReviewAppContextModel,
     SelectOption,
+    SubmissionInfo,
 } from '../../../lib/models'
 import { REVIEWER, SUBMITTER, TAB, TABLE_DATE_FORMAT } from '../../../config/index.config'
 import {
@@ -55,7 +56,7 @@ import {
 } from '../../../lib/utils'
 import type { PhaseLike, PhaseOrderingOptions } from '../../../lib/utils'
 import {
-    activeReviewAssigmentsRouteId,
+    activeReviewAssignmentsRouteId,
     pastReviewAssignmentsRouteId,
     rootRoute,
 } from '../../../config/routes.config'
@@ -64,24 +65,6 @@ import styles from './ChallengeDetailsPage.module.scss'
 
 interface Props {
     className?: string
-}
-
-const MINUTES_PER_HOUR = 60
-const SECONDS_PER_MINUTE = 60
-const SECONDS_PER_HOUR = MINUTES_PER_HOUR * SECONDS_PER_MINUTE
-
-const parseNonNegativeInteger = (value: string): number | undefined => {
-    const trimmedValue = value.trim()
-    if (!trimmedValue) {
-        return 0
-    }
-
-    const parsedValue = Number(trimmedValue)
-    if (!Number.isFinite(parsedValue) || parsedValue < 0 || !Number.isInteger(parsedValue)) {
-        return undefined
-    }
-
-    return parsedValue
 }
 
 // Helpers to keep UI hooks simple and under complexity limits
@@ -109,9 +92,25 @@ const getApproverResourceIds = (myResources?: Array<{ id?: string; roleName?: st
         .filter(Boolean) as string[],
 )
 
+// Determine whether a review has been completed/committed
+const isReviewComplete = (
+    review?: { committed?: boolean; status?: string | null },
+): boolean => {
+    const status = (review?.status || '').toUpperCase()
+    if (status === 'COMPLETED') {
+        return true
+    }
+
+    if (typeof review?.committed === 'boolean') {
+        return review.committed
+    }
+
+    return false
+}
+
 // Determine review completion flags for tabs (any assignment and any pending)
 const computeReviewCompletion = (
-    review: Array<{ review?: { id?: string; status?: string | null; resourceId?: string } }> | undefined,
+    review: Array<{ review?: { committed?: boolean; status?: string | null; resourceId?: string } }> | undefined,
     reviewerIds: Set<string>,
 ): { hasAnyReviewAssignment: boolean; hasAnyPendingReview: boolean } => {
     let hasAnyReviewAssignment = false
@@ -120,13 +119,10 @@ const computeReviewCompletion = (
     if (reviewerIds.size > 0) {
         for (const s of review || []) {
             const r = s.review
-            const isMine = Boolean(r?.id)
-                && Boolean(r?.resourceId)
-                && reviewerIds.has(r?.resourceId as string)
+            const isMine = Boolean(r?.resourceId) && reviewerIds.has(r?.resourceId as string)
             if (isMine) {
                 hasAnyReviewAssignment = true
-                const status = (r?.status || '').toUpperCase()
-                if (status !== 'COMPLETED') {
+                if (!isReviewComplete(r)) {
                     hasAnyPendingReview = true
                 }
             }
@@ -223,6 +219,11 @@ const computePhaseCompletionFromScreenings = (
     return { hasAnyAssignment, hasAnyPending }
 }
 
+const isIterativeReviewPhaseName = (name?: string): boolean => (name || '')
+    .toString()
+    .toLowerCase()
+    .includes('iterative review')
+
 // (Phase dates display removed)
 
 // eslint-disable-next-line complexity
@@ -253,35 +254,27 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
 
     // get challenge screening, review data
     const {
-        isLoading: isLoadingSubmission,
-        review,
-        reviewProgress,
-        screening,
+        approvalMinimumPassingScore,
+        approvalReviews,
         checkpoint,
         checkpointReview,
-        approvalReviews,
-        postMortemReviews,
+        checkpointReviewMinimumPassingScore,
+        checkpointScreeningMinimumPassingScore,
+        isLoading: isLoadingSubmission,
         mappingReviewAppeal,
+        postMortemMinimumPassingScore,
+        postMortemReviews,
+        review,
+        reviewMinimumPassingScore,
+        reviewProgress,
+        screening,
+        screeningMinimumPassingScore,
         submitterReviews,
     }: useFetchScreeningReviewProps = useFetchScreeningReview()
 
-    const userSubmissions = useMemo(
-        () => {
-            if (isLoadingChallengeSubmissions) {
-                return []
-            }
-
-            const userId = loginUserInfo?.userId
-
-            if (typeof userId === 'undefined' || userId === null) {
-                return []
-            }
-
-            const memberId = String(userId)
-
-            return challengeSubmissions.filter(submission => submission.memberId === memberId)
-        },
-        [challengeSubmissions, isLoadingChallengeSubmissions, loginUserInfo?.userId],
+    const visibleSubmissions = useMemo(
+        () => (isLoadingChallengeSubmissions ? [] : challengeSubmissions),
+        [challengeSubmissions, isLoadingChallengeSubmissions],
     )
 
     const [tabItems, setTabItems] = useState<SelectOption[]>([])
@@ -313,13 +306,25 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
     )
     const [isSavingPhaseNotifications, setIsSavingPhaseNotifications] = useState(false)
     const [phaseActionLoadingMap, setPhaseActionLoadingMap] = useState<Record<string, boolean>>({})
-    const [extendTarget, setExtendTarget] = useState<{ id: string; name: string; duration?: number }>()
-    const [extendHours, setExtendHours] = useState<string>('')
-    const [extendMinutes, setExtendMinutes] = useState<string>('')
+    const [extendTarget, setExtendTarget] = useState<{
+        id: string
+        name: string
+        duration?: number
+        actualStartDate?: string
+        scheduledStartDate?: string
+        actualEndDate?: string
+        scheduledEndDate?: string
+    }>()
+    const [extendSelectedEndDate, setExtendSelectedEndDate] = useState<Date | undefined>()
     const [extendError, setExtendError] = useState<string | undefined>()
-    const [reopenTarget, setReopenTarget] = useState<{ id: string; name: string; duration?: number }>()
-    const [reopenHours, setReopenHours] = useState<string>('')
-    const [reopenMinutes, setReopenMinutes] = useState<string>('')
+    const [reopenTarget, setReopenTarget] = useState<{
+        id: string
+        name: string
+        duration?: number
+        actualStartDate?: string
+        actualEndDate?: string
+    }>()
+    const [reopenSelectedEndDate, setReopenSelectedEndDate] = useState<Date | undefined>(undefined)
     const [reopenError, setReopenError] = useState<string | undefined>()
 
     // eslint-disable-next-line complexity
@@ -396,7 +401,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
 
     const listRouteId = isPastReviewDetail
         ? pastReviewAssignmentsRouteId
-        : activeReviewAssigmentsRouteId
+        : activeReviewAssignmentsRouteId
     const listLabel = isPastReviewDetail
         ? 'My Past Challenges'
         : 'Active Challenges'
@@ -438,7 +443,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         }
 
         const pastPrefix = `/${pastReviewAssignmentsRouteId}/`
-        const activePrefix = `/${activeReviewAssigmentsRouteId}/`
+        const activePrefix = `/${activeReviewAssignmentsRouteId}/`
         const idx = location.pathname.indexOf(pastPrefix)
         if (idx < 0) {
             return
@@ -543,37 +548,165 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         const typeName = challengeInfo?.type?.name?.toLowerCase?.() || ''
         const typeAbbrev = challengeInfo?.type?.abbreviation?.toLowerCase?.() || ''
         const simplifiedType = typeName.replace(/\s|-/g, '')
+        const isTopgearTask = simplifiedType === 'topgeartask'
         return {
             isF2F: typeAbbrev === 'f2f' || simplifiedType === 'first2finish',
-            isTask: typeAbbrev === 'task' || typeAbbrev === 'tsk' || simplifiedType === 'task',
+            isTask: !isTopgearTask && (typeAbbrev === 'task' || typeAbbrev === 'tsk' || simplifiedType === 'task'),
+            isTopgearTask,
         }
     }, [challengeInfo?.type?.abbreviation, challengeInfo?.type?.name])
 
-    useEffect(() => {
-        const tab = searchParams.get('tab')
-        if (tabItems.length) {
-            if (tab) {
-                const tabId = tabItems.findIndex(item => kebabCase(item.value) === tab)
-                if (tabId > -1) {
-                    setSelectedTab(tabItems[tabId].value)
-                    sessionStorage.setItem(TAB, tabItems[tabId].value)
+    const visibleChallengePhases = useMemo<BackendPhase[]>(() => {
+        const phases = challengeInfo?.phases ?? []
+        if (!phaseOrderingOptions.isTopgearTask || phases.length === 0) {
+            return phases
+        }
+
+        const normalizeId = (value: unknown): string | undefined => {
+            if (value === undefined || value === null) {
+                return undefined
+            }
+
+            const normalized = String(value)
+                .trim()
+            return normalized || undefined
+        }
+
+        const activityPhaseIds = new Set<string>()
+        const collectPhaseIds = (submissions?: SubmissionInfo[]): void => {
+            submissions?.forEach(submission => {
+                const phaseId = normalizeId(submission?.review?.phaseId)
+                if (phaseId) {
+                    activityPhaseIds.add(phaseId)
                 }
-            } else {
-                setSelectedTab(tabItems[0].value)
-                sessionStorage.setItem(TAB, tabItems[0].value)
+            })
+        }
+
+        collectPhaseIds(review)
+        collectPhaseIds(submitterReviews)
+
+        const iterativePhases = phases.filter(phase => isIterativeReviewPhaseName(phase?.name))
+        if (!iterativePhases.length) {
+            return phases
+        }
+
+        const sortedIterative = iterativePhases
+            .slice()
+            .sort((a, b) => {
+                const startA = Date.parse(a.actualStartDate || a.scheduledStartDate || '')
+                const startB = Date.parse(b.actualStartDate || b.scheduledStartDate || '')
+                const validA = Number.isFinite(startA)
+                const validB = Number.isFinite(startB)
+                if (validA && validB && startA !== startB) {
+                    return startA - startB
+                }
+
+                return 0
+            })
+
+        const hasActualTimestamps = (phase: BackendPhase): boolean => Boolean(
+            normalizeId(phase.actualStartDate)
+            || normalizeId(phase.actualEndDate),
+        )
+
+        const phaseHasActivity = (phase: BackendPhase): boolean => {
+            const candidateKeys = [
+                normalizeId(phase.id),
+                normalizeId(phase.phaseId),
+            ].filter(Boolean) as string[]
+
+            return candidateKeys.some(key => activityPhaseIds.has(key))
+        }
+
+        const primaryIterative = sortedIterative.find(phase => (
+            phase?.isOpen
+            || hasActualTimestamps(phase)
+            || phaseHasActivity(phase)
+        )) ?? sortedIterative[0]
+
+        const shouldKeep = (phase: BackendPhase): boolean => {
+            if (!isIterativeReviewPhaseName(phase?.name)) {
+                return true
+            }
+
+            if (primaryIterative && phase === primaryIterative) {
+                return true
+            }
+
+            if (phase.isOpen) {
+                return true
+            }
+
+            if (hasActualTimestamps(phase)) {
+                return true
+            }
+
+            if (phaseHasActivity(phase)) {
+                return true
+            }
+
+            return false
+        }
+
+        const filtered = phases.filter(shouldKeep)
+        return filtered.length ? filtered : phases
+    }, [challengeInfo?.phases, phaseOrderingOptions.isTopgearTask, review, submitterReviews])
+
+    useEffect(() => {
+        if (!tabItems.length) return
+
+        let nextTab: string | undefined
+
+        const tab = searchParams.get('tab')
+        if (tab) {
+            const match = tabItems.find(item => kebabCase(item.value) === tab)
+            if (match) {
+                nextTab = match.value
             }
         }
-    }, [searchParams, tabItems])
+
+        if (!nextTab && !isPastReviewDetail) {
+            const challengePhases = visibleChallengePhases
+            if (challengePhases.length) {
+                let openTabValue: string | undefined
+                tabItems.forEach(item => {
+                    const phase = findPhaseByTabLabel(challengePhases, item.value, phaseOrderingOptions)
+                    if (phase?.isOpen) {
+                        openTabValue = item.value
+                    }
+                })
+                if (openTabValue) {
+                    nextTab = openTabValue
+                }
+            }
+        }
+
+        if (!nextTab) {
+            nextTab = tabItems[0]?.value
+        }
+
+        if (nextTab && nextTab !== selectedTab) {
+            setSelectedTab(nextTab)
+            sessionStorage.setItem(TAB, nextTab)
+        }
+    }, [
+        searchParams,
+        tabItems,
+        visibleChallengePhases,
+        phaseOrderingOptions,
+        isPastReviewDetail,
+        selectedTab,
+    ])
 
     // eslint-disable-next-line complexity
     useEffect(() => {
         if (!challengeInfo) return
-        if (phaseOrderingOptions.isTask) {
+        if (phaseOrderingOptions.isTask && !phaseOrderingOptions.isTopgearTask) {
             setTabItems(prev => (prev.length ? [] : prev))
             return
         }
 
-        const challengePhases = challengeInfo.phases ?? []
+        const challengePhases = visibleChallengePhases
         const items = buildPhaseTabs(
             challengePhases,
             challengeInfo.status,
@@ -623,17 +756,18 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         )
 
         // Pending state per phase
-        const pendingReview = (() => {
-            if (myReviewerResourceIds.size === 0) return false
-            // Treat not-started (no id) or non-COMPLETED as pending
-            return (review || []).some(s => {
-                const r = s.review
-                if (!r) return false
-                if (!r.resourceId || !myReviewerResourceIds.has(r.resourceId)) return false
-                const status = (r.status || '').toUpperCase()
-                return status !== 'COMPLETED'
-            })
-        })()
+        const {
+            hasAnyPendingReview: pendingReview,
+        }: { hasAnyPendingReview: boolean } = computeReviewCompletion(
+            review,
+            myReviewerResourceIds,
+        )
+        const {
+            hasAnyPendingReview: pendingPostMortem,
+        }: { hasAnyPendingReview: boolean } = computeReviewCompletion(
+            postMortemReviews,
+            myReviewerResourceIds,
+        )
 
         const pendingScreening = (() => {
             if (myScreenerResourceIds.size === 0) return false
@@ -681,6 +815,10 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
             }
 
             if (label === 'checkpoint review' && pendingCheckpointReview) {
+                return { ...it, warning: true }
+            }
+
+            if (label === 'post-mortem' && pendingPostMortem) {
                 return { ...it, warning: true }
             }
 
@@ -762,13 +900,16 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         screening,
         checkpoint,
         checkpointReview,
+        isPastReviewDetail,
+        visibleChallengePhases,
+        postMortemReviews,
     ])
 
     // Add completion indicators for active challenges on relevant tabs
     // eslint-disable-next-line complexity
     useEffect(() => {
         if (!challengeInfo || !tabItems.length || isPastReviewDetail) return
-        if (phaseOrderingOptions.isTask) return
+        if (phaseOrderingOptions.isTask && !phaseOrderingOptions.isTopgearTask) return
 
         const norm = (s: string): string => s.trim()
             .toLowerCase()
@@ -780,6 +921,13 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
             hasAnyPendingReview,
         }: { hasAnyReviewAssignment: boolean; hasAnyPendingReview: boolean } = computeReviewCompletion(
             review,
+            reviewerIds,
+        )
+        const {
+            hasAnyReviewAssignment: hasAnyPostMortemAssignment,
+            hasAnyPendingReview: hasAnyPendingPostMortem,
+        }: { hasAnyReviewAssignment: boolean; hasAnyPendingReview: boolean } = computeReviewCompletion(
+            postMortemReviews,
             reviewerIds,
         )
         const {
@@ -847,6 +995,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
             ...((hasAnyCheckpointReviewAssignment && !hasAnyPendingCheckpointReview)
                 ? ['checkpoint review']
                 : []),
+            ...((hasAnyPostMortemAssignment && !hasAnyPendingPostMortem) ? ['post-mortem'] : []),
         ])
 
         const isCompletedLabel = (label: string): boolean => (
@@ -883,6 +1032,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         checkpoint,
         checkpointReview,
         phaseOrderingOptions,
+        postMortemReviews,
     ])
 
     // Determine if current user should see the Resources section
@@ -928,18 +1078,44 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         return map
     }, [challengePhases])
 
+    const reopenEligiblePhaseIds = useMemo(() => {
+        const allowed = new Set<string>()
+        if (!challengePhases?.length) {
+            return allowed
+        }
+
+        challengePhases.forEach(phase => {
+            if (!phase?.isOpen || !phase.predecessor) {
+                return
+            }
+
+            allowed.add(phase.predecessor)
+
+            const predecessorPhase = phaseLookup.get(phase.predecessor)
+            if (predecessorPhase?.id) {
+                allowed.add(predecessorPhase.id)
+            }
+
+            if (predecessorPhase?.phaseId) {
+                allowed.add(predecessorPhase.phaseId)
+            }
+        })
+
+        return allowed
+    }, [challengePhases, phaseLookup])
+
     const timelineRows = useMemo<ChallengeTimelineRow[]>(() => {
-        if (phaseOrderingOptions.isTask) {
+        if (phaseOrderingOptions.isTask && !phaseOrderingOptions.isTopgearTask) {
             return []
         }
 
-        if (!challengePhases || challengePhases.length === 0) {
+        if (!visibleChallengePhases.length) {
             return []
         }
 
         const baseItems = buildPhaseTabs(
-            challengePhases,
-            challengeInfo.status,
+            visibleChallengePhases,
+            challengeInfo?.status,
             phaseOrderingOptions,
         )
         const seen = new Set<string>()
@@ -957,12 +1133,17 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         const rows: ChallengeTimelineRow[] = []
         baseItems.forEach(item => {
             const phase = findPhaseByTabLabel(
-                challengePhases,
+                visibleChallengePhases,
                 item.value,
                 phaseOrderingOptions,
             )
 
             if (!phase) return
+
+            const displayName = item.label
+                || item.value
+                || phase.name
+                || 'Unnamed Phase'
 
             const uniqueKey = phase.id
                 || `${phase.name}-${phase.scheduledStartDate}-${phase.actualStartDate}`
@@ -988,14 +1169,14 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                 duration: typeof phase.duration === 'number' ? phase.duration : undefined,
                 end: formatDate(endSource),
                 id: phase.id || phase.phaseId,
-                name: phase.name || 'Unnamed Phase',
+                name: displayName,
                 start: formatDate(startSource),
                 status,
             })
         })
 
         return rows
-    }, [challengeInfo, challengePhases, phaseOrderingOptions])
+    }, [challengeInfo, phaseOrderingOptions, visibleChallengePhases])
 
     const setPhaseActionLoading = useCallback((phaseId: string, loading: boolean) => {
         setPhaseActionLoadingMap(prev => ({
@@ -1044,71 +1225,147 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         phaseName: string,
         duration?: number,
     ) => {
-        const safeDuration = typeof duration === 'number' && Number.isFinite(duration)
-            ? Math.max(duration, 0)
+        const phaseData = phaseLookup.get(phaseId)
+        const rawDuration = typeof phaseData?.duration === 'number'
+            ? phaseData.duration
+            : duration
+        const safeDuration = typeof rawDuration === 'number' && Number.isFinite(rawDuration)
+            ? Math.max(rawDuration, 0)
             : 0
-        const hours = Math.floor(safeDuration / SECONDS_PER_HOUR)
-        const minutes = Math.floor((safeDuration % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE)
+        const actualStartDate = phaseData?.actualStartDate
+        const scheduledStartDate = phaseData?.scheduledStartDate
+        const actualEndDate = phaseData?.actualEndDate
+        const scheduledEndDate = phaseData?.scheduledEndDate
+
+        const initialEndDate = (() => {
+            const endCandidates = [actualEndDate, scheduledEndDate]
+            for (const candidate of endCandidates) {
+                if (candidate) {
+                    const parsed = moment(candidate)
+                    if (parsed.isValid()) {
+                        return parsed.toDate()
+                    }
+                }
+            }
+
+            const startSource = actualStartDate ?? scheduledStartDate
+
+            if (startSource) {
+                const parsedStart = moment(startSource)
+                if (parsedStart.isValid()) {
+                    if (safeDuration > 0) {
+                        return parsedStart
+                            .clone()
+                            .add(safeDuration, 'seconds')
+                            .toDate()
+                    }
+
+                    return parsedStart
+                        .clone()
+                        .add(1, 'hour')
+                        .toDate()
+                }
+            }
+
+            return undefined
+        })()
 
         setExtendTarget({
+            actualEndDate,
+            actualStartDate,
             duration: safeDuration,
             id: phaseId,
             name: phaseName,
+            scheduledEndDate,
+            scheduledStartDate,
         })
-        setExtendHours(String(hours))
-        setExtendMinutes(String(minutes))
+        setExtendSelectedEndDate(initialEndDate)
         setExtendError(undefined)
-    }, [])
+    }, [phaseLookup])
 
     const closeExtendModal = useCallback(() => {
         setExtendTarget(undefined)
-        setExtendHours('')
-        setExtendMinutes('')
+        setExtendSelectedEndDate(undefined)
         setExtendError(undefined)
     }, [])
 
-    const handleExtendHoursChange = useCallback((event: FocusEvent<HTMLInputElement>) => {
-        setExtendHours(event.currentTarget.value)
+    const handleExtendEndDateChange = useCallback((date: Date | null) => {
+        setExtendSelectedEndDate(date ?? undefined)
         if (extendError) {
             setExtendError(undefined)
         }
     }, [extendError])
 
-    const handleExtendMinutesChange = useCallback((event: FocusEvent<HTMLInputElement>) => {
-        setExtendMinutes(event.currentTarget.value)
-        if (extendError) {
-            setExtendError(undefined)
+    const extendStartMoment = useMemo(() => {
+        const startSource = extendTarget?.actualStartDate ?? extendTarget?.scheduledStartDate
+        if (!startSource) {
+            return undefined
         }
-    }, [extendError])
+
+        const parsed = moment(startSource)
+        return parsed.isValid() ? parsed : undefined
+    }, [extendTarget?.actualStartDate, extendTarget?.scheduledStartDate])
+
+    const extendStartDateDisplay = useMemo(() => {
+        if (!extendStartMoment) {
+            return '-'
+        }
+
+        return extendStartMoment
+            .clone()
+            .local()
+            .format(TABLE_DATE_FORMAT)
+    }, [extendStartMoment])
+
+    const extendStartDate = useMemo(() => {
+        if (!extendStartMoment) {
+            return undefined
+        }
+
+        return extendStartMoment.toDate()
+    }, [extendStartMoment])
 
     const handleExtendSubmit = useCallback(async () => {
         if (!extendTarget) {
             return
         }
 
-        const parsedHours = parseNonNegativeInteger(extendHours)
-        const parsedMinutes = parseNonNegativeInteger(extendMinutes)
-
-        if (
-            parsedHours === undefined
-            || parsedMinutes === undefined
-            || parsedMinutes >= MINUTES_PER_HOUR
-        ) {
-            setExtendError('Enter valid non-negative hours and minutes. Minutes must be below 60.')
+        const startSource = extendTarget.actualStartDate ?? extendTarget.scheduledStartDate
+        if (!startSource) {
+            setExtendError('Phase start date is not available. Please refresh and try again.')
             return
         }
 
-        const totalSeconds = ((parsedHours * MINUTES_PER_HOUR) + parsedMinutes) * SECONDS_PER_MINUTE
-
-        if (totalSeconds <= 0) {
-            setExtendError('Duration must be greater than zero.')
+        const startMoment = moment(startSource)
+        if (!startMoment.isValid()) {
+            setExtendError('Phase start date is not valid. Please refresh and try again.')
             return
         }
+
+        if (!extendSelectedEndDate) {
+            setExtendError('Select a new end date.')
+            return
+        }
+
+        const endMoment = moment(extendSelectedEndDate)
+        if (!endMoment.isValid()) {
+            setExtendError('Select a valid end date.')
+            return
+        }
+
+        const totalSecondsFloat = endMoment.diff(startMoment, 'seconds', true)
+
+        if (totalSecondsFloat <= 0) {
+            setExtendError('End date must be after the start date.')
+            return
+        }
+
+        const totalSeconds = Math.ceil(totalSecondsFloat)
 
         const currentDuration = extendTarget.duration ?? 0
 
         if (totalSeconds <= currentDuration) {
-            setExtendError('New duration must be longer than the current duration.')
+            setExtendError('New end date must extend the phase beyond the current duration.')
             return
         }
 
@@ -1132,8 +1389,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         }
     }, [
         closeExtendModal,
-        extendHours,
-        extendMinutes,
+        extendSelectedEndDate,
         extendTarget,
         handlePhaseUpdate,
     ])
@@ -1143,45 +1399,103 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         phaseName: string,
         duration?: number,
     ) => {
-        const safeDuration = typeof duration === 'number' && Number.isFinite(duration)
-            ? Math.max(duration, 0)
+        const phaseData = phaseLookup.get(phaseId)
+        const baseDuration = typeof phaseData?.duration === 'number'
+            ? phaseData.duration
+            : duration
+        const safeDuration = typeof baseDuration === 'number' && Number.isFinite(baseDuration)
+            ? Math.max(baseDuration, 0)
             : 0
-        const hours = Math.floor(safeDuration / SECONDS_PER_HOUR)
-        const minutes = Math.floor((safeDuration % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE)
+        const actualStartDate = phaseData?.actualStartDate
+        const actualEndDate = phaseData?.actualEndDate
+
+        const initialEndDate: Date | undefined = (() => {
+            if (actualEndDate) {
+                const parsedActualEnd = moment(actualEndDate)
+                if (parsedActualEnd.isValid()) {
+                    return parsedActualEnd.toDate()
+                }
+            }
+
+            if (actualStartDate) {
+                const parsedActualStart = moment(actualStartDate)
+                if (parsedActualStart.isValid()) {
+                    if (safeDuration > 0) {
+                        return parsedActualStart
+                            .clone()
+                            .add(safeDuration, 'seconds')
+                            .toDate()
+                    }
+
+                    return parsedActualStart
+                        .clone()
+                        .add(1, 'hour')
+                        .toDate()
+                }
+            }
+
+            return undefined
+        })()
 
         setReopenTarget({
+            actualEndDate,
+            actualStartDate,
             duration: safeDuration,
             id: phaseId,
             name: phaseName,
         })
-        setReopenHours(String(hours))
-        setReopenMinutes(String(minutes))
+        setReopenSelectedEndDate(initialEndDate)
         setReopenError(undefined)
-    }, [])
+    }, [phaseLookup])
 
     const closeReopenModal = useCallback(() => {
         setReopenTarget(undefined)
-        setReopenHours('')
-        setReopenMinutes('')
+        setReopenSelectedEndDate(undefined)
         setReopenError(undefined)
     }, [])
 
-    const handleReopenHoursChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
-        setReopenHours(event.currentTarget.value)
+    const handleReopenEndDateChange = useCallback((date: Date | null) => {
+        setReopenSelectedEndDate(date ?? undefined)
         if (reopenError) {
             setReopenError(undefined)
         }
     }, [reopenError])
 
-    const handleReopenMinutesChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
-        setReopenMinutes(event.currentTarget.value)
-        if (reopenError) {
-            setReopenError(undefined)
+    const reopenStartMoment = useMemo(() => {
+        if (!reopenTarget?.actualStartDate) {
+            return undefined
         }
-    }, [reopenError])
+
+        const parsed = moment(reopenTarget.actualStartDate)
+        return parsed.isValid() ? parsed : undefined
+    }, [reopenTarget?.actualStartDate])
+
+    const reopenStartDateDisplay = useMemo(() => {
+        if (!reopenStartMoment) {
+            return '-'
+        }
+
+        return reopenStartMoment
+            .clone()
+            .local()
+            .format(TABLE_DATE_FORMAT)
+    }, [reopenStartMoment])
+
+    const reopenStartDate = useMemo(() => {
+        if (!reopenStartMoment) {
+            return undefined
+        }
+
+        return reopenStartMoment.toDate()
+    }, [reopenStartMoment])
+
+    const handleReadOnlyInputChange = useCallback((event: FocusEvent<HTMLInputElement>) => {
+        event.preventDefault()
+        event.stopPropagation()
+    }, [])
 
     const timelineRowsWithActions = useMemo<ChallengeTimelineRow[]>(() => {
-        if (phaseOrderingOptions.isTask) {
+        if (phaseOrderingOptions.isTask && !phaseOrderingOptions.isTopgearTask) {
             return []
         }
 
@@ -1226,8 +1540,15 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
 
                 if (phaseData?.predecessor) {
                     const predecessorPhase = phaseLookup.get(phaseData.predecessor)
-                    const predecessorCompleted = Boolean(predecessorPhase?.actualStartDate)
-                    if (!predecessorCompleted) {
+                    const predecessorIsClosed = predecessorPhase?.isOpen === false
+                    const predecessorHasActualStart = Boolean(predecessorPhase?.actualStartDate)
+                    const predecessorHasActualEnd = Boolean(predecessorPhase?.actualEndDate)
+                    // Allow opening the phase only when the predecessor has been opened and closed.
+                    if (
+                        !predecessorIsClosed
+                        || !predecessorHasActualStart
+                        || !predecessorHasActualEnd
+                    ) {
                         canOpenPhase = false
                     }
                 }
@@ -1247,11 +1568,33 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                     })
                 }
             } else if (normalizedStatus === 'closed') {
-                actions.push({
-                    disabled: isLoading,
-                    label: 'Reopen',
-                    onClick: () => openReopenModal(phaseId, row.name, row.duration),
-                })
+                const canReopenPhase = (() => {
+                    if (!reopenEligiblePhaseIds.size) {
+                        return false
+                    }
+
+                    if (reopenEligiblePhaseIds.has(phaseId)) {
+                        return true
+                    }
+
+                    if (phaseData?.id && reopenEligiblePhaseIds.has(phaseData.id)) {
+                        return true
+                    }
+
+                    if (phaseData?.phaseId && reopenEligiblePhaseIds.has(phaseData.phaseId)) {
+                        return true
+                    }
+
+                    return false
+                })()
+
+                if (canReopenPhase) {
+                    actions.push({
+                        disabled: isLoading,
+                        label: 'Reopen',
+                        onClick: () => openReopenModal(phaseId, row.name, row.duration),
+                    })
+                }
             }
 
             if (!actions.length) {
@@ -1270,9 +1613,16 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         openReopenModal,
         phaseActionLoadingMap,
         phaseLookup,
+        reopenEligiblePhaseIds,
         timelineRows,
         phaseOrderingOptions,
     ])
+
+    const shouldShowTimelineSection = useMemo<boolean>(() => {
+        const isTask = phaseOrderingOptions.isTask === true
+        const isTopgearTask = phaseOrderingOptions.isTopgearTask === true
+        return ((!isTask) || isTopgearTask) && timelineRowsWithActions.length > 0
+    }, [phaseOrderingOptions, timelineRowsWithActions])
 
     const isExtendSubmitting = extendTarget
         ? Boolean(phaseActionLoadingMap[extendTarget.id])
@@ -1287,24 +1637,36 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
             return
         }
 
-        const parsedHours = parseNonNegativeInteger(reopenHours)
-        const parsedMinutes = parseNonNegativeInteger(reopenMinutes)
-
-        if (
-            parsedHours === undefined
-            || parsedMinutes === undefined
-            || parsedMinutes >= MINUTES_PER_HOUR
-        ) {
-            setReopenError('Enter valid non-negative hours and minutes. Minutes must be below 60.')
+        if (!reopenTarget.actualStartDate) {
+            setReopenError('Phase start date is not available. Please refresh and try again.')
             return
         }
 
-        const totalSeconds = ((parsedHours * MINUTES_PER_HOUR) + parsedMinutes) * SECONDS_PER_MINUTE
-
-        if (totalSeconds <= 0) {
-            setReopenError('Duration must be greater than zero.')
+        const startMoment = moment(reopenTarget.actualStartDate)
+        if (!startMoment.isValid()) {
+            setReopenError('Phase start date is not valid. Please refresh and try again.')
             return
         }
+
+        if (!reopenSelectedEndDate) {
+            setReopenError('Select a new end date.')
+            return
+        }
+
+        const endMoment = moment(reopenSelectedEndDate)
+        if (!endMoment.isValid()) {
+            setReopenError('Select a valid end date.')
+            return
+        }
+
+        const totalSecondsFloat = endMoment.diff(startMoment, 'seconds', true)
+
+        if (totalSecondsFloat <= 0) {
+            setReopenError('End date must be after the start date.')
+            return
+        }
+
+        const totalSeconds = Math.ceil(totalSecondsFloat)
 
         setReopenError(undefined)
 
@@ -1327,8 +1689,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
     }, [
         closeReopenModal,
         handlePhaseUpdate,
-        reopenHours,
-        reopenMinutes,
+        reopenSelectedEndDate,
         reopenTarget,
     ])
 
@@ -1394,7 +1755,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                         <ChallengeLinks />
                     </div>
 
-                    {!phaseOrderingOptions.isTask ? (
+                    {(!phaseOrderingOptions.isTask || phaseOrderingOptions.isTopgearTask) ? (
                         <div className={styles.blockContent}>
                             <div className={styles.phaseHeader}>
                                 <span className={styles.textTitle}>Phases</span>
@@ -1425,18 +1786,24 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                                 selectedTab={selectedTab}
                                 isLoadingSubmission={isLoadingSubmission}
                                 screening={screening}
-                                submissions={userSubmissions}
+                                screeningMinimumPassingScore={screeningMinimumPassingScore}
+                                submissions={visibleSubmissions}
                                 checkpoint={checkpoint}
+                                checkpointScreeningMinimumPassingScore={checkpointScreeningMinimumPassingScore}
                                 checkpointReview={checkpointReview}
+                                checkpointReviewMinimumPassingScore={checkpointReviewMinimumPassingScore}
                                 review={review}
+                                reviewMinimumPassingScore={reviewMinimumPassingScore}
                                 submitterReviews={submitterReviews}
                                 approvalReviews={approvalReviews}
+                                approvalMinimumPassingScore={approvalMinimumPassingScore}
                                 postMortemReviews={postMortemReviews}
+                                postMortemMinimumPassingScore={postMortemMinimumPassingScore}
                                 mappingReviewAppeal={mappingReviewAppeal}
                                 isActiveChallenge={!isPastReviewDetail}
                                 selectedPhaseId={(() => {
                                     const phase = findPhaseByTabLabel(
-                                        challengeInfo?.phases ?? [],
+                                        visibleChallengePhases,
                                         selectedTab,
                                         phaseOrderingOptions,
                                     )
@@ -1446,7 +1813,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                         </div>
                     ) : undefined}
 
-                    {!phaseOrderingOptions.isTask && timelineRowsWithActions.length > 0 ? (
+                    {shouldShowTimelineSection ? (
                         <div className={styles.blockContent}>
                             <span className={styles.textTitle}>Timeline</span>
                             <ChallengeTimeline
@@ -1484,27 +1851,28 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                     </div>
                     <div className={styles.phaseDurationInputs}>
                         <InputText
-                            name='extend-hours'
-                            label='Hours'
-                            type='number'
-                            value={extendHours}
+                            name='extend-start-date'
+                            label='Start Date'
+                            type='text'
+                            value={extendStartDateDisplay}
                             forceUpdateValue
-                            placeholder='0'
-                            onChange={handleExtendHoursChange}
+                            onChange={handleReadOnlyInputChange}
                             classNameWrapper={styles.reopenModalInput}
-                            disabled={isExtendSubmitting}
+                            disabled
+                            readonly
                         />
-                        <InputText
-                            name='extend-minutes'
-                            label='Minutes'
-                            type='number'
-                            value={extendMinutes}
-                            forceUpdateValue
-                            placeholder='0'
-                            onChange={handleExtendMinutesChange}
-                            error={extendError}
-                            classNameWrapper={styles.reopenModalInput}
+                        <InputDatePicker
+                            label='New End Date'
+                            date={extendSelectedEndDate}
+                            onChange={handleExtendEndDateChange}
                             disabled={isExtendSubmitting}
+                            error={extendError}
+                            showTimeSelect
+                            timeIntervals={15}
+                            timeCaption='Time'
+                            placeholder='Select end date'
+                            minDate={extendStartDate}
+                            classNameWrapper={styles.reopenModalInput}
                         />
                     </div>
                     <div className={styles.reopenModalActions}>
@@ -1542,27 +1910,28 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                     </div>
                     <div className={styles.phaseDurationInputs}>
                         <InputText
-                            name='reopen-hours'
-                            label='Hours'
-                            type='number'
-                            value={reopenHours}
+                            name='reopen-start-date'
+                            label='Start Date'
+                            type='text'
+                            value={reopenStartDateDisplay}
                             forceUpdateValue
-                            placeholder='0'
-                            onChange={handleReopenHoursChange}
+                            onChange={handleReadOnlyInputChange}
                             classNameWrapper={styles.reopenModalInput}
-                            disabled={isReopenSubmitting}
+                            disabled
+                            readonly
                         />
-                        <InputText
-                            name='reopen-minutes'
-                            label='Minutes'
-                            type='number'
-                            value={reopenMinutes}
-                            forceUpdateValue
-                            placeholder='0'
-                            onChange={handleReopenMinutesChange}
-                            error={reopenError}
-                            classNameWrapper={styles.reopenModalInput}
+                        <InputDatePicker
+                            label='New End Date'
+                            date={reopenSelectedEndDate}
+                            onChange={handleReopenEndDateChange}
                             disabled={isReopenSubmitting}
+                            error={reopenError}
+                            showTimeSelect
+                            timeIntervals={15}
+                            timeCaption='Time'
+                            placeholder='Select end date'
+                            minDate={reopenStartDate}
+                            classNameWrapper={styles.reopenModalInput}
                         />
                     </div>
                     <div className={styles.reopenModalActions}>

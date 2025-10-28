@@ -33,6 +33,7 @@ export interface BackendReview {
     reviewItems?: BackendReviewItem[]
     updatedAt: string
     updatedBy: string
+    reviewType?: string | null
 }
 
 export function createEmptyBackendReview(): BackendReview {

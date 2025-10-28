@@ -33,38 +33,98 @@ import { SubmissionBarInfo } from '../../../lib/components/SubmissionBarInfo'
 import { ChallengeLinksForAdmin } from '../../../lib/components/ChallengeLinksForAdmin'
 import { ADMIN, COPILOT, MANAGER } from '../../../config/index.config'
 import { useIsEditReview, useIsEditReviewProps } from '../../../lib/hooks/useIsEditReview'
-import { activeReviewAssigmentsRouteId, rootRoute } from '../../../config/routes.config'
+import { activeReviewAssignmentsRouteId, rootRoute } from '../../../config/routes.config'
 
 import styles from './ScorecardDetailsPage.module.scss'
 
-type ReviewPhaseType = 'screening' | 'checkpoint screening' | 'checkpoint review'
+type ReviewPhaseType =
+    | 'screening'
+    | 'checkpoint screening'
+    | 'checkpoint review'
+    | 'post-mortem'
+    | 'approval'
+    | 'review'
 
-const detectReviewPhaseType = (value?: unknown): ReviewPhaseType | undefined => {
-    if (value === undefined || value === null) {
-        return undefined
-    }
+const isNil = (value: unknown): value is null | undefined => value === null || value === undefined
 
-    const normalized = `${value}`
-        .trim()
+const POST_MORTEM_KEYWORDS = ['post-mortem', 'post mortem', 'postmortem']
+
+type PhaseStringMatcher = {
+    match: (source: string) => boolean
+    phase: ReviewPhaseType
+}
+
+const PHASE_STRING_MATCHERS: PhaseStringMatcher[] = [
+    {
+        match: source => source.includes('checkpoint screening'),
+        phase: 'checkpoint screening',
+    },
+    {
+        match: source => source.includes('checkpoint review'),
+        phase: 'checkpoint review',
+    },
+    {
+        match: source => POST_MORTEM_KEYWORDS.some(keyword => source.includes(keyword)),
+        phase: 'post-mortem',
+    },
+    {
+        match: source => source.includes('screening') && !source.includes('checkpoint'),
+        phase: 'screening',
+    },
+    {
+        match: source => source.includes('approval'),
+        phase: 'approval',
+    },
+    {
+        match: source => source.includes('review'),
+        phase: 'review',
+    },
+]
+
+const detectPhaseTypeFromString = (value: string): ReviewPhaseType | undefined => {
+    const normalized = value.trim()
         .toLowerCase()
-
     if (!normalized) {
         return undefined
     }
 
-    if (normalized.includes('checkpoint screening')) {
-        return 'checkpoint screening'
-    }
-
-    if (normalized.includes('checkpoint review')) {
-        return 'checkpoint review'
-    }
-
-    if (normalized.includes('screening')) {
-        return 'screening'
+    for (const matcher of PHASE_STRING_MATCHERS) {
+        if (matcher.match(normalized)) {
+            return matcher.phase
+        }
     }
 
     return undefined
+}
+
+const detectPhaseTypeFromObject = (value: Record<string, unknown>): ReviewPhaseType | undefined => {
+    const candidateKeys: Array<keyof typeof value> = [
+        'name',
+        'phaseName',
+        'phase',
+        'type',
+    ].filter(key => key in value) as Array<keyof typeof value>
+
+    for (const key of candidateKeys) {
+        const detected = detectReviewPhaseType(value[key])
+        if (detected) {
+            return detected
+        }
+    }
+
+    return undefined
+}
+
+function detectReviewPhaseType(value?: unknown): ReviewPhaseType | undefined {
+    if (isNil(value)) {
+        return undefined
+    }
+
+    if (typeof value === 'object') {
+        return detectPhaseTypeFromObject(value as Record<string, unknown>)
+    }
+
+    return detectPhaseTypeFromString(`${value}`)
 }
 
 type ReviewerConfig = {
@@ -76,6 +136,37 @@ type ReviewerConfig = {
 type ChallengePhaseSummary = {
     id?: unknown
     name?: unknown
+}
+
+type RoleMatcher = (normalizedRoleName: string) => boolean
+
+const normalizeRoleName = (value: unknown): string => {
+    if (typeof value !== 'string') {
+        return ''
+    }
+
+    return value
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z]/g, '')
+}
+
+const PHASE_ROLE_MATCHERS: Partial<Record<ReviewPhaseType, RoleMatcher>> = {
+    approval: normalizedRoleName => (
+        normalizedRoleName.includes('approver')
+        || normalizedRoleName.includes('approval')
+    ),
+    'checkpoint review': normalizedRoleName => normalizedRoleName === 'checkpointreviewer',
+    'checkpoint screening': normalizedRoleName => normalizedRoleName === 'checkpointscreener',
+    'post-mortem': normalizedRoleName => normalizedRoleName.includes('postmortem'),
+    review: normalizedRoleName => normalizedRoleName === 'reviewer',
+    screening: normalizedRoleName => (
+        (
+            normalizedRoleName.includes('screener')
+            || normalizedRoleName.includes('screening')
+        )
+        && !normalizedRoleName.includes('checkpoint')
+    ),
 }
 
 const detectReviewTypeFromReviewerConfig = (
@@ -130,6 +221,20 @@ const detectReviewTypeFromPhases = (
     const matchedPhase = phases.find(phase => `${phase.id}` === normalizedTargetPhaseId)
 
     return detectReviewPhaseType(matchedPhase?.name)
+}
+
+const canRoleEditPhase = (
+    reviewPhaseType: ReviewPhaseType | undefined,
+    currentPhaseReviewType: ReviewPhaseType | undefined,
+    normalizedRoleName: string,
+): boolean => {
+    if (!reviewPhaseType || currentPhaseReviewType !== reviewPhaseType) {
+        return false
+    }
+
+    const matcher = PHASE_ROLE_MATCHERS[reviewPhaseType]
+
+    return matcher ? matcher(normalizedRoleName) : false
 }
 
 interface Props {
@@ -213,17 +318,22 @@ export const ScorecardDetailsPage: FC<Props> = (props: Props) => {
         const normalizedPhaseId = reviewInfo?.phaseId ? `${reviewInfo.phaseId}` : undefined
         const normalizedScorecardId = reviewInfo?.scorecardId ? `${reviewInfo.scorecardId}` : undefined
 
-        return detectReviewTypeFromReviewerConfig(
+        const metadataDerived = detectReviewTypeFromMetadata(reviewInfo?.metadata)
+        const phaseDerived = detectReviewTypeFromPhases(
+            challengeInfo?.phases as ChallengePhaseSummary[],
+            reviewInfo?.phaseId,
+        )
+        const reviewerDerived = detectReviewTypeFromReviewerConfig(
             reviewerConfigs as ReviewerConfig[],
             normalizedPhaseId,
             normalizedScorecardId,
         )
-            || detectReviewTypeFromMetadata(reviewInfo?.metadata)
-            || detectReviewTypeFromPhases(
-                challengeInfo?.phases as ChallengePhaseSummary[],
-                reviewInfo?.phaseId,
-            )
-            || detectReviewPhaseType(scorecardInfo?.name)
+        const scorecardDerived = detectReviewPhaseType(scorecardInfo?.name)
+
+        return metadataDerived
+            || phaseDerived
+            || reviewerDerived
+            || scorecardDerived
             || undefined
     }, [
         challengeInfo?.phases,
@@ -249,32 +359,13 @@ export const ScorecardDetailsPage: FC<Props> = (props: Props) => {
             return false
         }
 
-        const normalizedRoleName = typeof myResource.roleName === 'string'
-            ? myResource.roleName.trim()
-                .toLowerCase()
-            : ''
+        const normalizedRoleName = normalizeRoleName(myResource.roleName)
 
-        if (reviewPhaseType === 'checkpoint screening') {
-            return currentPhaseReviewType === 'checkpoint screening'
-                && normalizedRoleName === 'checkpoint screener'
-        }
-
-        if (reviewPhaseType === 'checkpoint review') {
-            return currentPhaseReviewType === 'checkpoint review'
-                && normalizedRoleName === 'checkpoint reviewer'
-        }
-
-        if (reviewPhaseType === 'screening') {
-            const isScreenerRole = (
-                normalizedRoleName.includes('screener')
-                || normalizedRoleName.includes('screening')
-            ) && !normalizedRoleName.includes('checkpoint')
-
-            return currentPhaseReviewType === 'screening'
-                && isScreenerRole
-        }
-
-        return false
+        return canRoleEditPhase(
+            reviewPhaseType,
+            currentPhaseReviewType,
+            normalizedRoleName,
+        )
     }, [
         reviewPhaseType,
         currentPhaseReviewType,
@@ -299,7 +390,7 @@ export const ScorecardDetailsPage: FC<Props> = (props: Props) => {
         {
             index: 1,
             label: 'Active Challenges',
-            path: `${rootRoute}/${activeReviewAssigmentsRouteId}/`,
+            path: `${rootRoute}/${activeReviewAssignmentsRouteId}/`,
         },
         {
             fallback: './../../../../challenge-details',

@@ -1,0 +1,92 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+
+    @include ltemd {
+        &:global(.enhanced-table) {
+            table {
+                tbody {
+                    tr:has(:global(.last-element)) {
+                        td {
+                            border-bottom: 0;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+.textBlue {
+    color: $link-blue-dark;
+
+    &:hover {
+        color: $link-blue-dark;
+    }
+
+    &:disabled {
+        opacity: 0.7;
+        pointer-events: none;
+    }
+}
+
+.tooltipTrigger {
+    display: inline-block;
+}
+
+.submissionColumn {
+    width: 240px;
+    min-width: 220px;
+    max-width: 260px;
+    white-space: nowrap;
+
+    :global(.TableCell_blockCell) {
+        width: 100%;
+    }
+}
+
+.notReviewed {
+    color: var(--GrayFontColor);
+}
+
+.tableCellNoWrap {
+    white-space: nowrap;
+}
+
+.respondButton {
+    display: inline-flex;
+    align-items: center;
+    font-weight: 700;
+    color: $link-blue-dark;
+    text-decoration: none;
+
+    &:hover {
+        color: $link-blue-dark;
+    }
+}
+
+.actionsCell {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: $sp-2;
+    align-items: center;
+}
+
+.actionItem {
+    display: inline-flex;
+    align-items: center;
+    margin-right: 12px;
+
+    &:global(.last-element) {
+        margin-right: 0;
+    }
+}
+
+.mobileLabel {
+    display: inline-block;
+    font-weight: 600;
+    font-size: 14px;
+    margin-right: $sp-2;
+}

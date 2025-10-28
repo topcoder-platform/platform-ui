@@ -12,13 +12,14 @@ import { TableIterativeReview } from '../TableIterativeReview'
 import { useRole, useRoleProps } from '../../hooks'
 import {
     REVIEWER,
-    SUBMITTER,
 } from '../../../config/index.config'
 import { ChallengeDetailContext } from '../../contexts'
+import { hasSubmitterPassedThreshold } from '../../utils/reviewScoring'
 
 interface Props {
     reviews: SubmissionInfo[]
     submitterReviews: SubmissionInfo[]
+    approvalMinimumPassingScore?: number | null
     isLoadingReview: boolean
     isDownloading: IsRemovingType
     downloadSubmission: (submissionId: string) => void
@@ -26,16 +27,44 @@ interface Props {
 }
 
 export const TabContentApproval: FC<Props> = (props: Props) => {
-    const { actionChallengeRole }: useRoleProps = useRole()
+    const {
+        challengeInfo,
+        myResources = [],
+    }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
+    const {
+        actionChallengeRole,
+        approverResourceIds,
+        isPrivilegedRole,
+    }: useRoleProps = useRole()
     const hideHandleColumn = props.isActiveChallenge
         && actionChallengeRole === REVIEWER
 
-    const isSubmitterView = actionChallengeRole === SUBMITTER
-    const rawRows = isSubmitterView ? props.submitterReviews : props.reviews
+    const myMemberIds = useMemo<Set<string>>(
+        () => new Set((myResources ?? []).map(resource => resource.memberId)),
+        [myResources],
+    )
+
+    const hasPassedApprovalThreshold = useMemo(
+        () => hasSubmitterPassedThreshold(
+            props.submitterReviews ?? [],
+            myMemberIds,
+            props.approvalMinimumPassingScore,
+        ),
+        [props.submitterReviews, myMemberIds, props.approvalMinimumPassingScore],
+    )
+
+    const isChallengeCompleted = useMemo(
+        () => {
+            const normalizedStatus = (challengeInfo?.status ?? '').toUpperCase()
+            return normalizedStatus === 'COMPLETED'
+                || normalizedStatus === 'CANCELLED'
+                || normalizedStatus.startsWith('CANCELLED_')
+        },
+        [challengeInfo?.status],
+    )
 
     // Only show Approval-phase reviews on the Approval tab
-    const { challengeInfo }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
-    const approvalPhaseIds = useMemo(
+    const approvalPhaseIds = useMemo<Set<string>>(
         () => new Set(
             (challengeInfo?.phases ?? [])
                 .filter(p => (p.name || '').toLowerCase() === 'approval')
@@ -43,26 +72,70 @@ export const TabContentApproval: FC<Props> = (props: Props) => {
         ),
         [challengeInfo?.phases],
     )
-    const sourceRows = useMemo(
-        () => rawRows.filter(r => (r.review?.phaseId ? approvalPhaseIds.has(r.review.phaseId) : false)),
-        [rawRows, approvalPhaseIds],
+    const approvalRows: SubmissionInfo[] = useMemo(
+        () => {
+            if (!props.reviews.length) {
+                return []
+            }
+
+            if (approvalPhaseIds.size === 0) {
+                return props.reviews
+            }
+
+            return props.reviews.filter(row => {
+                const phaseId = row.review?.phaseId
+                return phaseId ? approvalPhaseIds.has(phaseId) : false
+            })
+        },
+        [props.reviews, approvalPhaseIds],
+    )
+
+    const filteredApprovalRows = useMemo<SubmissionInfo[]>(
+        () => {
+            if (isPrivilegedRole || (isChallengeCompleted && hasPassedApprovalThreshold)) {
+                return approvalRows
+            }
+
+            return approvalRows.filter(row => {
+                if (row.review?.resourceId
+                    && approverResourceIds.has(row.review.resourceId)) {
+                    return true
+                }
+
+                if (row.memberId && myMemberIds.has(row.memberId)) {
+                    return true
+                }
+
+                return false
+            })
+        },
+        [
+            approvalRows,
+            isPrivilegedRole,
+            isChallengeCompleted,
+            hasPassedApprovalThreshold,
+            approverResourceIds,
+            myMemberIds,
+        ],
     )
 
     if (props.isLoadingReview) {
         return <TableLoading />
     }
 
-    if (!sourceRows.length) {
+    if (!filteredApprovalRows.length) {
         return <TableNoRecord message='No approvals yet' />
     }
 
     return (
         <TableIterativeReview
-            datas={sourceRows}
+            datas={filteredApprovalRows}
             isDownloading={props.isDownloading}
             downloadSubmission={props.downloadSubmission}
             hideHandleColumn={hideHandleColumn}
             columnLabel='Approval'
+            isChallengeCompleted={isChallengeCompleted}
+            hasPassedThreshold={hasPassedApprovalThreshold}
         />
     )
 }

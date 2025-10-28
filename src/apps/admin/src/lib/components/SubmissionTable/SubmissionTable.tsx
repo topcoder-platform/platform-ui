@@ -11,6 +11,7 @@ import { EnvironmentConfig } from '~/config'
 import { getRatingColor } from '~/libs/core'
 
 import { IsRemovingType, MobileTableColumn, Submission } from '../../models'
+import type { DoPostBusEvent } from '../../hooks'
 import { TableMobile } from '../common/TableMobile'
 import { TableWrapper } from '../common/TableWrapper'
 
@@ -27,7 +28,7 @@ interface Props {
     isRemovingReviewSummations: IsRemovingType
     doRemoveReviewSummations: (item: Submission) => void
     isRunningTest: IsRemovingType
-    doPostBusEvent: (submissionId: string, testType: string) => void
+    doPostBusEvent: DoPostBusEvent
     showSubmissionHistory: IsRemovingType
     setShowSubmissionHistory: Dispatch<SetStateAction<IsRemovingType>>
     isMM: boolean

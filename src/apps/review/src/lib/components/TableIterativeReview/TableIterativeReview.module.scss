@@ -83,6 +83,11 @@
     }
 }
 
+.submissionLabel {
+    color: var(--GrayFontColor);
+    font-weight: 600;
+}
+
 .reviewCell {
     display: inline-flex;
     flex-direction: column;
@@ -137,6 +142,28 @@
     color: var(--GrayFontColor);
 }
 
+.resultPill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: $sp-1 $sp-2;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.resultPass {
+    @extend .resultPill;
+    background-color: $green-25;
+    color: $green-140;
+}
+
+.resultFail {
+    @extend .resultPill;
+    background-color: $red-25;
+    color: $red-140;
+}
+
 .submit {
     align-items: center;
     display: flex;
@@ -182,4 +209,34 @@
     font-size: 12px;
     font-weight: 700;
     white-space: nowrap;
+}
+
+.postMortemResult {
+    display: inline-flex;
+    align-items: center;
+    gap: $sp-2;
+}
+
+.postMortemOutcomeLabel {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: capitalize;
+}
+
+.passText {
+    color: $green-140;
+}
+
+.failText {
+    color: $red-110;
+}
+
+.reviewerList {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 0;
+}
+
+.reviewerList > span {
+    display: inline-flex;
 }

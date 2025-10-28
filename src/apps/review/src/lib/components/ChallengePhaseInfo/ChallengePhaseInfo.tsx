@@ -219,7 +219,7 @@ export const ChallengePhaseInfo: FC<Props> = (props: Props) => {
         const reviewInProgress = props.reviewInProgress
 
         return [
-            ...createPhaseItems(variant, data),
+            ...createPhaseItems(variant, data, isTask),
             createRolesItem(myChallengeRoles),
             ...createTaskItems({
                 formattedStartDate,
@@ -311,8 +311,12 @@ export const ChallengePhaseInfo: FC<Props> = (props: Props) => {
 
 export default ChallengePhaseInfo
 
-function createPhaseItems(variant: ChallengeVariant, data: ChallengeInfo): ChallengePhaseItem[] {
+function createPhaseItems(variant: ChallengeVariant, data: ChallengeInfo, isTask: boolean): ChallengePhaseItem[] {
     if (variant !== 'active') {
+        return []
+    }
+
+    if (isTask) {
         return []
     }
 

@@ -18,6 +18,7 @@ import { UserRole } from '~/libs/core'
 import { TableMobile } from '~/apps/admin/src/lib/components/common/TableMobile'
 import { IsRemovingType } from '~/apps/admin/src/lib/models'
 import { MobileTableColumn } from '~/apps/admin/src/lib/models/MobileTableColumn.model'
+import { handleError } from '~/apps/admin/src/lib/utils'
 import { copyTextToClipboard, useWindowSize, WindowSize } from '~/libs/shared'
 import { IconOutline, Table, TableColumn, Tooltip } from '~/libs/ui'
 
@@ -33,10 +34,16 @@ import {
     getHandleUrl,
     getSubmissionHistoryKey,
     hasIsLatestFlag,
+    isReviewPhaseCurrentlyOpen,
     partitionSubmissionHistory,
+    refreshChallengeReviewData,
+    REOPEN_MESSAGE_OTHER,
+    REOPEN_MESSAGE_SELF,
     SubmissionHistoryPartition,
 } from '../../utils'
 import { ChallengeDetailContext, ReviewAppContext } from '../../contexts'
+import { updateReview } from '../../services'
+import { ConfirmModal } from '../ConfirmModal'
 import { useSubmissionDownloadAccess } from '../../hooks'
 import type { UseSubmissionDownloadAccessResult } from '../../hooks/useSubmissionDownloadAccess'
 
@@ -69,8 +76,8 @@ interface BaseColumnsConfig {
 }
 
 interface ScreeningColumnConfig {
-    canViewAllScorecards: boolean
-    currentMemberId?: string
+    canViewScorecard: (entry: Screening) => boolean
+    shouldMaskScore: (entry: Screening) => boolean
 }
 
 interface ActionRenderer {
@@ -79,7 +86,34 @@ interface ActionRenderer {
 }
 
 interface ActionColumnConfig {
+    allowCompleteScreeningAction: boolean
     hasAnyScreeningAssignment: boolean
+    historyByMember: Map<string, SubmissionInfo[]>
+    onHistoryClick: (event: MouseEvent<HTMLButtonElement>) => void
+    shouldShowHistoryActions: boolean
+    canShowReopenActions: boolean
+    onRequestReopen: (entry: Screening, isOwnReview: boolean) => void
+    isReopening: boolean
+    pendingReviewId?: string
+    canReopenGlobally: boolean
+    myResourceIds: Set<string>
+    challengeInfo?: ChallengeDetailContextModel['challengeInfo']
+}
+
+interface ReopenActionConfig {
+    data: Screening
+    canShowReopenActions: boolean
+    onRequestReopen: (entry: Screening, isOwnReview: boolean) => void
+    isReopening: boolean
+    pendingReviewId?: string
+    canReopenGlobally: boolean
+    myResourceIds: Set<string>
+    challengeInfo?: ChallengeDetailContextModel['challengeInfo']
+}
+
+interface HistoryActionConfig {
+    data: Screening
+    historyByMember: Map<string, SubmissionInfo[]>
     onHistoryClick: (event: MouseEvent<HTMLButtonElement>) => void
     shouldShowHistoryActions: boolean
 }
@@ -217,6 +251,156 @@ const createVirusScanColumn = (): TableColumn<Screening> => ({
     type: 'element',
 })
 
+const createMyReviewActions = (
+    data: Screening,
+    options: { allowCompleteScreeningAction: boolean },
+): ActionRenderer[] => {
+    if (!data.myReviewResourceId) {
+        return []
+    }
+
+    const status = (data.myReviewStatus ?? '').toUpperCase()
+    if (['COMPLETED', 'SUBMITTED'].includes(status)) {
+        return [
+            {
+                key: `completed-${data.submissionId}`,
+                render: () => (
+                    <div
+                        aria-label='Screening completed'
+                        className={styles.completedAction}
+                        title='Screening completed'
+                    >
+                        <span className={styles.completedIcon} aria-hidden='true'>
+                            <IconOutline.CheckIcon />
+                        </span>
+                        <span className={styles.completedPill}>Screening Complete</span>
+                    </div>
+                ),
+            },
+        ]
+    }
+
+    if (!options.allowCompleteScreeningAction) {
+        return []
+    }
+
+    if (!data.myReviewId) {
+        return []
+    }
+
+    return [
+        {
+            key: `complete-${data.myReviewId}`,
+            render: isLast => (
+                <Link
+                    to={`./../review/${data.myReviewId}`}
+                    className={classNames(
+                        styles.submit,
+                        { 'last-element': isLast },
+                    )}
+                >
+                    <i className='icon-upload' />
+                    Complete Screening
+                </Link>
+            ),
+        },
+    ]
+}
+
+const createReopenAction = ({
+    data,
+    canShowReopenActions,
+    onRequestReopen,
+    isReopening,
+    pendingReviewId,
+    canReopenGlobally,
+    myResourceIds,
+    challengeInfo,
+}: ReopenActionConfig): ActionRenderer | undefined => {
+    if (!canShowReopenActions) {
+        return undefined
+    }
+
+    const reviewId = data.reviewId
+    if (!reviewId) {
+        return undefined
+    }
+
+    if (!isReviewPhaseCurrentlyOpen(challengeInfo, data.reviewPhaseId)) {
+        return undefined
+    }
+
+    const derivedStatus = (data.reviewStatus ?? data.myReviewStatus ?? '').toUpperCase()
+    if (derivedStatus !== 'COMPLETED') {
+        return undefined
+    }
+
+    const candidateResourceIds = [
+        data.myReviewResourceId,
+        data.screenerId,
+    ].filter((id): id is string => Boolean(id))
+    const isOwnReview = candidateResourceIds.some(id => myResourceIds.has(id))
+
+    if (!canReopenGlobally && !isOwnReview) {
+        return undefined
+    }
+
+    return {
+        key: `reopen-${reviewId}`,
+        render: isLast => (
+            <button
+                type='button'
+                className={classNames(
+                    styles.submit,
+                    styles.textBlue,
+                    { 'last-element': isLast },
+                )}
+                // eslint-disable-next-line react/jsx-no-bind
+                onClick={() => onRequestReopen(data, isOwnReview)}
+                disabled={isReopening && pendingReviewId === reviewId}
+            >
+                <i className='icon-reopen' />
+                Reopen Review
+            </button>
+        ),
+    }
+}
+
+const createHistoryAction = ({
+    data,
+    historyByMember,
+    onHistoryClick,
+    shouldShowHistoryActions,
+}: HistoryActionConfig): ActionRenderer | undefined => {
+    if (!shouldShowHistoryActions) {
+        return undefined
+    }
+
+    const historyKeyForRow = getSubmissionHistoryKey(data.memberId, data.submissionId)
+    const historyEntries = historyByMember.get(historyKeyForRow) ?? []
+    if (!historyEntries.length) {
+        return undefined
+    }
+
+    return {
+        key: `history-${historyKeyForRow}`,
+        render: isLast => (
+            <button
+                type='button'
+                className={classNames(
+                    styles.historyButton,
+                    { 'last-element': isLast },
+                )}
+                data-member-id={data.memberId ?? ''}
+                data-submission-id={data.submissionId}
+                onClick={onHistoryClick}
+            >
+                View Submission History
+            </button>
+        ),
+    }
+}
+
 const createBaseColumns = ({
     handleColumn,
     submissionColumn,
@@ -229,9 +413,20 @@ const createBaseColumns = ({
     virusScanColumn,
 ]
 
+const isInProgressStatus = (value: string | undefined): boolean => (
+    typeof value === 'string'
+    && value.trim()
+        .toUpperCase() === 'IN_PROGRESS'
+)
+
+const isScreeningReviewInProgress = (entry: Screening): boolean => (
+    isInProgressStatus(entry.reviewStatus)
+    || isInProgressStatus(entry.myReviewStatus)
+)
+
 const createScreeningColumns = ({
-    canViewAllScorecards,
-    currentMemberId,
+    canViewScorecard,
+    shouldMaskScore,
 }: ScreeningColumnConfig): TableColumn<Screening>[] => [
     {
         label: 'Screener',
@@ -268,16 +463,16 @@ const createScreeningColumns = ({
         label: 'Screening Score',
         propertyName: 'score',
         renderer: (data: Screening) => {
-            const scoreValue = data.score ?? '-'
+            const maskScore = shouldMaskScore(data)
+            const scoreValue = maskScore ? '--' : (data.score ?? '-')
 
-            if (!data.reviewId) {
+            if (!data.reviewId || maskScore) {
                 return <span>{scoreValue}</span>
             }
 
-            const canViewScorecard = canViewAllScorecards
-                || Boolean(data.memberId && data.memberId === currentMemberId)
+            const canAccessScorecard = canViewScorecard(data)
 
-            if (!canViewScorecard) {
+            if (!canAccessScorecard) {
                 return (
                     <Tooltip content={VIEW_OWN_SCORECARD_TOOLTIP} triggerOn='click-hover'>
                         <span className={styles.tooltipTrigger}>
@@ -302,6 +497,10 @@ const createScreeningColumns = ({
         label: 'Screening Result',
         propertyName: 'result',
         renderer: (data: Screening) => {
+            if (isScreeningReviewInProgress(data)) {
+                return <span>-</span>
+            }
+
             const val = (data.result || '').toUpperCase()
             if (val === 'PASS') {
                 return (
@@ -322,11 +521,20 @@ const createScreeningColumns = ({
 ]
 
 const createActionColumn = ({
+    allowCompleteScreeningAction,
     hasAnyScreeningAssignment,
+    historyByMember,
     onHistoryClick,
     shouldShowHistoryActions,
+    canShowReopenActions,
+    onRequestReopen,
+    isReopening,
+    pendingReviewId,
+    canReopenGlobally,
+    myResourceIds,
+    challengeInfo,
 }: ActionColumnConfig): TableColumn<Screening> | undefined => {
-    if (!shouldShowHistoryActions && !hasAnyScreeningAssignment) {
+    if (!shouldShowHistoryActions && !hasAnyScreeningAssignment && !canShowReopenActions) {
         return undefined
     }
 
@@ -337,62 +545,33 @@ const createActionColumn = ({
         renderer: (data: Screening) => {
             const actionRenderers: ActionRenderer[] = []
 
-            if (data.myReviewResourceId) {
-                const status = (data.myReviewStatus ?? '').toUpperCase()
-                if (['COMPLETED', 'SUBMITTED'].includes(status)) {
-                    actionRenderers.push({
-                        key: `completed-${data.submissionId}`,
-                        render: () => (
-                            <div
-                                aria-label='Screening completed'
-                                className={styles.completedAction}
-                                title='Screening completed'
-                            >
-                                <span className={styles.completedIcon} aria-hidden='true'>
-                                    <IconOutline.CheckIcon />
-                                </span>
-                                <span className={styles.completedPill}>Screening Complete</span>
-                            </div>
-                        ),
-                    })
-                } else if (data.myReviewId) {
-                    actionRenderers.push({
-                        key: `complete-${data.myReviewId}`,
-                        render: isLast => (
-                            <Link
-                                to={`./../review/${data.myReviewId}`}
-                                className={classNames(
-                                    styles.submit,
-                                    { 'last-element': isLast },
-                                )}
-                            >
-                                <i className='icon-upload' />
-                                Complete Screening
-                            </Link>
-                        ),
-                    })
-                }
+            actionRenderers.push(...createMyReviewActions(
+                data,
+                { allowCompleteScreeningAction },
+            ))
+
+            const reopenAction = createReopenAction({
+                canReopenGlobally,
+                canShowReopenActions,
+                challengeInfo,
+                data,
+                isReopening,
+                myResourceIds,
+                onRequestReopen,
+                pendingReviewId,
+            })
+            if (reopenAction) {
+                actionRenderers.push(reopenAction)
             }
 
-            if (shouldShowHistoryActions) {
-                const historyKeyForRow = getSubmissionHistoryKey(data.memberId, data.submissionId)
-                actionRenderers.push({
-                    key: `history-${historyKeyForRow}`,
-                    render: isLast => (
-                        <button
-                            type='button'
-                            className={classNames(
-                                styles.historyButton,
-                                { 'last-element': isLast },
-                            )}
-                            data-member-id={data.memberId ?? ''}
-                            data-submission-id={data.submissionId}
-                            onClick={onHistoryClick}
-                        >
-                            View Submission History
-                        </button>
-                    ),
-                })
+            const historyAction = createHistoryAction({
+                data,
+                historyByMember,
+                onHistoryClick,
+                shouldShowHistoryActions,
+            })
+            if (historyAction) {
+                actionRenderers.push(historyAction)
             }
 
             if (actionRenderers.length === 0) {
@@ -442,7 +621,7 @@ const normalizeCreatedAt = (
 export const TableSubmissionScreening: FC<Props> = (props: Props) => {
     const { width: screenWidth }: WindowSize = useWindowSize()
     const isTablet = useMemo(() => screenWidth <= 984, [screenWidth])
-    const { challengeInfo, myRoles }: ChallengeDetailContextModel = useContext(
+    const { challengeInfo, myRoles, myResources }: ChallengeDetailContextModel = useContext(
         ChallengeDetailContext,
     )
     const { loginUserInfo }: ReviewAppContextModel = useContext(ReviewAppContext)
@@ -463,6 +642,11 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
         [normalisedRoles],
     )
 
+    const hasSubmitterRole = useMemo(
+        () => normalisedRoles.some(role => role.includes('submitter')),
+        [normalisedRoles],
+    )
+
     const isAdminUser = useMemo(
         () => loginUserInfo?.roles?.some(
             role => typeof role === 'string'
@@ -475,6 +659,21 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
         () => isAdminUser || hasCopilotRole,
         [isAdminUser, hasCopilotRole],
     )
+
+    const myResourceIds = useMemo(
+        () => new Set(
+            (myResources ?? [])
+                .map(resource => resource.id)
+                .filter((id): id is string => Boolean(id)),
+        ),
+        [myResources],
+    )
+
+    const canReopenGlobally = canViewAllScorecards
+    const challengeId = challengeInfo?.id
+    const challengeStatus = (challengeInfo?.status ?? '').toUpperCase()
+    const isChallengeClosedForReopen = challengeStatus === 'COMPLETED'
+        || challengeStatus.startsWith('CANCELLED')
     const showScreeningColumns = props.showScreeningColumns ?? true
     const submissionTypes = useMemo(
         () => new Set(
@@ -574,6 +773,50 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
         [props.screenings],
     )
 
+    const canShowReopenActions = useMemo(
+        () => {
+            if (!showScreeningColumns) {
+                return false
+            }
+
+            if (isChallengeClosedForReopen) {
+                return false
+            }
+
+            return props.screenings.some(screening => {
+                if (!screening.reviewId) {
+                    return false
+                }
+
+                const status = (screening.reviewStatus ?? screening.myReviewStatus ?? '').toUpperCase()
+                if (status !== 'COMPLETED') {
+                    return false
+                }
+
+                const candidateIds = [
+                    screening.myReviewResourceId,
+                    screening.screenerId,
+                ].filter((id): id is string => Boolean(id))
+
+                const isOwn = candidateIds.some(id => myResourceIds.has(id))
+                return canReopenGlobally || isOwn
+            })
+        },
+        [
+            isChallengeClosedForReopen,
+            showScreeningColumns,
+            props.screenings,
+            myResourceIds,
+            canReopenGlobally,
+        ],
+    )
+
+    const [pendingReopen, setPendingReopen] = useState<{
+        reviewId: string
+        isOwnReview: boolean
+    } | undefined>(undefined)
+    const [isReopening, setIsReopening] = useState(false)
+
     const [historyKey, setHistoryKey] = useState<string | undefined>(undefined)
 
     const historyEntriesForModal = useMemo<SubmissionInfo[]>(
@@ -597,6 +840,50 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
         },
         [historyByMember],
     )
+
+    const openReopenDialog = useCallback(
+        (entry: Screening, isOwnReview: boolean): void => {
+            if (!entry.reviewId) {
+                return
+            }
+
+            setPendingReopen({
+                isOwnReview,
+                reviewId: entry.reviewId,
+            })
+        },
+        [],
+    )
+
+    const closeReopenDialog = useCallback((): void => {
+        setPendingReopen(undefined)
+    }, [])
+
+    const handleConfirmReopen = useCallback(async (): Promise<void> => {
+        const reviewId = pendingReopen?.reviewId
+
+        if (!reviewId) {
+            closeReopenDialog()
+            return
+        }
+
+        setIsReopening(true)
+
+        try {
+            await updateReview(reviewId, { committed: false, status: 'PENDING' })
+            toast.success('Scorecard reopened.')
+            closeReopenDialog()
+            await refreshChallengeReviewData(challengeId)
+        } catch (error) {
+            handleError(error)
+        } finally {
+            setIsReopening(false)
+        }
+    }, [
+        pendingReopen?.reviewId,
+        closeReopenDialog,
+        challengeId,
+    ])
 
     const getHistoryRestriction = useCallback(
         (submission: SubmissionInfo): { message?: string; restricted: boolean } => {
@@ -678,21 +965,118 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
         [handleColumn, submissionColumn, submissionDateColumn, virusScanColumn],
     )
 
-    const screeningColumns = useMemo<TableColumn<Screening>[]>(
-        () => createScreeningColumns({
+    const canViewScorecardForRow = useCallback(
+        (entry: Screening): boolean => {
+            if (!entry.reviewId) {
+                return false
+            }
+
+            if (canViewAllScorecards) {
+                return true
+            }
+
+            if (
+                currentMemberId
+                && entry.memberId
+                && currentMemberId === entry.memberId
+            ) {
+                return true
+            }
+
+            if (entry.myReviewId && entry.reviewId === entry.myReviewId) {
+                return true
+            }
+
+            const reviewerResourceIds = [
+                entry.myReviewResourceId,
+                entry.screenerId,
+            ].filter((id): id is string => Boolean(id))
+
+            return reviewerResourceIds.some(id => myResourceIds.has(id))
+        },
+        [
             canViewAllScorecards,
             currentMemberId,
+            myResourceIds,
+        ],
+    )
+
+    const shouldMaskScoreForRow = useCallback(
+        (entry: Screening): boolean => {
+            if (!hasSubmitterRole) {
+                return false
+            }
+
+            if (canViewAllScorecards) {
+                return false
+            }
+
+            if (!currentMemberId) {
+                return false
+            }
+
+            if (entry.memberId && entry.memberId === currentMemberId) {
+                return false
+            }
+
+            if (canViewScorecardForRow(entry)) {
+                return false
+            }
+
+            const submissionType = (entry.type || '').toUpperCase()
+            if (!submissionType.includes('CHECKPOINT')) {
+                return false
+            }
+
+            return true
+        },
+        [
+            canViewAllScorecards,
+            canViewScorecardForRow,
+            currentMemberId,
+            hasSubmitterRole,
+        ],
+    )
+
+    const screeningColumns = useMemo<TableColumn<Screening>[]>(
+        () => createScreeningColumns({
+            canViewScorecard: canViewScorecardForRow,
+            shouldMaskScore: shouldMaskScoreForRow,
         }),
-        [canViewAllScorecards, currentMemberId],
+        [
+            canViewScorecardForRow,
+            shouldMaskScoreForRow,
+        ],
     )
 
     const actionColumn = useMemo(
         () => createActionColumn({
+            allowCompleteScreeningAction: showScreeningColumns,
+            canReopenGlobally,
+            canShowReopenActions,
+            challengeInfo,
             hasAnyScreeningAssignment,
+            historyByMember,
+            isReopening,
+            myResourceIds,
             onHistoryClick: handleHistoryButtonClick,
+            onRequestReopen: openReopenDialog,
+            pendingReviewId: pendingReopen?.reviewId,
             shouldShowHistoryActions,
         }),
-        [hasAnyScreeningAssignment, handleHistoryButtonClick, shouldShowHistoryActions],
+        [
+            challengeInfo,
+            canReopenGlobally,
+            canShowReopenActions,
+            hasAnyScreeningAssignment,
+            historyByMember,
+            myResourceIds,
+            handleHistoryButtonClick,
+            openReopenDialog,
+            pendingReopen?.reviewId,
+            isReopening,
+            shouldShowHistoryActions,
+        ],
     )
 
     const columns = useMemo<TableColumn<Screening>[]>(
@@ -762,6 +1146,21 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
                 getRestriction={getHistoryRestriction}
                 getSubmissionMeta={resolveSubmissionMeta}
             />
+            <ConfirmModal
+                title='Reopen Scorecard Confirmation'
+                open={Boolean(pendingReopen)}
+                onClose={closeReopenDialog}
+                onConfirm={handleConfirmReopen}
+                cancelText='Cancel'
+                action='Confirm'
+                isLoading={isReopening}
+            >
+                <div>
+                    {pendingReopen?.isOwnReview
+                        ? REOPEN_MESSAGE_SELF
+                        : REOPEN_MESSAGE_OTHER}
+                </div>
+            </ConfirmModal>
         </TableWrapper>
     )
 }

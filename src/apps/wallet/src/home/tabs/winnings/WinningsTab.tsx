@@ -1,19 +1,19 @@
 /* eslint-disable max-len */
 /* eslint-disable react/jsx-no-bind */
-import { toast } from 'react-toastify'
-import { AxiosError } from 'axios'
 import React, { FC, useCallback, useEffect } from 'react'
 
-import { Collapsible, ConfirmModal, LoadingCircles } from '~/libs/ui'
+import { Collapsible, LoadingCircles } from '~/libs/ui'
 import { UserProfile } from '~/libs/core'
 
-import { getPayments, processPayments } from '../../../lib/services/wallet'
+import { getPayments } from '../../../lib/services/wallet'
 import { Winning, WinningDetail } from '../../../lib/models/WinningDetail'
 import { FilterBar } from '../../../lib'
-import { ConfirmFlowData } from '../../../lib/models/ConfirmFlowData'
 import { PaginationInfo } from '../../../lib/models/PaginationInfo'
+import { useWalletDetails, WalletDetailsResponse } from '../../../lib/hooks/use-wallet-details'
+import { WalletDetails } from '../../../lib/models/WalletDetails'
 import PaymentsTable from '../../../lib/components/payments-table/PaymentTable'
 
+import ConfirmPaymentModal from './ConfirmPayment.modal'
 import styles from './Winnings.module.scss'
 
 interface ListViewProps {
@@ -42,10 +42,16 @@ function formatStatus(status: string): string {
             return 'On Hold'
         case 'OWED':
             return 'Available'
+        case 'PROCESSING':
+            return 'Processing'
         case 'PAID':
             return 'Paid'
         case 'CANCELLED':
             return 'Cancelled'
+        case 'FAILED':
+            return 'Failed'
+        case 'RETURNED':
+            return 'Returned'
         default:
             return status.replaceAll('_', ' ')
     }
@@ -69,11 +75,13 @@ const formatCurrency = (amountStr: string, currency: string): string => {
 }
 
 const ListView: FC<ListViewProps> = (props: ListViewProps) => {
-    const [confirmFlow, setConfirmFlow] = React.useState<ConfirmFlowData | undefined>(undefined)
+    const [confirmPayments, setConfirmPayments] = React.useState<Winning[]>()
     const [winnings, setWinnings] = React.useState<ReadonlyArray<Winning>>([])
     const [selectedPayments, setSelectedPayments] = React.useState<{ [paymentId: string]: Winning }>({})
     const [isLoading, setIsLoading] = React.useState<boolean>(false)
     const [filters, setFilters] = React.useState<Record<string, string[]>>({})
+    const { data: walletDetails }: WalletDetailsResponse = useWalletDetails()
+
     const [pagination, setPagination] = React.useState<PaginationInfo>({
         currentPage: 1,
         pageSize: 10,
@@ -110,8 +118,8 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                 datePaid: payment.details[0].datePaid ? formatIOSDateString(payment.details[0].datePaid) : '-',
                 description: payment.description,
                 details: payment.details,
+                grossPayment: formatCurrency(payment.details[0].totalAmount, payment.details[0].currency),
                 id: payment.id,
-                netPayment: formatCurrency(payment.details[0].totalAmount, payment.details[0].currency),
                 releaseDate: formattedReleaseDate,
                 status: formatStatus(payment.details[0].status),
                 type: payment.category.replaceAll('_', ' ')
@@ -135,49 +143,22 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
         }
     }, [props.profile.userId, convertToWinnings, filters, pagination.currentPage, pagination.pageSize])
 
-    const renderConfirmModalContent = React.useMemo(() => {
-        if (confirmFlow?.content === undefined) {
-            return undefined
-        }
-
-        if (typeof confirmFlow?.content === 'function') {
-            return confirmFlow?.content()
-        }
-
-        return confirmFlow?.content
-    }, [confirmFlow])
-
     useEffect(() => {
         fetchWinnings()
     }, [fetchWinnings])
 
-    const processPayouts = async (winningIds: string[]): Promise<void> => {
+    function handlePayMeClick(
+        payments: { [paymentId: string]: Winning },
+    ): void {
+        setConfirmPayments(Object.values(payments))
+    }
+
+    function handleCloseConfirmModal(isDone?: boolean): void {
+        setConfirmPayments(undefined)
         setSelectedPayments({})
-
-        toast.info('Processing payments...', {
-            position: toast.POSITION.BOTTOM_RIGHT,
-        })
-        try {
-            await processPayments(winningIds)
-            toast.success('Payments processed successfully!', {
-                position: toast.POSITION.BOTTOM_RIGHT,
-            })
-        } catch (error) {
-            let message = 'Failed to process payments. Please try again later.'
-
-            if (error instanceof AxiosError) {
-                message = error.response?.data?.error?.message
-
-                message = message.charAt(0)
-                    .toUpperCase() + message.slice(1)
-            }
-
-            toast.error(message, {
-                position: toast.POSITION.BOTTOM_RIGHT,
-            })
+        if (isDone) {
+            fetchWinnings()
         }
-
-        fetchWinnings()
     }
 
     return (
@@ -245,12 +226,24 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                                             value: 'ON_HOLD',
                                         },
                                         {
+                                            label: 'Processing',
+                                            value: 'PROCESSING',
+                                        },
+                                        {
                                             label: 'Paid',
                                             value: 'PAID',
                                         },
                                         {
                                             label: 'Cancelled',
                                             value: 'CANCELLED',
+                                        },
+                                        {
+                                            label: 'Failed',
+                                            value: 'FAILED',
+                                        },
+                                        {
+                                            label: 'Returned',
+                                            value: 'RETURNED',
                                         },
                                     ],
                                     type: 'dropdown',
@@ -307,6 +300,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                             <PaymentsTable
                                 currentPage={pagination.currentPage}
                                 numPages={pagination.totalPages}
+                                minWithdrawAmount={walletDetails?.minWithdrawAmount ?? 0}
                                 payments={winnings}
                                 selectedPayments={selectedPayments}
                                 onSelectedPaymentsChange={function onSelectedPaymentsChanged(selectedWinnings: { [paymentId: string]: Winning }) {
@@ -338,17 +332,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                                         currentPage: pageNumber,
                                     })
                                 }}
-                                onPayMeClick={async function onPayMeClicked(
-                                    paymentIds: { [paymentId: string]: Winning },
-                                    totalAmount: string,
-                                ) {
-                                    setConfirmFlow({
-                                        action: 'Yes',
-                                        callback: () => processPayouts(Object.keys(paymentIds)),
-                                        content: `You are about to process payments for a total of USD ${totalAmount}`,
-                                        title: 'Are you sure?',
-                                    })
-                                }}
+                                onPayMeClick={handlePayMeClick}
                             />
                         )}
                         {!isLoading && winnings.length === 0 && (
@@ -363,21 +347,13 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                     </Collapsible>
                 </div>
             </div>
-            {confirmFlow && (
-                <ConfirmModal
-                    title={confirmFlow.title}
-                    action={confirmFlow.action}
-                    onClose={function onClose() {
-                        setConfirmFlow(undefined)
-                    }}
-                    onConfirm={function onConfirm() {
-                        confirmFlow.callback?.()
-                        setConfirmFlow(undefined)
-                    }}
-                    open={confirmFlow !== undefined}
-                >
-                    <div>{renderConfirmModalContent}</div>
-                </ConfirmModal>
+            {confirmPayments && (
+                <ConfirmPaymentModal
+                    userEmail={props.profile.email}
+                    payments={confirmPayments}
+                    walletDetails={walletDetails as WalletDetails}
+                    onClose={handleCloseConfirmModal}
+                />
             )}
         </>
     )

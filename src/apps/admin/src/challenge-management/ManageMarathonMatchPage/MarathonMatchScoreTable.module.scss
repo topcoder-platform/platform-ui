@@ -1,0 +1,46 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.table {
+    width: 100%;
+}
+
+.downloadLink {
+    background: none;
+    border: none;
+    color: $link-blue;
+    cursor: pointer;
+    font: inherit;
+    padding: 0;
+    text-align: left;
+    text-decoration: underline;
+
+    &:hover:not(:disabled) {
+        color: $link-blue-dark;
+        text-decoration: none;
+    }
+
+    &:focus-visible {
+        outline: 2px solid $blue-120;
+        outline-offset: 2px;
+    }
+
+    &:disabled {
+        color: $black-60;
+        cursor: default;
+        text-decoration: none;
+    }
+}
+
+.isDownloading {
+    color: $black-60;
+    cursor: default;
+}
+
+.noScore {
+    color: $black-60;
+}

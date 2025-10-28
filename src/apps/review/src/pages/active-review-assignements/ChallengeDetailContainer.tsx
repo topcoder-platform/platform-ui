@@ -8,7 +8,7 @@ import { Outlet, Routes } from 'react-router-dom'
 import { routerContext, RouterContextData } from '~/libs/core'
 
 import { reviewRoutes } from '../../review-app.routes'
-import { activeReviewAssigmentsRouteId, challengeDetailRouteId } from '../../config/routes.config'
+import { activeReviewAssignmentsRouteId, challengeDetailRouteId } from '../../config/routes.config'
 import { ChallengeDetailContextProvider } from '../../lib'
 
 interface Props {
@@ -18,7 +18,7 @@ interface Props {
 
 export const ChallengeDetailContainer: FC<Props> = (props: Props) => {
     const parentRouteId = props.parentRouteId
-        ?? activeReviewAssigmentsRouteId
+        ?? activeReviewAssignmentsRouteId
     const detailRouteId = props.detailRouteId
         ?? challengeDetailRouteId
     const childRoutes = useChildRoutes(parentRouteId, detailRouteId)

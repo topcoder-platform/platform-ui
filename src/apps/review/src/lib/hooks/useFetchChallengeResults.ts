@@ -22,6 +22,7 @@ import {
 } from '../models'
 import { fetchChallengeReviews } from '../services'
 import { ChallengeDetailContext } from '../contexts'
+import { PAST_CHALLENGE_STATUSES } from '../utils/challengeStatus'
 
 type ResourceMemberMapping = ChallengeDetailContextModel['resourceMemberIdMapping']
 
@@ -250,6 +251,29 @@ export function useFetchChallengeResults(
     }, [challengeInfo])
     const challengeUuid = challengeInfo?.id ?? challengeId ?? ''
     const shouldFetchReviews = Boolean(challengeUuid && winners.length)
+    const normalizedStatus = useMemo<string>(
+        () => (challengeInfo?.status ?? '')
+            .trim()
+            .toUpperCase(),
+        [challengeInfo?.status],
+    )
+    const isPastChallengeStatus = useMemo<boolean>(
+        () => (normalizedStatus
+            ? PAST_CHALLENGE_STATUSES.some(status => normalizedStatus.startsWith(status))
+            : false),
+        [normalizedStatus],
+    )
+    const submissionSource = useMemo<SubmissionInfo[]>(() => {
+        if (isPastChallengeStatus && (challengeInfo?.submissions?.length ?? 0) > 0) {
+            return challengeInfo?.submissions ?? submissions
+        }
+
+        return submissions
+    }, [
+        challengeInfo?.submissions,
+        isPastChallengeStatus,
+        submissions,
+    ])
 
     // Use swr hooks for challenge reviews fetching when winners are available
     const {
@@ -265,7 +289,6 @@ export function useFetchChallengeResults(
             : undefined,
         () => fetchChallengeReviews(challengeUuid),
     )
-
     // Show backend error when fetching data fail
     useEffect(() => {
         if (error) {
@@ -301,12 +324,13 @@ export function useFetchChallengeResults(
                 challengeUuid,
                 memberMapping: resourceMemberIdMapping,
                 reviewsBySubmissionId,
-                submissions,
+                submissions: submissionSource,
                 winner,
             })
 
             if (projectResult) {
                 accumulator.push(projectResult)
+                return accumulator
             }
 
             return accumulator
@@ -316,7 +340,7 @@ export function useFetchChallengeResults(
         resourceMemberIdMapping,
         reviewsBySubmissionId,
         sortedWinners,
-        submissions,
+        submissionSource,
     ])
 
     return {

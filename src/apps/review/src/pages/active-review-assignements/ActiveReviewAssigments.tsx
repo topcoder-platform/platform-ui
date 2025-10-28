@@ -8,7 +8,7 @@ import { Outlet, Routes, useLocation } from 'react-router-dom'
 import { routerContext, RouterContextData } from '~/libs/core'
 
 import { reviewRoutes } from '../../review-app.routes'
-import { activeReviewAssigmentsRouteId } from '../../config/routes.config'
+import { activeReviewAssignmentsRouteId } from '../../config/routes.config'
 
 export const ActiveReviewAssigments: FC<PropsWithChildren> = () => {
     const location = useLocation()
@@ -30,7 +30,7 @@ function useChildRoutes(): Array<JSX.Element> | undefined {
     const { getRouteElement }: RouterContextData = useContext(routerContext)
     const childRoutes = useMemo(
         () => reviewRoutes[0].children
-            ?.find(r => r.id === activeReviewAssigmentsRouteId)
+            ?.find(r => r.id === activeReviewAssignmentsRouteId)
             ?.children?.map(getRouteElement),
         [getRouteElement],
     )

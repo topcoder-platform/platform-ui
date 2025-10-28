@@ -22,11 +22,20 @@ export interface SubmissionInfo {
     memberId: string
     userInfo?: BackendResource // this field is calculated at frontend
     review?: ReviewInfo
+    reviewInfos?: ReviewInfo[]
     reviews?: ReviewResult[]
+    /**
+     * Backend review type identifier (e.g. 'Post-Mortem Review').
+     */
+    reviewTypeId?: string
     /**
      * Aggregated final score from review summations when available.
      */
     aggregateScore?: number
+    /**
+     * Indicates whether the latest review summation meets the passing threshold.
+     */
+    isPassingReview?: boolean
     /**
      * The date/time when the submission was created.
      */
@@ -82,7 +91,11 @@ export function convertBackendSubmissionToSubmissionInfo(
             .local()
             .format(TABLE_DATE_FORMAT)
         : undefined
-    const aggregateScoreRaw = data.reviewSummation?.[0]?.aggregateScore
+    const reviewSummations = Array.isArray(data.reviewSummation) ? data.reviewSummation : []
+    const preferredSummation = reviewSummations.find(
+        entry => entry?.isFinal === true,
+    ) ?? reviewSummations[0]
+    const aggregateScoreRaw = preferredSummation?.aggregateScore
     const aggregateScoreParsed = typeof aggregateScoreRaw === 'number'
         ? aggregateScoreRaw
         : typeof aggregateScoreRaw === 'string'
@@ -92,17 +105,26 @@ export function convertBackendSubmissionToSubmissionInfo(
         && Number.isFinite(aggregateScoreParsed)
         ? aggregateScoreParsed
         : undefined
+    const isPassingReviewRaw = preferredSummation?.isPassing
+    const isPassingReview = typeof isPassingReviewRaw === 'boolean'
+        ? isPassingReviewRaw
+        : undefined
+    const reviewEntries = Array.isArray(data.review) ? data.review : []
+    const reviewInfos = reviewEntries.map(convertBackendReviewToReviewInfo)
+    const reviewResults = reviewEntries.map(convertBackendReviewToReviewResult)
+    const primaryReviewInfo = reviewInfos[0]
+    const primaryReview = reviewEntries[0]
 
     return {
         aggregateScore,
         id: data.id,
         isLatest: data.isLatest,
+        isPassingReview,
         memberId: data.memberId,
-        review:
-            data.review && data.review[0]
-                ? convertBackendReviewToReviewInfo(data.review[0])
-                : undefined,
-        reviews: data.review.map(convertBackendReviewToReviewResult),
+        review: primaryReviewInfo,
+        reviewInfos,
+        reviews: reviewResults,
+        reviewTypeId: primaryReview?.typeId ?? undefined,
         submittedDate,
         submittedDateString,
         type: data.type,

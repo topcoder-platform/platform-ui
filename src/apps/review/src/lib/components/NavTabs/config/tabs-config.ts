@@ -3,7 +3,7 @@ import _ from 'lodash'
 import { EnvironmentConfig } from '~/config'
 import { TabsNavItem } from '~/libs/ui'
 import {
-    activeReviewAssigmentsRouteId,
+    activeReviewAssignmentsRouteId,
     openOpportunitiesRouteId,
     pastReviewAssignmentsRouteId,
     scorecardRouteId,
@@ -13,7 +13,7 @@ export function getTabsConfig(userRoles: string[], isAnonymous: boolean): TabsNa
 
     const tabs: TabsNavItem[] = [
         ...(!isAnonymous ? [{
-            id: activeReviewAssigmentsRouteId,
+            id: activeReviewAssignmentsRouteId,
             title: 'Active Challenges',
         }, {
             id: pastReviewAssignmentsRouteId,

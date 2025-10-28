@@ -4,7 +4,7 @@
 import { EnvironmentConfig } from '~/config'
 import { xhrGetAsync } from '~/libs/core'
 
-const paymentsBaseUrlV6 = `${EnvironmentConfig.API.V6}`
+const financeApiBaseUrl = `${EnvironmentConfig.TC_FINANCE_API}`
 const memberApiBaseUrl = `${EnvironmentConfig.API.V6}/members`
 
 export interface PaymentDetailDto {
@@ -38,7 +38,7 @@ export interface WinningsSearchResponse {
  * Fetch winnings (payments) by challenge externalId.
  */
 export async function fetchWinningsByExternalId(challengeId: string): Promise<WinningDetailDto[]> {
-    const url = `${paymentsBaseUrlV6}/payments/challenges/${challengeId}`
+    const url = `${financeApiBaseUrl}/challenge-payments/${challengeId}`
     const response = await xhrGetAsync<{ winnings: WinningDetailDto[] }>(url)
     return response.winnings || []
 }

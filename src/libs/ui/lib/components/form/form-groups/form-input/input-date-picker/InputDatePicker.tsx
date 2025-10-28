@@ -31,6 +31,10 @@ interface InputDatePickerProps {
     readonly placeholder?: string
     readonly showMonthPicker?: boolean
     readonly showYearPicker?: boolean
+    readonly showTimeSelect?: boolean
+    readonly timeIntervals?: number
+    readonly timeCaption?: string
+    readonly timeFormat?: string
     readonly isClearable?: boolean
     readonly tabIndex?: number
     readonly classNameWrapper?: string
@@ -83,6 +87,7 @@ const InputDatePicker: FC<InputDatePickerProps> = (props: InputDatePickerProps) 
     }, [props.maxDate, props.minYear])
 
     const [stateHasFocus, setStateHasFocus] = useState(false)
+    const effectiveDateFormat = props.dateFormat ?? (props.showTimeSelect ? 'MMM d, yyyy h:mm aa' : undefined)
 
     function renderCustomHeader({
         date,
@@ -160,21 +165,23 @@ const InputDatePicker: FC<InputDatePickerProps> = (props: InputDatePickerProps) 
                     event?.preventDefault()
                     props.onChange?.(date)
 
-                    // re-focus on date input field after select date
-                    const calendarPortal = document.getElementById('react-date-portal')
-                    if (calendarPortal) {
-                        calendarPortal.style.display = 'none'
-                    }
+                    if (!props.showTimeSelect) {
+                        // re-focus on date input field after select date when closing the calendar
+                        const calendarPortal = document.getElementById('react-date-portal')
+                        if (calendarPortal) {
+                            calendarPortal.style.display = 'none'
+                        }
 
-                    setTimeout(() => {
-                        datePickerRef.current?.setFocus()
                         setTimeout(() => {
-                            datePickerRef.current?.setOpen(false, true)
-                            if (calendarPortal) {
-                                calendarPortal.style.display = ''
-                            }
+                            datePickerRef.current?.setFocus()
+                            setTimeout(() => {
+                                datePickerRef.current?.setOpen(false, true)
+                                if (calendarPortal) {
+                                    calendarPortal.style.display = ''
+                                }
+                            })
                         })
-                    })
+                    }
                 }}
                 placeholderText={props.placeholder || 'Select a date'}
                 className={styles.datePickerWrapper}
@@ -183,7 +190,11 @@ const InputDatePicker: FC<InputDatePickerProps> = (props: InputDatePickerProps) 
                 minTime={props.minTime}
                 maxTime={props.maxTime}
                 showYearPicker={props.showYearPicker}
-                dateFormat={props.dateFormat}
+                showTimeSelect={props.showTimeSelect}
+                timeIntervals={props.timeIntervals}
+                timeCaption={props.timeCaption}
+                timeFormat={props.timeFormat}
+                dateFormat={effectiveDateFormat}
                 popperPlacement='bottom'
                 portalId='react-date-portal'
                 onFocus={() => setStateHasFocus(true)}

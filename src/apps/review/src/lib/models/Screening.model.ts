@@ -14,6 +14,7 @@ export interface Screening {
     createdAtString?: string // this field is calculated at frontend
     screenerId?: string
     screener?: BackendResource // this field is calculated at frontend
+    checkpointReviewer?: BackendResource // optional dedicated checkpoint reviewer handle
     score: string
     result: ScreeningResult
     memberId: string
@@ -37,6 +38,10 @@ export interface Screening {
      */
     myReviewStatus?: string
     /**
+     * Overall review status for the associated scorecard.
+     */
+    reviewStatus?: string
+    /**
      * Indicates whether this submission is the latest for the member.
      */
     isLatest?: boolean
@@ -44,6 +49,10 @@ export interface Screening {
      * The review id associated with this screening entry (if available).
      */
     reviewId?: string
+    /**
+     * The phase identifier associated with the linked review (if available).
+     */
+    reviewPhaseId?: string
     /**
      * Submission type (e.g. CONTEST_SUBMISSION, CHECKPOINT_SUBMISSION).
      */
@@ -67,8 +76,12 @@ export function convertBackendSubmissionToScreening(
         : undefined
 
     let result: ScreeningResult = '-'
+    const status = (data.status ?? '')
+        .toString()
+        .toUpperCase()
+
     // update screening result base on the submission status
-    if (data.status.toString() === 'FAILED_SCREENING') {
+    if (status === 'FAILED_SCREENING' || status === 'FAILED_CHECKPOINT_SCREENING') {
         result = 'NO PASS'
     } else if (!!data.screeningScore) {
         result = 'PASS'

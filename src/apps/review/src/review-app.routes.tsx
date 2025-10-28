@@ -11,7 +11,7 @@ import {
 } from '~/libs/core'
 
 import {
-    activeReviewAssigmentsRouteId,
+    activeReviewAssignmentsRouteId,
     challengeDetailRouteId,
     pastChallengeDetailContainerRouteId,
     pastReviewAssignmentsRouteId,
@@ -67,7 +67,7 @@ const EditScorecardPage: LazyLoadedComponent = lazyLoad(
 )
 
 const activeChallengeDetailsRewriteTarget: string
-    = `${rootRoute || ''}/${activeReviewAssigmentsRouteId}/:challengeId/challenge-details`
+    = `${rootRoute || ''}/${activeReviewAssignmentsRouteId}/:challengeId/challenge-details`
 
 export const toolTitle: string = ToolTitle.review
 
@@ -77,7 +77,7 @@ export const reviewRoutes: ReadonlyArray<PlatformRoute> = [
         children: [
             {
                 authRequired: true,
-                element: <Rewrite to={activeReviewAssigmentsRouteId} />,
+                element: <Rewrite to={activeReviewAssignmentsRouteId} />,
                 route: '',
             },
             // Legacy redirect: /review/challenges/:challengeId
@@ -131,8 +131,8 @@ export const reviewRoutes: ReadonlyArray<PlatformRoute> = [
                     },
                 ],
                 element: <ActiveReviewAssigments />,
-                id: activeReviewAssigmentsRouteId,
-                route: activeReviewAssigmentsRouteId,
+                id: activeReviewAssignmentsRouteId,
+                route: activeReviewAssignmentsRouteId,
             },
             // Past Challenges Module
             {

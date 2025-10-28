@@ -33,7 +33,7 @@
     "@types/codemirror": "5.60.15",
     "amazon-s3-uri": "^0.1.1",
     "apexcharts": "^3.36.0",
-    "axios": "^1.7.9",
+    "axios": "^1.12.0",
     "browser-cookies": "^1.2.0",
     "city-timezones": "^1.2.1",
     "classnames": "^2.3.2",
