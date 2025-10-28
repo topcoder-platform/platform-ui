@@ -71,6 +71,18 @@ export const TabContentScreening: FC<Props> = (props: Props) => {
     const filteredScreening = useMemo<Screening[]>(
         () => {
             const baseRows = props.screening ?? []
+            // Defensive filtering: exclude any entries that don't belong to Screening phase
+            const phaseValidatedRows = baseRows.filter(row => {
+                if (!row.reviewId) {
+                    return true
+                }
+
+                const normalizedPhaseName = row.phaseName
+                    ?.toLowerCase()
+                    .trim()
+
+                return normalizedPhaseName === 'screening'
+            })
             const canSeeAll = isPrivilegedRole || hasReviewerRole
 
             if (isChallengeCompleted && !canSeeAll && !hasPassedScreeningThreshold) {
@@ -78,10 +90,10 @@ export const TabContentScreening: FC<Props> = (props: Props) => {
             }
 
             if (canSeeAll || (isChallengeCompleted && hasPassedScreeningThreshold)) {
-                return baseRows
+                return phaseValidatedRows
             }
 
-            return baseRows.filter(row => {
+            return phaseValidatedRows.filter(row => {
                 if (row.myReviewResourceId
                     && (screenerResourceIds.has(row.myReviewResourceId)
                         || reviewerResourceIds.has(row.myReviewResourceId))) {
