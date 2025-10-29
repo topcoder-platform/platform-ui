@@ -210,7 +210,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                                                 <>
                                                     <MinusCircleIcon className='icon icon-xl' />
                                                     {' '}
-                                                    Passed
+                                                    Failed
                                                 </>
                                             )}
                                     </div>
