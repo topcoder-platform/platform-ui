@@ -343,7 +343,9 @@ export const TabContentSubmissions: FC<Props> = props => {
                     type: 'element',
                 },
                 ...(!props.aiReviewers?.length ? [] : [{
+                    className: styles.aiReviewerRow,
                     label: 'Reviewer',
+                    mobileColSpan: 2,
                     propertyName: 'submittedDate',
                     renderer: (submission: BackendSubmission) => (
                         <CollapsibleAiReviewsRow
@@ -418,6 +420,7 @@ export const TabContentSubmissions: FC<Props> = props => {
                 },
                 {
                     ...column,
+                    colSpan: column.mobileColSpan,
                     mobileType: 'last-value',
                 },
             ] as MobileTableColumn<BackendSubmission>[],

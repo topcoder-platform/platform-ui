@@ -1,4 +1,5 @@
 import { FC, useCallback, useState } from 'react'
+import classNames from 'classnames'
 
 import { IconOutline } from '~/libs/ui'
 
@@ -27,7 +28,7 @@ const CollapsibleAiReviewsRow: FC<CollapsibleAiReviewsRowProps> = props => {
                 {' '}
                 AI Reviewer
                 {aiReviewersCount === 1 ? '' : 's'}
-                <IconOutline.ChevronDownIcon className='icon-xl' />
+                <IconOutline.ChevronDownIcon className={classNames('icon-xl', isOpen && styles.rotated)} />
             </span>
             {isOpen && (
                 <div className={styles.table}>
