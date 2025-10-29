@@ -5,15 +5,27 @@ import { EnvironmentConfig } from '~/config'
 import { xhrGetAsync } from '~/libs/core'
 import { handleError } from '~/libs/shared/lib/utils/handle-error'
 
+export enum AiWorkflowRunStatus {
+    INIT = 'INIT',
+    QUEUED = 'QUEUED',
+    DISPATCHED = 'DISPATCHED',
+    IN_PROGRESS = 'IN_PROGRESS',
+    CANCELLED = 'CANCELLED',
+    FAILURE = 'FAILURE',
+    COMPLETED = 'COMPLETED',
+    SUCCESS = 'SUCCESS',
+}
+
 export interface AiWorkflowRun {
     id: string;
     completedAt: string;
-    status: string;
+    status: AiWorkflowRunStatus;
     score: number;
     workflow: {
         name: string;
         description: string;
-        scorecard: {
+        scorecard?: {
+            id: string;
             name: string;
             minimumPassingScore: number;
         }

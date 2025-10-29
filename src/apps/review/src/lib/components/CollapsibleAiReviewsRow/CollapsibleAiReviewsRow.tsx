@@ -4,16 +4,17 @@ import classNames from 'classnames'
 import { IconOutline } from '~/libs/ui'
 
 import { AiReviewsTable } from '../AiReviewsTable'
+import { BackendSubmission } from '../../models'
 
 import styles from './CollapsibleAiReviewsRow.module.scss'
 
 interface CollapsibleAiReviewsRowProps {
     aiReviewers: { aiWorkflowId: string }[]
-    submissionId: string
+    submission: BackendSubmission
 }
 
 const CollapsibleAiReviewsRow: FC<CollapsibleAiReviewsRowProps> = props => {
-    const aiReviewersCount = props.aiReviewers.length
+    const aiReviewersCount = props.aiReviewers.length + 1
 
     const [isOpen, setIsOpen] = useState(false)
 
@@ -34,7 +35,7 @@ const CollapsibleAiReviewsRow: FC<CollapsibleAiReviewsRowProps> = props => {
                 <div className={styles.table}>
                     <AiReviewsTable
                         reviewers={props.aiReviewers}
-                        submissionId={props.submissionId}
+                        submission={props.submission}
                     />
                 </div>
             )}

@@ -319,42 +319,18 @@ export const TabContentSubmissions: FC<Props> = props => {
                     type: 'element',
                 },
                 {
-                    label: 'Virus Scan',
-                    propertyName: 'virusScan',
-                    renderer: (submission: BackendSubmission) => {
-                        if (submission.virusScan === true) {
-                            return (
-                                <span className={styles.virusOkIcon} title='Scan passed' aria-label='Scan passed'>
-                                    <IconOutline.CheckCircleIcon />
-                                </span>
-                            )
-                        }
-
-                        if (submission.virusScan === false) {
-                            return (
-                                <span className={styles.virusWarnIcon} title='Scan failed' aria-label='Scan failed'>
-                                    <IconOutline.ExclamationIcon />
-                                </span>
-                            )
-                        }
-
-                        return <span>-</span>
-                    },
-                    type: 'element',
-                },
-                ...(!props.aiReviewers?.length ? [] : [{
                     className: styles.aiReviewerRow,
                     label: 'Reviewer',
                     mobileColSpan: 2,
-                    propertyName: 'submittedDate',
+                    propertyName: 'virusScan',
                     renderer: (submission: BackendSubmission) => (
                         <CollapsibleAiReviewsRow
                             aiReviewers={props.aiReviewers!}
-                            submissionId={submission.id}
+                            submission={submission}
                         />
                     ),
                     type: 'element',
-                } as TableColumn<BackendSubmission>]),
+                },
             ]
 
             if (shouldShowHistoryActions) {

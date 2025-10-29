@@ -100,6 +100,8 @@ export const SubmissionHistoryModal: FC<SubmissionHistoryModalProps> = (props: S
         [props.submissions],
     )
 
+    const aiReviewersCount = useMemo(() => (props.aiReviewers?.length ?? 0) + 1, [props.aiReviewers]);
+
     const [toggledRows, setToggledRows] = useState(new Set<string>())
 
     const resolvedMemberInfo = useMemo(() => {
@@ -256,30 +258,15 @@ export const SubmissionHistoryModal: FC<SubmissionHistoryModalProps> = (props: S
                     <td className={styles.cellDate}>
                         {submittedDisplay}
                     </td>
-                    <td className={styles.cellVirusScan}>
-                        {resolvedVirusScan === true ? (
-                            <span className={styles.virusOkIcon} title='Scan passed' aria-label='Scan passed'>
-                                <IconOutline.CheckCircleIcon />
-                            </span>
-                        ) : resolvedVirusScan === false ? (
-                            <span className={styles.virusWarnIcon} title='Scan failed' aria-label='Scan failed'>
-                                <IconOutline.ExclamationIcon />
-                            </span>
-                        ) : (
-                            <span>-</span>
-                        )}
+                    <td className={styles.aiReviewers}>
+                        <span className={styles.reviewersDropown} onClick={toggle}>
+                            {aiReviewersCount}
+                            {' '}
+                            AI Reviewer
+                            {aiReviewersCount === 1 ? '' : 's'}
+                            <IconOutline.ChevronDownIcon className='icon-xl' />
+                        </span>
                     </td>
-                    {!!props.aiReviewers?.length && (
-                        <td className={styles.aiReviewers}>
-                            <span className={styles.reviewersDropown} onClick={toggle}>
-                                {props.aiReviewers.length}
-                                {' '}
-                                AI Reviewer
-                                {props.aiReviewers.length === 1 ? '' : 's'}
-                                <IconOutline.ChevronDownIcon className='icon-xl' />
-                            </span>
-                        </td>
-                    )}
                 </tr>
                 {toggledRows.has(submission.id) && (
                     <tr>
@@ -287,7 +274,7 @@ export const SubmissionHistoryModal: FC<SubmissionHistoryModalProps> = (props: S
                             <div className={styles.aiReviewersTable}>
                                 <AiReviewsTable
                                     reviewers={props.aiReviewers!}
-                                    submissionId={submission.id}
+                                    submission={submission}
                                 />
                             </div>
                         </td>
@@ -321,7 +308,6 @@ export const SubmissionHistoryModal: FC<SubmissionHistoryModalProps> = (props: S
                             <tr>
                                 <th className={styles.cellSubmission}>Submission ID</th>
                                 <th className={styles.cellDate}>Submitted</th>
-                                <th className={styles.cellVirusScan}>Virus Scan</th>
                                 <th className={styles.cellVirusScan}>Reviewer</th>
                             </tr>
                         </thead>
