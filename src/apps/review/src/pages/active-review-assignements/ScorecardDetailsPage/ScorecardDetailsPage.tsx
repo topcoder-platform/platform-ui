@@ -159,7 +159,11 @@ const PHASE_ROLE_MATCHERS: Partial<Record<ReviewPhaseType, RoleMatcher>> = {
     'checkpoint review': normalizedRoleName => normalizedRoleName === 'checkpointreviewer',
     'checkpoint screening': normalizedRoleName => normalizedRoleName === 'checkpointscreener',
     'post-mortem': normalizedRoleName => normalizedRoleName.includes('postmortem'),
-    review: normalizedRoleName => normalizedRoleName === 'reviewer',
+    review: normalizedRoleName => (
+        normalizedRoleName.includes('reviewer')
+        && !normalizedRoleName.includes('checkpoint')
+        && !normalizedRoleName.includes('postmortem')
+    ),
     screening: normalizedRoleName => (
         (
             normalizedRoleName.includes('screener')
@@ -228,7 +232,11 @@ const canRoleEditPhase = (
     currentPhaseReviewType: ReviewPhaseType | undefined,
     normalizedRoleName: string,
 ): boolean => {
-    if (!reviewPhaseType || currentPhaseReviewType !== reviewPhaseType) {
+    if (!reviewPhaseType) {
+        return false
+    }
+
+    if (currentPhaseReviewType && currentPhaseReviewType !== reviewPhaseType) {
         return false
     }
 
