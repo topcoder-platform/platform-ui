@@ -1275,12 +1275,19 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
             return undefined
         }
 
+        const hasMyIterativeReviewAssignments = (datas || []).some(entry => {
+            const resourceId = entry.review?.resourceId
+            return resourceId ? myResourceIds.has(resourceId) : false
+        })
+
         const hasCompletedIterativeReviews = (datas || []).some(d => (
             ['COMPLETED', 'SUBMITTED'].includes((d.review?.status || '').toString()
                 .toUpperCase())
         ))
 
-        const allowColumn = isReviewPhase(challengeInfo) || (isFirst2Finish && hasCompletedIterativeReviews)
+        const allowColumn = isReviewPhase(challengeInfo)
+            || hasMyIterativeReviewAssignments
+            || (isFirst2Finish && hasCompletedIterativeReviews)
         if (!allowColumn) {
             return undefined
         }
@@ -1307,6 +1314,7 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
         renderApprovalAction,
         renderIterativeAction,
         renderPostMortemAction,
+        myResourceIds,
     ])
 
     const columns = useMemo<TableColumn<SubmissionInfo>[]>(() => {
