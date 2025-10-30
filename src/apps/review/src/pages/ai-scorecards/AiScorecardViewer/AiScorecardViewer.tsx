@@ -1,21 +1,19 @@
 import { FC, useEffect, useMemo } from 'react'
 
-import styles from './AiScorecardViewer.module.scss'
-import { ScorecardHeader } from '../components/ScorecardHeader'
 import { NotificationContextType, useNotification } from '~/libs/shared'
+
+import { ScorecardHeader } from '../components/ScorecardHeader'
 import { IconAiReview } from '../../../lib/assets/icons'
 import { PageWrapper } from '../../../lib'
 import { useAiScorecardContext } from '../AiScorecardContext'
 import { AiScorecardContextModel } from '../../../lib/models'
 import { AiWorkflowsSidebar } from '../components/AiWorkflowsSidebar'
 
-interface AiScorecardViewerProps {
-}
+import styles from './AiScorecardViewer.module.scss'
 
-const AiScorecardViewer: FC<AiScorecardViewerProps> = props => {
-
+const AiScorecardViewer: FC = () => {
     const { showBannerNotification, removeNotification }: NotificationContextType = useNotification()
-    const { challengeInfo, workflowRuns }: AiScorecardContextModel = useAiScorecardContext()
+    const { challengeInfo }: AiScorecardContextModel = useAiScorecardContext()
 
     const breadCrumb = useMemo(
         () => [{ index: 1, label: 'My Active Challenges' }],

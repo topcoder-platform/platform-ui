@@ -1,8 +1,8 @@
-import { getRoutesContainer, lazyLoad, LazyLoadedComponent } from '~/libs/core';
+import { getRoutesContainer, lazyLoad, LazyLoadedComponent } from '~/libs/core'
 
-import { activeReviewAssignmentsRouteId, challengeDetailRouteId } from '../../config/routes.config';
+import { activeReviewAssignmentsRouteId } from '../../config/routes.config'
 
-import { challengeDetailsRoutes } from './challenge-details.routes';
+import { challengeDetailsRoutes } from './challenge-details.routes'
 
 const ActiveReviewsPage: LazyLoadedComponent = lazyLoad(
     () => import('./ActiveReviewsPage'),
@@ -17,13 +17,13 @@ export const activeReviewChildRoutes = [
         route: '',
     },
     ...challengeDetailsRoutes,
-];
+]
 
 export const activeReviewRoutes = [
     {
-        children: [ ...activeReviewChildRoutes ],
+        children: [...activeReviewChildRoutes],
         element: getRoutesContainer(activeReviewChildRoutes),
         id: activeReviewAssignmentsRouteId,
         route: activeReviewAssignmentsRouteId,
-    }
+    },
 ]

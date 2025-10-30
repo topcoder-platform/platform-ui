@@ -1,30 +1,38 @@
-import { FC, useCallback, useMemo, useState } from 'react'
+import { FC, useCallback, useState } from 'react'
+import { Link } from 'react-router-dom'
+import classNames from 'classnames'
 
-import styles from './AiWorkflowsSidebar.module.scss'
-import { useAiScorecardContext } from '../../AiScorecardContext'
 import { AiScorecardContextModel } from '~/apps/review/src/lib/models'
 import { AiWorkflowRunStatus } from '~/apps/review/src/lib/components/AiReviewsTable'
-import classNames from 'classnames'
 import { IconAiReview } from '~/apps/review/src/lib/assets/icons'
-import StatusLabel from '~/apps/review/src/lib/components/AiReviewsTable/StatusLabel'
 import { IconOutline, IconSolid } from '~/libs/ui'
-import { Link } from 'react-router-dom'
+import StatusLabel from '~/apps/review/src/lib/components/AiReviewsTable/StatusLabel'
+
+import { useAiScorecardContext } from '../../AiScorecardContext'
+
+import styles from './AiWorkflowsSidebar.module.scss'
 
 interface AiWorkflowsSidebarProps {
     className?: string
 }
 
 const AiWorkflowsSidebar: FC<AiWorkflowsSidebarProps> = props => {
-    const [isMobileOpen, setIsMobileOpen] = useState(false);
-    const { workflow, workflowRun, workflowRuns, workflowId, submissionId }: AiScorecardContextModel = useAiScorecardContext()
+    const [isMobileOpen, setIsMobileOpen] = useState(false)
+    const {
+        workflow,
+        workflowRun,
+        workflowRuns,
+        workflowId,
+        submissionId,
+    }: AiScorecardContextModel = useAiScorecardContext()
 
     const toggleOpen = useCallback(() => {
-      setIsMobileOpen(wasOpen => !wasOpen);
-    }, []);
+        setIsMobileOpen(wasOpen => !wasOpen)
+    }, [])
 
     const close = useCallback(() => {
-      setIsMobileOpen(false);
-    }, []);
+        setIsMobileOpen(false)
+    }, [])
 
     return (
         <div className={classNames(props.className, styles.wrap)}>
@@ -49,14 +57,25 @@ const AiWorkflowsSidebar: FC<AiWorkflowsSidebarProps> = props => {
                 </div>
                 <div className={styles.runsWrap}>
                     <ul>
-                        {workflowRuns.map(workflowRun => (
-                            <li className={classNames(styles.runEntry, workflowId === workflowRun.workflow.id && styles.active)} key={workflowRun.id}>
-                                <Link to={`../ai-scorecard/${submissionId}/${workflowRun.workflow.id}`} onClick={close} />
+                        {workflowRuns.map(run => (
+                            <li
+                                className={
+                                    classNames(
+                                        styles.runEntry,
+                                        workflowId === run.workflow.id && styles.active,
+                                    )
+                                }
+                                key={run.id}
+                            >
+                                <Link
+                                    to={`../ai-scorecard/${submissionId}/${run.workflow.id}`}
+                                    onClick={close}
+                                />
                                 <span className={styles.workflowNameWrap}>
                                     <IconAiReview />
-                                    <span className={styles.workflowName}>{workflowRun.workflow.name}</span>
+                                    <span className={styles.workflowName}>{run.workflow.name}</span>
                                 </span>
-                                <AiWorkflowRunStatus run={workflowRun} showScore hideLabel />
+                                <AiWorkflowRunStatus run={run} showScore hideLabel />
                             </li>
                         ))}
                     </ul>
@@ -68,13 +87,25 @@ const AiWorkflowsSidebar: FC<AiWorkflowsSidebarProps> = props => {
                     </div>
                     <ul>
                         <li>
-                            <StatusLabel icon={<IconOutline.CheckIcon className='icon-xl' />} label='Passed' status="passed" />
+                            <StatusLabel
+                                icon={<IconOutline.CheckIcon className='icon-xl' />}
+                                label='Passed'
+                                status='passed'
+                            />
                         </li>
                         <li>
-                            <StatusLabel icon={<IconOutline.MinusCircleIcon className='icon-xl' />} label='Failed' status="failed" />
+                            <StatusLabel
+                                icon={<IconOutline.MinusCircleIcon className='icon-xl' />}
+                                label='Failed'
+                                status='failed'
+                            />
                         </li>
                         <li>
-                            <StatusLabel icon={<IconOutline.MinusIcon className='icon-md' />} label='To be filled' status="pending" />
+                            <StatusLabel
+                                icon={<IconOutline.MinusIcon className='icon-md' />}
+                                label='To be filled'
+                                status='pending'
+                            />
                         </li>
                     </ul>
                 </div>

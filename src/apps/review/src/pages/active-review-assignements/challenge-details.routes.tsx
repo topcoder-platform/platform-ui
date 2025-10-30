@@ -1,11 +1,11 @@
-import { getRoutesContainer, lazyLoad, LazyLoadedComponent } from '~/libs/core';
+import { getRoutesContainer, lazyLoad, LazyLoadedComponent } from '~/libs/core'
 
-import { challengeDetailRouteId } from '../../config/routes.config';
-import { aiScorecardRoutes } from '../ai-scorecards';
+import { challengeDetailRouteId } from '../../config/routes.config'
+import { aiScorecardRoutes } from '../ai-scorecards'
 
 const ChallengeDetailContextProvider: LazyLoadedComponent = lazyLoad(
     () => import('../../lib/contexts/ChallengeDetailContextProvider'),
-    'ChallengeDetailContextProvider'
+    'ChallengeDetailContextProvider',
 )
 const ScorecardDetailsPage: LazyLoadedComponent = lazyLoad(
     () => import('./ScorecardDetailsPage'),
@@ -38,5 +38,5 @@ export const challengeDetailsRoutes = [
         element: getRoutesContainer(challengeDetailsChildRoutes, ChallengeDetailContextProvider),
         id: challengeDetailRouteId,
         route: challengeDetailRouteId,
-    }
+    },
 ]

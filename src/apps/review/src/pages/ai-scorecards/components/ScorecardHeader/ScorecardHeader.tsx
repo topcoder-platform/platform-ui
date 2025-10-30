@@ -1,14 +1,13 @@
 import { FC } from 'react'
 
-import styles from './ScorecardHeader.module.scss'
-import { useAiScorecardContext } from '../../AiScorecardContext'
 import { AiScorecardContextModel } from '~/apps/review/src/lib/models'
 
-interface ScorecardHeaderProps {
-}
+import { useAiScorecardContext } from '../../AiScorecardContext'
 
-const ScorecardHeader: FC<ScorecardHeaderProps> = props => {
-    const { workflow, scorecard }: AiScorecardContextModel = useAiScorecardContext()
+import styles from './ScorecardHeader.module.scss'
+
+const ScorecardHeader: FC = () => {
+    const { workflow }: AiScorecardContextModel = useAiScorecardContext()
 
     return (
         <div className={styles.wrap}>

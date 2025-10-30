@@ -1,4 +1,5 @@
 import { getRoutesContainer, lazyLoad, LazyLoadedComponent, PlatformRoute, UserRole } from '~/libs/core'
+
 import { scorecardRouteId } from '../../config/routes.config'
 
 const ScorecardsListPage: LazyLoadedComponent = lazyLoad(
@@ -61,5 +62,5 @@ export const scorecardRoutes: ReadonlyArray<PlatformRoute> = [
             UserRole.administrator,
         ],
         route: scorecardRouteId,
-    }
+    },
 ]

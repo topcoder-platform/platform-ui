@@ -6,7 +6,6 @@ import { useParams } from 'react-router-dom'
 
 import { ChallengeDetailContext } from '../../../lib'
 import { AiScorecardContextModel, ChallengeDetailContextModel } from '../../../lib/models'
-
 import { AiWorkflowRunsResponse, useFetchAiWorkflowsRuns } from '../../../lib/hooks'
 
 export const AiScorecardContext: Context<AiScorecardContextModel>
@@ -22,42 +21,48 @@ export const AiScorecardContextProvider: FC<PropsWithChildren> = props => {
     }>()
 
     const challengeDetailsCtx = useContext(ChallengeDetailContext)
-    const { challengeInfo }: ChallengeDetailContextModel = challengeDetailsCtx;
-    const aiReviewers = useMemo(() => (challengeInfo?.reviewers ?? []).filter(r => !!r.aiWorkflowId), [challengeInfo?.reviewers])
+    const { challengeInfo }: ChallengeDetailContextModel = challengeDetailsCtx
+    const aiReviewers = useMemo(() => (
+        (challengeInfo?.reviewers ?? []).filter(r => !!r.aiWorkflowId)
+    ), [challengeInfo?.reviewers])
     const aiWorkflowIds = useMemo(() => aiReviewers?.map(r => r.aiWorkflowId as string), [aiReviewers])
 
-    const { runs: workflowRuns, isLoading: aiWorkflowRunsLoading }: AiWorkflowRunsResponse = useFetchAiWorkflowsRuns(submissionId, aiWorkflowIds)
+    const { runs: workflowRuns, isLoading: aiWorkflowRunsLoading }: AiWorkflowRunsResponse
+        = useFetchAiWorkflowsRuns(submissionId, aiWorkflowIds)
 
-    const isLoadingCtxData =
-        challengeDetailsCtx.isLoadingChallengeInfo &&
-        challengeDetailsCtx.isLoadingChallengeResources &&
-        challengeDetailsCtx.isLoadingChallengeSubmissions &&
-        aiWorkflowRunsLoading
+    const isLoadingCtxData
+        = challengeDetailsCtx.isLoadingChallengeInfo
+        && challengeDetailsCtx.isLoadingChallengeResources
+        && challengeDetailsCtx.isLoadingChallengeSubmissions
+        && aiWorkflowRunsLoading
 
-    const workflowRun = useMemo(() => workflowRuns.find(w => w.workflow.id === workflowId), [workflowRuns, workflowId])
+    const workflowRun = useMemo(
+        () => workflowRuns.find(w => w.workflow.id === workflowId),
+        [workflowRuns, workflowId],
+    )
     const workflow = useMemo(() => workflowRun?.workflow, [workflowRuns, workflowId])
     const scorecard = useMemo(() => workflow?.scorecard, [workflow])
 
     const value = useMemo<AiScorecardContextModel>(
         () => ({
             ...challengeDetailsCtx,
-            submissionId,
-            workflowId,
-            workflowRuns,
-            workflowRun,
-            workflow,
-            scorecard,
             isLoading: isLoadingCtxData,
+            scorecard,
+            submissionId,
+            workflow,
+            workflowId,
+            workflowRun,
+            workflowRuns,
         }),
         [
             challengeDetailsCtx,
-            submissionId,
-            workflowId,
-            workflowRuns,
-            workflowRun,
             isLoadingCtxData,
-            workflow,
             scorecard,
+            submissionId,
+            workflow,
+            workflowId,
+            workflowRun,
+            workflowRuns,
         ],
     )
 
@@ -68,4 +73,4 @@ export const AiScorecardContextProvider: FC<PropsWithChildren> = props => {
     )
 }
 
-export const useAiScorecardContext = () => useContext(AiScorecardContext)
+export const useAiScorecardContext = (): AiScorecardContextModel => useContext(AiScorecardContext)

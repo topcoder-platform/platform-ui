@@ -5,8 +5,9 @@ import { EnvironmentConfig } from '~/config'
 import { xhrGetAsync } from '~/libs/core'
 import { handleError } from '~/libs/shared/lib/utils/handle-error'
 
-import { useRolePermissions, UseRolePermissionsResult } from './useRolePermissions'
 import { Scorecard } from '../models'
+
+import { useRolePermissions, UseRolePermissionsResult } from './useRolePermissions'
 
 export enum AiWorkflowRunStatusEnum {
     INIT = 'INIT',

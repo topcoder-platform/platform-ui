@@ -22,7 +22,6 @@ interface AiReviewsTableProps {
     reviewers: { aiWorkflowId: string }[]
 }
 
-
 const AiReviewsTable: FC<AiReviewsTableProps> = props => {
     const aiWorkflowIds = useMemo(() => props.reviewers.map(r => r.aiWorkflowId), [props.reviewers])
     const { runs, isLoading }: AiWorkflowRunsResponse = useFetchAiWorkflowsRuns(props.submission.id, aiWorkflowIds)

@@ -14,7 +14,6 @@ import {
     rootRoute,
 } from './config/routes.config'
 import { scorecardRoutes } from './pages/scorecards'
-import { aiScorecardRoutes } from './pages/ai-scorecards'
 import { activeReviewRoutes } from './pages/active-review-assignements'
 import { pastReviewRoutes } from './pages/past-review-assignments'
 

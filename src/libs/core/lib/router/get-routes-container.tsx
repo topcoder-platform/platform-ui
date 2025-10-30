@@ -2,7 +2,7 @@
  * The router outlet.
  */
 
-import { FC, Fragment, PropsWithChildren, useContext, useEffect, useMemo } from 'react'
+import { FC, Fragment, useContext, useEffect, useMemo } from 'react'
 import { Outlet, Routes, useLocation } from 'react-router-dom'
 
 import { PlatformRoute } from './platform-route.model'
@@ -10,7 +10,7 @@ import { routerContext, RouterContextData } from './router-context'
 
 export function getRoutesContainer(childRoutes: ReadonlyArray<PlatformRoute>, contextContainer?: FC): JSX.Element {
     const ContextContainer = contextContainer ?? Fragment
-    const Container = () => {
+    const Container = (): JSX.Element => {
         const location = useLocation()
         const { getRouteElement }: RouterContextData = useContext(routerContext)
         const childRoutesWithContext = useMemo(
