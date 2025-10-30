@@ -5,7 +5,7 @@ import { getWalletDetails } from '../services/wallet'
 
 export interface Response<T> {
     data?: Readonly<T>
-    error?: Readonly<string>
+    error?: Readonly<Error> | string
     mutate: KeyedMutator<any>
     isLoading?: Readonly<boolean>
 }

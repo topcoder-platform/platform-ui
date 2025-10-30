@@ -1,10 +1,9 @@
 /* eslint-disable react/jsx-wrap-multilines */
-import { FC, useEffect, useState } from 'react'
+import { FC, useMemo } from 'react'
 
 import { UserProfile } from '~/libs/core'
 import { IconOutline, LinkButton, LoadingCircles } from '~/libs/ui'
 
-import { Balance } from '../../../lib/models/WalletDetails'
 import { InfoRow, PayoutGuard } from '../../../lib'
 import { BannerImage, BannerText } from '../../../lib/assets/home'
 import { nullToZero } from '../../../lib/util'
@@ -17,21 +16,136 @@ interface HomeTabProps {
     profile: UserProfile
 }
 
+type WalletDetailsData = NonNullable<WalletDetailsResponse['data']>
+interface WalletInfoRowsProps {
+    walletDetails: WalletDetailsData
+    profile: UserProfile
+    balanceSum: number
+}
+
+const WalletInfoRows: FC<WalletInfoRowsProps> = props => (
+    <div className={styles['info-row-container']}>
+        <InfoRow
+            title='Account Balance'
+            value={`$${props.balanceSum}`}
+            action={
+                <LinkButton
+                    label='MANAGE YOUR WINNINGS'
+                    iconToRight
+                    icon={IconOutline.ArrowRightIcon}
+                    size='md'
+                    link
+                    to='#winnings'
+                />
+            }
+        />
+
+        <PayoutGuard profile={props.profile}>
+            {props.walletDetails.withdrawalMethod.isSetupComplete && (
+                <InfoRow
+                    title='Est. Payment Fees'
+                    value={`$${nullToZero(props.walletDetails.estimatedFees)} USD`}
+                    action={
+                        <LinkButton
+                            label='ADJUST YOUR PAYOUT SETTINGS'
+                            iconToRight
+                            icon={IconOutline.ArrowRightIcon}
+                            size='md'
+                            link
+                            to='#payout'
+                        />
+                    }
+                />
+            )}
+            {props.walletDetails.taxForm.isSetupComplete && (
+                <InfoRow
+                    title='Est. Tax Withholding %'
+                    value={`${nullToZero(props.walletDetails.taxWithholdingPercentage)}%`}
+                    action={
+                        <LinkButton
+                            label='ADJUST YOUR PAYOUT SETTINGS'
+                            iconToRight
+                            icon={IconOutline.ArrowRightIcon}
+                            size='md'
+                            link
+                            to='#payout'
+                        />
+                    }
+                />
+            )}
+
+            {!props.walletDetails.withdrawalMethod.isSetupComplete && (
+                <InfoRow
+                    title='Withdrawal Method'
+                    value={<Chip text='Setup Required' />}
+                    action={
+                        <LinkButton
+                            label='SETUP WITHDRAWAL METHOD'
+                            iconToRight
+                            icon={IconOutline.ArrowRightIcon}
+                            size='md'
+                            link
+                            to='#payout'
+                        />
+                    }
+                />
+            )}
+
+            {!props.walletDetails.taxForm.isSetupComplete && (
+                <InfoRow
+                    title='Tax Form'
+                    value={<Chip text='Setup Required' />}
+                    action={
+                        <LinkButton
+                            label='COMPLETE TAX FORM'
+                            iconToRight
+                            icon={IconOutline.ArrowRightIcon}
+                            size='md'
+                            link
+                            to='#payout'
+                        />
+                    }
+                />
+            )}
+            {!props.walletDetails.identityVerification.isSetupComplete && (
+                <InfoRow
+                    title='ID Verification'
+                    value={<Chip text='Setup Required' />}
+                    action={
+                        <LinkButton
+                            label='COMPLETE VERIFICATION'
+                            iconToRight
+                            icon={IconOutline.ArrowRightIcon}
+                            size='md'
+                            link
+                            to='#payout'
+                        />
+                    }
+                />
+            )}
+        </PayoutGuard>
+    </div>
+)
+
 const HomeTab: FC<HomeTabProps> = props => {
 
     const { data: walletDetails, isLoading, error }: WalletDetailsResponse = useWalletDetails()
-    const [balanceSum, setBalanceSum] = useState(0)
 
-    useEffect(() => {
-        if (walletDetails) {
-            setBalanceSum(
-                walletDetails.account.balances.reduce((sum: number, balance: Balance) => sum + balance.amount, 0),
-            )
-        }
-    }, [walletDetails])
+    const balanceSum = useMemo(
+        () => (walletDetails ? walletDetails.account.balances.reduce((sum, balance) => sum + balance.amount, 0) : 0),
+        [walletDetails],
+    )
 
     if (error) {
-        return <div>{error}</div>
+        let errorMessage = 'Unable to load wallet details.'
+
+        if (typeof error === 'string') {
+            errorMessage = error
+        } else if (error && typeof error === 'object' && 'message' in error) {
+            errorMessage = (error as Error).message || errorMessage
+        }
+
+        return <div>{errorMessage}</div>
     }
 
     return (
@@ -42,117 +156,7 @@ const HomeTab: FC<HomeTabProps> = props => {
             </div>
             {isLoading && <LoadingCircles />}
             {!isLoading && walletDetails && (
-                <div className={styles['info-row-container']}>
-                    <InfoRow
-                        title='Account Balance'
-                        value={`$${balanceSum}`}
-                        action={
-                            <LinkButton
-                                label='MANAGE YOUR WINNINGS'
-                                iconToRight
-                                icon={IconOutline.ArrowRightIcon}
-                                size='md'
-                                link
-                                to='#winnings'
-                            />
-                        }
-                    />
-
-                    <PayoutGuard profile={props.profile}>
-                        {walletDetails.withdrawalMethod.isSetupComplete && (
-                            <InfoRow
-                                title='Est. Payment Fees'
-                                value={`$${nullToZero(walletDetails.estimatedFees)} USD`}
-                                action={
-                                    <LinkButton
-                                        label='ADJUST YOUR PAYOUT SETTINGS'
-                                        iconToRight
-                                        icon={IconOutline.ArrowRightIcon}
-                                        size='md'
-                                        link
-                                        to='#payout'
-                                    />
-                                }
-                            />
-                        )}
-                        {walletDetails.taxForm.isSetupComplete && (
-                            <InfoRow
-                                title='Est. Tax Withholding %'
-                                value={`${nullToZero(walletDetails.taxWithholdingPercentage)}%`}
-                                action={
-                                    <LinkButton
-                                        label='ADJUST YOUR PAYOUT SETTINGS'
-                                        iconToRight
-                                        icon={IconOutline.ArrowRightIcon}
-                                        size='md'
-                                        link
-                                        to='#payout'
-                                    />
-                                }
-                            />
-                        )}
-
-                        {!walletDetails?.withdrawalMethod.isSetupComplete && (
-                            <InfoRow
-                                title='Withdrawal Method'
-                                value={
-                                    walletDetails?.withdrawalMethod.isSetupComplete ? (
-                                        'Your preferred method'
-                                    ) : (
-                                        <Chip text='Setup Required' />
-                                    )
-                                }
-                                action={
-                                    <LinkButton
-                                        label='SETUP WITHDRAWAL METHOD'
-                                        iconToRight
-                                        icon={IconOutline.ArrowRightIcon}
-                                        size='md'
-                                        link
-                                        to='#payout'
-                                    />
-                                }
-                            />
-                        )}
-
-                        {!walletDetails?.taxForm.isSetupComplete && (
-                            <InfoRow
-                                title='Tax Form'
-                                value={
-                                    walletDetails?.taxForm.isSetupComplete
-                                        ? 'All set'
-                                        : <Chip text='Setup Required' />
-                                }
-                                action={
-                                    <LinkButton
-                                        label='COMPLETE TAX FORM'
-                                        iconToRight
-                                        icon={IconOutline.ArrowRightIcon}
-                                        size='md'
-                                        link
-                                        to='#payout'
-                                    />
-                                }
-                            />
-                        )}
-                        {!walletDetails?.identityVerification.isSetupComplete && (
-                            <InfoRow
-                                title='ID Verification'
-                                value={<Chip text='Setup Required' />}
-                                action={
-                                    <LinkButton
-                                        label='COMPLETE VERIFICATION'
-                                        iconToRight
-                                        icon={IconOutline.ArrowRightIcon}
-                                        size='md'
-                                        link
-                                        to='#payout'
-                                    />
-                                }
-                            />
-                        )}
-                    </PayoutGuard>
-                </div>
+                <WalletInfoRows walletDetails={walletDetails} profile={props.profile} balanceSum={balanceSum} />
             )}
         </div>
     )
