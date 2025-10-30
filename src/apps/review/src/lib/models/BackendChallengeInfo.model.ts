@@ -1,6 +1,7 @@
 import moment from 'moment'
 
 import { formatDurationDate } from '../utils'
+import { SUBMISSION_TYPE_CONTEST } from '../constants'
 import { TABLE_DATE_FORMAT } from '../../config/index.config'
 
 import { BackendMetadata } from './BackendMetadata.model'
@@ -108,15 +109,22 @@ function normalizeTrack(
 function mapWinners(
     winners: BackendChallengeInfo['winners'],
 ): ChallengeWinner[] | undefined {
-    return winners
-        ? winners.map(winner => ({
-            handle: winner.handle,
-            maxRating: winner.maxRating ?? undefined,
-            placement: winner.placement,
-            type: winner.type,
-            userId: winner.userId,
-        }))
-        : undefined
+    if (!winners) {
+        return undefined
+    }
+
+    // Only expose contest submissions in the winners list
+    const contestWinners = winners.filter(winner => (
+        (winner.type ?? SUBMISSION_TYPE_CONTEST) === SUBMISSION_TYPE_CONTEST
+    ))
+
+    return contestWinners.map(winner => ({
+        handle: winner.handle,
+        maxRating: winner.maxRating ?? undefined,
+        placement: winner.placement,
+        type: winner.type,
+        userId: winner.userId,
+    }))
 }
 
 /**
