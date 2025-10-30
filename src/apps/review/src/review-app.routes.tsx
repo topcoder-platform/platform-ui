@@ -61,7 +61,6 @@ export const reviewRoutes: ReadonlyArray<PlatformRoute> = [
             // Past Challenges Module
             ...pastReviewRoutes,
             ...scorecardRoutes,
-            ...aiScorecardRoutes,
         ],
         domain: AppSubdomain.review,
         element: <ReviewApp />,

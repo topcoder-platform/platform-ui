@@ -1,0 +1,39 @@
+@import '@libs/ui/styles/includes';
+
+.wrap {
+    display: flex;
+    align-items: center;
+    gap: $sp-2;
+}
+
+.icon {
+    display: flex;
+    width: 20px;
+    height: 20px;
+    border-radius: 10px;
+    border: 1px solid #e9ecef;
+    background: #fff;
+    align-items: center;
+    justify-content: center;
+
+    &.failed,
+    &.failed-score {
+        color: #C1294F;
+    }
+
+    &.passed {
+        color: $teal-160;
+    }
+
+    &.pending {
+        color: #e9ecef;
+        border-color: #e9ecef;
+    }
+}
+
+.score {
+    font-size: 14px;
+    .failed-score {
+        color: #C1294F;
+    }
+}
