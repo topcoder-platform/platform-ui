@@ -1,3 +1,4 @@
+export * from './get-routes-container'
 export * from './router-context'
 export * from './routes-functions'
 export * from './platform-route.model'
