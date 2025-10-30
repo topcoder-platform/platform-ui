@@ -198,4 +198,8 @@
         display: block;
         color: #000;
     }
+
+    @include gtexl {
+        display: none;
+    }
 }
