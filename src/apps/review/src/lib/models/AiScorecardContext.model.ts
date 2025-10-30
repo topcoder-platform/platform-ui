@@ -8,6 +8,7 @@ export interface AiScorecardContextModel extends ChallengeDetailContextModel {
     submissionId: string
     workflowId: string
     workflow?: AiWorkflow
+    workflowRun?: AiWorkflowRun
     scorecard?: Scorecard
     workflowRuns: AiWorkflowRun[]
 }

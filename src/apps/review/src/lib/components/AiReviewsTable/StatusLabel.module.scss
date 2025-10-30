@@ -33,7 +33,7 @@
 
 .score {
     font-size: 14px;
-    .failed-score {
+    &.failed-score {
         color: #C1294F;
     }
 }

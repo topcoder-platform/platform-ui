@@ -34,10 +34,8 @@ export const AiScorecardContextProvider: FC<PropsWithChildren> = props => {
         challengeDetailsCtx.isLoadingChallengeSubmissions &&
         aiWorkflowRunsLoading
 
-    const workflow = useMemo(() => (
-        workflowRuns.map(r => r.workflow).find(w => w.id === workflowId)
-    ), [workflowRuns, workflowId])
-
+    const workflowRun = useMemo(() => workflowRuns.find(w => w.workflow.id === workflowId), [workflowRuns, workflowId])
+    const workflow = useMemo(() => workflowRun?.workflow, [workflowRuns, workflowId])
     const scorecard = useMemo(() => workflow?.scorecard, [workflow])
 
     const value = useMemo<AiScorecardContextModel>(
@@ -46,6 +44,7 @@ export const AiScorecardContextProvider: FC<PropsWithChildren> = props => {
             submissionId,
             workflowId,
             workflowRuns,
+            workflowRun,
             workflow,
             scorecard,
             isLoading: isLoadingCtxData,
@@ -55,6 +54,7 @@ export const AiScorecardContextProvider: FC<PropsWithChildren> = props => {
             submissionId,
             workflowId,
             workflowRuns,
+            workflowRun,
             isLoadingCtxData,
             workflow,
             scorecard,

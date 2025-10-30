@@ -30,14 +30,16 @@
     }
 }
 
+
 .runEntry {
     display: flex;
     flex-direction: row;
     align-items: center;
-    justify-content: space-between;
+    gap: $sp-4;
     padding: $sp-4;
     background-color: #f9fafa;
     cursor: pointer;
+    position: relative;
 
     font-family: "Nunito Sans", sans-serif;
     font-size: 16px;
@@ -80,6 +82,13 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+
+    &Wrap {
+        flex: 1 1 auto;
+    }
+    @include ltelg {
+        max-width: calc(90vw - 140px);
+    }
 }
 
 .legend {
@@ -108,5 +117,85 @@
                 margin-top: 0;
             }
         }
+    }
+}
+
+.mobileTrigger {
+    display: flex;
+    align-items: center;
+    gap: $sp-4;
+    cursor: pointer;
+
+    .runEntry {
+        flex: 1 1 auto;
+    }
+
+    .workflowName {
+        @include ltelg {
+            max-width: calc(90vw - 205px);
+        }
+    }
+
+    @include gtexl {
+        display: none;
+    }
+}
+
+.mobileMenuIcon {
+    display: flex;
+    width: 24px;
+    height: 24px;
+    align-items: center;
+    justify-content: center;
+    padding-left: $sp-4;
+    border-left: 1px solid #D1DAE4;
+    flex: 0 0 38px;
+
+    svg {
+        display: block;
+    }
+}
+
+.contentsWrap {
+    @include ltelg {
+        display: none;
+        position: relative;
+
+        flex-direction: column;
+        background: #fff;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: 1000;
+        padding: $sp-4;
+        overflow: auto;
+
+        &.open {
+            display: flex;
+        }
+
+        .runsWrap {
+            margin-bottom: $sp-4;
+        }
+
+        .legend {
+            margin-top: auto;
+        }
+    }
+}
+
+.mobileCloseicon {
+    display: flex;
+    height: 24px;
+    align-items: center;
+    justify-content: flex-end;
+    cursor: pointer;
+    margin-bottom: $sp-4;
+
+    svg {
+        display: block;
+        color: #000;
     }
 }

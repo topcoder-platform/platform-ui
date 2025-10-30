@@ -15,4 +15,14 @@
         flex-shrink: 0;
         flex-basis: 256px;
     }
+
+    @include ltelg {
+        flex-direction: column;
+        gap: $sp-6;
+
+        > .sidebar {
+            flex-basis: auto;
+            width: 100%;
+        }
+    }
 }
