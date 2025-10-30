@@ -180,11 +180,28 @@ export const shouldIncludeInReviewPhase = (
     }
 
     const normalizedCandidateList = Array.from(normalizedCandidates)
-    const isExcluded = normalizedCandidateList
-        .some(candidate => (
-            EXCLUDED_REVIEW_TYPE_FRAGMENTS
-                .some(fragment => candidate.includes(fragment))
-        ))
+
+    const hasExplicitReviewPhase = hasReviewPhase(submission.review, phases)
+        || (
+            Array.isArray(submission.reviews)
+            && submission.reviews.some(review => hasReviewPhase(review, phases))
+        )
+
+    const isExcluded = normalizedCandidateList.some(candidate => (
+        EXCLUDED_REVIEW_TYPE_FRAGMENTS.some(fragment => {
+            if (!candidate.includes(fragment)) {
+                return false
+            }
+
+            if (fragment === 'iterative' && hasExplicitReviewPhase) {
+                // Treat records that are tied to the official Review phase as review entries,
+                // even when the review type string mentions "Iterative".
+                return false
+            }
+
+            return true
+        })
+    ))
 
     if (process.env.NODE_ENV !== 'production') {
         // eslint-disable-next-line no-console
