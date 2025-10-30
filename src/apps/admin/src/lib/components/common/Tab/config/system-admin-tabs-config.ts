@@ -3,6 +3,7 @@ import _ from 'lodash'
 import { TabsNavItem } from '~/libs/ui'
 import {
     billingAccountRouteId,
+    defaultReviewersRouteId,
     gamificationAdminRouteId,
     manageChallengeRouteId,
     manageReviewRouteId,
@@ -10,7 +11,8 @@ import {
     permissionManagementRouteId,
     platformRouteId,
     termsRouteId,
-    userManagementRouteId } from '~/apps/admin/src/config/routes.config'
+    userManagementRouteId,
+} from '~/apps/admin/src/config/routes.config'
 import { platformSkillRouteId } from '~/apps/admin/src/platform/routes.config'
 
 export const SystemAdminTabsConfig: TabsNavItem[] = [
@@ -57,19 +59,20 @@ export const SystemAdminTabsConfig: TabsNavItem[] = [
     {
         children: [
             {
-
                 id: `${platformRouteId}/${platformSkillRouteId}`,
                 title: 'Skills',
             },
             {
                 id: `${platformRouteId}/${gamificationAdminRouteId}`,
                 title: 'Badges',
-
             },
             {
                 id: `${platformRouteId}/${termsRouteId}`,
                 title: 'Terms',
-
+            },
+            {
+                id: `${platformRouteId}/${defaultReviewersRouteId}`,
+                title: 'Default Reviewers',
             },
         ],
         id: platformRouteId,

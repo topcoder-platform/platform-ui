@@ -871,7 +871,7 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
     const reviewDateColumn: TableColumn<SubmissionInfo> = useMemo(
         () => ({
             columnId: 'review-date',
-            label: 'Review Date',
+            label: isApprovalColumn ? 'Approval Date' : 'Review Date',
             renderer: (data: SubmissionInfo) => {
                 const review = data.review
 
@@ -898,7 +898,7 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
             },
             type: 'element',
         }),
-        [],
+        [isApprovalColumn],
     )
 
     const approvalResultColumn: TableColumn<SubmissionInfo> | undefined = useMemo(() => {
@@ -914,6 +914,15 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
                 const status = (review?.status ?? '').toUpperCase()
                 const hasReview = hasActiveReview(review)
                 const isCompleted = ['COMPLETED', 'SUBMITTED'].includes(status)
+
+                if (!hasReview) {
+                    return <span>--</span>
+                }
+
+                if (!isCompleted) {
+                    return <span>--</span>
+                }
+
                 const outcome = resolveSubmissionReviewResult(
                     data as SubmissionRow,
                     {
@@ -933,18 +942,6 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
                     return (
                         <span className={styles.resultFail}>
                             Fail
-                        </span>
-                    )
-                }
-
-                if (!hasReview) {
-                    return <span>--</span>
-                }
-
-                if (!isCompleted) {
-                    return (
-                        <span className={styles.pendingText}>
-                            Pending
                         </span>
                     )
                 }
