@@ -125,14 +125,14 @@ export const ADMIN = {
 
 const REVIEW_OPPORTUNITIES_URL_DEFAULT = getReactEnv<string>(
     'REVIEW_OPPORTUNITIES_URL',
-    'https://www-v6.topcoder-dev.com/challenges/?bucket=reviewOpportunities&'
+    'https://www.topcoder-dev.com/challenges/?bucket=reviewOpportunities&'
         + 'tracks[DS]=true&tracks[Des]=true&tracks[Dev]=true&tracks[QA]=true',
 )
 
 export const REVIEW = {
-    CHALLENGE_PAGE_URL: 'https://www-v6.topcoder-dev.com/challenges',
+    CHALLENGE_PAGE_URL: 'https://www.topcoder-dev.com/challenges',
     OPPORTUNITIES_URL: REVIEW_OPPORTUNITIES_URL_DEFAULT,
-    PROFILE_PAGE_URL: 'https://profiles-v6.topcoder-dev.com/profiles',
+    PROFILE_PAGE_URL: 'https://profiles.topcoder-dev.com/profiles',
 }
 
 const FILESTACK_SECURITY_POLICY = getReactEnv<string | undefined>('FILESTACK_SECURITY_POLICY', undefined)
