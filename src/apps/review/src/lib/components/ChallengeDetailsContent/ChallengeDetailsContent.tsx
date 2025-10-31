@@ -1,7 +1,8 @@
 /**
  * Challenge Details Content.
  */
-import { FC, ReactNode, useContext, useMemo } from 'react'
+import { FC, ReactNode, useCallback, useContext, useMemo } from 'react'
+import { toast } from 'react-toastify'
 
 import { ActionLoading } from '~/apps/admin/src/lib'
 
@@ -185,6 +186,37 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
         isLoadingBool: isDownloadingSubmissionBool,
         downloadSubmission,
     }: useDownloadSubmissionProps = useDownloadSubmission()
+    const submissionsById = useMemo(() => {
+        const map = new Map<string, BackendSubmission>()
+        props.submissions.forEach(submission => {
+            if (submission?.id) {
+                map.set(submission.id, submission)
+            }
+        })
+        return map
+    }, [props.submissions])
+    const handleSubmissionDownload = useCallback((submissionId: string) => {
+        const submission = submissionsById.get(submissionId)
+        if (submission && submission.isFileSubmission === false) {
+            const targetUrl = submission.url?.trim()
+            if (targetUrl) {
+                if (typeof window !== 'undefined') {
+                    const openedWindow = window.open(targetUrl, '_blank', 'noopener,noreferrer')
+                    if (openedWindow === null) {
+                        toast.error('We could not open the submission URL. Check your pop-up blocker and try again.')
+                    }
+                } else {
+                    toast.error('Unable to open the submission URL from this environment.')
+                }
+            } else {
+                toast.error('Submission URL is not available for this entry.')
+            }
+
+            return
+        }
+
+        downloadSubmission(submissionId)
+    }, [downloadSubmission, submissionsById])
     const {
         isLoading: isLoadingProjectResult,
         projectResults,
@@ -335,7 +367,7 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
 
         if (SUBMISSION_TAB_KEYS.has(selectedTabNormalized)) {
             return renderSubmissionTab({
-                downloadSubmission,
+                downloadSubmission: handleSubmissionDownload,
                 isActiveChallenge: props.isActiveChallenge,
                 isDownloadingSubmission,
                 isLoadingSubmission: props.isLoadingSubmission,
@@ -361,7 +393,7 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
                     checkpointReviewMinimumPassingScore={props.checkpointReviewMinimumPassingScore}
                     isLoading={props.isLoadingSubmission}
                     isDownloading={isDownloadingSubmission}
-                    downloadSubmission={downloadSubmission}
+                    downloadSubmission={handleSubmissionDownload}
                     mode={checkpointMode}
                 />
             )
@@ -373,7 +405,7 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
                     isLoading={isLoadingProjectResult}
                     projectResults={projectResults}
                     isDownloading={isDownloadingSubmission}
-                    downloadSubmission={downloadSubmission}
+                    downloadSubmission={handleSubmissionDownload}
                 />
             )
         }
@@ -386,7 +418,7 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
                     approvalMinimumPassingScore={props.approvalMinimumPassingScore}
                     isLoadingReview={props.isLoadingSubmission}
                     isDownloading={isDownloadingSubmission}
-                    downloadSubmission={downloadSubmission}
+                    downloadSubmission={handleSubmissionDownload}
                     isActiveChallenge={props.isActiveChallenge}
                 />
             )
@@ -400,7 +432,7 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
                     postMortemMinimumPassingScore={props.postMortemMinimumPassingScore}
                     isLoadingReview={props.isLoadingSubmission}
                     isDownloading={isDownloadingSubmission}
-                    downloadSubmission={downloadSubmission}
+                    downloadSubmission={handleSubmissionDownload}
                     isActiveChallenge={props.isActiveChallenge}
                     columnLabel='Post-Mortem'
                 />
@@ -415,7 +447,7 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
                     postMortemMinimumPassingScore={props.postMortemMinimumPassingScore}
                     isLoadingReview={props.isLoadingSubmission}
                     isDownloading={isDownloadingSubmission}
-                    downloadSubmission={downloadSubmission}
+                    downloadSubmission={handleSubmissionDownload}
                     isActiveChallenge={props.isActiveChallenge}
                     phaseIdFilter={props.selectedPhaseId}
                 />
@@ -430,7 +462,7 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
                 reviewMinimumPassingScore={props.reviewMinimumPassingScore}
                 isLoadingReview={props.isLoadingSubmission}
                 isDownloading={isDownloadingSubmission}
-                downloadSubmission={downloadSubmission}
+                downloadSubmission={handleSubmissionDownload}
                 mappingReviewAppeal={props.mappingReviewAppeal}
                 isActiveChallenge={props.isActiveChallenge}
             />

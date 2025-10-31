@@ -261,15 +261,15 @@ const Actions: FC<{
                         {hasLegacyId && (
                             <a
                                 href={
-                                    `${EnvironmentConfig.ADMIN.ONLINE_REVIEW_URL}/actions/ViewProjectDetails?pid=${props.challenge.legacyId}` /* eslint-disable-line max-len */
+                                    `${EnvironmentConfig.ADMIN.REVIEW_UI_URL}/=${props.challenge.id}` /* eslint-disable-line max-len */
                                 }
                                 target='_blank'
                                 rel='noreferrer'
                             >
-                                Online Review
+                                Review UI
                             </a>
                         )}
-                        {!hasLegacyId && <span>Online Review</span>}
+                        {!hasLegacyId && <span>Review UI</span>}
                     </li>
                 </ul>
             </DropdownMenu>
