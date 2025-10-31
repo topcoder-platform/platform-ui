@@ -23,6 +23,7 @@ export const ADMIN = {
     DEFAULT_PAYMENT_TERMS: 1,
     DIRECT_URL: 'https://www.topcoder.com/direct',
     ONLINE_REVIEW_URL: 'https://software.topcoder.com/review',
+    REVIEW_UI_URL: 'https://review.topcoder.com',
     SUBMISSION_SCAN_TOPIC: 'submission.scan.complete',
     WORK_MANAGER_URL: 'https://challenges.topcoder.com',
 }
