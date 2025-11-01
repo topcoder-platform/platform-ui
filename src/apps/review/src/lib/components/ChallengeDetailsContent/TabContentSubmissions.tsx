@@ -232,7 +232,10 @@ export const TabContentSubmissions: FC<Props> = props => {
                         }
 
                         const isRestrictedBase = isSubmissionDownloadRestrictedForMember(submission.memberId)
-                        const failedScan = submission.virusScan === false
+                        const normalizedVirusScan = submission.isFileSubmission === false
+                            ? undefined
+                            : submission.virusScan
+                        const failedScan = normalizedVirusScan === false
                         const isRestricted = isRestrictedBase || failedScan
                         const tooltipMessage = failedScan
                             ? VIRUS_SCAN_FAILED_MESSAGE
@@ -320,6 +323,10 @@ export const TabContentSubmissions: FC<Props> = props => {
                     label: 'Virus Scan',
                     propertyName: 'virusScan',
                     renderer: (submission: BackendSubmission) => {
+                        if (submission.isFileSubmission === false) {
+                            return <span>N/A</span>
+                        }
+
                         if (submission.virusScan === true) {
                             return (
                                 <span className={styles.virusOkIcon} title='Scan passed' aria-label='Scan passed'>

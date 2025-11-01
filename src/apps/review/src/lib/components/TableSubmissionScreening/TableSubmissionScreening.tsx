@@ -125,7 +125,10 @@ const createSubmissionColumn = (config: SubmissionColumnConfig): TableColumn<Scr
     propertyName: 'submissionId',
     renderer: (data: Screening) => {
         const isRestrictedBase = config.isSubmissionDownloadRestrictedForMember(data.memberId)
-        const failedScan = data.virusScan === false
+        const normalizedVirusScan = data.isFileSubmission === false
+            ? undefined
+            : data.virusScan
+        const failedScan = normalizedVirusScan === false
         const isRestrictedForRow = isRestrictedBase || failedScan
         const tooltipMessage = failedScan
             ? 'Submission failed virus scan'
@@ -231,6 +234,10 @@ const createVirusScanColumn = (): TableColumn<Screening> => ({
     label: 'Virus Scan',
     propertyName: 'virusScan',
     renderer: (data: Screening) => {
+        if (data.isFileSubmission === false) {
+            return <span>N/A</span>
+        }
+
         if (data.virusScan === true) {
             return (
                 <span className={styles.virusOkIcon} title='Scan passed' aria-label='Scan passed'>
@@ -765,6 +772,7 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
             map.set(submissionId, {
                 ...existing,
                 id: existing?.id ?? submissionId,
+                isFileSubmission: screening.isFileSubmission ?? existing?.isFileSubmission,
                 isLatest: screening.isLatest ?? existing?.isLatest,
                 memberId: screening.memberId ?? existing?.memberId ?? '',
                 submittedDate: createdAt,
