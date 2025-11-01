@@ -201,7 +201,7 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
             const targetUrl = submission.url?.trim()
             if (targetUrl) {
                 if (typeof window !== 'undefined') {
-                    const openedWindow = window.open(targetUrl, '_blank', 'noopener,noreferrer')
+                    window.open(targetUrl, '_blank', 'noopener,noreferrer')
                 } else {
                     toast.error('Unable to open the submission URL from this environment.')
                 }
