@@ -203,7 +203,7 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
                 if (typeof window !== 'undefined') {
                     const openedWindow = window.open(targetUrl, '_blank', 'noopener,noreferrer')
                     if (openedWindow === null) {
-                        toast.error('We could not open the submission URL. Check your pop-up blocker and try again.')
+                        window.location.assign(targetUrl)
                     }
                 } else {
                     toast.error('Unable to open the submission URL from this environment.')

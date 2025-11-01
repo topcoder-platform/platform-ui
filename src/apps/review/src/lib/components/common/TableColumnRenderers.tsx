@@ -38,6 +38,7 @@ import styles from './TableColumnRenderers.module.scss'
 /**
  * Renders the submission ID cell with download controls and copy-to-clipboard actions.
  */
+// eslint-disable-next-line complexity -- Handles multiple restriction scenarios for submission downloads.
 export function renderSubmissionIdCell(
     submission: SubmissionRow,
     config: DownloadButtonConfig,
@@ -62,7 +63,10 @@ export function renderSubmissionIdCell(
     const isOwnershipRestricted = shouldRestrictSubmitterToOwnSubmission && !isOwnedSubmission
     const isRestrictedForMember = isSubmissionDownloadRestrictedForMember(submission.memberId)
     const memberRestrictionMessage = getRestrictionMessageForMember(submission.memberId)
-    const failedScan = submission.virusScan === false
+    const normalizedVirusScan = submission.isFileSubmission === false
+        ? undefined
+        : submission.virusScan
+    const failedScan = normalizedVirusScan === false
     const isButtonDisabled = Boolean(
         isDownloading[submission.id]
         || isRestrictedForMember
@@ -72,10 +76,6 @@ export function renderSubmissionIdCell(
     const downloadButton = (
         <button
             onClick={function onClick() {
-                if (isRestrictedForMember || failedScan || isOwnershipRestricted) {
-                    return
-                }
-
                 downloadSubmission(submission.id)
             }}
             className={classNames(styles.textBlue, styles.linkButton)}
@@ -91,29 +91,21 @@ export function renderSubmissionIdCell(
     ): Promise<void> {
         event.stopPropagation()
         event.preventDefault()
-
-        if (!submission.id) {
-            return
-        }
-
         await copyTextToClipboard(submission.id)
         toast.success('Submission ID copied to clipboard', {
             toastId: `challenge-submission-id-copy-${submission.id}`,
         })
     }
 
-    let tooltipContent: string | undefined
-    if (failedScan) {
-        tooltipContent = virusScanFailedMessage
-    } else if (isRestrictedForMember) {
-        tooltipContent = memberRestrictionMessage
-            ?? restrictionMessage
-            ?? downloadOwnSubmissionTooltip
-    } else if (isOwnershipRestricted) {
-        tooltipContent = downloadOwnSubmissionTooltip
-    } else if (isSubmissionDownloadRestricted && restrictionMessage) {
-        tooltipContent = restrictionMessage
-    }
+    const tooltipContent = failedScan
+        ? virusScanFailedMessage
+        : isRestrictedForMember
+            ? memberRestrictionMessage
+                ?? restrictionMessage
+                ?? downloadOwnSubmissionTooltip
+            : isOwnershipRestricted
+                ? downloadOwnSubmissionTooltip
+                : (isSubmissionDownloadRestricted && restrictionMessage) || undefined
 
     const downloadControl = isOwnershipRestricted ? (
         <span className={styles.textBlue}>

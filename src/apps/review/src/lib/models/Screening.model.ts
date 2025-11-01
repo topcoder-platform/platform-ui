@@ -58,6 +58,10 @@ export interface Screening {
      */
     type?: string
     /**
+     * Flag indicating whether the submission includes an uploaded file.
+     */
+    isFileSubmission?: boolean
+    /**
      * The phase name of the associated review (e.g., 'Screening', 'Review').
      * Used for defensive filtering to ensure phase data isolation.
      */
@@ -96,6 +100,7 @@ export function convertBackendSubmissionToScreening(
         challengeId: data.challengeId,
         createdAt,
         createdAtString,
+        isFileSubmission: data.isFileSubmission,
         isLatest: data.isLatest,
         memberId: data.memberId,
         result,
