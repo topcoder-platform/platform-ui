@@ -172,9 +172,12 @@ const ScorecardQuestionForm: FC<ScorecardQuestionFormProps> = (props: ScorecardQ
                                             <BasicSelect
                                                 options={scorecardScaleOptions}
                                                 {...{
-                                                    mapValue: (value: string) => (
-                                                        `${value?.toLowerCase()}${
-                                                            value === 'SCALE'
+                                                    mapValue: (value: string | number | boolean | '') => {
+                                                        const stringValue = typeof value === 'string'
+                                                            ? value
+                                                            : String(value ?? '')
+                                                        return `${stringValue.toLowerCase()}${
+                                                            stringValue === 'SCALE'
                                                                 ? `(${
                                                                     get(values, `${name}.${index}.scaleMin`)
                                                                 }-${
@@ -182,7 +185,7 @@ const ScorecardQuestionForm: FC<ScorecardQuestionFormProps> = (props: ScorecardQ
                                                                 })`
                                                                 : ''
                                                         }`
-                                                    ),
+                                                    },
                                                     onChange: ((
                                                         ev: ChangeEvent<HTMLInputElement>,
                                                         field: any,

@@ -148,7 +148,10 @@ export const DefaultReviewersAddForm: FC<Props> = (props: Props) => {
 
     const onSubmit = useCallback(
         (data: FormAddDefaultReviewer) => {
-            const requestBody = _.pickBy(data, _.identity)
+            const requestBody = _.omitBy(
+                data,
+                value => value === undefined || value === null || value === '',
+            )
             if (isEdit) {
                 doUpdateDefaultReviewer(requestBody, () => {
                     navigate('./../..')

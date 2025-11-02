@@ -70,10 +70,10 @@ const toChallengeTrackLabel = (value: string): string => (
 )
 
 const legacyChallengeTrackMap: Record<string, string> = {
-    DEVELOPMENT: 'DEVELOPMENT',
     DEVELOP: 'DEVELOPMENT',
-    QUALITY_ASSURANCE: 'QUALITY_ASSURANCE',
+    DEVELOPMENT: 'DEVELOPMENT',
     QA: 'QUALITY_ASSURANCE',
+    QUALITY_ASSURANCE: 'QUALITY_ASSURANCE',
 }
 
 const normalizeTrackOptionValue = (track: useFetchChallengeTracksProps['challengeTracks'][number]): string => {
@@ -140,7 +140,7 @@ const ScorecardInfoForm: FC = () => {
     const form = useFormContext()
     const { challengeTracks }: useFetchChallengeTracksProps = useFetchChallengeTracks()
     const { challengeTypes }: useFetchChallengeTypesProps = useFetchChallengeTypes()
-    const { getValues, setValue } = form
+    const { getValues, setValue }: Pick<typeof form, 'getValues' | 'setValue'> = form
     const normalizeValue = useCallback((
         value: string | number | boolean | null | undefined,
     ): string | undefined => {
@@ -148,7 +148,8 @@ const ScorecardInfoForm: FC = () => {
             return undefined
         }
 
-        const normalized = String(value).trim()
+        const normalized = String(value)
+            .trim()
 
         return normalized.length ? normalized : undefined
     }, [])

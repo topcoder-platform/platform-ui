@@ -1,19 +1,29 @@
 import { forwardRef, SelectHTMLAttributes } from 'react'
 import classNames from 'classnames'
 
-interface BasicSelectProps<T> extends SelectHTMLAttributes<T> {
-    options: { label: string; value: string|boolean|number }[];
-    mapValue?: (value: any) => string;
+interface BasicSelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
+    options: { label: string; value: string | boolean | number }[];
+    mapValue?: (value: string | number | boolean | '') => string;
     placeholder?: string;
 }
 
-const BasicSelect = forwardRef<HTMLSelectElement, BasicSelectProps<any>>((
-    props,
+const BasicSelect = forwardRef<HTMLSelectElement, BasicSelectProps>((
+    props: BasicSelectProps,
     ref,
 ) => {
-    const { className, options, placeholder, value, mapValue: _mapValue, ...rest } = props
+    const {
+        className,
+        options,
+        placeholder,
+        value,
+        mapValue,
+        ...rest
+    }: BasicSelectProps = props
 
-    const normalizedValue = value === null || value === undefined ? '' : value
+    const normalizedValue = value === null || value === undefined ? '' : String(value)
+    const displayValue = typeof mapValue === 'function'
+        ? mapValue(normalizedValue)
+        : normalizedValue
 
     return (
         <select
@@ -25,7 +35,7 @@ const BasicSelect = forwardRef<HTMLSelectElement, BasicSelectProps<any>>((
                     !normalizedValue && `${normalizedValue}` !== 'false' && 'empty',
                 )
             }
-            value={normalizedValue as any}
+            value={displayValue}
         >
             <option
                 key='placeholder-option'
@@ -34,10 +44,10 @@ const BasicSelect = forwardRef<HTMLSelectElement, BasicSelectProps<any>>((
             >
                 {placeholder}
             </option>
-            {options.map((option, index) => (
+            {options.map(option => (
                 <option
-                    key={`${option.value ?? option.label ?? index}-${index}`}
-                    value={`${option.value ?? ''}`}
+                    key={String(option.value ?? option.label)}
+                    value={String(option.value ?? '')}
                 >
                     {option.label}
                 </option>
