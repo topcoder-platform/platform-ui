@@ -40,7 +40,7 @@ export async function getChallengePayments(
     challengeId: string,
 ): Promise<ChallengePaymentsResponse> {
     return xhrGetAsync<ChallengePaymentsResponse>(
-        `${EnvironmentConfig.API.V6}/finance/challenges/${challengeId}`,
+        `${EnvironmentConfig.API.V6}/finance/challenge-payments/${challengeId}`,
     )
 }
 
