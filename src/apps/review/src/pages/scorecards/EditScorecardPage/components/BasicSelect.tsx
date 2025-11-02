@@ -1,37 +1,51 @@
-import { omit } from 'lodash'
-import { FC, SelectHTMLAttributes } from 'react'
+import { forwardRef, SelectHTMLAttributes } from 'react'
 import classNames from 'classnames'
 
 interface BasicSelectProps<T> extends SelectHTMLAttributes<T> {
     options: { label: string; value: string|boolean|number }[];
+    mapValue?: (value: any) => string;
     placeholder?: string;
 }
 
-const BasicSelect: FC<BasicSelectProps<any>> = props => (
-    <select
-        {...omit(props, 'options')}
-        className={
-            classNames(
-                props.className,
-                !props.value && `${props.value}` !== 'false' && 'empty',
-            )
-        }
-    >
-        <option
-            disabled
-            value=''
+const BasicSelect = forwardRef<HTMLSelectElement, BasicSelectProps<any>>((
+    props,
+    ref,
+) => {
+    const { className, options, placeholder, value, mapValue: _mapValue, ...rest } = props
+
+    const normalizedValue = value === null || value === undefined ? '' : value
+
+    return (
+        <select
+            ref={ref}
+            {...rest}
+            className={
+                classNames(
+                    className,
+                    !normalizedValue && `${normalizedValue}` !== 'false' && 'empty',
+                )
+            }
+            value={normalizedValue as any}
         >
-            {props.placeholder}
-        </option>
-        {props.options.map(option => (
             <option
-                key={`${option.value}`}
-                value={`${option.value}`}
+                key='placeholder-option'
+                disabled
+                value=''
             >
-                {option.label}
+                {placeholder}
             </option>
-        ))}
-    </select>
-)
+            {options.map((option, index) => (
+                <option
+                    key={`${option.value ?? option.label ?? index}-${index}`}
+                    value={`${option.value ?? ''}`}
+                >
+                    {option.label}
+                </option>
+            ))}
+        </select>
+    )
+})
+
+BasicSelect.displayName = 'BasicSelect'
 
 export default BasicSelect
