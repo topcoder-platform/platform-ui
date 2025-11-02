@@ -1,0 +1,29 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+    padding-top: 0;
+}
+
+.tableCell {
+    white-space: break-spaces !important;
+    text-align: left !important;
+}
+
+.rowActions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}
+
+.desktopTable {
+    td {
+        vertical-align: middle;
+    }
+}
+
+.deletingSpinner {
+    margin-left: 0.25rem;
+}

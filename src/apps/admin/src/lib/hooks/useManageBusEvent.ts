@@ -10,10 +10,20 @@ import { reqToBusAPI } from '../services'
 import { handleError } from '../utils'
 import { IsRemovingType } from '../models'
 
+export interface PostBusEventOptions {
+    silent?: boolean
+}
+
+export type DoPostBusEvent = (
+    submissionId: string,
+    testType: string,
+    options?: PostBusEventOptions,
+) => Promise<void>
+
 export interface useManageBusEventProps {
     isRunningTest: IsRemovingType
     isRunningTestBool: boolean
-    doPostBusEvent: (submissionId: string, testType: string) => void
+    doPostBusEvent: DoPostBusEvent
 }
 
 /**
@@ -26,33 +36,34 @@ export function useManageBusEvent(): useManageBusEventProps {
         [isRunningTest],
     )
 
-    const doPostBusEvent = useCallback(
-        (submissionId: string, testType: string) => {
+    const doPostBusEvent = useCallback<DoPostBusEvent>(
+        (submissionId, testType, options) => {
             setIsRunningTest(previous => ({
                 ...previous,
                 [`${submissionId}_${testType}`]: true,
             }))
-            reqToBusAPI(
+            return reqToBusAPI(
                 CREATE_BUS_EVENT_DATA_SUBMISSION_MARATHON_MATCH(
                     submissionId,
                     testType,
                 ),
             )
                 .then(() => {
-                    setIsRunningTest(previous => ({
-                        ...previous,
-                        [`${submissionId}_${testType}`]: false,
-                    }))
-                    toast.success(`Run ${testType} test successfully`, {
-                        toastId: 'Run test',
-                    })
+                    if (options?.silent !== true) {
+                        toast.success(`Run ${testType} test successfully`, {
+                            toastId: 'Run test',
+                        })
+                    }
                 })
-                .catch(e => {
+                .catch(error => {
+                    handleError(error)
+                    throw error
+                })
+                .finally(() => {
                     setIsRunningTest(previous => ({
                         ...previous,
                         [`${submissionId}_${testType}`]: false,
                     }))
-                    handleError(e)
                 })
         },
         [],

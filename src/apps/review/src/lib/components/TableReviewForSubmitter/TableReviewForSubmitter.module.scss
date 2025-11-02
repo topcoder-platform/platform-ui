@@ -1,0 +1,88 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+
+    @include ltemd {
+        &:global(.enhanced-table) {
+            table {
+                tbody {
+                    tr:has(:global(.last-element)) {
+                        td {
+                            border-bottom: 0;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+.submissionColumn {
+    width: 180px;
+    min-width: 160px;
+    max-width: 200px;
+    white-space: nowrap;
+
+    :global(.TableCell_blockCell) {
+        width: 100%;
+    }
+}
+
+.actionsCell {
+    display: inline-flex;
+    align-items: center;
+    gap: $sp-2;
+}
+
+.actionItem {
+    display: inline-flex;
+    align-items: center;
+}
+
+.historyButton {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    color: $link-blue-dark;
+    cursor: pointer;
+    font-weight: 600;
+
+    &:hover {
+        color: $blue-110;
+    }
+
+    &:focus {
+        outline: none;
+        color: $blue-110;
+    }
+
+    &:disabled {
+        opacity: 0.7;
+        pointer-events: none;
+    }
+}
+
+.resultPill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: $sp-1 $sp-2;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.resultPass {
+    @extend .resultPill;
+    background-color: $green-25;
+    color: $green-140;
+}
+
+.resultFail {
+    @extend .resultPill;
+    background-color: $red-25;
+    color: $red-140;
+}

@@ -1,0 +1,128 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+
+    @include ltemd {
+        &:global(.enhanced-table) {
+            table {
+                tbody {
+                    tr:has(:global(.last-element)) {
+                        td {
+                            border-bottom: 0;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+.textBlue {
+    color: $link-blue-dark;
+
+    &:hover {
+        color: $link-blue-dark;
+    }
+
+    &:disabled {
+        opacity: 0.7;
+        pointer-events: none;
+    }
+}
+
+.copyButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    align-self: flex-start;
+    padding: 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: $link-blue-dark;
+
+    &:hover,
+    &:focus {
+        color: $blue-110;
+    }
+
+    &:disabled {
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+
+    svg {
+        width: 18px;
+        height: 18px;
+    }
+}
+
+.tooltipTrigger {
+    display: inline-block;
+}
+
+.submissionColumn {
+    width: 240px;
+    min-width: 220px;
+    max-width: 260px;
+    white-space: nowrap;
+
+    :global(.TableCell_blockCell) {
+        width: 100%;
+    }
+}
+
+.submissionCell {
+    display: inline-flex;
+    align-items: flex-start;
+    gap: $sp-2;
+}
+
+.virusOkIcon {
+    color: $green-140;
+    display: inline-flex;
+    align-items: center;
+
+    svg {
+        width: 18px;
+        height: 18px;
+    }
+}
+
+.virusWarnIcon {
+    color: $orange-140;
+    display: inline-flex;
+    align-items: center;
+
+    svg {
+        width: 18px;
+        height: 18px;
+    }
+}
+
+.historyButton {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    color: $link-blue-dark;
+    cursor: pointer;
+    font-weight: 600;
+
+    &:hover {
+        color: $blue-110;
+    }
+
+    &:focus {
+        outline: none;
+        color: $blue-110;
+    }
+
+    &:disabled {
+        opacity: 0.7;
+        pointer-events: none;
+    }
+}

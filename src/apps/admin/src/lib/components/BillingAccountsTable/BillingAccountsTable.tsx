@@ -15,6 +15,16 @@ import { TableMobile } from '../common/TableMobile'
 
 import styles from './BillingAccountsTable.module.scss'
 
+const formatStatus = (status?: string): string => {
+    if (!status) {
+        return ''
+    }
+
+    const normalizedStatus = status.toLowerCase()
+    return `${normalizedStatus.charAt(0)
+        .toUpperCase()}${normalizedStatus.slice(1)}`
+}
+
 interface Props {
     className?: string
     datas: BillingAccount[]
@@ -51,7 +61,10 @@ export const BillingAccountsTable: FC<Props> = (props: Props) => {
                 columnId: 'status',
                 label: 'Status',
                 propertyName: 'status',
-                type: 'text',
+                renderer: (data: BillingAccount) => (
+                    <span>{formatStatus(data.status)}</span>
+                ),
+                type: 'element',
             },
             {
                 columnId: 'startDateString',

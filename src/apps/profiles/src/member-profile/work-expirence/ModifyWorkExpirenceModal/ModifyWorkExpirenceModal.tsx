@@ -11,7 +11,7 @@ import {
     UserTraitCategoryNames,
     UserTraitIds,
 } from '~/libs/core'
-import { INDUSTRIES_OPTIONS } from '~/libs/shared'
+import { getIndustryOptionLabel, getIndustryOptionValue, INDUSTRIES_OPTIONS } from '~/libs/shared'
 
 import { WorkExpirenceCard } from '../WorkExpirenceCard'
 
@@ -58,8 +58,8 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
 
     const industryOptions: any = sortBy(INDUSTRIES_OPTIONS)
         .map(v => ({
-            label: v,
-            value: v,
+            label: getIndustryOptionLabel(v),
+            value: getIndustryOptionValue(v),
         }))
 
     function handleModifyWorkExpirenceSave(): void {
@@ -76,6 +76,7 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
             traitId: UserTraitIds.work,
             traits: {
                 data: workExpirence || [],
+                traitId: UserTraitIds.work,
             },
         }, props.workExpirence)
             .then(() => {
@@ -163,13 +164,24 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
             }
         }
 
+        const companyName: string | undefined = formValues.company as string | undefined
+        const startDateIso: string | undefined = formValues.startDate
+            ? (formValues.startDate as Date).toISOString()
+            : undefined
+        const endDateIso: string | undefined = formValues.endDate
+            ? (formValues.endDate as Date).toISOString()
+            : undefined
+
         const updatedWorkExpirence: UserTrait = {
             cityTown: formValues.city,
-            company: formValues.company,
+            company: companyName,
+            companyName,
+            endDate: endDateIso,
             industry: formValues.industry,
             position: formValues.position,
-            timePeriodFrom: formValues.startDate ? (formValues.startDate as Date).toISOString() : undefined,
-            timePeriodTo: formValues.endDate ? (formValues.endDate as Date).toISOString() : undefined,
+            startDate: startDateIso,
+            timePeriodFrom: startDateIso,
+            timePeriodTo: endDateIso,
             working: formValues.currentlyWorking,
         }
 
@@ -194,13 +206,17 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
         setEditedItemIndex(indx)
 
         setFormValues({
-            city: work.cityTown,
-            company: work.company,
+            city: work.cityTown || work.city,
+            company: work.company || work.companyName,
             currentlyWorking: work.working,
-            endDate: work.timePeriodTo ? new Date(work.timePeriodTo) : undefined,
+            endDate: work.timePeriodTo
+                ? new Date(work.timePeriodTo)
+                : (work.endDate ? new Date(work.endDate) : undefined),
             industry: work.industry,
             position: work.position,
-            startDate: work.timePeriodFrom ? new Date(work.timePeriodFrom) : undefined,
+            startDate: work.timePeriodFrom
+                ? new Date(work.timePeriodFrom)
+                : (work.startDate ? new Date(work.startDate) : undefined),
         })
     }
 
@@ -255,28 +271,39 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
                 {editedItemIndex === undefined && !addingNewItem ? (
                     <div className={classNames(styles.workExpirenceWrap, !workExpirence?.length ? styles.noItems : '')}>
                         {
-                            workExpirence?.map((work: UserTrait, indx: number) => (
-                                <div
-                                    className={styles.workExpirenceCardWrap}
-                                    key={`${work.company}-${work.industry}-${work.position}`}
-                                >
-                                    <WorkExpirenceCard work={work} isModalView />
-                                    <div className={styles.actionElements}>
-                                        <Button
-                                            className={styles.ctaBtn}
-                                            icon={IconOutline.PencilIcon}
-                                            onClick={bind(handleWorkExpirenceEdit, this, indx)}
-                                            size='lg'
-                                        />
-                                        <Button
-                                            className={styles.ctaBtn}
-                                            icon={IconOutline.TrashIcon}
-                                            onClick={bind(handleWorkExpirenceDelete, this, indx)}
-                                            size='lg'
-                                        />
+                            workExpirence?.map((work: UserTrait, indx: number) => {
+                                const companyName: string | undefined = work.company || work.companyName
+                                const uniqueKey: string = [
+                                    companyName,
+                                    work.industry,
+                                    work.position,
+                                    work.timePeriodFrom || work.startDate,
+                                ].filter(Boolean)
+                                    .join('-')
+
+                                return (
+                                    <div
+                                        className={styles.workExpirenceCardWrap}
+                                        key={uniqueKey || `${work.position}-${indx}`}
+                                    >
+                                        <WorkExpirenceCard work={work} isModalView />
+                                        <div className={styles.actionElements}>
+                                            <Button
+                                                className={styles.ctaBtn}
+                                                icon={IconOutline.PencilIcon}
+                                                onClick={bind(handleWorkExpirenceEdit, this, indx)}
+                                                size='lg'
+                                            />
+                                            <Button
+                                                className={styles.ctaBtn}
+                                                icon={IconOutline.TrashIcon}
+                                                onClick={bind(handleWorkExpirenceDelete, this, indx)}
+                                                size='lg'
+                                            />
+                                        </div>
                                     </div>
-                                </div>
-                            ))
+                                )
+                            })
                         }
                     </div>
                 ) : undefined}

@@ -5,7 +5,7 @@ import { Submission } from './Submission.model'
  */
 export interface MemberSubmission {
     submissions: Submission[]
-    memberId: number
+    memberId: string
     provisionalRank: number | undefined
     finalRank: number | undefined
 }

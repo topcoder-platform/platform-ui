@@ -1,22 +1,20 @@
 export interface Reviewer {
+    /** Review application identifier */
+    applicationId: string;
     /** User Id */
-    userId: number,
+    userId: number;
     /** User handle */
-    handle: string,
+    handle: string;
     /** User email */
-    emailAddress: string,
+    emailAddress: string;
     /** Application Status */
-    applicationStatus: string,
-    /** Review Auction Id */
-    reviewAuctionId: number,
-    /** Application Role Id */
-    applicationRoleId: number,
+    applicationStatus: string;
     /** Application Role */
-    applicationRole: string,
+    applicationRole: string;
     /** Application Date */
-    applicationDate: string,
+    applicationDate: string;
     /** Number of completed reviews in last 60 days */
-    reviewsInPast60Days: number,
+    reviewsInPast60Days: number;
     /** Current number of open reviews */
-    currentNumberOfReviewPositions: number
+    currentNumberOfReviewPositions: number;
 }

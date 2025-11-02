@@ -12,12 +12,12 @@ export const USER_STATUS_SELECT_OPTIONS: InputSelectOption[] = [
 ]
 export const BILLING_ACCOUNT_STATUS_FILTER_OPTIONS: InputSelectOption[] = [
     { label: 'Select status', value: '' },
-    { label: 'Active', value: '1' },
-    { label: 'Inactive', value: '0' },
+    { label: 'Active', value: 'ACTIVE' },
+    { label: 'Inactive', value: 'INACTIVE' },
 ]
 export const BILLING_ACCOUNT_STATUS_EDIT_OPTIONS: InputSelectOption[] = [
-    { label: 'Active', value: 'Active' },
-    { label: 'Inactive', value: 'Inactive' },
+    { label: 'Active', value: 'ACTIVE' },
+    { label: 'Inactive', value: 'INACTIVE' },
 ]
 export const BILLING_ACCOUNT_RESOURCE_STATUS_EDIT_OPTIONS: InputSelectOption[]
     = [

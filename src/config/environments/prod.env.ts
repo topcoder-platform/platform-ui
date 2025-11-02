@@ -1,3 +1,6 @@
+import { FILESTACK as DefaultFileStack } from './default.env'
+import { getReactEnv } from './react-env'
+
 export * from './default.env'
 
 export const TERMS_URL = 'https://www.topcoder.com/challenges/terms/detail/564a981e-6840-4a5c-894e-d5ad22e9cd6f'
@@ -20,6 +23,21 @@ export const ADMIN = {
     DEFAULT_PAYMENT_TERMS: 1,
     DIRECT_URL: 'https://www.topcoder.com/direct',
     ONLINE_REVIEW_URL: 'https://software.topcoder.com/review',
+    REVIEW_UI_URL: 'https://review.topcoder.com',
     SUBMISSION_SCAN_TOPIC: 'submission.scan.complete',
     WORK_MANAGER_URL: 'https://challenges.topcoder.com',
+}
+
+export const REVIEW = {
+    CHALLENGE_PAGE_URL: 'https://www.topcoder.com/challenges',
+    OPPORTUNITIES_URL: 'https://www.topcoder.com/challenges/?bucket=reviewOpportunities&'
+        + 'tracks[DS]=true&tracks[Des]=true&tracks[Dev]=true&tracks[QA]=true',
+    PROFILE_PAGE_URL: 'https://profiles.topcoder.com',
+}
+
+export const FILESTACK = {
+    ...DefaultFileStack,
+    CNAME: getReactEnv<string>('FILESTACK_CNAME', 'fs.topcoder.com'),
+    CONTAINER: getReactEnv<string>('FILESTACK_CONTAINER', 'topcoder-submissions'),
+    PATH_PREFIX: getReactEnv<string>('FILESTACK_PATH_PREFIX', 'review-app'),
 }

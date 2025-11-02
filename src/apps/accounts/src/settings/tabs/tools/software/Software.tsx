@@ -3,9 +3,9 @@ import { bind, isEmpty, reject, trim } from 'lodash'
 import { toast } from 'react-toastify'
 import classNames from 'classnames'
 
-import { updateMemberTraitsAsync, updateOrCreateMemberTraitsAsync, UserProfile, UserTrait } from '~/libs/core'
+import { createMemberTraitsAsync, updateMemberTraitsAsync, UserProfile, UserTrait, UserTraitIds } from '~/libs/core'
 import { Button, Collapsible, ConfirmModal, IconOutline, InputSelect, InputText } from '~/libs/ui'
-import { SettingSection, SoftwareIcon, triggerSurvey } from '~/apps/accounts/src/lib'
+import { SettingSection, SoftwareIcon } from '~/apps/accounts/src/lib'
 
 import { softwareTypes } from './software-types.config'
 import styles from './Software.module.scss'
@@ -52,6 +52,9 @@ const Software: FC<SoftwareProps> = (props: SoftwareProps) => {
     const [itemToRemove, setItemToRemove]: [UserTrait | undefined, Dispatch<SetStateAction<UserTrait | undefined>>]
         = useState<UserTrait | undefined>()
 
+    const [isSaving, setIsSaving] = useState<boolean>(false)
+    const [isDeleting, setIsDeleting] = useState<boolean>(false)
+
     useEffect(() => {
         setSoftwareTypesData(props.softwareTrait?.traits.data)
     }, [props.softwareTrait])
@@ -90,6 +93,10 @@ const Software: FC<SoftwareProps> = (props: SoftwareProps) => {
     }
 
     function handleFormAction(): void {
+        if (isSaving) {
+            return
+        }
+
         // validate the form
         const sN: string = trim(selectedSoftwareName)
         const updatedFormErrors: { [key: string]: string } = {}
@@ -114,6 +121,7 @@ const Software: FC<SoftwareProps> = (props: SoftwareProps) => {
         }
 
         if (isEmpty(updatedFormErrors)) {
+            setIsSaving(true)
             // call the API to update the trait based on action type
             if (isEditMode) {
                 const updatedSoftwareTypesData: UserTrait[] = reject(softwareTypesData, (trait: UserTrait) => (
@@ -130,6 +138,7 @@ const Software: FC<SoftwareProps> = (props: SoftwareProps) => {
                                 ...updatedSoftwareTypesData || [],
                                 softwareTypeUpdate,
                             ],
+                            traitId: UserTraitIds.software,
                         },
                     }],
                 )
@@ -139,7 +148,6 @@ const Software: FC<SoftwareProps> = (props: SoftwareProps) => {
                             ...updatedSoftwareTypesData || [],
                             softwareTypeUpdate,
                         ])
-                        triggerSurvey()
                     })
                     .catch(() => {
                         toast.error('Error updating software')
@@ -147,20 +155,26 @@ const Software: FC<SoftwareProps> = (props: SoftwareProps) => {
                     .finally(() => {
                         resetForm()
                         setIsEditMode(false)
+                        setIsSaving(false)
                     })
             } else {
-                updateOrCreateMemberTraitsAsync(
+                const request = [{
+                    categoryName: 'Software',
+                    traitId: 'software',
+                    traits: {
+                        data: [
+                            ...softwareTypesData || [],
+                            softwareTypeUpdate,
+                        ],
+                        traitId: UserTraitIds.software,
+                    },
+                }]
+
+                const action = props.softwareTrait ? updateMemberTraitsAsync : createMemberTraitsAsync
+
+                action(
                     props.profile.handle,
-                    [{
-                        categoryName: 'Software',
-                        traitId: 'software',
-                        traits: {
-                            data: [
-                                ...softwareTypesData || [],
-                                softwareTypeUpdate,
-                            ],
-                        },
-                    }],
+                    request,
                 )
                     .then(() => {
                         toast.success('Software added successfully')
@@ -168,13 +182,13 @@ const Software: FC<SoftwareProps> = (props: SoftwareProps) => {
                             ...softwareTypesData || [],
                             softwareTypeUpdate,
                         ])
-                        triggerSurvey()
                     })
                     .catch(() => {
                         toast.error('Error adding new software')
                     })
                     .finally(() => {
                         resetForm()
+                        setIsSaving(false)
                     })
             }
         }
@@ -189,12 +203,17 @@ const Software: FC<SoftwareProps> = (props: SoftwareProps) => {
     }
 
     function onRemoveItemConfirm(): void {
+        if (isDeleting) {
+            return
+        }
+
         const updatedSoftwareTypesData: UserTrait[] = reject(softwareTypesData, (trait: UserTrait) => (
             trait.name === itemToRemove?.name && trait.softwareType === itemToRemove?.softwareType
         )) || []
 
         resetForm()
 
+        setIsDeleting(true)
         updateMemberTraitsAsync(
             props.profile.handle,
             [{
@@ -202,19 +221,20 @@ const Software: FC<SoftwareProps> = (props: SoftwareProps) => {
                 traitId: 'software',
                 traits: {
                     data: updatedSoftwareTypesData,
+                    traitId: UserTraitIds.software,
                 },
             }],
         )
             .then(() => {
                 toast.success('Software deleted successfully')
                 setSoftwareTypesData(updatedSoftwareTypesData)
-                triggerSurvey()
             })
             .catch(() => {
                 toast.error('Error deleting software')
             })
             .finally(() => {
                 toggleRemoveConfirmation()
+                setIsDeleting(false)
             })
     }
 
@@ -234,7 +254,7 @@ const Software: FC<SoftwareProps> = (props: SoftwareProps) => {
                             </div>
                         )}
                         title={trait.name}
-                        infoText={trait.softwareType}
+                        infoText={softwareTypes.find(t => t.value === trait.softwareType)?.label || trait.softwareType}
                         actionElement={(
                             <div className={styles.actionElements}>
                                 <Button
@@ -261,6 +281,7 @@ const Software: FC<SoftwareProps> = (props: SoftwareProps) => {
                 onClose={toggleRemoveConfirmation}
                 onConfirm={onRemoveItemConfirm}
                 open={removeConfirmationOpen}
+                isLoading={isDeleting}
             >
                 <div>
                     Are you sure you want to delete
@@ -305,6 +326,7 @@ const Software: FC<SoftwareProps> = (props: SoftwareProps) => {
                             link
                             label={`${isEditMode ? 'Edit' : 'Add'} Software to your List`}
                             onClick={handleFormAction}
+                            disabled={isSaving}
                         />
                         {isEditMode && (
                             <Button

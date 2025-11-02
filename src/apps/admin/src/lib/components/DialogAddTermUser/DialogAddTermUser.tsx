@@ -37,7 +37,14 @@ interface Props {
 }
 
 export const DialogAddTermUser: FC<Props> = (props: Props) => {
-    const handleClose = useEventCallback(() => props.setOpen(false))
+    const className = props.className
+    const open = props.open
+    const setOpen = props.setOpen
+    const termInfo = props.termInfo
+    const isAdding = props.isAdding
+    const doAddTermUser = props.doAddTermUser
+
+    const handleClose = useEventCallback(() => setOpen(false))
     const {
         handleSubmit,
         control,
@@ -56,11 +63,11 @@ export const DialogAddTermUser: FC<Props> = (props: Props) => {
      */
     const onSubmit = useCallback(
         (data: FormAddTermUser) => {
-            props.doAddTermUser(
+            doAddTermUser(
                 data.handle?.value ?? 0,
                 data.handle?.label ?? '',
                 () => {
-                    props.setOpen(false)
+                    setOpen(false)
                 },
                 () => {
                     reset({
@@ -70,22 +77,22 @@ export const DialogAddTermUser: FC<Props> = (props: Props) => {
                 },
             )
         },
-        [props.doAddTermUser, reset],
+        [doAddTermUser, reset, setOpen],
     )
 
     return (
         <BaseModal
             allowBodyScroll
             blockScroll
-            title={`Sign Terms ${props.termInfo.title}`}
+            title={`Sign Terms ${termInfo.title}`}
             onClose={handleClose}
-            open={props.open}
+            open={open}
             classNames={{
                 modal: classNames(styles.modal),
             }}
         >
             <form
-                className={classNames(styles.container, props.className)}
+                className={classNames(styles.container, className)}
                 onSubmit={handleSubmit(onSubmit)}
             >
                 <div className={styles.blockForm}>
@@ -105,7 +112,7 @@ export const DialogAddTermUser: FC<Props> = (props: Props) => {
                                     onChange={controlProps.field.onChange}
                                     onBlur={controlProps.field.onBlur}
                                     classNameWrapper={styles.inputField}
-                                    disabled={props.isAdding}
+                                    disabled={isAdding}
                                     dirty
                                     error={_.get(errors, 'handle.message')}
                                 />
@@ -118,7 +125,7 @@ export const DialogAddTermUser: FC<Props> = (props: Props) => {
                         secondary
                         size='lg'
                         onClick={handleClose}
-                        disabled={props.isAdding}
+                        disabled={isAdding}
                     >
                         Close
                     </Button>
@@ -126,13 +133,13 @@ export const DialogAddTermUser: FC<Props> = (props: Props) => {
                         type='submit'
                         primary
                         size='lg'
-                        disabled={props.isAdding || !isValid || !isDirty}
+                        disabled={isAdding || !isValid || !isDirty}
                     >
                         Sign Terms
                     </Button>
                 </div>
 
-                {props.isAdding && (
+                {isAdding && (
                     <div className={styles.dialogLoadingSpinnerContainer}>
                         <LoadingSpinner className={styles.spinner} />
                     </div>

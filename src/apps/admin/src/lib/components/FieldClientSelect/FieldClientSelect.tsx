@@ -7,7 +7,8 @@ import { ClientInfo, SelectOption } from '../../models'
 import { FieldSingleSelectAsync } from '../FieldSingleSelectAsync'
 import { searchClients } from '../../services'
 
-async function autoCompleteDatas(queryTerm: string): Promise<ClientInfo[]> {
+async function autoCompleteDatas(rawQueryTerm: string): Promise<ClientInfo[]> {
+    const queryTerm = rawQueryTerm.trim()
     if (!queryTerm) {
         return Promise.resolve([])
     }
@@ -15,6 +16,7 @@ async function autoCompleteDatas(queryTerm: string): Promise<ClientInfo[]> {
     const result = await searchClients(
         {
             name: queryTerm,
+            status: 'ACTIVE',
         },
         {
             limit: 10,
@@ -37,6 +39,9 @@ const fetchDatas = (
                     value: data.id,
                 })),
             )
+        })
+        .catch(() => {
+            callback([])
         })
 }
 

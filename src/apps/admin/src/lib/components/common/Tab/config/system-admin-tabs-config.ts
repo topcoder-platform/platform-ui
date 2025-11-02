@@ -3,9 +3,11 @@ import _ from 'lodash'
 import { TabsNavItem } from '~/libs/ui'
 import {
     billingAccountRouteId,
+    defaultReviewersRouteId,
     gamificationAdminRouteId,
     manageChallengeRouteId,
     manageReviewRouteId,
+    paymentsRouteId,
     permissionManagementRouteId,
     platformRouteId,
     termsRouteId,
@@ -57,23 +59,28 @@ export const SystemAdminTabsConfig: TabsNavItem[] = [
     {
         children: [
             {
-
                 id: `${platformRouteId}/${platformSkillRouteId}`,
                 title: 'Skills',
             },
             {
                 id: `${platformRouteId}/${gamificationAdminRouteId}`,
                 title: 'Badges',
-
             },
             {
                 id: `${platformRouteId}/${termsRouteId}`,
                 title: 'Terms',
-
+            },
+            {
+                id: `${platformRouteId}/${defaultReviewersRouteId}`,
+                title: 'Default Reviewers',
             },
         ],
         id: platformRouteId,
         title: 'Platform',
+    },
+    {
+        id: paymentsRouteId,
+        title: 'Payments',
     },
 ]
 

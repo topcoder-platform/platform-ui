@@ -13,6 +13,7 @@ import { getProject, getProjects, ProjectsResponse, useProjects } from '../../se
 import { ProjectTypes, ProjectTypeValues } from '../../constants'
 import { CopilotRequestResponse, saveCopilotRequest, useCopilotRequest } from '../../services/copilot-requests'
 import { Project } from '../../models/Project'
+import { rootRoute } from '../../copilots.routes'
 
 import styles from './styles.module.scss'
 
@@ -321,7 +322,7 @@ const CopilotRequestForm: FC<{}> = () => {
                     setPaymentType('')
                     // Added a small timeout for the toast to be visible properly to the users
                     setTimeout(() => {
-                        navigate('/requests')
+                        navigate(`${rootRoute}/requests`)
                     }, 1000)
                 })
                 .catch(e => {

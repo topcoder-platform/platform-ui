@@ -4,7 +4,6 @@ import { useSearchParams } from 'react-router-dom'
 import { MemberTraitsAPI, useMemberTraits, UserProfile, UserTrait, UserTraitIds } from '~/libs/core'
 
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
-import { triggerSurvey } from '../../lib'
 import { AddButton, EditMemberPropertyBtn, EmptySection } from '../../components'
 
 import { ModifyWorkExpirenceModal } from './ModifyWorkExpirenceModal'
@@ -52,7 +51,6 @@ const WorkExpirence: FC<WorkExpirenceProps> = (props: WorkExpirenceProps) => {
             setIsEditMode(false)
             mutateTraits()
             props.refreshProfile(props.profile.handle)
-            triggerSurvey()
         }, 1000)
     }
 
@@ -71,12 +69,23 @@ const WorkExpirence: FC<WorkExpirenceProps> = (props: WorkExpirenceProps) => {
                 {!loading && (
                     <>
                         {(workExpirence?.length as number) > 0
-                            ? workExpirence?.map((work: UserTrait) => (
-                                <WorkExpirenceCard
-                                    key={`${work.company}-${work.industry}-${work.position}`}
-                                    work={work}
-                                />
-                            ))
+                            ? workExpirence?.map((work: UserTrait, index: number) => {
+                                const companyName: string | undefined = work.company || work.companyName
+                                const uniqueKey: string = [
+                                    companyName,
+                                    work.industry,
+                                    work.position,
+                                    work.timePeriodFrom || work.startDate,
+                                ].filter(Boolean)
+                                    .join('-')
+
+                                return (
+                                    <WorkExpirenceCard
+                                        key={uniqueKey || `${work.position || 'experience'}-${index}`}
+                                        work={work}
+                                    />
+                                )
+                            })
                             : (
                                 <EmptySection
                                     selfMessage={

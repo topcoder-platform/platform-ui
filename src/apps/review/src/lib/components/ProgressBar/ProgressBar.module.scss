@@ -1,0 +1,32 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    align-items: center;
+    display: flex;
+    width: 100%;
+    @include ltemd {
+        justify-content: flex-end;
+    }
+    .progress {
+        background-color: #E9ECEF;
+        height: 6px;
+        border-radius: 3px;
+        position: relative;
+        width: 100px;
+    }
+    .inner {
+        background-color: var(--Actived);
+        height: 6px;
+        border-radius: 3px;
+        position: absolute;
+        inset: 0;
+        right: auto;
+        width: calc(var(--progress) * 100%);
+        transition: .5s;
+    }
+    .percentage {
+        font-size: 14px;
+        font-weight: normal;
+        margin-left: $sp-2;
+    }
+}

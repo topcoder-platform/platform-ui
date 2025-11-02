@@ -1,5 +1,6 @@
 export * from './api'
 export * from './validation'
+export * from './validation-schemas'
 export * from './challenge'
 export * from './number'
 export * from './string'

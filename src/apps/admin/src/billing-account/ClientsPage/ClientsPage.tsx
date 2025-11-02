@@ -1,17 +1,18 @@
 /**
  * Billing account clients page.
  */
-import { FC, useState } from 'react'
+import { FC, useCallback, useState } from 'react'
 import classNames from 'classnames'
 
-import { colWidthType, LinkButton, LoadingSpinner, PageDivider, PageTitle } from '~/libs/ui'
 import { PlusIcon } from '@heroicons/react/solid'
+import { Button, colWidthType, LoadingSpinner, PageDivider, PageTitle } from '~/libs/ui'
 
 import { MSG_NO_RECORD_FOUND } from '../../config/index.config'
 import { useManageClients, useManageClientsProps } from '../../lib/hooks'
 import { PageContent, PageHeader } from '../../lib'
 import { ClientsFilter } from '../../lib/components/ClientsFilter'
 import { ClientsTable } from '../../lib/components/ClientsTable'
+import { DialogAddClient } from '../../lib/components/DialogAddClient'
 
 import styles from './ClientsPage.module.scss'
 
@@ -23,6 +24,7 @@ const pageTitle = 'Clients'
 
 export const ClientsPage: FC<Props> = (props: Props) => {
     const [colWidth, setColWidth] = useState<colWidthType>({})
+    const [showAddDialog, setShowAddDialog] = useState(false)
     const {
         isLoading,
         datas,
@@ -32,10 +34,19 @@ export const ClientsPage: FC<Props> = (props: Props) => {
         sort,
         setSort,
         setFilterCriteria,
+        reloadData,
     }: useManageClientsProps = useManageClients({
         endDateString: 'endDate',
         startDateString: 'startDate',
     })
+
+    const handleOpenAddDialog = useCallback(() => {
+        setShowAddDialog(true)
+    }, [])
+
+    const handleAdded = useCallback(() => {
+        reloadData?.()
+    }, [reloadData])
 
     return (
         <div className={classNames(styles.container, props.className)}>
@@ -43,12 +54,12 @@ export const ClientsPage: FC<Props> = (props: Props) => {
             <PageHeader>
                 <h3>{pageTitle}</h3>
                 <div className={styles.headerActions}>
-                    <LinkButton
+                    <Button
                         primary
                         size='lg'
-                        to='new'
                         icon={PlusIcon}
                         iconToLeft
+                        onClick={handleOpenAddDialog}
                         label='add client'
                     />
                 </div>
@@ -85,6 +96,11 @@ export const ClientsPage: FC<Props> = (props: Props) => {
                     </>
                 )}
             </PageContent>
+            <DialogAddClient
+                open={showAddDialog}
+                setOpen={setShowAddDialog}
+                onAdded={handleAdded}
+            />
         </div>
     )
 }

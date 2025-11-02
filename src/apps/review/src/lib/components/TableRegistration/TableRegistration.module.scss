@@ -1,0 +1,57 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+    @include ltemd {
+        &:global(.enhanced-table) {
+            table {
+                tbody {
+                    tr:has(:global(.last-element)) {
+                        td {
+                            border-bottom: 0;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+.emailCell {
+    display: inline-flex;
+    align-items: center;
+    gap: $sp-2;
+    color: $black-100;
+}
+
+.emailLink {
+    color: inherit;
+    text-decoration: underline;
+
+    &:hover,
+    &:focus {
+        color: $blue-110;
+    }
+}
+
+.copyButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: $sp-1;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: $blue-100;
+
+    &:hover,
+    &:focus {
+        color: $blue-110;
+    }
+
+    svg {
+        width: 18px;
+        height: 18px;
+    }
+}

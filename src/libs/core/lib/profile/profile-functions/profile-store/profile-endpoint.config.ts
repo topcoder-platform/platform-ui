@@ -1,7 +1,7 @@
 import { EnvironmentConfig } from '~/config'
 
 export function profile(handle: string): string {
-    return `${EnvironmentConfig.API.V5}/members/${handle}`
+    return `${EnvironmentConfig.API.V6}/members/${handle}`
 }
 
 export function verify(): string {
@@ -12,9 +12,8 @@ export function verify(): string {
 }
 
 export function countryLookupURL(): string {
-    // API URL is hardcoded here because there is no DEV API for this endpoint
-    // TODO: add DEV API eventually and/or add a config for this
-    return 'https://api.topcoder.com/v3/members/lookup/countries'
+    // Fetch country list from lookups-api-v6; request a large page to get all
+    return `${EnvironmentConfig.API.V6}/lookups/countries?page=1&perPage=9999`
 }
 
 export function gamificationAPIBaseURL(): string {
@@ -26,11 +25,11 @@ export function learnBaseURL(): string {
 }
 
 export function memberStatsDistroURL(): string {
-    return `${EnvironmentConfig.API.V5}/members/stats/distribution`
+    return `${EnvironmentConfig.API.V6}/members/stats/distribution`
 }
 
 export function memberModifyURL(): string {
-    return `${EnvironmentConfig.API.V3}/users`
+    return `${EnvironmentConfig.API.V6}/users`
 }
 
 export function memberEmailPreferencesURL(): string {

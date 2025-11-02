@@ -69,7 +69,7 @@ export const ClientEditPage: FC<Props> = (props: Props) => {
             endDate: undefined,
             name: '',
             startDate: undefined,
-            status: 'Active',
+            status: 'ACTIVE',
         },
         mode: 'all',
         resolver: yupResolver(formEditClientSchema),

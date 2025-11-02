@@ -1,0 +1,41 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+}
+
+.blockHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+
+    .textTitle {
+        font-family: 'Inter', sans-serif;
+        color: var(--FontColor);
+        font-size: $sp-8;
+        line-height: 36px;
+        text-transform: none;
+
+        @include font-weight-bold;
+    }
+}
+
+.blockHeaderRight {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.blockHeaderTitle {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+}
+
+.blockExternalLink {
+    margin-left: $sp-2;
+    margin-bottom: 6px;
+}

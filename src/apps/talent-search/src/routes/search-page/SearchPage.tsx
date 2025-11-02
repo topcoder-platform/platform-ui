@@ -1,20 +1,17 @@
-import { FC, useEffect, useRef, useState } from 'react'
+import { FC, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 
+import type { UserSkill } from '~/libs/core'
 import { ContentLayout, IconOutline } from '~/libs/ui'
-import { UserSkill } from '~/libs/core'
 
 import { SearchInput } from '../../components/search-input'
 import { PopularSkills } from '../../components/popular-skills'
 import { TALENT_SEARCH_PATHS } from '../../talent-search.routes'
 import { encodeUrlQuerySearch } from '../../lib/utils/search-query'
-import { triggerSurvey } from '../../lib/services'
 
 import styles from './SearchPage.module.scss'
 
 export const SearchPage: FC = () => {
-    const surveyFlag = useRef(false)
-
     const [params] = useSearchParams()
     const isMissingProfileRoute = params.get('memberNotFound') !== null
 
@@ -31,14 +28,6 @@ export const SearchPage: FC = () => {
         setSkillsFilter(filter as UserSkill[])
         searchInputRef.current?.focus()
     }
-
-    useEffect(() => {
-        if (!surveyFlag.current && skillsFilter && skillsFilter.length > 0) {
-            triggerSurvey()
-
-            surveyFlag.current = true
-        }
-    }, [skillsFilter])
 
     function renderHeader(): JSX.Element {
         return isMissingProfileRoute ? (

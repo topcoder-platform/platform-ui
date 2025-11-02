@@ -21,6 +21,7 @@ import {
 import { useEventCallback } from '../../hooks'
 import { Challenge, ChallengeFilterCriteria, ChallengeType } from '../../models'
 import { Paging } from '../../models/challenge-management/Pagination'
+import { checkIsMM } from '../../utils/challenge'
 
 import { MobileListView } from './MobileListView'
 import styles from './ChallengeList.module.scss'
@@ -41,9 +42,11 @@ const ChallengeCurrentPhase: FC<{ challenge: Challenge }> = props => {
                 .diff(b.scheduledEndDate))[0]
     }
 
+    const typeName = props.challenge.type?.name
+
     if (
         !statusPhase
-        && props.challenge.type === 'First2Finish'
+        && typeName === 'First2Finish'
         && props.challenge.phases.length
     ) {
         statusPhase = _.clone(props.challenge.phases[0])
@@ -52,7 +55,7 @@ const ChallengeCurrentPhase: FC<{ challenge: Challenge }> = props => {
 
     let phaseMessage = 'Stalled'
     if (statusPhase) phaseMessage = statusPhase.name
-    else if (props.challenge.status === 'Draft') phaseMessage = 'In Draft'
+    else if (props.challenge.status === 'DRAFT') phaseMessage = 'In Draft'
 
     return <>{phaseMessage}</>
 }
@@ -120,10 +123,12 @@ const TrackIcon: FC<{ challenge: Challenge }> = props => {
         }
     }
 
+    const trackName = props.challenge.track?.name || ''
+
     return (
         <div
             className={cn(styles.trackIcon)}
-            style={iconStyles(props.challenge.track)}
+            style={iconStyles(trackName)}
         >
             {type?.abbreviation}
         </div>
@@ -136,6 +141,7 @@ const Actions: FC<{
 }> = props => {
     const [openDropdown, setOpenDropdown] = useState(false)
     const navigate = useNavigate()
+    const isMM = useMemo(() => checkIsMM(props.challenge), [props.challenge])
     const goToManageUser = useEventCallback(() => {
         navigate(`${props.challenge.id}/manage-user`, {
             state: { previousChallengeListFilter: props.currentFilters },
@@ -208,6 +214,16 @@ const Actions: FC<{
                     >
                         Submissions
                     </li>
+                    {isMM && (
+                        <li
+                            onClick={function onClick() {
+                                navigate(`${props.challenge.id}/manage-marathon-match`)
+                                setOpenDropdown(false)
+                            }}
+                        >
+                            Marathon Match
+                        </li>
+                    )}
                 </ul>
             </DropdownMenu>
 
@@ -218,6 +234,15 @@ const Actions: FC<{
                 classNames={{ menu: 'challenge-list-actions-dropdown-menu' }}
             >
                 <ul>
+                    <li>
+                        <a
+                            href={`${EnvironmentConfig.ADMIN.CHALLENGE_URL}/${props.challenge.id}`}
+                            target='_blank'
+                            rel='noreferrer'
+                        >
+                            Challenge Details
+                        </a>
+                    </li>
                     <li className={cn({ disabled: !hasProjectId })}>
                         {hasProjectId && (
                             <a
@@ -236,15 +261,15 @@ const Actions: FC<{
                         {hasLegacyId && (
                             <a
                                 href={
-                                    `${EnvironmentConfig.ADMIN.ONLINE_REVIEW_URL}/actions/ViewProjectDetails?pid=${props.challenge.legacyId}` /* eslint-disable-line max-len */
+                                    `${EnvironmentConfig.ADMIN.REVIEW_UI_URL}/=${props.challenge.id}` /* eslint-disable-line max-len */
                                 }
                                 target='_blank'
                                 rel='noreferrer'
                             >
-                                Online Review
+                                Review UI
                             </a>
                         )}
-                        {!hasLegacyId && <span>Online Review</span>}
+                        {!hasLegacyId && <span>Review UI</span>}
                     </li>
                 </ul>
             </DropdownMenu>
@@ -268,11 +293,10 @@ const ChallengeList: FC<ChallengeListProps> = props => {
                 renderer: (challenge: Challenge) => (
                     // eslint-disable-next-line jsx-a11y/anchor-is-valid
                     <a
-                        href={`${EnvironmentConfig.ADMIN.CHALLENGE_URL}/${challenge.id}`}
+                        href={`${EnvironmentConfig.API.V6}/challenges/${challenge.id}`}
                         className={styles.challengeTitle}
-                        onClick={function onClick() {
-                            window.location.href = `${EnvironmentConfig.ADMIN.CHALLENGE_URL}/${challenge.id}`
-                        }}
+                        target='_blank'
+                        rel='noreferrer'
                     >
                         {challenge.name}
                     </a>
@@ -282,17 +306,21 @@ const ChallengeList: FC<ChallengeListProps> = props => {
             { label: 'Legacy ID', propertyName: 'legacyId', type: 'text' },
             {
                 label: 'Type & Track',
-                renderer: (challenge: Challenge) => (
-                    <div>
-                        {challenge.type}
-                        <br />
-                        {challenge.track}
-                        {' '}
-                        {challenge.legacy.subTrack
-                            ? ` / ${challenge.legacy.subTrack}`
-                            : ''}
-                    </div>
-                ),
+                renderer: (challenge: Challenge) => {
+                    const typeName = challenge.type?.name || ''
+                    const trackName = challenge.track?.name || ''
+                    return (
+                        <div>
+                            {typeName}
+                            <br />
+                            {trackName}
+                            {' '}
+                            {challenge.legacy.subTrack
+                                ? ` / ${challenge.legacy.subTrack}`
+                                : ''}
+                        </div>
+                    )
+                },
                 type: 'element',
             },
             {
@@ -334,6 +362,7 @@ const ChallengeList: FC<ChallengeListProps> = props => {
                     disableSorting
                     onToggleSort={_.noop}
                     className={styles.desktopTable}
+                    preventDefault
                 />
             )}
             {screenWidth <= 1279 && (

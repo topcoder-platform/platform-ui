@@ -1,0 +1,55 @@
+@import '@libs/ui/styles/includes';
+
+.blockTitle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+    position: sticky;
+    top: 0;
+    background-color: white;
+    z-index: 1;
+    padding-top: $sp-6;
+    padding-bottom: $sp-6;
+    @include ltemd {
+        top: 46px;
+    }
+}
+
+.blockTitleLeft {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: wrap;
+}
+
+.textTitle {
+    color: var(--FontColor);
+    font-family: "Figtree", sans-serif;
+    font-size: 26px;
+    line-height: 30px;
+    font-weight: $font-weight-bold;
+}
+
+.textTotalScore,
+.textCompleted {
+    color: var(--FontColor);
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 16px;
+    line-height: 22px;
+    font-weight: $font-weight-bold;
+}
+
+.textTotalScore {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-right: 31px;
+}
+
+.blockBtns {
+    display: flex;
+    gap: $sp-4;
+    flex-wrap: wrap;
+}

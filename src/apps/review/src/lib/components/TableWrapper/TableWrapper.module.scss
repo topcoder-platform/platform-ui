@@ -1,0 +1,15 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+
+    th:first-child {
+        padding-left: 16px !important;
+
+        @include ltemd {
+            padding-left: 5px !important;
+        }
+    }
+}

@@ -1,0 +1,242 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+
+    @include ltemd {
+        &:global(.enhanced-table) {
+            table {
+                tbody {
+                    tr:has(:global(.last-element)) {
+                        td {
+                            border-bottom: 0;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+.textBlue,
+.scoreLink {
+    color: $link-blue-dark;
+    font-weight: 600;
+
+    &:hover,
+    &:focus {
+        color: $link-blue-dark;
+    }
+
+    &:disabled {
+        opacity: 0.7;
+        pointer-events: none;
+    }
+}
+
+.tooltipTrigger {
+    display: inline-block;
+}
+
+.submissionColumn {
+    width: 240px;
+    min-width: 220px;
+    max-width: 260px;
+    white-space: nowrap;
+
+    :global(.TableCell_blockCell) {
+        width: 100%;
+    }
+}
+
+.submissionCell {
+    display: inline-flex;
+    align-items: flex-start;
+    gap: $sp-2;
+}
+
+.copyButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    align-self: flex-start;
+    padding: 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: $link-blue-dark;
+
+    &:hover,
+    &:focus {
+        color: $blue-110;
+    }
+
+    &:disabled {
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+
+    svg {
+        width: 18px;
+        height: 18px;
+    }
+}
+
+.submissionLabel {
+    color: var(--GrayFontColor);
+    font-weight: 600;
+}
+
+.reviewCell {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: $sp-1;
+}
+
+.scoreRow {
+    display: inline-flex;
+    align-items: center;
+    gap: $sp-2;
+}
+
+.statusIcon {
+    display: inline-flex;
+    align-items: center;
+
+    svg {
+        width: 18px;
+        height: 18px;
+    }
+}
+
+.passIcon {
+    color: $green-140;
+}
+
+.failIcon {
+    color: $red-110;
+}
+
+.outcome {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: capitalize;
+    color: var(--GrayFontColor);
+}
+
+.statusBadgePending {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: $sp-1 $sp-2;
+    border-radius: 999px;
+    background-color: $orange-25;
+    color: $orange-140;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.pendingText {
+    color: var(--GrayFontColor);
+}
+
+.resultPill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: $sp-1 $sp-2;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.resultPass {
+    @extend .resultPill;
+    background-color: $green-25;
+    color: $green-140;
+}
+
+.resultFail {
+    @extend .resultPill;
+    background-color: $red-25;
+    color: $red-140;
+}
+
+.submit {
+    align-items: center;
+    display: flex;
+    font-weight: 700;
+    & > i {
+        margin-right: $sp-2;
+    }
+}
+
+.completedAction {
+    align-items: center;
+    display: flex;
+    justify-content: center;
+}
+
+.completedIcon {
+    align-items: center;
+    background-color: #2fa152;
+    border-radius: 50%;
+    color: #fff;
+    display: flex;
+    height: 20px;
+    justify-content: center;
+    line-height: 1;
+    width: 20px;
+
+    svg {
+        width: 14px;
+        height: 14px;
+        color: #fff;
+    }
+}
+
+.completedPill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: $sp-2;
+    padding: $sp-1 $sp-2;
+    border-radius: 999px;
+    background-color: $green-25;
+    color: $green-140;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.postMortemResult {
+    display: inline-flex;
+    align-items: center;
+    gap: $sp-2;
+}
+
+.postMortemOutcomeLabel {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: capitalize;
+}
+
+.passText {
+    color: $green-140;
+}
+
+.failText {
+    color: $red-110;
+}
+
+.reviewerList {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 0;
+}
+
+.reviewerList > span {
+    display: inline-flex;
+}

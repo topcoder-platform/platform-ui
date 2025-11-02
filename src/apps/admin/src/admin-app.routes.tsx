@@ -10,9 +10,11 @@ import {
 
 import {
     billingAccountRouteId,
+    defaultReviewersRouteId,
     gamificationAdminRouteId,
     manageChallengeRouteId,
     manageReviewRouteId,
+    paymentsRouteId,
     permissionManagementRouteId,
     platformRouteId,
     rootRoute,
@@ -37,6 +39,10 @@ const ManageUserPage: LazyLoadedComponent = lazyLoad(
 const ManageSubmissionPage: LazyLoadedComponent = lazyLoad(
     () => import('./challenge-management/ManageSubmissionPage'),
     'ManageSubmissionPage',
+)
+const ManageMarathonMatchPage: LazyLoadedComponent = lazyLoad(
+    () => import('./challenge-management/ManageMarathonMatchPage'),
+    'ManageMarathonMatchPage',
 )
 const UserManagementPage: LazyLoadedComponent = lazyLoad(
     () => import('./user-management/UserManagementPage'),
@@ -141,9 +147,26 @@ const TermsEditPage: LazyLoadedComponent = lazyLoad(
     () => import('./platform/terms/TermsEditPage'),
     'TermsEditPage',
 )
+const DefaultReviewersListPage: LazyLoadedComponent = lazyLoad(
+    () => import('./platform/default-reviewers/DefaultReviewersListPage'),
+    'DefaultReviewersListPage',
+)
+const DefaultReviewersAddPage: LazyLoadedComponent = lazyLoad(
+    () => import('./platform/default-reviewers/DefaultReviewersAddPage'),
+    'DefaultReviewersAddPage',
+)
+const DefaultReviewersEditPage: LazyLoadedComponent = lazyLoad(
+    () => import('./platform/default-reviewers/DefaultReviewersEditPage'),
+    'DefaultReviewersEditPage',
+)
 const TermsUsersPage: LazyLoadedComponent = lazyLoad(
     () => import('./platform/terms/TermsUsersPage'),
     'TermsUsersPage',
+)
+
+const PaymentsPage: LazyLoadedComponent = lazyLoad(
+    () => import('./payments/PaymentsPage'),
+    'PaymentsPage',
 )
 
 export const toolTitle: string = ToolTitle.admin
@@ -174,6 +197,11 @@ export const adminRoutes: ReadonlyArray<PlatformRoute> = [
                         element: <ManageSubmissionPage />,
                         id: 'manage-resource',
                         route: ':challengeId/manage-submission',
+                    },
+                    {
+                        element: <ManageMarathonMatchPage />,
+                        id: 'manage-marathon-match',
+                        route: ':challengeId/manage-marathon-match',
                     },
                 ],
                 element: <ChallengeManagement />,
@@ -320,11 +348,19 @@ export const adminRoutes: ReadonlyArray<PlatformRoute> = [
                         route: gamificationAdminRouteId,
                     },
                     {
-                        element: <CreateBadgePage />,
+                        element: (
+                            <CreateBadgePage
+                                rootPage={`${rootRoute}/${platformRouteId}/${gamificationAdminRouteId}`}
+                            />
+                        ),
                         route: `${gamificationAdminRouteId}${createBadgePath}`,
                     },
                     {
-                        element: <BadgeDetailPage />,
+                        element: (
+                            <BadgeDetailPage
+                                rootPage={`${rootRoute}/${platformRouteId}/${gamificationAdminRouteId}`}
+                            />
+                        ),
                         route: `${gamificationAdminRouteId}${baseDetailPath}/:id`,
                     },
                     {
@@ -343,10 +379,28 @@ export const adminRoutes: ReadonlyArray<PlatformRoute> = [
                         element: <TermsEditPage />,
                         route: `${termsRouteId}/:id/edit`,
                     },
+                    {
+                        element: <DefaultReviewersListPage />,
+                        route: defaultReviewersRouteId,
+                    },
+                    {
+                        element: <DefaultReviewersAddPage />,
+                        route: `${defaultReviewersRouteId}/add`,
+                    },
+                    {
+                        element: <DefaultReviewersEditPage />,
+                        route: `${defaultReviewersRouteId}/:id/edit`,
+                    },
                 ],
                 element: <Platform />,
                 id: platformRouteId,
                 route: platformRouteId,
+            },
+            // Payments Module
+            {
+                element: <PaymentsPage />,
+                id: paymentsRouteId,
+                route: paymentsRouteId,
             },
         ],
         domain: AppSubdomain.admin,

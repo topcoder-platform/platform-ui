@@ -7,6 +7,9 @@ import axios, {
     Method,
 } from 'axios'
 
+import { EnvironmentConfig } from '~/config'
+import type { LocalServiceOverride } from '~/config/environments/global-config.model'
+
 import { tokenGetAsync, TokenModel } from '../../auth'
 
 // initialize the global instance when this singleton is loaded
@@ -29,6 +32,8 @@ export function createInstance(): AxiosInstance {
     })
 
     // add the interceptors
+    interceptLegacyCountryLookupPath(created)
+    interceptLocalApiRouting(created)
     interceptAuth(created)
     interceptError(created)
 
@@ -179,20 +184,190 @@ function interceptAuth(instance: AxiosInstance): void {
     })
 }
 
+function interceptLocalApiRouting(instance: AxiosInstance): void {
+    const overrides: LocalServiceOverride[] = EnvironmentConfig.LOCAL_SERVICE_OVERRIDES ?? []
+
+    if (!overrides.length) {
+        return
+    }
+
+    instance.interceptors.request.use(config => {
+        if (!config.url) {
+            return config
+        }
+
+        const absoluteUrl = toAbsoluteUrl(config.url, config.baseURL)
+
+        if (!absoluteUrl) {
+            return config
+        }
+
+        let parsed: URL
+
+        try {
+            parsed = new URL(absoluteUrl)
+        } catch {
+            return config
+        }
+
+        const override: LocalServiceOverride | undefined = overrides.find(
+            ({ prefix }: LocalServiceOverride) => parsed.pathname.startsWith(prefix),
+        )
+
+        if (!override) {
+            return config
+        }
+
+        let target: URL
+
+        try {
+            target = new URL(override.target)
+        } catch {
+            return config
+        }
+
+        if (parsed.host === target.host && parsed.protocol === target.protocol) {
+            return config
+        }
+
+        const normalizedBasePath = target.pathname === '/' ? '' : target.pathname.replace(/\/$/, '')
+        const rewrittenPath = `${normalizedBasePath}${parsed.pathname}`
+        const finalUrl = `${target.protocol}//${target.host}${rewrittenPath}${parsed.search}${parsed.hash}`
+
+        config.url = finalUrl
+        config.baseURL = undefined
+
+        return config
+    })
+}
+
+function interceptLegacyCountryLookupPath(instance: AxiosInstance): void {
+    // Rewrite deprecated country lookup path to lookups-api path
+    instance.interceptors.request.use(config => {
+        if (!config.url) {
+            return config
+        }
+
+        const absoluteUrl = toAbsoluteUrl(config.url, config.baseURL)
+        if (!absoluteUrl) {
+            return config
+        }
+
+        let parsed: URL
+        try {
+            parsed = new URL(absoluteUrl)
+        } catch {
+            return config
+        }
+
+        const legacyPaths = ['/v6/members/lookup/countries', '/v6/members/lookups/countries']
+        if (legacyPaths.some(p => parsed.pathname === p || parsed.pathname === `${p}/`)) {
+            const newPath = '/v6/lookups/countries'
+            const finalUrl = `${parsed.protocol}//${parsed.host}${newPath}${parsed.search}${parsed.hash}`
+            config.url = finalUrl
+            config.baseURL = undefined
+        }
+
+        return config
+    })
+}
+
+function toAbsoluteUrl(url: string, baseUrl?: string): string | undefined {
+    if (/^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//.test(url)) {
+        return url
+    }
+
+    const base = baseUrl || (typeof window !== 'undefined' ? window.location.origin : undefined)
+
+    if (!base) {
+        return undefined
+    }
+
+    try {
+        return new URL(url, base)
+            .toString()
+    } catch {
+        return undefined
+    }
+}
+
+async function hydrateErrorFromBlobResponse(
+    responseData: unknown,
+    response: AxiosResponse | undefined,
+    error: any,
+): Promise<boolean> {
+    if (
+        !responseData
+        || typeof Blob === 'undefined'
+        || !(responseData instanceof Blob)
+    ) {
+        return false
+    }
+
+    try {
+        const payloadText = await responseData.text()
+        if (!payloadText) {
+            return true
+        }
+
+        try {
+            const parsed = JSON.parse(payloadText)
+            if (response) {
+                response.data = parsed
+            }
+
+            error.data = parsed
+        } catch {
+            // fallback to plain text message if parsing fails
+            error.message = payloadText
+        }
+    } catch {
+        // ignore blob parse failures and defer to axios default behaviour
+    }
+
+    return true
+}
+
+function assignErrorMessageFromResponse(error: any, response: AxiosResponse | undefined): void {
+    if (response?.data?.message) {
+        error.message = response.data.message
+    } else if (response?.data?.error?.message) {
+        error.message = response.data.error.message
+    }
+}
+
+function assignErrorCodeFromResponse(error: any, response: AxiosResponse | undefined): void {
+    if (!error.code && response?.data?.code) {
+        error.code = response.data.code
+    }
+}
+
 function interceptError(instance: AxiosInstance): void {
     // handle all http errors
     instance.interceptors.response.use(
         config => config,
-        (error: any) => {
-            // if there is server error message, then return it inside `message` property of error
-            if (error?.response?.data?.message) {
-                error.message = error?.response?.data?.message
-            } else if (error?.response?.data?.error?.message) {
-                error.message = error?.response?.data?.error?.message
+        async (error: any) => {
+            const response: AxiosResponse | undefined = error?.response
+
+            if (response?.status && !error.status) {
+                error.status = response.status
             }
 
+            const blobHandled = await hydrateErrorFromBlobResponse(
+                response?.data,
+                response,
+                error,
+            )
+
+            if (response?.data && !error.data && !blobHandled) {
+                error.data = response.data
+            }
+
+            assignErrorMessageFromResponse(error, response)
+            assignErrorCodeFromResponse(error, response)
+
             // if there is server errors data, then return it inside `errors` property of error
-            error.errors = error?.response?.data?.errors
+            error.errors = response?.data?.errors
             return Promise.reject(error)
         },
     )

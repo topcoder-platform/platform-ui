@@ -1,0 +1,148 @@
+@import '@libs/ui/styles/includes';
+
+.modal {
+  max-width: 720px;
+}
+
+.titleHandle {
+  font-weight: 700;
+}
+
+.tableWrapper {
+  overflow-x: auto;
+
+  &:global(.enhanced-table) {
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: 'Nunito Sans', sans-serif;
+
+      thead tr {
+        background: var(--invertButtonColor);
+      }
+
+      th,
+      td {
+        text-align: left;
+        padding: $sp-3 $sp-4;
+        border-bottom: 1px solid var(--TableBorderColor);
+        color: var(--FontColor);
+        font-size: 14px;
+      }
+
+      th {
+        font-weight: 700;
+      }
+
+      tbody tr:last-of-type td {
+        border-bottom: none;
+      }
+    }
+  }
+}
+
+.table {
+  width: 100%;
+}
+
+.cellSubmission {
+  width: 50%;
+}
+
+.cellDate {
+  width: 25%;
+  white-space: nowrap;
+}
+
+.cellVirusScan {
+  width: 25%;
+  white-space: nowrap;
+}
+
+.submissionCell {
+  display: inline-flex;
+  align-items: center;
+  gap: $sp-2;
+}
+
+.submissionLink {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  font-weight: 700;
+  line-height: inherit;
+  color: $link-blue-dark;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+
+  &:hover,
+  &:focus {
+    color: $blue-110;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+}
+
+.copyButton {
+  border: none;
+  background: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: $link-blue-dark;
+  cursor: pointer;
+  padding: 0;
+
+  &:hover,
+  &:focus {
+    color: $blue-110;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.tooltipTrigger {
+  display: inline-flex;
+}
+
+.virusOkIcon,
+.virusWarnIcon {
+  display: inline-flex;
+  align-items: center;
+
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.virusOkIcon {
+  color: $green-140;
+}
+
+.virusWarnIcon {
+  color: $orange-140;
+}
+
+.emptyState {
+  margin: 0;
+  padding: $sp-4 0;
+  color: var(--GrayFontColor);
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 14px;
+  text-align: center;
+}

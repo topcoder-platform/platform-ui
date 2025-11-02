@@ -4,4 +4,13 @@
 export interface SubmissionReviewSummation {
     aggregateScore: number
     id: string
+    isProvisional?: boolean | null
+    isFinal?: boolean | null
+    createdAt: Date | string
+    submissionId: string
+    memberId?: string | number | null
+    submitterId?: number | null
+    submitterHandle?: string | null
+    submitterMaxRating?: number | null
+    metadata?: unknown | null
 }

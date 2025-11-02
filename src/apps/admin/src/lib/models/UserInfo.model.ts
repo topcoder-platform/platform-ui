@@ -21,11 +21,12 @@ export interface UserInfo {
     emailStatusDesc: string
     createdAt: Date
     modifiedAt: Date
-    credential: {
-        activationCode: string
+    credential?: {
+        activationCode?: string
     }
     active: boolean
-    emailActive: boolean
+    emailActive?: boolean
+    emailVerified?: boolean
 }
 
 /**
@@ -34,6 +35,13 @@ export interface UserInfo {
  * @returns updated user info
  */
 export function adjustUserInfoResponse(userInfo: UserInfo): UserInfo {
+    const isEmailVerified
+        = typeof userInfo.emailVerified === 'boolean'
+            ? userInfo.emailVerified
+            : typeof userInfo.emailActive === 'boolean'
+                ? userInfo.emailActive
+                : false
+
     return {
         ...userInfo,
         activationLink:
@@ -42,9 +50,11 @@ export function adjustUserInfoResponse(userInfo: UserInfo): UserInfo {
                 ? `${EnvironmentConfig.API.URL}/pub/activation.html?code=${userInfo.credential.activationCode}&retUrl=https%3A%2F%2Fwww.topcoder.com%2Fskill-picker%2F`
                 : '',
         createdAt: new Date(userInfo.createdAt),
-        emailStatusDesc: !!userInfo.emailActive
+        emailActive: isEmailVerified,
+        emailStatusDesc: isEmailVerified
             ? LABEL_EMAIL_STATUS_VERIFIED
             : LABEL_EMAIL_STATUS_UNVERIFIED,
+        emailVerified: isEmailVerified,
         modifiedAt: new Date(userInfo.modifiedAt),
         statusDesc: DICT_USER_STATUS[userInfo.status],
     }

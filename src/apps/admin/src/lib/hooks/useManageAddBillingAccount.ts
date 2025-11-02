@@ -5,10 +5,11 @@ import { useCallback, useEffect, useReducer, useRef } from 'react'
 import { toast } from 'react-toastify'
 
 import { handleError } from '../utils'
-import { BillingAccount, ClientInfo, FormEditBillingAccount } from '../models'
+import { BillingAccount, ClientInfo, FormEditBillingAccount, FormEditClient } from '../models'
 import {
     createBillingAccount,
     editBillingAccount,
+    editClient,
     findBillingAccountById,
     findClientById,
 } from '../services'
@@ -209,7 +210,25 @@ export function useManageAddBillingAccount(
                 type: BillingAccountsActionType.ADD_BILLING_ACCOUNT_INIT,
             })
             createBillingAccount(data)
-                .then(() => {
+                .then(async () => {
+                    // Persist Customer Number (companyId) into the selected client's codeName
+                    if (data.client?.id !== undefined && data.companyId !== undefined && data.companyId !== null) {
+                        try {
+                            const client = await findClientById(data.client.id)
+                            const patch: FormEditClient = {
+                                codeName: String(data.companyId),
+                                endDate: client.endDate,
+                                name: client.name,
+                                startDate: client.startDate,
+                                status: client.status,
+                            }
+                            await editClient(String(client.id), patch)
+                        } catch (e) {
+                            // Non-fatal: continue flow even if client update fails
+                            console.warn('Failed to update client customer number (codeName):', e)
+                        }
+                    }
+
                     toast.success('Billing account added successfully', {
                         toastId: 'Add accounts',
                     })
@@ -234,7 +253,24 @@ export function useManageAddBillingAccount(
                 type: BillingAccountsActionType.UPDATE_BILLING_ACCOUNT_INIT,
             })
             editBillingAccount(accountId, data)
-                .then(() => {
+                .then(async () => {
+                    // Persist Customer Number (companyId) into the selected client's codeName
+                    if (data.client?.id !== undefined && data.companyId !== undefined && data.companyId !== null) {
+                        try {
+                            const client = await findClientById(data.client.id)
+                            const patch: FormEditClient = {
+                                codeName: String(data.companyId),
+                                endDate: client.endDate,
+                                name: client.name,
+                                startDate: client.startDate,
+                                status: client.status,
+                            }
+                            await editClient(String(client.id), patch)
+                        } catch (e) {
+                            console.warn('Failed to update client customer number (codeName):', e)
+                        }
+                    }
+
                     toast.success('Billing account updated successfully', {
                         toastId: 'Update accounts',
                     })
