@@ -72,7 +72,7 @@ export interface ChallengeInfo {
         basePayment: number
         incrementalPayment: number
         type: string
-        isAIReviewer: boolean
+        aiWorkflowId?: string;
     }[]
     currentPhaseObject?: BackendPhase
     metadata?: BackendMetadata[]

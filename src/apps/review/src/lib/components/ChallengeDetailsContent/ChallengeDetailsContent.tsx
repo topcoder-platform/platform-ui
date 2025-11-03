@@ -126,6 +126,7 @@ interface SubmissionTabParams {
     isDownloadingSubmission: useDownloadSubmissionProps['isLoading']
     downloadSubmission: useDownloadSubmissionProps['downloadSubmission']
     isActiveChallenge: boolean
+    aiReviewers: { aiWorkflowId: string }[]
 }
 
 const renderSubmissionTab = ({
@@ -137,6 +138,7 @@ const renderSubmissionTab = ({
     isDownloadingSubmission,
     downloadSubmission,
     isActiveChallenge,
+    aiReviewers,
 }: SubmissionTabParams): JSX.Element => {
     const isSubmissionTab = selectedTabNormalized === 'submission'
     const isTopgearSubmissionTab = selectedTabNormalized === 'topgearsubmission'
@@ -155,6 +157,7 @@ const renderSubmissionTab = ({
     if (canShowSubmissionList) {
         return (
             <TabContentSubmissions
+                aiReviewers={aiReviewers}
                 submissions={visibleSubmissions}
                 isLoading={isLoadingSubmission}
                 isDownloading={isDownloadingSubmission}
@@ -335,6 +338,9 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
 
         if (SUBMISSION_TAB_KEYS.has(selectedTabNormalized)) {
             return renderSubmissionTab({
+                aiReviewers: (
+                    challengeInfo?.reviewers?.filter(r => !!r.aiWorkflowId) as { aiWorkflowId: string }[]
+                ) ?? [],
                 downloadSubmission,
                 isActiveChallenge: props.isActiveChallenge,
                 isDownloadingSubmission,

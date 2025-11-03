@@ -41,10 +41,12 @@ import {
 } from '../../utils'
 import type { SubmissionHistoryPartition } from '../../utils'
 import { TABLE_DATE_FORMAT } from '../../../config/index.config'
+import { CollapsibleAiReviewsRow } from '../CollapsibleAiReviewsRow'
 
 import styles from './TabContentSubmissions.module.scss'
 
 interface Props {
+    aiReviewers?: { aiWorkflowId: string }[]
     submissions: BackendSubmission[]
     isLoading: boolean
     isDownloading: IsRemovingType
@@ -317,27 +319,16 @@ export const TabContentSubmissions: FC<Props> = props => {
                     type: 'element',
                 },
                 {
-                    label: 'Virus Scan',
+                    className: styles.aiReviewerRow,
+                    label: 'Reviewer',
+                    mobileColSpan: 2,
                     propertyName: 'virusScan',
-                    renderer: (submission: BackendSubmission) => {
-                        if (submission.virusScan === true) {
-                            return (
-                                <span className={styles.virusOkIcon} title='Scan passed' aria-label='Scan passed'>
-                                    <IconOutline.CheckCircleIcon />
-                                </span>
-                            )
-                        }
-
-                        if (submission.virusScan === false) {
-                            return (
-                                <span className={styles.virusWarnIcon} title='Scan failed' aria-label='Scan failed'>
-                                    <IconOutline.ExclamationIcon />
-                                </span>
-                            )
-                        }
-
-                        return <span>-</span>
-                    },
+                    renderer: (submission: BackendSubmission) => (
+                        <CollapsibleAiReviewsRow
+                            aiReviewers={props.aiReviewers!}
+                            submission={submission}
+                        />
+                    ),
                     type: 'element',
                 },
             ]
@@ -405,6 +396,7 @@ export const TabContentSubmissions: FC<Props> = props => {
                 },
                 {
                     ...column,
+                    colSpan: column.mobileColSpan,
                     mobileType: 'last-value',
                 },
             ] as MobileTableColumn<BackendSubmission>[],
@@ -442,6 +434,7 @@ export const TabContentSubmissions: FC<Props> = props => {
                 isDownloading={props.isDownloading}
                 getRestriction={getHistoryRestriction}
                 getSubmissionMeta={resolveSubmissionMeta}
+                aiReviewers={props.aiReviewers}
             />
         </TableWrapper>
     )
