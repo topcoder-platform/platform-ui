@@ -45,7 +45,7 @@ export async function getChallengePayments(
 }
 
 export async function createWinning(payload: any): Promise<unknown> {
-    return xhrPostAsync(`${EnvironmentConfig.API.V5}/finance/winnings`, payload)
+    return xhrPostAsync(`${EnvironmentConfig.API.V6}/finance/winnings`, payload)
 }
 
 export async function autocompleteMembers(term: string): Promise<Array<{ handle: string }>> {
