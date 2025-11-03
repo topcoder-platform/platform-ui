@@ -40,12 +40,12 @@ export async function getChallengePayments(
     challengeId: string,
 ): Promise<ChallengePaymentsResponse> {
     return xhrGetAsync<ChallengePaymentsResponse>(
-        `${EnvironmentConfig.API.V6}/payments/challenges/${challengeId}`,
+        `${EnvironmentConfig.API.V6}/finance/challenge-payments/${challengeId}`,
     )
 }
 
 export async function createWinning(payload: any): Promise<unknown> {
-    return xhrPostAsync(`${EnvironmentConfig.API.V5}/finance/winnings`, payload)
+    return xhrPostAsync(`${EnvironmentConfig.API.V6}/finance/winnings`, payload)
 }
 
 export async function autocompleteMembers(term: string): Promise<Array<{ handle: string }>> {
