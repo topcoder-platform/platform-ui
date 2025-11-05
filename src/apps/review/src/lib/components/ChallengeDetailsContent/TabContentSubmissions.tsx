@@ -323,10 +323,11 @@ export const TabContentSubmissions: FC<Props> = props => {
                     label: 'Reviewer',
                     mobileColSpan: 2,
                     propertyName: 'virusScan',
-                    renderer: (submission: BackendSubmission) => (
+                    renderer: (submission: BackendSubmission, allRows: BackendSubmission[]) => (
                         <CollapsibleAiReviewsRow
                             aiReviewers={props.aiReviewers!}
                             submission={submission}
+                            defaultOpen={allRows ? !allRows.indexOf(submission) : false}
                         />
                     ),
                     type: 'element',

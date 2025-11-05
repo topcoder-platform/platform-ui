@@ -9,6 +9,7 @@ import { BackendSubmission } from '../../models'
 import styles from './CollapsibleAiReviewsRow.module.scss'
 
 interface CollapsibleAiReviewsRowProps {
+    defaultOpen?: boolean
     aiReviewers: { aiWorkflowId: string }[]
     submission: BackendSubmission
 }
@@ -16,7 +17,7 @@ interface CollapsibleAiReviewsRowProps {
 const CollapsibleAiReviewsRow: FC<CollapsibleAiReviewsRowProps> = props => {
     const aiReviewersCount = props.aiReviewers.length + 1
 
-    const [isOpen, setIsOpen] = useState(false)
+    const [isOpen, setIsOpen] = useState(props.defaultOpen ?? false)
 
     const toggleOpen = useCallback(() => {
         setIsOpen(wasOpen => !wasOpen)

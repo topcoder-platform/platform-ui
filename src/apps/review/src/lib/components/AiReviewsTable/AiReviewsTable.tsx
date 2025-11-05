@@ -174,7 +174,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                                     <span className={styles.icon}>
                                         <IconAiReview />
                                     </span>
-                                    <span className={styles.workflowName} title={run.workflow.name}>
+                                    <span className={styles.workflowName}>
                                         <Tooltip content={run.workflow.name} triggerOn='hover'>
                                             {run.workflow.name}
                                         </Tooltip>
