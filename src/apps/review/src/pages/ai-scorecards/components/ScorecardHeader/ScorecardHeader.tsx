@@ -4,8 +4,9 @@ import moment, { Duration } from 'moment'
 import { AiScorecardContextModel } from '~/apps/review/src/lib/models'
 
 import { useAiScorecardContext } from '../../AiScorecardContext'
-import { IconClock, IconDeepseekAi, IconPremium } from '../../../../lib/assets/icons'
+import { IconClock, IconPremium } from '../../../../lib/assets/icons'
 import { AiModelModal } from '../AiModelModal'
+import AiModelIcon from '../AiModelIcon'
 
 import styles from './ScorecardHeader.module.scss'
 
@@ -19,7 +20,7 @@ const formatDuration = (duration: Duration): string => [
 const ScorecardHeader: FC = () => {
     const { workflow, workflowRun }: AiScorecardContextModel = useAiScorecardContext()
     const runDuration = useMemo(() => (
-        workflowRun && moment.duration(
+        workflowRun && workflowRun.completedAt && workflowRun.startedAt && moment.duration(
             +new Date(workflowRun.completedAt) - +new Date(workflowRun.startedAt),
             'milliseconds',
         )
@@ -38,7 +39,9 @@ const ScorecardHeader: FC = () => {
         <div className={styles.wrap}>
             <div className={styles.headerWrap}>
                 <div className={styles.workflowInfo}>
-                    <IconDeepseekAi className={styles.workflowIcon} />
+                    <div className={styles.workflowIcon}>
+                        <AiModelIcon model={workflow.llm} />
+                    </div>
                     <div className={styles.workflowName}>
                         <h3>{workflow.name}</h3>
                         <span className={styles.modelName} onClick={toggleModelDetails}>{workflow.llm.name}</span>

@@ -4,6 +4,8 @@ import { BaseModal } from '~/libs/ui'
 import { AiWorkflow } from '~/apps/review/src/lib/hooks'
 import { IconExternalLink } from '~/apps/review/src/lib/assets/icons'
 
+import AiModelIcon from '../AiModelIcon'
+
 import styles from './AiModelModal.module.scss'
 
 interface AiModelModalProps {
@@ -22,11 +24,11 @@ const AiModelModal: FC<AiModelModalProps> = props => (
         <div className={styles.wrap}>
             <div className={styles.modelNameWrap}>
                 <div className={styles.modelIcon}>
-                    <img src={props.model.icon} alt={props.model.name} />
+                    <AiModelIcon model={props.model} />
                 </div>
                 <div className={styles.modelName}>
                     <h3>{props.model.name}</h3>
-                    <a href={props.model.url} target='_blank' rel='noreferrer'>
+                    <a href={props.model.url} target='_blank' rel='noreferrer noopener'>
                         <IconExternalLink />
                     </a>
                 </div>
