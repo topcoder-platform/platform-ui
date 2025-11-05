@@ -56,6 +56,10 @@ export interface SubmissionInfo {
      * Submission type (e.g. CONTEST_SUBMISSION, CHECKPOINT_SUBMISSION).
      */
     type?: string
+    /**
+     * Flag indicating whether the submission includes an uploaded file.
+     */
+    isFileSubmission?: boolean
 }
 
 /**
@@ -118,6 +122,7 @@ export function convertBackendSubmissionToSubmissionInfo(
     return {
         aggregateScore,
         id: data.id,
+        isFileSubmission: data.isFileSubmission,
         isLatest: data.isLatest,
         isPassingReview,
         memberId: data.memberId,

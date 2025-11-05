@@ -1,5 +1,5 @@
-import { FC } from 'react'
-import { useFormContext } from 'react-hook-form'
+import { FC, useMemo } from 'react'
+import { useFormContext, useWatch } from 'react-hook-form'
 import classNames from 'classnames'
 
 import styles from './CalculatedWeightsSum.module.scss'
@@ -13,11 +13,25 @@ interface CalculatedWeightsSumProps {
 
 const CalculatedWeightsSum: FC<CalculatedWeightsSumProps> = props => {
     const form = useFormContext()
-    const fields = form.watch(props.fieldName)
+    const watchedFields = useWatch({
+        control: form.control,
+        defaultValue: [],
+        name: props.fieldName,
+    }) as { weight?: number | string | null }[] | undefined
 
-    const weightsSum = fields.reduce(
-        (sum: number, field: { weight: string | number | undefined }) => (Number(field.weight) || 0) + sum,
-        0,
+    const fields = useMemo(
+        () => (Array.isArray(watchedFields) ? watchedFields : []),
+        [watchedFields],
+    )
+
+    const weightsSum = useMemo(
+        () => fields.reduce(
+            (sum: number, field: { weight?: string | number | null }) => (
+                Number(field?.weight ?? 0) + sum
+            ),
+            0,
+        ),
+        [fields],
     )
 
     return (

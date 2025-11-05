@@ -662,6 +662,7 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
             columnId: 'submission-id',
             label: 'Submission ID',
             propertyName: 'id',
+            // eslint-disable-next-line complexity -- Renderer must account for multiple submission restriction states.
             renderer: (data: SubmissionInfo) => {
                 const isOwnedSubmission = data.memberId
                     ? ownedMemberIds.has(data.memberId)
@@ -675,7 +676,10 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
                 const memberRestrictionMessage = getRestrictionMessageForMember(
                     data.memberId,
                 )
-                const failedScan = (data as SubmissionInfo).virusScan === false
+                const normalizedVirusScan = data.isFileSubmission === false
+                    ? undefined
+                    : data.virusScan
+                const failedScan = normalizedVirusScan === false
                 const isButtonDisabled = Boolean(
                     isDownloading[data.id]
                     || isRestrictedForMember
@@ -685,14 +689,6 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
                 const downloadButton = (
                     <button
                         onClick={function onClick() {
-                            if (
-                                isRestrictedForMember
-                                || failedScan
-                                || isOwnershipRestricted
-                            ) {
-                                return
-                            }
-
                             downloadSubmission(data.id)
                         }}
                         className={styles.textBlue}
@@ -708,27 +704,19 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
                 ): Promise<void> {
                     event.stopPropagation()
                     event.preventDefault()
-
-                    if (!data.id) {
-                        return
-                    }
-
                     await copyTextToClipboard(data.id)
                     toast.success('Submission ID copied to clipboard', {
                         toastId: `challenge-submission-id-copy-${data.id}`,
                     })
                 }
 
-                let tooltipContent: string | undefined
-                if (failedScan) {
-                    tooltipContent = 'Submission failed virus scan'
-                } else if (isRestrictedForMember) {
-                    tooltipContent = memberRestrictionMessage ?? restrictionMessage
-                } else if (isOwnershipRestricted) {
-                    tooltipContent = DOWNLOAD_OWN_SUBMISSION_TOOLTIP
-                } else if (isSubmissionDownloadRestricted && restrictionMessage) {
-                    tooltipContent = restrictionMessage
-                }
+                const tooltipContent = failedScan
+                    ? 'Submission failed virus scan'
+                    : isRestrictedForMember
+                        ? memberRestrictionMessage ?? restrictionMessage
+                        : isOwnershipRestricted
+                            ? DOWNLOAD_OWN_SUBMISSION_TOOLTIP
+                            : (isSubmissionDownloadRestricted && restrictionMessage) || undefined
 
                 const downloadControl = isOwnershipRestricted ? (
                     <span className={styles.textBlue}>
@@ -871,7 +859,7 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
     const reviewDateColumn: TableColumn<SubmissionInfo> = useMemo(
         () => ({
             columnId: 'review-date',
-            label: 'Review Date',
+            label: isApprovalColumn ? 'Approval Date' : 'Review Date',
             renderer: (data: SubmissionInfo) => {
                 const review = data.review
 
@@ -898,7 +886,7 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
             },
             type: 'element',
         }),
-        [],
+        [isApprovalColumn],
     )
 
     const approvalResultColumn: TableColumn<SubmissionInfo> | undefined = useMemo(() => {
@@ -914,6 +902,15 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
                 const status = (review?.status ?? '').toUpperCase()
                 const hasReview = hasActiveReview(review)
                 const isCompleted = ['COMPLETED', 'SUBMITTED'].includes(status)
+
+                if (!hasReview) {
+                    return <span>--</span>
+                }
+
+                if (!isCompleted) {
+                    return <span>--</span>
+                }
+
                 const outcome = resolveSubmissionReviewResult(
                     data as SubmissionRow,
                     {
@@ -933,18 +930,6 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
                     return (
                         <span className={styles.resultFail}>
                             Fail
-                        </span>
-                    )
-                }
-
-                if (!hasReview) {
-                    return <span>--</span>
-                }
-
-                if (!isCompleted) {
-                    return (
-                        <span className={styles.pendingText}>
-                            Pending
                         </span>
                     )
                 }
@@ -1278,12 +1263,19 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
             return undefined
         }
 
+        const hasMyIterativeReviewAssignments = (datas || []).some(entry => {
+            const resourceId = entry.review?.resourceId
+            return resourceId ? myResourceIds.has(resourceId) : false
+        })
+
         const hasCompletedIterativeReviews = (datas || []).some(d => (
             ['COMPLETED', 'SUBMITTED'].includes((d.review?.status || '').toString()
                 .toUpperCase())
         ))
 
-        const allowColumn = isReviewPhase(challengeInfo) || (isFirst2Finish && hasCompletedIterativeReviews)
+        const allowColumn = isReviewPhase(challengeInfo)
+            || hasMyIterativeReviewAssignments
+            || (isFirst2Finish && hasCompletedIterativeReviews)
         if (!allowColumn) {
             return undefined
         }
@@ -1310,6 +1302,7 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
         renderApprovalAction,
         renderIterativeAction,
         renderPostMortemAction,
+        myResourceIds,
     ])
 
     const columns = useMemo<TableColumn<SubmissionInfo>[]>(() => {

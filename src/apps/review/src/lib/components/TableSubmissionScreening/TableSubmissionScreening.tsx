@@ -44,8 +44,9 @@ import {
 import { ChallengeDetailContext, ReviewAppContext } from '../../contexts'
 import { updateReview } from '../../services'
 import { ConfirmModal } from '../ConfirmModal'
-import { useSubmissionDownloadAccess } from '../../hooks'
+import { useRole, useSubmissionDownloadAccess } from '../../hooks'
 import type { UseSubmissionDownloadAccessResult } from '../../hooks/useSubmissionDownloadAccess'
+import type { useRoleProps } from '../../hooks/useRole'
 
 import styles from './TableSubmissionScreening.module.scss'
 
@@ -124,7 +125,10 @@ const createSubmissionColumn = (config: SubmissionColumnConfig): TableColumn<Scr
     propertyName: 'submissionId',
     renderer: (data: Screening) => {
         const isRestrictedBase = config.isSubmissionDownloadRestrictedForMember(data.memberId)
-        const failedScan = data.virusScan === false
+        const normalizedVirusScan = data.isFileSubmission === false
+            ? undefined
+            : data.virusScan
+        const failedScan = normalizedVirusScan === false
         const isRestrictedForRow = isRestrictedBase || failedScan
         const tooltipMessage = failedScan
             ? 'Submission failed virus scan'
@@ -230,6 +234,10 @@ const createVirusScanColumn = (): TableColumn<Screening> => ({
     label: 'Virus Scan',
     propertyName: 'virusScan',
     renderer: (data: Screening) => {
+        if (data.isFileSubmission === false) {
+            return <span>N/A</span>
+        }
+
         if (data.virusScan === true) {
             return (
                 <span className={styles.virusOkIcon} title='Scan passed' aria-label='Scan passed'>
@@ -424,47 +432,78 @@ const isScreeningReviewInProgress = (entry: Screening): boolean => (
     || isInProgressStatus(entry.myReviewStatus)
 )
 
+/**
+ * Creates columns for displaying screening review data.
+ *
+ * Note: This function assumes that the input data has been validated
+ * to contain only Screening phase reviews. Defensive filtering is
+ * performed in TabContentScreening to ensure phase data isolation.
+ *
+ * @param config - Configuration for scorecard access and score masking
+ * @returns Array of table columns for screening data
+ */
 const createScreeningColumns = ({
     canViewScorecard,
     shouldMaskScore,
 }: ScreeningColumnConfig): TableColumn<Screening>[] => [
     {
         label: 'Screener',
-        propertyName: 'screenerHandle',
-        renderer: (data: Screening) => (data.screener?.memberHandle ? (
-            <a
-                href={getHandleUrl(data.screener)}
-                target='_blank'
-                rel='noreferrer'
-                style={{
-                    color: data.screener?.handleColor,
-                }}
-                onClick={function onClick() {
-                    window.open(
-                        getHandleUrl(data.screener),
-                        '_blank',
-                    )
-                }}
-            >
-                {data.screener?.memberHandle ?? ''}
-            </a>
-        ) : (
-            <span
-                style={{
-                    color: data.screener?.handleColor,
-                }}
-            >
-                {data.screener?.memberHandle ?? ''}
-            </span>
-        )),
+        propertyName: 'screener',
+        renderer: (data: Screening) => {
+            const normalizedPhaseName = data.phaseName
+                ?.toLowerCase()
+                .trim()
+
+            if (normalizedPhaseName && normalizedPhaseName !== 'screening') {
+                return <span />
+            }
+
+            // Display the screener handle from the Screening phase review
+            // (Review phase data is filtered out in TabContentScreening)
+            return data.screener?.memberHandle ? (
+                <a
+                    href={getHandleUrl(data.screener)}
+                    target='_blank'
+                    rel='noreferrer'
+                    style={{
+                        color: data.screener?.handleColor,
+                    }}
+                    onClick={function onClick() {
+                        window.open(
+                            getHandleUrl(data.screener),
+                            '_blank',
+                        )
+                    }}
+                >
+                    {data.screener?.memberHandle ?? ''}
+                </a>
+            ) : (
+                <span
+                    style={{
+                        color: data.screener?.handleColor,
+                    }}
+                >
+                    {data.screener?.memberHandle ?? ''}
+                </span>
+            )
+        },
         type: 'element',
     },
     {
         label: 'Screening Score',
         propertyName: 'score',
         renderer: (data: Screening) => {
+            const normalizedPhaseName = data.phaseName
+                ?.toLowerCase()
+                .trim()
+            // Link to the Screening phase scorecard
+            // (Review phase scorecards are filtered out upstream)
             const maskScore = shouldMaskScore(data)
             const scoreValue = maskScore ? '--' : (data.score ?? '-')
+
+            if (normalizedPhaseName && normalizedPhaseName !== 'screening') {
+                return <span>{scoreValue}</span>
+            }
 
             if (!data.reviewId || maskScore) {
                 return <span>{scoreValue}</span>
@@ -631,6 +670,7 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
         getRestrictionMessageForMember,
         currentMemberId,
     }: UseSubmissionDownloadAccessResult = useSubmissionDownloadAccess()
+    const { hasReviewerRole }: useRoleProps = useRole()
 
     const normalisedRoles = useMemo(
         () => (myRoles ?? []).map(role => role.toLowerCase()),
@@ -732,6 +772,7 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
             map.set(submissionId, {
                 ...existing,
                 id: existing?.id ?? submissionId,
+                isFileSubmission: screening.isFileSubmission ?? existing?.isFileSubmission,
                 isLatest: screening.isLatest ?? existing?.isLatest,
                 memberId: screening.memberId ?? existing?.memberId ?? '',
                 submittedDate: createdAt,
@@ -971,7 +1012,7 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
                 return false
             }
 
-            if (canViewAllScorecards) {
+            if (canViewAllScorecards || hasReviewerRole) {
                 return true
             }
 
@@ -996,6 +1037,7 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
         },
         [
             canViewAllScorecards,
+            hasReviewerRole,
             currentMemberId,
             myResourceIds,
         ],

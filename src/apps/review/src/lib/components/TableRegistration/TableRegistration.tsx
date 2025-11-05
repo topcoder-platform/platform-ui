@@ -58,6 +58,14 @@ export const TableRegistration: FC<Props> = (props: Props) => {
         [myRoles],
     )
 
+    const hasManagerRole = useMemo(
+        () => (myRoles ?? [])
+            .some(role => role
+                ?.trim()
+                .toLowerCase() === 'manager'),
+        [myRoles],
+    )
+
     const isAdmin = useMemo(
         () => loginUserInfo?.roles?.some(
             role => typeof role === 'string'
@@ -66,7 +74,7 @@ export const TableRegistration: FC<Props> = (props: Props) => {
         [loginUserInfo?.roles],
     )
 
-    const shouldDisplayEmail = hasCopilotRole || isAdmin
+    const shouldDisplayEmail = hasCopilotRole || hasManagerRole || isAdmin
 
     const columns = useMemo<TableColumn<BackendResource>[]>(
         () => {

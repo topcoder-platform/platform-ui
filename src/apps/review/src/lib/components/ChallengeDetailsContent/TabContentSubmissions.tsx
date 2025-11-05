@@ -56,6 +56,8 @@ interface Props {
 const VIRUS_SCAN_FAILED_MESSAGE = 'Submission failed virus scan'
 
 export const TabContentSubmissions: FC<Props> = props => {
+    console.log('here', props.submissions);
+
     const windowSize: WindowSize = useWindowSize()
     const isTablet = useMemo(
         () => (windowSize.width ?? 0) <= 984,
@@ -234,7 +236,10 @@ export const TabContentSubmissions: FC<Props> = props => {
                         }
 
                         const isRestrictedBase = isSubmissionDownloadRestrictedForMember(submission.memberId)
-                        const failedScan = submission.virusScan === false
+                        const normalizedVirusScan = submission.isFileSubmission === false
+                            ? undefined
+                            : submission.virusScan
+                        const failedScan = normalizedVirusScan === false
                         const isRestricted = isRestrictedBase || failedScan
                         const tooltipMessage = failedScan
                             ? VIRUS_SCAN_FAILED_MESSAGE
@@ -324,11 +329,15 @@ export const TabContentSubmissions: FC<Props> = props => {
                     mobileColSpan: 2,
                     propertyName: 'virusScan',
                     renderer: (submission: BackendSubmission, allRows: BackendSubmission[]) => (
-                        <CollapsibleAiReviewsRow
-                            aiReviewers={props.aiReviewers!}
-                            submission={submission}
-                            defaultOpen={allRows ? !allRows.indexOf(submission) : false}
-                        />
+                        submission.isFileSubmission === false ? (
+                            <span>N/A</span>
+                        ) : (
+                            <CollapsibleAiReviewsRow
+                                aiReviewers={props.aiReviewers!}
+                                submission={submission}
+                                defaultOpen={allRows ? !allRows.indexOf(submission) : false}
+                            />
+                        )
                     ),
                     type: 'element',
                 },

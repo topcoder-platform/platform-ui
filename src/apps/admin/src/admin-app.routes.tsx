@@ -10,6 +10,7 @@ import {
 
 import {
     billingAccountRouteId,
+    defaultReviewersRouteId,
     gamificationAdminRouteId,
     manageChallengeRouteId,
     manageReviewRouteId,
@@ -145,6 +146,18 @@ const TermsAddPage: LazyLoadedComponent = lazyLoad(
 const TermsEditPage: LazyLoadedComponent = lazyLoad(
     () => import('./platform/terms/TermsEditPage'),
     'TermsEditPage',
+)
+const DefaultReviewersListPage: LazyLoadedComponent = lazyLoad(
+    () => import('./platform/default-reviewers/DefaultReviewersListPage'),
+    'DefaultReviewersListPage',
+)
+const DefaultReviewersAddPage: LazyLoadedComponent = lazyLoad(
+    () => import('./platform/default-reviewers/DefaultReviewersAddPage'),
+    'DefaultReviewersAddPage',
+)
+const DefaultReviewersEditPage: LazyLoadedComponent = lazyLoad(
+    () => import('./platform/default-reviewers/DefaultReviewersEditPage'),
+    'DefaultReviewersEditPage',
 )
 const TermsUsersPage: LazyLoadedComponent = lazyLoad(
     () => import('./platform/terms/TermsUsersPage'),
@@ -365,6 +378,18 @@ export const adminRoutes: ReadonlyArray<PlatformRoute> = [
                     {
                         element: <TermsEditPage />,
                         route: `${termsRouteId}/:id/edit`,
+                    },
+                    {
+                        element: <DefaultReviewersListPage />,
+                        route: defaultReviewersRouteId,
+                    },
+                    {
+                        element: <DefaultReviewersAddPage />,
+                        route: `${defaultReviewersRouteId}/add`,
+                    },
+                    {
+                        element: <DefaultReviewersEditPage />,
+                        route: `${defaultReviewersRouteId}/:id/edit`,
                     },
                 ],
                 element: <Platform />,

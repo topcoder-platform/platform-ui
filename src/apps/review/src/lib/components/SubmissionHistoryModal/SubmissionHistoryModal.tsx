@@ -194,7 +194,9 @@ export const SubmissionHistoryModal: FC<SubmissionHistoryModalProps> = (props: S
     const renderHistoryRow = useCallback((submission: SubmissionInfo): JSX.Element => {
         const fallbackMeta = props.getSubmissionMeta?.(submission.id) ?? undefined
         const resolvedVirusScan = submission.virusScan ?? fallbackMeta?.virusScan
-        const failedScan = resolvedVirusScan === false
+        const isFileSubmission = submission.isFileSubmission ?? fallbackMeta?.isFileSubmission
+        const normalizedVirusScan = isFileSubmission === false ? undefined : resolvedVirusScan
+        const failedScan = normalizedVirusScan === false
         const restriction = props.getRestriction
             ? props.getRestriction(submission)
             : { restricted: false }
@@ -259,13 +261,17 @@ export const SubmissionHistoryModal: FC<SubmissionHistoryModalProps> = (props: S
                         {submittedDisplay}
                     </td>
                     <td className={styles.aiReviewers}>
-                        <span className={styles.reviewersDropown} onClick={toggle}>
-                            {aiReviewersCount}
-                            {' '}
-                            AI Reviewer
-                            {aiReviewersCount === 1 ? '' : 's'}
-                            <IconOutline.ChevronDownIcon className='icon-xl' />
-                        </span>
+                        {isFileSubmission === false ? (
+                            <span>N/A</span>
+                        ) : (
+                            <span className={styles.reviewersDropown} onClick={toggle}>
+                                {aiReviewersCount}
+                                {' '}
+                                AI Reviewer
+                                {aiReviewersCount === 1 ? '' : 's'}
+                                <IconOutline.ChevronDownIcon className='icon-xl' />
+                            </span>
+                        )}
                     </td>
                 </tr>
                 {toggledRows.has(submission.id) && (

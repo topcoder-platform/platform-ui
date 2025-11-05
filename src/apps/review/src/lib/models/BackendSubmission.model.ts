@@ -48,6 +48,11 @@ export interface BackendSubmission {
      * Indicates whether the submission is the latest for the member.
      */
     isLatest?: boolean
+    /**
+     * Flag indicating whether the submission includes a downloadable file.
+     * When false the submission is represented only by a URL.
+     */
+    isFileSubmission?: boolean
 }
 
 /**

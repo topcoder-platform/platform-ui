@@ -171,7 +171,10 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
                 propertyName: 'submissionId',
                 renderer: (data: Screening) => {
                     const isRestrictedBase = isSubmissionDownloadRestrictedForMember(data.memberId)
-                    const failedScan = data.virusScan === false
+                    const normalizedVirusScan = data.isFileSubmission === false
+                        ? undefined
+                        : data.virusScan
+                    const failedScan = normalizedVirusScan === false
                     const isRestrictedForRow = isRestrictedBase || failedScan
                     const tooltipMessage = failedScan
                         ? 'Submission failed virus scan'

@@ -1047,13 +1047,20 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
             }),
         [myResources],
     )
+    const hasManagerRole = useMemo(
+        () => (myResources ?? [])
+            .some(resource => (resource.roleName ?? '')
+                .trim()
+                .toLowerCase() === 'manager'),
+        [myResources],
+    )
     const isAdmin = useMemo(
         () => loginUserInfo?.roles?.some(
             role => typeof role === 'string' && role.toLowerCase() === 'administrator',
         ) ?? false,
         [loginUserInfo?.roles],
     )
-    const shouldShowResourcesSection = hasCopilotRole || isAdmin
+    const shouldShowResourcesSection = hasCopilotRole || hasManagerRole || isAdmin
     const canManagePhases = useMemo(
         () => !isPastReviewDetail && (hasCopilotRole || isAdmin),
         [hasCopilotRole, isAdmin, isPastReviewDetail],

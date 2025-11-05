@@ -1,5 +1,5 @@
 import * as yup from 'yup'
-import { FC, useEffect, useMemo } from 'react'
+import { FC, useCallback, useEffect, useMemo, useRef } from 'react'
 import { useFormContext } from 'react-hook-form'
 import classNames from 'classnames'
 
@@ -70,8 +70,30 @@ const toChallengeTrackLabel = (value: string): string => (
 )
 
 const legacyChallengeTrackMap: Record<string, string> = {
-    DEVELOPMENT: 'DEVELOP',
-    QUALITY_ASSURANCE: 'QA',
+    DEVELOP: 'DEVELOPMENT',
+    DEVELOPMENT: 'DEVELOPMENT',
+    QA: 'QUALITY_ASSURANCE',
+    QUALITY_ASSURANCE: 'QUALITY_ASSURANCE',
+}
+
+const normalizeTrackOptionValue = (track: useFetchChallengeTracksProps['challengeTracks'][number]): string => {
+    if (track.track) {
+        return track.track
+    }
+
+    const normalizedName = track.name
+        ?.replace(/\s+/g, '_')
+        .toUpperCase()
+
+    if (normalizedName && legacyChallengeTrackMap[normalizedName]) {
+        return legacyChallengeTrackMap[normalizedName]
+    }
+
+    if (track.name) {
+        return normalizedName || track.name
+    }
+
+    return track.id
 }
 
 const normalizeChallengeTrackValue = (
@@ -82,21 +104,23 @@ const normalizeChallengeTrackValue = (
 
     const directMatch = tracks.find(track => track.track === value && track.isActive)
     if (directMatch) {
-        return directMatch.track
+        return normalizeTrackOptionValue(directMatch)
     }
 
     const mappedValue = legacyChallengeTrackMap[value]
     if (mappedValue) {
-        const mappedMatch = tracks.find(track => track.track === mappedValue && track.isActive)
+        const mappedMatch = tracks.find(track => (
+            normalizeTrackOptionValue(track) === mappedValue && track.isActive
+        ))
         if (mappedMatch) {
-            return mappedMatch.track
+            return normalizeTrackOptionValue(mappedMatch)
         }
     }
 
     const normalizedLabel = toChallengeTrackLabel(value)
     const nameMatch = tracks.find(track => track.name === normalizedLabel && track.isActive)
     if (nameMatch) {
-        return nameMatch.track
+        return normalizeTrackOptionValue(nameMatch)
     }
 
     const uppercaseValue = value
@@ -109,22 +133,41 @@ const normalizeChallengeTrackValue = (
         && track.isActive
     ))
 
-    return fallbackMatch?.track
+    return fallbackMatch ? normalizeTrackOptionValue(fallbackMatch) : undefined
 }
 
 const ScorecardInfoForm: FC = () => {
     const form = useFormContext()
     const { challengeTracks }: useFetchChallengeTracksProps = useFetchChallengeTracks()
     const { challengeTypes }: useFetchChallengeTypesProps = useFetchChallengeTypes()
+    const { getValues, setValue }: Pick<typeof form, 'getValues' | 'setValue'> = form
+    const normalizeValue = useCallback((
+        value: string | number | boolean | null | undefined,
+    ): string | undefined => {
+        if (value === null || value === undefined) {
+            return undefined
+        }
+
+        const normalized = String(value)
+            .trim()
+
+        return normalized.length ? normalized : undefined
+    }, [])
 
     const challengeTrackOptions = useMemo(() => (
         challengeTracks
             .filter(track => track.isActive)
             .map(track => ({
                 label: track.name,
-                value: track.track,
+                value: normalizeTrackOptionValue(track),
             }))
     ), [challengeTracks])
+
+    const fallbackChallengeTrack = useMemo(
+        () => challengeTrackOptions.find(option => option.value)?.value,
+        [challengeTrackOptions],
+    )
+    const shouldNormalizeTrack = useRef(true)
 
     const challengeTypeOptions = useMemo(() => (
         challengeTypes
@@ -135,49 +178,97 @@ const ScorecardInfoForm: FC = () => {
             }))
     ), [challengeTypes])
 
+    const fallbackChallengeType = useMemo(
+        () => challengeTypeOptions.find(option => option.value)?.value,
+        [challengeTypeOptions],
+    )
+    const shouldNormalizeType = useRef(true)
+
     useEffect(() => {
+        if (!shouldNormalizeTrack.current) {
+            return
+        }
+
         if (!challengeTrackOptions.length) {
             return
         }
 
-        const currentValue: string = form.getValues('challengeTrack') as string
+        const currentValue = normalizeValue(getValues('challengeTrack') as string)
         const isCurrentValid: boolean = !!currentValue
-            && challengeTrackOptions.some(option => option.value === currentValue)
+            && challengeTrackOptions.some(option => (
+                normalizeValue(option.value) === currentValue
+            ))
 
         if (currentValue && !isCurrentValid) {
-            const normalizedValue = normalizeChallengeTrackValue(currentValue, challengeTracks)
-            if (normalizedValue) {
-                form.setValue('challengeTrack', normalizedValue, {
+            const normalizedValue = normalizeValue(
+                normalizeChallengeTrackValue(currentValue, challengeTracks),
+            )
+
+            if (normalizedValue && normalizedValue !== currentValue) {
+                setValue('challengeTrack', normalizedValue, {
                     shouldDirty: false,
                     shouldValidate: true,
                 })
-                return
+            }
+
+            return
+        }
+
+        if (!isCurrentValid && fallbackChallengeTrack) {
+            const normalizedFallback = normalizeValue(fallbackChallengeTrack)
+
+            if (normalizedFallback && normalizedFallback !== currentValue) {
+                setValue('challengeTrack', normalizedFallback, {
+                    shouldDirty: false,
+                    shouldValidate: true,
+                })
             }
         }
 
-        if (!isCurrentValid) {
-            form.setValue('challengeTrack', challengeTrackOptions[0].value, {
-                shouldDirty: false,
-                shouldValidate: true,
-            })
-        }
-    }, [challengeTrackOptions, challengeTracks, form])
+        shouldNormalizeTrack.current = false
+    }, [
+        challengeTrackOptions,
+        challengeTracks,
+        fallbackChallengeTrack,
+        getValues,
+        normalizeValue,
+        setValue,
+    ])
 
     useEffect(() => {
+        if (!shouldNormalizeType.current) {
+            return
+        }
+
         if (!challengeTypeOptions.length) {
             return
         }
 
-        const currentChallengeType: string = form.getValues('challengeType') as string
+        const currentChallengeType = normalizeValue(getValues('challengeType') as string)
         const partOfCategories: { label: string; value: string } | undefined
-            = challengeTypeOptions.find(item => item.value === currentChallengeType)
-        if ((!partOfCategories || !currentChallengeType) && challengeTypeOptions.length > 0) {
-            form.setValue('challengeType', challengeTypeOptions[0].value, {
-                shouldDirty: false,
-                shouldValidate: true,
-            })
+            = challengeTypeOptions.find(item => (
+                normalizeValue(item.value) === currentChallengeType
+            ))
+
+        if ((!partOfCategories || !currentChallengeType) && fallbackChallengeType) {
+            const normalizedFallback = normalizeValue(fallbackChallengeType)
+
+            if (normalizedFallback && normalizedFallback !== currentChallengeType) {
+                setValue('challengeType', normalizedFallback, {
+                    shouldDirty: false,
+                    shouldValidate: true,
+                })
+            }
         }
-    }, [challengeTypeOptions, form])
+
+        shouldNormalizeType.current = false
+    }, [
+        challengeTypeOptions,
+        fallbackChallengeType,
+        getValues,
+        normalizeValue,
+        setValue,
+    ])
 
     return (
         <div className={classNames(styles.grayWrapper, styles.scorecardInfo)}>

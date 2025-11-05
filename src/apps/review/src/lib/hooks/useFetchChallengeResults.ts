@@ -23,6 +23,9 @@ import {
 import { fetchChallengeReviews } from '../services'
 import { ChallengeDetailContext } from '../contexts'
 import { PAST_CHALLENGE_STATUSES } from '../utils/challengeStatus'
+import {
+    SUBMISSION_TYPE_CONTEST,
+} from '../constants'
 
 type ResourceMemberMapping = ChallengeDetailContextModel['resourceMemberIdMapping']
 
@@ -135,8 +138,16 @@ const buildProjectResult = ({
 
     // Find all submissions for this member
     const memberSubmissions = submissions.filter(s => s.memberId === memberId)
+    const contestSubmissions = memberSubmissions.filter(
+        submission => (submission.type ?? SUBMISSION_TYPE_CONTEST) === SUBMISSION_TYPE_CONTEST,
+    )
 
-    if (!memberSubmissions.length) {
+    // Prefer contest submissions; fall back to everything so we still display something if data is inconsistent
+    const submissionsToEvaluate = contestSubmissions.length
+        ? contestSubmissions
+        : memberSubmissions
+
+    if (!submissionsToEvaluate.length) {
         return undefined
     }
 
@@ -148,7 +159,7 @@ const buildProjectResult = ({
         computedInitialScore: number
     }
 
-    const evaluated: EvaluatedSubmission[] = memberSubmissions.map(submission => {
+    const evaluated: EvaluatedSubmission[] = submissionsToEvaluate.map(submission => {
         const fallbackReviews = submission?.reviews ?? []
         const mappedReviews = reviewsBySubmissionId.get(submission.id) ?? fallbackReviews
         const orderedReviews = orderReviewsByCreatedDate(mappedReviews)
