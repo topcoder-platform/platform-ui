@@ -1,9 +1,19 @@
 @import '@libs/ui/styles/includes';
 
+.wrap {
+    @include ltemd {
+        padding-top: $sp-15;
+    }
+}
+
 .modelNameWrap {
     display: flex;
     align-items: center;
     gap: $sp-4;
+    @include ltemd {
+        flex-direction: column;
+        gap: $sp-4;
+    }
 }
 
 .modelIcon {
@@ -37,6 +47,13 @@
         display: block;
         width: 16px;
         height: 16px;
+    }
+
+    @include ltemd {
+        h3 {
+            font-size: 22px;
+            line-height: 26px;
+        }
     }
 }
 

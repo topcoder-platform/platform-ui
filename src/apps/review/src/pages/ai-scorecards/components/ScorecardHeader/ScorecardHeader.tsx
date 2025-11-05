@@ -41,7 +41,7 @@ const ScorecardHeader: FC = () => {
                     <IconDeepseekAi className={styles.workflowIcon} />
                     <div className={styles.workflowName}>
                         <h3>{workflow.name}</h3>
-                        <span onClick={toggleModelDetails}>{workflow.llm.name}</span>
+                        <span className={styles.modelName} onClick={toggleModelDetails}>{workflow.llm.name}</span>
                     </div>
                 </div>
                 <div className={styles.workflowRunStats}>

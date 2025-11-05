@@ -2,11 +2,18 @@
 
 .wrap {
     width: 100%;
+    color: #0A0A0A;
 }
 
 .headerWrap {
     display: flex;
     align-items: flex-start;
+
+    @include ltemd {
+        flex-direction: column;
+        align-items: stretch;
+        gap: $sp-6;
+    }
 }
 
 .workflowInfo {
@@ -27,19 +34,20 @@
     justify-content: center;
 
     flex: 0 0 auto;
+    @include ltemd {
+        width: 56px;
+        height: 56px;
+    }
 }
 
 .workflowName {
-    display: flex;
-    flex-direction: column;
-    gap: $sp-2;
-
     h3 {
         font-family: "Figtree", sans-serif;
         font-size: 26px;
         font-weight: 700;
         line-height: 30px;
         color: #0A0A0A;
+        margin-bottom: $sp-2;
     }
 
     span {
@@ -48,6 +56,17 @@
         font-weight: bold;
         font-size: 16px;
         line-height: 22px;
+    }
+
+    .modelName {
+        cursor: pointer;
+    }
+
+    @include ltemd {
+        h3 {
+            font-size: 22px;
+            line-height: 26px;
+        }
     }
 }
 
@@ -76,6 +95,10 @@
         font-weight: 700;
         line-height: 19px;
         color: var(--FontColor);
+    }
+
+    @include ltemd {
+        margin-left: 0;
     }
 }
 
