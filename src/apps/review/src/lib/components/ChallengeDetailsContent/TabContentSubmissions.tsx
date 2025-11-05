@@ -56,8 +56,6 @@ interface Props {
 const VIRUS_SCAN_FAILED_MESSAGE = 'Submission failed virus scan'
 
 export const TabContentSubmissions: FC<Props> = props => {
-    console.log('here', props.submissions);
-
     const windowSize: WindowSize = useWindowSize()
     const isTablet = useMemo(
         () => (windowSize.width ?? 0) <= 984,
