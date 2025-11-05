@@ -5,7 +5,11 @@ import { EnvironmentConfig } from '~/config'
 import { xhrGetAsync } from '~/libs/core'
 import { handleError } from '~/libs/shared/lib/utils/handle-error'
 
-export enum AiWorkflowRunStatus {
+import { Scorecard } from '../models'
+
+import { useRolePermissions, UseRolePermissionsResult } from './useRolePermissions'
+
+export enum AiWorkflowRunStatusEnum {
     INIT = 'INIT',
     QUEUED = 'QUEUED',
     DISPATCHED = 'DISPATCHED',
@@ -16,20 +20,19 @@ export enum AiWorkflowRunStatus {
     SUCCESS = 'SUCCESS',
 }
 
+export interface AiWorkflow {
+    id: string;
+    name: string;
+    description: string;
+    scorecard?: Scorecard
+}
+
 export interface AiWorkflowRun {
     id: string;
     completedAt: string;
-    status: AiWorkflowRunStatus;
+    status: AiWorkflowRunStatusEnum;
     score: number;
-    workflow: {
-        name: string;
-        description: string;
-        scorecard?: {
-            id: string;
-            name: string;
-            minimumPassingScore: number;
-        }
-    }
+    workflow: AiWorkflow
 }
 
 const TC_API_BASE_URL = EnvironmentConfig.API.V6
@@ -39,39 +42,24 @@ export interface AiWorkflowRunsResponse {
     isLoading: boolean
 }
 
-export function useFetchAiWorkflowRuns(
-    workflowId: string,
-    submissionId: string,
-): AiWorkflowRunsResponse {
-    // Use swr hooks for challenge info fetching
-    const {
-        data: runs = [],
-        error: fetchError,
-        isValidating: isLoading,
-    }: SWRResponse<AiWorkflowRun[], Error> = useSWR<AiWorkflowRun[], Error>(
-        `${TC_API_BASE_URL}/workflows/${workflowId}/runs?submissionId=${submissionId}`,
-        {
-            isPaused: () => !workflowId || !submissionId,
-        },
-    )
+export const aiRunInProgress = (aiRun: Pick<AiWorkflowRun, 'status'>): boolean => [
+    AiWorkflowRunStatusEnum.INIT,
+    AiWorkflowRunStatusEnum.QUEUED,
+    AiWorkflowRunStatusEnum.DISPATCHED,
+    AiWorkflowRunStatusEnum.IN_PROGRESS,
+].includes(aiRun.status)
 
-    // Show backend error when fetching challenge info
-    useEffect(() => {
-        if (fetchError) {
-            handleError(fetchError)
-        }
-    }, [fetchError])
-
-    return {
-        isLoading,
-        runs,
-    }
-}
+export const aiRunFailed = (aiRun: Pick<AiWorkflowRun, 'status'>): boolean => [
+    AiWorkflowRunStatusEnum.FAILURE,
+    AiWorkflowRunStatusEnum.CANCELLED,
+].includes(aiRun.status)
 
 export function useFetchAiWorkflowsRuns(
     submissionId: string,
     workflowIds: string[],
 ): AiWorkflowRunsResponse {
+    const { isAdmin }: UseRolePermissionsResult = useRolePermissions()
+
     // Use swr hooks for challenge info fetching
     const {
         data: runs = [],
@@ -101,6 +89,6 @@ export function useFetchAiWorkflowsRuns(
 
     return {
         isLoading,
-        runs,
+        runs: runs.filter(r => isAdmin || !aiRunFailed(r)),
     }
 }

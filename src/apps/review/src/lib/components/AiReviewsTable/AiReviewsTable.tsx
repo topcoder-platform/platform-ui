@@ -1,40 +1,26 @@
 import { FC, useMemo } from 'react'
 import moment from 'moment'
 
-import { CheckIcon, MinusCircleIcon } from '@heroicons/react/outline'
 import { useWindowSize, WindowSize } from '~/libs/shared'
-import { IconOutline, Tooltip } from '~/libs/ui'
+import { Tooltip } from '~/libs/ui'
 
 import {
     AiWorkflowRun,
     AiWorkflowRunsResponse,
-    AiWorkflowRunStatus,
+    AiWorkflowRunStatusEnum,
     useFetchAiWorkflowsRuns,
-    useRolePermissions,
-    UseRolePermissionsResult,
 } from '../../hooks'
 import { IconAiReview } from '../../assets/icons'
 import { TABLE_DATE_FORMAT } from '../../../config/index.config'
 import { BackendSubmission } from '../../models'
 
+import { AiWorkflowRunStatus } from './AiWorkflowRunStatus'
 import styles from './AiReviewsTable.module.scss'
 
 interface AiReviewsTableProps {
     submission: Pick<BackendSubmission, 'id'|'virusScan'>
     reviewers: { aiWorkflowId: string }[]
 }
-
-const aiRunInProgress = (aiRun: Pick<AiWorkflowRun, 'status'>): boolean => [
-    AiWorkflowRunStatus.INIT,
-    AiWorkflowRunStatus.QUEUED,
-    AiWorkflowRunStatus.DISPATCHED,
-    AiWorkflowRunStatus.IN_PROGRESS,
-].includes(aiRun.status)
-
-const aiRunFailed = (aiRun: Pick<AiWorkflowRun, 'status'>): boolean => [
-    AiWorkflowRunStatus.FAILURE,
-    AiWorkflowRunStatus.CANCELLED,
-].includes(aiRun.status)
 
 const AiReviewsTable: FC<AiReviewsTableProps> = props => {
     const aiWorkflowIds = useMemo(() => props.reviewers.map(r => r.aiWorkflowId), [props.reviewers])
@@ -45,7 +31,6 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
         () => (windowSize.width ?? 0) <= 984,
         [windowSize.width],
     )
-    const { isAdmin }: UseRolePermissionsResult = useRolePermissions()
 
     const aiRuns = useMemo(() => [
         ...runs,
@@ -53,13 +38,13 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
             completedAt: (props.submission as BackendSubmission).submittedDate,
             id: '-1',
             score: props.submission.virusScan === true ? 100 : 0,
-            status: AiWorkflowRunStatus.SUCCESS,
+            status: AiWorkflowRunStatusEnum.SUCCESS,
             workflow: {
                 description: '',
                 name: 'Virus Scan',
             },
         } as AiWorkflowRun,
-    ].filter(r => isAdmin || !aiRunFailed(r)), [runs, props.submission])
+    ], [runs, props.submission])
 
     if (isTablet) {
         return (
@@ -107,39 +92,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                         <div className={styles.mobileRow}>
                             <div className={styles.label}>Result</div>
                             <div className={`${styles.value} ${styles.resultCol}`}>
-                                {run.status === 'SUCCESS' && (
-                                    <div className={styles.result}>
-                                        {run.score >= (run.workflow.scorecard?.minimumPassingScore ?? 0) ? (
-                                            <>
-                                                <CheckIcon className='icon icon-xl passed' />
-                                                {' '}
-                                                Passed
-                                            </>
-                                        ) : (
-                                            <>
-                                                <MinusCircleIcon className='icon icon-xl' />
-                                                {' '}
-                                                Failed
-                                            </>
-                                        )}
-                                    </div>
-                                )}
-                                {aiRunInProgress(run) && (
-                                    <div className={styles.result}>
-                                        <span className='icon pending'>
-                                            <IconOutline.MinusIcon className='icon-sm' />
-                                        </span>
-                                        {' '}
-                                        To be filled
-                                    </div>
-                                )}
-                                {aiRunFailed(run) && (
-                                    <div className={styles.result}>
-                                        <span className='icon'>
-                                            <IconOutline.XCircleIcon className='icon-xl' />
-                                        </span>
-                                    </div>
-                                )}
+                                <AiWorkflowRunStatus run={run} />
                             </div>
                         </div>
                     </div>
@@ -196,41 +149,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                                 ) : '-'}
                             </td>
                             <td className={styles.resultCol}>
-                                {run.status === 'SUCCESS' && (
-                                    <div className={styles.result}>
-                                        {run.score >= (run.workflow.scorecard?.minimumPassingScore ?? 0)
-                                            ? (
-                                                <>
-                                                    <CheckIcon className='icon icon-xl passed' />
-                                                    {' '}
-                                                    Passed
-                                                </>
-                                            )
-                                            : (
-                                                <>
-                                                    <MinusCircleIcon className='icon icon-xl' />
-                                                    {' '}
-                                                    Failed
-                                                </>
-                                            )}
-                                    </div>
-                                )}
-                                {aiRunInProgress(run) && (
-                                    <div className={styles.result}>
-                                        <span className='icon pending'>
-                                            <IconOutline.MinusIcon className='icon-sm' />
-                                        </span>
-                                        {' '}
-                                        To be filled
-                                    </div>
-                                )}
-                                {aiRunFailed(run) && (
-                                    <div className={styles.result}>
-                                        <span className='icon'>
-                                            <IconOutline.XCircleIcon className='icon-xl' />
-                                        </span>
-                                    </div>
-                                )}
+                                <AiWorkflowRunStatus run={run} />
                             </td>
                         </tr>
                     ))}
