@@ -9,6 +9,9 @@ import { ReactComponent as IconReview } from './icon-phase-review.svg'
 import { ReactComponent as IconAppeal } from './icon-phase-appeal.svg'
 import { ReactComponent as IconAppealResponse } from './icon-phase-appeal-response.svg'
 import { ReactComponent as IconPhaseWinners } from './icon-phase-winners.svg'
+import { ReactComponent as IconDeepseekAi } from './deepseek.svg'
+import { ReactComponent as IconClock } from './icon-clock.svg'
+import { ReactComponent as IconPremium } from './icon-premium.svg'
 
 export * from './editor/bold'
 export * from './editor/code'
@@ -37,6 +40,9 @@ export {
     IconAppeal,
     IconAppealResponse,
     IconPhaseWinners,
+    IconDeepseekAi,
+    IconClock,
+    IconPremium,
 }
 
 export const phasesIcons = {

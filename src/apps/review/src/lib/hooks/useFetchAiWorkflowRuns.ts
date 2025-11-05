@@ -25,10 +25,21 @@ export interface AiWorkflow {
     name: string;
     description: string;
     scorecard?: Scorecard
+    defUrl: string
+    llm: {
+        name: string
+        description: string
+        icon: string
+        url: string
+        provider: {
+            name: string
+        }
+    }
 }
 
 export interface AiWorkflowRun {
     id: string;
+    startedAt: string;
     completedAt: string;
     status: AiWorkflowRunStatusEnum;
     score: number;
