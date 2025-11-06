@@ -1,0 +1,11 @@
+@import '@libs/ui/styles/includes';
+
+.wrap {
+    font-weight: normal;
+    text-align: right;
+
+    span {
+        margin-left: $sp-1;
+        opacity: 0.75;
+    }
+}

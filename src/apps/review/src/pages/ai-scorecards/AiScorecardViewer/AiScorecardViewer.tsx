@@ -10,10 +10,13 @@ import { AiScorecardContextModel } from '../../../lib/models'
 import { AiWorkflowsSidebar } from '../components/AiWorkflowsSidebar'
 
 import styles from './AiScorecardViewer.module.scss'
+import { ScorecardViewer } from '../../../lib/components/Scorecard'
+import { AiWorkflowRunItemsResponse, useFetchAiWorkflowsRunItems } from '../../../lib/hooks'
 
 const AiScorecardViewer: FC = () => {
     const { showBannerNotification, removeNotification }: NotificationContextType = useNotification()
-    const { challengeInfo }: AiScorecardContextModel = useAiScorecardContext()
+    const { challengeInfo, scorecard, workflowId, workflowRun }: AiScorecardContextModel = useAiScorecardContext()
+    const { runItems }: AiWorkflowRunItemsResponse = useFetchAiWorkflowsRunItems(workflowId, workflowRun?.id)
 
     const breadCrumb = useMemo(
         () => [{ index: 1, label: 'My Active Challenges' }],
@@ -36,9 +39,18 @@ const AiScorecardViewer: FC = () => {
             className={styles.container}
             breadCrumb={breadCrumb}
         >
-            <div className={styles.contentWrap}>
+            <div className={styles.pageContentWrap}>
                 <AiWorkflowsSidebar className={styles.sidebar} />
-                <ScorecardHeader />
+                <div className={styles.contentWrap}>
+                    <ScorecardHeader />
+                    {!!scorecard && (
+                        <ScorecardViewer
+                            scorecard={scorecard}
+                            aiFeedback={runItems}
+                            score={workflowRun?.score}
+                        />
+                    )}
+                </div>
             </div>
         </PageWrapper>
     )

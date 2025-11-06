@@ -1,0 +1,25 @@
+@import '@libs/ui/styles/includes';
+
+.toggleBtn {
+    cursor: pointer;
+    display: block;
+    width: 16px;
+    height: 16px;
+    color: #767676;
+    transition: 0.15s ease-in-out;
+
+    &.toggled {
+        transform: rotate(180deg);
+    }
+}
+
+.questionText {
+    font-weight: bold;
+    + * {
+        margin-top: $sp-2;
+    }
+}
+
+.guidelines {
+    white-space: pre-wrap;
+}

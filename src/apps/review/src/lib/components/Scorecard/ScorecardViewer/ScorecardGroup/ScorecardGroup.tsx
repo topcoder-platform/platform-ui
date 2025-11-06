@@ -1,0 +1,61 @@
+import { FC, useCallback, useMemo } from 'react'
+import classNames from 'classnames'
+
+import { IconOutline } from '~/libs/ui'
+
+import { ScorecardGroup as ScorecardGroupModel } from '../../../../models'
+import { ScorecardSection } from '../ScorecardSection'
+import { ScorecardViewerContextValue, useScorecardContext } from '../ScorecardViewer.context'
+
+import styles from './ScorecardGroup.module.scss'
+import { ScorecardScore } from '../ScorecardScore'
+import { calcGroupScore } from '../utils'
+
+interface ScorecardGroupProps {
+    index: number
+    group: ScorecardGroupModel
+}
+
+const ScorecardGroup: FC<ScorecardGroupProps> = props => {
+    const { aiFeedbackItems }: ScorecardViewerContextValue = useScorecardContext()
+    const allFeedbackItems = aiFeedbackItems || [];
+    const { toggleItem, toggledItems }: ScorecardViewerContextValue = useScorecardContext();
+
+    const isVissible = !toggledItems[props.group.id];
+    const toggle = useCallback(() => toggleItem(props.group.id), [props.group, toggleItem]);
+
+    const score = useMemo(() => (
+        calcGroupScore(props.group, allFeedbackItems)
+    ), [props.group, allFeedbackItems])
+
+    return (
+        <div className={styles.wrap}>
+            <div className={classNames(styles.headerBar, isVissible && styles.toggled)} onClick={toggle}>
+                <span className={styles.index}>
+                    {props.index}.
+                </span>
+                <span>
+                    {props.group.name}
+                </span>
+                <span className={styles.mx} />
+                <span>
+                    <ScorecardScore
+                        score={score}
+                        scaleMax={1}
+                        scaleType='SCALE'
+                        weight={props.group.weight}
+                    />
+                </span>
+                <span className={styles.toggleBtn}>
+                    <IconOutline.ChevronDownIcon />
+                </span>
+            </div>
+
+            {isVissible && props.group.sections.map((section, index) => (
+                <ScorecardSection key={section.id} section={section} index={[props.index, index+1].join('.')} />
+            ))}
+        </div>
+    )
+}
+
+export default ScorecardGroup

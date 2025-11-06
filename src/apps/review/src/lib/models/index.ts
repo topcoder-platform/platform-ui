@@ -1,4 +1,5 @@
 export * from './AiScorecardContext.model'
+export * from './AiFeedbackItem.model'
 export * from './ChallengeInfo.model'
 export * from './SubmissionInfo.model'
 export * from './ReviewInfo.model'
