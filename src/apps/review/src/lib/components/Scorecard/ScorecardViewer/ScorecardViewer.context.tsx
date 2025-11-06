@@ -1,6 +1,6 @@
-import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from 'react';
-import { AiFeedbackItem, Scorecard } from '../../../models';
-import { isEmpty } from 'lodash';
+import { createContext, FC, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+
+import { AiFeedbackItem, Scorecard } from '../../../models'
 
 export interface ScorecardViewerContextProps {
     children: ReactNode;
@@ -14,39 +14,38 @@ export type ScorecardViewerContextValue = {
     toggleItem: (id: string) => void
 };
 
-const ScorecardViewerContext = createContext({} as ScorecardViewerContextValue);
+const ScorecardViewerContext = createContext({} as ScorecardViewerContextValue)
 
-
-export function ScorecardViewerContextProvider({
-    children,
-    aiFeedbackItems,
-    scorecard,
-    ...props
-}: ScorecardViewerContextProps) {
-    const [toggledItems, setToggledItems] = useState<{[key: string]: boolean}>({});
+export const ScorecardViewerContextProvider: FC<ScorecardViewerContextProps> = props => {
+    const [toggledItems, setToggledItems] = useState<{[key: string]: boolean}>({})
 
     const toggleItem = useCallback((id: string, toggle?: boolean) => {
-        setToggledItems((prevItems) => ({
+        setToggledItems(prevItems => ({
             ...prevItems,
             [id]: typeof toggle === 'boolean' ? toggle : !prevItems[id],
         }))
-    }, []);
+    }, [])
 
     // reset toggle state on scorecard change
-    useEffect(() => setToggledItems({}), [scorecard]);
+    useEffect(() => setToggledItems({}), [props.scorecard])
+
+    const ctxValue = useMemo(() => ({
+        aiFeedbackItems: props.aiFeedbackItems,
+        toggledItems,
+        toggleItem,
+    }), [
+        props.aiFeedbackItems,
+        toggledItems,
+        toggleItem,
+    ])
 
     return (
         <ScorecardViewerContext.Provider
-            value={{
-                aiFeedbackItems,
-                toggledItems,
-                toggleItem,
-            }}
-            {...props}
+            value={ctxValue}
         >
-            {children}
+            {props.children}
         </ScorecardViewerContext.Provider>
-    );
-};
+    )
+}
 
-export const useScorecardContext = () => useContext(ScorecardViewerContext);
+export const useScorecardContext = (): ScorecardViewerContextValue => useContext(ScorecardViewerContext)

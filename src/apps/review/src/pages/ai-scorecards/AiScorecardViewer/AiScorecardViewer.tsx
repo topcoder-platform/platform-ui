@@ -8,10 +8,10 @@ import { PageWrapper } from '../../../lib'
 import { useAiScorecardContext } from '../AiScorecardContext'
 import { AiScorecardContextModel } from '../../../lib/models'
 import { AiWorkflowsSidebar } from '../components/AiWorkflowsSidebar'
-
-import styles from './AiScorecardViewer.module.scss'
 import { ScorecardViewer } from '../../../lib/components/Scorecard'
 import { AiWorkflowRunItemsResponse, useFetchAiWorkflowsRunItems } from '../../../lib/hooks'
+
+import styles from './AiScorecardViewer.module.scss'
 
 const AiScorecardViewer: FC = () => {
     const { showBannerNotification, removeNotification }: NotificationContextType = useNotification()

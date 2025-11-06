@@ -15,7 +15,7 @@ interface ScorecardSectionProps {
 
 const ScorecardSection: FC<ScorecardSectionProps> = props => {
     const { aiFeedbackItems }: ScorecardViewerContextValue = useScorecardContext()
-    const allFeedbackItems = aiFeedbackItems || [];
+    const allFeedbackItems = aiFeedbackItems || []
 
     const score = useMemo(() => (
         calcSectionScore(props.section, allFeedbackItems)
@@ -25,7 +25,8 @@ const ScorecardSection: FC<ScorecardSectionProps> = props => {
         <div className={styles.wrap}>
             <div className={styles.headerBar}>
                 <span>
-                    {props.index}.
+                    {props.index}
+                    .
                 </span>
                 <span>
                     {props.section.name}
@@ -35,7 +36,6 @@ const ScorecardSection: FC<ScorecardSectionProps> = props => {
                     <ScorecardScore
                         score={score}
                         scaleMax={1}
-                        scaleType='SCALE'
                         weight={props.section.weight}
                     />
                 </span>
@@ -44,7 +44,7 @@ const ScorecardSection: FC<ScorecardSectionProps> = props => {
             {props.section.questions.map((question, index) => (
                 <ScorecardQuestion
                     key={question.id}
-                    index={[props.index, index+1].join('.')}
+                    index={[props.index, index + 1].join('.')}
                     question={question}
                 />
             ))}

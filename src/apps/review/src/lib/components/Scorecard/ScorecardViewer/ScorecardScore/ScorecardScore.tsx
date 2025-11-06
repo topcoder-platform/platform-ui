@@ -1,16 +1,14 @@
 import { FC } from 'react'
 
 import styles from './ScorecardScore.module.scss'
-import { ScorecardQuestion } from '../../../../models'
 
 interface ScorecardScoreProps {
     score: number
     scaleMax: number
-    scaleType: ScorecardQuestion['type']
     weight: number
 }
 
-export const calcScore = (score: number, scaleMax: number, weight: number) => (
+export const calcScore = (score: number, scaleMax: number, weight: number): number => (
     (score / (scaleMax || 1)) * weight
 )
 

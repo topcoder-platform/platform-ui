@@ -1,14 +1,14 @@
 import { FC, useCallback } from 'react'
+import classNames from 'classnames'
 
 import { IconOutline } from '~/libs/ui'
 
 import { ScorecardQuestion as ScorecardQuestionModel } from '../../../../models'
+import { ScorecardViewerContextValue, useScorecardContext } from '../ScorecardViewer.context'
 
-import styles from './ScorecardQuestion.module.scss'
 import { AiFeedback } from './AiFeedback'
 import { ScorecardQuestionRow } from './ScorecardQuestionRow'
-import { ScorecardViewerContextValue, useScorecardContext } from '../ScorecardViewer.context'
-import classNames from 'classnames'
+import styles from './ScorecardQuestion.module.scss'
 
 interface ScorecardQuestionProps {
     index: string
@@ -16,20 +16,20 @@ interface ScorecardQuestionProps {
 }
 
 const ScorecardQuestion: FC<ScorecardQuestionProps> = props => {
-    const { toggleItem, toggledItems }: ScorecardViewerContextValue = useScorecardContext();
+    const { toggleItem, toggledItems }: ScorecardViewerContextValue = useScorecardContext()
 
-    const isToggled = toggledItems[props.question.id!];
-    const toggle = useCallback(() => toggleItem(props.question.id!), [props.question, toggleItem]);
+    const isToggled = toggledItems[props.question.id!]
+    const toggle = useCallback(() => toggleItem(props.question.id!), [props.question, toggleItem])
 
     return (
         <div className={styles.wrap}>
             <ScorecardQuestionRow
-                icon={
+                icon={(
                     <IconOutline.ChevronDownIcon
                         className={classNames(styles.toggleBtn, isToggled && styles.toggled)}
                         onClick={toggle}
                     />
-                }
+                )}
                 index={`Question ${props.index}`}
                 className={styles.headerBar}
                 score=''

@@ -6,10 +6,10 @@ import { IconOutline } from '~/libs/ui'
 import { ScorecardGroup as ScorecardGroupModel } from '../../../../models'
 import { ScorecardSection } from '../ScorecardSection'
 import { ScorecardViewerContextValue, useScorecardContext } from '../ScorecardViewer.context'
-
-import styles from './ScorecardGroup.module.scss'
 import { ScorecardScore } from '../ScorecardScore'
 import { calcGroupScore } from '../utils'
+
+import styles from './ScorecardGroup.module.scss'
 
 interface ScorecardGroupProps {
     index: number
@@ -18,11 +18,11 @@ interface ScorecardGroupProps {
 
 const ScorecardGroup: FC<ScorecardGroupProps> = props => {
     const { aiFeedbackItems }: ScorecardViewerContextValue = useScorecardContext()
-    const allFeedbackItems = aiFeedbackItems || [];
-    const { toggleItem, toggledItems }: ScorecardViewerContextValue = useScorecardContext();
+    const allFeedbackItems = aiFeedbackItems || []
+    const { toggleItem, toggledItems }: ScorecardViewerContextValue = useScorecardContext()
 
-    const isVissible = !toggledItems[props.group.id];
-    const toggle = useCallback(() => toggleItem(props.group.id), [props.group, toggleItem]);
+    const isVissible = !toggledItems[props.group.id]
+    const toggle = useCallback(() => toggleItem(props.group.id), [props.group, toggleItem])
 
     const score = useMemo(() => (
         calcGroupScore(props.group, allFeedbackItems)
@@ -32,7 +32,8 @@ const ScorecardGroup: FC<ScorecardGroupProps> = props => {
         <div className={styles.wrap}>
             <div className={classNames(styles.headerBar, isVissible && styles.toggled)} onClick={toggle}>
                 <span className={styles.index}>
-                    {props.index}.
+                    {props.index}
+                    .
                 </span>
                 <span>
                     {props.group.name}
@@ -42,7 +43,6 @@ const ScorecardGroup: FC<ScorecardGroupProps> = props => {
                     <ScorecardScore
                         score={score}
                         scaleMax={1}
-                        scaleType='SCALE'
                         weight={props.group.weight}
                     />
                 </span>
@@ -52,7 +52,7 @@ const ScorecardGroup: FC<ScorecardGroupProps> = props => {
             </div>
 
             {isVissible && props.group.sections.map((section, index) => (
-                <ScorecardSection key={section.id} section={section} index={[props.index, index+1].join('.')} />
+                <ScorecardSection key={section.id} section={section} index={[props.index, index + 1].join('.')} />
             ))}
         </div>
     )
