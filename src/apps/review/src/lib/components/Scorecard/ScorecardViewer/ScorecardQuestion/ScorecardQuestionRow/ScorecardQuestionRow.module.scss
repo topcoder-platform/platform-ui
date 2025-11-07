@@ -11,6 +11,42 @@
     font-size: 14px;
     line-height: 20px;
     color: #0A0A0A;
+
+    @include ltemd {
+        display: flex;
+        gap: $sp-2 $sp-4;
+        flex-wrap: wrap;
+
+        .icon {
+            width: 24px;
+            flex: 0 0 auto
+        }
+
+        .index {
+            width: 128px;
+            flex: 0 0 auto
+        }
+
+        .content {
+            flex: 100%;
+            padding-left: $sp-10;
+        }
+
+        .score {
+            width: 100%;
+            padding-left: $sp-10;
+
+            &:empty {
+                display: none;
+            }
+            &:not(:empty)::before {
+                content: 'Score';
+                display: block;
+                font-weight: bold;
+                margin-bottom: $sp-2;
+            }
+        }
+    }
 }
 
 .content {

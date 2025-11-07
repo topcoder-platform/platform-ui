@@ -12,10 +12,10 @@ interface ScorecardQuestionRowProps extends PropsWithChildren {
 
 const ScorecardQuestionRow: FC<ScorecardQuestionRowProps> = props => (
     <div className={classNames(props.className, styles.wrap)}>
-        <span>{props.icon}</span>
-        <span>{props.index}</span>
+        <span className={styles.icon}>{props.icon}</span>
+        <span className={styles.index}>{props.index}</span>
         <span className={styles.content}>{props.children}</span>
-        <span>{props.score}</span>
+        <span className={styles.score}>{props.score}</span>
     </div>
 )
 

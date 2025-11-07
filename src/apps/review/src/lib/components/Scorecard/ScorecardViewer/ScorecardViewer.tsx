@@ -19,6 +19,27 @@ const ScorecardViewer: FC<ScorecardViewerProps> = props => (
             scorecard={props.scorecard}
             aiFeedbackItems={props.aiFeedback}
         >
+            {!!props.score && (
+                <div className={styles.conclusion}>
+                    <strong>Conclusion</strong>
+                    <p>
+                        Congratulations! You earned a score of
+                        {' '}
+                        <strong>
+                            {props.score.toFixed(2)}
+                        </strong>
+                        {' '}
+                        out of the maximum of
+                        {' '}
+                        <strong>
+                            {props.scorecard.maxScore.toFixed(2)}
+                        </strong>
+                        .
+                        You did a good job on passing the scorecard criteria.
+                        Please check the below sections to see if there is any place for improvement.
+                    </p>
+                </div>
+            )}
             {props.scorecard.scorecardGroups.map((group, index) => (
                 <ScorecardGroup key={group.id} group={group} index={index + 1} />
             ))}

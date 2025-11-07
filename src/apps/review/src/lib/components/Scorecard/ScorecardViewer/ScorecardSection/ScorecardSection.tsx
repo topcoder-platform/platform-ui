@@ -24,15 +24,15 @@ const ScorecardSection: FC<ScorecardSectionProps> = props => {
     return (
         <div className={styles.wrap}>
             <div className={styles.headerBar}>
-                <span>
+                <span className={styles.index}>
                     {props.index}
                     .
                 </span>
-                <span>
+                <span className={styles.name}>
                     {props.section.name}
                 </span>
                 <span className={styles.mx} />
-                <span>
+                <span className={styles.score}>
                     <ScorecardScore
                         score={score}
                         scaleMax={1}

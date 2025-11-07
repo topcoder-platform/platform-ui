@@ -35,11 +35,11 @@ const ScorecardGroup: FC<ScorecardGroupProps> = props => {
                     {props.index}
                     .
                 </span>
-                <span>
+                <span className={styles.name}>
                     {props.group.name}
                 </span>
                 <span className={styles.mx} />
-                <span>
+                <span className={styles.score}>
                     <ScorecardScore
                         score={score}
                         scaleMax={1}

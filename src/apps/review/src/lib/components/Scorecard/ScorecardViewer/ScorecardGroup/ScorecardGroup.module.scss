@@ -36,6 +36,17 @@
             }
         }
     }
+
+    @include ltemd {
+        flex-wrap: wrap;
+        row-gap: $sp-2;
+
+        .score {
+            order: 7;
+            width: 100%;
+            margin-left: $sp-10;
+        }
+    }
 }
 
 .index {

@@ -18,6 +18,16 @@
     color: #0A0A0A;
 
     padding-right: 56px;
+    @include ltemd {
+        flex-wrap: wrap;
+        row-gap: $sp-2;
+
+        .score {
+            order: 7;
+            width: 100%;
+            margin-left: $sp-10;
+        }
+    }
 }
 
 .mx {

@@ -3,5 +3,9 @@
 .wrap {
     p {
         margin-bottom: $sp-4;
+
+        @include ltemd {
+            margin-bottom: $sp-2;
+        }
     }
 }
