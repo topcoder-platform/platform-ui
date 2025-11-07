@@ -1,17 +1,23 @@
-import { FC, useEffect, useMemo } from 'react'
+import { FC, useEffect, useMemo, useState } from 'react'
 
 import { NotificationContextType, useNotification } from '~/libs/shared'
 
 import { ScorecardHeader } from '../components/ScorecardHeader'
 import { IconAiReview } from '../../../lib/assets/icons'
-import { PageWrapper } from '../../../lib'
+import { PageWrapper, Tabs } from '../../../lib'
 import { useAiScorecardContext } from '../AiScorecardContext'
-import { AiScorecardContextModel } from '../../../lib/models'
+import { AiScorecardContextModel, SelectOption } from '../../../lib/models'
 import { AiWorkflowsSidebar } from '../components/AiWorkflowsSidebar'
 import { ScorecardViewer } from '../../../lib/components/Scorecard'
 import { AiWorkflowRunItemsResponse, useFetchAiWorkflowsRunItems } from '../../../lib/hooks'
 
 import styles from './AiScorecardViewer.module.scss'
+import { ScorecardAttachments } from '../../../lib/components/Scorecard/ScorecardAttachments'
+
+const tabItems: SelectOption[] = [
+    { label: 'Scorecard', value: 'scorecard'},
+    { label: 'Attachments', value: 'attachments' },
+]
 
 const AiScorecardViewer: FC = () => {
     const { showBannerNotification, removeNotification }: NotificationContextType = useNotification()
@@ -22,6 +28,8 @@ const AiScorecardViewer: FC = () => {
         () => [{ index: 1, label: 'My Active Challenges' }],
         [],
     )
+
+    const [selectedTab, setSelectedTab] = useState('scorecard');
 
     useEffect(() => {
         const notification = showBannerNotification({
@@ -43,12 +51,22 @@ const AiScorecardViewer: FC = () => {
                 <AiWorkflowsSidebar className={styles.sidebar} />
                 <div className={styles.contentWrap}>
                     <ScorecardHeader />
-                    {!!scorecard && (
+                    <Tabs
+                        className={styles.tabs}
+                        items={tabItems}
+                        selected={selectedTab}
+                        onChange={setSelectedTab}
+                    />
+                    {!!scorecard && selectedTab === 'scorecard' && (
                         <ScorecardViewer
                             scorecard={scorecard}
                             aiFeedback={runItems}
                             score={workflowRun?.score}
                         />
+                    )}
+
+                    {selectedTab === 'attachments' && (
+                        <ScorecardAttachments />
                     )}
                 </div>
             </div>
