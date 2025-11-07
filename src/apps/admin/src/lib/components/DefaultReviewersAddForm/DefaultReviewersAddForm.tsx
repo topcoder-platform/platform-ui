@@ -1,17 +1,7 @@
-import {
-    useCallback,
-    useEffect,
-    useMemo,
-    useState,
-} from 'react'
 import type { FC } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
-import type { NavigateFunction } from 'react-router-dom'
-import { Controller, useForm } from 'react-hook-form'
-import type {
-    ControllerRenderProps,
-    UseFormReturn,
-} from 'react-hook-form'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { NavigateFunction, useNavigate, useParams } from 'react-router-dom'
+import { Controller, ControllerRenderProps, useForm, UseFormReturn } from 'react-hook-form'
 import _ from 'lodash'
 import classNames from 'classnames'
 
@@ -25,13 +15,14 @@ import {
     LinkButton,
 } from '~/libs/ui'
 
-import { FormAddWrapper } from '../common/FormAddWrapper'
-import { FormAddDefaultReviewer } from '../../models'
-import { formAddDefaultReviewerSchema } from '../../utils'
 import {
     useManageAddDefaultReviewer,
     useManageAddDefaultReviewerProps,
 } from '../../hooks'
+import { FormAddWrapper } from '../common/FormAddWrapper'
+import { FormAddDefaultReviewer } from '../../models'
+import { formAddDefaultReviewerSchema } from '../../utils'
+import { getAiWorkflows } from '../../services/ai-workflows.service'
 
 import styles from './DefaultReviewersAddForm.module.scss'
 
@@ -127,6 +118,7 @@ export const DefaultReviewersAddForm: FC<Props> = (props: Props) => {
         formState: { errors, isDirty },
     }: UseFormReturn<FormAddDefaultReviewer> = useForm({
         defaultValues: {
+            aiWorkflowId: '',
             baseCoefficient: 0,
             fixedAmount: 0,
             incrementalCoefficient: 0,
@@ -165,11 +157,22 @@ export const DefaultReviewersAddForm: FC<Props> = (props: Props) => {
         [doAddDefaultReviewer, doUpdateDefaultReviewer, isEdit, navigate],
     )
 
+    const [aiWorkflows, setAiWorkflows] = useState<{ label: string; value: string }[]>([])
+
+    useEffect(() => {
+        getAiWorkflows()
+            .then((workflows: { id: string; name: string }[]) => {
+                const options = workflows.map((wf: { id: string; name: string }) => ({ label: wf.name, value: wf.id }))
+                setAiWorkflows(options)
+            })
+    }, [])
+
     const isMemberReview = watch('isMemberReview')
 
     useEffect(() => {
         if (defaultReviewerInfo) {
             reset({
+                aiWorkflowId: defaultReviewerInfo.aiWorkflowId ?? '',
                 baseCoefficient: defaultReviewerInfo.baseCoefficient ?? 0,
                 fixedAmount: defaultReviewerInfo.fixedAmount ?? 0,
                 incrementalCoefficient: defaultReviewerInfo.incrementalCoefficient ?? 0,
@@ -460,35 +463,14 @@ export const DefaultReviewersAddForm: FC<Props> = (props: Props) => {
                         )
                     }}
                 />
-                <div className={styles.inputField}>
-                    <Controller
-                        name='isAIReviewer'
-                        control={control}
-                        render={function render(controlProps: {
-                        field: ControllerRenderProps<FormAddDefaultReviewer, 'isAIReviewer'>
-                    }) {
-                            return (
-                                <InputCheckbox
-                                    name='isAIReviewer'
-                                    label='Is AI Reviewer'
-                                    onChange={function onChange(event: Event) {
-                                        const target = event.target as HTMLInputElement | null
-                                        controlProps.field.onChange(target?.checked ?? false)
-                                    }}
-                                    checked={controlProps.field.value}
-                                    disabled={isLoading}
-                                />
-                            )
-                        }}
-                    />
-                </div>
+
                 <div className={styles.inputField}>
                     <Controller
                         name='shouldOpenOpportunity'
                         control={control}
                         render={function render(controlProps: {
-                        field: ControllerRenderProps<FormAddDefaultReviewer, 'shouldOpenOpportunity'>
-                    }) {
+                field: ControllerRenderProps<FormAddDefaultReviewer, 'shouldOpenOpportunity'>
+            }) {
                             return (
                                 <InputCheckbox
                                     name='shouldOpenOpportunity'
@@ -504,6 +486,31 @@ export const DefaultReviewersAddForm: FC<Props> = (props: Props) => {
                         }}
                     />
                 </div>
+                {!isMemberReview && (
+                    <Controller
+                        name='aiWorkflowId'
+                        control={control}
+                        render={function render(controlProps: {
+                        field: ControllerRenderProps<FormAddDefaultReviewer, 'aiWorkflowId'>
+                    }) {
+                            return (
+                                <InputSelectReact
+                                    name='aiWorkflowId'
+                                    label='AI Workflow'
+                                    placeholder='Select AI Workflow'
+                                    options={aiWorkflows}
+                                    value={controlProps.field.value}
+                                    onChange={controlProps.field.onChange}
+                                    onBlur={controlProps.field.onBlur}
+                                    classNameWrapper={styles.inputField}
+                                    disabled={isLoading}
+                                    dirty
+                                    error={_.get(errors, 'aiWorkflowId.message')}
+                                />
+                            )
+                        }}
+                    />
+                )}
             </FormAddWrapper>
             <ConfirmModal
                 title='Delete Confirmation'

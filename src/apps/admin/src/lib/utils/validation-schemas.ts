@@ -20,6 +20,8 @@ export const formSearchDefaultReviewersSchema: Yup.ObjectSchema<FormSearchDefaul
 
 export const formAddDefaultReviewerSchema: Yup.ObjectSchema<FormAddDefaultReviewer>
     = Yup.object({
+        aiWorkflowId: Yup.string()
+            .optional(),
         baseCoefficient: Yup.number()
             .optional()
             .min(0, 'Must be non-negative'),

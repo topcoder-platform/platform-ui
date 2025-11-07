@@ -13,6 +13,7 @@ export interface DefaultChallengeReviewer {
   incrementalCoefficient?: number;
   opportunityType?: string;
   isAIReviewer: boolean;
+  aiWorkflowId?: string;
   shouldOpenOpportunity: boolean;
   createdAt: string;
   createdBy: string;
@@ -42,4 +43,5 @@ export interface FormAddDefaultReviewer {
   opportunityType?: string;
   isAIReviewer: boolean;
   shouldOpenOpportunity: boolean;
+  aiWorkflowId?: string;
 }
