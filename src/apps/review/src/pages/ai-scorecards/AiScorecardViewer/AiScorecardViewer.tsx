@@ -10,12 +10,12 @@ import { AiScorecardContextModel, SelectOption } from '../../../lib/models'
 import { AiWorkflowsSidebar } from '../components/AiWorkflowsSidebar'
 import { ScorecardViewer } from '../../../lib/components/Scorecard'
 import { AiWorkflowRunItemsResponse, useFetchAiWorkflowsRunItems } from '../../../lib/hooks'
-
-import styles from './AiScorecardViewer.module.scss'
 import { ScorecardAttachments } from '../../../lib/components/Scorecard/ScorecardAttachments'
 
+import styles from './AiScorecardViewer.module.scss'
+
 const tabItems: SelectOption[] = [
-    { label: 'Scorecard', value: 'scorecard'},
+    { label: 'Scorecard', value: 'scorecard' },
     { label: 'Attachments', value: 'attachments' },
 ]
 
@@ -29,7 +29,7 @@ const AiScorecardViewer: FC = () => {
         [],
     )
 
-    const [selectedTab, setSelectedTab] = useState('scorecard');
+    const [selectedTab, setSelectedTab] = useState('scorecard')
 
     useEffect(() => {
         const notification = showBannerNotification({
