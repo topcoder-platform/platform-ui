@@ -17,6 +17,7 @@ import {
 } from '../models'
 
 const resourceBaseUrl = `${EnvironmentConfig.API.V6}`
+const DEFAULT_PER_PAGE = 1000
 
 /**
  * Fetch all resource roles
@@ -38,13 +39,49 @@ export const fetchResources = async (query: {
     challengeId?: string
     memberId?: string
 }): Promise<PaginatedResponse<BackendResource[]>> => {
-    const results = await xhrGetPaginatedAsync<BackendResource[]>(
-        `${resourceBaseUrl}/resources?${qs.stringify(query)}`,
+    const baseQuery = {
+        ...query,
+        page: 1,
+        perPage: DEFAULT_PER_PAGE,
+    }
+    const firstPage = await xhrGetPaginatedAsync<BackendResource[]>(
+        `${resourceBaseUrl}/resources?${qs.stringify(baseQuery)}`,
     )
+    const totalPages = firstPage.totalPages ?? 0
+
+    if (totalPages <= 1) {
+        return {
+            ...firstPage,
+            data: firstPage.data
+                .map(adjustBackendResource)
+                .filter((resource): resource is BackendResource => Boolean(resource)),
+        }
+    }
+
+    const remainingPagePromises: Array<Promise<PaginatedResponse<BackendResource[]>>> = []
+    for (let page = 2; page <= totalPages; page += 1) {
+        remainingPagePromises.push(
+            xhrGetPaginatedAsync<BackendResource[]>(
+                `${resourceBaseUrl}/resources?${qs.stringify({
+                    ...query,
+                    page,
+                    perPage: DEFAULT_PER_PAGE,
+                })}`,
+            ),
+        )
+    }
+
+    const remainingPages = await Promise.all(remainingPagePromises)
+    const combinedData = [
+        ...firstPage.data,
+        ...remainingPages.flatMap(pageResult => pageResult.data),
+    ]
 
     return {
-        ...results,
-        data: results.data.map(adjustBackendResource) as BackendResource[],
+        ...firstPage,
+        data: combinedData
+            .map(adjustBackendResource)
+            .filter((resource): resource is BackendResource => Boolean(resource)),
     }
 }
 

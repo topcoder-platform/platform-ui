@@ -8,13 +8,14 @@ import moment from 'moment'
 
 import { EnvironmentConfig } from '~/config'
 
-import type { BackendResource, ChallengeInfo, ReviewAppContextModel } from '../../models'
+import type { BackendPhase, BackendResource, ChallengeInfo, ReviewAppContextModel } from '../../models'
 import type { WinningDetailDto } from '../../services'
 import { ChallengeDetailContext, ReviewAppContext } from '../../contexts'
 import { useRole, useRoleProps } from '../../hooks'
 import { fetchWinningsByExternalId } from '../../services'
 import { ProgressBar } from '../ProgressBar'
 import { SUBMITTER, TABLE_DATE_FORMAT } from '../../../config/index.config'
+import { formatDurationDate } from '../../utils'
 
 import styles from './ChallengePhaseInfo.module.scss'
 
@@ -46,6 +47,14 @@ interface ChallengePhaseProgressItem {
 type ChallengePhaseItem = ChallengePhaseDisplayItem | ChallengePhaseProgressItem
 
 type ChallengeVariant = 'active' | 'past'
+
+interface PhaseDisplayInfo {
+    phaseEndDateString?: string
+    phaseLabel: string
+    timeLeft?: string
+    timeLeftColor?: string
+    timeLeftStatus?: string
+}
 
 export const ChallengePhaseInfo: FC<Props> = (props: Props) => {
     const { myChallengeRoles }: useRoleProps = useRole()
@@ -156,6 +165,16 @@ export const ChallengePhaseInfo: FC<Props> = (props: Props) => {
         isLoadingPayment,
         isTopgearTask,
     ])
+    const {
+        phaseEndDateString: displayPhaseEndDateString,
+        phaseLabel: displayPhaseLabel,
+        timeLeft: displayTimeLeft,
+        timeLeftColor: displayTimeLeftColor,
+        timeLeftStatus: displayTimeLeftStatus,
+    }: PhaseDisplayInfo = useMemo(
+        () => computePhaseDisplayInfo(props.challengeInfo),
+        [props.challengeInfo],
+    )
 
     useEffect(() => {
         const run = async (): Promise<void> => {
@@ -219,7 +238,11 @@ export const ChallengePhaseInfo: FC<Props> = (props: Props) => {
         const reviewInProgress = props.reviewInProgress
 
         return [
-            ...createPhaseItems(variant, data, isTask),
+            ...createPhaseItems({
+                displayPhaseLabel,
+                isTask,
+                variant,
+            }),
             createRolesItem(myChallengeRoles),
             ...createTaskItems({
                 formattedStartDate,
@@ -230,6 +253,7 @@ export const ChallengePhaseInfo: FC<Props> = (props: Props) => {
             }),
             ...createNonTaskItems({
                 data,
+                displayPhaseEndDateString,
                 formattedNonTaskPayment,
                 isTask,
                 variant,
@@ -237,6 +261,9 @@ export const ChallengePhaseInfo: FC<Props> = (props: Props) => {
             }),
             ...createActiveItems({
                 data,
+                displayTimeLeft,
+                displayTimeLeftColor,
+                displayTimeLeftStatus,
                 isTask,
                 progressType: PROGRESS_TYPE,
                 reviewInProgress,
@@ -251,6 +278,11 @@ export const ChallengePhaseInfo: FC<Props> = (props: Props) => {
         isTask,
         myChallengeRoles,
         props.challengeInfo,
+        displayPhaseLabel,
+        displayPhaseEndDateString,
+        displayTimeLeft,
+        displayTimeLeftColor,
+        displayTimeLeftStatus,
         props.reviewProgress,
         props.reviewInProgress,
         props.variant,
@@ -311,19 +343,23 @@ export const ChallengePhaseInfo: FC<Props> = (props: Props) => {
 
 export default ChallengePhaseInfo
 
-function createPhaseItems(variant: ChallengeVariant, data: ChallengeInfo, isTask: boolean): ChallengePhaseItem[] {
-    if (variant !== 'active') {
+function createPhaseItems(config: {
+    displayPhaseLabel: string
+    isTask: boolean
+    variant: ChallengeVariant
+}): ChallengePhaseItem[] {
+    if (config.variant !== 'active') {
         return []
     }
 
-    if (isTask) {
+    if (config.isTask) {
         return []
     }
 
     return [{
         icon: 'icon-review',
         title: 'Phase',
-        value: computeIterativeReviewLabel(data) || data.currentPhase || 'N/A',
+        value: config.displayPhaseLabel || 'N/A',
     }]
 }
 
@@ -385,6 +421,7 @@ function createNonTaskItems(config: {
     data: ChallengeInfo
     formattedNonTaskPayment?: string
     isTask: boolean
+    displayPhaseEndDateString?: string
     variant: ChallengeVariant
     walletUrl: string
 }): ChallengePhaseItem[] {
@@ -397,7 +434,7 @@ function createNonTaskItems(config: {
         title: config.variant === 'past' ? 'Challenge End Date' : 'Phase End Date',
         value: config.variant === 'past'
             ? getChallengeEndDateValue(config.data)
-            : config.data.currentPhaseEndDateString || '-',
+            : config.displayPhaseEndDateString || '-',
     }]
 
     if (config.formattedNonTaskPayment) {
@@ -421,6 +458,9 @@ function createNonTaskItems(config: {
 
 function createActiveItems(config: {
     data: ChallengeInfo
+    displayTimeLeft?: string
+    displayTimeLeftColor?: string
+    displayTimeLeftStatus?: string
     progressType: typeof PROGRESS_TYPE
     reviewInProgress: boolean
     reviewProgress: number
@@ -437,12 +477,12 @@ function createActiveItems(config: {
 
     const items: ChallengePhaseItem[] = [{
         icon: 'icon-timer',
-        status: config.data.timeLeftStatus,
+        status: config.displayTimeLeftStatus,
         style: {
-            color: config.data.timeLeftColor,
+            color: config.displayTimeLeftColor,
         },
         title: 'Time Left',
-        value: config.data.timeLeft || '-',
+        value: config.displayTimeLeft || '-',
     }]
 
     if (!config.reviewInProgress) {
@@ -456,6 +496,130 @@ function createActiveItems(config: {
     return items
 }
 
+function computePhaseDisplayInfo(data?: ChallengeInfo): PhaseDisplayInfo {
+    const fallbackPhaseLabel = (data?.currentPhase || '').trim() || 'N/A'
+    const fallback: PhaseDisplayInfo = {
+        phaseEndDateString: data?.currentPhaseEndDateString,
+        phaseLabel: fallbackPhaseLabel,
+        timeLeft: data?.timeLeft,
+        timeLeftColor: data?.timeLeftColor,
+        timeLeftStatus: data?.timeLeftStatus,
+    }
+
+    if (!data) {
+        return fallback
+    }
+
+    const phaseForDisplay = selectPhaseForDisplay(data)
+    const phaseLabel = computeDisplayPhaseLabel(data, phaseForDisplay) || fallback.phaseLabel
+    const timing = computePhaseTiming(phaseForDisplay)
+
+    return {
+        phaseEndDateString: timing.endDateString ?? fallback.phaseEndDateString,
+        phaseLabel,
+        timeLeft: timing.timeLeft ?? fallback.timeLeft,
+        timeLeftColor: timing.timeLeftColor ?? fallback.timeLeftColor,
+        timeLeftStatus: timing.timeLeftStatus ?? fallback.timeLeftStatus,
+    }
+}
+
+function selectPhaseForDisplay(data?: ChallengeInfo): BackendPhase | undefined {
+    if (!data) return undefined
+
+    const phases = Array.isArray(data.phases) ? data.phases : []
+    if (!phases.length) {
+        return data.currentPhaseObject
+    }
+
+    const openPhases = phases.filter(phase => phase?.isOpen)
+    if (!openPhases.length) {
+        return data.currentPhaseObject
+    }
+
+    const submissionPhase = openPhases.find(phase => normalizePhaseName(phase?.name) === 'submission')
+    const registrationPhase = openPhases.find(phase => normalizePhaseName(phase?.name) === 'registration')
+
+    if (submissionPhase && registrationPhase) {
+        return submissionPhase
+    }
+
+    if (data.currentPhaseObject && data.currentPhaseObject.isOpen) {
+        return data.currentPhaseObject
+    }
+
+    return submissionPhase ?? openPhases[0]
+}
+
+function computeDisplayPhaseLabel(
+    data?: ChallengeInfo,
+    phase?: BackendPhase,
+): string {
+    const fallback = (data?.currentPhase || '').trim() || 'N/A'
+
+    if (!data) {
+        return fallback
+    }
+
+    if (phase && isIterativePhaseName(phase.name)) {
+        const iterativeLabel = computeIterativeReviewLabel(data, phase)
+        if (iterativeLabel) {
+            return iterativeLabel
+        }
+    } else if (!phase) {
+        const iterativeLabel = computeIterativeReviewLabel(data)
+        if (iterativeLabel) {
+            return iterativeLabel
+        }
+    }
+
+    const name = (phase?.name || '').trim()
+    if (name) {
+        return name
+    }
+
+    return fallback
+}
+
+function computePhaseTiming(phase?: BackendPhase): {
+    endDateString?: string
+    timeLeft?: string
+    timeLeftColor?: string
+    timeLeftStatus?: string
+} {
+    if (!phase || !phase.isOpen) {
+        return {}
+    }
+
+    const rawEndDate = phase.actualEndDate || phase.scheduledEndDate
+    if (!rawEndDate) {
+        return {}
+    }
+
+    const endDate = new Date(rawEndDate)
+    if (Number.isNaN(endDate.getTime())) {
+        return {}
+    }
+
+    const formattedEndDate = moment(endDate)
+        .local()
+        .format(TABLE_DATE_FORMAT)
+    const duration = formatDurationDate(endDate, new Date())
+
+    return {
+        endDateString: formattedEndDate,
+        timeLeft: duration.durationString,
+        timeLeftColor: duration.durationColor,
+        timeLeftStatus: duration.durationStatus,
+    }
+}
+
+function normalizePhaseName(name?: string): string {
+    return (name || '')
+        .toString()
+        .trim()
+        .toLowerCase()
+}
+
 // Helpers extracted to keep component complexity manageable
 function isIterativePhaseName(name?: string): boolean {
     return typeof name === 'string' && name.trim()
@@ -463,10 +627,13 @@ function isIterativePhaseName(name?: string): boolean {
         .includes('iterative review')
 }
 
-function computeIterativeReviewLabel(data: any): string | undefined {
+function computeIterativeReviewLabel(
+    data: any,
+    overridePhase?: BackendPhase,
+): string | undefined {
     const phases = Array.isArray(data?.phases) ? data.phases : []
 
-    const current = data?.currentPhaseObject
+    const current = overridePhase ?? data?.currentPhaseObject
     const currentIsIterative = isIterativePhaseName(current?.name)
 
     const openIterative = currentIsIterative
