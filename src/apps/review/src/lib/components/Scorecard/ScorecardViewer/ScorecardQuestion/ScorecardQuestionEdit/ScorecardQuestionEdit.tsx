@@ -47,7 +47,6 @@ export const ScorecardQuestionEdit: FC<ScorecardQuestionEditProps> = props => {
         isTouched,
         setIsTouched,
         formTrigger,
-        recalculateReviewProgress,
     }: ScorecardViewerContextValue = useScorecardContext()
 
     const isExpanded = toggledItems[props.question.id!] ?? false
@@ -223,7 +222,6 @@ export const ScorecardQuestionEdit: FC<ScorecardQuestionEditProps> = props => {
                                             controlProps.field.onChange(
                                                 (option as SelectOption).value,
                                             )
-                                            recalculateReviewProgress()
                                         }}
                                         onBlur={function onBlur() {
                                             controlProps.field.onBlur()

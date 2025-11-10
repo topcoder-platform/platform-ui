@@ -1,12 +1,18 @@
-import { FC, useMemo } from 'react'
+import { FC, useCallback, useMemo } from 'react'
+import classNames from 'classnames'
+
+import { IconOutline } from '~/libs/ui'
 
 import { ScorecardQuestion as ScorecardQuestionModel } from '../../../../models'
 import { ScorecardViewerContextValue, useScorecardContext } from '../ScorecardViewer.context'
 import { createReviewItemMapping, normalizeScorecardQuestionId } from '../utils'
+import { MarkdownReview } from '../../../MarkdownReview'
 
+import { ReviewComments } from './ReviewResponse/ReviewComments'
 import { AiFeedback } from './AiFeedback'
 import { ScorecardQuestionEdit } from './ScorecardQuestionEdit'
-import { ScorecardQuestionView } from './ScorecardQuestionView'
+import { ScorecardQuestionRow } from './ScorecardQuestionRow'
+import { ReviewAnswer } from './ReviewResponse/ReviewAnswer'
 import styles from './ScorecardQuestion.module.scss'
 
 interface ScorecardQuestionProps {
@@ -18,6 +24,9 @@ interface ScorecardQuestionProps {
 const ScorecardQuestion: FC<ScorecardQuestionProps> = props => {
     const {
         isEdit,
+        toggleItem,
+        toggledItems,
+        mappingAppeals,
     }: ScorecardViewerContextValue = useScorecardContext()
 
     const normalizedQuestionId = useMemo(
@@ -33,6 +42,21 @@ const ScorecardQuestion: FC<ScorecardQuestionProps> = props => {
         return props.reviewItemMapping[normalizedQuestionId]
     }, [normalizedQuestionId, props.reviewItemMapping])
 
+    const isExpanded = toggledItems[props.question.id!] ?? false
+    const toggle = useCallback(() => toggleItem(props.question.id!), [props.question.id, toggleItem])
+
+    const hasReviewData = useMemo(() => {
+        if (!reviewItemInfo?.item) {
+            return false
+        }
+
+        const reviewItem = reviewItemInfo.item
+        const hasAnswer = !!(reviewItem.finalAnswer || reviewItem.initialAnswer)
+        const hasComments = reviewItem.reviewItemComments?.length > 0
+        const hasManagerComment = !!reviewItem.managerComment
+        return hasAnswer || hasComments || hasManagerComment
+    }, [reviewItemInfo])
+
     // If in edit mode and we have review item, show edit component
     if (isEdit && reviewItemInfo) {
         return (
@@ -47,28 +71,48 @@ const ScorecardQuestion: FC<ScorecardQuestionProps> = props => {
         )
     }
 
-    // If in view mode and we have review item, show view component
-    if (!isEdit && reviewItemInfo) {
-        return (
-            <div className={styles.wrap}>
-                <ScorecardQuestionView
-                    question={props.question}
-                    reviewItem={reviewItemInfo.item}
-                    index={props.index}
-                />
-            </div>
-        )
-    }
-
-    // Default: show read-only question (for AI scorecards or when no review data)
+    // View mode: render question with review data if available
     return (
         <div className={styles.wrap}>
-            <ScorecardQuestionView
-                question={props.question}
-                reviewItem={reviewItemInfo?.item}
-                index={props.index}
-            />
-            <AiFeedback question={props.question} />
+            <ScorecardQuestionRow
+                icon={(
+                    <IconOutline.ChevronDownIcon
+                        className={classNames(styles.toggleBtn, isExpanded && styles.expanded)}
+                        onClick={toggle}
+                    />
+                )}
+                index={`Question ${props.index}`}
+                className={styles.header}
+            >
+                <span className={styles.questionText}>
+                    {props.question.description}
+                </span>
+                {isExpanded && props.question.guidelines && (
+                    <div className={styles.guidelines}>
+                        <MarkdownReview
+                            value={props.question.guidelines}
+                            className={styles.guidelinesContent}
+                        />
+                    </div>
+                )}
+            </ScorecardQuestionRow>
+
+            {!reviewItemInfo && <AiFeedback question={props.question} />}
+
+            {hasReviewData && reviewItemInfo && (
+                <>
+                    <ReviewAnswer
+                        question={props.question}
+                        reviewItem={reviewItemInfo.item}
+                    />
+
+                    <ReviewComments
+                        question={props.question}
+                        reviewItem={reviewItemInfo.item}
+                        mappingAppeals={mappingAppeals}
+                    />
+                </>
+            )}
         </div>
     )
 }
