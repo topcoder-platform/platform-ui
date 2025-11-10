@@ -48,6 +48,14 @@ type ChallengePhaseItem = ChallengePhaseDisplayItem | ChallengePhaseProgressItem
 
 type ChallengeVariant = 'active' | 'past'
 
+interface PhaseDisplayInfo {
+    phaseEndDateString?: string
+    phaseLabel: string
+    timeLeft?: string
+    timeLeftColor?: string
+    timeLeftStatus?: string
+}
+
 export const ChallengePhaseInfo: FC<Props> = (props: Props) => {
     const { myChallengeRoles }: useRoleProps = useRole()
     const {
@@ -157,17 +165,16 @@ export const ChallengePhaseInfo: FC<Props> = (props: Props) => {
         isLoadingPayment,
         isTopgearTask,
     ])
-    const phaseDisplayInfo = useMemo(
-        () => computePhaseDisplayInfo(props.challengeInfo),
-        [props.challengeInfo],
-    )
     const {
         phaseEndDateString: displayPhaseEndDateString,
         phaseLabel: displayPhaseLabel,
         timeLeft: displayTimeLeft,
         timeLeftColor: displayTimeLeftColor,
         timeLeftStatus: displayTimeLeftStatus,
-    } = phaseDisplayInfo
+    }: PhaseDisplayInfo = useMemo(
+        () => computePhaseDisplayInfo(props.challengeInfo),
+        [props.challengeInfo],
+    )
 
     useEffect(() => {
         const run = async (): Promise<void> => {
@@ -487,14 +494,6 @@ function createActiveItems(config: {
     }
 
     return items
-}
-
-interface PhaseDisplayInfo {
-    phaseEndDateString?: string
-    phaseLabel: string
-    timeLeft?: string
-    timeLeftColor?: string
-    timeLeftStatus?: string
 }
 
 function computePhaseDisplayInfo(data?: ChallengeInfo): PhaseDisplayInfo {
