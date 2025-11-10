@@ -31,8 +31,6 @@ export const formAddDefaultReviewerSchema: Yup.ObjectSchema<FormAddDefaultReview
         incrementalCoefficient: Yup.number()
             .optional()
             .min(0, 'Must be non-negative'),
-        isAIReviewer: Yup.boolean()
-            .required(),
         isMemberReview: Yup.boolean()
             .required(),
         memberReviewerCount: Yup.number()
