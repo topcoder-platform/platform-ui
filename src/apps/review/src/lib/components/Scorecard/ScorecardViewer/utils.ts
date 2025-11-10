@@ -1,4 +1,4 @@
-import { AiFeedbackItem, ScorecardGroup, ScorecardSection } from '../../../models'
+import { AiFeedbackItem, ReviewItemInfo, ScorecardGroup, ScorecardSection } from '../../../models'
 
 export const calcSectionScore = (
     section: ScorecardSection,
@@ -23,3 +23,52 @@ export const calcGroupScore = (
         ) * (section.weight / 100)
     ), 0)
 )
+
+/**
+ * Normalize scorecard question ID for consistent comparison
+ */
+export const normalizeScorecardQuestionId = (
+    id?: string | null,
+): string | undefined => {
+    if (id === undefined || id === null) {
+        return undefined
+    }
+
+    const normalized = `${id}`.trim()
+        .toLowerCase()
+
+    return normalized || undefined
+}
+
+/**
+ * Create mapping of review items by normalized question ID
+ */
+export const createReviewItemMapping = (
+    reviewItems: ReviewItemInfo[],
+): {
+    [key: string]: {
+        item: ReviewItemInfo
+        index: number
+    }
+} => {
+    const result: {
+        [key: string]: {
+            item: ReviewItemInfo
+            index: number
+        }
+    } = {}
+    
+    reviewItems.forEach((item, index) => {
+        const normalizedId = normalizeScorecardQuestionId(
+            item.scorecardQuestionId,
+        )
+        if (normalizedId) {
+            result[normalizedId] = {
+                index,
+                item,
+            }
+        }
+    })
+    
+    return result
+}

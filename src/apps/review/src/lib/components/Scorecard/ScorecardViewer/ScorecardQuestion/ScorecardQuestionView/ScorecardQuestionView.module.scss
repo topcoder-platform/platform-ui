@@ -1,0 +1,29 @@
+.wrap {
+}
+
+.header {
+    margin-bottom: 12px;
+}
+
+.toggleBtn {
+    cursor: pointer;
+    transition: transform 0.2s;
+    width: 20px;
+    height: 20px;
+
+    &.expanded {
+        transform: rotate(180deg);
+    }
+}
+
+.questionText {
+    font-weight: 600;
+    flex: 1;
+}
+
+.guidelines {
+    white-space: pre-wrap;
+}
+
+
+

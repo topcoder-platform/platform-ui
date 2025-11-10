@@ -1,0 +1,112 @@
+.wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-left: 16px;
+}
+
+.appealRow {
+}
+
+.responseRow {
+}
+
+.content {
+}
+
+.status {
+    font-weight: bold;
+    margin-top: 8px;
+}
+
+.responseActions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.respondButton,
+.editResponseButton {
+    padding: 6px 12px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+
+    &:hover:not(:disabled) {
+        background-color: #0056b3;
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+}
+
+.responseForm {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 8px;
+    padding: 12px;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    background-color: #f8f9fa;
+}
+
+.responseFormHeader {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.responseFormLabel {
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.responseSelect {
+    min-width: 200px;
+}
+
+.markdownEditor {
+}
+
+.responseFormActions {
+    display: flex;
+    gap: 8px;
+}
+
+.submitButton,
+.cancelButton {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+}
+
+.submitButton {
+    background-color: #28a745;
+    color: white;
+
+    &:hover:not(:disabled) {
+        background-color: #218838;
+    }
+}
+
+.cancelButton {
+    background-color: #6c757d;
+    color: white;
+
+    &:hover:not(:disabled) {
+        background-color: #5a6268;
+    }
+}

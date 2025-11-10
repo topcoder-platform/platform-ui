@@ -8,6 +8,7 @@ import { ScorecardQuestionRow } from '../ScorecardQuestionRow'
 import { ScorecardScore } from '../../ScorecardScore'
 
 import styles from './AiFeedback.module.scss'
+import { MarkdownReview } from '../../../../MarkdownReview'
 
 interface AiFeedbackProps {
     question: ScorecardQuestion
@@ -43,7 +44,7 @@ const AiFeedback: FC<AiFeedbackProps> = props => {
                     <strong>{feedback.questionScore ? 'Yes' : 'No'}</strong>
                 </p>
             )}
-            {feedback.content}
+            <MarkdownReview value={feedback.content} />
         </ScorecardQuestionRow>
     )
 }

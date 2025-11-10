@@ -1,0 +1,109 @@
+.wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.commentRow {
+}
+
+.content {
+}
+
+.appealActions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+    margin-left: 16px;
+}
+
+.addAppealButton,
+.editAppealButton,
+.deleteAppealButton {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+}
+
+.addAppealButton,
+.editAppealButton {
+    background-color: #ffc107;
+    color: #000;
+
+    &:hover:not(:disabled) {
+        background-color: #e0a800;
+    }
+}
+
+.deleteAppealButton {
+    background-color: #dc3545;
+    color: white;
+
+    &:hover:not(:disabled) {
+        background-color: #c82333;
+    }
+}
+
+.appealForm {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 8px;
+    margin-left: 16px;
+    padding: 12px;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    background-color: #fff3cd;
+}
+
+.appealFormLabel {
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.markdownEditor {
+}
+
+.appealFormActions {
+    display: flex;
+    gap: 8px;
+}
+
+.submitButton,
+.cancelButton {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+}
+
+.submitButton {
+    background-color: #28a745;
+    color: white;
+
+    &:hover:not(:disabled) {
+        background-color: #218838;
+    }
+}
+
+.cancelButton {
+    background-color: #6c757d;
+    color: white;
+
+    &:hover:not(:disabled) {
+        background-color: #5a6268;
+    }
+}

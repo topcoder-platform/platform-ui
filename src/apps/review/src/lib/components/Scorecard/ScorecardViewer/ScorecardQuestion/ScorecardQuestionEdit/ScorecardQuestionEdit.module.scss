@@ -1,0 +1,90 @@
+@import '@libs/ui/styles/includes';
+
+.wrap {
+    margin-bottom: 16px;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    padding: 16px;
+
+    &.hasError {
+        border-color: #d32f2f;
+    }
+}
+
+.header {
+    margin-bottom: 12px;
+}
+
+.toggleBtn {
+    cursor: pointer;
+    transition: transform 0.2s;
+    width: 20px;
+    height: 20px;
+
+    &.expanded {
+        transform: rotate(180deg);
+    }
+}
+
+.guidelines {
+    white-space: pre-wrap;
+}
+
+.questionText {
+    font-weight: 600;
+    flex: 1;
+}
+
+.errorMessage {
+    color: #d32f2f;
+    font-size: 14px;
+    margin: 8px 0;
+    padding: 8px;
+    background-color: #ffebee;
+    border-radius: 4px;
+}
+
+.answerSection {
+    background: #f6f7f8;
+    margin: 0 -1*$sp-4 -1*$sp-4;
+    padding: 0 $sp-4 $sp-4;
+}
+
+.commentForm {
+    margin-bottom: 24px;
+}
+
+.markdownEditor {
+    margin-top: $sp-4;
+
+    :global(.EasyMDEContainer) {
+        :global(.editor-toolbar),
+        :global(.CodeMirror) {
+            border: 1px solid #A8A8A8;
+        }
+        :global(.CodeMirror) {
+            border-top: 0 none;
+        }
+    }
+}
+
+.answerWrap {
+    width: 120px;
+}
+
+.responseTypeWrap {
+    width: 240px;
+}
+
+.addCommentBtn {
+    display: flex;
+    align-items: center;
+    gap: $sp-2;
+    font-family: "Nunito Sans", sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    line-height: 20px;
+    color: #0D61BF;
+    padding: $sp-2 $sp-4;
+    white-space: nowrap;
+}

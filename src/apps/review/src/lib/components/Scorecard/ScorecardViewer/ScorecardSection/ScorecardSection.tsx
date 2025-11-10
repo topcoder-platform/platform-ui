@@ -4,13 +4,20 @@ import { ScorecardSection as ScorecardSectionModel } from '../../../../models'
 import { ScorecardQuestion } from '../ScorecardQuestion'
 import { ScorecardScore } from '../ScorecardScore'
 import { ScorecardViewerContextValue, useScorecardContext } from '../ScorecardViewer.context'
-import { calcSectionScore } from '../utils'
+import { calcSectionScore, createReviewItemMapping } from '../utils'
 
 import styles from './ScorecardSection.module.scss'
 
 interface ScorecardSectionProps {
     index: string
     section: ScorecardSectionModel
+    reviewItemMapping?: ReturnType<typeof createReviewItemMapping>
+    formControl?: any
+    formErrors?: any
+    formIsTouched?: { [key: string]: boolean }
+    formSetIsTouched?: any
+    formTrigger?: any
+    recalculateReviewProgress?: () => void
 }
 
 const ScorecardSection: FC<ScorecardSectionProps> = props => {
@@ -46,6 +53,13 @@ const ScorecardSection: FC<ScorecardSectionProps> = props => {
                     key={question.id}
                     index={[props.index, index + 1].join('.')}
                     question={question}
+                    reviewItemMapping={props.reviewItemMapping}
+                    formControl={props.formControl}
+                    formErrors={props.formErrors}
+                    formIsTouched={props.formIsTouched}
+                    formSetIsTouched={props.formSetIsTouched}
+                    formTrigger={props.formTrigger}
+                    recalculateReviewProgress={props.recalculateReviewProgress}
                 />
             ))}
         </div>

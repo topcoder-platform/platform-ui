@@ -7,13 +7,20 @@ import { ScorecardGroup as ScorecardGroupModel } from '../../../../models'
 import { ScorecardSection } from '../ScorecardSection'
 import { ScorecardViewerContextValue, useScorecardContext } from '../ScorecardViewer.context'
 import { ScorecardScore } from '../ScorecardScore'
-import { calcGroupScore } from '../utils'
+import { calcGroupScore, createReviewItemMapping } from '../utils'
 
 import styles from './ScorecardGroup.module.scss'
 
 interface ScorecardGroupProps {
     index: number
     group: ScorecardGroupModel
+    reviewItemMapping?: ReturnType<typeof createReviewItemMapping>
+    formControl?: any
+    formErrors?: any
+    formIsTouched?: { [key: string]: boolean }
+    formSetIsTouched?: any
+    formTrigger?: any
+    recalculateReviewProgress?: () => void
 }
 
 const ScorecardGroup: FC<ScorecardGroupProps> = props => {
@@ -52,7 +59,18 @@ const ScorecardGroup: FC<ScorecardGroupProps> = props => {
             </div>
 
             {isVissible && props.group.sections.map((section, index) => (
-                <ScorecardSection key={section.id} section={section} index={[props.index, index + 1].join('.')} />
+                <ScorecardSection
+                    key={section.id}
+                    section={section}
+                    index={[props.index, index + 1].join('.')}
+                    reviewItemMapping={props.reviewItemMapping}
+                    formControl={props.formControl}
+                    formErrors={props.formErrors}
+                    formIsTouched={props.formIsTouched}
+                    formSetIsTouched={props.formSetIsTouched}
+                    formTrigger={props.formTrigger}
+                    recalculateReviewProgress={props.recalculateReviewProgress}
+                />
             ))}
         </div>
     )

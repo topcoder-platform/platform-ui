@@ -12,6 +12,7 @@ import { ReactComponent as IconPhaseWinners } from './icon-phase-winners.svg'
 import { ReactComponent as IconDeepseekAi } from './deepseek.svg'
 import { ReactComponent as IconClock } from './icon-clock.svg'
 import { ReactComponent as IconPremium } from './icon-premium.svg'
+import { ReactComponent as IconComment } from './icon-comment.svg'
 
 export * from './editor/bold'
 export * from './editor/code'
@@ -43,6 +44,7 @@ export {
     IconDeepseekAi,
     IconClock,
     IconPremium,
+    IconComment,
 }
 
 export const phasesIcons = {
