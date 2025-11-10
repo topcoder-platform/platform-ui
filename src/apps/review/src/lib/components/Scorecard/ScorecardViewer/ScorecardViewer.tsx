@@ -1,4 +1,6 @@
-import { FC, useCallback, useMemo, useState, Fragment } from 'react'
+/* eslint-disable complexity */
+
+import { FC, useCallback, useMemo, useState } from 'react'
 import { isEmpty } from 'lodash'
 import classNames from 'classnames'
 
@@ -15,14 +17,17 @@ import {
     Scorecard,
     ScorecardInfo,
 } from '../../../models'
-import { useReviewForm } from './hooks/useReviewForm'
-import { createReviewItemMapping } from './utils'
-import { ScorecardGroup } from './ScorecardGroup'
-import { ScorecardViewerContextProvider } from './ScorecardViewer.context'
-import { ScorecardTotal } from './ScorecardTotal'
-import { ConfirmModal } from '../../ConfirmModal'
 import { IconError } from '../../../assets/icons'
+import { ConfirmModal } from '../../ConfirmModal'
 
+import {
+    ScorecardViewerContextProvider,
+    ScorecardViewerContextValue,
+    useScorecardContext,
+} from './ScorecardViewer.context'
+import { ScorecardGroup } from './ScorecardGroup'
+import { ScorecardTotal } from './ScorecardTotal'
+import { createReviewItemMapping } from './utils'
 import styles from './ScorecardViewer.module.scss'
 
 interface ScorecardViewerProps {
@@ -72,46 +77,28 @@ interface ScorecardViewerProps {
     setIsChanged?: (changed: boolean) => void
 }
 
-const ScorecardViewer: FC<ScorecardViewerProps> = props => {
+const ScorecardViewerContent: FC<ScorecardViewerProps> = props => {
     const [isShowSaveAsDraftModal, setIsShowSaveAsDraftModal] = useState(false)
     const [shouldRedirectAfterDraft, setShouldRedirectAfterDraft] = useState(false)
-    // const [isChanged, setIsChanged] = useState(false)
 
     const reviewItemMapping = useMemo(() => {
         if (!props.reviewInfo?.reviewItems) {
             return undefined
         }
+
         return createReviewItemMapping(props.reviewInfo.reviewItems)
     }, [props.reviewInfo])
 
     const {
         form,
-        reviewProgress,
         totalScore,
         isTouched,
-        setIsTouched,
-        recalculateReviewProgress,
         touchedAllFields,
-    } = useReviewForm({
-        reviewInfo: props.reviewInfo,
-        scorecardInfo: props.scorecard as ScorecardInfo,
-        onFormChange: props.setIsChanged,
-    })
+        formErrors,
+    }: ScorecardViewerContextValue = useScorecardContext()
 
-    const { handleSubmit, getValues, formState: { errors, isDirty } } = form
-
-    const displayedTotalScore = useMemo(() => {
-        const maybeFinalScore = props.reviewInfo?.finalScore
-        if (
-            !props.isEdit
-            && typeof maybeFinalScore === 'number'
-            && Number.isFinite(maybeFinalScore)
-        ) {
-            return maybeFinalScore.toFixed(2)
-        }
-
-        return totalScore.toFixed(2)
-    }, [props.isEdit, props.reviewInfo?.finalScore, totalScore])
+    const isDirty = form?.formState?.isDirty || false
+    const errors = formErrors || {}
 
     const errorMessageTop = isEmpty(errors) || isEmpty(isTouched)
         ? ''
@@ -121,20 +108,20 @@ const ScorecardViewer: FC<ScorecardViewerProps> = props => {
         ? ''
         : 'There were validation errors. Check above.'
 
-    const onSubmit = useCallback((data: FormReviews) => {
+    const onSubmit = useCallback(() => {
         if (props.saveReviewInfo) {
             props.saveReviewInfo(
-                isDirty ? getValues() : undefined,
-                getValues(),
+                isDirty ? form?.getValues() : undefined,
+                form?.getValues(),
                 true,
                 totalScore,
-                () => {
+                (): void => {
                     // Success callback - could navigate or show success message
                 },
             )
         }
     }, [
-        getValues,
+        form,
         isDirty,
         props.saveReviewInfo,
         totalScore,
@@ -143,8 +130,8 @@ const ScorecardViewer: FC<ScorecardViewerProps> = props => {
     const handleSaveAsDraft = useCallback(() => {
         if (props.saveReviewInfo) {
             props.saveReviewInfo(
-                isDirty ? getValues() : undefined,
-                getValues(),
+                isDirty ? form?.getValues() : undefined,
+                form?.getValues(),
                 false,
                 totalScore,
                 () => {
@@ -153,7 +140,7 @@ const ScorecardViewer: FC<ScorecardViewerProps> = props => {
                 },
             )
         }
-    }, [getValues, isDirty, props.saveReviewInfo, totalScore])
+    }, [form, isDirty, props.saveReviewInfo, totalScore])
 
     const handleCloseDraftModal = useCallback(() => {
         setIsShowSaveAsDraftModal(false)
@@ -162,161 +149,115 @@ const ScorecardViewer: FC<ScorecardViewerProps> = props => {
         }
     }, [shouldRedirectAfterDraft])
 
-    const expandAll = useCallback(() => {
-        // Expand all questions - this would need to be implemented in context
-    }, [])
-
-    const collapseAll = useCallback(() => {
-        // Collapse all questions - this would need to be implemented in context
-    }, [])
-
     const ContainerTag = props.isEdit ? 'form' : 'div'
+
+    if (props.isLoading) {
+        return <TableLoading />
+    }
 
     return (
         <div className={styles.wrap}>
-            <ScorecardViewerContextProvider
-                scorecard={props.scorecard as Scorecard}
-                aiFeedbackItems={props.aiFeedback}
-                reviewInfo={props.reviewInfo}
-                isEdit={props.isEdit}
-                isManagerEdit={props.isManagerEdit}
-                actionChallengeRole={props.actionChallengeRole}
-                mappingAppeals={props.mappingAppeals}
-                isSavingReview={props.isSavingReview}
-                isSavingAppeal={props.isSavingAppeal}
-                isSavingAppealResponse={props.isSavingAppealResponse}
-                isSavingManagerComment={props.isSavingManagerComment}
-                saveReviewInfo={props.saveReviewInfo}
-                addAppeal={props.addAppeal}
-                doDeleteAppeal={props.doDeleteAppeal}
-                addAppealResponse={props.addAppealResponse}
-                addManagerComment={props.addManagerComment}
-            >
-                {props.isLoading ? (
-                    <TableLoading />
-                ) : (
-                    <>
-                        {/* {(props.isEdit || props.reviewInfo) && (
-                            <ScorecardViewerHeader
-                                scorecard={props.scorecard as Scorecard}
-                                isEdit={props.isEdit}
-                                reviewProgress={props.isEdit ? reviewProgress : undefined}
-                                totalScore={displayedTotalScore}
-                                onExpandAll={expandAll}
-                                onCollapseAll={collapseAll}
-                            />
-                        )} */}
+            {errorMessageTop && (
+                <div className={classNames(styles.errorMessage, styles.errorTop)}>
+                    <i>
+                        <IconError />
+                    </i>
+                    {errorMessageTop}
+                </div>
+            )}
 
-                        {errorMessageTop && (
-                            <div className={classNames(styles.errorMessage, styles.errorTop)}>
+            {!!props.score && !props.reviewInfo && (
+                <div className={styles.conclusion}>
+                    <strong>Conclusion</strong>
+                    <p>
+                        Congratulations! You earned a score of
+                        {' '}
+                        <strong>
+                            {props.score.toFixed(2)}
+                        </strong>
+                        {' '}
+                        out of the maximum of
+                        {' '}
+                        <strong>
+                            {(props.scorecard as Scorecard).maxScore.toFixed(2)}
+                        </strong>
+                        .
+                        You did a good job on passing the scorecard criteria.
+                        Please check the below sections to see if there is any place for improvement.
+                    </p>
+                </div>
+            )}
+
+            {props.reviewInfo && (
+                <ContainerTag
+                    className={styles.formContainer}
+                    {...((props.isEdit && form) ? { onSubmit: form.handleSubmit(onSubmit) ?? undefined } : {})}
+                >
+                    {props.scorecard.scorecardGroups.map((group, index) => (
+                        <ScorecardGroup
+                            key={group.id}
+                            group={group}
+                            index={index + 1}
+                            reviewItemMapping={reviewItemMapping}
+                        />
+                    ))}
+                </ContainerTag>
+            )}
+
+            {!props.reviewInfo && props.scorecard.scorecardGroups.map((group, index) => (
+                <ScorecardGroup
+                    key={group.id}
+                    group={group}
+                    index={index + 1}
+                />
+            ))}
+
+            <ScorecardTotal score={props.score} />
+
+            {props.isEdit && (
+                <div className={styles.footer}>
+                    <div>
+                        {errorMessageBottom && (
+                            <div className={classNames(styles.errorMessage, styles.errorBottom)}>
                                 <i>
                                     <IconError />
                                 </i>
-                                {errorMessageTop}
+                                {errorMessageBottom}
                             </div>
                         )}
+                    </div>
 
-                        {!!props.score && !props.reviewInfo && (
-                            <div className={styles.conclusion}>
-                                <strong>Conclusion</strong>
-                                <p>
-                                    Congratulations! You earned a score of
-                                    {' '}
-                                    <strong>
-                                        {props.score.toFixed(2)}
-                                    </strong>
-                                    {' '}
-                                    out of the maximum of
-                                    {' '}
-                                    <strong>
-                                        {(props.scorecard as Scorecard).maxScore.toFixed(2)}
-                                    </strong>
-                                    .
-                                    You did a good job on passing the scorecard criteria.
-                                    Please check the below sections to see if there is any place for improvement.
-                                </p>
-                            </div>
-                        )}
-
-                        {props.reviewInfo && (
-                            <ContainerTag
-                                className={styles.formContainer}
-                                onSubmit={props.isEdit ? handleSubmit(onSubmit) : undefined}
+                    <div className={styles.actions}>
+                        {props.onCancelEdit && (
+                            <button
+                                type='button'
+                                className='cancelButton'
+                                onClick={props.onCancelEdit}
                             >
-                                {props.scorecard.scorecardGroups.map((group, index) => (
-                                    <ScorecardGroup
-                                        key={group.id}
-                                        group={group}
-                                        index={index + 1}
-                                        reviewItemMapping={reviewItemMapping}
-                                        formControl={props.isEdit ? form.control : undefined}
-                                        formErrors={props.isEdit ? errors : undefined}
-                                        formIsTouched={props.isEdit ? isTouched : undefined}
-                                        formSetIsTouched={props.isEdit ? setIsTouched : undefined}
-                                        formTrigger={props.isEdit ? form.trigger : undefined}
-                                        recalculateReviewProgress={props.isEdit ? recalculateReviewProgress : undefined}
-                                    />
-                                ))}
-                            </ContainerTag>
+                                Cancel
+                            </button>
                         )}
-
-                        {!props.reviewInfo && props.scorecard.scorecardGroups.map((group, index) => (
-                            <ScorecardGroup
-                                key={group.id}
-                                group={group}
-                                index={index + 1}
-                            />
-                        ))}
-
-                        <ScorecardTotal score={props.score} />
-
-                        {props.isEdit && (
-                            <div className={styles.footer}>
-                                <div>
-                                    {errorMessageBottom && (
-                                        <div className={classNames(styles.errorMessage, styles.errorBottom)}>
-                                            <i>
-                                                <IconError />
-                                            </i>
-                                            {errorMessageBottom}
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className={styles.actions}>
-                                    {props.onCancelEdit && (
-                                        <button
-                                            type='button'
-                                            className='cancelButton'
-                                            onClick={props.onCancelEdit}
-                                        >
-                                            Cancel
-                                        </button>
-                                    )}
-                                    <button
-                                        type='button'
-                                        className='borderButton'
-                                        onClick={handleSaveAsDraft}
-                                        disabled={props.isSavingReview}
-                                    >
-                                        Save as Draft
-                                    </button>
-                                    <button
-                                        type='submit'
-                                        className='filledButton'
-                                        onClick={function onClick() {
-                                            touchedAllFields()
-                                        }}
-                                        disabled={props.isSavingReview}
-                                    >
-                                        Mark as Complete
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-                    </>
-                )}
-            </ScorecardViewerContextProvider>
+                        <button
+                            type='button'
+                            className='borderButton'
+                            onClick={handleSaveAsDraft}
+                            disabled={props.isSavingReview}
+                        >
+                            Save as Draft
+                        </button>
+                        <button
+                            type='submit'
+                            className='filledButton'
+                            onClick={function onClick() {
+                                touchedAllFields()
+                            }}
+                            disabled={props.isSavingReview}
+                        >
+                            Mark as Complete
+                        </button>
+                    </div>
+                </div>
+            )}
 
             <ConfirmModal
                 title='Save as Draft'
@@ -331,5 +272,29 @@ const ScorecardViewer: FC<ScorecardViewerProps> = props => {
         </div>
     )
 }
+
+const ScorecardViewer: FC<ScorecardViewerProps> = props => (
+    <ScorecardViewerContextProvider
+        scorecard={props.scorecard}
+        aiFeedbackItems={props.aiFeedback}
+        reviewInfo={props.reviewInfo}
+        isEdit={props.isEdit}
+        isManagerEdit={props.isManagerEdit}
+        actionChallengeRole={props.actionChallengeRole}
+        mappingAppeals={props.mappingAppeals}
+        isSavingReview={props.isSavingReview}
+        isSavingAppeal={props.isSavingAppeal}
+        isSavingAppealResponse={props.isSavingAppealResponse}
+        isSavingManagerComment={props.isSavingManagerComment}
+        saveReviewInfo={props.saveReviewInfo}
+        addAppeal={props.addAppeal}
+        doDeleteAppeal={props.doDeleteAppeal}
+        addAppealResponse={props.addAppealResponse}
+        addManagerComment={props.addManagerComment}
+        onFormChange={props.setIsChanged}
+    >
+        <ScorecardViewerContent {...props} />
+    </ScorecardViewerContextProvider>
+)
 
 export default ScorecardViewer

@@ -1,19 +1,20 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useForm, UseFormReturn } from 'react-hook-form'
-import { filter, forEach, isEmpty, reduce } from 'lodash'
+import { filter, forEach, reduce } from 'lodash'
+
 import { yupResolver } from '@hookform/resolvers/yup'
 
-import { FormReviews, ReviewInfo, ScorecardInfo } from '../../../../models'
+import { FormReviews, ReviewInfo, Scorecard, ScorecardInfo } from '../../../../models'
 import { formReviewsSchema, roundWith2DecimalPlaces } from '../../../../utils'
 import { normalizeScorecardQuestionId } from '../utils'
 
 interface UseReviewFormProps {
     reviewInfo?: ReviewInfo
-    scorecardInfo?: ScorecardInfo
+    scorecardInfo?: Scorecard | ScorecardInfo
     onFormChange?: (isDirty: boolean) => void
 }
 
-interface UseReviewFormReturn {
+export interface UseReviewForm {
     form: UseFormReturn<FormReviews>
     reviewProgress: number
     totalScore: number
@@ -27,7 +28,7 @@ export const useReviewForm = ({
     reviewInfo,
     scorecardInfo,
     onFormChange,
-}: UseReviewFormProps): UseReviewFormReturn => {
+}: UseReviewFormProps): UseReviewForm => {
     const [reviewProgress, setReviewProgress] = useState(0)
     const [totalScore, setTotalScore] = useState(0)
     const [isTouched, setIsTouched] = useState<{ [key: string]: boolean }>({})
@@ -40,7 +41,7 @@ export const useReviewForm = ({
         resolver: yupResolver(formReviewsSchema),
     })
 
-    const { formState: { isDirty }, getValues, reset } = form
+    const { formState: { isDirty }, getValues, reset }: UseFormReturn<FormReviews> = form
 
     useEffect(() => {
         onFormChange?.(isDirty)
@@ -51,7 +52,7 @@ export const useReviewForm = ({
         const mappingResult: {
             [scorecardQuestionId: string]: string
         } = {}
-        
+
         const newReviewProgress = reviewFormDatas.length > 0
             ? Math.round(
                 (filter(reviewFormDatas, review => {
@@ -86,7 +87,7 @@ export const useReviewForm = ({
                                 const initialAnswer = normalizedQuestionId
                                     ? mappingResult[normalizedQuestionId]
                                     : undefined
-                                
+
                                 if (
                                     question.type === 'YES_NO'
                                     && initialAnswer === 'Yes'
@@ -162,13 +163,11 @@ export const useReviewForm = ({
 
     return {
         form,
-        reviewProgress,
-        totalScore,
         isTouched,
-        setIsTouched,
         recalculateReviewProgress,
+        reviewProgress,
+        setIsTouched,
+        totalScore,
         touchedAllFields,
     }
 }
-
-

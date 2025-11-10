@@ -13,7 +13,7 @@ import { AppealInfo, ChallengeDetailContextModel, FormAppealResponse } from '../
 import { ReviewItemComment } from '../../../../../../models/ReviewItemComment.model'
 import { formAppealResponseSchema, isAppealsPhase } from '../../../../../../utils'
 import { ChallengeDetailContext } from '../../../../../../contexts'
-import { FieldMarkdownEditor } from '../../../../../../components/FieldMarkdownEditor'
+import { FieldMarkdownEditor } from '../../../../../FieldMarkdownEditor'
 import { ScorecardViewerContextValue, useScorecardContext } from '../../../ScorecardViewer.context'
 import { ScorecardQuestionRow } from '../../ScorecardQuestionRow'
 
@@ -71,6 +71,23 @@ const ReviewComment: FC<ReviewCommentProps> = props => {
 
     const typeDisplay = props.comment.typeDisplay || props.comment.type
 
+    const handleShowAppealForm = useCallback(() => {
+        setShowAppealForm(true)
+    }, [])
+
+    const handleDeleteAppeal = useCallback(() => {
+        if (doDeleteAppeal && window.confirm('Are you sure you want to delete this appeal?')) {
+            doDeleteAppeal(props.appeal, () => {
+                setAppealContent('')
+            })
+        }
+    }, [doDeleteAppeal, props.appeal])
+
+    const handleCancelAppealForm = useCallback(() => {
+        setShowAppealForm(false)
+        setAppealContent(props.appeal?.content || '')
+    }, [props.appeal])
+
     return (
         <div className={styles.wrap}>
             <ScorecardQuestionRow
@@ -88,7 +105,7 @@ const ReviewComment: FC<ReviewCommentProps> = props => {
                         <div className={styles.appealActions}>
                             <button
                                 type='button'
-                                onClick={() => setShowAppealForm(true)}
+                                onClick={handleShowAppealForm}
                                 disabled={isSavingAppeal}
                                 className={styles.addAppealButton}
                             >
@@ -101,7 +118,7 @@ const ReviewComment: FC<ReviewCommentProps> = props => {
                         <div className={styles.appealActions}>
                             <button
                                 type='button'
-                                onClick={() => setShowAppealForm(true)}
+                                onClick={handleShowAppealForm}
                                 disabled={isSavingAppeal}
                                 className={styles.editAppealButton}
                             >
@@ -109,13 +126,7 @@ const ReviewComment: FC<ReviewCommentProps> = props => {
                             </button>
                             <button
                                 type='button'
-                                onClick={() => {
-                                    if (doDeleteAppeal && window.confirm('Are you sure you want to delete this appeal?')) {
-                                        doDeleteAppeal(props.appeal, () => {
-                                            setAppealContent('')
-                                        })
-                                    }
-                                }}
+                                onClick={handleDeleteAppeal}
                                 disabled={isSavingAppeal}
                                 className={styles.deleteAppealButton}
                             >
@@ -164,10 +175,7 @@ const ReviewComment: FC<ReviewCommentProps> = props => {
                                 <button
                                     type='button'
                                     className={styles.cancelButton}
-                                    onClick={() => {
-                                        setShowAppealForm(false)
-                                        setAppealContent(props.appeal?.content || '')
-                                    }}
+                                    onClick={handleCancelAppealForm}
                                 >
                                     Cancel
                                 </button>
@@ -181,4 +189,3 @@ const ReviewComment: FC<ReviewCommentProps> = props => {
 }
 
 export default ReviewComment
-

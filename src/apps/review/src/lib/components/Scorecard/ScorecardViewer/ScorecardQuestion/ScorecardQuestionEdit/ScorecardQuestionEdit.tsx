@@ -1,60 +1,64 @@
-import { Dispatch, FC, SetStateAction, useMemo } from 'react'
+import { FC, useCallback, useMemo } from 'react'
 import {
-    Control,
     Controller,
     ControllerRenderProps,
-    FieldErrors,
     useFieldArray,
     UseFieldArrayReturn,
-    UseFormTrigger,
 } from 'react-hook-form'
 import _, { capitalize, compact, isEmpty } from 'lodash'
 import Select, { SingleValue } from 'react-select'
 import classNames from 'classnames'
 
-import { Button, IconOutline } from '~/libs/ui'
+import { IconOutline } from '~/libs/ui'
+import { IconComment } from '~/apps/review/src/lib/assets/icons'
 
-import { FieldMarkdownEditor } from '../../../../FieldMarkdownEditor'
 import {
     QUESTION_RESPONSE_OPTIONS,
     QUESTION_YES_NO_OPTIONS,
 } from '../../../../../../config/index.config'
-import { MarkdownReview } from '../../../../MarkdownReview'
 import {
     FormReviews,
     ReviewItemInfo,
     ScorecardQuestion,
     SelectOption,
 } from '../../../../../models'
-import { ScorecardQuestionRow } from '../ScorecardQuestionRow'
+import { FieldMarkdownEditor } from '../../../../FieldMarkdownEditor'
+import { MarkdownReview } from '../../../../MarkdownReview'
 import { ScorecardViewerContextValue, useScorecardContext } from '../../ScorecardViewer.context'
+import { ScorecardQuestionRow } from '../ScorecardQuestionRow'
+import { ScorecardScore } from '../../ScorecardScore'
 
 import styles from './ScorecardQuestionEdit.module.scss'
-import { ScorecardScore } from '../../ScorecardScore'
-import { IconComment } from '~/apps/review/src/lib/assets/icons'
 
 interface ScorecardQuestionEditProps {
     question: ScorecardQuestion
     reviewItem: ReviewItemInfo
     index: string
-    control: Control<FormReviews, any>
     fieldIndex: number
-    errors: FieldErrors<FormReviews>
-    isTouched: { [key: string]: boolean }
     disabled?: boolean
-    setIsTouched: Dispatch<
-        SetStateAction<{
-            [key: string]: boolean
-        }>
-    >
-    trigger: UseFormTrigger<FormReviews>
-    recalculateReviewProgress: () => void
 }
 
 export const ScorecardQuestionEdit: FC<ScorecardQuestionEditProps> = props => {
-    const { toggleItem, toggledItems }: ScorecardViewerContextValue = useScorecardContext()
+    const {
+        toggleItem,
+        toggledItems,
+        form,
+        formErrors,
+        isTouched,
+        setIsTouched,
+        formTrigger,
+        recalculateReviewProgress,
+    }: ScorecardViewerContextValue = useScorecardContext()
+
     const isExpanded = toggledItems[props.question.id!] ?? false
-    const toggle = () => toggleItem(props.question.id!)
+    const toggle = useCallback((): void => {
+        toggleItem(props.question.id!)
+    }, [toggleItem])
+
+    const control = form?.control
+    const errors = formErrors || {}
+    const touched = isTouched || {}
+    const trigger = formTrigger || ((): Promise<boolean> => Promise.resolve(true))
 
     const responseOptions = useMemo<SelectOption[]>(() => {
         if (props.question.type === 'SCALE') {
@@ -62,10 +66,11 @@ export const ScorecardQuestionEdit: FC<ScorecardQuestionEditProps> = props => {
             return Array.from(
                 new Array(length),
                 (x, i) => `${i + props.question.scaleMin}`,
-            ).map(item => ({
-                label: item,
-                value: item,
-            }))
+            )
+                .map(item => ({
+                    label: item,
+                    value: item,
+                }))
         }
 
         if (props.question.type === 'YES_NO') {
@@ -75,20 +80,29 @@ export const ScorecardQuestionEdit: FC<ScorecardQuestionEditProps> = props => {
         return []
     }, [props.question])
 
+    const {
+        fields,
+        append,
+    }: UseFieldArrayReturn<FormReviews, 'reviews.0.comments', 'id'>
+        = useFieldArray({
+            control: control!,
+            name: `reviews.${props.fieldIndex}.comments` as 'reviews.0.comments',
+        })
+
     const errorMessage = useMemo(
         () => {
-            if (props.isTouched[
+            if (touched[
                 `reviews.${props.fieldIndex}.initialAnswer.message`
             ]) {
                 return _.get(
-                    props.errors,
+                    errors,
                     `reviews.${props.fieldIndex}.initialAnswer.message`,
                 )
             }
 
             return ''
         },
-        [props],
+        [touched, errors, props.fieldIndex],
     )
 
     const initCommentContents = useMemo<{ [key: string]: string }>(() => {
@@ -102,31 +116,35 @@ export const ScorecardQuestionEdit: FC<ScorecardQuestionEditProps> = props => {
         return results
     }, [props])
 
-    const {
-        fields,
-        append,
-    }: UseFieldArrayReturn<FormReviews, 'reviews.0.comments', 'id'>
-        = useFieldArray({
-            control: props.control,
-            name: `reviews.${props.fieldIndex}.comments` as 'reviews.0.comments',
-        })
-
     const errorCommentsMessage = useMemo<{ [index: number]: string }>(() => {
         const result: { [index: number]: string } = {}
         _.forEach(fields, (field, idx) => {
-            result[idx] = props.isTouched[
+            result[idx] = touched[
                 `reviews.${props.fieldIndex}.comments.${idx}.content`
             ]
                 ? _.get(
-                    props.errors,
+                    errors,
                     `reviews.${props.fieldIndex}.comments.${idx}.content.message`,
                 ) ?? ''
                 : ''
         })
         return result
-    }, [props, fields])
+    }, [touched, errors, props.fieldIndex, fields])
 
     const hasErrors = !!errorMessage || !isEmpty(compact(Object.values(errorCommentsMessage)))
+
+    const handleAddResponse = useCallback(() => {
+        append({
+            content: '',
+            id: '-1',
+            index: fields.length,
+            type: '',
+        })
+    }, [append, fields.length])
+
+    if (!form || !control) {
+        return <></>
+    }
 
     return (
         <div className={classNames(styles.wrap, hasErrors && styles.hasError)}>
@@ -163,7 +181,7 @@ export const ScorecardQuestionEdit: FC<ScorecardQuestionEditProps> = props => {
             <div className={styles.answerSection}>
                 <Controller
                     name={`reviews.${props.fieldIndex}.initialAnswer`}
-                    control={props.control}
+                    control={control}
                     render={function render(controlProps: {
                         field: ControllerRenderProps<
                             FormReviews,
@@ -173,13 +191,13 @@ export const ScorecardQuestionEdit: FC<ScorecardQuestionEditProps> = props => {
                         return (
                             <ScorecardQuestionRow
                                 index='Answer'
-                                score={
+                                score={(
                                     <ScorecardScore
                                         score={Number(controlProps.field.value)}
                                         scaleMax={props.question.scaleMax}
                                         weight={props.question.weight}
                                     />
-                                }
+                                )}
                             >
                                 <div className={styles.answerWrap}>
                                     <Select
@@ -199,19 +217,21 @@ export const ScorecardQuestionEdit: FC<ScorecardQuestionEditProps> = props => {
                                                 }
                                                 : undefined
                                         }
-                                        onChange={function onChange(option: SingleValue<{ label: string; value: string }>) {
+                                        onChange={function onChange(
+                                            option: SingleValue<{ label: string; value: string }>,
+                                        ) {
                                             controlProps.field.onChange(
                                                 (option as SelectOption).value,
                                             )
-                                            props.recalculateReviewProgress()
+                                            recalculateReviewProgress()
                                         }}
                                         onBlur={function onBlur() {
                                             controlProps.field.onBlur()
-                                            props.setIsTouched(old => ({
+                                            setIsTouched(old => ({
                                                 ...old,
                                                 [`reviews.${props.fieldIndex}.initialAnswer.message`]: true,
                                             }))
-                                            props.trigger(
+                                            trigger(
                                                 `reviews.${props.fieldIndex}.initialAnswer`,
                                             )
                                         }}
@@ -223,15 +243,14 @@ export const ScorecardQuestionEdit: FC<ScorecardQuestionEditProps> = props => {
                     }}
                 />
 
-
                 {fields.map((commentItem, idx) => (
                     <ScorecardQuestionRow
-                        index={`Response ${idx+1}`}
+                        index={`Response ${idx + 1}`}
                         key={commentItem.index}
                     >
                         <Controller
                             name={`reviews.${props.fieldIndex}.comments.${idx}.type`}
-                            control={props.control}
+                            control={control}
                             render={function render(controlProps: {
                                 field: ControllerRenderProps<
                                     FormReviews,
@@ -259,7 +278,7 @@ export const ScorecardQuestionEdit: FC<ScorecardQuestionEditProps> = props => {
                                                 controlProps.field.onChange(
                                                     (option as SelectOption).value,
                                                 )
-                                                props.trigger(
+                                                trigger(
                                                     `reviews.${props.fieldIndex}.comments.${idx}.content`,
                                                 )
                                             }}
@@ -275,7 +294,7 @@ export const ScorecardQuestionEdit: FC<ScorecardQuestionEditProps> = props => {
 
                         <Controller
                             name={`reviews.${props.fieldIndex}.comments.${idx}.content`}
-                            control={props.control}
+                            control={control}
                             render={function render(controlProps: {
                                 field: ControllerRenderProps<
                                     FormReviews,
@@ -293,7 +312,7 @@ export const ScorecardQuestionEdit: FC<ScorecardQuestionEditProps> = props => {
                                         onChange={controlProps.field.onChange}
                                         onBlur={function onBlur() {
                                             controlProps.field.onBlur()
-                                            props.setIsTouched(
+                                            setIsTouched(
                                                 old => ({
                                                     ...old,
                                                     [`reviews.${props.fieldIndex}.comments.${idx}.content`]: true,
@@ -311,24 +330,17 @@ export const ScorecardQuestionEdit: FC<ScorecardQuestionEditProps> = props => {
                 ))}
 
                 <ScorecardQuestionRow
-                    index={
+                    index={(
                         <button
                             type='button'
                             className={styles.addCommentBtn}
-                            onClick={function onClick() {
-                                append({
-                                    content: '',
-                                    id: '-1',
-                                    index: fields.length,
-                                    type: '',
-                                })
-                            }}
+                            onClick={handleAddResponse}
                             disabled={props.disabled}
                         >
                             <IconComment className='icon-xl' />
                             Add Response
                         </button>
-                    }
+                    )}
                 />
             </div>
         </div>
@@ -336,5 +348,3 @@ export const ScorecardQuestionEdit: FC<ScorecardQuestionEditProps> = props => {
 }
 
 export default ScorecardQuestionEdit
-
-

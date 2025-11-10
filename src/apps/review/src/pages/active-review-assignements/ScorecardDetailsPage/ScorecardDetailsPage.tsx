@@ -28,7 +28,7 @@ import {
     PageWrapper,
     ScorecardDetails,
 } from '../../../lib'
-import { BreadCrumbData, ChallengeDetailContextModel } from '../../../lib/models'
+import { BreadCrumbData, ChallengeDetailContextModel, ScorecardInfo } from '../../../lib/models'
 import { SubmissionBarInfo } from '../../../lib/components/SubmissionBarInfo'
 import { ChallengeLinksForAdmin } from '../../../lib/components/ChallengeLinksForAdmin'
 import { ADMIN, COPILOT, MANAGER } from '../../../config/index.config'
@@ -36,6 +36,7 @@ import { useIsEditReview, useIsEditReviewProps } from '../../../lib/hooks/useIsE
 import { activeReviewAssignmentsRouteId, rootRoute } from '../../../config/routes.config'
 
 import styles from './ScorecardDetailsPage.module.scss'
+import { ScorecardViewer } from '../../../lib/components/Scorecard'
 
 type ReviewPhaseType =
     | 'screening'
@@ -553,6 +554,7 @@ export const ScorecardDetailsPage: FC<Props> = (props: Props) => {
                             </span>
                         </div>
                     ) : (
+                        <>
                         <ScorecardDetails
                             mappingAppeals={mappingAppeals}
                             isEdit={isEdit}
@@ -572,6 +574,26 @@ export const ScorecardDetailsPage: FC<Props> = (props: Props) => {
                             doDeleteAppeal={doDeleteAppeal}
                             addManagerComment={addManagerComment}
                         />
+                        <ScorecardViewer
+                            scorecard={scorecardInfo as ScorecardInfo}
+                            reviewInfo={reviewInfo}
+                            mappingAppeals={mappingAppeals}
+                            isEdit={isEdit}
+                            onCancelEdit={onCancelEdit}
+                            setIsChanged={setIsChanged}
+                            isLoading={isLoading}
+                            isManagerEdit={isManagerEdit}
+                            isSavingReview={isSavingReview}
+                            isSavingAppeal={isSavingAppeal}
+                            isSavingAppealResponse={isSavingAppealResponse}
+                            isSavingManagerComment={isSavingManagerComment}
+                            saveReviewInfo={saveReviewInfo}
+                            addAppeal={addAppeal}
+                            addAppealResponse={addAppealResponse}
+                            doDeleteAppeal={doDeleteAppeal}
+                            addManagerComment={addManagerComment}
+                        />
+                        </>
                     )}
 
                     {isEdit && (

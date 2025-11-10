@@ -18,7 +18,7 @@ const ReviewAnswer: FC<ReviewAnswerProps> = props => {
     const {
         isManagerEdit,
         isSavingManagerComment,
-        addManagerComment,
+        // addManagerComment,
     }: ScorecardViewerContextValue = useScorecardContext()
 
     const answer = useMemo(() => (
@@ -26,7 +26,6 @@ const ReviewAnswer: FC<ReviewAnswerProps> = props => {
     ), [props.reviewItem.finalAnswer, props.reviewItem.initialAnswer])
 
     const [selectedScore, setSelectedScore] = useState(answer)
-    const [showManagerCommentForm, setShowManagerCommentForm] = useState(false)
 
     const responseOptions = useMemo<SelectOption[]>(() => {
         if (props.question.type === 'SCALE') {
@@ -34,10 +33,11 @@ const ReviewAnswer: FC<ReviewAnswerProps> = props => {
             return Array.from(
                 new Array(length),
                 (x, i) => `${i + props.question.scaleMin}`,
-            ).map(item => ({
-                label: item,
-                value: item,
-            }))
+            )
+                .map(item => ({
+                    label: item,
+                    value: item,
+                }))
         }
 
         if (props.question.type === 'YES_NO') {
@@ -50,19 +50,14 @@ const ReviewAnswer: FC<ReviewAnswerProps> = props => {
     const handleScoreChange = useCallback((option: SingleValue<SelectOption>) => {
         const nextValue = (option as SelectOption | null)?.value ?? ''
         setSelectedScore(nextValue)
-
-        if (nextValue && nextValue !== answer && addManagerComment) {
-            setShowManagerCommentForm(true)
-        } else {
-            setShowManagerCommentForm(false)
-        }
-    }, [answer, addManagerComment])
+    }, [])
 
     const score = useMemo(() => {
         const currentAnswer = selectedScore || answer
         if (props.question.type === 'YES_NO') {
             return currentAnswer === 'Yes' ? 1 : 0
         }
+
         if (props.question.type === 'SCALE' && currentAnswer) {
             const answerNum = parseInt(currentAnswer, 10)
             const totalPoint = props.question.scaleMax - props.question.scaleMin
@@ -70,6 +65,7 @@ const ReviewAnswer: FC<ReviewAnswerProps> = props => {
                 return (answerNum - props.question.scaleMin) / totalPoint
             }
         }
+
         return 0
     }, [selectedScore, answer, props.question])
 
@@ -111,4 +107,3 @@ const ReviewAnswer: FC<ReviewAnswerProps> = props => {
 }
 
 export default ReviewAnswer
-

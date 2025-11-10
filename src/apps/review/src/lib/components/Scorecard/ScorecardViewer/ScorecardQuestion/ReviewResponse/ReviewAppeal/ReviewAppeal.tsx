@@ -22,8 +22,7 @@ import {
 import { formAppealResponseSchema, isAppealsResponsePhase } from '../../../../../../utils'
 import { QUESTION_YES_NO_OPTIONS } from '../../../../../../../config/index.config'
 import { ChallengeDetailContext } from '../../../../../../contexts'
-import { MarkdownReview } from '../../../../../../components/MarkdownReview'
-import { FieldMarkdownEditor } from '../../../../../../components/FieldMarkdownEditor'
+import { FieldMarkdownEditor } from '../../../../../FieldMarkdownEditor'
 import { ScorecardViewerContextValue, useScorecardContext } from '../../../ScorecardViewer.context'
 import { ScorecardQuestionRow } from '../../ScorecardQuestionRow'
 
@@ -40,7 +39,6 @@ const ReviewAppeal: FC<ReviewAppealProps> = props => {
         actionChallengeRole,
         addAppealResponse,
         isSavingAppealResponse,
-        reviewInfo,
     }: ScorecardViewerContextValue = useScorecardContext()
 
     const { challengeInfo }: ChallengeDetailContextModel = useContext(
@@ -58,10 +56,10 @@ const ReviewAppeal: FC<ReviewAppealProps> = props => {
         [challengeInfo, canRespondToAppeal],
     )
 
-    const isReviewerRole = useMemo(() => {
-        const role = actionChallengeRole?.toLowerCase() || ''
-        return role.includes('reviewer') || role.includes('admin') || role.includes('copilot')
-    }, [actionChallengeRole])
+    // const isReviewerRole = useMemo(() => {
+    //     const role = actionChallengeRole?.toLowerCase() || ''
+    //     return role.includes('reviewer') || role.includes('admin') || role.includes('copilot')
+    // }, [actionChallengeRole])
 
     const [showResponseForm, setShowResponseForm] = useState(false)
     const [appealResponse, setAppealResponse] = useState(props.appeal.appealResponse?.content || '')
@@ -77,10 +75,11 @@ const ReviewAppeal: FC<ReviewAppealProps> = props => {
             return Array.from(
                 new Array(length),
                 (x, i) => `${i + props.scorecardQuestion!.scaleMin}`,
-            ).map(item => ({
-                label: item,
-                value: item,
-            }))
+            )
+                .map(item => ({
+                    label: item,
+                    value: item,
+                }))
         }
 
         if (props.scorecardQuestion.type === 'YES_NO') {
@@ -121,6 +120,19 @@ const ReviewAppeal: FC<ReviewAppealProps> = props => {
         setAppealResponse(props.appeal.appealResponse?.content || '')
     }, [props.appeal.appealResponse?.content])
 
+    const handleShowResponseForm = useCallback(() => {
+        setShowResponseForm(true)
+    }, [])
+
+    const handleCancelResponseForm = useCallback(() => {
+        setShowResponseForm(false)
+        setAppealResponse(props.appeal.appealResponse?.content || '')
+    }, [props.appeal.appealResponse?.content])
+
+    const handleResponseChange = useCallback((option: SingleValue<SelectOption>) => {
+        setUpdatedResponse(option)
+    }, [])
+
     return (
         <div className={styles.wrap}>
             <ScorecardQuestionRow
@@ -149,7 +161,7 @@ const ReviewAppeal: FC<ReviewAppealProps> = props => {
                         <div className={styles.responseActions}>
                             <button
                                 type='button'
-                                onClick={() => setShowResponseForm(true)}
+                                onClick={handleShowResponseForm}
                                 disabled={isSavingAppealResponse}
                                 className={styles.editResponseButton}
                             >
@@ -164,7 +176,7 @@ const ReviewAppeal: FC<ReviewAppealProps> = props => {
                 <div className={styles.responseActions}>
                     <button
                         type='button'
-                        onClick={() => setShowResponseForm(true)}
+                        onClick={handleShowResponseForm}
                         disabled={isSavingAppealResponse}
                         className={styles.respondButton}
                     >
@@ -188,9 +200,7 @@ const ReviewAppeal: FC<ReviewAppealProps> = props => {
                                 placeholder='Select'
                                 options={responseOptions}
                                 value={updatedResponse}
-                                onChange={(option: SingleValue<SelectOption>) => {
-                                    setUpdatedResponse(option)
-                                }}
+                                onChange={handleResponseChange}
                                 isDisabled={isSavingAppealResponse}
                             />
                         )}
@@ -229,10 +239,7 @@ const ReviewAppeal: FC<ReviewAppealProps> = props => {
                         <button
                             type='button'
                             className={styles.cancelButton}
-                            onClick={() => {
-                                setShowResponseForm(false)
-                                setAppealResponse(props.appeal.appealResponse?.content || '')
-                            }}
+                            onClick={handleCancelResponseForm}
                         >
                             Cancel
                         </button>
@@ -244,4 +251,3 @@ const ReviewAppeal: FC<ReviewAppealProps> = props => {
 }
 
 export default ReviewAppeal
-

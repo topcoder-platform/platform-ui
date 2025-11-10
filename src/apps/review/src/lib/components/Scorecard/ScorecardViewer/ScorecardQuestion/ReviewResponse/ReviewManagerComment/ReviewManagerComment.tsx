@@ -13,8 +13,8 @@ import { yupResolver } from '@hookform/resolvers/yup'
 import { FormManagerComment, ReviewItemInfo, ScorecardQuestion, SelectOption } from '../../../../../../models'
 import { formManagerCommentSchema } from '../../../../../../utils'
 import { QUESTION_YES_NO_OPTIONS } from '../../../../../../../config/index.config'
-import { MarkdownReview } from '../../../../../../components/MarkdownReview'
-import { FieldMarkdownEditor } from '../../../../../../components/FieldMarkdownEditor'
+import { MarkdownReview } from '../../../../../MarkdownReview'
+import { FieldMarkdownEditor } from '../../../../../FieldMarkdownEditor'
 import { ScorecardViewerContextValue, useScorecardContext } from '../../../ScorecardViewer.context'
 import { ScorecardQuestionRow } from '../../ScorecardQuestionRow'
 
@@ -46,10 +46,11 @@ const ReviewManagerComment: FC<ReviewManagerCommentProps> = props => {
             return Array.from(
                 new Array(length),
                 (x, i) => `${i + props.scorecardQuestion!.scaleMin}`,
-            ).map(item => ({
-                label: item,
-                value: item,
-            }))
+            )
+                .map(item => ({
+                    label: item,
+                    value: item,
+                }))
         }
 
         if (props.scorecardQuestion.type === 'YES_NO') {
@@ -92,6 +93,15 @@ const ReviewManagerComment: FC<ReviewManagerCommentProps> = props => {
         }
     }, [props.managerComment])
 
+    const handleShowCommentForm = useCallback(() => {
+        setShowCommentForm(true)
+    }, [])
+
+    const handleCancelCommentForm = useCallback(() => {
+        setShowCommentForm(false)
+        setComment(props.managerComment || '')
+    }, [props.managerComment])
+
     if (!props.managerComment && !isManagerEdit) {
         return <></>
     }
@@ -109,7 +119,7 @@ const ReviewManagerComment: FC<ReviewManagerCommentProps> = props => {
                     {isManagerEdit && (
                         <button
                             type='button'
-                            onClick={() => setShowCommentForm(true)}
+                            onClick={handleShowCommentForm}
                             disabled={isSavingManagerComment}
                             className={styles.editButton}
                         >
@@ -122,7 +132,7 @@ const ReviewManagerComment: FC<ReviewManagerCommentProps> = props => {
             {!showCommentForm && !comment && isManagerEdit && (
                 <button
                     type='button'
-                    onClick={() => setShowCommentForm(true)}
+                    onClick={handleShowCommentForm}
                     disabled={isSavingManagerComment}
                     className={styles.addButton}
                 >
@@ -163,8 +173,12 @@ const ReviewManagerComment: FC<ReviewManagerCommentProps> = props => {
                                                         }
                                                         : undefined
                                                 }
-                                                onChange={(option: SingleValue<SelectOption>) => {
-                                                    controlProps.field.onChange((option as SelectOption)?.value || '')
+                                                onChange={function handleChange(
+                                                    option: SingleValue<SelectOption>,
+                                                ): void {
+                                                    controlProps.field.onChange(
+                                                        (option as SelectOption | null)?.value || '',
+                                                    )
                                                 }}
                                                 onBlur={controlProps.field.onBlur}
                                                 isDisabled={isSavingManagerComment}
@@ -209,10 +223,7 @@ const ReviewManagerComment: FC<ReviewManagerCommentProps> = props => {
                         <button
                             type='button'
                             className={styles.cancelButton}
-                            onClick={() => {
-                                setShowCommentForm(false)
-                                setComment(props.managerComment || '')
-                            }}
+                            onClick={handleCancelCommentForm}
                         >
                             Cancel
                         </button>
@@ -224,4 +235,3 @@ const ReviewManagerComment: FC<ReviewManagerCommentProps> = props => {
 }
 
 export default ReviewManagerComment
-

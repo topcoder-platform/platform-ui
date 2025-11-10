@@ -1,4 +1,5 @@
 import { createContext, FC, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { FieldErrors, UseFormReturn, UseFormTrigger } from 'react-hook-form'
 
 import {
     AiFeedbackItem,
@@ -8,12 +9,15 @@ import {
     ReviewInfo,
     ReviewItemInfo,
     Scorecard,
+    ScorecardInfo,
 } from '../../../models'
 import { ReviewItemComment } from '../../../models/ReviewItemComment.model'
 
+import { useReviewForm } from './hooks/useReviewForm'
+
 export interface ScorecardViewerContextProps {
     children: ReactNode;
-    scorecard: Scorecard
+    scorecard: Scorecard | ScorecardInfo
     aiFeedbackItems?: AiFeedbackItem[]
     reviewInfo?: ReviewInfo
     isEdit?: boolean
@@ -53,6 +57,7 @@ export interface ScorecardViewerContextProps {
         reviewItem: ReviewItemInfo,
         success: () => void,
     ) => void
+    onFormChange?: (isDirty: boolean) => void
 }
 
 export type ScorecardViewerContextValue = {
@@ -97,6 +102,16 @@ export type ScorecardViewerContextValue = {
         reviewItem: ReviewItemInfo,
         success: () => void,
     ) => void
+    // Form control related
+    form?: UseFormReturn<FormReviews>
+    reviewProgress: number
+    totalScore: number
+    isTouched: { [key: string]: boolean }
+    setIsTouched: React.Dispatch<React.SetStateAction<{ [key: string]: boolean }>>
+    recalculateReviewProgress: () => void
+    touchedAllFields: () => void
+    formErrors?: FieldErrors<FormReviews>
+    formTrigger?: UseFormTrigger<FormReviews>
 };
 
 const ScorecardViewerContext = createContext({} as ScorecardViewerContextValue)
@@ -114,24 +129,35 @@ export const ScorecardViewerContextProvider: FC<ScorecardViewerContextProps> = p
     // reset toggle state on scorecard change
     useEffect(() => setToggledItems({}), [props.scorecard])
 
-    const ctxValue = useMemo(() => ({
-        aiFeedbackItems: props.aiFeedbackItems,
-        toggledItems,
-        toggleItem,
+    const reviewFormCtx = useReviewForm({
+        onFormChange: props.onFormChange,
         reviewInfo: props.reviewInfo,
+        scorecardInfo: props.scorecard,
+    })
+
+    const ctxValue = useMemo(() => ({
+        actionChallengeRole: props.actionChallengeRole,
+        addAppeal: props.addAppeal,
+        addAppealResponse: props.addAppealResponse,
+        addManagerComment: props.addManagerComment,
+        aiFeedbackItems: props.aiFeedbackItems,
+        doDeleteAppeal: props.doDeleteAppeal,
         isEdit: props.isEdit,
         isManagerEdit: props.isManagerEdit,
-        actionChallengeRole: props.actionChallengeRole,
-        mappingAppeals: props.mappingAppeals,
-        isSavingReview: props.isSavingReview,
         isSavingAppeal: props.isSavingAppeal,
         isSavingAppealResponse: props.isSavingAppealResponse,
         isSavingManagerComment: props.isSavingManagerComment,
+        isSavingReview: props.isSavingReview,
+        mappingAppeals: props.mappingAppeals,
+        reviewInfo: props.reviewInfo,
         saveReviewInfo: props.saveReviewInfo,
-        addAppeal: props.addAppeal,
-        doDeleteAppeal: props.doDeleteAppeal,
-        addAppealResponse: props.addAppealResponse,
-        addManagerComment: props.addManagerComment,
+        toggledItems,
+        toggleItem,
+        // Form control related
+        ...reviewFormCtx,
+        form: props.isEdit ? reviewFormCtx.form : undefined,
+        formErrors: props.isEdit ? reviewFormCtx.form.formState.errors : undefined,
+        formTrigger: props.isEdit ? reviewFormCtx.form.trigger : undefined,
     }), [
         props.aiFeedbackItems,
         props.reviewInfo,
@@ -150,6 +176,7 @@ export const ScorecardViewerContextProvider: FC<ScorecardViewerContextProps> = p
         props.addManagerComment,
         toggledItems,
         toggleItem,
+        reviewFormCtx,
     ])
 
     return (

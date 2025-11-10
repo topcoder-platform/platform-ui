@@ -12,12 +12,6 @@ interface ScorecardSectionProps {
     index: string
     section: ScorecardSectionModel
     reviewItemMapping?: ReturnType<typeof createReviewItemMapping>
-    formControl?: any
-    formErrors?: any
-    formIsTouched?: { [key: string]: boolean }
-    formSetIsTouched?: any
-    formTrigger?: any
-    recalculateReviewProgress?: () => void
 }
 
 const ScorecardSection: FC<ScorecardSectionProps> = props => {
@@ -54,12 +48,6 @@ const ScorecardSection: FC<ScorecardSectionProps> = props => {
                     index={[props.index, index + 1].join('.')}
                     question={question}
                     reviewItemMapping={props.reviewItemMapping}
-                    formControl={props.formControl}
-                    formErrors={props.formErrors}
-                    formIsTouched={props.formIsTouched}
-                    formSetIsTouched={props.formSetIsTouched}
-                    formTrigger={props.formTrigger}
-                    recalculateReviewProgress={props.recalculateReviewProgress}
                 />
             ))}
         </div>

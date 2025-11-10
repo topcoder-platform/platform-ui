@@ -57,7 +57,7 @@ export const createReviewItemMapping = (
             index: number
         }
     } = {}
-    
+
     reviewItems.forEach((item, index) => {
         const normalizedId = normalizeScorecardQuestionId(
             item.scorecardQuestionId,
@@ -69,6 +69,6 @@ export const createReviewItemMapping = (
             }
         }
     })
-    
+
     return result
 }

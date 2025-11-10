@@ -79,5 +79,3 @@ export const ScorecardQuestionView: FC<ScorecardQuestionViewProps> = props => {
 }
 
 export default ScorecardQuestionView
-
-

@@ -1,7 +1,6 @@
 import { FC, useMemo } from 'react'
 
 import { MappingAppeal, ReviewItemInfo, ScorecardQuestion } from '../../../../../../models'
-
 import ReviewAppeal from '../ReviewAppeal/ReviewAppeal'
 import ReviewComment from '../ReviewComment/ReviewComment'
 import ReviewManagerComment from '../ReviewManagerComment/ReviewManagerComment'
@@ -54,4 +53,3 @@ const ReviewComments: FC<ReviewCommentsProps> = props => {
 }
 
 export default ReviewComments
-

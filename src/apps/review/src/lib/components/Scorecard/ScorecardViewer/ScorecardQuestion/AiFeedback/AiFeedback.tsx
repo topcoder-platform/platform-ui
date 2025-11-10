@@ -6,9 +6,9 @@ import { ScorecardQuestion } from '~/apps/review/src/lib/models'
 import { ScorecardViewerContextValue, useScorecardContext } from '../../ScorecardViewer.context'
 import { ScorecardQuestionRow } from '../ScorecardQuestionRow'
 import { ScorecardScore } from '../../ScorecardScore'
+import { MarkdownReview } from '../../../../MarkdownReview'
 
 import styles from './AiFeedback.module.scss'
-import { MarkdownReview } from '../../../../MarkdownReview'
 
 interface AiFeedbackProps {
     question: ScorecardQuestion

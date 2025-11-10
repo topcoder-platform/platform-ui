@@ -1,30 +1,23 @@
 import { FC, useMemo } from 'react'
 
-import { ReviewItemInfo, ScorecardQuestion as ScorecardQuestionModel } from '../../../../models'
+import { ScorecardQuestion as ScorecardQuestionModel } from '../../../../models'
 import { ScorecardViewerContextValue, useScorecardContext } from '../ScorecardViewer.context'
-import { normalizeScorecardQuestionId, createReviewItemMapping } from '../utils'
+import { createReviewItemMapping, normalizeScorecardQuestionId } from '../utils'
+
+import { AiFeedback } from './AiFeedback'
 import { ScorecardQuestionEdit } from './ScorecardQuestionEdit'
 import { ScorecardQuestionView } from './ScorecardQuestionView'
-import { AiFeedback } from './AiFeedback'
-
 import styles from './ScorecardQuestion.module.scss'
 
 interface ScorecardQuestionProps {
     index: string
     question: ScorecardQuestionModel
     reviewItemMapping?: ReturnType<typeof createReviewItemMapping>
-    formControl?: any
-    formErrors?: any
-    formIsTouched?: { [key: string]: boolean }
-    formSetIsTouched?: any
-    formTrigger?: any
-    recalculateReviewProgress?: () => void
 }
 
 const ScorecardQuestion: FC<ScorecardQuestionProps> = props => {
     const {
         isEdit,
-        reviewInfo,
     }: ScorecardViewerContextValue = useScorecardContext()
 
     const normalizedQuestionId = useMemo(
@@ -36,24 +29,19 @@ const ScorecardQuestion: FC<ScorecardQuestionProps> = props => {
         if (!normalizedQuestionId || !props.reviewItemMapping) {
             return undefined
         }
+
         return props.reviewItemMapping[normalizedQuestionId]
     }, [normalizedQuestionId, props.reviewItemMapping])
 
     // If in edit mode and we have review item, show edit component
-    if (isEdit && reviewItemInfo && props.formControl) {
+    if (isEdit && reviewItemInfo) {
         return (
             <div className={styles.wrap}>
                 <ScorecardQuestionEdit
                     question={props.question}
                     reviewItem={reviewItemInfo.item}
                     index={props.index}
-                    control={props.formControl}
                     fieldIndex={reviewItemInfo.index}
-                    errors={props.formErrors || {}}
-                    isTouched={props.formIsTouched || {}}
-                    setIsTouched={props.formSetIsTouched}
-                    trigger={props.formTrigger}
-                    recalculateReviewProgress={props.recalculateReviewProgress || (() => {})}
                 />
             </div>
         )
