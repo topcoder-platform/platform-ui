@@ -9,7 +9,7 @@ import { ActionLoading } from '~/apps/admin/src/lib'
 import { ChallengeDetailContext } from '../../contexts'
 import {
     BackendSubmission,
-    ChallengeInfo,
+    ChallengeDetailContextModel,
     MappingReviewAppeal,
     Screening,
     SubmissionInfo,
@@ -120,6 +120,7 @@ const buildScreeningRows = ({
 
 interface SubmissionTabParams {
     selectedTabNormalized: string
+    allowTopgearSubmissionList: boolean
     submissions: BackendSubmission[]
     screeningRows: Screening[]
     screeningMinimumPassingScore: number | null | undefined
@@ -131,6 +132,7 @@ interface SubmissionTabParams {
 
 const renderSubmissionTab = ({
     selectedTabNormalized,
+    allowTopgearSubmissionList,
     submissions,
     screeningRows,
     screeningMinimumPassingScore,
@@ -149,7 +151,7 @@ const renderSubmissionTab = ({
             submission => normalizeType(submission.type) === 'contestsubmission',
         )
         : submissions
-    const canShowSubmissionList = !isTopgearSubmissionTab
+    const canShowSubmissionList = (allowTopgearSubmissionList || !isTopgearSubmissionTab)
         && selectedTabNormalized !== 'screening'
         && visibleSubmissions.length > 0
 
@@ -178,8 +180,23 @@ const renderSubmissionTab = ({
 }
 
 export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
-    const { challengeInfo }: { challengeInfo?: ChallengeInfo } = useContext(ChallengeDetailContext)
+    const {
+        challengeInfo,
+        myResources,
+    }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
     const { actionChallengeRole }: useRoleProps = useRole()
+    const hasIterativeReviewerRole = useMemo(
+        () => myResources.some(
+            resource => resource.roleName
+                ?.toLowerCase()
+                .includes('iterative reviewer'),
+        ),
+        [myResources],
+    )
+    const allowTopgearSubmissionList = useMemo(
+        () => actionChallengeRole !== SUBMITTER || hasIterativeReviewerRole,
+        [actionChallengeRole, hasIterativeReviewerRole],
+    )
     const { currentMemberId }: UseSubmissionDownloadAccessResult = useSubmissionDownloadAccess()
     const {
         isLoading: isDownloadingSubmission,
@@ -364,6 +381,7 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
 
         if (SUBMISSION_TAB_KEYS.has(selectedTabNormalized)) {
             return renderSubmissionTab({
+                allowTopgearSubmissionList,
                 downloadSubmission: handleSubmissionDownload,
                 isActiveChallenge: props.isActiveChallenge,
                 isDownloadingSubmission,
