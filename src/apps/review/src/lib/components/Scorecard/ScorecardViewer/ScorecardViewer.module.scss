@@ -1,0 +1,27 @@
+@import '@libs/ui/styles/includes';
+
+.wrap {
+    width: 100%;
+    strong {
+        font-weight: bold;
+    }
+}
+
+.conclusion {
+    padding: $sp-4;
+    background: #E0E4E8;
+    color: #0A0A0A;
+    margin-bottom: $sp-4;
+
+    > strong {
+        font-size: 16px;
+        line-height: 22px;
+
+        margin-bottom: $sp-2;
+    }
+
+    p {
+        font-size: 14px;
+        line-height: 20px;
+    }
+}

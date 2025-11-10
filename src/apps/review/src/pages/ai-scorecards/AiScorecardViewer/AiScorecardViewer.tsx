@@ -1,24 +1,35 @@
-import { FC, useEffect, useMemo } from 'react'
+import { FC, useEffect, useMemo, useState } from 'react'
 
 import { NotificationContextType, useNotification } from '~/libs/shared'
 
 import { ScorecardHeader } from '../components/ScorecardHeader'
 import { IconAiReview } from '../../../lib/assets/icons'
-import { PageWrapper } from '../../../lib'
+import { PageWrapper, Tabs } from '../../../lib'
 import { useAiScorecardContext } from '../AiScorecardContext'
-import { AiScorecardContextModel } from '../../../lib/models'
+import { AiScorecardContextModel, SelectOption } from '../../../lib/models'
 import { AiWorkflowsSidebar } from '../components/AiWorkflowsSidebar'
+import { ScorecardViewer } from '../../../lib/components/Scorecard'
+import { AiWorkflowRunItemsResponse, useFetchAiWorkflowsRunItems } from '../../../lib/hooks'
+import { ScorecardAttachments } from '../../../lib/components/Scorecard/ScorecardAttachments'
 
 import styles from './AiScorecardViewer.module.scss'
 
+const tabItems: SelectOption[] = [
+    { label: 'Scorecard', value: 'scorecard' },
+    { label: 'Attachments', value: 'attachments' },
+]
+
 const AiScorecardViewer: FC = () => {
     const { showBannerNotification, removeNotification }: NotificationContextType = useNotification()
-    const { challengeInfo }: AiScorecardContextModel = useAiScorecardContext()
+    const { challengeInfo, scorecard, workflowId, workflowRun }: AiScorecardContextModel = useAiScorecardContext()
+    const { runItems }: AiWorkflowRunItemsResponse = useFetchAiWorkflowsRunItems(workflowId, workflowRun?.id)
 
     const breadCrumb = useMemo(
         () => [{ index: 1, label: 'My Active Challenges' }],
         [],
     )
+
+    const [selectedTab, setSelectedTab] = useState('scorecard')
 
     useEffect(() => {
         const notification = showBannerNotification({
@@ -36,9 +47,28 @@ const AiScorecardViewer: FC = () => {
             className={styles.container}
             breadCrumb={breadCrumb}
         >
-            <div className={styles.contentWrap}>
+            <div className={styles.pageContentWrap}>
                 <AiWorkflowsSidebar className={styles.sidebar} />
-                <ScorecardHeader />
+                <div className={styles.contentWrap}>
+                    <ScorecardHeader />
+                    <Tabs
+                        className={styles.tabs}
+                        items={tabItems}
+                        selected={selectedTab}
+                        onChange={setSelectedTab}
+                    />
+                    {!!scorecard && selectedTab === 'scorecard' && (
+                        <ScorecardViewer
+                            scorecard={scorecard}
+                            aiFeedback={runItems}
+                            score={workflowRun?.score}
+                        />
+                    )}
+
+                    {selectedTab === 'attachments' && (
+                        <ScorecardAttachments />
+                    )}
+                </div>
             </div>
         </PageWrapper>
     )

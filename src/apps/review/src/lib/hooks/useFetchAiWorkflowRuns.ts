@@ -5,7 +5,7 @@ import { EnvironmentConfig } from '~/config'
 import { xhrGetAsync } from '~/libs/core'
 import { handleError } from '~/libs/shared/lib/utils/handle-error'
 
-import { Scorecard } from '../models'
+import { AiFeedbackItem, Scorecard } from '../models'
 
 import { useRolePermissions, UseRolePermissionsResult } from './useRolePermissions'
 
@@ -46,10 +46,17 @@ export interface AiWorkflowRun {
     workflow: AiWorkflow
 }
 
+export type AiWorkflowRunItem = AiFeedbackItem
+
 const TC_API_BASE_URL = EnvironmentConfig.API.V6
 
 export interface AiWorkflowRunsResponse {
     runs: AiWorkflowRun[]
+    isLoading: boolean
+}
+
+export interface AiWorkflowRunItemsResponse {
+    runItems: AiWorkflowRunItem[]
     isLoading: boolean
 }
 
@@ -101,5 +108,34 @@ export function useFetchAiWorkflowsRuns(
     return {
         isLoading,
         runs: runs.filter(r => isAdmin || !aiRunFailed(r)),
+    }
+}
+
+export function useFetchAiWorkflowsRunItems(
+    workflowId: string,
+    runId: string | undefined,
+): AiWorkflowRunItemsResponse {
+    // Use swr hooks for challenge info fetching
+    const {
+        data: runItems = [],
+        error: fetchError,
+        isValidating: isLoading,
+    }: SWRResponse<AiWorkflowRunItem[], Error> = useSWR<AiWorkflowRunItem[], Error>(
+        `${TC_API_BASE_URL}/workflows/${workflowId}/runs/${runId}/items`,
+        {
+            isPaused: () => !workflowId || !runId,
+        },
+    )
+
+    // Show backend error when fetching challenge info
+    useEffect(() => {
+        if (fetchError) {
+            handleError(fetchError)
+        }
+    }, [fetchError])
+
+    return {
+        isLoading,
+        runItems,
     }
 }

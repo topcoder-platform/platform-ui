@@ -1,0 +1,35 @@
+@import '@libs/ui/styles/includes';
+
+.wrap {
+}
+
+.headerBar {
+    display: flex;
+    align-items: center;
+    gap: $sp-4;
+
+    background: #E0E4E8;
+    padding: $sp-4;
+
+    font-family: "Nunito Sans", sans-serif;
+    font-weight: bold;
+    font-size: 14px;
+    line-height: 20px;
+    color: #0A0A0A;
+
+    padding-right: 56px;
+    @include ltemd {
+        flex-wrap: wrap;
+        row-gap: $sp-2;
+
+        .score {
+            order: 7;
+            width: 100%;
+            margin-left: $sp-10;
+        }
+    }
+}
+
+.mx {
+    margin: 0 auto;
+}
