@@ -17,6 +17,10 @@ const ChallengeDetailsPage: LazyLoadedComponent = lazyLoad(
     'ChallengeDetailsPage',
 )
 
+const ReviewsWrapper: LazyLoadedComponent = lazyLoad(
+    () => import('./Reviews/ReviewsWrapper'),
+)
+
 export const challengeDetailsChildRoutes = [
     {
         element: <ChallengeDetailsPage />,

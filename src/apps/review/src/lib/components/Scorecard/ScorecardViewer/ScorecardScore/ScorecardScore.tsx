@@ -13,12 +13,15 @@ export const calcScore = (score: number, scaleMax: number, weight: number): numb
 )
 
 const ScorecardScore: FC<ScorecardScoreProps> = props => {
-    const score = calcScore(props.score, props.scaleMax, props.weight)
+    let score = calcScore(props.score, props.scaleMax, props.weight)?.toFixed(2)
+    if (props.score.toString() === 'NaN') {
+        score = '-';
+    }
 
     return (
         <div className={styles.wrap}>
             <strong>
-                {score.toFixed(2)}
+                {score}
             </strong>
             <span>/</span>
             <span>

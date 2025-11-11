@@ -30,6 +30,18 @@ import { ScorecardScore } from '../../ScorecardScore'
 
 import styles from './ScorecardQuestionEdit.module.scss'
 
+const normalizeAnswerValue = (questionType: ScorecardQuestion['type'], value: string | number): number => {
+    if (['undefined', 'null'].includes(typeof value)) {
+        return Number(value);
+    }
+
+    if (questionType === 'YES_NO') {
+        return Number(`${value}`.toLowerCase() === 'yes')
+    }
+
+    return Number(`${value}`)
+}
+
 interface ScorecardQuestionEditProps {
     question: ScorecardQuestion
     reviewItem: ReviewItemInfo
@@ -192,7 +204,7 @@ export const ScorecardQuestionEdit: FC<ScorecardQuestionEditProps> = props => {
                                 index='Answer'
                                 score={(
                                     <ScorecardScore
-                                        score={Number(controlProps.field.value)}
+                                        score={normalizeAnswerValue(props.question.type || '', controlProps.field.value)}
                                         scaleMax={props.question.scaleMax}
                                         weight={props.question.weight}
                                     />

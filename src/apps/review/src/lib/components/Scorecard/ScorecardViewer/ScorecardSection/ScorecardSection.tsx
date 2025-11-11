@@ -15,12 +15,15 @@ interface ScorecardSectionProps {
 }
 
 const ScorecardSection: FC<ScorecardSectionProps> = props => {
-    const { aiFeedbackItems }: ScorecardViewerContextValue = useScorecardContext()
-    const allFeedbackItems = aiFeedbackItems || []
+    const { aiFeedbackItems, reviewInfo, form }: ScorecardViewerContextValue = useScorecardContext()
+    const formValues = form?.getValues();
+    const allFeedbackItems = useMemo(() => (
+        formValues?.reviews || aiFeedbackItems || reviewInfo?.reviewItems || []
+    ), [formValues, aiFeedbackItems, reviewInfo])
 
     const score = useMemo(() => (
         calcSectionScore(props.section, allFeedbackItems)
-    ), [props.section, allFeedbackItems])
+    ), [props.section, allFeedbackItems, formValues])
 
     return (
         <div className={styles.wrap}>

@@ -1,4 +1,4 @@
-import { filter, reduce } from 'lodash'
+import { filter, map, reduce } from 'lodash'
 
 import {
     AiFeedbackItem,
@@ -13,15 +13,29 @@ import { roundWith2DecimalPlaces } from '../../../utils'
 
 export const calcSectionScore = (
     section: ScorecardSection,
-    feedbackItems: Pick<AiFeedbackItem, 'questionScore' | 'scorecardQuestionId'>[],
+    feedbackItems: (
+        Pick<AiFeedbackItem, 'questionScore' | 'scorecardQuestionId'>[] |
+        Pick<ReviewItemInfo, 'scorecardQuestionId' | 'initialAnswer' | 'finalAnswer'>[]
+    ),
 ): number => {
     const feedbackItemsMap = Object.fromEntries(feedbackItems.map(r => [r.scorecardQuestionId, r]))
 
-    return section.questions.reduce((sum, question) => (
-        sum + (
-            (feedbackItemsMap[question.id as string]?.questionScore ?? 0) / (question.scaleMax || 1)
+    return section.questions.reduce((sum, question) => {
+        const item = feedbackItemsMap[question.id as string]
+        let score = 0
+
+        if (item && ('initialAnswer' in item || 'finalAnswer' in item)) {
+            score += Number(item.finalAnswer || item.initialAnswer) || 0
+        }
+
+        if (item && 'questionScore' in item) {
+            score += Number(item.questionScore) || 0
+        }
+
+        return sum + (
+            score / (question.scaleMax || 1)
         ) * (question.weight / 100)
-    ), 0)
+    }, 0)
 }
 
 export const calcGroupScore = (

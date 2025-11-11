@@ -179,7 +179,7 @@ const ScorecardViewerContent: FC<ScorecardViewerProps> = props => {
                         out of the maximum of
                         {' '}
                         <strong>
-                            {(props.scorecard as Scorecard).maxScore.toFixed(2)}
+                            {(props.scorecard as Scorecard).maxScore?.toFixed(2)}
                         </strong>
                         .
                         You did a good job on passing the scorecard criteria.

@@ -1,8 +1,8 @@
 /**
  * Context provider for challenge detail page
  */
-import { Context, createContext, FC, PropsWithChildren, useContext, useMemo } from 'react'
-import { useParams } from 'react-router-dom'
+import { Context, createContext, FC, PropsWithChildren, useContext, useMemo, useState } from 'react'
+import { useParams, useSearchParams } from 'react-router-dom'
 
 import { ChallengeDetailContext } from '../../../lib'
 import { AiScorecardContextModel, ChallengeDetailContextModel } from '../../../lib/models'
@@ -12,13 +12,16 @@ export const AiScorecardContext: Context<AiScorecardContextModel>
     = createContext<AiScorecardContextModel>({} as AiScorecardContextModel)
 
 export const AiScorecardContextProvider: FC<PropsWithChildren> = props => {
-    const { workflowId = '', submissionId = '' }: {
+    const { submissionId: submissionIdParam = '' }: {
         submissionId?: string,
-        workflowId?: string,
     } = useParams<{
         submissionId: string,
-        workflowId: string,
     }>()
+    const [params] = useSearchParams()
+    const workflowId = params.get('workflowId') ?? ''
+    const reviewId = params.get('reviewId') ?? ''
+
+    const [submissionId, setSubmissionId] = useState(submissionIdParam);
 
     const challengeDetailsCtx = useContext(ChallengeDetailContext)
     const { challengeInfo }: ChallengeDetailContextModel = challengeDetailsCtx
@@ -53,6 +56,7 @@ export const AiScorecardContextProvider: FC<PropsWithChildren> = props => {
             workflowId,
             workflowRun,
             workflowRuns,
+            setSubmissionId,
         }),
         [
             challengeDetailsCtx,

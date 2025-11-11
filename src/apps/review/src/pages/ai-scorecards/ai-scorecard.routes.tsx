@@ -29,6 +29,6 @@ export const aiScorecardRoutes: ReadonlyArray<PlatformRoute> = [
         rolesRequired: [
             // UserRole.administrator,
         ],
-        route: `${aiScorecardRouteId}/:submissionId/:workflowId`,
+        route: `${aiScorecardRouteId}/:submissionId`,
     },
 ]

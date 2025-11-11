@@ -32,11 +32,11 @@ import { BreadCrumbData, ChallengeDetailContextModel, ScorecardInfo } from '../.
 import { SubmissionBarInfo } from '../../../lib/components/SubmissionBarInfo'
 import { ChallengeLinksForAdmin } from '../../../lib/components/ChallengeLinksForAdmin'
 import { ADMIN, COPILOT, MANAGER } from '../../../config/index.config'
-import { useIsEditReview, useIsEditReviewProps } from '../../../lib/hooks/useIsEditReview'
 import { activeReviewAssignmentsRouteId, rootRoute } from '../../../config/routes.config'
+import { ScorecardViewer } from '../../../lib/components/Scorecard'
+import { useIsEditReview, useIsEditReviewProps } from '../../../lib/hooks/useIsEditReview'
 
 import styles from './ScorecardDetailsPage.module.scss'
-import { ScorecardViewer } from '../../../lib/components/Scorecard'
 
 type ReviewPhaseType =
     | 'screening'
@@ -555,44 +555,44 @@ export const ScorecardDetailsPage: FC<Props> = (props: Props) => {
                         </div>
                     ) : (
                         <>
-                        <ScorecardDetails
-                            mappingAppeals={mappingAppeals}
-                            isEdit={isEdit}
-                            onCancelEdit={onCancelEdit}
-                            setIsChanged={setIsChanged}
-                            scorecardInfo={scorecardInfo}
-                            isLoading={isLoading}
-                            reviewInfo={reviewInfo}
-                            isManagerEdit={isManagerEdit}
-                            isSavingReview={isSavingReview}
-                            isSavingAppeal={isSavingAppeal}
-                            isSavingAppealResponse={isSavingAppealResponse}
-                            isSavingManagerComment={isSavingManagerComment}
-                            saveReviewInfo={saveReviewInfo}
-                            addAppeal={addAppeal}
-                            addAppealResponse={addAppealResponse}
-                            doDeleteAppeal={doDeleteAppeal}
-                            addManagerComment={addManagerComment}
-                        />
-                        <ScorecardViewer
-                            scorecard={scorecardInfo as ScorecardInfo}
-                            reviewInfo={reviewInfo}
-                            mappingAppeals={mappingAppeals}
-                            isEdit={isEdit}
-                            onCancelEdit={onCancelEdit}
-                            setIsChanged={setIsChanged}
-                            isLoading={isLoading}
-                            isManagerEdit={isManagerEdit}
-                            isSavingReview={isSavingReview}
-                            isSavingAppeal={isSavingAppeal}
-                            isSavingAppealResponse={isSavingAppealResponse}
-                            isSavingManagerComment={isSavingManagerComment}
-                            saveReviewInfo={saveReviewInfo}
-                            addAppeal={addAppeal}
-                            addAppealResponse={addAppealResponse}
-                            doDeleteAppeal={doDeleteAppeal}
-                            addManagerComment={addManagerComment}
-                        />
+                            <ScorecardDetails
+                                mappingAppeals={mappingAppeals}
+                                isEdit={isEdit}
+                                onCancelEdit={onCancelEdit}
+                                setIsChanged={setIsChanged}
+                                scorecardInfo={scorecardInfo}
+                                isLoading={isLoading}
+                                reviewInfo={reviewInfo}
+                                isManagerEdit={isManagerEdit}
+                                isSavingReview={isSavingReview}
+                                isSavingAppeal={isSavingAppeal}
+                                isSavingAppealResponse={isSavingAppealResponse}
+                                isSavingManagerComment={isSavingManagerComment}
+                                saveReviewInfo={saveReviewInfo}
+                                addAppeal={addAppeal}
+                                addAppealResponse={addAppealResponse}
+                                doDeleteAppeal={doDeleteAppeal}
+                                addManagerComment={addManagerComment}
+                            />
+                            <ScorecardViewer
+                                scorecard={scorecardInfo as ScorecardInfo}
+                                reviewInfo={reviewInfo}
+                                mappingAppeals={mappingAppeals}
+                                isEdit={isEdit}
+                                onCancelEdit={onCancelEdit}
+                                setIsChanged={setIsChanged}
+                                isLoading={isLoading}
+                                isManagerEdit={isManagerEdit}
+                                isSavingReview={isSavingReview}
+                                isSavingAppeal={isSavingAppeal}
+                                isSavingAppealResponse={isSavingAppealResponse}
+                                isSavingManagerComment={isSavingManagerComment}
+                                saveReviewInfo={saveReviewInfo}
+                                addAppeal={addAppeal}
+                                addAppealResponse={addAppealResponse}
+                                doDeleteAppeal={doDeleteAppeal}
+                                addManagerComment={addManagerComment}
+                            />
                         </>
                     )}
 
