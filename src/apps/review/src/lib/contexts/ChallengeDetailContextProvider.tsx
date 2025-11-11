@@ -1,7 +1,7 @@
 /**
  * Context provider for challenge detail page
  */
-import { FC, PropsWithChildren, useMemo } from 'react'
+import { FC, PropsWithChildren, useContext, useMemo } from 'react'
 import { useParams } from 'react-router-dom'
 
 import { convertBackendSubmissionToSubmissionInfo } from '../models'
@@ -99,3 +99,5 @@ export const ChallengeDetailContextProvider: FC<PropsWithChildren> = props => {
         </ChallengeDetailContext.Provider>
     )
 }
+
+export const useChallengeDetailsContext = (): ChallengeDetailContextModel => useContext(ChallengeDetailContext)

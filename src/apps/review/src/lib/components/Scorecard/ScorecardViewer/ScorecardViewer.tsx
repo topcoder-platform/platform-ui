@@ -109,6 +109,7 @@ const ScorecardViewerContent: FC<ScorecardViewerProps> = props => {
         : 'There were validation errors. Check above.'
 
     const onSubmit = useCallback(() => {
+        debugger
         if (props.saveReviewInfo) {
             props.saveReviewInfo(
                 isDirty ? form?.getValues() : undefined,
@@ -188,21 +189,20 @@ const ScorecardViewerContent: FC<ScorecardViewerProps> = props => {
                 </div>
             )}
 
-            {props.reviewInfo && (
-                <ContainerTag
-                    className={styles.formContainer}
-                    {...((props.isEdit && form) ? { onSubmit: form.handleSubmit(onSubmit) ?? undefined } : {})}
-                >
-                    {props.scorecard.scorecardGroups.map((group, index) => (
+            <ContainerTag
+                className={styles.formContainer}
+                {...((props.isEdit && form) ? { onSubmit: form.handleSubmit(onSubmit) ?? undefined } : {})}
+            >
+                {props.reviewInfo && (
+                    props.scorecard.scorecardGroups.map((group, index) => (
                         <ScorecardGroup
                             key={group.id}
                             group={group}
                             index={index + 1}
                             reviewItemMapping={reviewItemMapping}
                         />
-                    ))}
-                </ContainerTag>
-            )}
+                    ))
+                )}
 
             {!props.reviewInfo && props.scorecard.scorecardGroups.map((group, index) => (
                 <ScorecardGroup
@@ -258,6 +258,7 @@ const ScorecardViewerContent: FC<ScorecardViewerProps> = props => {
                     </div>
                 </div>
             )}
+            </ContainerTag>
 
             <ConfirmModal
                 title='Save as Draft'

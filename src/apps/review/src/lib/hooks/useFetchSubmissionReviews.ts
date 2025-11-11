@@ -340,15 +340,12 @@ export interface useFetchSubmissionReviewsProps {
  * Fetch reviews of submission
  * @returns reviews info
  */
-export function useFetchSubmissionReviews(): useFetchSubmissionReviewsProps {
+export function useFetchSubmissionReviews(reviewId: string = ''): useFetchSubmissionReviewsProps {
     const [isSavingReview, setIsSavingReview] = useState(false)
     const [isSavingAppeal, setIsSavingAppeal] = useState(false)
     const [isSavingAppealResponse, setIsSavingAppealResponse] = useState(false)
     const [isSavingManagerComment, setIsSavingManagerComment] = useState(false)
     const { actionChallengeRole }: useRoleProps = useRole()
-    const { reviewId = '' }: { reviewId?: string } = useParams<{
-        reviewId: string
-    }>()
 
     const {
         challengeId: contextChallengeId,
@@ -531,7 +528,7 @@ export function useFetchSubmissionReviews(): useFetchSubmissionReviewsProps {
         error: fetchSubmissionError,
         isValidating: isLoadingSubmission,
     }: SWRResponse<BackendSubmission, Error> = useSWR<BackendSubmission, Error>(
-        `EnvironmentConfig.API.V6/submissions/${submissionId}`,
+        `/submissions/${submissionId}`,
         {
             fetcher: () => fetchSubmission(submissionId),
             isPaused: () => !submissionId,

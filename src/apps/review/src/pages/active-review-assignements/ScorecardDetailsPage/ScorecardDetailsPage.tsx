@@ -554,46 +554,25 @@ export const ScorecardDetailsPage: FC<Props> = (props: Props) => {
                             </span>
                         </div>
                     ) : (
-                        <>
-                            <ScorecardDetails
-                                mappingAppeals={mappingAppeals}
-                                isEdit={isEdit}
-                                onCancelEdit={onCancelEdit}
-                                setIsChanged={setIsChanged}
-                                scorecardInfo={scorecardInfo}
-                                isLoading={isLoading}
-                                reviewInfo={reviewInfo}
-                                isManagerEdit={isManagerEdit}
-                                isSavingReview={isSavingReview}
-                                isSavingAppeal={isSavingAppeal}
-                                isSavingAppealResponse={isSavingAppealResponse}
-                                isSavingManagerComment={isSavingManagerComment}
-                                saveReviewInfo={saveReviewInfo}
-                                addAppeal={addAppeal}
-                                addAppealResponse={addAppealResponse}
-                                doDeleteAppeal={doDeleteAppeal}
-                                addManagerComment={addManagerComment}
-                            />
-                            <ScorecardViewer
-                                scorecard={scorecardInfo as ScorecardInfo}
-                                reviewInfo={reviewInfo}
-                                mappingAppeals={mappingAppeals}
-                                isEdit={isEdit}
-                                onCancelEdit={onCancelEdit}
-                                setIsChanged={setIsChanged}
-                                isLoading={isLoading}
-                                isManagerEdit={isManagerEdit}
-                                isSavingReview={isSavingReview}
-                                isSavingAppeal={isSavingAppeal}
-                                isSavingAppealResponse={isSavingAppealResponse}
-                                isSavingManagerComment={isSavingManagerComment}
-                                saveReviewInfo={saveReviewInfo}
-                                addAppeal={addAppeal}
-                                addAppealResponse={addAppealResponse}
-                                doDeleteAppeal={doDeleteAppeal}
-                                addManagerComment={addManagerComment}
-                            />
-                        </>
+                        <ScorecardDetails
+                            mappingAppeals={mappingAppeals}
+                            isEdit={isEdit}
+                            onCancelEdit={onCancelEdit}
+                            setIsChanged={setIsChanged}
+                            scorecardInfo={scorecardInfo}
+                            isLoading={isLoading}
+                            reviewInfo={reviewInfo}
+                            isManagerEdit={isManagerEdit}
+                            isSavingReview={isSavingReview}
+                            isSavingAppeal={isSavingAppeal}
+                            isSavingAppealResponse={isSavingAppealResponse}
+                            isSavingManagerComment={isSavingManagerComment}
+                            saveReviewInfo={saveReviewInfo}
+                            addAppeal={addAppeal}
+                            addAppealResponse={addAppealResponse}
+                            doDeleteAppeal={doDeleteAppeal}
+                            addManagerComment={addManagerComment}
+                        />
                     )}
 
                     {isEdit && (

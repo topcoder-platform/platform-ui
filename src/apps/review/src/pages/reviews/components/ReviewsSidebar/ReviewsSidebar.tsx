@@ -1,16 +1,16 @@
 import { FC, useCallback, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import classNames from 'classnames'
 
-import { AiScorecardContextModel } from '~/apps/review/src/lib/models'
+import { ReviewsContextModel } from '~/apps/review/src/lib/models'
 import { AiWorkflowRunStatus } from '~/apps/review/src/lib/components/AiReviewsTable'
 import { IconAiReview } from '~/apps/review/src/lib/assets/icons'
 import { IconOutline, IconSolid } from '~/libs/ui'
 import StatusLabel from '~/apps/review/src/lib/components/AiReviewsTable/StatusLabel'
 
-import { useAiScorecardContext } from '../../ai-scorecards/AiScorecardContext'
 
 import styles from './ReviewsSidebar.module.scss'
+import { useReviewsContext } from '../../ReviewsContext'
 
 interface ReviewsSidebarProps {
     className?: string
@@ -18,15 +18,14 @@ interface ReviewsSidebarProps {
 
 const ReviewsSidebar: FC<ReviewsSidebarProps> = props => {
     const [isMobileOpen, setIsMobileOpen] = useState(false)
-    const { reviewId, submissionId } = useParams<{ reviewId: string, submissionId: string }>()
     const {
         workflow,
         workflowRun,
         workflowRuns,
         workflowId,
-        submissionId: contextSubmissionId,
-    }: AiScorecardContextModel = useAiScorecardContext()
-
+        submissionId,
+        reviewId,
+    }: ReviewsContextModel = useReviewsContext()
     const isReviewActive = !workflowRun;
 
     const toggleOpen = useCallback(() => {
@@ -36,8 +35,6 @@ const ReviewsSidebar: FC<ReviewsSidebarProps> = props => {
     const close = useCallback(() => {
         setIsMobileOpen(false)
     }, [])
-
-    const currentSubmissionId = submissionId || contextSubmissionId
 
     return (
         <div className={classNames(props.className, styles.wrap)}>
@@ -73,7 +70,7 @@ const ReviewsSidebar: FC<ReviewsSidebarProps> = props => {
                                 key={run.id}
                             >
                                 <Link
-                                    to={`../reviews/${reviewId}/ai/${run.workflow.id}`}
+                                    to={`../reviews/${submissionId}?workflowId=${run.workflow.id}&reviewId=${reviewId}`}
                                     onClick={close}
                                 />
                                 <span className={styles.workflowNameWrap}>
@@ -83,7 +80,8 @@ const ReviewsSidebar: FC<ReviewsSidebarProps> = props => {
                                 <AiWorkflowRunStatus run={run} showScore hideLabel />
                             </li>
                         ))}
-                        {currentSubmissionId && (
+
+                        {submissionId && reviewId && (
                             <li
                                 className={classNames(
                                     styles.runEntry,
@@ -91,7 +89,7 @@ const ReviewsSidebar: FC<ReviewsSidebarProps> = props => {
                                 )}
                             >
                                 <Link
-                                    to={`../review/${currentSubmissionId}`}
+                                    to={`../reviews/${submissionId}?reviewId=${reviewId}`}
                                     onClick={close}
                                 />
                                 <span className={styles.workflowNameWrap}>
@@ -136,4 +134,3 @@ const ReviewsSidebar: FC<ReviewsSidebarProps> = props => {
 }
 
 export default ReviewsSidebar
-

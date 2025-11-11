@@ -1,7 +1,7 @@
 import { getRoutesContainer, lazyLoad, LazyLoadedComponent } from '~/libs/core'
 
 import { challengeDetailRouteId } from '../../config/routes.config'
-import { aiScorecardRoutes } from '../ai-scorecards'
+import { reviewsRoutes } from '../reviews'
 
 const ChallengeDetailContextProvider: LazyLoadedComponent = lazyLoad(
     () => import('../../lib/contexts/ChallengeDetailContextProvider'),
@@ -17,10 +17,6 @@ const ChallengeDetailsPage: LazyLoadedComponent = lazyLoad(
     'ChallengeDetailsPage',
 )
 
-const ReviewsWrapper: LazyLoadedComponent = lazyLoad(
-    () => import('./Reviews/ReviewsWrapper'),
-)
-
 export const challengeDetailsChildRoutes = [
     {
         element: <ChallengeDetailsPage />,
@@ -32,7 +28,7 @@ export const challengeDetailsChildRoutes = [
         id: 'scorecard-details-page',
         route: 'review/:reviewId',
     },
-    ...aiScorecardRoutes,
+    ...reviewsRoutes,
 ]
 
 export const challengeDetailsRoutes = [
