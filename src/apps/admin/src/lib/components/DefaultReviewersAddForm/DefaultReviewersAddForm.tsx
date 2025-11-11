@@ -139,10 +139,19 @@ export const DefaultReviewersAddForm: FC<Props> = (props: Props) => {
 
     const onSubmit = useCallback(
         (data: FormAddDefaultReviewer) => {
+            const isMemberReview = data.isMemberReview
             const requestBody = _.omitBy(
                 data,
                 value => value === undefined || value === null || value === '',
             )
+
+            if (!isMemberReview) {
+                requestBody.memberReviewerCount = undefined
+            } else {
+                // eslint-disable-next-line unicorn/no-null
+                requestBody.aiWorkflowId = null
+            }
+
             if (isEdit) {
                 doUpdateDefaultReviewer(requestBody, () => {
                     navigate('./../..')
@@ -407,7 +416,7 @@ export const DefaultReviewersAddForm: FC<Props> = (props: Props) => {
                     classNameWrapper={styles.inputField}
                 />
                 <InputText
-                    type='number'
+                    type='text'
                     name='baseCoefficient'
                     label='Base Coefficient'
                     placeholder='Enter value'
@@ -416,14 +425,23 @@ export const DefaultReviewersAddForm: FC<Props> = (props: Props) => {
                     onChange={_.noop}
                     error={_.get(errors, 'baseCoefficient.message')}
                     inputControl={register('baseCoefficient', {
-                        valueAsNumber: true,
+                        setValueAs: v => {
+                            if (typeof v === 'string') {
+                                const normalized = v.replace(',', '.')
+                                const parsed = parseFloat(normalized)
+                                return Number.isNaN(parsed) ? undefined : parsed
+                            }
+
+                            return v
+                        },
+                        valueAsNumber: false,
                     })}
                     dirty
                     disabled={isLoading}
                     classNameWrapper={styles.inputField}
                 />
                 <InputText
-                    type='number'
+                    type='text'
                     name='incrementalCoefficient'
                     label='Incremental Coefficient'
                     placeholder='Enter value'
@@ -432,7 +450,16 @@ export const DefaultReviewersAddForm: FC<Props> = (props: Props) => {
                     onChange={_.noop}
                     error={_.get(errors, 'incrementalCoefficient.message')}
                     inputControl={register('incrementalCoefficient', {
-                        valueAsNumber: true,
+                        setValueAs: v => {
+                            if (typeof v === 'string') {
+                                const normalized = v.replace(',', '.')
+                                const parsed = parseFloat(normalized)
+                                return Number.isNaN(parsed) ? undefined : parsed
+                            }
+
+                            return v
+                        },
+                        valueAsNumber: false,
                     })}
                     dirty
                     disabled={isLoading}
@@ -497,7 +524,7 @@ export const DefaultReviewersAddForm: FC<Props> = (props: Props) => {
                                     label='AI Workflow'
                                     placeholder='Select AI Workflow'
                                     options={aiWorkflows}
-                                    value={controlProps.field.value}
+                                    value={controlProps.field.value || ''}
                                     onChange={controlProps.field.onChange}
                                     onBlur={controlProps.field.onBlur}
                                     classNameWrapper={styles.inputField}

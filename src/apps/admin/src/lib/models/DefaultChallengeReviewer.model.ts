@@ -41,5 +41,5 @@ export interface FormAddDefaultReviewer {
   incrementalCoefficient?: number;
   opportunityType?: string;
   shouldOpenOpportunity: boolean;
-  aiWorkflowId?: string;
+  aiWorkflowId?: string | null;
 }
