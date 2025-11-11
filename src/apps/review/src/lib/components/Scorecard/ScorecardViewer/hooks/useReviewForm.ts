@@ -4,11 +4,11 @@ import { forEach } from 'lodash'
 
 import { yupResolver } from '@hookform/resolvers/yup'
 
-import { FormReviews, ReviewInfo, Scorecard, ScorecardInfo } from '../../../../models'
+import { AiFeedbackItem, FormReviews, ReviewInfo, Scorecard, ScorecardInfo } from '../../../../models'
 import { formReviewsSchema } from '../../../../utils'
 
 interface UseReviewFormProps {
-    reviewInfo?: ReviewInfo
+    reviewItems?: ReviewInfo['reviewItems'] | AiFeedbackItem[]
     scorecardInfo?: Scorecard | ScorecardInfo
     onFormChange?: (isDirty: boolean) => void
 }
@@ -21,7 +21,7 @@ export interface UseReviewForm {
 }
 
 export const useReviewForm = ({
-    reviewInfo,
+    reviewItems,
     onFormChange,
 }: UseReviewFormProps): UseReviewForm => {
     const [isTouched, setIsTouched] = useState<{ [key: string]: boolean }>({})
@@ -41,28 +41,32 @@ export const useReviewForm = ({
     }, [isDirty, onFormChange])
 
     useEffect(() => {
-        if (reviewInfo) {
+        if (reviewItems?.length) {
             const newFormData = {
-                reviews: reviewInfo.reviewItems.map(
+                reviews: reviewItems.map(
                     (reviewItem, reviewItemIndex) => ({
-                        comments: reviewItem.reviewItemComments.map(
+                        comments: 'reviewItemComments' in reviewItem ? reviewItem.reviewItemComments?.map(
                             (commentItem, commentIndex) => ({
                                 content: commentItem.content ?? '',
                                 id: commentItem.id,
                                 index: commentIndex,
                                 type: commentItem.type ?? '',
                             }),
-                        ),
+                        ) : [],
                         id: reviewItem.id,
                         index: reviewItemIndex,
-                        initialAnswer: reviewItem.finalAnswer || reviewItem.initialAnswer,
+                        initialAnswer: (
+                            ('finalAnswer' in reviewItem && reviewItem.finalAnswer)
+                            || ('initialAnswer' in reviewItem && reviewItem.initialAnswer)
+                            || ('questionScore' in reviewItem && reviewItem.questionScore)
+                        ) as string,
                         scorecardQuestionId: reviewItem.scorecardQuestionId,
                     }),
                 ),
             }
             reset(newFormData)
         }
-    }, [reviewInfo, reset])
+    }, [reviewItems, reset])
 
     const touchedAllFields = useCallback(() => {
         const formData = getValues()

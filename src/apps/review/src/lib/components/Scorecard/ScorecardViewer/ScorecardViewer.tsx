@@ -109,7 +109,6 @@ const ScorecardViewerContent: FC<ScorecardViewerProps> = props => {
         : 'There were validation errors. Check above.'
 
     const onSubmit = useCallback(() => {
-        debugger
         if (props.saveReviewInfo) {
             props.saveReviewInfo(
                 isDirty ? form?.getValues() : undefined,
@@ -212,7 +211,7 @@ const ScorecardViewerContent: FC<ScorecardViewerProps> = props => {
                 />
             ))}
 
-            <ScorecardTotal score={props.score} />
+            <ScorecardTotal score={totalScore} />
 
             {props.isEdit && (
                 <div className={styles.footer}>

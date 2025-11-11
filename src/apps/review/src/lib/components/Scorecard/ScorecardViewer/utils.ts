@@ -1,53 +1,11 @@
-import { filter, map, reduce } from 'lodash'
+import { filter, reduce } from 'lodash'
 
 import {
-    AiFeedbackItem,
-    FormReviews,
     ReviewItemInfo,
     Scorecard,
-    ScorecardGroup,
     ScorecardInfo,
-    ScorecardSection,
 } from '../../../models'
 import { roundWith2DecimalPlaces } from '../../../utils'
-
-export const calcSectionScore = (
-    section: ScorecardSection,
-    feedbackItems: (
-        Pick<AiFeedbackItem, 'questionScore' | 'scorecardQuestionId'>[] |
-        Pick<ReviewItemInfo, 'scorecardQuestionId' | 'initialAnswer' | 'finalAnswer'>[]
-    ),
-): number => {
-    const feedbackItemsMap = Object.fromEntries(feedbackItems.map(r => [r.scorecardQuestionId, r]))
-
-    return section.questions.reduce((sum, question) => {
-        const item = feedbackItemsMap[question.id as string]
-        let score = 0
-
-        if (item && ('initialAnswer' in item || 'finalAnswer' in item)) {
-            score += Number(item.finalAnswer || item.initialAnswer) || 0
-        }
-
-        if (item && 'questionScore' in item) {
-            score += Number(item.questionScore) || 0
-        }
-
-        return sum + (
-            score / (question.scaleMax || 1)
-        ) * (question.weight / 100)
-    }, 0)
-}
-
-export const calcGroupScore = (
-    group: ScorecardGroup,
-    feedbackItems: Pick<AiFeedbackItem, 'questionScore' | 'scorecardQuestionId'>[],
-): number => (
-    group.sections.reduce((sum, section) => (
-        sum + (
-            calcSectionScore(section, feedbackItems)
-        ) * (section.weight / 100)
-    ), 0)
-)
 
 /**
  * Normalize scorecard question ID for consistent comparison
@@ -99,23 +57,26 @@ export const createReviewItemMapping = (
 }
 
 export interface ProgressAndScore {
-    progress: number;
-    score: number;
+    reviewProgress: number;
+    totalScore: number;
+    scoreMap: Map<string, number>
 }
 
 /**
  * Calculate progress and score from review form data
  */
 export const calculateProgressAndScore = (
-    reviewFormDatas: FormReviews['reviews'],
+    reviewFormDatas: {scorecardQuestionId: string; initialAnswer: string;}[],
     scorecard: Scorecard | ScorecardInfo,
 ): ProgressAndScore => {
+    const scoreMap = new Map<string, number>()
+
     if (!scorecard || reviewFormDatas.length === 0) {
-        return { progress: 0, score: 0 }
+        return { reviewProgress: 0, scoreMap, totalScore: 0 }
     }
 
     const mappingResult: {
-        [scorecardQuestionId: string]: string
+        [scorecardQuestionId: string]: string | number
     } = {}
 
     const newReviewProgress = Math.round(
@@ -152,38 +113,40 @@ export const calculateProgressAndScore = (
 
                             if (
                                 question.type === 'YES_NO'
-                                && initialAnswer === 'Yes'
+                                && (initialAnswer === 'Yes' || initialAnswer === 1)
                             ) {
                                 questionPoint = 100
                             } else if (
                                 question.type === 'SCALE'
                                 && !!initialAnswer
                             ) {
-                                const totalPoint = question.scaleMax - question.scaleMin
-                                const initialAnswerNumber = parseInt(initialAnswer, 10) - question.scaleMin
+                                const totalPoint = question.scaleMax
+                                const initialAnswerNumber = parseInt(initialAnswer as string, 10)
                                 questionPoint = totalPoint > 0
                                     ? (initialAnswerNumber * 100) / totalPoint
                                     : 0
                             }
 
-                            return (
-                                questionResult
-                                    + (questionPoint * question.weight) / 100
-                            )
+                            const score = (questionPoint * question.weight) / 100
+                            scoreMap.set(question.id as string, score)
+                            return questionResult + score
                         },
                         0,
                     ) * section.weight) / 100
+                    scoreMap.set(section.id as string, sectionPoint)
                     return sectionResult + sectionPoint
                 },
                 0,
             ) * group.weight) / 100
+            scoreMap.set(group.id as string, groupPoint)
             return groupResult + groupPoint
         },
         0,
     )
 
     return {
-        progress: newReviewProgress,
-        score: roundWith2DecimalPlaces(groupsScore),
+        reviewProgress: newReviewProgress,
+        scoreMap,
+        totalScore: roundWith2DecimalPlaces(groupsScore),
     }
 }

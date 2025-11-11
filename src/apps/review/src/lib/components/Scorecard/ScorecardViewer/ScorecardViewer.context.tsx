@@ -13,7 +13,7 @@ import {
 } from '../../../models'
 import { ReviewItemComment } from '../../../models/ReviewItemComment.model'
 
-import { useProgressCalculation } from './hooks/useProgressCalculation'
+import { useProgressCalculation, UseProgressCalculationValue } from './hooks/useProgressCalculation'
 import { useReviewForm } from './hooks/useReviewForm'
 import { useToggleItems } from './hooks/useToggleItems'
 
@@ -106,15 +106,13 @@ export type ScorecardViewerContextValue = {
     ) => void
     // Form control related
     form?: UseFormReturn<FormReviews>
-    reviewProgress: number
-    totalScore: number
     isTouched: { [key: string]: boolean }
     setIsTouched: React.Dispatch<React.SetStateAction<{ [key: string]: boolean }>>
     recalculateReviewProgress: () => void
     touchedAllFields: () => void
     formErrors?: FieldErrors<FormReviews>
     formTrigger?: UseFormTrigger<FormReviews>
-};
+} & UseProgressCalculationValue;
 
 const ScorecardViewerContext = createContext({} as ScorecardViewerContextValue)
 
@@ -123,7 +121,7 @@ export const ScorecardViewerContextProvider: FC<ScorecardViewerContextProps> = p
 
     const reviewFormCtx = useReviewForm({
         onFormChange: props.onFormChange,
-        reviewInfo: props.reviewInfo,
+        reviewItems: props.reviewInfo?.reviewItems ?? props.aiFeedbackItems ?? [],
         scorecardInfo: props.scorecard,
     })
 

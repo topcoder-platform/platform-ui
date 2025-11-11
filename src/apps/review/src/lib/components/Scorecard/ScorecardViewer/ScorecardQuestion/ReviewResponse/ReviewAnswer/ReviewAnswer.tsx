@@ -19,6 +19,7 @@ const ReviewAnswer: FC<ReviewAnswerProps> = props => {
         isManagerEdit,
         isSavingManagerComment,
         // addManagerComment,
+        scoreMap,
     }: ScorecardViewerContextValue = useScorecardContext()
 
     const answer = useMemo(() => (
@@ -83,8 +84,7 @@ const ReviewAnswer: FC<ReviewAnswerProps> = props => {
             className={styles.wrap}
             score={(
                 <ScorecardScore
-                    score={score}
-                    scaleMax={props.question.scaleMax}
+                    score={scoreMap.get(props.question.id as string) ?? 0}
                     weight={props.question.weight}
                 />
             )}

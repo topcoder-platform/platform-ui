@@ -27,6 +27,7 @@ const ScorecardQuestion: FC<ScorecardQuestionProps> = props => {
         toggleItem,
         toggledItems,
         mappingAppeals,
+        scoreMap,
     }: ScorecardViewerContextValue = useScorecardContext()
 
     const normalizedQuestionId = useMemo(

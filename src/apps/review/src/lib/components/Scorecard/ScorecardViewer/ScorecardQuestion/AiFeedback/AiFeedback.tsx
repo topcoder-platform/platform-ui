@@ -7,6 +7,7 @@ import { ScorecardViewerContextValue, useScorecardContext } from '../../Scorecar
 import { ScorecardQuestionRow } from '../ScorecardQuestionRow'
 import { ScorecardScore } from '../../ScorecardScore'
 import { MarkdownReview } from '../../../../MarkdownReview'
+import { calculateProgressAndScore } from '../../utils'
 
 import styles from './AiFeedback.module.scss'
 
@@ -15,7 +16,7 @@ interface AiFeedbackProps {
 }
 
 const AiFeedback: FC<AiFeedbackProps> = props => {
-    const { aiFeedbackItems }: ScorecardViewerContextValue = useScorecardContext()
+    const { aiFeedbackItems, scoreMap, }: ScorecardViewerContextValue = useScorecardContext()
     const feedback = useMemo(() => (
         aiFeedbackItems?.find(r => r.scorecardQuestionId === props.question.id)
     ), [props.question.id, aiFeedbackItems])
@@ -33,8 +34,7 @@ const AiFeedback: FC<AiFeedbackProps> = props => {
             className={styles.wrap}
             score={(
                 <ScorecardScore
-                    score={feedback.questionScore}
-                    scaleMax={props.question.scaleMax}
+                    score={scoreMap.get(props.question.id as string) ?? 0}
                     weight={props.question.weight}
                 />
             )}

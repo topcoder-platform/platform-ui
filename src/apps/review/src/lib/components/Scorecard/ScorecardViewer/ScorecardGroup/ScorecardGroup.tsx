@@ -7,7 +7,7 @@ import { ScorecardGroup as ScorecardGroupModel } from '../../../../models'
 import { ScorecardSection } from '../ScorecardSection'
 import { ScorecardViewerContextValue, useScorecardContext } from '../ScorecardViewer.context'
 import { ScorecardScore } from '../ScorecardScore'
-import { calcGroupScore, createReviewItemMapping } from '../utils'
+import { createReviewItemMapping } from '../utils'
 
 import styles from './ScorecardGroup.module.scss'
 
@@ -18,16 +18,12 @@ interface ScorecardGroupProps {
 }
 
 const ScorecardGroup: FC<ScorecardGroupProps> = props => {
-    const { aiFeedbackItems }: ScorecardViewerContextValue = useScorecardContext()
+    const { aiFeedbackItems, scoreMap }: ScorecardViewerContextValue = useScorecardContext()
     const allFeedbackItems = aiFeedbackItems || []
     const { toggleItem, toggledItems }: ScorecardViewerContextValue = useScorecardContext()
 
     const isVissible = !toggledItems[props.group.id]
     const toggle = useCallback(() => toggleItem(props.group.id), [props.group, toggleItem])
-
-    const score = useMemo(() => (
-        calcGroupScore(props.group, allFeedbackItems)
-    ), [props.group, allFeedbackItems])
 
     return (
         <div className={styles.wrap}>
@@ -42,8 +38,7 @@ const ScorecardGroup: FC<ScorecardGroupProps> = props => {
                 <span className={styles.mx} />
                 <span className={styles.score}>
                     <ScorecardScore
-                        score={score}
-                        scaleMax={1}
+                        score={scoreMap.get(props.group.id) ?? 0}
                         weight={props.group.weight}
                     />
                 </span>

@@ -1,10 +1,10 @@
-import { FC, useMemo } from 'react'
+import { FC } from 'react'
 
 import { ScorecardSection as ScorecardSectionModel } from '../../../../models'
 import { ScorecardQuestion } from '../ScorecardQuestion'
 import { ScorecardScore } from '../ScorecardScore'
 import { ScorecardViewerContextValue, useScorecardContext } from '../ScorecardViewer.context'
-import { calcSectionScore, createReviewItemMapping } from '../utils'
+import { createReviewItemMapping } from '../utils'
 
 import styles from './ScorecardSection.module.scss'
 
@@ -15,15 +15,7 @@ interface ScorecardSectionProps {
 }
 
 const ScorecardSection: FC<ScorecardSectionProps> = props => {
-    const { aiFeedbackItems, reviewInfo, form }: ScorecardViewerContextValue = useScorecardContext()
-    const formValues = form?.getValues();
-    const allFeedbackItems = useMemo(() => (
-        formValues?.reviews || aiFeedbackItems || reviewInfo?.reviewItems || []
-    ), [formValues, aiFeedbackItems, reviewInfo])
-
-    const score = useMemo(() => (
-        calcSectionScore(props.section, allFeedbackItems)
-    ), [props.section, allFeedbackItems, formValues])
+    const { scoreMap }: ScorecardViewerContextValue = useScorecardContext()
 
     return (
         <div className={styles.wrap}>
@@ -38,8 +30,7 @@ const ScorecardSection: FC<ScorecardSectionProps> = props => {
                 <span className={styles.mx} />
                 <span className={styles.score}>
                     <ScorecardScore
-                        score={score}
-                        scaleMax={1}
+                        score={scoreMap.get(props.section.id as string) ?? 0}
                         weight={props.section.weight}
                     />
                 </span>

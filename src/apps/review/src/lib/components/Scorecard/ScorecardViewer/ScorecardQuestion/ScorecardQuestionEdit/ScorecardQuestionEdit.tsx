@@ -59,6 +59,7 @@ export const ScorecardQuestionEdit: FC<ScorecardQuestionEditProps> = props => {
         isTouched,
         setIsTouched,
         formTrigger,
+        scoreMap,
     }: ScorecardViewerContextValue = useScorecardContext()
 
     const isExpanded = toggledItems[props.question.id!] ?? false
@@ -204,8 +205,7 @@ export const ScorecardQuestionEdit: FC<ScorecardQuestionEditProps> = props => {
                                 index='Answer'
                                 score={(
                                     <ScorecardScore
-                                        score={normalizeAnswerValue(props.question.type || '', controlProps.field.value)}
-                                        scaleMax={props.question.scaleMax}
+                                        score={scoreMap.get(props.question.id as string) ?? 0}
                                         weight={props.question.weight}
                                     />
                                 )}
