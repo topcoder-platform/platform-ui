@@ -153,6 +153,11 @@ export const DefaultReviewersAddForm: FC<Props> = (props: Props) => {
                 requestBody.baseCoefficient = undefined
                 requestBody.incrementalCoefficient = undefined
                 requestBody.opportunityType = undefined
+                // The reason for flipping the value is that
+                // in UI the checkbox is shown as "is AI review"
+                // but in the database its denoted as member review
+                // so we are just flipping the boolean value
+                requestBody.isMemberReview = false
             } else {
                 // eslint-disable-next-line unicorn/no-null
                 requestBody.aiWorkflowId = null
