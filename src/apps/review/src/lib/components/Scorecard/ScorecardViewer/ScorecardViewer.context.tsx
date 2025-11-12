@@ -157,8 +157,8 @@ export const ScorecardViewerContextProvider: FC<ScorecardViewerContextProps> = p
         reviewInfo: props.reviewInfo,
         saveReviewInfo: props.saveReviewInfo,
         setIsTouched: reviewFormCtx.setIsTouched,
-        touchedAllFields: reviewFormCtx.touchedAllFields,
         setReviewStatus: props.setReviewStatus,
+        touchedAllFields: reviewFormCtx.touchedAllFields,
     }), [
         props.aiFeedbackItems,
         props.reviewInfo,

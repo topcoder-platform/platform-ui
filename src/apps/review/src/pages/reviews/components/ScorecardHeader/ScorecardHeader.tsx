@@ -5,9 +5,9 @@ import { ReviewsContextModel } from '~/apps/review/src/lib/models'
 
 import { IconClock, IconPremium } from '../../../../lib/assets/icons'
 import { AiModelModal } from '../AiModelModal'
+import { useReviewsContext } from '../../ReviewsContext'
 import AiModelIcon from '../AiModelIcon'
 
-import { useReviewsContext } from '../../ReviewsContext'
 import styles from './ScorecardHeader.module.scss'
 
 const formatDuration = (duration: Duration): string => [

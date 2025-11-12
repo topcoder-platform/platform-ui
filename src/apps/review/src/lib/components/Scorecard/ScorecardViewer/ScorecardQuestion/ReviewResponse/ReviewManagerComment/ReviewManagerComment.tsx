@@ -9,6 +9,7 @@ import Select, { SingleValue } from 'react-select'
 import classNames from 'classnames'
 
 import { yupResolver } from '@hookform/resolvers/yup'
+import { IconPhaseReview } from '~/apps/review/src/lib/assets/icons'
 
 import { FormManagerComment, ReviewItemInfo, ScorecardQuestion, SelectOption } from '../../../../../../models'
 import { formManagerCommentSchema } from '../../../../../../utils'
@@ -19,7 +20,6 @@ import { ScorecardViewerContextValue, useScorecardViewerContext } from '../../..
 import { ScorecardQuestionRow } from '../../ScorecardQuestionRow'
 
 import styles from './ReviewManagerComment.module.scss'
-import { IconPhaseReview } from '~/apps/review/src/lib/assets/icons'
 
 interface ReviewManagerCommentProps {
     managerComment?: string
@@ -27,6 +27,7 @@ interface ReviewManagerCommentProps {
     scorecardQuestion?: ScorecardQuestion
 }
 
+// eslint-disable-next-line complexity
 const ReviewManagerComment: FC<ReviewManagerCommentProps> = props => {
     const {
         isManagerEdit,

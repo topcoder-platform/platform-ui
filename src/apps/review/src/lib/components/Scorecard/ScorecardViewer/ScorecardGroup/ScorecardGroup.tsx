@@ -1,4 +1,4 @@
-import { FC, useCallback, useMemo } from 'react'
+import { FC, useCallback } from 'react'
 import classNames from 'classnames'
 
 import { IconOutline } from '~/libs/ui'
@@ -18,8 +18,7 @@ interface ScorecardGroupProps {
 }
 
 const ScorecardGroup: FC<ScorecardGroupProps> = props => {
-    const { aiFeedbackItems, scoreMap }: ScorecardViewerContextValue = useScorecardViewerContext()
-    const allFeedbackItems = aiFeedbackItems || []
+    const { scoreMap }: ScorecardViewerContextValue = useScorecardViewerContext()
     const { toggleItem, toggledItems }: ScorecardViewerContextValue = useScorecardViewerContext()
 
     const isVissible = !toggledItems[props.group.id]

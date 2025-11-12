@@ -29,7 +29,6 @@ import { ScorecardQuestionRow } from '../ScorecardQuestionRow'
 import { ScorecardScore } from '../../ScorecardScore'
 
 import styles from './ScorecardQuestionEdit.module.scss'
-import { type } from 'os'
 
 interface ScorecardQuestionEditProps {
     question: ScorecardQuestion
@@ -295,7 +294,12 @@ export const ScorecardQuestionEdit: FC<ScorecardQuestionEditProps> = props => {
                             }) {
                                 return (
                                     <FieldMarkdownEditor
-                                        className={classNames(styles.markdownEditor, errorCommentsMessage[idx] && styles.editorError)}
+                                        className={
+                                            classNames(
+                                                styles.markdownEditor,
+                                                errorCommentsMessage[idx] && styles.editorError,
+                                            )
+                                        }
                                         initialValue={
                                             initCommentContents[
                                                 `${idx}.content`

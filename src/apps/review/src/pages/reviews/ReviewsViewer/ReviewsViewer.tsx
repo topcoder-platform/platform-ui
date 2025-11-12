@@ -1,4 +1,5 @@
 import { FC, useEffect, useMemo } from 'react'
+import { useLocation } from 'react-router-dom'
 
 import { NotificationContextType, useNotification } from '~/libs/shared'
 
@@ -7,16 +8,17 @@ import { PageWrapper } from '../../../lib'
 import { BreadCrumbData, ReviewsContextModel } from '../../../lib/models'
 import { ReviewsSidebar } from '../components/ReviewsSidebar'
 import { useReviewsContext } from '../ReviewsContext'
-
 import { AiReviewViewer } from '../components/AiReviewViewer'
 import { activeReviewAssignmentsRouteId, rootRoute } from '../../../config/routes.config'
 import { ReviewViewer } from '../components/ReviewViewer'
+
 import styles from './ReviewsViewer.module.scss'
 
 const ReviewsViewer: FC = () => {
     const { showBannerNotification, removeNotification }: NotificationContextType = useNotification()
     const { challengeInfo, submissionId, workflowRun }: ReviewsContextModel = useReviewsContext()
 
+    const location = useLocation()
     const containsPastChallenges = location.pathname.indexOf('/past-challenges/')
 
     const breadCrumb = useMemo<BreadCrumbData[]>(() => [

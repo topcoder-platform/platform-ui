@@ -3,18 +3,23 @@ import { FC, useCallback, useEffect, useMemo, useState } from 'react'
 import { SubmissionBarInfo } from '~/apps/review/src/lib/components/SubmissionBarInfo'
 import { ChallengeLinksForAdmin } from '~/apps/review/src/lib/components/ChallengeLinksForAdmin'
 import { ScorecardViewer } from '~/apps/review/src/lib/components/Scorecard'
-import { useAppNavigate, useFetchSubmissionReviews, useFetchSubmissionReviewsProps, useRole, useRoleProps } from '~/apps/review/src/lib/hooks'
+import {
+    useAppNavigate,
+    useFetchSubmissionReviews,
+    useFetchSubmissionReviewsProps,
+    useRole,
+    useRoleProps,
+} from '~/apps/review/src/lib/hooks'
 import { ChallengeDetailContextModel, ReviewsContextModel } from '~/apps/review/src/lib/models'
 import { ChallengeLinks, ConfirmModal, useChallengeDetailsContext } from '~/apps/review/src/lib'
 import { useIsEditReview, useIsEditReviewProps } from '~/apps/review/src/lib/hooks/useIsEditReview'
+
 import { ADMIN, COPILOT, MANAGER } from '../../../../config/index.config'
 import { useReviewsContext } from '../../ReviewsContext'
+
 import styles from './ReviewViewer.module.scss'
 
-interface ReviewViewerProps {
-}
-
-const ReviewViewer: FC<ReviewViewerProps> = props => {
+const ReviewViewer: FC = () => {
     const navigate = useAppNavigate()
     const { reviewId, setReviewStatus }: ReviewsContextModel = useReviewsContext()
 
@@ -29,7 +34,6 @@ const ReviewViewer: FC<ReviewViewerProps> = props => {
 
     const {
         challengeInfo,
-        isLoadingChallengeInfo,
     }: ChallengeDetailContextModel = useChallengeDetailsContext()
     const { isEdit: isEditPhase }: useIsEditReviewProps = useIsEditReview()
 

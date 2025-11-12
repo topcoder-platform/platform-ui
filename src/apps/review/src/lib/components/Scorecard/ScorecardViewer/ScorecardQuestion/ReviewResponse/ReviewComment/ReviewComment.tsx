@@ -8,19 +8,25 @@ import {
 import { get, includes } from 'lodash'
 
 import { yupResolver } from '@hookform/resolvers/yup'
+import { IconAppeal, IconEdit } from '~/apps/review/src/lib/assets/icons'
+import { ADMIN, COPILOT, REVIEWER } from '~/apps/review/src/config/index.config'
 
-import { AppealInfo, ChallengeDetailContextModel, FormAppealResponse, ReviewItemInfo, ScorecardQuestion } from '../../../../../../models'
+import {
+    AppealInfo,
+    ChallengeDetailContextModel,
+    FormAppealResponse,
+    ReviewItemInfo,
+    ScorecardQuestion,
+} from '../../../../../../models'
 import { ReviewItemComment } from '../../../../../../models/ReviewItemComment.model'
 import { formAppealResponseSchema, isAppealsPhase } from '../../../../../../utils'
 import { ChallengeDetailContext } from '../../../../../../contexts'
 import { FieldMarkdownEditor } from '../../../../../FieldMarkdownEditor'
 import { ScorecardViewerContextValue, useScorecardViewerContext } from '../../../ScorecardViewer.context'
 import { ScorecardQuestionRow } from '../../ScorecardQuestionRow'
+import { ReviewAppeal } from '../ReviewAppeal'
 
 import styles from './ReviewComment.module.scss'
-import { ReviewAppeal } from '../ReviewAppeal'
-import { IconAppeal, IconEdit } from '~/apps/review/src/lib/assets/icons'
-import { ADMIN, COPILOT, REVIEWER } from '~/apps/review/src/config/index.config'
 
 interface ReviewCommentProps {
     comment: ReviewItemComment
@@ -30,12 +36,12 @@ interface ReviewCommentProps {
     question: ScorecardQuestion
 }
 
+// eslint-disable-next-line complexity
 const ReviewComment: FC<ReviewCommentProps> = props => {
     const {
         isManagerEdit,
         actionChallengeRole,
         addAppeal,
-        doDeleteAppeal,
         isSavingAppeal,
     }: ScorecardViewerContextValue = useScorecardViewerContext()
 
@@ -48,9 +54,9 @@ const ReviewComment: FC<ReviewCommentProps> = props => {
     const [appealContent, setAppealContent] = useState(props.appeal?.content || '')
     const [showAppealForm, setShowAppealForm] = useState(false)
 
-    const isReviewerRole = useMemo(() => {
-        return includes([REVIEWER, COPILOT, ADMIN], actionChallengeRole)
-    }, [actionChallengeRole])
+    const isReviewerRole = useMemo(() => (
+        includes([REVIEWER, COPILOT, ADMIN], actionChallengeRole)
+    ), [actionChallengeRole])
 
     const {
         handleSubmit,
@@ -85,14 +91,6 @@ const ReviewComment: FC<ReviewCommentProps> = props => {
         setShowAppealForm(true)
     }, [])
 
-    const handleDeleteAppeal = useCallback(() => {
-        if (doDeleteAppeal && window.confirm('Are you sure you want to delete this appeal?')) {
-            doDeleteAppeal(props.appeal, () => {
-                setAppealContent('')
-            })
-        }
-    }, [doDeleteAppeal, props.appeal])
-
     const handleCancelAppealForm = useCallback(() => {
         setShowAppealForm(false)
         setAppealContent(props.appeal?.content || '')
@@ -109,8 +107,7 @@ const ReviewComment: FC<ReviewCommentProps> = props => {
                 </div>
             </ScorecardQuestionRow>
 
-            <ScorecardQuestionRow
-            >
+            <ScorecardQuestionRow>
                 {isSubmitter && canAddAppeal && (!props.appeal && !showAppealForm && (
                     <button
                         type='button'
@@ -170,7 +167,6 @@ const ReviewComment: FC<ReviewCommentProps> = props => {
                         </div>
                     </form>
                 )}
-
 
                 {props.appeal && !showAppealForm && (isSubmitter || isReviewerRole || isManagerEdit) && (
                     <ReviewAppeal

@@ -14,7 +14,6 @@ const ScorecardTotal: FC<ScorecardTotalProps> = props => (
         <span className={styles.mx} />
         <ScorecardScore
             score={props.score ?? 0}
-            scaleMax={100}
             weight={100}
         />
     </div>

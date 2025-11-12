@@ -21,7 +21,7 @@ export const ReviewsContextProvider: FC<PropsWithChildren> = props => {
     const workflowId = searchParams.get('workflowId') ?? ''
     const reviewId = searchParams.get('reviewId') ?? ''
 
-    const [reviewStatus, setReviewStatus] = useState({} as ReviewCtxStatus);
+    const [reviewStatus, setReviewStatus] = useState({} as ReviewCtxStatus)
 
     const challengeDetailsCtx = useContext(ChallengeDetailContext)
     const { challengeInfo }: ChallengeDetailContextModel = challengeDetailsCtx
@@ -63,7 +63,7 @@ export const ReviewsContextProvider: FC<PropsWithChildren> = props => {
         [
             challengeDetailsCtx,
             isLoadingCtxData,
-            reviewId,,
+            reviewId,
             scorecard,
             submissionId,
             workflow,

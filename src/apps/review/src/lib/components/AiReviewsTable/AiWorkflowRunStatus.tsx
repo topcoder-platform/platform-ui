@@ -33,7 +33,7 @@ export const AiWorkflowRunStatus: FC<AiWorkflowRunStatusProps> = props => {
         }
 
         if (props.run) {
-            return aiRunStatus(props.run);
+            return aiRunStatus(props.run)
         }
 
         return ''

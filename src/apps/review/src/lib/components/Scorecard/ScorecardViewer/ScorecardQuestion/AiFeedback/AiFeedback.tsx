@@ -7,7 +7,6 @@ import { ScorecardViewerContextValue, useScorecardViewerContext } from '../../Sc
 import { ScorecardQuestionRow } from '../ScorecardQuestionRow'
 import { ScorecardScore } from '../../ScorecardScore'
 import { MarkdownReview } from '../../../../MarkdownReview'
-import { calculateProgressAndScore } from '../../utils'
 
 import styles from './AiFeedback.module.scss'
 

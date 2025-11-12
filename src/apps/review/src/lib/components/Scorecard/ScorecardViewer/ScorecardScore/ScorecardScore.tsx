@@ -4,7 +4,6 @@ import styles from './ScorecardScore.module.scss'
 
 interface ScorecardScoreProps {
     score: number
-    scaleMax?: number
     weight: number
 }
 

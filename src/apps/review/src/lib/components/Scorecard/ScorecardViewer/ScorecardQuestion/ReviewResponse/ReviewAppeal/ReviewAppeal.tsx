@@ -1,4 +1,4 @@
-import { FC, PropsWithChildren, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { FC, PropsWithChildren, useCallback, useEffect, useMemo, useState } from 'react'
 import {
     Controller,
     ControllerRenderProps,
@@ -10,6 +10,7 @@ import Select, { SingleValue } from 'react-select'
 import classNames from 'classnames'
 
 import { yupResolver } from '@hookform/resolvers/yup'
+import { IconAppealResponse, IconEdit } from '~/apps/review/src/lib/assets/icons'
 
 import {
     AppealInfo,
@@ -21,13 +22,12 @@ import {
 } from '../../../../../../models'
 import { formAppealResponseSchema, isAppealsResponsePhase } from '../../../../../../utils'
 import { QUESTION_YES_NO_OPTIONS } from '../../../../../../../config/index.config'
-import { ChallengeDetailContext, useChallengeDetailsContext } from '../../../../../../contexts'
+import { useChallengeDetailsContext } from '../../../../../../contexts'
 import { FieldMarkdownEditor } from '../../../../../FieldMarkdownEditor'
 import { MarkdownReview } from '../../../../../MarkdownReview'
 import { ScorecardViewerContextValue, useScorecardViewerContext } from '../../../ScorecardViewer.context'
 
 import styles from './ReviewAppeal.module.scss'
-import { IconAppealResponse, IconEdit } from '~/apps/review/src/lib/assets/icons'
 
 interface ReviewAppealProps extends PropsWithChildren {
     appeal: AppealInfo

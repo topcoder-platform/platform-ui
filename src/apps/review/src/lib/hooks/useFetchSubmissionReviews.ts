@@ -15,7 +15,6 @@ import {
 } from 'react'
 import { find, forEach, map } from 'lodash'
 import { toast } from 'react-toastify'
-import { useParams } from 'react-router-dom'
 import useSWR, { SWRResponse } from 'swr'
 
 import { handleError } from '~/apps/admin/src/lib/utils'

@@ -28,12 +28,11 @@ import {
     PageWrapper,
     ScorecardDetails,
 } from '../../../lib'
-import { BreadCrumbData, ChallengeDetailContextModel, ScorecardInfo } from '../../../lib/models'
+import { BreadCrumbData, ChallengeDetailContextModel } from '../../../lib/models'
 import { SubmissionBarInfo } from '../../../lib/components/SubmissionBarInfo'
 import { ChallengeLinksForAdmin } from '../../../lib/components/ChallengeLinksForAdmin'
 import { ADMIN, COPILOT, MANAGER } from '../../../config/index.config'
 import { activeReviewAssignmentsRouteId, rootRoute } from '../../../config/routes.config'
-import { ScorecardViewer } from '../../../lib/components/Scorecard'
 import { useIsEditReview, useIsEditReviewProps } from '../../../lib/hooks/useIsEditReview'
 
 import styles from './ScorecardDetailsPage.module.scss'

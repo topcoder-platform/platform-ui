@@ -94,7 +94,6 @@ const ScorecardViewerContent: FC<ScorecardViewerProps> = props => {
     const {
         form,
         totalScore,
-        reviewProgress,
         isTouched,
         touchedAllFields,
         formErrors,
@@ -153,7 +152,7 @@ const ScorecardViewerContent: FC<ScorecardViewerProps> = props => {
     useEffect(() => {
         if (props.setReviewStatus && props.scorecard) {
             const isCompleted = props.reviewInfo?.status === 'COMPLETED'
-            const score = isCompleted ? props.reviewInfo?.finalScore! : totalScore
+            const score = isCompleted ? props.reviewInfo!.finalScore! : totalScore
             let status: 'passed' |'failed-score' |'pending' = (
                 score >= (props.scorecard.minimumPassingScore ?? 50) ? 'passed' : 'failed-score'
             )
@@ -167,7 +166,7 @@ const ScorecardViewerContent: FC<ScorecardViewerProps> = props => {
                 status,
             })
         }
-    }, [totalScore, props.scorecard]);
+    }, [totalScore, props.scorecard])
 
     if (props.isLoading) {
         return <TableLoading />

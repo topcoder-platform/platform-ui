@@ -1,11 +1,8 @@
 import { FC, useMemo } from 'react'
 
 import { MappingAppeal, ReviewItemInfo, ScorecardQuestion } from '../../../../../../models'
-import ReviewAppeal from '../ReviewAppeal/ReviewAppeal'
 import ReviewComment from '../ReviewComment/ReviewComment'
 import ReviewManagerComment from '../ReviewManagerComment/ReviewManagerComment'
-
-// import styles from './ReviewComments.module.scss'
 
 interface ReviewCommentsProps {
     question: ScorecardQuestion
