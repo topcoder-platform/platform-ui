@@ -7,8 +7,8 @@ import { IconClock, IconPremium } from '../../../../lib/assets/icons'
 import { AiModelModal } from '../AiModelModal'
 import AiModelIcon from '../AiModelIcon'
 
-import styles from './ScorecardHeader.module.scss'
 import { useReviewsContext } from '../../ReviewsContext'
+import styles from './ScorecardHeader.module.scss'
 
 const formatDuration = (duration: Duration): string => [
     !!duration.hours() && `${duration.hours()}h`,

@@ -4,7 +4,7 @@ import classNames from 'classnames'
 import { IconOutline } from '~/libs/ui'
 
 import { ScorecardQuestion as ScorecardQuestionModel } from '../../../../models'
-import { ScorecardViewerContextValue, useScorecardContext } from '../ScorecardViewer.context'
+import { ScorecardViewerContextValue, useScorecardViewerContext } from '../ScorecardViewer.context'
 import { createReviewItemMapping, normalizeScorecardQuestionId } from '../utils'
 import { MarkdownReview } from '../../../MarkdownReview'
 
@@ -27,7 +27,7 @@ const ScorecardQuestion: FC<ScorecardQuestionProps> = props => {
         toggleItem,
         toggledItems,
         mappingAppeals,
-    }: ScorecardViewerContextValue = useScorecardContext()
+    }: ScorecardViewerContextValue = useScorecardViewerContext()
 
     const normalizedQuestionId = useMemo(
         () => normalizeScorecardQuestionId(props.question.id as string),

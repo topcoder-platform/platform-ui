@@ -24,7 +24,7 @@ import {
 } from '../../../../../models'
 import { FieldMarkdownEditor } from '../../../../FieldMarkdownEditor'
 import { MarkdownReview } from '../../../../MarkdownReview'
-import { ScorecardViewerContextValue, useScorecardContext } from '../../ScorecardViewer.context'
+import { ScorecardViewerContextValue, useScorecardViewerContext } from '../../ScorecardViewer.context'
 import { ScorecardQuestionRow } from '../ScorecardQuestionRow'
 import { ScorecardScore } from '../../ScorecardScore'
 
@@ -48,7 +48,7 @@ export const ScorecardQuestionEdit: FC<ScorecardQuestionEditProps> = props => {
         setIsTouched,
         formTrigger,
         scoreMap,
-    }: ScorecardViewerContextValue = useScorecardContext()
+    }: ScorecardViewerContextValue = useScorecardViewerContext()
 
     const isExpanded = toggledItems[props.question.id!] ?? false
     const toggle = useCallback((): void => {
@@ -90,8 +90,8 @@ export const ScorecardQuestionEdit: FC<ScorecardQuestionEditProps> = props => {
         })
 
     const errorMessage = touched[
-            `reviews.${props.fieldIndex}.initialAnswer.message`
-        ] ? _.get(
+        `reviews.${props.fieldIndex}.initialAnswer.message`
+    ] ? _.get(
             errors,
             `reviews.${props.fieldIndex}.initialAnswer.message`,
         ) : ''
@@ -121,7 +121,6 @@ export const ScorecardQuestionEdit: FC<ScorecardQuestionEditProps> = props => {
         })
         return result
     }, [touched, errors, errors?.reviews, props.fieldIndex, fields])
-console.log('here', initCommentContents, errorCommentsMessage);
 
     const hasErrors = !!errorMessage || !isEmpty(compact(Object.values(errorCommentsMessage)))
 

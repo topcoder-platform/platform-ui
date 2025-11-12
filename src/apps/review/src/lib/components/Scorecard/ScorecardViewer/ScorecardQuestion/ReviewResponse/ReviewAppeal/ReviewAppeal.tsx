@@ -23,7 +23,7 @@ import { formAppealResponseSchema, isAppealsResponsePhase } from '../../../../..
 import { QUESTION_YES_NO_OPTIONS } from '../../../../../../../config/index.config'
 import { ChallengeDetailContext } from '../../../../../../contexts'
 import { FieldMarkdownEditor } from '../../../../../FieldMarkdownEditor'
-import { ScorecardViewerContextValue, useScorecardContext } from '../../../ScorecardViewer.context'
+import { ScorecardViewerContextValue, useScorecardViewerContext } from '../../../ScorecardViewer.context'
 import { ScorecardQuestionRow } from '../../ScorecardQuestionRow'
 
 import styles from './ReviewAppeal.module.scss'
@@ -39,7 +39,7 @@ const ReviewAppeal: FC<ReviewAppealProps> = props => {
         actionChallengeRole,
         addAppealResponse,
         isSavingAppealResponse,
-    }: ScorecardViewerContextValue = useScorecardContext()
+    }: ScorecardViewerContextValue = useScorecardViewerContext()
 
     const { challengeInfo }: ChallengeDetailContextModel = useContext(
         ChallengeDetailContext,

@@ -1,6 +1,5 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react'
 
-import styles from './ReviewViewer.module.scss'
 import { SubmissionBarInfo } from '~/apps/review/src/lib/components/SubmissionBarInfo'
 import { ChallengeLinksForAdmin } from '~/apps/review/src/lib/components/ChallengeLinksForAdmin'
 import { ScorecardViewer } from '~/apps/review/src/lib/components/Scorecard'
@@ -10,13 +9,14 @@ import { ChallengeLinks, ConfirmModal, useChallengeDetailsContext } from '~/apps
 import { useIsEditReview, useIsEditReviewProps } from '~/apps/review/src/lib/hooks/useIsEditReview'
 import { ADMIN, COPILOT, MANAGER } from '../../../../config/index.config'
 import { useReviewsContext } from '../../ReviewsContext'
+import styles from './ReviewViewer.module.scss'
 
 interface ReviewViewerProps {
 }
 
 const ReviewViewer: FC<ReviewViewerProps> = props => {
     const navigate = useAppNavigate()
-    const { reviewId }: ReviewsContextModel = useReviewsContext()
+    const { reviewId, setReviewStatus }: ReviewsContextModel = useReviewsContext()
 
     const {
         actionChallengeRole,
@@ -226,6 +226,7 @@ const ReviewViewer: FC<ReviewViewerProps> = props => {
                         addAppealResponse={addAppealResponse}
                         doDeleteAppeal={doDeleteAppeal}
                         addManagerComment={addManagerComment}
+                        setReviewStatus={setReviewStatus}
                     />
                 )}
             </div>

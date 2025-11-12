@@ -5,7 +5,7 @@ import { Context, createContext, FC, PropsWithChildren, useContext, useMemo, use
 import { useParams, useSearchParams } from 'react-router-dom'
 
 import { ChallengeDetailContext } from '../../../lib'
-import { ReviewsContextModel, ChallengeDetailContextModel } from '../../../lib/models'
+import { ChallengeDetailContextModel, ReviewCtxStatus, ReviewsContextModel } from '../../../lib/models'
 import { AiWorkflowRunsResponse, useFetchAiWorkflowsRuns } from '../../../lib/hooks'
 
 export const ReviewsContext: Context<ReviewsContextModel>
@@ -20,6 +20,8 @@ export const ReviewsContextProvider: FC<PropsWithChildren> = props => {
     const [searchParams] = useSearchParams()
     const workflowId = searchParams.get('workflowId') ?? ''
     const reviewId = searchParams.get('reviewId') ?? ''
+
+    const [reviewStatus, setReviewStatus] = useState({} as ReviewCtxStatus);
 
     const challengeDetailsCtx = useContext(ChallengeDetailContext)
     const { challengeInfo }: ChallengeDetailContextModel = challengeDetailsCtx
@@ -49,7 +51,9 @@ export const ReviewsContextProvider: FC<PropsWithChildren> = props => {
             ...challengeDetailsCtx,
             isLoading: isLoadingCtxData,
             reviewId,
+            reviewStatus,
             scorecard,
+            setReviewStatus,
             submissionId,
             workflow,
             workflowId,
@@ -66,6 +70,7 @@ export const ReviewsContextProvider: FC<PropsWithChildren> = props => {
             workflowId,
             workflowRun,
             workflowRuns,
+            reviewStatus,
         ],
     )
 

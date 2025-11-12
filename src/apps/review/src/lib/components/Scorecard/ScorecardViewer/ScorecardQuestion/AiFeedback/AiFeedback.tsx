@@ -3,7 +3,7 @@ import { FC, useMemo } from 'react'
 import { IconAiReview } from '~/apps/review/src/lib/assets/icons'
 import { ScorecardQuestion } from '~/apps/review/src/lib/models'
 
-import { ScorecardViewerContextValue, useScorecardContext } from '../../ScorecardViewer.context'
+import { ScorecardViewerContextValue, useScorecardViewerContext } from '../../ScorecardViewer.context'
 import { ScorecardQuestionRow } from '../ScorecardQuestionRow'
 import { ScorecardScore } from '../../ScorecardScore'
 import { MarkdownReview } from '../../../../MarkdownReview'
@@ -16,7 +16,7 @@ interface AiFeedbackProps {
 }
 
 const AiFeedback: FC<AiFeedbackProps> = props => {
-    const { aiFeedbackItems, scoreMap, }: ScorecardViewerContextValue = useScorecardContext()
+    const { aiFeedbackItems, scoreMap }: ScorecardViewerContextValue = useScorecardViewerContext()
     const feedback = useMemo(() => (
         aiFeedbackItems?.find(r => r.scorecardQuestionId === props.question.id)
     ), [props.question.id, aiFeedbackItems])

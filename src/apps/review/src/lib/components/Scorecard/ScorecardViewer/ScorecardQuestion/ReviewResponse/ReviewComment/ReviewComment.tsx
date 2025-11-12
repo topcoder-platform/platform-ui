@@ -14,7 +14,7 @@ import { ReviewItemComment } from '../../../../../../models/ReviewItemComment.mo
 import { formAppealResponseSchema, isAppealsPhase } from '../../../../../../utils'
 import { ChallengeDetailContext } from '../../../../../../contexts'
 import { FieldMarkdownEditor } from '../../../../../FieldMarkdownEditor'
-import { ScorecardViewerContextValue, useScorecardContext } from '../../../ScorecardViewer.context'
+import { ScorecardViewerContextValue, useScorecardViewerContext } from '../../../ScorecardViewer.context'
 import { ScorecardQuestionRow } from '../../ScorecardQuestionRow'
 
 import styles from './ReviewComment.module.scss'
@@ -31,7 +31,7 @@ const ReviewComment: FC<ReviewCommentProps> = props => {
         addAppeal,
         doDeleteAppeal,
         isSavingAppeal,
-    }: ScorecardViewerContextValue = useScorecardContext()
+    }: ScorecardViewerContextValue = useScorecardViewerContext()
 
     const { challengeInfo }: ChallengeDetailContextModel = useContext(
         ChallengeDetailContext,

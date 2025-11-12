@@ -8,11 +8,10 @@ import { BreadCrumbData, ReviewsContextModel } from '../../../lib/models'
 import { ReviewsSidebar } from '../components/ReviewsSidebar'
 import { useReviewsContext } from '../ReviewsContext'
 
-import styles from './ReviewsViewer.module.scss'
 import { AiReviewViewer } from '../components/AiReviewViewer'
 import { activeReviewAssignmentsRouteId, rootRoute } from '../../../config/routes.config'
 import { ReviewViewer } from '../components/ReviewViewer'
-
+import styles from './ReviewsViewer.module.scss'
 
 const ReviewsViewer: FC = () => {
     const { showBannerNotification, removeNotification }: NotificationContextType = useNotification()

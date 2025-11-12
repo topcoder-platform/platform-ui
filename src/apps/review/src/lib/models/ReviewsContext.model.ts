@@ -3,6 +3,11 @@ import { AiWorkflow, AiWorkflowRun } from '../hooks'
 import { Scorecard } from './Scorecard.model'
 import { ChallengeDetailContextModel } from './ChallengeDetailContextModel.model'
 
+export interface ReviewCtxStatus {
+    status: 'passed' | 'pending' | 'failed-score';
+    score: number;
+}
+
 export interface ReviewsContextModel extends ChallengeDetailContextModel {
     isLoading: boolean
     reviewId?: string;
@@ -12,4 +17,6 @@ export interface ReviewsContextModel extends ChallengeDetailContextModel {
     workflowRun?: AiWorkflowRun
     scorecard?: Scorecard
     workflowRuns: AiWorkflowRun[]
+    reviewStatus?: ReviewCtxStatus
+    setReviewStatus: (status: ReviewCtxStatus) => void
 }

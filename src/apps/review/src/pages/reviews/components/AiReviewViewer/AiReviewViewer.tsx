@@ -1,13 +1,13 @@
 import { FC, useState } from 'react'
 
-import styles from './AiReviewViewer.module.scss'
-import { ScorecardHeader } from '../ScorecardHeader'
 import { Tabs } from '~/apps/review/src/lib'
 import { ScorecardViewer } from '~/apps/review/src/lib/components/Scorecard'
 import { ScorecardAttachments } from '~/apps/review/src/lib/components/Scorecard/ScorecardAttachments'
 import { AiWorkflowRunItemsResponse, useFetchAiWorkflowsRunItems } from '~/apps/review/src/lib/hooks'
 import { ReviewsContextModel, SelectOption } from '~/apps/review/src/lib/models'
+import { ScorecardHeader } from '../ScorecardHeader'
 import { useReviewsContext } from '../../ReviewsContext'
+import styles from './AiReviewViewer.module.scss'
 
 interface AiReviewViewerProps {
 }

@@ -15,7 +15,7 @@ import { formManagerCommentSchema } from '../../../../../../utils'
 import { QUESTION_YES_NO_OPTIONS } from '../../../../../../../config/index.config'
 import { MarkdownReview } from '../../../../../MarkdownReview'
 import { FieldMarkdownEditor } from '../../../../../FieldMarkdownEditor'
-import { ScorecardViewerContextValue, useScorecardContext } from '../../../ScorecardViewer.context'
+import { ScorecardViewerContextValue, useScorecardViewerContext } from '../../../ScorecardViewer.context'
 import { ScorecardQuestionRow } from '../../ScorecardQuestionRow'
 
 import styles from './ReviewManagerComment.module.scss'
@@ -31,7 +31,7 @@ const ReviewManagerComment: FC<ReviewManagerCommentProps> = props => {
         isManagerEdit,
         isSavingManagerComment,
         addManagerComment,
-    }: ScorecardViewerContextValue = useScorecardContext()
+    }: ScorecardViewerContextValue = useScorecardViewerContext()
 
     const [comment, setComment] = useState(props.managerComment || '')
     const [showCommentForm, setShowCommentForm] = useState(false)

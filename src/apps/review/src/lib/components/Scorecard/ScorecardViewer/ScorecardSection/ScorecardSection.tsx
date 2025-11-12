@@ -3,7 +3,7 @@ import { FC } from 'react'
 import { ScorecardSection as ScorecardSectionModel } from '../../../../models'
 import { ScorecardQuestion } from '../ScorecardQuestion'
 import { ScorecardScore } from '../ScorecardScore'
-import { ScorecardViewerContextValue, useScorecardContext } from '../ScorecardViewer.context'
+import { ScorecardViewerContextValue, useScorecardViewerContext } from '../ScorecardViewer.context'
 import { createReviewItemMapping } from '../utils'
 
 import styles from './ScorecardSection.module.scss'
@@ -15,7 +15,7 @@ interface ScorecardSectionProps {
 }
 
 const ScorecardSection: FC<ScorecardSectionProps> = props => {
-    const { scoreMap }: ScorecardViewerContextValue = useScorecardContext()
+    const { scoreMap }: ScorecardViewerContextValue = useScorecardViewerContext()
 
     return (
         <div className={styles.wrap}>

@@ -5,7 +5,7 @@ import { IconOutline } from '~/libs/ui'
 
 import { ScorecardGroup as ScorecardGroupModel } from '../../../../models'
 import { ScorecardSection } from '../ScorecardSection'
-import { ScorecardViewerContextValue, useScorecardContext } from '../ScorecardViewer.context'
+import { ScorecardViewerContextValue, useScorecardViewerContext } from '../ScorecardViewer.context'
 import { ScorecardScore } from '../ScorecardScore'
 import { createReviewItemMapping } from '../utils'
 
@@ -18,9 +18,9 @@ interface ScorecardGroupProps {
 }
 
 const ScorecardGroup: FC<ScorecardGroupProps> = props => {
-    const { aiFeedbackItems, scoreMap }: ScorecardViewerContextValue = useScorecardContext()
+    const { aiFeedbackItems, scoreMap }: ScorecardViewerContextValue = useScorecardViewerContext()
     const allFeedbackItems = aiFeedbackItems || []
-    const { toggleItem, toggledItems }: ScorecardViewerContextValue = useScorecardContext()
+    const { toggleItem, toggledItems }: ScorecardViewerContextValue = useScorecardViewerContext()
 
     const isVissible = !toggledItems[props.group.id]
     const toggle = useCallback(() => toggleItem(props.group.id), [props.group, toggleItem])

@@ -3,7 +3,7 @@ import Select, { SingleValue } from 'react-select'
 
 import { ReviewItemInfo, ScorecardQuestion, SelectOption } from '../../../../../../models'
 import { QUESTION_YES_NO_OPTIONS } from '../../../../../../../config/index.config'
-import { ScorecardViewerContextValue, useScorecardContext } from '../../../ScorecardViewer.context'
+import { ScorecardViewerContextValue, useScorecardViewerContext } from '../../../ScorecardViewer.context'
 import { ScorecardQuestionRow } from '../../ScorecardQuestionRow'
 import { ScorecardScore } from '../../../ScorecardScore'
 
@@ -20,7 +20,7 @@ const ReviewAnswer: FC<ReviewAnswerProps> = props => {
         isSavingManagerComment,
         // addManagerComment,
         scoreMap,
-    }: ScorecardViewerContextValue = useScorecardContext()
+    }: ScorecardViewerContextValue = useScorecardViewerContext()
 
     const answer = useMemo(() => (
         props.reviewItem.finalAnswer || props.reviewItem.initialAnswer || ''

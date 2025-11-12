@@ -1,6 +1,6 @@
 /* eslint-disable complexity */
 
-import { FC, useCallback, useMemo, useState } from 'react'
+import { FC, useCallback, useEffect, useMemo, useState } from 'react'
 import { isEmpty } from 'lodash'
 import classNames from 'classnames'
 
@@ -11,6 +11,7 @@ import {
     AppealInfo,
     FormReviews,
     MappingAppeal,
+    ReviewCtxStatus,
     ReviewInfo,
     ReviewItemComment,
     ReviewItemInfo,
@@ -23,7 +24,7 @@ import { ConfirmModal } from '../../ConfirmModal'
 import {
     ScorecardViewerContextProvider,
     ScorecardViewerContextValue,
-    useScorecardContext,
+    useScorecardViewerContext,
 } from './ScorecardViewer.context'
 import { ScorecardGroup } from './ScorecardGroup'
 import { ScorecardTotal } from './ScorecardTotal'
@@ -43,6 +44,7 @@ interface ScorecardViewerProps {
     isSavingAppeal?: boolean
     isSavingAppealResponse?: boolean
     isSavingManagerComment?: boolean
+    setReviewStatus?: (status: ReviewCtxStatus) => void
     saveReviewInfo?: (
         updatedReview: FormReviews | undefined,
         fullReview: FormReviews | undefined,
@@ -92,10 +94,11 @@ const ScorecardViewerContent: FC<ScorecardViewerProps> = props => {
     const {
         form,
         totalScore,
+        reviewProgress,
         isTouched,
         touchedAllFields,
         formErrors,
-    }: ScorecardViewerContextValue = useScorecardContext()
+    }: ScorecardViewerContextValue = useScorecardViewerContext()
 
     const isDirty = form?.formState?.isDirty || false
     const errors = formErrors || {}
@@ -147,6 +150,25 @@ const ScorecardViewerContent: FC<ScorecardViewerProps> = props => {
 
     const ContainerTag = props.isEdit ? 'form' : 'div'
 
+    useEffect(() => {
+        if (props.setReviewStatus && props.scorecard) {
+            const isCompleted = props.reviewInfo?.status === 'COMPLETED'
+            const score = isCompleted ? props.reviewInfo?.finalScore! : totalScore
+            let status: 'passed' |'failed-score' |'pending' = (
+                score >= (props.scorecard.minimumPassingScore ?? 50) ? 'passed' : 'failed-score'
+            )
+
+            if (!isCompleted) {
+                status = 'pending'
+            }
+
+            props.setReviewStatus({
+                score,
+                status,
+            })
+        }
+    }, [totalScore, props.scorecard]);
+
     if (props.isLoading) {
         return <TableLoading />
     }
@@ -158,7 +180,9 @@ const ScorecardViewerContent: FC<ScorecardViewerProps> = props => {
                     <i>
                         <IconError />
                     </i>
-                    {errorMessage} Check bellow.
+                    {errorMessage}
+                    {' '}
+                    Check bellow.
                 </div>
             )}
 
@@ -169,7 +193,7 @@ const ScorecardViewerContent: FC<ScorecardViewerProps> = props => {
                         Congratulations! You earned a score of
                         {' '}
                         <strong>
-                            {props.score.toFixed(2)}
+                            {totalScore.toFixed(2)}
                         </strong>
                         {' '}
                         out of the maximum of
@@ -199,60 +223,62 @@ const ScorecardViewerContent: FC<ScorecardViewerProps> = props => {
                     ))
                 )}
 
-            {!props.reviewInfo && props.scorecard.scorecardGroups.map((group, index) => (
-                <ScorecardGroup
-                    key={group.id}
-                    group={group}
-                    index={index + 1}
-                />
-            ))}
+                {!props.reviewInfo && props.scorecard.scorecardGroups.map((group, index) => (
+                    <ScorecardGroup
+                        key={group.id}
+                        group={group}
+                        index={index + 1}
+                    />
+                ))}
 
-            <ScorecardTotal score={totalScore} />
+                <ScorecardTotal score={totalScore} />
 
-            {props.isEdit && (
-                <div className={styles.footer}>
-                    <div>
-                        {errorMessage && (
-                            <div className={classNames(styles.errorMessage, styles.errorBottom)}>
-                                <i>
-                                    <IconError />
-                                </i>
-                                {errorMessage} Check above.
-                            </div>
-                        )}
-                    </div>
+                {props.isEdit && (
+                    <div className={styles.footer}>
+                        <div>
+                            {errorMessage && (
+                                <div className={classNames(styles.errorMessage, styles.errorBottom)}>
+                                    <i>
+                                        <IconError />
+                                    </i>
+                                    {errorMessage}
+                                    {' '}
+                                    Check above.
+                                </div>
+                            )}
+                        </div>
 
-                    <div className={styles.actions}>
-                        {props.onCancelEdit && (
+                        <div className={styles.actions}>
+                            {props.onCancelEdit && (
+                                <button
+                                    type='button'
+                                    className='cancelButton'
+                                    onClick={props.onCancelEdit}
+                                >
+                                    Cancel
+                                </button>
+                            )}
                             <button
                                 type='button'
-                                className='cancelButton'
-                                onClick={props.onCancelEdit}
+                                className='borderButton'
+                                onClick={handleSaveAsDraft}
+                                disabled={props.isSavingReview}
                             >
-                                Cancel
+                                Save as Draft
                             </button>
-                        )}
-                        <button
-                            type='button'
-                            className='borderButton'
-                            onClick={handleSaveAsDraft}
-                            disabled={props.isSavingReview}
-                        >
-                            Save as Draft
-                        </button>
-                        <button
-                            type='submit'
-                            className='filledButton'
-                            onClick={function onClick() {
-                                touchedAllFields()
-                            }}
-                            disabled={props.isSavingReview}
-                        >
-                            Mark as Complete
-                        </button>
+                            <button
+                                type='submit'
+                                className='filledButton'
+                                onClick={function onClick() {
+                                    touchedAllFields()
+                                }}
+                                disabled={props.isSavingReview}
+                            >
+                                Mark as Complete
+                            </button>
+                        </div>
                     </div>
-                </div>
-            )}
+                )}
             </ContainerTag>
 
             <ConfirmModal
@@ -288,6 +314,7 @@ const ScorecardViewer: FC<ScorecardViewerProps> = props => (
         addAppealResponse={props.addAppealResponse}
         addManagerComment={props.addManagerComment}
         onFormChange={props.setIsChanged}
+        setReviewStatus={props.setReviewStatus}
     >
         <ScorecardViewerContent {...props} />
     </ScorecardViewerContextProvider>

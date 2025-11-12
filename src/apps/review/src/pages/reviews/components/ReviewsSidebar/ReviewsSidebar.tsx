@@ -4,13 +4,12 @@ import classNames from 'classnames'
 
 import { ReviewsContextModel } from '~/apps/review/src/lib/models'
 import { AiWorkflowRunStatus } from '~/apps/review/src/lib/components/AiReviewsTable'
-import { IconAiReview } from '~/apps/review/src/lib/assets/icons'
+import { IconAiReview, IconPhaseReview } from '~/apps/review/src/lib/assets/icons'
 import { IconOutline, IconSolid } from '~/libs/ui'
 import StatusLabel from '~/apps/review/src/lib/components/AiReviewsTable/StatusLabel'
 
-
-import styles from './ReviewsSidebar.module.scss'
 import { useReviewsContext } from '../../ReviewsContext'
+import styles from './ReviewsSidebar.module.scss'
 
 interface ReviewsSidebarProps {
     className?: string
@@ -25,8 +24,9 @@ const ReviewsSidebar: FC<ReviewsSidebarProps> = props => {
         workflowId,
         submissionId,
         reviewId,
+        reviewStatus,
     }: ReviewsContextModel = useReviewsContext()
-    const isReviewActive = !workflowRun;
+    const isReviewActive = !workflowRun
 
     const toggleOpen = useCallback(() => {
         setIsMobileOpen(wasOpen => !wasOpen)
@@ -93,8 +93,17 @@ const ReviewsSidebar: FC<ReviewsSidebarProps> = props => {
                                     onClick={close}
                                 />
                                 <span className={styles.workflowNameWrap}>
+                                    <IconPhaseReview />
                                     <span className={styles.workflowName}>Review</span>
                                 </span>
+                                {reviewStatus && (
+                                    <AiWorkflowRunStatus
+                                        status={reviewStatus.status}
+                                        score={reviewStatus.score}
+                                        showScore
+                                        hideLabel
+                                    />
+                                )}
                             </li>
                         )}
                     </ul>

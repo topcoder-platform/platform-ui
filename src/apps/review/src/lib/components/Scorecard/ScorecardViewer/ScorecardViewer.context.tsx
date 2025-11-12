@@ -6,6 +6,7 @@ import {
     AppealInfo,
     FormReviews,
     MappingAppeal,
+    ReviewCtxStatus,
     ReviewInfo,
     ReviewItemInfo,
     Scorecard,
@@ -30,6 +31,7 @@ export interface ScorecardViewerContextProps {
     isSavingAppeal?: boolean
     isSavingAppealResponse?: boolean
     isSavingManagerComment?: boolean
+    setReviewStatus?: (status: ReviewCtxStatus) => void
     saveReviewInfo?: (
         updatedReview: FormReviews | undefined,
         fullReview: FormReviews | undefined,
@@ -75,6 +77,7 @@ export type ScorecardViewerContextValue = {
     isSavingAppeal?: boolean
     isSavingAppealResponse?: boolean
     isSavingManagerComment?: boolean
+    setReviewStatus?: (status: ReviewCtxStatus) => void
     saveReviewInfo?: (
         updatedReview: FormReviews | undefined,
         fullReview: FormReviews | undefined,
@@ -155,6 +158,7 @@ export const ScorecardViewerContextProvider: FC<ScorecardViewerContextProps> = p
         saveReviewInfo: props.saveReviewInfo,
         setIsTouched: reviewFormCtx.setIsTouched,
         touchedAllFields: reviewFormCtx.touchedAllFields,
+        setReviewStatus: props.setReviewStatus,
     }), [
         props.aiFeedbackItems,
         props.reviewInfo,
@@ -171,6 +175,7 @@ export const ScorecardViewerContextProvider: FC<ScorecardViewerContextProps> = p
         props.doDeleteAppeal,
         props.addAppealResponse,
         props.addManagerComment,
+        props.setReviewStatus,
         collapsiblesCtx.toggledItems,
         reviewFormCtx,
         progressCtx,
@@ -185,4 +190,4 @@ export const ScorecardViewerContextProvider: FC<ScorecardViewerContextProps> = p
     )
 }
 
-export const useScorecardContext = (): ScorecardViewerContextValue => useContext(ScorecardViewerContext)
+export const useScorecardViewerContext = (): ScorecardViewerContextValue => useContext(ScorecardViewerContext)
