@@ -1,7 +1,6 @@
 export * from './reviews.service'
 export * from './challenges.service'
 export * from './scorecards.service'
-export * from './tabs.service'
 export * from './file-upload.service'
 export * from './resources.service'
 export * from './payments.service'

@@ -1,0 +1,36 @@
+@import '@libs/ui/styles/includes';
+
+.wrap {
+    width: 100%;
+    text-align: left;
+}
+
+.reviewersDropown {
+    display: flex;
+    align-items: center;
+    gap: $sp-2;
+    cursor: pointer;
+
+    @include ltelg {
+        justify-content: space-between;
+        font-weight: 600;
+    }
+
+    svg {
+        color: #767676;
+    }
+}
+
+.table {
+    margin-top: $sp-2;
+    margin-left: -1 * $sp-4;
+    @include ltelg {
+        margin-top: 0;
+        margin-left: -1 * $sp-4;
+        margin-right: -1 * $sp-4;
+    }
+}
+
+.rotated {
+    transform: rotate(180deg);
+}

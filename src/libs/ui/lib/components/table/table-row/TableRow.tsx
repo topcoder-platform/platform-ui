@@ -66,6 +66,7 @@ export const TableRow: <T extends { [propertyName: string]: any }>(
                         : undefined
                 }
                 style={colWidth ? { width: `${colWidth}px` } : {}}
+                allRows={props.allRows}
             />
         )
     })
