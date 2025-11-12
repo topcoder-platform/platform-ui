@@ -1,0 +1,205 @@
+@import '@libs/ui/styles/includes';
+
+.wrap {
+
+}
+
+.runsWrap {
+    > ul {
+        padding: 0;
+        margin: 0;
+        list-style: none;
+
+        li {
+            position: relative;
+            margin-top: $sp-1;
+            &:first-child {
+                margin-top: 0;
+            }
+
+            > a {
+                display: block;
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                opacity: 0;
+            }
+        }
+    }
+}
+
+
+.runEntry {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: $sp-4;
+    padding: $sp-4;
+    background-color: #f9fafa;
+    cursor: pointer;
+    position: relative;
+
+    font-family: "Nunito Sans", sans-serif;
+    font-size: 16px;
+    line-height: 22px;
+
+    &.active {
+        background-color: #E9ECEF;
+        .workflowName{
+            font-weight: bold;
+        }
+        &:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background-color: $teal-160;
+        }
+    }
+
+    &:hover {
+        background-color: lighten(#E9ECEF, 2.5%);
+    }
+
+    &:active:hover {
+        background-color: darken(#E9ECEF, 5%);
+    }
+
+    > span {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: $sp-2;
+    }
+}
+
+.workflowName {
+    max-width: 139px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    &Wrap {
+        flex: 1 1 auto;
+    }
+    @include ltelg {
+        max-width: calc(90vw - 140px);
+    }
+}
+
+.legend {
+    background-color: #f9fafa;
+    padding: $sp-4;
+    margin-top: $sp-4;
+
+
+    font-family: "Nunito Sans", sans-serif;
+    font-size: 16px;
+    line-height: 22px;
+    color: #0A0A0A;
+
+    &Label {
+        font-weight: bold;
+    }
+
+    ul {
+        padding: 0;
+        margin: $sp-2 0 0;
+        list-style: none;
+
+        li {
+            margin-top: $sp-1;
+            &:first-child {
+                margin-top: 0;
+            }
+        }
+    }
+}
+
+.mobileTrigger {
+    display: flex;
+    align-items: center;
+    gap: $sp-4;
+    cursor: pointer;
+
+    .runEntry {
+        flex: 1 1 auto;
+    }
+
+    .workflowName {
+        @include ltelg {
+            max-width: calc(90vw - 205px);
+        }
+    }
+
+    @include gtexl {
+        display: none;
+    }
+}
+
+.mobileMenuIcon {
+    display: flex;
+    width: 24px;
+    height: 24px;
+    align-items: center;
+    justify-content: center;
+    padding-left: $sp-4;
+    border-left: 1px solid #D1DAE4;
+    flex: 0 0 38px;
+
+    svg {
+        display: block;
+    }
+}
+
+.contentsWrap {
+    @include ltelg {
+        display: none;
+        position: relative;
+
+        flex-direction: column;
+        background: #fff;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: 1000;
+        padding: $sp-4;
+        overflow: auto;
+
+        &.open {
+            display: flex;
+        }
+
+        .runsWrap {
+            margin-bottom: $sp-4;
+        }
+
+        .legend {
+            margin-top: auto;
+        }
+    }
+}
+
+.mobileCloseicon {
+    display: flex;
+    height: 24px;
+    align-items: center;
+    justify-content: flex-end;
+    cursor: pointer;
+    margin-bottom: $sp-4;
+
+    svg {
+        display: block;
+        color: #000;
+    }
+
+    @include gtexl {
+        display: none;
+    }
+}

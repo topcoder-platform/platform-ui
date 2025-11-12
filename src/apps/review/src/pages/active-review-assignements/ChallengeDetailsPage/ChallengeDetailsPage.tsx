@@ -13,6 +13,7 @@ import { TableLoading } from '~/apps/admin/src/lib'
 import { handleError } from '~/apps/admin/src/lib/utils'
 import { EnvironmentConfig } from '~/config'
 import { BaseModal, Button, InputCheckbox, InputDatePicker, InputText } from '~/libs/ui'
+import { NotificationContextType, useNotification } from '~/libs/shared'
 
 import {
     useFetchScreeningReview,
@@ -65,6 +66,11 @@ import styles from './ChallengeDetailsPage.module.scss'
 interface Props {
     className?: string
 }
+
+const normalizePhaseName = (name?: string): string => (name ? name.trim()
+    .toLowerCase() : '')
+const SUBMISSION_PHASE_NAMES = new Set(['submission', 'topgear submission'])
+const REGISTRATION_PHASE_NAME = 'registration'
 
 // Helpers to keep UI hooks simple and under complexity limits
 
@@ -227,6 +233,7 @@ const isIterativeReviewPhaseName = (name?: string): boolean => (name || '')
 
 // eslint-disable-next-line complexity
 export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
+    const { showBannerNotification, removeNotification }: NotificationContextType = useNotification()
     const [searchParams, setSearchParams] = useSearchParams()
     const location = useLocation()
     const navigate = useNavigate()
@@ -1089,22 +1096,40 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
             return allowed
         }
 
+        const addPhaseIdentifiers = (phase?: BackendPhase): void => {
+            if (!phase) {
+                return
+            }
+
+            if (phase.id) {
+                allowed.add(phase.id)
+            }
+
+            if (phase.phaseId) {
+                allowed.add(phase.phaseId)
+            }
+        }
+
         challengePhases.forEach(phase => {
             if (!phase?.isOpen || !phase.predecessor) {
                 return
             }
 
             allowed.add(phase.predecessor)
-
-            const predecessorPhase = phaseLookup.get(phase.predecessor)
-            if (predecessorPhase?.id) {
-                allowed.add(predecessorPhase.id)
-            }
-
-            if (predecessorPhase?.phaseId) {
-                allowed.add(predecessorPhase.phaseId)
-            }
+            addPhaseIdentifiers(phaseLookup.get(phase.predecessor))
         })
+
+        const hasSubmissionVariantOpen = challengePhases.some(phase => (
+            phase?.isOpen && SUBMISSION_PHASE_NAMES.has(normalizePhaseName(phase.name))
+        ))
+
+        if (hasSubmissionVariantOpen) {
+            challengePhases.forEach(phase => {
+                if (normalizePhaseName(phase?.name) === REGISTRATION_PHASE_NAME) {
+                    addPhaseIdentifiers(phase)
+                }
+            })
+        }
 
         return allowed
     }, [challengePhases, phaseLookup])
@@ -1706,6 +1731,16 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         ? formatChallengeStatusLabel(challengeInfo?.status)
         : undefined
     const shouldShowChallengeMetaRow = Boolean(statusLabel) || trackTypePills.length > 0
+
+    useEffect(() => {
+        const notification = showBannerNotification({
+            id: 'ai-review-scores-warning',
+            message: `AI Review Scores are advisory only to provide immediate,
+                educational, and actionable feedback to members.
+                AI Review Scores do not influence winner selection.`,
+        })
+        return () => notification && removeNotification(notification.id)
+    }, [showBannerNotification])
 
     return (
         <PageWrapper
