@@ -1,17 +1,73 @@
-.wrap {
+@import '@libs/ui/styles/includes';
+
+.container {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    margin-left: 16px;
+    gap: $sp-4;
+    align-items: flex-start;
+    :global(.borderButton),
+    :global(.filledButton) {
+        font-size: 14px;
+    }
+    :global(.filledButton) {
+        font-size: 16px;
+    }
 }
 
-.appealRow {
+.blockAppealComment {
+    background-color: var(--Appeal);
 }
 
-.responseRow {
+.blockAppealResponse {
+    background-color: var(--TableColumn);
 }
 
-.content {
+.blockAppealResponse,
+.blockAppealComment {
+    padding: $sp-4;
+    display: flex;
+    flex-direction: column;
+    gap: $sp-2;
+    width: 100%;
+}
+
+.markdownEditor {
+    width: 100%;
+}
+
+.textTitle {
+    color: var(--FontColor);
+    font-family: "Nunito Sans", sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 20px;
+}
+
+.blockBtns {
+    display: flex;
+    gap: 10px;
+    padding-top: 8px;
+    padding-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.blockForm {
+    background-color: var(--TableColumn);
+    display: flex;
+    flex-direction: column;
+    padding: $sp-6;
+    gap: $sp-4;
+    width: 100%;
+    @include ltemd {
+        padding: $sp-4;
+    }
+    label {
+        color: var(--FontColor);
+        font-family: "Nunito Sans", sans-serif;
+        font-size: 16px;
+        font-weight: 700;
+        line-height: 20px;
+    }
 }
 
 .status {
@@ -19,94 +75,24 @@
     margin-top: 8px;
 }
 
-.responseActions {
-    display: flex;
-    gap: 8px;
-    margin-top: 8px;
-}
-
-.respondButton,
-.editResponseButton {
-    padding: 6px 12px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-
-    &:hover:not(:disabled) {
-        background-color: #0056b3;
-    }
-
-    &:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
-}
-
-.responseForm {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-top: 8px;
-    padding: 12px;
-    border: 1px solid #e0e0e0;
-    border-radius: 4px;
-    background-color: #f8f9fa;
-}
-
-.responseFormHeader {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.responseFormLabel {
-    font-weight: bold;
-    font-size: 14px;
-}
-
 .responseSelect {
     min-width: 200px;
 }
 
-.markdownEditor {
-}
-
-.responseFormActions {
+.linkStyleBtn {
     display: flex;
-    gap: 8px;
-}
-
-.submitButton,
-.cancelButton {
-    padding: 6px 12px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
+    align-items: center;
+    gap: $sp-2;
+    color: #0D61BF;
     font-size: 14px;
+    font-family: "Nunito Sans", sans-serif;
+    font-weight: 700;
 
-    &:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
+    > svg path {
+        fill: currentColor;
     }
-}
 
-.submitButton {
-    background-color: #28a745;
-    color: white;
-
-    &:hover:not(:disabled) {
-        background-color: #218838;
-    }
-}
-
-.cancelButton {
-    background-color: #6c757d;
-    color: white;
-
-    &:hover:not(:disabled) {
-        background-color: #5a6268;
+    &:hover {
+        color: darken(#0D61BF, 10%);
     }
 }

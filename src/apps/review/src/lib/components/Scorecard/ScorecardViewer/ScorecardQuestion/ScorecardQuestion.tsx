@@ -24,6 +24,7 @@ interface ScorecardQuestionProps {
 const ScorecardQuestion: FC<ScorecardQuestionProps> = props => {
     const {
         isEdit,
+        isManagerEdit,
         toggleItem,
         toggledItems,
         mappingAppeals,
@@ -99,7 +100,7 @@ const ScorecardQuestion: FC<ScorecardQuestionProps> = props => {
 
             {!reviewItemInfo && <AiFeedback question={props.question} />}
 
-            {hasReviewData && reviewItemInfo && (
+            {reviewItemInfo && (hasReviewData || isManagerEdit) && (
                 <>
                     <ReviewAnswer
                         question={props.question}

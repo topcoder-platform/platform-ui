@@ -19,6 +19,7 @@ import { ScorecardViewerContextValue, useScorecardViewerContext } from '../../..
 import { ScorecardQuestionRow } from '../../ScorecardQuestionRow'
 
 import styles from './ReviewManagerComment.module.scss'
+import { IconPhaseReview } from '~/apps/review/src/lib/assets/icons'
 
 interface ReviewManagerCommentProps {
     managerComment?: string
@@ -66,8 +67,8 @@ const ReviewManagerComment: FC<ReviewManagerCommentProps> = props => {
         formState: { errors },
     }: UseFormReturn<FormManagerComment> = useForm({
         defaultValues: {
-            finalScore: '',
-            response: '',
+            finalScore: props.reviewItem?.finalAnswer ?? props.reviewItem?.initialAnswer ?? '',
+            response: props.managerComment ?? '',
         },
         mode: 'all',
         resolver: yupResolver(formManagerCommentSchema),
@@ -134,19 +135,20 @@ const ReviewManagerComment: FC<ReviewManagerCommentProps> = props => {
                     type='button'
                     onClick={handleShowCommentForm}
                     disabled={isSavingManagerComment}
-                    className={styles.addButton}
+                    className={styles.linkStyleBtn}
                 >
+                    <IconPhaseReview />
                     Add a Manager Comment
                 </button>
             )}
 
             {showCommentForm && isManagerEdit && (
                 <form
-                    className={styles.commentForm}
+                    className={styles.blockForm}
                     onSubmit={handleSubmit(onSubmit)}
                 >
                     <div className={styles.commentFormHeader}>
-                        <label className={styles.commentFormLabel}>Manager Comment</label>
+                        <label>Manager Comment</label>
                         {props.scorecardQuestion && responseOptions.length > 0 && (
                             <div className={styles.scoreSelect}>
                                 <Controller
@@ -212,9 +214,9 @@ const ReviewManagerComment: FC<ReviewManagerCommentProps> = props => {
                             )
                         }}
                     />
-                    <div className={styles.commentFormActions}>
+                    <div className={styles.blockBtns}>
                         <button
-                            className={styles.submitButton}
+                            className='filledButton'
                             type='submit'
                             disabled={isSavingManagerComment}
                         >
@@ -222,7 +224,7 @@ const ReviewManagerComment: FC<ReviewManagerCommentProps> = props => {
                         </button>
                         <button
                             type='button'
-                            className={styles.cancelButton}
+                            className='borderButton'
                             onClick={handleCancelCommentForm}
                         >
                             Cancel

@@ -18,10 +18,6 @@ const ReviewComments: FC<ReviewCommentsProps> = props => {
         (props.reviewItem.reviewItemComments || []).filter(c => c.content || c.appeal || props.mappingAppeals?.[c.id])
     ).sort((a, b) => a.sortOrder - b.sortOrder), [props.reviewItem.reviewItemComments, props.mappingAppeals])
 
-    if (!comments.length && !props.reviewItem.managerComment) {
-        return <></>
-    }
-
     return (
         <div>
             {comments.map((comment, index) => {
@@ -31,15 +27,10 @@ const ReviewComments: FC<ReviewCommentsProps> = props => {
                         <ReviewComment
                             comment={comment}
                             appeal={appeal}
+                            reviewItem={props.reviewItem}
                             index={index + 1}
+                            question={props.question}
                         />
-                        {appeal && (
-                            <ReviewAppeal
-                                appeal={appeal}
-                                reviewItem={props.reviewItem}
-                                scorecardQuestion={props.question}
-                            />
-                        )}
                     </div>
                 )
             })}

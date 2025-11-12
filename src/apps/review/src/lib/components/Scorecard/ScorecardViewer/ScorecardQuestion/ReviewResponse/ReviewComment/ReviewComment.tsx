@@ -5,11 +5,11 @@ import {
     useForm,
     UseFormReturn,
 } from 'react-hook-form'
-import { get } from 'lodash'
+import { get, includes } from 'lodash'
 
 import { yupResolver } from '@hookform/resolvers/yup'
 
-import { AppealInfo, ChallengeDetailContextModel, FormAppealResponse } from '../../../../../../models'
+import { AppealInfo, ChallengeDetailContextModel, FormAppealResponse, ReviewItemInfo, ScorecardQuestion } from '../../../../../../models'
 import { ReviewItemComment } from '../../../../../../models/ReviewItemComment.model'
 import { formAppealResponseSchema, isAppealsPhase } from '../../../../../../utils'
 import { ChallengeDetailContext } from '../../../../../../contexts'
@@ -18,15 +18,21 @@ import { ScorecardViewerContextValue, useScorecardViewerContext } from '../../..
 import { ScorecardQuestionRow } from '../../ScorecardQuestionRow'
 
 import styles from './ReviewComment.module.scss'
+import { ReviewAppeal } from '../ReviewAppeal'
+import { IconAppeal, IconEdit } from '~/apps/review/src/lib/assets/icons'
+import { ADMIN, COPILOT, REVIEWER } from '~/apps/review/src/config/index.config'
 
 interface ReviewCommentProps {
     comment: ReviewItemComment
     appeal?: AppealInfo
+    reviewItem?: ReviewItemInfo
     index: number
+    question: ScorecardQuestion
 }
 
 const ReviewComment: FC<ReviewCommentProps> = props => {
     const {
+        isManagerEdit,
         actionChallengeRole,
         addAppeal,
         doDeleteAppeal,
@@ -41,6 +47,10 @@ const ReviewComment: FC<ReviewCommentProps> = props => {
 
     const [appealContent, setAppealContent] = useState(props.appeal?.content || '')
     const [showAppealForm, setShowAppealForm] = useState(false)
+
+    const isReviewerRole = useMemo(() => {
+        return includes([REVIEWER, COPILOT, ADMIN], actionChallengeRole)
+    }, [actionChallengeRole])
 
     const {
         handleSubmit,
@@ -99,91 +109,93 @@ const ReviewComment: FC<ReviewCommentProps> = props => {
                 </div>
             </ScorecardQuestionRow>
 
-            {isSubmitter && canAddAppeal && (
-                <>
-                    {!props.appeal && !showAppealForm && (
-                        <div className={styles.appealActions}>
-                            <button
-                                type='button'
-                                onClick={handleShowAppealForm}
-                                disabled={isSavingAppeal}
-                                className={styles.addAppealButton}
-                            >
-                                Add Appeal
-                            </button>
-                        </div>
-                    )}
+            <ScorecardQuestionRow
+            >
+                {isSubmitter && canAddAppeal && (!props.appeal && !showAppealForm && (
+                    <button
+                        type='button'
+                        onClick={handleShowAppealForm}
+                        disabled={isSavingAppeal}
+                        className={styles.linkStyleBtn}
+                    >
+                        <IconAppeal />
+                        Submit Appeal
+                    </button>
+                ))}
 
-                    {props.appeal && (
-                        <div className={styles.appealActions}>
-                            <button
-                                type='button'
-                                onClick={handleShowAppealForm}
-                                disabled={isSavingAppeal}
-                                className={styles.editAppealButton}
-                            >
-                                Edit Appeal
-                            </button>
-                            <button
-                                type='button'
-                                onClick={handleDeleteAppeal}
-                                disabled={isSavingAppeal}
-                                className={styles.deleteAppealButton}
-                            >
-                                Delete
-                            </button>
-                        </div>
-                    )}
-
-                    {showAppealForm && (
-                        <form
-                            className={styles.appealForm}
-                            onSubmit={handleSubmit(onSubmit)}
-                        >
-                            <label className={styles.appealFormLabel}>Submit Appeal</label>
-                            <Controller
-                                name='response'
-                                control={control}
-                                render={function render(controlProps: {
-                                    field: ControllerRenderProps<
-                                        FormAppealResponse,
-                                        'response'
-                                    >
-                                }) {
-                                    return (
-                                        <FieldMarkdownEditor
-                                            initialValue={appealContent}
-                                            className={styles.markdownEditor}
-                                            onChange={controlProps.field.onChange}
-                                            showBorder
-                                            onBlur={controlProps.field.onBlur}
-                                            error={get(errors, 'response.message')}
-                                            disabled={isSavingAppeal}
-                                            uploadCategory='appeal'
-                                        />
-                                    )
-                                }}
-                            />
-                            <div className={styles.appealFormActions}>
-                                <button
-                                    disabled={isSavingAppeal}
-                                    className={styles.submitButton}
-                                    type='submit'
+                {showAppealForm && (
+                    <form
+                        className={styles.blockForm}
+                        onSubmit={handleSubmit(onSubmit)}
+                    >
+                        <label>Submit Appeal</label>
+                        <Controller
+                            name='response'
+                            control={control}
+                            render={function render(controlProps: {
+                                field: ControllerRenderProps<
+                                    FormAppealResponse,
+                                    'response'
                                 >
-                                    Submit Appeal
-                                </button>
+                            }) {
+                                return (
+                                    <FieldMarkdownEditor
+                                        initialValue={appealContent}
+                                        className={styles.markdownEditor}
+                                        onChange={controlProps.field.onChange}
+                                        showBorder
+                                        onBlur={controlProps.field.onBlur}
+                                        error={get(errors, 'response.message')}
+                                        disabled={isSavingAppeal}
+                                        uploadCategory='appeal'
+                                    />
+                                )
+                            }}
+                        />
+                        <div className={styles.blockBtns}>
+                            <button
+                                disabled={isSavingAppeal}
+                                className='filledButton'
+                                type='submit'
+                            >
+                                Submit Appeal
+                            </button>
+                            <button
+                                type='button'
+                                className='borderButton'
+                                onClick={handleCancelAppealForm}
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                )}
+
+
+                {props.appeal && !showAppealForm && (isSubmitter || isReviewerRole || isManagerEdit) && (
+                    <ReviewAppeal
+                        appeal={props.appeal}
+                        reviewItem={props.reviewItem}
+                        scorecardQuestion={props.question}
+                        canRespondToAppeal={isReviewerRole}
+                    >
+                        {isSubmitter && canAddAppeal && (
+                            <div className={styles.blockBtns}>
                                 <button
                                     type='button'
-                                    className={styles.cancelButton}
-                                    onClick={handleCancelAppealForm}
+                                    onClick={handleShowAppealForm}
+                                    disabled={isSavingAppeal}
+                                    className={styles.linkStyleBtn}
                                 >
-                                    Cancel
+                                    <IconEdit />
+                                    Edit
                                 </button>
                             </div>
-                        </form>
-                    )}
-                </>
-            )}
+                        )}
+                    </ReviewAppeal>
+                )}
+            </ScorecardQuestionRow>
+
         </div>
     )
 }

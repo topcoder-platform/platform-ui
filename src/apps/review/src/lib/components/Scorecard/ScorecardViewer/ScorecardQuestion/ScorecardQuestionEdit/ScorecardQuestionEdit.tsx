@@ -29,6 +29,7 @@ import { ScorecardQuestionRow } from '../ScorecardQuestionRow'
 import { ScorecardScore } from '../../ScorecardScore'
 
 import styles from './ScorecardQuestionEdit.module.scss'
+import { type } from 'os'
 
 interface ScorecardQuestionEditProps {
     question: ScorecardQuestion

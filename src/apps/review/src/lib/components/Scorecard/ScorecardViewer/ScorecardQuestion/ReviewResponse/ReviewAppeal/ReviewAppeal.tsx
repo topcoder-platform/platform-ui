@@ -1,4 +1,4 @@
-import { FC, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { FC, PropsWithChildren, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import {
     Controller,
     ControllerRenderProps,
@@ -21,45 +21,33 @@ import {
 } from '../../../../../../models'
 import { formAppealResponseSchema, isAppealsResponsePhase } from '../../../../../../utils'
 import { QUESTION_YES_NO_OPTIONS } from '../../../../../../../config/index.config'
-import { ChallengeDetailContext } from '../../../../../../contexts'
+import { ChallengeDetailContext, useChallengeDetailsContext } from '../../../../../../contexts'
 import { FieldMarkdownEditor } from '../../../../../FieldMarkdownEditor'
+import { MarkdownReview } from '../../../../../MarkdownReview'
 import { ScorecardViewerContextValue, useScorecardViewerContext } from '../../../ScorecardViewer.context'
-import { ScorecardQuestionRow } from '../../ScorecardQuestionRow'
 
 import styles from './ReviewAppeal.module.scss'
+import { IconAppealResponse, IconEdit } from '~/apps/review/src/lib/assets/icons'
 
-interface ReviewAppealProps {
+interface ReviewAppealProps extends PropsWithChildren {
     appeal: AppealInfo
     reviewItem?: ReviewItemInfo
     scorecardQuestion?: ScorecardQuestion
+    canRespondToAppeal: boolean
 }
 
 const ReviewAppeal: FC<ReviewAppealProps> = props => {
     const {
-        actionChallengeRole,
         addAppealResponse,
         isSavingAppealResponse,
     }: ScorecardViewerContextValue = useScorecardViewerContext()
 
-    const { challengeInfo }: ChallengeDetailContextModel = useContext(
-        ChallengeDetailContext,
-    )
-
-    // Determine if user can respond to appeal (reviewer/copilot/admin roles)
-    const canRespondToAppeal = useMemo(() => {
-        const role = actionChallengeRole?.toLowerCase() || ''
-        return role.includes('reviewer') || role.includes('admin') || role.includes('copilot')
-    }, [actionChallengeRole])
+    const { challengeInfo }: ChallengeDetailContextModel = useChallengeDetailsContext()
 
     const canAddAppealResponse = useMemo(
-        () => canRespondToAppeal && isAppealsResponsePhase(challengeInfo),
-        [challengeInfo, canRespondToAppeal],
+        () => props.canRespondToAppeal && isAppealsResponsePhase(challengeInfo),
+        [challengeInfo, props.canRespondToAppeal],
     )
-
-    // const isReviewerRole = useMemo(() => {
-    //     const role = actionChallengeRole?.toLowerCase() || ''
-    //     return role.includes('reviewer') || role.includes('admin') || role.includes('copilot')
-    // }, [actionChallengeRole])
 
     const [showResponseForm, setShowResponseForm] = useState(false)
     const [appealResponse, setAppealResponse] = useState(props.appeal.appealResponse?.content || '')
@@ -134,77 +122,70 @@ const ReviewAppeal: FC<ReviewAppealProps> = props => {
     }, [])
 
     return (
-        <div className={styles.wrap}>
-            <ScorecardQuestionRow
-                index='Appeal'
-                className={styles.appealRow}
-            >
-                <div className={styles.content}>
-                    {props.appeal.content}
-                </div>
-            </ScorecardQuestionRow>
+        <div className={styles.container}>
+            <div className={styles.blockAppealComment}>
+                <span className={styles.textTitle}>
+                    <strong>Appeal</strong>
+                </span>
+                <MarkdownReview value={props.appeal.content} />
+                {props.children}
+            </div>
 
             {props.appeal.appealResponse && !showResponseForm && (
-                <ScorecardQuestionRow
-                    index='Appeal Response'
-                    className={styles.responseRow}
-                >
-                    <div className={styles.content}>
-                        {props.appeal.appealResponse.content}
-                    </div>
+                <div className={styles.blockAppealResponse}>
+                    <span className={styles.textTitle}>Appeal Response</span>
+                    <MarkdownReview value={props.appeal.appealResponse.content} />
                     {props.appeal.appealResponse.success !== undefined && (
                         <div className={styles.status}>
                             {props.appeal.appealResponse.success ? 'Accepted' : 'Rejected'}
                         </div>
                     )}
                     {canAddAppealResponse && (
-                        <div className={styles.responseActions}>
+                        <div className={styles.blockBtns}>
                             <button
                                 type='button'
                                 onClick={handleShowResponseForm}
                                 disabled={isSavingAppealResponse}
-                                className={styles.editResponseButton}
+                                className={styles.linkStyleBtn}
                             >
-                                Edit Appeal Response
+                                <IconEdit />
+                                Edit
                             </button>
                         </div>
                     )}
-                </ScorecardQuestionRow>
+                </div>
             )}
 
             {!props.appeal.appealResponse && !showResponseForm && canAddAppealResponse && (
-                <div className={styles.responseActions}>
-                    <button
-                        type='button'
-                        onClick={handleShowResponseForm}
-                        disabled={isSavingAppealResponse}
-                        className={styles.respondButton}
-                    >
-                        Respond to Appeal
-                    </button>
-                </div>
+                <button
+                    type='button'
+                    onClick={handleShowResponseForm}
+                    disabled={isSavingAppealResponse}
+                    className={styles.linkStyleBtn}
+                >
+                    <IconAppealResponse />
+                    Respond to Appeal
+                </button>
             )}
 
             {showResponseForm && canAddAppealResponse && (
                 <form
-                    className={styles.responseForm}
+                    className={styles.blockForm}
                     onSubmit={handleSubmit(onSubmit)}
                 >
-                    <div className={styles.responseFormHeader}>
-                        <label className={styles.responseFormLabel}>Respond to Appeal</label>
-                        {props.scorecardQuestion && responseOptions.length > 0 && (
-                            <Select
-                                className={classNames('react-select-container', styles.responseSelect)}
-                                classNamePrefix='select'
-                                name='response'
-                                placeholder='Select'
-                                options={responseOptions}
-                                value={updatedResponse}
-                                onChange={handleResponseChange}
-                                isDisabled={isSavingAppealResponse}
-                            />
-                        )}
-                    </div>
+                    <label>Respond to Appeal</label>
+                    {props.scorecardQuestion && responseOptions.length > 0 && (
+                        <Select
+                            className={classNames('react-select-container', styles.responseSelect)}
+                            classNamePrefix='select'
+                            name='response'
+                            placeholder='Select'
+                            options={responseOptions}
+                            value={updatedResponse}
+                            onChange={handleResponseChange}
+                            isDisabled={isSavingAppealResponse}
+                        />
+                    )}
                     <Controller
                         name='response'
                         control={control}
@@ -228,9 +209,9 @@ const ReviewAppeal: FC<ReviewAppealProps> = props => {
                             )
                         }}
                     />
-                    <div className={styles.responseFormActions}>
+                    <div className={styles.blockBtns}>
                         <button
-                            className={styles.submitButton}
+                            className='filledButton'
                             type='submit'
                             disabled={isSavingAppealResponse}
                         >
@@ -238,7 +219,7 @@ const ReviewAppeal: FC<ReviewAppealProps> = props => {
                         </button>
                         <button
                             type='button'
-                            className={styles.cancelButton}
+                            className='borderButton'
                             onClick={handleCancelResponseForm}
                         >
                             Cancel

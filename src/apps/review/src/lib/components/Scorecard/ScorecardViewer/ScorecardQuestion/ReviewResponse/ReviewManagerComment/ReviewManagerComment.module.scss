@@ -1,13 +1,29 @@
-.wrap {
-}
+@import '@libs/ui/styles/includes';
 
-.content {
+.linkStyleBtn {
+    display: flex;
+    align-items: center;
+    gap: $sp-2;
+    color: #0D61BF;
+    font-size: 14px;
+    font-family: "Nunito Sans", sans-serif;
+    font-weight: 700;
+
+    > svg path {
+        fill: currentColor;
+    }
+
+    &:hover {
+        color: darken(#0D61BF, 10%);
+    }
 }
 
 .displayContainer {
     display: flex;
     flex-direction: column;
     gap: 8px;
+    background-color: #ECF4FA;
+    padding: $sp-4;
 }
 
 .editButton,
@@ -32,10 +48,30 @@
     }
 }
 
-.commentForm {
+.blockForm {
+    background-color: var(--TableColumn);
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    padding: $sp-6;
+    gap: $sp-4;
+    width: 100%;
+    @include ltemd {
+        padding: $sp-4;
+    }
+    label {
+        color: var(--FontColor);
+        font-family: "Nunito Sans", sans-serif;
+        font-size: 16px;
+        font-weight: 700;
+        line-height: 20px;
+    }
+    :global(.borderButton),
+    :global(.filledButton) {
+        font-size: 14px;
+    }
+    :global(.filledButton) {
+        font-size: 16px;
+    }
 }
 
 .commentFormHeader {
@@ -44,54 +80,15 @@
     gap: 8px;
 }
 
-.commentFormLabel {
-    font-weight: bold;
-    font-size: 14px;
-}
-
 .scoreSelect {
     min-width: 200px;
 }
 
-.select {
-}
-
-.markdownEditor {
-}
-
-.commentFormActions {
+.blockBtns {
     display: flex;
-    gap: 8px;
+    gap: 10px;
+    padding-top: 8px;
+    padding-bottom: 16px;
+    flex-wrap: wrap;
 }
 
-.submitButton,
-.cancelButton {
-    padding: 6px 12px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-
-    &:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
-}
-
-.submitButton {
-    background-color: #28a745;
-    color: white;
-
-    &:hover:not(:disabled) {
-        background-color: #218838;
-    }
-}
-
-.cancelButton {
-    background-color: #6c757d;
-    color: white;
-
-    &:hover:not(:disabled) {
-        background-color: #5a6268;
-    }
-}

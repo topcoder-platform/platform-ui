@@ -89,7 +89,7 @@ const ReviewViewer: FC<ReviewViewerProps> = props => {
     )
 
     const isEdit = useMemo(
-        () => (isEditPhase) && !isReviewCompleted,
+        () => isEditPhase && !isReviewCompleted,
         [isEditPhase, isReviewCompleted],
     )
 
@@ -209,6 +209,7 @@ const ReviewViewer: FC<ReviewViewerProps> = props => {
                 )}
                 {!isSubmitterPhaseLocked && (
                     <ScorecardViewer
+                        actionChallengeRole={actionChallengeRole}
                         scorecard={scorecardInfo as any}
                         reviewInfo={reviewInfo}
                         mappingAppeals={mappingAppeals}
