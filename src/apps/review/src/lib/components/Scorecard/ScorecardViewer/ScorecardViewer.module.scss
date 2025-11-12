@@ -50,10 +50,10 @@
     align-items: center;
     gap: 8px;
     padding: 12px;
-    background-color: #ffebee;
     color: #d32f2f;
     border-radius: 4px;
     font-size: 14px;
+    font-weight: bold;
 
     i {
         display: flex;
@@ -62,9 +62,9 @@
 }
 
 .errorTop {
-    margin-bottom: 16px;
+    margin-bottom: $sp-3;
 }
 
 .errorBottom {
-    margin-top: 16px;
+    margin-top: $sp-3;
 }

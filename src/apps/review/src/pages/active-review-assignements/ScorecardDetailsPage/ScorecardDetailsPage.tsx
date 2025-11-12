@@ -286,7 +286,7 @@ export const ScorecardDetailsPage: FC<Props> = (props: Props) => {
         scorecardInfo,
         submissionInfo,
         saveReviewInfo,
-    }: useFetchSubmissionReviewsProps = useFetchSubmissionReviews()
+    }: useFetchSubmissionReviewsProps = useFetchSubmissionReviews(reviewId)
 
     const isReviewCompleted = useMemo(
         () => {

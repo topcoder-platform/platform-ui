@@ -30,18 +30,6 @@ import { ScorecardScore } from '../../ScorecardScore'
 
 import styles from './ScorecardQuestionEdit.module.scss'
 
-const normalizeAnswerValue = (questionType: ScorecardQuestion['type'], value: string | number): number => {
-    if (['undefined', 'null'].includes(typeof value)) {
-        return Number(value);
-    }
-
-    if (questionType === 'YES_NO') {
-        return Number(`${value}`.toLowerCase() === 'yes')
-    }
-
-    return Number(`${value}`)
-}
-
 interface ScorecardQuestionEditProps {
     question: ScorecardQuestion
     reviewItem: ReviewItemInfo
@@ -101,21 +89,12 @@ export const ScorecardQuestionEdit: FC<ScorecardQuestionEditProps> = props => {
             name: `reviews.${props.fieldIndex}.comments` as 'reviews.0.comments',
         })
 
-    const errorMessage = useMemo(
-        () => {
-            if (touched[
-                `reviews.${props.fieldIndex}.initialAnswer.message`
-            ]) {
-                return _.get(
-                    errors,
-                    `reviews.${props.fieldIndex}.initialAnswer.message`,
-                )
-            }
-
-            return ''
-        },
-        [touched, errors, props.fieldIndex],
-    )
+    const errorMessage = touched[
+            `reviews.${props.fieldIndex}.initialAnswer.message`
+        ] ? _.get(
+            errors,
+            `reviews.${props.fieldIndex}.initialAnswer.message`,
+        ) : ''
 
     const initCommentContents = useMemo<{ [key: string]: string }>(() => {
         const results: { [key: string]: string } = {}
@@ -141,7 +120,8 @@ export const ScorecardQuestionEdit: FC<ScorecardQuestionEditProps> = props => {
                 : ''
         })
         return result
-    }, [touched, errors, props.fieldIndex, fields])
+    }, [touched, errors, errors?.reviews, props.fieldIndex, fields])
+console.log('here', initCommentContents, errorCommentsMessage);
 
     const hasErrors = !!errorMessage || !isEmpty(compact(Object.values(errorCommentsMessage)))
 
@@ -159,7 +139,7 @@ export const ScorecardQuestionEdit: FC<ScorecardQuestionEditProps> = props => {
     }
 
     return (
-        <div className={classNames(styles.wrap, hasErrors && styles.hasError)}>
+        <div className={styles.wrap}>
             <ScorecardQuestionRow
                 icon={(
                     <IconOutline.ChevronDownIcon
@@ -173,12 +153,6 @@ export const ScorecardQuestionEdit: FC<ScorecardQuestionEditProps> = props => {
                 <span className={styles.questionText}>
                     {props.question.description}
                 </span>
-
-                {errorMessage && (
-                    <div className={styles.errorMessage}>
-                        {errorMessage}
-                    </div>
-                )}
 
                 {isExpanded && (
                     <div className={styles.guidelines}>
@@ -209,10 +183,12 @@ export const ScorecardQuestionEdit: FC<ScorecardQuestionEditProps> = props => {
                                         weight={props.question.weight}
                                     />
                                 )}
+                                className={classNames(hasErrors && styles.hasError)}
                             >
                                 <div className={styles.answerWrap}>
                                     <Select
                                         className={classNames(
+                                            styles.answerInput,
                                             'react-select-container',
                                             errorMessage ? 'error' : '',
                                         )}
@@ -247,6 +223,12 @@ export const ScorecardQuestionEdit: FC<ScorecardQuestionEditProps> = props => {
                                         }}
                                         isDisabled={props.disabled}
                                     />
+
+                                    {errorMessage && (
+                                        <div className={styles.errorMessage}>
+                                            {errorMessage}
+                                        </div>
+                                    )}
                                 </div>
                             </ScorecardQuestionRow>
                         )
@@ -313,7 +295,7 @@ export const ScorecardQuestionEdit: FC<ScorecardQuestionEditProps> = props => {
                             }) {
                                 return (
                                     <FieldMarkdownEditor
-                                        className={styles.markdownEditor}
+                                        className={classNames(styles.markdownEditor, errorCommentsMessage[idx] && styles.editorError)}
                                         initialValue={
                                             initCommentContents[
                                                 `${idx}.content`

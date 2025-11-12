@@ -120,8 +120,8 @@ export const calculateProgressAndScore = (
                                 question.type === 'SCALE'
                                 && !!initialAnswer
                             ) {
-                                const totalPoint = question.scaleMax
-                                const initialAnswerNumber = parseInt(initialAnswer as string, 10)
+                                const totalPoint = question.scaleMax - question.scaleMin
+                                const initialAnswerNumber = parseInt(initialAnswer as string, 10) - question.scaleMin
                                 questionPoint = totalPoint > 0
                                     ? (initialAnswerNumber * 100) / totalPoint
                                     : 0

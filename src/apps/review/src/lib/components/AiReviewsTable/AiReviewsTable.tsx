@@ -145,7 +145,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                                 {run.status === 'SUCCESS' ? (
                                     run.workflow.scorecard ? (
                                         <a
-                                            href={`./ai-scorecard/${props.submission.id}/${run.workflow.id}`}
+                                            href={`./reviews/${props.submission.id}?workflowId=${run.workflow.id}`}
                                         >
                                             {run.score}
                                         </a>

@@ -59,6 +59,7 @@ export const useReviewForm = ({
                             ('finalAnswer' in reviewItem && reviewItem.finalAnswer)
                             || ('initialAnswer' in reviewItem && reviewItem.initialAnswer)
                             || ('questionScore' in reviewItem && reviewItem.questionScore)
+                            || undefined
                         ) as string,
                         scorecardQuestionId: reviewItem.scorecardQuestionId,
                     }),

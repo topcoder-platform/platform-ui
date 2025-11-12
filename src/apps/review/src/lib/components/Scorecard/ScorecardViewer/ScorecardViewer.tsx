@@ -100,13 +100,9 @@ const ScorecardViewerContent: FC<ScorecardViewerProps> = props => {
     const isDirty = form?.formState?.isDirty || false
     const errors = formErrors || {}
 
-    const errorMessageTop = isEmpty(errors) || isEmpty(isTouched)
+    const errorMessage = isEmpty(errors) || isEmpty(isTouched)
         ? ''
-        : 'There were validation errors. Check below.'
-
-    const errorMessageBottom = isEmpty(errors) || isEmpty(isTouched)
-        ? ''
-        : 'There were validation errors. Check above.'
+        : 'There were validation errors.'
 
     const onSubmit = useCallback(() => {
         if (props.saveReviewInfo) {
@@ -157,12 +153,12 @@ const ScorecardViewerContent: FC<ScorecardViewerProps> = props => {
 
     return (
         <div className={styles.wrap}>
-            {errorMessageTop && (
+            {errorMessage && (
                 <div className={classNames(styles.errorMessage, styles.errorTop)}>
                     <i>
                         <IconError />
                     </i>
-                    {errorMessageTop}
+                    {errorMessage} Check bellow.
                 </div>
             )}
 
@@ -216,12 +212,12 @@ const ScorecardViewerContent: FC<ScorecardViewerProps> = props => {
             {props.isEdit && (
                 <div className={styles.footer}>
                     <div>
-                        {errorMessageBottom && (
+                        {errorMessage && (
                             <div className={classNames(styles.errorMessage, styles.errorBottom)}>
                                 <i>
                                     <IconError />
                                 </i>
-                                {errorMessageBottom}
+                                {errorMessage} Check above.
                             </div>
                         )}
                     </div>

@@ -1213,7 +1213,7 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
 
             return (
                 <Link
-                    to={`./../review/${reviewId}`}
+                    to={`./../reviews/${data.id}?reviewId=${reviewId}`}
                     className={classNames(styles.submit, 'last-element')}
                 >
                     <i className='icon-upload' />
