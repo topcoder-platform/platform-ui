@@ -145,7 +145,7 @@ export const DefaultReviewersAddForm: FC<Props> = (props: Props) => {
                 value => value === undefined || value === null || value === '',
             )
 
-            if (!isMemberReview) {
+            if (isMemberReview) {
                 requestBody.memberReviewerCount = undefined
                 // Also clear fields when isMemberReview is false
                 requestBody.scorecardId = undefined
@@ -156,6 +156,7 @@ export const DefaultReviewersAddForm: FC<Props> = (props: Props) => {
             } else {
                 // eslint-disable-next-line unicorn/no-null
                 requestBody.aiWorkflowId = null
+                requestBody.isMemberReview = true
             }
 
             if (isEdit) {
@@ -190,7 +191,7 @@ export const DefaultReviewersAddForm: FC<Props> = (props: Props) => {
                 baseCoefficient: defaultReviewerInfo.baseCoefficient ?? 0,
                 fixedAmount: defaultReviewerInfo.fixedAmount ?? 0,
                 incrementalCoefficient: defaultReviewerInfo.incrementalCoefficient ?? 0,
-                isMemberReview: defaultReviewerInfo.isMemberReview,
+                isMemberReview: !defaultReviewerInfo.isMemberReview,
                 memberReviewerCount: defaultReviewerInfo.memberReviewerCount ?? 0,
                 opportunityType: defaultReviewerInfo.opportunityType ?? '',
                 phaseId: defaultReviewerInfo.phaseId ?? '',
@@ -318,7 +319,7 @@ export const DefaultReviewersAddForm: FC<Props> = (props: Props) => {
                     }}
                 />
                 {
-                    isMemberReview && (
+                    !isMemberReview && (
                         <Controller
                             name='scorecardId'
                             control={control}
@@ -379,7 +380,7 @@ export const DefaultReviewersAddForm: FC<Props> = (props: Props) => {
                             return (
                                 <InputCheckbox
                                     name='isMemberReview'
-                                    label='Is Member Review'
+                                    label='Is AI Review'
                                     onChange={function onChange(event: Event) {
                                         const target = event.target as HTMLInputElement | null
                                         controlProps.field.onChange(target?.checked ?? false)
@@ -391,7 +392,7 @@ export const DefaultReviewersAddForm: FC<Props> = (props: Props) => {
                         }}
                     />
                 </div>
-                {isMemberReview && (
+                {!isMemberReview && (
                     <InputText
                         type='number'
                         name='memberReviewerCount'
@@ -409,7 +410,7 @@ export const DefaultReviewersAddForm: FC<Props> = (props: Props) => {
                         classNameWrapper={styles.inputField}
                     />
                 )}
-                {isMemberReview && (
+                {!isMemberReview && (
                     <>
                         <InputText
                             type='number'
@@ -481,8 +482,8 @@ export const DefaultReviewersAddForm: FC<Props> = (props: Props) => {
                             name='opportunityType'
                             control={control}
                             render={function render(controlProps: {
-                                field: ControllerRenderProps<FormAddDefaultReviewer, 'opportunityType'>
-                            }) {
+                            field: ControllerRenderProps<FormAddDefaultReviewer, 'opportunityType'>
+                        }) {
                                 return (
                                     <InputSelectReact
                                         name='opportunityType'
@@ -504,7 +505,7 @@ export const DefaultReviewersAddForm: FC<Props> = (props: Props) => {
                 )}
 
                 {
-                    isMemberReview && (
+                    !isMemberReview && (
                         <div className={styles.inputField}>
                             <Controller
                                 name='shouldOpenOpportunity'
@@ -529,7 +530,7 @@ export const DefaultReviewersAddForm: FC<Props> = (props: Props) => {
                         </div>
                     )
                 }
-                {!isMemberReview && (
+                {isMemberReview && (
                     <Controller
                         name='aiWorkflowId'
                         control={control}
@@ -537,19 +538,19 @@ export const DefaultReviewersAddForm: FC<Props> = (props: Props) => {
                         field: ControllerRenderProps<FormAddDefaultReviewer, 'aiWorkflowId'>
                     }) {
                             return (
-                <InputSelectReact
-                    name='aiWorkflowId'
-                    label='AI Workflow'
-                    placeholder='Select AI Workflow'
-                    options={aiWorkflows}
-                    value={controlProps.field.value ?? ''}
-                    onChange={controlProps.field.onChange}
-                    onBlur={controlProps.field.onBlur}
-                    classNameWrapper={styles.inputField}
-                    disabled={isLoading}
-                    dirty
-                    error={_.get(errors, 'aiWorkflowId.message')}
-                />
+                                <InputSelectReact
+                                    name='aiWorkflowId'
+                                    label='AI Workflow'
+                                    placeholder='Select AI Workflow'
+                                    options={aiWorkflows}
+                                    value={controlProps.field.value ?? ''}
+                                    onChange={controlProps.field.onChange}
+                                    onBlur={controlProps.field.onBlur}
+                                    classNameWrapper={styles.inputField}
+                                    disabled={isLoading}
+                                    dirty
+                                    error={_.get(errors, 'aiWorkflowId.message')}
+                                />
                             )
                         }}
                     />
