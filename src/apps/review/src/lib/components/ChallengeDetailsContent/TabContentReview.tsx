@@ -55,10 +55,115 @@ interface Props {
     isActiveChallenge: boolean
 }
 
+const normalizeTabLabel = (value?: string): string => (
+    value
+        ? value
+            .toLowerCase()
+            .replace(/[^a-z]/g, '')
+        : ''
+)
+
+const parseScoreValue = (value: unknown): number | undefined => {
+    if (typeof value === 'number') {
+        return Number.isFinite(value) ? value : undefined
+    }
+
+    if (typeof value === 'string') {
+        const trimmed = value.trim()
+        if (!trimmed.length) {
+            return undefined
+        }
+
+        const parsed = Number.parseFloat(trimmed)
+        return Number.isFinite(parsed) ? parsed : undefined
+    }
+
+    return undefined
+}
+
+const resolveSubmissionReviewScore = (submission: SubmissionInfo): number | undefined => {
+    const reviewResultScores = Array.isArray(submission.reviews)
+        ? submission.reviews
+            .map(review => parseScoreValue(review?.score))
+            .filter((score): score is number => typeof score === 'number')
+        : []
+
+    if (reviewResultScores.length) {
+        const total = reviewResultScores.reduce((sum, score) => sum + score, 0)
+        return total / reviewResultScores.length
+    }
+
+    const aggregateScore = parseScoreValue(submission.aggregateScore)
+    if (aggregateScore !== undefined) {
+        return aggregateScore
+    }
+
+    const finalScore = parseScoreValue(submission.review?.finalScore)
+    if (finalScore !== undefined) {
+        return finalScore
+    }
+
+    const initialScore = parseScoreValue(submission.review?.initialScore)
+    if (initialScore !== undefined) {
+        return initialScore
+    }
+
+    return undefined
+}
+
+type SubmissionScoreEntry = {
+    index: number
+    score?: number
+    submission: SubmissionInfo
+}
+
+const sortSubmissionsByReviewScoreDesc = (rows: SubmissionInfo[]): SubmissionInfo[] => {
+    const entries: SubmissionScoreEntry[] = rows.map((submission, index) => ({
+        index,
+        score: resolveSubmissionReviewScore(submission),
+        submission,
+    }))
+
+    entries.sort((a: SubmissionScoreEntry, b: SubmissionScoreEntry) => {
+        const scoreA: number | undefined = a.score
+        const scoreB: number | undefined = b.score
+        const indexA: number = a.index
+        const indexB: number = b.index
+
+        if (scoreA === undefined && scoreB === undefined) {
+            return indexA - indexB
+        }
+
+        if (scoreA === undefined) {
+            return 1
+        }
+
+        if (scoreB === undefined) {
+            return -1
+        }
+
+        if (scoreB !== scoreA) {
+            return scoreB - scoreA
+        }
+
+        return indexA - indexB
+    })
+
+    return entries.map(entry => entry.submission)
+}
+
 export const TabContentReview: FC<Props> = (props: Props) => {
     const selectedTab = props.selectedTab
     const providedReviews = props.reviews
     const providedSubmitterReviews = props.submitterReviews
+    const normalizedSelectedTab = useMemo(
+        () => normalizeTabLabel(selectedTab),
+        [selectedTab],
+    )
+    const shouldSortReviewTabByScore = useMemo(
+        () => !props.isActiveChallenge && normalizedSelectedTab === 'review',
+        [normalizedSelectedTab, props.isActiveChallenge],
+    )
     const {
         challengeInfo,
         challengeSubmissions: backendChallengeSubmissions,
@@ -546,13 +651,27 @@ export const TabContentReview: FC<Props> = (props: Props) => {
         },
         [resolvedSubmitterReviews],
     )
+    const reviewerRowsForReviewTab = useMemo(
+        () => (shouldSortReviewTabByScore
+            ? sortSubmissionsByReviewScoreDesc(filteredReviews)
+            : filteredReviews),
+        [filteredReviews, shouldSortReviewTabByScore],
+    )
+    const submitterRowsForReviewTab = useMemo(
+        () => (shouldSortReviewTabByScore
+            ? sortSubmissionsByReviewScoreDesc(filteredSubmitterReviews)
+            : filteredSubmitterReviews),
+        [filteredSubmitterReviews, shouldSortReviewTabByScore],
+    )
     const hideHandleColumn = props.isActiveChallenge
         && actionChallengeRole === REVIEWER
 
     // show loading ui when fetching data
     const isSubmitterView = actionChallengeRole === SUBMITTER
         && selectedTab !== APPROVAL
-    const reviewRows = isSubmitterView ? filteredSubmitterReviews : filteredReviews
+    const reviewRows = isSubmitterView
+        ? (shouldSortReviewTabByScore ? submitterRowsForReviewTab : filteredSubmitterReviews)
+        : (shouldSortReviewTabByScore ? reviewerRowsForReviewTab : filteredReviews)
 
     if (props.isLoadingReview) {
         return <TableLoading />
@@ -596,14 +715,14 @@ export const TabContentReview: FC<Props> = (props: Props) => {
 
     return isSubmitterView ? (
         <TableReviewForSubmitter
-            datas={filteredSubmitterReviews}
+            datas={reviewRows}
             isDownloading={props.isDownloading}
             downloadSubmission={props.downloadSubmission}
             mappingReviewAppeal={props.mappingReviewAppeal}
         />
     ) : (
         <TableReview
-            datas={filteredReviews}
+            datas={reviewRows}
             isDownloading={props.isDownloading}
             downloadSubmission={props.downloadSubmission}
             mappingReviewAppeal={props.mappingReviewAppeal}

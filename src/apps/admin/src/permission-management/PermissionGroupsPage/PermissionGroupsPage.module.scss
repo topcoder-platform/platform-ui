@@ -19,10 +19,29 @@
     text-align: center;
 }
 
-.btnNewGroup {
-    margin: $sp-8 $sp-8 $sp-4 $sp-8;
+.actions {
+    display: flex;
+    align-items: flex-end;
+    gap: $sp-4;
+    margin: $sp-8 $sp-8 $sp-4;
 
     @include ltelg {
+        flex-direction: column;
+        align-items: stretch;
         margin: $sp-4;
+        gap: $sp-3;
+    }
+}
+
+.searchField {
+    flex: 1;
+}
+
+.btnNewGroup {
+    margin: 0;
+    min-width: max-content;
+
+    @include ltelg {
+        width: 100%;
     }
 }
