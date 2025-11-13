@@ -91,7 +91,7 @@ export async function exportSearchResults(filters: Record<string, string[]>): Pr
     }
 
     if (filters.winnerIds && filters.winnerIds.length > 0) {
-        payload.winnerIds = filters.winnerIds
+        payload.winnerIds = filters.winnerIds.map(id => id.toString())
     }
 
     const body = JSON.stringify(payload)
