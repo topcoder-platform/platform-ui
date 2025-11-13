@@ -20,17 +20,27 @@ export const formSearchDefaultReviewersSchema: Yup.ObjectSchema<FormSearchDefaul
 
 export const formAddDefaultReviewerSchema: Yup.ObjectSchema<FormAddDefaultReviewer>
     = Yup.object({
+        aiWorkflowId: Yup.string()
+            .optional(),
         baseCoefficient: Yup.number()
             .optional()
-            .min(0, 'Must be non-negative'),
+            .min(0, 'Must be non-negative')
+            .transform((value, originalValue) => {
+                if (typeof originalValue === 'string') {
+                    // Replace comma with dot for decimal separator
+                    const normalized = originalValue.replace(',', '.')
+                    return parseFloat(normalized)
+                }
+
+                return value
+            })
+            .typeError('Please enter a valid number'),
         fixedAmount: Yup.number()
             .optional()
             .min(0, 'Must be non-negative'),
         incrementalCoefficient: Yup.number()
             .optional()
             .min(0, 'Must be non-negative'),
-        isAIReviewer: Yup.boolean()
-            .required(),
         isMemberReview: Yup.boolean()
             .required(),
         memberReviewerCount: Yup.number()
