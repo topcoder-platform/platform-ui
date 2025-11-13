@@ -13,6 +13,7 @@ import { TableLoading } from '~/apps/admin/src/lib'
 import { handleError } from '~/apps/admin/src/lib/utils'
 import { EnvironmentConfig } from '~/config'
 import { BaseModal, Button, InputCheckbox, InputDatePicker, InputText } from '~/libs/ui'
+import { NotificationContextType, useNotification } from '~/libs/shared'
 
 import {
     useFetchScreeningReview,
@@ -232,6 +233,7 @@ const isIterativeReviewPhaseName = (name?: string): boolean => (name || '')
 
 // eslint-disable-next-line complexity
 export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
+    const { showBannerNotification, removeNotification }: NotificationContextType = useNotification()
     const [searchParams, setSearchParams] = useSearchParams()
     const location = useLocation()
     const navigate = useNavigate()
@@ -1729,6 +1731,16 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         ? formatChallengeStatusLabel(challengeInfo?.status)
         : undefined
     const shouldShowChallengeMetaRow = Boolean(statusLabel) || trackTypePills.length > 0
+
+    useEffect(() => {
+        const notification = showBannerNotification({
+            id: 'ai-review-scores-warning',
+            message: `AI Review Scores are advisory only to provide immediate,
+                educational, and actionable feedback to members.
+                AI Review Scores do not influence winner selection.`,
+        })
+        return () => notification && removeNotification(notification.id)
+    }, [showBannerNotification])
 
     return (
         <PageWrapper

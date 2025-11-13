@@ -1,7 +1,7 @@
 import { FC, ReactNode } from 'react'
 
 import { authUrlLogout, ProfileProvider } from '~/libs/core'
-import { ConfigContextProvider } from '~/libs/shared'
+import { ConfigContextProvider, NotificationProvider } from '~/libs/shared'
 
 import { PlatformRouterProvider } from './platform-router.provider'
 
@@ -13,7 +13,9 @@ const Providers: FC<ProvidersProps> = props => (
     <ConfigContextProvider logoutUrl={authUrlLogout}>
         <ProfileProvider>
             <PlatformRouterProvider>
-                {props.children}
+                <NotificationProvider>
+                    {props.children}
+                </NotificationProvider>
             </PlatformRouterProvider>
         </ProfileProvider>
     </ConfigContextProvider>

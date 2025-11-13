@@ -1,0 +1,70 @@
+@import '@libs/ui/styles/includes';
+
+.wrap {
+}
+
+.headerBar {
+    display: flex;
+    align-items: center;
+    gap: $sp-4;
+
+    background: #00797A;
+    padding: $sp-4;
+
+    font-family: "Nunito Sans", sans-serif;
+    font-weight: bold;
+    font-size: 16px;
+    line-height: 22px;
+    color: #FFFFFF;
+
+    cursor: pointer;
+    transition: 0.15s ease-in-out;
+
+    &:hover {
+        background: darken(#00797A, 1.5%);
+    }
+
+    &:active {
+        transition: none;
+        background: darken(#00797A, 3%);
+    }
+
+    &.toggled {
+        .toggleBtn {
+            svg {
+                transform: rotate(180deg);
+            }
+        }
+    }
+
+    @include ltemd {
+        flex-wrap: wrap;
+        row-gap: $sp-2;
+
+        .score {
+            order: 7;
+            width: 100%;
+            margin-left: $sp-10;
+        }
+    }
+}
+
+.index {
+    width: 24px;
+}
+
+.mx {
+    margin: 0 auto;
+}
+
+.toggleBtn {
+    cursor: pointer;
+    width: 24px;
+
+    svg {
+        display: block;
+        width: 16px;
+        height: 16px;
+        transition: 0.15s ease-in-out;
+    }
+}

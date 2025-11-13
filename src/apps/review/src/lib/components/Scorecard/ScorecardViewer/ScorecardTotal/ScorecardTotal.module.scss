@@ -1,0 +1,20 @@
+@import '@libs/ui/styles/includes';
+
+.wrap {
+    display: flex;
+    align-items: center;
+    gap: $sp-6;
+
+    padding: $sp-4 56px;
+    background: #E9ECEF;
+
+    font-family: "Nunito Sans", sans-serif;
+    font-weight: bold;
+    font-size: 16px;
+    line-height: 22px;
+    color: #0A0A0A;
+}
+
+.mx {
+    margin: 0 auto;
+}
