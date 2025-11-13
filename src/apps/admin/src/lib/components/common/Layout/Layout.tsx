@@ -24,6 +24,7 @@ export type LayoutProps = PropsWithChildren<{
 
 export const Layout: FC<LayoutProps> = props => (
     <ContentLayout
+        isFluid
         contentClass={cn(styles.contentLayout, props.classes?.contentClass)}
         innerClass={cn(styles.contentLayoutInner, props.classes?.innerClass)}
         outerClass={cn(styles.contentLayoutOuter, props.classes?.outerClass)}
