@@ -46,10 +46,11 @@ export interface Submission {
     provisionalRank?: number // this field is calculated at frontend
     finalRank?: number // this field is calculated at frontend
     hideToggleHistory?: boolean // this field is calculated at frontend
-  isTheLatestSubmission?: boolean // this field is calculated at frontend
-  // Enriched fields from API (Admin/Copilot/M2M only)
-  submitterHandle?: string
-  submitterMaxRating?: number | null
+    virusScan?: boolean
+    isTheLatestSubmission?: boolean // this field is calculated at frontend
+    // Enriched fields from API (Admin/Copilot/M2M only)
+    submitterHandle?: string
+    submitterMaxRating?: number | null
 }
 
 /**

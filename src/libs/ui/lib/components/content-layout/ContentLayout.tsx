@@ -15,14 +15,29 @@ export interface ContentLayoutProps {
     title?: string
     titleClass?: string
     infoComponent?: ReactNode
+    isFluid?: boolean
 }
 
 const ContentLayout: FC<ContentLayoutProps> = (props: ContentLayoutProps) => (
-    <div className={classNames(styles.content, props.contentClass)}>
+    <div
+        className={classNames(
+            styles.content,
+            props.contentClass,
+            { [styles.isFluid]: props.isFluid },
+        )}
+    >
 
-        <div className={classNames(styles['content-outer'], props.outerClass)}>
+        <div className={classNames(
+            styles['content-outer'],
+            props.outerClass,
+        )}
+        >
 
-            <div className={classNames(styles['content-inner'], props.innerClass)}>
+            <div className={classNames(
+                styles['content-inner'],
+                props.innerClass,
+            )}
+            >
 
                 {!!props.title && (
                     <div className={classNames(styles['page-header'], props.titleClass)}>
