@@ -5,8 +5,8 @@
     margin-top: $sp-4;
 
     .inner {
-        max-width: $xl-max;
-        margin: 0 auto;
+        width: 100%;
+        margin: 0;
         background-color: $tc-white;
         border-radius: 8px;
     }

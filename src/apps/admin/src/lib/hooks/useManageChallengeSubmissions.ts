@@ -63,8 +63,11 @@ export function useManageChallengeSubmissions(
                     index++
                 ) {
                     const submission = memberSubmission.submissions[index]
-                    submission.hideToggleHistory = true
-                    results.push(submission)
+                    results.push({
+                        ...submission,
+                        hideToggleHistory: true,
+                        isTheLatestSubmission: false,
+                    })
                 }
             }
         })

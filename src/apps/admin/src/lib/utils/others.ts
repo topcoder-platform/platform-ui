@@ -35,17 +35,16 @@ export function validateS3URI(
 ): ValidateS3URIResult {
     try {
         const { region, bucket, key }: AmazonS3URI = AmazonS3URI(fileURL)
-        if (
-            region !== EnvironmentConfig.ADMIN.AWS_REGION
-            || bucket !== EnvironmentConfig.ADMIN.AWS_DMZ_BUCKET
-        ) {
-            return { isValid: false }
-        }
+        const parsedBucket = bucket ?? undefined
+        const parsedKey = key ?? undefined
+        const isValid = Boolean(parsedBucket)
+            && region === EnvironmentConfig.ADMIN.AWS_REGION
+            && parsedBucket === EnvironmentConfig.ADMIN.AWS_DMZ_BUCKET
 
         return {
-            bucket: bucket ?? undefined,
-            isValid: true,
-            key: key ?? undefined,
+            bucket: parsedBucket,
+            isValid,
+            key: parsedKey,
         }
     } catch (error) {}
 
