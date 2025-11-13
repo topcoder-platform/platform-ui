@@ -18,15 +18,14 @@ interface ScorecardGroupProps {
 }
 
 const ScorecardGroup: FC<ScorecardGroupProps> = props => {
-    const { scoreMap }: ScorecardViewerContextValue = useScorecardViewerContext()
-    const { toggleItem, toggledItems }: ScorecardViewerContextValue = useScorecardViewerContext()
+    const { scoreMap, toggleItem, toggledItems }: ScorecardViewerContextValue = useScorecardViewerContext()
 
-    const isVissible = !toggledItems[props.group.id]
+    const isVisible = !toggledItems[props.group.id]
     const toggle = useCallback(() => toggleItem(props.group.id), [props.group, toggleItem])
 
     return (
         <div className={styles.wrap}>
-            <div className={classNames(styles.headerBar, isVissible && styles.toggled)} onClick={toggle}>
+            <div className={classNames(styles.headerBar, isVisible && styles.toggled)} onClick={toggle}>
                 <span className={styles.index}>
                     {props.index}
                     .
@@ -46,7 +45,7 @@ const ScorecardGroup: FC<ScorecardGroupProps> = props => {
                 </span>
             </div>
 
-            {isVissible && props.group.sections.map((section, index) => (
+            {isVisible && props.group.sections.map((section, index) => (
                 <ScorecardSection
                     key={section.id}
                     section={section}
