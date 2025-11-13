@@ -35,7 +35,6 @@ const AiReviewViewer: FC = () => {
                 <ScorecardViewer
                     scorecard={scorecard}
                     aiFeedback={runItems}
-                    score={workflowRun?.score}
                 />
             )}
 

@@ -34,7 +34,6 @@ import styles from './ScorecardViewer.module.scss'
 interface ScorecardViewerProps {
     scorecard: Scorecard | ScorecardInfo
     aiFeedback?: AiFeedbackItem[]
-    score?: number
     reviewInfo?: ReviewInfo
     isEdit?: boolean
     isManagerEdit?: boolean
@@ -185,11 +184,12 @@ const ScorecardViewerContent: FC<ScorecardViewerProps> = props => {
                 </div>
             )}
 
-            {!!props.score && !props.reviewInfo && (
+            {totalScore && !!props.aiFeedback && (
                 <div className={styles.conclusion}>
                     <strong>Conclusion</strong>
                     <p>
-                        Congratulations! You earned a score of
+                        {(totalScore > (props.scorecard.minimumPassingScore ?? 0)) && 'Congratulations!'}
+                        You earned a score of
                         {' '}
                         <strong>
                             {totalScore.toFixed(2)}
@@ -201,7 +201,9 @@ const ScorecardViewerContent: FC<ScorecardViewerProps> = props => {
                             {(props.scorecard as Scorecard).maxScore?.toFixed(2)}
                         </strong>
                         .
-                        You did a good job on passing the scorecard criteria.
+                        {(totalScore > (props.scorecard.minimumPassingScore ?? 0))
+                            ? 'You did a good job on passing the scorecard criteria.'
+                            : 'You did not pass the scorecard criteria.'}
                         Please check the below sections to see if there is any place for improvement.
                     </p>
                 </div>
