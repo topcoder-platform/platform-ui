@@ -69,7 +69,10 @@ const useRole = (): useRoleProps => {
             return ''
         }
 
-        const normalizedRoles = myRoles.map(role => role.toLowerCase())
+        const normalizedRoles = [
+            ...myRoles.map(role => role.toLowerCase()),
+            ...(isTopcoderAdmin ? ['admin'] : []),
+        ]
         const rolePriority: ChallengeRole[] = [
             'Admin',
             'Manager',
