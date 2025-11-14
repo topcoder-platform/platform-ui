@@ -1502,6 +1502,25 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
                 reviewEntries: reviewsToRender,
             })
 
+            const hasCheckpointReview = rowsForSubmission.some(row => Boolean(row.reviewId))
+            const submissionStatus = (item.status ?? '')
+                .toString()
+                .trim()
+                .toUpperCase()
+            const failedCheckpointScreening = submissionStatus === 'FAILED_CHECKPOINT_SCREENING'
+
+            if (failedCheckpointScreening && !hasCheckpointReview) {
+                if (debugCheckpointPhases) {
+                    debugLog('checkpointReview.skipSubmission', {
+                        reason: 'failedCheckpointScreeningWithoutReview',
+                        submissionId: item.id,
+                        submissionStatus,
+                    })
+                }
+
+                return rows
+            }
+
             rows.push(...rowsForSubmission)
 
             return rows
