@@ -31,7 +31,7 @@ export interface FormAddDefaultReviewer {
   typeId: string;
   trackId: string;
   timelineTemplateId?: string;
-  scorecardId: string;
+  scorecardId?: string;
   isMemberReview: boolean;
   memberReviewerCount?: number;
   phaseName: string;
