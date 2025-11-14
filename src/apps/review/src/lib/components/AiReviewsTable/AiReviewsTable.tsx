@@ -1,4 +1,4 @@
-import { FC, useMemo } from 'react'
+import { FC, MouseEvent as ReactMouseEvent, useMemo } from 'react'
 import moment from 'moment'
 
 import { useWindowSize, WindowSize } from '~/libs/shared'
@@ -20,6 +20,10 @@ import styles from './AiReviewsTable.module.scss'
 interface AiReviewsTableProps {
     submission: Pick<BackendSubmission, 'id'|'virusScan'>
     reviewers: { aiWorkflowId: string }[]
+}
+
+const stopPropagation = (ev: ReactMouseEvent<HTMLDivElement, MouseEvent>): void => {
+    ev.stopPropagation()
 }
 
 const AiReviewsTable: FC<AiReviewsTableProps> = props => {
@@ -102,7 +106,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
     }
 
     return (
-        <div className={styles.wrap}>
+        <div className={styles.wrap} onClick={stopPropagation}>
             <table className={styles.reviewsTable}>
                 <thead>
                     <tr>
@@ -145,7 +149,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                                 {run.status === 'SUCCESS' ? (
                                     run.workflow.scorecard ? (
                                         <a
-                                            href={`./ai-scorecard/${props.submission.id}/${run.workflow.id}`}
+                                            href={`./reviews/${props.submission.id}?workflowId=${run.workflow.id}`}
                                         >
                                             {run.score}
                                         </a>

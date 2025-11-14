@@ -77,7 +77,6 @@ export function useFetchAiWorkflowsRuns(
     workflowIds: string[],
 ): AiWorkflowRunsResponse {
     const { isAdmin }: UseRolePermissionsResult = useRolePermissions()
-
     // Use swr hooks for challenge info fetching
     const {
         data: runs = [],
@@ -112,7 +111,7 @@ export function useFetchAiWorkflowsRuns(
 }
 
 export function useFetchAiWorkflowsRunItems(
-    workflowId: string,
+    workflowId: string | undefined,
     runId: string | undefined,
 ): AiWorkflowRunItemsResponse {
     // Use swr hooks for challenge info fetching

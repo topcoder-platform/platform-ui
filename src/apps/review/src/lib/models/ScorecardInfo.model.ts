@@ -8,6 +8,7 @@ import { adjustScorecardGroup, ScorecardGroup } from './ScorecardGroup.model'
 export interface ScorecardInfo {
     id: string
     name: string
+    minimumPassingScore?: number
     scorecardGroups: ScorecardGroup[]
 }
 

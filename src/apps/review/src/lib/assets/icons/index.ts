@@ -5,13 +5,15 @@ import { ReactComponent as IconError } from './icon-error.svg'
 import { ReactComponent as IconAiReview } from './icon-ai-review.svg'
 import { ReactComponent as IconSubmission } from './icon-phase-submission.svg'
 import { ReactComponent as IconRegistration } from './icon-phase-registration.svg'
-import { ReactComponent as IconReview } from './icon-phase-review.svg'
+import { ReactComponent as IconPhaseReview } from './icon-phase-review.svg'
 import { ReactComponent as IconAppeal } from './icon-phase-appeal.svg'
 import { ReactComponent as IconAppealResponse } from './icon-phase-appeal-response.svg'
 import { ReactComponent as IconPhaseWinners } from './icon-phase-winners.svg'
 import { ReactComponent as IconDeepseekAi } from './deepseek.svg'
 import { ReactComponent as IconClock } from './icon-clock.svg'
 import { ReactComponent as IconPremium } from './icon-premium.svg'
+import { ReactComponent as IconComment } from './icon-comment.svg'
+import { ReactComponent as IconEdit } from './icon-edit.svg'
 
 export * from './editor/bold'
 export * from './editor/code'
@@ -36,20 +38,22 @@ export {
     IconError,
     IconAiReview,
     IconSubmission,
-    IconReview,
+    IconPhaseReview,
     IconAppeal,
     IconAppealResponse,
     IconPhaseWinners,
     IconDeepseekAi,
     IconClock,
     IconPremium,
+    IconComment,
+    IconEdit,
 }
 
 export const phasesIcons = {
     appeal: IconAppeal,
     appealResponse: IconAppealResponse,
-    'iterative review': IconReview,
+    'iterative review': IconPhaseReview,
     registration: IconRegistration,
-    review: IconReview,
+    review: IconPhaseReview,
     submission: IconSubmission,
 }

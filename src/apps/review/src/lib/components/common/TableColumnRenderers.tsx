@@ -585,7 +585,7 @@ export function renderScoreCell(
         )
     }
 
-    const reviewUrl = getReviewUrl ? getReviewUrl(reviewId) : getReviewRoute(reviewId)
+    const reviewUrl = getReviewUrl ? getReviewUrl(reviewId) : getReviewRoute(submission.id, reviewId)
 
     return (
         <div className={styles.scoreReopenBlock}>
@@ -668,7 +668,7 @@ export function renderAppealsCell(
         )
     }
 
-    const reviewUrl = getReviewUrl ? getReviewUrl(reviewId) : getReviewRoute(reviewId)
+    const reviewUrl = getReviewUrl ? getReviewUrl(reviewId) : getReviewRoute(submission.id, reviewId)
 
     return (
         <Link

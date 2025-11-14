@@ -437,7 +437,7 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
                 return (
                     <Link
                         key='complete-review'
-                        to={`./../review/${reviewId}`}
+                        to={`./../reviews/${submission.id}?reviewId=${reviewId}`}
                         className={styles.submit}
                     >
                         <i className='icon-upload' />

@@ -1,25 +1,21 @@
-import { FC, useMemo } from 'react'
+import { FC } from 'react'
 
 import { ScorecardSection as ScorecardSectionModel } from '../../../../models'
 import { ScorecardQuestion } from '../ScorecardQuestion'
 import { ScorecardScore } from '../ScorecardScore'
-import { ScorecardViewerContextValue, useScorecardContext } from '../ScorecardViewer.context'
-import { calcSectionScore } from '../utils'
+import { ScorecardViewerContextValue, useScorecardViewerContext } from '../ScorecardViewer.context'
+import { createReviewItemMapping } from '../utils'
 
 import styles from './ScorecardSection.module.scss'
 
 interface ScorecardSectionProps {
     index: string
     section: ScorecardSectionModel
+    reviewItemMapping?: ReturnType<typeof createReviewItemMapping>
 }
 
 const ScorecardSection: FC<ScorecardSectionProps> = props => {
-    const { aiFeedbackItems }: ScorecardViewerContextValue = useScorecardContext()
-    const allFeedbackItems = aiFeedbackItems || []
-
-    const score = useMemo(() => (
-        calcSectionScore(props.section, allFeedbackItems)
-    ), [props.section, allFeedbackItems])
+    const { scoreMap }: ScorecardViewerContextValue = useScorecardViewerContext()
 
     return (
         <div className={styles.wrap}>
@@ -34,8 +30,7 @@ const ScorecardSection: FC<ScorecardSectionProps> = props => {
                 <span className={styles.mx} />
                 <span className={styles.score}>
                     <ScorecardScore
-                        score={score}
-                        scaleMax={1}
+                        score={scoreMap.get(props.section.id as string) ?? 0}
                         weight={props.section.weight}
                     />
                 </span>
@@ -46,6 +41,7 @@ const ScorecardSection: FC<ScorecardSectionProps> = props => {
                     key={question.id}
                     index={[props.index, index + 1].join('.')}
                     question={question}
+                    reviewItemMapping={props.reviewItemMapping}
                 />
             ))}
         </div>

@@ -608,7 +608,7 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
                             key: `complete-${data.myReviewId}`,
                             render: isLast => (
                                 <Link
-                                    to={`./../review/${data.myReviewId}`}
+                                    to={`./../reviews/${data.submissionId}?reviewId=${data.myReviewId}`}
                                     className={classNames(styles.submit, { 'last-element': isLast })}
                                 >
                                     <i className='icon-upload' />

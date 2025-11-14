@@ -465,7 +465,7 @@ export const TableAppealsResponse: FC<TableAppealsResponseProps> = (props: Table
                                 >
                                     <Link
                                         className={styles.respondButton}
-                                        to={getReviewRoute(reviewId)}
+                                        to={getReviewRoute(submission.id, reviewId)}
                                     >
                                         Respond to Appeals
                                     </Link>

@@ -6,7 +6,7 @@ import styles from './ScorecardQuestionRow.module.scss'
 interface ScorecardQuestionRowProps extends PropsWithChildren {
     className?: string
     icon?: ReactNode
-    index?: string
+    index?: ReactNode
     score?: ReactNode
 }
 

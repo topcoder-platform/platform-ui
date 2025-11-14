@@ -32,8 +32,8 @@ import { BreadCrumbData, ChallengeDetailContextModel } from '../../../lib/models
 import { SubmissionBarInfo } from '../../../lib/components/SubmissionBarInfo'
 import { ChallengeLinksForAdmin } from '../../../lib/components/ChallengeLinksForAdmin'
 import { ADMIN, COPILOT, MANAGER } from '../../../config/index.config'
-import { useIsEditReview, useIsEditReviewProps } from '../../../lib/hooks/useIsEditReview'
 import { activeReviewAssignmentsRouteId, rootRoute } from '../../../config/routes.config'
+import { useIsEditReview, useIsEditReviewProps } from '../../../lib/hooks/useIsEditReview'
 
 import styles from './ScorecardDetailsPage.module.scss'
 
@@ -285,7 +285,7 @@ export const ScorecardDetailsPage: FC<Props> = (props: Props) => {
         scorecardInfo,
         submissionInfo,
         saveReviewInfo,
-    }: useFetchSubmissionReviewsProps = useFetchSubmissionReviews()
+    }: useFetchSubmissionReviewsProps = useFetchSubmissionReviews(reviewId)
 
     const isReviewCompleted = useMemo(
         () => {

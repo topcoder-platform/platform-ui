@@ -1,11 +1,11 @@
 import { FC, useCallback, useMemo, useState } from 'react'
 import moment, { Duration } from 'moment'
 
-import { AiScorecardContextModel } from '~/apps/review/src/lib/models'
+import { ReviewsContextModel } from '~/apps/review/src/lib/models'
 
-import { useAiScorecardContext } from '../../AiScorecardContext'
 import { IconClock, IconPremium } from '../../../../lib/assets/icons'
 import { AiModelModal } from '../AiModelModal'
+import { useReviewsContext } from '../../ReviewsContext'
 import AiModelIcon from '../AiModelIcon'
 
 import styles from './ScorecardHeader.module.scss'
@@ -18,7 +18,7 @@ const formatDuration = (duration: Duration): string => [
     .join(' ')
 
 const ScorecardHeader: FC = () => {
-    const { workflow, workflowRun }: AiScorecardContextModel = useAiScorecardContext()
+    const { workflow, workflowRun }: ReviewsContextModel = useReviewsContext()
     const runDuration = useMemo(() => (
         workflowRun && workflowRun.completedAt && workflowRun.startedAt && moment.duration(
             +new Date(workflowRun.completedAt) - +new Date(workflowRun.startedAt),
