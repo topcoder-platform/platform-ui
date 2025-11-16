@@ -1,9 +1,13 @@
-import { FC, useState } from 'react'
+import { FC, useMemo, useState } from 'react'
 
 import { Tabs } from '~/apps/review/src/lib'
 import { ScorecardViewer } from '~/apps/review/src/lib/components/Scorecard'
 import { ScorecardAttachments } from '~/apps/review/src/lib/components/Scorecard/ScorecardAttachments'
-import { AiWorkflowRunItemsResponse, AiWorkflowRunStatusEnum, useFetchAiWorkflowsRunItems } from '~/apps/review/src/lib/hooks'
+import {
+    AiWorkflowRunItemsResponse,
+    AiWorkflowRunStatusEnum,
+    useFetchAiWorkflowsRunItems,
+} from '~/apps/review/src/lib/hooks'
 import { ReviewsContextModel, SelectOption } from '~/apps/review/src/lib/models'
 
 import { ScorecardHeader } from '../ScorecardHeader'
@@ -20,6 +24,12 @@ const AiReviewViewer: FC = () => {
     const { scorecard, workflowId, workflowRun }: ReviewsContextModel = useReviewsContext()
     const [selectedTab, setSelectedTab] = useState('scorecard')
     const { runItems }: AiWorkflowRunItemsResponse = useFetchAiWorkflowsRunItems(workflowId, workflowRun?.id)
+    const isFailedRun = useMemo(() => (
+        workflowRun && [
+            AiWorkflowRunStatusEnum.CANCELLED,
+            AiWorkflowRunStatusEnum.FAILURE,
+        ].includes(workflowRun.status)
+    ), [workflowRun])
 
     return (
         <div className={styles.wrap}>
@@ -32,7 +42,7 @@ const AiReviewViewer: FC = () => {
                 onChange={setSelectedTab}
             />
 
-            {workflowRun && [AiWorkflowRunStatusEnum.CANCELLED, AiWorkflowRunStatusEnum.FAILURE].includes(workflowRun.status) ? (
+            {isFailedRun ? (
                 <div>
                     AI run failed - no scorecard results are available
                 </div>

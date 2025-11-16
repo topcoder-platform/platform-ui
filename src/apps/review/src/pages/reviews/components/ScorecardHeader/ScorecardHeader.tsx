@@ -73,7 +73,7 @@ const ScorecardHeader: FC = () => {
                                 <strong>Git log:</strong>
                                 {' '}
                                 {workflowRun.gitRunUrl && (
-                                    <a href={workflowRun.gitRunUrl} target='_blank'>
+                                    <a href={workflowRun.gitRunUrl} target='_blank' rel='noreferrer'>
                                         #
                                         {workflowRun.gitRunId}
                                     </a>

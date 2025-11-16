@@ -1,7 +1,6 @@
 import { FC, useMemo } from 'react'
 import { useLocation } from 'react-router-dom'
 
-
 import { PageWrapper } from '../../../lib'
 import { BreadCrumbData, ReviewsContextModel } from '../../../lib/models'
 import { ReviewsSidebar } from '../components/ReviewsSidebar'

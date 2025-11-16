@@ -209,7 +209,6 @@ const ScorecardViewerContent: FC<ScorecardViewerProps> = props => {
                 </div>
             )}
 
-
             <ContainerTag
                 className={styles.formContainer}
                 {...((props.isEdit && form) ? { onSubmit: form.handleSubmit(onSubmit) ?? undefined } : {})}

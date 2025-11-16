@@ -47,8 +47,8 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                 description: '',
                 name: 'Virus Scan',
                 scorecard: {
-                    minimumPassingScore: 1
-                }
+                    minimumPassingScore: 1,
+                },
             },
         } as AiWorkflowRun,
     ], [runs, props.submission])
