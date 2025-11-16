@@ -41,7 +41,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
         {
             completedAt: (props.submission as BackendSubmission).submittedDate,
             id: '-1',
-            score: props.submission.virusScan === true ? 0 : 0,
+            score: props.submission.virusScan === true ? 100 : 0,
             status: AiWorkflowRunStatusEnum.SUCCESS,
             workflow: {
                 description: '',
