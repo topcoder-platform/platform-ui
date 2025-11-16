@@ -97,6 +97,15 @@
         color: var(--FontColor);
     }
 
+    svg {
+        &.sm {
+            height: 16px;
+        }
+        path {
+            fill: #0A0A0A;
+        }
+    }
+
     @include ltemd {
         margin-left: 0;
     }

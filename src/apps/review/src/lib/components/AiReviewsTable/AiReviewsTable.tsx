@@ -41,11 +41,14 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
         {
             completedAt: (props.submission as BackendSubmission).submittedDate,
             id: '-1',
-            score: props.submission.virusScan === true ? 100 : 0,
+            score: props.submission.virusScan === true ? 0 : 0,
             status: AiWorkflowRunStatusEnum.SUCCESS,
             workflow: {
                 description: '',
                 name: 'Virus Scan',
+                scorecard: {
+                    minimumPassingScore: 1
+                }
             },
         } as AiWorkflowRun,
     ], [runs, props.submission])
@@ -112,7 +115,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                     <tr>
                         <th>AI Reviewer</th>
                         <th>Review Date</th>
-                        <th>Score</th>
+                        <th className={styles.scoreCol}>Score</th>
                         <th>Result</th>
                     </tr>
                 </thead>
@@ -147,7 +150,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                             </td>
                             <td className={styles.scoreCol}>
                                 {run.status === 'SUCCESS' ? (
-                                    run.workflow.scorecard ? (
+                                    run.workflow.id ? (
                                         <a
                                             href={`./reviews/${props.submission.id}?workflowId=${run.workflow.id}`}
                                         >

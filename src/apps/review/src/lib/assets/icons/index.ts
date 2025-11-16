@@ -14,6 +14,7 @@ import { ReactComponent as IconClock } from './icon-clock.svg'
 import { ReactComponent as IconPremium } from './icon-premium.svg'
 import { ReactComponent as IconComment } from './icon-comment.svg'
 import { ReactComponent as IconEdit } from './icon-edit.svg'
+import { ReactComponent as IconFile } from './icon-file.svg'
 
 export * from './editor/bold'
 export * from './editor/code'
@@ -47,6 +48,7 @@ export {
     IconPremium,
     IconComment,
     IconEdit,
+    IconFile,
 }
 
 export const phasesIcons = {

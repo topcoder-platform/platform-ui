@@ -7,8 +7,6 @@ import { handleError } from '~/libs/shared/lib/utils/handle-error'
 
 import { AiFeedbackItem, Scorecard } from '../models'
 
-import { useRolePermissions, UseRolePermissionsResult } from './useRolePermissions'
-
 export enum AiWorkflowRunStatusEnum {
     INIT = 'INIT',
     QUEUED = 'QUEUED',
@@ -42,6 +40,8 @@ export interface AiWorkflowRun {
     startedAt: string;
     completedAt: string;
     status: AiWorkflowRunStatusEnum;
+    gitRunId?: string;
+    gitRunUrl?: string;
     score: number;
     workflow: AiWorkflow
 }
@@ -76,7 +76,6 @@ export function useFetchAiWorkflowsRuns(
     submissionId: string,
     workflowIds: string[],
 ): AiWorkflowRunsResponse {
-    const { isAdmin }: UseRolePermissionsResult = useRolePermissions()
     // Use swr hooks for challenge info fetching
     const {
         data: runs = [],
@@ -106,7 +105,7 @@ export function useFetchAiWorkflowsRuns(
 
     return {
         isLoading,
-        runs: runs.filter(r => isAdmin || !aiRunFailed(r)),
+        runs,
     }
 }
 

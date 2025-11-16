@@ -3,7 +3,7 @@ import { FC, useState } from 'react'
 import { Tabs } from '~/apps/review/src/lib'
 import { ScorecardViewer } from '~/apps/review/src/lib/components/Scorecard'
 import { ScorecardAttachments } from '~/apps/review/src/lib/components/Scorecard/ScorecardAttachments'
-import { AiWorkflowRunItemsResponse, useFetchAiWorkflowsRunItems } from '~/apps/review/src/lib/hooks'
+import { AiWorkflowRunItemsResponse, AiWorkflowRunStatusEnum, useFetchAiWorkflowsRunItems } from '~/apps/review/src/lib/hooks'
 import { ReviewsContextModel, SelectOption } from '~/apps/review/src/lib/models'
 
 import { ScorecardHeader } from '../ScorecardHeader'
@@ -31,15 +31,24 @@ const AiReviewViewer: FC = () => {
                 selected={selectedTab}
                 onChange={setSelectedTab}
             />
-            {!!scorecard && selectedTab === 'scorecard' && (
-                <ScorecardViewer
-                    scorecard={scorecard}
-                    aiFeedback={runItems}
-                />
-            )}
 
-            {selectedTab === 'attachments' && (
-                <ScorecardAttachments />
+            {workflowRun && [AiWorkflowRunStatusEnum.CANCELLED, AiWorkflowRunStatusEnum.FAILURE].includes(workflowRun.status) ? (
+                <div>
+                    AI run failed - no scorecard results are available
+                </div>
+            ) : (
+                <>
+                    {!!scorecard && selectedTab === 'scorecard' && (
+                        <ScorecardViewer
+                            scorecard={scorecard}
+                            aiFeedback={runItems}
+                        />
+                    )}
+
+                    {selectedTab === 'attachments' && (
+                        <ScorecardAttachments />
+                    )}
+                </>
             )}
         </div>
     )

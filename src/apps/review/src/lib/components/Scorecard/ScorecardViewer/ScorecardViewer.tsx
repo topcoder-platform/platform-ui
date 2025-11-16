@@ -184,7 +184,7 @@ const ScorecardViewerContent: FC<ScorecardViewerProps> = props => {
                 </div>
             )}
 
-            {totalScore && !!props.aiFeedback && (
+            {!!totalScore && !!props.aiFeedback && (
                 <div className={styles.conclusion}>
                     <strong>Conclusion</strong>
                     <p>
@@ -208,6 +208,7 @@ const ScorecardViewerContent: FC<ScorecardViewerProps> = props => {
                     </p>
                 </div>
             )}
+
 
             <ContainerTag
                 className={styles.formContainer}

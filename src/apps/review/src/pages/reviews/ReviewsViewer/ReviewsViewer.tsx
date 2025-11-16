@@ -1,9 +1,7 @@
-import { FC, useEffect, useMemo } from 'react'
+import { FC, useMemo } from 'react'
 import { useLocation } from 'react-router-dom'
 
-import { NotificationContextType, useNotification } from '~/libs/shared'
 
-import { IconAiReview } from '../../../lib/assets/icons'
 import { PageWrapper } from '../../../lib'
 import { BreadCrumbData, ReviewsContextModel } from '../../../lib/models'
 import { ReviewsSidebar } from '../components/ReviewsSidebar'
@@ -15,7 +13,6 @@ import { ReviewViewer } from '../components/ReviewViewer'
 import styles from './ReviewsViewer.module.scss'
 
 const ReviewsViewer: FC = () => {
-    const { showBannerNotification, removeNotification }: NotificationContextType = useNotification()
     const { challengeInfo, submissionId, workflowRun }: ReviewsContextModel = useReviewsContext()
 
     const location = useLocation()
@@ -40,16 +37,6 @@ const ReviewsViewer: FC = () => {
             label: `Review Scorecard - ${submissionId}`,
         },
     ], [challengeInfo?.name, challengeInfo?.id, submissionId, containsPastChallenges])
-
-    useEffect(() => {
-        const notification = showBannerNotification({
-            icon: <IconAiReview />,
-            id: 'ai-review-icon-notification',
-            message: `Challenges with this icon indicate that
-                one or more AI reviews will be conducted for each member submission.`,
-        })
-        return () => notification && removeNotification(notification.id)
-    }, [showBannerNotification, removeNotification])
 
     return (
         <PageWrapper
