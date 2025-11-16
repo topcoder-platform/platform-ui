@@ -73,7 +73,9 @@ export const AiWorkflowRunStatus: FC<AiWorkflowRunStatusProps> = props => {
             {status === 'failed' && (
                 <StatusLabel
                     icon={<IconOutline.XCircleIcon className='icon-xl' />}
+                    hideLabel={props.hideLabel}
                     status={status}
+                    label='Failure'
                     score={score}
                 />
             )}
