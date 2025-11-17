@@ -46,7 +46,7 @@ export const formAddDefaultReviewerSchema: Yup.ObjectSchema<FormAddDefaultReview
         memberReviewerCount: Yup.number()
             .optional()
             .when('isMemberReview', {
-                is: true,
+                is: false,
                 otherwise: schema => schema.optional(),
                 then: schema => schema
                     .required('Member Reviewer Count is required when Is Member Review is checked')
@@ -59,7 +59,13 @@ export const formAddDefaultReviewerSchema: Yup.ObjectSchema<FormAddDefaultReview
         phaseName: Yup.string()
             .required('Phase Name is required'),
         scorecardId: Yup.string()
-            .required('Scorecard is required'),
+            .optional()
+            .when('isMemberReview', {
+                is: false,
+                otherwise: schema => schema.optional(),
+                then: schema => schema
+                    .required('Scorecard is required'),
+            }),
         shouldOpenOpportunity: Yup.boolean()
             .required(),
         timelineTemplateId: Yup.string()

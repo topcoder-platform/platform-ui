@@ -1,36 +1,31 @@
-import { FC, useCallback, useMemo } from 'react'
+import { FC, useCallback } from 'react'
 import classNames from 'classnames'
 
 import { IconOutline } from '~/libs/ui'
 
 import { ScorecardGroup as ScorecardGroupModel } from '../../../../models'
 import { ScorecardSection } from '../ScorecardSection'
-import { ScorecardViewerContextValue, useScorecardContext } from '../ScorecardViewer.context'
+import { ScorecardViewerContextValue, useScorecardViewerContext } from '../ScorecardViewer.context'
 import { ScorecardScore } from '../ScorecardScore'
-import { calcGroupScore } from '../utils'
+import { createReviewItemMapping } from '../utils'
 
 import styles from './ScorecardGroup.module.scss'
 
 interface ScorecardGroupProps {
     index: number
     group: ScorecardGroupModel
+    reviewItemMapping?: ReturnType<typeof createReviewItemMapping>
 }
 
 const ScorecardGroup: FC<ScorecardGroupProps> = props => {
-    const { aiFeedbackItems }: ScorecardViewerContextValue = useScorecardContext()
-    const allFeedbackItems = aiFeedbackItems || []
-    const { toggleItem, toggledItems }: ScorecardViewerContextValue = useScorecardContext()
+    const { scoreMap, toggleItem, toggledItems }: ScorecardViewerContextValue = useScorecardViewerContext()
 
-    const isVissible = !toggledItems[props.group.id]
+    const isVisible = !toggledItems[props.group.id]
     const toggle = useCallback(() => toggleItem(props.group.id), [props.group, toggleItem])
-
-    const score = useMemo(() => (
-        calcGroupScore(props.group, allFeedbackItems)
-    ), [props.group, allFeedbackItems])
 
     return (
         <div className={styles.wrap}>
-            <div className={classNames(styles.headerBar, isVissible && styles.toggled)} onClick={toggle}>
+            <div className={classNames(styles.headerBar, isVisible && styles.toggled)} onClick={toggle}>
                 <span className={styles.index}>
                     {props.index}
                     .
@@ -41,8 +36,7 @@ const ScorecardGroup: FC<ScorecardGroupProps> = props => {
                 <span className={styles.mx} />
                 <span className={styles.score}>
                     <ScorecardScore
-                        score={score}
-                        scaleMax={1}
+                        score={scoreMap.get(props.group.id) ?? 0}
                         weight={props.group.weight}
                     />
                 </span>
@@ -51,8 +45,13 @@ const ScorecardGroup: FC<ScorecardGroupProps> = props => {
                 </span>
             </div>
 
-            {isVissible && props.group.sections.map((section, index) => (
-                <ScorecardSection key={section.id} section={section} index={[props.index, index + 1].join('.')} />
+            {isVisible && props.group.sections.map((section, index) => (
+                <ScorecardSection
+                    key={section.id}
+                    section={section}
+                    index={[props.index, index + 1].join('.')}
+                    reviewItemMapping={props.reviewItemMapping}
+                />
             ))}
         </div>
     )

@@ -1,24 +1,27 @@
 /**
  * Context provider for challenge detail page
  */
-import { Context, createContext, FC, PropsWithChildren, useContext, useMemo } from 'react'
-import { useParams } from 'react-router-dom'
+import { Context, createContext, FC, PropsWithChildren, useContext, useMemo, useState } from 'react'
+import { useParams, useSearchParams } from 'react-router-dom'
 
 import { ChallengeDetailContext } from '../../../lib'
-import { AiScorecardContextModel, ChallengeDetailContextModel } from '../../../lib/models'
+import { ChallengeDetailContextModel, ReviewCtxStatus, ReviewsContextModel } from '../../../lib/models'
 import { AiWorkflowRunsResponse, useFetchAiWorkflowsRuns } from '../../../lib/hooks'
 
-export const AiScorecardContext: Context<AiScorecardContextModel>
-    = createContext<AiScorecardContextModel>({} as AiScorecardContextModel)
+export const ReviewsContext: Context<ReviewsContextModel>
+    = createContext<ReviewsContextModel>({} as ReviewsContextModel)
 
-export const AiScorecardContextProvider: FC<PropsWithChildren> = props => {
-    const { workflowId = '', submissionId = '' }: {
+export const ReviewsContextProvider: FC<PropsWithChildren> = props => {
+    const { submissionId = '' }: {
         submissionId?: string,
-        workflowId?: string,
     } = useParams<{
         submissionId: string,
-        workflowId: string,
     }>()
+    const [searchParams] = useSearchParams()
+    const workflowId = searchParams.get('workflowId') ?? ''
+    const reviewId = searchParams.get('reviewId') ?? ''
+
+    const [reviewStatus, setReviewStatus] = useState({} as ReviewCtxStatus)
 
     const challengeDetailsCtx = useContext(ChallengeDetailContext)
     const { challengeInfo }: ChallengeDetailContextModel = challengeDetailsCtx
@@ -43,11 +46,14 @@ export const AiScorecardContextProvider: FC<PropsWithChildren> = props => {
     const workflow = useMemo(() => workflowRun?.workflow, [workflowRuns, workflowId])
     const scorecard = useMemo(() => workflow?.scorecard, [workflow])
 
-    const value = useMemo<AiScorecardContextModel>(
+    const value = useMemo<ReviewsContextModel>(
         () => ({
             ...challengeDetailsCtx,
             isLoading: isLoadingCtxData,
+            reviewId,
+            reviewStatus,
             scorecard,
+            setReviewStatus,
             submissionId,
             workflow,
             workflowId,
@@ -57,20 +63,22 @@ export const AiScorecardContextProvider: FC<PropsWithChildren> = props => {
         [
             challengeDetailsCtx,
             isLoadingCtxData,
+            reviewId,
             scorecard,
             submissionId,
             workflow,
             workflowId,
             workflowRun,
             workflowRuns,
+            reviewStatus,
         ],
     )
 
     return (
-        <AiScorecardContext.Provider value={value}>
+        <ReviewsContext.Provider value={value}>
             {props.children}
-        </AiScorecardContext.Provider>
+        </ReviewsContext.Provider>
     )
 }
 
-export const useAiScorecardContext = (): AiScorecardContextModel => useContext(AiScorecardContext)
+export const useReviewsContext = (): ReviewsContextModel => useContext(ReviewsContext)

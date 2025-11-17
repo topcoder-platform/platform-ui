@@ -35,7 +35,7 @@
 .icon {
     flex: 0 0;
     margin-right: $sp-2;
-    > svg path {
+    > svg path[fill] {
         fill: $tc-white;
     }
 }

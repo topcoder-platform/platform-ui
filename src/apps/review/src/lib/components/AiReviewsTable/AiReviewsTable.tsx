@@ -1,4 +1,4 @@
-import { FC, useMemo } from 'react'
+import { FC, MouseEvent as ReactMouseEvent, useMemo } from 'react'
 import moment from 'moment'
 
 import { useWindowSize, WindowSize } from '~/libs/shared'
@@ -22,6 +22,10 @@ interface AiReviewsTableProps {
     reviewers: { aiWorkflowId: string }[]
 }
 
+const stopPropagation = (ev: ReactMouseEvent<HTMLDivElement, MouseEvent>): void => {
+    ev.stopPropagation()
+}
+
 const AiReviewsTable: FC<AiReviewsTableProps> = props => {
     const aiWorkflowIds = useMemo(() => props.reviewers.map(r => r.aiWorkflowId), [props.reviewers])
     const { runs, isLoading }: AiWorkflowRunsResponse = useFetchAiWorkflowsRuns(props.submission.id, aiWorkflowIds)
@@ -42,6 +46,9 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
             workflow: {
                 description: '',
                 name: 'Virus Scan',
+                scorecard: {
+                    minimumPassingScore: 1,
+                },
             },
         } as AiWorkflowRun,
     ], [runs, props.submission])
@@ -102,13 +109,13 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
     }
 
     return (
-        <div className={styles.wrap}>
+        <div className={styles.wrap} onClick={stopPropagation}>
             <table className={styles.reviewsTable}>
                 <thead>
                     <tr>
                         <th>AI Reviewer</th>
                         <th>Review Date</th>
-                        <th>Score</th>
+                        <th className={styles.scoreCol}>Score</th>
                         <th>Result</th>
                     </tr>
                 </thead>
@@ -143,9 +150,9 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                             </td>
                             <td className={styles.scoreCol}>
                                 {run.status === 'SUCCESS' ? (
-                                    run.workflow.scorecard ? (
+                                    run.workflow.id ? (
                                         <a
-                                            href={`./ai-scorecard/${props.submission.id}/${run.workflow.id}`}
+                                            href={`./reviews/${props.submission.id}?workflowId=${run.workflow.id}`}
                                         >
                                             {run.score}
                                         </a>

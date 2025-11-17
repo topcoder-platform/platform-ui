@@ -49,6 +49,7 @@ export interface BackendScorecard extends BackendScorecardBase {
 export function convertBackendScorecard(data: BackendScorecard): ScorecardInfo {
     return adjustScorecardInfo({
         id: data.id,
+        minimumPassingScore: data.minimumPassingScore ?? undefined,
         name: data.name,
         scorecardGroups: data.scorecardGroups.map(convertBackendScorecardGroup),
     })
