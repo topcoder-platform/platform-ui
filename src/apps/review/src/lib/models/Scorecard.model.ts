@@ -5,20 +5,21 @@
 import { ScorecardGroup } from './ScorecardGroup.model'
 
 export enum ProjectType {
-  DEVELOPMENT = 'DEVELOPMENT',
-  DATA_SCIENCE = 'DATA_SCIENCE',
-  DESIGN = 'DESIGN',
-  QUALITY_ASSURANCE = 'QUALITY_ASSURANCE',
+    DEVELOPMENT = 'DEVELOPMENT',
+    DATA_SCIENCE = 'DATA_SCIENCE',
+    DESIGN = 'DESIGN',
+    QUALITY_ASSURANCE = 'QUALITY_ASSURANCE',
 }
 
-export const ProjectTypeLabels: Record<ProjectType | 'DEVELOP' | 'QA', string> = {
-    [ProjectType.DEVELOPMENT]: 'Development',
-    [ProjectType.DATA_SCIENCE]: 'Data Science',
-    [ProjectType.DESIGN]: 'Design',
-    [ProjectType.QUALITY_ASSURANCE]: 'Quality Assurance',
-    DEVELOP: 'Development',
-    QA: 'Quality Assurance',
-}
+export const ProjectTypeLabels: Record<ProjectType | 'DEVELOP' | 'QA', string> =
+    {
+        [ProjectType.DEVELOPMENT]: 'Development',
+        [ProjectType.DATA_SCIENCE]: 'Data Science',
+        [ProjectType.DESIGN]: 'Design',
+        [ProjectType.QUALITY_ASSURANCE]: 'Quality Assurance',
+        DEVELOP: 'Development',
+        QA: 'Quality Assurance',
+    }
 
 export const categoryByProjectType = {
     DATA_SCIENCE: ['Marathon Match'],
@@ -57,13 +58,12 @@ export const categoryByProjectType = {
     ],
 } satisfies Record<ProjectType, string[]>
 
-export const scorecardCategories = Object.values(categoryByProjectType)
-    .flat()
+export const scorecardCategories = Object.values(categoryByProjectType).flat()
 
 export enum ScorecardStatus {
-  ACTIVE = 'ACTIVE',
-  INACTIVE = 'INACTIVE',
-  DELETED = 'DELETED',
+    ACTIVE = 'ACTIVE',
+    INACTIVE = 'INACTIVE',
+    DELETED = 'DELETED',
 }
 
 export const ScorecardStatusLabels: Record<ScorecardStatus, string> = {
@@ -73,14 +73,14 @@ export const ScorecardStatusLabels: Record<ScorecardStatus, string> = {
 }
 
 export enum ScorecardType {
-  SCREENING = 'SCREENING',
-  REVIEW = 'REVIEW',
-  APPROVAL = 'APPROVAL',
-  POST_MORTEM = 'POST_MORTEM',
-  SPECIFICATION_REVIEW = 'SPECIFICATION_REVIEW',
-  CHECKPOINT_SCREENING = 'CHECKPOINT_SCREENING',
-  CHECKPOINT_REVIEW = 'CHECKPOINT_REVIEW',
-  ITERATIVE_REVIEW = 'ITERATIVE_REVIEW',
+    SCREENING = 'SCREENING',
+    REVIEW = 'REVIEW',
+    APPROVAL = 'APPROVAL',
+    POST_MORTEM = 'POST_MORTEM',
+    SPECIFICATION_REVIEW = 'SPECIFICATION_REVIEW',
+    CHECKPOINT_SCREENING = 'CHECKPOINT_SCREENING',
+    CHECKPOINT_REVIEW = 'CHECKPOINT_REVIEW',
+    ITERATIVE_REVIEW = 'ITERATIVE_REVIEW',
 }
 
 export const ScorecardTypeLabels: Record<ScorecardType, string> = {
@@ -95,6 +95,10 @@ export const ScorecardTypeLabels: Record<ScorecardType, string> = {
 }
 
 export const ScorecardScales = {
+    'scale(0-4)': 'Scale 0-4',
+    'scale(0-5)': 'Scale 0-5',
+    'scale(0-10)': 'Scale 0-10',
+    'scale(0-100)': 'Scale 0-100',
     'scale(1-4)': 'Scale 1-4',
     'scale(1-5)': 'Scale 1-5',
     'scale(1-10)': 'Scale 1-10',
