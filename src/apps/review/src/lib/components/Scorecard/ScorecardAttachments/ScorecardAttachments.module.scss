@@ -1,5 +1,9 @@
 @import '@libs/ui/styles/includes';
 
+.container {
+    min-height: calc($content-height - 250px);
+}
+
 .tableCell {
     vertical-align: middle;
 }
