@@ -11,8 +11,8 @@ export enum ProjectType {
     QUALITY_ASSURANCE = 'QUALITY_ASSURANCE',
 }
 
-export const ProjectTypeLabels: Record<ProjectType | 'DEVELOP' | 'QA', string> =
-    {
+export const ProjectTypeLabels: Record<ProjectType | 'DEVELOP' | 'QA', string>
+    = {
         [ProjectType.DEVELOPMENT]: 'Development',
         [ProjectType.DATA_SCIENCE]: 'Data Science',
         [ProjectType.DESIGN]: 'Design',
@@ -58,7 +58,8 @@ export const categoryByProjectType = {
     ],
 } satisfies Record<ProjectType, string[]>
 
-export const scorecardCategories = Object.values(categoryByProjectType).flat()
+export const scorecardCategories = Object.values(categoryByProjectType)
+    .flat()
 
 export enum ScorecardStatus {
     ACTIVE = 'ACTIVE',
