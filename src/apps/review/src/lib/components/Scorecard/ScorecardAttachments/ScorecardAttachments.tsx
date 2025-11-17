@@ -1,15 +1,139 @@
-import { FC } from 'react'
+import { FC, useCallback, useMemo } from 'react'
+import { noop } from 'lodash'
+import classNames from 'classnames'
+import moment from 'moment'
 
-// import styles from './ScorecardAttachments.module.scss'
+import { IconOutline, Table, TableColumn } from '~/libs/ui'
+import { useAiScorecardContext } from '~/apps/review/src/pages/ai-scorecards/AiScorecardContext'
+
+import { AiScorecardContextModel } from '../../../models'
+import { AiWorkflowRunArtifact,
+    AiWorkflowRunArtifactDownloadResponse,
+    AiWorkflowRunAttachmentsResponse,
+    useDownloadAiWorkflowsRunArtifact, useFetchAiWorkflowsRunAttachments } from '../../../hooks'
+import { TableWrapper } from '../../TableWrapper'
+import { TABLE_DATE_FORMAT } from '../../../constants'
+import { formatFileSize } from '../../common'
+
+import styles from './ScorecardAttachments.module.scss'
 
 interface ScorecardAttachmentsProps {
     className?: string
 }
 
-const ScorecardAttachments: FC<ScorecardAttachmentsProps> = props => (
-    <div className={props.className}>
-        attachments
-    </div>
-)
+const ScorecardAttachments: FC<ScorecardAttachmentsProps> = (props: ScorecardAttachmentsProps) => {
+    const className = props.className
+    // const { width: screenWidth }: WindowSize = useWindowSize()
+    // const isTablet = useMemo(() => screenWidth <= 1000, [screenWidth])
+    const { workflowId, workflowRun }: AiScorecardContextModel = useAiScorecardContext()
+    const { artifacts }: AiWorkflowRunAttachmentsResponse
+    = useFetchAiWorkflowsRunAttachments(workflowId, workflowRun?.id)
+    const { download, isDownloading }: AiWorkflowRunArtifactDownloadResponse = useDownloadAiWorkflowsRunArtifact(
+        workflowId,
+        workflowRun?.id,
+    )
+
+    const handleDownload = useCallback(
+        async (artifactId: number): Promise<void> => {
+            await download(artifactId)
+        },
+        [download],
+    )
+
+    const createDownloadHandler = useCallback(
+        (id: number) => () => handleDownload(id),
+        [handleDownload],
+    )
+
+    console.log('attachments', artifacts)
+
+    const columns = useMemo<TableColumn<AiWorkflowRunArtifact>[]>(
+        () => [
+            {
+                className: classNames(styles.tableCell),
+                label: 'Filename',
+                propertyName: 'name',
+                renderer: (attachment: AiWorkflowRunArtifact) => {
+                    const isExpired = attachment.expired
+
+                    return (
+                        <div
+                            className={classNames(
+                                styles.filenameCell,
+                                {
+                                    [styles.expired]: isExpired,
+                                    [styles.downloading]: isDownloading && !isExpired,
+                                },
+                            )}
+                            onClick={!isExpired ? createDownloadHandler(attachment.id) : undefined}
+                        >
+                            <span>{attachment.name}</span>
+                            {isExpired && <span>Expired</span>}
+                        </div>
+                    )
+                },
+                type: 'element',
+            },
+            {
+                className: classNames(styles.tableCell),
+                label: 'Type',
+                renderer: () => (
+                    <div className={styles.artifactType}>
+                        <IconOutline.CubeIcon />
+                        <span>Artifact</span>
+                    </div>
+                ),
+                type: 'element',
+            },
+            {
+                className: classNames(styles.tableCell),
+                label: 'Size',
+                propertyName: 'sizeInBytes',
+                renderer: (attachment: AiWorkflowRunArtifact) => (
+                    <div>{formatFileSize(attachment.size_in_bytes)}</div>
+                ),
+                type: 'element',
+            },
+            {
+                className: styles.tableCell,
+                label: 'Attached Date',
+                renderer: (attachment: AiWorkflowRunArtifact) => (
+                    <span className='last-element'>
+                        {moment(attachment.created_at)
+                            .local()
+                            .format(TABLE_DATE_FORMAT)}
+                    </span>
+                ),
+                type: 'element',
+            },
+        ],
+        [],
+    )
+
+    return (
+        <TableWrapper
+            className={classNames(
+                styles.container,
+                className,
+                'enhanced-table',
+            )}
+        >
+            {artifacts ? (
+                <Table
+                    columns={columns}
+                    data={artifacts}
+                    disableSorting
+                    onToggleSort={noop}
+                    removeDefaultSort
+                    className='enhanced-table-desktop'
+                />
+            ) : (
+                <div>No attachments</div>
+            )}
+
+        </TableWrapper>
+    )
+
+}
 
 export default ScorecardAttachments
