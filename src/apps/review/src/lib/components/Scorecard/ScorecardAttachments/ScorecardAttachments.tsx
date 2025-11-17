@@ -45,8 +45,6 @@ const ScorecardAttachments: FC<ScorecardAttachmentsProps> = (props: ScorecardAtt
         [handleDownload],
     )
 
-    console.log('attachments', artifacts)
-
     const columns = useMemo<TableColumn<AiWorkflowRunArtifact>[]>(
         () => [
             {
@@ -68,7 +66,7 @@ const ScorecardAttachments: FC<ScorecardAttachmentsProps> = (props: ScorecardAtt
                             onClick={!isExpired ? createDownloadHandler(attachment.id) : undefined}
                         >
                             <span>{attachment.name}</span>
-                            {isExpired && <span>Expired</span>}
+                            {isExpired && <span>(Link Expired)</span>}
                         </div>
                     )
                 },
@@ -79,7 +77,7 @@ const ScorecardAttachments: FC<ScorecardAttachmentsProps> = (props: ScorecardAtt
                 label: 'Type',
                 renderer: () => (
                     <div className={styles.artifactType}>
-                        <IconOutline.CubeIcon />
+                        <IconOutline.CubeIcon className={styles.artifactIcon} width={26} />
                         <span>Artifact</span>
                     </div>
                 ),

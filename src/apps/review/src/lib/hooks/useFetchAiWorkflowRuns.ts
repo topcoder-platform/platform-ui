@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import useSWR, { SWRResponse } from 'swr'
 
 import { EnvironmentConfig } from '~/config'
-import { xhrGetAsync } from '~/libs/core'
+import { xhrGetAsync, xhrGetBlobAsync } from '~/libs/core'
 import { handleError } from '~/libs/shared/lib/utils/handle-error'
 
 import { AiFeedbackItem, Scorecard } from '../models'
@@ -216,26 +216,22 @@ export function useDownloadAiWorkflowsRunArtifact(
 
             const url = `${TC_API_BASE_URL}/workflows/${workflowId}/runs/${runId}/attachments/${artifactId}/zip`
 
-            const response = await fetch(url, {
-                credentials: 'include',
-                method: 'GET',
-            })
+            xhrGetBlobAsync<Blob>(url)
+                .then(blob => {
+                    const objectUrl = window.URL.createObjectURL(blob)
+                    const link = document.createElement('a')
+                    link.href = objectUrl
+                    link.download = `artifact-${artifactId}.zip`
 
-            if (!response.ok) {
-                throw new Error(`Download failed with status ${response.status}`)
-            }
+                    document.body.appendChild(link)
+                    link.click()
+                    link.remove()
 
-            const blob = await response.blob()
-
-            // Create a blob URL and trigger browser download
-            const objectUrl = window.URL.createObjectURL(blob)
-            const link = document.createElement('a')
-            link.href = objectUrl
-            link.download = `artifact-${artifactId}.zip`
-            link.click()
-
-            // Cleanup
-            window.URL.revokeObjectURL(objectUrl)
+                    window.URL.revokeObjectURL(objectUrl)
+                })
+                .catch(err => {
+                    handleError(err as Error)
+                })
         } catch (err) {
             handleError(err as Error)
         } finally {

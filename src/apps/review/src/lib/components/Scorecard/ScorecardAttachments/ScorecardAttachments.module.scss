@@ -25,10 +25,19 @@
 
 .expired {
   cursor: not-allowed;
-  opacity: 0.4;
   color: #999;
 
   &:hover {
     text-decoration: none;
   }
+}
+
+.artifactType {
+    display: flex;
+    gap: 5px;
+    align-items: center; 
+
+    .artifactIcon {
+        stroke: #00797A;
+    }
 }
