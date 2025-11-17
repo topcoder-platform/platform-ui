@@ -4,9 +4,8 @@ import classNames from 'classnames'
 import moment from 'moment'
 
 import { IconOutline, Table, TableColumn } from '~/libs/ui'
-import { useAiScorecardContext } from '~/apps/review/src/pages/ai-scorecards/AiScorecardContext'
+import { useReviewsContext } from '~/apps/review/src/pages/reviews/ReviewsContext'
 
-import { AiScorecardContextModel } from '../../../models'
 import { AiWorkflowRunArtifact,
     AiWorkflowRunArtifactDownloadResponse,
     AiWorkflowRunAttachmentsResponse,
@@ -14,6 +13,7 @@ import { AiWorkflowRunArtifact,
 import { TableWrapper } from '../../TableWrapper'
 import { TABLE_DATE_FORMAT } from '../../../constants'
 import { formatFileSize } from '../../common'
+import { ReviewsContextModel } from '../../../models'
 
 import styles from './ScorecardAttachments.module.scss'
 
@@ -25,7 +25,7 @@ const ScorecardAttachments: FC<ScorecardAttachmentsProps> = (props: ScorecardAtt
     const className = props.className
     // const { width: screenWidth }: WindowSize = useWindowSize()
     // const isTablet = useMemo(() => screenWidth <= 1000, [screenWidth])
-    const { workflowId, workflowRun }: AiScorecardContextModel = useAiScorecardContext()
+    const { workflowId, workflowRun }: ReviewsContextModel = useReviewsContext()
     const { artifacts }: AiWorkflowRunAttachmentsResponse
     = useFetchAiWorkflowsRunAttachments(workflowId, workflowRun?.id)
     const { download, isDownloading }: AiWorkflowRunArtifactDownloadResponse = useDownloadAiWorkflowsRunArtifact(

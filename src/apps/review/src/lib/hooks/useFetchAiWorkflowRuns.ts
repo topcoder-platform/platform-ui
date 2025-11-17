@@ -172,8 +172,8 @@ export function useFetchAiWorkflowsRunItems(
 }
 
 export function useFetchAiWorkflowsRunAttachments(
-    workflowId: string,
-    runId: string | undefined,
+    workflowId?: string,
+    runId?: string | undefined,
 ): AiWorkflowRunAttachmentsResponse {
     const {
         data,
@@ -203,8 +203,8 @@ export function useFetchAiWorkflowsRunAttachments(
 }
 
 export function useDownloadAiWorkflowsRunArtifact(
-    workflowId: string,
-    runId: string | undefined,
+    workflowId?: string,
+    runId?: string | undefined,
 ): AiWorkflowRunArtifactDownloadResponse {
     const [isDownloading, setIsDownloading] = useState(false)
 
