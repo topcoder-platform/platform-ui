@@ -1,7 +1,7 @@
 import { FC } from 'react'
 
 import { ProgressBar } from '~/apps/review/src/lib/components/ProgressBar'
-import { IconPremium, IconDeepseekAi, IconAiReview, IconPhaseReview } from '~/apps/review/src/lib/assets/icons'
+import { IconDeepseekAi, IconPhaseReview, IconPremium } from '~/apps/review/src/lib/assets/icons'
 import { ReviewInfo, ScorecardInfo } from '~/apps/review/src/lib/models'
 import { AiWorkflow } from '~/apps/review/src/lib/hooks'
 
@@ -15,12 +15,10 @@ interface Props {
 }
 
 export const ReviewScorecardHeader: FC<Props> = (props: Props) => {
-    const { reviewInfo, scorecardInfo, workflow, reviewProgress = 0 } = props
-
-    const reviewerHandle = reviewInfo?.reviewerHandle
-    const reviewerColor = reviewInfo?.reviewerHandleColor
-    const llmModelName = workflow?.llm?.name || 'N/A'
-    const minimumPassingScore = scorecardInfo?.minimumPassingScore ?? 0
+    const reviewerHandle = props.reviewInfo?.reviewerHandle
+    const reviewerColor = props.reviewInfo?.reviewerHandleColor
+    const llmModelName = props.workflow?.llm?.name || 'N/A'
+    const minimumPassingScore = props.scorecardInfo?.minimumPassingScore ?? 0
 
     return (
         <div className={styles.wrap}>
@@ -37,7 +35,7 @@ export const ReviewScorecardHeader: FC<Props> = (props: Props) => {
                             {reviewerHandle && (
                                 <div className={styles.infoRow}>
                                     <div className={styles.personIcon}>
-                                        <i className='icon-handle'></i>
+                                        <i className='icon-handle' />
                                     </div>
                                     <span className={styles.infoLabel}>Reviewer:</span>
                                     <span className={styles.infoValue} style={{ color: reviewerColor }}>
@@ -45,7 +43,7 @@ export const ReviewScorecardHeader: FC<Props> = (props: Props) => {
                                     </span>
                                 </div>
                             )}
-                            {workflow?.llm && (
+                            {props.workflow?.llm && (
                                 <div className={styles.infoRow}>
                                     <div className={styles.whaleIcon}>
                                         <IconDeepseekAi />
@@ -68,8 +66,11 @@ export const ReviewScorecardHeader: FC<Props> = (props: Props) => {
                         </span>
                     </div>
                     <div className={styles.progressSection}>
-                        <ProgressBar progress={reviewProgress} progressWidth="100%" withoutPercentage />
-                        <span className={styles.progressText}>{reviewProgress}%</span>
+                        <ProgressBar progress={props.reviewProgress} progressWidth='100%' withoutPercentage />
+                        <span className={styles.progressText}>
+                            {props.reviewProgress}
+                            %
+                        </span>
                     </div>
                 </div>
             </div>
@@ -78,4 +79,3 @@ export const ReviewScorecardHeader: FC<Props> = (props: Props) => {
 }
 
 export default ReviewScorecardHeader
-

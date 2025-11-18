@@ -23,7 +23,13 @@ import styles from './ReviewViewer.module.scss'
 
 const ReviewViewer: FC = () => {
     const navigate = useAppNavigate()
-    const { reviewId, setReviewStatus, setActionButtons, workflow, reviewStatus }: ReviewsContextModel = useReviewsContext()
+    const {
+        reviewId,
+        setReviewStatus,
+        setActionButtons,
+        workflow,
+        reviewStatus,
+    }: ReviewsContextModel = useReviewsContext()
 
     const {
         actionChallengeRole,
@@ -243,28 +249,28 @@ const ReviewViewer: FC = () => {
                             reviewProgress={reviewStatus?.progress ?? reviewInfo?.reviewProgress ?? 0}
                         />
                         <ScorecardViewer
-                        actionChallengeRole={actionChallengeRole}
-                        scorecard={scorecardInfo as any}
-                        reviewInfo={reviewInfo}
-                        mappingAppeals={mappingAppeals}
-                        isEdit={isEdit}
-                        onCancelEdit={onCancelEdit}
-                        navigateBack={back}
-                        setIsChanged={setIsChanged}
-                        isLoading={isLoading}
-                        isManagerEdit={isManagerEdit}
-                        isSavingReview={isSavingReview}
-                        isSavingAppeal={isSavingAppeal}
-                        isSavingAppealResponse={isSavingAppealResponse}
-                        isSavingManagerComment={isSavingManagerComment}
-                        saveReviewInfo={saveReviewInfo}
-                        addAppeal={addAppeal}
-                        addAppealResponse={addAppealResponse}
-                        doDeleteAppeal={doDeleteAppeal}
-                        addManagerComment={addManagerComment}
-                        setReviewStatus={setReviewStatus}
-                        setActionButtons={setActionButtons}
-                    />
+                            actionChallengeRole={actionChallengeRole}
+                            scorecard={scorecardInfo as any}
+                            reviewInfo={reviewInfo}
+                            mappingAppeals={mappingAppeals}
+                            isEdit={isEdit}
+                            onCancelEdit={onCancelEdit}
+                            navigateBack={back}
+                            setIsChanged={setIsChanged}
+                            isLoading={isLoading}
+                            isManagerEdit={isManagerEdit}
+                            isSavingReview={isSavingReview}
+                            isSavingAppeal={isSavingAppeal}
+                            isSavingAppealResponse={isSavingAppealResponse}
+                            isSavingManagerComment={isSavingManagerComment}
+                            saveReviewInfo={saveReviewInfo}
+                            addAppeal={addAppeal}
+                            addAppealResponse={addAppealResponse}
+                            doDeleteAppeal={doDeleteAppeal}
+                            addManagerComment={addManagerComment}
+                            setReviewStatus={setReviewStatus}
+                            setActionButtons={setActionButtons}
+                        />
                     </>
                 )}
             </div>

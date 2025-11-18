@@ -163,9 +163,9 @@ const ScorecardViewerContent: FC<ScorecardViewerProps> = props => {
             }
 
             props.setReviewStatus({
+                progress: reviewProgress,
                 score,
                 status,
-                progress: reviewProgress,
             })
         }
     }, [totalScore, reviewProgress, props.scorecard])
