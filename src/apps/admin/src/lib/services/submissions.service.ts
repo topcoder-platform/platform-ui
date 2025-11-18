@@ -10,6 +10,7 @@ import {
     MemberSubmission,
     RequestBusAPIAVScanPayload,
     Submission,
+    SubmissionReprocessPayload,
     ValidateS3URIResult,
 } from '../models'
 import { validateS3URI } from '../utils'
@@ -123,5 +124,64 @@ export const createAvScanSubmissionPayload = async (
             EnvironmentConfig.ADMIN.AWS_QUARANTINE_BUCKET,
         submissionId: submissionInfo.id,
         url,
+    }
+}
+
+/**
+ * Create submission reprocess payload
+ * @param submissionInfo submission info
+ * @returns resolves to the reprocess payload
+ */
+export const createSubmissionReprocessPayload = async (
+    submissionInfo: Submission,
+): Promise<SubmissionReprocessPayload> => {
+    const submissionId = submissionInfo.id
+    const challengeId = submissionInfo.challengeId
+    const submissionUrl = submissionInfo.url
+    const memberId = submissionInfo.memberId
+    const memberHandle = submissionInfo.submitterHandle ?? submissionInfo.createdBy
+    const submittedDateValue = submissionInfo.submittedDate
+
+    if (!submissionId) {
+        throw new Error('Submission id is not valid')
+    }
+
+    const normalizedChallengeId = challengeId
+        ? challengeId.toString()
+        : ''
+    if (!normalizedChallengeId) {
+        throw new Error('Challenge id is not valid')
+    }
+
+    if (!submissionUrl) {
+        throw new Error('Submission url is not valid')
+    }
+
+    const normalizedMemberId = memberId ? memberId.toString() : ''
+    if (!normalizedMemberId) {
+        throw new Error('Member id is not valid')
+    }
+
+    if (!memberHandle) {
+        throw new Error('Member handle is not valid')
+    }
+
+    const submittedDate = submittedDateValue
+        ? new Date(submittedDateValue)
+        : undefined
+    const submittedDateIso = submittedDate && !Number.isNaN(submittedDate.valueOf())
+        ? submittedDate.toISOString()
+        : ''
+    if (!submittedDateIso) {
+        throw new Error('Submitted date is not valid')
+    }
+
+    return {
+        challengeId: normalizedChallengeId,
+        memberHandle,
+        memberId: normalizedMemberId,
+        submissionId,
+        submissionUrl,
+        submittedDate: submittedDateIso,
     }
 }
