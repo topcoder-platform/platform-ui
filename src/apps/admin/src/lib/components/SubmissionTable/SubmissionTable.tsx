@@ -70,6 +70,9 @@ interface Props {
     downloadSubmission: (submissionId: string) => void
     isDoingAvScan: IsRemovingType
     doPostBusEventAvScan: (submission: Submission) => void
+    isReprocessingSubmission: IsRemovingType
+    doReprocessSubmission: (submission: Submission) => void
+    canReprocessSubmission?: boolean
 }
 
 export const SubmissionTable: FC<Props> = (props: Props) => {
@@ -277,6 +280,15 @@ export const SubmissionTable: FC<Props> = (props: Props) => {
                                 doPostBusEventAvScan={function doPostBusEventAvScan() {
                                     props.doPostBusEventAvScan(data)
                                 }}
+                                canReprocessSubmission={
+                                    props.canReprocessSubmission
+                                }
+                                isReprocessingSubmission={
+                                    props.isReprocessingSubmission
+                                }
+                                doReprocessSubmission={function doReprocessSubmission() {
+                                    props.doReprocessSubmission(data)
+                                }}
                                 isDownloading={props.isDownloading}
                                 downloadSubmission={function downloadSubmission() {
                                     props.downloadSubmission(data.id)
@@ -306,6 +318,9 @@ export const SubmissionTable: FC<Props> = (props: Props) => {
             props.downloadSubmission,
             props.isDoingAvScan,
             props.doPostBusEventAvScan,
+            props.isReprocessingSubmission,
+            props.doReprocessSubmission,
+            props.canReprocessSubmission,
         ],
     )
 

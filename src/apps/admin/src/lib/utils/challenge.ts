@@ -4,6 +4,7 @@
 
 import _ from 'lodash'
 
+import { SUBMISSION_REPROCESS_TOPICS } from '../../config/busEvent.config'
 import { Challenge, MemberSubmission } from '../models'
 
 /**
@@ -16,6 +17,30 @@ export function checkIsMM(challenge?: Challenge): boolean {
     const typeName = challenge ? _.get(challenge, 'type.name') as string | undefined : undefined
     const isMMType = typeName === 'Marathon Match'
     return tags.includes('Marathon Match') || isMMType
+}
+
+/**
+ * Resolve submission reprocess topic based on challenge type
+ * @param challenge challenge info
+ * @returns kafka topic for submission reprocess
+ */
+export function getSubmissionReprocessTopic(
+    challenge?: Challenge,
+): string | undefined {
+    const normalizedType = challenge?.type?.name
+        ? challenge.type.name.replace(/\s+/g, '')
+            .toLowerCase()
+        : ''
+
+    if (normalizedType === 'first2finish') {
+        return SUBMISSION_REPROCESS_TOPICS.FIRST2FINISH
+    }
+
+    if (normalizedType === 'topgeartask') {
+        return SUBMISSION_REPROCESS_TOPICS.TOPGEAR_TASK
+    }
+
+    return undefined
 }
 
 /**
