@@ -9,6 +9,7 @@ import { BackendSubmission } from './BackendSubmission.model'
 export interface ReviewCtxStatus {
     status: 'passed' | 'pending' | 'failed-score';
     score: number;
+    progress: number;
 }
 
 export interface ReviewsContextModel extends ChallengeDetailContextModel {

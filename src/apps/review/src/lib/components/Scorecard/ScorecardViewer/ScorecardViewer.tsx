@@ -96,6 +96,7 @@ const ScorecardViewerContent: FC<ScorecardViewerProps> = props => {
     const {
         form,
         totalScore,
+        reviewProgress,
         isTouched,
         touchedAllFields,
         formErrors,
@@ -162,11 +163,12 @@ const ScorecardViewerContent: FC<ScorecardViewerProps> = props => {
             }
 
             props.setReviewStatus({
+                progress: reviewProgress,
                 score,
                 status,
             })
         }
-    }, [totalScore, props.scorecard])
+    }, [totalScore, reviewProgress, props.scorecard])
 
     const actionButtons = useMemo(() => (
         <div className={styles.actions}>
