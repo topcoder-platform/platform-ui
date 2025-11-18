@@ -15,6 +15,9 @@ interface Props {
     downloadSubmission: () => void
     isDoingAvScan: IsRemovingType
     doPostBusEventAvScan: () => void
+    canReprocessSubmission?: boolean
+    isReprocessingSubmission: IsRemovingType
+    doReprocessSubmission: () => void
 }
 
 export const SubmissionTableActionsNonMM: FC<Props> = (props: Props) => (
@@ -37,6 +40,17 @@ export const SubmissionTableActionsNonMM: FC<Props> = (props: Props) => (
                 disabled={props.isDoingAvScan[props.data.id]}
             >
                 AV Rescan
+            </Button>
+        )}
+        {props.canReprocessSubmission && (
+            <Button
+                onClick={function onClick() {
+                    props.doReprocessSubmission()
+                }}
+                primary
+                disabled={props.isReprocessingSubmission[props.data.id]}
+            >
+                Reprocess submission
             </Button>
         )}
     </div>

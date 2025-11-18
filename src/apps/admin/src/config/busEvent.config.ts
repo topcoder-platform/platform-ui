@@ -7,6 +7,8 @@ import {
     RequestBusAPI,
     RequestBusAPIAVScan,
     RequestBusAPIAVScanPayload,
+    RequestBusAPIReprocess,
+    SubmissionReprocessPayload,
 } from '../lib/models'
 
 /**
@@ -46,4 +48,27 @@ export const CREATE_BUS_EVENT_AV_RESCAN = (
     timestamp: new Date()
         .toISOString(),
     topic: 'avscan.action.scan',
+})
+
+export const SUBMISSION_REPROCESS_TOPICS = {
+    FIRST2FINISH: 'first2finish.submission.received',
+    TOPGEAR_TASK: 'topgear.submission.received',
+}
+
+/**
+ * Create data for submission reprocess bus event
+ * @param topic kafka topic
+ * @param payload submission data
+ * @returns data for bus event
+ */
+export const CREATE_BUS_EVENT_REPROCESS_SUBMISSION = (
+    topic: string,
+    payload: SubmissionReprocessPayload,
+): RequestBusAPIReprocess => ({
+    'mime-type': 'application/json',
+    originator: 'review-api-v6',
+    payload,
+    timestamp: new Date()
+        .toISOString(),
+    topic,
 })

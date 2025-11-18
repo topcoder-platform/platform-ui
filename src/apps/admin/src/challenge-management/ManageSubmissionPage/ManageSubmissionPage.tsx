@@ -18,6 +18,8 @@ import {
     useManageBusEventProps,
     useManageChallengeSubmissions,
     useManageChallengeSubmissionsProps,
+    useManageSubmissionReprocess,
+    useManageSubmissionReprocessProps,
 } from '../../lib/hooks'
 import {
     ActionLoading,
@@ -26,7 +28,7 @@ import {
     TableLoading,
     TableNoRecord,
 } from '../../lib'
-import { checkIsMM } from '../../lib/utils'
+import { checkIsMM, getSubmissionReprocessTopic } from '../../lib/utils'
 
 import styles from './ManageSubmissionPage.module.scss'
 
@@ -46,6 +48,10 @@ export const ManageSubmissionPage: FC<Props> = (props: Props) => {
         challengeInfo,
     }: useFetchChallengeProps = useFetchChallenge(challengeId)
     const isMM = useMemo(() => checkIsMM(challengeInfo), [challengeInfo])
+    const submissionReprocessTopic = useMemo(
+        () => getSubmissionReprocessTopic(challengeInfo),
+        [challengeInfo],
+    )
 
     const {
         isLoading: isLoadingSubmission,
@@ -71,6 +77,12 @@ export const ManageSubmissionPage: FC<Props> = (props: Props) => {
         isLoadingBool: isDoingAvScanBool,
         doPostBusEvent: doPostBusEventAvScan,
     }: useManageAVScanProps = useManageAVScan()
+    const {
+        isLoading: isReprocessingSubmission,
+        isLoadingBool: isReprocessingSubmissionBool,
+        doReprocessSubmission,
+    }: useManageSubmissionReprocessProps
+        = useManageSubmissionReprocess(submissionReprocessTopic)
 
     const isLoading = isLoadingSubmission || isLoadingChallenge
 
@@ -111,13 +123,21 @@ export const ManageSubmissionPage: FC<Props> = (props: Props) => {
                                 showSubmissionHistory={showSubmissionHistory}
                                 setShowSubmissionHistory={setShowSubmissionHistory}
                                 isMM={isMM}
+                                isReprocessingSubmission={
+                                    isReprocessingSubmission
+                                }
+                                doReprocessSubmission={doReprocessSubmission}
+                                canReprocessSubmission={Boolean(
+                                    submissionReprocessTopic,
+                                )}
                             />
 
                             {(isDoingAvScanBool
                                 || isDownloadingSubmissionBool
                                 || isRemovingSubmissionBool
                                 || isRunningTestBool
-                                || isRemovingReviewSummationsBool) && (
+                                || isRemovingReviewSummationsBool
+                                || isReprocessingSubmissionBool) && (
                                 <ActionLoading />
                             )}
                         </div>
