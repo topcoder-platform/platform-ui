@@ -1,6 +1,7 @@
 /* eslint-disable complexity */
 
-import { FC, useCallback, useEffect, useMemo, useState } from 'react'
+import { FC, ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
+import { Link, NavLink } from 'react-router-dom'
 import { isEmpty } from 'lodash'
 import classNames from 'classnames'
 
@@ -44,6 +45,7 @@ interface ScorecardViewerProps {
     isSavingAppealResponse?: boolean
     isSavingManagerComment?: boolean
     setReviewStatus?: (status: ReviewCtxStatus) => void
+    setActionButtons?: (buttons?: ReactNode) => void
     saveReviewInfo?: (
         updatedReview: FormReviews | undefined,
         fullReview: FormReviews | undefined,
@@ -74,6 +76,7 @@ interface ScorecardViewerProps {
         success: () => void,
     ) => void
     onCancelEdit?: () => void
+    navigateBack?: (e?: React.MouseEvent<HTMLAnchorElement>) => void
     isLoading?: boolean
     setIsChanged?: (changed: boolean) => void
 }
@@ -112,9 +115,7 @@ const ScorecardViewerContent: FC<ScorecardViewerProps> = props => {
                 form?.getValues(),
                 true,
                 totalScore,
-                (): void => {
-                    // Success callback - could navigate or show success message
-                },
+                () => props.navigateBack?.(),
             )
         }
     }, [
@@ -166,6 +167,44 @@ const ScorecardViewerContent: FC<ScorecardViewerProps> = props => {
             })
         }
     }, [totalScore, props.scorecard])
+
+    const actionButtons = useMemo(() => (
+        <div className={styles.actions}>
+            <button
+                type='button'
+                className='borderButton'
+                onClick={handleSaveAsDraft}
+                disabled={props.isSavingReview}
+            >
+                Save as Draft
+            </button>
+            <button
+                type='submit'
+                className='filledButton'
+                onClick={function onClick() {
+                    touchedAllFields()
+                    form?.handleSubmit(onSubmit)()
+                }}
+                disabled={props.isSavingReview}
+            >
+                Mark as Complete
+            </button>
+        </div>
+    ), [props.isEdit, handleSaveAsDraft, touchedAllFields, props.isSavingReview])
+
+    useEffect(() => {
+        props.setActionButtons?.(props.isEdit ? actionButtons : (
+            <>
+                <Link
+                    type='button'
+                    className='borderButton'
+                    to='../challenge-details'
+                >
+                    Back to Challenge
+                </Link>
+            </>
+        ))
+    }, [actionButtons, props.setActionButtons])
 
     if (props.isLoading) {
         return <TableLoading />
@@ -234,7 +273,7 @@ const ScorecardViewerContent: FC<ScorecardViewerProps> = props => {
 
                 <ScorecardTotal score={totalScore} />
 
-                {props.isEdit && (
+                {props.isEdit ? (
                     <div className={styles.footer}>
                         <div>
                             {errorMessage && (
@@ -259,27 +298,22 @@ const ScorecardViewerContent: FC<ScorecardViewerProps> = props => {
                                     Cancel
                                 </button>
                             )}
-                            <button
-                                type='button'
-                                className='borderButton'
-                                onClick={handleSaveAsDraft}
-                                disabled={props.isSavingReview}
-                            >
-                                Save as Draft
-                            </button>
-                            <button
-                                type='submit'
-                                className='filledButton'
-                                onClick={function onClick() {
-                                    touchedAllFields()
-                                }}
-                                disabled={props.isSavingReview}
-                            >
-                                Mark as Complete
-                            </button>
+                            {actionButtons}
                         </div>
                     </div>
-                )}
+                ) : (props.navigateBack && (
+                    <div className={styles.footer}>
+                        <div className={styles.actions}>
+                            <NavLink
+                                className='filledButton'
+                                to=''
+                                onClick={props.navigateBack}
+                            >
+                                Back to Challenge
+                            </NavLink>
+                        </div>
+                    </div>
+                ))}
             </ContainerTag>
 
             <ConfirmModal

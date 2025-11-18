@@ -27,6 +27,13 @@
     }
 }
 
+.subHeader {
+    margin-bottom: 80px;
+    @include ltelg {
+        margin-bottom: 40px;
+    }
+}
+
 .contentWrap {
     width: 100%;
 }

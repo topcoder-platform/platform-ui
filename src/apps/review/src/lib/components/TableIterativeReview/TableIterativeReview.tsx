@@ -384,7 +384,7 @@ const renderStandardReviewCell = ({
         (review?.metadata as ScoreMetadata | undefined)?.outcome,
     )
     const reviewId = review?.id
-    const reviewPath = reviewId ? `./../review/${reviewId}` : undefined
+    const reviewPath = reviewId ? `./../reviews/${data.id}?reviewId=${reviewId}` : undefined
     const isCompleted = ['COMPLETED', 'SUBMITTED'].includes(status)
 
     if (isCompleted) {
@@ -1123,7 +1123,7 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
 
             return (
                 <Link
-                    to={`./../review/${reviewId}`}
+                    to={`./../reviews/${data.id}?reviewId=${reviewId}`}
                     className={classNames(styles.submit, 'last-element')}
                 >
                     <i className='icon-upload' />
@@ -1165,7 +1165,7 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
 
         return (
             <Link
-                to={`./../review/${reviewId}`}
+                to={`./../reviews/${data.id}?reviewId=${reviewId}`}
                 className={classNames(styles.submit, 'last-element')}
             >
                 <i className='icon-upload' />

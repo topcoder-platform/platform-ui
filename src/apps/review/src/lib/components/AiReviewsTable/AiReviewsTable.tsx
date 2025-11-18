@@ -1,4 +1,5 @@
 import { FC, MouseEvent as ReactMouseEvent, useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import moment from 'moment'
 
 import { useWindowSize, WindowSize } from '~/libs/shared'
@@ -90,7 +91,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                             <div className={styles.value}>
                                 {run.status === 'SUCCESS' ? (
                                     run.workflow.scorecard ? (
-                                        <a href={`/scorecard/${run.workflow.scorecard.id}`}>{run.score}</a>
+                                        <Link to={`/scorecard/${run.workflow.scorecard.id}`}>{run.score}</Link>
                                     ) : run.score
                                 ) : '-'}
                             </div>
@@ -151,11 +152,11 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                             <td className={styles.scoreCol}>
                                 {run.status === 'SUCCESS' ? (
                                     run.workflow.id ? (
-                                        <a
-                                            href={`./reviews/${props.submission.id}?workflowId=${run.workflow.id}`}
+                                        <Link
+                                            to={`../reviews/${props.submission.id}?workflowId=${run.workflow.id}`}
                                         >
                                             {run.score}
-                                        </a>
+                                        </Link>
                                     ) : run.score
                                 ) : '-'}
                             </td>

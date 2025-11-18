@@ -301,7 +301,7 @@ const createMyReviewActions = (
             key: `complete-${data.myReviewId}`,
             render: isLast => (
                 <Link
-                    to={`./../review/${data.myReviewId}`}
+                    to={`./../reviews/${data.submissionId}?reviewId=${data.myReviewId}`}
                     className={classNames(
                         styles.submit,
                         { 'last-element': isLast },
@@ -523,7 +523,7 @@ const createScreeningColumns = ({
 
             return (
                 <Link
-                    to={`./../review/${data.reviewId}`}
+                    to={`./../reviews/${data.submissionId}?reviewId=${data.reviewId}`}
                     className={styles.textBlue}
                 >
                     {scoreValue}
