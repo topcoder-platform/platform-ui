@@ -1,8 +1,9 @@
-import { FC } from 'react'
+import { FC, useMemo } from 'react'
 
+import { useChallengeDetailsContext } from '~/apps/review/src/lib'
 import { ProgressBar } from '~/apps/review/src/lib/components/ProgressBar'
 import { IconDeepseekAi, IconPhaseReview, IconPremium } from '~/apps/review/src/lib/assets/icons'
-import { ReviewInfo, ScorecardInfo } from '~/apps/review/src/lib/models'
+import { ChallengeDetailContextModel, ReviewInfo, ScorecardInfo } from '~/apps/review/src/lib/models'
 import { AiWorkflow } from '~/apps/review/src/lib/hooks'
 
 import styles from './ReviewScorecardHeader.module.scss'
@@ -15,8 +16,20 @@ interface Props {
 }
 
 export const ReviewScorecardHeader: FC<Props> = (props: Props) => {
-    const reviewerHandle = props.reviewInfo?.reviewerHandle
-    const reviewerColor = props.reviewInfo?.reviewerHandleColor
+    const {
+        resources,
+    }: ChallengeDetailContextModel = useChallengeDetailsContext()
+
+    const reviewer = useMemo(() => {
+        if (!props.reviewInfo?.resourceId) {
+            return undefined
+        }
+
+        return resources.find(r => r.id === props.reviewInfo?.resourceId)
+    }, [props.reviewInfo?.resourceId, resources])
+
+    const reviewerHandle = reviewer?.memberHandle
+    const reviewerColor = reviewer?.handleColor
     const llmModelName = props.workflow?.llm?.name || 'N/A'
     const minimumPassingScore = props.scorecardInfo?.minimumPassingScore ?? 0
 
