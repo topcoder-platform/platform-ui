@@ -69,3 +69,28 @@ export const getProfileUrl = (handle: string): string => {
 
     return `${normalizedBase}/${encodeURIComponent(handle)}`
 }
+
+/**
+ * converts size_in_bytes into KB / MB / GB with correct formatting.
+ */
+export const formatFileSize = (bytes: number): string => {
+    if (!bytes || bytes < 0) return '0 B'
+
+    const KB = 1024
+    const MB = KB * 1024
+    const GB = MB * 1024
+
+    if (bytes >= GB) {
+        return `${(bytes / GB).toFixed(2)} GB`
+    }
+
+    if (bytes >= MB) {
+        return `${(bytes / MB).toFixed(2)} MB`
+    }
+
+    if (bytes >= KB) {
+        return `${(bytes / KB).toFixed(2)} KB`
+    }
+
+    return `${bytes} B`
+}

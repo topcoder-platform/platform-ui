@@ -1,0 +1,87 @@
+@import '@libs/ui/styles/includes';
+
+.tableWrapper {
+    min-height: calc($content-height - 250px);
+    font-size: 14px;
+
+    &:global(.enhanced-table) {
+    table {
+      th,
+      td {
+        text-align: left;
+        background-color: white;
+      }
+
+    }
+  }
+}
+
+.tableCell {
+    vertical-align: middle;
+}
+
+.filenameCell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: $link-blue-dark;
+  cursor: pointer;
+  opacity: 1;
+  transition: opacity 0.15s ease;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.downloading {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.expired {
+  cursor: not-allowed;
+  color: #999;
+
+  &:hover {
+    text-decoration: none;
+  }
+}
+
+.artifactType {
+    display: flex;
+    gap: 5px;
+    align-items: center; 
+
+    .artifactIcon {
+        stroke: #00797A;
+    }
+}
+
+.noAttachmentText {
+    text-align: center;
+}
+
+.mobileRow {
+    padding: 16px 8px;
+    border-bottom: 1px solid #A8A8A8;
+}
+
+.mobileHeader {
+    display: flex;
+    gap: 12px;
+}
+
+.mobileExpanded {
+    padding: 16px 20px 0px 32px;
+}
+
+.rowItem {
+    display: flex;
+    justify-content: space-between;
+}
+
+.rowItemHeading {
+    font-weight: 700;
+    color: #0a0a0a;
+}
