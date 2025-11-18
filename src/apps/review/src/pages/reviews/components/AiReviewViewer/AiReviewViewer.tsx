@@ -21,7 +21,7 @@ const tabItems: SelectOption[] = [
 ]
 
 const AiReviewViewer: FC = () => {
-    const { scorecard, workflowId, workflowRun }: ReviewsContextModel = useReviewsContext()
+    const { scorecard, workflowId, workflowRun, setActionButtons }: ReviewsContextModel = useReviewsContext()
     const [selectedTab, setSelectedTab] = useState('scorecard')
     const { runItems }: AiWorkflowRunItemsResponse = useFetchAiWorkflowsRunItems(workflowId, workflowRun?.id)
     const isFailedRun = useMemo(() => (
@@ -52,6 +52,7 @@ const AiReviewViewer: FC = () => {
                         <ScorecardViewer
                             scorecard={scorecard}
                             aiFeedback={runItems}
+                            setActionButtons={setActionButtons}
                         />
                     )}
 

@@ -12,7 +12,7 @@ interface ReviewCommentsProps {
 
 const ReviewComments: FC<ReviewCommentsProps> = props => {
     const comments = useMemo(() => (
-        (props.reviewItem.reviewItemComments || []).filter(c => c.content || c.appeal || props.mappingAppeals?.[c.id])
+        (props.reviewItem.reviewItemComments || [])
     ).sort((a, b) => a.sortOrder - b.sortOrder), [props.reviewItem.reviewItemComments, props.mappingAppeals])
 
     return (

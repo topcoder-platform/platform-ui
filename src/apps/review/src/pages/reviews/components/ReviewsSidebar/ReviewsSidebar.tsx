@@ -39,14 +39,26 @@ const ReviewsSidebar: FC<ReviewsSidebarProps> = props => {
 
     return (
         <div className={classNames(props.className, styles.wrap)}>
-            {workflow && workflowRun && (
+            {((workflow && workflowRun) || reviewId) && (
                 <div className={styles.mobileTrigger} onClick={toggleOpen}>
                     <div className={classNames(styles.runEntry, styles.active)}>
                         <span className={styles.workflowNameWrap}>
-                            <IconAiReview />
-                            <span className={styles.workflowName}>{workflow.name}</span>
+                            {reviewId ? <IconPhaseReview /> : <IconAiReview />}
+                            <span className={styles.workflowName}>
+                                {(workflow && workflowRun) ? workflow.name : 'Review'}
+                            </span>
                         </span>
-                        <AiWorkflowRunStatus run={workflowRun} showScore hideLabel />
+
+                        {reviewStatus ? (
+                            <AiWorkflowRunStatus
+                                status={reviewStatus.status}
+                                score={reviewStatus.score}
+                                showScore
+                                hideLabel
+                            />
+                        ) : (
+                            <AiWorkflowRunStatus run={workflowRun} showScore hideLabel />
+                        )}
                         <div className={styles.mobileMenuIcon}>
                             <IconOutline.MenuIcon className='icon-xl' />
                         </div>

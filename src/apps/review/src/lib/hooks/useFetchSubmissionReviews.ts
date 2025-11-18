@@ -26,7 +26,6 @@ import {
     BackendRequestReviewItem,
     BackendReview,
     BackendReviewItem,
-    BackendSubmission,
     ChallengeDetailContextModel,
     convertBackendAppeal,
     convertBackendReviewToReviewInfo,
@@ -46,7 +45,6 @@ import {
     fetchChallengeReviews,
     fetchReview,
     fetchScorecard,
-    fetchSubmission,
     updateAppeal,
     updateAppealResponse,
     updateReview,
@@ -293,7 +291,6 @@ const resolveReviewOrThrow = (
 export interface useFetchSubmissionReviewsProps {
     mappingAppeals: MappingAppeal
     scorecardInfo?: ScorecardInfo
-    submissionInfo?: BackendSubmission
     scorecardId: string
     isLoading: boolean
     reviewInfo?: ReviewInfo
@@ -521,19 +518,6 @@ export function useFetchSubmissionReviews(reviewId: string = ''): useFetchSubmis
         },
     )
 
-    // Use swr hooks for submission info fetching
-    const {
-        data: submissionInfo,
-        error: fetchSubmissionError,
-        isValidating: isLoadingSubmission,
-    }: SWRResponse<BackendSubmission, Error> = useSWR<BackendSubmission, Error>(
-        `/submissions/${submissionId}`,
-        {
-            fetcher: () => fetchSubmission(submissionId),
-            isPaused: () => !submissionId,
-        },
-    )
-
     /**
      * Get review info from backend and scorecard info
      */
@@ -592,13 +576,6 @@ export function useFetchSubmissionReviews(reviewId: string = ''): useFetchSubmis
             handleError(fetchScorecardError)
         }
     }, [fetchScorecardError])
-
-    // Show backend error when fetching submission info
-    useEffect(() => {
-        if (fetchSubmissionError) {
-            handleError(fetchSubmissionError)
-        }
-    }, [fetchSubmissionError])
 
     // Show backend error when fetching appeal info
     useEffect(() => {
@@ -950,7 +927,7 @@ export function useFetchSubmissionReviews(reviewId: string = ''): useFetchSubmis
         addManagerComment,
         doDeleteAppeal,
         isLoading:
-            isLoadingReview || isLoadingScorecard || isLoadingSubmission,
+            isLoadingReview || isLoadingScorecard,
         isSavingAppeal,
         isSavingAppealResponse,
         isSavingManagerComment,
@@ -962,7 +939,6 @@ export function useFetchSubmissionReviews(reviewId: string = ''): useFetchSubmis
         scorecardId,
         scorecardInfo,
         setReviewInfo: setUpdatedReviewInfo,
-        submissionInfo,
         submitterLockedPhaseName: submitterPhaseGate.phaseName,
     }
 }

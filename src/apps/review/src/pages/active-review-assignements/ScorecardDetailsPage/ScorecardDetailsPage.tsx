@@ -16,6 +16,7 @@ import { TableLoading } from '~/apps/admin/src/lib'
 
 import {
     useAppNavigate,
+    useFetchSubmissionInfo,
     useFetchSubmissionReviews,
     useFetchSubmissionReviewsProps,
     useRole,
@@ -283,9 +284,10 @@ export const ScorecardDetailsPage: FC<Props> = (props: Props) => {
         submitterLockedPhaseName,
         reviewInfo,
         scorecardInfo,
-        submissionInfo,
         saveReviewInfo,
     }: useFetchSubmissionReviewsProps = useFetchSubmissionReviews(reviewId)
+
+    const [submissionInfo] = useFetchSubmissionInfo(reviewInfo?.submissionId)
 
     const isReviewCompleted = useMemo(
         () => {

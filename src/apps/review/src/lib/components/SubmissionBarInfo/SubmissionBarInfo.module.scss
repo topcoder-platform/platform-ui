@@ -2,18 +2,12 @@
 
 .container {
     display: flex;
-    gap: $sp-10;
+    gap: $sp-4;
     margin-top: $sp-6;
     flex-wrap: wrap;
 
-    @include ltelg {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 15px 30px;
-    }
-
-    @include ltesm {
-        grid-template-columns: 1fr;
+    @include ltemd {
+        flex-direction: column;
     }
 }
 
@@ -22,31 +16,39 @@
     font-size: 14px;
     line-height: 19px;
 
-    .circleWrapper {
-        align-items: center;
-        background-color: #E9ECEF;
-        border-radius: 50%;
-        height: 40px;
+    .nameIcon {
         display: flex;
-        margin-right: $sp-4;
-        justify-content: center;
-        width: 40px;
+        align-items: center;
+
+        @include ltemd {
+            margin-right: auto;
+        }
     }
 
-    strong,
-    a {
-        color: var(--FontColor);
-        font-family: "Nunito Sans", sans-serif;
+    .icon {
         display: block;
-        font-weight: 700;
-        line-height: 20px;
+        width: 20px;
+        height: 20px;
+        margin-right: 8px;
+        padding-top: 2px;
+        padding-bottom: 2px;
+        i {
+            width: auto;
+            height: 100%;
+        }
     }
-    span {
-        color: var(--GrayFontColor);
-        display: block;
+
+    strong {
+        font-weight: bold;
+        margin-right: $sp-1;
+    }
+
+    strong, a {
+        color: #0A0A0A;
         font-family: "Nunito Sans", sans-serif;
         display: block;
         line-height: 20px;
+        font-size: 14px;
     }
 }
 

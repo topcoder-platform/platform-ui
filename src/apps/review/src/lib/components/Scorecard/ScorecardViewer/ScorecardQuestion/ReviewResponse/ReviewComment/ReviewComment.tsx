@@ -98,14 +98,16 @@ const ReviewComment: FC<ReviewCommentProps> = props => {
 
     return (
         <div className={styles.wrap}>
-            <ScorecardQuestionRow
-                index={`Comment ${props.index}${typeDisplay ? ` (${typeDisplay})` : ''}`}
-                className={styles.commentRow}
-            >
-                <div className={styles.content}>
-                    {props.comment.content}
-                </div>
-            </ScorecardQuestionRow>
+            {props.comment.content && (
+                <ScorecardQuestionRow
+                    index={`Comment ${props.index}${typeDisplay ? ` (${typeDisplay})` : ''}`}
+                    className={styles.commentRow}
+                >
+                    <div className={styles.content}>
+                        {props.comment.content}
+                    </div>
+                </ScorecardQuestionRow>
+            )}
 
             <ScorecardQuestionRow>
                 {isSubmitter && canAddAppeal && (!props.appeal && !showAppealForm && (
