@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import useSWR, { SWRResponse } from 'swr'
 
 import { EnvironmentConfig } from '~/config'
@@ -204,40 +204,38 @@ export function useFetchAiWorkflowsRunAttachments(
 
 export function useDownloadAiWorkflowsRunArtifact(
     workflowId?: string,
-    runId?: string | undefined,
+    runId?: string,
 ): AiWorkflowRunArtifactDownloadResponse {
     const [isDownloading, setIsDownloading] = useState(false)
 
-    const download = async (artifactId: number): Promise<void> => {
-        if (!workflowId || !runId || !artifactId) return
+    const download = useCallback(
+        async (artifactId: number): Promise<void> => {
+            if (!workflowId || !runId || !artifactId) return
 
-        try {
             setIsDownloading(true)
-
             const url = `${TC_API_BASE_URL}/workflows/${workflowId}/runs/${runId}/attachments/${artifactId}/zip`
 
-            xhrGetBlobAsync<Blob>(url)
-                .then(blob => {
-                    const objectUrl = window.URL.createObjectURL(blob)
-                    const link = document.createElement('a')
-                    link.href = objectUrl
-                    link.download = `artifact-${artifactId}.zip`
+            try {
+                const blob = await xhrGetBlobAsync<Blob>(url)
 
-                    document.body.appendChild(link)
-                    link.click()
-                    link.remove()
+                const objectUrl = window.URL.createObjectURL(blob)
+                const link = document.createElement('a')
+                link.href = objectUrl
+                link.download = `artifact-${artifactId}.zip`
 
-                    window.URL.revokeObjectURL(objectUrl)
-                })
-                .catch(err => {
-                    handleError(err as Error)
-                })
-        } catch (err) {
-            handleError(err as Error)
-        } finally {
-            setIsDownloading(false)
-        }
-    }
+                document.body.appendChild(link)
+                link.click()
+                link.remove()
+
+                window.URL.revokeObjectURL(objectUrl)
+            } catch (err) {
+                handleError(err as Error)
+            } finally {
+                setIsDownloading(false)
+            }
+        },
+        [workflowId, runId],
+    )
 
     return {
         download,

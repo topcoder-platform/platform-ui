@@ -1,7 +1,19 @@
 @import '@libs/ui/styles/includes';
 
-.container {
+.tableWrapper {
     min-height: calc($content-height - 250px);
+    font-size: 14px;
+
+    &:global(.enhanced-table) {
+    table {
+      th,
+      td {
+        text-align: left;
+        background-color: white;
+      }
+
+    }
+  }
 }
 
 .tableCell {
@@ -44,4 +56,32 @@
     .artifactIcon {
         stroke: #00797A;
     }
+}
+
+.noAttachmentText {
+    text-align: center;
+}
+
+.mobileRow {
+    padding: 16px 8px;
+    border-bottom: 1px solid #A8A8A8;
+}
+
+.mobileHeader {
+    display: flex;
+    gap: 12px;
+}
+
+.mobileExpanded {
+    padding: 16px 20px 0px 32px;
+}
+
+.rowItem {
+    display: flex;
+    justify-content: space-between;
+}
+
+.rowItemHeading {
+    font-weight: 700;
+    color: #0a0a0a;
 }

@@ -1,10 +1,11 @@
-import { FC, useCallback, useMemo } from 'react'
+import { FC, useCallback, useMemo, useState } from 'react'
 import { noop } from 'lodash'
 import classNames from 'classnames'
 import moment from 'moment'
 
 import { IconOutline, Table, TableColumn } from '~/libs/ui'
 import { useReviewsContext } from '~/apps/review/src/pages/reviews/ReviewsContext'
+import { useWindowSize, WindowSize } from '~/libs/shared'
 
 import { AiWorkflowRunArtifact,
     AiWorkflowRunArtifactDownloadResponse,
@@ -23,8 +24,8 @@ interface ScorecardAttachmentsProps {
 
 const ScorecardAttachments: FC<ScorecardAttachmentsProps> = (props: ScorecardAttachmentsProps) => {
     const className = props.className
-    // const { width: screenWidth }: WindowSize = useWindowSize()
-    // const isTablet = useMemo(() => screenWidth <= 1000, [screenWidth])
+    const { width: screenWidth }: WindowSize = useWindowSize()
+    const isTablet = useMemo(() => screenWidth <= 1000, [screenWidth])
     const { workflowId, workflowRun }: ReviewsContextModel = useReviewsContext()
     const { artifacts }: AiWorkflowRunAttachmentsResponse
     = useFetchAiWorkflowsRunAttachments(workflowId, workflowRun?.id)
@@ -105,28 +106,94 @@ const ScorecardAttachments: FC<ScorecardAttachmentsProps> = (props: ScorecardAtt
                 type: 'element',
             },
         ],
+        [createDownloadHandler, isDownloading],
+    )
+
+    const [openRow, setOpenRow] = useState<number | undefined>(undefined)
+    const toggleRow = useCallback(
+        (id: number) => () => {
+            setOpenRow(prev => (prev === id ? undefined : id))
+        },
         [],
     )
+    const renderMobileRow = (attachment: AiWorkflowRunArtifact): JSX.Element => {
+        const isExpired = attachment.expired
+        const downloading = isDownloading
+        const isOpen = openRow === attachment.id
+
+        return (
+            <div key={attachment.id} className={styles.mobileRow}>
+                {/* Top collapsed row */}
+                <div className={styles.mobileHeader}>
+                    <IconOutline.ChevronDownIcon
+                        onClick={toggleRow(attachment.id)}
+                        className={classNames(styles.chevron, {
+                            [styles.open]: isOpen,
+                        })}
+                        width={20}
+                    />
+                    <div
+                        className={classNames(styles.filenameCell, {
+                            [styles.expired]: isExpired,
+                            [styles.downloading]: downloading,
+                        })}
+                        onClick={!isExpired ? createDownloadHandler(attachment.id) : undefined}
+                    >
+                        {attachment.name}
+                    </div>
+
+                </div>
+
+                {/* Expanded content */}
+                {isOpen && (
+                    <div className={styles.mobileExpanded}>
+                        <div className={styles.rowItem}>
+                            <span className={styles.rowItemHeading}>Type:</span>
+                            <div className={styles.artifactType}>
+                                <IconOutline.CubeIcon className={styles.artifactIcon} width={20} />
+                                Artifact
+                            </div>
+                        </div>
+
+                        <div className={styles.rowItem}>
+                            <span className={styles.rowItemHeading}>Size:</span>
+                            {formatFileSize(attachment.size_in_bytes)}
+                        </div>
+
+                        <div className={styles.rowItem}>
+                            <span className={styles.rowItemHeading}>Date:</span>
+                            {moment(attachment.created_at)
+                                .local()
+                                .format(TABLE_DATE_FORMAT)}
+                        </div>
+                    </div>
+                )}
+            </div>
+        )
+    }
 
     return (
         <TableWrapper
             className={classNames(
-                styles.container,
+                styles.tableWrapper,
                 className,
                 'enhanced-table',
             )}
         >
-            {artifacts ? (
+            {!artifacts || artifacts.length === 0 ? (
+                <div className={styles.noAttachmentText}>No attachments</div>
+            ) : isTablet ? (
+                <div className={styles.mobileList}>
+                    {artifacts.map(renderMobileRow)}
+                </div>
+            ) : (
                 <Table
                     columns={columns}
                     data={artifacts}
                     disableSorting
                     onToggleSort={noop}
                     removeDefaultSort
-                    className='enhanced-table-desktop'
                 />
-            ) : (
-                <div>No attachments</div>
             )}
 
         </TableWrapper>
