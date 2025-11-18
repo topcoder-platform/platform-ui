@@ -18,11 +18,12 @@ import { rootRoute } from '~/apps/review/src/config/routes.config'
 import { ADMIN, COPILOT, MANAGER } from '../../../../config/index.config'
 import { useReviewsContext } from '../../ReviewsContext'
 
+import { ReviewScorecardHeader } from './ReviewScorecardHeader'
 import styles from './ReviewViewer.module.scss'
 
 const ReviewViewer: FC = () => {
     const navigate = useAppNavigate()
-    const { reviewId, setReviewStatus, setActionButtons }: ReviewsContextModel = useReviewsContext()
+    const { reviewId, setReviewStatus, setActionButtons, workflow, reviewStatus }: ReviewsContextModel = useReviewsContext()
 
     const {
         actionChallengeRole,
@@ -234,7 +235,14 @@ const ReviewViewer: FC = () => {
                     </div>
                 )}
                 {!isSubmitterPhaseLocked && (
-                    <ScorecardViewer
+                    <>
+                        <ReviewScorecardHeader
+                            reviewInfo={reviewInfo}
+                            scorecardInfo={scorecardInfo}
+                            workflow={workflow}
+                            reviewProgress={reviewStatus?.progress ?? reviewInfo?.reviewProgress ?? 0}
+                        />
+                        <ScorecardViewer
                         actionChallengeRole={actionChallengeRole}
                         scorecard={scorecardInfo as any}
                         reviewInfo={reviewInfo}
@@ -257,6 +265,7 @@ const ReviewViewer: FC = () => {
                         setReviewStatus={setReviewStatus}
                         setActionButtons={setActionButtons}
                     />
+                    </>
                 )}
             </div>
             {isEdit && (

@@ -33,6 +33,10 @@
 
 .summary {
     margin-bottom: $sp-6;
+    > * {
+        padding-top: 0;
+        justify-content: flex-end;
+    }
 }
 
 .lockedNotice {
