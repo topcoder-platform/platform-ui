@@ -44,6 +44,10 @@ export interface AiWorkflowRun {
     gitRunUrl?: string;
     score: number;
     workflow: AiWorkflow
+    usage: {
+        input: number
+        output: number
+    }
 }
 
 export interface AiWorkflowRunArtifact {

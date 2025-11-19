@@ -101,8 +101,16 @@
         &.sm {
             height: 16px;
         }
-        path {
-            fill: #0A0A0A;
+        &.md {
+            height: 20px;
+            stroke: #0a0a0a;
+        }
+        
+        &.iconFile {
+            path {
+                fill: #0A0A0A;
+            }
+            height: 16px;
         }
     }
 

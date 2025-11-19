@@ -3,6 +3,7 @@ import moment, { Duration } from 'moment'
 
 import { ReviewsContextModel } from '~/apps/review/src/lib/models'
 import { useRolePermissions, UseRolePermissionsResult } from '~/apps/review/src/lib/hooks'
+import { ArrowCircleDownIcon, ArrowCircleUpIcon } from '@heroicons/react/outline'
 
 import { IconClock, IconFile, IconPremium } from '../../../../lib/assets/icons'
 import { AiModelModal } from '../AiModelModal'
@@ -68,7 +69,7 @@ const ScorecardHeader: FC = () => {
                     </span>
                     {isAdmin && (
                         <span>
-                            <IconFile className={styles.sm} />
+                            <IconFile className={styles.iconFile} />
                             <span>
                                 <strong>Git log:</strong>
                                 {' '}
@@ -78,6 +79,26 @@ const ScorecardHeader: FC = () => {
                                         {workflowRun.gitRunId}
                                     </a>
                                 )}
+                            </span>
+                        </span>
+                    )}
+                    {isAdmin && (
+                        <span>
+                            <ArrowCircleDownIcon className={styles.md} />
+                            <span>
+                                <strong>Input Tokens:</strong>
+                                {' '}
+                                {workflowRun.usage.input}
+                            </span>
+                        </span>
+                    )}
+                    {isAdmin && (
+                        <span>
+                            <ArrowCircleUpIcon className={styles.md} />
+                            <span>
+                                <strong>Output Tokens:</strong>
+                                {' '}
+                                {workflowRun.usage.output}
                             </span>
                         </span>
                     )}
