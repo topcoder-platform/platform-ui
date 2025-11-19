@@ -88,7 +88,7 @@ const ScorecardHeader: FC = () => {
                             <span>
                                 <strong>Input Tokens:</strong>
                                 {' '}
-                                {workflowRun.usage.input}
+                                {workflowRun.usage?.input}
                             </span>
                         </span>
                     )}
@@ -98,7 +98,7 @@ const ScorecardHeader: FC = () => {
                             <span>
                                 <strong>Output Tokens:</strong>
                                 {' '}
-                                {workflowRun.usage.output}
+                                {workflowRun.usage?.output}
                             </span>
                         </span>
                     )}
