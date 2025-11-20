@@ -52,7 +52,7 @@ export const AiFeedbackActions: FC<AiFeedbackActionsProps> = props => {
         setUpVotes(initialUp)
         setDownVotes(initialDown)
         setUserVote(myVote?.voteType ?? undefined)
-    }, [])
+    }, [votesArr, props.feedback])
 
     const setInitialVotesForComment = useCallback((): void => {
         const initialUp = votesArr.filter(v => String(v.voteType)
@@ -66,7 +66,7 @@ export const AiFeedbackActions: FC<AiFeedbackActionsProps> = props => {
         setUpVotes(initialUp)
         setDownVotes(initialDown)
         setUserVote(myVote?.voteType ?? undefined)
-    }, [])
+    }, [votesArr])
 
     useEffect(() => {
         if (props.actionType === 'runItem') {
