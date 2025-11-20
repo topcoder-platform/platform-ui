@@ -1,0 +1,29 @@
+@import '@libs/ui/styles/includes';
+
+.comments {
+    font-family: "Nunito Sans", sans-serif;
+    .comment {
+        margin-top: 32px;
+        background-color: #E0E4E8;
+        padding: 16px;
+        .info {
+            margin: 16px 0;
+            font-size: 14px;
+            .reply {
+                color: #0A0A0A;
+                font-weight: $font-weight-bold;
+            }
+            .text {
+                font-weight: $font-weight-normal;
+                color: #767676;
+            }
+            .name {
+                color: #0A0A0A;
+                font-weight: $font-weight-bold;
+            }
+            .date {
+                color: #0A0A0A;
+            }
+        }
+    }
+}
