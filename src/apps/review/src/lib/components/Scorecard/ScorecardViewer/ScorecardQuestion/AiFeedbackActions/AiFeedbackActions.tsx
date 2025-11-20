@@ -40,35 +40,35 @@ export const AiFeedbackActions: FC<AiFeedbackActionsProps> = props => {
 
     const votesArr: any[] = (props.actionType === 'runItem' ? (props.feedback?.votes) : (props.comment?.votes)) || []
 
+    const setInitialVotesForFeedback = useCallback((): void => {
+        const initialUp = props.feedback?.upVotes ?? votesArr.filter(v => String(v.voteType)
+            .toLowerCase()
+            .includes('up')).length
+        const initialDown = props.feedback?.downVotes ?? votesArr.filter(v => String(v.voteType)
+            .toLowerCase()
+            .includes('down')).length
+
+        const myVote = votesArr.find(v => String(v.createdBy) === String(loginUserInfo?.userId))
+        setUpVotes(initialUp)
+        setDownVotes(initialDown)
+        setUserVote(myVote?.voteType ?? undefined)
+    }, [])
+
+    const setInitialVotesForComment = useCallback((): void => {
+        const initialUp = votesArr.filter(v => String(v.voteType)
+            .toLowerCase()
+            .includes('up')).length
+        const initialDown = votesArr.filter(v => String(v.voteType)
+            .toLowerCase()
+            .includes('down')).length
+
+        const myVote = votesArr.find(v => String(v.createdBy) === String(loginUserInfo?.userId))
+        setUpVotes(initialUp)
+        setDownVotes(initialDown)
+        setUserVote(myVote?.voteType ?? undefined)
+    }, [])
+
     useEffect(() => {
-        const setInitialVotesForFeedback = (): void => {
-            const initialUp = props.feedback?.upVotes ?? votesArr.filter(v => String(v.voteType)
-                .toLowerCase()
-                .includes('up')).length
-            const initialDown = props.feedback?.downVotes ?? votesArr.filter(v => String(v.voteType)
-                .toLowerCase()
-                .includes('down')).length
-    
-            const myVote = votesArr.find(v => String(v.createdBy) === String(loginUserInfo?.userId))
-            setUpVotes(initialUp)
-            setDownVotes(initialDown)
-            setUserVote(myVote?.voteType ?? undefined)
-        }
-    
-        const setInitialVotesForComment = (): void => {
-            const initialUp = votesArr.filter(v => String(v.voteType)
-                .toLowerCase()
-                .includes('up')).length
-            const initialDown = votesArr.filter(v => String(v.voteType)
-                .toLowerCase()
-                .includes('down')).length
-    
-            const myVote = votesArr.find(v => String(v.createdBy) === String(loginUserInfo?.userId))
-            setUpVotes(initialUp)
-            setDownVotes(initialDown)
-            setUserVote(myVote?.voteType ?? undefined)
-        }
-        
         if (props.actionType === 'runItem') {
             setInitialVotesForFeedback()
         } else {
