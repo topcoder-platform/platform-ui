@@ -17,6 +17,7 @@ import {
     paymentsRouteId,
     permissionManagementRouteId,
     platformRouteId,
+    reportsRouteId,
     rootRoute,
     termsRouteId,
     userManagementRouteId,
@@ -167,6 +168,10 @@ const TermsUsersPage: LazyLoadedComponent = lazyLoad(
 const PaymentsPage: LazyLoadedComponent = lazyLoad(
     () => import('./payments/PaymentsPage'),
     'PaymentsPage',
+)
+const ReportsPage: LazyLoadedComponent = lazyLoad(
+    () => import('./reports/ReportsPage'),
+    'ReportsPage',
 )
 
 export const toolTitle: string = ToolTitle.admin
@@ -401,6 +406,12 @@ export const adminRoutes: ReadonlyArray<PlatformRoute> = [
                 element: <PaymentsPage />,
                 id: paymentsRouteId,
                 route: paymentsRouteId,
+            },
+            // Reports Module
+            {
+                element: <ReportsPage />,
+                id: reportsRouteId,
+                route: reportsRouteId,
             },
         ],
         domain: AppSubdomain.admin,

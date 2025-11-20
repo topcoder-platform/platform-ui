@@ -286,6 +286,31 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
         ),
         [challengeInfo?.phases],
     )
+    const screeningOutcome = useMemo(
+        () => {
+            const passingSubmissionIds = new Set<string>()
+            const failingSubmissionIds = new Set<string>()
+
+            props.screening.forEach(entry => {
+                if (!entry?.submissionId) {
+                    return
+                }
+
+                const normalizedResult = (entry.result || '').toUpperCase()
+                if (normalizedResult === 'PASS') {
+                    passingSubmissionIds.add(`${entry.submissionId}`)
+                } else if (normalizedResult === 'NO PASS') {
+                    failingSubmissionIds.add(`${entry.submissionId}`)
+                }
+            })
+
+            return {
+                failingSubmissionIds,
+                passingSubmissionIds,
+            }
+        },
+        [props.screening],
+    )
     const passesReviewTabGuards: (submission: SubmissionInfo) => boolean = useMemo(
         () => (submission: SubmissionInfo): boolean => shouldIncludeInReviewPhase(
             submission,
@@ -300,36 +325,22 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
         reviews: SubmissionInfo[]
         submitterReviews: SubmissionInfo[]
     } = useMemo(() => {
-        const shouldFilter = props.isActiveChallenge && hasScreeningPhase
-        if (!shouldFilter) {
-            return {
-                reviews: props.review.filter(passesReviewTabGuards),
-                submitterReviews: props.submitterReviews.filter(passesReviewTabGuards),
-            }
-        }
+        const {
+            failingSubmissionIds,
+            passingSubmissionIds,
+        }: {
+            failingSubmissionIds: Set<string>
+            passingSubmissionIds: Set<string>
+        } = screeningOutcome
+        const shouldFilter = props.isActiveChallenge
+            && (hasScreeningPhase || props.screening.length > 0)
+            && (passingSubmissionIds.size > 0 || failingSubmissionIds.size > 0)
 
-        const passingSubmissionIds = new Set<string>()
-        props.screening.forEach(entry => {
-            if (!entry?.submissionId) {
-                return
+        const matchesScreeningOutcome = (submission: SubmissionInfo): boolean => {
+            if (!shouldFilter) {
+                return true
             }
 
-            const result = (entry.result || '').toUpperCase()
-            if (result === 'PASS') {
-                passingSubmissionIds.add(`${entry.submissionId}`)
-            }
-        })
-
-        if (passingSubmissionIds.size === 0) {
-            return {
-                reviews: props.review
-                    .filter(passesReviewTabGuards),
-                submitterReviews: props.submitterReviews
-                    .filter(passesReviewTabGuards),
-            }
-        }
-
-        const matchesPassingScreening = (submission: SubmissionInfo): boolean => {
             if (!submission) {
                 return false
             }
@@ -348,15 +359,23 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
                 return true
             }
 
+            if (passingSubmissionIds.size > 0) {
+                return candidateIds.some(id => passingSubmissionIds.has(id))
+            }
+
+            if (failingSubmissionIds.size > 0) {
+                return !candidateIds.some(id => failingSubmissionIds.has(id))
+            }
+
             return candidateIds.some(id => passingSubmissionIds.has(id))
         }
 
         return {
             reviews: props.review
-                .filter(matchesPassingScreening)
+                .filter(matchesScreeningOutcome)
                 .filter(passesReviewTabGuards),
             submitterReviews: props.submitterReviews
-                .filter(matchesPassingScreening)
+                .filter(matchesScreeningOutcome)
                 .filter(passesReviewTabGuards),
         }
     }, [
@@ -365,7 +384,9 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
         props.review,
         props.submitterReviews,
         props.screening,
+        props.screening.length,
         passesReviewTabGuards,
+        screeningOutcome,
     ])
 
     const renderSelectedTab = (): JSX.Element => {
