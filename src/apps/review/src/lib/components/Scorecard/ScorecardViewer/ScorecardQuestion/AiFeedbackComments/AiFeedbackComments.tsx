@@ -1,4 +1,5 @@
 import { FC } from 'react'
+import moment from 'moment'
 
 import { AiFeedbackActions } from '../AiFeedbackActions/AiFeedbackActions'
 
@@ -47,7 +48,7 @@ export const AiFeedbackComments: FC<AiFeedbackCommentsProps> = props => (
                             {comment.createdUser.handle}
                         </span>
                         <span className={styles.text}> on </span>
-                        <span className={styles.date}>{comment.createdAt}</span>
+                        <span className={styles.date}>{ moment(comment.createdAt).local().format('MMM DD, hh:mm A')}</span>
                     </div>
                     <div className={styles.commentContent}>{comment.content}</div>
                     <AiFeedbackActions feedback={props.feedback} comment={comment} actionType='comment' />
