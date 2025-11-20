@@ -18,6 +18,17 @@ import { rootRoute } from '~/apps/review/src/config/routes.config'
 import { ADMIN, COPILOT, MANAGER } from '../../../../config/index.config'
 import { useReviewsContext } from '../../ReviewsContext'
 
+import {
+    canRoleEditPhase,
+    ChallengePhaseSummary,
+    detectReviewPhaseType,
+    detectReviewTypeFromMetadata,
+    detectReviewTypeFromPhases,
+    detectReviewTypeFromReviewerConfig,
+    normalizeRoleName,
+    ReviewerConfig,
+    ReviewPhaseType,
+} from './phase.utils'
 import { ReviewScorecardHeader } from './ReviewScorecardHeader'
 import styles from './ReviewViewer.module.scss'
 
@@ -99,9 +110,69 @@ const ReviewViewer: FC = () => {
         [submitterLockedPhaseName],
     )
 
+    const reviewPhaseType = useMemo<ReviewPhaseType | undefined>(() => {
+        const reviewerConfigs = challengeInfo?.reviewers ?? []
+        const normalizedPhaseId = reviewInfo?.phaseId ? `${reviewInfo.phaseId}` : undefined
+        const normalizedScorecardId = reviewInfo?.scorecardId ? `${reviewInfo.scorecardId}` : undefined
+
+        const metadataDerived = detectReviewTypeFromMetadata(reviewInfo?.metadata)
+        const phaseDerived = detectReviewTypeFromPhases(
+            challengeInfo?.phases as ChallengePhaseSummary[],
+            reviewInfo?.phaseId,
+        )
+        const reviewerDerived = detectReviewTypeFromReviewerConfig(
+            reviewerConfigs as ReviewerConfig[],
+            normalizedPhaseId,
+            normalizedScorecardId,
+        )
+        const scorecardDerived = detectReviewPhaseType(scorecardInfo?.name)
+
+        return metadataDerived
+            || phaseDerived
+            || reviewerDerived
+            || scorecardDerived
+            || undefined
+    }, [
+        challengeInfo?.phases,
+        challengeInfo?.reviewers,
+        reviewInfo?.metadata,
+        reviewInfo?.phaseId,
+        reviewInfo?.scorecardId,
+        scorecardInfo?.name,
+    ])
+
+    const currentPhaseReviewType = useMemo(
+        () => detectReviewPhaseType(challengeInfo?.currentPhase),
+        [challengeInfo?.currentPhase],
+    )
+
+    const isPhaseEditAllowed = useMemo(() => {
+        if (!reviewPhaseType || !reviewInfo?.resourceId) {
+            return false
+        }
+
+        const myResource = myChallengeResources.find(resource => resource.id === reviewInfo.resourceId)
+        if (!myResource) {
+            return false
+        }
+
+        const normalizedRoleName = normalizeRoleName(myResource.roleName)
+
+        return canRoleEditPhase(
+            reviewPhaseType,
+            currentPhaseReviewType,
+            normalizedRoleName,
+        )
+    }, [
+        reviewPhaseType,
+        currentPhaseReviewType,
+        myChallengeResources,
+        reviewInfo?.resourceId,
+    ])
+
     const isEdit = useMemo(
-        () => isEditPhase && !isReviewCompleted,
-        [isEditPhase, isReviewCompleted],
+        () => (isEditPhase || isPhaseEditAllowed) && !isReviewCompleted,
+        [isEditPhase, isPhaseEditAllowed, isReviewCompleted],
     )
 
     /**
