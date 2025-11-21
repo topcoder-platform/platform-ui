@@ -7,6 +7,8 @@ import {
     useAppNavigate,
     useFetchSubmissionReviews,
     useFetchSubmissionReviewsProps,
+    useReviewEditAccess,
+    UseReviewEditAccessResult,
     useRole,
     useRoleProps,
 } from '~/apps/review/src/lib/hooks'
@@ -99,10 +101,14 @@ const ReviewViewer: FC = () => {
         [submitterLockedPhaseName],
     )
 
-    const isEdit = useMemo(
-        () => isEditPhase && !isReviewCompleted,
-        [isEditPhase, isReviewCompleted],
-    )
+    const { isEdit }: UseReviewEditAccessResult = useReviewEditAccess({
+        challengeInfo,
+        isEditPhase,
+        isReviewCompleted,
+        myChallengeResources,
+        reviewInfo,
+        scorecardInfo,
+    })
 
     /**
      * Cancel edit
