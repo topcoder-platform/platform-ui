@@ -1,4 +1,5 @@
 import { FC, useCallback, useMemo, useState } from 'react'
+import { mutate } from 'swr'
 
 import { IconAiReview } from '~/apps/review/src/lib/assets/icons'
 import { ReviewsContextModel, ScorecardQuestion } from '~/apps/review/src/lib/models'

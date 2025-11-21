@@ -69,7 +69,7 @@ export const AiFeedbackReply: FC<AiFeedbackReplyProps> = props => {
                                 error={get(errors, 'reply.message')}
                                 disabled={isSavingReply}
                                 uploadCategory='appeal'
-                                maxCharactersAllowed={10}
+                                maxCharactersAllowed={5000}
                             />
                         )
                     }}

@@ -883,7 +883,7 @@ export const FieldMarkdownEditor: FC<Props> = (props: Props) => {
         >
             <textarea ref={elementRef} placeholder={props.placeholder} />
             {props.maxCharactersAllowed && (
-                <div>
+                <div className={styles.remainingCharacters}>
                     {remainingCharacters}
                     {' '}
                     characters remaining
