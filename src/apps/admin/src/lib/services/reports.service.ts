@@ -3,11 +3,21 @@ import type { AxiosInstance } from 'axios'
 import { EnvironmentConfig } from '~/config'
 import { xhrCreateInstance, xhrGetAsync } from '~/libs/core/lib/xhr'
 
+export type ReportParameter = {
+    name: string
+    type: 'string' | 'string[]' | 'number' | 'number[]' | 'boolean' | 'date' | 'enum' | 'enum[]'
+    description?: string
+    required?: boolean
+    location?: 'query' | 'path'
+    options?: string[]
+}
+
 export type ReportDefinition = {
     name: string
     path: string
     description?: string
     method: string
+    parameters?: ReportParameter[]
 }
 
 export type ReportGroup = {

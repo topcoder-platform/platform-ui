@@ -26,6 +26,28 @@
     gap: 4px;
 }
 
+.params {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin-top: 12px;
+}
+
+.paramLabel {
+    font-weight: 600;
+}
+
+.paramMeta {
+    color: #6b6f75;
+    font-size: 12px;
+}
+
+.paramHint {
+    color: #6b6f75;
+    font-size: 12px;
+    font-style: italic;
+}
+
 .reportTitle {
     font-weight: 600;
 }
