@@ -83,7 +83,6 @@ interface ScorecardViewerProps {
 
 const ScorecardViewerContent: FC<ScorecardViewerProps> = props => {
     const [isShowSaveAsDraftModal, setIsShowSaveAsDraftModal] = useState(false)
-    const [shouldRedirectAfterDraft, setShouldRedirectAfterDraft] = useState(false)
 
     const reviewItemMapping = useMemo(() => {
         if (!props.reviewInfo?.reviewItems) {
@@ -135,7 +134,6 @@ const ScorecardViewerContent: FC<ScorecardViewerProps> = props => {
                 totalScore,
                 () => {
                     setIsShowSaveAsDraftModal(true)
-                    setShouldRedirectAfterDraft(true)
                 },
             )
         }
@@ -143,10 +141,8 @@ const ScorecardViewerContent: FC<ScorecardViewerProps> = props => {
 
     const handleCloseDraftModal = useCallback(() => {
         setIsShowSaveAsDraftModal(false)
-        if (shouldRedirectAfterDraft) {
-            setShouldRedirectAfterDraft(false)
-        }
-    }, [shouldRedirectAfterDraft])
+        props.navigateBack?.()
+    }, [])
 
     const ContainerTag = props.isEdit ? 'form' : 'div'
 
