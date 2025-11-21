@@ -1,9 +1,8 @@
 import { FC } from 'react'
+import classNames from 'classnames'
 
 import { AiFeedbackComment } from './AiFeedbackComment'
-
 import styles from './AiFeedbackComments.module.scss'
-import classNames from 'classnames'
 
 export interface AiFeedbackVote {
     id: string

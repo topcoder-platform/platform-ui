@@ -3,7 +3,7 @@
  */
 import { FC, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import _ from 'lodash'
-import CodeMirror, { EditorChange, EditorChangeCancellable } from 'codemirror'
+import CodeMirror, { EditorChangeCancellable } from 'codemirror'
 import EasyMDE from 'easymde'
 import classNames from 'classnames'
 import 'easymde/dist/easymde.min.css'
@@ -150,7 +150,9 @@ type CodeMirrorType = keyof typeof stateStrategy | 'variable-2'
 export const FieldMarkdownEditor: FC<Props> = (props: Props) => {
     const elementRef = useRef<HTMLTextAreaElement>(null)
     const easyMDE = useRef<any>(null)
-    const [remainingCharacters, setRemainingCharacters] = useState((props.maxCharactersAllowed || 0) - (props.initialValue?.length || 0))
+    const [remainingCharacters, setRemainingCharacters] = useState(
+        (props.maxCharactersAllowed || 0) - (props.initialValue?.length || 0),
+    )
     const { challengeId }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
     const uploadCategory: string = props.uploadCategory ?? 'general'
 
@@ -827,26 +829,26 @@ export const FieldMarkdownEditor: FC<Props> = (props: Props) => {
             uploadImage: true,
         })
 
-        easyMDE.current.codemirror.on("beforeChange", (cm: CodeMirror.Editor, change: EditorChangeCancellable) => {
+        easyMDE.current.codemirror.on('beforeChange', (cm: CodeMirror.Editor, change: EditorChangeCancellable) => {
             if (change.update) {
-              const current = cm.getValue().length;
-              const incoming = change.text.join("\n").length;
-              const replaced = cm.indexFromPos(change.to) - cm.indexFromPos(change.from);
-          
-              const newLength = current + incoming - replaced;
-          
-              if (props.maxCharactersAllowed) {
-                if (newLength > props.maxCharactersAllowed) {
-                    change.cancel();
-                  }
-              }
+                const current = cm.getValue().length
+                const incoming = change.text.join('\n').length
+                const replaced = cm.indexFromPos(change.to) - cm.indexFromPos(change.from)
+
+                const newLength = current + incoming - replaced
+
+                if (props.maxCharactersAllowed) {
+                    if (newLength > props.maxCharactersAllowed) {
+                        change.cancel()
+                    }
+                }
             }
-          });
+        })
 
         easyMDE.current.codemirror.on('change', (cm: CodeMirror.Editor) => {
             if (props.maxCharactersAllowed) {
-                const remainingCharacters = (props.maxCharactersAllowed || 0) - cm.getValue().length
-                setRemainingCharacters(remainingCharacters)
+                const remaining = (props.maxCharactersAllowed || 0) - cm.getValue().length
+                setRemainingCharacters(remaining)
                 props.onChange?.(cm.getValue())
             } else {
                 props.onChange?.(cm.getValue())
@@ -880,7 +882,13 @@ export const FieldMarkdownEditor: FC<Props> = (props: Props) => {
             })}
         >
             <textarea ref={elementRef} placeholder={props.placeholder} />
-            {props.maxCharactersAllowed && <div>{remainingCharacters} characters remaining</div>}
+            {props.maxCharactersAllowed && (
+                <div>
+                    {remainingCharacters}
+                    {' '}
+                    characters remaining
+                </div>
+            )}
             {props.error && (
                 <div className={classNames(styles.error, 'errorMessage')}>
                     {props.error}

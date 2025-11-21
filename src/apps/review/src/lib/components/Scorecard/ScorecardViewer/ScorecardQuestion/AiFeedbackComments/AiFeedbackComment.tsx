@@ -1,19 +1,19 @@
-import { FC, useCallback, useState } from "react"
-import { AiFeedbackComments, AiFeedbackComment as AiFeedbackCommentType } from "./AiFeedbackComments"
-import { mutate } from "swr"
-import moment from "moment"
-import classNames from "classnames"
+import { FC, useCallback, useState } from 'react'
+import { mutate } from 'swr'
+import classNames from 'classnames'
+import moment from 'moment'
 
-import { useReviewsContext } from "~/apps/review/src/pages/reviews/ReviewsContext"
-import { createFeedbackComment } from "~/apps/review/src/lib/services"
-import { AiFeedbackItem, ReviewsContextModel } from "~/apps/review/src/lib/models"
-import { EnvironmentConfig } from "~/config"
+import { useReviewsContext } from '~/apps/review/src/pages/reviews/ReviewsContext'
+import { createFeedbackComment } from '~/apps/review/src/lib/services'
+import { AiFeedbackItem, ReviewsContextModel } from '~/apps/review/src/lib/models'
+import { EnvironmentConfig } from '~/config'
 
-import { AiFeedbackActions } from "../AiFeedbackActions/AiFeedbackActions"
-import { AiFeedbackReply } from "../AiFeedbackReply/AiFeedbackReply"
-import { MarkdownReview } from "../../../../MarkdownReview"
+import { AiFeedbackActions } from '../AiFeedbackActions/AiFeedbackActions'
+import { AiFeedbackReply } from '../AiFeedbackReply/AiFeedbackReply'
+import { MarkdownReview } from '../../../../MarkdownReview'
 
-import styles from "./AiFeedbackComments.module.scss"
+import { AiFeedbackComment as AiFeedbackCommentType, AiFeedbackComments } from './AiFeedbackComments'
+import styles from './AiFeedbackComments.module.scss'
 
 interface AiFeedbackCommentProps {
     comment: AiFeedbackCommentType
@@ -21,7 +21,7 @@ interface AiFeedbackCommentProps {
     isRoot: boolean
 }
 
-export const AiFeedbackComment: FC<AiFeedbackCommentProps> = (props) => {
+export const AiFeedbackComment: FC<AiFeedbackCommentProps> = props => {
     const { workflowId, workflowRun }: ReviewsContextModel = useReviewsContext()
     const [showReply, setShowReply] = useState(false)
 
@@ -38,9 +38,12 @@ export const AiFeedbackComment: FC<AiFeedbackCommentProps> = (props) => {
         setShowReply(false)
     }, [workflowId, workflowRun?.id, props.feedback?.id])
     return (
-        <div key={props.comment.id} className={classNames(styles.comment, {
-            [styles.noMarginTop]: !props.isRoot,
-        })}>
+        <div
+            key={props.comment.id}
+            className={classNames(styles.comment, {
+                [styles.noMarginTop]: !props.isRoot,
+            })}
+        >
             <div className={styles.info}>
                 <span className={styles.reply}>Reply</span>
                 <span className={styles.text}> by </span>
@@ -60,14 +63,22 @@ export const AiFeedbackComment: FC<AiFeedbackCommentProps> = (props) => {
                 </span>
             </div>
             <MarkdownReview value={props.comment.content} />
-            <AiFeedbackActions feedback={props.feedback} comment={props.comment} actionType='comment' onPressReply={onShowReply}/>
+            <AiFeedbackActions
+                feedback={props.feedback}
+                comment={props.comment}
+                actionType='comment'
+                onPressReply={onShowReply}
+            />
             {
                 showReply && (
-                    <AiFeedbackReply onSubmitReply={function submitReply(content: string) {
-                        return onSubmitReply(content, props.comment)
-                    }} onCloseReply={function closeReply() {
-                        setShowReply(false)
-                    }} />
+                    <AiFeedbackReply
+                        onSubmitReply={function submitReply(content: string) {
+                            return onSubmitReply(content, props.comment)
+                        }}
+                        onCloseReply={function closeReply() {
+                            setShowReply(false)
+                        }}
+                    />
                 )
             }
             <AiFeedbackComments comments={props.comment.comments} feedback={props.feedback} isRoot={false} />

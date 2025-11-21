@@ -5,38 +5,42 @@ import {
     UseFormReturn,
 } from 'react-hook-form'
 import { get } from 'lodash'
-
-import styles from "./AiFeedbackReply.module.scss"
-import { formFeedbackReplySchema } from '~/apps/review/src/lib/utils'
-import { yupResolver } from '@hookform/resolvers/yup'
-import { FormFeedbackReply } from '~/apps/review/src/lib/models/FormFeedbackReply.model'
 import { FC, useCallback, useState } from 'react'
-import { FieldMarkdownEditor } from '../../../../FieldMarkdownEditor'
 import classNames from 'classnames'
+
+import { yupResolver } from '@hookform/resolvers/yup'
+import { formFeedbackReplySchema } from '~/apps/review/src/lib/utils'
+import { FormFeedbackReply } from '~/apps/review/src/lib/models/FormFeedbackReply.model'
+
+import { FieldMarkdownEditor } from '../../../../FieldMarkdownEditor'
+
+import styles from './AiFeedbackReply.module.scss'
 
 interface AiFeedbackReplyProps {
     onCloseReply: () => void
     onSubmitReply: (content: string) => Promise<void>
 }
 
-export const AiFeedbackReply: FC<AiFeedbackReplyProps> = (props) => {
+export const AiFeedbackReply: FC<AiFeedbackReplyProps> = props => {
     const [reply, setReply] = useState('')
     const [isSavingReply, setSavingReply] = useState(false)
     const {
-            handleSubmit,
-            control,
-            formState: { errors },
-        }: UseFormReturn<FormFeedbackReply> = useForm({
-            defaultValues: {
-                reply: '',
-            },
-            mode: 'all',
-            resolver: yupResolver(formFeedbackReplySchema),
-        })
-    
+        handleSubmit,
+        control,
+        formState: { errors },
+    }: UseFormReturn<FormFeedbackReply> = useForm({
+        defaultValues: {
+            reply: '',
+        },
+        mode: 'all',
+        resolver: yupResolver(formFeedbackReplySchema),
+    })
+
     const onSubmit = useCallback(async (data: FormFeedbackReply) => {
+        setSavingReply(true)
         await props.onSubmitReply(data.reply)
         setReply('')
+        setSavingReply(false)
     }, [props.onSubmitReply, setReply])
 
     return (

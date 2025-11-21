@@ -2,6 +2,9 @@ import { FC, useCallback, useMemo, useState } from 'react'
 
 import { IconAiReview } from '~/apps/review/src/lib/assets/icons'
 import { ReviewsContextModel, ScorecardQuestion } from '~/apps/review/src/lib/models'
+import { createFeedbackComment } from '~/apps/review/src/lib/services'
+import { useReviewsContext } from '~/apps/review/src/pages/reviews/ReviewsContext'
+import { EnvironmentConfig } from '~/config'
 
 import { ScorecardViewerContextValue, useScorecardViewerContext } from '../../ScorecardViewer.context'
 import { ScorecardQuestionRow } from '../ScorecardQuestionRow'
@@ -9,13 +12,9 @@ import { ScorecardScore } from '../../ScorecardScore'
 import { MarkdownReview } from '../../../../MarkdownReview'
 import { AiFeedbackActions } from '../AiFeedbackActions/AiFeedbackActions'
 import { AiFeedbackComments } from '../AiFeedbackComments/AiFeedbackComments'
+import { AiFeedbackReply } from '../AiFeedbackReply/AiFeedbackReply'
 
 import styles from './AiFeedback.module.scss'
-import { AiFeedbackReply } from '../AiFeedbackReply/AiFeedbackReply'
-import { createFeedbackComment } from '~/apps/review/src/lib/services'
-import { useReviewsContext } from '~/apps/review/src/pages/reviews/ReviewsContext'
-import { mutate } from 'swr'
-import { EnvironmentConfig } from '~/config'
 
 interface AiFeedbackProps {
     question: ScorecardQuestion
@@ -73,9 +72,12 @@ const AiFeedback: FC<AiFeedbackProps> = props => {
 
             {
                 showReply && (
-                    <AiFeedbackReply onSubmitReply={onSubmitReply} onCloseReply={function closeReply() {
-                        setShowReply(false)
-                    }} />
+                    <AiFeedbackReply
+                        onSubmitReply={onSubmitReply}
+                        onCloseReply={function closeReply() {
+                            setShowReply(false)
+                        }}
+                    />
                 )
             }
 
