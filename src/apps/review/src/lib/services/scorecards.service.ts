@@ -56,3 +56,16 @@ export const updateLikesOrDislikesOnRunItemComment = (
     `${EnvironmentConfig.API.V6}/workflows/${workflowId}/runs/${runId}/items/${feedbackId}/comments/${commentId}`,
     body,
 )
+
+export const createFeedbackComment = (
+    workflowId: string,
+    runId: string,
+    feedbackId: string,
+    body: {
+        content: string
+        parentId?: string
+    },
+): Promise<void> => xhrPostAsync(
+    `${EnvironmentConfig.API.V6}/workflows/${workflowId}/runs/${runId}/items/${feedbackId}/comments`,
+    body,
+)

@@ -1,7 +1,11 @@
-import { FC, useMemo } from 'react'
+import { FC, useCallback, useMemo, useState } from 'react'
+import { mutate } from 'swr'
 
 import { IconAiReview } from '~/apps/review/src/lib/assets/icons'
-import { ScorecardQuestion } from '~/apps/review/src/lib/models'
+import { ReviewsContextModel, ScorecardQuestion } from '~/apps/review/src/lib/models'
+import { createFeedbackComment } from '~/apps/review/src/lib/services'
+import { useReviewsContext } from '~/apps/review/src/pages/reviews/ReviewsContext'
+import { EnvironmentConfig } from '~/config'
 
 import { ScorecardViewerContextValue, useScorecardViewerContext } from '../../ScorecardViewer.context'
 import { ScorecardQuestionRow } from '../ScorecardQuestionRow'
@@ -9,6 +13,7 @@ import { ScorecardScore } from '../../ScorecardScore'
 import { MarkdownReview } from '../../../../MarkdownReview'
 import { AiFeedbackActions } from '../AiFeedbackActions/AiFeedbackActions'
 import { AiFeedbackComments } from '../AiFeedbackComments/AiFeedbackComments'
+import { AiFeedbackReply } from '../AiFeedbackReply/AiFeedbackReply'
 
 import styles from './AiFeedback.module.scss'
 
@@ -21,8 +26,22 @@ const AiFeedback: FC<AiFeedbackProps> = props => {
     const feedback: any = useMemo(() => (
         aiFeedbackItems?.find((r: any) => r.scorecardQuestionId === props.question.id)
     ), [props.question.id, aiFeedbackItems])
+    const { workflowId, workflowRun }: ReviewsContextModel = useReviewsContext()
+    const [showReply, setShowReply] = useState(false)
 
     const commentsArr: any[] = (feedback?.comments) || []
+
+    const onShowReply = useCallback(() => {
+        setShowReply(!showReply)
+    }, [])
+
+    const onSubmitReply = useCallback(async (content: string) => {
+        await createFeedbackComment(workflowId as string, workflowRun?.id as string, feedback?.id, {
+            content,
+        })
+        await mutate(`${EnvironmentConfig.API.V6}/workflows/${workflowId}/runs/${workflowRun?.id}/items`)
+        setShowReply(false)
+    }, [workflowId, workflowRun?.id, feedback?.id])
 
     if (!aiFeedbackItems?.length || !feedback) {
         return <></>
@@ -50,10 +69,21 @@ const AiFeedback: FC<AiFeedbackProps> = props => {
 
             <MarkdownReview value={feedback.content} />
 
-            <AiFeedbackActions feedback={feedback} actionType='runItem' />
+            <AiFeedbackActions feedback={feedback} actionType='runItem' onPressReply={onShowReply} />
+
+            {
+                showReply && (
+                    <AiFeedbackReply
+                        onSubmitReply={onSubmitReply}
+                        onCloseReply={function closeReply() {
+                            setShowReply(false)
+                        }}
+                    />
+                )
+            }
 
             {commentsArr.length > 0 && (
-                <AiFeedbackComments comments={commentsArr} feedback={feedback} />
+                <AiFeedbackComments comments={commentsArr} feedback={feedback} isRoot />
             )}
         </ScorecardQuestionRow>
     )
