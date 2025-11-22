@@ -3,6 +3,7 @@ import { FC, useCallback, useContext, useEffect, useState } from 'react'
 import { mutate } from 'swr'
 
 import {
+    IconReply,
     IconThumbsDown,
     IconThumbsDownFilled,
     IconThumbsUp,
@@ -27,6 +28,7 @@ interface AiFeedbackActionsProps {
     actionType: 'comment' | 'runItem'
     comment?: AiFeedbackComment
     feedback?: any
+    onPressReply: () => void
 }
 
 export const AiFeedbackActions: FC<AiFeedbackActionsProps> = props => {
@@ -221,6 +223,15 @@ export const AiFeedbackActions: FC<AiFeedbackActionsProps> = props => {
             >
                 {userVote === 'DOWNVOTE' ? <IconThumbsDownFilled /> : <IconThumbsDown />}
                 <span className={styles.count}>{downVotes}</span>
+            </button>
+
+            <button
+                type='button'
+                className={styles.actionBtn}
+                onClick={props.onPressReply}
+            >
+                <IconReply />
+                <span className={styles.count}>Reply</span>
             </button>
         </div>
     )

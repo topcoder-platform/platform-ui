@@ -4,6 +4,7 @@ import { ReactComponent as IconChevronDown } from './selector.svg'
 import { ReactComponent as IconError } from './icon-error.svg'
 import { ReactComponent as IconAiReview } from './icon-ai-review.svg'
 import { ReactComponent as IconSubmission } from './icon-phase-submission.svg'
+import { ReactComponent as IconReply } from './icon-reply.svg'
 import { ReactComponent as IconRegistration } from './icon-phase-registration.svg'
 import { ReactComponent as IconPhaseReview } from './icon-phase-review.svg'
 import { ReactComponent as IconAppeal } from './icon-phase-appeal.svg'
@@ -47,6 +48,7 @@ export {
     IconAppeal,
     IconAppealResponse,
     IconPhaseWinners,
+    IconReply,
     IconDeepseekAi,
     IconClock,
     IconPremium,
