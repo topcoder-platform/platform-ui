@@ -3,6 +3,7 @@ import { FC, useCallback, useContext, useEffect, useState } from 'react'
 import { mutate } from 'swr'
 
 import {
+    IconEditReply,
     IconReply,
     IconThumbsDown,
     IconThumbsDownFilled,
@@ -11,7 +12,7 @@ import {
 } from '~/apps/review/src/lib/assets/icons'
 import { ReviewAppContext } from '~/apps/review/src/lib/contexts'
 import { useReviewsContext } from '~/apps/review/src/pages/reviews/ReviewsContext'
-import { updateLikesOrDislikesOnRunItem, updateLikesOrDislikesOnRunItemComment } from '~/apps/review/src/lib/services'
+import { updateLikesOrDislikesOnRunItem, updateRunItemComment } from '~/apps/review/src/lib/services'
 import { EnvironmentConfig } from '~/config'
 import { ReviewAppContextModel, ReviewsContextModel } from '~/apps/review/src/lib/models'
 
@@ -29,6 +30,7 @@ interface AiFeedbackActionsProps {
     comment?: AiFeedbackComment
     feedback?: any
     onPressReply: () => void
+    onPressEdit?: () => void
 }
 
 export const AiFeedbackActions: FC<AiFeedbackActionsProps> = props => {
@@ -185,7 +187,7 @@ export const AiFeedbackActions: FC<AiFeedbackActionsProps> = props => {
         }
 
         try {
-            await updateLikesOrDislikesOnRunItemComment(workflowId, workflowRun.id, props.feedback.id, c.id, {
+            await updateRunItemComment(workflowId, workflowRun.id, props.feedback.id, c.id, {
                 downVote: down,
                 upVote: up,
             })
@@ -233,6 +235,19 @@ export const AiFeedbackActions: FC<AiFeedbackActionsProps> = props => {
                 <IconReply />
                 <span className={styles.count}>Reply</span>
             </button>
+
+            {
+                props.onPressEdit && (
+                    <button
+                        type='button'
+                        className={styles.actionBtn}
+                        onClick={props.onPressEdit}
+                    >
+                        <IconEditReply />
+                        <span className={styles.count}>Edit</span>
+                    </button>
+                )
+            }
         </div>
     )
 }
