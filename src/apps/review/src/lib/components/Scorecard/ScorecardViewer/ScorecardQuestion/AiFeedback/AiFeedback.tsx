@@ -7,6 +7,8 @@ import { ScorecardViewerContextValue, useScorecardViewerContext } from '../../Sc
 import { ScorecardQuestionRow } from '../ScorecardQuestionRow'
 import { ScorecardScore } from '../../ScorecardScore'
 import { MarkdownReview } from '../../../../MarkdownReview'
+import { AiFeedbackActions } from '../AiFeedbackActions/AiFeedbackActions'
+import { AiFeedbackComments } from '../AiFeedbackComments/AiFeedbackComments'
 
 import styles from './AiFeedback.module.scss'
 
@@ -16,9 +18,11 @@ interface AiFeedbackProps {
 
 const AiFeedback: FC<AiFeedbackProps> = props => {
     const { aiFeedbackItems, scoreMap }: ScorecardViewerContextValue = useScorecardViewerContext()
-    const feedback = useMemo(() => (
-        aiFeedbackItems?.find(r => r.scorecardQuestionId === props.question.id)
+    const feedback: any = useMemo(() => (
+        aiFeedbackItems?.find((r: any) => r.scorecardQuestionId === props.question.id)
     ), [props.question.id, aiFeedbackItems])
+
+    const commentsArr: any[] = (feedback?.comments) || []
 
     if (!aiFeedbackItems?.length || !feedback) {
         return <></>
@@ -43,7 +47,14 @@ const AiFeedback: FC<AiFeedbackProps> = props => {
                     <strong>{feedback.questionScore ? 'Yes' : 'No'}</strong>
                 </p>
             )}
+
             <MarkdownReview value={feedback.content} />
+
+            <AiFeedbackActions feedback={feedback} actionType='runItem' />
+
+            {commentsArr.length > 0 && (
+                <AiFeedbackComments comments={commentsArr} feedback={feedback} />
+            )}
         </ScorecardQuestionRow>
     )
 }
