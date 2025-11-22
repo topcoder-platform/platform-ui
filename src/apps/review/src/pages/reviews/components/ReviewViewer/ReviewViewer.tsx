@@ -1,27 +1,37 @@
+import { mutate } from 'swr'
 import { FC, useCallback, useEffect, useMemo, useState } from 'react'
 
-import { SubmissionBarInfo } from '~/apps/review/src/lib/components/SubmissionBarInfo'
 import { ChallengeLinksForAdmin } from '~/apps/review/src/lib/components/ChallengeLinksForAdmin'
 import { ScorecardViewer } from '~/apps/review/src/lib/components/Scorecard'
 import {
     useAppNavigate,
     useFetchSubmissionReviews,
     useFetchSubmissionReviewsProps,
+    useReviewEditAccess,
+    UseReviewEditAccessResult,
     useRole,
     useRoleProps,
 } from '~/apps/review/src/lib/hooks'
 import { ChallengeDetailContextModel, ReviewsContextModel } from '~/apps/review/src/lib/models'
 import { ChallengeLinks, ConfirmModal, useChallengeDetailsContext } from '~/apps/review/src/lib'
 import { useIsEditReview, useIsEditReviewProps } from '~/apps/review/src/lib/hooks/useIsEditReview'
+import { rootRoute } from '~/apps/review/src/config/routes.config'
 
 import { ADMIN, COPILOT, MANAGER } from '../../../../config/index.config'
 import { useReviewsContext } from '../../ReviewsContext'
 
+import { ReviewScorecardHeader } from './ReviewScorecardHeader'
 import styles from './ReviewViewer.module.scss'
 
 const ReviewViewer: FC = () => {
     const navigate = useAppNavigate()
-    const { reviewId, setReviewStatus }: ReviewsContextModel = useReviewsContext()
+    const {
+        reviewId,
+        setReviewStatus,
+        setActionButtons,
+        workflow,
+        reviewStatus,
+    }: ReviewsContextModel = useReviewsContext()
 
     const {
         actionChallengeRole,
@@ -52,7 +62,6 @@ const ReviewViewer: FC = () => {
         submitterLockedPhaseName,
         reviewInfo,
         scorecardInfo,
-        submissionInfo,
         saveReviewInfo,
     }: useFetchSubmissionReviewsProps = useFetchSubmissionReviews(reviewId)
 
@@ -92,10 +101,14 @@ const ReviewViewer: FC = () => {
         [submitterLockedPhaseName],
     )
 
-    const isEdit = useMemo(
-        () => isEditPhase && !isReviewCompleted,
-        [isEditPhase, isReviewCompleted],
-    )
+    const { isEdit }: UseReviewEditAccessResult = useReviewEditAccess({
+        challengeInfo,
+        isEditPhase,
+        isReviewCompleted,
+        myChallengeResources,
+        reviewInfo,
+        scorecardInfo,
+    })
 
     /**
      * Cancel edit
@@ -109,6 +122,28 @@ const ReviewViewer: FC = () => {
             })
         }
     }, [isChanged, isEdit, navigate])
+
+    const back = useCallback(async (e?: React.MouseEvent<HTMLAnchorElement>) => {
+        e?.preventDefault()
+        try {
+            if (challengeInfo?.id) {
+                // Ensure the challenge details reflect the latest data (e.g., active phase)
+                await mutate(`challengeBaseUrl/challenges/${challengeInfo?.id}`)
+            }
+        } catch {
+            // no-op: navigation should still occur even if revalidation fails
+        }
+
+        const pastPrefix = '/past-challenges/'
+        // eslint-disable-next-line no-restricted-globals
+        const idx = location.pathname.indexOf(pastPrefix)
+        const url = idx > -1
+            ? `${rootRoute}/past-challenges/${challengeInfo?.id}/challenge-details`
+            : `${rootRoute}/active-challenges/${challengeInfo?.id}/challenge-details`
+        navigate(url, {
+            fallback: './../../../../challenge-details',
+        })
+    }, [challengeInfo?.id, mutate, navigate])
 
     const hasChallengeAdminRole = useMemo(
         () => myChallengeResources.some(
@@ -181,7 +216,7 @@ const ReviewViewer: FC = () => {
         <div className={styles.wrap}>
             <div className={styles.contentWrap}>
                 <div className={styles.summary}>
-                    <SubmissionBarInfo submission={submissionInfo} />
+                    {/* <SubmissionBarInfo submission={submissionInfo} /> */}
                     {actionChallengeRole === ADMIN
                         || actionChallengeRole === COPILOT
                         || actionChallengeRole === MANAGER
@@ -212,27 +247,37 @@ const ReviewViewer: FC = () => {
                     </div>
                 )}
                 {!isSubmitterPhaseLocked && (
-                    <ScorecardViewer
-                        actionChallengeRole={actionChallengeRole}
-                        scorecard={scorecardInfo as any}
-                        reviewInfo={reviewInfo}
-                        mappingAppeals={mappingAppeals}
-                        isEdit={isEdit}
-                        onCancelEdit={onCancelEdit}
-                        setIsChanged={setIsChanged}
-                        isLoading={isLoading}
-                        isManagerEdit={isManagerEdit}
-                        isSavingReview={isSavingReview}
-                        isSavingAppeal={isSavingAppeal}
-                        isSavingAppealResponse={isSavingAppealResponse}
-                        isSavingManagerComment={isSavingManagerComment}
-                        saveReviewInfo={saveReviewInfo}
-                        addAppeal={addAppeal}
-                        addAppealResponse={addAppealResponse}
-                        doDeleteAppeal={doDeleteAppeal}
-                        addManagerComment={addManagerComment}
-                        setReviewStatus={setReviewStatus}
-                    />
+                    <>
+                        <ReviewScorecardHeader
+                            reviewInfo={reviewInfo}
+                            scorecardInfo={scorecardInfo}
+                            workflow={workflow}
+                            reviewProgress={reviewStatus?.progress ?? reviewInfo?.reviewProgress ?? 0}
+                        />
+                        <ScorecardViewer
+                            actionChallengeRole={actionChallengeRole}
+                            scorecard={scorecardInfo as any}
+                            reviewInfo={reviewInfo}
+                            mappingAppeals={mappingAppeals}
+                            isEdit={isEdit}
+                            onCancelEdit={onCancelEdit}
+                            navigateBack={back}
+                            setIsChanged={setIsChanged}
+                            isLoading={isLoading}
+                            isManagerEdit={isManagerEdit}
+                            isSavingReview={isSavingReview}
+                            isSavingAppeal={isSavingAppeal}
+                            isSavingAppealResponse={isSavingAppealResponse}
+                            isSavingManagerComment={isSavingManagerComment}
+                            saveReviewInfo={saveReviewInfo}
+                            addAppeal={addAppeal}
+                            addAppealResponse={addAppealResponse}
+                            doDeleteAppeal={doDeleteAppeal}
+                            addManagerComment={addManagerComment}
+                            setReviewStatus={setReviewStatus}
+                            setActionButtons={setActionButtons}
+                        />
+                    </>
                 )}
             </div>
             {isEdit && (

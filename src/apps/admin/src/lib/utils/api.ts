@@ -51,34 +51,38 @@ export const handleError = (error: any): void => {
 export const createChallengeQueryString = (
     filterCriteria: ChallengeFilterCriteria,
 ): string => {
-    let filter = ''
-    filter = `page=${filterCriteria.page}&perPage=${filterCriteria.perPage}`
+    const params: Record<string, unknown> = {
+        page: filterCriteria.page,
+        perPage: filterCriteria.perPage,
+        sortBy: 'createdAt',
+        sortOrder: 'desc',
+    }
 
     if (filterCriteria.legacyId) {
-        filter += `&legacyId=${filterCriteria.legacyId}`
+        params.legacyId = filterCriteria.legacyId
     }
 
     if (filterCriteria.type) {
-        filter += `&types[]=${filterCriteria.type}`
+        params.types = [filterCriteria.type]
     }
 
     if (filterCriteria.track) {
-        filter += `&tracks[]=${filterCriteria.track}`
+        params.tracks = [filterCriteria.track]
     }
 
     if (filterCriteria.challengeId) {
-        filter += `&id=${filterCriteria.challengeId}`
+        params.id = filterCriteria.challengeId
     }
 
     if (filterCriteria.name) {
-        filter += `&name=${filterCriteria.name}`
+        params.name = filterCriteria.name
     }
 
-    if (filterCriteria.status) filter += `&status=${filterCriteria.status}`
+    if (filterCriteria.status) {
+        params.status = filterCriteria.status
+    }
 
-    filter += '&sortBy=createdAt&sortOrder=desc'
-
-    return filter
+    return qs.stringify(params, { arrayFormat: 'brackets', skipNulls: true })
 }
 
 export const createReviewQueryString = (

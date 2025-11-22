@@ -1,0 +1,157 @@
+@import '@libs/ui/styles/includes';
+
+.wrap {
+    width: 100%;
+    margin-bottom: $sp-6;
+}
+
+.title {
+    font-family: "Figtree", sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 30px;
+    color: #0A0A0A;
+}
+
+.content {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: $sp-6;
+
+    @include ltemd {
+        flex-direction: column;
+        gap: $sp-6;
+    }
+}
+
+.leftSection {
+    display: flex;
+    align-items: flex-start;
+    gap: $sp-4;
+    flex: 1;
+}
+
+.iconWrapper {
+    flex: 0 0 auto;
+}
+
+.scorecardIcon {
+    width: 60px;
+    height: 60px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #A8A8A8;
+}
+
+.aiReviewIcon {
+    width: 40px;
+    height: 40px;
+}
+
+.infoSection {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-3;
+    flex: 1;
+    margin-top: $sp-2;
+}
+
+.infoRow {
+    display: flex;
+    align-items: center;
+    gap: $sp-2;
+    font-family: "Nunito Sans", sans-serif;
+    font-size: 14px;
+    line-height: 19px;
+    font-weight: bold;
+    color: #0A0A0A;
+}
+
+.personIcon {
+    display: flex;
+    align-items: center;
+    flex: 0 0 auto;
+    width: 20px;
+    height: 20px;
+    padding: 2px;
+
+    > * {
+        width: 16px;
+        height: 16px;
+    }
+}
+
+.whaleIcon {
+    display: flex;
+    align-items: center;
+    flex: 0 0 auto;
+    width: 16px;
+    height: 16px;
+
+    svg {
+        width: 16px;
+        height: 16px;
+    }
+}
+
+.rightSection {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-1;
+    flex: 0 0 auto;
+    min-width: 200px;
+
+    @include ltemd {
+        width: 100%;
+        min-width: auto;
+    }
+}
+
+.scoreInfo {
+    display: flex;
+    align-items: center;
+    gap: $sp-2;
+    font-family: "Nunito Sans", sans-serif;
+    font-size: 14px;
+    line-height: 19px;
+    font-weight: bold;
+    color: #0A0A0A;
+}
+
+.trophyIcon {
+    flex: 0 0 auto;
+    width: 16px;
+    height: 16px;
+
+    path {
+        fill: #0A0A0A;
+    }
+}
+
+.scoreValue {
+    font-weight: 400;
+}
+
+.progressSection {
+    display: flex;
+    align-items: center;
+    gap: $sp-2;
+    width: 100%;
+
+    :global(.container) {
+        flex: 1;
+    }
+}
+
+.progressText {
+    font-family: "Nunito Sans", sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    color: #0A0A0A;
+    white-space: nowrap;
+    flex: 0 0 auto;
+}
+

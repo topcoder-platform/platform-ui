@@ -447,13 +447,15 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
 
     // fetch challenge submissions
     const {
-        challengeSubmissions: allChallengeSubmissions,
+        challengeSubmissions,
+        deletedLegacySubmissionIds,
+        deletedSubmissionIds,
         isLoading,
     }: useFetchChallengeSubmissionsProps = useFetchChallengeSubmissions(challengeId)
 
     const visibleChallengeSubmissions = useMemo<BackendSubmission[]>(
-        () => allChallengeSubmissions,
-        [allChallengeSubmissions],
+        () => challengeSubmissions,
+        [challengeSubmissions],
     )
 
     const visibleSubmissionsById = useMemo(
@@ -716,8 +718,35 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
     }, [challengeId, reviewerKey])
 
     const challengeReviews = useMemo(
-        () => challengeReviewsData,
-        [challengeReviewsData],
+        () => {
+            if (!challengeReviewsData) {
+                return challengeReviewsData
+            }
+
+            if (!deletedSubmissionIds.size && !deletedLegacySubmissionIds.size) {
+                return challengeReviewsData
+            }
+
+            return challengeReviewsData.filter(reviewEntry => {
+                if (!reviewEntry) {
+                    return false
+                }
+
+                if (reviewEntry.submissionId && deletedSubmissionIds.has(`${reviewEntry.submissionId}`)) {
+                    return false
+                }
+
+                if (
+                    reviewEntry.legacySubmissionId
+                    && deletedLegacySubmissionIds.has(`${reviewEntry.legacySubmissionId}`)
+                ) {
+                    return false
+                }
+
+                return true
+            })
+        },
+        [challengeReviewsData, deletedLegacySubmissionIds, deletedSubmissionIds],
     )
 
     const challengeReviewById = useMemo(() => {

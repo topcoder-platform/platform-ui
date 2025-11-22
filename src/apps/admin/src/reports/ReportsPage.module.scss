@@ -1,0 +1,80 @@
+.page {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.instructions {
+    color: #565a5f;
+    max-width: 720px;
+}
+
+.selectors {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.select {
+    min-width: 260px;
+    max-width: 340px;
+}
+
+.reportDetails {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.params {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin-top: 12px;
+}
+
+.paramLabel {
+    font-weight: 600;
+}
+
+.paramMeta {
+    color: #6b6f75;
+    font-size: 12px;
+}
+
+.paramHint {
+    color: #6b6f75;
+    font-size: 12px;
+    font-style: italic;
+}
+
+.reportTitle {
+    font-weight: 600;
+}
+
+.reportDescription {
+    color: #494f55;
+}
+
+.reportMeta {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 13px;
+    color: #6b6f75;
+}
+
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.spinnerWrapper {
+    padding: 40px 0;
+    display: flex;
+    justify-content: center;
+}
+
+.emptyState {
+    font-style: italic;
+    color: #6b6f75;
+}

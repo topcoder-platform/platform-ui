@@ -1,8 +1,8 @@
-import { useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import useSWR, { SWRResponse } from 'swr'
 
 import { EnvironmentConfig } from '~/config'
-import { xhrGetAsync } from '~/libs/core'
+import { xhrGetAsync, xhrGetBlobAsync } from '~/libs/core'
 import { handleError } from '~/libs/shared/lib/utils/handle-error'
 
 import { AiFeedbackItem, Scorecard } from '../models'
@@ -44,6 +44,27 @@ export interface AiWorkflowRun {
     gitRunUrl?: string;
     score: number;
     workflow: AiWorkflow
+    usage: {
+        input: number
+        output: number
+    }
+}
+
+export interface AiWorkflowRunArtifact {
+    id: number
+    name: string
+    size_in_bytes: number
+    url: string
+    archive_download_url: string
+    expired: boolean
+    workflow_run: {
+        id: number
+        repository_id: number
+        head_sha: string
+    }
+    created_at: string
+    updated_at: string
+    expires_at: string
 }
 
 export type AiWorkflowRunItem = AiFeedbackItem
@@ -58,6 +79,22 @@ export interface AiWorkflowRunsResponse {
 export interface AiWorkflowRunItemsResponse {
     runItems: AiWorkflowRunItem[]
     isLoading: boolean
+}
+
+export interface AiWorkflowRunAttachmentsApiResponse {
+    artifacts: AiWorkflowRunArtifact[]
+    total_count: number
+}
+
+export interface AiWorkflowRunAttachmentsResponse {
+    artifacts: AiWorkflowRunArtifact[]
+    totalCount: number
+    isLoading: boolean
+}
+
+export interface AiWorkflowRunArtifactDownloadResponse {
+    download: (artifactId: number) => Promise<void>
+    isDownloading: boolean
 }
 
 export const aiRunInProgress = (aiRun: Pick<AiWorkflowRun, 'status'>): boolean => [
@@ -135,5 +172,77 @@ export function useFetchAiWorkflowsRunItems(
     return {
         isLoading,
         runItems,
+    }
+}
+
+export function useFetchAiWorkflowsRunAttachments(
+    workflowId?: string,
+    runId?: string | undefined,
+): AiWorkflowRunAttachmentsResponse {
+    const {
+        data,
+        error: fetchError,
+        isValidating: isLoading,
+    }: SWRResponse<AiWorkflowRunAttachmentsApiResponse, Error> = useSWR<
+        AiWorkflowRunAttachmentsApiResponse,
+        Error
+    >(
+        `${TC_API_BASE_URL}/workflows/${workflowId}/runs/${runId}/attachments`,
+        {
+            isPaused: () => !workflowId || !runId,
+        },
+    )
+
+    useEffect(() => {
+        if (fetchError) {
+            handleError(fetchError)
+        }
+    }, [fetchError])
+
+    return {
+        artifacts: data?.artifacts ?? [],
+        isLoading,
+        totalCount: data?.total_count ?? 0,
+    }
+}
+
+export function useDownloadAiWorkflowsRunArtifact(
+    workflowId?: string,
+    runId?: string,
+): AiWorkflowRunArtifactDownloadResponse {
+    const [isDownloading, setIsDownloading] = useState(false)
+
+    const download = useCallback(
+        async (artifactId: number): Promise<void> => {
+            if (!workflowId || !runId || !artifactId) return
+
+            setIsDownloading(true)
+            const url = `${TC_API_BASE_URL}/workflows/${workflowId}/runs/${runId}/attachments/${artifactId}/zip`
+
+            try {
+                const blob = await xhrGetBlobAsync<Blob>(url)
+
+                const objectUrl = window.URL.createObjectURL(blob)
+                const link = document.createElement('a')
+                link.href = objectUrl
+                link.download = `artifact-${artifactId}.zip`
+
+                document.body.appendChild(link)
+                link.click()
+                link.remove()
+
+                window.URL.revokeObjectURL(objectUrl)
+            } catch (err) {
+                handleError(err as Error)
+            } finally {
+                setIsDownloading(false)
+            }
+        },
+        [workflowId, runId],
+    )
+
+    return {
+        download,
+        isDownloading,
     }
 }

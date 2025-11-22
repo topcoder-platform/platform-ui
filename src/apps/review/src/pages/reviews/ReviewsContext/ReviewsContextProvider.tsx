@@ -1,12 +1,12 @@
 /**
  * Context provider for challenge detail page
  */
-import { Context, createContext, FC, PropsWithChildren, useContext, useMemo, useState } from 'react'
+import { Context, createContext, FC, PropsWithChildren, ReactNode, useContext, useMemo, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 
 import { ChallengeDetailContext } from '../../../lib'
 import { ChallengeDetailContextModel, ReviewCtxStatus, ReviewsContextModel } from '../../../lib/models'
-import { AiWorkflowRunsResponse, useFetchAiWorkflowsRuns } from '../../../lib/hooks'
+import { AiWorkflowRunsResponse, useFetchAiWorkflowsRuns, useFetchSubmissionInfo } from '../../../lib/hooks'
 
 export const ReviewsContext: Context<ReviewsContextModel>
     = createContext<ReviewsContextModel>({} as ReviewsContextModel)
@@ -22,9 +22,13 @@ export const ReviewsContextProvider: FC<PropsWithChildren> = props => {
     const reviewId = searchParams.get('reviewId') ?? ''
 
     const [reviewStatus, setReviewStatus] = useState({} as ReviewCtxStatus)
+    const [actionButtons, setActionButtons] = useState<ReactNode>()
 
     const challengeDetailsCtx = useContext(ChallengeDetailContext)
     const { challengeInfo }: ChallengeDetailContextModel = challengeDetailsCtx
+
+    const [submissionInfo] = useFetchSubmissionInfo(submissionId)
+
     const aiReviewers = useMemo(() => (
         (challengeInfo?.reviewers ?? []).filter(r => !!r.aiWorkflowId)
     ), [challengeInfo?.reviewers])
@@ -49,28 +53,33 @@ export const ReviewsContextProvider: FC<PropsWithChildren> = props => {
     const value = useMemo<ReviewsContextModel>(
         () => ({
             ...challengeDetailsCtx,
+            actionButtons,
             isLoading: isLoadingCtxData,
             reviewId,
             reviewStatus,
             scorecard,
+            setActionButtons,
             setReviewStatus,
             submissionId,
+            submissionInfo,
             workflow,
             workflowId,
             workflowRun,
             workflowRuns,
         }),
         [
+            actionButtons,
             challengeDetailsCtx,
             isLoadingCtxData,
             reviewId,
+            reviewStatus,
             scorecard,
             submissionId,
+            submissionInfo,
             workflow,
             workflowId,
             workflowRun,
             workflowRuns,
-            reviewStatus,
         ],
     )
 
