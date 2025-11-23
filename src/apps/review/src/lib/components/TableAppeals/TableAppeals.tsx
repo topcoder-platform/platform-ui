@@ -44,11 +44,13 @@ import type {
     SubmissionRow,
 } from '../common/types'
 import type { AggregatedSubmissionReviews } from '../../utils/aggregateSubmissionReviews'
+import { CollapsibleAiReviewsRow } from '../CollapsibleAiReviewsRow'
 
 import styles from './TableAppeals.module.scss'
 
 export interface TableAppealsProps {
     className?: string
+    aiReviewers?: { aiWorkflowId: string }[]
     datas: SubmissionInfo[]
     isDownloading: IsRemovingType
     downloadSubmission: (submissionId: string) => void
@@ -357,6 +359,25 @@ export const TableAppeals: FC<TableAppealsProps> = (props: TableAppealsProps) =>
             }
         }
 
+        if (props.aiReviewers) {
+            baseColumns.push({
+                columnId: 'ai-reviews-table',
+                isExpand: true,
+                label: '',
+                renderer: (submission: SubmissionRow, allRows: SubmissionRow[]) => (
+                    props.aiReviewers && (
+                        <CollapsibleAiReviewsRow
+                            className={styles.aiReviews}
+                            aiReviewers={props.aiReviewers}
+                            submission={submission as any}
+                            defaultOpen={allRows ? !allRows.indexOf(submission) : false}
+                        />
+                    )
+                ),
+                type: 'element',
+            })
+        }
+
         return baseColumns
     }, [
         allowsAppeals,
@@ -369,7 +390,7 @@ export const TableAppeals: FC<TableAppealsProps> = (props: TableAppealsProps) =>
 
     const columnsMobile = useMemo<MobileTableColumn<SubmissionRow>[][]>(
         () => columns.map(column => ([
-            {
+            column.label && {
                 columnId: `${column.columnId}-label`,
                 label: '',
                 mobileType: 'label',
@@ -384,11 +405,12 @@ export const TableAppeals: FC<TableAppealsProps> = (props: TableAppealsProps) =>
             },
             {
                 ...column,
+                colSpan: column.label ? 1 : 2,
                 columnId: `${column.columnId}-value`,
                 label: '',
                 mobileType: 'last-value',
             },
-        ]) as MobileTableColumn<SubmissionRow>[]),
+        ]).filter(Boolean) as MobileTableColumn<SubmissionRow>[]),
         [columns],
     )
 
@@ -408,6 +430,8 @@ export const TableAppeals: FC<TableAppealsProps> = (props: TableAppealsProps) =>
                 <Table
                     columns={columns}
                     data={aggregatedRows}
+                    showExpand
+                    expandMode='always'
                     disableSorting
                     onToggleSort={_.noop}
                     removeDefaultSort

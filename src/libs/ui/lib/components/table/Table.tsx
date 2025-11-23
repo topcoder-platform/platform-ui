@@ -28,6 +28,7 @@ interface TableProps<T> {
     readonly moreToLoad?: boolean
     readonly disableSorting?: boolean
     readonly showExpand?: boolean
+    readonly expandMode?: 'always'
     readonly initSort?: Sort
     readonly forceSort?: Sort
     readonly onLoadMoreClick?: () => void
@@ -239,7 +240,7 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
                 )
             })
 
-        const rowCells: Array<JSX.Element> = sortedData
+        const bodyRows: Array<JSX.Element> = sortedData
             .map((sorted, index) => (
                 <TableRow
                     key={getKey(index)}
@@ -249,6 +250,7 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
                     columns={props.columns}
                     index={index}
                     showExpand={props.showExpand}
+                    expandMode={props.expandMode}
                     colWidth={colWidthInput}
                     preventDefault={props.preventDefault}
                 />
@@ -264,7 +266,7 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
                         </tr>
                     </thead>
                     <tbody>
-                        {rowCells}
+                        {bodyRows}
                     </tbody>
                 </table>
                 {

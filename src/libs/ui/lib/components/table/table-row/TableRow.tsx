@@ -21,6 +21,7 @@ interface Props<T> {
     readonly columns: ReadonlyArray<TableColumn<T>>
     index: number
     readonly showExpand?: boolean
+    readonly expandMode?: 'always'
     colWidth?: {[key: string]: number}
     readonly preventDefault?: boolean
     allRows?: ReadonlyArray<T>
@@ -38,7 +39,8 @@ export const TableRow: <T extends { [propertyName: string]: any }>(
 
         return _.filter(props.columns, item => !item.isExpand)
     }, [props.columns, props.showExpand])
-    const [isExpanded, setIsExpanded] = useState(false)
+    const isAlwaysExpand = props.expandMode === 'always'
+    const [isExpanded, setIsExpanded] = useState(isAlwaysExpand)
     const expandColumns = useMemo(() => {
         if (!props.showExpand) {
             return props.columns
@@ -56,12 +58,12 @@ export const TableRow: <T extends { [propertyName: string]: any }>(
                 data={props.data}
                 index={props.index}
                 key={getKey(`${props.index}${colIndex}`)}
-                showExpandIndicator={colIndex === 0 && props.showExpand}
+                showExpandIndicator={colIndex === 0 && (!isAlwaysExpand && props.showExpand)}
                 isExpanded={isExpanded && colIndex === 0}
                 onExpand={
                     props.showExpand
                         ? function onExpand() {
-                            setIsExpanded(!isExpanded)
+                            setIsExpanded(isAlwaysExpand || !isExpanded)
                         }
                         : undefined
                 }
@@ -93,22 +95,22 @@ export const TableRow: <T extends { [propertyName: string]: any }>(
             >
                 {cells}
             </tr>
-            {isExpanded && props.showExpand && (
+            {props.showExpand && isExpanded && (
                 <tr
                     className={classNames(styles.tr, {
                         [styles.isEvenRow]: props.index % 2 === 1,
                     })}
                 >
                     <td colSpan={displayColumns.length}>
-                        <div className={styles.blockExpandContainer}>
-                            {expandColumns.map((col, colIndex) => {
-                                const columnId = `column-id-${col.columnId}-`
-                                const colWidth = props.colWidth?.[columnId]
-                                return (
-                                    <div
-                                        key={getKey(`${props.index}${colIndex}`)}
-                                        className={styles.blockExpandItem}
-                                    >
+                        {expandColumns.map((col, colIndex) => {
+                            const columnId = `column-id-${col.columnId}-`
+                            const colWidth = props.colWidth?.[columnId]
+                            return (
+                                <div
+                                    key={getKey(`${props.index}${colIndex}`)}
+                                    className={styles.blockExpandItem}
+                                >
+                                    {!!col.label && (
                                         <strong
                                             className={classNames(
                                                 styles.blockExpandCell,
@@ -119,23 +121,24 @@ export const TableRow: <T extends { [propertyName: string]: any }>(
                                             {col.label as string}
                                             :
                                         </strong>
-                                        <TableCell
-                                            {...col}
-                                            data={props.data}
-                                            index={props.index}
-                                            as='div'
-                                            className={classNames(
-                                                styles.blockExpandCell,
-                                                styles.blockExpandValue,
-                                                col.className,
-                                                'TableCell_blockExpandValue',
-                                            )}
-                                            style={colWidth ? { width: `${colWidth}px` } : {}}
-                                        />
-                                    </div>
-                                )
-                            })}
-                        </div>
+                                    )}
+                                    <TableCell
+                                        {...col}
+                                        data={props.data}
+                                        index={props.index}
+                                        as='div'
+                                        className={classNames(
+                                            styles.blockExpandCell,
+                                            styles.blockExpandValue,
+                                            col.className,
+                                            'TableCell_blockExpandValue',
+                                        )}
+                                        style={colWidth ? { width: `${colWidth}px` } : {}}
+                                        allRows={props.allRows}
+                                    />
+                                </div>
+                            )
+                        })}
                     </td>
                 </tr>
             )}

@@ -64,10 +64,12 @@ import type {
 } from '../common/types'
 import { resolveSubmissionReviewResult } from '../common/reviewResult'
 import { shouldIncludeInReviewPhase } from '../../utils/reviewPhaseGuards'
+import { CollapsibleAiReviewsRow } from '../CollapsibleAiReviewsRow'
 
 import styles from './TableReview.module.scss'
 
 export interface TableReviewProps {
+    aiReviewers?: { aiWorkflowId: string }[]
     className?: string
     datas: SubmissionInfo[]
     isDownloading: IsRemovingType
@@ -589,7 +591,52 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
             })
         }
 
+        for (let index = 0; index < maxReviewCount; index += 1) {
+            const metadata = reviewerColumnMetadata[index] ?? {
+                label: `Reviewer ${index + 1}`,
+            }
+            baseColumns.push(
+                {
+                    columnId: `reviewer-${index}`,
+                    label: metadata.renderLabel ?? metadata.label,
+                    renderer: (submission: SubmissionRow) => renderReviewerCell(submission, index),
+                    type: 'element',
+                },
+                {
+                    columnId: `score-${index}`,
+                    label: `Score ${index + 1}`,
+                    renderer: (submission: SubmissionRow) => renderScoreCell(
+                        submission,
+                        index,
+                        scoreVisibilityConfig,
+                        challengeInfo,
+                        pendingReopen,
+                        canManageCompletedReviews,
+                        isReopening,
+                        openReopenDialog,
+                    ),
+                    type: 'element',
+                },
+            )
+        }
+
         baseColumns.push(
+            ...(props.aiReviewers ? [{
+                columnId: 'ai-reviews-table',
+                isExpand: true,
+                label: '',
+                renderer: (submission: SubmissionRow, allRows: SubmissionRow[]) => (
+                    props.aiReviewers && (
+                        <CollapsibleAiReviewsRow
+                            className={styles.aiReviews}
+                            aiReviewers={props.aiReviewers}
+                            submission={submission as any}
+                            defaultOpen={allRows ? !allRows.indexOf(submission) : false}
+                        />
+                    )
+                ),
+                type: 'element',
+            }] : []) as TableColumn<SubmissionRow>[],
             {
                 columnId: 'review-date',
                 label: 'Review Date',
@@ -630,35 +677,6 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
                 type: 'element',
             },
         )
-
-        for (let index = 0; index < maxReviewCount; index += 1) {
-            const metadata = reviewerColumnMetadata[index] ?? {
-                label: `Reviewer ${index + 1}`,
-            }
-            baseColumns.push(
-                {
-                    columnId: `reviewer-${index}`,
-                    label: metadata.renderLabel ?? metadata.label,
-                    renderer: (submission: SubmissionRow) => renderReviewerCell(submission, index),
-                    type: 'element',
-                },
-                {
-                    columnId: `score-${index}`,
-                    label: `Score ${index + 1}`,
-                    renderer: (submission: SubmissionRow) => renderScoreCell(
-                        submission,
-                        index,
-                        scoreVisibilityConfig,
-                        challengeInfo,
-                        pendingReopen,
-                        canManageCompletedReviews,
-                        isReopening,
-                        openReopenDialog,
-                    ),
-                    type: 'element',
-                },
-            )
-        }
 
         if (shouldShowAggregatedActions) {
             baseColumns.push({
@@ -738,24 +756,27 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
             const labelText = resolvedLabel || ''
 
             return [
+                (labelText && (
+                    {
+                        ...column,
+                        className: '',
+                        label: labelText ? `${labelText} label` : 'label',
+                        mobileType: 'label',
+                        renderer: () => (
+                            <div>
+                                {labelText}
+                                :
+                            </div>
+                        ),
+                        type: 'element',
+                    }
+                )),
                 {
                     ...column,
-                    className: '',
-                    label: labelText ? `${labelText} label` : 'label',
-                    mobileType: 'label',
-                    renderer: () => (
-                        <div>
-                            {labelText}
-                            :
-                        </div>
-                    ),
-                    type: 'element',
-                },
-                {
-                    ...column,
+                    colSpan: labelText ? 1 : 2,
                     mobileType: 'last-value',
                 },
-            ] as MobileTableColumn<SubmissionRow>[]
+            ].filter(Boolean) as MobileTableColumn<SubmissionRow>[]
         }),
         [columns, reviewerColumnMetadata],
     )
@@ -773,6 +794,8 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
             ) : (
                 <Table
                     key={tableKey}
+                    showExpand
+                    expandMode='always'
                     columns={columns}
                     data={aggregatedRows}
                     disableSorting

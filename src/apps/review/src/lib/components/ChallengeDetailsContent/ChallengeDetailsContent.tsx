@@ -392,6 +392,9 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
     const renderSelectedTab = (): JSX.Element => {
         const selectedTabLower = (props.selectedTab || '').toLowerCase()
         const selectedTabNormalized = normalizeType(props.selectedTab)
+        const aiReviewers = (
+            challengeInfo?.reviewers?.filter(r => !!r.aiWorkflowId) as { aiWorkflowId: string }[]
+        ) ?? []
 
         if (selectedTabLower === 'registration') {
             return <TabContentRegistration />
@@ -405,9 +408,7 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
 
         if (SUBMISSION_TAB_KEYS.has(selectedTabNormalized)) {
             return renderSubmissionTab({
-                aiReviewers: (
-                    challengeInfo?.reviewers?.filter(r => !!r.aiWorkflowId) as { aiWorkflowId: string }[]
-                ) ?? [],
+                aiReviewers,
                 allowTopgearSubmissionList,
                 downloadSubmission: handleSubmissionDownload,
                 isActiveChallenge: props.isActiveChallenge,
@@ -444,6 +445,7 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
         if (selectedTabLower === 'winners') {
             return (
                 <TabContentWinners
+                    aiReviewers={aiReviewers}
                     isLoading={isLoadingProjectResult}
                     projectResults={projectResults}
                     isDownloading={isDownloadingSubmission}
@@ -498,6 +500,7 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
 
         return (
             <TabContentReview
+                aiReviewers={aiReviewers}
                 selectedTab={props.selectedTab}
                 reviews={reviewTabReviews}
                 submitterReviews={reviewTabSubmitterReviews}
