@@ -5,7 +5,7 @@ import {
     UseFormReturn,
 } from 'react-hook-form'
 import { get } from 'lodash'
-import { FC, useCallback, useState } from 'react'
+import { FC, useCallback, useEffect, useState } from 'react'
 import classNames from 'classnames'
 
 import { yupResolver } from '@hookform/resolvers/yup'
@@ -17,8 +17,10 @@ import { FieldMarkdownEditor } from '../../../../FieldMarkdownEditor'
 import styles from './AiFeedbackReply.module.scss'
 
 interface AiFeedbackReplyProps {
+    id?: string
+    initialValue?: string
     onCloseReply: () => void
-    onSubmitReply: (content: string) => Promise<void>
+    onSubmitReply: (content: string, id?: string) => Promise<void>
 }
 
 export const AiFeedbackReply: FC<AiFeedbackReplyProps> = props => {
@@ -36,9 +38,15 @@ export const AiFeedbackReply: FC<AiFeedbackReplyProps> = props => {
         resolver: yupResolver(formFeedbackReplySchema),
     })
 
+    useEffect(() => {
+        if (props.initialValue) {
+            setReply(props.initialValue)
+        }
+    }, [props.initialValue])
+
     const onSubmit = useCallback(async (data: FormFeedbackReply) => {
         setSavingReply(true)
-        await props.onSubmitReply(data.reply)
+        await props.onSubmitReply(data.reply, props.id)
         setReply('')
         setSavingReply(false)
     }, [props.onSubmitReply, setReply])
@@ -80,7 +88,9 @@ export const AiFeedbackReply: FC<AiFeedbackReplyProps> = props => {
                         className='filledButton'
                         type='submit'
                     >
-                        Submit Reply
+                        {
+                            props.id ? 'Edit Reply' : 'Submit Reply'
+                        }
                     </button>
                     <button
                         type='button'

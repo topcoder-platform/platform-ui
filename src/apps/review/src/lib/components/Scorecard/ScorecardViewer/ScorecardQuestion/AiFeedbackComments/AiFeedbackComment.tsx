@@ -4,7 +4,7 @@ import classNames from 'classnames'
 import moment from 'moment'
 
 import { useReviewsContext } from '~/apps/review/src/pages/reviews/ReviewsContext'
-import { createFeedbackComment } from '~/apps/review/src/lib/services'
+import { createFeedbackComment, updateRunItemComment } from '~/apps/review/src/lib/services'
 import { AiFeedbackItem, ReviewsContextModel } from '~/apps/review/src/lib/models'
 import { EnvironmentConfig } from '~/config'
 
@@ -23,10 +23,15 @@ interface AiFeedbackCommentProps {
 
 export const AiFeedbackComment: FC<AiFeedbackCommentProps> = props => {
     const { workflowId, workflowRun }: ReviewsContextModel = useReviewsContext()
+    const [editMode, setEditMode] = useState(false)
     const [showReply, setShowReply] = useState(false)
 
     const onShowReply = useCallback(() => {
         setShowReply(!showReply)
+    }, [])
+
+    const onPressEdit = useCallback(() => {
+        setEditMode(true)
     }, [])
 
     const onSubmitReply = useCallback(async (content: string, comment: AiFeedbackCommentType) => {
@@ -37,6 +42,15 @@ export const AiFeedbackComment: FC<AiFeedbackCommentProps> = props => {
         await mutate(`${EnvironmentConfig.API.V6}/workflows/${workflowId}/runs/${workflowRun?.id}/items`)
         setShowReply(false)
     }, [workflowId, workflowRun?.id, props.feedback?.id])
+
+    const onEditReply = useCallback(async (content: string, comment: AiFeedbackCommentType) => {
+        await updateRunItemComment(workflowId as string, workflowRun?.id as string, props.feedback?.id, comment.id, {
+            content,
+        })
+        await mutate(`${EnvironmentConfig.API.V6}/workflows/${workflowId}/runs/${workflowRun?.id}/items`)
+        setEditMode(false)
+    }, [workflowId, workflowRun?.id, props.feedback?.id])
+
     return (
         <div
             key={props.comment.id}
@@ -62,12 +76,29 @@ export const AiFeedbackComment: FC<AiFeedbackCommentProps> = props => {
                         .format('MMM DD, hh:mm A')}
                 </span>
             </div>
-            <MarkdownReview value={props.comment.content} />
+            {
+                !editMode && <MarkdownReview value={props.comment.content} />
+            }
+            {
+                editMode && (
+                    <AiFeedbackReply
+                        id={props.comment.id}
+                        initialValue={props.comment.content}
+                        onSubmitReply={function submitReply(content: string) {
+                            return onEditReply(content, props.comment)
+                        }}
+                        onCloseReply={function closeReply() {
+                            setEditMode(false)
+                        }}
+                    />
+                )
+            }
             <AiFeedbackActions
                 feedback={props.feedback}
                 comment={props.comment}
                 actionType='comment'
                 onPressReply={onShowReply}
+                onPressEdit={onPressEdit}
             />
             {
                 showReply && (

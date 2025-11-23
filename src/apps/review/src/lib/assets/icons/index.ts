@@ -20,6 +20,7 @@ import { ReactComponent as IconThumbsUp } from './icon-thumb-up.svg'
 import { ReactComponent as IconThumbsDown } from './icon-thumbs-down.svg'
 import { ReactComponent as IconThumbsUpFilled } from './icon-thumb-up-filled.svg'
 import { ReactComponent as IconThumbsDownFilled } from './icon-thumbs-down-filled.svg'
+import { ReactComponent as IconEditReply } from './icon-edit-reply.svg'
 
 export * from './editor/bold'
 export * from './editor/code'
@@ -59,6 +60,7 @@ export {
     IconThumbsDown,
     IconThumbsUpFilled,
     IconThumbsDownFilled,
+    IconEditReply,
 }
 
 export const phasesIcons = {

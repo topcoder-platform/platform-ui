@@ -43,14 +43,15 @@ export const updateLikesOrDislikesOnRunItem = (
     body,
 )
 
-export const updateLikesOrDislikesOnRunItemComment = (
+export const updateRunItemComment = (
     workflowId: string,
     runId: string,
     feedbackId: string,
     commentId: string,
     body: {
-        upVote: boolean
-        downVote: boolean
+        content?: string
+        upVote?: boolean
+        downVote?: boolean
     },
 ): Promise<void> => xhrPatchAsync(
     `${EnvironmentConfig.API.V6}/workflows/${workflowId}/runs/${runId}/items/${feedbackId}/comments/${commentId}`,
