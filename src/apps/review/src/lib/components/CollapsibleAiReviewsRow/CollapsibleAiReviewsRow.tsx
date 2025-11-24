@@ -9,9 +9,10 @@ import { BackendSubmission } from '../../models'
 import styles from './CollapsibleAiReviewsRow.module.scss'
 
 interface CollapsibleAiReviewsRowProps {
+    className?: string
     defaultOpen?: boolean
     aiReviewers: { aiWorkflowId: string }[]
-    submission: BackendSubmission
+    submission: Pick<BackendSubmission, 'id'|'virusScan'>
 }
 
 const CollapsibleAiReviewsRow: FC<CollapsibleAiReviewsRowProps> = props => {
@@ -24,8 +25,8 @@ const CollapsibleAiReviewsRow: FC<CollapsibleAiReviewsRowProps> = props => {
     }, [])
 
     return (
-        <div className={styles.wrap}>
-            <span className={styles.reviewersDropown} onClick={toggleOpen}>
+        <div className={classNames(props.className, styles.wrap)}>
+            <span className={classNames(styles.reviewersDropown, 'trigger')} onClick={toggleOpen}>
                 {aiReviewersCount}
                 {' '}
                 AI Reviewer
@@ -33,7 +34,7 @@ const CollapsibleAiReviewsRow: FC<CollapsibleAiReviewsRowProps> = props => {
                 <IconOutline.ChevronDownIcon className={classNames('icon-xl', isOpen && styles.rotated)} />
             </span>
             {isOpen && (
-                <div className={styles.table}>
+                <div className={classNames(styles.table, 'reviews-table')}>
                     <AiReviewsTable
                         reviewers={props.aiReviewers}
                         submission={props.submission}
