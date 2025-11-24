@@ -8,6 +8,7 @@ import { ScorecardSection } from '../ScorecardSection'
 import { ScorecardViewerContextValue, useScorecardViewerContext } from '../ScorecardViewer.context'
 import { ScorecardScore } from '../ScorecardScore'
 import { createReviewItemMapping } from '../utils'
+import { AiWorkflowRunStatus } from '../../../AiReviewsTable'
 
 import styles from './ScorecardGroup.module.scss'
 
@@ -22,6 +23,15 @@ const ScorecardGroup: FC<ScorecardGroupProps> = props => {
 
     const isVisible = !toggledItems[props.group.id]
     const toggle = useCallback(() => toggleItem(props.group.id), [props.group, toggleItem])
+    const score = scoreMap.get(props.group.id)
+    const weight = props.group.weight
+    let status: 'passed' | 'pending' | 'failed-score' | undefined
+
+    if (score === weight) {
+        status = 'passed'
+    } else if (!score) {
+        status = 'failed-score'
+    }
 
     return (
         <div className={styles.wrap}>
@@ -36,9 +46,16 @@ const ScorecardGroup: FC<ScorecardGroupProps> = props => {
                 <span className={styles.mx} />
                 <span className={styles.score}>
                     <ScorecardScore
-                        score={scoreMap.get(props.group.id) ?? 0}
+                        score={score ?? 0}
                         weight={props.group.weight}
                     />
+                    {status && (
+                        <AiWorkflowRunStatus
+                            status={status}
+                            score={score}
+                            hideLabel
+                        />
+                    )}
                 </span>
                 <span className={styles.toggleBtn}>
                     <IconOutline.ChevronDownIcon />

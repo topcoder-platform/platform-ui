@@ -37,6 +37,12 @@
         }
     }
 
+    .score {
+        display: flex;
+        align-items: center;
+        gap: $sp-1;
+    }
+
     @include ltemd {
         flex-wrap: wrap;
         row-gap: $sp-2;
