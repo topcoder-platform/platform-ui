@@ -11,6 +11,7 @@ import {
     useFetchAiWorkflowsRunItems,
 } from '~/apps/review/src/lib/hooks'
 import { ReviewsContextModel, SelectOption } from '~/apps/review/src/lib/models'
+import { AiWorkflowRunStatus } from '~/apps/review/src/lib/components/AiReviewsTable'
 
 import { ScorecardHeader } from '../ScorecardHeader'
 import { useReviewsContext } from '../../ReviewsContext'
@@ -25,7 +26,19 @@ const AiReviewViewer: FC = () => {
         = useFetchAiWorkflowsRunAttachments(workflowId, workflowRun?.id)
 
     const tabItems: SelectOption[] = [
-        { label: 'Scorecard', value: 'scorecard' },
+        {
+            indicator: workflowRun && (
+                <>
+                    <span className={styles.tabScore}>{workflowRun?.score ?? ''}</span>
+                    <AiWorkflowRunStatus
+                        run={workflowRun}
+                        hideLabel
+                    />
+                </>
+            ),
+            label: 'Scorecard',
+            value: 'scorecard',
+        },
         { label: `Attachments (${totalCount ?? 0})`, value: 'attachments' },
     ]
     const isFailedRun = useMemo(() => (

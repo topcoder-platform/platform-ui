@@ -18,3 +18,9 @@
 .mx {
     margin: 0 auto;
 }
+
+.score {
+    display: flex;
+    align-items: center;
+    gap: $sp-1;
+}
