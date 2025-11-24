@@ -269,7 +269,10 @@ const ScorecardViewerContent: FC<ScorecardViewerProps> = props => {
                     />
                 ))}
 
-                <ScorecardTotal score={totalScore} />
+                <ScorecardTotal
+                    score={totalScore}
+                    minScore={props.scorecard.minimumPassingScore}
+                />
 
                 {props.isEdit ? (
                     <div className={styles.footer}>
