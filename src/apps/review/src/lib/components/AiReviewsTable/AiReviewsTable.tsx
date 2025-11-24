@@ -91,7 +91,11 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                             <div className={styles.value}>
                                 {run.status === 'SUCCESS' ? (
                                     run.workflow.scorecard ? (
-                                        <Link to={`/scorecard/${run.workflow.scorecard.id}`}>{run.score}</Link>
+                                        <Link
+                                            to={`../reviews/${props.submission.id}?workflowId=${run.workflow.id}`}
+                                        >
+                                            {run.score}
+                                        </Link>
                                     ) : run.score
                                 ) : '-'}
                             </div>
