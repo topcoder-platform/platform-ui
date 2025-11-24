@@ -29,7 +29,7 @@ interface AiFeedbackActionsProps {
     actionType: 'comment' | 'runItem'
     comment?: AiFeedbackComment
     feedback?: any
-    onPressReply: () => void
+    onPressReply?: () => void
     onPressEdit?: () => void
 }
 
@@ -227,17 +227,20 @@ export const AiFeedbackActions: FC<AiFeedbackActionsProps> = props => {
                 <span className={styles.count}>{downVotes}</span>
             </button>
 
-            <button
-                type='button'
-                className={styles.actionBtn}
-                onClick={props.onPressReply}
-            >
-                <IconReply />
-                <span className={styles.count}>Reply</span>
-            </button>
-
             {
-                props.onPressEdit && (
+                props.onPressReply && (
+                    <button
+                        type='button'
+                        className={styles.actionBtn}
+                        onClick={props.onPressReply}
+                    >
+                        <IconReply />
+                        <span className={styles.count}>Reply</span>
+                    </button>
+                )
+            }
+            {
+                props.onPressEdit && (loginUserInfo?.userId?.toString() === props.comment?.createdBy.toString()) && (
                     <button
                         type='button'
                         className={styles.actionBtn}

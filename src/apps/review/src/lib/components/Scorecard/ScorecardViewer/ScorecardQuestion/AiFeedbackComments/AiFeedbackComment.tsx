@@ -26,12 +26,9 @@ export const AiFeedbackComment: FC<AiFeedbackCommentProps> = props => {
     const [editMode, setEditMode] = useState(false)
     const [showReply, setShowReply] = useState(false)
 
-    const onShowReply = useCallback(() => {
-        setShowReply(!showReply)
-    }, [])
-
     const onPressEdit = useCallback(() => {
         setEditMode(true)
+        setShowReply(false)
     }, [])
 
     const onSubmitReply = useCallback(async (content: string, comment: AiFeedbackCommentType) => {
@@ -97,7 +94,6 @@ export const AiFeedbackComment: FC<AiFeedbackCommentProps> = props => {
                 feedback={props.feedback}
                 comment={props.comment}
                 actionType='comment'
-                onPressReply={onShowReply}
                 onPressEdit={onPressEdit}
             />
             {

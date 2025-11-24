@@ -69,7 +69,11 @@ const AiFeedback: FC<AiFeedbackProps> = props => {
 
             <MarkdownReview value={feedback.content} />
 
-            <AiFeedbackActions feedback={feedback} actionType='runItem' onPressReply={onShowReply} />
+            <AiFeedbackActions
+                feedback={feedback}
+                actionType='runItem'
+                onPressReply={commentsArr.length === 0 ? onShowReply : undefined}
+            />
 
             {
                 showReply && (
