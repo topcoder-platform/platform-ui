@@ -809,7 +809,7 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
         [primarySubmissionInfos],
     )
 
-    const fitleredScreenings = useMemo(() => (
+    const filteredScreenings = useMemo(() => (
         props.screenings
             .filter(screening => latestSubmissionIds.has(screening.submissionId))
     ), [props.screenings, latestSubmissionIds])
@@ -1177,7 +1177,7 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
             ) : (
                 <Table
                     columns={columns}
-                    data={fitleredScreenings}
+                    data={filteredScreenings}
                     disableSorting
                     onToggleSort={_.noop}
                     removeDefaultSort

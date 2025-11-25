@@ -100,7 +100,8 @@ export const SubmissionHistoryModal: FC<SubmissionHistoryModalProps> = (props: S
         [props.submissions],
     )
 
-    const aiReviewersCount = useMemo(() => (props.aiReviewers?.length ?? 0) + 1, [props.aiReviewers])
+    const aiReviewers = useMemo(() => props.aiReviewers ?? [], [props.aiReviewers])
+    const aiReviewersCount = useMemo(() => (aiReviewers.length ?? 0) + 1, [aiReviewers])
 
     const [toggledRows, setToggledRows] = useState(new Set<string>())
 
@@ -279,7 +280,7 @@ export const SubmissionHistoryModal: FC<SubmissionHistoryModalProps> = (props: S
                         <td className={styles.aiReviewersTableRow} colSpan={4}>
                             <div className={styles.aiReviewersTable}>
                                 <AiReviewsTable
-                                    reviewers={props.aiReviewers ?? []}
+                                    reviewers={aiReviewers}
                                     submission={submission}
                                 />
                             </div>
