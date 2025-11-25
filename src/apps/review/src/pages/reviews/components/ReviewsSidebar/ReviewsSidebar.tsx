@@ -5,7 +5,7 @@ import classNames from 'classnames'
 import { ReviewsContextModel } from '~/apps/review/src/lib/models'
 import { AiWorkflowRunStatus } from '~/apps/review/src/lib/components/AiReviewsTable'
 import { IconAiReview, IconPhaseReview } from '~/apps/review/src/lib/assets/icons'
-import { IconOutline, IconSolid } from '~/libs/ui'
+import { IconOutline, IconSolid, Tooltip } from '~/libs/ui'
 import StatusLabel from '~/apps/review/src/lib/components/AiReviewsTable/StatusLabel'
 
 import { useReviewsContext } from '../../ReviewsContext'
@@ -36,6 +36,10 @@ const ReviewsSidebar: FC<ReviewsSidebarProps> = props => {
     const close = useCallback(() => {
         setIsMobileOpen(false)
     }, [])
+
+    const runUrl = useCallback((runWorkflowId: string) => (
+        `../reviews/${submissionId}?workflowId=${runWorkflowId}&reviewId=${reviewId}`
+    ), [reviewId, submissionId])
 
     return (
         <div className={classNames(props.className, styles.wrap)}>
@@ -82,14 +86,20 @@ const ReviewsSidebar: FC<ReviewsSidebarProps> = props => {
                                 }
                                 key={run.id}
                             >
-                                <Link
-                                    to={`../reviews/${submissionId}?workflowId=${run.workflow.id}&reviewId=${reviewId}`}
-                                    onClick={close}
-                                />
-                                <span className={styles.workflowNameWrap}>
-                                    <IconAiReview />
-                                    <span className={styles.workflowName}>{run.workflow.name}</span>
-                                </span>
+                                <Tooltip
+                                    content={run.workflow.name}
+                                    triggerOn='hover'
+                                    disableWrap
+                                >
+                                    <Link
+                                        to={runUrl(run.workflow.id)}
+                                        onClick={close}
+                                    />
+                                    <span className={styles.workflowNameWrap}>
+                                        <IconAiReview />
+                                        <span className={styles.workflowName}>{run.workflow.name}</span>
+                                    </span>
+                                </Tooltip>
                                 <AiWorkflowRunStatus run={run} showScore hideLabel />
                             </li>
                         ))}

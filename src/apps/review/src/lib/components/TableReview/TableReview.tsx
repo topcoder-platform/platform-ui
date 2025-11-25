@@ -621,22 +621,6 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
         }
 
         baseColumns.push(
-            ...(props.aiReviewers ? [{
-                columnId: 'ai-reviews-table',
-                isExpand: true,
-                label: '',
-                renderer: (submission: SubmissionRow, allRows: SubmissionRow[]) => (
-                    props.aiReviewers && (
-                        <CollapsibleAiReviewsRow
-                            className={styles.aiReviews}
-                            aiReviewers={props.aiReviewers}
-                            submission={submission as any}
-                            defaultOpen={allRows ? !allRows.indexOf(submission) : false}
-                        />
-                    )
-                ),
-                type: 'element',
-            }] : []) as TableColumn<SubmissionRow>[],
             {
                 columnId: 'review-date',
                 label: 'Review Date',
@@ -684,6 +668,25 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
                 columnId: 'actions',
                 label: 'Actions',
                 renderer: renderActionsCell,
+                type: 'element',
+            })
+        }
+
+        if (props.aiReviewers) {
+            baseColumns.push({
+                columnId: 'ai-reviews-table',
+                isExpand: true,
+                label: '',
+                renderer: (submission: SubmissionRow, allRows: SubmissionRow[]) => (
+                    props.aiReviewers && (
+                        <CollapsibleAiReviewsRow
+                            className={styles.aiReviews}
+                            aiReviewers={props.aiReviewers}
+                            submission={submission as any}
+                            defaultOpen={allRows ? !allRows.indexOf(submission) : false}
+                        />
+                    )
+                ),
                 type: 'element',
             })
         }
