@@ -3,6 +3,7 @@ import { FC } from 'react'
 import { BaseModal } from '~/libs/ui'
 import { AiWorkflow } from '~/apps/review/src/lib/hooks'
 import { IconExternalLink } from '~/apps/review/src/lib/assets/icons'
+import { MarkdownReview } from '~/apps/review/src/lib/components/MarkdownReview'
 
 import AiModelIcon from '../AiModelIcon'
 
@@ -35,7 +36,7 @@ const AiModelModal: FC<AiModelModalProps> = props => (
             </div>
 
             <p className={styles.modelDescription}>
-                {props.model.description}
+                <MarkdownReview value={props.model.description} />
             </p>
         </div>
     </BaseModal>
