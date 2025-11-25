@@ -6,6 +6,7 @@ import { ReviewsContextModel, ScorecardQuestion } from '~/apps/review/src/lib/mo
 import { createFeedbackComment } from '~/apps/review/src/lib/services'
 import { useReviewsContext } from '~/apps/review/src/pages/reviews/ReviewsContext'
 import { EnvironmentConfig } from '~/config'
+import { Tooltip } from '~/libs/ui'
 
 import { ScorecardViewerContextValue, useScorecardViewerContext } from '../../ScorecardViewer.context'
 import { ScorecardQuestionRow } from '../ScorecardQuestionRow'
@@ -61,11 +62,21 @@ const AiFeedback: FC<AiFeedbackProps> = props => {
                 />
             )}
         >
-            {isYesNo && (
-                <p>
-                    <strong>{feedback.questionScore ? 'Yes' : 'No'}</strong>
-                </p>
-            )}
+            <p>
+                <strong>
+                    {isYesNo && (feedback.questionScore ? 'Yes' : 'No')}
+                    {!isYesNo && (
+                        <Tooltip
+                            content={`On a scale of ${props.question.scaleMin} to ${props.question.scaleMax}`}
+                            triggerOn='hover'
+                        >
+                            <span>
+                                {feedback.questionScore}
+                            </span>
+                        </Tooltip>
+                    )}
+                </strong>
+            </p>
 
             <MarkdownReview value={feedback.content} />
 

@@ -671,6 +671,7 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
                 type: 'element',
             })
         }
+
         if (props.aiReviewers) {
             baseColumns.push({
                 columnId: 'ai-reviews-table',
