@@ -5,6 +5,7 @@ import { ReviewsContextModel } from '~/apps/review/src/lib/models'
 import { useRolePermissions, UseRolePermissionsResult } from '~/apps/review/src/lib/hooks'
 import { ArrowCircleDownIcon, ArrowCircleUpIcon } from '@heroicons/react/outline'
 
+import { MarkdownReview } from '../../../../lib/components/MarkdownReview'
 import { IconClock, IconFile, IconPremium } from '../../../../lib/assets/icons'
 import { AiModelModal } from '../AiModelModal'
 import { useReviewsContext } from '../../ReviewsContext'
@@ -105,7 +106,7 @@ const ScorecardHeader: FC = () => {
                 </div>
             </div>
             <p className={styles.workflowDescription}>
-                {workflow.description}
+                <MarkdownReview value={workflow.description} />
             </p>
             {/* <div className={styles.workflowFileLink}>
                 <a href={workflow.defUrl}>
