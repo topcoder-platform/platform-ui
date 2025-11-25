@@ -22,6 +22,12 @@
     gap: $sp-4;
 }
 
+.mdContainer {
+    & > * {
+        all: revert-layer;
+    }
+}
+
 .workflowIcon {
     width: 60px;
     height: 60px;
@@ -105,7 +111,7 @@
             height: 20px;
             stroke: #0a0a0a;
         }
-        
+
         &.iconFile {
             path {
                 fill: #0A0A0A;

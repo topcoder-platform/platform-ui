@@ -16,6 +16,12 @@
     }
 }
 
+.mdContainer {
+    & > * {
+        all: revert-layer;
+    }
+}
+
 .modelIcon {
     width: 60px;
     height: 60px;
