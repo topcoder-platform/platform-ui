@@ -217,7 +217,7 @@ const ScorecardViewerContent: FC<ScorecardViewerProps> = props => {
                     </i>
                     {errorMessage}
                     {' '}
-                    Check bellow.
+                    Check below.
                 </div>
             )}
 

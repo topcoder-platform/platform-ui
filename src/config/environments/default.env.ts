@@ -169,7 +169,7 @@ const REVIEW_OPPORTUNITIES_URL_DEFAULT = getReactEnv<string>(
 export const REVIEW = {
     CHALLENGE_PAGE_URL: 'https://www.topcoder-dev.com/challenges',
     OPPORTUNITIES_URL: REVIEW_OPPORTUNITIES_URL_DEFAULT,
-    PROFILE_PAGE_URL: 'https://profiles.topcoder-dev.com/profiles',
+    PROFILE_PAGE_URL: 'https://profiles.topcoder-dev.com',
 }
 
 const FILESTACK_SECURITY_POLICY = getReactEnv<string | undefined>(
