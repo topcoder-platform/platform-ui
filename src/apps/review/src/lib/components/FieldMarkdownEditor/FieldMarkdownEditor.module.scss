@@ -162,6 +162,10 @@ $error-line-height: 14px;
     color: var(--GrayFontColor);
     font-size: 14px;
     line-height: 20px;
+    @include ltemd {
+        text-align: right;
+        margin-top: 12px;
+    }
 }
 
 .error {

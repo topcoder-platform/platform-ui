@@ -38,6 +38,7 @@ export const AiFeedbackActions: FC<AiFeedbackActionsProps> = props => {
     const [userVote, setUserVote] = useState<string | undefined>(undefined)
     const [upVotes, setUpVotes] = useState<number>(0)
     const [downVotes, setDownVotes] = useState<number>(0)
+    const [isVotingInprogress, setVotingInprogress] = useState(false)
 
     const { loginUserInfo }: ReviewAppContextModel = useContext(ReviewAppContext)
     const { workflowId, workflowRun }: ReviewsContextModel = useReviewsContext()
@@ -45,6 +46,9 @@ export const AiFeedbackActions: FC<AiFeedbackActionsProps> = props => {
     const votesArr: any[] = (props.actionType === 'runItem' ? (props.feedback?.votes) : (props.comment?.votes)) || []
 
     const setInitialVotesForFeedback = useCallback((): void => {
+        // don't override optimistic updates while a vote mutation is in progress
+        if (isVotingInprogress) return
+
         const initialUp = props.feedback?.upVotes ?? votesArr.filter(v => String(v.voteType)
             .toLowerCase()
             .includes('up')).length
@@ -56,9 +60,12 @@ export const AiFeedbackActions: FC<AiFeedbackActionsProps> = props => {
         setUpVotes(initialUp)
         setDownVotes(initialDown)
         setUserVote(myVote?.voteType ?? undefined)
-    }, [votesArr, props.feedback])
+    }, [votesArr, props.feedback, isVotingInprogress, loginUserInfo?.userId])
 
     const setInitialVotesForComment = useCallback((): void => {
+        // don't override optimistic updates while a vote mutation is in progress
+        if (isVotingInprogress) return
+
         const initialUp = votesArr.filter(v => String(v.voteType)
             .toLowerCase()
             .includes('up')).length
@@ -70,7 +77,7 @@ export const AiFeedbackActions: FC<AiFeedbackActionsProps> = props => {
         setUpVotes(initialUp)
         setDownVotes(initialDown)
         setUserVote(myVote?.voteType ?? undefined)
-    }, [votesArr])
+    }, [votesArr, isVotingInprogress, loginUserInfo?.userId])
 
     useEffect(() => {
         if (props.actionType === 'runItem') {
@@ -78,10 +85,12 @@ export const AiFeedbackActions: FC<AiFeedbackActionsProps> = props => {
         } else {
             setInitialVotesForComment()
         }
-    }, [props.actionType, props.feedback?.id, votesArr.length, loginUserInfo?.userId])
+    }, [props.actionType, props.feedback?.id, votesArr.length, loginUserInfo?.userId, isVotingInprogress])
 
     const voteOnItem = useCallback(async (type: VOTE_TYPE) => {
-        if (!workflowId || !workflowRun?.id) return
+        if (!workflowId || !workflowRun?.id || isVotingInprogress) return
+
+        setVotingInprogress(true)
         const current = userVote
         let up = false
         let down = false
@@ -136,11 +145,14 @@ export const AiFeedbackActions: FC<AiFeedbackActionsProps> = props => {
             setUserVote(prevUserVote)
             setUpVotes(prevUp)
             setDownVotes(prevDown)
+        } finally {
+            setVotingInprogress(false)
         }
-    }, [workflowId, workflowRun, props.feedback?.id, userVote, upVotes, downVotes])
+    }, [workflowId, workflowRun, props.feedback?.id, userVote, upVotes, downVotes, isVotingInprogress])
 
     const voteOnComment = useCallback(async (c: any, type: VOTE_TYPE) => {
-        if (!workflowId || !workflowRun?.id) return
+        if (!workflowId || !workflowRun?.id || isVotingInprogress) return
+        setVotingInprogress(true)
         const votes = (c.votes || [])
         const my = votes.find((v: any) => String(v.createdBy) === String(loginUserInfo?.userId))
         const current = my?.voteType ?? undefined
@@ -196,8 +208,20 @@ export const AiFeedbackActions: FC<AiFeedbackActionsProps> = props => {
             setUserVote(prevUserVote)
             setUpVotes(prevUp)
             setDownVotes(prevDown)
+        } finally {
+            setVotingInprogress(false)
         }
-    }, [workflowId, workflowRun, props.feedback?.id, loginUserInfo])
+    }, [
+        workflowId,
+        workflowRun,
+        props.feedback?.id,
+        props.comment?.id,
+        loginUserInfo,
+        isVotingInprogress,
+        userVote,
+        upVotes,
+        downVotes,
+    ])
 
     const onVote = (action: VOTE_TYPE): void => {
         if (props.actionType === 'comment') {
@@ -213,6 +237,7 @@ export const AiFeedbackActions: FC<AiFeedbackActionsProps> = props => {
                 type='button'
                 className={styles.actionBtn}
                 onClick={() => onVote(VOTE_TYPE.UPVOTE)}
+                disabled={isVotingInprogress}
             >
                 {userVote === 'UPVOTE' ? <IconThumbsUpFilled /> : <IconThumbsUp />}
                 <span className={styles.count}>{upVotes}</span>
@@ -222,6 +247,7 @@ export const AiFeedbackActions: FC<AiFeedbackActionsProps> = props => {
                 type='button'
                 className={styles.actionBtn}
                 onClick={() => onVote(VOTE_TYPE.DOWNVOTE)}
+                disabled={isVotingInprogress}
             >
                 {userVote === 'DOWNVOTE' ? <IconThumbsDownFilled /> : <IconThumbsDown />}
                 <span className={styles.count}>{downVotes}</span>
