@@ -37,9 +37,9 @@ const ReviewsSidebar: FC<ReviewsSidebarProps> = props => {
         setIsMobileOpen(false)
     }, [])
 
-    const runUrl = useCallback((workflowId: string) => (
-        `../reviews/${submissionId}?workflowId=${workflowId}&reviewId=${reviewId}`
-    ), [reviewId, submissionId]);
+    const runUrl = useCallback((runWorkflowId: string) => (
+        `../reviews/${submissionId}?workflowId=${runWorkflowId}&reviewId=${reviewId}`
+    ), [reviewId, submissionId])
 
     return (
         <div className={classNames(props.className, styles.wrap)}>
