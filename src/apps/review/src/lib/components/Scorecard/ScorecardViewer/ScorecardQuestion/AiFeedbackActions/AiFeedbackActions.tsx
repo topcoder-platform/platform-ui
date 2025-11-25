@@ -136,15 +136,74 @@ export const AiFeedbackActions: FC<AiFeedbackActionsProps> = props => {
         }
 
         try {
+            const itemsKey = `${EnvironmentConfig.API.V6}/workflows/${workflowId}/runs/${workflowRun.id}/items`
+            mutate(itemsKey, (items: any) => {
+                if (!items || !Array.isArray(items)) return items
+
+                return items.map((it: any) => {
+                    if (String(it.id) !== String(props.feedback?.id)) return it
+
+                    const newItem = { ...it }
+
+                    const prevUpCount = Number(newItem.upVotes
+                        ?? (newItem.votes ? newItem.votes.filter((v: any) => String(v.voteType)
+                            .toLowerCase()
+                            .includes('up')).length : 0))
+                    const prevDownCount = Number(newItem.downVotes
+                        ?? (newItem.votes ? newItem.votes.filter((v: any) => String(v.voteType)
+                            .toLowerCase()
+                            .includes('down')).length : 0))
+
+                    let nextUp = prevUpCount
+                    let nextDown = prevDownCount
+
+                    if (current === type) {
+                        // user removed their existing vote
+                        if (type === VOTE_TYPE.UPVOTE) nextUp = Math.max(0, prevUpCount - 1)
+                        else nextDown = Math.max(0, prevDownCount - 1)
+                    } else if (!current) {
+                        // user added a new vote
+                        if (type === VOTE_TYPE.UPVOTE) nextUp = prevUpCount + 1
+                        else nextDown = prevDownCount + 1
+                    } else if (type === VOTE_TYPE.UPVOTE) {
+                        nextUp = prevUpCount + 1
+                        nextDown = Math.max(0, prevDownCount - 1)
+                    } else {
+                        nextDown = prevDownCount + 1
+                        nextUp = Math.max(0, prevUpCount - 1)
+                    }
+
+                    newItem.upVotes = nextUp
+                    newItem.downVotes = nextDown
+
+                    const votesArrLocal = Array.isArray(newItem.votes) ? [...newItem.votes] : []
+                    const filtered = votesArrLocal
+                        .filter((v: any) => String(v.createdBy) !== String(loginUserInfo?.userId))
+
+                    if (up) {
+                        filtered.push({ createdBy: loginUserInfo?.userId, voteType: VOTE_TYPE.UPVOTE })
+                    } else if (down) {
+                        filtered.push({ createdBy: loginUserInfo?.userId, voteType: VOTE_TYPE.DOWNVOTE })
+                    }
+
+                    newItem.votes = filtered
+
+                    return newItem
+                })
+            }, false)
+
             await updateLikesOrDislikesOnRunItem(workflowId, workflowRun.id, props.feedback.id, {
                 downVote: down,
                 upVote: up,
             })
+            await mutate(itemsKey)
         } catch (err) {
-            // rollback
             setUserVote(prevUserVote)
             setUpVotes(prevUp)
             setDownVotes(prevDown)
+
+            const itemsKey = `${EnvironmentConfig.API.V6}/workflows/${workflowId}/runs/${workflowRun.id}/items`
+            await mutate(itemsKey)
         } finally {
             setVotingInprogress(false)
         }
