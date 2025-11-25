@@ -36,7 +36,7 @@ const AiModelModal: FC<AiModelModalProps> = props => (
             </div>
 
             <p className={styles.modelDescription}>
-                <MarkdownReview value={props.model.description} />
+                <MarkdownReview className={styles.mdContainer} value={props.model.description} />
             </p>
         </div>
     </BaseModal>
