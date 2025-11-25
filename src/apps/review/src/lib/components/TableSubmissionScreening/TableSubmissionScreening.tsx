@@ -802,12 +802,17 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
         [historySourceSubmissions, primarySubmissionInfos],
     )
 
-    const { historyByMember }: SubmissionHistoryPartition = submissionHistory
+    const { historyByMember, latestSubmissionIds }: SubmissionHistoryPartition = submissionHistory
 
     const shouldShowHistoryActions = useMemo(
         () => hasIsLatestFlag(primarySubmissionInfos),
         [primarySubmissionInfos],
     )
+
+    const fitleredScreenings = useMemo(() => (
+        props.screenings
+            .filter(screening => latestSubmissionIds.has(screening.submissionId))
+    ), [props.screenings, latestSubmissionIds])
 
     const hasAnyScreeningAssignment = useMemo(
         () => props.screenings.some(screening => Boolean(screening.myReviewResourceId)),
@@ -1172,7 +1177,7 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
             ) : (
                 <Table
                     columns={columns}
-                    data={props.screenings}
+                    data={fitleredScreenings}
                     disableSorting
                     onToggleSort={_.noop}
                     removeDefaultSort

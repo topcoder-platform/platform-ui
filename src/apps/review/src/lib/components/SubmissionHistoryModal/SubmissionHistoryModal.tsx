@@ -279,7 +279,7 @@ export const SubmissionHistoryModal: FC<SubmissionHistoryModalProps> = (props: S
                         <td className={styles.aiReviewersTableRow} colSpan={4}>
                             <div className={styles.aiReviewersTable}>
                                 <AiReviewsTable
-                                    reviewers={props.aiReviewers!}
+                                    reviewers={props.aiReviewers ?? []}
                                     submission={submission}
                                 />
                             </div>
