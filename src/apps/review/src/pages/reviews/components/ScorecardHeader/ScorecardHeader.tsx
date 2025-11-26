@@ -105,12 +105,12 @@ const ScorecardHeader: FC = () => {
                     )}
                 </div>
             </div>
-            <p className={styles.workflowDescription}>
+            <div className={styles.workflowDescription}>
                 <MarkdownReview
                     className={styles.mdContainer}
                     value={workflow.description}
                 />
-            </p>
+            </div>
             {/* <div className={styles.workflowFileLink}>
                 <a href={workflow.defUrl}>
                     Workflow File
