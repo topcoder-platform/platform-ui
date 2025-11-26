@@ -40,6 +40,7 @@
     justify-content: center;
 
     flex: 0 0 auto;
+
     @include ltemd {
         width: 56px;
         height: 56px;
@@ -84,7 +85,7 @@
 
     flex: 0 0 auto;
 
-    > span {
+    >span {
         display: flex;
         align-items: center;
         gap: $sp-2;
@@ -107,6 +108,7 @@
         &.sm {
             height: 16px;
         }
+
         &.md {
             height: 20px;
             stroke: #0a0a0a;
@@ -116,6 +118,7 @@
             path {
                 fill: #0A0A0A;
             }
+
             height: 16px;
         }
     }
@@ -131,10 +134,25 @@
     font-size: 14px;
     line-height: 20px;
     color: #0A0A0A;
+
+    >div {
+
+        >p,
+        >ul,
+        >blockquote,
+        >h5 {
+            margin-top: $sp-3;
+        }
+
+        >h5 {
+            font-weight: bold;
+        }
+    }
 }
 
 .workflowFileLink {
     margin-top: $sp-4;
+
     a {
         display: flex;
         align-items: center;
@@ -147,6 +165,7 @@
         svg {
             width: 12px;
             height: 12px;
+
             path {
                 fill: $link-blue-dark;
             }
