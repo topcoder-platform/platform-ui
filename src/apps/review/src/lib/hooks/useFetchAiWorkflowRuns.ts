@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import useSWR, { SWRResponse } from 'swr'
 
 import { EnvironmentConfig } from '~/config'
-import { xhrGetBlobAsync } from '~/libs/core'
+import { xhrGetAsync, xhrGetBlobAsync } from '~/libs/core'
 import { handleError } from '~/libs/shared/lib/utils/handle-error'
 
 import { AiFeedbackItem, Scorecard } from '../models'
@@ -150,6 +150,7 @@ export function useFetchAiWorkflowsRuns(
 export function useFetchAiWorkflowsRunItems(
     workflowId: string | undefined,
     runId: string | undefined,
+    runStatus: string = '',
 ): AiWorkflowRunItemsResponse {
     // Use swr hooks for challenge info fetching
     const {
@@ -157,8 +158,9 @@ export function useFetchAiWorkflowsRunItems(
         error: fetchError,
         isValidating: isLoading,
     }: SWRResponse<AiWorkflowRunItem[], Error> = useSWR<AiWorkflowRunItem[], Error>(
-        `${TC_API_BASE_URL}/workflows/${workflowId}/runs/${runId}/items`,
+        `${TC_API_BASE_URL}/workflows/${workflowId}/runs/${runId}/items?[${runStatus}]`,
         {
+            fetcher: url => xhrGetAsync(url.replace(`[${runStatus}]`, '')),
             isPaused: () => !workflowId || !runId,
         },
     )

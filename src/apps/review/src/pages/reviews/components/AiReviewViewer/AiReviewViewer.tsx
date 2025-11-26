@@ -21,7 +21,11 @@ import styles from './AiReviewViewer.module.scss'
 const AiReviewViewer: FC = () => {
     const { scorecard, workflowId, workflowRun, setActionButtons }: ReviewsContextModel = useReviewsContext()
     const [selectedTab, setSelectedTab] = useState('scorecard')
-    const { runItems }: AiWorkflowRunItemsResponse = useFetchAiWorkflowsRunItems(workflowId, workflowRun?.id)
+    const { runItems }: AiWorkflowRunItemsResponse = useFetchAiWorkflowsRunItems(
+        workflowId,
+        workflowRun?.id,
+        workflowRun?.status,
+    )
     const { totalCount }: AiWorkflowRunAttachmentsResponse
         = useFetchAiWorkflowsRunAttachments(workflowId, workflowRun?.id)
 
