@@ -29,6 +29,8 @@ export const AiFeedbackReply: FC<AiFeedbackReplyProps> = props => {
     const {
         handleSubmit,
         control,
+        watch,
+        reset,
         formState: { errors },
     }: UseFormReturn<FormFeedbackReply> = useForm({
         defaultValues: {
@@ -48,8 +50,12 @@ export const AiFeedbackReply: FC<AiFeedbackReplyProps> = props => {
         setSavingReply(true)
         await props.onSubmitReply(data.reply, props.id)
         setReply('')
+        reset({ reply: '' })
         setSavingReply(false)
-    }, [props.onSubmitReply, setReply])
+    }, [props.onSubmitReply, setReply, reset])
+
+    const replyValue = watch('reply') || ''
+    const isSubmitDisabled = isSavingReply || replyValue.trim().length === 0
 
     return (
         <div className={styles.replyWrapper}>
@@ -84,7 +90,7 @@ export const AiFeedbackReply: FC<AiFeedbackReplyProps> = props => {
                 />
                 <div className={styles.blockBtns}>
                     <button
-                        disabled={isSavingReply}
+                        disabled={isSubmitDisabled}
                         className='filledButton'
                         type='submit'
                     >

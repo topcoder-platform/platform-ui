@@ -15,5 +15,13 @@
         .cancelButton {
             margin-left: 16px;
         }
+        @include ltemd {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            .cancelButton {
+                margin-left: 0;
+            }
+        }
     }
 }
