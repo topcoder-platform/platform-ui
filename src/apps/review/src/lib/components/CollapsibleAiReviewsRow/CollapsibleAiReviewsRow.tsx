@@ -35,10 +35,7 @@ const CollapsibleAiReviewsRow: FC<CollapsibleAiReviewsRowProps> = props => {
             </span>
             {isOpen && (
                 <div className={classNames(styles.table, 'reviews-table')}>
-                    <AiReviewsTable
-                        reviewers={props.aiReviewers}
-                        submission={props.submission}
-                    />
+                    <AiReviewsTable submission={props.submission} />
                 </div>
             )}
         </div>

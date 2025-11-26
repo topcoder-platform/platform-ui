@@ -5,7 +5,7 @@ import { Context, createContext, FC, PropsWithChildren, ReactNode, useContext, u
 import { useParams, useSearchParams } from 'react-router-dom'
 
 import { ChallengeDetailContext } from '../../../lib'
-import { ChallengeDetailContextModel, ReviewCtxStatus, ReviewsContextModel } from '../../../lib/models'
+import { ReviewCtxStatus, ReviewsContextModel } from '../../../lib/models'
 import { AiWorkflowRunsResponse, useFetchAiWorkflowsRuns, useFetchSubmissionInfo } from '../../../lib/hooks'
 
 export const ReviewsContext: Context<ReviewsContextModel>
@@ -25,17 +25,10 @@ export const ReviewsContextProvider: FC<PropsWithChildren> = props => {
     const [actionButtons, setActionButtons] = useState<ReactNode>()
 
     const challengeDetailsCtx = useContext(ChallengeDetailContext)
-    const { challengeInfo }: ChallengeDetailContextModel = challengeDetailsCtx
-
     const [submissionInfo] = useFetchSubmissionInfo(submissionId)
 
-    const aiReviewers = useMemo(() => (
-        (challengeInfo?.reviewers ?? []).filter(r => !!r.aiWorkflowId)
-    ), [challengeInfo?.reviewers])
-    const aiWorkflowIds = useMemo(() => aiReviewers?.map(r => r.aiWorkflowId as string), [aiReviewers])
-
     const { runs: workflowRuns, isLoading: aiWorkflowRunsLoading }: AiWorkflowRunsResponse
-        = useFetchAiWorkflowsRuns(submissionId, aiWorkflowIds)
+        = useFetchAiWorkflowsRuns(submissionId)
 
     const isLoadingCtxData
         = challengeDetailsCtx.isLoadingChallengeInfo
