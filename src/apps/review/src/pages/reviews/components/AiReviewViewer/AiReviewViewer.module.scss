@@ -15,4 +15,9 @@
     color: var(--FontColor);
     font-weight: normal;
     margin-left: 4px;
+    @include ltemd {
+        &.selected {
+            color: var(--invertButtonColor);
+        }
+    }
 }
