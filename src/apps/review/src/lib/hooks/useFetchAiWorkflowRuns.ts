@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import useSWR, { SWRResponse } from 'swr'
 
 import { EnvironmentConfig } from '~/config'
-import { xhrGetAsync, xhrGetBlobAsync } from '~/libs/core'
+import { xhrGetBlobAsync } from '~/libs/core'
 import { handleError } from '~/libs/shared/lib/utils/handle-error'
 
 import { AiFeedbackItem, Scorecard } from '../models'
@@ -119,16 +119,8 @@ export function useFetchAiWorkflowsRuns(
         error: fetchError,
         isValidating: isLoading,
     }: SWRResponse<AiWorkflowRun[], Error> = useSWR<AiWorkflowRun[], Error>(
-        `${TC_API_BASE_URL}/workflows/${workflowIds.join(',')}/runs?submissionId=${submissionId}`,
+        `${TC_API_BASE_URL}/workflows/runs?submissionId=${submissionId}`,
         {
-            fetcher: () => Promise.all(
-                workflowIds.map(workflowId => (
-                    xhrGetAsync<AiWorkflowRun>(
-                        `${TC_API_BASE_URL}/workflows/${workflowId}/runs?submissionId=${submissionId}`,
-                    )
-                )),
-            )
-                .then(results => results.flat()),
             isPaused: () => !workflowIds?.length || !submissionId,
         },
     )
