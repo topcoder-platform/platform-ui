@@ -25,17 +25,10 @@ export const ReviewsContextProvider: FC<PropsWithChildren> = props => {
     const [actionButtons, setActionButtons] = useState<ReactNode>()
 
     const challengeDetailsCtx = useContext(ChallengeDetailContext)
-    const { challengeInfo }: ChallengeDetailContextModel = challengeDetailsCtx
-
     const [submissionInfo] = useFetchSubmissionInfo(submissionId)
 
-    const aiReviewers = useMemo(() => (
-        (challengeInfo?.reviewers ?? []).filter(r => !!r.aiWorkflowId)
-    ), [challengeInfo?.reviewers])
-    const aiWorkflowIds = useMemo(() => aiReviewers?.map(r => r.aiWorkflowId as string), [aiReviewers])
-
     const { runs: workflowRuns, isLoading: aiWorkflowRunsLoading }: AiWorkflowRunsResponse
-        = useFetchAiWorkflowsRuns(submissionId, aiWorkflowIds)
+        = useFetchAiWorkflowsRuns(submissionId)
 
     const isLoadingCtxData
         = challengeDetailsCtx.isLoadingChallengeInfo

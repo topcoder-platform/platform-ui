@@ -52,12 +52,12 @@ const Tooltip: FC<TooltipProps> = (props: TooltipProps) => {
 
     function renderTrigger(): ReactElement[] {
         return Children.toArray(props.children)
-            .map(child => cloneElement((wrapComponents(child, props.disableWrap) as ReactElement), {
+            .map((child, i) => cloneElement((wrapComponents(child, props.disableWrap) as ReactElement), {
                 'data-tooltip-delay-show': triggerOnClick ? '0' : '300',
                 'data-tooltip-id': tooltipId.current as string,
                 'data-tooltip-place': props.place ?? 'bottom',
                 'data-tooltip-strategy': props.strategy ?? 'absolute',
-                key: tooltipId.current as string,
+                key: `${tooltipId.current as string}-${i}`,
             } as any))
     }
 

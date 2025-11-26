@@ -28,8 +28,7 @@ const stopPropagation = (ev: ReactMouseEvent<HTMLDivElement, MouseEvent>): void 
 }
 
 const AiReviewsTable: FC<AiReviewsTableProps> = props => {
-    const aiWorkflowIds = useMemo(() => props.reviewers.map(r => r.aiWorkflowId), [props.reviewers])
-    const { runs, isLoading }: AiWorkflowRunsResponse = useFetchAiWorkflowsRuns(props.submission.id, aiWorkflowIds)
+    const { runs, isLoading }: AiWorkflowRunsResponse = useFetchAiWorkflowsRuns(props.submission.id)
 
     const windowSize: WindowSize = useWindowSize()
     const isTablet = useMemo(

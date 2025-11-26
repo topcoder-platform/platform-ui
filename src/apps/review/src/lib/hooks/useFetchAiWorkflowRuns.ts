@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import useSWR, { SWRResponse } from 'swr'
 
 import { EnvironmentConfig } from '~/config'
@@ -111,8 +111,8 @@ export const aiRunFailed = (aiRun: Pick<AiWorkflowRun, 'status'>): boolean => [
 
 export function useFetchAiWorkflowsRuns(
     submissionId: string,
-    workflowIds: string[],
 ): AiWorkflowRunsResponse {
+    const hasInProgress = useRef(true)
     // Use swr hooks for challenge info fetching
     const {
         data: runs = [],
@@ -121,9 +121,18 @@ export function useFetchAiWorkflowsRuns(
     }: SWRResponse<AiWorkflowRun[], Error> = useSWR<AiWorkflowRun[], Error>(
         `${TC_API_BASE_URL}/workflows/runs?submissionId=${submissionId}`,
         {
-            isPaused: () => !workflowIds?.length || !submissionId,
+            isPaused: () => !submissionId,
+            refreshInterval: hasInProgress.current ? 10 * 1000 : 0,
         },
     )
+
+    hasInProgress.current = !!runs.find(r => (
+        ![
+            AiWorkflowRunStatusEnum.SUCCESS,
+            AiWorkflowRunStatusEnum.CANCELLED,
+            AiWorkflowRunStatusEnum.COMPLETED,
+        ].includes(r.status)
+    ))
 
     // Show backend error when fetching challenge info
     useEffect(() => {
