@@ -20,7 +20,6 @@ import styles from './AiReviewsTable.module.scss'
 
 interface AiReviewsTableProps {
     submission: Pick<BackendSubmission, 'id'|'virusScan'>
-    reviewers: { aiWorkflowId: string }[]
 }
 
 const stopPropagation = (ev: ReactMouseEvent<HTMLDivElement, MouseEvent>): void => {

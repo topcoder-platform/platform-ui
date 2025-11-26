@@ -5,7 +5,7 @@ import { Context, createContext, FC, PropsWithChildren, ReactNode, useContext, u
 import { useParams, useSearchParams } from 'react-router-dom'
 
 import { ChallengeDetailContext } from '../../../lib'
-import { ChallengeDetailContextModel, ReviewCtxStatus, ReviewsContextModel } from '../../../lib/models'
+import { ReviewCtxStatus, ReviewsContextModel } from '../../../lib/models'
 import { AiWorkflowRunsResponse, useFetchAiWorkflowsRuns, useFetchSubmissionInfo } from '../../../lib/hooks'
 
 export const ReviewsContext: Context<ReviewsContextModel>
