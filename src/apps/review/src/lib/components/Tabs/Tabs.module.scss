@@ -138,6 +138,9 @@
         }
         .blockItem {
             position: relative;
+            display: flex;
+            align-items: flex-start;
+            justify-content: flex-start;
             &.selected {
                 background-color: var(--Actived);
                 color: var(--invertButtonColor);
