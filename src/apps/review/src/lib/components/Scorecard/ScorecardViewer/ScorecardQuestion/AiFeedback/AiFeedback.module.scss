@@ -54,3 +54,15 @@
         font-weight: 600;
     }
 }
+
+.mdReview {
+    h1, h2, h3, h4, h5, h6 {
+        font-size: 14px;
+        line-height: 20px;
+        text-transform: none;
+    }
+
+    ul {
+        margin: $sp-4 0;
+    }
+}

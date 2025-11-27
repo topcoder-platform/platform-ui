@@ -78,7 +78,10 @@ const AiFeedback: FC<AiFeedbackProps> = props => {
                 </strong>
             </p>
 
-            <MarkdownReview value={feedback.content} />
+            <MarkdownReview
+                className={styles.mdReview}
+                value={feedback.content}
+            />
 
             <AiFeedbackActions
                 feedback={feedback}
