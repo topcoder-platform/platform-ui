@@ -24,6 +24,7 @@ interface Props {
     downloadSubmission: (submissionId: string) => void
     challengeStatus?: string
     mode?: 'submission' | 'screening' | 'review'
+    aiReviewers?: { aiWorkflowId: string }[]
 }
 
 export const TabContentCheckpoint: FC<Props> = (props: Props) => {
@@ -148,6 +149,7 @@ export const TabContentCheckpoint: FC<Props> = (props: Props) => {
             isDownloading={props.isDownloading}
             downloadSubmission={props.downloadSubmission}
             mode={mode}
+            aiReviewers={props.aiReviewers}
         />
     )
 }

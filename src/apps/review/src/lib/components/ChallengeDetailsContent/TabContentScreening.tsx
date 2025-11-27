@@ -23,6 +23,7 @@ interface Props {
     isActiveChallenge: boolean
     showScreeningColumns?: boolean
     challengeStatus?: string
+    aiReviewers?: { aiWorkflowId: string }[]
 }
 
 export const TabContentScreening: FC<Props> = (props: Props) => {
@@ -136,6 +137,7 @@ export const TabContentScreening: FC<Props> = (props: Props) => {
             downloadSubmission={props.downloadSubmission}
             hideHandleColumn={hideHandleColumn}
             showScreeningColumns={showScreeningColumns}
+            aiReviewers={props.aiReviewers}
         />
     )
 }

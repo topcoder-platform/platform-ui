@@ -23,6 +23,7 @@ import { copyTextToClipboard, useWindowSize, WindowSize } from '~/libs/shared'
 import { IconOutline, Table, TableColumn, Tooltip } from '~/libs/ui'
 
 import {
+    BackendSubmission,
     ChallengeDetailContextModel,
     ReviewAppContextModel,
     Screening,
@@ -47,6 +48,7 @@ import { ConfirmModal } from '../ConfirmModal'
 import { useRole, useSubmissionDownloadAccess } from '../../hooks'
 import type { UseSubmissionDownloadAccessResult } from '../../hooks/useSubmissionDownloadAccess'
 import type { useRoleProps } from '../../hooks/useRole'
+import { CollapsibleAiReviewsRow } from '../CollapsibleAiReviewsRow'
 
 import styles from './TableSubmissionScreening.module.scss'
 
@@ -59,6 +61,7 @@ interface Props {
     downloadSubmission: (submissionId: string) => void
     hideHandleColumn?: boolean
     showScreeningColumns?: boolean
+    aiReviewers?: { aiWorkflowId: string }[]
 }
 
 interface SubmissionColumnConfig {
@@ -785,6 +788,44 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
         return map
     }, [filteredChallengeSubmissions, props.screenings])
 
+    const aiReviewersColumn = useMemo<TableColumn<Screening> | undefined>(
+        () => {
+            if (!props.aiReviewers?.length) {
+                return undefined
+            }
+
+            return {
+                columnId: 'ai-reviews-table',
+                isExpand: true,
+                label: '',
+                renderer: (
+                    data: Screening,
+                    allRows: Screening[],
+                ) => {
+                    const submissionPayload = submissionMetaById.get(data.submissionId) ?? {
+                        id: data.submissionId ?? '',
+                        virusScan: data.virusScan,
+                    }
+
+                    if (!submissionPayload?.id) {
+                        return <></>
+                    }
+
+                    return (
+                        <CollapsibleAiReviewsRow
+                            className={styles.aiReviews}
+                            aiReviewers={props.aiReviewers!}
+                            submission={submissionPayload as Pick<BackendSubmission, 'id'|'virusScan'>}
+                            defaultOpen={allRows ? !allRows.indexOf(data) : false}
+                        />
+                    )
+                },
+                type: 'element',
+            } as TableColumn<Screening>
+        },
+        [props.aiReviewers, submissionMetaById],
+    )
+
     const primarySubmissionInfos = useMemo<SubmissionInfo[]>(
         () => props.screenings
             .map(screening => submissionMetaById.get(screening.submissionId))
@@ -1129,14 +1170,22 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
     const columns = useMemo<TableColumn<Screening>[]>(
         () => {
             const base = [...baseColumns]
-            if (!showScreeningColumns) {
-                return appendActionColumn(base, actionColumn)
-            }
+            const columnsWithoutAction = showScreeningColumns
+                ? [...base, ...screeningColumns]
+                : base
+            const columnsWithAi = aiReviewersColumn
+                ? [...columnsWithoutAction, aiReviewersColumn]
+                : columnsWithoutAction
 
-            const withScreening = [...base, ...screeningColumns]
-            return appendActionColumn(withScreening, actionColumn)
+            return appendActionColumn(columnsWithAi, actionColumn)
         },
-        [actionColumn, baseColumns, screeningColumns, showScreeningColumns],
+        [
+            actionColumn,
+            aiReviewersColumn,
+            baseColumns,
+            screeningColumns,
+            showScreeningColumns,
+        ],
     )
 
     const columnsMobile = useMemo<MobileTableColumn<Screening>[][]>(
@@ -1178,6 +1227,8 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
                 <Table
                     columns={columns}
                     data={filteredScreenings}
+                    showExpand
+                    expandMode='always'
                     disableSorting
                     onToggleSort={_.noop}
                     removeDefaultSort
