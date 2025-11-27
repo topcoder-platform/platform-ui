@@ -16,6 +16,7 @@ import { UserRole } from '~/libs/core'
 import { handleError } from '~/apps/admin/src/lib/utils'
 
 import {
+    BackendSubmission,
     ChallengeDetailContextModel,
     ReviewAppContextModel,
     Screening,
@@ -33,6 +34,7 @@ import { updateReview } from '../../services'
 import { ConfirmModal } from '../ConfirmModal'
 import { useSubmissionDownloadAccess } from '../../hooks'
 import type { UseSubmissionDownloadAccessResult } from '../../hooks/useSubmissionDownloadAccess'
+import { CollapsibleAiReviewsRow } from '../CollapsibleAiReviewsRow'
 
 import styles from './TableCheckpointSubmissions.module.scss'
 
@@ -42,6 +44,7 @@ interface Props {
     isDownloading: IsRemovingType
     downloadSubmission: (submissionId: string) => void
     mode?: 'submission' | 'screening' | 'review'
+    aiReviewers?: { aiWorkflowId: string }[]
 }
 
 const isInProgressStatus = (value: string | undefined): boolean => (
@@ -159,6 +162,45 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
     const visibleRows = useMemo<Screening[]>(
         () => datas ?? [],
         [datas],
+    )
+
+    const aiReviewsColumn = useMemo<TableColumn<Screening> | undefined>(
+        () => {
+            if (!props.aiReviewers?.length) {
+                return undefined
+            }
+
+            return {
+                columnId: 'ai-reviews-table',
+                isExpand: true,
+                label: '',
+                renderer: (data: Screening, allRows: Screening[]) => {
+                    const submissionPayload = {
+                        id: data.submissionId ?? '',
+                        virusScan: data.virusScan,
+                    } as Pick<BackendSubmission, 'id'|'virusScan'>
+
+                    if (!submissionPayload.id) {
+                        return <></>
+                    }
+
+                    return (
+                        <CollapsibleAiReviewsRow
+                            className={styles.aiReviews}
+                            aiReviewers={props.aiReviewers!}
+                            submission={submissionPayload}
+                            defaultOpen={allRows ? !allRows.indexOf(data) : false}
+                        />
+                    )
+                },
+                type: 'element',
+            } as TableColumn<Screening>
+        },
+        [props.aiReviewers],
+    )
+
+    const appendAiColumn = (columns: TableColumn<Screening>[]): TableColumn<Screening>[] => (
+        aiReviewsColumn ? [...columns, aiReviewsColumn] : columns
     )
 
     const columns = useMemo<TableColumn<Screening>[]>(
@@ -312,7 +354,7 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
             }
 
             if (tableMode === 'submission') {
-                return baseColumns
+                return appendAiColumn(baseColumns)
             }
 
             if (tableMode === 'screening') {
@@ -410,7 +452,7 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
                 const hasAnyMyAssignment = rows.some(row => Boolean(row.myReviewResourceId))
                 const canShowReopenActions = rows.some(row => computeReopenEligibility(row).canReopen)
                 if (!hasAnyMyAssignment && !canShowReopenActions) {
-                    return screeningColumns
+                    return appendAiColumn(screeningColumns)
                 }
 
                 const actionColumn: TableColumn<Screening> = {
@@ -502,10 +544,10 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
                     type: 'element',
                 }
 
-                return [
+                return appendAiColumn([
                     ...screeningColumns,
                     actionColumn,
-                ]
+                ])
             }
 
             // mode === 'review'
@@ -574,7 +616,7 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
             const hasAnyMyAssignment = rows.some(row => Boolean(row.myReviewResourceId))
             const canShowReopenActions = rows.some(row => computeReopenEligibility(row).canReopen)
             if (!hasAnyMyAssignment && !canShowReopenActions) {
-                return reviewColumns
+                return appendAiColumn(reviewColumns)
             }
 
             const actionColumn: TableColumn<Screening> = {
@@ -666,10 +708,10 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
                 type: 'element',
             }
 
-            return [
+            return appendAiColumn([
                 ...reviewColumns,
                 actionColumn,
-            ]
+            ])
         },
         [
             challengeInfo,
@@ -730,6 +772,8 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
                 <Table
                     columns={columns}
                     data={visibleRows}
+                    showExpand
+                    expandMode='always'
                     disableSorting
                     onToggleSort={_.noop}
                     removeDefaultSort

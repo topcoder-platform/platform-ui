@@ -184,3 +184,23 @@
     color: var(--GrayFontColor);
     font-size: 14px;
 }
+
+.aiReviews {
+    margin: $sp-2 0;
+
+    :global(.trigger) {
+        width: fit-content;
+        margin-left: auto;
+    }
+
+    :global(.reviews-table) {
+        margin-left: auto;
+        width: 75%;
+        margin-bottom: -9px;
+
+        @include ltelg {
+            width: auto;
+            margin-left: -1*$sp-4;
+        }
+    }
+}

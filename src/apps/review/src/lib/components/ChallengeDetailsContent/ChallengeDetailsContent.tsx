@@ -178,6 +178,7 @@ const renderSubmissionTab = ({
             downloadSubmission={downloadSubmission}
             isActiveChallenge={isActiveChallenge}
             showScreeningColumns={!isSubmissionTab && !isTopgearSubmissionTab}
+            aiReviewers={aiReviewers}
         />
     )
 }
@@ -438,6 +439,7 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
                     isDownloading={isDownloadingSubmission}
                     downloadSubmission={handleSubmissionDownload}
                     mode={checkpointMode}
+                    aiReviewers={aiReviewers}
                 />
             )
         }
@@ -479,6 +481,7 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
                     downloadSubmission={handleSubmissionDownload}
                     isActiveChallenge={props.isActiveChallenge}
                     columnLabel='Post-Mortem'
+                    aiReviewers={aiReviewers}
                 />
             )
         }
@@ -494,6 +497,7 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
                     downloadSubmission={handleSubmissionDownload}
                     isActiveChallenge={props.isActiveChallenge}
                     phaseIdFilter={props.selectedPhaseId}
+                    aiReviewers={aiReviewers}
                 />
             )
         }

@@ -44,6 +44,7 @@ import type { SubmissionRow } from '../common/types'
 import { resolveSubmissionReviewResult } from '../common/reviewResult'
 import { ProgressBar } from '../ProgressBar'
 import { TableWrapper } from '../TableWrapper'
+import { CollapsibleAiReviewsRow } from '../CollapsibleAiReviewsRow'
 
 import styles from './TableIterativeReview.module.scss'
 
@@ -57,6 +58,7 @@ interface Props {
     hideSubmissionColumn?: boolean
     isChallengeCompleted?: boolean
     hasPassedThreshold?: boolean
+    aiReviewers?: { aiWorkflowId: string }[]
 }
 
 interface ScoreMetadata {
@@ -1335,6 +1337,25 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
             baseColumns.push(reviewerColumn)
         }
 
+        if (props.aiReviewers) {
+            baseColumns.push({
+                columnId: 'ai-reviews-table',
+                isExpand: true,
+                label: '',
+                renderer: (submission: SubmissionInfo, allRows: SubmissionInfo[]) => (
+                    props.aiReviewers && (
+                        <CollapsibleAiReviewsRow
+                            className={styles.aiReviews}
+                            aiReviewers={props.aiReviewers}
+                            submission={submission as any}
+                            defaultOpen={allRows ? !allRows.indexOf(submission) : false}
+                        />
+                    )
+                ),
+                type: 'element',
+            })
+        }
+
         return baseColumns
     }, [
         approverColumn,
@@ -1349,6 +1370,7 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
         reviewDateColumn,
         reviewerColumn,
         submissionColumn,
+        props.aiReviewers,
     ])
 
     const columnsMobile = useMemo<MobileTableColumn<SubmissionInfo>[][]>(() => (
@@ -1387,6 +1409,8 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
                 <Table
                     columns={actionColumn ? [...columns, actionColumn] : columns}
                     data={datas}
+                    showExpand
+                    expandMode='always'
                     disableSorting
                     onToggleSort={_.noop}
                     removeDefaultSort

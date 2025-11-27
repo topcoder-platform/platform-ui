@@ -28,6 +28,7 @@ interface Props {
     isActiveChallenge: boolean
     columnLabel?: string
     phaseIdFilter?: string
+    aiReviewers?: { aiWorkflowId: string }[]
 }
 
 const getSubmissionPriority = (submission: SubmissionInfo): number => {
@@ -203,6 +204,7 @@ export const TabContentIterativeReview: FC<Props> = (props: Props) => {
             hideSubmissionColumn={shouldHideSubmissionColumn}
             isChallengeCompleted={isChallengeCompleted}
             hasPassedThreshold={hasPassedPostMortemThreshold}
+            aiReviewers={props.aiReviewers}
         />
     )
 }
