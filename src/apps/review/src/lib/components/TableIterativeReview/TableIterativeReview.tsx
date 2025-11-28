@@ -1337,24 +1337,20 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
             baseColumns.push(reviewerColumn)
         }
 
-        if (props.aiReviewers) {
-            baseColumns.push({
-                columnId: 'ai-reviews-table',
-                isExpand: true,
-                label: '',
-                renderer: (submission: SubmissionInfo, allRows: SubmissionInfo[]) => (
-                    props.aiReviewers && (
-                        <CollapsibleAiReviewsRow
-                            className={styles.aiReviews}
-                            aiReviewers={props.aiReviewers}
-                            submission={submission as any}
-                            defaultOpen={allRows ? !allRows.indexOf(submission) : false}
-                        />
-                    )
-                ),
-                type: 'element',
-            })
-        }
+        baseColumns.push({
+            columnId: 'ai-reviews-table',
+            isExpand: true,
+            label: '',
+            renderer: (submission: SubmissionInfo, allRows: SubmissionInfo[]) => (
+                <CollapsibleAiReviewsRow
+                    className={styles.aiReviews}
+                    aiReviewers={props.aiReviewers ?? []}
+                    submission={submission as any}
+                    defaultOpen={allRows ? !allRows.indexOf(submission) : false}
+                />
+            ),
+            type: 'element',
+        })
 
         return baseColumns
     }, [
@@ -1375,7 +1371,7 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
 
     const columnsMobile = useMemo<MobileTableColumn<SubmissionInfo>[][]>(() => (
         (actionColumn ? [...columns, actionColumn] : columns).map(column => ([
-            {
+            column.label && {
                 ...column,
                 className: '',
                 label: `${column.label as string} label`,
@@ -1390,9 +1386,10 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
             },
             {
                 ...column,
+                colSpan: column.label ? 1 : 2,
                 mobileType: 'last-value',
             },
-        ] as MobileTableColumn<SubmissionInfo>[]))
+        ].filter(Boolean) as MobileTableColumn<SubmissionInfo>[]))
     ), [actionColumn, columns])
 
     return (

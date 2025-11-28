@@ -789,40 +789,34 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
     }, [filteredChallengeSubmissions, props.screenings])
 
     const aiReviewersColumn = useMemo<TableColumn<Screening> | undefined>(
-        () => {
-            if (!props.aiReviewers?.length) {
-                return undefined
-            }
+        () => ({
+            columnId: 'ai-reviews-table',
+            isExpand: true,
+            label: '',
+            renderer: (
+                data: Screening,
+                allRows: Screening[],
+            ) => {
+                const submissionPayload = submissionMetaById.get(data.submissionId) ?? {
+                    id: data.submissionId ?? '',
+                    virusScan: data.virusScan,
+                }
 
-            return {
-                columnId: 'ai-reviews-table',
-                isExpand: true,
-                label: '',
-                renderer: (
-                    data: Screening,
-                    allRows: Screening[],
-                ) => {
-                    const submissionPayload = submissionMetaById.get(data.submissionId) ?? {
-                        id: data.submissionId ?? '',
-                        virusScan: data.virusScan,
-                    }
+                if (!submissionPayload?.id) {
+                    return <></>
+                }
 
-                    if (!submissionPayload?.id) {
-                        return <></>
-                    }
-
-                    return (
-                        <CollapsibleAiReviewsRow
-                            className={styles.aiReviews}
-                            aiReviewers={props.aiReviewers!}
-                            submission={submissionPayload as Pick<BackendSubmission, 'id'|'virusScan'>}
-                            defaultOpen={allRows ? !allRows.indexOf(data) : false}
-                        />
-                    )
-                },
-                type: 'element',
-            } as TableColumn<Screening>
-        },
+                return (
+                    <CollapsibleAiReviewsRow
+                        className={styles.aiReviews}
+                        aiReviewers={props.aiReviewers!}
+                        submission={submissionPayload as Pick<BackendSubmission, 'id'|'virusScan'>}
+                        defaultOpen={allRows ? !allRows.indexOf(data) : false}
+                    />
+                )
+            },
+            type: 'element',
+        } as TableColumn<Screening>),
         [props.aiReviewers, submissionMetaById],
     )
 
@@ -1191,7 +1185,7 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
     const columnsMobile = useMemo<MobileTableColumn<Screening>[][]>(
         () => columns.map(
             column => [
-                {
+                column.label && {
                     ...column,
                     className: '',
                     label: `${column.label as string} label`,
@@ -1206,9 +1200,10 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
                 },
                 {
                     ...column,
+                    colSpan: column.label ? 1 : 2,
                     mobileType: 'last-value',
                 },
-            ] as MobileTableColumn<Screening>[],
+            ].filter(Boolean) as MobileTableColumn<Screening>[],
         ),
         [columns],
     )

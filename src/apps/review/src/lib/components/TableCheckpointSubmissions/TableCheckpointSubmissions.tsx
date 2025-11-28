@@ -165,37 +165,31 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
     )
 
     const aiReviewsColumn = useMemo<TableColumn<Screening> | undefined>(
-        () => {
-            if (!props.aiReviewers?.length) {
-                return undefined
-            }
+        () => ({
+            columnId: 'ai-reviews-table',
+            isExpand: true,
+            label: '',
+            renderer: (data: Screening, allRows: Screening[]) => {
+                const submissionPayload = {
+                    id: data.submissionId ?? '',
+                    virusScan: data.virusScan,
+                } as Pick<BackendSubmission, 'id'|'virusScan'>
 
-            return {
-                columnId: 'ai-reviews-table',
-                isExpand: true,
-                label: '',
-                renderer: (data: Screening, allRows: Screening[]) => {
-                    const submissionPayload = {
-                        id: data.submissionId ?? '',
-                        virusScan: data.virusScan,
-                    } as Pick<BackendSubmission, 'id'|'virusScan'>
+                if (!submissionPayload.id) {
+                    return <></>
+                }
 
-                    if (!submissionPayload.id) {
-                        return <></>
-                    }
-
-                    return (
-                        <CollapsibleAiReviewsRow
-                            className={styles.aiReviews}
-                            aiReviewers={props.aiReviewers!}
-                            submission={submissionPayload}
-                            defaultOpen={allRows ? !allRows.indexOf(data) : false}
-                        />
-                    )
-                },
-                type: 'element',
-            } as TableColumn<Screening>
-        },
+                return (
+                    <CollapsibleAiReviewsRow
+                        className={styles.aiReviews}
+                        aiReviewers={props.aiReviewers ?? []}
+                        submission={submissionPayload}
+                        defaultOpen={allRows ? !allRows.indexOf(data) : false}
+                    />
+                )
+            },
+            type: 'element',
+        } as TableColumn<Screening>),
         [props.aiReviewers],
     )
 
@@ -733,7 +727,7 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
     const columnsMobile = useMemo<MobileTableColumn<Screening>[][]>(
         () => columns.map(
             column => [
-                {
+                column.label && {
                     ...column,
                     className: '',
                     label: `${column.label as string} label`,
@@ -748,9 +742,10 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
                 },
                 {
                     ...column,
+                    colSpan: column.label ? 1 : 2,
                     mobileType: 'last-value',
                 },
-            ] as MobileTableColumn<Screening>[],
+            ].filter(Boolean) as MobileTableColumn<Screening>[],
         ),
         [columns],
     )
