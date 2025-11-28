@@ -789,12 +789,7 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
     }, [filteredChallengeSubmissions, props.screenings])
 
     const aiReviewersColumn = useMemo<TableColumn<Screening> | undefined>(
-        () => {
-            if (!props.aiReviewers?.length) {
-                return undefined
-            }
-
-            return {
+        () => ({
                 columnId: 'ai-reviews-table',
                 isExpand: true,
                 label: '',
@@ -821,8 +816,7 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
                     )
                 },
                 type: 'element',
-            } as TableColumn<Screening>
-        },
+            } as TableColumn<Screening>),
         [props.aiReviewers, submissionMetaById],
     )
 
@@ -1191,7 +1185,7 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
     const columnsMobile = useMemo<MobileTableColumn<Screening>[][]>(
         () => columns.map(
             column => [
-                {
+                column.label && {
                     ...column,
                     className: '',
                     label: `${column.label as string} label`,
@@ -1206,9 +1200,10 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
                 },
                 {
                     ...column,
+                    colSpan: column.label ? 1 : 2,
                     mobileType: 'last-value',
                 },
-            ] as MobileTableColumn<Screening>[],
+            ].filter(Boolean) as MobileTableColumn<Screening>[],
         ),
         [columns],
     )

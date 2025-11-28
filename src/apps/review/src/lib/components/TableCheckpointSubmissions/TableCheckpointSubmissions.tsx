@@ -165,12 +165,7 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
     )
 
     const aiReviewsColumn = useMemo<TableColumn<Screening> | undefined>(
-        () => {
-            if (!props.aiReviewers?.length) {
-                return undefined
-            }
-
-            return {
+        () => ({
                 columnId: 'ai-reviews-table',
                 isExpand: true,
                 label: '',
@@ -187,15 +182,14 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
                     return (
                         <CollapsibleAiReviewsRow
                             className={styles.aiReviews}
-                            aiReviewers={props.aiReviewers!}
+                            aiReviewers={props.aiReviewers ?? []}
                             submission={submissionPayload}
                             defaultOpen={allRows ? !allRows.indexOf(data) : false}
                         />
                     )
                 },
                 type: 'element',
-            } as TableColumn<Screening>
-        },
+            } as TableColumn<Screening>),
         [props.aiReviewers],
     )
 
@@ -733,7 +727,7 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
     const columnsMobile = useMemo<MobileTableColumn<Screening>[][]>(
         () => columns.map(
             column => [
-                {
+                column.label && {
                     ...column,
                     className: '',
                     label: `${column.label as string} label`,
@@ -748,9 +742,10 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
                 },
                 {
                     ...column,
+                    colSpan: column.label ? 1 : 2,
                     mobileType: 'last-value',
                 },
-            ] as MobileTableColumn<Screening>[],
+            ].filter(Boolean) as MobileTableColumn<Screening>[],
         ),
         [columns],
     )
