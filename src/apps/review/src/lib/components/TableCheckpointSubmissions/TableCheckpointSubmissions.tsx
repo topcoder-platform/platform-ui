@@ -166,30 +166,30 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
 
     const aiReviewsColumn = useMemo<TableColumn<Screening> | undefined>(
         () => ({
-                columnId: 'ai-reviews-table',
-                isExpand: true,
-                label: '',
-                renderer: (data: Screening, allRows: Screening[]) => {
-                    const submissionPayload = {
-                        id: data.submissionId ?? '',
-                        virusScan: data.virusScan,
-                    } as Pick<BackendSubmission, 'id'|'virusScan'>
+            columnId: 'ai-reviews-table',
+            isExpand: true,
+            label: '',
+            renderer: (data: Screening, allRows: Screening[]) => {
+                const submissionPayload = {
+                    id: data.submissionId ?? '',
+                    virusScan: data.virusScan,
+                } as Pick<BackendSubmission, 'id'|'virusScan'>
 
-                    if (!submissionPayload.id) {
-                        return <></>
-                    }
+                if (!submissionPayload.id) {
+                    return <></>
+                }
 
-                    return (
-                        <CollapsibleAiReviewsRow
-                            className={styles.aiReviews}
-                            aiReviewers={props.aiReviewers ?? []}
-                            submission={submissionPayload}
-                            defaultOpen={allRows ? !allRows.indexOf(data) : false}
-                        />
-                    )
-                },
-                type: 'element',
-            } as TableColumn<Screening>),
+                return (
+                    <CollapsibleAiReviewsRow
+                        className={styles.aiReviews}
+                        aiReviewers={props.aiReviewers ?? []}
+                        submission={submissionPayload}
+                        defaultOpen={allRows ? !allRows.indexOf(data) : false}
+                    />
+                )
+            },
+            type: 'element',
+        } as TableColumn<Screening>),
         [props.aiReviewers],
     )
 

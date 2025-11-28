@@ -790,33 +790,33 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
 
     const aiReviewersColumn = useMemo<TableColumn<Screening> | undefined>(
         () => ({
-                columnId: 'ai-reviews-table',
-                isExpand: true,
-                label: '',
-                renderer: (
-                    data: Screening,
-                    allRows: Screening[],
-                ) => {
-                    const submissionPayload = submissionMetaById.get(data.submissionId) ?? {
-                        id: data.submissionId ?? '',
-                        virusScan: data.virusScan,
-                    }
+            columnId: 'ai-reviews-table',
+            isExpand: true,
+            label: '',
+            renderer: (
+                data: Screening,
+                allRows: Screening[],
+            ) => {
+                const submissionPayload = submissionMetaById.get(data.submissionId) ?? {
+                    id: data.submissionId ?? '',
+                    virusScan: data.virusScan,
+                }
 
-                    if (!submissionPayload?.id) {
-                        return <></>
-                    }
+                if (!submissionPayload?.id) {
+                    return <></>
+                }
 
-                    return (
-                        <CollapsibleAiReviewsRow
-                            className={styles.aiReviews}
-                            aiReviewers={props.aiReviewers!}
-                            submission={submissionPayload as Pick<BackendSubmission, 'id'|'virusScan'>}
-                            defaultOpen={allRows ? !allRows.indexOf(data) : false}
-                        />
-                    )
-                },
-                type: 'element',
-            } as TableColumn<Screening>),
+                return (
+                    <CollapsibleAiReviewsRow
+                        className={styles.aiReviews}
+                        aiReviewers={props.aiReviewers!}
+                        submission={submissionPayload as Pick<BackendSubmission, 'id'|'virusScan'>}
+                        defaultOpen={allRows ? !allRows.indexOf(data) : false}
+                    />
+                )
+            },
+            type: 'element',
+        } as TableColumn<Screening>),
         [props.aiReviewers, submissionMetaById],
     )
 
