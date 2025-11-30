@@ -40,7 +40,7 @@ const AiFeedback: FC<AiFeedbackProps> = props => {
         await createFeedbackComment(workflowId as string, workflowRun?.id as string, feedback?.id, {
             content,
         })
-        await mutate(`${EnvironmentConfig.API.V6}/workflows/${workflowId}/runs/${workflowRun?.id}/items`)
+        await mutate(`${EnvironmentConfig.API.V6}/workflows/${workflowId}/runs/${workflowRun?.id}/items?[${workflowRun?.status}]`)
         setShowReply(false)
     }, [workflowId, workflowRun?.id, feedback?.id])
 

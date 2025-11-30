@@ -136,7 +136,7 @@ export const AiFeedbackActions: FC<AiFeedbackActionsProps> = props => {
         }
 
         try {
-            const itemsKey = `${EnvironmentConfig.API.V6}/workflows/${workflowId}/runs/${workflowRun.id}/items`
+            const itemsKey = `${EnvironmentConfig.API.V6}/workflows/${workflowId}/runs/${workflowRun.id}/items?[${workflowRun?.status}]`
             mutate(itemsKey, (items: any) => {
                 if (!items || !Array.isArray(items)) return items
 
@@ -202,7 +202,7 @@ export const AiFeedbackActions: FC<AiFeedbackActionsProps> = props => {
             setUpVotes(prevUp)
             setDownVotes(prevDown)
 
-            const itemsKey = `${EnvironmentConfig.API.V6}/workflows/${workflowId}/runs/${workflowRun.id}/items`
+            const itemsKey = `${EnvironmentConfig.API.V6}/workflows/${workflowId}/runs/${workflowRun.id}/items?[${workflowRun?.status}]`
             await mutate(itemsKey)
         } finally {
             setVotingInprogress(false)
@@ -262,7 +262,7 @@ export const AiFeedbackActions: FC<AiFeedbackActionsProps> = props => {
                 downVote: down,
                 upVote: up,
             })
-            await mutate(`${EnvironmentConfig.API.V6}/workflows/${workflowId}/runs/${workflowRun.id}/items`)
+            await mutate(`${EnvironmentConfig.API.V6}/workflows/${workflowId}/runs/${workflowRun?.id}/items?[${workflowRun?.status}]`)
         } catch (err) {
             setUserVote(prevUserVote)
             setUpVotes(prevUp)
