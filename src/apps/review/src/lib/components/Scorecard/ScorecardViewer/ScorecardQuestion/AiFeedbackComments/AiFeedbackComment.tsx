@@ -36,7 +36,9 @@ export const AiFeedbackComment: FC<AiFeedbackCommentProps> = props => {
             content,
             parentId: comment.id,
         })
-        await mutate(`${EnvironmentConfig.API.V6}/workflows/${workflowId}/runs/${workflowRun?.id}/items?[${workflowRun?.status}]`)
+        await mutate(`
+            ${EnvironmentConfig.API.V6}/workflows/${workflowId}/runs/${workflowRun?.id}/items?[${workflowRun?.status}]
+        `)
         setShowReply(false)
     }, [workflowId, workflowRun?.id, props.feedback?.id])
 
@@ -44,7 +46,9 @@ export const AiFeedbackComment: FC<AiFeedbackCommentProps> = props => {
         await updateRunItemComment(workflowId as string, workflowRun?.id as string, props.feedback?.id, comment.id, {
             content,
         })
-        await mutate(`${EnvironmentConfig.API.V6}/workflows/${workflowId}/runs/${workflowRun?.id}/items?[${workflowRun?.status}]`)
+        await mutate(`
+            ${EnvironmentConfig.API.V6}/workflows/${workflowId}/runs/${workflowRun?.id}/items?[${workflowRun?.status}]
+        `)
         setEditMode(false)
     }, [workflowId, workflowRun?.id, props.feedback?.id])
 

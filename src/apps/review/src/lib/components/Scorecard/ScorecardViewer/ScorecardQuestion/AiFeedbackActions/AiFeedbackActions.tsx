@@ -136,6 +136,7 @@ export const AiFeedbackActions: FC<AiFeedbackActionsProps> = props => {
         }
 
         try {
+            // eslint-disable-next-line max-len
             const itemsKey = `${EnvironmentConfig.API.V6}/workflows/${workflowId}/runs/${workflowRun.id}/items?[${workflowRun?.status}]`
             mutate(itemsKey, (items: any) => {
                 if (!items || !Array.isArray(items)) return items
@@ -202,6 +203,7 @@ export const AiFeedbackActions: FC<AiFeedbackActionsProps> = props => {
             setUpVotes(prevUp)
             setDownVotes(prevDown)
 
+            // eslint-disable-next-line max-len
             const itemsKey = `${EnvironmentConfig.API.V6}/workflows/${workflowId}/runs/${workflowRun.id}/items?[${workflowRun?.status}]`
             await mutate(itemsKey)
         } finally {
@@ -262,6 +264,7 @@ export const AiFeedbackActions: FC<AiFeedbackActionsProps> = props => {
                 downVote: down,
                 upVote: up,
             })
+            // eslint-disable-next-line max-len
             await mutate(`${EnvironmentConfig.API.V6}/workflows/${workflowId}/runs/${workflowRun?.id}/items?[${workflowRun?.status}]`)
         } catch (err) {
             setUserVote(prevUserVote)
