@@ -44,7 +44,6 @@ export const AiFeedbackComment: FC<AiFeedbackCommentProps> = props => {
         await updateRunItemComment(workflowId as string, workflowRun?.id as string, props.feedback?.id, comment.id, {
             content,
         })
-        console.log(`${EnvironmentConfig.API.V6}/workflows/${workflowId}/runs/${workflowRun?.id}/items?[${workflowRun?.status}]`)
         await mutate(`${EnvironmentConfig.API.V6}/workflows/${workflowId}/runs/${workflowRun?.id}/items?[${workflowRun?.status}]`)
         setEditMode(false)
     }, [workflowId, workflowRun?.id, props.feedback?.id])
