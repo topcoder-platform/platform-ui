@@ -36,7 +36,9 @@ const AiReviewViewer: FC = () => {
         challengeInfo,
     }: ChallengeDetailContextModel = useChallengeDetailsContext()
     const navigate = useAppNavigate()
-    const workflowRunIsFailed = [AiWorkflowRunStatusEnum.FAILURE].includes(workflowRun?.status as AiWorkflowRunStatusEnum);
+    const workflowRunIsFailed = [
+        AiWorkflowRunStatusEnum.FAILURE,
+    ].includes(workflowRun?.status as AiWorkflowRunStatusEnum)
 
     const tabItems: SelectOption[] = [
         {
