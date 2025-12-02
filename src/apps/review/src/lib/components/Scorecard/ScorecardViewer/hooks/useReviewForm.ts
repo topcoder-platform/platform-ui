@@ -41,32 +41,30 @@ export const useReviewForm = ({
     }, [isDirty, onFormChange])
 
     useEffect(() => {
-        if (reviewItems?.length) {
-            const newFormData = {
-                reviews: reviewItems.map(
-                    (reviewItem, reviewItemIndex) => ({
-                        comments: 'reviewItemComments' in reviewItem ? reviewItem.reviewItemComments?.map(
-                            (commentItem, commentIndex) => ({
-                                content: commentItem.content ?? '',
-                                id: commentItem.id,
-                                index: commentIndex,
-                                type: commentItem.type ?? '',
-                            }),
-                        ) : [],
-                        id: reviewItem.id,
-                        index: reviewItemIndex,
-                        initialAnswer: (
-                            ('finalAnswer' in reviewItem && reviewItem.finalAnswer)
-                            || ('initialAnswer' in reviewItem && reviewItem.initialAnswer)
-                            || ('questionScore' in reviewItem && reviewItem.questionScore)
-                            || undefined
-                        ) as string,
-                        scorecardQuestionId: reviewItem.scorecardQuestionId,
-                    }),
-                ),
-            }
-            reset(newFormData)
+        const newFormData = {
+            reviews: (reviewItems ?? []).map(
+                (reviewItem, reviewItemIndex) => ({
+                    comments: 'reviewItemComments' in reviewItem ? reviewItem.reviewItemComments?.map(
+                        (commentItem, commentIndex) => ({
+                            content: commentItem.content ?? '',
+                            id: commentItem.id,
+                            index: commentIndex,
+                            type: commentItem.type ?? '',
+                        }),
+                    ) : [],
+                    id: reviewItem.id,
+                    index: reviewItemIndex,
+                    initialAnswer: (
+                        ('finalAnswer' in reviewItem && reviewItem.finalAnswer)
+                        || ('initialAnswer' in reviewItem && reviewItem.initialAnswer)
+                        || ('questionScore' in reviewItem && reviewItem.questionScore)
+                        || undefined
+                    ) as string,
+                    scorecardQuestionId: reviewItem.scorecardQuestionId,
+                }),
+            ),
         }
+        reset(newFormData)
     }, [reviewItems, reset])
 
     const touchedAllFields = useCallback(() => {
