@@ -3,6 +3,8 @@
  */
 import { v4 as uuidv4 } from 'uuid'
 
+import { EnvironmentConfig } from '~/config'
+
 import {
     RequestBusAPI,
     RequestBusAPIAVScan,
@@ -43,11 +45,11 @@ export const CREATE_BUS_EVENT_AV_RESCAN = (
     payload: RequestBusAPIAVScanPayload,
 ): RequestBusAPIAVScan => ({
     'mime-type': 'application/json',
-    originator: 'submission-processor',
+    originator: 'review-api-v6',
     payload,
     timestamp: new Date()
         .toISOString(),
-    topic: 'avscan.action.scan',
+    topic: EnvironmentConfig.ADMIN.AVSCAN_TOPIC,
 })
 
 export const SUBMISSION_REPROCESS_TOPICS = {

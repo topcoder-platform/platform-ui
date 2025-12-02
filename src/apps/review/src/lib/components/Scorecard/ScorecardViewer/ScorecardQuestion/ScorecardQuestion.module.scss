@@ -1,0 +1,36 @@
+@import '@libs/ui/styles/includes';
+
+.wrap {
+}
+
+.header {
+    margin-bottom: 12px;
+}
+
+.toggleBtn {
+    cursor: pointer;
+    transition: transform 0.2s;
+    width: 20px;
+    height: 20px;
+    display: block;
+    color: #767676;
+
+    &.expanded {
+        transform: rotate(180deg);
+    }
+}
+
+.questionText {
+    font-weight: 600;
+    flex: 1;
+    + * {
+        margin-top: $sp-2;
+    }
+}
+
+.guidelines {
+    white-space: pre-wrap;
+}
+
+.guidelinesContent {
+}

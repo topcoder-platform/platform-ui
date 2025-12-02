@@ -126,3 +126,13 @@
         pointer-events: none;
     }
 }
+
+.aiReviewerRow {
+    @include ltelg {
+        tr:has(&) {
+            td:first-child {
+                display: none;
+            }
+        }
+    }
+}

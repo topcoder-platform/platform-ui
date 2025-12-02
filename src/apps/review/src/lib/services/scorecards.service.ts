@@ -1,7 +1,7 @@
 /**
  * Scorecards service
  */
-import { xhrPostAsync, xhrPutAsync } from '~/libs/core'
+import { xhrPatchAsync, xhrPostAsync, xhrPutAsync } from '~/libs/core'
 import { EnvironmentConfig } from '~/config'
 
 import { Scorecard } from '../models'
@@ -29,3 +29,44 @@ export const saveScorecard = async (scorecard: Scorecard): Promise<Scorecard> =>
 
     return xhrPutAsync<Scorecard, Scorecard>(`${baseUrl}/${scorecard.id}`, scorecard)
 }
+
+export const updateLikesOrDislikesOnRunItem = (
+    workflowId: string,
+    runId: string,
+    feedbackId: string,
+    body: {
+        upVote: boolean
+        downVote: boolean
+    },
+): Promise<void> => xhrPatchAsync(
+    `${EnvironmentConfig.API.V6}/workflows/${workflowId}/runs/${runId}/items/${feedbackId}`,
+    body,
+)
+
+export const updateRunItemComment = (
+    workflowId: string,
+    runId: string,
+    feedbackId: string,
+    commentId: string,
+    body: {
+        content?: string
+        upVote?: boolean
+        downVote?: boolean
+    },
+): Promise<void> => xhrPatchAsync(
+    `${EnvironmentConfig.API.V6}/workflows/${workflowId}/runs/${runId}/items/${feedbackId}/comments/${commentId}`,
+    body,
+)
+
+export const createFeedbackComment = (
+    workflowId: string,
+    runId: string,
+    feedbackId: string,
+    body: {
+        content: string
+        parentId?: string
+    },
+): Promise<void> => xhrPostAsync(
+    `${EnvironmentConfig.API.V6}/workflows/${workflowId}/runs/${runId}/items/${feedbackId}/comments`,
+    body,
+)

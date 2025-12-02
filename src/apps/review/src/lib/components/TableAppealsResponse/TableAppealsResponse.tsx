@@ -48,12 +48,14 @@ import type {
 } from '../common/types'
 import type { AggregatedSubmissionReviews } from '../../utils/aggregateSubmissionReviews'
 import type { UseSubmissionDownloadAccessResult } from '../../hooks/useSubmissionDownloadAccess'
+import { CollapsibleAiReviewsRow } from '../CollapsibleAiReviewsRow'
 
 import styles from './TableAppealsResponse.module.scss'
 
 export interface TableAppealsResponseProps {
     className?: string
     datas: SubmissionInfo[]
+    aiReviewers?: { aiWorkflowId: string }[]
     isDownloading: IsRemovingType
     downloadSubmission: (submissionId: string) => void
     mappingReviewAppeal: MappingReviewAppeal
@@ -465,7 +467,7 @@ export const TableAppealsResponse: FC<TableAppealsResponseProps> = (props: Table
                                 >
                                     <Link
                                         className={styles.respondButton}
-                                        to={getReviewRoute(reviewId)}
+                                        to={getReviewRoute(submission.id, reviewId)}
                                     >
                                         Respond to Appeals
                                     </Link>
@@ -474,6 +476,25 @@ export const TableAppealsResponse: FC<TableAppealsResponseProps> = (props: Table
                         </span>
                     )
                 },
+                type: 'element',
+            })
+        }
+
+        if (props.aiReviewers) {
+            baseColumns.push({
+                columnId: 'ai-reviews-table',
+                isExpand: true,
+                label: '',
+                renderer: (submission: SubmissionRow, allRows: SubmissionRow[]) => (
+                    props.aiReviewers && (
+                        <CollapsibleAiReviewsRow
+                            className={styles.aiReviews}
+                            aiReviewers={props.aiReviewers}
+                            submission={submission as any}
+                            defaultOpen={allRows ? !allRows.indexOf(submission) : false}
+                        />
+                    )
+                ),
                 type: 'element',
             })
         }
@@ -509,13 +530,14 @@ export const TableAppealsResponse: FC<TableAppealsResponseProps> = (props: Table
 
             const valueColumn: MobileTableColumn<SubmissionRow> = {
                 ...column,
+                colSpan: label ? 1 : 2,
                 columnId: `${column.columnId}-value`,
                 label: '',
                 mobileType: 'last-value',
                 ...(column.columnId === 'actions' ? { colSpan: 2 } : {}),
             }
 
-            return [labelColumn, valueColumn]
+            return [!!label && labelColumn, valueColumn].filter(Boolean) as MobileTableColumn<SubmissionRow>[]
         }),
         [columns],
     )
@@ -541,6 +563,8 @@ export const TableAppealsResponse: FC<TableAppealsResponseProps> = (props: Table
                 <TableMobile columns={columnsMobile} data={visibleRows} />
             ) : (
                 <Table
+                    showExpand
+                    expandMode='always'
                     columns={columns}
                     data={visibleRows}
                     disableSorting

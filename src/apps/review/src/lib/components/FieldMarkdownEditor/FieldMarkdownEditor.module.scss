@@ -157,6 +157,17 @@ $error-line-height: 14px;
     }
 }
 
+.remainingCharacters {
+    font-family: "Nunito Sans", sans-serif;
+    color: var(--GrayFontColor);
+    font-size: 14px;
+    line-height: 20px;
+    @include ltemd {
+        text-align: right;
+        margin-top: 12px;
+    }
+}
+
 .error {
     display: flex;
     align-items: center;

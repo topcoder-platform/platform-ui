@@ -44,6 +44,7 @@ import {
 import { hasSubmitterPassedThreshold } from '../../utils/reviewScoring'
 
 interface Props {
+    aiReviewers?: { aiWorkflowId: string }[]
     selectedTab: string
     reviews: SubmissionInfo[]
     submitterReviews: SubmissionInfo[]
@@ -681,6 +682,7 @@ export const TabContentReview: FC<Props> = (props: Props) => {
         return (
             <TableAppealsResponse
                 datas={resolvedReviewsWithSubmitter}
+                aiReviewers={props.aiReviewers}
                 isDownloading={props.isDownloading}
                 downloadSubmission={props.downloadSubmission}
                 mappingReviewAppeal={props.mappingReviewAppeal}
@@ -698,6 +700,7 @@ export const TabContentReview: FC<Props> = (props: Props) => {
         return isSubmitterView ? (
             <TableAppealsForSubmitter
                 datas={filteredSubmitterReviews}
+                aiReviewers={props.aiReviewers}
                 isDownloading={props.isDownloading}
                 downloadSubmission={props.downloadSubmission}
                 mappingReviewAppeal={props.mappingReviewAppeal}
@@ -705,6 +708,7 @@ export const TabContentReview: FC<Props> = (props: Props) => {
         ) : (
             <TableAppeals
                 datas={filteredReviews}
+                aiReviewers={props.aiReviewers}
                 isDownloading={props.isDownloading}
                 downloadSubmission={props.downloadSubmission}
                 mappingReviewAppeal={props.mappingReviewAppeal}
@@ -716,12 +720,14 @@ export const TabContentReview: FC<Props> = (props: Props) => {
     return isSubmitterView ? (
         <TableReviewForSubmitter
             datas={reviewRows}
+            aiReviewers={props.aiReviewers}
             isDownloading={props.isDownloading}
             downloadSubmission={props.downloadSubmission}
             mappingReviewAppeal={props.mappingReviewAppeal}
         />
     ) : (
         <TableReview
+            aiReviewers={props.aiReviewers}
             datas={reviewRows}
             isDownloading={props.isDownloading}
             downloadSubmission={props.downloadSubmission}

@@ -1,0 +1,98 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-4;
+    align-items: flex-start;
+    :global(.borderButton),
+    :global(.filledButton) {
+        font-size: 14px;
+    }
+    :global(.filledButton) {
+        font-size: 16px;
+    }
+}
+
+.blockAppealComment {
+    background-color: var(--Appeal);
+}
+
+.blockAppealResponse {
+    background-color: var(--TableColumn);
+}
+
+.blockAppealResponse,
+.blockAppealComment {
+    padding: $sp-4;
+    display: flex;
+    flex-direction: column;
+    gap: $sp-2;
+    width: 100%;
+}
+
+.markdownEditor {
+    width: 100%;
+}
+
+.textTitle {
+    color: var(--FontColor);
+    font-family: "Nunito Sans", sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 20px;
+}
+
+.blockBtns {
+    display: flex;
+    gap: 10px;
+    padding-top: 8px;
+    padding-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.blockForm {
+    background-color: var(--TableColumn);
+    display: flex;
+    flex-direction: column;
+    padding: $sp-6;
+    gap: $sp-4;
+    width: 100%;
+    @include ltemd {
+        padding: $sp-4;
+    }
+    label {
+        color: var(--FontColor);
+        font-family: "Nunito Sans", sans-serif;
+        font-size: 16px;
+        font-weight: 700;
+        line-height: 20px;
+    }
+}
+
+.status {
+    font-weight: bold;
+    margin-top: 8px;
+}
+
+.responseSelect {
+    min-width: 200px;
+}
+
+.linkStyleBtn {
+    display: flex;
+    align-items: center;
+    gap: $sp-2;
+    color: #0D61BF;
+    font-size: 14px;
+    font-family: "Nunito Sans", sans-serif;
+    font-weight: 700;
+
+    > svg path {
+        fill: currentColor;
+    }
+
+    &:hover {
+        color: darken(#0D61BF, 10%);
+    }
+}

@@ -1,0 +1,41 @@
+@import '../../../styles/includes';
+
+.wrap {
+    background: #60267D;
+    color: $tc-white;
+
+    font-family: "Nunito Sans", sans-serif;
+    font-size: 14px;
+    line-height: 20px;
+
+    .inner {
+        max-width: $xxl-min;
+        padding: $sp-2 0;
+        @include pagePaddings;
+        margin: 0 auto;
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+}
+
+.close {
+    cursor: pointer;
+    color: $tc-white;
+    flex: 0 0;
+    margin-left: auto;
+    border-radius: 50%;
+    border: 2px solid white;
+    @include ltemd {
+        margin-left: $sp-3;
+    }
+}
+
+.icon {
+    flex: 0 0;
+    margin-right: $sp-2;
+    > svg path[fill] {
+        fill: $tc-white;
+    }
+}

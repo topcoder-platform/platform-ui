@@ -141,6 +141,7 @@ export const transformAssignments = (
                     .local()
                     .format(TABLE_DATE_FORMAT)
                 : undefined,
+            hasAIReview: base.hasAIReview,
             id: base.challengeId,
             index: currentIndex,
             name: base.challengeName,

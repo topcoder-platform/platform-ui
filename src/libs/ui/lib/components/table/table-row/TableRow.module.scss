@@ -27,20 +27,9 @@
     }
 }
 
-.isEvenRow {
-    td {
-        background-color: $tc-white;
-    }
-}
-
-.blockExpandContainer {
-    display: table;
-    padding: 8px;
-    width: 100%;
-}
-
 .blockExpandItem {
-    display: table-row;
+    display: flex;
+    align-items: flex-start;
     font-size: 14px;
     line-height: 22px;
 }
@@ -53,7 +42,12 @@
 }
 
 .blockExpandCell {
-    display: table-cell;
+    display: block;
+    max-width: none;
+    flex: 1 1 auto;
+    > * {
+        display: block;
+    }
 }
 
 .blockExpandValue {
@@ -61,8 +55,4 @@
     background-color: white !important;
     font-weight: 400 !important;
     white-space: break-spaces !important;
-
-    :global(.TableCell_blockCell) {
-        margin-top: 3px;
-    }
 }

@@ -15,7 +15,6 @@ import {
 } from 'react'
 import { find, forEach, map } from 'lodash'
 import { toast } from 'react-toastify'
-import { useParams } from 'react-router-dom'
 import useSWR, { SWRResponse } from 'swr'
 
 import { handleError } from '~/apps/admin/src/lib/utils'
@@ -27,7 +26,6 @@ import {
     BackendRequestReviewItem,
     BackendReview,
     BackendReviewItem,
-    BackendSubmission,
     ChallengeDetailContextModel,
     convertBackendAppeal,
     convertBackendReviewToReviewInfo,
@@ -47,7 +45,6 @@ import {
     fetchChallengeReviews,
     fetchReview,
     fetchScorecard,
-    fetchSubmission,
     updateAppeal,
     updateAppealResponse,
     updateReview,
@@ -294,7 +291,6 @@ const resolveReviewOrThrow = (
 export interface useFetchSubmissionReviewsProps {
     mappingAppeals: MappingAppeal
     scorecardInfo?: ScorecardInfo
-    submissionInfo?: BackendSubmission
     scorecardId: string
     isLoading: boolean
     reviewInfo?: ReviewInfo
@@ -340,15 +336,12 @@ export interface useFetchSubmissionReviewsProps {
  * Fetch reviews of submission
  * @returns reviews info
  */
-export function useFetchSubmissionReviews(): useFetchSubmissionReviewsProps {
+export function useFetchSubmissionReviews(reviewId: string = ''): useFetchSubmissionReviewsProps {
     const [isSavingReview, setIsSavingReview] = useState(false)
     const [isSavingAppeal, setIsSavingAppeal] = useState(false)
     const [isSavingAppealResponse, setIsSavingAppealResponse] = useState(false)
     const [isSavingManagerComment, setIsSavingManagerComment] = useState(false)
     const { actionChallengeRole }: useRoleProps = useRole()
-    const { reviewId = '' }: { reviewId?: string } = useParams<{
-        reviewId: string
-    }>()
 
     const {
         challengeId: contextChallengeId,
@@ -525,19 +518,6 @@ export function useFetchSubmissionReviews(): useFetchSubmissionReviewsProps {
         },
     )
 
-    // Use swr hooks for submission info fetching
-    const {
-        data: submissionInfo,
-        error: fetchSubmissionError,
-        isValidating: isLoadingSubmission,
-    }: SWRResponse<BackendSubmission, Error> = useSWR<BackendSubmission, Error>(
-        `EnvironmentConfig.API.V6/submissions/${submissionId}`,
-        {
-            fetcher: () => fetchSubmission(submissionId),
-            isPaused: () => !submissionId,
-        },
-    )
-
     /**
      * Get review info from backend and scorecard info
      */
@@ -596,13 +576,6 @@ export function useFetchSubmissionReviews(): useFetchSubmissionReviewsProps {
             handleError(fetchScorecardError)
         }
     }, [fetchScorecardError])
-
-    // Show backend error when fetching submission info
-    useEffect(() => {
-        if (fetchSubmissionError) {
-            handleError(fetchSubmissionError)
-        }
-    }, [fetchSubmissionError])
 
     // Show backend error when fetching appeal info
     useEffect(() => {
@@ -954,7 +927,7 @@ export function useFetchSubmissionReviews(): useFetchSubmissionReviewsProps {
         addManagerComment,
         doDeleteAppeal,
         isLoading:
-            isLoadingReview || isLoadingScorecard || isLoadingSubmission,
+            isLoadingReview || isLoadingScorecard,
         isSavingAppeal,
         isSavingAppealResponse,
         isSavingManagerComment,
@@ -966,7 +939,6 @@ export function useFetchSubmissionReviews(): useFetchSubmissionReviewsProps {
         scorecardId,
         scorecardInfo,
         setReviewInfo: setUpdatedReviewInfo,
-        submissionInfo,
         submitterLockedPhaseName: submitterPhaseGate.phaseName,
     }
 }

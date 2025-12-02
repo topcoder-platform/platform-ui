@@ -1,0 +1,68 @@
+@import '@libs/ui/styles/includes';
+
+.wrap {
+    p {
+        margin-bottom: $sp-4;
+
+        @include ltemd {
+            margin-bottom: $sp-2;
+        }
+    }
+
+    .comment {
+        margin-top: $sp-3;
+        padding-left: $sp-4;
+        border-left: 2px solid black;
+    }
+
+    .commentContent {
+        margin-bottom: $sp-1;
+    }
+
+    .commentActions {
+        display: flex;
+        gap: $sp-2;
+        margin-bottom: $sp-2;
+    }
+
+    .commentBtn {
+        display: inline-flex;
+        align-items: center;
+        gap: $sp-1;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        padding: $sp-1;
+    }
+
+    .replies {
+        margin-left: $sp-4;
+        margin-top: $sp-2;
+    }
+
+    .reply {
+        margin-top: $sp-2;
+    }
+
+    .count {
+        font-size: 12px;
+        margin-left: $sp-1;
+    }
+
+    .active {
+        color: blue;
+        font-weight: 600;
+    }
+}
+
+.mdReview {
+    h1, h2, h3, h4, h5, h6 {
+        font-size: 14px;
+        line-height: 20px;
+        text-transform: none;
+    }
+
+    ul {
+        margin: $sp-4 0;
+    }
+}

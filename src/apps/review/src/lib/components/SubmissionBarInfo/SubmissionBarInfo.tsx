@@ -42,17 +42,17 @@ export const SubmissionBarInfo: FC<Props> = (props: Props) => {
             type: 'link',
             value: submissionIdValue,
         },
-        {
-            icon: 'icon-handle',
-            title: 'My Role',
-            value: (
-                <div className={styles.blockMyRoles}>
-                    {myChallengeRoles.map(item => (
-                        <span key={item}>{item}</span>
-                    ))}
-                </div>
-            ),
-        },
+        // {
+        //     icon: 'icon-handle',
+        //     title: 'My Role',
+        //     value: (
+        //         <div className={styles.blockMyRoles}>
+        //             {myChallengeRoles.map(item => (
+        //                 <span key={item}>{item}</span>
+        //             ))}
+        //         </div>
+        //     ),
+        // },
         {
             href: getHandleUrl(useInfo),
             icon: 'icon-handle',
@@ -69,24 +69,27 @@ export const SubmissionBarInfo: FC<Props> = (props: Props) => {
         <div className={classNames(styles.container, props.className)}>
             {uiItems.map(item => (
                 <div className={styles.blockItem} key={item.title}>
-                    <span className={styles.circleWrapper}>
-                        <i className={item.icon} />
+                    <span className={styles.nameIcon}>
+                        <span className={styles.icon}>
+                            <i className={item.icon} />
+                        </span>
+                        <strong>
+                            {item.title}
+                            :
+                        </strong>
                     </span>
-                    <div>
-                        <span>{item.title}</span>
-                        {item.type === 'link' ? (
-                            <a
-                                href={item.href}
-                                style={item.style}
-                                target='_blank'
-                                rel='noreferrer'
-                            >
-                                {item.value}
-                            </a>
-                        ) : (
-                            <strong style={item.style}>{item.value}</strong>
-                        )}
-                    </div>
+                    {item.type === 'link' ? (
+                        <a
+                            href={item.href}
+                            style={item.style}
+                            target='_blank'
+                            rel='noreferrer'
+                        >
+                            {item.value}
+                        </a>
+                    ) : (
+                        <span>{item.value}</span>
+                    )}
                 </div>
             ))}
         </div>

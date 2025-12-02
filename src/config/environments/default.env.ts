@@ -146,9 +146,9 @@ export const ADMIN = {
     AGREE_FOR_DOCUSIGN_TEMPLATE: '999a26ad-b334-453c-8425-165d4cf496d7',
     AV_SCAN_SCORER_REVIEW_TYPE_ID: '68c5a381-c8ab-48af-92a7-7a869a4ee6c3',
     AVSCAN_TOPIC: 'avscan.action.scan',
-    AWS_CLEAN_BUCKET: '',
-    AWS_DMZ_BUCKET: 'topcoder-dev-submissions',
-    AWS_QUARANTINE_BUCKET: '',
+    AWS_CLEAN_BUCKET: 'topcoder-dev-submissions',
+    AWS_DMZ_BUCKET: 'topcoder-dev-submissions-dmz',
+    AWS_QUARANTINE_BUCKET: 'topcoder-dev-submissions-quarantine',
     AWS_REGION: 'us-east-1',
     CHALLENGE_URL: 'https://www.topcoder-dev.com/challenges',
     CONNECT_URL: 'https://connect.topcoder-dev.com',
@@ -169,7 +169,7 @@ const REVIEW_OPPORTUNITIES_URL_DEFAULT = getReactEnv<string>(
 export const REVIEW = {
     CHALLENGE_PAGE_URL: 'https://www.topcoder-dev.com/challenges',
     OPPORTUNITIES_URL: REVIEW_OPPORTUNITIES_URL_DEFAULT,
-    PROFILE_PAGE_URL: 'https://profiles.topcoder-dev.com/profiles',
+    PROFILE_PAGE_URL: 'https://profiles.topcoder-dev.com',
 }
 
 const FILESTACK_SECURITY_POLICY = getReactEnv<string | undefined>(

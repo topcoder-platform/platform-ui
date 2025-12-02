@@ -4,6 +4,7 @@ const CHALLENGE_DETAILS_SEGMENT = /(active-challenges|past-challenges)\/([^/]+)\
  * Builds the review detail route for the current challenge context.
  */
 export function getReviewRoute(
+    submissionId: string,
     reviewId: string,
     currentPathname?: string,
 ): string {
@@ -25,9 +26,9 @@ export function getReviewRoute(
                 ? `${prefix}/${match[1]}/${match[2]}`
                 : `/${match[1]}/${match[2]}`
 
-            return `${basePath}/review/${encodedReviewId}`
+            return `${basePath}/reviews/${submissionId}?reviewId=${encodedReviewId}`
         }
     }
 
-    return `/review/${encodedReviewId}`
+    return `/reviews/${submissionId}?reviewId=${encodedReviewId}`
 }

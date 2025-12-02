@@ -44,6 +44,7 @@ import type { SubmissionRow } from '../common/types'
 import { resolveSubmissionReviewResult } from '../common/reviewResult'
 import { ProgressBar } from '../ProgressBar'
 import { TableWrapper } from '../TableWrapper'
+import { CollapsibleAiReviewsRow } from '../CollapsibleAiReviewsRow'
 
 import styles from './TableIterativeReview.module.scss'
 
@@ -57,6 +58,7 @@ interface Props {
     hideSubmissionColumn?: boolean
     isChallengeCompleted?: boolean
     hasPassedThreshold?: boolean
+    aiReviewers?: { aiWorkflowId: string }[]
 }
 
 interface ScoreMetadata {
@@ -384,7 +386,7 @@ const renderStandardReviewCell = ({
         (review?.metadata as ScoreMetadata | undefined)?.outcome,
     )
     const reviewId = review?.id
-    const reviewPath = reviewId ? `./../review/${reviewId}` : undefined
+    const reviewPath = reviewId ? `./../reviews/${data.id}?reviewId=${reviewId}` : undefined
     const isCompleted = ['COMPLETED', 'SUBMITTED'].includes(status)
 
     if (isCompleted) {
@@ -1123,7 +1125,7 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
 
             return (
                 <Link
-                    to={`./../review/${reviewId}`}
+                    to={`./../reviews/${data.id}?reviewId=${reviewId}`}
                     className={classNames(styles.submit, 'last-element')}
                 >
                     <i className='icon-upload' />
@@ -1165,7 +1167,7 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
 
         return (
             <Link
-                to={`./../review/${reviewId}`}
+                to={`./../reviews/${data.id}?reviewId=${reviewId}`}
                 className={classNames(styles.submit, 'last-element')}
             >
                 <i className='icon-upload' />
@@ -1213,7 +1215,7 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
 
             return (
                 <Link
-                    to={`./../review/${reviewId}`}
+                    to={`./../reviews/${data.id}?reviewId=${reviewId}`}
                     className={classNames(styles.submit, 'last-element')}
                 >
                     <i className='icon-upload' />
@@ -1335,6 +1337,21 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
             baseColumns.push(reviewerColumn)
         }
 
+        baseColumns.push({
+            columnId: 'ai-reviews-table',
+            isExpand: true,
+            label: '',
+            renderer: (submission: SubmissionInfo, allRows: SubmissionInfo[]) => (
+                <CollapsibleAiReviewsRow
+                    className={styles.aiReviews}
+                    aiReviewers={props.aiReviewers ?? []}
+                    submission={submission as any}
+                    defaultOpen={allRows ? !allRows.indexOf(submission) : false}
+                />
+            ),
+            type: 'element',
+        })
+
         return baseColumns
     }, [
         approverColumn,
@@ -1349,11 +1366,12 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
         reviewDateColumn,
         reviewerColumn,
         submissionColumn,
+        props.aiReviewers,
     ])
 
     const columnsMobile = useMemo<MobileTableColumn<SubmissionInfo>[][]>(() => (
         (actionColumn ? [...columns, actionColumn] : columns).map(column => ([
-            {
+            column.label && {
                 ...column,
                 className: '',
                 label: `${column.label as string} label`,
@@ -1368,9 +1386,10 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
             },
             {
                 ...column,
+                colSpan: column.label ? 1 : 2,
                 mobileType: 'last-value',
             },
-        ] as MobileTableColumn<SubmissionInfo>[]))
+        ].filter(Boolean) as MobileTableColumn<SubmissionInfo>[]))
     ), [actionColumn, columns])
 
     return (
@@ -1387,6 +1406,8 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
                 <Table
                     columns={actionColumn ? [...columns, actionColumn] : columns}
                     data={datas}
+                    showExpand
+                    expandMode='always'
                     disableSorting
                     onToggleSort={_.noop}
                     removeDefaultSort

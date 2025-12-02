@@ -146,3 +146,21 @@
   font-size: 14px;
   text-align: center;
 }
+
+.reviewersDropown {
+    display: flex;
+    align-items: center;
+    gap: $sp-2;
+
+    svg {
+        color: #767676;
+    }
+}
+
+.table .aiReviewersTableRow.aiReviewersTableRow {
+    padding: 0;
+}
+
+.aiReviewersTable {
+    margin-top: -1px;
+}

@@ -128,6 +128,7 @@ interface SubmissionTabParams {
     isDownloadingSubmission: useDownloadSubmissionProps['isLoading']
     downloadSubmission: useDownloadSubmissionProps['downloadSubmission']
     isActiveChallenge: boolean
+    aiReviewers: { aiWorkflowId: string }[]
 }
 
 const renderSubmissionTab = ({
@@ -140,6 +141,7 @@ const renderSubmissionTab = ({
     isDownloadingSubmission,
     downloadSubmission,
     isActiveChallenge,
+    aiReviewers,
 }: SubmissionTabParams): JSX.Element => {
     const isSubmissionTab = selectedTabNormalized === 'submission'
     const isTopgearSubmissionTab = selectedTabNormalized === 'topgearsubmission'
@@ -158,6 +160,7 @@ const renderSubmissionTab = ({
     if (canShowSubmissionList) {
         return (
             <TabContentSubmissions
+                aiReviewers={aiReviewers}
                 submissions={visibleSubmissions}
                 isLoading={isLoadingSubmission}
                 isDownloading={isDownloadingSubmission}
@@ -175,6 +178,7 @@ const renderSubmissionTab = ({
             downloadSubmission={downloadSubmission}
             isActiveChallenge={isActiveChallenge}
             showScreeningColumns={!isSubmissionTab && !isTopgearSubmissionTab}
+            aiReviewers={aiReviewers}
         />
     )
 }
@@ -283,6 +287,31 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
         ),
         [challengeInfo?.phases],
     )
+    const screeningOutcome = useMemo(
+        () => {
+            const passingSubmissionIds = new Set<string>()
+            const failingSubmissionIds = new Set<string>()
+
+            props.screening.forEach(entry => {
+                if (!entry?.submissionId) {
+                    return
+                }
+
+                const normalizedResult = (entry.result || '').toUpperCase()
+                if (normalizedResult === 'PASS') {
+                    passingSubmissionIds.add(`${entry.submissionId}`)
+                } else if (normalizedResult === 'NO PASS') {
+                    failingSubmissionIds.add(`${entry.submissionId}`)
+                }
+            })
+
+            return {
+                failingSubmissionIds,
+                passingSubmissionIds,
+            }
+        },
+        [props.screening],
+    )
     const passesReviewTabGuards: (submission: SubmissionInfo) => boolean = useMemo(
         () => (submission: SubmissionInfo): boolean => shouldIncludeInReviewPhase(
             submission,
@@ -297,36 +326,22 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
         reviews: SubmissionInfo[]
         submitterReviews: SubmissionInfo[]
     } = useMemo(() => {
-        const shouldFilter = props.isActiveChallenge && hasScreeningPhase
-        if (!shouldFilter) {
-            return {
-                reviews: props.review.filter(passesReviewTabGuards),
-                submitterReviews: props.submitterReviews.filter(passesReviewTabGuards),
-            }
-        }
+        const {
+            failingSubmissionIds,
+            passingSubmissionIds,
+        }: {
+            failingSubmissionIds: Set<string>
+            passingSubmissionIds: Set<string>
+        } = screeningOutcome
+        const shouldFilter = props.isActiveChallenge
+            && (hasScreeningPhase || props.screening.length > 0)
+            && (passingSubmissionIds.size > 0 || failingSubmissionIds.size > 0)
 
-        const passingSubmissionIds = new Set<string>()
-        props.screening.forEach(entry => {
-            if (!entry?.submissionId) {
-                return
+        const matchesScreeningOutcome = (submission: SubmissionInfo): boolean => {
+            if (!shouldFilter) {
+                return true
             }
 
-            const result = (entry.result || '').toUpperCase()
-            if (result === 'PASS') {
-                passingSubmissionIds.add(`${entry.submissionId}`)
-            }
-        })
-
-        if (passingSubmissionIds.size === 0) {
-            return {
-                reviews: props.review
-                    .filter(passesReviewTabGuards),
-                submitterReviews: props.submitterReviews
-                    .filter(passesReviewTabGuards),
-            }
-        }
-
-        const matchesPassingScreening = (submission: SubmissionInfo): boolean => {
             if (!submission) {
                 return false
             }
@@ -345,15 +360,23 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
                 return true
             }
 
+            if (passingSubmissionIds.size > 0) {
+                return candidateIds.some(id => passingSubmissionIds.has(id))
+            }
+
+            if (failingSubmissionIds.size > 0) {
+                return !candidateIds.some(id => failingSubmissionIds.has(id))
+            }
+
             return candidateIds.some(id => passingSubmissionIds.has(id))
         }
 
         return {
             reviews: props.review
-                .filter(matchesPassingScreening)
+                .filter(matchesScreeningOutcome)
                 .filter(passesReviewTabGuards),
             submitterReviews: props.submitterReviews
-                .filter(matchesPassingScreening)
+                .filter(matchesScreeningOutcome)
                 .filter(passesReviewTabGuards),
         }
     }, [
@@ -362,12 +385,17 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
         props.review,
         props.submitterReviews,
         props.screening,
+        props.screening.length,
         passesReviewTabGuards,
+        screeningOutcome,
     ])
 
     const renderSelectedTab = (): JSX.Element => {
         const selectedTabLower = (props.selectedTab || '').toLowerCase()
         const selectedTabNormalized = normalizeType(props.selectedTab)
+        const aiReviewers = (
+            challengeInfo?.reviewers?.filter(r => !!r.aiWorkflowId) as { aiWorkflowId: string }[]
+        ) ?? []
 
         if (selectedTabLower === 'registration') {
             return <TabContentRegistration />
@@ -381,6 +409,7 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
 
         if (SUBMISSION_TAB_KEYS.has(selectedTabNormalized)) {
             return renderSubmissionTab({
+                aiReviewers,
                 allowTopgearSubmissionList,
                 downloadSubmission: handleSubmissionDownload,
                 isActiveChallenge: props.isActiveChallenge,
@@ -410,6 +439,7 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
                     isDownloading={isDownloadingSubmission}
                     downloadSubmission={handleSubmissionDownload}
                     mode={checkpointMode}
+                    aiReviewers={aiReviewers}
                 />
             )
         }
@@ -417,6 +447,7 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
         if (selectedTabLower === 'winners') {
             return (
                 <TabContentWinners
+                    aiReviewers={aiReviewers}
                     isLoading={isLoadingProjectResult}
                     projectResults={projectResults}
                     isDownloading={isDownloadingSubmission}
@@ -450,6 +481,7 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
                     downloadSubmission={handleSubmissionDownload}
                     isActiveChallenge={props.isActiveChallenge}
                     columnLabel='Post-Mortem'
+                    aiReviewers={aiReviewers}
                 />
             )
         }
@@ -465,12 +497,14 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
                     downloadSubmission={handleSubmissionDownload}
                     isActiveChallenge={props.isActiveChallenge}
                     phaseIdFilter={props.selectedPhaseId}
+                    aiReviewers={aiReviewers}
                 />
             )
         }
 
         return (
             <TabContentReview
+                aiReviewers={aiReviewers}
                 selectedTab={props.selectedTab}
                 reviews={reviewTabReviews}
                 submitterReviews={reviewTabSubmitterReviews}

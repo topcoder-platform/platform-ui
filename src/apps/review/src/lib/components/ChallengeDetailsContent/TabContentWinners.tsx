@@ -12,6 +12,7 @@ import { TableWinners } from '../TableWinners'
 
 interface Props {
     projectResults: ProjectResult[]
+    aiReviewers?: { aiWorkflowId: string }[]
     isLoading: boolean
     isDownloading: IsRemovingType
     downloadSubmission: (submissionId: string) => void
@@ -30,6 +31,7 @@ export const TabContentWinners: FC<Props> = (props: Props) => {
 
     return (
         <TableWinners
+            aiReviewers={props.aiReviewers}
             datas={props.projectResults}
             isDownloading={props.isDownloading}
             downloadSubmission={props.downloadSubmission}

@@ -1,0 +1,70 @@
+@import '@libs/ui/styles/includes';
+
+.wrap {
+    width: 100%;
+    strong {
+        font-weight: bold;
+    }
+}
+
+.conclusion {
+    padding: $sp-4;
+    background: #E0E4E8;
+    color: #0A0A0A;
+    margin-bottom: $sp-4;
+
+    > strong {
+        font-size: 16px;
+        line-height: 22px;
+
+        margin-bottom: $sp-2;
+    }
+
+    p {
+        font-size: 14px;
+        line-height: 20px;
+    }
+}
+
+.formContainer {
+    width: 100%;
+}
+
+.footer {
+    margin-top: 24px;
+    padding: 16px;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.errorMessage {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    color: #d32f2f;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: bold;
+
+    i {
+        display: flex;
+        align-items: center;
+    }
+}
+
+.errorTop {
+    margin-bottom: $sp-3;
+}
+
+.errorBottom {
+    margin-top: $sp-3;
+}

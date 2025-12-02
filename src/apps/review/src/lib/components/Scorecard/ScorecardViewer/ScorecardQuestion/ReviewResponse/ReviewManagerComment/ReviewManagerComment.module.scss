@@ -1,0 +1,94 @@
+@import '@libs/ui/styles/includes';
+
+.linkStyleBtn {
+    display: flex;
+    align-items: center;
+    gap: $sp-2;
+    color: #0D61BF;
+    font-size: 14px;
+    font-family: "Nunito Sans", sans-serif;
+    font-weight: 700;
+
+    > svg path {
+        fill: currentColor;
+    }
+
+    &:hover {
+        color: darken(#0D61BF, 10%);
+    }
+}
+
+.displayContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background-color: #ECF4FA;
+    padding: $sp-4;
+}
+
+.editButton,
+.addButton {
+    align-self: flex-start;
+    padding: 6px 12px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-top: 8px;
+
+    &:hover:not(:disabled) {
+        background-color: #0056b3;
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+}
+
+.blockForm {
+    background-color: var(--TableColumn);
+    display: flex;
+    flex-direction: column;
+    padding: $sp-6;
+    gap: $sp-4;
+    width: 100%;
+    @include ltemd {
+        padding: $sp-4;
+    }
+    label {
+        color: var(--FontColor);
+        font-family: "Nunito Sans", sans-serif;
+        font-size: 16px;
+        font-weight: 700;
+        line-height: 20px;
+    }
+    :global(.borderButton),
+    :global(.filledButton) {
+        font-size: 14px;
+    }
+    :global(.filledButton) {
+        font-size: 16px;
+    }
+}
+
+.commentFormHeader {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.scoreSelect {
+    min-width: 200px;
+}
+
+.blockBtns {
+    display: flex;
+    gap: 10px;
+    padding-top: 8px;
+    padding-bottom: 16px;
+    flex-wrap: wrap;
+}
+

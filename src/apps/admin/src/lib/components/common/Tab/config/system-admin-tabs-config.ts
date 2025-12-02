@@ -10,6 +10,7 @@ import {
     paymentsRouteId,
     permissionManagementRouteId,
     platformRouteId,
+    reportsRouteId,
     termsRouteId,
     userManagementRouteId,
 } from '~/apps/admin/src/config/routes.config'
@@ -81,6 +82,10 @@ export const SystemAdminTabsConfig: TabsNavItem[] = [
     {
         id: paymentsRouteId,
         title: 'Payments',
+    },
+    {
+        id: reportsRouteId,
+        title: 'Reports',
     },
 ]
 

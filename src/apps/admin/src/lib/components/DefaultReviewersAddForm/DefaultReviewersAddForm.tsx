@@ -1,17 +1,7 @@
-import {
-    useCallback,
-    useEffect,
-    useMemo,
-    useState,
-} from 'react'
 import type { FC } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
-import type { NavigateFunction } from 'react-router-dom'
-import { Controller, useForm } from 'react-hook-form'
-import type {
-    ControllerRenderProps,
-    UseFormReturn,
-} from 'react-hook-form'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { NavigateFunction, useNavigate, useParams } from 'react-router-dom'
+import { Controller, ControllerRenderProps, useForm, UseFormReturn } from 'react-hook-form'
 import _ from 'lodash'
 import classNames from 'classnames'
 
@@ -25,13 +15,14 @@ import {
     LinkButton,
 } from '~/libs/ui'
 
-import { FormAddWrapper } from '../common/FormAddWrapper'
-import { FormAddDefaultReviewer } from '../../models'
-import { formAddDefaultReviewerSchema } from '../../utils'
 import {
     useManageAddDefaultReviewer,
     useManageAddDefaultReviewerProps,
 } from '../../hooks'
+import { FormAddWrapper } from '../common/FormAddWrapper'
+import { FormAddDefaultReviewer } from '../../models'
+import { formAddDefaultReviewerSchema } from '../../utils'
+import { getAiWorkflows } from '../../services/ai-workflows.service'
 
 import styles from './DefaultReviewersAddForm.module.scss'
 
@@ -127,10 +118,10 @@ export const DefaultReviewersAddForm: FC<Props> = (props: Props) => {
         formState: { errors, isDirty },
     }: UseFormReturn<FormAddDefaultReviewer> = useForm({
         defaultValues: {
+            aiWorkflowId: '',
             baseCoefficient: 0,
             fixedAmount: 0,
             incrementalCoefficient: 0,
-            isAIReviewer: false,
             isMemberReview: false,
             memberReviewerCount: 0,
             opportunityType: '',
@@ -148,10 +139,31 @@ export const DefaultReviewersAddForm: FC<Props> = (props: Props) => {
 
     const onSubmit = useCallback(
         (data: FormAddDefaultReviewer) => {
+            const isMemberReview = data.isMemberReview
             const requestBody = _.omitBy(
                 data,
                 value => value === undefined || value === null || value === '',
             )
+
+            if (isMemberReview) {
+                requestBody.memberReviewerCount = undefined
+                // Also clear fields when isMemberReview is false
+                requestBody.scorecardId = undefined
+                requestBody.fixedAmount = undefined
+                requestBody.baseCoefficient = undefined
+                requestBody.incrementalCoefficient = undefined
+                requestBody.opportunityType = undefined
+                // The reason for flipping the value is that
+                // in UI the checkbox is shown as "is AI review"
+                // but in the database its denoted as member review
+                // so we are just flipping the boolean value
+                requestBody.isMemberReview = false
+            } else {
+                // eslint-disable-next-line unicorn/no-null
+                requestBody.aiWorkflowId = null
+                requestBody.isMemberReview = true
+            }
+
             if (isEdit) {
                 doUpdateDefaultReviewer(requestBody, () => {
                     navigate('./../..')
@@ -165,16 +177,26 @@ export const DefaultReviewersAddForm: FC<Props> = (props: Props) => {
         [doAddDefaultReviewer, doUpdateDefaultReviewer, isEdit, navigate],
     )
 
+    const [aiWorkflows, setAiWorkflows] = useState<{ label: string; value: string }[]>([])
+
+    useEffect(() => {
+        getAiWorkflows()
+            .then((workflows: { id: string; name: string }[]) => {
+                const options = workflows.map((wf: { id: string; name: string }) => ({ label: wf.name, value: wf.id }))
+                setAiWorkflows(options)
+            })
+    }, [])
+
     const isMemberReview = watch('isMemberReview')
 
     useEffect(() => {
         if (defaultReviewerInfo) {
             reset({
+                aiWorkflowId: defaultReviewerInfo.aiWorkflowId ?? '',
                 baseCoefficient: defaultReviewerInfo.baseCoefficient ?? 0,
                 fixedAmount: defaultReviewerInfo.fixedAmount ?? 0,
                 incrementalCoefficient: defaultReviewerInfo.incrementalCoefficient ?? 0,
-                isAIReviewer: defaultReviewerInfo.isAIReviewer,
-                isMemberReview: defaultReviewerInfo.isMemberReview,
+                isMemberReview: !defaultReviewerInfo.isMemberReview,
                 memberReviewerCount: defaultReviewerInfo.memberReviewerCount ?? 0,
                 opportunityType: defaultReviewerInfo.opportunityType ?? '',
                 phaseId: defaultReviewerInfo.phaseId ?? '',
@@ -301,30 +323,34 @@ export const DefaultReviewersAddForm: FC<Props> = (props: Props) => {
                         )
                     }}
                 />
-                <Controller
-                    name='scorecardId'
-                    control={control}
-                    render={function render(controlProps: {
-                    field: ControllerRenderProps<FormAddDefaultReviewer, 'scorecardId'>
-                }) {
-                        return (
-                            <InputSelectReact
-                                name='scorecardId'
-                                label='Scorecard'
-                                placeholder='Select'
-                                options={scorecardOptions}
-                                value={controlProps.field.value}
-                                onChange={controlProps.field.onChange}
-                                onBlur={controlProps.field.onBlur}
-                                classNameWrapper={styles.inputField}
-                                disabled={isLoading}
-                                isLoading={isFetchingScorecards}
-                                dirty
-                                error={_.get(errors, 'scorecardId.message')}
-                            />
-                        )
-                    }}
-                />
+                {
+                    !isMemberReview && (
+                        <Controller
+                            name='scorecardId'
+                            control={control}
+                            render={function render(controlProps: {
+                            field: ControllerRenderProps<FormAddDefaultReviewer, 'scorecardId'>
+                        }) {
+                                return (
+                                    <InputSelectReact
+                                        name='scorecardId'
+                                        label='Scorecard'
+                                        placeholder='Select'
+                                        options={scorecardOptions}
+                                        value={controlProps.field.value}
+                                        onChange={controlProps.field.onChange}
+                                        onBlur={controlProps.field.onBlur}
+                                        classNameWrapper={styles.inputField}
+                                        disabled={isLoading}
+                                        isLoading={isFetchingScorecards}
+                                        dirty
+                                        error={_.get(errors, 'scorecardId.message')}
+                                    />
+                                )
+                            }}
+                        />
+                    )
+                }
                 <Controller
                     name='phaseName'
                     control={control}
@@ -359,7 +385,7 @@ export const DefaultReviewersAddForm: FC<Props> = (props: Props) => {
                             return (
                                 <InputCheckbox
                                     name='isMemberReview'
-                                    label='Is Member Review'
+                                    label='Is AI Review'
                                     onChange={function onChange(event: Event) {
                                         const target = event.target as HTMLInputElement | null
                                         controlProps.field.onChange(target?.checked ?? false)
@@ -371,7 +397,7 @@ export const DefaultReviewersAddForm: FC<Props> = (props: Props) => {
                         }}
                     />
                 </div>
-                {isMemberReview && (
+                {!isMemberReview && (
                     <InputText
                         type='number'
                         name='memberReviewerCount'
@@ -389,121 +415,151 @@ export const DefaultReviewersAddForm: FC<Props> = (props: Props) => {
                         classNameWrapper={styles.inputField}
                     />
                 )}
-                <InputText
-                    type='number'
-                    name='fixedAmount'
-                    label='Fixed Amount'
-                    placeholder='Enter amount'
-                    tabIndex={0}
-                    forceUpdateValue
-                    onChange={_.noop}
-                    error={_.get(errors, 'fixedAmount.message')}
-                    inputControl={register('fixedAmount', {
-                        valueAsNumber: true,
-                    })}
-                    dirty
-                    disabled={isLoading}
-                    classNameWrapper={styles.inputField}
-                />
-                <InputText
-                    type='number'
-                    name='baseCoefficient'
-                    label='Base Coefficient'
-                    placeholder='Enter value'
-                    tabIndex={0}
-                    forceUpdateValue
-                    onChange={_.noop}
-                    error={_.get(errors, 'baseCoefficient.message')}
-                    inputControl={register('baseCoefficient', {
-                        valueAsNumber: true,
-                    })}
-                    dirty
-                    disabled={isLoading}
-                    classNameWrapper={styles.inputField}
-                />
-                <InputText
-                    type='number'
-                    name='incrementalCoefficient'
-                    label='Incremental Coefficient'
-                    placeholder='Enter value'
-                    tabIndex={0}
-                    forceUpdateValue
-                    onChange={_.noop}
-                    error={_.get(errors, 'incrementalCoefficient.message')}
-                    inputControl={register('incrementalCoefficient', {
-                        valueAsNumber: true,
-                    })}
-                    dirty
-                    disabled={isLoading}
-                    classNameWrapper={styles.inputField}
-                />
-                <Controller
-                    name='opportunityType'
-                    control={control}
-                    render={function render(controlProps: {
-                    field: ControllerRenderProps<FormAddDefaultReviewer, 'opportunityType'>
-                }) {
-                        return (
-                            <InputSelectReact
-                                name='opportunityType'
-                                label='Opportunity Type'
-                                placeholder='Select'
-                                options={opportunityOptions}
-                                value={controlProps.field.value}
-                                onChange={controlProps.field.onChange}
-                                onBlur={controlProps.field.onBlur}
-                                classNameWrapper={styles.inputField}
-                                disabled={isLoading}
-                                dirty
-                                error={_.get(errors, 'opportunityType.message')}
+                {!isMemberReview && (
+                    <>
+                        <InputText
+                            type='number'
+                            name='fixedAmount'
+                            label='Fixed Amount'
+                            placeholder='Enter amount'
+                            tabIndex={0}
+                            forceUpdateValue
+                            onChange={_.noop}
+                            error={_.get(errors, 'fixedAmount.message')}
+                            inputControl={register('fixedAmount', {
+                                valueAsNumber: true,
+                            })}
+                            dirty
+                            disabled={isLoading}
+                            classNameWrapper={styles.inputField}
+                        />
+                        <InputText
+                            type='text'
+                            name='baseCoefficient'
+                            label='Base Coefficient'
+                            placeholder='Enter value'
+                            tabIndex={0}
+                            forceUpdateValue
+                            onChange={_.noop}
+                            error={_.get(errors, 'baseCoefficient.message')}
+                            inputControl={register('baseCoefficient', {
+                                setValueAs: v => {
+                                    if (typeof v === 'string') {
+                                        const normalized = v.replace(',', '.')
+                                        const parsed = parseFloat(normalized)
+                                        return Number.isNaN(parsed) ? undefined : parsed
+                                    }
+
+                                    return v
+                                },
+                                valueAsNumber: false,
+                            })}
+                            dirty
+                            disabled={isLoading}
+                            classNameWrapper={styles.inputField}
+                        />
+                        <InputText
+                            type='text'
+                            name='incrementalCoefficient'
+                            label='Incremental Coefficient'
+                            placeholder='Enter value'
+                            tabIndex={0}
+                            forceUpdateValue
+                            onChange={_.noop}
+                            error={_.get(errors, 'incrementalCoefficient.message')}
+                            inputControl={register('incrementalCoefficient', {
+                                setValueAs: v => {
+                                    if (typeof v === 'string') {
+                                        const normalized = v.replace(',', '.')
+                                        const parsed = parseFloat(normalized)
+                                        return Number.isNaN(parsed) ? undefined : parsed
+                                    }
+
+                                    return v
+                                },
+                                valueAsNumber: false,
+                            })}
+                            dirty
+                            disabled={isLoading}
+                            classNameWrapper={styles.inputField}
+                        />
+                        <Controller
+                            name='opportunityType'
+                            control={control}
+                            render={function render(controlProps: {
+                            field: ControllerRenderProps<FormAddDefaultReviewer, 'opportunityType'>
+                        }) {
+                                return (
+                                    <InputSelectReact
+                                        name='opportunityType'
+                                        label='Opportunity Type'
+                                        placeholder='Select'
+                                        options={opportunityOptions}
+                                        value={controlProps.field.value}
+                                        onChange={controlProps.field.onChange}
+                                        onBlur={controlProps.field.onBlur}
+                                        classNameWrapper={styles.inputField}
+                                        disabled={isLoading}
+                                        dirty
+                                        error={_.get(errors, 'opportunityType.message')}
+                                    />
+                                )
+                            }}
+                        />
+                    </>
+                )}
+
+                {
+                    !isMemberReview && (
+                        <div className={styles.inputField}>
+                            <Controller
+                                name='shouldOpenOpportunity'
+                                control={control}
+                                render={function render(controlProps: {
+                                    field: ControllerRenderProps<FormAddDefaultReviewer, 'shouldOpenOpportunity'>
+                                }) {
+                                    return (
+                                        <InputCheckbox
+                                            name='shouldOpenOpportunity'
+                                            label='Should Open Opportunity'
+                                            onChange={function onChange(event: Event) {
+                                                const target = event.target as HTMLInputElement | null
+                                                controlProps.field.onChange(target?.checked ?? false)
+                                            }}
+                                            checked={controlProps.field.value}
+                                            disabled={isLoading}
+                                        />
+                                    )
+                                }}
                             />
-                        )
-                    }}
-                />
-                <div className={styles.inputField}>
+                        </div>
+                    )
+                }
+                {isMemberReview && (
                     <Controller
-                        name='isAIReviewer'
+                        name='aiWorkflowId'
                         control={control}
                         render={function render(controlProps: {
-                        field: ControllerRenderProps<FormAddDefaultReviewer, 'isAIReviewer'>
+                        field: ControllerRenderProps<FormAddDefaultReviewer, 'aiWorkflowId'>
                     }) {
                             return (
-                                <InputCheckbox
-                                    name='isAIReviewer'
-                                    label='Is AI Reviewer'
-                                    onChange={function onChange(event: Event) {
-                                        const target = event.target as HTMLInputElement | null
-                                        controlProps.field.onChange(target?.checked ?? false)
-                                    }}
-                                    checked={controlProps.field.value}
+                                <InputSelectReact
+                                    name='aiWorkflowId'
+                                    label='AI Workflow'
+                                    placeholder='Select AI Workflow'
+                                    options={aiWorkflows}
+                                    value={controlProps.field.value ?? ''}
+                                    onChange={controlProps.field.onChange}
+                                    onBlur={controlProps.field.onBlur}
+                                    classNameWrapper={styles.inputField}
                                     disabled={isLoading}
+                                    dirty
+                                    error={_.get(errors, 'aiWorkflowId.message')}
                                 />
                             )
                         }}
                     />
-                </div>
-                <div className={styles.inputField}>
-                    <Controller
-                        name='shouldOpenOpportunity'
-                        control={control}
-                        render={function render(controlProps: {
-                        field: ControllerRenderProps<FormAddDefaultReviewer, 'shouldOpenOpportunity'>
-                    }) {
-                            return (
-                                <InputCheckbox
-                                    name='shouldOpenOpportunity'
-                                    label='Should Open Opportunity'
-                                    onChange={function onChange(event: Event) {
-                                        const target = event.target as HTMLInputElement | null
-                                        controlProps.field.onChange(target?.checked ?? false)
-                                    }}
-                                    checked={controlProps.field.value}
-                                    disabled={isLoading}
-                                />
-                            )
-                        }}
-                    />
-                </div>
+                )}
             </FormAddWrapper>
             <ConfirmModal
                 title='Delete Confirmation'

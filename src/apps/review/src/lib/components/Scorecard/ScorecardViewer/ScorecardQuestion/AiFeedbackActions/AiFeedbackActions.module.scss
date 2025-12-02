@@ -1,0 +1,40 @@
+@import '@libs/ui/styles/includes';
+
+.actions {
+    display: flex;
+    gap: $sp-2;
+    margin-top: $sp-3;
+    .count {
+        font-family: $font-roboto;
+        color: #0D61BF;
+        font-weight: 700;
+        font-size: 14px;
+    }
+}
+
+.actionBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: $sp-2;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: black;
+    padding: $sp-1 $sp-2;
+    &.active {
+        svg {
+            path {
+                fill: $link-blue-dark;
+            }
+        }
+    }
+
+    svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    &:hover {
+        opacity: 0.85;
+    }
+}

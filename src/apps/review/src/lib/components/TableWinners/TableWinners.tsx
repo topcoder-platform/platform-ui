@@ -23,12 +23,14 @@ import { buildPhaseTabs, getHandleUrl } from '../../utils'
 import type { PhaseOrderingOptions } from '../../utils'
 import { useSubmissionDownloadAccess } from '../../hooks'
 import type { UseSubmissionDownloadAccessResult } from '../../hooks/useSubmissionDownloadAccess'
+import { CollapsibleAiReviewsRow } from '../CollapsibleAiReviewsRow'
 
 import styles from './TableWinners.module.scss'
 
 interface Props {
     className?: string
     datas: ProjectResult[]
+    aiReviewers?: { aiWorkflowId: string }[]
     isDownloading: IsRemovingType
     downloadSubmission: (submissionId: string) => void
 }
@@ -210,6 +212,21 @@ export const TableWinners: FC<Props> = (props: Props) => {
                 ),
                 type: 'element',
             },
+            {
+                columnId: 'ai-reviews-table',
+                label: '',
+                renderer: (result: ProjectResult, allRows: ProjectResult[]) => (
+                    props.aiReviewers && (
+                        <CollapsibleAiReviewsRow
+                            className={styles.aiReviews}
+                            aiReviewers={props.aiReviewers}
+                            submission={{ id: result.submissionId, virusScan: true }}
+                            defaultOpen={allRows ? !allRows.indexOf(result) : false}
+                        />
+                    )
+                ),
+                type: 'element',
+            },
         ],
         [
             downloadSubmission,
@@ -223,7 +240,7 @@ export const TableWinners: FC<Props> = (props: Props) => {
 
     const columnsMobile = useMemo<MobileTableColumn<ProjectResult>[][]>(
         () => columns.map(column => [
-            {
+            column.label && {
                 ...column,
                 className: '',
                 label: `${column.label as string} label`,
@@ -238,9 +255,10 @@ export const TableWinners: FC<Props> = (props: Props) => {
             },
             {
                 ...column,
+                colSpan: column.label ? 1 : 2,
                 mobileType: 'last-value',
             },
-        ] as MobileTableColumn<ProjectResult>[]),
+        ].filter(Boolean) as MobileTableColumn<ProjectResult>[]),
         [columns],
     )
 

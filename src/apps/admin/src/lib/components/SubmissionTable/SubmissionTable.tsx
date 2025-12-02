@@ -6,7 +6,7 @@ import _ from 'lodash'
 import classNames from 'classnames'
 
 import { useWindowSize, WindowSize } from '~/libs/shared'
-import { ConfirmModal, Table, TableColumn } from '~/libs/ui'
+import { ConfirmModal, IconOutline, Table, TableColumn } from '~/libs/ui'
 import { EnvironmentConfig } from '~/config'
 import { getRatingColor } from '~/libs/core'
 
@@ -19,6 +19,40 @@ import ShowHistoryButton from './ShowHistoryButton'
 import SubmissionTableActions from './SubmissionTableActions'
 import SubmissionTableActionsNonMM from './SubmissionTableActionsNonMM'
 import styles from './SubmissionTable.module.scss'
+
+const renderVirusScanStatus = (submission: Submission): JSX.Element => {
+    if (submission.virusScan === true) {
+        return (
+            <span
+                className={classNames(
+                    styles.virusScanStatus,
+                    styles.virusScanStatusSuccess,
+                )}
+                role='img'
+                aria-label='Virus scan passed'
+            >
+                <IconOutline.CheckCircleIcon aria-hidden />
+            </span>
+        )
+    }
+
+    if (submission.virusScan === false) {
+        return (
+            <span
+                className={classNames(
+                    styles.virusScanStatus,
+                    styles.virusScanStatusFailed,
+                )}
+                role='img'
+                aria-label='Virus scan failed'
+            >
+                <IconOutline.XCircleIcon aria-hidden />
+            </span>
+        )
+    }
+
+    return <span className={styles.virusScanStatus}>--</span>
+}
 
 interface Props {
     className?: string
@@ -91,6 +125,11 @@ export const SubmissionTable: FC<Props> = (props: Props) => {
                     label: 'ID',
                     propertyName: 'id',
                     type: 'text',
+                },
+                {
+                    label: 'Virus Scan',
+                    renderer: renderVirusScanStatus,
+                    type: 'element',
                 },
                 {
                     label: 'Submission date',
@@ -166,6 +205,10 @@ export const SubmissionTable: FC<Props> = (props: Props) => {
                                 isRemovingReviewSummations={
                                     props.isRemovingReviewSummations
                                 }
+                                isDownloading={props.isDownloading}
+                                downloadSubmission={props.downloadSubmission}
+                                isDoingAvScan={props.isDoingAvScan}
+                                doPostBusEventAvScan={props.doPostBusEventAvScan}
                                 setShowConfirmDeleteSubmissionDialog={
                                     setShowConfirmDeleteSubmissionDialog
                                 }
@@ -191,6 +234,11 @@ export const SubmissionTable: FC<Props> = (props: Props) => {
                     label: 'Submission ID',
                     propertyName: 'id',
                     type: 'text',
+                },
+                {
+                    label: 'Virus Scan',
+                    renderer: renderVirusScanStatus,
+                    type: 'element',
                 },
                 {
                     label: 'Time submitted',

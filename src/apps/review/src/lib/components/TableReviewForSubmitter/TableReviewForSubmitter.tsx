@@ -61,12 +61,14 @@ import {
     WITHOUT_APPEAL,
 } from '../../../config/index.config'
 import { resolveSubmissionReviewResult } from '../common/reviewResult'
+import { CollapsibleAiReviewsRow } from '../CollapsibleAiReviewsRow'
 
 import styles from './TableReviewForSubmitter.module.scss'
 
 export interface TableReviewForSubmitterProps {
     className?: string
     datas: SubmissionInfo[]
+    aiReviewers?: { aiWorkflowId: string }[]
     isDownloading: IsRemovingType
     downloadSubmission: (submissionId: string) => void
     mappingReviewAppeal: MappingReviewAppeal
@@ -492,6 +494,25 @@ export const TableReviewForSubmitter: FC<TableReviewForSubmitterProps> = (props:
             })
         }
 
+        if (props.aiReviewers) {
+            columnsList.push({
+                columnId: 'ai-reviews-table',
+                isExpand: true,
+                label: '',
+                renderer: (submission: SubmissionRow, allRows: SubmissionRow[]) => (
+                    props.aiReviewers && (
+                        <CollapsibleAiReviewsRow
+                            className={styles.aiReviews}
+                            aiReviewers={props.aiReviewers}
+                            submission={submission as any}
+                            defaultOpen={allRows ? !allRows.indexOf(submission) : false}
+                        />
+                    )
+                ),
+                type: 'element',
+            })
+        }
+
         return columnsList
     }, [
         canDisplayScores,
@@ -511,7 +532,7 @@ export const TableReviewForSubmitter: FC<TableReviewForSubmitterProps> = (props:
     const columnsMobile = useMemo<MobileTableColumn<SubmissionRow>[][]>(
         () => columns.map(column => (
             [
-                {
+                column.label && {
                     ...column,
                     className: '',
                     label: `${column.label as string} label`,
@@ -526,9 +547,10 @@ export const TableReviewForSubmitter: FC<TableReviewForSubmitterProps> = (props:
                 },
                 {
                     ...column,
+                    colSpan: column.label ? 1 : 2,
                     mobileType: 'last-value',
                 },
-            ] as MobileTableColumn<SubmissionRow>[]
+            ].filter(Boolean) as MobileTableColumn<SubmissionRow>[]
         )),
         [columns],
     )
@@ -549,6 +571,8 @@ export const TableReviewForSubmitter: FC<TableReviewForSubmitterProps> = (props:
                 <Table
                     columns={columns}
                     data={aggregatedSubmissionRows}
+                    showExpand
+                    expandMode='always'
                     disableSorting
                     onToggleSort={noop}
                     removeDefaultSort

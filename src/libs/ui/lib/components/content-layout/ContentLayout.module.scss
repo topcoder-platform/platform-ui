@@ -44,4 +44,18 @@
             }
         }
     }
+
+    &.isFluid {
+        .content-outer {
+            max-width: none;
+        }
+
+        .content-inner {
+            max-width: none;
+
+            @include ltesm {
+                max-width: none;
+            }
+        }
+    }
 }

@@ -23,6 +23,7 @@ import { copyTextToClipboard, useWindowSize, WindowSize } from '~/libs/shared'
 import { IconOutline, Table, TableColumn, Tooltip } from '~/libs/ui'
 
 import {
+    BackendSubmission,
     ChallengeDetailContextModel,
     ReviewAppContextModel,
     Screening,
@@ -47,6 +48,7 @@ import { ConfirmModal } from '../ConfirmModal'
 import { useRole, useSubmissionDownloadAccess } from '../../hooks'
 import type { UseSubmissionDownloadAccessResult } from '../../hooks/useSubmissionDownloadAccess'
 import type { useRoleProps } from '../../hooks/useRole'
+import { CollapsibleAiReviewsRow } from '../CollapsibleAiReviewsRow'
 
 import styles from './TableSubmissionScreening.module.scss'
 
@@ -59,6 +61,7 @@ interface Props {
     downloadSubmission: (submissionId: string) => void
     hideHandleColumn?: boolean
     showScreeningColumns?: boolean
+    aiReviewers?: { aiWorkflowId: string }[]
 }
 
 interface SubmissionColumnConfig {
@@ -301,7 +304,7 @@ const createMyReviewActions = (
             key: `complete-${data.myReviewId}`,
             render: isLast => (
                 <Link
-                    to={`./../review/${data.myReviewId}`}
+                    to={`./../reviews/${data.submissionId}?reviewId=${data.myReviewId}`}
                     className={classNames(
                         styles.submit,
                         { 'last-element': isLast },
@@ -523,7 +526,7 @@ const createScreeningColumns = ({
 
             return (
                 <Link
-                    to={`./../review/${data.reviewId}`}
+                    to={`./../reviews/${data.submissionId}?reviewId=${data.reviewId}`}
                     className={styles.textBlue}
                 >
                     {scoreValue}
@@ -785,6 +788,38 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
         return map
     }, [filteredChallengeSubmissions, props.screenings])
 
+    const aiReviewersColumn = useMemo<TableColumn<Screening> | undefined>(
+        () => ({
+            columnId: 'ai-reviews-table',
+            isExpand: true,
+            label: '',
+            renderer: (
+                data: Screening,
+                allRows: Screening[],
+            ) => {
+                const submissionPayload = submissionMetaById.get(data.submissionId) ?? {
+                    id: data.submissionId ?? '',
+                    virusScan: data.virusScan,
+                }
+
+                if (!submissionPayload?.id) {
+                    return <></>
+                }
+
+                return (
+                    <CollapsibleAiReviewsRow
+                        className={styles.aiReviews}
+                        aiReviewers={props.aiReviewers!}
+                        submission={submissionPayload as Pick<BackendSubmission, 'id'|'virusScan'>}
+                        defaultOpen={allRows ? !allRows.indexOf(data) : false}
+                    />
+                )
+            },
+            type: 'element',
+        } as TableColumn<Screening>),
+        [props.aiReviewers, submissionMetaById],
+    )
+
     const primarySubmissionInfos = useMemo<SubmissionInfo[]>(
         () => props.screenings
             .map(screening => submissionMetaById.get(screening.submissionId))
@@ -802,12 +837,17 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
         [historySourceSubmissions, primarySubmissionInfos],
     )
 
-    const { historyByMember }: SubmissionHistoryPartition = submissionHistory
+    const { historyByMember, latestSubmissionIds }: SubmissionHistoryPartition = submissionHistory
 
     const shouldShowHistoryActions = useMemo(
         () => hasIsLatestFlag(primarySubmissionInfos),
         [primarySubmissionInfos],
     )
+
+    const filteredScreenings = useMemo(() => (
+        props.screenings
+            .filter(screening => latestSubmissionIds.has(screening.submissionId))
+    ), [props.screenings, latestSubmissionIds])
 
     const hasAnyScreeningAssignment = useMemo(
         () => props.screenings.some(screening => Boolean(screening.myReviewResourceId)),
@@ -1124,20 +1164,28 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
     const columns = useMemo<TableColumn<Screening>[]>(
         () => {
             const base = [...baseColumns]
-            if (!showScreeningColumns) {
-                return appendActionColumn(base, actionColumn)
-            }
+            const columnsWithoutAction = showScreeningColumns
+                ? [...base, ...screeningColumns]
+                : base
+            const columnsWithAi = aiReviewersColumn
+                ? [...columnsWithoutAction, aiReviewersColumn]
+                : columnsWithoutAction
 
-            const withScreening = [...base, ...screeningColumns]
-            return appendActionColumn(withScreening, actionColumn)
+            return appendActionColumn(columnsWithAi, actionColumn)
         },
-        [actionColumn, baseColumns, screeningColumns, showScreeningColumns],
+        [
+            actionColumn,
+            aiReviewersColumn,
+            baseColumns,
+            screeningColumns,
+            showScreeningColumns,
+        ],
     )
 
     const columnsMobile = useMemo<MobileTableColumn<Screening>[][]>(
         () => columns.map(
             column => [
-                {
+                column.label && {
                     ...column,
                     className: '',
                     label: `${column.label as string} label`,
@@ -1152,9 +1200,10 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
                 },
                 {
                     ...column,
+                    colSpan: column.label ? 1 : 2,
                     mobileType: 'last-value',
                 },
-            ] as MobileTableColumn<Screening>[],
+            ].filter(Boolean) as MobileTableColumn<Screening>[],
         ),
         [columns],
     )
@@ -1172,7 +1221,9 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
             ) : (
                 <Table
                     columns={columns}
-                    data={props.screenings}
+                    data={filteredScreenings}
+                    showExpand
+                    expandMode='always'
                     disableSorting
                     onToggleSort={_.noop}
                     removeDefaultSort

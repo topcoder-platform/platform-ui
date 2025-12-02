@@ -53,6 +53,7 @@ export const Tabs: FC<Props> = (props: Props) => {
                         })}
                     >
                         {item.label}
+                        {item.indicator}
                         {item.warning ? (
                             // Global class 'icon-warning' defined in review app styles
                             <span className={classNames('icon-warning', styles.warningIcon)} />

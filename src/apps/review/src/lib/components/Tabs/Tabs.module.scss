@@ -73,6 +73,11 @@
     position: relative;
     white-space: nowrap;
 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+
     // &::before {
     //     content: '';
     //     display: flex;
@@ -133,6 +138,9 @@
         }
         .blockItem {
             position: relative;
+            display: flex;
+            align-items: flex-start;
+            justify-content: flex-start;
             &.selected {
                 background-color: var(--Actived);
                 color: var(--invertButtonColor);

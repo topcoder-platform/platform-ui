@@ -1,0 +1,72 @@
+@import '@libs/ui/styles/includes';
+
+.wrap {
+    @include ltemd {
+        padding-top: $sp-15;
+    }
+}
+
+.modelNameWrap {
+    display: flex;
+    align-items: center;
+    gap: $sp-4;
+    @include ltemd {
+        flex-direction: column;
+        gap: $sp-4;
+    }
+}
+
+.mdContainer {
+    & > * {
+        all: revert-layer;
+    }
+}
+
+.modelIcon {
+    width: 60px;
+    height: 60px;
+    border-radius: $sp-1;
+    border: 1px solid #A8A8A8;
+    padding: $sp-1;
+
+    align-items: center;
+    display: flex;
+    justify-content: center;
+
+    flex: 0 0 auto;
+}
+
+.modelName {
+    display: flex;
+    align-items: center;
+    gap: $sp-3;
+
+    h3 {
+        font-family: "Figtree", sans-serif;
+        font-size: 26px;
+        font-weight: 700;
+        line-height: 30px;
+        color: #0A0A0A;
+    }
+
+    svg {
+        display: block;
+        width: 16px;
+        height: 16px;
+    }
+
+    @include ltemd {
+        h3 {
+            font-size: 22px;
+            line-height: 26px;
+        }
+    }
+}
+
+.modelDescription {
+    margin-top: $sp-6;
+    font-family: "Nunito Sans", sans-serif;
+    font-size: 14px;
+    line-height: 20px;
+    color: #0A0A0A;
+}

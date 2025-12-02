@@ -108,9 +108,23 @@ export const createAvScanSubmissionPayload = async (
         throw new Error('Submission url is not valid')
     }
 
-    const { isValid, key: fileName }: ValidateS3URIResult = validateS3URI(url)
+    const {
+        isValid,
+        key: fileName,
+        bucket,
+    }: ValidateS3URIResult = validateS3URI(url)
+    const isQuarantineBucket = Boolean(
+        bucket && bucket.toLowerCase()
+            .endsWith('-dmz'),
+    )
+    const allowQuarantineRescan = submissionInfo.virusScan === false
+        && isQuarantineBucket
 
-    if (!isValid) {
+    if (!isValid && !allowQuarantineRescan) {
+        throw new Error('Submission url is not valid')
+    }
+
+    if (!fileName) {
         throw new Error('Submission url is not valid')
     }
 
