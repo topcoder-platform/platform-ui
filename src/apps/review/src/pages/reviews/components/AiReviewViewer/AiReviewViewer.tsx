@@ -36,6 +36,9 @@ const AiReviewViewer: FC = () => {
         challengeInfo,
     }: ChallengeDetailContextModel = useChallengeDetailsContext()
     const navigate = useAppNavigate()
+    const workflowRunIsFailed = [
+        AiWorkflowRunStatusEnum.FAILURE,
+    ].includes(workflowRun?.status as AiWorkflowRunStatusEnum)
 
     const tabItems: SelectOption[] = [
         {
@@ -56,7 +59,7 @@ const AiReviewViewer: FC = () => {
             label: 'Scorecard',
             value: 'scorecard',
         },
-        { label: `Attachments (${totalCount ?? 0})`, value: 'attachments' },
+        { label: `Attachments${workflowRunIsFailed ? '' : ` (${totalCount ?? 0})`}`, value: 'attachments' },
     ]
     const isFailedRun = useMemo(() => (
         workflowRun && [
