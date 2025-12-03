@@ -267,8 +267,6 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
     }, [fetchWinnings])
 
     const onPaymentEditCallback = useCallback((payment: Winning) => {
-        let status = payment.status
-
         setConfirmFlow({
             action: 'Save',
             callback: async () => {
@@ -276,10 +274,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
             },
             content: (
                 <PaymentEditForm
-                    payment={{
-                        ...payment,
-                        status,
-                    }}
+                    payment={payment}
                     canSave={setIsConfirmFormValid}
                     onValueUpdated={handleValueUpdated}
                 />
