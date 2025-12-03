@@ -179,9 +179,11 @@ const PaymentEdit: React.FC<PaymentEditFormProps> = (props: PaymentEditFormProps
 
     const options = useCallback(() => {
         if (props.payment.status.toUpperCase() !== 'PAID') {
+            const isMemberHold = ['On Hold (Member)', 'On Hold (Tax Form)', 'On Hold (Payment Provider)'].indexOf(props.payment.status) !== -1;
             return [
+                ...(isMemberHold ? [{label: props.payment.status, value: props.payment.status}] : []),
                 { label: 'Owed', value: 'Owed' },
-                { label: 'On Hold', value: 'On Hold' },
+                { label: 'On Hold (Admin)', value: 'On Hold (Admin)' },
                 { label: 'Cancel', value: 'Cancel' },
             ]
         }

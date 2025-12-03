@@ -217,7 +217,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
         if (updateObj.paymentStatus !== undefined) {
             if (updateObj.paymentStatus === 'Owed') {
                 paymentStatus = 'OWED'
-            } else if (updateObj.paymentStatus === 'On Hold') {
+            } else if (updateObj.paymentStatus === 'On Hold (Admin)') {
                 paymentStatus = 'ON_HOLD_ADMIN'
             } else if (updateObj.paymentStatus === 'Cancel') {
                 paymentStatus = 'CANCELLED'
@@ -268,11 +268,6 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
 
     const onPaymentEditCallback = useCallback((payment: Winning) => {
         let status = payment.status
-        if (status === 'On Hold (Admin)') {
-            status = 'On Hold'
-        } else if (['On Hold (Member)', 'On Hold (Tax Form)', 'On Hold (Payment Provider)'].indexOf(status) !== -1) {
-            status = 'Owed'
-        }
 
         setConfirmFlow({
             action: 'Save',
