@@ -40,11 +40,10 @@ const AiFeedback: FC<AiFeedbackProps> = props => {
         await createFeedbackComment(workflowId as string, workflowRun?.id as string, feedback?.id, {
             content,
         })
-        await mutate(`
-            ${EnvironmentConfig.API.V6}/workflows/${workflowId}/runs/${workflowRun?.id}/items?[${workflowRun?.status}]
-        `)
+        // eslint-disable-next-line max-len
+        await mutate(`${EnvironmentConfig.API.V6}/workflows/${workflowId}/runs/${workflowRun?.id}/items?[${workflowRun?.status}]`)
         setShowReply(false)
-    }, [workflowId, workflowRun?.id, feedback?.id])
+    }, [workflowId, workflowRun?.id, workflowRun?.status, feedback?.id])
 
     if (!aiFeedbackItems?.length || !feedback) {
         return <></>
