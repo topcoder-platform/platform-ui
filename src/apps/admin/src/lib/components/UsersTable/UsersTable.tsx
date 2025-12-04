@@ -341,21 +341,21 @@ export const UsersTable: FC<Props> = props => {
                     return (
                         <div className={styles.blockBtns}>
                             {isTablet ? (
-                                    <DropdownMenuButton
-                                        options={[
-                                            'Primary Email',
-                                            'Roles',
-                                            'Groups',
-                                            'Terms',
-                                            'SSO Logins',
-                                            ...(data.active
-                                                ? ['Deactivate', 'Delete']
-                                                : ['Activate', 'Delete']),
-                                        ]}
-                                        onSelectOption={onSelectOption}
-                                    >
-                                        <button type='button'>
-                                            <IconOutline.DotsHorizontalIcon
+                                <DropdownMenuButton
+                                    options={[
+                                        'Primary Email',
+                                        'Roles',
+                                        'Groups',
+                                        'Terms',
+                                        'SSO Logins',
+                                        ...(data.active
+                                            ? ['Deactivate', 'Delete']
+                                            : ['Activate', 'Delete']),
+                                    ]}
+                                    onSelectOption={onSelectOption}
+                                >
+                                    <button type='button'>
+                                        <IconOutline.DotsHorizontalIcon
                                             width={15}
                                         />
                                     </button>
@@ -381,20 +381,20 @@ export const UsersTable: FC<Props> = props => {
                                         </Button>
                                     </DropdownMenuButton>
                                     {data.active ? (
-                                    <Button
-                                        primary
-                                        variant='danger'
-                                        label='Deactivate'
-                                        onClick={function onClick() {
-                                            onSelectOption('Deactivate')
-                                        }}
-                                        disabled={isDeleting}
-                                    />
-                                ) : (
-                                    <Button
-                                        primary
-                                        variant='linkblue'
-                                        label='Activate'
+                                        <Button
+                                            primary
+                                            variant='danger'
+                                            label='Deactivate'
+                                            onClick={function onClick() {
+                                                onSelectOption('Deactivate')
+                                            }}
+                                            disabled={isDeleting}
+                                        />
+                                    ) : (
+                                        <Button
+                                            primary
+                                            variant='linkblue'
+                                            label='Activate'
                                             onClick={function onClick() {
                                                 onSelectOption('Activate')
                                             }}

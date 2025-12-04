@@ -1,6 +1,7 @@
-import { FC, useCallback, useEffect, useState } from 'react'
-import { BaseModal, Button, InputText } from '~/libs/ui'
+import { ChangeEvent, FC, useCallback, useEffect, useState } from 'react'
 import classNames from 'classnames'
+
+import { BaseModal, Button, InputText } from '~/libs/ui'
 
 import { UserInfo } from '../../models'
 
@@ -37,11 +38,25 @@ export const DialogDeleteUser: FC<Props> = (props: Props) => {
             setError('Delete ticket URL is required')
             return
         }
+
         setError('')
         props.onDelete(ticketUrl.trim())
     }, [props, ticketUrl])
 
-    const description = `Are you sure you want to DELETE user ${props.userInfo.handle} with email address ${props.userInfo.email}. If you are sure, please enter the associated delete request ticket URL below`
+    const handleTicketUrlChange = useCallback(
+        (event: ChangeEvent<HTMLInputElement>) => {
+            if (error) {
+                setError('')
+            }
+
+            setTicketUrl(event.target.value)
+        },
+        [error],
+    )
+
+    const description
+        = `Are you sure you want to DELETE user ${props.userInfo.handle} with email address ${props.userInfo.email}. `
+        + 'If you are sure, please enter the associated delete request ticket URL below'
 
     return (
         <BaseModal
@@ -60,12 +75,7 @@ export const DialogDeleteUser: FC<Props> = (props: Props) => {
                     placeholder='https://'
                     value={ticketUrl}
                     error={error}
-                    onChange={event => {
-                        setTicketUrl(event.target.value)
-                        if (error) {
-                            setError('')
-                        }
-                    }}
+                    onChange={handleTicketUrlChange}
                     disabled={props.isLoading}
                 />
 

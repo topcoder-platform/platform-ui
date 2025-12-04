@@ -15,16 +15,19 @@ import { handleError } from '../utils'
 /// ////////////////
 
 type UsersState = {
-    isLoading: boolean
-    users: UserInfo[]
-    page: number
-    totalPages: number
-    total: number
-    updatingStatus: { [key: string]: boolean }
     deletingUsers: { [key: string]: boolean }
+    isLoading: boolean
+    page: number
+    total: number
+    totalPages: number
+    updatingStatus: { [key: string]: boolean }
+    users: UserInfo[]
 }
 
 const UsersActionType = {
+    DELETE_USER_DONE: 'DELETE_USER_DONE' as const,
+    DELETE_USER_FAILED: 'DELETE_USER_FAILED' as const,
+    DELETE_USER_INIT: 'DELETE_USER_INIT' as const,
     FETCH_USERS_DONE: 'FETCH_USERS_DONE' as const,
     FETCH_USERS_FAILED: 'FETCH_USERS_FAILED' as const,
     FETCH_USERS_INIT: 'FETCH_USERS_INIT' as const,
@@ -32,9 +35,6 @@ const UsersActionType = {
     UPDATE_USER_STATUS_DONE: 'UPDATE_USER_STATUS_DONE' as const,
     UPDATE_USER_STATUS_FAILED: 'UPDATE_USER_STATUS_FAILED' as const,
     UPDATE_USER_STATUS_INIT: 'UPDATE_USER_STATUS_INIT' as const,
-    DELETE_USER_INIT: 'DELETE_USER_INIT' as const,
-    DELETE_USER_DONE: 'DELETE_USER_DONE' as const,
-    DELETE_USER_FAILED: 'DELETE_USER_FAILED' as const,
 }
 
 type UsersReducerAction =
@@ -45,7 +45,7 @@ type UsersReducerAction =
       }
     | {
           type: typeof UsersActionType.FETCH_USERS_DONE
-          payload: { users: UserInfo[]; page: number; totalPages: number; total: number }
+          payload: { page: number; total: number; totalPages: number; users: UserInfo[] }
       }
     | { type: typeof UsersActionType.SET_PAGE; payload: number }
     | {
@@ -110,12 +110,12 @@ const reducer = (
             const userInfo = action.payload
             return {
                 ...previousState,
-                updatingStatus: {
-                    ...previousState.updatingStatus,
-                    [userInfo.id]: false,
-                },
                 deletingUsers: {
                     ...previousState.deletingUsers,
+                    [userInfo.id]: false,
+                },
+                updatingStatus: {
+                    ...previousState.updatingStatus,
                     [userInfo.id]: false,
                 },
                 users: _.map(previousState.users, item => (userInfo.id !== item.id ? item : userInfo)),
@@ -150,8 +150,8 @@ const reducer = (
                     ...previousState.deletingUsers,
                     [userId]: false,
                 },
-                users: previousState.users.filter(user => user.id !== userId),
                 total: Math.max(previousState.total - 1, 0),
+                users: previousState.users.filter(user => user.id !== userId),
             }
         }
 
@@ -199,12 +199,12 @@ export interface useManageUsersProps {
  */
 export function useManageUsers(): useManageUsersProps {
     const [state, dispatch] = useReducer(reducer, {
+        deletingUsers: {},
         isLoading: false,
         page: 1,
         total: 0,
         totalPages: 0,
         updatingStatus: {},
-        deletingUsers: {},
         users: [],
     })
     const filterRef = useRef('')
@@ -351,14 +351,14 @@ export function useManageUsers(): useManageUsersProps {
     )
 
     return {
-        doSearchUsers,
+        deletingUsers: state.deletingUsers,
         doDeleteUser,
+        doSearchUsers,
         doUpdateStatus,
         isLoading: state.isLoading,
         onPageChange,
         page: state.page,
         totalPages: state.totalPages,
-        deletingUsers: state.deletingUsers,
         updatingStatus: state.updatingStatus,
         users: state.users,
     }
