@@ -27,7 +27,9 @@ export const UserManagementPage: FC<Props> = (props: Props) => {
         doSearchUsers,
         isLoading,
         updatingStatus,
+        deletingUsers,
         doUpdateStatus,
+        doDeleteUser,
         page,
         totalPages,
         onPageChange,
@@ -66,6 +68,8 @@ export const UserManagementPage: FC<Props> = (props: Props) => {
                                 onPageChange={onPageChange}
                                 updatingStatus={updatingStatus}
                                 doUpdateStatus={doUpdateStatus}
+                                deletingUsers={deletingUsers}
+                                doDeleteUser={doDeleteUser}
                             />
                         )}
                     </>

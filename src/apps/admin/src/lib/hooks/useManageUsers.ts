@@ -6,7 +6,7 @@ import { toast } from 'react-toastify'
 import _ from 'lodash'
 
 import { UserInfo } from '../models'
-import { searchUsersPaginated, updateUserStatus } from '../services'
+import { deleteUser, searchUsersPaginated, updateUserStatus } from '../services'
 import { TABLE_PAGINATION_ITEM_PER_PAGE } from '../../config/index.config'
 import { handleError } from '../utils'
 
@@ -21,6 +21,7 @@ type UsersState = {
     totalPages: number
     total: number
     updatingStatus: { [key: string]: boolean }
+    deletingUsers: { [key: string]: boolean }
 }
 
 const UsersActionType = {
@@ -31,6 +32,9 @@ const UsersActionType = {
     UPDATE_USER_STATUS_DONE: 'UPDATE_USER_STATUS_DONE' as const,
     UPDATE_USER_STATUS_FAILED: 'UPDATE_USER_STATUS_FAILED' as const,
     UPDATE_USER_STATUS_INIT: 'UPDATE_USER_STATUS_INIT' as const,
+    DELETE_USER_INIT: 'DELETE_USER_INIT' as const,
+    DELETE_USER_DONE: 'DELETE_USER_DONE' as const,
+    DELETE_USER_FAILED: 'DELETE_USER_FAILED' as const,
 }
 
 type UsersReducerAction =
@@ -48,11 +52,17 @@ type UsersReducerAction =
           type:
               | typeof UsersActionType.UPDATE_USER_STATUS_INIT
               | typeof UsersActionType.UPDATE_USER_STATUS_FAILED
+              | typeof UsersActionType.DELETE_USER_INIT
+              | typeof UsersActionType.DELETE_USER_FAILED
           payload: string
       }
     | {
           type: typeof UsersActionType.UPDATE_USER_STATUS_DONE
           payload: UserInfo
+      }
+    | {
+          type: typeof UsersActionType.DELETE_USER_DONE
+          payload: string
       }
 
 const reducer = (
@@ -104,6 +114,10 @@ const reducer = (
                     ...previousState.updatingStatus,
                     [userInfo.id]: false,
                 },
+                deletingUsers: {
+                    ...previousState.deletingUsers,
+                    [userInfo.id]: false,
+                },
                 users: _.map(previousState.users, item => (userInfo.id !== item.id ? item : userInfo)),
             }
         }
@@ -113,6 +127,39 @@ const reducer = (
                 ...previousState,
                 updatingStatus: {
                     ...previousState.updatingStatus,
+                    [action.payload]: false,
+                },
+            }
+        }
+
+        case UsersActionType.DELETE_USER_INIT: {
+            return {
+                ...previousState,
+                deletingUsers: {
+                    ...previousState.deletingUsers,
+                    [action.payload]: true,
+                },
+            }
+        }
+
+        case UsersActionType.DELETE_USER_DONE: {
+            const userId = action.payload
+            return {
+                ...previousState,
+                deletingUsers: {
+                    ...previousState.deletingUsers,
+                    [userId]: false,
+                },
+                users: previousState.users.filter(user => user.id !== userId),
+                total: Math.max(previousState.total - 1, 0),
+            }
+        }
+
+        case UsersActionType.DELETE_USER_FAILED: {
+            return {
+                ...previousState,
+                deletingUsers: {
+                    ...previousState.deletingUsers,
                     [action.payload]: false,
                 },
             }
@@ -132,10 +179,16 @@ export interface useManageUsersProps {
     totalPages: number
     onPageChange: (page: number) => void
     updatingStatus: { [key: string]: boolean }
+    deletingUsers: { [key: string]: boolean }
     doUpdateStatus: (
         userInfo: UserInfo,
         newStatus: string,
         comment: string,
+        onSuccess?: () => void,
+    ) => void
+    doDeleteUser: (
+        userInfo: UserInfo,
+        ticketUrl: string,
         onSuccess?: () => void,
     ) => void
 }
@@ -151,6 +204,7 @@ export function useManageUsers(): useManageUsersProps {
         total: 0,
         totalPages: 0,
         updatingStatus: {},
+        deletingUsers: {},
         users: [],
     })
     const filterRef = useRef('')
@@ -260,13 +314,51 @@ export function useManageUsers(): useManageUsersProps {
         [dispatch],
     )
 
+    const doDeleteUser = useCallback(
+        (userInfo: UserInfo, ticketUrl: string, onSuccess?: () => void) => {
+            if (!ticketUrl) {
+                toast.error('Delete ticket URL is required', {
+                    toastId: 'Delete user',
+                })
+                return
+            }
+
+            dispatch({
+                payload: userInfo.id,
+                type: UsersActionType.DELETE_USER_INIT,
+            })
+
+            deleteUser(userInfo.handle, ticketUrl)
+                .then(() => {
+                    dispatch({
+                        payload: userInfo.id,
+                        type: UsersActionType.DELETE_USER_DONE,
+                    })
+                    toast.success('User deleted successfully', {
+                        toastId: 'Delete user',
+                    })
+                    onSuccess?.()
+                })
+                .catch(e => {
+                    dispatch({
+                        payload: userInfo.id,
+                        type: UsersActionType.DELETE_USER_FAILED,
+                    })
+                    handleError(e)
+                })
+        },
+        [dispatch],
+    )
+
     return {
         doSearchUsers,
+        doDeleteUser,
         doUpdateStatus,
         isLoading: state.isLoading,
         onPageChange,
         page: state.page,
         totalPages: state.totalPages,
+        deletingUsers: state.deletingUsers,
         updatingStatus: state.updatingStatus,
         users: state.users,
     }
