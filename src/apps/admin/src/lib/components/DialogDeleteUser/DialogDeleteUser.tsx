@@ -73,6 +73,7 @@ export const DialogDeleteUser: FC<Props> = (props: Props) => {
                     name='ticketUrl'
                     label='Delete request ticket URL'
                     placeholder='https://'
+                    type='text'
                     value={ticketUrl}
                     error={error}
                     onChange={handleTicketUrlChange}
