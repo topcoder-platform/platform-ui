@@ -10,6 +10,7 @@ import { get, includes } from 'lodash'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { IconAppeal, IconEdit } from '~/apps/review/src/lib/assets/icons'
 import { ADMIN, COPILOT, REVIEWER } from '~/apps/review/src/config/index.config'
+import { useRolePermissions } from '~/apps/review/src/lib/hooks'
 
 import {
     AppealInfo,
@@ -44,6 +45,7 @@ const ReviewComment: FC<ReviewCommentProps> = props => {
         addAppeal,
         isSavingAppeal,
     }: ScorecardViewerContextValue = useScorecardViewerContext()
+    const {isAdmin, hasReviewerRole}  = useRolePermissions()
 
     const { challengeInfo }: ChallengeDetailContextModel = useContext(
         ChallengeDetailContext,
@@ -175,7 +177,7 @@ const ReviewComment: FC<ReviewCommentProps> = props => {
                         appeal={props.appeal}
                         reviewItem={props.reviewItem}
                         scorecardQuestion={props.question}
-                        canRespondToAppeal={isReviewerRole}
+                        canRespondToAppeal={isAdmin || hasReviewerRole}
                     >
                         {isSubmitter && canAddAppeal && (
                             <div className={styles.blockBtns}>
