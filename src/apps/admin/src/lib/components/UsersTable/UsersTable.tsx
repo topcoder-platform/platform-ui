@@ -26,6 +26,7 @@ import { DialogEditUserSSOLogin } from '../DialogEditUserSSOLogin'
 import { DialogEditUserTerms } from '../DialogEditUserTerms'
 import { DialogEditUserStatus } from '../DialogEditUserStatus'
 import { DialogUserStatusHistory } from '../DialogUserStatusHistory'
+import { DialogDeleteUser } from '../DialogDeleteUser'
 import { DropdownMenuButton } from '../common/DropdownMenuButton'
 import { useTableFilterLocal, useTableFilterLocalProps } from '../../hooks'
 import { TABLE_DATE_FORMAT } from '../../../config/index.config'
@@ -43,10 +44,16 @@ interface Props {
     totalPages: number
     onPageChange: (page: number) => void
     updatingStatus: { [key: string]: boolean }
+    deletingUsers: { [key: string]: boolean }
     doUpdateStatus: (
         userInfo: UserInfo,
         newStatus: string,
         comment: string,
+        onSuccess?: () => void,
+    ) => void
+    doDeleteUser: (
+        userInfo: UserInfo,
+        ticketUrl: string,
         onSuccess?: () => void,
     ) => void
 }
@@ -98,6 +105,9 @@ export const UsersTable: FC<Props> = props => {
         | undefined
     >()
     const [showDialogStatusHistory, setShowDialogStatusHistory] = useState<
+        UserInfo | undefined
+    >()
+    const [showDialogDeleteUser, setShowDialogDeleteUser] = useState<
         UserInfo | undefined
     >()
     const { width: screenWidth }: WindowSize = useWindowSize()
@@ -294,6 +304,8 @@ export const UsersTable: FC<Props> = props => {
                 columnId: 'Action',
                 label: 'Action',
                 renderer: (data: UserInfo) => {
+                    const isDeleting = props.deletingUsers?.[data.id] === true
+
                     function onSelectOption(item: string): void {
                         if (item === 'Primary Email') {
                             setShowDialogEditUserEmail(data)
@@ -321,6 +333,8 @@ export const UsersTable: FC<Props> = props => {
                                 data,
                                 message: confirmation,
                             })
+                        } else if (item === 'Delete') {
+                            setShowDialogDeleteUser(data)
                         }
                     }
 
@@ -335,8 +349,8 @@ export const UsersTable: FC<Props> = props => {
                                         'Terms',
                                         'SSO Logins',
                                         ...(data.active
-                                            ? ['Deactivate']
-                                            : ['Activate']),
+                                            ? ['Deactivate', 'Delete']
+                                            : ['Activate', 'Delete']),
                                     ]}
                                     onSelectOption={onSelectOption}
                                 >
@@ -374,6 +388,7 @@ export const UsersTable: FC<Props> = props => {
                                             onClick={function onClick() {
                                                 onSelectOption('Deactivate')
                                             }}
+                                            disabled={isDeleting}
                                         />
                                     ) : (
                                         <Button
@@ -385,6 +400,15 @@ export const UsersTable: FC<Props> = props => {
                                             }}
                                         />
                                     )}
+                                    <Button
+                                        primary
+                                        variant='danger'
+                                        label='Delete'
+                                        onClick={function onClick() {
+                                            onSelectOption('Delete')
+                                        }}
+                                        disabled={isDeleting}
+                                    />
                                 </>
                             )}
                         </div>
@@ -393,7 +417,7 @@ export const UsersTable: FC<Props> = props => {
                 type: 'action',
             },
         ],
-        [isTablet, isMobile],
+        [isTablet, isMobile, props.deletingUsers, props.updatingStatus],
     )
 
     return (
@@ -471,6 +495,23 @@ export const UsersTable: FC<Props> = props => {
                     userInfo={showDialogEditUserStatus}
                     doUpdateStatus={props.doUpdateStatus}
                     isLoading={updatingStatusBool}
+                />
+            )}
+            {showDialogDeleteUser && (
+                <DialogDeleteUser
+                    open
+                    setOpen={function setOpen() {
+                        setShowDialogDeleteUser(undefined)
+                    }}
+                    userInfo={showDialogDeleteUser}
+                    isLoading={props.deletingUsers?.[showDialogDeleteUser.id]}
+                    onDelete={function onDelete(ticketUrl: string) {
+                        props.doDeleteUser(
+                            showDialogDeleteUser,
+                            ticketUrl,
+                            () => setShowDialogDeleteUser(undefined),
+                        )
+                    }}
                 />
             )}
             {showDialogStatusHistory && (

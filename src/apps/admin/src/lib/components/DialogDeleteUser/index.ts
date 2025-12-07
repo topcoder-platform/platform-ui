@@ -1,0 +1,1 @@
+export { DialogDeleteUser } from './DialogDeleteUser'

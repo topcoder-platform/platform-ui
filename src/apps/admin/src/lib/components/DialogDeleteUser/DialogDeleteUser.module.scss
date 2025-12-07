@@ -1,0 +1,18 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-4;
+}
+
+.description {
+    white-space: pre-line;
+}
+
+.actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: $sp-3;
+    margin-top: $sp-4;
+}
