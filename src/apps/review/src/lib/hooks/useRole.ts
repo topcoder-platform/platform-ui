@@ -24,6 +24,7 @@ export interface useRoleProps {
     hasReviewerRole: boolean
     hasApproverRole: boolean
     hasPostMortemReviewerRole: boolean
+    hasManagerRole: boolean
     checkpointScreenerResourceIds: Set<string>
     checkpointReviewerResourceIds: Set<string>
     copilotReviewerResourceIds: Set<string>
@@ -119,6 +120,18 @@ const useRole = (): useRoleProps => {
         [myResources],
     )
 
+    const pmResourceIds = useMemo<Set<string>>(
+        () => new Set(
+            (myResources ?? [])
+                .filter(resource => {
+                    const roleName = resource.roleName?.toLowerCase() ?? ''
+                    return roleName.includes('manager')
+                })
+                .map(resource => resource.id),
+        ),
+        [myResources],
+    )
+
     const screenerResourceIds = useMemo<Set<string>>(
         () => new Set(
             (myResources ?? [])
@@ -201,6 +214,11 @@ const useRole = (): useRoleProps => {
         [screenerResourceIds],
     )
 
+    const hasManagerRole = useMemo(
+        () => pmResourceIds.size > 0,
+        [pmResourceIds],
+    )
+
     const hasReviewerRole = useMemo(
         () => reviewerResourceIds.size > 0,
         [reviewerResourceIds],
@@ -235,6 +253,7 @@ const useRole = (): useRoleProps => {
         hasApproverRole,
         hasCheckpointReviewerRole,
         hasCheckpointScreenerRole,
+        hasManagerRole,
         hasPostMortemReviewerRole,
         hasReviewerRole,
         hasScreenerRole,
