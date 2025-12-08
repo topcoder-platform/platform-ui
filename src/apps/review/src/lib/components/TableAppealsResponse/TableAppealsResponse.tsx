@@ -107,7 +107,7 @@ export const TableAppealsResponse: FC<TableAppealsResponseProps> = (props: Table
     const canViewAsReviewer = hasReviewerRole
     const canViewAsSubmitter = hasSubmitterRole
     const canRender = canViewAllAppeals || canViewAsReviewer || canViewAsSubmitter
-    const canRespondToAppeals = hasReviewerRole
+    const canRespondToAppeals = hasReviewerRole || isAdmin
 
     const isAppealsResponsePhaseOpen = useMemo<boolean>(
         () => (challengeInfo?.phases ?? []).some(phase => phase?.name?.toLowerCase() === 'appeals response'
