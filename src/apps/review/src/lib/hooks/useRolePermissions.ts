@@ -100,20 +100,28 @@ export function useRolePermissions(): UseRolePermissionsResult {
     )
 
     const canViewAllSubmissions = useMemo<boolean>(
-        () => isAdmin || hasCopilotRole || hasReviewerRole || hasManagerRole || hasScreenerRole || hasApproverRole || isProjectManager,
+        () => (
+            isAdmin
+            || hasCopilotRole
+            || hasReviewerRole
+            || hasManagerRole
+            || hasScreenerRole
+            || hasApproverRole
+            || isProjectManager
+        ),
         [hasCopilotRole, isAdmin, isProjectManager, hasReviewerRole, hasManagerRole, hasScreenerRole],
     )
 
     return {
         actionChallengeRole,
-        canViewAllSubmissions,
         canManageCompletedReviews,
+        canViewAllSubmissions,
         hasCopilotRole,
         hasReviewerRole,
         hasSubmitterRole,
         isAdmin,
-        isProjectManager,
         isCopilotWithReviewerAssignments,
+        isProjectManager,
         ownedMemberIds,
     }
 }

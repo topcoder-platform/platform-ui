@@ -43,9 +43,9 @@ import {
 import type { SubmissionHistoryPartition } from '../../utils'
 import { TABLE_DATE_FORMAT } from '../../../config/index.config'
 import { CollapsibleAiReviewsRow } from '../CollapsibleAiReviewsRow'
+import { useRolePermissions, UseRolePermissionsResult } from '../../hooks'
 
 import styles from './TabContentSubmissions.module.scss'
-import { useRolePermissions, UseRolePermissionsResult } from '../../hooks'
 
 interface Props {
     aiReviewers?: { aiWorkflowId: string }[]
@@ -76,8 +76,10 @@ export const TabContentSubmissions: FC<Props> = props => {
 
     const isCompletedDesignChallenge = useMemo(() => {
         if (!challengeInfo) return false
-        const type = challengeInfo.type ? String(challengeInfo.type).toLowerCase() : ''
-        const status = challengeInfo.status ? String(challengeInfo.status).toLowerCase() : ''
+        const type = challengeInfo.track.name ? String(challengeInfo.track.name)
+            .toLowerCase() : ''
+        const status = challengeInfo.status ? String(challengeInfo.status)
+            .toLowerCase() : ''
         return type === 'design' && (
             status === 'completed'
         )
@@ -86,16 +88,16 @@ export const TabContentSubmissions: FC<Props> = props => {
     const isSubmissionsViewable = useMemo(() => {
         if (!challengeInfo?.metadata?.length) return false
         return Array.isArray(challengeInfo.metadata)
-            ? challengeInfo.metadata.some(m => m.name === 'submissionsViewable' && String(m.value).toLowerCase() === 'true')
+            ? challengeInfo.metadata.some(m => m.name === 'submissionsViewable' && String(m.value)
+                .toLowerCase() === 'true')
             : false
     }, [challengeInfo])
-
 
     const canViewSubmissions = useMemo(() => {
         if (isCompletedDesignChallenge) {
             return canViewAllSubmissions || (isCompletedDesignChallenge && isSubmissionsViewable)
         }
-        
+
         return true
     }, [isCompletedDesignChallenge, isSubmissionsViewable, canViewAllSubmissions])
 
@@ -235,13 +237,14 @@ export const TabContentSubmissions: FC<Props> = props => {
     const filteredSubmissions = useMemo<BackendSubmission[]>(
         () => {
 
-            const filterFunc = (submissions: BackendSubmission[]) => submissions.filter(submission => {
-                if (!canViewSubmissions) {
-                    return String(submission.memberId) === String(loginUserInfo?.userId)
-                }
+            const filterFunc = (submissions: BackendSubmission[]): BackendSubmission[] => submissions
+                .filter(submission => {
+                    if (!canViewSubmissions) {
+                        return String(submission.memberId) === String(loginUserInfo?.userId)
+                    }
 
-                return true
-            })
+                    return true
+                })
             const filteredByUserId = filterFunc(latestBackendSubmissions)
             const filteredByUserIdSubmissions = filterFunc(props.submissions)
             if (restrictToLatest && hasLatestFlag) {
