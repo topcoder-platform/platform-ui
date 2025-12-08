@@ -95,7 +95,7 @@ export const TabContentSubmissions: FC<Props> = props => {
 
     const canViewSubmissions = useMemo(() => {
         if (isCompletedDesignChallenge) {
-            return canViewAllSubmissions || (isCompletedDesignChallenge && isSubmissionsViewable)
+            return canViewAllSubmissions || isSubmissionsViewable
         }
 
         return true
