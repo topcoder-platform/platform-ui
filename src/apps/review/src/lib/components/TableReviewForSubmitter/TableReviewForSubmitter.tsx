@@ -149,6 +149,7 @@ export const TableReviewForSubmitter: FC<TableReviewForSubmitterProps> = (props:
         },
         [challengeInfo?.submissions, datas, submissionTypes],
     )
+    console.log(filteredAll, 'filteredAll')
 
     const {
         closeHistoryModal,

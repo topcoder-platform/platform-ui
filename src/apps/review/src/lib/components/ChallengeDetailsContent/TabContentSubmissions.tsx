@@ -25,6 +25,7 @@ import {
     BackendSubmission,
     ChallengeDetailContextModel,
     convertBackendSubmissionToSubmissionInfo,
+    ReviewAppContextModel,
     SubmissionInfo,
 } from '../../models'
 import { TableNoRecord } from '../TableNoRecord'
@@ -32,7 +33,7 @@ import { TableWrapper } from '../TableWrapper'
 import { SubmissionHistoryModal } from '../SubmissionHistoryModal'
 import { useSubmissionDownloadAccess } from '../../hooks/useSubmissionDownloadAccess'
 import type { UseSubmissionDownloadAccessResult } from '../../hooks/useSubmissionDownloadAccess'
-import { ChallengeDetailContext } from '../../contexts'
+import { ChallengeDetailContext, ReviewAppContext } from '../../contexts'
 import {
     challengeHasSubmissionLimit,
     getSubmissionHistoryKey,
@@ -44,6 +45,7 @@ import { TABLE_DATE_FORMAT } from '../../../config/index.config'
 import { CollapsibleAiReviewsRow } from '../CollapsibleAiReviewsRow'
 
 import styles from './TabContentSubmissions.module.scss'
+import { useRolePermissions, UseRolePermissionsResult } from '../../hooks'
 
 interface Props {
     aiReviewers?: { aiWorkflowId: string }[]
@@ -67,8 +69,31 @@ export const TabContentSubmissions: FC<Props> = props => {
         isSubmissionDownloadRestrictedForMember,
         getRestrictionMessageForMember,
     }: UseSubmissionDownloadAccessResult = useSubmissionDownloadAccess()
+    const { loginUserInfo }: ReviewAppContextModel = useContext(ReviewAppContext)
+    const { canViewAllSubmissions }: UseRolePermissionsResult = useRolePermissions()
 
     const { challengeInfo }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
+
+    const isCompletedDesignChallenge = useMemo(() => {
+        if (!challengeInfo) return false
+        const type = challengeInfo.type ? String(challengeInfo.type).toLowerCase() : ''
+        const status = challengeInfo.status ? String(challengeInfo.status).toLowerCase() : ''
+        return type === 'design' && (
+            status === 'completed'
+        )
+    }, [challengeInfo])
+
+    const isSubmissionsViewable = useMemo(() => {
+        if (!challengeInfo?.metadata?.length) return false
+        return Array.isArray(challengeInfo.metadata)
+            ? challengeInfo.metadata.some(m => m.name === 'submissionsViewable' && String(m.value).toLowerCase() === 'true')
+            : false
+    }, [challengeInfo])
+
+
+    const canViewSubmissions = useMemo(() => {
+        return canViewAllSubmissions || (isCompletedDesignChallenge && isSubmissionsViewable)
+    }, [isCompletedDesignChallenge, isSubmissionsViewable, canViewAllSubmissions])
 
     const submissionMetaById = useMemo(
         () => {
@@ -205,19 +230,31 @@ export const TabContentSubmissions: FC<Props> = props => {
 
     const filteredSubmissions = useMemo<BackendSubmission[]>(
         () => {
+
+            const filterFunc = (submissions: BackendSubmission[]) => submissions.filter(submission => {
+                if (!canViewSubmissions) {
+                    return String(submission.memberId) === String(loginUserInfo?.userId)
+                }
+
+                return true
+            })
+            const filteredByUserId = filterFunc(latestBackendSubmissions)
+            const filteredByUserIdSubmissions = filterFunc(props.submissions)
             if (restrictToLatest && hasLatestFlag) {
                 return latestBackendSubmissions.length
-                    ? latestBackendSubmissions
-                    : props.submissions
+                    ? filteredByUserId
+                    : filteredByUserIdSubmissions
             }
 
-            return props.submissions
+            return filteredByUserIdSubmissions
         },
         [
             latestBackendSubmissions,
             props.submissions,
             restrictToLatest,
             hasLatestFlag,
+            canViewSubmissions,
+            loginUserInfo?.userId,
         ],
     )
 
