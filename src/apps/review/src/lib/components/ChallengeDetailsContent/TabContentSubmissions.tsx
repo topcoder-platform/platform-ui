@@ -87,10 +87,8 @@ export const TabContentSubmissions: FC<Props> = props => {
 
     const isSubmissionsViewable = useMemo(() => {
         if (!challengeInfo?.metadata?.length) return false
-        return Array.isArray(challengeInfo.metadata)
-            ? challengeInfo.metadata.some(m => m.name === 'submissionsViewable' && String(m.value)
-                .toLowerCase() === 'true')
-            : false
+        return challengeInfo.metadata.some(m => m.name === 'submissionsViewable' && String(m.value)
+            .toLowerCase() === 'true')
     }, [challengeInfo])
 
     const canViewSubmissions = useMemo(() => {

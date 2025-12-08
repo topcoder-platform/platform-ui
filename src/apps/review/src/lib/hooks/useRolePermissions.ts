@@ -109,7 +109,7 @@ export function useRolePermissions(): UseRolePermissionsResult {
             || hasApproverRole
             || isProjectManager
         ),
-        [hasCopilotRole, isAdmin, isProjectManager, hasReviewerRole, hasManagerRole, hasScreenerRole],
+        [hasCopilotRole, isAdmin, isProjectManager, hasReviewerRole, hasManagerRole, hasScreenerRole, hasApproverRole],
     )
 
     return {

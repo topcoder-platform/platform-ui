@@ -137,7 +137,7 @@ const useRole = (): useRoleProps => {
             (myResources ?? [])
                 .filter(resource => {
                     const roleName = resource.roleName?.toLowerCase() ?? ''
-                    return roleName.includes('screener')
+                    return roleName.includes('screener') && !roleName.includes('checkpoint')
                 })
                 .map(resource => resource.id),
         ),
