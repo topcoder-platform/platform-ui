@@ -233,6 +233,7 @@ workflows:
                               - feat/v6
                               - pm-2074_1
                               - feat/ai-workflows
+                              - delete_user
 
             - deployQa:
                   context: org-global

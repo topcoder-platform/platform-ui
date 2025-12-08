@@ -9,6 +9,7 @@ import {
     xhrPatchAsync,
     xhrPostAsync,
     xhrPutAsync,
+    xhrRequestAsync,
 } from '~/libs/core'
 
 import {
@@ -342,3 +343,17 @@ export const deleteSSOUserLogin = async (
     )
     return response
 }
+
+/**
+ * Permanently delete a user profile.
+ * @param handle user handle.
+ * @param ticketUrl delete request ticket url.
+ */
+export const deleteUser = async (
+    handle: string,
+    ticketUrl: string,
+): Promise<void> => xhrRequestAsync<{ ticketUrl: string }, void>({
+    data: { ticketUrl },
+    method: 'DELETE',
+    url: `${EnvironmentConfig.API.V6}/members/${encodeURIComponent(handle)}`,
+})

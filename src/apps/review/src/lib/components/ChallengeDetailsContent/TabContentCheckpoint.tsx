@@ -36,6 +36,7 @@ export const TabContentCheckpoint: FC<Props> = (props: Props) => {
         checkpointReviewerResourceIds,
         checkpointScreenerResourceIds,
         isPrivilegedRole,
+        hasCheckpointScreenerRole,
     }: useRoleProps = useRole()
 
     const myMemberIds = useMemo<Set<string>>(
@@ -78,7 +79,8 @@ export const TabContentCheckpoint: FC<Props> = (props: Props) => {
         () => {
             const baseRows = props.checkpoint ?? []
 
-            if (isPrivilegedRole || (isChallengeCompleted && hasPassedCheckpointScreeningThreshold)) {
+            const canSeeAll = isPrivilegedRole || hasCheckpointScreenerRole
+            if (canSeeAll || (isChallengeCompleted && hasPassedCheckpointScreeningThreshold)) {
                 return baseRows
             }
 
