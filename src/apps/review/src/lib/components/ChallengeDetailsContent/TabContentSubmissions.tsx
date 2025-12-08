@@ -92,7 +92,11 @@ export const TabContentSubmissions: FC<Props> = props => {
 
 
     const canViewSubmissions = useMemo(() => {
-        return canViewAllSubmissions || (isCompletedDesignChallenge && isSubmissionsViewable)
+        if (isCompletedDesignChallenge) {
+            return canViewAllSubmissions || (isCompletedDesignChallenge && isSubmissionsViewable)
+        }
+        
+        return true
     }, [isCompletedDesignChallenge, isSubmissionsViewable, canViewAllSubmissions])
 
     const submissionMetaById = useMemo(
