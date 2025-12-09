@@ -6,6 +6,7 @@ interface PageTitleProps {
 }
 
 const PageTitle: FC<PageTitleProps> = (props: PageTitleProps) => (
+    // @ts-expect-error: TS2786: Helmet cannot be used as a JSX component
     <Helmet>
         <title>{props.children}</title>
     </Helmet>
