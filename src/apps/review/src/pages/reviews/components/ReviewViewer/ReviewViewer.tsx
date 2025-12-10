@@ -27,7 +27,7 @@ import styles from './ReviewViewer.module.scss'
 const ReviewViewer: FC = () => {
     const navigate = useAppNavigate()
     const [searchParams] = useSearchParams()
-    const [respondToAppeals, setRespondToAppeals] = useState(searchParams.get("respondToAppeals") === 'true')
+    const [respondToAppeals, setRespondToAppeals] = useState(searchParams.get('respondToAppeals') === 'true')
     const {
         reviewId,
         setReviewStatus,

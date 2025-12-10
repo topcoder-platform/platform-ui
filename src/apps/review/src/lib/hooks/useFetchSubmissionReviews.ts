@@ -15,9 +15,10 @@ import {
 } from 'react'
 import { find, forEach, map } from 'lodash'
 import { toast } from 'react-toastify'
-import useSWR, { SWRResponse, mutate } from 'swr'
+import useSWR, { mutate, SWRResponse } from 'swr'
 
 import { handleError } from '~/apps/admin/src/lib/utils'
+import { EnvironmentConfig } from '~/config'
 
 import {
     AppealInfo,
@@ -56,7 +57,6 @@ import { ReviewItemComment } from '../models/ReviewItemComment.model'
 import { SUBMITTER } from '../../config/index.config'
 
 import { useRole, useRoleProps } from './useRole'
-import { EnvironmentConfig } from '~/config'
 
 const hasSubmitterReviewDetails = (review?: BackendReview): boolean => {
     if (!review) {
@@ -865,8 +865,9 @@ export function useFetchSubmissionReviews(reviewId: string = ''): useFetchSubmis
                         if (resourceId) {
                             // re-fetch appeals for this resourceId
                             mutate(`EnvironmentConfig.API.V6/appeals/resourceId/${resourceId}`)
-                            
+
                         }
+
                         if (reviewId) {
                             // re-fetch review data
                             mutate(`EnvironmentConfig.API.V6/reviews/${reviewId}`)
