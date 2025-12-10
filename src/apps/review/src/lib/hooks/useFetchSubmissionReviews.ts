@@ -862,12 +862,6 @@ export function useFetchSubmissionReviews(reviewId: string = ''): useFetchSubmis
                     setIsSavingAppealResponse(false)
                     // Revalidate SWR caches so other components using the raw SWR data update immediately
                     try {
-                        if (resourceId) {
-                            // re-fetch appeals for this resourceId
-                            mutate(`EnvironmentConfig.API.V6/appeals/resourceId/${resourceId}`)
-
-                        }
-
                         if (reviewId) {
                             // re-fetch review data
                             mutate(`EnvironmentConfig.API.V6/reviews/${reviewId}`)
