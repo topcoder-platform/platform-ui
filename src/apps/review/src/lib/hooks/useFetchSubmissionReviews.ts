@@ -15,7 +15,7 @@ import {
 } from 'react'
 import { find, forEach, map } from 'lodash'
 import { toast } from 'react-toastify'
-import useSWR, { SWRResponse } from 'swr'
+import useSWR, { SWRResponse, mutate } from 'swr'
 
 import { handleError } from '~/apps/admin/src/lib/utils'
 
@@ -56,6 +56,7 @@ import { ReviewItemComment } from '../models/ReviewItemComment.model'
 import { SUBMITTER } from '../../config/index.config'
 
 import { useRole, useRoleProps } from './useRole'
+import { EnvironmentConfig } from '~/config'
 
 const hasSubmitterReviewDetails = (review?: BackendReview): boolean => {
     if (!review) {
@@ -458,7 +459,7 @@ export function useFetchSubmissionReviews(reviewId: string = ''): useFetchSubmis
         data: appeals,
         error: fetchAppealsError,
     }: SWRResponse<AppealInfo[], Error> = useSWR<AppealInfo[], Error>(
-        `EnvironmentConfig.API.V6/appeals/resourceId/${resourceId}`,
+        `${EnvironmentConfig.API.V6}/appeals/resourceId/${resourceId}`,
         {
             fetcher: () => fetchAppeals(1, 100, resourceId),
             isPaused: () => !resourceId,
@@ -857,8 +858,23 @@ export function useFetchSubmissionReviews(reviewId: string = ''): useFetchSubmis
 
             setIsSavingAppealResponse(true)
             Promise.all(listRequest)
-                .then(() => {
+                .then(async () => {
                     setIsSavingAppealResponse(false)
+                    // Revalidate SWR caches so other components using the raw SWR data update immediately
+                    try {
+                        if (resourceId) {
+                            // re-fetch appeals for this resourceId
+                            mutate(`EnvironmentConfig.API.V6/appeals/resourceId/${resourceId}`, (prev: any) => ({ ...prev, status: "processing" }), false)
+                            
+                        }
+                        if (reviewId) {
+                            // re-fetch review data
+                            mutate(`EnvironmentConfig.API.V6/reviews/${reviewId}`, (prev: any) => ({ ...prev, status: "processing" }), false)
+                        }
+                    } catch (e) {
+                        // ignore mutate errors
+                    }
+
                     toast.success('Appeal response saved successfully!')
                     success()
                 })
@@ -867,7 +883,7 @@ export function useFetchSubmissionReviews(reviewId: string = ''): useFetchSubmis
                     handleError(e)
                 })
         },
-        [resourceId, reviewInfo, setUpdatedReviewInfo, updatedReviewInfo],
+        [resourceId, reviewInfo, setUpdatedReviewInfo, updatedReviewInfo, reviewId],
     )
 
     /**
