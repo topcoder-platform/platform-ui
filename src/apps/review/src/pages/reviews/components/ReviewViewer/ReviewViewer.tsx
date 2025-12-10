@@ -1,5 +1,6 @@
 import { mutate } from 'swr'
 import { FC, useCallback, useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 
 import { ChallengeLinksForAdmin } from '~/apps/review/src/lib/components/ChallengeLinksForAdmin'
 import { ScorecardViewer } from '~/apps/review/src/lib/components/Scorecard'
@@ -25,6 +26,8 @@ import styles from './ReviewViewer.module.scss'
 
 const ReviewViewer: FC = () => {
     const navigate = useAppNavigate()
+    const [searchParams] = useSearchParams()
+    const [respondToAppeals, setRespondToAppeals] = useState(searchParams.get("respondToAppeals") === 'true')
     const {
         reviewId,
         setReviewStatus,
@@ -205,8 +208,11 @@ const ReviewViewer: FC = () => {
     useEffect(() => {
         if (!canEditScorecard && isManagerEdit) {
             setIsManagerEdit(false)
+        } else if (!isManagerEdit && respondToAppeals) {
+            setIsManagerEdit(true)
+            setRespondToAppeals(false)
         }
-    }, [canEditScorecard, isManagerEdit])
+    }, [canEditScorecard, isManagerEdit, respondToAppeals])
 
     const toggleManagerEdit = useCallback(() => {
         setIsManagerEdit(prev => !prev)
