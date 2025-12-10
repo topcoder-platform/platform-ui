@@ -864,12 +864,12 @@ export function useFetchSubmissionReviews(reviewId: string = ''): useFetchSubmis
                     try {
                         if (resourceId) {
                             // re-fetch appeals for this resourceId
-                            mutate(`EnvironmentConfig.API.V6/appeals/resourceId/${resourceId}`, (prev: any) => ({ ...prev, status: "processing" }), false)
+                            mutate(`EnvironmentConfig.API.V6/appeals/resourceId/${resourceId}`)
                             
                         }
                         if (reviewId) {
                             // re-fetch review data
-                            mutate(`EnvironmentConfig.API.V6/reviews/${reviewId}`, (prev: any) => ({ ...prev, status: "processing" }), false)
+                            mutate(`EnvironmentConfig.API.V6/reviews/${reviewId}`)
                         }
                     } catch (e) {
                         // ignore mutate errors
