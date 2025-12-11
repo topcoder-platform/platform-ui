@@ -160,7 +160,7 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
     ])
 
     const visibleRows = useMemo<Screening[]>(
-        () => datas ?? [],
+        () => datas.filter(screening => screening.result === 'NO PASS') ?? [],
         [datas],
     )
 
