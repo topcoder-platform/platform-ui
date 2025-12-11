@@ -273,8 +273,8 @@ export const TableReviewForSubmitter: FC<TableReviewForSubmitterProps> = (props:
 
     const isSubmissionsViewable = useMemo(() => {
         if (!challengeInfo?.metadata?.length) return false
-            return challengeInfo.metadata.some(m => m.name === 'submissionsViewable' && String(m.value)
-                .toLowerCase() === 'true')
+        return challengeInfo.metadata.some(m => m.name === 'submissionsViewable' && String(m.value)
+            .toLowerCase() === 'true')
     }, [challengeInfo])
 
     const canViewSubmissions = useMemo(() => {
