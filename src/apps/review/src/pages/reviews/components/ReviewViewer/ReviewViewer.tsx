@@ -27,7 +27,6 @@ import styles from './ReviewViewer.module.scss'
 const ReviewViewer: FC = () => {
     const navigate = useAppNavigate()
     const [searchParams] = useSearchParams()
-    const [initialLoad, setInitialLoad] = useState(false)
     const {
         reviewId,
         setReviewStatus,
