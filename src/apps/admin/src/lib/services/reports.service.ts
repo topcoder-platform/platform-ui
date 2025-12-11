@@ -36,7 +36,7 @@ const buildReportUrl = (path: string): string => {
 }
 
 export const fetchReportsIndex = async (): Promise<ReportsIndexResponse> => (
-    xhrGetAsync<ReportsIndexResponse>(`${EnvironmentConfig.API.V6}/reports`)
+    xhrGetAsync<ReportsIndexResponse>(`${EnvironmentConfig.API.V6}/reports/directory`)
 )
 
 const downloadReportBlob = async (path: string, accept: string): Promise<Blob> => {
