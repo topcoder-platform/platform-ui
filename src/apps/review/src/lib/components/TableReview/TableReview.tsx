@@ -267,20 +267,20 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
 
     const aggregatedRows = useMemo<SubmissionRow[]>(() => {
         const rows = aggregatedSubmissionRows
-        .filter((aggregated) => {
-            const reviews = aggregated.reviews ?? []
-            const myReviewDetail = reviews.find(review => {
-                const resourceId = review.reviewInfo?.resourceId ?? review.resourceId
-                return resourceId ? myReviewerResourceIds.has(resourceId) : false
-            })
+            .filter(aggregated => {
+                const reviews = aggregated.reviews ?? []
+                const myReviewDetail = reviews.find(review => {
+                    const resourceId = review.reviewInfo?.resourceId ?? review.resourceId
+                    return resourceId ? myReviewerResourceIds.has(resourceId) : false
+                })
 
-            return !!myReviewDetail?.reviewId;
-        })
-        .map(aggregated => ({
-            ...(aggregated.submission ?? {}),
-            ...aggregated.submission,
-            aggregated,
-        })) as SubmissionRow[]
+                return !!myReviewDetail?.reviewId
+            })
+            .map(aggregated => ({
+                ...(aggregated.submission ?? {}),
+                ...aggregated.submission,
+                aggregated,
+            })) as SubmissionRow[]
 
         if (!restrictToLatest) {
             return rows
