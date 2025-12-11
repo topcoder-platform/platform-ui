@@ -843,10 +843,17 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
         () => hasIsLatestFlag(primarySubmissionInfos),
         [primarySubmissionInfos],
     )
-
+    const mobileScreenings = useMemo(() => props.screenings
+        .filter(screening => screening.reviewStatus !== 'PENDING' && screening.result === 'PASS'), [props.screenings])
     const filteredScreenings = useMemo(() => (
         props.screenings
-            .filter(screening => latestSubmissionIds.has(screening.submissionId))
+            .filter(screening => {
+                if (screening.reviewStatus !== 'PENDING') {
+                    return latestSubmissionIds.has(screening.submissionId) && screening.result === 'PASS'
+                }
+
+                return latestSubmissionIds.has(screening.submissionId)
+            })
     ), [props.screenings, latestSubmissionIds])
 
     const hasAnyScreeningAssignment = useMemo(
@@ -1217,7 +1224,7 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
             )}
         >
             {isTablet ? (
-                <TableMobile columns={columnsMobile} data={props.screenings} />
+                <TableMobile columns={columnsMobile} data={mobileScreenings} />
             ) : (
                 <Table
                     columns={columns}
