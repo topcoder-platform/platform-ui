@@ -20,7 +20,7 @@ export interface useRoleProps {
     hasCheckpointScreenerRole: boolean
     hasCheckpointReviewerRole: boolean
     hasScreenerRole: boolean
-    /** Indicates the user has at least one reviewer resource assignment. */
+    /** Indicates the user has at least one reviewer-eligible resource assignment. */
     hasReviewerRole: boolean
     hasApproverRole: boolean
     hasPostMortemReviewerRole: boolean
@@ -61,44 +61,6 @@ const useRole = (): useRoleProps => {
             ? myRoles
             : isTopcoderAdmin ? ['Topcoder Admin'] : []),
         [isTopcoderAdmin, myRoles],
-    )
-
-    // Get role for review flow
-    const actionChallengeRole = useMemo<ChallengeRole>(() => {
-        if (!challengeId) {
-            return ''
-        }
-
-        const normalizedRoles = [
-            ...myRoles.map(role => role.toLowerCase()),
-            ...(isTopcoderAdmin ? ['admin'] : []),
-        ]
-        const rolePriority: ChallengeRole[] = [
-            'Admin',
-            'Manager',
-            'Copilot',
-            'Reviewer',
-            'Submitter',
-        ]
-
-        const matchedRole = rolePriority.find(item => (
-            normalizedRoles.some(role => role.includes(item.toLowerCase()))
-        )) as ChallengeRole | undefined
-
-        if (matchedRole) {
-            return matchedRole
-        }
-
-        if (isTopcoderAdmin) {
-            return 'Admin'
-        }
-
-        return ''
-    }, [challengeId, isTopcoderAdmin, myRoles])
-
-    const isCopilot = useMemo(
-        () => actionChallengeRole === 'Copilot',
-        [actionChallengeRole],
     )
 
     const checkpointScreenerResourceIds = useMemo<Set<string>>(
@@ -168,6 +130,68 @@ const useRole = (): useRoleProps => {
         [myResources],
     )
 
+    const reviewerLikeResourceIds = useMemo(
+        () => {
+            const ids = new Set<string>()
+
+            checkpointReviewerResourceIds.forEach(id => ids.add(id))
+            checkpointScreenerResourceIds.forEach(id => ids.add(id))
+            screenerResourceIds.forEach(id => ids.add(id))
+            reviewerResourceIds.forEach(id => ids.add(id))
+            approverResourceIds.forEach(id => ids.add(id))
+            postMortemReviewerResourceIds.forEach(id => ids.add(id))
+
+            return ids
+        },
+        [
+            approverResourceIds,
+            checkpointReviewerResourceIds,
+            checkpointScreenerResourceIds,
+            postMortemReviewerResourceIds,
+            reviewerResourceIds,
+            screenerResourceIds,
+        ],
+    )
+
+    // Get role for review flow
+    const actionChallengeRole = useMemo<ChallengeRole>(() => {
+        if (!challengeId) {
+            return ''
+        }
+
+        const normalizedRoles = [
+            ...myRoles.map(role => role.toLowerCase()),
+            ...(isTopcoderAdmin ? ['admin'] : []),
+            ...(reviewerLikeResourceIds.size > 0 ? ['reviewer'] : []),
+        ]
+        const rolePriority: ChallengeRole[] = [
+            'Admin',
+            'Manager',
+            'Copilot',
+            'Reviewer',
+            'Submitter',
+        ]
+
+        const matchedRole = rolePriority.find(item => (
+            normalizedRoles.some(role => role.includes(item.toLowerCase()))
+        )) as ChallengeRole | undefined
+
+        if (matchedRole) {
+            return matchedRole
+        }
+
+        if (isTopcoderAdmin) {
+            return 'Admin'
+        }
+
+        return ''
+    }, [challengeId, isTopcoderAdmin, myRoles, reviewerLikeResourceIds.size])
+
+    const isCopilot = useMemo(
+        () => actionChallengeRole === 'Copilot',
+        [actionChallengeRole],
+    )
+
     const copilotReviewerResourceIds = useMemo<Set<string>>(
         () => {
             if (!isCopilot) {
@@ -202,8 +226,8 @@ const useRole = (): useRoleProps => {
     )
 
     const hasReviewerRole = useMemo(
-        () => reviewerResourceIds.size > 0,
-        [reviewerResourceIds],
+        () => reviewerLikeResourceIds.size > 0,
+        [reviewerLikeResourceIds],
     )
 
     const hasApproverRole = useMemo(
