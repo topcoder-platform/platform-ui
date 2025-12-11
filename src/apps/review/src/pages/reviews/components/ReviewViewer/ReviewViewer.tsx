@@ -27,7 +27,6 @@ import styles from './ReviewViewer.module.scss'
 const ReviewViewer: FC = () => {
     const navigate = useAppNavigate()
     const [searchParams] = useSearchParams()
-    const [respondToAppeals, setRespondToAppeals] = useState(searchParams.get('respondToAppeals') === 'true')
     const {
         reviewId,
         setReviewStatus,
@@ -43,7 +42,8 @@ const ReviewViewer: FC = () => {
     }: useRoleProps = useRole()
     const [showCloseConfirmation, setShowCloseConfirmation] = useState<boolean>(false)
     const [isChanged, setIsChanged] = useState(false)
-    const [isManagerEdit, setIsManagerEdit] = useState(false)
+    const respondToAppeals = searchParams.get('respondToAppeals') === 'true'
+    const [isManagerEdit, setIsManagerEdit] = useState(respondToAppeals)
 
     const {
         challengeInfo,
@@ -206,11 +206,8 @@ const ReviewViewer: FC = () => {
     ])
 
     useEffect(() => {
-        if (!canEditScorecard && isManagerEdit) {
+        if (!canEditScorecard && isManagerEdit && !respondToAppeals) {
             setIsManagerEdit(false)
-        } else if (!isManagerEdit && respondToAppeals) {
-            setIsManagerEdit(true)
-            setRespondToAppeals(false)
         }
     }, [canEditScorecard, isManagerEdit, respondToAppeals])
 
