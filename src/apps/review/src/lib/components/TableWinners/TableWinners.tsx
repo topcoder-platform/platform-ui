@@ -85,14 +85,14 @@ export const TableWinners: FC<Props> = (props: Props) => {
     }, [isCompletedDesignChallenge, isSubmissionsViewable, canViewAllSubmissions])
 
     const filterFunc = useCallback((submissions: ProjectResult[]): ProjectResult[] => submissions
-            .filter(submission => {
-                if (!canViewSubmissions) {
-                    return String(submission.userId) === String(loginUserInfo?.userId)
-                }
-    
-                return true
-            }), [canViewSubmissions, loginUserInfo?.userId])
-    
+        .filter(submission => {
+            if (!canViewSubmissions) {
+                return String(submission.userId) === String(loginUserInfo?.userId)
+            }
+
+            return true
+        }), [canViewSubmissions, loginUserInfo?.userId])
+
     const winnerData = filterFunc(datas)
 
     const reviewTabUrl = useMemo(() => {
