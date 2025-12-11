@@ -226,7 +226,6 @@ workflows:
                       branches:
                           only:
                               - dev
-                              - security
 
             - deployQa:
                   context: org-global
