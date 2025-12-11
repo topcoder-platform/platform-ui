@@ -310,14 +310,14 @@ export const TableReviewForSubmitter: FC<TableReviewForSubmitterProps> = (props:
         [mappingReviewAppeal, reviewers, submissionsForAggregation],
     )
 
-    const filterFunc = (submissions: SubmissionRow[]): SubmissionRow[] => submissions
+    const filterFunc = useCallback((submissions: SubmissionRow[]): SubmissionRow[] => submissions
         .filter(submission => {
             if (!canViewSubmissions) {
                 return String(submission.memberId) === String(loginUserInfo?.userId)
             }
 
             return true
-        })
+        }), [canViewSubmissions, loginUserInfo?.userId])
 
     const aggregatedSubmissionRows = useMemo<SubmissionRow[]>(
         () => filterFunc(aggregatedRows.map(row => ({
