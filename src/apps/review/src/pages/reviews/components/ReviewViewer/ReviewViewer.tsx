@@ -23,11 +23,13 @@ import { useReviewsContext } from '../../ReviewsContext'
 
 import { ReviewScorecardHeader } from './ReviewScorecardHeader'
 import styles from './ReviewViewer.module.scss'
+import { set } from 'lodash'
 
 const ReviewViewer: FC = () => {
     const navigate = useAppNavigate()
     const [searchParams] = useSearchParams()
     const [respondToAppeals, setRespondToAppeals] = useState(searchParams.get('respondToAppeals') === 'true')
+    const [initialLoad, setInitialLoad] = useState(false)
     const {
         reviewId,
         setReviewStatus,
@@ -208,11 +210,15 @@ const ReviewViewer: FC = () => {
     useEffect(() => {
         if (!canEditScorecard && isManagerEdit) {
             setIsManagerEdit(false)
-        } else if (!isManagerEdit && respondToAppeals) {
-            setIsManagerEdit(true)
-            setRespondToAppeals(false)
         }
-    }, [canEditScorecard, isManagerEdit, respondToAppeals])
+    }, [canEditScorecard, isManagerEdit])
+
+    useEffect(() => {
+        if (!initialLoad && respondToAppeals) {
+            setIsManagerEdit(true)
+            setInitialLoad(true)
+        }
+    }, [isManagerEdit, respondToAppeals, initialLoad])
 
     const toggleManagerEdit = useCallback(() => {
         setIsManagerEdit(prev => !prev)

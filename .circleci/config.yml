@@ -226,6 +226,7 @@ workflows:
                       branches:
                           only:
                               - dev
+                              - pm-3141_3
 
             - deployQa:
                   context: org-global
