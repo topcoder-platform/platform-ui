@@ -6,6 +6,7 @@ const CHALLENGE_DETAILS_SEGMENT = /(active-challenges|past-challenges)\/([^/]+)\
 export function getReviewRoute(
     submissionId: string,
     reviewId: string,
+    addRespondToAppeals?: boolean,
     currentPathname?: string,
 ): string {
     const encodedReviewId = encodeURIComponent(reviewId)
@@ -26,7 +27,9 @@ export function getReviewRoute(
                 ? `${prefix}/${match[1]}/${match[2]}`
                 : `/${match[1]}/${match[2]}`
 
-            return `${basePath}/reviews/${submissionId}?reviewId=${encodedReviewId}&respondToAppeals=true`
+            const respondToAppeals = addRespondToAppeals ? '&respondToAppeals=true' : ''
+
+            return `${basePath}/reviews/${submissionId}?reviewId=${encodedReviewId}${respondToAppeals}`
         }
     }
 

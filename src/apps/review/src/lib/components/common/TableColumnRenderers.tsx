@@ -522,6 +522,7 @@ export function renderScoreCell(
         canViewScorecard,
         viewOwnScorecardTooltip = VIEW_OWN_SCORECARD_TOOLTIP,
         getReviewUrl,
+        canRespondToAppeals,
     }: ScoreVisibilityConfig = configWithDefaults
 
     const reviewDetail = submission.aggregated?.reviews?.[reviewIndex]
@@ -585,7 +586,9 @@ export function renderScoreCell(
         )
     }
 
-    const reviewUrl = getReviewUrl ? getReviewUrl(reviewId) : getReviewRoute(submission.id, reviewId)
+    const reviewUrl = getReviewUrl
+        ? getReviewUrl(reviewId)
+        : getReviewRoute(submission.id, reviewId, canRespondToAppeals)
 
     return (
         <div className={styles.scoreReopenBlock}>
@@ -615,6 +618,7 @@ export function renderAppealsCell(
         canViewScorecard,
         viewOwnScorecardTooltip = VIEW_OWN_SCORECARD_TOOLTIP,
         getReviewUrl,
+        canRespondToAppeals,
     }: ScoreVisibilityConfig = configWithDefaults
 
     const reviewDetail = submission.aggregated?.reviews?.[reviewIndex]
@@ -668,7 +672,9 @@ export function renderAppealsCell(
         )
     }
 
-    const reviewUrl = getReviewUrl ? getReviewUrl(reviewId) : getReviewRoute(submission.id, reviewId)
+    const reviewUrl = getReviewUrl
+        ? getReviewUrl(reviewId)
+        : getReviewRoute(submission.id, reviewId, canRespondToAppeals)
 
     return (
         <Link
