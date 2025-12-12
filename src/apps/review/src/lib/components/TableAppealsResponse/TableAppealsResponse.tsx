@@ -319,10 +319,11 @@ export const TableAppealsResponse: FC<TableAppealsResponseProps> = (props: Table
     const scoreVisibilityConfig = useMemo<ScoreVisibilityConfig>(
         () => ({
             canDisplayScores: () => true,
+            canRespondToAppeals,
             canViewScorecard: true,
             isAppealsTab: false,
         }),
-        [],
+        [canRespondToAppeals],
     )
 
     const columns = useMemo<TableColumn<SubmissionRow>[]>(() => {
@@ -467,7 +468,7 @@ export const TableAppealsResponse: FC<TableAppealsResponseProps> = (props: Table
                                 >
                                     <Link
                                         className={styles.respondButton}
-                                        to={getReviewRoute(submission.id, reviewId)}
+                                        to={getReviewRoute(submission.id, reviewId, canRespondToAppeals)}
                                     >
                                         Respond to Appeals
                                     </Link>

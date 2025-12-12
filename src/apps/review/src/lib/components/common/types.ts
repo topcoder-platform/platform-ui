@@ -75,6 +75,8 @@ export interface ScoreVisibilityConfig {
     isAppealsTab?: boolean
     /** Optional function to build review detail URLs by ID. */
     getReviewUrl?: (reviewId: string) => string
+    /** Indicates whether the viewer can appeal to respond. */
+    canRespondToAppeals?: boolean
 }
 
 export type { AggregatedReviewDetail, AggregatedSubmissionReviews }
