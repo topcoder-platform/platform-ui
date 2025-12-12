@@ -31,6 +31,7 @@ interface ReviewManagerCommentProps {
 const ReviewManagerComment: FC<ReviewManagerCommentProps> = props => {
     const {
         isManagerEdit,
+        canAddManagerComment,
         isSavingManagerComment,
         addManagerComment,
     }: ScorecardViewerContextValue = useScorecardViewerContext()
@@ -131,7 +132,7 @@ const ReviewManagerComment: FC<ReviewManagerCommentProps> = props => {
                 </div>
             )}
 
-            {!showCommentForm && !comment && isManagerEdit && (
+            {!showCommentForm && !comment && isManagerEdit && canAddManagerComment && (
                 <button
                     type='button'
                     onClick={handleShowCommentForm}
