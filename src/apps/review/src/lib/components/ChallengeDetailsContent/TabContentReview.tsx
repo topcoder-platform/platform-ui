@@ -46,6 +46,10 @@ import { hasSubmitterPassedThreshold } from '../../utils/reviewScoring'
 interface Props {
     aiReviewers?: { aiWorkflowId: string }[]
     selectedTab: string
+    screeningOutcome: {
+        failingSubmissionIds: Set<string>;
+        passingSubmissionIds: Set<string>;
+    }
     reviews: SubmissionInfo[]
     submitterReviews: SubmissionInfo[]
     reviewMinimumPassingScore?: number | null
@@ -636,6 +640,7 @@ export const TabContentReview: FC<Props> = (props: Props) => {
         },
         [resolvedReviewsWithSubmitter],
     )
+
     const filteredSubmitterReviews = useMemo(
         () => {
             if (!resolvedSubmitterReviews.length) {
@@ -729,6 +734,7 @@ export const TabContentReview: FC<Props> = (props: Props) => {
         <TableReview
             aiReviewers={props.aiReviewers}
             datas={reviewRows}
+            screeningOutcome={props.screeningOutcome}
             isDownloading={props.isDownloading}
             downloadSubmission={props.downloadSubmission}
             mappingReviewAppeal={props.mappingReviewAppeal}
