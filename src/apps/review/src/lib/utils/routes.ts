@@ -9,7 +9,6 @@ export function getReviewRoute(
     addRespondToAppeals?: boolean,
     currentPathname?: string,
 ): string {
-    console.log('getReviewRoute called with:', addRespondToAppeals)
     const encodedReviewId = encodeURIComponent(reviewId)
     const pathname = currentPathname
         ?? (typeof window !== 'undefined' ? window.location.pathname : '')
