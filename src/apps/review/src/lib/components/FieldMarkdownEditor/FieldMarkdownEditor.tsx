@@ -135,7 +135,7 @@ const toggleStrategy = {
     },
     italic: (start: any, end: any) => {
         const startType = start.replace(/(\*|_)(?![\s\S]*(\*|_))/, '')
-        const endType = end.replace(/(\*|_)/, '')
+        const endType = end.replace(/(\*|_)/g, '')
         return { endType, startType }
     },
     strikethrough: (start: any, end: any) => {
