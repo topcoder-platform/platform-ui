@@ -266,21 +266,11 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
     const minimumPassingScoreByScorecardId = useScorecardPassingScores(scorecardIds)
 
     const aggregatedRows = useMemo<SubmissionRow[]>(() => {
-        const rows = aggregatedSubmissionRows
-            .filter(aggregated => {
-                const reviews = aggregated.reviews ?? []
-                const myReviewDetail = reviews.find(review => {
-                    const resourceId = review.reviewInfo?.resourceId ?? review.resourceId
-                    return resourceId ? myReviewerResourceIds.has(resourceId) : false
-                })
-
-                return !!myReviewDetail?.reviewId
-            })
-            .map(aggregated => ({
-                ...(aggregated.submission ?? {}),
-                ...aggregated.submission,
-                aggregated,
-            })) as SubmissionRow[]
+        const rows = aggregatedSubmissionRows.map(aggregated => ({
+            ...(aggregated.submission ?? {}),
+            ...aggregated.submission,
+            aggregated,
+        })) as SubmissionRow[]
 
         if (!restrictToLatest) {
             return rows
