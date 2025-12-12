@@ -226,7 +226,7 @@ workflows:
                       branches:
                           only:
                               - dev
-                              - pm-3141_3
+                              - revert-1373-pm-2573
 
             - deployQa:
                   context: org-global
