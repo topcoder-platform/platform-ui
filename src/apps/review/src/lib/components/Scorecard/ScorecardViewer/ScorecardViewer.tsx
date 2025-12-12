@@ -44,6 +44,7 @@ interface ScorecardViewerProps {
     isSavingAppeal?: boolean
     isSavingAppealResponse?: boolean
     isSavingManagerComment?: boolean
+    canAddManagerComment?: boolean
     setReviewStatus?: (status: ReviewCtxStatus) => void
     setActionButtons?: (buttons?: ReactNode) => void
     saveReviewInfo?: (
@@ -335,6 +336,7 @@ const ScorecardViewer: FC<ScorecardViewerProps> = props => (
     <ScorecardViewerContextProvider
         scorecard={props.scorecard}
         aiFeedbackItems={props.aiFeedback}
+        canAddManagerComment={props.canAddManagerComment}
         reviewInfo={props.reviewInfo}
         isEdit={props.isEdit}
         isManagerEdit={props.isManagerEdit}
