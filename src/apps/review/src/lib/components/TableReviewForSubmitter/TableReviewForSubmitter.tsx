@@ -18,9 +18,10 @@ import {
     ChallengeDetailContextModel,
     ChallengeInfo,
     MappingReviewAppeal,
+    ReviewAppContextModel,
     SubmissionInfo,
 } from '../../models'
-import { ChallengeDetailContext } from '../../contexts'
+import { ChallengeDetailContext, ReviewAppContext } from '../../contexts'
 import { TableWrapper } from '../TableWrapper'
 import { SubmissionHistoryModal } from '../SubmissionHistoryModal'
 import {
@@ -85,6 +86,7 @@ export const TableReviewForSubmitter: FC<TableReviewForSubmitterProps> = (props:
     const downloadSubmission: (submissionId: string) => void = props.downloadSubmission
     const isDownloading: IsRemovingType = props.isDownloading
     const mappingReviewAppeal: MappingReviewAppeal = props.mappingReviewAppeal
+    const { loginUserInfo }: ReviewAppContextModel = useContext(ReviewAppContext)
     const {
         challengeInfo,
         reviewers,
@@ -100,6 +102,7 @@ export const TableReviewForSubmitter: FC<TableReviewForSubmitterProps> = (props:
     }: UseSubmissionDownloadAccessResult = downloadAccess
     const {
         ownedMemberIds: ownedMemberIdsFromRole,
+        canViewAllSubmissions,
     }: UseRolePermissionsResult = useRolePermissions()
     const ownedMemberIds = useMemo<Set<string>>(() => {
         if (ownedMemberIdsFromRole.size) {
@@ -257,6 +260,31 @@ export const TableReviewForSubmitter: FC<TableReviewForSubmitterProps> = (props:
         [challengeInfo],
     )
 
+    const isCompletedDesignChallenge = useMemo(() => {
+        if (!challengeInfo) return false
+        const type = challengeInfo.track.name ? String(challengeInfo.track.name)
+            .toLowerCase() : ''
+        const status = challengeInfo.status ? String(challengeInfo.status)
+            .toLowerCase() : ''
+        return type === 'design' && (
+            status === 'completed'
+        )
+    }, [challengeInfo])
+
+    const isSubmissionsViewable = useMemo(() => {
+        if (!challengeInfo?.metadata?.length) return false
+        return challengeInfo.metadata.some(m => m.name === 'submissionsViewable' && String(m.value)
+            .toLowerCase() === 'true')
+    }, [challengeInfo])
+
+    const canViewSubmissions = useMemo(() => {
+        if (isCompletedDesignChallenge) {
+            return canViewAllSubmissions || isSubmissionsViewable
+        }
+
+        return true
+    }, [isCompletedDesignChallenge, isSubmissionsViewable, canViewAllSubmissions])
+
     const {
         canDisplayScores,
         isChallengeCompleted,
@@ -282,12 +310,21 @@ export const TableReviewForSubmitter: FC<TableReviewForSubmitterProps> = (props:
         [mappingReviewAppeal, reviewers, submissionsForAggregation],
     )
 
+    const filterFunc = useCallback((submissions: SubmissionRow[]): SubmissionRow[] => submissions
+        .filter(submission => {
+            if (!canViewSubmissions) {
+                return String(submission.memberId) === String(loginUserInfo?.userId)
+            }
+
+            return true
+        }), [canViewSubmissions, loginUserInfo?.userId])
+
     const aggregatedSubmissionRows = useMemo<SubmissionRow[]>(
-        () => aggregatedRows.map(row => ({
+        () => filterFunc(aggregatedRows.map(row => ({
             ...row.submission,
             aggregated: row,
-        })),
-        [aggregatedRows],
+        }))),
+        [aggregatedRows, filterFunc, canViewSubmissions, loginUserInfo?.userId],
     )
 
     const scorecardIds = useMemo<Set<string>>(() => {

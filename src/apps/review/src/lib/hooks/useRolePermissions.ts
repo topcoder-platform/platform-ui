@@ -18,10 +18,12 @@ import { useRole } from './useRole'
 export interface UseRolePermissionsResult {
     actionChallengeRole: ChallengeRole
     canManageCompletedReviews: boolean
+    canViewAllSubmissions: boolean
     hasCopilotRole: boolean
     hasReviewerRole: boolean
     hasSubmitterRole: boolean
     isAdmin: boolean
+    isProjectManager: boolean
     isCopilotWithReviewerAssignments: boolean
     ownedMemberIds: Set<string>
 }
@@ -38,6 +40,9 @@ export function useRolePermissions(): UseRolePermissionsResult {
     const {
         actionChallengeRole,
         hasReviewerRole,
+        hasApproverRole,
+        hasScreenerRole,
+        hasManagerRole,
         isCopilotWithReviewerAssignments,
     }: useRoleProps = useRole()
 
@@ -54,6 +59,18 @@ export function useRolePermissions(): UseRolePermissionsResult {
     const hasSubmitterRole = useMemo<boolean>(
         () => normalizedRoles.some(role => role.includes('submitter')),
         [normalizedRoles],
+    )
+
+    const isProjectManager = useMemo<boolean>(
+        () => (loginUserInfo?.roles?.some(
+            role => typeof role === 'string'
+                && role.toLowerCase() === UserRole.projectManager,
+        ) ?? false)
+            || normalizedRoles.some(role => role.includes('project manager')),
+        [
+            loginUserInfo?.roles,
+            normalizedRoles,
+        ],
     )
 
     const isAdmin = useMemo<boolean>(
@@ -82,14 +99,29 @@ export function useRolePermissions(): UseRolePermissionsResult {
         [hasCopilotRole, isAdmin],
     )
 
+    const canViewAllSubmissions = useMemo<boolean>(
+        () => (
+            isAdmin
+            || hasCopilotRole
+            || hasReviewerRole
+            || hasManagerRole
+            || hasScreenerRole
+            || hasApproverRole
+            || isProjectManager
+        ),
+        [hasCopilotRole, isAdmin, isProjectManager, hasReviewerRole, hasManagerRole, hasScreenerRole, hasApproverRole],
+    )
+
     return {
         actionChallengeRole,
         canManageCompletedReviews,
+        canViewAllSubmissions,
         hasCopilotRole,
         hasReviewerRole,
         hasSubmitterRole,
         isAdmin,
         isCopilotWithReviewerAssignments,
+        isProjectManager,
         ownedMemberIds,
     }
 }

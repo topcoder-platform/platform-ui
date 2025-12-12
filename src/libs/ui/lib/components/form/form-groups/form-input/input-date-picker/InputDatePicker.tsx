@@ -27,7 +27,7 @@ interface InputDatePickerProps {
     readonly maxTime?: Date | undefined
     readonly minDate?: Date | null | undefined
     readonly minTime?: Date | undefined
-    readonly minYear?: Date | null |undefined
+    readonly minYear?: Date | null | undefined
     readonly placeholder?: string
     readonly showMonthPicker?: boolean
     readonly showYearPicker?: boolean
@@ -151,6 +151,7 @@ const InputDatePicker: FC<InputDatePickerProps> = (props: InputDatePickerProps) 
             type='text'
             className={classNames(props.className, styles.container)}
         >
+            {/* @ts-expect-error: TS2786: DatePicker cannot be used as a JSX component */}
             <DatePicker
                 ref={datePickerRef}
                 customInput={<CustomInput stateHasFocus={stateHasFocus} datePickerRef={datePickerRef} />}

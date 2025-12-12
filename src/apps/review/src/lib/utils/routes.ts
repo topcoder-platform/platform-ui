@@ -26,7 +26,7 @@ export function getReviewRoute(
                 ? `${prefix}/${match[1]}/${match[2]}`
                 : `/${match[1]}/${match[2]}`
 
-            return `${basePath}/reviews/${submissionId}?reviewId=${encodedReviewId}`
+            return `${basePath}/reviews/${submissionId}?reviewId=${encodedReviewId}&respondToAppeals=true`
         }
     }
 

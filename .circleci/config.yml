@@ -226,14 +226,7 @@ workflows:
                       branches:
                           only:
                               - dev
-                              - LVT-256
-                              - CORE-635
-                              - feat/review
-                              - feat/system-admin
-                              - feat/v6
-                              - pm-2074_1
-                              - feat/ai-workflows
-                              - delete_user
+                              - pm-3141_3
 
             - deployQa:
                   context: org-global
