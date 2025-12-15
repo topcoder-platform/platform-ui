@@ -44,6 +44,7 @@ import type { SubmissionHistoryPartition } from '../../utils'
 import { TABLE_DATE_FORMAT } from '../../../config/index.config'
 import { CollapsibleAiReviewsRow } from '../CollapsibleAiReviewsRow'
 import { useRolePermissions, UseRolePermissionsResult } from '../../hooks'
+import { SUBMISSION_DOWNLOAD_RESTRICTION_MESSAGE } from '../../constants'
 
 import styles from './TabContentSubmissions.module.scss'
 
@@ -234,24 +235,13 @@ export const TabContentSubmissions: FC<Props> = props => {
 
     const filteredSubmissions = useMemo<BackendSubmission[]>(
         () => {
-
-            const filterFunc = (submissions: BackendSubmission[]): BackendSubmission[] => submissions
-                .filter(submission => {
-                    if (!canViewSubmissions) {
-                        return String(submission.memberId) === String(loginUserInfo?.userId)
-                    }
-
-                    return true
-                })
-            const filteredByUserId = filterFunc(latestBackendSubmissions)
-            const filteredByUserIdSubmissions = filterFunc(props.submissions)
             if (restrictToLatest && hasLatestFlag) {
                 return latestBackendSubmissions.length
-                    ? filteredByUserId
-                    : filteredByUserIdSubmissions
+                    ? latestBackendSubmissions
+                    : props.submissions
             }
 
-            return filteredByUserIdSubmissions
+            return props.submissions
         },
         [
             latestBackendSubmissions,
@@ -280,13 +270,21 @@ export const TabContentSubmissions: FC<Props> = props => {
                             ? undefined
                             : submission.virusScan
                         const failedScan = normalizedVirusScan === false
-                        const isRestricted = isRestrictedBase || failedScan
-                        const tooltipMessage = failedScan
+                        const canDownloadSubmission = (
+                            !canViewSubmissions && String(submission.memberId) === String(loginUserInfo?.userId)
+                        )
+                        const isRestricted = isRestrictedBase || failedScan || !canDownloadSubmission
+                        let tooltipMessage = failedScan
                             ? VIRUS_SCAN_FAILED_MESSAGE
                             : (
                                 getRestrictionMessageForMember(submission.memberId)
                                 ?? restrictionMessage
                             )
+
+                        if (!canDownloadSubmission) {
+                            tooltipMessage = SUBMISSION_DOWNLOAD_RESTRICTION_MESSAGE
+                        }
+
                         const isButtonDisabled = Boolean(
                             props.isDownloading[submission.id]
                             || isRestricted,

@@ -310,21 +310,16 @@ export const TableReviewForSubmitter: FC<TableReviewForSubmitterProps> = (props:
         [mappingReviewAppeal, reviewers, submissionsForAggregation],
     )
 
-    const filterFunc = useCallback((submissions: SubmissionRow[]): SubmissionRow[] => submissions
-        .filter(submission => {
-            if (!canViewSubmissions) {
-                return String(submission.memberId) === String(loginUserInfo?.userId)
-            }
-
-            return true
-        }), [canViewSubmissions, loginUserInfo?.userId])
+    const isSubmissionNotViewable = (submission: SubmissionRow): boolean => (
+        !canViewSubmissions && String(submission.memberId) !== String(loginUserInfo?.userId)
+    )
 
     const aggregatedSubmissionRows = useMemo<SubmissionRow[]>(
-        () => filterFunc(aggregatedRows.map(row => ({
+        () => aggregatedRows.map(row => ({
             ...row.submission,
             aggregated: row,
-        }))),
-        [aggregatedRows, filterFunc, canViewSubmissions, loginUserInfo?.userId],
+        })),
+        [aggregatedRows, canViewSubmissions, loginUserInfo?.userId],
     )
 
     const scorecardIds = useMemo<Set<string>>(() => {
@@ -371,8 +366,9 @@ export const TableReviewForSubmitter: FC<TableReviewForSubmitterProps> = (props:
         downloadSubmission,
         getRestrictionMessageForMember,
         isDownloading,
-        isSubmissionDownloadRestricted,
+        isSubmissionDownloadRestricted: isSubmissionDownloadRestricted || (!canViewSubmissions && !isOwned),
         isSubmissionDownloadRestrictedForMember,
+        isSubmissionNotViewable,
         ownedMemberIds,
         restrictionMessage,
         shouldRestrictSubmitterToOwnSubmission,
@@ -382,9 +378,11 @@ export const TableReviewForSubmitter: FC<TableReviewForSubmitterProps> = (props:
         isDownloading,
         isSubmissionDownloadRestricted,
         isSubmissionDownloadRestrictedForMember,
+        isSubmissionNotViewable,
         ownedMemberIds,
         restrictionMessage,
         shouldRestrictSubmitterToOwnSubmission,
+        canViewSubmissions,
     ])
 
     const columns = useMemo<TableColumn<SubmissionRow>[]>(() => {

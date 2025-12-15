@@ -21,6 +21,7 @@ import type {
     ReviewResult,
 } from '../../models'
 import { isReviewPhaseCurrentlyOpen } from '../../utils'
+import { SUBMISSION_DOWNLOAD_RESTRICTION_MESSAGE } from '../../constants'
 
 import {
     formatScoreDisplay,
@@ -50,6 +51,7 @@ export function renderSubmissionIdCell(
         shouldRestrictSubmitterToOwnSubmission,
         isSubmissionDownloadRestrictedForMember,
         getRestrictionMessageForMember,
+        isSubmissionNotViewable,
         isSubmissionDownloadRestricted,
         restrictionMessage,
         ownedMemberIds,
@@ -61,7 +63,9 @@ export function renderSubmissionIdCell(
         ? ownedMemberIds.has(submission.memberId)
         : false
     const isOwnershipRestricted = shouldRestrictSubmitterToOwnSubmission && !isOwnedSubmission
+    const isSubmissionNotAllowedToView = (isSubmissionNotViewable && isSubmissionNotViewable(submission))
     const isRestrictedForMember = isSubmissionDownloadRestrictedForMember(submission.memberId)
+        || isSubmissionNotAllowedToView
     const memberRestrictionMessage = getRestrictionMessageForMember(submission.memberId)
     const normalizedVirusScan = submission.isFileSubmission === false
         ? undefined
@@ -97,7 +101,7 @@ export function renderSubmissionIdCell(
         })
     }
 
-    const tooltipContent = failedScan
+    let tooltipContent = failedScan
         ? virusScanFailedMessage
         : isRestrictedForMember
             ? memberRestrictionMessage
@@ -106,6 +110,10 @@ export function renderSubmissionIdCell(
             : isOwnershipRestricted
                 ? downloadOwnSubmissionTooltip
                 : (isSubmissionDownloadRestricted && restrictionMessage) || undefined
+
+    if (isSubmissionNotAllowedToView) {
+        tooltipContent = SUBMISSION_DOWNLOAD_RESTRICTION_MESSAGE
+    }
 
     const downloadControl = isOwnershipRestricted ? (
         <span className={styles.textBlue}>
