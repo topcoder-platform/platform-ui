@@ -256,6 +256,7 @@ export const TableAppeals: FC<TableAppealsProps> = (props: TableAppealsProps) =>
                         ? ownedMemberIds.has(submissionOwnerId)
                         : false
                 },
+                canRespondToAppeals: isAdmin || hasReviewerRole,
                 canViewScorecard: canAccessScorecards,
                 isAppealsTab: true,
             }

@@ -112,9 +112,14 @@ export function findMetadataPhaseMatch(
             return { source: 'stringExact' }
         }
 
-        const escapedTarget = escapeRegexLiteral(target)
-            .replace(/ /g, '\\ ')
-        const sepInsensitive = new RegExp(`\\b${escapedTarget.replace(/\\ /g, '[-_\\s]+')}\\b`)
+        // Replace all sequences of space, underscore, or hyphen in the target with a placeholder
+        const WORDSEP_PLACEHOLDER = '__WORDSEP__'
+        const sepPattern = /[ \-_]+/g
+        const targetWithPlaceholder = target.replace(sepPattern, WORDSEP_PLACEHOLDER)
+        // Properly escape ALL regex metacharacters (including backslash), leaving the placeholder intact
+        const escapedTarget = escapeRegexLiteral(targetWithPlaceholder)
+            .replace(new RegExp(escapeRegexLiteral(WORDSEP_PLACEHOLDER), 'g'), '[-_\\s]+')
+        const sepInsensitive = new RegExp(`\\b${escapedTarget}\\b`)
         if (sepInsensitive.test(normalizedMetadata)) {
             return { source: 'stringBoundary' }
         }

@@ -272,6 +272,12 @@ const ReviewViewer: FC = () => {
                             isSavingAppeal={isSavingAppeal}
                             isSavingAppealResponse={isSavingAppealResponse}
                             isSavingManagerComment={isSavingManagerComment}
+                            canAddManagerComment={
+                                hasChallengeAdminRole
+                                || hasTopcoderAdminRole
+                                || hasChallengeManagerRole
+                                || hasChallengeCopilotRole
+                            }
                             saveReviewInfo={saveReviewInfo}
                             addAppeal={addAppeal}
                             addAppealResponse={addAppealResponse}

@@ -508,6 +508,7 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
                 selectedTab={props.selectedTab}
                 reviews={reviewTabReviews}
                 submitterReviews={reviewTabSubmitterReviews}
+                screeningOutcome={screeningOutcome}
                 reviewMinimumPassingScore={props.reviewMinimumPassingScore}
                 isLoadingReview={props.isLoadingSubmission}
                 isDownloading={isDownloadingSubmission}

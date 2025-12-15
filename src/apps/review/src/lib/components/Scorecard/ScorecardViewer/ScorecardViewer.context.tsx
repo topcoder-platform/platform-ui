@@ -22,6 +22,7 @@ export interface ScorecardViewerContextProps {
     children: ReactNode;
     scorecard: Scorecard | ScorecardInfo
     aiFeedbackItems?: AiFeedbackItem[]
+    canAddManagerComment?: boolean
     reviewInfo?: ReviewInfo
     isEdit?: boolean
     isManagerEdit?: boolean
@@ -66,6 +67,7 @@ export interface ScorecardViewerContextProps {
 
 export type ScorecardViewerContextValue = {
     aiFeedbackItems?: AiFeedbackItem[]
+    canAddManagerComment?: boolean
     toggledItems: {[key: string]: boolean}
     toggleItem: (id: string, toggle?: boolean) => void
     reviewInfo?: ReviewInfo
@@ -142,6 +144,7 @@ export const ScorecardViewerContextProvider: FC<ScorecardViewerContextProps> = p
         addAppealResponse: props.addAppealResponse,
         addManagerComment: props.addManagerComment,
         aiFeedbackItems: props.aiFeedbackItems,
+        canAddManagerComment: props.canAddManagerComment,
         doDeleteAppeal: props.doDeleteAppeal,
         form: props.isEdit ? reviewFormCtx.form : undefined,
         formErrors: props.isEdit ? reviewFormCtx.form.formState.errors : undefined,
@@ -161,6 +164,7 @@ export const ScorecardViewerContextProvider: FC<ScorecardViewerContextProps> = p
         touchedAllFields: reviewFormCtx.touchedAllFields,
     }), [
         props.aiFeedbackItems,
+        props.canAddManagerComment,
         props.reviewInfo,
         props.isEdit,
         props.isManagerEdit,
