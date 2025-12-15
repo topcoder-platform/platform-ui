@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marathon Match Tournament 2025 - Champions Reveal</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Loading/Intro Screen -->
+    <div id="intro-screen" class="intro-screen">
+        <div class="intro-content">
+            <div class="logo-container">
+                <div class="globe-trophy-container">
+                    <div class="globe">
+                        <div class="globe-sphere">
+                            <div class="globe-lines"></div>
+                            <div class="globe-lines"></div>
+                            <div class="globe-lines"></div>
+                            <div class="globe-lines"></div>
+                            <div class="globe-lines"></div>
+                        </div>
+                        <div class="trophy">🏆</div>
+                    </div>
+                </div>
+                <h1 class="intro-title">Marathon Match Tournament 2025</h1>
+            </div>
+            <p class="intro-subtitle">The champions are about to be revealed...</p>
+            <div class="loading-bar">
+                <div class="loading-progress"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content - Auto-Advancing Presentation -->
+    <div id="main-content" class="main-content hidden">
+        <!-- Hero Section -->
+        <section class="presentation-section hero-section" id="section-hero">
+            <div class="container">
+                <div class="hero-content">
+                    <h1 class="hero-title">
+                        <span class="text-line">The Marathon Match</span>
+                        <span class="text-line">Tournament Final</span>
+                        <span class="text-line highlight">Has Concluded!</span>
+                    </h1>
+                    <p class="hero-subtitle">After 24 hours of intense competition, the champions have emerged.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Problem Section -->
+        <section class="presentation-section problem-section" id="section-problem">
+            <div class="container">
+                <div class="problem-content">
+                    <div class="section-header">
+                        <h2>The Challenge</h2>
+                        <p class="section-subtitle">The problem that tested our finalists</p>
+                    </div>
+                    <div class="problem-card">
+                        <div class="problem-icon">🧩</div>
+                        <h3>Grid Puzzle Game</h3>
+                        <div class="problem-details">
+                            <p class="problem-summary">
+                                Finalists faced a challenging <strong>tile-matching puzzle</strong> on an N×N grid. 
+                                Each tile has 4 numbers (one per edge), and the goal is to place tiles so that 
+                                adjacent edges match. When two edges match with value <strong>k</strong>, you score 
+                                <strong>k³</strong> points. With limited discards and a hidden tile queue, competitors 
+                                had to balance strategy, timing, and optimization to maximize their score.
+                            </p>
+                            
+                            <div class="problem-animation-container">
+                                <canvas id="puzzle-animation" class="puzzle-animation"></canvas>
+                                <div class="animation-label">Example Solution Animation</div>
+                            </div>
+                            
+                            <div class="problem-features">
+                                <div class="feature-item">
+                                    <span class="feature-icon">🎯</span>
+                                    <div>
+                                        <strong>Objective</strong>
+                                        <p>Place tiles to match edges and maximize score</p>
+                                    </div>
+                                </div>
+                                <div class="feature-item">
+                                    <span class="feature-icon">⚡</span>
+                                    <div>
+                                        <strong>Scoring</strong>
+                                        <p>Matching edges with value <strong>k</strong> earns <strong>k³</strong> points</p>
+                                    </div>
+                                </div>
+                                <div class="feature-item">
+                                    <span class="feature-icon">🎲</span>
+                                    <div>
+                                        <strong>Complexity</strong>
+                                        <p>Grid size 4-16, hand size 1-N, up to 20 edge values</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="problem-credits">
+                                <p><strong>Problem Setter:</strong> dimkadimon</p>
+                                <p><strong>Problem Testers:</strong> JacoCronje and nika</p>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </section>
+
+        <!-- Finalists Section -->
+        <section class="presentation-section finalists-section" id="section-finalists">
+            <div class="container">
+                <div class="finalists-content">
+                    <div class="section-header">
+                        <h2>The Finalists</h2>
+                        <p class="section-subtitle">Elite competitors who made it to the final round</p>
+                    </div>
+                    <div id="finalists-grid" class="finalists-grid">
+                        <!-- Finalists will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Leaderboard Section -->
+        <section class="presentation-section leaderboard-transition-section" id="section-leaderboard">
+            <div class="container">
+                <div class="section-header">
+                    <h2>The Leaderboard</h2>
+                    <p class="section-subtitle">From provisional scores to final results</p>
+                </div>
+                
+                <div class="leaderboard-container">
+                    <div class="leaderboard-header">
+                        <div class="leaderboard-title-container">
+                            <h3 id="leaderboard-title" class="leaderboard-title">PROVISIONAL SCORES</h3>
+                            <div class="leaderboard-subtitle" id="leaderboard-subtitle">Calculated during the 24-hour challenge</div>
+                        </div>
+                        <div class="transition-indicator hidden" id="transition-indicator">
+                            <div class="transition-text">Transitioning to Final Scores...</div>
+                            <div class="transition-bar">
+                                <div class="transition-progress"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="leaderboard-table-wrapper">
+                        <table class="leaderboard-table" id="leaderboard-table">
+                            <thead>
+                                <tr>
+                                    <th class="rank-col">RANK</th>
+                                    <th class="member-col">MEMBER</th>
+                                    <th class="score-col">SCORE</th>
+                                    <th class="change-col hidden" id="change-header">CHANGE</th>
+                                </tr>
+                            </thead>
+                            <tbody id="leaderboard-body">
+                                <!-- Leaderboard rows will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Countdown to Reveal -->
+        <section class="presentation-section countdown-section" id="section-countdown">
+            <div class="container">
+                <div class="countdown-content">
+                    <h2>And the Champions Are...</h2>
+                    <div class="countdown-timer">
+                        <span class="countdown-number" id="countdown">3</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Podium Section -->
+        <section class="presentation-section podium-section" id="section-podium">
+            <div class="container">
+                <div class="podium-container">
+                    <!-- 2nd Place -->
+                    <div class="podium-place second-place reveal-podium-delay">
+                        <div class="podium-pedestal">
+                            <div class="podium-base second-base">
+                                <div class="podium-number">2</div>
+                                <div class="podium-trophy trophy-silver">🏆</div>
+                            </div>
+                            <div class="winner-card second-winner">
+                                <div class="winner-avatar second-avatar">
+                                    <div class="avatar-placeholder">🥈</div>
+                                </div>
+                                <div class="winner-info">
+                                    <h3 class="winner-name" id="second-name">Loading...</h3>
+                                    <p class="winner-country" id="second-country">-</p>
+                                    <div class="winner-score" id="second-score">-</div>
+                                </div>
+                                <div class="winner-badge second-badge">2nd</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 1st Place -->
+                    <div class="podium-place first-place reveal-podium">
+                        <div class="podium-pedestal">
+                            <div class="podium-base first-base">
+                                <div class="podium-number">1</div>
+                                <div class="crown">👑</div>
+                                <div class="podium-trophy trophy-gold">🏆</div>
+                            </div>
+                            <div class="winner-card first-winner">
+                                <div class="winner-avatar first-avatar">
+                                    <div class="avatar-placeholder">🥇</div>
+                                </div>
+                                <div class="winner-info">
+                                    <h3 class="winner-name" id="first-name">Loading...</h3>
+                                    <p class="winner-country" id="first-country">-</p>
+                                    <div class="winner-score" id="first-score">-</div>
+                                </div>
+                                <div class="winner-badge first-badge">CHAMPION</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3rd Place -->
+                    <div class="podium-place third-place reveal-podium-delay-2">
+                        <div class="podium-pedestal">
+                            <div class="podium-base third-base">
+                                <div class="podium-number">3</div>
+                                <div class="podium-trophy trophy-bronze">🏆</div>
+                            </div>
+                            <div class="winner-card third-winner">
+                                <div class="winner-avatar third-avatar">
+                                    <div class="avatar-placeholder">🥉</div>
+                                </div>
+                                <div class="winner-info">
+                                    <h3 class="winner-name" id="third-name">Loading...</h3>
+                                    <p class="winner-country" id="third-country">-</p>
+                                    <div class="winner-score" id="third-score">-</div>
+                                </div>
+                                <div class="winner-badge third-badge">3rd</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Celebration Message -->
+                <div class="celebration-message">
+                    <h2>Congratulations to All Finalists!</h2>
+                    <p>Your dedication, skill, and strategic thinking made this tournament unforgettable.</p>
+                    <div class="celebration-stats">
+                        <div class="stat-item">
+                            <div class="stat-number">24</div>
+                            <div class="stat-label">Hours</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number" id="total-finalists">-</div>
+                            <div class="stat-label">Finalists</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">1</div>
+                            <div class="stat-label">Champion</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+
