@@ -234,12 +234,19 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
         [myReviewerResourceIds],
     )
 
-    const filterScreeningPassedReviews = useCallback((submissions: SubmissionInfo[]): SubmissionInfo[] => {
-        return submissions.filter(submission => props.screeningOutcome.passingSubmissionIds.has(submission.id ?? ''))
-    }, [props.screeningOutcome.passingSubmissionIds])
+    const filterScreeningPassedReviews = useCallback(
+        (submissions: SubmissionInfo[]): SubmissionInfo[] => submissions.filter(
+            submission => props.screeningOutcome.passingSubmissionIds.has(submission.id ?? ''),
+        ),
+        [props.screeningOutcome.passingSubmissionIds],
+    )
 
     const submissionsForAggregation = useMemo<SubmissionInfo[]>(
-        () => (restrictToLatest ? filterScreeningPassedReviews(latestSubmissions) : filterScreeningPassedReviews(reviewPhaseDatas)),
+        () => (
+            restrictToLatest
+                ? filterScreeningPassedReviews(latestSubmissions)
+                : filterScreeningPassedReviews(reviewPhaseDatas)
+        ),
         [latestSubmissions, restrictToLatest, reviewPhaseDatas, filterScreeningPassedReviews],
     )
 
