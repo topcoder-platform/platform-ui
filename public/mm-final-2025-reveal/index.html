@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,6 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 </head>
+
 <body>
     <!-- Loading/Intro Screen -->
     <div id="intro-screen" class="intro-screen">
@@ -64,18 +66,18 @@
                         <h3>Grid Puzzle Game</h3>
                         <div class="problem-details">
                             <p class="problem-summary">
-                                Finalists faced a challenging <strong>tile-matching puzzle</strong> on an N×N grid. 
-                                Each tile has 4 numbers (one per edge), and the goal is to place tiles so that 
-                                adjacent edges match. When two edges match with value <strong>k</strong>, you score 
-                                <strong>k³</strong> points. With limited discards and a hidden tile queue, competitors 
+                                Finalists faced a challenging <strong>tile-matching puzzle</strong> on an N×N grid.
+                                Each tile has 4 numbers (one per edge), and the goal is to place tiles so that
+                                adjacent edges match. When two edges match with value <strong>k</strong>, you score
+                                <strong>k³</strong> points. With limited discards and a hidden tile queue, competitors
                                 had to balance strategy, timing, and optimization to maximize their score.
                             </p>
-                            
+
                             <div class="problem-animation-container">
                                 <canvas id="puzzle-animation" class="puzzle-animation"></canvas>
                                 <div class="animation-label">Example Solution Animation</div>
                             </div>
-                            
+
                             <div class="problem-features">
                                 <div class="feature-item">
                                     <span class="feature-icon">🎯</span>
@@ -88,7 +90,8 @@
                                     <span class="feature-icon">⚡</span>
                                     <div>
                                         <strong>Scoring</strong>
-                                        <p>Matching edges with value <strong>k</strong> earns <strong>k³</strong> points</p>
+                                        <p>Matching edges with value <strong>k</strong> earns <strong>k³</strong> points
+                                        </p>
                                     </div>
                                 </div>
                                 <div class="feature-item">
@@ -105,7 +108,7 @@
                             </div>
                         </div>
                     </div>
-            </div>
+                </div>
         </section>
 
         <!-- Finalists Section -->
@@ -130,12 +133,13 @@
                     <h2>The Leaderboard</h2>
                     <p class="section-subtitle">From provisional scores to final results</p>
                 </div>
-                
+
                 <div class="leaderboard-container">
                     <div class="leaderboard-header">
                         <div class="leaderboard-title-container">
                             <h3 id="leaderboard-title" class="leaderboard-title">PROVISIONAL SCORES</h3>
-                            <div class="leaderboard-subtitle" id="leaderboard-subtitle">Calculated during the 24-hour challenge</div>
+                            <div class="leaderboard-subtitle" id="leaderboard-subtitle">Calculated during the 24-hour
+                                challenge</div>
                         </div>
                         <div class="transition-indicator hidden" id="transition-indicator">
                             <div class="transition-text">Transitioning to Final Scores...</div>
@@ -144,7 +148,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="leaderboard-table-wrapper">
                         <table class="leaderboard-table" id="leaderboard-table">
                             <thead>
@@ -271,5 +275,5 @@
 
     <script src="script.js"></script>
 </body>
-</html>
 
+</html>
