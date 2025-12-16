@@ -72,6 +72,10 @@ export interface TableReviewProps {
     aiReviewers?: { aiWorkflowId: string }[]
     className?: string
     datas: SubmissionInfo[]
+    screeningOutcome: {
+        failingSubmissionIds: Set<string>;
+        passingSubmissionIds: Set<string>;
+    }
     isDownloading: IsRemovingType
     downloadSubmission: (submissionId: string) => void
     mappingReviewAppeal: MappingReviewAppeal
@@ -230,9 +234,20 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
         [myReviewerResourceIds],
     )
 
+    const filterScreeningPassedReviews = useCallback(
+        (submissions: SubmissionInfo[]): SubmissionInfo[] => submissions.filter(
+            submission => props.screeningOutcome.passingSubmissionIds.has(submission.id ?? ''),
+        ),
+        [props.screeningOutcome.passingSubmissionIds],
+    )
+
     const submissionsForAggregation = useMemo<SubmissionInfo[]>(
-        () => (restrictToLatest ? latestSubmissions : reviewPhaseDatas),
-        [latestSubmissions, restrictToLatest, reviewPhaseDatas],
+        () => (
+            restrictToLatest
+                ? filterScreeningPassedReviews(latestSubmissions)
+                : filterScreeningPassedReviews(reviewPhaseDatas)
+        ),
+        [latestSubmissions, restrictToLatest, reviewPhaseDatas, filterScreeningPassedReviews],
     )
 
     const aggregatedSubmissionRows = useMemo<AggregatedSubmissionReviews[]>(() => (

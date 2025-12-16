@@ -119,7 +119,7 @@ const ReviewManagerComment: FC<ReviewManagerCommentProps> = props => {
                     <div className={styles.content}>
                         <MarkdownReview value={comment} />
                     </div>
-                    {isManagerEdit && (
+                    {isManagerEdit && canAddManagerComment && (
                         <button
                             type='button'
                             onClick={handleShowCommentForm}

@@ -24,13 +24,30 @@ type PastRow = { id: string, description: string, handle: string, amount: string
 const formatCurrency = (amount: number | string, currency?: string): string => {
     const n = typeof amount === 'number' ? amount : Number(amount)
     if (Number.isNaN(n)) return String(amount)
-    const nf = new Intl.NumberFormat('en-US', {
-        currency: currency || 'USD',
-        maximumFractionDigits: 2,
-        minimumFractionDigits: 2,
-        style: 'currency',
-    })
-    return nf.format(n)
+
+    const normalizedCurrency = (currency || 'USD').toUpperCase()
+    if (normalizedCurrency === 'POINT') {
+        return `${n.toLocaleString('en-US', {
+            maximumFractionDigits: 2,
+            minimumFractionDigits: 0,
+        })} Points`
+    }
+
+    try {
+        const nf = new Intl.NumberFormat('en-US', {
+            currency: normalizedCurrency,
+            maximumFractionDigits: 2,
+            minimumFractionDigits: 2,
+            style: 'currency',
+        })
+        return nf.format(n)
+    } catch (err) {
+        // Fallback for any non-ISO currency codes
+        return `${normalizedCurrency} ${n.toLocaleString('en-US', {
+            maximumFractionDigits: 2,
+            minimumFractionDigits: 2,
+        })}`
+    }
 }
 
 const ordinal = (i: number): string => {
