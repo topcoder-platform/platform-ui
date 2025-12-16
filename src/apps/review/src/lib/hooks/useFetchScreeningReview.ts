@@ -703,7 +703,7 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
     }: SWRResponse<BackendReview[], Error> = useSWR<BackendReview[], Error>(
         challengeId && (reviewerIds.length || shouldForceReviewFetch)
             ? `reviewBaseUrl/reviews/${challengeId}/${reviewerKey}`
-            : null,
+            : undefined,
         {
             fetcher: () => fetchChallengeReviews(challengeId ?? ''),
         },
