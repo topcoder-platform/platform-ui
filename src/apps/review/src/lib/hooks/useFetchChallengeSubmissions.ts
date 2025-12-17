@@ -40,7 +40,7 @@ export function useFetchChallengeSubmissions(
         Error
     >(`reviewBaseUrl/submissions/${challengeId}`, {
         fetcher: async () => {
-            const results = await fetchSubmissions(1, 50, challengeId ?? '')
+            const results = await fetchSubmissions(1, 100, challengeId ?? '')
             return results
         },
         isPaused: () => !challengeId,
