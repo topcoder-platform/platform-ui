@@ -114,7 +114,10 @@ const highlightJson = (value: unknown): Array<string | JSX.Element> => {
         = /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(?:\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g
     let lastIndex = 0
 
-    for (const match of jsonString.matchAll(regex)) {
+    regex.lastIndex = 0
+    let match: RegExpExecArray | null
+    // eslint-disable-next-line no-cond-assign
+    while ((match = regex.exec(jsonString)) !== null) {
         const token = match[0]
         const index = match.index ?? 0
         if (index > lastIndex) {
@@ -546,7 +549,7 @@ export const ChallengeDetailsPage: FC = () => {
                                             name={`placement-${winner.id}`}
                                             label='Placement'
                                             type='number'
-                                            value={winner.placement}
+                                            value={`${winner.placement}`}
                                             onChange={event => handlePlacementChange(
                                                 winner.id,
                                                 event.target.value,

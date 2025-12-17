@@ -35,7 +35,6 @@ const ChallengeManagementPage: LazyLoadedComponent = lazyLoad(
 )
 const ChallengeDetailsPage: LazyLoadedComponent = lazyLoad(
     () => import('./challenge-management/ChallengeDetailsPage'),
-    'ChallengeDetailsPage',
 )
 const ManageUserPage: LazyLoadedComponent = lazyLoad(
     () => import('./challenge-management/ManageUserPage'),
