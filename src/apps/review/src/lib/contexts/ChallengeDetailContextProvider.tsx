@@ -5,7 +5,11 @@ import { FC, PropsWithChildren, useContext, useMemo } from 'react'
 import { useParams } from 'react-router-dom'
 
 import { convertBackendSubmissionToSubmissionInfo } from '../models'
-import type { ChallengeDetailContextModel, SubmissionInfo } from '../models'
+import type {
+    ChallengeDetailContextModel,
+    ReviewAppContextModel,
+    SubmissionInfo,
+} from '../models'
 import {
     useFetchChallengeInfo,
     useFetchChallengeInfoProps,
@@ -16,11 +20,13 @@ import {
 } from '../hooks'
 
 import { ChallengeDetailContext } from './ChallengeDetailContext'
+import { ReviewAppContext } from './ReviewAppContext'
 
 export const ChallengeDetailContextProvider: FC<PropsWithChildren> = props => {
     const { challengeId = '' }: { challengeId?: string } = useParams<{
         challengeId: string
     }>()
+    const { loginUserInfo }: ReviewAppContextModel = useContext(ReviewAppContext)
     // fetch challenge info
     const {
         challengeInfo,
@@ -37,10 +43,21 @@ export const ChallengeDetailContextProvider: FC<PropsWithChildren> = props => {
         isLoading: isLoadingChallengeResources,
         resourceMemberIdMapping,
     }: useFetchChallengeResourcesProps = useFetchChallengeResources(challengeId)
+    const submissionViewer = useMemo(
+        () => ({
+            roles: myRoles,
+            tokenRoles: loginUserInfo?.roles,
+            userId: loginUserInfo?.userId,
+        }),
+        [loginUserInfo?.roles, loginUserInfo?.userId, myRoles],
+    )
     const {
         challengeSubmissions,
         isLoading: isLoadingChallengeSubmissions,
-    }: useFetchChallengeSubmissionsProps = useFetchChallengeSubmissions(challengeId)
+    }: useFetchChallengeSubmissionsProps = useFetchChallengeSubmissions(
+        challengeId,
+        submissionViewer,
+    )
 
     const submissionInfos = useMemo<SubmissionInfo[]>(
         () => challengeSubmissions.map(convertBackendSubmissionToSubmissionInfo),
