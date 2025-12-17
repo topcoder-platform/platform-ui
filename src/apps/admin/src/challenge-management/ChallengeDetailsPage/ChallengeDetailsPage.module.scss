@@ -1,0 +1,181 @@
+.loading {
+    display: flex;
+    justify-content: center;
+    padding: 48px 0;
+
+    .spinner {
+        background: none;
+    }
+}
+
+.summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.summaryText {
+    flex: 1;
+    min-width: 280px;
+}
+
+.sectionLabel {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 12px;
+    color: #5b6472;
+    margin: 0 0 4px;
+}
+
+.challengeTitle {
+    margin: 0 0 8px;
+    font-size: 24px;
+    font-weight: 700;
+    color: #0b1b2b;
+}
+
+.metaRow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    color: #4b5563;
+    font-size: 14px;
+}
+
+.statusPill {
+    background: #ecfdf3;
+    color: #166534;
+    border-radius: 999px;
+    padding: 6px 10px;
+    font-weight: 600;
+}
+
+.meta {
+    background: #f3f4f6;
+    border-radius: 10px;
+    padding: 6px 10px;
+}
+
+.actionButtons {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.sectionCard {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.03);
+}
+
+.cardHeader {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.cardTitle {
+    margin: 4px 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.helperText {
+    margin: 0;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.statusControls {
+    max-width: 420px;
+}
+
+.cardActions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.winnerRows {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.winnerRow {
+    display: grid;
+    grid-template-columns: minmax(120px, 180px) 1fr auto;
+    align-items: end;
+    gap: 12px;
+
+    @media screen and (max-width: 900px) {
+        grid-template-columns: 1fr;
+    }
+}
+
+.placementInput {
+    min-width: 140px;
+}
+
+.handleSelectWrapper {
+    width: 100%;
+}
+
+.removeButton {
+    align-self: center;
+}
+
+.emptyState {
+    margin: 8px 0 0;
+    color: #6b7280;
+    font-style: italic;
+}
+
+.jsonContainer {
+    background: #0f172a;
+    border-radius: 12px;
+    padding: 12px;
+    border: 1px solid #111827;
+    overflow: auto;
+}
+
+.jsonPreview {
+    margin: 0;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #e5e7eb;
+    white-space: pre;
+    overflow: auto;
+}
+
+.jsonKey {
+    color: #93c5fd;
+}
+
+.jsonString {
+    color: #fcd34d;
+}
+
+.jsonNumber {
+    color: #a5b4fc;
+}
+
+.jsonBoolean {
+    color: #34d399;
+}
+
+.jsonNull {
+    color: #9ca3af;
+}

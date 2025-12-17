@@ -1,8 +1,28 @@
 export enum ChallengeStatus {
     New = 'NEW',
     Draft = 'DRAFT',
+    Approved = 'APPROVED',
     Active = 'ACTIVE',
     Completed = 'COMPLETED',
+    Deleted = 'DELETED',
+    Cancelled = 'CANCELLED',
+    CancelledFailedReview = 'CANCELLED_FAILED_REVIEW',
+    CancelledFailedScreening = 'CANCELLED_FAILED_SCREENING',
+    CancelledZeroSubmissions = 'CANCELLED_ZERO_SUBMISSIONS',
+    CancelledWinnerUnresponsive = 'CANCELLED_WINNER_UNRESPONSIVE',
+    CancelledClientRequest = 'CANCELLED_CLIENT_REQUEST',
+    CancelledRequirementsInfeasible = 'CANCELLED_REQUIREMENTS_INFEASIBLE',
+    CancelledZeroRegistrations = 'CANCELLED_ZERO_REGISTRATIONS',
+    CancelledPaymentFailed = 'CANCELLED_PAYMENT_FAILED',
+}
+
+export interface ChallengeWinner {
+    placement: number
+    handle?: string
+    userId?: number
+    prize?: number
+    submissionId?: string
+    type?: string
 }
 
 export type ChallengeType = {
@@ -43,6 +63,7 @@ export interface Challenge {
     numOfSubmissions: number
     /** Challenge groups. */
     groups: Array<object>
+    winners?: ChallengeWinner[]
     /** Challenge phases. */
     phases: Array<{ name: string; isOpen: boolean; scheduledEndDate: string }>
     tags: Array<string>

@@ -52,8 +52,19 @@ export const ChallengeManagementContextProvider: FC<PropsWithChildren> = props =
     const [challengeStatuses] = useState<ChallengeStatus[]>([
         ChallengeStatus.New,
         ChallengeStatus.Draft,
+        ChallengeStatus.Approved,
         ChallengeStatus.Active,
         ChallengeStatus.Completed,
+        ChallengeStatus.Cancelled,
+        ChallengeStatus.CancelledFailedReview,
+        ChallengeStatus.CancelledFailedScreening,
+        ChallengeStatus.CancelledZeroSubmissions,
+        ChallengeStatus.CancelledWinnerUnresponsive,
+        ChallengeStatus.CancelledClientRequest,
+        ChallengeStatus.CancelledRequirementsInfeasible,
+        ChallengeStatus.CancelledZeroRegistrations,
+        ChallengeStatus.CancelledPaymentFailed,
+        ChallengeStatus.Deleted,
     ])
     const [resourceRoles, setResourceRoles] = useState<ResourceRole[]>([])
     const [resourceRolesLoading, setResourceRolesLoading] = useState(false)

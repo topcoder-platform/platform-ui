@@ -5,6 +5,7 @@ import {
     PaginatedResponse,
     xhrGetAsync,
     xhrGetPaginatedAsync,
+    xhrPatchAsync,
     xhrPostAsync,
     xhrRequestAsync,
 } from '~/libs/core'
@@ -13,6 +14,8 @@ import {
     Challenge,
     ChallengeFilterCriteria,
     ChallengeResource,
+    ChallengeStatus,
+    ChallengeWinner,
     ChallengeTrack,
     ChallengeType,
     ResourceEmail,
@@ -138,3 +141,17 @@ export const addChallengeResource = async (data: {
 export const getChallengeById = async (
     id: Challenge['id'],
 ): Promise<Challenge> => xhrGetAsync<Challenge>(`${challengeBaseUrl}/challenges/${id}`)
+
+export const updateChallengeStatus = async (
+    id: Challenge['id'],
+    status: ChallengeStatus,
+): Promise<Challenge> => xhrPatchAsync(`${challengeBaseUrl}/challenges/${id}`, {
+    status,
+})
+
+export const updateChallengeWinners = async (
+    id: Challenge['id'],
+    winners: ChallengeWinner[],
+): Promise<Challenge> => xhrPatchAsync(`${challengeBaseUrl}/challenges/${id}`, {
+    winners,
+})
