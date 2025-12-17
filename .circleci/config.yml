@@ -226,6 +226,7 @@ workflows:
                       branches:
                           only:
                               - dev
+                              - challenge-management
 
             - deployQa:
                   context: org-global
