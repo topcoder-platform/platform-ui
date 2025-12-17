@@ -436,7 +436,16 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
         reviewers: challengeReviewers,
         resources,
         myResources,
+        myRoles,
     }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
+    const submissionViewer = useMemo(
+        () => ({
+            roles: myRoles,
+            tokenRoles: loginUserInfo?.roles,
+            userId: loginUserInfo?.userId,
+        }),
+        [loginUserInfo?.roles, loginUserInfo?.userId, myRoles],
+    )
 
     const challengeLegacy = (challengeInfo as unknown as {
         legacy?: {
@@ -451,7 +460,10 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
         deletedLegacySubmissionIds,
         deletedSubmissionIds,
         isLoading,
-    }: useFetchChallengeSubmissionsProps = useFetchChallengeSubmissions(challengeId)
+    }: useFetchChallengeSubmissionsProps = useFetchChallengeSubmissions(
+        challengeId,
+        submissionViewer,
+    )
 
     const visibleChallengeSubmissions = useMemo<BackendSubmission[]>(
         () => challengeSubmissions,

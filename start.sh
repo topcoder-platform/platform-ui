@@ -4,10 +4,10 @@
 
 export ESLINT_NO_DEV_ERRORS=true
 export HTTPS=true
-export HOST=local.topcoder-dev.com
-export REACT_APP_HOST_ENV=${REACT_APP_HOST_ENV:-dev}
+export SSL_CRT_FILE=/home/jmgasper/Documents/Git/v6/local.topcoder-dev.com.pem
+export SSL_KEY_FILE=/home/jmgasper/Documents/Git/v6/local.topcoder-dev.com-key.pem
 export PORT=443
-
+export HOST=local.topcoder-dev.com
 # if [[ ! -e ./.environments/.env.local ]]; then
 #     filename=.env.${REACT_APP_HOST_ENV:-dev}
 #     cp ./.environments/$filename ./.environments/.env.local
