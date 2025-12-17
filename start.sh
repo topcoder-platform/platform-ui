@@ -4,8 +4,6 @@
 
 export ESLINT_NO_DEV_ERRORS=true
 export HTTPS=true
-export SSL_CRT_FILE=/home/jmgasper/Documents/Git/v6/local.topcoder-dev.com.pem
-export SSL_KEY_FILE=/home/jmgasper/Documents/Git/v6/local.topcoder-dev.com-key.pem
 export PORT=443
 export HOST=local.topcoder-dev.com
 # if [[ ! -e ./.environments/.env.local ]]; then
