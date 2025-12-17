@@ -157,6 +157,27 @@ export const ChallengePhaseInfo: FC<Props> = (props: Props) => {
         return formatCurrency(taskPaymentFromPrizeSets.value, taskPaymentFromPrizeSets.currency)
     }, [taskPaymentFromPrizeSets, formatCurrency])
 
+    const placementPrizePayment = useMemo(
+        () => computePlacementPrizePayment({
+            formatCurrency,
+            isTask,
+            isTopgearTask,
+            loginUserId: loginUserInfo?.userId,
+            prizeSets: props.challengeInfo?.prizeSets,
+            variant: props.variant ?? 'active',
+            winners: props.challengeInfo?.winners,
+        }),
+        [
+            formatCurrency,
+            isTask,
+            isTopgearTask,
+            loginUserInfo?.userId,
+            props.challengeInfo?.prizeSets,
+            props.challengeInfo?.winners,
+            props.variant,
+        ],
+    )
+
     const walletUrl = useMemo(
         () => `https://wallet.${EnvironmentConfig.TC_DOMAIN}`,
         [],
@@ -164,23 +185,26 @@ export const ChallengePhaseInfo: FC<Props> = (props: Props) => {
 
     const formattedNonTaskPayment = useMemo(() => {
         const variant = props.variant ?? 'active'
-        if (!shouldShowPayment(
-            variant,
-            hasPayment,
-            Boolean(paymentAmount),
-            isLoadingPayment,
-            isTopgearTask,
-        )) {
+        if (variant !== 'past' || isTopgearTask) {
             return undefined
         }
 
-        return paymentAmount
+        if (hasPayment && paymentAmount && !isLoadingPayment) {
+            return paymentAmount
+        }
+
+        if (!isLoadingPayment && placementPrizePayment) {
+            return placementPrizePayment
+        }
+
+        return undefined
     }, [
         props.variant,
         hasPayment,
         paymentAmount,
         isLoadingPayment,
         isTopgearTask,
+        placementPrizePayment,
     ])
     const {
         phaseEndDateString: displayPhaseEndDateString,
@@ -359,6 +383,51 @@ export const ChallengePhaseInfo: FC<Props> = (props: Props) => {
 }
 
 export default ChallengePhaseInfo
+
+interface PlacementPrizePaymentParams {
+    variant: string
+    isTask: boolean
+    isTopgearTask: boolean
+    prizeSets?: ChallengeInfo['prizeSets']
+    winners?: ChallengeInfo['winners']
+    loginUserId?: number
+    formatCurrency: (amount: number | string, currency?: string) => string
+}
+
+function computePlacementPrizePayment(config: PlacementPrizePaymentParams): string | undefined {
+    if (config.variant !== 'past' || config.isTask || config.isTopgearTask) {
+        return undefined
+    }
+
+    const placementPrizeSet = config.prizeSets
+        ?.find(prizeSet => (prizeSet?.type || '').toUpperCase() === 'PLACEMENT')
+    const prizes = placementPrizeSet?.prizes
+    if (!Array.isArray(prizes) || !prizes.length) {
+        return undefined
+    }
+
+    const myPlacement = config.loginUserId
+        ? config.winners
+            ?.find(w => Number(w.userId) === Number(config.loginUserId))
+            ?.placement
+        : undefined
+
+    const prize = typeof myPlacement === 'number' && myPlacement > 0
+        ? prizes[myPlacement - 1]
+        : prizes[0]
+
+    if (!prize || typeof prize.value !== 'number') {
+        return undefined
+    }
+
+    const prizeCurrency = (prize as any)?.type
+    if ((String(prizeCurrency || ''))
+        .toUpperCase() !== 'POINT') {
+        return undefined
+    }
+
+    return config.formatCurrency(prize.value, prizeCurrency)
+}
 
 function createPhaseItems(config: {
     displayPhaseLabel: string
@@ -697,20 +766,4 @@ function getChallengeEndDateValue(data: any): string {
     }
 
     return 'N/A'
-}
-
-function shouldShowPayment(
-    variant: string,
-    hasPayment: boolean,
-    hasPaymentAmount: boolean,
-    isLoadingPayment: boolean,
-    isTopgearTask: boolean,
-): boolean {
-    return (
-        variant === 'past'
-        && hasPayment
-        && hasPaymentAmount
-        && !isLoadingPayment
-        && !isTopgearTask
-    )
 }
