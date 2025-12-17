@@ -236,9 +236,9 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
 
     const filterScreeningPassedReviews = useCallback(
         (submissions: SubmissionInfo[]): SubmissionInfo[] => submissions.filter(
-            submission => props.screeningOutcome.passingSubmissionIds.has(submission.id ?? ''),
+            submission => !props.screeningOutcome.failingSubmissionIds.has(submission.id ?? ''),
         ),
-        [props.screeningOutcome.passingSubmissionIds],
+        [props.screeningOutcome.failingSubmissionIds],
     )
 
     const submissionsForAggregation = useMemo<SubmissionInfo[]>(
