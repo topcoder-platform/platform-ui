@@ -1,5 +1,6 @@
 import {
     FC,
+    FocusEvent,
     useCallback,
     useContext,
     useEffect,
@@ -56,7 +57,7 @@ type EditableWinner = {
 type NormalizedWinner = {
     placement: number
     handle: string
-    userId: number | null
+    userId: number | undefined
 }
 
 const formatStatusLabel = (status?: string): string => {
@@ -68,9 +69,9 @@ const formatStatusLabel = (status?: string): string => {
         .join(' ')
 }
 
-const toNumberOrNull = (value?: number | string): number | null => {
+const toNumberOrUndefined = (value?: number | string): number | undefined => {
     const parsed = Number(value)
-    return Number.isFinite(parsed) ? parsed : null
+    return Number.isFinite(parsed) ? parsed : undefined
 }
 
 const normalizeWinners = (
@@ -79,14 +80,16 @@ const normalizeWinners = (
     .map(item => ({
         handle: item.handle ?? '',
         placement: Number(item.placement) || 0,
-        userId: toNumberOrNull(item.userId),
+        userId: toNumberOrUndefined(item.userId),
     }))
     .sort((a, b) => a.placement - b.placement)
 
 const createRowId = (seed?: { placement?: number; handle?: string; userId?: number | string }): string => {
     const safePlacement = seed?.placement ?? 'row'
     const safeHandle = seed?.handle ?? seed?.userId ?? 'new'
-    return `${safePlacement}-${safeHandle}-${Math.random().toString(16).slice(2)}`
+    return `${safePlacement}-${safeHandle}-${Math.random()
+        .toString(16)
+        .slice(2)}`
 }
 
 const toEditableWinners = (winners?: ChallengeWinner[]): EditableWinner[] => (
@@ -102,22 +105,23 @@ const toEditableWinners = (winners?: ChallengeWinner[]): EditableWinner[] => (
                     userId: winner.userId,
                 }),
                 placement: winner.placement,
-                userId: toNumberOrNull(winner.userId) ?? undefined,
+                userId: toNumberOrUndefined(winner.userId) ?? undefined,
             }))
         : []
 )
 
 const highlightJson = (value: unknown): Array<string | JSX.Element> => {
-    const jsonString = JSON.stringify(value ?? {}, null, 2) ?? ''
+    const jsonString = JSON.stringify(value ?? {}, undefined, 2) ?? ''
     const parts: Array<string | JSX.Element> = []
     const regex
         = /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(?:\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g
     let lastIndex = 0
 
     regex.lastIndex = 0
-    let match: RegExpExecArray | null
-    // eslint-disable-next-line no-cond-assign
-    while ((match = regex.exec(jsonString)) !== null) {
+    for (;;) {
+        const match = regex.exec(jsonString)
+        if (!match) break
+
         const token = match[0]
         const index = match.index ?? 0
         if (index > lastIndex) {
@@ -152,19 +156,22 @@ const highlightJson = (value: unknown): Array<string | JSX.Element> => {
     return parts
 }
 
+// eslint-disable-next-line complexity
 export const ChallengeDetailsPage: FC = () => {
     const { challengeId = '' }: { challengeId?: string } = useParams()
     const location = useLocation()
     const routeState: { previousChallengeListFilter?: ChallengeFilterCriteria }
         = (location.state as { previousChallengeListFilter?: ChallengeFilterCriteria })
         || {}
-    const { challengeStatuses } = useContext(ChallengeManagementContext)
+    const { challengeStatuses }: { challengeStatuses: ChallengeStatus[] } = useContext(
+        ChallengeManagementContext,
+    )
 
     const [challenge, setChallenge] = useState<Challenge>()
-    const [isLoading, setIsLoading] = useState(true)
-    const [statusOption, setStatusOption] = useState<SelectOption | null>(null)
-    const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
-    const [isSavingWinners, setIsSavingWinners] = useState(false)
+    const [isLoading, setIsLoading] = useState<boolean>(true)
+    const [statusOption, setStatusOption] = useState<SelectOption | undefined>()
+    const [isUpdatingStatus, setIsUpdatingStatus] = useState<boolean>(false)
+    const [isSavingWinners, setIsSavingWinners] = useState<boolean>(false)
     const [winnerRows, setWinnerRows] = useState<EditableWinner[]>([])
 
     const isMM = useMemo(() => checkIsMM(challenge), [challenge])
@@ -174,6 +181,7 @@ export const ChallengeDetailsPage: FC = () => {
         if (challenge?.status) {
             allStatuses.add(challenge.status)
         }
+
         return Array.from(allStatuses.values())
             .map(status => ({
                 label: formatStatusLabel(status),
@@ -212,6 +220,7 @@ export const ChallengeDetailsPage: FC = () => {
             setIsLoading(false)
             return
         }
+
         setIsLoading(true)
         try {
             const data = await getChallengeById(challengeId)
@@ -312,7 +321,59 @@ export const ChallengeDetailsPage: FC = () => {
         },
     )
 
-    const buildWinnerPayload = useCallback((): ChallengeWinner[] | null => {
+    const createPlacementChangeHandler = useCallback(
+        (id: string) => (event: FocusEvent<HTMLInputElement>) => {
+            handlePlacementChange(id, event.target.value)
+        },
+        [handlePlacementChange],
+    )
+
+    const createHandleSelectHandler = useCallback(
+        (id: string) => (option: SelectOption) => {
+            handleWinnerHandleChange(id, option)
+        },
+        [handleWinnerHandleChange],
+    )
+
+    const createRemoveWinnerHandler = useCallback(
+        (id: string) => () => {
+            handleRemoveWinner(id)
+        },
+        [handleRemoveWinner],
+    )
+
+    const placementChangeHandlers: Record<string, (event: FocusEvent<HTMLInputElement>) => void>
+        = useMemo(
+            () => Object.fromEntries(
+                winnerRows.map(row => [
+                    row.id,
+                    createPlacementChangeHandler(row.id),
+                ]),
+            ),
+            [createPlacementChangeHandler, winnerRows],
+        )
+
+    const handleSelectHandlers: Record<string, (option: SelectOption) => void> = useMemo(
+        () => Object.fromEntries(
+            winnerRows.map(row => [
+                row.id,
+                createHandleSelectHandler(row.id),
+            ]),
+        ),
+        [createHandleSelectHandler, winnerRows],
+    )
+
+    const removeWinnerHandlers: Record<string, () => void> = useMemo(
+        () => Object.fromEntries(
+            winnerRows.map(row => [
+                row.id,
+                createRemoveWinnerHandler(row.id),
+            ]),
+        ),
+        [createRemoveWinnerHandler, winnerRows],
+    )
+
+    const buildWinnerPayload = useCallback((): ChallengeWinner[] | undefined => {
         if (!winnerRows.length) {
             return []
         }
@@ -326,19 +387,18 @@ export const ChallengeDetailsPage: FC = () => {
         const hasMissingFields = payload.some(
             winner => !winner.handle
                 || winner.userId === undefined
-                || winner.userId === null
                 || !winner.placement
                 || winner.placement <= 0,
         )
         if (hasMissingFields) {
             toast.error('Placement, handle, and user ID are required for each winner.')
-            return null
+            return undefined
         }
 
         const placements = payload.map(winner => winner.placement)
         if (new Set(placements).size !== placements.length) {
             toast.error('Each placement must be unique.')
-            return null
+            return undefined
         }
 
         const normalized = payload.map(winner => ({
@@ -349,12 +409,12 @@ export const ChallengeDetailsPage: FC = () => {
 
         if (normalized.some(winner => Number.isNaN(winner.userId))) {
             toast.error('Winner user IDs must be numeric.')
-            return null
+            return undefined
         }
 
         if (normalized.some(winner => Number.isNaN(winner.placement))) {
             toast.error('Placements must be numeric.')
-            return null
+            return undefined
         }
 
         return normalized.sort((a, b) => a.placement - b.placement)
@@ -550,10 +610,7 @@ export const ChallengeDetailsPage: FC = () => {
                                             label='Placement'
                                             type='number'
                                             value={`${winner.placement}`}
-                                            onChange={event => handlePlacementChange(
-                                                winner.id,
-                                                event.target.value,
-                                            )}
+                                            onChange={placementChangeHandlers[winner.id]}
                                             disabled={isSavingWinners || !challenge}
                                             forceUpdateValue
                                             classNameWrapper={styles.placementInput}
@@ -568,12 +625,9 @@ export const ChallengeDetailsPage: FC = () => {
                                                         value: winner.userId
                                                             ?? winner.handle,
                                                     }
-                                                    : null
+                                                    : undefined
                                             }
-                                            onChange={option => handleWinnerHandleChange(
-                                                winner.id,
-                                                option,
-                                            )}
+                                            onChange={handleSelectHandlers[winner.id]}
                                             disabled={isSavingWinners || !challenge}
                                             classNameWrapper={styles.handleSelectWrapper}
                                         />
@@ -581,7 +635,7 @@ export const ChallengeDetailsPage: FC = () => {
                                             secondary
                                             variant='danger'
                                             size='sm'
-                                            onClick={() => handleRemoveWinner(winner.id)}
+                                            onClick={removeWinnerHandlers[winner.id]}
                                             disabled={isSavingWinners || !challenge}
                                             className={styles.removeButton}
                                         >

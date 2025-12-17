@@ -15,9 +15,9 @@ import {
     ChallengeFilterCriteria,
     ChallengeResource,
     ChallengeStatus,
-    ChallengeWinner,
     ChallengeTrack,
     ChallengeType,
+    ChallengeWinner,
     ResourceEmail,
     ResourceRole,
 } from '../models'

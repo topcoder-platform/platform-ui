@@ -1,1 +1,1 @@
-export { ChallengeDetailsPage, ChallengeDetailsPage as default } from './ChallengeDetailsPage'
+export { default as ChallengeDetailsPage } from './ChallengeDetailsPage'
