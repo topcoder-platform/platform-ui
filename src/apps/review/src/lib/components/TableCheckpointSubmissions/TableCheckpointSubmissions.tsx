@@ -32,9 +32,10 @@ import {
 import { ChallengeDetailContext, ReviewAppContext } from '../../contexts'
 import { updateReview } from '../../services'
 import { ConfirmModal } from '../ConfirmModal'
-import { useSubmissionDownloadAccess } from '../../hooks'
+import { useRolePermissions, UseRolePermissionsResult, useSubmissionDownloadAccess } from '../../hooks'
 import type { UseSubmissionDownloadAccessResult } from '../../hooks/useSubmissionDownloadAccess'
 import { CollapsibleAiReviewsRow } from '../CollapsibleAiReviewsRow'
+import { SUBMISSION_DOWNLOAD_RESTRICTION_MESSAGE } from '../../constants'
 
 import styles from './TableCheckpointSubmissions.module.scss'
 
@@ -65,6 +66,7 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
     const datas: Screening[] | undefined = props.datas
     const downloadSubmission = props.downloadSubmission
     const isDownloading = props.isDownloading
+    const { canViewAllSubmissions }: UseRolePermissionsResult = useRolePermissions()
 
     const {
         challengeInfo,
@@ -114,6 +116,31 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
         isSubmissionDownloadRestrictedForMember,
         getRestrictionMessageForMember,
     }: UseSubmissionDownloadAccessResult = useSubmissionDownloadAccess()
+
+    const isCompletedDesignChallenge = useMemo(() => {
+        if (!challengeInfo) return false
+        const type = challengeInfo.track.name ? String(challengeInfo.track.name)
+            .toLowerCase() : ''
+        const status = challengeInfo.status ? String(challengeInfo.status)
+            .toLowerCase() : ''
+        return type === 'design' && (
+            status === 'completed'
+        )
+    }, [challengeInfo])
+
+    const isSubmissionsViewable = useMemo(() => {
+        if (!challengeInfo?.metadata?.length) return false
+        return challengeInfo.metadata.some(m => m.name === 'submissionsViewable' && String(m.value)
+            .toLowerCase() === 'true')
+    }, [challengeInfo])
+
+    const canViewSubmissions = useMemo(() => {
+        if (isCompletedDesignChallenge) {
+            return canViewAllSubmissions || isSubmissionsViewable
+        }
+
+        return true
+    }, [isCompletedDesignChallenge, isSubmissionsViewable, canViewAllSubmissions])
 
     const openReopenDialog = useCallback(
         (entry: Screening, isOwnReview: boolean): void => {
@@ -211,10 +238,18 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
                         ? undefined
                         : data.virusScan
                     const failedScan = normalizedVirusScan === false
-                    const isRestrictedForRow = isRestrictedBase || failedScan
-                    const tooltipMessage = failedScan
+                    const isDownloadDisabled = (
+                        !canViewSubmissions && String(data.memberId) !== String(loginUserInfo?.userId)
+                    )
+                    const isRestrictedForRow = isRestrictedBase || failedScan || isDownloadDisabled
+                    let tooltipMessage = failedScan
                         ? 'Submission failed virus scan'
                         : (getRestrictionMessageForMember(data.memberId) ?? restrictionMessage)
+
+                    if (isDownloadDisabled) {
+                        tooltipMessage = SUBMISSION_DOWNLOAD_RESTRICTION_MESSAGE
+                    }
+
                     const isButtonDisabled = Boolean(
                         isDownloading[data.submissionId]
                         || isRestrictedForRow,
