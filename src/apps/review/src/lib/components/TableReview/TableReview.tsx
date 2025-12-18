@@ -430,6 +430,7 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
             isDownloading,
             isSubmissionDownloadRestricted,
             isSubmissionDownloadRestrictedForMember,
+            isSubmissionNotViewable,
             ownedMemberIds,
             restrictionMessage,
         ],

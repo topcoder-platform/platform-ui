@@ -270,10 +270,10 @@ export const TabContentSubmissions: FC<Props> = props => {
                             ? undefined
                             : submission.virusScan
                         const failedScan = normalizedVirusScan === false
-                        const canDownloadSubmission = (
+                        const cannotDownloadSubmission = (
                             !canViewSubmissions && String(submission.memberId) === String(loginUserInfo?.userId)
                         )
-                        const isRestricted = isRestrictedBase || failedScan || !canDownloadSubmission
+                        const isRestricted = isRestrictedBase || failedScan || !cannotDownloadSubmission
                         let tooltipMessage = failedScan
                             ? VIRUS_SCAN_FAILED_MESSAGE
                             : (
@@ -281,7 +281,7 @@ export const TabContentSubmissions: FC<Props> = props => {
                                 ?? restrictionMessage
                             )
 
-                        if (!canDownloadSubmission) {
+                        if (!cannotDownloadSubmission) {
                             tooltipMessage = SUBMISSION_DOWNLOAD_RESTRICTION_MESSAGE
                         }
 

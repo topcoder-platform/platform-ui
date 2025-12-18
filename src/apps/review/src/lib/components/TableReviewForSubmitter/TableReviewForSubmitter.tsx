@@ -319,7 +319,7 @@ export const TableReviewForSubmitter: FC<TableReviewForSubmitterProps> = (props:
             ...row.submission,
             aggregated: row,
         })),
-        [aggregatedRows, canViewSubmissions, loginUserInfo?.userId],
+        [aggregatedRows],
     )
 
     const scorecardIds = useMemo<Set<string>>(() => {
@@ -366,7 +366,7 @@ export const TableReviewForSubmitter: FC<TableReviewForSubmitterProps> = (props:
         downloadSubmission,
         getRestrictionMessageForMember,
         isDownloading,
-        isSubmissionDownloadRestricted: isSubmissionDownloadRestricted || (!canViewSubmissions && !isOwned),
+        isSubmissionDownloadRestricted,
         isSubmissionDownloadRestrictedForMember,
         isSubmissionNotViewable,
         ownedMemberIds,
