@@ -713,11 +713,11 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
         error: fetchChallengeReviewsError,
         isValidating: isValidatingChallengeReviews,
     }: SWRResponse<BackendReview[], Error> = useSWR<BackendReview[], Error>(
-        `reviewBaseUrl/reviews/${challengeId}/${reviewerKey}`,
+        challengeId && (reviewerIds.length || shouldForceReviewFetch)
+            ? `reviewBaseUrl/reviews/${challengeId}/${reviewerKey}`
+            : undefined,
         {
             fetcher: () => fetchChallengeReviews(challengeId ?? ''),
-            isPaused: () => !challengeId
-                || (!reviewerIds.length && !shouldForceReviewFetch),
         },
     )
 
