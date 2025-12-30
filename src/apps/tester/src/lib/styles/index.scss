@@ -1,0 +1,58 @@
+@import '@libs/ui/styles/includes';
+@import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+
+.borderButton {
+    border: var(--ButtonColor) solid 1px;
+    border-radius: 4px;
+    color: var(--ButtonColor);
+    font-family: "Nunito Sans", sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 22px;
+    padding: 8px 24px;
+    background-color: #FFFFFF;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+
+    &:hover {
+        background-color: var(--ButtonColor);
+        color: var(--invertButtonColor);
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+}
+
+.filledButton {
+    @extend .borderButton;
+    background-color: var(--ButtonColor);
+    color: var(--invertButtonColor);
+
+    &:hover {
+        background-color: var(--Actived);
+        border-color: var(--Actived);
+    }
+}
+
+body.tester-app {
+    --Primary: #545f71;
+    --FontColor: #0a0a0a;
+    --Actived: #00797A;
+    --Appeal: #E9ECEF;
+    --invertButtonColor: #fff;
+    --ButtonColor: #0B3D56;
+    --Secondary: #9ba5b7;
+    --Tertiary: #eef1f4;
+    --GrayBorder: #e2e8f0;
+    --Link: #0d61bf;
+    --GrayFontColor: #767676;
+    --RedError: #D34E3B;
+    --TableBorderColor: #A8A8A8;
+
+    background-color: #fff;
+    color: var(--FontColor);
+    font-family: "Nunito Sans", sans-serif;
+}

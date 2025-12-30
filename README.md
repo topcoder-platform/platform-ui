@@ -178,6 +178,17 @@ Otherwise, you will need to override the exception each time you load the site. 
 
 Each [Application](#applications-hosted-under-platform-ui) can have its own setup requirements. Please see each apps's [README](#applications-hosted-under-platform-ui) for further information.
 
+## Tester Backend Service
+
+The tester backend runs as a separate service in the `qa-tester-service-v6` repository.
+
+For frontend configuration, set `REACT_APP_TESTER_API_URL` to point to the tester service endpoint:
+- Local: `http://localhost:3001/api`
+- Dev: `https://qa-tester-service.topcoder-dev.com/api`
+- Prod: `https://qa-tester-service.topcoder.com/api`
+
+See the [Tester App README](./src/apps/tester/README.md) for more details.
+
 ## yarn Commands
 
 | Command                      | Description                                                                              |
@@ -553,6 +564,7 @@ The following summarizes the various [apps](#adding-a-new-platform-ui-applicatio
 - [Platform App](#platform-app)
 - [Dev Center](#dev-center)
 - [Earn](#earn)
+- [Tester](#tester)
 - [Gamification Admin](#gamification-admin)
 - [Learn](#learn)
 - [Self Service](#self-service)
@@ -578,6 +590,13 @@ The application that displays the list of challenges & gigs: opportunity feed
 
 [Earn README](./src/apps/earn/README.md)
 [Earn Routes](./src/apps/earn/src/earn.routes.tsx)
+
+## Tester
+
+Application that automates end-to-end challenge lifecycle testing with real-time monitoring and debugging.
+
+[Tester README](./src/apps/tester/README.md)
+[Tester Routes](./src/apps/tester/src/tester-app.routes.tsx)
 
 ## Gamification Admin
 

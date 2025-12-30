@@ -1,0 +1,36 @@
+.button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px 8px;
+    min-height: 32px;
+    transition: transform 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+
+    &:active {
+        transform: scale(0.98);
+    }
+}
+
+.icon {
+    width: 16px;
+    height: 16px;
+    display: block;
+}
+
+.copied {
+    border-color: #10B981;
+    color: #10B981;
+    background: #ECFDF5;
+}
+
+.srOnly {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+}

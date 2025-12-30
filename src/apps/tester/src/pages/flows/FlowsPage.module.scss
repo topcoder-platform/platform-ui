@@ -1,0 +1,118 @@
+@import '@libs/ui/styles/includes';
+
+.page {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.flowTabs {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.flowTab {
+    border: 1px solid transparent;
+    border-radius: 999px;
+    padding: 8px 16px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+
+    &:hover {
+        filter: brightness(0.97);
+    }
+}
+
+.flowTab--active {
+    font-weight: 700;
+}
+
+.section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.actionsCard {
+    background: #F6F7F9;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    h3 {
+        margin: 0;
+        font-family: "Inter", sans-serif;
+        font-size: 18px;
+        color: #0A0A0A;
+    }
+}
+
+.buttonGroup {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.label {
+    font-size: 16px;
+    font-weight: 700;
+    color: #0A0A0A;
+    font-family: "Nunito Sans", sans-serif;
+}
+
+.stepSelector {
+    appearance: none;
+    border: 1px solid #A8A8A8;
+    background: #FFFFFF url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M5.99994 6.72682C5.87772 6.72682 5.76314 6.70773 5.65619 6.66953C5.54925 6.63134 5.44994 6.56641 5.35828 6.47474L1.14161 2.25807C0.973554 2.09002 0.889526 1.87613 0.889526 1.61641C0.889526 1.35668 0.973554 1.1428 1.14161 0.97474C1.30967 0.806684 1.52355 0.722656 1.78328 0.722656C2.043 0.722656 2.25689 0.806684 2.42494 0.97474L5.99994 4.54974L9.57494 0.97474C9.743 0.806684 9.95689 0.722656 10.2166 0.722656C10.4763 0.722656 10.6902 0.806684 10.8583 0.97474C11.0263 1.1428 11.1104 1.35668 11.1104 1.61641C11.1104 1.87613 11.0263 2.09002 10.8583 2.25807L6.64161 6.47474C6.54994 6.56641 6.45064 6.63134 6.34369 6.66953C6.23675 6.70773 6.12216 6.72682 5.99994 6.72682Z' fill='%23767676'/%3E%3C/svg%3E") no-repeat right 12px center/16px 10px;
+    color: #0A0A0A;
+    padding: 8px 40px 8px 16px;
+    border-radius: 4px;
+    font-size: 16px;
+    line-height: 22px;
+    height: 38px;
+    font-family: "Nunito Sans", sans-serif;
+    max-width: 400px;
+}
+
+.formWrapper {
+    animation: slideIn 0.3s ease;
+}
+
+.loadingCard {
+    background: #F6F7F9;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    padding: 16px;
+    color: #767676;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 768px) {
+    .flowTabs {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding-bottom: 4px;
+    }
+
+    .actionsCard {
+        padding: 12px;
+    }
+}

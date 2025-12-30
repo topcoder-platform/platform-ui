@@ -1,0 +1,123 @@
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    z-index: 1000;
+}
+
+.modalContent {
+    width: min(800px, 100%);
+    max-height: 90vh;
+    overflow-y: auto;
+    background: #FFFFFF;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.modalHeader {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+
+    h3 {
+        margin: 0;
+        font-family: "Inter", sans-serif;
+    }
+}
+
+.subtitle {
+    margin: 4px 0 0;
+    color: #767676;
+    font-size: 14px;
+}
+
+.modalBody {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.requestList {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.requestCard {
+    background: #F6F7F9;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    align-items: flex-start;
+}
+
+.requestInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.requestTitle {
+    font-size: 15px;
+    font-weight: 600;
+    color: #0A0A0A;
+}
+
+.requestMeta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    font-size: 12px;
+    color: #767676;
+    align-items: center;
+}
+
+.statusBadge {
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: #E2E8F0;
+    color: #0A0A0A;
+    font-weight: 600;
+}
+
+.statusSuccess {
+    color: #10B981;
+    font-weight: 600;
+}
+
+.statusFailure {
+    color: #EF4444;
+    font-weight: 600;
+}
+
+.emptyState {
+    color: #767676;
+    font-size: 14px;
+}
+
+@media (max-width: 640px) {
+    .modal {
+        padding: 16px;
+    }
+
+    .modalContent {
+        padding: 16px;
+    }
+
+    .requestCard {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

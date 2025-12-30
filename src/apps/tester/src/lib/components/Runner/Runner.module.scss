@@ -1,0 +1,296 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.columns {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 24px;
+    align-items: start;
+}
+
+.column {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    min-width: 0;
+}
+
+.section {
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.sectionHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.heading {
+    margin: 0;
+    font-family: "Inter", sans-serif;
+    font-size: 20px;
+    color: #0A0A0A;
+}
+
+.subheading {
+    margin: 0 0 8px;
+    font-size: 16px;
+    color: #0A0A0A;
+    font-family: "Inter", sans-serif;
+}
+
+.progressWrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.progressMeta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.progressText {
+    font-size: 16px;
+    color: #0A0A0A;
+    font-family: "Nunito Sans", sans-serif;
+}
+
+.connectionStatus {
+    font-size: 14px;
+    font-weight: 600;
+    color: #767676;
+}
+
+.connectionStatus--connected {
+    color: #10B981;
+}
+
+.connectionStatus--connecting,
+.connectionStatus--reconnecting {
+    color: #3B82F6;
+}
+
+.connectionStatus--error {
+    color: #EF4444;
+}
+
+.stepsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+}
+
+.stepCard {
+    border: 2px solid #E2E8F0;
+    border-radius: 8px;
+    padding: 12px 16px;
+    background: #FFFFFF;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    text-align: left;
+    cursor: pointer;
+    transition: box-shadow 0.2s ease;
+
+    &:hover:not(:disabled) {
+        box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+    }
+
+    &:disabled {
+        cursor: default;
+        opacity: 0.7;
+    }
+}
+
+.stepCard--pending {
+    border-color: #E2E8F0;
+}
+
+.stepCard--running {
+    border-color: #3B82F6;
+}
+
+.stepCard--success {
+    border-color: #10B981;
+}
+
+.stepCard--error {
+    border-color: #EF4444;
+}
+
+.stepCard--skipped {
+    border-color: #94A3B8;
+}
+
+.stepMain {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.statusIndicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.stepTitle {
+    font-weight: 600;
+    color: #0A0A0A;
+}
+
+.stepMeta {
+    font-size: 12px;
+    color: #767676;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+.countBadge {
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: #EEF1F4;
+    color: #0A0A0A;
+    font-weight: 600;
+    font-size: 11px;
+}
+
+.errorBadge {
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: #FEE2E2;
+    color: #B91C1C;
+    font-weight: 600;
+    font-size: 11px;
+}
+
+.logsContainer {
+    background: #F6F7F9;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    padding: 16px;
+    max-height: 320px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.logEntry {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 14px;
+    color: #0A0A0A;
+    line-height: 1.4;
+}
+
+.logLevel {
+    font-weight: 700;
+    margin-right: 6px;
+}
+
+.logMessage {
+    font-weight: 500;
+}
+
+.logData {
+    margin-top: 6px;
+    padding: 8px 10px;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 6px;
+    font-size: 12px;
+    white-space: pre-wrap;
+}
+
+.emptyState {
+    color: #767676;
+    font-size: 14px;
+}
+
+.subText {
+    margin: 4px 0 0;
+    font-size: 13px;
+    color: #767676;
+}
+
+.copyRow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.tabsContainer {
+    border-bottom: 1px solid #E2E8F0;
+    padding-bottom: 8px;
+}
+
+.snapshotBody {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.snapshotItem {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.snapshotHeader {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #94A3B8;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.jsonDisplay {
+    background: #1E293B;
+    color: #E2E8F0;
+    border-radius: 8px;
+    padding: 16px;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 14px;
+    overflow-x: auto;
+    white-space: pre-wrap;
+}
+
+.loadingNotice {
+    color: #767676;
+    font-size: 13px;
+}
+
+.errorText {
+    font-size: 13px;
+    color: #D34E3B;
+}
+
+@media (max-width: 768px) {
+    .section {
+        padding: 16px;
+    }
+
+    .logsContainer {
+        max-height: 260px;
+    }
+}
