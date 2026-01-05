@@ -12,7 +12,7 @@ export enum AppSubdomain {
     copilots = 'copilots',
     admin = 'system-admin',
     review = 'review',
-    leaveTracker = 'leave-tracker',
+    calendar = 'calendar',
 }
 
 export enum ToolTitle {
@@ -29,7 +29,7 @@ export enum ToolTitle {
     copilots = 'Copilots',
     admin = 'Admin',
     review = 'Review',
-    leaveTracker = 'Leave Tracker',
+    calendar = 'Calendar',
 }
 
 export const PageSubheaderPortalId: string = 'page-subheader-portal-el'
