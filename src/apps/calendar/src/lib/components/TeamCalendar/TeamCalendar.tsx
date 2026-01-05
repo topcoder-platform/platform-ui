@@ -15,7 +15,9 @@ type TeamLeaveUser = TeamLeaveDate['usersOnLeave'][number]
 const getUserDisplayName = (user: TeamLeaveUser): string => {
     const firstName = user.firstName?.trim()
     const lastName = user.lastName?.trim()
-    const fullName = [firstName, lastName].filter(Boolean).join(' ')
+    const fullName = [firstName, lastName]
+        .filter(Boolean)
+        .join(' ')
 
     return fullName || user.handle || user.userId
 }
@@ -115,21 +117,20 @@ export const TeamCalendar: FC<TeamCalendarProps> = (props: TeamCalendarProps) =>
                         >
                             <span className={styles.dateNumber}>{date.getDate()}</span>
                             <div className={styles.userList}>
-                                {displayedUsers.length
-                                    ? displayedUsers.map((user, userIndex) => (
-                                          <div
-                                              key={`${dateKey}-${user.userId}-${userIndex.toString()}`}
-                                              className={classNames(
-                                                  styles.userItem,
-                                                  user.status === LeaveStatus.WIPRO_HOLIDAY
-                                                      ? styles.userHoliday
-                                                      : styles.userLeave,
-                                              )}
-                                          >
-                                              {getUserDisplayName(user)}
-                                          </div>
-                                      ))
-                                    : null}
+                                {displayedUsers.length > 0
+                                    && displayedUsers.map((user, userIndex) => (
+                                        <div
+                                            key={`${dateKey}-${user.userId}-${userIndex.toString()}`}
+                                            className={classNames(
+                                                styles.userItem,
+                                                user.status === LeaveStatus.WIPRO_HOLIDAY
+                                                    ? styles.userHoliday
+                                                    : styles.userLeave,
+                                            )}
+                                        >
+                                            {getUserDisplayName(user)}
+                                        </div>
+                                    ))}
                                 {overflowCount > 0 && (
                                     <div className={styles.overflowIndicator}>
                                         {`+${overflowCount} more`}
