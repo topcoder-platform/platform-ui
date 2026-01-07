@@ -1390,12 +1390,27 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
             return
         }
 
-        const totalSeconds = Math.ceil(totalSecondsFloat)
+        const currentEndMoment = (() => {
+            const endSource = extendTarget.actualEndDate ?? extendTarget.scheduledEndDate
+            if (endSource) {
+                const parsed = moment(endSource)
+                if (parsed.isValid()) {
+                    return parsed
+                }
+            }
 
-        const currentDuration = extendTarget.duration ?? 0
+            const currentDuration = extendTarget.duration
+            if (typeof currentDuration === 'number' && Number.isFinite(currentDuration)) {
+                return startMoment
+                    .clone()
+                    .add(Math.max(currentDuration, 0), 'seconds')
+            }
 
-        if (totalSeconds <= currentDuration) {
-            setExtendError('New end date must extend the phase beyond the current duration.')
+            return undefined
+        })()
+
+        if (currentEndMoment && !endMoment.isAfter(currentEndMoment)) {
+            setExtendError('New end date must extend the phase beyond the current end date.')
             return
         }
 
@@ -1404,8 +1419,8 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         const didSucceed = await handlePhaseUpdate(
             extendTarget.id,
             {
-                duration: totalSeconds,
                 isOpen: true,
+                scheduledEndDate: endMoment.toISOString(),
             },
             {
                 error: `Failed to extend ${extendTarget.name} phase.`,
