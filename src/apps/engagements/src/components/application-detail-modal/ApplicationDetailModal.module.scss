@@ -1,0 +1,99 @@
+.content {
+    display: grid;
+    gap: 20px;
+}
+
+.header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.title {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #0f172a;
+}
+
+.subTitle {
+    margin-top: 4px;
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+.badges {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.section {
+    display: grid;
+    gap: 10px;
+}
+
+.section h4 {
+    margin: 0;
+    font-size: 0.95rem;
+    color: #0f172a;
+}
+
+.metaGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+}
+
+.metaItem {
+    display: grid;
+    gap: 4px;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+}
+
+.metaLabel {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #64748b;
+}
+
+.metaValue {
+    font-size: 0.9rem;
+    color: #334155;
+    word-break: break-word;
+}
+
+.coverLetter {
+    white-space: pre-line;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 14px;
+    color: #334155;
+    line-height: 1.6;
+}
+
+.link {
+    color: #2563eb;
+    font-weight: 600;
+    word-break: break-word;
+}
+
+.linkList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 6px;
+}
+
+.emptyState {
+    padding: 24px;
+    text-align: center;
+    color: #64748b;
+}

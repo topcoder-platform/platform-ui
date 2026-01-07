@@ -1,0 +1,59 @@
+$breakpoint-mobile: 767px;
+$breakpoint-tablet: 1024px;
+$breakpoint-desktop: 1280px;
+
+@mixin mobile {
+    @media (max-width: $breakpoint-mobile) {
+        @content;
+    }
+}
+
+@mixin tablet {
+    @media (max-width: $breakpoint-tablet) {
+        @content;
+    }
+}
+
+@mixin desktop {
+    @media (min-width: $breakpoint-desktop) {
+        @content;
+    }
+}
+
+@mixin gridColumns($desktop, $tablet: 2, $mobile: 1, $gap: 24px) {
+    display: grid;
+    gap: $gap;
+    grid-template-columns: repeat($desktop, minmax(0, 1fr));
+
+    @include tablet {
+        grid-template-columns: repeat($tablet, minmax(0, 1fr));
+    }
+
+    @include mobile {
+        grid-template-columns: repeat($mobile, minmax(0, 1fr));
+    }
+}
+
+.spacingSm {
+    margin-bottom: 8px;
+}
+
+.spacingMd {
+    margin-bottom: 16px;
+}
+
+.spacingLg {
+    margin-bottom: 24px;
+}
+
+.textMuted {
+    color: #64748b;
+}
+
+.textStrong {
+    font-weight: 600;
+}
+
+.textSmall {
+    font-size: 0.85rem;
+}

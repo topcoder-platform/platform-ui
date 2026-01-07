@@ -1,0 +1,41 @@
+.badge {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+}
+
+.size-sm {
+    font-size: 0.7rem;
+    padding: 4px 8px;
+}
+
+.size-md {
+    font-size: 0.8rem;
+    padding: 6px 10px;
+}
+
+.size-lg {
+    font-size: 0.9rem;
+    padding: 8px 14px;
+}
+
+.status-open {
+    background: #dcfce7;
+    color: #166534;
+    border: 1px solid #86efac;
+}
+
+.status-pending_assignment {
+    background: #fef9c3;
+    color: #92400e;
+    border: 1px solid #fde047;
+}
+
+.status-closed {
+    background: #e2e8f0;
+    color: #475569;
+    border: 1px solid #cbd5e1;
+}
