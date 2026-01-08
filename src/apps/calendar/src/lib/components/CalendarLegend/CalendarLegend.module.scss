@@ -1,0 +1,42 @@
+.legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 20px;
+    align-items: center;
+    margin: 8px 0 16px;
+}
+
+.item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #4b5563;
+}
+
+.color {
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+    border: 1px solid var(--calendar-border);
+}
+
+.status-available {
+    background: var(--status-available);
+}
+
+.status-leave {
+    background: var(--status-leave);
+}
+
+.status-holiday {
+    background: var(--status-holiday);
+}
+
+.status-weekend {
+    background: var(--status-weekend);
+}
+
+.label {
+    white-space: nowrap;
+}
