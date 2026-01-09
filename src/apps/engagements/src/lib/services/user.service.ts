@@ -1,4 +1,5 @@
-import { profileGetLoggedInAsync, tokenGetAsync, UserProfile } from '~/libs/core'
+import type { UserProfile } from '~/libs/core'
+import { profileGetLoggedInAsync, tokenGetAsync } from '~/libs/core'
 
 interface ApplicationUserData {
     name: string
@@ -27,12 +28,12 @@ export const getUserDataForApplication = async (): Promise<ApplicationUserData> 
     try {
         const token = await tokenGetAsync()
         if (!token?.userId) {
-            return { name: '', email: '' }
+            return { email: '', name: '' }
         }
 
         const profile = await profileGetLoggedInAsync(token.handle)
         if (!profile) {
-            return { name: '', email: '' }
+            return { email: '', name: '' }
         }
 
         const nameParts = [profile.firstName, profile.lastName]
@@ -41,11 +42,11 @@ export const getUserDataForApplication = async (): Promise<ApplicationUserData> 
             .filter(Boolean)
 
         return {
-            name: nameParts.join(' '),
-            email: profile.email ?? '',
             address: formatAddress(profile),
+            email: profile.email ?? '',
+            name: nameParts.join(' '),
         }
     } catch (error) {
-        return { name: '', email: '' }
+        return { email: '', name: '' }
     }
 }

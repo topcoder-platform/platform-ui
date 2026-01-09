@@ -32,9 +32,11 @@ export const formatApplicationDate = (dateString: string): string => {
     if (days === 0) {
         return 'Today'
     }
+
     if (days === 1) {
         return '1 day ago'
     }
+
     if (days < 7) {
         return `${days} days ago`
     }
@@ -43,6 +45,7 @@ export const formatApplicationDate = (dateString: string): string => {
     if (weeks === 1) {
         return '1 week ago'
     }
+
     if (weeks < 4) {
         return `${weeks} weeks ago`
     }
@@ -51,6 +54,7 @@ export const formatApplicationDate = (dateString: string): string => {
     if (months === 1) {
         return '1 month ago'
     }
+
     return `${months} months ago`
 }
 
@@ -69,5 +73,8 @@ export const truncateText = (text: string, maxLength: number): string => {
     }
 
     const sliceLength = Math.max(0, maxLength - 3)
-    return `${trimmed.slice(0, sliceLength).trimEnd()}...`
+    const truncated = trimmed.slice(0, sliceLength)
+        .trimEnd()
+
+    return `${truncated}...`
 }

@@ -1,8 +1,8 @@
 import { Engagement } from '../models'
 
 const DATE_FORMATTER = new Intl.DateTimeFormat('en-US', {
-    month: 'short',
     day: 'numeric',
+    month: 'short',
     year: 'numeric',
 })
 
@@ -23,12 +23,15 @@ export const formatDuration = (duration: Engagement['duration']): string => {
     if (duration.startDate && duration.endDate) {
         return `${formatDate(duration.startDate)} - ${formatDate(duration.endDate)}`
     }
+
     if (duration.lengthInMonths) {
         return `${duration.lengthInMonths} month${duration.lengthInMonths > 1 ? 's' : ''}`
     }
+
     if (duration.lengthInWeeks) {
         return `${duration.lengthInWeeks} week${duration.lengthInWeeks > 1 ? 's' : ''}`
     }
+
     return 'Duration not specified'
 }
 
@@ -73,11 +76,14 @@ export const formatDeadlineCountdown = (deadline: string): string => {
     if (daysLeft < 0) {
         return 'Deadline passed'
     }
+
     if (daysLeft === 0) {
         return 'Deadline today'
     }
+
     if (daysLeft === 1) {
         return '1 day left'
     }
+
     return `${daysLeft} days left`
 }

@@ -243,3 +243,90 @@
     display: flex;
     gap: 12px;
 }
+
+.feedbackSection {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 20px;
+    display: grid;
+    gap: 16px;
+}
+
+.feedbackHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.feedbackHeader p {
+    margin: 4px 0 0 0;
+    color: #64748b;
+}
+
+.feedbackActions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.modalForm {
+    display: grid;
+    gap: 16px;
+}
+
+.modalLabel {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 0.85rem;
+    color: #475569;
+}
+
+.modalInput {
+    width: 100%;
+    border: 1px solid #cbd5f5;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 0.95rem;
+    color: #0f172a;
+    background: #ffffff;
+}
+
+.modalActions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.linkDisplay {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+}
+
+.linkInput {
+    flex: 1;
+    min-width: 220px;
+    border: 1px solid #cbd5f5;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 0.9rem;
+    color: #1f2937;
+    background: #ffffff;
+}
+
+.linkInput[readonly] {
+    background: #f8fafc;
+}
+
+.linkMeta {
+    font-size: 0.85rem;
+    color: #64748b;
+}

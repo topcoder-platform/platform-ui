@@ -8,7 +8,9 @@ interface CharacterCounterProps {
     maxLength: number
 }
 
-const CharacterCounter: FC<CharacterCounterProps> = ({ currentLength, maxLength }) => {
+const CharacterCounter: FC<CharacterCounterProps> = (props: CharacterCounterProps) => {
+    const currentLength = props.currentLength
+    const maxLength = props.maxLength
     const ratio = maxLength > 0 ? currentLength / maxLength : 0
     const isWarning = ratio >= 0.9 && ratio < 1
     const isLimit = ratio >= 1
@@ -21,7 +23,7 @@ const CharacterCounter: FC<CharacterCounterProps> = ({ currentLength, maxLength 
                 isLimit && styles.characterCounterLimit,
             )}
         >
-            {currentLength} / {maxLength} characters
+            {`${currentLength} / ${maxLength} characters`}
         </div>
     )
 }

@@ -1,6 +1,10 @@
-import { FC, useContext } from 'react'
+import type { FC } from 'react'
+import { useContext } from 'react'
 import { Outlet, Routes } from 'react-router-dom'
-import { routerContext, RouterContextData } from '~/libs/core'
+
+import type { RouterContextData } from '~/libs/core'
+import { routerContext } from '~/libs/core'
+
 import { toolTitle } from './engagements.routes'
 import { EngagementsSwr } from './lib'
 

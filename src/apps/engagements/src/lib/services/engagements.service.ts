@@ -1,6 +1,7 @@
 import { EnvironmentConfig } from '~/config'
-import { getAsync, getPaginatedAsync, PaginatedResponse } from '~/libs/core'
-import { Engagement, EngagementListResponse } from '../models'
+import { getAsync, getPaginatedAsync } from '~/libs/core'
+
+import type { Engagement, EngagementListResponse } from '../models'
 
 const BASE_URL = `${EnvironmentConfig.API.V6}/engagements`
 
@@ -25,6 +26,7 @@ export const getEngagements = async (
     if (params.skills?.length) {
         params.skills.forEach(skill => queryParams.append('skills', skill))
     }
+
     if (params.countries?.length) {
         params.countries.forEach(country => queryParams.append('countries', country))
     }
@@ -33,10 +35,10 @@ export const getEngagements = async (
     return getPaginatedAsync<Engagement[]>(url)
 }
 
-export const getEngagementByNanoId = async (nanoId: string): Promise<Engagement> => {
-    return getAsync<Engagement>(`${BASE_URL}/${nanoId}`)
-}
+export const getEngagementByNanoId = async (nanoId: string): Promise<Engagement> => (
+    getAsync<Engagement>(`${BASE_URL}/${nanoId}`)
+)
 
-export const getEngagementById = async (id: string): Promise<Engagement> => {
-    return getAsync<Engagement>(`${BASE_URL}/${id}`)
-}
+export const getEngagementById = async (id: string): Promise<Engagement> => (
+    getAsync<Engagement>(`${BASE_URL}/${id}`)
+)

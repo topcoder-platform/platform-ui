@@ -1,0 +1,101 @@
+.form {
+    display: grid;
+    gap: 20px;
+}
+
+.fieldGroup {
+    display: grid;
+    gap: 6px;
+}
+
+.fieldLabel {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #334155;
+}
+
+.inputField {
+    width: 100%;
+    border: 1px solid #cbd5f5;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 0.95rem;
+    color: #0f172a;
+    background: #ffffff;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.inputField:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.inputField:disabled {
+    background: #f1f5f9;
+    color: #94a3b8;
+    cursor: not-allowed;
+}
+
+.inputError {
+    border-color: #b91c1c;
+    box-shadow: 0 0 0 1px rgba(185, 28, 28, 0.15);
+}
+
+.textareaField {
+    min-height: 140px;
+    resize: vertical;
+}
+
+.fieldMeta {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.fieldError {
+    color: #b91c1c;
+    font-size: 0.8rem;
+}
+
+.characterCounter {
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+.characterCounterWarning {
+    color: #b45309;
+}
+
+.characterCounterLimit {
+    color: #b91c1c;
+}
+
+.submitError {
+    color: #b91c1c;
+    font-size: 0.85rem;
+}
+
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+}
+
+.submitLabel {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.submitSpinner {
+    width: 16px;
+    height: 16px;
+    background: transparent;
+    position: static;
+}
+
+.submitSpinner svg {
+    width: 16px;
+    height: 16px;
+}

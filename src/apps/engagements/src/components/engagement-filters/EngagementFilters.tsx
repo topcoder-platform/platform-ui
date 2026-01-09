@@ -37,7 +37,8 @@ interface EngagementFiltersProps {
 }
 
 const EngagementFilters: FC<EngagementFiltersProps> = (props: EngagementFiltersProps) => {
-    const { filters, onFilterChange } = props
+    const filters = props.filters
+    const onFilterChange = props.onFilterChange
     const [searchValue, setSearchValue] = useState<string>(filters.search ?? '')
     const countryLookup = useCountryLookup()
 
@@ -74,7 +75,12 @@ const EngagementFilters: FC<EngagementFiltersProps> = (props: EngagementFiltersP
         }
 
         const normalizedQuery = query.toLowerCase()
-        return countryOptions.filter(option => option.label?.toString().toLowerCase().includes(normalizedQuery))
+        return countryOptions.filter(option => {
+            const normalizedLabel = option.label?.toString()
+                .toLowerCase()
+
+            return normalizedLabel?.includes(normalizedQuery)
+        })
     }, [countryOptions])
 
     const selectedCountries = useMemo(() => (
@@ -87,8 +93,8 @@ const EngagementFilters: FC<EngagementFiltersProps> = (props: EngagementFiltersP
     const selectedSkills = useMemo(() => (
         (filters.skills ?? []).map(skill => ({
             id: skill,
-            name: skill,
             levels: [],
+            name: skill,
         }))
     ), [filters.skills])
 
@@ -100,12 +106,12 @@ const EngagementFilters: FC<EngagementFiltersProps> = (props: EngagementFiltersP
     ]), [])
 
     const searchInput: FormInputModel = useMemo(() => ({
-        name: 'search',
-        type: 'text',
-        label: 'Search',
-        placeholder: 'Search engagements',
-        value: searchValue,
         forceUpdateValue: true,
+        label: 'Search',
+        name: 'search',
+        placeholder: 'Search engagements',
+        type: 'text',
+        value: searchValue,
     } as FormInputModel & { forceUpdateValue?: boolean }), [searchValue])
 
     const searchFormDef: FormDefinition = useMemo(() => ({
@@ -145,8 +151,8 @@ const EngagementFilters: FC<EngagementFiltersProps> = (props: EngagementFiltersP
 
         onFilterChange({
             ...filters,
-            search: searchValue.trim() || undefined,
             countries,
+            search: searchValue.trim() || undefined,
         })
     }, [filters, onFilterChange, searchValue])
 
@@ -163,12 +169,14 @@ const EngagementFilters: FC<EngagementFiltersProps> = (props: EngagementFiltersP
     const handleClearFilters = useCallback(() => {
         setSearchValue('')
         onFilterChange({
+            countries: [],
             search: '',
             skills: [],
-            countries: [],
             status: EngagementStatus.OPEN,
         })
     }, [onFilterChange])
+
+    const handleSearchBlur = useCallback(() => undefined, [])
 
     return (
         <div className={styles.filters}>
@@ -177,7 +185,7 @@ const EngagementFilters: FC<EngagementFiltersProps> = (props: EngagementFiltersP
                     <FormGroups
                         formDef={searchFormDef}
                         inputs={[searchInput]}
-                        onBlur={() => undefined}
+                        onBlur={handleSearchBlur}
                         onChange={handleSearchChange}
                     />
                 </div>

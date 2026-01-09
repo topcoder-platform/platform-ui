@@ -1,3 +1,9 @@
+export enum EngagementStatus {
+    OPEN = 'open',
+    PENDING_ASSIGNMENT = 'pending_assignment',
+    CLOSED = 'closed',
+}
+
 export interface Engagement {
     id: string
     nanoId: string
@@ -18,12 +24,6 @@ export interface Engagement {
     createdAt: string
     updatedAt: string
     createdBy: string
-}
-
-export enum EngagementStatus {
-    OPEN = 'open',
-    PENDING_ASSIGNMENT = 'pending_assignment',
-    CLOSED = 'closed',
 }
 
 export interface EngagementListResponse {

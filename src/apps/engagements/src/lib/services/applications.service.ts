@@ -1,6 +1,7 @@
 import { EnvironmentConfig } from '~/config'
-import { getAsync, postAsync, getPaginatedAsync } from '~/libs/core'
-import {
+import { getAsync, getPaginatedAsync, postAsync } from '~/libs/core'
+
+import type {
     Application,
     ApplicationListResponse,
     CreateApplicationRequest,
@@ -18,12 +19,10 @@ export interface GetApplicationsParams {
 export const createApplication = async (
     engagementId: string,
     data: CreateApplicationRequest,
-): Promise<Application> => {
-    return postAsync<CreateApplicationRequest, Application>(
-        `${BASE_URL}/${engagementId}/applications`,
-        data,
-    )
-}
+): Promise<Application> => postAsync<CreateApplicationRequest, Application>(
+    `${BASE_URL}/${engagementId}/applications`,
+    data,
+)
 
 export const getMyApplications = async (
     params: GetApplicationsParams = {},
@@ -45,14 +44,14 @@ export const getMyApplications = async (
     return getPaginatedAsync<Application[]>(url)
 }
 
-export const getApplicationById = async (id: string): Promise<Application> => {
-    return getAsync<Application>(`${EnvironmentConfig.API.V6}/applications/${id}`)
-}
+export const getApplicationById = async (id: string): Promise<Application> => (
+    getAsync<Application>(`${EnvironmentConfig.API.V6}/applications/${id}`)
+)
 
 export const checkExistingApplication = async (
     engagementId: string,
-): Promise<{ hasApplied: boolean; application?: Application }> => {
-    return getAsync<{ hasApplied: boolean; application?: Application }>(
+): Promise<{ hasApplied: boolean; application?: Application }> => (
+    getAsync<{ hasApplied: boolean; application?: Application }>(
         `${BASE_URL}/${engagementId}/applications/check`,
     )
-}
+)

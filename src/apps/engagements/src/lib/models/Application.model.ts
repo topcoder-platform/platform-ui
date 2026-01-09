@@ -1,5 +1,12 @@
 import { Engagement } from './Engagement.model'
 
+export enum ApplicationStatus {
+    SUBMITTED = 'submitted',
+    UNDER_REVIEW = 'under_review',
+    ACCEPTED = 'accepted',
+    REJECTED = 'rejected',
+}
+
 export interface Application {
     id: string
     engagementId: string
@@ -17,13 +24,6 @@ export interface Application {
     createdAt: string
     updatedAt: string
     engagement?: Engagement
-}
-
-export enum ApplicationStatus {
-    SUBMITTED = 'submitted',
-    UNDER_REVIEW = 'under_review',
-    ACCEPTED = 'accepted',
-    REJECTED = 'rejected',
 }
 
 export interface ApplicationListResponse {

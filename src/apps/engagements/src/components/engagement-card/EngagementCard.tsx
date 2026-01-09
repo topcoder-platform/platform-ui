@@ -3,7 +3,7 @@ import { FC } from 'react'
 import { IconSolid } from '~/libs/ui'
 import { SkillPill } from '~/libs/shared'
 
-import { Engagement } from '../../lib/models'
+import type { Engagement } from '../../lib/models'
 import { formatDate, formatDuration, formatLocation } from '../../lib/utils'
 import { StatusBadge } from '../status-badge'
 
@@ -15,8 +15,11 @@ interface EngagementCardProps {
 }
 
 const EngagementCard: FC<EngagementCardProps> = (props: EngagementCardProps) => {
-    const { engagement, onClick } = props
+    const engagement = props.engagement
+    const onClick = props.onClick
     const skills = engagement.requiredSkills ?? []
+    const visibleSkills = skills.slice(0, 6)
+    const extraSkillsCount = Math.max(0, skills.length - 6)
     const deadlineText = engagement.applicationDeadline
         ? formatDate(engagement.applicationDeadline)
         : 'Deadline TBD'
@@ -45,22 +48,22 @@ const EngagementCard: FC<EngagementCardProps> = (props: EngagementCardProps) => 
                 </div>
             </div>
             <div className={styles.skills}>
-                {skills.length > 0 ? skills.slice(0, 6).map(skill => (
+                {skills.length > 0 ? visibleSkills.map(skill => (
                     <SkillPill
                         key={`${engagement.nanoId}-${skill}`}
-                        skill={{ name: skill, levels: [] }}
+                        skill={{ levels: [], name: skill }}
                         theme='presentation'
                     />
                 )) : (
                     <span className={styles.emptySkills}>No skills listed</span>
                 )}
-                {skills.length > 6 && (
-                    <span className={styles.moreSkills}>+{skills.length - 6} more</span>
+                {extraSkillsCount > 0 && (
+                    <span className={styles.moreSkills}>{`+${extraSkillsCount} more`}</span>
                 )}
             </div>
             <div className={styles.deadline}>
                 <IconSolid.CalendarIcon className={styles.metaIcon} />
-                <span>Apply by {deadlineText}</span>
+                <span>{`Apply by ${deadlineText}`}</span>
             </div>
         </button>
     )

@@ -20,9 +20,9 @@ interface FilterState {
 }
 
 const DEFAULT_FILTERS: FilterState = {
+    countries: [],
     search: '',
     skills: [],
-    countries: [],
     status: EngagementStatus.OPEN,
 }
 
@@ -31,47 +31,51 @@ const PER_PAGE = 12
 const EngagementListPage: FC = () => {
     const navigate = useNavigate()
     const location = useLocation()
-    const { isLoggedIn } = useProfileContext()
+    const profileContext = useProfileContext()
+    const isLoggedIn = profileContext.isLoggedIn
 
     const [engagements, setEngagements] = useState<Engagement[]>([])
     const [loading, setLoading] = useState<boolean>(false)
-    const [error, setError] = useState<string | null>(null)
+    const [error, setError] = useState<string | undefined>(undefined)
     const [page, setPage] = useState<number>(1)
     const [totalPages, setTotalPages] = useState<number>(1)
     const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS)
-    const [redirectMessage, setRedirectMessage] = useState<string | null>(null)
+    const [redirectMessage, setRedirectMessage] = useState<string | undefined>(undefined)
     const requestIdRef = useRef(0)
 
     useEffect(() => {
-        const state = location.state as { engagementError?: string } | null
+        const state = location.state as { engagementError?: string } | undefined
         if (state?.engagementError) {
             setRedirectMessage(state.engagementError)
-            navigate(location.pathname, { replace: true, state: {} })
+            navigate(location.pathname, { replace: true, state: undefined })
         }
     }, [location.pathname, location.state, navigate])
 
     const fetchEngagements = useCallback(async (): Promise<void> => {
-        const requestId = ++requestIdRef.current
+        requestIdRef.current += 1
+        const requestId = requestIdRef.current
         setLoading(true)
-        setError(null)
+        setError(undefined)
         try {
             const response = await getEngagements({
+                countries: filters.countries,
                 page,
                 perPage: PER_PAGE,
                 search: filters.search || undefined,
                 skills: filters.skills,
-                countries: filters.countries,
                 status: filters.status,
             })
             if (requestId !== requestIdRef.current) {
                 return
             }
+
             setEngagements(response.data)
             setTotalPages(response.totalPages || 1)
         } catch (err) {
             if (requestId !== requestIdRef.current) {
                 return
             }
+
             setError('Unable to load engagement opportunities. Please try again.')
         } finally {
             if (requestId === requestIdRef.current) {
@@ -93,9 +97,12 @@ const EngagementListPage: FC = () => {
         setPage(nextPage)
     }, [])
 
-    const handleCardClick = useCallback((nanoId: string) => {
-        navigate(`${rootRoute}/${nanoId}`)
-    }, [navigate])
+    const handleCardClick = useCallback(
+        (nanoId: string) => (): void => {
+            navigate(`${rootRoute}/${nanoId}`)
+        },
+        [navigate],
+    )
 
     const handleRetry = useCallback(() => {
         fetchEngagements()
@@ -156,7 +163,7 @@ const EngagementListPage: FC = () => {
                         <EngagementCard
                             key={engagement.nanoId}
                             engagement={engagement}
-                            onClick={() => handleCardClick(engagement.nanoId)}
+                            onClick={handleCardClick(engagement.nanoId)}
                         />
                     ))}
                 </div>

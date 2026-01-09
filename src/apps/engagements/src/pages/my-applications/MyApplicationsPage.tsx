@@ -24,16 +24,17 @@ const PER_PAGE = APPLICATIONS_PER_PAGE
 
 const MyApplicationsPage: FC = () => {
     const navigate = useNavigate()
-    const { isLoggedIn } = useProfileContext()
+    const profileContext = useProfileContext()
+    const isLoggedIn = profileContext.isLoggedIn
 
     const [applications, setApplications] = useState<Application[]>([])
     const [loading, setLoading] = useState<boolean>(false)
-    const [error, setError] = useState<string | null>(null)
+    const [error, setError] = useState<string | undefined>(undefined)
     const [page, setPage] = useState<number>(1)
     const [totalPages, setTotalPages] = useState<number>(1)
     const [activeTab, setActiveTab] = useState<ApplicationsTab>('active')
     const [selectedStatus, setSelectedStatus] = useState<StatusFilterValue>('all')
-    const [selectedApplication, setSelectedApplication] = useState<Application | null>(null)
+    const [selectedApplication, setSelectedApplication] = useState<Application | undefined>(undefined)
     const [modalOpen, setModalOpen] = useState<boolean>(false)
 
     const tabsConfig = useMemo<TabsNavItem<ApplicationsTab>[]>(() => ([
@@ -69,7 +70,7 @@ const MyApplicationsPage: FC = () => {
         }
 
         setLoading(true)
-        setError(null)
+        setError(undefined)
 
         try {
             const response = await getMyApplications({
@@ -105,20 +106,24 @@ const MyApplicationsPage: FC = () => {
         setPage(nextPage)
     }, [])
 
-    const handleApplicationClick = useCallback((application: Application) => {
-        setSelectedApplication(application)
-        setModalOpen(true)
-    }, [])
+    const handleApplicationClick = useCallback(
+        (application: Application) => (): void => {
+            setSelectedApplication(application)
+            setModalOpen(true)
+        },
+        [],
+    )
 
     const handleCloseModal = useCallback(() => {
         setModalOpen(false)
-        setSelectedApplication(null)
+        setSelectedApplication(undefined)
     }, [])
 
     const handleViewEngagement = useCallback(() => {
         if (!selectedApplication?.engagement?.nanoId) {
             return
         }
+
         setModalOpen(false)
         navigate(`${rootRoute}/${selectedApplication.engagement.nanoId}`)
     }, [navigate, selectedApplication])
@@ -189,7 +194,7 @@ const MyApplicationsPage: FC = () => {
                         <ApplicationCard
                             key={application.id}
                             application={application}
-                            onClick={() => handleApplicationClick(application)}
+                            onClick={handleApplicationClick(application)}
                         />
                     ))}
                 </div>

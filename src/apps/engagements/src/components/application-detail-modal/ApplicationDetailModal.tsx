@@ -2,7 +2,7 @@ import { FC, useMemo } from 'react'
 
 import { BaseModal, Button } from '~/libs/ui'
 
-import { Application } from '../../lib/models'
+import type { Application } from '../../lib/models'
 import { formatDate } from '../../lib/utils'
 import { ApplicationStatusBadge } from '../application-status-badge'
 import { StatusBadge } from '../status-badge'
@@ -19,7 +19,10 @@ interface ApplicationDetailModalProps {
 const ApplicationDetailModal: FC<ApplicationDetailModalProps> = (
     props: ApplicationDetailModalProps,
 ) => {
-    const { application, open, onClose, onViewEngagement } = props
+    const application = props.application
+    const open = props.open
+    const onClose = props.onClose
+    const onViewEngagement = props.onViewEngagement
 
     const formattedDate = useMemo(() => (
         application?.createdAt ? formatDate(application.createdAt) : 'Date TBD'
@@ -61,7 +64,7 @@ const ApplicationDetailModal: FC<ApplicationDetailModalProps> = (
                     <div className={styles.header}>
                         <div>
                             <h3 className={styles.title}>{engagement?.title ?? 'Engagement'}</h3>
-                            <div className={styles.subTitle}>Submitted {formattedDate}</div>
+                            <div className={styles.subTitle}>{`Submitted ${formattedDate}`}</div>
                         </div>
                         <div className={styles.badges}>
                             <ApplicationStatusBadge status={application.status} size='sm' />
