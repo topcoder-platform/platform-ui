@@ -1,0 +1,47 @@
+@import '@libs/ui/styles/includes';
+
+.layout {
+    position: relative;
+    font-family: $font-roboto;
+    color: var(--Primary);
+    background: #ffffff;
+    border: 1px solid var(--BorderColor, #e0e0e0);
+    border-radius: 10px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+    padding: $sp-5;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: $sp-3;
+    flex-wrap: wrap;
+    margin-bottom: $sp-4;
+}
+
+.headerActions {
+    display: flex;
+    align-items: center;
+    gap: $sp-2;
+
+    @include ltemd {
+        width: 100%;
+        justify-content: flex-start;
+    }
+}
+
+.main {
+    @include ltelg {
+        padding-top: $sp-3;
+    }
+}
+
+.contentLayoutOuter {
+    margin: $sp-6 auto !important;
+}
+
+.contentLayoutInner {
+    box-sizing: border-box;
+    width: 100%;
+}
