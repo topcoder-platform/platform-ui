@@ -1,12 +1,10 @@
 import { FC, useContext, useEffect } from 'react'
 import { Outlet, Routes, useLocation } from 'react-router-dom'
-import { Provider, useDispatch, useSelector } from 'react-redux'
+import { Provider, useDispatch } from 'react-redux'
 import classNames from 'classnames'
 
 import { routerContext, RouterContextData } from '~/libs/core'
-import { Member } from '~/apps/talent-search/src/lib/models'
 import { SharedSwrConfig } from '~/libs/shared'
-import { EnvironmentConfig } from '~/config'
 
 import { onboardRouteId } from '../../onboarding.routes'
 import { fetchMemberInfo, fetchMemberTraits } from '../../redux/actions/member'
@@ -20,7 +18,6 @@ const OnboardingContent: FC<{
     const { getChildRoutes }: RouterContextData = useContext(routerContext)
     const location = useLocation()
     const dispatch = useDispatch()
-    const reduxMemberInfo: Member = useSelector((state: any) => state.member.memberInfo)
 
     useEffect(() => {
         dispatch(fetchMemberInfo())
