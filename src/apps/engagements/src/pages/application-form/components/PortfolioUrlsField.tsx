@@ -27,6 +27,11 @@ const PortfolioUrlInput: FC<PortfolioUrlInputProps> = (props: PortfolioUrlInputP
     const errorMessage = props.errorMessage
     const disabled = props.disabled
     const index = props.index
+    const inputValue = (
+        typeof field.value === 'string' || typeof field.value === 'number'
+            ? field.value
+            : ''
+    )
 
     function handleChange(event: ChangeEvent<HTMLInputElement>): void {
         const nextValue = event.target.value
@@ -42,7 +47,7 @@ const PortfolioUrlInput: FC<PortfolioUrlInputProps> = (props: PortfolioUrlInputP
                 styles.inputField,
                 errorMessage && styles.inputError,
             )}
-            value={field.value ?? ''}
+            value={inputValue}
             onChange={handleChange}
             aria-invalid={!!errorMessage}
             aria-describedby={errorMessage ? `${inputId}-error` : undefined}
@@ -69,7 +74,7 @@ const PortfolioUrlsField: FC<PortfolioUrlsFieldProps> = (props: PortfolioUrlsFie
             return
         }
 
-        append('')
+        append({ value: undefined })
     }, [append, fields.length])
 
     const handleRemove = useCallback(
@@ -90,13 +95,13 @@ const PortfolioUrlsField: FC<PortfolioUrlsFieldProps> = (props: PortfolioUrlsFie
                     <div className={styles.fieldHint}>No portfolio URLs added yet.</div>
                 )}
                 {fields.map((field, index) => {
-                    const errorMessage = errors.portfolioUrls?.[index]?.message as string | undefined
+                    const errorMessage = errors.portfolioUrls?.[index]?.value?.message as string | undefined
                     const inputId = `portfolio-url-${index}`
 
                     return (
                         <div className={styles.portfolioItem} key={field.id}>
                             <Controller
-                                name={`portfolioUrls.${index}`}
+                                name={`portfolioUrls.${index}.value`}
                                 control={control}
                                 render={function renderPortfolioUrlInput(
                                     renderProps: { field: ControllerRenderProps<ApplicationFormData> },

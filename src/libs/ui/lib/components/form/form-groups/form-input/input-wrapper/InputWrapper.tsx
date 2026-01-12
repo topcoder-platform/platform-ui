@@ -29,7 +29,6 @@ interface InputWrapperProps {
     readonly forceFocusStyle?: boolean
 }
 
-// @ts-expect-error: TS2322: Type mismatch for ForwardRefExoticComponent
 const InputWrapper: ForwardRefExoticComponent<InputWrapperProps & { ref?: React.Ref<HTMLDivElement> }>
     = forwardRef<HTMLDivElement, InputWrapperProps>((props: InputWrapperProps, ref) => {
 

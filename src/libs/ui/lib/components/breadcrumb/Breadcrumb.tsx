@@ -11,7 +11,6 @@ interface BreadcrumbProps {
     renderInline?: boolean
 }
 
-// @ts-expect-error: TS2322: Type mismatch for FC return type
 const Breadcrumb: FC<BreadcrumbProps> = props => {
     const usePortal: boolean = !props.renderInline
 

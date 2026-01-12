@@ -34,7 +34,7 @@ const MyApplicationsPage: FC = () => {
     const [totalPages, setTotalPages] = useState<number>(1)
     const [activeTab, setActiveTab] = useState<ApplicationsTab>('active')
     const [selectedStatus, setSelectedStatus] = useState<StatusFilterValue>('all')
-    const [selectedApplication, setSelectedApplication] = useState<Application | undefined>(undefined)
+    const [selectedApplication, setSelectedApplication] = useState<Application | undefined>()
     const [modalOpen, setModalOpen] = useState<boolean>(false)
 
     const tabsConfig = useMemo<TabsNavItem<ApplicationsTab>[]>(() => ([

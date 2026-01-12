@@ -20,7 +20,6 @@ interface Props {
 
 export const MarkdownReview: FC<Props> = (props: Props) => (
     <div className={classNames(styles.container, props.className)}>
-        {/* @ts-expect-error: TS2786: ReactMarkdown cannot be used as a JSX component */}
         <ReactMarkdown
             remarkPlugins={[
                 remarkFrontmatter,

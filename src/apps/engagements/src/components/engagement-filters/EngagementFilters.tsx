@@ -128,7 +128,7 @@ const EngagementFilters: FC<EngagementFiltersProps> = (props: EngagementFiltersP
         },
     }), [searchInput])
 
-    const handleSearchChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
+    const handleSearchChange = useCallback((event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         setSearchValue(event.target.value)
     }, [])
 

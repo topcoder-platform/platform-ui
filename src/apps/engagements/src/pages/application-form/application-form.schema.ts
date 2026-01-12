@@ -1,6 +1,8 @@
 import * as yup from 'yup'
 
-export const applicationFormSchema = yup.object({
+import type { ApplicationFormData } from './application-form.types'
+
+export const applicationFormSchema: yup.ObjectSchema<ApplicationFormData> = yup.object({
     availability: yup
         .string()
         .max(500, 'Availability must be 500 characters or less')
@@ -12,11 +14,16 @@ export const applicationFormSchema = yup.object({
     portfolioUrls: yup
         .array()
         .of(
-            yup
-                .string()
-                .url('Must be a valid URL'),
+            yup.object({
+                value: yup
+                    .string()
+                    .url('Must be a valid URL')
+                    .optional(),
+            })
+                .defined(),
         )
-        .optional(),
+        .default([])
+        .defined(),
     resumeUrl: yup
         .string()
         .url('Must be a valid URL')

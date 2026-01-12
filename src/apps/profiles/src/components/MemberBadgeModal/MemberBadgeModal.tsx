@@ -36,7 +36,6 @@ const MemberBadgeModal: FC<MemberBadgeModalProps> = (props: MemberBadgeModalProp
                     {' '}
                     {format(new Date(props.selectedBadge.awarded_at), 'PPP')}
                 </div>
-                {/* @ts-expect-error: TS2786: ReactMarkdown cannot be used as a JSX component */}
                 <ReactMarkdown
                     remarkPlugins={[
                         remarkFrontmatter,

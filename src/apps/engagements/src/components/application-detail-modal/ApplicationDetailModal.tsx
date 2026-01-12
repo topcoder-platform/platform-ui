@@ -10,7 +10,7 @@ import { StatusBadge } from '../status-badge'
 import styles from './ApplicationDetailModal.module.scss'
 
 interface ApplicationDetailModalProps {
-    application: Application | null
+    application: Application | undefined
     open: boolean
     onClose: () => void
     onViewEngagement?: () => void

@@ -207,11 +207,13 @@ const ApplicationFormPage: FC = () => {
 
         try {
             const values = getValues()
-            const portfolioLinks = values.portfolioUrls?.filter((url): url is string => !!url)
+            const portfolioLinks = values.portfolioUrls
+                .map(entry => entry.value)
+                .filter((url): url is string => !!url)
             const request: CreateApplicationRequest = {
                 availability: values.availability?.trim() || '',
                 coverLetter: values.coverLetter?.trim() || '',
-                portfolioLinks,
+                portfolioLinks: portfolioLinks.length ? portfolioLinks : undefined,
                 resumeUrl: values.resumeUrl || undefined,
                 yearsOfExperience: values.yearsOfExperience,
             }
