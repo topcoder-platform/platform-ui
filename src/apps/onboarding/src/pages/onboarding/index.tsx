@@ -43,11 +43,6 @@ const OnboardingContent: FC<{
                     {getChildRoutes(onboardRouteId)}
                 </Routes>
             </div>
-            <span className={styles.textFooter}>
-                I will complete this onboarding later,
-                <a href={`${EnvironmentConfig.USER_PROFILE_URL}/${reduxMemberInfo?.handle}`}> skip for now</a>
-                .
-            </span>
         </>
     )
 }
