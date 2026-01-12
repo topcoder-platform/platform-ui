@@ -176,7 +176,7 @@ export const TabContentReview: FC<Props> = (props: Props) => {
         resourceMemberIdMapping,
         resources,
     }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
-    const { actionChallengeRole, isPrivilegedRole }: useRoleProps = useRole()
+    const { actionChallengeRole, isPrivilegedRole, hasApproverRole }: useRoleProps = useRole()
     const challengeSubmissions = useMemo<SubmissionInfo[]>(
         () => challengeInfo?.submissions ?? [],
         [challengeInfo?.submissions],
@@ -524,7 +524,7 @@ export const TabContentReview: FC<Props> = (props: Props) => {
 
             const validReviewPhaseSubmissions = baseReviews.filter(hasReviewPhaseReview)
 
-            if (isPrivilegedRole || (isChallengeCompleted && hasPassedReviewThreshold)) {
+            if (isPrivilegedRole || hasApproverRole || (isChallengeCompleted && hasPassedReviewThreshold)) {
                 return validReviewPhaseSubmissions
             }
 
