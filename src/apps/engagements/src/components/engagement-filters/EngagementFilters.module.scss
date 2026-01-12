@@ -1,8 +1,9 @@
+@import '@libs/ui/styles/includes';
 @import '../../styles/responsive';
 
 .filters {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
+    background: $black-5;
+    border: 1px solid $black-10;
     border-radius: 16px;
     padding: 16px;
     display: grid;

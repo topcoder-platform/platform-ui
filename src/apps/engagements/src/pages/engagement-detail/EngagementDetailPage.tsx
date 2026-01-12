@@ -4,7 +4,7 @@ import { toast } from 'react-toastify'
 
 import { authUrlLogin, useProfileContext, UserRole } from '~/libs/core'
 import { BaseModal, Button, ContentLayout, IconOutline, IconSolid, LoadingSpinner } from '~/libs/ui'
-import { copyTextToClipboard, SkillPill } from '~/libs/shared'
+import { copyTextToClipboard } from '~/libs/shared'
 
 import type {
     Application,
@@ -511,11 +511,12 @@ const EngagementDetailPage: FC = () => {
                     <h2>Required Skills</h2>
                     <div className={styles.skillsList}>
                         {engagement.requiredSkills.map(skill => (
-                            <SkillPill
+                            <span
                                 key={`${engagement.nanoId}-${skill}`}
-                                skill={{ levels: [], name: skill }}
-                                theme='presentation'
-                            />
+                                className={styles.skillPill}
+                            >
+                                {skill}
+                            </span>
                         ))}
                     </div>
                 </div>

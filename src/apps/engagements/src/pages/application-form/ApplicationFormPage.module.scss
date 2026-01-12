@@ -1,3 +1,4 @@
+@import '@libs/ui/styles/includes';
 @import '../../styles/responsive';
 
 .formContainer {
@@ -13,8 +14,8 @@
 }
 
 .section {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
+    background: $tc-white;
+    border: 1px solid $black-10;
     border-radius: 16px;
     padding: 20px;
     display: grid;
@@ -24,7 +25,7 @@
 .sectionTitle {
     font-size: 1.1rem;
     font-weight: 600;
-    color: #0f172a;
+    color: $black-100;
 }
 
 .readOnlyGrid {
@@ -32,8 +33,8 @@
 }
 
 .readOnlyField {
-    background: #f8fafc;
-    color: #475569;
+    background: $black-5;
+    color: $black-60;
 }
 
 .fieldGroup {
@@ -44,40 +45,40 @@
 .fieldLabel {
     font-size: 0.85rem;
     font-weight: 600;
-    color: #334155;
+    color: $black-80;
 }
 
 .fieldHint {
     font-size: 0.8rem;
-    color: #64748b;
+    color: $black-60;
 }
 
 .inputField {
     width: 100%;
-    border: 1px solid #cbd5f5;
+    border: 1px solid $black-20;
     border-radius: 10px;
     padding: 10px 12px;
     font-size: 0.95rem;
-    color: #0f172a;
-    background: #ffffff;
+    color: $black-100;
+    background: $tc-white;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .inputField:focus {
     outline: none;
-    border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    border-color: $turq-160;
+    box-shadow: 0 0 0 3px rgba($turq-160, 0.15);
 }
 
 .inputField:disabled {
-    background: #f1f5f9;
-    color: #94a3b8;
+    background: $black-5;
+    color: $black-60;
     cursor: not-allowed;
 }
 
 .inputError {
-    border-color: #b91c1c;
-    box-shadow: 0 0 0 1px rgba(185, 28, 28, 0.15);
+    border-color: $red-120;
+    box-shadow: 0 0 0 1px rgba($red-120, 0.15);
 }
 
 .textareaField {
@@ -91,21 +92,21 @@
 }
 
 .fieldError {
-    color: #b91c1c;
+    color: $red-120;
     font-size: 0.8rem;
 }
 
 .characterCounter {
     font-size: 0.75rem;
-    color: #64748b;
+    color: $black-60;
 }
 
 .characterCounterWarning {
-    color: #b45309;
+    color: $orange-140;
 }
 
 .characterCounterLimit {
-    color: #b91c1c;
+    color: $red-120;
 }
 
 .portfolioList {
@@ -128,15 +129,20 @@
 .removeButton {
     border: none;
     background: none;
-    color: #2563eb;
+    color: $turq-160;
     font-weight: 600;
     padding: 0;
     cursor: pointer;
 }
 
+.addButton:hover,
+.removeButton:hover {
+    color: $turq-140;
+}
+
 .addButton:disabled,
 .removeButton:disabled {
-    color: #94a3b8;
+    color: $black-40;
     cursor: not-allowed;
 }
 
@@ -171,8 +177,8 @@
     gap: 12px;
     padding: 16px;
     border-radius: 16px;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
+    background: $black-5;
+    border: 1px solid $black-10;
 }
 
 .loadingSpinner {
@@ -190,7 +196,7 @@
 .skeletonLine,
 .skeletonBlock {
     position: relative;
-    background: #e2e8f0;
+    background: $black-10;
     overflow: hidden;
     border-radius: 10px;
 }
@@ -211,7 +217,7 @@
     position: absolute;
     inset: 0;
     transform: translateX(-100%);
-    background: linear-gradient(90deg, transparent, rgba(148, 163, 184, 0.35), transparent);
+    background: linear-gradient(90deg, transparent, rgba($black-40, 0.35), transparent);
     animation: shimmer 1.6s infinite;
 }
 
@@ -227,15 +233,15 @@
     gap: 12px;
     padding: 16px;
     border-radius: 12px;
-    background: #fef2f2;
-    border: 1px solid #fecaca;
-    color: #7f1d1d;
+    background: $red-25;
+    border: 1px solid $red-50;
+    color: $red-140;
 }
 
 .errorIcon {
     width: 24px;
     height: 24px;
-    color: #b91c1c;
+    color: $red-120;
 }
 
 .errorText {
@@ -248,21 +254,21 @@
     gap: 12px;
     padding: 16px;
     border-radius: 12px;
-    background: #f1f5f9;
-    border: 1px solid #e2e8f0;
-    color: #475569;
+    background: $black-5;
+    border: 1px solid $black-10;
+    color: $black-80;
 }
 
 .infoMessage[data-variant='warning'] {
-    background: #fffbeb;
-    border-color: #fde68a;
-    color: #92400e;
+    background: $orange-25;
+    border-color: $orange-100;
+    color: $orange-140;
 }
 
 .infoMessage[data-variant='error'] {
-    background: #fef2f2;
-    border-color: #fecaca;
-    color: #7f1d1d;
+    background: $red-25;
+    border-color: $red-50;
+    color: $red-140;
 }
 
 .infoIcon {

@@ -1,3 +1,5 @@
+@import '@libs/ui/styles/includes';
+
 .form {
     display: grid;
     gap: 20px;
@@ -11,35 +13,35 @@
 .fieldLabel {
     font-size: 0.85rem;
     font-weight: 600;
-    color: #334155;
+    color: $black-80;
 }
 
 .inputField {
     width: 100%;
-    border: 1px solid #cbd5f5;
+    border: 1px solid $black-20;
     border-radius: 10px;
     padding: 10px 12px;
     font-size: 0.95rem;
-    color: #0f172a;
-    background: #ffffff;
+    color: $black-100;
+    background: $tc-white;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .inputField:focus {
     outline: none;
-    border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    border-color: $turq-160;
+    box-shadow: 0 0 0 3px rgba($turq-160, 0.15);
 }
 
 .inputField:disabled {
-    background: #f1f5f9;
-    color: #94a3b8;
+    background: $black-5;
+    color: $black-60;
     cursor: not-allowed;
 }
 
 .inputError {
-    border-color: #b91c1c;
-    box-shadow: 0 0 0 1px rgba(185, 28, 28, 0.15);
+    border-color: $red-120;
+    box-shadow: 0 0 0 1px rgba($red-120, 0.15);
 }
 
 .textareaField {
@@ -53,25 +55,25 @@
 }
 
 .fieldError {
-    color: #b91c1c;
+    color: $red-120;
     font-size: 0.8rem;
 }
 
 .characterCounter {
     font-size: 0.75rem;
-    color: #64748b;
+    color: $black-60;
 }
 
 .characterCounterWarning {
-    color: #b45309;
+    color: $orange-140;
 }
 
 .characterCounterLimit {
-    color: #b91c1c;
+    color: $red-120;
 }
 
 .submitError {
-    color: #b91c1c;
+    color: $red-120;
     font-size: 0.85rem;
 }
 

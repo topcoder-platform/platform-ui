@@ -1,3 +1,4 @@
+@import '@libs/ui/styles/includes';
 @import '../../styles/responsive';
 
 .loadingSection {
@@ -5,7 +6,7 @@
     gap: 12px;
     padding: 16px;
     border-radius: 16px;
-    background: #f8fafc;
+    background: $black-5;
     margin-bottom: 16px;
 }
 
@@ -17,7 +18,7 @@
 .skeletonBlock,
 .skeletonLine {
     position: relative;
-    background: #e2e8f0;
+    background: $black-10;
     overflow: hidden;
 }
 
@@ -38,7 +39,7 @@
     position: absolute;
     inset: 0;
     transform: translateX(-100%);
-    background: linear-gradient(90deg, transparent, rgba(148, 163, 184, 0.3), transparent);
+    background: linear-gradient(90deg, transparent, rgba($black-40, 0.3), transparent);
     animation: shimmer 1.6s infinite;
 }
 
@@ -54,20 +55,20 @@
     gap: 12px;
     padding: 16px;
     border-radius: 12px;
-    background: #fef2f2;
-    border: 1px solid #fecaca;
+    background: $red-25;
+    border: 1px solid $red-50;
     margin-bottom: 16px;
 }
 
 .errorIcon {
     width: 24px;
     height: 24px;
-    color: #b91c1c;
+    color: $red-120;
 }
 
 .errorText {
     margin: 0 0 8px 0;
-    color: #7f1d1d;
+    color: $red-140;
 }
 
 .emptyState {
@@ -78,14 +79,14 @@
     gap: 8px;
     padding: 32px;
     border-radius: 16px;
-    border: 1px dashed #cbd5f5;
-    color: #475569;
+    border: 1px dashed $black-20;
+    color: $black-80;
 }
 
 .emptyIcon {
     width: 32px;
     height: 32px;
-    color: #64748b;
+    color: $black-60;
 }
 
 .detail {
@@ -102,18 +103,18 @@
 
 .statusHint {
     font-size: 0.85rem;
-    color: #64748b;
+    color: $black-60;
 }
 
 .descriptionBlock {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
+    background: $tc-white;
+    border: 1px solid $black-10;
     border-radius: 16px;
     padding: 20px;
 }
 
 .description {
-    color: #475569;
+    color: $black-80;
     line-height: 1.6;
     white-space: pre-line;
     margin-top: 8px;
@@ -126,8 +127,8 @@
 .metaItem {
     display: flex;
     gap: 12px;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
+    background: $black-5;
+    border: 1px solid $black-10;
     border-radius: 16px;
     padding: 16px;
 }
@@ -135,7 +136,7 @@
 .metaIcon {
     width: 20px;
     height: 20px;
-    color: #64748b;
+    color: $teal-100;
     margin-top: 2px;
 }
 
@@ -143,13 +144,13 @@
     font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: #64748b;
+    color: $black-60;
 }
 
 .metaValue {
     font-size: 0.95rem;
     font-weight: 600;
-    color: #1f2937;
+    color: $black-100;
     margin-top: 4px;
 }
 
@@ -157,22 +158,22 @@
     display: inline-flex;
     margin-top: 6px;
     font-size: 0.8rem;
-    color: #475569;
+    color: $black-60;
 }
 
 .deadlineCountdown[data-deadline-soon='true'] {
-    color: #b45309;
+    color: $orange-140;
     font-weight: 600;
 }
 
 .deadlineCountdown[data-deadline-passed='true'] {
-    color: #b91c1c;
+    color: $red-120;
     font-weight: 600;
 }
 
 .skillsSection {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
+    background: $tc-white;
+    border: 1px solid $black-10;
     border-radius: 16px;
     padding: 20px;
 }
@@ -184,11 +185,19 @@
     margin-top: 12px;
 }
 
+.skillPill {
+    background: $teal-100;
+    color: $tc-white;
+    padding: 4px 10px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+}
+
 .applySection {
-    background: #f1f5f9;
+    background: $black-5;
     border-radius: 16px;
     padding: 20px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid $black-10;
 }
 
 .applyHeader {
@@ -202,8 +211,8 @@
 
 .applyHint {
     font-size: 0.85rem;
-    color: #15803d;
-    background: #dcfce7;
+    color: $turq-180;
+    background: $turq-25;
     padding: 4px 8px;
     border-radius: 999px;
 }
@@ -212,7 +221,7 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
-    color: #475569;
+    color: $black-80;
 }
 
 .appliedActions {
@@ -223,7 +232,7 @@
 }
 
 .signInLink {
-    color: #2563eb;
+    color: $turq-160;
     font-weight: 600;
     text-decoration: underline;
     width: fit-content;
@@ -236,7 +245,7 @@
 
 .applicationStatus {
     font-size: 0.85rem;
-    color: #64748b;
+    color: $black-60;
 }
 
 .applyActions {
@@ -245,8 +254,8 @@
 }
 
 .feedbackSection {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
+    background: $tc-white;
+    border: 1px solid $black-10;
     border-radius: 16px;
     padding: 20px;
     display: grid;
@@ -263,7 +272,7 @@
 
 .feedbackHeader p {
     margin: 4px 0 0 0;
-    color: #64748b;
+    color: $black-60;
 }
 
 .feedbackActions {
@@ -281,17 +290,23 @@
     display: block;
     margin-bottom: 6px;
     font-size: 0.85rem;
-    color: #475569;
+    color: $black-80;
 }
 
 .modalInput {
     width: 100%;
-    border: 1px solid #cbd5f5;
+    border: 1px solid $black-20;
     border-radius: 10px;
     padding: 10px 12px;
     font-size: 0.95rem;
-    color: #0f172a;
-    background: #ffffff;
+    color: $black-100;
+    background: $tc-white;
+}
+
+.modalInput:focus {
+    outline: none;
+    border-color: $turq-160;
+    box-shadow: 0 0 0 2px rgba($turq-160, 0.2);
 }
 
 .modalActions {
@@ -307,26 +322,26 @@
     flex-wrap: wrap;
     padding: 12px;
     border-radius: 12px;
-    border: 1px solid #e2e8f0;
-    background: #f8fafc;
+    border: 1px solid $black-10;
+    background: $black-5;
 }
 
 .linkInput {
     flex: 1;
     min-width: 220px;
-    border: 1px solid #cbd5f5;
+    border: 1px solid $black-20;
     border-radius: 10px;
     padding: 10px 12px;
     font-size: 0.9rem;
-    color: #1f2937;
-    background: #ffffff;
+    color: $black-100;
+    background: $tc-white;
 }
 
 .linkInput[readonly] {
-    background: #f8fafc;
+    background: $black-5;
 }
 
 .linkMeta {
     font-size: 0.85rem;
-    color: #64748b;
+    color: $black-60;
 }

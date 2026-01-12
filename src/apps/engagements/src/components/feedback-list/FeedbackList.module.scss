@@ -1,3 +1,5 @@
+@import '@libs/ui/styles/includes';
+
 .feedbackList {
     display: grid;
     gap: 16px;
@@ -8,13 +10,13 @@
     gap: 12px;
     padding: 18px;
     border-radius: 16px;
-    border: 1px solid #e2e8f0;
-    background: #ffffff;
+    border: 1px solid $black-10;
+    background: $tc-white;
 }
 
 .feedbackText {
     margin: 0;
-    color: #334155;
+    color: $black-80;
     line-height: 1.6;
 }
 
@@ -29,7 +31,7 @@
 .authorInfo {
     font-size: 0.85rem;
     font-weight: 600;
-    color: #475569;
+    color: $black-80;
 }
 
 .metaRow {
@@ -38,12 +40,12 @@
     align-items: center;
     gap: 12px;
     font-size: 0.85rem;
-    color: #64748b;
+    color: $black-60;
 }
 
 .feedbackDate {
     font-size: 0.85rem;
-    color: #64748b;
+    color: $black-60;
 }
 
 .rating {
@@ -64,16 +66,16 @@
 }
 
 .ratingStarFilled {
-    color: #f59e0b;
+    color: $orange-100;
 }
 
 .ratingStarEmpty {
-    color: #e2e8f0;
+    color: $black-20;
 }
 
 .ratingValue {
     font-size: 0.8rem;
-    color: #64748b;
+    color: $black-60;
 }
 
 .loadingState {
@@ -82,9 +84,9 @@
     gap: 8px;
     padding: 16px;
     border-radius: 12px;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    color: #64748b;
+    background: $black-5;
+    border: 1px solid $black-10;
+    color: $black-60;
 }
 
 .loadingSpinner {
@@ -99,19 +101,19 @@
     gap: 12px;
     padding: 16px;
     border-radius: 12px;
-    background: #fef2f2;
-    border: 1px solid #fecaca;
+    background: $red-25;
+    border: 1px solid $red-50;
 }
 
 .errorIcon {
     width: 24px;
     height: 24px;
-    color: #b91c1c;
+    color: $red-120;
 }
 
 .errorText {
     margin: 0 0 8px 0;
-    color: #7f1d1d;
+    color: $red-140;
 }
 
 .emptyState {
@@ -122,12 +124,12 @@
     gap: 8px;
     padding: 28px;
     border-radius: 16px;
-    border: 1px dashed #cbd5f5;
-    color: #475569;
+    border: 1px dashed $black-20;
+    color: $black-80;
 }
 
 .emptyIcon {
     width: 32px;
     height: 32px;
-    color: #64748b;
+    color: $black-60;
 }

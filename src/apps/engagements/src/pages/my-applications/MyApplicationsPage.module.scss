@@ -1,3 +1,4 @@
+@import '@libs/ui/styles/includes';
 @import '../../styles/responsive';
 
 .pageContent {
@@ -35,7 +36,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    color: #64748b;
+    color: $black-60;
     margin: 16px 0;
 }
 
@@ -50,20 +51,20 @@
     gap: 12px;
     padding: 16px;
     border-radius: 12px;
-    background: #fef2f2;
-    border: 1px solid #fecaca;
+    background: $red-25;
+    border: 1px solid $red-50;
     margin: 16px 0;
 }
 
 .errorIcon {
     width: 24px;
     height: 24px;
-    color: #b91c1c;
+    color: $red-120;
 }
 
 .errorText {
     margin: 0 0 8px 0;
-    color: #7f1d1d;
+    color: $red-140;
 }
 
 .emptyState {
@@ -74,15 +75,15 @@
     gap: 8px;
     padding: 32px;
     border-radius: 16px;
-    border: 1px dashed #cbd5f5;
-    color: #475569;
+    border: 1px dashed $black-20;
+    color: $black-80;
     margin: 16px 0;
 }
 
 .emptyIcon {
     width: 32px;
     height: 32px;
-    color: #64748b;
+    color: $black-60;
 }
 
 .grid {
@@ -98,7 +99,7 @@
 
 .skeletonCard {
     position: relative;
-    background: #f1f5f9;
+    background: $black-5;
     border-radius: 16px;
     height: 220px;
     overflow: hidden;
@@ -109,7 +110,7 @@
     position: absolute;
     inset: 0;
     transform: translateX(-100%);
-    background: linear-gradient(90deg, transparent, rgba(148, 163, 184, 0.2), transparent);
+    background: linear-gradient(90deg, transparent, rgba($black-40, 0.2), transparent);
     animation: shimmer 1.6s infinite;
 }
 

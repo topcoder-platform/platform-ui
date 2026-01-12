@@ -1,7 +1,6 @@
 import { FC } from 'react'
 
 import { IconSolid } from '~/libs/ui'
-import { SkillPill } from '~/libs/shared'
 
 import type { Engagement } from '../../lib/models'
 import { formatDate, formatDuration, formatLocation } from '../../lib/utils'
@@ -49,11 +48,9 @@ const EngagementCard: FC<EngagementCardProps> = (props: EngagementCardProps) => 
             </div>
             <div className={styles.skills}>
                 {skills.length > 0 ? visibleSkills.map(skill => (
-                    <SkillPill
-                        key={`${engagement.nanoId}-${skill}`}
-                        skill={{ levels: [], name: skill }}
-                        theme='presentation'
-                    />
+                    <span key={`${engagement.nanoId}-${skill}`} className={styles.skillPill}>
+                        {skill}
+                    </span>
                 )) : (
                     <span className={styles.emptySkills}>No skills listed</span>
                 )}

@@ -1,3 +1,5 @@
+@import '@libs/ui/styles/includes';
+
 .content {
     display: grid;
     gap: 20px;
@@ -14,13 +16,13 @@
 .title {
     margin: 0;
     font-size: 1.1rem;
-    color: #0f172a;
+    color: $black-100;
 }
 
 .subTitle {
     margin-top: 4px;
     font-size: 0.85rem;
-    color: #64748b;
+    color: $black-60;
 }
 
 .badges {
@@ -37,7 +39,7 @@
 .section h4 {
     margin: 0;
     font-size: 0.95rem;
-    color: #0f172a;
+    color: $black-100;
 }
 
 .metaGrid {
@@ -51,35 +53,35 @@
     gap: 4px;
     padding: 12px;
     border-radius: 12px;
-    border: 1px solid #e2e8f0;
-    background: #f8fafc;
+    border: 1px solid $black-10;
+    background: $black-5;
 }
 
 .metaLabel {
     font-size: 0.7rem;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: #64748b;
+    color: $black-60;
 }
 
 .metaValue {
     font-size: 0.9rem;
-    color: #334155;
+    color: $black-80;
     word-break: break-word;
 }
 
 .coverLetter {
     white-space: pre-line;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
+    background: $black-5;
+    border: 1px solid $black-10;
     border-radius: 12px;
     padding: 14px;
-    color: #334155;
+    color: $black-80;
     line-height: 1.6;
 }
 
 .link {
-    color: #2563eb;
+    color: $turq-160;
     font-weight: 600;
     word-break: break-word;
 }
@@ -95,5 +97,5 @@
 .emptyState {
     padding: 24px;
     text-align: center;
-    color: #64748b;
+    color: $black-60;
 }
