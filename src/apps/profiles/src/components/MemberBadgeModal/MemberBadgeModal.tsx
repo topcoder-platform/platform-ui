@@ -1,6 +1,6 @@
 import { FC } from 'react'
 import { format } from 'date-fns'
-import ReactMarkdown from 'react-markdown'
+import ReactMarkdown, { type Options as ReactMarkdownOptions } from 'react-markdown'
 import remarkBreaks from 'remark-breaks'
 import remarkFrontmatter from 'remark-frontmatter'
 import remarkGfm from 'remark-gfm'
@@ -15,6 +15,8 @@ interface MemberBadgeModalProps {
     onClose: () => void
     selectedBadge: UserBadge
 }
+
+const Markdown = ReactMarkdown as unknown as FC<ReactMarkdownOptions>
 
 const MemberBadgeModal: FC<MemberBadgeModalProps> = (props: MemberBadgeModalProps) => (
     <BaseModal
@@ -36,7 +38,7 @@ const MemberBadgeModal: FC<MemberBadgeModalProps> = (props: MemberBadgeModalProp
                     {' '}
                     {format(new Date(props.selectedBadge.awarded_at), 'PPP')}
                 </div>
-                <ReactMarkdown
+                <Markdown
                     remarkPlugins={[
                         remarkFrontmatter,
                         [remarkGfm, { singleTilde: false }],
@@ -45,7 +47,7 @@ const MemberBadgeModal: FC<MemberBadgeModalProps> = (props: MemberBadgeModalProp
                     className={styles.badgeDescription}
                 >
                     {props.selectedBadge.org_badge.badge_description}
-                </ReactMarkdown>
+                </Markdown>
             </div>
         </div>
     </BaseModal>
