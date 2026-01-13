@@ -24,6 +24,9 @@ export interface Engagement {
     createdAt: string
     updatedAt: string
     createdBy: string
+    role?: string
+    workload?: string
+    compensationRange?: string
 }
 
 export interface EngagementListResponse {

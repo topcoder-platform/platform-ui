@@ -19,7 +19,11 @@ export const formatDate = (dateString: string): string => {
     return DATE_FORMATTER.format(date)
 }
 
-export const formatDuration = (duration: Engagement['duration']): string => {
+export const formatDuration = (duration?: Engagement['duration']): string => {
+    if (!duration) {
+        return 'Duration not specified'
+    }
+
     if (duration.startDate && duration.endDate) {
         return `${formatDate(duration.startDate)} - ${formatDate(duration.endDate)}`
     }

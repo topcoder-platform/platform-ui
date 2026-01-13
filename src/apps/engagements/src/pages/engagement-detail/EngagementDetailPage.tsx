@@ -506,6 +506,29 @@ const EngagementDetailPage: FC = () => {
                             </span>
                         </div>
                     </div>
+                    <div className={styles.metaItem}>
+                        <IconSolid.BriefcaseIcon className={styles.metaIcon} />
+                        <div>
+                            <div className={styles.metaLabel}>Role</div>
+                            <div className={styles.metaValue}>{engagement.role || 'Not specified'}</div>
+                        </div>
+                    </div>
+                    <div className={styles.metaItem}>
+                        <IconSolid.ClockIcon className={styles.metaIcon} />
+                        <div>
+                            <div className={styles.metaLabel}>Workload</div>
+                            <div className={styles.metaValue}>{engagement.workload || 'Not specified'}</div>
+                        </div>
+                    </div>
+                    <div className={styles.metaItem}>
+                        <IconSolid.CurrencyDollarIcon className={styles.metaIcon} />
+                        <div>
+                            <div className={styles.metaLabel}>Compensation</div>
+                            <div className={styles.metaValue}>
+                                {engagement.compensationRange || 'Not specified'}
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div className={styles.skillsSection}>
                     <h2>Required Skills</h2>
