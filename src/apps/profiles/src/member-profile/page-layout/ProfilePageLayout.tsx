@@ -14,6 +14,7 @@ import { MemberTCAchievements } from '../tc-achievements'
 import { WorkExpirence } from '../work-expirence'
 import { EducationAndCertifications } from '../education-and-certifications'
 import { ProfileCompleteness } from '../profile-completeness'
+import { canDownloadProfile } from '../../lib'
 import OnboardingCompleted from '../onboarding-complete/OnboardingCompleted'
 
 import styles from './ProfilePageLayout.module.scss'
@@ -27,34 +28,6 @@ interface ProfilePageLayoutProps {
 }
 
 const ProfilePageLayout: FC<ProfilePageLayoutProps> = (props: ProfilePageLayoutProps) => {
-    function canDownloadProfile(authProfile: UserProfile | undefined, profile: UserProfile): boolean {
-        if (!authProfile) {
-            return false
-        }
-
-        // Check if user is viewing their own profile
-        if (authProfile.handle === profile.handle) {
-            return true
-        }
-
-        // Check if user has admin roles
-        const adminRoles = ['administrator', 'admin']
-        if (authProfile.roles?.some(role => adminRoles.includes(role.toLowerCase()))) {
-            return true
-        }
-
-        // Check if user has PM or Talent Manager roles
-        const allowedRoles = ['Project Manager', 'Talent Manager']
-        if (authProfile
-            .roles?.some(
-                role => allowedRoles.some(allowed => role.toLowerCase() === allowed.toLowerCase()),
-            )
-        ) {
-            return true
-        }
-
-        return false
-    }
 
     const canDownload: boolean = canDownloadProfile(props.authProfile, props.profile)
 
@@ -69,10 +42,7 @@ const ProfilePageLayout: FC<ProfilePageLayoutProps> = (props: ProfilePageLayoutP
         setIsDownloading(true)
         try {
             await downloadProfileAsync(props.profile.handle)
-        } catch (error) {
-            // Error handling - could show a toast notification here
-            console.error('Failed to download profile:', error)
-        } finally {
+        } catch (error) {} finally {
             setIsDownloading(false)
         }
     }

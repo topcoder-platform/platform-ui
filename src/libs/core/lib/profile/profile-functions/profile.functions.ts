@@ -145,15 +145,23 @@ export async function updateMemberPhotoAsync(handle: string, payload: FormData):
 }
 
 export async function downloadProfileAsync(handle: string): Promise<void> {
-    const blob = await downloadProfile(handle)
-    const url = window.URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.setAttribute('download', `profile-${handle}.pdf`)
-    document.body.appendChild(link)
-    link.click()
-    link.parentNode?.removeChild(link)
-    window.URL.revokeObjectURL(url)
+    let url: string | undefined
+    try {
+        const blob = await downloadProfile(handle)
+        url = window.URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.setAttribute('download', `profile-${handle}.pdf`)
+        document.body.appendChild(link)
+        link.click()
+        link.parentNode?.removeChild(link)
+    } catch (error) {
+        console.error('Failed to download profile:', error)
+    } finally {
+        if (url) {
+            window.URL.revokeObjectURL(url)
+        }
+    }
 }
 
 export async function updateOrCreateMemberTraitsAsync(
