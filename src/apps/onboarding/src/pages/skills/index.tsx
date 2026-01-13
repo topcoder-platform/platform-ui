@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { FC, useState } from 'react'
+import { FC, useEffect, useState } from 'react'
 import { connect } from 'react-redux'
 import classNames from 'classnames'
 
@@ -17,8 +17,15 @@ export const PageSkillsContent: FC<{
     const navigate: any = useNavigate()
     const [loading, setLoading] = useState(false)
     const editor: MemberSkillEditor = useMemberSkillEditor()
+    const [showValidationError, setShowValidationError] = useState(false)
 
     async function saveSkills(): Promise<void> {
+        if (!editor.hasValidSkills()) {
+            setShowValidationError(true)
+            return
+        }
+
+        setShowValidationError(false)
         setLoading(true)
         try {
             await editor.saveSkills()
@@ -28,6 +35,12 @@ export const PageSkillsContent: FC<{
         setLoading(false)
         navigate('../open-to-work')
     }
+
+    useEffect(() => {
+        if (editor.hasValidSkills()) {
+            setShowValidationError(false)
+        }
+    }, [editor])
 
     return (
         <div className={classNames('d-flex flex-column', styles.container)}>
@@ -56,6 +69,11 @@ export const PageSkillsContent: FC<{
                 progress={1}
                 maxStep={5}
             />
+            {showValidationError && (
+                <span className={styles.validationError}>
+                    * Please select at least one skill in both Principal and Additional Skills.
+                </span>
+            )}
 
             <div className={classNames('d-flex justify-content-end', styles.blockFooter)}>
                 <Button
