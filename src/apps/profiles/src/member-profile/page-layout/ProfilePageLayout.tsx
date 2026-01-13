@@ -1,6 +1,6 @@
 import { Dispatch, FC, SetStateAction, useState } from 'react'
 
-import { UserProfile, downloadProfileAsync } from '~/libs/core'
+import { downloadProfileAsync, UserProfile } from '~/libs/core'
 import { Button, ContentLayout, IconSolid, PageTitle } from '~/libs/ui'
 
 // import { MemberTCActivityInfo } from '../tc-activity'
@@ -31,20 +31,28 @@ const ProfilePageLayout: FC<ProfilePageLayoutProps> = (props: ProfilePageLayoutP
         if (!authProfile) {
             return false
         }
+
         // Check if user is viewing their own profile
         if (authProfile.handle === profile.handle) {
             return true
         }
+
         // Check if user has admin roles
         const adminRoles = ['administrator', 'admin']
         if (authProfile.roles?.some(role => adminRoles.includes(role.toLowerCase()))) {
             return true
         }
+
         // Check if user has PM or Talent Manager roles
         const allowedRoles = ['Project Manager', 'Talent Manager']
-        if (authProfile.roles?.some(role => allowedRoles.some(allowed => role.toLowerCase() === allowed.toLowerCase()))) {
+        if (authProfile
+            .roles?.some(
+                role => allowedRoles.some(allowed => role.toLowerCase() === allowed.toLowerCase()),
+            )
+        ) {
             return true
         }
+
         return false
     }
 
@@ -57,6 +65,7 @@ const ProfilePageLayout: FC<ProfilePageLayoutProps> = (props: ProfilePageLayoutP
         if (isDownloading) {
             return
         }
+
         setIsDownloading(true)
         try {
             await downloadProfileAsync(props.profile.handle)
@@ -80,7 +89,7 @@ const ProfilePageLayout: FC<ProfilePageLayoutProps> = (props: ProfilePageLayoutP
                             <Button
                                 label='Download Profile'
                                 icon={IconSolid.DownloadIcon}
-                                iconToRight={true}
+                                iconToRight
                                 onClick={handleDownloadProfile}
                                 disabled={isDownloading}
                                 className={styles.downloadButton}
@@ -112,70 +121,70 @@ const ProfilePageLayout: FC<ProfilePageLayoutProps> = (props: ProfilePageLayoutP
                 <div className={styles.profileHeaderBottom} />
             </div>
 
-        <ContentLayout
-            outerClass={styles.profileOuter}
-            innerClass={styles.profileInner}
-        >
-            <div className={styles.profileInfoWrap}>
-                <div className={styles.profileInfoLeft}>
-                    <AboutMe
-                        profile={props.profile}
-                        authProfile={props.authProfile}
-                        refreshProfile={props.refreshProfile}
-                    />
+            <ContentLayout
+                outerClass={styles.profileOuter}
+                innerClass={styles.profileInner}
+            >
+                <div className={styles.profileInfoWrap}>
+                    <div className={styles.profileInfoLeft}>
+                        <AboutMe
+                            profile={props.profile}
+                            authProfile={props.authProfile}
+                            refreshProfile={props.refreshProfile}
+                        />
 
-                    <MemberLanguages profile={props.profile} authProfile={props.authProfile} />
+                        <MemberLanguages profile={props.profile} authProfile={props.authProfile} />
 
-                    <MemberLocalInfo
-                        profile={props.profile}
-                        authProfile={props.authProfile}
-                        refreshProfile={props.refreshProfile}
-                    />
+                        <MemberLocalInfo
+                            profile={props.profile}
+                            authProfile={props.authProfile}
+                            refreshProfile={props.refreshProfile}
+                        />
 
-                    {props.profile.userId === props.authProfile?.userId && (
-                        <MemberLinks profile={props.profile} authProfile={props.authProfile} />
-                    )}
-                </div>
-                <div className={styles.profileInfoRight}>
-                    {props.authProfile?.handle === props.profile.handle && (
-                        <ProfileCompleteness profile={props.profile} authProfile={props.authProfile} />
-                    )}
-                    <div className={styles.sectionWrap}>
-                        <div className={styles.skillsWrap}>
-                            <MemberSkillsInfo
-                                profile={props.profile}
-                                authProfile={props.authProfile}
-                                refreshProfile={props.refreshProfile}
-                            />
-                        </div>
+                        {props.profile.userId === props.authProfile?.userId && (
+                            <MemberLinks profile={props.profile} authProfile={props.authProfile} />
+                        )}
                     </div>
-
-                    <MemberTCAchievements profile={props.profile} />
-
-                    <div className={styles.expirenceWrap}>
-                        <div>
-                            <div className={styles.sectionWrap}>
-                                <WorkExpirence
+                    <div className={styles.profileInfoRight}>
+                        {props.authProfile?.handle === props.profile.handle && (
+                            <ProfileCompleteness profile={props.profile} authProfile={props.authProfile} />
+                        )}
+                        <div className={styles.sectionWrap}>
+                            <div className={styles.skillsWrap}>
+                                <MemberSkillsInfo
                                     profile={props.profile}
                                     authProfile={props.authProfile}
                                     refreshProfile={props.refreshProfile}
                                 />
                             </div>
                         </div>
-                        <div className={styles.sectionWrap}>
-                            <EducationAndCertifications
-                                profile={props.profile}
-                                authProfile={props.authProfile}
-                                refreshProfile={props.refreshProfile}
-                            />
+
+                        <MemberTCAchievements profile={props.profile} />
+
+                        <div className={styles.expirenceWrap}>
+                            <div>
+                                <div className={styles.sectionWrap}>
+                                    <WorkExpirence
+                                        profile={props.profile}
+                                        authProfile={props.authProfile}
+                                        refreshProfile={props.refreshProfile}
+                                    />
+                                </div>
+                            </div>
+                            <div className={styles.sectionWrap}>
+                                <EducationAndCertifications
+                                    profile={props.profile}
+                                    authProfile={props.authProfile}
+                                    refreshProfile={props.refreshProfile}
+                                />
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-        </ContentLayout>
+            </ContentLayout>
 
-        <OnboardingCompleted authProfile={props.authProfile} />
+            <OnboardingCompleted authProfile={props.authProfile} />
 
         </div>
     )
