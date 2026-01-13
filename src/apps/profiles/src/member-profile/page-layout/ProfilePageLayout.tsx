@@ -1,6 +1,6 @@
-import { FC } from 'react'
+import { Dispatch, FC, SetStateAction, useState } from 'react'
 
-import { UserProfile } from '~/libs/core'
+import { UserProfile, downloadProfileAsync } from '~/libs/core'
 import { Button, ContentLayout, IconSolid, PageTitle } from '~/libs/ui'
 
 // import { MemberTCActivityInfo } from '../tc-activity'
@@ -26,35 +26,91 @@ interface ProfilePageLayoutProps {
     handleBackBtn: () => void
 }
 
-const ProfilePageLayout: FC<ProfilePageLayoutProps> = (props: ProfilePageLayoutProps) => (
-    <div className={styles.container}>
+const ProfilePageLayout: FC<ProfilePageLayoutProps> = (props: ProfilePageLayoutProps) => {
+    function canDownloadProfile(authProfile: UserProfile | undefined, profile: UserProfile): boolean {
+        if (!authProfile) {
+            return false
+        }
+        // Check if user is viewing their own profile
+        if (authProfile.handle === profile.handle) {
+            return true
+        }
+        // Check if user has admin roles
+        const adminRoles = ['administrator', 'admin']
+        if (authProfile.roles?.some(role => adminRoles.includes(role.toLowerCase()))) {
+            return true
+        }
+        // Check if user has PM or Talent Manager roles
+        const allowedRoles = ['Project Manager', 'Talent Manager']
+        if (authProfile.roles?.some(role => allowedRoles.some(allowed => role.toLowerCase() === allowed.toLowerCase()))) {
+            return true
+        }
+        return false
+    }
 
-        <PageTitle>{`${props.profile.handle} | Community Profile | Topcoder`}</PageTitle>
+    const canDownload: boolean = canDownloadProfile(props.authProfile, props.profile)
 
-        <div className={styles.profileHeaderWrap}>
-            <ContentLayout
-                outerClass={styles.profileHeaderContentOuter}
-                contentClass={styles.profileHeaderContent}
-            >
-                {props.isTalentSearch && (
-                    <div className={styles.backBtn}>
-                        <Button
-                            link
-                            label='Search Results'
-                            icon={IconSolid.ChevronLeftIcon}
-                            iconToLeft
-                            onClick={props.handleBackBtn}
-                        />
-                    </div>
-                )}
-                <ProfileHeader
-                    profile={props.profile}
-                    authProfile={props.authProfile}
-                    refreshProfile={props.refreshProfile}
-                />
-            </ContentLayout>
-            <div className={styles.profileHeaderBottom} />
-        </div>
+    const [isDownloading, setIsDownloading]: [boolean, Dispatch<SetStateAction<boolean>>]
+        = useState<boolean>(false)
+
+    async function handleDownloadProfile(): Promise<void> {
+        if (isDownloading) {
+            return
+        }
+        setIsDownloading(true)
+        try {
+            await downloadProfileAsync(props.profile.handle)
+        } catch (error) {
+            // Error handling - could show a toast notification here
+            console.error('Failed to download profile:', error)
+        } finally {
+            setIsDownloading(false)
+        }
+    }
+
+    return (
+        <div className={styles.container}>
+
+            <PageTitle>{`${props.profile.handle} | Community Profile | Topcoder`}</PageTitle>
+
+            <div className={styles.profileHeaderWrap}>
+                {
+                    canDownload && (
+                        <div className={styles.downloadButtonWrap}>
+                            <Button
+                                label='Download Profile'
+                                icon={IconSolid.DownloadIcon}
+                                iconToRight={true}
+                                onClick={handleDownloadProfile}
+                                disabled={isDownloading}
+                                className={styles.downloadButton}
+                            />
+                        </div>
+                    )
+                }
+                <ContentLayout
+                    outerClass={styles.profileHeaderContentOuter}
+                    contentClass={styles.profileHeaderContent}
+                >
+                    {props.isTalentSearch && (
+                        <div className={styles.backBtn}>
+                            <Button
+                                link
+                                label='Search Results'
+                                icon={IconSolid.ChevronLeftIcon}
+                                iconToLeft
+                                onClick={props.handleBackBtn}
+                            />
+                        </div>
+                    )}
+                    <ProfileHeader
+                        profile={props.profile}
+                        authProfile={props.authProfile}
+                        refreshProfile={props.refreshProfile}
+                    />
+                </ContentLayout>
+                <div className={styles.profileHeaderBottom} />
+            </div>
 
         <ContentLayout
             outerClass={styles.profileOuter}
@@ -121,7 +177,8 @@ const ProfilePageLayout: FC<ProfilePageLayoutProps> = (props: ProfilePageLayoutP
 
         <OnboardingCompleted authProfile={props.authProfile} />
 
-    </div>
-)
+        </div>
+    )
+}
 
 export default ProfilePageLayout

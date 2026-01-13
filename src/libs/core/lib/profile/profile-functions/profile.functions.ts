@@ -16,6 +16,7 @@ import { getMemberStats, getVerification, profileStoreGet, profileStorePatchName
 import {
     createMemberTraits,
     deleteMemberTrait,
+    downloadProfile,
     getCountryLookup,
     modifyTracks,
     updateMemberEmailPreferences,
@@ -141,6 +142,18 @@ export async function updateMemberProfileAsync(handle: string, profile: UpdatePr
 
 export async function updateMemberPhotoAsync(handle: string, payload: FormData): Promise<UserPhotoUpdateResponse> {
     return updateMemberPhoto(handle, payload)
+}
+
+export async function downloadProfileAsync(handle: string): Promise<void> {
+    const blob = await downloadProfile(handle)
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', `profile-${handle}.pdf`)
+    document.body.appendChild(link)
+    link.click()
+    link.parentNode?.removeChild(link)
+    window.URL.revokeObjectURL(url)
 }
 
 export async function updateOrCreateMemberTraitsAsync(
