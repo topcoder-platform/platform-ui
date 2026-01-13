@@ -46,6 +46,10 @@ import { hasSubmitterPassedThreshold } from '../../utils/reviewScoring'
 interface Props {
     aiReviewers?: { aiWorkflowId: string }[]
     selectedTab: string
+    screeningOutcome: {
+        failingSubmissionIds: Set<string>;
+        passingSubmissionIds: Set<string>;
+    }
     reviews: SubmissionInfo[]
     submitterReviews: SubmissionInfo[]
     reviewMinimumPassingScore?: number | null
@@ -172,7 +176,7 @@ export const TabContentReview: FC<Props> = (props: Props) => {
         resourceMemberIdMapping,
         resources,
     }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
-    const { actionChallengeRole, isPrivilegedRole }: useRoleProps = useRole()
+    const { actionChallengeRole, isPrivilegedRole, hasApproverRole }: useRoleProps = useRole()
     const challengeSubmissions = useMemo<SubmissionInfo[]>(
         () => challengeInfo?.submissions ?? [],
         [challengeInfo?.submissions],
@@ -520,7 +524,7 @@ export const TabContentReview: FC<Props> = (props: Props) => {
 
             const validReviewPhaseSubmissions = baseReviews.filter(hasReviewPhaseReview)
 
-            if (isPrivilegedRole || (isChallengeCompleted && hasPassedReviewThreshold)) {
+            if (isPrivilegedRole || hasApproverRole || (isChallengeCompleted && hasPassedReviewThreshold)) {
                 return validReviewPhaseSubmissions
             }
 
@@ -636,6 +640,7 @@ export const TabContentReview: FC<Props> = (props: Props) => {
         },
         [resolvedReviewsWithSubmitter],
     )
+
     const filteredSubmitterReviews = useMemo(
         () => {
             if (!resolvedSubmitterReviews.length) {
@@ -729,6 +734,7 @@ export const TabContentReview: FC<Props> = (props: Props) => {
         <TableReview
             aiReviewers={props.aiReviewers}
             datas={reviewRows}
+            screeningOutcome={props.screeningOutcome}
             isDownloading={props.isDownloading}
             downloadSubmission={props.downloadSubmission}
             mappingReviewAppeal={props.mappingReviewAppeal}

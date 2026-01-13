@@ -21,6 +21,7 @@ import { InputSkillSelector } from '../input-skill-selector'
 export interface MemberSkillEditor {
     formInput: ReactNode
     saveSkills: () => Promise<void>,
+    hasValidSkills: () => boolean
 }
 
 /**
@@ -152,10 +153,16 @@ export const useMemberSkillEditor = ({
         return () => { mounted = false }
     }, [profile?.userId])
 
+    const hasValidSkills = (): boolean => {
+        const principalCount = principalSkills.length
+        const additionalCount = additionalSkills.length
+        return principalCount > 0 && additionalCount > 0
+    }
+
     // build the form input
     const formInput = useMemo(() => (
         <>
-            <p className='body-main-bold'>Principal Skills</p>
+            <p className='body-main-bold'>Principal Skills *</p>
             <p>
                 Add up to 10 of the skills that are central to your expertise.
                 These will be showcased at the top of your profile.
@@ -168,7 +175,7 @@ export const useMemberSkillEditor = ({
                 limit={MAX_PRINCIPAL_SKILLS_COUNT}
             />
 
-            <p className='body-main-bold'>Additional skills</p>
+            <p className='body-main-bold'>Additional skills *</p>
             <p>
                 All your other skills that make you a valuable asset on a project or a team.
             </p>
@@ -184,6 +191,7 @@ export const useMemberSkillEditor = ({
 
     return {
         formInput,
+        hasValidSkills,
         saveSkills,
     }
 }

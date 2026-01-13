@@ -38,6 +38,8 @@ export const LOCAL_SERVICE_OVERRIDES: LocalServiceOverride[] = [
     { prefix: '/v6/resources', target: 'http://localhost:3004' },
     { prefix: '/v6/resource-roles', target: 'http://localhost:3004' },
 
+    { prefix: '/v6/leave', target: 'http://localhost:3011' },
+
     { prefix: '/v6/reviewSummations', target: 'http://localhost:3005' },
     { prefix: '/v6/reviewTypes', target: 'http://localhost:3005' },
     { prefix: '/v6/reviews', target: 'http://localhost:3005' },

@@ -68,19 +68,3 @@
         text-transform: none;
     }
 }
-
-.textFooter {
-    color: $black-80;
-    margin-top: 64px;
-    text-align: center;
-
-    @include ltemd {
-        margin-top: 32px;
-        max-width: 284px;
-    }
-
-    a {
-        color: $turq-160;
-        font-weight: 500;
-    }
-}
