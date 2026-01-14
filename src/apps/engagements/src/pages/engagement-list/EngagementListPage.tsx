@@ -1,7 +1,9 @@
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import codes from 'country-calling-code'
+import moment from 'moment-timezone'
 
-import { useProfileContext } from '~/libs/core'
+import { CountryLookup, SearchUserSkill, useCountryLookup, useProfileContext } from '~/libs/core'
 import { Button, ContentLayout, IconOutline, LoadingSpinner } from '~/libs/ui'
 import { Pagination } from '~/apps/admin/src/lib/components/common/Pagination'
 
@@ -14,7 +16,7 @@ import styles from './EngagementListPage.module.scss'
 
 interface FilterState {
     search?: string
-    skills?: string[]
+    skills?: SearchUserSkill[]
     countries?: string[]
     status?: string
 }
@@ -28,10 +30,87 @@ const DEFAULT_FILTERS: FilterState = {
 
 const PER_PAGE = 12
 
+type CountryMatch = {
+    name?: string
+    iso2?: string
+    iso3?: string
+}
+
+const resolveCountryMatch = (
+    value: string,
+    countryLookup: CountryLookup[] | undefined,
+): CountryMatch => {
+    const normalized = value.trim()
+    if (!normalized) {
+        return {}
+    }
+
+    const lowerValue = normalized.toLowerCase()
+    const lookupMatch = (countryLookup ?? []).find(country => (
+        country.country?.toLowerCase() === lowerValue
+        || country.countryCode?.toLowerCase() === lowerValue
+    ))
+
+    const lookupIso3 = lookupMatch?.countryCode
+    const codeMatch = codes.find(code => (
+        lookupIso3
+            ? code.isoCode3?.toLowerCase() === lookupIso3.toLowerCase()
+            : (
+                code.isoCode2?.toLowerCase() === lowerValue
+                || code.isoCode3?.toLowerCase() === lowerValue
+                || code.country?.toLowerCase() === lowerValue
+            )
+    ))
+
+    return {
+        iso2: codeMatch?.isoCode2,
+        iso3: lookupIso3 ?? codeMatch?.isoCode3,
+        name: lookupMatch?.country ?? codeMatch?.country,
+    }
+}
+
+const buildLocationFilters = (
+    selectedCountries: string[] | undefined,
+    countryLookup: CountryLookup[] | undefined,
+): { countries: string[]; timeZones: string[] } => {
+    const countryFilters = new Set<string>()
+    const timeZoneFilters = new Set<string>()
+    const selectedCountryList = selectedCountries ?? []
+
+    selectedCountryList.forEach(country => {
+        const normalized = country.trim()
+        if (!normalized) {
+            return
+        }
+
+        const match = resolveCountryMatch(normalized, countryLookup)
+        countryFilters.add(normalized)
+        if (match.name) {
+            countryFilters.add(match.name)
+        }
+
+        if (match.iso2) {
+            countryFilters.add(match.iso2)
+            const zones = moment.tz.zonesForCountry(match.iso2) ?? []
+            zones.forEach(zone => timeZoneFilters.add(zone))
+        }
+
+        if (match.iso3) {
+            countryFilters.add(match.iso3)
+        }
+    })
+
+    return {
+        countries: Array.from(countryFilters),
+        timeZones: Array.from(timeZoneFilters),
+    }
+}
+
 const EngagementListPage: FC = () => {
     const navigate = useNavigate()
     const location = useLocation()
     const profileContext = useProfileContext()
+    const countryLookup = useCountryLookup()
     const isLoggedIn = profileContext.isLoggedIn
 
     const [engagements, setEngagements] = useState<Engagement[]>([])
@@ -42,6 +121,11 @@ const EngagementListPage: FC = () => {
     const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS)
     const [redirectMessage, setRedirectMessage] = useState<string | undefined>(undefined)
     const requestIdRef = useRef(0)
+
+    const locationFilters = useMemo(
+        () => buildLocationFilters(filters.countries, countryLookup),
+        [countryLookup, filters.countries],
+    )
 
     useEffect(() => {
         const state = location.state as { engagementError?: string } | undefined
@@ -58,12 +142,13 @@ const EngagementListPage: FC = () => {
         setError(undefined)
         try {
             const response = await getEngagements({
-                countries: filters.countries,
+                countries: locationFilters.countries,
                 page,
                 perPage: PER_PAGE,
                 search: filters.search || undefined,
-                skills: filters.skills,
+                skills: filters.skills?.map(skill => skill.id),
                 status: filters.status,
+                timeZones: locationFilters.timeZones,
             })
             if (requestId !== requestIdRef.current) {
                 return
@@ -82,7 +167,7 @@ const EngagementListPage: FC = () => {
                 setLoading(false)
             }
         }
-    }, [filters, page])
+    }, [filters, locationFilters.countries, locationFilters.timeZones, page])
 
     useEffect(() => {
         fetchEngagements()

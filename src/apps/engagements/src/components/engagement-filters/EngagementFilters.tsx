@@ -18,7 +18,7 @@ import {
     InputSelect,
 } from '~/libs/ui'
 import { InputSkillSelector } from '~/libs/shared'
-import { useCountryLookup } from '~/libs/core'
+import { SearchUserSkill, useCountryLookup } from '~/libs/core'
 
 import { EngagementStatus } from '../../lib/models'
 
@@ -26,7 +26,7 @@ import styles from './EngagementFilters.module.scss'
 
 export interface FilterState {
     search?: string
-    skills?: string[]
+    skills?: SearchUserSkill[]
     countries?: string[]
     status?: string
 }
@@ -91,11 +91,7 @@ const EngagementFilters: FC<EngagementFiltersProps> = (props: EngagementFiltersP
     ), [filters.countries])
 
     const selectedSkills = useMemo(() => (
-        (filters.skills ?? []).map(skill => ({
-            id: skill,
-            levels: [],
-            name: skill,
-        }))
+        filters.skills ?? []
     ), [filters.skills])
 
     const statusOptions = useMemo(() => ([
@@ -134,9 +130,10 @@ const EngagementFilters: FC<EngagementFiltersProps> = (props: EngagementFiltersP
 
     const handleSkillsChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
         const options = event.target.value as unknown as InputMultiselectOption[]
-        const skills = options.map(option => (
-            typeof option.label === 'string' ? option.label : option.value
-        ))
+        const skills = options.map(option => ({
+            id: option.value,
+            name: typeof option.label === 'string' ? option.label : option.value,
+        }))
 
         onFilterChange({
             ...filters,

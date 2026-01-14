@@ -83,6 +83,7 @@ export interface GetEngagementsParams {
     status?: string
     skills?: string[]
     countries?: string[]
+    timeZones?: string[]
     search?: string
 }
 
@@ -185,6 +186,10 @@ export const getEngagements = async (
 
     if (params.countries?.length) {
         params.countries.forEach(country => queryParams.append('countries', country))
+    }
+
+    if (params.timeZones?.length) {
+        params.timeZones.forEach(timeZone => queryParams.append('timeZones', timeZone))
     }
 
     const url = `${BASE_URL}?${queryParams.toString()}`

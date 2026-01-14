@@ -1,4 +1,7 @@
-import { FC } from 'react'
+import type { FC, ReactNode } from 'react'
+import ReactMarkdown, { type Components, type Options as ReactMarkdownOptions } from 'react-markdown'
+import remarkFrontmatter from 'remark-frontmatter'
+import remarkGfm from 'remark-gfm'
 
 import { IconSolid } from '~/libs/ui'
 
@@ -7,6 +10,42 @@ import { formatDate, formatDuration, formatLocation } from '../../lib/utils'
 import { StatusBadge } from '../status-badge'
 
 import styles from './EngagementCard.module.scss'
+
+const Markdown = ReactMarkdown as unknown as FC<ReactMarkdownOptions>
+
+type MarkdownChildrenProps = {
+    children?: ReactNode
+}
+
+const renderInlineMarkdown = ({ children }: MarkdownChildrenProps): JSX.Element => (
+    <span>
+        {children}
+        {' '}
+    </span>
+)
+
+const renderListItemMarkdown = ({ children }: MarkdownChildrenProps): JSX.Element => (
+    <span>
+        {'- '}
+        {children}
+        {' '}
+    </span>
+)
+
+const compactMarkdownComponents: Components = {
+    blockquote: renderInlineMarkdown,
+    br: () => <span> </span>,
+    h1: renderInlineMarkdown,
+    h2: renderInlineMarkdown,
+    h3: renderInlineMarkdown,
+    h4: renderInlineMarkdown,
+    h5: renderInlineMarkdown,
+    h6: renderInlineMarkdown,
+    li: renderListItemMarkdown,
+    ol: renderInlineMarkdown,
+    p: renderInlineMarkdown,
+    ul: renderInlineMarkdown,
+}
 
 interface EngagementCardProps {
     engagement: Engagement
@@ -33,7 +72,17 @@ const EngagementCard: FC<EngagementCardProps> = (props: EngagementCardProps) => 
                 <h3 className={styles.title}>{engagement.title}</h3>
                 <StatusBadge status={engagement.status} size='sm' />
             </div>
-            <p className={styles.description}>{engagement.description}</p>
+            <div className={styles.description}>
+                <Markdown
+                    remarkPlugins={[
+                        remarkFrontmatter,
+                        [remarkGfm, { singleTilde: false }],
+                    ]}
+                    components={compactMarkdownComponents}
+                >
+                    {engagement.description}
+                </Markdown>
+            </div>
             <div className={styles.meta}>
                 <div className={styles.metaItem}>
                     <IconSolid.ClockIcon className={styles.metaIcon} />
