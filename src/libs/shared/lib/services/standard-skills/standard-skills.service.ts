@@ -43,3 +43,23 @@ export async function updateMemberSkills(
         skills,
     })
 }
+
+/**
+ * Fetch skills by their IDs
+ * @param skillIds Array of skill UUIDs
+ * @returns Promise with array of UserSkill objects
+ */
+export async function fetchSkillsByIds(skillIds: string[]): Promise<UserSkill[]> {
+    if (!skillIds || skillIds.length === 0) {
+        return Promise.resolve([])
+    }
+
+    try {
+        const skillPromises = skillIds.map(skillId => xhrGetAsync<UserSkill>(`${baseUrl}/skills/${skillId}`)
+            .catch(() => undefined))
+        const results = await Promise.all(skillPromises)
+        return results.filter((skill): skill is UserSkill => (skill !== null || skill !== undefined))
+    } catch {
+        return []
+    }
+}
