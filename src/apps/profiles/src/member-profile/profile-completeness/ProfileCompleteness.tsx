@@ -45,9 +45,11 @@ const ProfileCompleteness: FC<ProfileCompletenessProps> = props => {
             <div>
                 <small>
                     Only
+                    {' '}
                     {incompleteEntries}
                     {' '}
                     left to fill. Please add
+                    {' '}
                     {count === 1 ? 'it' : 'them'}
                     {' '}
                     to make your profile more discoverable.
