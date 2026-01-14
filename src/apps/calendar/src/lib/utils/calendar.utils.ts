@@ -4,6 +4,7 @@ import { LeaveDate, LeaveStatus } from '../models'
 
 const statusColorMap: Record<LeaveStatus, string> = {
     [LeaveStatus.LEAVE]: 'status-leave',
+    [LeaveStatus.HOLIDAY]: 'status-holiday',
     [LeaveStatus.WIPRO_HOLIDAY]: 'status-holiday',
     [LeaveStatus.WEEKEND]: 'status-weekend',
     [LeaveStatus.AVAILABLE]: 'status-available',
@@ -11,6 +12,7 @@ const statusColorMap: Record<LeaveStatus, string> = {
 
 const statusLabelMap: Record<LeaveStatus, string> = {
     [LeaveStatus.LEAVE]: 'Leave',
+    [LeaveStatus.HOLIDAY]: 'Personal Holiday',
     [LeaveStatus.WIPRO_HOLIDAY]: 'Wipro Holiday',
     [LeaveStatus.WEEKEND]: 'Weekend',
     [LeaveStatus.AVAILABLE]: 'Available',
@@ -19,6 +21,7 @@ const statusLabelMap: Record<LeaveStatus, string> = {
 export const legendStatusOrder: LeaveStatus[] = [
     LeaveStatus.AVAILABLE,
     LeaveStatus.LEAVE,
+    LeaveStatus.HOLIDAY,
     LeaveStatus.WIPRO_HOLIDAY,
     LeaveStatus.WEEKEND,
 ]

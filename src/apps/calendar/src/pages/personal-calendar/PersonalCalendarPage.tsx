@@ -75,6 +75,19 @@ const PersonalCalendarPage: FC = () => {
         }
     }, [loadCurrentMonth, selectedDates, updateLeaveDates])
 
+    const handleSetAsHoliday = useCallback(async () => {
+        if (!selectedDates.size) return
+
+        setActionError('')
+        try {
+            await updateLeaveDates(Array.from(selectedDates), LeaveStatus.HOLIDAY)
+            setSelectedDates(new Set())
+            await loadCurrentMonth()
+        } catch {
+            setActionError('Unable to update leave dates. Please try again.')
+        }
+    }, [loadCurrentMonth, selectedDates, updateLeaveDates])
+
     const handleSetAsAvailable = useCallback(async () => {
         if (!selectedDates.size) return
 
@@ -132,6 +145,14 @@ const PersonalCalendarPage: FC = () => {
                         disabled={!selectedDates.size || isUpdating}
                     >
                         Set as Leave
+                    </Button>
+                    <Button
+                        secondary
+                        variant='warning'
+                        onClick={handleSetAsHoliday}
+                        disabled={!selectedDates.size || isUpdating}
+                    >
+                        Set as Personal Holiday
                     </Button>
                     <Button
                         secondary

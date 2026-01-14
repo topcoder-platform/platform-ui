@@ -118,19 +118,24 @@ export const TeamCalendar: FC<TeamCalendarProps> = (props: TeamCalendarProps) =>
                             <span className={styles.dateNumber}>{date.getDate()}</span>
                             <div className={styles.userList}>
                                 {displayedUsers.length > 0
-                                    && displayedUsers.map((user, userIndex) => (
-                                        <div
-                                            key={`${dateKey}-${user.userId}-${userIndex.toString()}`}
-                                            className={classNames(
-                                                styles.userItem,
-                                                user.status === LeaveStatus.WIPRO_HOLIDAY
-                                                    ? styles.userHoliday
-                                                    : styles.userLeave,
-                                            )}
-                                        >
-                                            {getUserDisplayName(user)}
-                                        </div>
-                                    ))}
+                                    && displayedUsers.map((user, userIndex) => {
+                                        const isHolidayStatus = user.status === LeaveStatus.WIPRO_HOLIDAY
+                                            || user.status === LeaveStatus.HOLIDAY
+
+                                        return (
+                                            <div
+                                                key={`${dateKey}-${user.userId}-${userIndex.toString()}`}
+                                                className={classNames(
+                                                    styles.userItem,
+                                                    isHolidayStatus
+                                                        ? styles.userHoliday
+                                                        : styles.userLeave,
+                                                )}
+                                            >
+                                                {getUserDisplayName(user)}
+                                            </div>
+                                        )
+                                    })}
                                 {overflowCount > 0 && (
                                     <div className={styles.overflowIndicator}>
                                         {`+${overflowCount} more`}

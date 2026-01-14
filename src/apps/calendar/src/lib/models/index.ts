@@ -3,11 +3,12 @@ import { TokenModel } from '~/libs/core'
 export enum LeaveStatus {
     AVAILABLE = 'AVAILABLE',
     LEAVE = 'LEAVE',
-    WEEKEND = 'WEEKEND',
+    HOLIDAY = 'HOLIDAY',
     WIPRO_HOLIDAY = 'WIPRO_HOLIDAY',
+    WEEKEND = 'WEEKEND',
 }
 
-export type LeaveUpdateStatus = LeaveStatus.AVAILABLE | LeaveStatus.LEAVE
+export type LeaveUpdateStatus = LeaveStatus.AVAILABLE | LeaveStatus.LEAVE | LeaveStatus.HOLIDAY
 
 export interface LeaveDate {
     date: string
@@ -21,7 +22,7 @@ export interface TeamLeaveDate {
         handle?: string
         firstName?: string
         lastName?: string
-        status: LeaveStatus.LEAVE | LeaveStatus.WIPRO_HOLIDAY
+        status: LeaveStatus.LEAVE | LeaveStatus.HOLIDAY | LeaveStatus.WIPRO_HOLIDAY
     }>
 }
 
