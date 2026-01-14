@@ -1,5 +1,5 @@
 import { FC, MouseEvent, useCallback, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import classNames from 'classnames'
 
 import { Button, IconOutline, IconSolid } from '~/libs/ui'
@@ -19,6 +19,47 @@ interface ApplicationCardProps {
     expanded?: boolean
 }
 
+interface ApplicationDetailsProps {
+    application: Application
+    coverLetterSnippet: string
+    isExpanded: boolean
+}
+
+const ApplicationDetails: FC<ApplicationDetailsProps> = (props: ApplicationDetailsProps) => {
+    const application = props.application
+    const coverLetterSnippet = props.coverLetterSnippet
+    const isExpanded = props.isExpanded
+
+    if (!isExpanded) {
+        return undefined
+    }
+
+    return (
+        <div className={styles.details}>
+            <div className={styles.detailBlock}>
+                <div className={styles.detailLabel}>Cover letter</div>
+                <p className={styles.detailValue}>
+                    {coverLetterSnippet || 'No cover letter provided.'}
+                </p>
+            </div>
+            <div className={styles.detailGrid}>
+                <div className={styles.detailBlock}>
+                    <div className={styles.detailLabel}>Years of experience</div>
+                    <div className={styles.detailValue}>
+                        {application.yearsOfExperience ?? 'Not specified'}
+                    </div>
+                </div>
+                <div className={styles.detailBlock}>
+                    <div className={styles.detailLabel}>Availability</div>
+                    <div className={styles.detailValue}>
+                        {application.availability || 'Not specified'}
+                    </div>
+                </div>
+            </div>
+        </div>
+    )
+}
+
 const ApplicationCard: FC<ApplicationCardProps> = (props: ApplicationCardProps) => {
     const navigate = useNavigate()
     const application = props.application
@@ -29,6 +70,9 @@ const ApplicationCard: FC<ApplicationCardProps> = (props: ApplicationCardProps) 
 
     const engagementTitle = application.engagement?.title ?? 'Engagement details unavailable'
     const engagementStatus = application.engagement?.status
+    const engagementLink = application.engagement?.nanoId
+        ? `${rootRoute}/${application.engagement.nanoId}`
+        : undefined
 
     const coverLetterSnippet = useMemo(
         () => truncateText(application.coverLetter, APPLICATION_CARD_DESCRIPTION_MAX_LENGTH),
@@ -44,6 +88,10 @@ const ApplicationCard: FC<ApplicationCardProps> = (props: ApplicationCardProps) 
         event.stopPropagation()
         onClick?.()
     }, [onClick])
+
+    const handleTitleClick = useCallback((event: MouseEvent<HTMLAnchorElement>) => {
+        event.stopPropagation()
+    }, [])
 
     const handleCardClick = useCallback(() => {
         if (!application.engagement?.nanoId) {
@@ -65,7 +113,19 @@ const ApplicationCard: FC<ApplicationCardProps> = (props: ApplicationCardProps) 
             <div className={styles.header}>
                 <div className={styles.titleRow}>
                     <IconSolid.BriefcaseIcon className={styles.titleIcon} />
-                    <h3 className={styles.title}>{engagementTitle}</h3>
+                    <h3 className={styles.title}>
+                        {engagementLink ? (
+                            <Link
+                                to={engagementLink}
+                                className={styles.titleLink}
+                                onClick={handleTitleClick}
+                            >
+                                {engagementTitle}
+                            </Link>
+                        ) : (
+                            engagementTitle
+                        )}
+                    </h3>
                 </div>
                 <ApplicationStatusBadge status={application.status} size='sm' />
             </div>
@@ -98,30 +158,11 @@ const ApplicationCard: FC<ApplicationCardProps> = (props: ApplicationCardProps) 
                     />
                 )}
             </div>
-            {isExpanded && (
-                <div className={styles.details}>
-                    <div className={styles.detailBlock}>
-                        <div className={styles.detailLabel}>Cover letter</div>
-                        <p className={styles.detailValue}>
-                            {coverLetterSnippet || 'No cover letter provided.'}
-                        </p>
-                    </div>
-                    <div className={styles.detailGrid}>
-                        <div className={styles.detailBlock}>
-                            <div className={styles.detailLabel}>Years of experience</div>
-                            <div className={styles.detailValue}>
-                                {application.yearsOfExperience ?? 'Not specified'}
-                            </div>
-                        </div>
-                        <div className={styles.detailBlock}>
-                            <div className={styles.detailLabel}>Availability</div>
-                            <div className={styles.detailValue}>
-                                {application.availability || 'Not specified'}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <ApplicationDetails
+                application={application}
+                coverLetterSnippet={coverLetterSnippet}
+                isExpanded={isExpanded}
+            />
         </div>
     )
 }

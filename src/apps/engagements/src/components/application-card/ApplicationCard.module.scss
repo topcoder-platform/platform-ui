@@ -49,6 +49,18 @@
     color: $black-100;
 }
 
+.titleLink {
+    color: $turq-160;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.titleLink:hover,
+.titleLink:focus {
+    color: $turq-140;
+    text-decoration: underline;
+}
+
 .metaRow {
     display: flex;
     align-items: center;

@@ -1,4 +1,4 @@
-import { ChangeEvent, FC, useCallback, useEffect, useMemo, useState } from 'react'
+import { ChangeEvent, FC, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { useProfileContext } from '~/libs/core'
@@ -6,8 +6,9 @@ import { Button, ContentLayout, IconOutline, InputSelect, LoadingSpinner, TabsNa
 import { Pagination } from '~/apps/admin/src/lib/components/common/Pagination'
 
 import { APPLICATIONS_PER_PAGE } from '../../config/constants'
-import { Application, ApplicationStatus } from '../../lib/models'
+import { Application, ApplicationStatus, Engagement } from '../../lib/models'
 import { getMyApplications } from '../../lib/services/applications.service'
+import { getEngagementById } from '../../lib/services/engagements.service'
 import { ApplicationCard } from '../../components/application-card'
 import { ApplicationDetailModal } from '../../components/application-detail-modal'
 import { rootRoute } from '../../engagements.routes'
@@ -36,6 +37,7 @@ const MyApplicationsPage: FC = () => {
     const [selectedStatus, setSelectedStatus] = useState<StatusFilterValue>('all')
     const [selectedApplication, setSelectedApplication] = useState<Application | undefined>()
     const [modalOpen, setModalOpen] = useState<boolean>(false)
+    const engagementCacheRef = useRef<Map<string, Engagement>>(new Map())
 
     const tabsConfig = useMemo<TabsNavItem<ApplicationsTab>[]>(() => ([
         { id: 'active', title: 'Active' },
@@ -64,6 +66,55 @@ const MyApplicationsPage: FC = () => {
         return selectedStatus
     }, [activeTab, selectedStatus])
 
+    const hydrateApplications = useCallback(async (
+        applicationsToHydrate: Application[],
+    ): Promise<Application[]> => {
+        if (!applicationsToHydrate.length) {
+            return applicationsToHydrate
+        }
+
+        const cache = engagementCacheRef.current
+        applicationsToHydrate.forEach(application => {
+            if (application.engagement) {
+                cache.set(application.engagement.id || application.engagementId, application.engagement)
+            }
+        })
+
+        const engagementIds = Array.from(new Set(
+            applicationsToHydrate
+                .map(application => application.engagementId)
+                .filter(Boolean),
+        ))
+        const missingEngagementIds = engagementIds.filter(id => !cache.has(id))
+
+        if (missingEngagementIds.length) {
+            await Promise.all(missingEngagementIds.map(async engagementId => {
+                try {
+                    const engagement = await getEngagementById(engagementId)
+                    cache.set(engagementId, engagement)
+                } catch (err) {
+                    // Keep application data even if engagement lookup fails.
+                }
+            }))
+        }
+
+        return applicationsToHydrate.map(application => {
+            if (application.engagement) {
+                return application
+            }
+
+            const engagement = cache.get(application.engagementId)
+            if (!engagement) {
+                return application
+            }
+
+            return {
+                ...application,
+                engagement,
+            }
+        })
+    }, [])
+
     const fetchApplications = useCallback(async (): Promise<void> => {
         if (!isLoggedIn) {
             return
@@ -78,14 +129,15 @@ const MyApplicationsPage: FC = () => {
                 perPage: PER_PAGE,
                 status: statusFilter,
             })
-            setApplications(response.data)
+            const hydratedApplications = await hydrateApplications(response.data)
+            setApplications(hydratedApplications)
             setTotalPages(response.totalPages || 1)
         } catch (err) {
             setError('Unable to load your applications. Please try again.')
         } finally {
             setLoading(false)
         }
-    }, [page, statusFilter, isLoggedIn])
+    }, [page, statusFilter, isLoggedIn, hydrateApplications])
 
     useEffect(() => {
         fetchApplications()
