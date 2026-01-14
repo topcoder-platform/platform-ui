@@ -1,0 +1,295 @@
+@import '@libs/ui/styles/includes';
+@import '../../styles/responsive';
+
+.loadingSection {
+    display: grid;
+    gap: 12px;
+    padding: 16px;
+    border-radius: 16px;
+    background: $black-5;
+    margin-bottom: 16px;
+}
+
+.loadingSpinner {
+    width: 24px;
+    height: 24px;
+}
+
+.skeletonBlock,
+.skeletonLine {
+    position: relative;
+    background: $black-10;
+    overflow: hidden;
+}
+
+.skeletonBlock {
+    height: 120px;
+    border-radius: 12px;
+}
+
+.skeletonLine {
+    height: 14px;
+    border-radius: 999px;
+    width: 80%;
+}
+
+.skeletonBlock::after,
+.skeletonLine::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgba($black-40, 0.3), transparent);
+    animation: shimmer 1.6s infinite;
+}
+
+@keyframes shimmer {
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+.errorState {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+    border-radius: 12px;
+    background: $red-25;
+    border: 1px solid $red-50;
+    margin-bottom: 16px;
+}
+
+.errorIcon {
+    width: 24px;
+    height: 24px;
+    color: $red-120;
+}
+
+.errorText {
+    margin: 0 0 8px 0;
+    color: $red-140;
+}
+
+.emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 8px;
+    padding: 32px;
+    border-radius: 16px;
+    border: 1px dashed $black-20;
+    color: $black-80;
+}
+
+.emptyIcon {
+    width: 32px;
+    height: 32px;
+    color: $black-60;
+}
+
+.detail {
+    display: grid;
+    gap: 24px;
+}
+
+.statusRow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.statusHint {
+    font-size: 0.85rem;
+    color: $black-60;
+}
+
+.descriptionBlock {
+    background: $tc-white;
+    border: 1px solid $black-10;
+    border-radius: 16px;
+    padding: 20px;
+}
+
+.description {
+    color: $black-80;
+    line-height: 1.6;
+    margin-top: 8px;
+
+    :global(p) {
+        margin: 0 0 12px 0;
+    }
+
+    :global(p:last-child) {
+        margin-bottom: 0;
+    }
+
+    :global(ul),
+    :global(ol) {
+        margin: 0 0 12px 20px;
+        padding: 0;
+    }
+
+    :global(li) {
+        margin-bottom: 6px;
+    }
+
+    :global(li:last-child) {
+        margin-bottom: 0;
+    }
+
+    :global(h1),
+    :global(h2),
+    :global(h3),
+    :global(h4),
+    :global(h5),
+    :global(h6) {
+        margin: 16px 0 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        color: $black-100;
+    }
+
+    :global(strong) {
+        color: $black-100;
+    }
+
+    :global(a) {
+        color: $teal-100;
+    }
+}
+
+.metaGrid {
+    @include gridColumns(3, 2, 1);
+}
+
+.metaItem {
+    display: flex;
+    gap: 12px;
+    background: $black-5;
+    border: 1px solid $black-10;
+    border-radius: 16px;
+    padding: 16px;
+}
+
+.metaIcon {
+    width: 20px;
+    height: 20px;
+    color: $teal-100;
+    margin-top: 2px;
+}
+
+.metaLabel {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: $black-60;
+}
+
+.metaValue {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: $black-100;
+    margin-top: 4px;
+}
+
+.deadlineCountdown {
+    display: inline-flex;
+    margin-top: 6px;
+    font-size: 0.8rem;
+    color: $black-60;
+}
+
+.deadlineCountdown[data-deadline-soon='true'] {
+    color: $orange-140;
+    font-weight: 600;
+}
+
+.deadlineCountdown[data-deadline-passed='true'] {
+    color: $red-120;
+    font-weight: 600;
+}
+
+.skillsSection {
+    background: $tc-white;
+    border: 1px solid $black-10;
+    border-radius: 16px;
+    padding: 20px;
+}
+
+.skillsList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.skillPill {
+    background: $teal-100;
+    color: $tc-white;
+    padding: 4px 10px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+}
+
+.applySection {
+    background: $black-5;
+    border-radius: 16px;
+    padding: 20px;
+    border: 1px solid $black-10;
+}
+
+.applyHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.applyHint {
+    font-size: 0.85rem;
+    color: $turq-180;
+    background: $turq-25;
+    padding: 4px 8px;
+    border-radius: 999px;
+}
+
+.applyMessage {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    color: $black-80;
+}
+
+.appliedActions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.signInLink {
+    color: $turq-160;
+    font-weight: 600;
+    text-decoration: underline;
+    width: fit-content;
+}
+
+.inlineSpinner {
+    width: 18px;
+    height: 18px;
+}
+
+.applicationStatus {
+    font-size: 0.85rem;
+    color: $black-60;
+}
+
+.applyActions {
+    display: flex;
+    gap: 12px;
+}

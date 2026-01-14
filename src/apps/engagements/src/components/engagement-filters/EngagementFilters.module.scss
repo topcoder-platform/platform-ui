@@ -1,0 +1,40 @@
+@import '@libs/ui/styles/includes';
+@import '../../styles/responsive';
+
+.filters {
+    background: $black-5;
+    border: 1px solid $black-10;
+    border-radius: 16px;
+    padding: 16px;
+    display: grid;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.filterGrid {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    align-items: end;
+
+    @include tablet {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    @include mobile {
+        grid-template-columns: 1fr;
+    }
+}
+
+.field {
+    min-width: 0;
+}
+
+.actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.filters :global(.page-divider) {
+    display: none;
+}

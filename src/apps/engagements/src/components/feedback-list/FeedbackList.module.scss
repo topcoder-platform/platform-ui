@@ -1,0 +1,135 @@
+@import '@libs/ui/styles/includes';
+
+.feedbackList {
+    display: grid;
+    gap: 16px;
+}
+
+.feedbackItem {
+    display: grid;
+    gap: 12px;
+    padding: 18px;
+    border-radius: 16px;
+    border: 1px solid $black-10;
+    background: $tc-white;
+}
+
+.feedbackText {
+    margin: 0;
+    color: $black-80;
+    line-height: 1.6;
+}
+
+.feedbackMeta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.authorInfo {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: $black-80;
+}
+
+.metaRow {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.85rem;
+    color: $black-60;
+}
+
+.feedbackDate {
+    font-size: 0.85rem;
+    color: $black-60;
+}
+
+.rating {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.ratingStars {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.ratingStar {
+    width: 16px;
+    height: 16px;
+}
+
+.ratingStarFilled {
+    color: $orange-100;
+}
+
+.ratingStarEmpty {
+    color: $black-20;
+}
+
+.ratingValue {
+    font-size: 0.8rem;
+    color: $black-60;
+}
+
+.loadingState {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 16px;
+    border-radius: 12px;
+    background: $black-5;
+    border: 1px solid $black-10;
+    color: $black-60;
+}
+
+.loadingSpinner {
+    width: 20px;
+    height: 20px;
+    background: transparent;
+}
+
+.errorState {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+    border-radius: 12px;
+    background: $red-25;
+    border: 1px solid $red-50;
+}
+
+.errorIcon {
+    width: 24px;
+    height: 24px;
+    color: $red-120;
+}
+
+.errorText {
+    margin: 0 0 8px 0;
+    color: $red-140;
+}
+
+.emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 8px;
+    padding: 28px;
+    border-radius: 16px;
+    border: 1px dashed $black-20;
+    color: $black-80;
+}
+
+.emptyIcon {
+    width: 32px;
+    height: 32px;
+    color: $black-60;
+}

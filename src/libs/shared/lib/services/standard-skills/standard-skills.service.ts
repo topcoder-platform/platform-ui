@@ -1,5 +1,5 @@
 import { EnvironmentConfig } from '~/config'
-import { UserSkill, xhrGetAsync, xhrPostAsync, xhrPutAsync } from '~/libs/core'
+import { SearchUserSkill, UserSkill, xhrGetAsync, xhrPostAsync, xhrPutAsync } from '~/libs/core'
 
 const baseUrl = `${EnvironmentConfig.API.V5}/standardized-skills`
 
@@ -16,6 +16,19 @@ export async function autoCompleteSkills(queryTerm: string): Promise<UserSkill[]
 
     const encodedQuery = encodeURIComponent(queryTerm)
     return xhrGetAsync(`${baseUrl}/skills/autocomplete?term=${encodedQuery}`)
+}
+
+export async function fetchSkillsByIds(skillIds: string[]): Promise<SearchUserSkill[]> {
+    const uniqueIds = Array.from(new Set(skillIds.filter(Boolean)))
+    if (!uniqueIds.length) {
+        return []
+    }
+
+    const params = new URLSearchParams()
+    uniqueIds.forEach(skillId => params.append('skillId', skillId))
+    params.set('disablePagination', 'true')
+
+    return xhrGetAsync(`${baseUrl}/skills?${params.toString()}`)
 }
 
 export type FetchMemberSkillsConfig = {

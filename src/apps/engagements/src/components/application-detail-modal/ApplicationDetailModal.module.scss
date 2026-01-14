@@ -1,0 +1,101 @@
+@import '@libs/ui/styles/includes';
+
+.content {
+    display: grid;
+    gap: 20px;
+}
+
+.header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.title {
+    margin: 0;
+    font-size: 1.1rem;
+    color: $black-100;
+}
+
+.subTitle {
+    margin-top: 4px;
+    font-size: 0.85rem;
+    color: $black-60;
+}
+
+.badges {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.section {
+    display: grid;
+    gap: 10px;
+}
+
+.section h4 {
+    margin: 0;
+    font-size: 0.95rem;
+    color: $black-100;
+}
+
+.metaGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+}
+
+.metaItem {
+    display: grid;
+    gap: 4px;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid $black-10;
+    background: $black-5;
+}
+
+.metaLabel {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: $black-60;
+}
+
+.metaValue {
+    font-size: 0.9rem;
+    color: $black-80;
+    word-break: break-word;
+}
+
+.coverLetter {
+    white-space: pre-line;
+    background: $black-5;
+    border: 1px solid $black-10;
+    border-radius: 12px;
+    padding: 14px;
+    color: $black-80;
+    line-height: 1.6;
+}
+
+.link {
+    color: $turq-160;
+    font-weight: 600;
+    word-break: break-word;
+}
+
+.linkList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 6px;
+}
+
+.emptyState {
+    padding: 24px;
+    text-align: center;
+    color: $black-60;
+}
