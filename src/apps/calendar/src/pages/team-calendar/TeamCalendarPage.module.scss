@@ -1,0 +1,46 @@
+.page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px 16px 48px;
+}
+
+.header {
+    margin-bottom: 8px;
+}
+
+.title {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 800;
+    color: #111827;
+}
+
+.navigation {
+    display: flex;
+    justify-content: center;
+    margin: 14px 0 10px;
+}
+
+.calendarSection {
+    margin: 0 auto;
+}
+
+.error {
+    margin-top: 12px;
+    padding: 12px 16px;
+    background: #fff5f5;
+    border: 1px solid #fda4af;
+    border-radius: 8px;
+    color: #b91c1c;
+    font-weight: 600;
+}
+
+@media (max-width: 720px) {
+    .page {
+        padding: 20px 12px 32px;
+    }
+
+    .title {
+        font-size: 24px;
+    }
+}

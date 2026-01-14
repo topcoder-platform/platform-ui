@@ -12,5 +12,6 @@ export enum UserRole {
     projectManager = 'Project Manager',
     taxFormAdmin = 'TaxForm Admin',
     taxFormViewer = 'TaxForm Viewer',
-    copilot = 'copilot'
+    copilot = 'copilot',
+    topcoderStaff = 'Topcoder Staff'
 }

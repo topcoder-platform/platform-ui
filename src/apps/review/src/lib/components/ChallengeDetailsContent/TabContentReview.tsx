@@ -176,7 +176,7 @@ export const TabContentReview: FC<Props> = (props: Props) => {
         resourceMemberIdMapping,
         resources,
     }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
-    const { actionChallengeRole, isPrivilegedRole }: useRoleProps = useRole()
+    const { actionChallengeRole, isPrivilegedRole, hasApproverRole }: useRoleProps = useRole()
     const challengeSubmissions = useMemo<SubmissionInfo[]>(
         () => challengeInfo?.submissions ?? [],
         [challengeInfo?.submissions],
@@ -222,8 +222,12 @@ export const TabContentReview: FC<Props> = (props: Props) => {
         },
         [challengeInfo?.status],
     )
+
+    const isSubmitterView = actionChallengeRole === SUBMITTER
+        && selectedTab !== APPROVAL
+
     const hasPassedReviewThreshold = useMemo(
-        () => hasSubmitterPassedThreshold(
+        () => !isSubmitterView || hasSubmitterPassedThreshold(
             providedReviews ?? [],
             myOwnedMemberIds,
             props.reviewMinimumPassingScore,
@@ -524,7 +528,7 @@ export const TabContentReview: FC<Props> = (props: Props) => {
 
             const validReviewPhaseSubmissions = baseReviews.filter(hasReviewPhaseReview)
 
-            if (isPrivilegedRole || (isChallengeCompleted && hasPassedReviewThreshold)) {
+            if (isPrivilegedRole || hasApproverRole || (isChallengeCompleted && hasPassedReviewThreshold)) {
                 return validReviewPhaseSubmissions
             }
 
@@ -673,8 +677,6 @@ export const TabContentReview: FC<Props> = (props: Props) => {
         && actionChallengeRole === REVIEWER
 
     // show loading ui when fetching data
-    const isSubmitterView = actionChallengeRole === SUBMITTER
-        && selectedTab !== APPROVAL
     const reviewRows = isSubmitterView
         ? (shouldSortReviewTabByScore ? submitterRowsForReviewTab : filteredSubmitterReviews)
         : (shouldSortReviewTabByScore ? reviewerRowsForReviewTab : filteredReviews)

@@ -9,6 +9,7 @@ const challengePhaseBaseUrl = `${EnvironmentConfig.API.V6}`
 export interface UpdateChallengePhaseRequest {
     isOpen: boolean
     duration?: number
+    scheduledEndDate?: string
 }
 
 /**
