@@ -12,7 +12,7 @@ const statusColorMap: Record<LeaveStatus, string> = {
 
 const statusLabelMap: Record<LeaveStatus, string> = {
     [LeaveStatus.LEAVE]: 'Leave',
-    [LeaveStatus.HOLIDAY]: 'Personal Holiday',
+    [LeaveStatus.HOLIDAY]: 'Holiday',
     [LeaveStatus.WIPRO_HOLIDAY]: 'Wipro Holiday',
     [LeaveStatus.WEEKEND]: 'Weekend',
     [LeaveStatus.AVAILABLE]: 'Available',
@@ -22,7 +22,6 @@ export const legendStatusOrder: LeaveStatus[] = [
     LeaveStatus.AVAILABLE,
     LeaveStatus.LEAVE,
     LeaveStatus.HOLIDAY,
-    LeaveStatus.WIPRO_HOLIDAY,
     LeaveStatus.WEEKEND,
 ]
 
