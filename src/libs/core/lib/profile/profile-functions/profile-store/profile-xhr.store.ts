@@ -1,4 +1,4 @@
-import { xhrDeleteAsync, xhrGetAsync, xhrPatchAsync, xhrPostAsync, xhrPutAsync } from '../../../xhr'
+import { xhrDeleteAsync, xhrGetAsync, xhrGetBlobAsync, xhrPatchAsync, xhrPostAsync, xhrPutAsync } from '../../../xhr'
 import { CountryLookup } from '../../country-lookup.model'
 import { EditNameRequest } from '../../edit-name-request.model'
 import { ModifyTracksRequest } from '../../modify-tracks.request'
@@ -125,4 +125,8 @@ export async function updateMemberPhoto(handle: string, payload: FormData): Prom
             'Content-Type': 'multipart/form-data',
         },
     })
+}
+
+export async function downloadProfile(handle: string): Promise<Blob> {
+    return xhrGetBlobAsync<Blob>(`${profileUrl(handle)}/profileDownload`)
 }
