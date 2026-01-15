@@ -1,7 +1,8 @@
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { SWRResponse } from 'swr'
 
-import { MemberTraitsAPI, useMemberTraits, UserProfile, UserTrait, UserTraitIds } from '~/libs/core'
+import { MemberTraitsAPI, useMemberTraits, UserProfile, UserSkill, UserTrait, UserTraitIds } from '~/libs/core'
 import { useSkillsByIds } from '~/libs/shared/lib/services/standard-skills'
 
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
@@ -52,8 +53,7 @@ const WorkExpirence: FC<WorkExpirenceProps> = (props: WorkExpirenceProps) => {
         return Array.from(skillIdsSet)
     }, [workExpirence])
 
-    // Fetch skills using SWR hook
-    const { data: fetchedSkills, error: skillsError } = useSkillsByIds(
+    const { data: fetchedSkills, error: skillsError }: SWRResponse<UserSkill[], Error> = useSkillsByIds(
         allSkillIds.length > 0 ? allSkillIds : undefined,
     )
 

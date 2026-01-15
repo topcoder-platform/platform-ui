@@ -1,6 +1,5 @@
 import { useMemo } from 'react'
-import { SWRResponse } from 'swr'
-import useSWR from 'swr'
+import useSWR, { SWRResponse } from 'swr'
 
 import { EnvironmentConfig } from '~/config'
 import { UserSkill, xhrGetAsync, xhrPostAsync, xhrPutAsync } from '~/libs/core'
@@ -76,9 +75,11 @@ async function fetchSkillsByIdsFetcher(skillIds: string[]): Promise<UserSkill[]>
 export function useSkillsByIds(skillIds: string[] | undefined): SWRResponse<UserSkill[], Error> {
     const swrKey = useMemo(() => {
         if (!skillIds || skillIds.length === 0) {
-            return null
+            return undefined
         }
-        return ['skills-by-ids', [...skillIds].sort().join(',')]
+
+        return ['skills-by-ids', [...skillIds].sort()
+            .join(',')]
     }, [skillIds])
 
     return useSWR<UserSkill[], Error>(
