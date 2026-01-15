@@ -26,3 +26,10 @@ export enum profileEditModes {
 // (removed) CES Survey/Userflow integrations
 
 export const MAX_PRINCIPAL_SKILLS_COUNT = 10
+
+export enum ADMIN_ROLES_ENUM {
+    ADMINISTRATOR = 'administrator',
+    ADMIN = 'admin',
+}
+
+export const ADMIN_ROLES = [ADMIN_ROLES_ENUM.ADMINISTRATOR, ADMIN_ROLES_ENUM.ADMIN]

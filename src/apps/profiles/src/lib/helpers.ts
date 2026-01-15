@@ -1,5 +1,6 @@
 /* eslint-disable complexity */
 import { UserProfile } from '~/libs/core'
+import { ADMIN_ROLES, ADMIN_ROLES_ENUM } from '../config'
 
 declare global {
     interface Window { tcUniNav: any }
@@ -143,8 +144,7 @@ export function canDownloadProfile(authProfile: UserProfile | undefined, profile
     }
 
     // Check if user has admin roles
-    const adminRoles = ['administrator', 'admin']
-    if (authProfile.roles?.some(role => adminRoles.includes(role.toLowerCase()))) {
+    if (authProfile.roles?.some(role => ADMIN_ROLES.includes(role.toLowerCase() as ADMIN_ROLES_ENUM))) {
         return true
     }
 
