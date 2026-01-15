@@ -37,6 +37,18 @@
     border-color: $orange-100;
 }
 
+.status-active {
+    background: $teal-25;
+    color: $teal-140;
+    border-color: $teal-100;
+}
+
+.status-cancelled {
+    background: $red-25;
+    color: $red-140;
+    border-color: $red-100;
+}
+
 .status-closed {
     background: $black-5;
     color: $black-60;

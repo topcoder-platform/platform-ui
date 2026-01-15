@@ -98,6 +98,8 @@ const EngagementFilters: FC<EngagementFiltersProps> = (props: EngagementFiltersP
         { label: 'All', value: '' },
         { label: 'Open', value: EngagementStatus.OPEN },
         { label: 'Pending Assignment', value: EngagementStatus.PENDING_ASSIGNMENT },
+        { label: 'Active', value: EngagementStatus.ACTIVE },
+        { label: 'Cancelled', value: EngagementStatus.CANCELLED },
         { label: 'Closed', value: EngagementStatus.CLOSED },
     ]), [])
 

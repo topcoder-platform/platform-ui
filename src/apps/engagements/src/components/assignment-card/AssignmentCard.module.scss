@@ -1,0 +1,102 @@
+@import '@libs/ui/styles/includes';
+@import '../../styles/responsive';
+
+.card {
+    background: $tc-white;
+    border: 1px solid $black-10;
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.title {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: $black-100;
+}
+
+.description {
+    margin: 0;
+    color: $black-80;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.meta {
+    display: grid;
+    gap: 8px;
+    color: $black-60;
+    font-size: 0.85rem;
+}
+
+.metaItem {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.metaIcon {
+    width: 16px;
+    height: 16px;
+    color: $teal-100;
+}
+
+.skills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.skillPill {
+    background-color: $black-20;
+    color: $black-100;
+    padding: 4px 8px;
+    border-radius: 10px;
+    font-size: 0.7rem;
+}
+
+.moreSkills {
+    font-size: 0.85rem;
+    color: $black-60;
+    align-self: center;
+}
+
+.emptySkills {
+    font-size: 0.85rem;
+    color: $black-60;
+}
+
+.actions {
+    display: flex;
+    gap: 12px;
+    margin-top: auto;
+    flex-wrap: wrap;
+}
+
+.actionButton {
+    flex: 1 1 160px;
+}
+
+@include mobile {
+    .actions {
+        flex-direction: column;
+    }
+
+    .actionButton {
+        width: 100%;
+    }
+}

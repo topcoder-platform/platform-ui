@@ -13,6 +13,8 @@ interface StatusBadgeProps {
 const STATUS_LABELS: Record<EngagementStatus, string> = {
     [EngagementStatus.OPEN]: 'Open',
     [EngagementStatus.PENDING_ASSIGNMENT]: 'Pending Assignment',
+    [EngagementStatus.ACTIVE]: 'Active',
+    [EngagementStatus.CANCELLED]: 'Cancelled',
     [EngagementStatus.CLOSED]: 'Closed',
 }
 

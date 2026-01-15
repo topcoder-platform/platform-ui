@@ -22,17 +22,11 @@ interface ApplicationCardProps {
 interface ApplicationDetailsProps {
     application: Application
     coverLetterSnippet: string
-    isExpanded: boolean
 }
 
 const ApplicationDetails: FC<ApplicationDetailsProps> = (props: ApplicationDetailsProps) => {
     const application = props.application
     const coverLetterSnippet = props.coverLetterSnippet
-    const isExpanded = props.isExpanded
-
-    if (!isExpanded) {
-        return undefined
-    }
 
     return (
         <div className={styles.details}>
@@ -158,11 +152,12 @@ const ApplicationCard: FC<ApplicationCardProps> = (props: ApplicationCardProps) 
                     />
                 )}
             </div>
-            <ApplicationDetails
-                application={application}
-                coverLetterSnippet={coverLetterSnippet}
-                isExpanded={isExpanded}
-            />
+            {isExpanded && (
+                <ApplicationDetails
+                    application={application}
+                    coverLetterSnippet={coverLetterSnippet}
+                />
+            )}
         </div>
     )
 }

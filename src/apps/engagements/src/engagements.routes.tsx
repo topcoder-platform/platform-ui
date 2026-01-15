@@ -19,6 +19,10 @@ const MyApplicationsPage: LazyLoadedComponent = lazyLoad(
     () => import('./pages/my-applications'),
     'MyApplicationsPage',
 )
+const MyAssignmentsPage: LazyLoadedComponent = lazyLoad(
+    () => import('./pages/my-assignments'),
+    'MyAssignmentsPage',
+)
 
 export const rootRoute: string = (
     EnvironmentConfig.SUBDOMAIN === AppSubdomain.engagements ? '' : `/${AppSubdomain.engagements}`
@@ -56,6 +60,13 @@ export const engagementsRoutes: ReadonlyArray<PlatformRoute> = [
                 element: <MyApplicationsPage />,
                 id: 'My Applications',
                 route: 'my-applications',
+            },
+            {
+                authRequired: true,
+                children: [],
+                element: <MyAssignmentsPage />,
+                id: 'My Assignments',
+                route: 'assignments',
             },
         ],
         domain: AppSubdomain.engagements,

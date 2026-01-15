@@ -43,6 +43,13 @@ interface BackendEngagement {
     createdAt?: string
     updatedAt?: string
     createdBy?: string
+    assignedMembers?: string[]
+    assignedMemberHandles?: string[]
+    isPrivate?: boolean
+    requiredMemberCount?: number
+    role?: string
+    workload?: string
+    compensationRange?: string
 }
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -150,19 +157,26 @@ const normalizeDuration = (data: BackendEngagement): Engagement['duration'] => {
 
 const normalizeEngagement = (data: BackendEngagement): Engagement => ({
     applicationDeadline: withDefault('', data.applicationDeadline),
+    assignedMemberHandles: withDefault([], data.assignedMemberHandles),
+    assignedMembers: withDefault([], data.assignedMembers),
+    compensationRange: firstDefined(data.compensationRange),
     countries: withDefault([], data.countries),
     createdAt: withDefault('', data.createdAt),
     createdBy: withDefault('', data.createdBy),
     description: withDefault('', data.description),
     duration: normalizeDuration(data),
     id: withDefault('', data.id, data.nanoId),
+    isPrivate: withDefault(false, data.isPrivate),
     nanoId: withDefault('', data.nanoId, data.id),
     projectId: withDefault('', data.projectId),
+    requiredMemberCount: withDefault<number | undefined>(undefined, data.requiredMemberCount),
     requiredSkills: withDefault([], data.requiredSkills),
+    role: firstDefined(data.role),
     status: normalizeEngagementStatus(data.status),
     timeZones: withDefault([], data.timeZones),
     title: withDefault('', data.title),
     updatedAt: withDefault('', data.updatedAt),
+    workload: firstDefined(data.workload),
 })
 
 export const getEngagements = async (
@@ -193,6 +207,35 @@ export const getEngagements = async (
     }
 
     const url = `${BASE_URL}?${queryParams.toString()}`
+    const response = await xhrGetPaginatedAsync<
+        BackendEngagement[] | BackendPaginatedResponse<BackendEngagement>
+    >(url)
+    const normalized = normalizePaginatedResponse(response, params.page, params.perPage)
+
+    const normalizedEngagements = normalized.data.map(normalizeEngagement)
+    const hydratedEngagements = await hydrateEngagementSkills(normalizedEngagements)
+
+    return {
+        ...normalized,
+        data: hydratedEngagements,
+    }
+}
+
+export interface GetMyAssignmentsParams {
+    page?: number
+    perPage?: number
+}
+
+export const getMyAssignedEngagements = async (
+    params: GetMyAssignmentsParams = {},
+): Promise<EngagementListResponse> => {
+    const queryParams = new URLSearchParams()
+
+    if (params.page) queryParams.append('page', params.page.toString())
+    if (params.perPage) queryParams.append('perPage', params.perPage.toString())
+
+    const queryString = queryParams.toString()
+    const url = `${BASE_URL}/my-assignments${queryString ? `?${queryString}` : ''}`
     const response = await xhrGetPaginatedAsync<
         BackendEngagement[] | BackendPaginatedResponse<BackendEngagement>
     >(url)

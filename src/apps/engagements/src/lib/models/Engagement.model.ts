@@ -1,6 +1,8 @@
 export enum EngagementStatus {
     OPEN = 'open',
     PENDING_ASSIGNMENT = 'pending_assignment',
+    ACTIVE = 'active',
+    CANCELLED = 'cancelled',
     CLOSED = 'closed',
 }
 
@@ -24,6 +26,10 @@ export interface Engagement {
     createdAt: string
     updatedAt: string
     createdBy: string
+    assignedMembers?: string[]
+    assignedMemberHandles?: string[]
+    isPrivate?: boolean
+    requiredMemberCount?: number
     role?: string
     workload?: string
     compensationRange?: string
