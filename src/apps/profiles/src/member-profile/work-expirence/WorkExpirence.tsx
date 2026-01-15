@@ -1,8 +1,8 @@
-import { Dispatch, FC, SetStateAction, useEffect, useMemo, useRef, useState } from 'react'
+import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 
 import { MemberTraitsAPI, useMemberTraits, UserProfile, UserTrait, UserTraitIds } from '~/libs/core'
-import { fetchSkillsByIds } from '~/libs/shared/lib/services/standard-skills'
+import { useSkillsByIds } from '~/libs/shared/lib/services/standard-skills'
 
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
 import { AddButton, EditMemberPropertyBtn, EmptySection } from '../../components'
@@ -32,75 +32,57 @@ const WorkExpirence: FC<WorkExpirenceProps> = (props: WorkExpirenceProps) => {
     const workExpirence: UserTrait[] | undefined
         = useMemo(() => memberWorkExpirenceTraits?.[0]?.traits?.data, [memberWorkExpirenceTraits])
 
-    const [skillNamesMap, setSkillNamesMap] = useState<Record<string, string>>({})
-    const [loadingSkills, setLoadingSkills] = useState<boolean>(false)
-    const fetchedSkillIdsRef = useRef<Set<string>>(new Set())
-
-    useEffect(() => {
+    // Collect all unique skill IDs from work experience entries
+    const allSkillIds = useMemo(() => {
         if (!workExpirence) {
-            setLoadingSkills(false)
-            return
+            return []
         }
 
-        const allSkillIds = new Set<string>()
+        const skillIdsSet = new Set<string>()
         workExpirence.forEach((work: UserTrait) => {
             if (work.associatedSkills && Array.isArray(work.associatedSkills)) {
                 work.associatedSkills.forEach((skillId: string) => {
                     if (skillId && typeof skillId === 'string') {
-                        allSkillIds.add(skillId)
+                        skillIdsSet.add(skillId)
                     }
                 })
             }
         })
 
-        if (allSkillIds.size > 0) {
-            const skillIdsToFetch = Array.from(allSkillIds)
-                .filter(id => !fetchedSkillIdsRef.current.has(id))
-
-            if (skillIdsToFetch.length > 0) {
-                setLoadingSkills(true)
-                skillIdsToFetch.forEach(id => fetchedSkillIdsRef.current.add(id))
-
-                fetchSkillsByIds(skillIdsToFetch)
-                    .then(skills => {
-                        setSkillNamesMap(prevMap => {
-                            const newMap: Record<string, string> = { ...prevMap }
-                            skills.forEach(skill => {
-                                if (skill.id && skill.name) {
-                                    newMap[skill.id] = skill.name
-                                }
-                            })
-                            skillIdsToFetch.forEach(skillId => {
-                                if (!newMap[skillId]) {
-                                    newMap[skillId] = skillId
-                                }
-                            })
-                            return newMap
-                        })
-                    })
-                    .catch(() => {
-                        setSkillNamesMap(prevMap => {
-                            const fallbackMap: Record<string, string> = { ...prevMap }
-                            skillIdsToFetch.forEach(skillId => {
-                                if (!fallbackMap[skillId]) {
-                                    fallbackMap[skillId] = skillId
-                                }
-                            })
-                            return fallbackMap
-                        })
-                    })
-                    .finally(() => {
-                        setLoadingSkills(false)
-                    })
-            } else {
-                setLoadingSkills(false)
-            }
-        } else {
-            setLoadingSkills(false)
-        }
+        return Array.from(skillIdsSet)
     }, [workExpirence])
 
-    const areSkillsLoaded = (work: UserTrait): boolean => {
+    // Fetch skills using SWR hook
+    const { data: fetchedSkills, error: skillsError } = useSkillsByIds(
+        allSkillIds.length > 0 ? allSkillIds : undefined,
+    )
+
+    // Determine loading state: data is undefined and no error yet
+    const loadingSkills = fetchedSkills === undefined && !skillsError
+
+    // Build skill names map from fetched skills
+    const skillNamesMap = useMemo(() => {
+        const map: Record<string, string> = {}
+
+        if (fetchedSkills) {
+            fetchedSkills.forEach(skill => {
+                if (skill.id && skill.name) {
+                    map[skill.id] = skill.name
+                }
+            })
+        }
+
+        // For skills that weren't found, use ID as fallback
+        allSkillIds.forEach(skillId => {
+            if (!map[skillId]) {
+                map[skillId] = skillId
+            }
+        })
+
+        return map
+    }, [fetchedSkills, allSkillIds])
+
+    const areSkillsLoaded = useCallback((work: UserTrait): boolean => {
         if (!work.associatedSkills || !Array.isArray(work.associatedSkills) || work.associatedSkills.length === 0) {
             return true
         }
@@ -109,7 +91,7 @@ const WorkExpirence: FC<WorkExpirenceProps> = (props: WorkExpirenceProps) => {
             const skillName = skillNamesMap[skillId]
             return skillName && skillName !== skillId
         })
-    }
+    }, [skillNamesMap])
 
     useEffect(() => {
         if (props.authProfile && editMode === profileEditModes.workExperience) {

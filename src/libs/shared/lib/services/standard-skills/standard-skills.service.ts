@@ -1,3 +1,7 @@
+import { useMemo } from 'react'
+import { SWRResponse } from 'swr'
+import useSWR from 'swr'
+
 import { EnvironmentConfig } from '~/config'
 import { UserSkill, xhrGetAsync, xhrPostAsync, xhrPutAsync } from '~/libs/core'
 
@@ -45,21 +49,53 @@ export async function updateMemberSkills(
 }
 
 /**
- * Fetch skills by their IDs
+ * Fetcher function for useSWR to fetch skills by their IDs
  * @param skillIds Array of skill UUIDs
  * @returns Promise with array of UserSkill objects
  */
-export async function fetchSkillsByIds(skillIds: string[]): Promise<UserSkill[]> {
+async function fetchSkillsByIdsFetcher(skillIds: string[]): Promise<UserSkill[]> {
     if (!skillIds || skillIds.length === 0) {
-        return Promise.resolve([])
+        return []
     }
 
     try {
         const skillPromises = skillIds.map(skillId => xhrGetAsync<UserSkill>(`${baseUrl}/skills/${skillId}`)
             .catch(() => undefined))
         const results = await Promise.all(skillPromises)
-        return results.filter((skill): skill is UserSkill => (skill !== null || skill !== undefined))
+        return results.filter((skill): skill is UserSkill => skill !== null && skill !== undefined)
     } catch {
         return []
     }
+}
+
+/**
+ * Hook to fetch skills by their IDs using SWR
+ * @param skillIds Array of skill UUIDs
+ * @returns SWRResponse with array of UserSkill objects
+ */
+export function useSkillsByIds(skillIds: string[] | undefined): SWRResponse<UserSkill[], Error> {
+    const swrKey = useMemo(() => {
+        if (!skillIds || skillIds.length === 0) {
+            return null
+        }
+        return ['skills-by-ids', [...skillIds].sort().join(',')]
+    }, [skillIds])
+
+    return useSWR<UserSkill[], Error>(
+        swrKey,
+        () => fetchSkillsByIdsFetcher(skillIds!),
+        {
+            revalidateOnFocus: false,
+            revalidateOnReconnect: false,
+        },
+    )
+}
+
+/**
+ * Fetch skills by their IDs (legacy async function for backward compatibility)
+ * @param skillIds Array of skill UUIDs
+ * @returns Promise with array of UserSkill objects
+ */
+export async function fetchSkillsByIds(skillIds: string[]): Promise<UserSkill[]> {
+    return fetchSkillsByIdsFetcher(skillIds)
 }
