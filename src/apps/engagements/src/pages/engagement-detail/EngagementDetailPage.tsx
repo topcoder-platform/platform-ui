@@ -36,6 +36,23 @@ const APPLICATION_STATUS_LABELS: Record<ApplicationStatus, string> = {
     [ApplicationStatus.REJECTED]: 'Rejected',
 }
 
+const formatEnumLabel = (value?: string): string | undefined => {
+    if (!value) {
+        return undefined
+    }
+
+    const normalized = value
+        .replace(/_/g, ' ')
+        .trim()
+    if (!normalized) {
+        return undefined
+    }
+
+    return normalized
+        .toLowerCase()
+        .replace(/\b\w/g, character => character.toUpperCase())
+}
+
 const EngagementDetailPage: FC = () => {
     const params = useParams<{ nanoId: string }>()
     const nanoId = params.nanoId
@@ -273,6 +290,9 @@ const EngagementDetailPage: FC = () => {
             return renderMissingEngagementState()
         }
 
+        const roleLabel = formatEnumLabel(engagement.role)
+        const workloadLabel = formatEnumLabel(engagement.workload)
+
         return (
             <div className={styles.detail}>
                 <div className={styles.statusRow}>
@@ -332,14 +352,14 @@ const EngagementDetailPage: FC = () => {
                         <IconSolid.BriefcaseIcon className={styles.metaIcon} />
                         <div>
                             <div className={styles.metaLabel}>Role</div>
-                            <div className={styles.metaValue}>{engagement.role || 'Not specified'}</div>
+                            <div className={styles.metaValue}>{roleLabel ?? 'Not specified'}</div>
                         </div>
                     </div>
                     <div className={styles.metaItem}>
                         <IconSolid.ClockIcon className={styles.metaIcon} />
                         <div>
                             <div className={styles.metaLabel}>Workload</div>
-                            <div className={styles.metaValue}>{engagement.workload || 'Not specified'}</div>
+                            <div className={styles.metaValue}>{workloadLabel ?? 'Not specified'}</div>
                         </div>
                     </div>
                     <div className={styles.metaItem}>

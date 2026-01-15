@@ -3,7 +3,7 @@ import { xhrGetAsync, xhrGetPaginatedAsync } from '~/libs/core'
 import { fetchSkillsByIds } from '~/libs/shared'
 
 import { EngagementStatus } from '../models'
-import type { Engagement, EngagementListResponse } from '../models'
+import type { Engagement, EngagementAssignment, EngagementListResponse } from '../models'
 
 const BASE_URL = `${EnvironmentConfig.API.V6}/engagements/engagements`
 
@@ -17,6 +17,15 @@ interface BackendMeta {
 interface BackendPaginatedResponse<T> {
     data?: T[]
     meta?: BackendMeta
+}
+
+interface BackendEngagementAssignment {
+    id?: string
+    engagementId?: string
+    memberId?: string
+    memberHandle?: string
+    createdAt?: string
+    updatedAt?: string
 }
 
 interface BackendEngagement {
@@ -43,16 +52,22 @@ interface BackendEngagement {
     createdAt?: string
     updatedAt?: string
     createdBy?: string
-    assignedMembers?: string[]
-    assignedMemberHandles?: string[]
+    createdByEmail?: string
+    assignments?: BackendEngagementAssignment[]
     isPrivate?: boolean
     requiredMemberCount?: number
-    role?: string
-    workload?: string
-    compensationRange?: string
+    role?: string | null
+    workload?: string | null
+    compensationRange?: string | null
+}
+
+type MemberEmailRecord = {
+    userId: number | string
+    email?: string
 }
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+const USER_ID_PATTERN = /^\d+$/
 const UNKNOWN_SKILL_LABEL = 'Unknown skill'
 
 const isUuid = (value: string): boolean => UUID_PATTERN.test(value)
@@ -144,6 +159,32 @@ const withDefault = <T>(fallback: T, ...values: Array<T | undefined>): T => (
     firstDefined(...values) ?? fallback
 )
 
+const normalizeEnumValue = (
+    value?: string | number | null,
+): string | undefined => {
+    if (value === null || value === undefined) {
+        return undefined
+    }
+
+    const normalized = typeof value === 'string' ? value : value.toString()
+    return normalized || undefined
+}
+
+const normalizeAssignments = (assignments?: BackendEngagementAssignment[]): EngagementAssignment[] => {
+    if (!Array.isArray(assignments)) {
+        return []
+    }
+
+    return assignments.map(assignment => ({
+        createdAt: withDefault('', assignment.createdAt),
+        engagementId: withDefault('', assignment.engagementId),
+        id: withDefault('', assignment.id),
+        memberHandle: withDefault('', assignment.memberHandle),
+        memberId: withDefault('', assignment.memberId),
+        updatedAt: withDefault('', assignment.updatedAt),
+    }))
+}
+
 const normalizeDuration = (data: BackendEngagement): Engagement['duration'] => {
     const duration: NonNullable<BackendEngagement['duration']> = data.duration ?? {}
 
@@ -157,12 +198,12 @@ const normalizeDuration = (data: BackendEngagement): Engagement['duration'] => {
 
 const normalizeEngagement = (data: BackendEngagement): Engagement => ({
     applicationDeadline: withDefault('', data.applicationDeadline),
-    assignedMemberHandles: withDefault([], data.assignedMemberHandles),
-    assignedMembers: withDefault([], data.assignedMembers),
-    compensationRange: firstDefined(data.compensationRange),
+    assignments: normalizeAssignments(data.assignments),
+    compensationRange: data.compensationRange ?? undefined,
     countries: withDefault([], data.countries),
     createdAt: withDefault('', data.createdAt),
     createdBy: withDefault('', data.createdBy),
+    createdByEmail: firstDefined(data.createdByEmail),
     description: withDefault('', data.description),
     duration: normalizeDuration(data),
     id: withDefault('', data.id, data.nanoId),
@@ -171,13 +212,70 @@ const normalizeEngagement = (data: BackendEngagement): Engagement => ({
     projectId: withDefault('', data.projectId),
     requiredMemberCount: withDefault<number | undefined>(undefined, data.requiredMemberCount),
     requiredSkills: withDefault([], data.requiredSkills),
-    role: firstDefined(data.role),
+    role: normalizeEnumValue(firstDefined(data.role)),
     status: normalizeEngagementStatus(data.status),
     timeZones: withDefault([], data.timeZones),
     title: withDefault('', data.title),
     updatedAt: withDefault('', data.updatedAt),
-    workload: firstDefined(data.workload),
+    workload: normalizeEnumValue(firstDefined(data.workload)),
 })
+
+const toUserId = (value?: string): number | undefined => {
+    const normalized = value?.trim()
+    if (!normalized || !USER_ID_PATTERN.test(normalized)) {
+        return undefined
+    }
+
+    const parsed = Number(normalized)
+    return Number.isFinite(parsed) ? parsed : undefined
+}
+
+const hydrateEngagementCreatorEmails = async (
+    engagements: Engagement[],
+): Promise<Engagement[]> => {
+    const userIds = Array.from(new Set(
+        engagements
+            .filter(engagement => !engagement.createdByEmail)
+            .map(engagement => toUserId(engagement.createdBy))
+            .filter((value): value is number => Number.isFinite(value)),
+    ))
+
+    if (!userIds.length) {
+        return engagements
+    }
+
+    const qs = userIds.length > 1
+        ? userIds
+            .map(id => `userIds=${id}`)
+            .join('&')
+        : `userId=${userIds[0]}`
+
+    try {
+        const emailRecords = await xhrGetAsync<MemberEmailRecord[]>(
+            `${EnvironmentConfig.API.V6}/members?${qs}&fields=userId,email&perPage=${userIds.length}`,
+        )
+        const records = Array.isArray(emailRecords) ? emailRecords : []
+        const emailByUserId = new Map<number, string>(
+            records.map(record => [Number(record.userId), record.email ?? '']),
+        )
+
+        return engagements.map(engagement => {
+            if (engagement.createdByEmail) {
+                return engagement
+            }
+
+            const userId = toUserId(engagement.createdBy)
+            if (!userId) {
+                return engagement
+            }
+
+            const email = emailByUserId.get(userId)
+            return email ? { ...engagement, createdByEmail: email } : engagement
+        })
+    } catch (error) {
+        return engagements
+    }
+}
 
 export const getEngagements = async (
     params: GetEngagementsParams = {},
@@ -243,16 +341,21 @@ export const getMyAssignedEngagements = async (
 
     const normalizedEngagements = normalized.data.map(normalizeEngagement)
     const hydratedEngagements = await hydrateEngagementSkills(normalizedEngagements)
+    const hydratedWithEmails = await hydrateEngagementCreatorEmails(hydratedEngagements)
 
     return {
         ...normalized,
-        data: hydratedEngagements,
+        data: hydratedWithEmails,
     }
 }
 
 export const getEngagementByNanoId = async (nanoId: string): Promise<Engagement> => {
     const response = await xhrGetAsync<BackendEngagement>(`${BASE_URL}/${nanoId}`)
+    // eslint-disable-next-line no-console
+    console.log('API Response:', response)
     const engagement = normalizeEngagement(response)
+    // eslint-disable-next-line no-console
+    console.log('Normalized:', engagement)
     const [hydrated] = await hydrateEngagementSkills([engagement])
     return hydrated ?? engagement
 }

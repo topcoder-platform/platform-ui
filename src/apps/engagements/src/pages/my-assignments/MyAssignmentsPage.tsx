@@ -39,8 +39,8 @@ const getBaseDomainFromHostname = (hostname: string): string | undefined => {
         .join('.')
 }
 
-const getTaskManagerEmail = (createdBy?: string): string | undefined => {
-    const normalized = createdBy?.trim()
+const normalizeContactEmail = (contactEmail?: string): string | undefined => {
+    const normalized = contactEmail?.trim()
     if (!normalized) {
         return undefined
     }
@@ -150,7 +150,7 @@ const MyAssignmentsPage: FC = () => {
                     {loading ? skeletonCards.map(card => (
                         <div key={`skeleton-${card}`} className={styles.skeletonCard} />
                     )) : assignments.map(engagement => {
-                        const contactEmail = getTaskManagerEmail(engagement.createdBy)
+                        const contactEmail = normalizeContactEmail(engagement.createdByEmail)
 
                         return (
                             <AssignmentCard

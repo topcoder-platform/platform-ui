@@ -6,6 +6,15 @@ export enum EngagementStatus {
     CLOSED = 'closed',
 }
 
+export interface EngagementAssignment {
+    id: string
+    engagementId: string
+    memberId: string
+    memberHandle: string
+    createdAt: string
+    updatedAt: string
+}
+
 export interface Engagement {
     id: string
     nanoId: string
@@ -26,8 +35,8 @@ export interface Engagement {
     createdAt: string
     updatedAt: string
     createdBy: string
-    assignedMembers?: string[]
-    assignedMemberHandles?: string[]
+    createdByEmail?: string
+    assignments?: EngagementAssignment[]
     isPrivate?: boolean
     requiredMemberCount?: number
     role?: string
