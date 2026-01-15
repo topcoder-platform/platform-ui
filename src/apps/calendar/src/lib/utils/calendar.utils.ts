@@ -22,7 +22,6 @@ export const legendStatusOrder: LeaveStatus[] = [
     LeaveStatus.AVAILABLE,
     LeaveStatus.LEAVE,
     LeaveStatus.HOLIDAY,
-    LeaveStatus.WIPRO_HOLIDAY,
     LeaveStatus.WEEKEND,
 ]
 
