@@ -358,7 +358,6 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
         }
     }
 
-    console.log(formValues, 'formValues')
     return (
         <BaseModal
             onClose={props.onClose}
