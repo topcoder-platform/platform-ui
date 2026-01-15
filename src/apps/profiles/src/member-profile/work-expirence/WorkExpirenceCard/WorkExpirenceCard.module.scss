@@ -30,4 +30,39 @@
         justify-content: space-between;
         align-items: flex-end;
     }
+
+    .workExpirenceCardDescription {
+        margin-top: $sp-4;
+        color: $black-80;
+
+        :global(.body-main-normal) {
+            color: $black-80;
+            line-height: 22px;
+        }
+    }
+
+    .workExpirenceCardSkills {
+        margin-top: $sp-4;
+        display: flex;
+
+        :global(.body-main-small-bold) {
+            margin-bottom: $sp-2;
+            color: $black-100;
+        }
+
+        .skillsList {
+            display: flex;
+            flex-wrap: wrap;
+            gap: $sp-2;
+
+            .skillTag {
+                display: inline-block;
+                padding: $sp-1 $sp-2;
+                color: $turq-160;
+                border-radius: 4px;
+                font-size: 12px;
+                line-height: 16px;
+            }
+        }
+    }
 }
