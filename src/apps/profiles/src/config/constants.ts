@@ -1,5 +1,7 @@
 // import { EnvironmentConfig } from '~/config'
 
+import { UserRole } from "~/libs/core"
+
 export enum TRACKS_PROFILE_MAP {
     DEVELOP = 'Developer',
     DESIGN = 'Designer',
@@ -27,9 +29,4 @@ export enum profileEditModes {
 
 export const MAX_PRINCIPAL_SKILLS_COUNT = 10
 
-export enum ADMIN_ROLES_ENUM {
-    ADMINISTRATOR = 'administrator',
-    ADMIN = 'admin',
-}
-
-export const ADMIN_ROLES = [ADMIN_ROLES_ENUM.ADMINISTRATOR, ADMIN_ROLES_ENUM.ADMIN]
+export const ADMIN_ROLES = [UserRole.administrator]
