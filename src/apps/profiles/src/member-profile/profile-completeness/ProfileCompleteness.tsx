@@ -24,7 +24,7 @@ const ProfileCompleteness: FC<ProfileCompletenessProps> = props => {
 
     const [count, incompleteEntries] = useMemo(() => {
         const fields = Object.entries(completeness.entries)
-            .filter(([, value]) => !value)
+            .filter(([, value]) => value === false || value === null || value === undefined)
             .map(([key]) => startCase(key))
 
         if (fields.length === 2) {
