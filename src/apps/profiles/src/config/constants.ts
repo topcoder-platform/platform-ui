@@ -1,6 +1,6 @@
 // import { EnvironmentConfig } from '~/config'
 
-import { UserRole } from "~/libs/core"
+import { UserRole } from '~/libs/core'
 
 export enum TRACKS_PROFILE_MAP {
     DEVELOP = 'Developer',
