@@ -27,3 +27,16 @@
         padding: $sp-4 $sp-4 $sp-4 0;
     }
 }
+
+.titleWrap {
+    margin-top: $sp-8;
+}
+
+.email {
+    display: flex;
+    align-items: center;
+}
+
+.emailText {
+    margin-top: $sp-2;
+}

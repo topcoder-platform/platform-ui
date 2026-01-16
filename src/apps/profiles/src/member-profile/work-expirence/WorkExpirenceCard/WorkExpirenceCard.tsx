@@ -1,3 +1,5 @@
+/* eslint-disable complexity */
+
 import { FC } from 'react'
 import classNames from 'classnames'
 import moment from 'moment'
@@ -10,6 +12,8 @@ import styles from './WorkExpirenceCard.module.scss'
 interface WorkExpirenceCardProps {
     work: UserTrait
     isModalView?: boolean
+    skillNamesMap?: Record<string, string>
+    showSkills?: boolean
 }
 
 const formatDateRange = (work: UserTrait): string | undefined => {
@@ -39,6 +43,7 @@ const WorkExpirenceCard: FC<WorkExpirenceCardProps> = (props: WorkExpirenceCardP
     const companyName: string | undefined = props.work.company || props.work.companyName
     const city: string | undefined = props.work.cityTown || props.work.city
     const industry: string | undefined = props.work.industry
+    const position: string | undefined = props.work.position
     const dateRange: string | undefined = formatDateRange(props.work)
 
     const containerClassName: string = classNames(
@@ -50,14 +55,20 @@ const WorkExpirenceCard: FC<WorkExpirenceCardProps> = (props: WorkExpirenceCardP
         <div className={containerClassName}>
             <div className={styles.workExpirenceCardHeader}>
                 <div className={styles.workExpirenceCardHeaderLeft}>
-                    <p className='body-main-bold'>
-                        {props.work.position}
-                        {industry ? `, ${getIndustryOptionLabel(industry)}` : undefined}
-                    </p>
+                    {(position || industry) && (
+                        <p className='body-main-bold'>
+                            {position || ''}
+                            {
+                                position && industry
+                                    ? `, ${getIndustryOptionLabel(industry)}`
+                                    : (industry ? getIndustryOptionLabel(industry) : '')
+                            }
+                        </p>
+                    )}
                     {(companyName || city) && (
                         <p>
-                            {companyName}
-                            {city ? `, ${city}` : undefined}
+                            {companyName || ''}
+                            {companyName && city ? `, ${city}` : (city || '')}
                         </p>
                     )}
                 </div>
@@ -67,6 +78,32 @@ const WorkExpirenceCard: FC<WorkExpirenceCardProps> = (props: WorkExpirenceCardP
                     </div>
                 ) : undefined}
             </div>
+            {props.work.description && (
+                <div className={styles.workExpirenceCardDescription}>
+                    <p className='body-main-normal'>{props.work.description}</p>
+                </div>
+            )}
+            {
+                props.work.associatedSkills
+                && Array.isArray(props.work.associatedSkills)
+                && props.work.associatedSkills.length > 0
+                && props.showSkills
+                && (
+                    <div className={styles.workExpirenceCardSkills}>
+                        <p className='body-main-small-bold'>Skills:</p>
+                        <div className={styles.skillsList}>
+                            {props.work.associatedSkills.map((skillId: string) => {
+                                const skillName = props.skillNamesMap?.[skillId] || skillId
+                                return (
+                                    <span key={skillId} className={styles.skillTag}>
+                                        {skillName}
+                                    </span>
+                                )
+                            })}
+                        </div>
+                    </div>
+                )
+            }
         </div>
     )
 }
