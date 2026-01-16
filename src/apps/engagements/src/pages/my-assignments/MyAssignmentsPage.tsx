@@ -9,7 +9,7 @@ import { Pagination } from '~/apps/admin/src/lib/components/common/Pagination'
 import { APPLICATIONS_PER_PAGE } from '../../config/constants'
 import type { Engagement } from '../../lib/models'
 import { getMyAssignedEngagements } from '../../lib/services/engagements.service'
-import { AssignmentCard } from '../../components/assignment-card'
+import { AssignmentCard, EngagementsTabs } from '../../components'
 import { rootRoute } from '../../engagements.routes'
 
 import styles from './MyAssignmentsPage.module.scss'
@@ -121,7 +121,8 @@ const MyAssignmentsPage: FC = () => {
     const showEmptyState = !loading && !error && assignments.length === 0
 
     return (
-        <ContentLayout title='My Assignments' contentClass={styles.pageContent}>
+        <ContentLayout title='My Active Assignments' contentClass={styles.pageContent}>
+            <EngagementsTabs activeTab='assignments' />
             {loading && (
                 <div className={styles.loadingState}>
                     <LoadingSpinner className={styles.loadingSpinner} />

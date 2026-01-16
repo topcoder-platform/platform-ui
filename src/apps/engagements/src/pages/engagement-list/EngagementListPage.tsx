@@ -9,7 +9,7 @@ import { Pagination } from '~/apps/admin/src/lib/components/common/Pagination'
 
 import { Engagement, EngagementStatus } from '../../lib/models'
 import { getEngagements } from '../../lib/services'
-import { EngagementCard, EngagementFilters } from '../../components'
+import { EngagementCard, EngagementFilters, EngagementsTabs } from '../../components'
 import { rootRoute } from '../../engagements.routes'
 
 import styles from './EngagementListPage.module.scss'
@@ -216,6 +216,7 @@ const EngagementListPage: FC = () => {
                     <span>Sign in to apply for engagements.</span>
                 </div>
             )}
+            <EngagementsTabs activeTab='opportunities' />
             <EngagementFilters filters={filters} onFilterChange={handleFilterChange} />
             {loading && (
                 <div className={styles.loadingState}>
