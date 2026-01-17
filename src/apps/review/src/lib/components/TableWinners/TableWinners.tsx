@@ -1,7 +1,7 @@
 /**
  * Table Winners.
  */
-import { FC, useCallback, useContext, useMemo } from 'react'
+import { FC, useContext, useMemo } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import _ from 'lodash'
 import classNames from 'classnames'
@@ -25,6 +25,7 @@ import type { PhaseOrderingOptions } from '../../utils'
 import { useRolePermissions, UseRolePermissionsResult, useSubmissionDownloadAccess } from '../../hooks'
 import type { UseSubmissionDownloadAccessResult } from '../../hooks/useSubmissionDownloadAccess'
 import { CollapsibleAiReviewsRow } from '../CollapsibleAiReviewsRow'
+import { SUBMISSION_DOWNLOAD_RESTRICTION_MESSAGE } from '../../constants'
 
 import styles from './TableWinners.module.scss'
 
@@ -84,17 +85,6 @@ export const TableWinners: FC<Props> = (props: Props) => {
         return true
     }, [isCompletedDesignChallenge, isSubmissionsViewable, canViewAllSubmissions])
 
-    const filterFunc = useCallback((submissions: ProjectResult[]): ProjectResult[] => submissions
-        .filter(submission => {
-            if (!canViewSubmissions) {
-                return String(submission.userId) === String(loginUserInfo?.userId)
-            }
-
-            return true
-        }), [canViewSubmissions, loginUserInfo?.userId])
-
-    const winnerData = filterFunc(datas)
-
     const reviewTabUrl = useMemo(() => {
         const searchParams = new URLSearchParams(location.search)
         const challengePhases = challengeInfo?.phases ?? []
@@ -146,11 +136,19 @@ export const TableWinners: FC<Props> = (props: Props) => {
                 label: 'Submission ID',
                 propertyName: 'submissionId',
                 renderer: (data: ProjectResult) => {
+                    const cannotDownloadSubmission = (
+                        !canViewSubmissions && String(data.userId) !== String(loginUserInfo?.userId)
+                    )
                     const isRestrictedForRow = data.submissionId
                         ? isSubmissionDownloadRestrictedForMember(data.userId)
+                            || cannotDownloadSubmission
                         : false
-                    const tooltipMessage = getRestrictionMessageForMember(data.userId)
+                    let tooltipMessage = getRestrictionMessageForMember(data.userId)
                         ?? restrictionMessage
+                    if (cannotDownloadSubmission) {
+                        tooltipMessage = SUBMISSION_DOWNLOAD_RESTRICTION_MESSAGE
+                    }
+
                     const isButtonDisabled = Boolean(
                         (data.submissionId
                             ? isDownloading[data.submissionId]
@@ -310,11 +308,11 @@ export const TableWinners: FC<Props> = (props: Props) => {
             )}
         >
             {isTablet ? (
-                <TableMobile columns={columnsMobile} data={winnerData} />
+                <TableMobile columns={columnsMobile} data={datas} />
             ) : (
                 <Table
                     columns={columns}
-                    data={winnerData}
+                    data={datas}
                     disableSorting
                     onToggleSort={_.noop}
                     removeDefaultSort
