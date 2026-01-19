@@ -34,4 +34,3 @@ const PhoneCard: FC<PhoneCardProps> = (props: PhoneCardProps) => {
 }
 
 export default PhoneCard
-

@@ -1,5 +1,5 @@
 /* eslint-disable complexity */
-import { ChangeEvent, Dispatch, FC, MutableRefObject, SetStateAction, useRef, useState } from 'react'
+import { Dispatch, FC, MutableRefObject, SetStateAction, useRef, useState } from 'react'
 import { bind, trim } from 'lodash'
 import { toast } from 'react-toastify'
 import classNames from 'classnames'
@@ -8,6 +8,7 @@ import { BaseModal, Button, IconOutline, InputSelect, InputText } from '~/libs/u
 import { updateMemberProfileAsync, UserProfile } from '~/libs/core'
 
 import PhoneCard from '../PhoneCard'
+
 import styles from './ModifyPhonesModal.module.scss'
 
 interface ModifyPhonesModalProps {
@@ -69,7 +70,7 @@ const ModifyPhonesModal: FC<ModifyPhonesModalProps> = (props: ModifyPhonesModalP
         setIsSaving(true)
 
         updateMemberProfileAsync(props.profile.handle, {
-            phones: phones,
+            phones,
         })
             .then(() => {
                 toast.success('Phone numbers updated successfully.', { position: toast.POSITION.BOTTOM_RIGHT })
@@ -103,7 +104,7 @@ const ModifyPhonesModal: FC<ModifyPhonesModalProps> = (props: ModifyPhonesModalP
 
     function handlePhoneNumberBlur(): void {
         const phoneNumber = formValues.number || ''
-        
+
         if (phoneNumber && !PHONE_VALIDATION_REGEX.test(phoneNumber)) {
             setFormErrors({
                 ...formErrors,
@@ -124,6 +125,7 @@ const ModifyPhonesModal: FC<ModifyPhonesModalProps> = (props: ModifyPhonesModalP
         if (formElRef.current && formElRef.current.reset) {
             formElRef.current.reset()
         }
+
         setEditedItemIndex(undefined)
         setAddingNewItem(false)
     }
@@ -304,4 +306,3 @@ const ModifyPhonesModal: FC<ModifyPhonesModalProps> = (props: ModifyPhonesModalP
 }
 
 export default ModifyPhonesModal
-

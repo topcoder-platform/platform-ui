@@ -4,8 +4,8 @@ import { UserProfile } from '~/libs/core'
 import { CopyButton } from '~/apps/admin/src/lib/components/CopyButton'
 
 import { AddButton, EditMemberPropertyBtn, EmptySection } from '../../components'
-import PhoneCard from './PhoneCard'
 import ModifyPhonesModal from './ModifyPhonesModal'
+import PhoneCard from './PhoneCard'
 import styles from './Phones.module.scss'
 
 interface PhonesProps {
@@ -70,9 +70,7 @@ const Phones: FC<PhonesProps> = (props: PhonesProps) => {
                     ))
                     : (
                         <EmptySection
-                            selfMessage={
-                                'Adding contact information helps others reach you.'
-                            }
+                            selfMessage='Adding contact information helps others reach you.'
                             isSelf={canEdit}
                         >
                             This member has not added contact phone numbers.
@@ -101,4 +99,3 @@ const Phones: FC<PhonesProps> = (props: PhonesProps) => {
 }
 
 export default Phones
-

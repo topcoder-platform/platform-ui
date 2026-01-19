@@ -7,10 +7,10 @@ import { NamesAndHandleAppearance, useMemberTraits, UserProfile, UserTraitIds, U
 
 import { AddButton, EditMemberPropertyBtn, EmptySection } from '../../components'
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
+import Phones from '../phones'
 
 import { ModifyAboutMeModal } from './ModifyAboutMeModal'
 import MemberRatingCard from './MemberRatingCard/MemberRatingCard'
-import Phones from '../phones'
 import styles from './AboutMe.module.scss'
 
 interface AboutMeProps {
