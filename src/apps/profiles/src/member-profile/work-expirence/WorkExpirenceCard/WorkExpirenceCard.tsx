@@ -1,6 +1,7 @@
 /* eslint-disable complexity */
 
 import { FC } from 'react'
+import DOMPurify from 'dompurify'
 import classNames from 'classnames'
 import moment from 'moment'
 
@@ -78,9 +79,18 @@ const WorkExpirenceCard: FC<WorkExpirenceCardProps> = (props: WorkExpirenceCardP
                     </div>
                 ) : undefined}
             </div>
-            {props.work.description && (
+            {props.work.description && !props.isModalView && (
                 <div className={styles.workExpirenceCardDescription}>
-                    <p className='body-main-normal'>{props.work.description}</p>
+                    <div
+                        className='body-main-normal'
+                        // eslint-disable-next-line react/no-danger
+                        dangerouslySetInnerHTML={{
+                            __html: DOMPurify.sanitize(props.work.description, {
+                                ALLOWED_ATTR: ['href', 'target', 'rel'],
+                                ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'ul', 'ol', 'li', 'a'],
+                            }),
+                        }}
+                    />
                 </div>
             )}
             {
@@ -88,18 +98,12 @@ const WorkExpirenceCard: FC<WorkExpirenceCardProps> = (props: WorkExpirenceCardP
                 && Array.isArray(props.work.associatedSkills)
                 && props.work.associatedSkills.length > 0
                 && props.showSkills
+                && !props.isModalView
                 && (
                     <div className={styles.workExpirenceCardSkills}>
-                        <p className='body-main-small-bold'>Skills:</p>
+                        <p className='body-main-small-bold'>{`Skills: `}</p>
                         <div className={styles.skillsList}>
-                            {props.work.associatedSkills.map((skillId: string) => {
-                                const skillName = props.skillNamesMap?.[skillId] || skillId
-                                return (
-                                    <span key={skillId} className={styles.skillTag}>
-                                        {skillName}
-                                    </span>
-                                )
-                            })}
+                            {props.work.associatedSkills.map((skillId: string) => props.skillNamesMap?.[skillId] || skillId).join(', ')}
                         </div>
                     </div>
                 )

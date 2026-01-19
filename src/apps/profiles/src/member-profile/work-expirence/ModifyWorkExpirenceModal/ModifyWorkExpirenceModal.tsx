@@ -4,14 +4,20 @@ import { bind, sortBy, trim } from 'lodash'
 import { toast } from 'react-toastify'
 import classNames from 'classnames'
 
-import { BaseModal, Button, IconOutline, InputDatePicker, InputSelect, InputText, InputTextarea } from '~/libs/ui'
+import { BaseModal, Button, IconOutline, InputDatePicker, InputSelect, InputText } from '~/libs/ui'
 import {
     updateDeleteOrCreateMemberTraitAsync,
     UserProfile, UserTrait,
     UserTraitCategoryNames,
     UserTraitIds,
 } from '~/libs/core'
-import { getIndustryOptionLabel, getIndustryOptionValue, INDUSTRIES_OPTIONS, InputSkillSelector } from '~/libs/shared'
+import {
+    FieldHtmlEditor,
+    getIndustryOptionLabel,
+    getIndustryOptionValue,
+    INDUSTRIES_OPTIONS,
+    InputSkillSelector,
+} from '~/libs/shared'
 import { fetchSkillsByIds } from '~/libs/shared/lib/services/standard-skills'
 
 import { WorkExpirenceCard } from '../WorkExpirenceCard'
@@ -197,6 +203,13 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
         setFormValues({
             ...oldFormValues,
             [key]: value,
+        })
+    }
+
+    function handleDescriptionChange(value: string): void {
+        setFormValues({
+            ...formValues,
+            description: value,
         })
     }
 
@@ -500,15 +513,15 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
                             onChange={bind(handleFormValueChange, this, 'currentlyWorking')}
                             checked={formValues.currentlyWorking as boolean}
                         />
-                        <InputTextarea
+                        <FieldHtmlEditor
                             name='description'
                             label='Description'
                             placeholder='Describe your role and achievements at this company'
                             dirty
                             tabIndex={0}
-                            onChange={bind(handleFormValueChange, this, 'description')}
+                            onChange={handleDescriptionChange}
+                            toolbar='undo redo | formatselect | bold italic underline strikethrough | link | alignleft aligncenter alignright alignjustify | numlist bullist outdent indent | table | removeformat'
                             value={formValues.description as string}
-                            rows={4}
                         />
                         <InputSkillSelector
                             label='Associated Skills'

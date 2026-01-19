@@ -30,12 +30,12 @@ import {
 } from '~/libs/ui'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { EnvironmentConfig } from '~/config'
+import { FieldHtmlEditor } from '~/libs/shared'
 
 import { FormAddWrapper } from '../common/FormAddWrapper'
 import { FormAddTerm } from '../../models'
 import { formAddTermSchema } from '../../utils'
 import { useManageAddTerm, useManageAddTermProps } from '../../hooks'
-import { FieldHtmlEditor } from '../common/FieldHtmlEditor'
 
 import styles from './TermsAddForm.module.scss'
 
