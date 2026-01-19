@@ -173,7 +173,7 @@ const PersonalCalendarPage: FC = () => {
                         onClick={handleSetAsHoliday}
                         disabled={!selectedDates.size || isUpdating}
                     >
-                        Set as Personal Holiday
+                        Set as Holiday
                     </Button>
                     <Button
                         secondary

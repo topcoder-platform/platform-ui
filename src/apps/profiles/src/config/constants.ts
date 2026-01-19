@@ -1,5 +1,7 @@
 // import { EnvironmentConfig } from '~/config'
 
+import { UserRole } from '~/libs/core'
+
 export enum TRACKS_PROFILE_MAP {
     DEVELOP = 'Developer',
     DESIGN = 'Designer',
@@ -26,3 +28,5 @@ export enum profileEditModes {
 // (removed) CES Survey/Userflow integrations
 
 export const MAX_PRINCIPAL_SKILLS_COUNT = 10
+
+export const ADMIN_ROLES = [UserRole.administrator]

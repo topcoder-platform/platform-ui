@@ -4,6 +4,7 @@ import { KeyedMutator } from 'swr'
 import classNames from 'classnames'
 
 import { NamesAndHandleAppearance, useMemberTraits, UserProfile, UserTraitIds, UserTraits } from '~/libs/core'
+import { CopyButton } from '~/apps/admin/src/lib/components/CopyButton'
 
 import { AddButton, EditMemberPropertyBtn, EmptySection } from '../../components'
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
@@ -119,6 +120,18 @@ const AboutMe: FC<AboutMeProps> = (props: AboutMeProps) => {
                     />
                 )
             }
+
+            {props.profile?.email
+            && (
+                <div className={styles.titleWrap}>
+                    <p className='body-main-bold'>Contact</p>
+                    <div className={styles.email}>
+                        <p className={styles.emailText}>{props.profile.email}</p>
+                        <CopyButton className={styles.copyButton} text={props.profile.email} />
+                    </div>
+                </div>
+            )}
+
         </div>
     )
 }

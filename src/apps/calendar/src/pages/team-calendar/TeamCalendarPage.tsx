@@ -1,7 +1,7 @@
 import { addMonths, endOfMonth, startOfMonth, subMonths } from 'date-fns'
 import { FC, useCallback, useEffect, useMemo, useState } from 'react'
 
-import { MonthNavigation, TeamCalendar } from '../../lib/components'
+import { CalendarLegend, MonthNavigation, TeamCalendar } from '../../lib/components'
 import { useFetchTeamLeave } from '../../lib/hooks'
 
 import styles from './TeamCalendarPage.module.scss'
@@ -57,6 +57,7 @@ const TeamCalendarPage: FC = () => {
                     onNextMonth={handleNextMonth}
                     onPrevMonth={handlePrevMonth}
                 />
+                <CalendarLegend />
             </section>
 
             <section className={styles.calendarSection}>
