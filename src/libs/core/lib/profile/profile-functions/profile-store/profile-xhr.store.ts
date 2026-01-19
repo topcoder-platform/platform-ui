@@ -9,14 +9,12 @@ import { UserEmailPreferences } from '../../user-email-preference.model'
 import { UserProfile } from '../../user-profile.model'
 import { UserStats } from '../../user-stats.model'
 import { UserTraits } from '../../user-traits.model'
-import { UserVerify } from '../../user-verify.model'
 
 import {
     countryLookupURL,
     memberEmailPreferencesURL,
     memberModifyURL,
     profile as profileUrl,
-    verify as verifyUrl,
 } from './profile-endpoint.config'
 
 export function get(handle: string): Promise<UserProfile> {
@@ -27,11 +25,6 @@ export function get(handle: string): Promise<UserProfile> {
 // but the underlying xhr request is actually a put b/c the api doesn't support patch
 export function patchName(handle: string, request: EditNameRequest): Promise<UserProfile> {
     return xhrPutAsync<EditNameRequest, UserProfile>(profileUrl(handle), request)
-}
-
-// reads from looker where member verified status is stored
-export function getVerification(): Promise<UserVerify[]> {
-    return xhrGetAsync<UserVerify[]>(verifyUrl())
 }
 
 export function getMemberStats(handle: string): Promise<UserStats | undefined> {
