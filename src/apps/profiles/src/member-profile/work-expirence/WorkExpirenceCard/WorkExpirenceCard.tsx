@@ -87,7 +87,7 @@ const WorkExpirenceCard: FC<WorkExpirenceCardProps> = (props: WorkExpirenceCardP
                         dangerouslySetInnerHTML={{
                             __html: DOMPurify.sanitize(props.work.description, {
                                 ALLOWED_ATTR: ['href', 'target', 'rel'],
-                                ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'ul', 'ol', 'li', 'a'],
+                                ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 's', 'strike', 'ul', 'ol', 'li', 'a'],
                             }),
                         }}
                     />
