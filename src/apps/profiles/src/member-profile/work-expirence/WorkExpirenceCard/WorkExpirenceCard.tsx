@@ -101,9 +101,13 @@ const WorkExpirenceCard: FC<WorkExpirenceCardProps> = (props: WorkExpirenceCardP
                 && !props.isModalView
                 && (
                     <div className={styles.workExpirenceCardSkills}>
-                        <p className='body-main-small-bold'>{`Skills: `}</p>
+                        <p className='body-main-small-bold'>{'Skills: '}</p>
                         <div className={styles.skillsList}>
-                            {props.work.associatedSkills.map((skillId: string) => props.skillNamesMap?.[skillId] || skillId).join(', ')}
+                            {props
+                                .work
+                                .associatedSkills
+                                .map((skillId: string) => props.skillNamesMap?.[skillId] || skillId)
+                                .join(', ')}
                         </div>
                     </div>
                 )

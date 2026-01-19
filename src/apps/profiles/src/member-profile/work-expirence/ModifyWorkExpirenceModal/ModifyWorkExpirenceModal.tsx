@@ -520,7 +520,16 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
                             dirty
                             tabIndex={0}
                             onChange={handleDescriptionChange}
-                            toolbar='undo redo | formatselect | bold italic underline strikethrough | link | alignleft aligncenter alignright alignjustify | numlist bullist outdent indent | table | removeformat'
+                            toolbar={`
+                                undo redo 
+                                | formatselect 
+                                | bold italic underline strikethrough 
+                                | link 
+                                | alignleft aligncenter alignright alignjustify 
+                                | numlist bullist outdent indent 
+                                | table 
+                                | removeformat
+                            `}
                             value={formValues.description as string}
                         />
                         <InputSkillSelector
