@@ -113,7 +113,9 @@ const PersonalCalendarPage: FC = () => {
     const displayName = useMemo(() => {
         const firstName = profile?.firstName?.trim()
         const lastName = profile?.lastName?.trim()
-        const fullName = [firstName, lastName].filter(Boolean).join(' ')
+        const fullName = [firstName, lastName]
+            .filter(Boolean)
+            .join(' ')
 
         return (
             fullName

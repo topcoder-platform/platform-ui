@@ -106,10 +106,10 @@ export function useSkillsByIds(skillIds: string[] | undefined): SWRResponse<User
 }
 
 /**
- * Fetch skills by their IDs (legacy async function for backward compatibility)
+ * Fetch skills by their IDs using individual requests (legacy async function for backward compatibility)
  * @param skillIds Array of skill UUIDs
  * @returns Promise with array of UserSkill objects
  */
-export async function fetchSkillsByIds(skillIds: string[]): Promise<UserSkill[]> {
+export async function fetchSkillsByIdsLegacy(skillIds: string[]): Promise<UserSkill[]> {
     return fetchSkillsByIdsFetcher(skillIds)
 }
