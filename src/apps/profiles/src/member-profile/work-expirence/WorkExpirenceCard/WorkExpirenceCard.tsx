@@ -106,7 +106,7 @@ const WorkExpirenceCard: FC<WorkExpirenceCardProps> = (props: WorkExpirenceCardP
                                     'ul', 'ol', 'li', 'a', 'div', 'span', 'table',
                                     'thead', 'tbody', 'tfoot', 'tr', 'td', 'th',
                                 ],
-                            }),
+                            } as any),
                         }}
                     />
                 </div>
