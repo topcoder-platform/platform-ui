@@ -86,8 +86,26 @@ const WorkExpirenceCard: FC<WorkExpirenceCardProps> = (props: WorkExpirenceCardP
                         // eslint-disable-next-line react/no-danger
                         dangerouslySetInnerHTML={{
                             __html: DOMPurify.sanitize(props.work.description, {
-                                ALLOWED_ATTR: ['href', 'target', 'rel'],
-                                ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 's', 'strike', 'ul', 'ol', 'li', 'a'],
+                                ALLOWED_ATTR: [
+                                    'href', 'target', 'rel', 'style', 'align',
+                                    'border', 'cellpadding', 'cellspacing', 'colspan',
+                                    'rowspan', 'width', 'height', 'class',
+                                ],
+                                ALLOWED_STYLES: {
+                                    '*': {
+                                        'background-color': true,
+                                        color: true,
+                                        'font-style': true,
+                                        'font-weight': true,
+                                        'text-align': true,
+                                        'text-decoration': true,
+                                    },
+                                },
+                                ALLOWED_TAGS: [
+                                    'p', 'br', 'strong', 'em', 'u', 's', 'strike',
+                                    'ul', 'ol', 'li', 'a', 'div', 'span', 'table',
+                                    'thead', 'tbody', 'tfoot', 'tr', 'td', 'th',
+                                ],
                             }),
                         }}
                     />

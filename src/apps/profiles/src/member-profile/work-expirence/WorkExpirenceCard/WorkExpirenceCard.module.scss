@@ -74,7 +74,12 @@
             }
 
             u {
-                text-decoration: underline;
+                text-decoration: underline !important;
+                color: $black-100;
+            }
+
+            span {
+                color: $black-100;
             }
 
             a {
@@ -83,6 +88,29 @@
 
                 &:hover {
                     text-decoration: underline;
+                }
+            }
+
+            div {
+                color: $black-100;
+            }
+
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin: $sp-2 0;
+                border: 1px solid $black-20;
+
+                th,
+                td {
+                    border: 1px solid $black-20;
+                    padding: $sp-2;
+                    text-align: left;
+                }
+
+                th {
+                    font-weight: $font-weight-bold;
+                    background-color: $black-5;
                 }
             }
         }
