@@ -1,6 +1,7 @@
 import { addMonths, endOfMonth, startOfMonth, subMonths } from 'date-fns'
 import { FC, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 
+import { useProfileContext } from '~/libs/core'
 import { Button } from '~/libs/ui'
 
 import { Calendar, CalendarLegend, MonthNavigation } from '../../lib/components'
@@ -12,6 +13,7 @@ import styles from './PersonalCalendarPage.module.scss'
 
 const PersonalCalendarPage: FC = () => {
     const calendarContext = useContext(CalendarContext)
+    const profileContext = useProfileContext()
     const [currentDate, setCurrentDate] = useState<Date>(new Date())
     const [selectedDates, setSelectedDates] = useState<Set<string>>(new Set())
     const leaveDatesState = useFetchLeaveDates()
@@ -107,6 +109,25 @@ const PersonalCalendarPage: FC = () => {
         return `${count} date${count > 1 ? 's' : ''} selected`
     }, [selectedDates])
 
+    const profile = profileContext.profile
+    const displayName = useMemo(() => {
+        const firstName = profile?.firstName?.trim()
+        const lastName = profile?.lastName?.trim()
+        const fullName = [firstName, lastName].filter(Boolean).join(' ')
+
+        return (
+            fullName
+            || profile?.handle
+            || calendarContext.loginUserInfo?.handle
+            || 'Your calendar'
+        )
+    }, [
+        calendarContext.loginUserInfo?.handle,
+        profile?.firstName,
+        profile?.handle,
+        profile?.lastName,
+    ])
+
     const errorMessage = actionError || (error ? 'Something went wrong. Please try again.' : '')
 
     return (
@@ -114,7 +135,7 @@ const PersonalCalendarPage: FC = () => {
             <header className={styles.header}>
                 <p className={styles.subtitle}>Welcome back</p>
                 <h2 className={styles.title}>
-                    {calendarContext.loginUserInfo?.handle ?? 'Your calendar'}
+                    {displayName}
                 </h2>
             </header>
 
