@@ -1,0 +1,31 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    margin-top: $sp-8;
+}
+
+.titleWrap {
+    margin-bottom: $sp-4;
+}
+
+.email {
+    display: flex;
+    align-items: center;
+    margin-top: $sp-2;
+}
+
+.emailText {
+    margin-top: $sp-2;
+}
+
+.phonesHeader {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: $sp-2;
+}
+
+.phonesContent {
+    display: flex;
+    flex-direction: column;
+}
+
