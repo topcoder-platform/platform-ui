@@ -1,7 +1,7 @@
 /* eslint-disable max-len */
 /* eslint-disable react/jsx-no-bind */
-import React, { FC, useEffect, useState, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
+import React, { FC, useEffect, useRef, useState } from 'react'
 
 import { UserProfile } from '~/libs/core'
 
@@ -63,5 +63,3 @@ const WinningsTab: FC<WinningsTabProps> = (props: WinningsTabProps) => {
 }
 
 export default WinningsTab
-
-

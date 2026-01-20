@@ -1,4 +1,4 @@
-import { Dispatch, FC, ReactNode, SetStateAction, useState, useEffect } from 'react'
+import { Dispatch, FC, ReactNode, SetStateAction, useEffect, useState } from 'react'
 import classNames from 'classnames'
 
 import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/solid'
@@ -18,7 +18,10 @@ interface CollapsibleProps {
 }
 
 const Collapsible: FC<CollapsibleProps> = (props: CollapsibleProps) => {
-    const [internalIsCollapsed, setInternalIsCollapsed]: [boolean, Dispatch<SetStateAction<boolean>>] = useState<boolean>(props.isCollapsed ?? false)
+    const [internalIsCollapsed, setInternalIsCollapsed]: [
+        boolean,
+        Dispatch<SetStateAction<boolean>>
+    ] = useState<boolean>(props.isCollapsed ?? false)
 
     // Sync internal state with prop if controlled
     useEffect(() => {
@@ -34,6 +37,7 @@ const Collapsible: FC<CollapsibleProps> = (props: CollapsibleProps) => {
         if (props.isCollapsed === undefined) {
             setInternalIsCollapsed(newValue)
         }
+
         props.onToggle?.(newValue)
     }
 

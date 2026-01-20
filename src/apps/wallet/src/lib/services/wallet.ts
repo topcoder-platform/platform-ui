@@ -5,7 +5,7 @@ import { EnvironmentConfig } from '~/config'
 import { xhrGetAsync, xhrPostAsync, xhrPostAsyncWithBlobHandling } from '~/libs/core'
 
 import { WalletDetails } from '../models/WalletDetails'
-import { Winning, WinningDetail, WinningsType } from '../models/WinningDetail'
+import { WinningDetail, WinningsType } from '../models/WinningDetail'
 import { OtpVerificationResponse } from '../models/OtpVerificationResponse'
 import { TransactionResponse } from '../models/TransactionId'
 import { PaginationInfo } from '../models/PaginationInfo'

@@ -78,7 +78,10 @@ const PointsTable: React.FC<PointsTableProps> = (props: PointsTableProps) => {
 
             <div className={styles.paginationContainer}>
                 <div className={styles.totalContainer}>
-                    <span className='body-small'>Total: {props.points.length}</span>
+                    <span className='body-small'>
+                        Total:
+                        {props.points.length}
+                    </span>
                 </div>
                 <div className={styles.pagination}>
                     <button

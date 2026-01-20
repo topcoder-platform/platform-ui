@@ -91,12 +91,12 @@ const PointsListView: FC<PointsListViewProps> = (props: PointsListViewProps) => 
     }, [fetchPoints])
 
     useEffect(() => {
-      if (isLoading || hasPointsWinnings !== undefined) {
-        return;
-      }
+        if (isLoading || hasPointsWinnings !== undefined) {
+            return
+        }
 
-      setHasPointsWinnings(pointsWinnings.length > 0);
-    }, [isLoading, pointsWinnings]);
+        setHasPointsWinnings(pointsWinnings.length > 0)
+    }, [isLoading, pointsWinnings])
 
     if (!hasPointsWinnings) {
         return <></>
