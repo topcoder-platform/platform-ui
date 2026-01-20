@@ -1,0 +1,29 @@
+@import '@libs/ui/styles/includes';
+
+.layout {
+    position: relative;
+    font-family: $font-roboto;
+    color: var(--Primary);
+
+    .main {
+        @include ltelg {
+            padding: 36px 0;
+        }
+    }
+
+    h1,
+    h2,
+    h3,
+    h4 {
+        font-family: $font-roboto;
+    }
+}
+
+.contentLayoutOuter {
+    margin: $sp-6 auto !important;
+}
+
+.contantentLayoutInner {
+    box-sizing: border-box;
+    width: 100%;
+}

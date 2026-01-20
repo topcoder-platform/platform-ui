@@ -1,0 +1,31 @@
+@import '@libs/ui/styles/includes';
+
+.breadcrumb {
+    padding-bottom: $sp-6;
+    ul {
+        align-items: center;
+        display: flex;
+        flex-wrap: wrap;
+        li {
+            font-size: 14px;
+            line-height: 20px;
+            white-space: nowrap;
+            button,
+            a {
+                font-family: "Nunito Sans", sans-serif;
+                color: var(--GrayFontColor);
+                align-items: center;
+                display: flex;
+                &::after {
+                    color: var(--GrayFontColor);
+                    content: '/';
+                    padding: 0 $sp-2;
+                }
+            }
+            span {
+                font-family: "Nunito Sans", sans-serif;
+                color: var(--FontColor);
+            }
+        }
+    }
+}
