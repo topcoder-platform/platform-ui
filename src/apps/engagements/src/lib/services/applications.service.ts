@@ -9,7 +9,6 @@ import type {
 
 const API_BASE_URL = `${EnvironmentConfig.API.V6}/engagements`
 const APPLICATIONS_URL = `${API_BASE_URL}/applications`
-const ENGAGEMENTS_URL = `${API_BASE_URL}/engagements`
 
 interface BackendMeta {
     page?: number
@@ -67,7 +66,7 @@ export const createApplication = async (
     engagementId: string,
     data: CreateApplicationRequest,
 ): Promise<Application> => xhrPostAsync<CreateApplicationRequest, Application>(
-    `${ENGAGEMENTS_URL}/${engagementId}/applications`,
+    `${API_BASE_URL}/${engagementId}/applications`,
     data,
 )
 
