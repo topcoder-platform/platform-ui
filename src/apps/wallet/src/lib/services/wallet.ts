@@ -5,7 +5,7 @@ import { EnvironmentConfig } from '~/config'
 import { xhrGetAsync, xhrPostAsync, xhrPostAsyncWithBlobHandling } from '~/libs/core'
 
 import { WalletDetails } from '../models/WalletDetails'
-import { WinningDetail } from '../models/WinningDetail'
+import { Winning, WinningDetail, WinningsType } from '../models/WinningDetail'
 import { OtpVerificationResponse } from '../models/OtpVerificationResponse'
 import { TransactionResponse } from '../models/TransactionId'
 import { PaginationInfo } from '../models/PaginationInfo'
@@ -24,14 +24,20 @@ export async function getWalletDetails(): Promise<WalletDetails> {
 }
 
 // eslint-disable-next-line max-len
-export async function getPayments(userId: string, limit: number, offset: number, filters: Record<string, string[]>): Promise<{
+export async function getchUserWinnings(
+    userId: string,
+    type: WinningsType,
+    limit: number,
+    offset: number,
+    filters: Record<string, string[]>,
+): Promise<{
     winnings: WinningDetail[],
     pagination: PaginationInfo
 }> {
     const filteredFilters: Record<string, string> = {}
 
     for (const key in filters) {
-        if (filters[key].length > 0 && key !== 'pageSize') {
+        if (filters[key].length > 0 && key !== 'pageSize' && filters[key][0]) {
             filteredFilters[key] = filters[key][0]
         }
     }
@@ -41,6 +47,7 @@ export async function getPayments(userId: string, limit: number, offset: number,
         offset,
         winnerId: userId,
         ...filteredFilters,
+        type,
     })
 
     const url = `${WALLET_API_BASE_URL}/user/winnings`
@@ -59,6 +66,38 @@ export async function getPayments(userId: string, limit: number, offset: number,
 
     return response.data
 }
+
+export const getPayments = async (
+    userId: string,
+    limit: number,
+    offset: number,
+    filters: Record<string, string[]>,
+): Promise<{
+    winnings: WinningDetail[],
+    pagination: PaginationInfo
+}> => getchUserWinnings(
+    userId,
+    WinningsType.PAYMENT,
+    limit,
+    offset,
+    filters,
+)
+
+export const getPoints = async (
+    userId: string,
+    limit: number,
+    offset: number,
+    filters: Record<string, string[]>,
+): Promise<{
+    winnings: WinningDetail[],
+    pagination: PaginationInfo
+}> => getchUserWinnings(
+    userId,
+    WinningsType.POINTS,
+    limit,
+    offset,
+    filters,
+)
 
 export async function processWinningsPayments(
     winningsIds: string[],

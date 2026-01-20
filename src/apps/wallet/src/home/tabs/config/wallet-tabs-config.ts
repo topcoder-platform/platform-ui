@@ -33,10 +33,10 @@ export function getHashFromTabId(tabId: WalletTabViews): string {
 }
 
 export function getTabIdFromHash(hash: string): WalletTabViews {
-    switch (hash) {
-        case '#winnings':
+    switch (true) {
+        case hash.startsWith('#winnings'):
             return WalletTabViews.winnings
-        case '#payout':
+        case hash.startsWith('#payout'):
             return WalletTabViews.payout
         default:
             return WalletTabViews.home
