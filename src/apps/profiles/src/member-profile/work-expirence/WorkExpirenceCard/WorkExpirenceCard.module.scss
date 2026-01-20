@@ -33,17 +33,96 @@
 
     .workExpirenceCardDescription {
         margin-top: $sp-4;
-        color: $black-80;
+        color: $black-100;
+        font-size: 16px;
+        line-height: 24px;
+        font-family: $font-roboto;
 
         :global(.body-main-normal) {
             color: $black-80;
             line-height: 22px;
+
+            // Style for HTML elements within rich text content
+            p {
+                margin: 0 0 $sp-2 0;
+                line-height: 22px;
+                color: $black-100;
+
+                &:last-child {
+                    margin-bottom: 0;
+                }
+            }
+
+            ul,
+            ol {
+                margin: $sp-2 0;
+                padding-left: $sp-6;
+            }
+
+            li {
+                margin-bottom: $sp-1;
+                line-height: 22px;
+            }
+
+            strong {
+                font-weight: $font-weight-bold;
+                color: $black-100;
+            }
+
+            em {
+                font-style: italic;
+            }
+
+            u {
+                text-decoration: underline !important;
+                color: $black-100;
+            }
+
+            span {
+                color: $black-100;
+            }
+
+            a {
+                color: $blue-100;
+                text-decoration: none;
+
+                &:hover {
+                    text-decoration: underline;
+                }
+            }
+
+            div {
+                color: $black-100;
+            }
+
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin: $sp-2 0;
+                border: 1px solid $black-20;
+
+                th,
+                td {
+                    border: 1px solid $black-20;
+                    padding: $sp-2;
+                    text-align: left;
+                }
+
+                th {
+                    font-weight: $font-weight-bold;
+                    background-color: $black-5;
+                }
+            }
         }
     }
 
     .workExpirenceCardSkills {
         margin-top: $sp-4;
         display: flex;
+        color: $black-100;
+        font-size: 16px;
+        line-height: 24px;
+        font-family: $font-roboto;
 
         :global(.body-main-small-bold) {
             margin-bottom: $sp-2;
@@ -51,18 +130,7 @@
         }
 
         .skillsList {
-            display: flex;
-            flex-wrap: wrap;
-            gap: $sp-2;
-
-            .skillTag {
-                display: inline-block;
-                padding: $sp-1 $sp-2;
-                color: $turq-160;
-                border-radius: 4px;
-                font-size: 12px;
-                line-height: 16px;
-            }
+            margin-left: 4px;
         }
     }
 }
