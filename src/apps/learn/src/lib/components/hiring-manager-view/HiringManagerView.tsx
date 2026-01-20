@@ -18,7 +18,6 @@ import {
     DefaultMemberIcon,
     IconOutline,
     LinkButton,
-    VerifiedMemberBadge,
 } from '~/libs/ui'
 import { EnvironmentConfig } from '~/config'
 import { UserProfile } from '~/libs/core'
@@ -61,7 +60,6 @@ export interface HiringManagerViewProps {
     completionUuid?: string
     isPreview?: boolean
     isModalView?: boolean
-    isMemberVerified?: boolean
     isOwner?: boolean
     userProfile?: UserProfile
     userName?: string
@@ -182,11 +180,6 @@ const HiringManagerView: FC<HiringManagerViewProps> = (props: HiringManagerViewP
                                 <div className={styles.memberInfo}>
                                     <p className='body-large-bold'>{props.userName}</p>
                                     <p className='body-large-medium'>{props.userProfile.handle}</p>
-                                    {
-                                        props.isMemberVerified ? (
-                                            <VerifiedMemberBadge />
-                                        ) : undefined
-                                    }
                                 </div>
                             </div>
                             <div className={styles.certTitle}>{props.certification.title}</div>

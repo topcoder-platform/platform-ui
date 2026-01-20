@@ -1,19 +1,14 @@
 import {
-    Dispatch,
     FC,
     MutableRefObject,
-    SetStateAction,
-    useEffect,
     useLayoutEffect,
     useMemo,
     useRef,
-    useState,
 } from 'react'
 import { useSearchParams } from 'react-router-dom'
 
 import { LoadingSpinner } from '~/libs/ui'
 import {
-    getVerificationStatusAsync,
     UserProfile,
 } from '~/libs/core'
 
@@ -51,19 +46,7 @@ const UserCertificationViewBase: FC<UserCertificationViewBaseProps> = (props: Us
             : props.enrollment?.userName
     ), [props.profile, props.enrollment])
 
-    const [isMemberVerified, setIsMemberVerified]: [boolean, Dispatch<SetStateAction<boolean>>]
-        = useState<boolean>(false)
-
     const validationUrl: string = getTCACertificationValidationUrl(props.enrollment?.completionUuid as string)
-
-    useEffect(() => {
-        if (!props.enrollment?.userHandle) {
-            return
-        }
-
-        getVerificationStatusAsync(props.enrollment?.userHandle)
-            .then(verified => setIsMemberVerified(verified))
-    }, [props.enrollment])
 
     useLayoutEffect(() => {
         const el: HTMLElement = elRef.current
@@ -99,7 +82,6 @@ const UserCertificationViewBase: FC<UserCertificationViewBaseProps> = (props: Us
                         certification={props.certification}
                         completedAt={(props.enrollment.completedAt ?? undefined) as string}
                         completionUuid={props.enrollment.completionUuid ?? undefined}
-                        isMemberVerified={isMemberVerified}
                         userProfile={props.profile}
                         userName={userName}
                         isOwner={isOwnProfile}
