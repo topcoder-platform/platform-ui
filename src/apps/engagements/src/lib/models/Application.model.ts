@@ -18,7 +18,7 @@ export interface Application {
     mobileNumber?: string
     coverLetter: string
     resumeUrl?: string
-    portfolioLinks?: string[]
+    portfolioUrls?: string[]
     yearsOfExperience?: number
     availability: string
     status: ApplicationStatus
@@ -38,7 +38,7 @@ export interface ApplicationListResponse {
 export interface CreateApplicationRequest {
     coverLetter: string
     resumeUrl?: string
-    portfolioLinks?: string[]
+    portfolioUrls?: string[]
     yearsOfExperience?: number
     availability?: string
     mobileNumber?: string

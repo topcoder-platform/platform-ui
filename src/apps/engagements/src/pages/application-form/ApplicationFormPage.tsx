@@ -212,14 +212,14 @@ const ApplicationFormPage: FC = () => {
             const values = getValues()
             const trimmedAvailability = values.availability?.trim()
             const trimmedCoverLetter = values.coverLetter?.trim() || ''
-            const portfolioLinks = values.portfolioUrls
+            const portfolioUrls = values.portfolioUrls
                 .map(entry => entry.value)
                 .filter((url): url is string => !!url)
             const request: CreateApplicationRequest = {
                 availability: trimmedAvailability || undefined,
                 coverLetter: trimmedCoverLetter,
                 mobileNumber: values.mobileNumber?.trim() || undefined,
-                portfolioLinks: portfolioLinks.length ? portfolioLinks : undefined,
+                portfolioUrls: portfolioUrls.length ? portfolioUrls : undefined,
                 resumeUrl: values.resumeUrl || undefined,
                 yearsOfExperience: values.yearsOfExperience,
             }

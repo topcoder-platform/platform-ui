@@ -366,3 +366,10 @@ export const getEngagementById = async (id: string): Promise<Engagement> => {
     const [hydrated] = await hydrateEngagementSkills([engagement])
     return hydrated ?? engagement
 }
+
+export {
+    createMemberExperience,
+    getMemberExperienceById,
+    getMemberExperiences,
+    updateMemberExperience,
+} from './member-experience.service'

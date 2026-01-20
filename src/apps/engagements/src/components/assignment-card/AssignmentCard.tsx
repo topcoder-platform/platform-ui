@@ -12,6 +12,7 @@ interface AssignmentCardProps {
     engagement: Engagement
     contactEmail?: string
     onViewPayments: () => void
+    onDocumentExperience: () => void
     onContactTaskManager: (contactEmail?: string) => void
     canContactTaskManager?: boolean
 }
@@ -76,6 +77,12 @@ const AssignmentCard: FC<AssignmentCardProps> = (props: AssignmentCardProps) => 
                     label='View Payments'
                     onClick={props.onViewPayments}
                     primary
+                    className={styles.actionButton}
+                />
+                <Button
+                    label='Document Experience'
+                    onClick={props.onDocumentExperience}
+                    secondary
                     className={styles.actionButton}
                 />
                 <Button

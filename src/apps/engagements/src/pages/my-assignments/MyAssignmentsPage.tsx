@@ -1,5 +1,6 @@
-import { FC, useCallback, useEffect, useMemo, useState } from 'react'
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { toast } from 'react-toastify'
 
 import { EnvironmentConfig } from '~/config'
 import { useProfileContext } from '~/libs/core'
@@ -9,7 +10,7 @@ import { Pagination } from '~/apps/admin/src/lib/components/common/Pagination'
 import { APPLICATIONS_PER_PAGE } from '../../config/constants'
 import type { Engagement } from '../../lib/models'
 import { getMyAssignedEngagements } from '../../lib/services/engagements.service'
-import { AssignmentCard, EngagementsTabs } from '../../components'
+import { AssignmentCard, EngagementsTabs, MemberExperienceModal } from '../../components'
 import { rootRoute } from '../../engagements.routes'
 
 import styles from './MyAssignmentsPage.module.scss'
@@ -57,12 +58,17 @@ const MyAssignmentsPage: FC = () => {
     const navigate = useNavigate()
     const profileContext = useProfileContext()
     const isLoggedIn = profileContext.isLoggedIn
+    const userId = profileContext.profile?.userId
 
     const [assignments, setAssignments] = useState<Engagement[]>([])
     const [loading, setLoading] = useState<boolean>(false)
     const [error, setError] = useState<string | undefined>(undefined)
     const [page, setPage] = useState<number>(1)
     const [totalPages, setTotalPages] = useState<number>(1)
+    const [selectedEngagement, setSelectedEngagement] = useState<Engagement | undefined>(undefined)
+    const [selectedAssignmentId, setSelectedAssignmentId] = useState<string | undefined>(undefined)
+    const [modalOpen, setModalOpen] = useState<boolean>(false)
+    const closeTimeoutRef = useRef<number | undefined>(undefined)
 
     const fetchAssignments = useCallback(async (): Promise<void> => {
         if (!isLoggedIn) {
@@ -90,6 +96,15 @@ const MyAssignmentsPage: FC = () => {
         fetchAssignments()
     }, [fetchAssignments])
 
+    useEffect(() => (
+        () => {
+            if (closeTimeoutRef.current !== undefined) {
+                window.clearTimeout(closeTimeoutRef.current)
+                closeTimeoutRef.current = undefined
+            }
+        }
+    ), [])
+
     const handlePageChange = useCallback((nextPage: number) => {
         setPage(nextPage)
     }, [])
@@ -115,6 +130,51 @@ const MyAssignmentsPage: FC = () => {
         }
 
         window.open(`mailto:${contactEmail}`, '_blank')
+    }, [])
+
+    const getUserAssignmentId = useCallback((engagement: Engagement): string | undefined => {
+        if (!userId) {
+            return undefined
+        }
+
+        const assignment = engagement.assignments?.find(
+            candidate => candidate.memberId === String(userId),
+        )
+
+        return assignment?.id
+    }, [userId])
+
+    const handleDocumentExperience = useCallback((engagement: Engagement) => {
+        const assignmentId = getUserAssignmentId(engagement)
+
+        if (!assignmentId) {
+            toast.error('Unable to find your assignment for this engagement.')
+            return
+        }
+
+        if (closeTimeoutRef.current !== undefined) {
+            window.clearTimeout(closeTimeoutRef.current)
+            closeTimeoutRef.current = undefined
+        }
+
+        setSelectedEngagement(engagement)
+        setSelectedAssignmentId(assignmentId)
+        setModalOpen(true)
+    }, [getUserAssignmentId])
+
+    const handleCloseModal = useCallback(() => {
+        setModalOpen(false)
+
+        if (closeTimeoutRef.current !== undefined) {
+            window.clearTimeout(closeTimeoutRef.current)
+            closeTimeoutRef.current = undefined
+        }
+
+        closeTimeoutRef.current = window.setTimeout(() => {
+            setSelectedEngagement(undefined)
+            setSelectedAssignmentId(undefined)
+            closeTimeoutRef.current = undefined
+        }, 200)
     }, [])
 
     const skeletonCards = useMemo(() => Array.from({ length: 6 }, (_, index) => index), [])
@@ -152,6 +212,9 @@ const MyAssignmentsPage: FC = () => {
                         <div key={`skeleton-${card}`} className={styles.skeletonCard} />
                     )) : assignments.map(engagement => {
                         const contactEmail = normalizeContactEmail(engagement.createdByEmail)
+                        const handleDocumentExperienceClick = function (): void {
+                            handleDocumentExperience(engagement)
+                        }
 
                         return (
                             <AssignmentCard
@@ -159,6 +222,7 @@ const MyAssignmentsPage: FC = () => {
                                 engagement={engagement}
                                 contactEmail={contactEmail}
                                 onViewPayments={handleViewPayments}
+                                onDocumentExperience={handleDocumentExperienceClick}
                                 onContactTaskManager={handleContactTaskManager}
                                 canContactTaskManager={Boolean(contactEmail)}
                             />
@@ -175,6 +239,14 @@ const MyAssignmentsPage: FC = () => {
                         disabled={loading}
                     />
                 </div>
+            )}
+            {selectedEngagement && selectedAssignmentId && (
+                <MemberExperienceModal
+                    open={modalOpen}
+                    onClose={handleCloseModal}
+                    engagement={selectedEngagement}
+                    assignmentId={selectedAssignmentId}
+                />
             )}
         </ContentLayout>
     )

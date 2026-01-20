@@ -158,7 +158,7 @@ const DocumentsSection: FC<DocumentsSectionProps> = (
     props: DocumentsSectionProps,
 ) => {
     const application = props.application
-    const hasPortfolioLinks = (application.portfolioLinks?.length ?? 0) > 0
+    const hasPortfolioUrls = (application.portfolioUrls?.length ?? 0) > 0
 
     return (
         <div className={styles.section}>
@@ -181,17 +181,17 @@ const DocumentsSection: FC<DocumentsSectionProps> = (
                 </div>
                 <div className={styles.metaItem}>
                     <span className={styles.metaLabel}>Portfolio</span>
-                    {hasPortfolioLinks ? (
+                    {hasPortfolioUrls ? (
                         <ul className={styles.linkList}>
-                            {application.portfolioLinks?.map(link => (
-                                <li key={link}>
+                            {application.portfolioUrls?.map(url => (
+                                <li key={url}>
                                     <a
                                         className={styles.link}
-                                        href={link}
+                                        href={url}
                                         target='_blank'
                                         rel='noreferrer noopener'
                                     >
-                                        {link}
+                                        {url}
                                     </a>
                                 </li>
                             ))}

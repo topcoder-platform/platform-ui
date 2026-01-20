@@ -81,19 +81,19 @@
 }
 
 .actions {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     gap: 12px;
     margin-top: auto;
-    flex-wrap: wrap;
 }
 
 .actionButton {
-    flex: 1 1 160px;
+    width: 100%;
 }
 
 @include mobile {
     .actions {
-        flex-direction: column;
+        grid-template-columns: 1fr;
     }
 
     .actionButton {
