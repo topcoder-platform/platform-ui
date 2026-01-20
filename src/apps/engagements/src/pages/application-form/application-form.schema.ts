@@ -2,20 +2,33 @@ import * as yup from 'yup'
 
 import type { ApplicationFormData } from './application-form.types'
 
+const requiredMessage = 'Field cannot be empty or contain only whitespace'
+
 export const applicationFormSchema: yup.ObjectSchema<ApplicationFormData> = yup.object({
     availability: yup
         .string()
         .max(500, 'Availability must be 500 characters or less')
+        .test(
+            'not-whitespace',
+            requiredMessage,
+            value => (
+                value === undefined
+                || value === ''
+                || (typeof value === 'string' && value.trim().length > 0)
+            ),
+        )
         .optional(),
     coverLetter: yup
         .string()
+        .trim()
+        .required(requiredMessage)
         .max(5000, 'Cover letter must be 5000 characters or less')
-        .optional(),
+        .defined(),
     mobileNumber: yup
         .string()
         .matches(
             /^[\d\s()+-]+$/,
-            'Mobile number can only contain digits, spaces, hyphens, plus signs, and parentheses',
+            'Mobile number must contain only digits, spaces, hyphens, plus signs, and parentheses',
         )
         .max(20, 'Mobile number must be 20 characters or less')
         .optional(),

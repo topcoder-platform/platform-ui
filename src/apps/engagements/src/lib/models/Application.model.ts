@@ -40,6 +40,6 @@ export interface CreateApplicationRequest {
     resumeUrl?: string
     portfolioLinks?: string[]
     yearsOfExperience?: number
-    availability: string
+    availability?: string
     mobileNumber?: string
 }

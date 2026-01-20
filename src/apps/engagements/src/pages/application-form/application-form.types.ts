@@ -3,7 +3,7 @@ export interface PortfolioUrlEntry {
 }
 
 export interface ApplicationFormData {
-    coverLetter?: string
+    coverLetter: string
     resumeUrl?: string
     portfolioUrls: PortfolioUrlEntry[]
     yearsOfExperience?: number

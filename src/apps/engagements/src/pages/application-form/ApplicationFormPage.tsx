@@ -27,17 +27,18 @@ import styles from './ApplicationFormPage.module.scss'
 interface SubmitDisabledParams {
     applicationError?: string
     hasApplied: boolean
+    hasSubmitted: boolean
     isFormDisabled: boolean
     isLoading: boolean
     isValid: boolean
 }
 
 const getIsSubmitDisabled = (params: SubmitDisabledParams): boolean => (
-    !params.isValid
-    || params.isFormDisabled
+    params.isFormDisabled
     || params.isLoading
     || params.hasApplied
     || Boolean(params.applicationError)
+    || (params.hasSubmitted && !params.isValid)
 )
 
 const ApplicationFormPage: FC = () => {
@@ -72,6 +73,7 @@ const ApplicationFormPage: FC = () => {
     const errors = form.formState.errors
     const handleSubmit = form.handleSubmit
     const isValid = form.formState.isValid
+    const hasSubmitted = form.formState.submitCount > 0
     const getValues = form.getValues
     const clearErrors = form.clearErrors
     const coverLetterValue = form.watch('coverLetter') ?? ''
@@ -208,12 +210,14 @@ const ApplicationFormPage: FC = () => {
 
         try {
             const values = getValues()
+            const trimmedAvailability = values.availability?.trim()
+            const trimmedCoverLetter = values.coverLetter?.trim() || ''
             const portfolioLinks = values.portfolioUrls
                 .map(entry => entry.value)
                 .filter((url): url is string => !!url)
             const request: CreateApplicationRequest = {
-                availability: values.availability?.trim() || '',
-                coverLetter: values.coverLetter?.trim() || '',
+                availability: trimmedAvailability || undefined,
+                coverLetter: trimmedCoverLetter,
                 mobileNumber: values.mobileNumber?.trim() || undefined,
                 portfolioLinks: portfolioLinks.length ? portfolioLinks : undefined,
                 resumeUrl: values.resumeUrl || undefined,
@@ -294,6 +298,7 @@ const ApplicationFormPage: FC = () => {
     const isSubmitDisabled = getIsSubmitDisabled({
         applicationError,
         hasApplied,
+        hasSubmitted,
         isFormDisabled,
         isLoading,
         isValid,
