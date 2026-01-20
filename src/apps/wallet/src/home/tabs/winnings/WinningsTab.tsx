@@ -210,6 +210,10 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                                             label: 'Review Board Payment',
                                             value: 'REVIEW_BOARD_PAYMENT',
                                         },
+                                        {
+                                            label: 'Engagement Payment',
+                                            value: 'ENGAGEMENT_PAYMENT',
+                                        },
                                     ],
                                     type: 'dropdown',
                                 },

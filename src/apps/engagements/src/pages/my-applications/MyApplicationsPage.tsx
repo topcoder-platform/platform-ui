@@ -27,6 +27,7 @@ const MyApplicationsPage: FC = () => {
     const navigate = useNavigate()
     const profileContext = useProfileContext()
     const isLoggedIn = profileContext.isLoggedIn
+    const userId = profileContext.profile?.userId
 
     const [applications, setApplications] = useState<Application[]>([])
     const [loading, setLoading] = useState<boolean>(false)
@@ -116,7 +117,7 @@ const MyApplicationsPage: FC = () => {
     }, [])
 
     const fetchApplications = useCallback(async (): Promise<void> => {
-        if (!isLoggedIn) {
+        if (!isLoggedIn || userId === undefined) {
             return
         }
 
@@ -128,6 +129,7 @@ const MyApplicationsPage: FC = () => {
                 page,
                 perPage: PER_PAGE,
                 status: statusFilter,
+                userId,
             })
             const hydratedApplications = await hydrateApplications(response.data)
             setApplications(hydratedApplications)
@@ -137,7 +139,7 @@ const MyApplicationsPage: FC = () => {
         } finally {
             setLoading(false)
         }
-    }, [page, statusFilter, isLoggedIn, hydrateApplications])
+    }, [page, statusFilter, isLoggedIn, hydrateApplications, userId])
 
     useEffect(() => {
         fetchApplications()

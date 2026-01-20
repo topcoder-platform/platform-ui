@@ -8,10 +8,12 @@ export interface ApplicationFormData {
     portfolioUrls: PortfolioUrlEntry[]
     yearsOfExperience?: number
     availability?: string
+    mobileNumber?: string
 }
 
 export interface PrePopulatedUserData {
     name: string
     email: string
     address?: string
+    mobileNumber?: string
 }

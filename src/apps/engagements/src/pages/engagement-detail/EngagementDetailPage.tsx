@@ -36,6 +36,8 @@ const APPLICATION_STATUS_LABELS: Record<ApplicationStatus, string> = {
     [ApplicationStatus.REJECTED]: 'Rejected',
 }
 
+const PRIVATE_ENGAGEMENT_ROLE_KEYWORDS = ['project manager', 'task manager', 'admin']
+
 const formatEnumLabel = (value?: string): string | undefined => {
     if (!value) {
         return undefined
@@ -53,12 +55,83 @@ const formatEnumLabel = (value?: string): string | undefined => {
         .replace(/\b\w/g, character => character.toUpperCase())
 }
 
+const normalizeRoleNames = (roles?: string[]): string[] => (
+    (roles ?? [])
+        .filter((role): role is string => typeof role === 'string')
+        .map(role => role
+            .trim()
+            .toLowerCase())
+)
+
+const hasPrivateEngagementRoleMatch = (roles: string[]): boolean => (
+    roles.some(role => PRIVATE_ENGAGEMENT_ROLE_KEYWORDS.some(keyword => role.includes(keyword)))
+)
+
+const isAssignedMemberToEngagement = (
+    assignments: Engagement['assignments'],
+    userId?: number | string,
+): boolean => {
+    if (!assignments || userId === undefined || userId === null) {
+        return false
+    }
+
+    const normalizedUserId = String(userId)
+    return assignments.some(assignment => (
+        assignment.memberId && String(assignment.memberId) === normalizedUserId
+    ))
+}
+
+type PrivateEngagementAccess = {
+    isAccessPending: boolean
+    canViewPrivateEngagement: boolean
+    shouldRestrictEngagement: boolean
+}
+
+const getPrivateEngagementAccess = ({
+    isPrivateEngagement,
+    isProfileReady,
+    isLoggedIn,
+    hasPrivateEngagementRole,
+    isAssignedMember,
+}: {
+    isPrivateEngagement: boolean
+    isProfileReady: boolean
+    isLoggedIn: boolean
+    hasPrivateEngagementRole: boolean
+    isAssignedMember: boolean
+}): PrivateEngagementAccess => {
+    if (!isPrivateEngagement) {
+        return {
+            canViewPrivateEngagement: true,
+            isAccessPending: false,
+            shouldRestrictEngagement: false,
+        }
+    }
+
+    if (!isProfileReady) {
+        return {
+            canViewPrivateEngagement: false,
+            isAccessPending: true,
+            shouldRestrictEngagement: false,
+        }
+    }
+
+    const canViewPrivateEngagement = isLoggedIn && (hasPrivateEngagementRole || isAssignedMember)
+    return {
+        canViewPrivateEngagement,
+        isAccessPending: false,
+        shouldRestrictEngagement: !canViewPrivateEngagement,
+    }
+}
+
 const EngagementDetailPage: FC = () => {
     const params = useParams<{ nanoId: string }>()
     const nanoId = params.nanoId
     const navigate = useNavigate()
     const profileContext = useProfileContext()
+    const isProfileReady = profileContext.initialized
     const isLoggedIn = profileContext.isLoggedIn
+    const userId = profileContext.profile?.userId
 
     const [engagement, setEngagement] = useState<Engagement | undefined>(undefined)
     const [loading, setLoading] = useState<boolean>(true)
@@ -99,7 +172,7 @@ const EngagementDetailPage: FC = () => {
     }, [nanoId, navigate])
 
     const checkApplication = useCallback(async (): Promise<void> => {
-        if (!isLoggedIn || !engagement?.id) {
+        if (!isLoggedIn || !engagement?.id || userId === undefined) {
             return
         }
 
@@ -107,7 +180,7 @@ const EngagementDetailPage: FC = () => {
         setApplicationError(undefined)
 
         try {
-            const response = await checkExistingApplication(engagement.id)
+            const response = await checkExistingApplication(engagement.id, userId)
             setHasApplied(response.hasApplied)
             setApplication(response.application)
         } catch (err) {
@@ -115,7 +188,7 @@ const EngagementDetailPage: FC = () => {
         } finally {
             setCheckingApplication(false)
         }
-    }, [engagement?.id, isLoggedIn])
+    }, [engagement?.id, isLoggedIn, userId])
 
     useEffect(() => {
         fetchEngagement()
@@ -161,6 +234,23 @@ const EngagementDetailPage: FC = () => {
     ), [engagement?.applicationDeadline])
 
     const isDeadlineSoon = daysUntilDeadline > 0 && daysUntilDeadline <= 7
+    const isEngagementOpen = engagement?.status === EngagementStatus.OPEN
+    const isPrivateEngagement = Boolean(engagement?.isPrivate)
+
+    const normalizedRoles = normalizeRoleNames(profileContext.profile?.roles)
+    const hasPrivateEngagementRole = hasPrivateEngagementRoleMatch(normalizedRoles)
+    const isAssignedMember = isAssignedMemberToEngagement(engagement?.assignments, userId)
+    const {
+        isAccessPending,
+        canViewPrivateEngagement,
+        shouldRestrictEngagement,
+    }: PrivateEngagementAccess = getPrivateEngagementAccess({
+        hasPrivateEngagementRole,
+        isAssignedMember,
+        isLoggedIn,
+        isPrivateEngagement,
+        isProfileReady,
+    })
 
     const applicationStatusLabel = application?.status
         ? APPLICATION_STATUS_LABELS[application.status]
@@ -175,21 +265,52 @@ const EngagementDetailPage: FC = () => {
             )
         }
 
-        if (!isLoggedIn) {
+        if (isLoggedIn && checkingApplication) {
             return (
                 <div className={styles.applyMessage}>
-                    <span>Sign in to apply for this engagement.</span>
-                    <a className={styles.signInLink} href={authUrlLogin()}>
-                        Sign in
-                    </a>
+                    <LoadingSpinner className={styles.inlineSpinner} />
+                    <span>Checking your application status...</span>
                 </div>
             )
         }
 
-        if (engagement.status === EngagementStatus.CLOSED) {
+        if (isLoggedIn && applicationError) {
             return (
                 <div className={styles.applyMessage}>
-                    <span>Applications are closed for this engagement.</span>
+                    <span>{applicationError}</span>
+                    <Button label='Retry' onClick={checkApplication} secondary />
+                </div>
+            )
+        }
+
+        if (isLoggedIn && hasApplied) {
+            return (
+                <div className={styles.applyMessage}>
+                    <div className={styles.appliedActions}>
+                        <Button label='Already Applied' secondary disabled />
+                        <Button label='View My Applications' onClick={handleViewApplications} link />
+                    </div>
+                    {applicationStatusLabel && (
+                        <span className={styles.applicationStatus}>
+                            {`Application status: ${applicationStatusLabel}`}
+                        </span>
+                    )}
+                </div>
+            )
+        }
+
+        if (isPrivateEngagement) {
+            return (
+                <div className={styles.applyMessage}>
+                    <span>This engagement is private and not accepting applications.</span>
+                </div>
+            )
+        }
+
+        if (!isEngagementOpen) {
+            return (
+                <div className={styles.applyMessage}>
+                    <span>This engagement is not accepting applications.</span>
                 </div>
             )
         }
@@ -202,36 +323,13 @@ const EngagementDetailPage: FC = () => {
             )
         }
 
-        if (checkingApplication) {
+        if (!isLoggedIn) {
             return (
                 <div className={styles.applyMessage}>
-                    <LoadingSpinner className={styles.inlineSpinner} />
-                    <span>Checking your application status...</span>
-                </div>
-            )
-        }
-
-        if (applicationError) {
-            return (
-                <div className={styles.applyMessage}>
-                    <span>{applicationError}</span>
-                    <Button label='Retry' onClick={checkApplication} secondary />
-                </div>
-            )
-        }
-
-        if (hasApplied) {
-            return (
-                <div className={styles.applyMessage}>
-                    <div className={styles.appliedActions}>
-                        <Button label='Already Applied' secondary disabled />
-                        <Button label='View My Applications' onClick={handleViewApplications} link />
-                    </div>
-                    {applicationStatusLabel && (
-                        <span className={styles.applicationStatus}>
-                            {`Application status: ${applicationStatusLabel}`}
-                        </span>
-                    )}
+                    <span>Sign in to apply for this engagement.</span>
+                    <a className={styles.signInLink} href={authUrlLogin()}>
+                        Sign in
+                    </a>
                 </div>
             )
         }
@@ -271,12 +369,31 @@ const EngagementDetailPage: FC = () => {
         </div>
     )
 
+    const renderRestrictedEngagementState = (): JSX.Element => (
+        <div className={styles.emptyState}>
+            <IconOutline.LockClosedIcon className={styles.emptyIcon} />
+            <h3>Private engagement</h3>
+            <p>
+                {isLoggedIn
+                    ? 'Only task managers, project managers, administrators, '
+                        + 'and assigned members can view this engagement.'
+                    : 'Sign in to confirm your access to this private engagement.'}
+            </p>
+            {!isLoggedIn && (
+                <a className={styles.signInLink} href={authUrlLogin()}>
+                    Sign in
+                </a>
+            )}
+            <Button label='Back to Engagements' secondary onClick={handleBackClick} />
+        </div>
+    )
+
     const renderApplyHint = (): JSX.Element | undefined => {
         if (!engagement) {
             return undefined
         }
 
-        if (engagement.status === EngagementStatus.CLOSED || deadlinePassed) {
+        if (isPrivateEngagement || !isEngagementOpen || deadlinePassed) {
             return undefined
         }
 
@@ -409,12 +526,24 @@ const EngagementDetailPage: FC = () => {
             return renderMissingEngagementState()
         }
 
+        if (isAccessPending) {
+            return renderLoadingState()
+        }
+
+        if (shouldRestrictEngagement) {
+            return renderRestrictedEngagementState()
+        }
+
         return renderDetailSection()
     }
 
+    const pageTitle = engagement && canViewPrivateEngagement
+        ? engagement.title
+        : 'Engagement Details'
+
     return (
         <ContentLayout
-            title={engagement?.title ?? 'Engagement Details'}
+            title={pageTitle}
             secondaryButtonConfig={{
                 label: 'Back to Engagements',
                 onClick: handleBackClick,

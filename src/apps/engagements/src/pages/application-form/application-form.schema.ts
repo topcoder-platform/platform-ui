@@ -11,6 +11,14 @@ export const applicationFormSchema: yup.ObjectSchema<ApplicationFormData> = yup.
         .string()
         .max(5000, 'Cover letter must be 5000 characters or less')
         .optional(),
+    mobileNumber: yup
+        .string()
+        .matches(
+            /^[\d\s()+-]+$/,
+            'Mobile number can only contain digits, spaces, hyphens, plus signs, and parentheses',
+        )
+        .max(20, 'Mobile number must be 20 characters or less')
+        .optional(),
     portfolioUrls: yup
         .array()
         .of(

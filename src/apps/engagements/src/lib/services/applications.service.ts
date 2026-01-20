@@ -27,7 +27,7 @@ export interface GetApplicationsParams {
     page?: number
     perPage?: number
     status?: string | string[]
-    userId?: number
+    userId?: number | string
 }
 
 const normalizePaginatedResponse = <T>(
@@ -78,6 +78,7 @@ export const getMyApplications = async (
 
     if (params.page) queryParams.append('page', params.page.toString())
     if (params.perPage) queryParams.append('perPage', params.perPage.toString())
+    if (params.userId !== undefined) queryParams.append('userId', `${params.userId}`)
     if (params.status) {
         const statusParts = Array.isArray(params.status)
             ? params.status
@@ -103,11 +104,15 @@ export const getApplicationById = async (id: string): Promise<Application> => (
 
 export const checkExistingApplication = async (
     engagementId: string,
+    userId?: number | string,
 ): Promise<{ hasApplied: boolean; application?: Application }> => {
     const queryParams = new URLSearchParams()
     queryParams.append('engagementId', engagementId)
     queryParams.append('page', '1')
     queryParams.append('perPage', '1')
+    if (userId !== undefined) {
+        queryParams.append('userId', `${userId}`)
+    }
 
     const response = await xhrGetAsync<{ data?: Application[] } | Application[]>(
         `${APPLICATIONS_URL}?${queryParams.toString()}`,

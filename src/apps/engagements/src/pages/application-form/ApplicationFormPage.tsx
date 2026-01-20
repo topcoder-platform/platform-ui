@@ -59,6 +59,7 @@ const ApplicationFormPage: FC = () => {
         defaultValues: {
             availability: '',
             coverLetter: '',
+            mobileNumber: undefined,
             portfolioUrls: [],
             resumeUrl: undefined,
             yearsOfExperience: undefined,
@@ -165,7 +166,7 @@ const ApplicationFormPage: FC = () => {
             : false
     ), [engagement?.applicationDeadline])
 
-    const engagementClosed = engagement?.status === EngagementStatus.CLOSED
+    const isEngagementOpen = engagement?.status === EngagementStatus.OPEN
 
     const isLoading = loading || userDataLoading || checkingApplication
 
@@ -199,7 +200,7 @@ const ApplicationFormPage: FC = () => {
     }, [navigate])
 
     const onSubmit = useCallback(async (): Promise<void> => {
-        if (!engagement?.id || submitting) {
+        if (!engagement?.id || submitting || !isEngagementOpen || deadlinePassed) {
             return
         }
 
@@ -213,6 +214,7 @@ const ApplicationFormPage: FC = () => {
             const request: CreateApplicationRequest = {
                 availability: values.availability?.trim() || '',
                 coverLetter: values.coverLetter?.trim() || '',
+                mobileNumber: values.mobileNumber?.trim() || undefined,
                 portfolioLinks: portfolioLinks.length ? portfolioLinks : undefined,
                 resumeUrl: values.resumeUrl || undefined,
                 yearsOfExperience: values.yearsOfExperience,
@@ -236,7 +238,7 @@ const ApplicationFormPage: FC = () => {
         } finally {
             setSubmitting(false)
         }
-    }, [clearErrors, engagement?.id, getValues, navigate, submitting])
+    }, [clearErrors, deadlinePassed, engagement?.id, getValues, isEngagementOpen, navigate, submitting])
 
     const handleCoverLetterChange = useCallback(
         (field: ControllerRenderProps<ApplicationFormData, 'coverLetter'>) => (
@@ -277,7 +279,17 @@ const ApplicationFormPage: FC = () => {
         [],
     )
 
-    const isFormDisabled = submitting || deadlinePassed || engagementClosed
+    const handleMobileNumberChange = useCallback(
+        (field: ControllerRenderProps<ApplicationFormData, 'mobileNumber'>) => (
+            (event: ChangeEvent<HTMLInputElement>): void => {
+                const nextValue = event.target.value
+                field.onChange(nextValue || undefined)
+            }
+        ),
+        [],
+    )
+
+    const isFormDisabled = submitting || deadlinePassed || !isEngagementOpen
 
     const isSubmitDisabled = getIsSubmitDisabled({
         applicationError,
@@ -374,6 +386,26 @@ const ApplicationFormPage: FC = () => {
         [errors.availability, handleAvailabilityChange, isFormDisabled],
     )
 
+    const renderMobileNumberField = useCallback(
+        (renderProps: { field: ControllerRenderProps<ApplicationFormData, 'mobileNumber'> }): JSX.Element => (
+            <input
+                id='mobile-number'
+                type='tel'
+                className={classNames(
+                    styles.inputField,
+                    errors.mobileNumber && styles.inputError,
+                )}
+                placeholder='+1 (555) 123-4567'
+                value={renderProps.field.value ?? ''}
+                onChange={handleMobileNumberChange(renderProps.field)}
+                disabled={isFormDisabled}
+                aria-invalid={!!errors.mobileNumber}
+                aria-describedby={errors.mobileNumber ? 'mobile-number-error' : undefined}
+            />
+        ),
+        [errors.mobileNumber, handleMobileNumberChange, isFormDisabled],
+    )
+
     const renderLoadingState = (): JSX.Element => (
         <div className={styles.loadingState}>
             <LoadingSpinner className={styles.loadingSpinner} inline />
@@ -438,21 +470,21 @@ const ApplicationFormPage: FC = () => {
         </div>
     )
 
-    const renderEngagementClosedBanner = (): JSX.Element | undefined => {
-        if (!engagementClosed) {
+    const renderEngagementNotOpenBanner = (): JSX.Element | undefined => {
+        if (isEngagementOpen) {
             return undefined
         }
 
         return (
             <div className={styles.infoMessage} data-variant='error'>
                 <IconOutline.ExclamationIcon className={styles.infoIcon} />
-                <div>This engagement is no longer accepting applications.</div>
+                <div>This engagement is not accepting applications.</div>
             </div>
         )
     }
 
     const renderDeadlinePassedBanner = (): JSX.Element | undefined => {
-        if (engagementClosed || !deadlinePassed) {
+        if (!isEngagementOpen || !deadlinePassed) {
             return undefined
         }
 
@@ -486,7 +518,7 @@ const ApplicationFormPage: FC = () => {
 
     const renderForm = (): JSX.Element => (
         <div className={styles.formContainer}>
-            {renderEngagementClosedBanner()}
+            {renderEngagementNotOpenBanner()}
             {renderDeadlinePassedBanner()}
 
             <form className={styles.form} onSubmit={handleSubmit(onSubmit)}>
@@ -516,6 +548,19 @@ const ApplicationFormPage: FC = () => {
                             />
                         </div>
                         {renderAddressField()}
+                        <div className={styles.fieldGroup}>
+                            <label className={styles.fieldLabel} htmlFor='mobile-number'>Mobile Number</label>
+                            <Controller
+                                name='mobileNumber'
+                                control={control}
+                                render={renderMobileNumberField}
+                            />
+                            {errors.mobileNumber && (
+                                <div className={styles.fieldError} id='mobile-number-error'>
+                                    {errors.mobileNumber.message}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </section>
 

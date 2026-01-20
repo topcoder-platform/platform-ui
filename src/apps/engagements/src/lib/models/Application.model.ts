@@ -15,6 +15,7 @@ export interface Application {
     email: string
     name: string
     address?: string
+    mobileNumber?: string
     coverLetter: string
     resumeUrl?: string
     portfolioLinks?: string[]
@@ -40,4 +41,5 @@ export interface CreateApplicationRequest {
     portfolioLinks?: string[]
     yearsOfExperience?: number
     availability: string
+    mobileNumber?: string
 }
