@@ -193,9 +193,19 @@ const MyApplicationsPage: FC = () => {
     const skeletonCards = useMemo(() => Array.from({ length: 6 }, (_, index) => index), [])
 
     const showEmptyState = !loading && !error && applications.length === 0
-    const emptyMessage = activeTab === 'active'
-        ? "You haven't applied to any engagements yet."
-        : 'No past applications.'
+    const selectedStatusLabel = useMemo(() => {
+        if (selectedStatus === 'all') {
+            return undefined
+        }
+
+        const option = statusOptions.find(statusOption => statusOption.value === selectedStatus)
+        return option?.label ?? selectedStatus
+    }, [selectedStatus, statusOptions])
+    const emptyMessage = selectedStatusLabel
+        ? `You haven't applied to any engagements with status ${selectedStatusLabel}.`
+        : activeTab === 'active'
+            ? "You don't have any active applications yet."
+            : 'No past applications.'
 
     return (
         <ContentLayout title='My Applications' contentClass={styles.pageContent}>

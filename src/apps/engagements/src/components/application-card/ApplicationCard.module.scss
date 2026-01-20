@@ -10,10 +10,6 @@
     transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
 }
 
-.expanded {
-    border-color: $turq-120;
-}
-
 .clickable {
     cursor: pointer;
 }
@@ -109,48 +105,9 @@
 .toggleIcon {
     width: 16px;
     height: 16px;
-    transition: transform 0.2s ease;
-}
-
-.toggleIconOpen {
-    transform: rotate(180deg);
 }
 
 .viewDetailsButton {
     padding: 0;
     font-weight: 600;
-}
-
-.details {
-    display: grid;
-    gap: 12px;
-    padding: 14px;
-    border-radius: 12px;
-    background: $black-5;
-    border: 1px solid $black-10;
-}
-
-.detailGrid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 12px;
-}
-
-.detailBlock {
-    display: grid;
-    gap: 4px;
-}
-
-.detailLabel {
-    font-size: 0.7rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: $black-60;
-}
-
-.detailValue {
-    margin: 0;
-    font-size: 0.9rem;
-    color: $black-80;
-    line-height: 1.5;
 }

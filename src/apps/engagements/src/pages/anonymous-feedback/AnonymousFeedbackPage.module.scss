@@ -1,0 +1,89 @@
+@import '@libs/ui/styles/includes';
+@import '../../styles/responsive';
+
+.pageContent {
+    display: block;
+}
+
+.container {
+    max-width: 720px;
+    margin: 0 auto;
+    display: grid;
+    gap: 20px;
+}
+
+.intro {
+    display: grid;
+    gap: 6px;
+}
+
+.introTitle {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: $black-100;
+}
+
+.introText {
+    margin: 0;
+    color: $black-80;
+}
+
+.card {
+    background: $tc-white;
+    border: 1px solid $black-10;
+    border-radius: 16px;
+    padding: 20px;
+    display: grid;
+    gap: 16px;
+}
+
+.notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: 12px;
+}
+
+.noticeIcon {
+    width: 22px;
+    height: 22px;
+    flex: 0 0 22px;
+}
+
+.noticeTitle {
+    margin: 0;
+    font-weight: 600;
+}
+
+.noticeText {
+    margin: 4px 0 0;
+    font-size: 0.9rem;
+}
+
+.noticeError {
+    background: $red-25;
+    border: 1px solid $red-50;
+    color: $red-140;
+}
+
+.noticeError .noticeIcon {
+    color: $red-120;
+}
+
+.noticeSuccess {
+    background: $green-25;
+    border: 1px solid $green-50;
+    color: $green-140;
+}
+
+.noticeSuccess .noticeIcon {
+    color: $green-120;
+}
+
+@include mobile {
+    .card {
+        padding: 16px;
+    }
+}

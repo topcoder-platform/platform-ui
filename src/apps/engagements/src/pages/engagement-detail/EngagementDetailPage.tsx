@@ -36,7 +36,7 @@ const APPLICATION_STATUS_LABELS: Record<ApplicationStatus, string> = {
     [ApplicationStatus.REJECTED]: 'Rejected',
 }
 
-const PRIVATE_ENGAGEMENT_ROLE_KEYWORDS = ['project manager', 'task manager', 'admin']
+const PRIVATE_ENGAGEMENT_ROLE_KEYWORDS = ['project manager', 'task manager', 'talent manager', 'admin']
 
 const formatEnumLabel = (value?: string): string | undefined => {
     if (!value) {
@@ -140,6 +140,19 @@ const EngagementDetailPage: FC = () => {
     const [hasApplied, setHasApplied] = useState<boolean>(false)
     const [checkingApplication, setCheckingApplication] = useState<boolean>(false)
     const [applicationError, setApplicationError] = useState<string | undefined>(undefined)
+    const normalizedUserId = userId !== undefined && userId !== null ? String(userId) : undefined
+    const normalizedCreatedBy = engagement?.createdBy?.trim()
+    const normalizedCreatorEmail = engagement?.createdByEmail
+        ?.trim()
+        .toLowerCase()
+    const normalizedUserEmail = profileContext.profile?.email
+        ?.trim()
+        .toLowerCase()
+    const isEngagementCreator = Boolean(
+        (normalizedUserId && normalizedCreatedBy && normalizedCreatedBy === normalizedUserId)
+        || (normalizedCreatorEmail && normalizedUserEmail && normalizedCreatorEmail === normalizedUserEmail),
+    )
+
     const fetchEngagement = useCallback(async (): Promise<void> => {
         if (!nanoId) {
             navigate(rootRoute || '/', {
@@ -172,7 +185,7 @@ const EngagementDetailPage: FC = () => {
     }, [nanoId, navigate])
 
     const checkApplication = useCallback(async (): Promise<void> => {
-        if (!isLoggedIn || !engagement?.id || userId === undefined) {
+        if (!isLoggedIn || !engagement?.id || userId === undefined || isEngagementCreator) {
             return
         }
 
@@ -188,7 +201,7 @@ const EngagementDetailPage: FC = () => {
         } finally {
             setCheckingApplication(false)
         }
-    }, [engagement?.id, isLoggedIn, userId])
+    }, [engagement?.id, isEngagementCreator, isLoggedIn, userId])
 
     useEffect(() => {
         fetchEngagement()
@@ -375,7 +388,7 @@ const EngagementDetailPage: FC = () => {
             <h3>Private engagement</h3>
             <p>
                 {isLoggedIn
-                    ? 'Only task managers, project managers, administrators, '
+                    ? 'Only task managers, talent managers, project managers, administrators, '
                         + 'and assigned members can view this engagement.'
                     : 'Sign in to confirm your access to this private engagement.'}
             </p>
@@ -502,13 +515,15 @@ const EngagementDetailPage: FC = () => {
                         ))}
                     </div>
                 </div>
-                <div className={styles.applySection}>
-                    <div className={styles.applyHeader}>
-                        <h2>Apply</h2>
-                        {renderApplyHint()}
+                {!isEngagementCreator && (
+                    <div className={styles.applySection}>
+                        <div className={styles.applyHeader}>
+                            <h2>Apply</h2>
+                            {renderApplyHint()}
+                        </div>
+                        {renderApplySection()}
                     </div>
-                    {renderApplySection()}
-                </div>
+                )}
             </div>
         )
     }
