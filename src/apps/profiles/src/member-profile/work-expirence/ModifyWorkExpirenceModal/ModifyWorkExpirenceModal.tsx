@@ -503,16 +503,6 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
                                 maxDate={new Date()}
                             />
                         </div>
-                        <InputText
-                            name='currentlyWorking'
-                            label='I am currently working in this role'
-                            error={formErrors.currentlyWorking}
-                            dirty
-                            tabIndex={0}
-                            type='checkbox'
-                            onChange={bind(handleFormValueChange, this, 'currentlyWorking')}
-                            checked={formValues.currentlyWorking as boolean}
-                        />
                         <FieldHtmlEditor
                             name='description'
                             label='Description'
@@ -538,6 +528,16 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
                             value={formValues.associatedSkills as any[]}
                             onChange={handleSkillsChange}
                             loading={false}
+                        />
+                        <InputText
+                            name='currentlyWorking'
+                            label='I am currently working in this role'
+                            error={formErrors.currentlyWorking}
+                            dirty
+                            tabIndex={0}
+                            type='checkbox'
+                            onChange={bind(handleFormValueChange, this, 'currentlyWorking')}
+                            checked={formValues.currentlyWorking as boolean}
                         />
                     </form>
                 ) : (
