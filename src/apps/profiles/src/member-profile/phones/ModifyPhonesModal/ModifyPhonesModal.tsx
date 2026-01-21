@@ -125,6 +125,7 @@ const ModifyPhonesModal: FC<ModifyPhonesModalProps> = (props: ModifyPhonesModalP
             if (!PHONE_VALIDATION_REGEX.test(normalized)) {
                 setFormErrors({
                     ...formErrors,
+                    // eslint-disable-next-line max-len
                     number: 'Phone number is not in valid E.164 format (must start with + followed by 1-9, then 1-14 more digits)',
                 })
             } else {
@@ -167,9 +168,10 @@ const ModifyPhonesModal: FC<ModifyPhonesModalProps> = (props: ModifyPhonesModalP
 
         const phoneNumber = trim(formValues.number as string)
         const normalized = normalizePhoneNumber(phoneNumber)
-        
+
         if (!PHONE_VALIDATION_REGEX.test(normalized)) {
             setFormErrors({
+                // eslint-disable-next-line max-len
                 number: 'Phone number is not in valid E.164 format (must start with + followed by 1-9, then 1-14 more digits)',
             })
             return
