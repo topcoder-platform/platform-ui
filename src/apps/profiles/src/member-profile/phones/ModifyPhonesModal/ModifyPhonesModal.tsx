@@ -7,7 +7,7 @@ import classNames from 'classnames'
 import { BaseModal, Button, IconOutline, InputSelect, InputText } from '~/libs/ui'
 import { updateMemberProfileAsync, UserProfile } from '~/libs/core'
 
-import PhoneCard from '../PhoneCard'
+import { PhoneCard } from '../PhoneCard'
 
 import styles from './ModifyPhonesModal.module.scss'
 
@@ -19,6 +19,7 @@ interface ModifyPhonesModalProps {
         type: string
         number: string
     }>
+    initialEditIndex?: number
 }
 
 const PHONE_TYPE_OPTIONS = [
@@ -27,20 +28,27 @@ const PHONE_TYPE_OPTIONS = [
     { label: 'Home', value: 'Home' },
 ]
 
-const PHONE_VALIDATION_REGEX = /^[+\d\s\-]+$/
+const PHONE_VALIDATION_REGEX = /^[+\d\s-]+$/
 
 const ModifyPhonesModal: FC<ModifyPhonesModalProps> = (props: ModifyPhonesModalProps) => {
     const [isSaving, setIsSaving]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
 
     const [addingNewItem, setAddingNewItem]: [boolean, Dispatch<SetStateAction<boolean>>]
-        = useState<boolean>(props.phones.length === 0 || false)
+        = useState<boolean>(props.initialEditIndex === undefined && props.phones.length === 0)
 
     const [formValues, setFormValues]: [
         { [key: string]: string | undefined },
         Dispatch<SetStateAction<{ [key: string]: string | undefined }>>
     ]
-        = useState<{ [key: string]: string | undefined }>({})
+        = useState<{ [key: string]: string | undefined }>(
+            props.initialEditIndex !== undefined && props.phones[props.initialEditIndex]
+                ? {
+                    number: props.phones[props.initialEditIndex].number,
+                    type: props.phones[props.initialEditIndex].type,
+                }
+                : {},
+        )
 
     const [formErrors, setFormErrors]: [
         { [key: string]: string },
@@ -53,7 +61,7 @@ const ModifyPhonesModal: FC<ModifyPhonesModalProps> = (props: ModifyPhonesModalP
     const [editedItemIndex, setEditedItemIndex]: [
         number | undefined,
         Dispatch<SetStateAction<number | undefined>>
-    ] = useState<number | undefined>()
+    ] = useState<number | undefined>(props.initialEditIndex)
 
     const [phones, setPhones]: [
         Array<{ type: string; number: string }>,
@@ -156,8 +164,8 @@ const ModifyPhonesModal: FC<ModifyPhonesModalProps> = (props: ModifyPhonesModalP
         }
 
         const updatedPhone: { type: string; number: string } = {
-            type: formValues.type as string,
             number: phoneNumber,
+            type: formValues.type as string,
         }
 
         if (editedItemIndex !== undefined) {
@@ -176,8 +184,8 @@ const ModifyPhonesModal: FC<ModifyPhonesModalProps> = (props: ModifyPhonesModalP
 
         setEditedItemIndex(indx)
         setFormValues({
-            type: phone.type,
             number: phone.number,
+            type: phone.type,
         })
     }
 
@@ -234,7 +242,7 @@ const ModifyPhonesModal: FC<ModifyPhonesModalProps> = (props: ModifyPhonesModalP
                             phones.map((phone, indx: number) => (
                                 <div
                                     className={styles.phoneCardWrap}
-                                    key={`${phone.type}-${phone.number}-${indx}`}
+                                    key={`${phone.type}-${phone.number}`}
                                 >
                                     <PhoneCard
                                         type={phone.type}

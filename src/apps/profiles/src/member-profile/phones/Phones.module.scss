@@ -4,24 +4,26 @@
     margin-top: $sp-8;
 }
 
-.titleWrap {
-    margin-bottom: $sp-4;
-}
-
 .email {
     display: flex;
     align-items: center;
     margin-top: $sp-2;
+    .emailIcon {
+        width: 20px;
+        height: 20px;
+        margin-right: $sp-2;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
 }
 
 .emailText {
-    margin-top: $sp-2;
-}
-
-.phonesHeader {
-    display: flex;
-    justify-content: flex-end;
-    margin-bottom: $sp-2;
+    font-family: $font-roboto;
+    font-size: 16px;
+    line-height: 24px;
+    color: $black-100;
+    font-weight: $font-weight-normal;
 }
 
 .phonesContent {

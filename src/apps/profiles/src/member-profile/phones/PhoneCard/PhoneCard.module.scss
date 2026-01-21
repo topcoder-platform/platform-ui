@@ -1,7 +1,6 @@
 @import '@libs/ui/styles/includes';
 
 .phoneCard {
-    margin-bottom: $sp-4;
 
     &.phoneCardModalView {
         margin-bottom: $sp-2;
@@ -10,7 +9,6 @@
     .phoneCardContent {
         display: flex;
         align-items: center;
-        justify-content: space-between;
     }
 
     .phoneCardLeft {
@@ -48,8 +46,29 @@
         color: $black-100;
     }
 
+    .phoneCardRight {
+        display: flex;
+        align-items: center;
+        gap: $sp-1;
+    }
+
+    .editButton {
+        margin-left: auto;
+        padding: 0 !important;
+        padding-left: $sp-4 !important;
+        color: $black-100;
+
+        svg {
+            width: 20px;
+            height: 20px;
+        }
+    }
+
     .copyButton {
-        margin-left: $sp-2;
+        margin-left: 10px;
+    }
+    .phoneCardNotFirst {
+        margin-left: 32px;
     }
 }
 

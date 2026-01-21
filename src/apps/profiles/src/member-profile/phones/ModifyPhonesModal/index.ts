@@ -1,1 +1,1 @@
-export { default } from './ModifyPhonesModal'
+export { default as ModifyPhonesModal } from './ModifyPhonesModal'

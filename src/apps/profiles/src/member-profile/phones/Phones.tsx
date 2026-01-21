@@ -2,10 +2,12 @@ import { Dispatch, FC, SetStateAction, useState } from 'react'
 
 import { UserProfile } from '~/libs/core'
 import { CopyButton } from '~/apps/admin/src/lib/components/CopyButton'
+import { IconSolid } from '~/libs/ui'
 
-import { AddButton, EditMemberPropertyBtn, EmptySection } from '../../components'
-import ModifyPhonesModal from './ModifyPhonesModal'
-import PhoneCard from './PhoneCard'
+import { AddButton, EmptySection } from '../../components'
+
+import { ModifyPhonesModal } from './ModifyPhonesModal'
+import { PhoneCard } from './PhoneCard'
 import styles from './Phones.module.scss'
 
 interface PhonesProps {
@@ -20,19 +22,27 @@ const Phones: FC<PhonesProps> = (props: PhonesProps) => {
     const [isEditMode, setIsEditMode]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
 
+    const [initialEditIndex, setInitialEditIndex]: [
+        number | undefined,
+        Dispatch<SetStateAction<number | undefined>>
+    ] = useState<number | undefined>()
+
     const phones = props.profile.phones || []
 
     function handleEditPhonesClick(): void {
+        setInitialEditIndex(undefined)
         setIsEditMode(true)
     }
 
     function handleModifyPhonesModalClose(): void {
         setIsEditMode(false)
+        setInitialEditIndex(undefined)
     }
 
     function handleModifyPhonesSave(): void {
         setTimeout(() => {
             setIsEditMode(false)
+            setInitialEditIndex(undefined)
             props.refreshProfile(props.profile.handle)
         }, 1000)
     }
@@ -43,29 +53,25 @@ const Phones: FC<PhonesProps> = (props: PhonesProps) => {
                 <p className='body-main-bold'>Contact</p>
                 {props.profile?.email && (
                     <div className={styles.email}>
+                        <div className={styles.emailIcon}>
+                            <IconSolid.MailIcon width={20} height={20} />
+                        </div>
                         <p className={styles.emailText}>{props.profile.email}</p>
                         <CopyButton className={styles.copyButton} text={props.profile.email} />
                     </div>
                 )}
             </div>
 
-            {phones.length > 0 && (
-                <div className={styles.phonesHeader}>
-                    {canEdit && (
-                        <EditMemberPropertyBtn
-                            onClick={handleEditPhonesClick}
-                        />
-                    )}
-                </div>
-            )}
-
             <div className={styles.phonesContent}>
                 {phones.length > 0
                     ? phones.map((phone, index: number) => (
                         <PhoneCard
-                            key={`${phone.type}-${phone.number}-${index}`}
+                            key={`${phone.type}-${phone.number}`}
                             type={phone.type}
                             number={phone.number}
+                            canEdit={canEdit && index === 0}
+                            phoneIndex={index}
+                            onEdit={index === 0 ? handleEditPhonesClick : undefined}
                         />
                     ))
                     : (
@@ -76,7 +82,7 @@ const Phones: FC<PhonesProps> = (props: PhonesProps) => {
                             This member has not added contact phone numbers.
                         </EmptySection>
                     )}
-                {canEdit && !phones.length && (
+                {canEdit && (
                     <AddButton
                         label='Add phone number'
                         onClick={handleEditPhonesClick}
@@ -91,6 +97,7 @@ const Phones: FC<PhonesProps> = (props: PhonesProps) => {
                         onSave={handleModifyPhonesSave}
                         profile={props.profile}
                         phones={phones}
+                        initialEditIndex={initialEditIndex}
                     />
                 )
             }

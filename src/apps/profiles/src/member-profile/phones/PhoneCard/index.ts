@@ -1,1 +1,1 @@
-export { default } from './PhoneCard'
+export { default as PhoneCard } from './PhoneCard'
