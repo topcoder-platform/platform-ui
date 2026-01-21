@@ -1,3 +1,9 @@
+export enum WinningsType {
+  PAYMENT = 'PAYMENT',
+  ENGAGEMENT = 'ENGAGEMENT',
+  POINTS = 'POINTS',
+}
+
 export interface PaymentDetail {
     id: string
     grossAmount: string
