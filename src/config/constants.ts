@@ -13,6 +13,7 @@ export enum AppSubdomain {
     admin = 'system-admin',
     review = 'review',
     calendar = 'calendar',
+    customer = 'customer'
 }
 
 export enum ToolTitle {
@@ -30,6 +31,7 @@ export enum ToolTitle {
     admin = 'Admin',
     review = 'Review',
     calendar = 'Calendar',
+    customer = 'Customer'
 }
 
 export const PageSubheaderPortalId: string = 'page-subheader-portal-el'
