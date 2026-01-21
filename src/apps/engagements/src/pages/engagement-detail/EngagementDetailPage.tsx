@@ -152,6 +152,7 @@ const EngagementDetailPage: FC = () => {
         (normalizedUserId && normalizedCreatedBy && normalizedCreatedBy === normalizedUserId)
         || (normalizedCreatorEmail && normalizedUserEmail && normalizedCreatorEmail === normalizedUserEmail),
     )
+    const isPrivateEngagement = Boolean(engagement?.isPrivate)
 
     const fetchEngagement = useCallback(async (): Promise<void> => {
         if (!nanoId) {
@@ -185,7 +186,7 @@ const EngagementDetailPage: FC = () => {
     }, [nanoId, navigate])
 
     const checkApplication = useCallback(async (): Promise<void> => {
-        if (!isLoggedIn || !engagement?.id || userId === undefined || isEngagementCreator) {
+        if (!isLoggedIn || !engagement?.id || userId === undefined || isEngagementCreator || isPrivateEngagement) {
             return
         }
 
@@ -201,7 +202,7 @@ const EngagementDetailPage: FC = () => {
         } finally {
             setCheckingApplication(false)
         }
-    }, [engagement?.id, isEngagementCreator, isLoggedIn, userId])
+    }, [engagement?.id, isEngagementCreator, isLoggedIn, isPrivateEngagement, userId])
 
     useEffect(() => {
         fetchEngagement()
@@ -248,7 +249,6 @@ const EngagementDetailPage: FC = () => {
 
     const isDeadlineSoon = daysUntilDeadline > 0 && daysUntilDeadline <= 7
     const isEngagementOpen = engagement?.status === EngagementStatus.OPEN
-    const isPrivateEngagement = Boolean(engagement?.isPrivate)
 
     const normalizedRoles = normalizeRoleNames(profileContext.profile?.roles)
     const hasPrivateEngagementRole = hasPrivateEngagementRoleMatch(normalizedRoles)
@@ -274,6 +274,14 @@ const EngagementDetailPage: FC = () => {
             return (
                 <div className={styles.applyMessage}>
                     <span>Engagement details are unavailable.</span>
+                </div>
+            )
+        }
+
+        if (isPrivateEngagement) {
+            return (
+                <div className={styles.applyMessage}>
+                    <span>This engagement is private and not accepting applications.</span>
                 </div>
             )
         }
@@ -308,14 +316,6 @@ const EngagementDetailPage: FC = () => {
                             {`Application status: ${applicationStatusLabel}`}
                         </span>
                     )}
-                </div>
-            )
-        }
-
-        if (isPrivateEngagement) {
-            return (
-                <div className={styles.applyMessage}>
-                    <span>This engagement is private and not accepting applications.</span>
                 </div>
             )
         }

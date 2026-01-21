@@ -133,6 +133,14 @@
         padding: 0;
     }
 
+    :global(ul) {
+        list-style: disc;
+    }
+
+    :global(ol) {
+        list-style: decimal;
+    }
+
     :global(li) {
         margin-bottom: 6px;
     }

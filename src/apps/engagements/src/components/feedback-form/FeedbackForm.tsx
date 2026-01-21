@@ -160,7 +160,7 @@ const FeedbackForm: FC<FeedbackFormProps> = (props: FeedbackFormProps) => {
     return (
         <form className={styles.form} onSubmit={handleSubmit(handleFormSubmit)}>
             <div className={styles.fieldGroup}>
-                <label className={styles.fieldLabel} htmlFor='feedback-text'>Feedback</label>
+                <label className={styles.fieldLabel} htmlFor='feedback-text'>Internal Performance Review</label>
                 <Controller
                     name='feedbackText'
                     control={control}
@@ -179,7 +179,9 @@ const FeedbackForm: FC<FeedbackFormProps> = (props: FeedbackFormProps) => {
             </div>
 
             <div className={styles.fieldGroup}>
-                <label className={styles.fieldLabel} htmlFor='feedback-rating'>Rating (optional)</label>
+                <label className={styles.fieldLabel} htmlFor='feedback-rating'>
+                    Communication with Customer (optional)
+                </label>
                 <Controller
                     name='rating'
                     control={control}
