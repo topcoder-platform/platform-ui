@@ -59,7 +59,7 @@ function formatStatus(status: string): string {
     }
 }
 
-const formatCurrency = (amountStr: string, currency: string): string => {
+export const formatCurrency = (amountStr: string, currency: string): string => {
     let amount: number
     try {
         amount = parseFloat(amountStr)

@@ -11,6 +11,8 @@ import { PaginationInfo } from '../../../lib/models/PaginationInfo'
 import PointsTable from '../../../lib/components/points-table/PointsTable'
 
 import styles from './Winnings.module.scss'
+import { WinningDetail } from '../../../lib/models/WinningDetail'
+import { formatCurrency } from './PaymentsListView'
 
 interface PointsListViewProps {
     profile: UserProfile
@@ -19,10 +21,10 @@ interface PointsListViewProps {
 }
 
 interface PointItem {
-    id: string
-    description: string
+    amount: number
     createDate: string
-    points: number
+    description: string
+    id: string
 }
 
 function formatIOSDateString(iosDateString: string): string {
@@ -49,17 +51,17 @@ const PointsListView: FC<PointsListViewProps> = (props: PointsListViewProps) => 
 
     const [pagination, setPagination] = React.useState<PaginationInfo>({
         currentPage: 1,
-        pageSize: 10,
+        pageSize: 3,
         totalItems: 0,
         totalPages: 0,
     })
 
     const convertToPoints = useCallback(
-        (pointsData: any[]) => pointsData.map((point: any) => ({
-            createDate: formatIOSDateString(point.createdAt || point.createDate),
-            description: point.description,
-            id: point.id,
-            points: point.points || point.amount,
+        (pointsData: WinningDetail[]) => pointsData.map((p) => ({
+            amount: parseFloat(p.details[0].totalAmount),
+            createDate: formatIOSDateString(p.createdAt),
+            description: p.description,
+            id: p.id,
         })),
         [],
     )
