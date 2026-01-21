@@ -2,7 +2,7 @@ import { ChangeEvent, FC, useCallback, useEffect, useMemo, useRef, useState } fr
 import { useNavigate } from 'react-router-dom'
 
 import { useProfileContext } from '~/libs/core'
-import { Button, ContentLayout, IconOutline, InputSelect, LoadingSpinner, TabsNavbar, TabsNavItem } from '~/libs/ui'
+import { Button, ContentLayout, IconOutline, InputSelect, LoadingSpinner } from '~/libs/ui'
 import { Pagination } from '~/apps/admin/src/lib/components/common/Pagination'
 
 import { APPLICATIONS_PER_PAGE } from '../../config/constants'
@@ -11,12 +11,12 @@ import { getMyApplications } from '../../lib/services/applications.service'
 import { getEngagementById } from '../../lib/services/engagements.service'
 import { ApplicationCard } from '../../components/application-card'
 import { ApplicationDetailModal } from '../../components/application-detail-modal'
+import { EngagementsTabs } from '../../components'
 import { rootRoute } from '../../engagements.routes'
 
 import styles from './MyApplicationsPage.module.scss'
 
-type ApplicationsTab = 'active' | 'past'
-type StatusFilterValue = ApplicationStatus | 'all'
+type StatusFilterValue = ApplicationStatus | 'active' | 'past'
 
 const ACTIVE_STATUSES = [ApplicationStatus.SUBMITTED, ApplicationStatus.UNDER_REVIEW]
 const PAST_STATUSES = [ApplicationStatus.ACCEPTED, ApplicationStatus.REJECTED]
@@ -34,38 +34,33 @@ const MyApplicationsPage: FC = () => {
     const [error, setError] = useState<string | undefined>(undefined)
     const [page, setPage] = useState<number>(1)
     const [totalPages, setTotalPages] = useState<number>(1)
-    const [activeTab, setActiveTab] = useState<ApplicationsTab>('active')
-    const [selectedStatus, setSelectedStatus] = useState<StatusFilterValue>('all')
+    const [selectedStatus, setSelectedStatus] = useState<StatusFilterValue>('active')
     const [selectedApplication, setSelectedApplication] = useState<Application | undefined>()
     const [modalOpen, setModalOpen] = useState<boolean>(false)
     const engagementCacheRef = useRef<Map<string, Engagement>>(new Map())
 
-    const tabsConfig = useMemo<TabsNavItem<ApplicationsTab>[]>(() => ([
-        { id: 'active', title: 'Active' },
-        { id: 'past', title: 'Past' },
-    ]), [])
-
     const statusOptions = useMemo(() => (
-        activeTab === 'active'
-            ? [
-                { label: 'All Active', value: 'all' },
-                { label: 'Submitted', value: ApplicationStatus.SUBMITTED },
-                { label: 'Under Review', value: ApplicationStatus.UNDER_REVIEW },
-            ]
-            : [
-                { label: 'All Past', value: 'all' },
-                { label: 'Accepted', value: ApplicationStatus.ACCEPTED },
-                { label: 'Rejected', value: ApplicationStatus.REJECTED },
-            ]
-    ), [activeTab])
+        [
+            { label: 'All Active', value: 'active' },
+            { label: 'Submitted', value: ApplicationStatus.SUBMITTED },
+            { label: 'Under Review', value: ApplicationStatus.UNDER_REVIEW },
+            { label: 'All Past', value: 'past' },
+            { label: 'Accepted', value: ApplicationStatus.ACCEPTED },
+            { label: 'Rejected', value: ApplicationStatus.REJECTED },
+        ]
+    ), [])
 
     const statusFilter = useMemo(() => {
-        if (selectedStatus === 'all') {
-            return (activeTab === 'active' ? ACTIVE_STATUSES : PAST_STATUSES).join(',')
+        if (selectedStatus === 'active') {
+            return ACTIVE_STATUSES.join(',')
+        }
+
+        if (selectedStatus === 'past') {
+            return PAST_STATUSES.join(',')
         }
 
         return selectedStatus
-    }, [activeTab, selectedStatus])
+    }, [selectedStatus])
 
     const hydrateApplications = useCallback(async (
         applicationsToHydrate: Application[],
@@ -145,12 +140,6 @@ const MyApplicationsPage: FC = () => {
         fetchApplications()
     }, [fetchApplications])
 
-    const handleTabChange = useCallback((tabId: ApplicationsTab) => {
-        setActiveTab(tabId)
-        setPage(1)
-        setSelectedStatus('all')
-    }, [])
-
     const handleStatusChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
         setSelectedStatus(event.target.value as StatusFilterValue)
         setPage(1)
@@ -194,7 +183,7 @@ const MyApplicationsPage: FC = () => {
 
     const showEmptyState = !loading && !error && applications.length === 0
     const selectedStatusLabel = useMemo(() => {
-        if (selectedStatus === 'all') {
+        if (selectedStatus === 'active' || selectedStatus === 'past') {
             return undefined
         }
 
@@ -203,20 +192,14 @@ const MyApplicationsPage: FC = () => {
     }, [selectedStatus, statusOptions])
     const emptyMessage = selectedStatusLabel
         ? `You haven't applied to any engagements with status ${selectedStatusLabel}.`
-        : activeTab === 'active'
-            ? "You don't have any active applications yet."
-            : 'No past applications.'
+        : selectedStatus === 'past'
+            ? 'No past applications.'
+            : "You don't have any active applications yet."
 
     return (
         <ContentLayout title='My Applications' contentClass={styles.pageContent}>
+            <EngagementsTabs activeTab='applications' />
             <div className={styles.controls}>
-                <div className={styles.tabs}>
-                    <TabsNavbar
-                        defaultActive={activeTab}
-                        onChange={handleTabChange}
-                        tabs={tabsConfig}
-                    />
-                </div>
                 <div className={styles.statusFilter}>
                     <InputSelect
                         label='Status'

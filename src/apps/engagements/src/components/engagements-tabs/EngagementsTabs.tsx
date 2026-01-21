@@ -7,7 +7,7 @@ import { rootRoute } from '../../engagements.routes'
 
 import styles from './EngagementsTabs.module.scss'
 
-export type EngagementsTab = 'opportunities' | 'assignments'
+export type EngagementsTab = 'opportunities' | 'applications' | 'assignments'
 
 interface EngagementsTabsProps {
     activeTab: EngagementsTab
@@ -18,12 +18,18 @@ const EngagementsTabs: FC<EngagementsTabsProps> = (props: EngagementsTabsProps) 
 
     const tabsConfig = useMemo<TabsNavItem<EngagementsTab>[]>(() => ([
         { id: 'opportunities', title: 'Engagement Opportunities' },
+        { id: 'applications', title: 'My Applications' },
         { id: 'assignments', title: 'My Active Assignments' },
     ]), [])
 
     const handleTabChange = useCallback((tabId: EngagementsTab) => {
         if (tabId === 'assignments') {
             navigate(`${rootRoute}/assignments`)
+            return
+        }
+
+        if (tabId === 'applications') {
+            navigate(`${rootRoute}/my-applications`)
             return
         }
 

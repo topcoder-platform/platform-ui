@@ -4,7 +4,7 @@
 import { min } from 'date-fns'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 
-import { PLATFORMUI_URL, TOPCODER_URL } from '~/config/environments/default.env'
+import { ENGAGEMENTS_URL, TOPCODER_URL } from '~/config/environments/default.env'
 import { InputDatePicker, InputSelect, InputText } from '~/libs/ui'
 
 import { Winning } from '../../models/WinningDetail'
@@ -177,7 +177,7 @@ const PaymentEdit: React.FC<PaymentEditFormProps> = (props: PaymentEditFormProps
 
     const getLink = (payment: Winning): string => {
         if (payment.type.toLowerCase() === 'engagement payment') {
-            return `${PLATFORMUI_URL}/engagements/${payment.externalId}`
+            return `${ENGAGEMENTS_URL}/${payment.externalId}`
         }
 
         return `${TOPCODER_URL}/challenges/${payment.externalId}`

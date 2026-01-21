@@ -5,7 +5,7 @@
 import React from 'react'
 
 import { Button, Collapsible } from '~/libs/ui'
-import { PLATFORMUI_URL, TOPCODER_URL } from '~/config/environments/default.env'
+import { ENGAGEMENTS_URL, TOPCODER_URL } from '~/config/environments/default.env'
 
 import { WinningsAudit } from '../../models/WinningsAudit'
 import { Winning } from '../../models/WinningDetail'
@@ -83,7 +83,7 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
 
     const getLink = (payment: Winning): string => {
         if (payment.type.toLowerCase() === 'engagement payment') {
-            return `${PLATFORMUI_URL}/engagements/${payment.externalId}`
+            return `${ENGAGEMENTS_URL}/${payment.externalId}`
         }
 
         return `${TOPCODER_URL}/challenges/${payment.externalId}`
