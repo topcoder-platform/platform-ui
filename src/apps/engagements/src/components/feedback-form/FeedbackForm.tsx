@@ -1,4 +1,4 @@
-import { ChangeEvent, FC, useCallback, useMemo, useState } from 'react'
+import { ChangeEvent, FC, useCallback, useEffect, useMemo, useState } from 'react'
 import { Controller, type ControllerRenderProps, useForm } from 'react-hook-form'
 import classNames from 'classnames'
 
@@ -16,6 +16,7 @@ interface FeedbackFormProps {
     onCancel?: () => void
     disabled?: boolean
     submitLabel?: string
+    initialValues?: FeedbackFormData
 }
 
 const FeedbackForm: FC<FeedbackFormProps> = (props: FeedbackFormProps) => {
@@ -23,15 +24,16 @@ const FeedbackForm: FC<FeedbackFormProps> = (props: FeedbackFormProps) => {
     const onCancel = props.onCancel
     const disabled = props.disabled ?? false
     const submitLabel = props.submitLabel ?? 'Submit Feedback'
+    const initialValues = useMemo(() => ({
+        feedbackText: props.initialValues?.feedbackText ?? '',
+        rating: props.initialValues?.rating ?? undefined,
+    }), [props.initialValues?.feedbackText, props.initialValues?.rating])
 
     const [submitting, setSubmitting] = useState<boolean>(false)
     const [submitError, setSubmitError] = useState<string | undefined>(undefined)
 
     const form = useForm<FeedbackFormData>({
-        defaultValues: {
-            feedbackText: '',
-            rating: undefined,
-        },
+        defaultValues: initialValues,
         mode: 'all',
         resolver: yupResolver(feedbackFormSchema),
     })
@@ -41,6 +43,14 @@ const FeedbackForm: FC<FeedbackFormProps> = (props: FeedbackFormProps) => {
     const handleSubmit = form.handleSubmit
     const isValid = form.formState.isValid
     const feedbackTextValue = form.watch('feedbackText') ?? ''
+
+    useEffect(() => {
+        form.reset(initialValues)
+        if (initialValues.feedbackText.trim()) {
+            form.trigger()
+                .catch(() => undefined)
+        }
+    }, [form, initialValues])
 
     const characterCounterClassName = useMemo(() => {
         const ratio = 2000 > 0 ? feedbackTextValue.length / 2000 : 0

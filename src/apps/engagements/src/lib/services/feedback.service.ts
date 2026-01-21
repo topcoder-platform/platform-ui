@@ -2,6 +2,7 @@ import { EnvironmentConfig } from '~/config'
 import { xhrGetAsync, xhrPostAsync } from '~/libs/core'
 
 import type {
+    AnonymousFeedbackResponse,
     CreateFeedbackRequest,
     Feedback,
     GenerateFeedbackLinkRequest,
@@ -33,6 +34,14 @@ export const generateFeedbackLink = async (
     xhrPostAsync<GenerateFeedbackLinkRequest, GenerateFeedbackLinkResponse>(
         `${ENGAGEMENTS_URL}/${engagementId}/feedback/generate-link`,
         data,
+    )
+)
+
+export const getAnonymousFeedback = async (
+    secretToken: string,
+): Promise<AnonymousFeedbackResponse> => (
+    xhrGetAsync<AnonymousFeedbackResponse>(
+        `${FEEDBACK_URL}/anonymous/${secretToken}`,
     )
 )
 

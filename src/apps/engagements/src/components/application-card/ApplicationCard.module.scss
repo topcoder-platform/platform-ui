@@ -86,28 +86,8 @@
     gap: 12px;
 }
 
-.toggleButton {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    border: none;
-    background: transparent;
-    color: $turq-160;
-    font-weight: 600;
-    padding: 0;
-    cursor: pointer;
-}
-
-.toggleButton:hover {
-    color: $turq-140;
-}
-
-.toggleIcon {
-    width: 16px;
-    height: 16px;
-}
-
 .viewDetailsButton {
+    margin-left: auto;
     padding: 0;
     font-weight: 600;
 }

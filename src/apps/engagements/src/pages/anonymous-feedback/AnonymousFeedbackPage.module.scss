@@ -38,6 +38,18 @@
     gap: 16px;
 }
 
+.loadingState {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: $black-60;
+}
+
+.loadingSpinner {
+    width: 20px;
+    height: 20px;
+}
+
 .notice {
     display: flex;
     align-items: flex-start;

@@ -2,7 +2,7 @@ import { FC, MouseEvent, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import classNames from 'classnames'
 
-import { Button, IconOutline, IconSolid } from '~/libs/ui'
+import { Button, IconSolid } from '~/libs/ui'
 
 import type { Application } from '../../lib/models'
 import { formatDate } from '../../lib/utils'
@@ -84,16 +84,6 @@ const ApplicationCard: FC<ApplicationCardProps> = (props: ApplicationCardProps) 
                 )}
             </div>
             <div className={styles.actions}>
-                <button
-                    type='button'
-                    className={styles.toggleButton}
-                    onClick={handleOpenDetails}
-                >
-                    <span>Show details</span>
-                    <IconOutline.ChevronDownIcon
-                        className={styles.toggleIcon}
-                    />
-                </button>
                 {onClick && (
                     <Button
                         label='View Application'

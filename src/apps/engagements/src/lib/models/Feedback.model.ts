@@ -25,3 +25,9 @@ export interface GenerateFeedbackLinkResponse {
     feedbackUrl: string
     expiresAt: string
 }
+
+export interface AnonymousFeedbackResponse {
+    memberHandle: string
+    feedbackText: string
+    rating?: number | null
+}
