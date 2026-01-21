@@ -28,7 +28,14 @@ const PHONE_TYPE_OPTIONS = [
     { label: 'Home', value: 'Home' },
 ]
 
-const PHONE_VALIDATION_REGEX = /^[+\d\s-]+$/
+const PHONE_VALIDATION_REGEX = /^\+[1-9]\d{1,14}$/
+
+/**
+ * Normalize phone number by removing spaces and dashes
+ */
+function normalizePhoneNumber(phone: string): string {
+    return phone.replace(/[\s-]/g, '')
+}
 
 const ModifyPhonesModal: FC<ModifyPhonesModalProps> = (props: ModifyPhonesModalProps) => {
     const [isSaving, setIsSaving]: [boolean, Dispatch<SetStateAction<boolean>>]
@@ -113,17 +120,20 @@ const ModifyPhonesModal: FC<ModifyPhonesModalProps> = (props: ModifyPhonesModalP
     function handlePhoneNumberBlur(): void {
         const phoneNumber = formValues.number || ''
 
-        if (phoneNumber && !PHONE_VALIDATION_REGEX.test(phoneNumber)) {
-            setFormErrors({
-                ...formErrors,
-                number: 'Phone number format is invalid. Please use international format (e.g., +1 234-567-8900)',
-            })
-        } else if (phoneNumber) {
-            // Clear error if valid
-            setFormErrors({
-                ...formErrors,
-                number: '',
-            })
+        if (phoneNumber) {
+            const normalized = normalizePhoneNumber(phoneNumber)
+            if (!PHONE_VALIDATION_REGEX.test(normalized)) {
+                setFormErrors({
+                    ...formErrors,
+                    number: 'Phone number is not in valid E.164 format (must start with + followed by 1-9, then 1-14 more digits)',
+                })
+            } else {
+                // Clear error if valid
+                setFormErrors({
+                    ...formErrors,
+                    number: '',
+                })
+            }
         }
     }
 
@@ -156,15 +166,17 @@ const ModifyPhonesModal: FC<ModifyPhonesModalProps> = (props: ModifyPhonesModalP
         }
 
         const phoneNumber = trim(formValues.number as string)
-        if (!PHONE_VALIDATION_REGEX.test(phoneNumber)) {
+        const normalized = normalizePhoneNumber(phoneNumber)
+        
+        if (!PHONE_VALIDATION_REGEX.test(normalized)) {
             setFormErrors({
-                number: 'Phone number format is invalid. Please use international format (e.g., +1 234-567-8900)',
+                number: 'Phone number is not in valid E.164 format (must start with + followed by 1-9, then 1-14 more digits)',
             })
             return
         }
 
         const updatedPhone: { type: string; number: string } = {
-            number: phoneNumber,
+            number: normalized,
             type: formValues.type as string,
         }
 
@@ -290,7 +302,7 @@ const ModifyPhonesModal: FC<ModifyPhonesModalProps> = (props: ModifyPhonesModalP
                                 name='number'
                                 label='Number *'
                                 error={formErrors.number}
-                                placeholder='Enter phone number (e.g., +1 234-567-8900)'
+                                placeholder='Enter phone number (e.g., +1234567890)'
                                 dirty
                                 tabIndex={0}
                                 forceUpdateValue
