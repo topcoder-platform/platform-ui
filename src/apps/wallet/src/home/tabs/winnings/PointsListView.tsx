@@ -8,6 +8,7 @@ import { UserProfile } from '~/libs/core'
 import { getPoints } from '../../../lib/services/wallet'
 import { FilterBar } from '../../../lib'
 import { PaginationInfo } from '../../../lib/models/PaginationInfo'
+import { WinningDetail } from '../../../lib/models/WinningDetail'
 import PointsTable from '../../../lib/components/points-table/PointsTable'
 
 import styles from './Winnings.module.scss'
@@ -19,10 +20,10 @@ interface PointsListViewProps {
 }
 
 interface PointItem {
-    id: string
-    description: string
+    amount: number
     createDate: string
-    points: number
+    description: string
+    id: string
 }
 
 function formatIOSDateString(iosDateString: string): string {
@@ -55,11 +56,11 @@ const PointsListView: FC<PointsListViewProps> = (props: PointsListViewProps) => 
     })
 
     const convertToPoints = useCallback(
-        (pointsData: any[]) => pointsData.map((point: any) => ({
-            createDate: formatIOSDateString(point.createdAt || point.createDate),
-            description: point.description,
-            id: point.id,
-            points: point.points || point.amount,
+        (pointsData: WinningDetail[]) => pointsData.map(p => ({
+            amount: parseFloat(p.details[0].totalAmount),
+            createDate: formatIOSDateString(p.createdAt),
+            description: p.description,
+            id: p.id,
         })),
         [],
     )
