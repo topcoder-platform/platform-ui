@@ -50,7 +50,7 @@ const PointsListView: FC<PointsListViewProps> = (props: PointsListViewProps) => 
 
     const [pagination, setPagination] = React.useState<PaginationInfo>({
         currentPage: 1,
-        pageSize: 3,
+        pageSize: 10,
         totalItems: 0,
         totalPages: 0,
     })
