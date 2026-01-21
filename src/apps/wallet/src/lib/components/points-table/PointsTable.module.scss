@@ -72,13 +72,6 @@ table {
 
         color: #333;
     }
-
-    .paymeBtn {
-        pointer-events: initial;
-        &[disabled] {
-            cursor: not-allowed;
-        }
-    }
 }
 
 @media (max-width: 768px) {
@@ -88,10 +81,6 @@ table {
 
         .total {
             margin-bottom: 10px;
-        }
-
-        .payMeButton {
-            width: 100%;
         }
     }
 }
