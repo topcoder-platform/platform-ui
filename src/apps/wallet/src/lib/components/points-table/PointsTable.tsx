@@ -2,10 +2,9 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 import React, { useMemo } from 'react'
 
-import { IconOutline } from '~/libs/ui'
+import PaymentTablePagination from '../payments-table/PaymentTablePagination'
 
 import styles from './PointsTable.module.scss'
-import PaymentTablePagination from '../payments-table/PaymentTablePagination'
 
 interface PointItem {
     amount: number
@@ -55,7 +54,9 @@ const PointsTable: React.FC<PointsTableProps> = (props: PointsTableProps) => {
 
             <div className={styles.paymentFooter}>
                 <div className={styles.total}>
-                    Total: {pointsTotal}
+                    Total:
+                    {' '}
+                    {pointsTotal}
                 </div>
                 <PaymentTablePagination
                     currentPage={props.currentPage}

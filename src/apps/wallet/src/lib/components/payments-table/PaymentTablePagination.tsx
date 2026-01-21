@@ -1,7 +1,10 @@
+/* eslint-disable react/jsx-no-bind */
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
 import { FC } from 'react'
 
-import styles from './PaymentTablePagination.module.scss'
 import { Button, IconOutline } from '~/libs/ui'
+
+import styles from './PaymentTablePagination.module.scss'
 
 interface PaymentTablePaginationProps {
     currentPage: number;
@@ -16,8 +19,8 @@ const PaymentTablePagination: FC<PaymentTablePaginationProps> = props => {
     if (props.numPages <= 1) {
         return <></>
     }
-    
-    return  (
+
+    return (
         <div className={styles.pageButtons}>
             <Button
                 onClick={props.onPreviousPageClick}

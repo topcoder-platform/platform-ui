@@ -2,12 +2,12 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 import React, { useEffect, useState } from 'react'
 
-import { Button, IconOutline, Tooltip } from '~/libs/ui'
+import { Button, Tooltip } from '~/libs/ui'
 
 import { Winning } from '../../models/WinningDetail'
 
+import PaymentTablePagination from './PaymentTablePagination'
 import styles from './PaymentTable.module.scss'
-import PaymentTablePagination from './PaymentTablePagination';
 
 interface PaymentTableProps {
     minWithdrawAmount: number;

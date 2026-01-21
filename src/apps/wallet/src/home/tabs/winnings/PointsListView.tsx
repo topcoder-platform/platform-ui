@@ -8,11 +8,10 @@ import { UserProfile } from '~/libs/core'
 import { getPoints } from '../../../lib/services/wallet'
 import { FilterBar } from '../../../lib'
 import { PaginationInfo } from '../../../lib/models/PaginationInfo'
+import { WinningDetail } from '../../../lib/models/WinningDetail'
 import PointsTable from '../../../lib/components/points-table/PointsTable'
 
 import styles from './Winnings.module.scss'
-import { WinningDetail } from '../../../lib/models/WinningDetail'
-import { formatCurrency } from './PaymentsListView'
 
 interface PointsListViewProps {
     profile: UserProfile
@@ -57,7 +56,7 @@ const PointsListView: FC<PointsListViewProps> = (props: PointsListViewProps) => 
     })
 
     const convertToPoints = useCallback(
-        (pointsData: WinningDetail[]) => pointsData.map((p) => ({
+        (pointsData: WinningDetail[]) => pointsData.map(p => ({
             amount: parseFloat(p.details[0].totalAmount),
             createDate: formatIOSDateString(p.createdAt),
             description: p.description,
