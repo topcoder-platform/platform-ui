@@ -16,6 +16,7 @@ import { OpenForGigs } from './OpenForGigs'
 import { ModifyMemberNameModal } from './ModifyMemberNameModal'
 import { ModifyMemberPhotoModal } from './ModifyMemberPhotoModal'
 import { HiringFormModal } from './HiringFormModal'
+import IdentityVerifiedBadge from './IdentityVerifiedBadge'
 import styles from './ProfileHeader.module.scss'
 
 interface ProfileHeaderProps {
@@ -109,6 +110,7 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
         return (
             <div className={styles.photoWrap}>
                 <ProfilePicture member={props.profile} className={styles.profilePhoto} />
+                <IdentityVerifiedBadge identityVerified={props.profile.identityVerified} />
                 {canEdit && hasProfilePicture && (
                     <EditMemberPropertyBtn
                         className={styles.button}

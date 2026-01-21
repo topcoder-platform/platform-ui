@@ -74,14 +74,7 @@ const Phones: FC<PhonesProps> = (props: PhonesProps) => {
                             onEdit={index === 0 ? handleEditPhonesClick : undefined}
                         />
                     ))
-                    : (
-                        <EmptySection
-                            selfMessage='Adding contact information helps others reach you.'
-                            isSelf={canEdit}
-                        >
-                            This member has not added contact phone numbers.
-                        </EmptySection>
-                    )}
+                    : null}
                 {canEdit && (
                     <AddButton
                         label='Add phone number'
