@@ -4,7 +4,7 @@ import { UserProfile } from '~/libs/core'
 import { CopyButton } from '~/apps/admin/src/lib/components/CopyButton'
 import { IconSolid } from '~/libs/ui'
 
-import { AddButton, EmptySection } from '../../components'
+import { AddButton } from '../../components'
 
 import { ModifyPhonesModal } from './ModifyPhonesModal'
 import { PhoneCard } from './PhoneCard'
@@ -64,7 +64,7 @@ const Phones: FC<PhonesProps> = (props: PhonesProps) => {
 
             <div className={styles.phonesContent}>
                 {phones.length > 0
-                    ? phones.map((phone, index: number) => (
+                    && phones.map((phone, index: number) => (
                         <PhoneCard
                             key={`${phone.type}-${phone.number}`}
                             type={phone.type}
@@ -73,8 +73,7 @@ const Phones: FC<PhonesProps> = (props: PhonesProps) => {
                             phoneIndex={index}
                             onEdit={index === 0 ? handleEditPhonesClick : undefined}
                         />
-                    ))
-                    : null}
+                    ))}
                 {canEdit && (
                     <AddButton
                         label='Add phone number'
