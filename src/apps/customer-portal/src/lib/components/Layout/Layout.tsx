@@ -17,11 +17,14 @@ export const NullLayout: FC<PropsWithChildren> = props => (
 export const Layout: FC<PropsWithChildren> = props => {
     const { loginUserInfo }: CustomerPortalAppContextModel = useContext(CustomerPortalAppContext)
     const userRoles = useMemo(() => loginUserInfo?.roles || [], [loginUserInfo?.roles])
+    const isAuthResolved = loginUserInfo !== undefined
+
     const isUnprivilegedUser = useMemo(() => {
+        if (!isAuthResolved) return false
         if (!loginUserInfo) return true
 
         return !userRoles.some(role => PRIVILEGED_ROLES.includes(role))
-    }, [loginUserInfo, userRoles])
+    }, [isAuthResolved, loginUserInfo, userRoles])
 
     if (isUnprivilegedUser) {
         return (
