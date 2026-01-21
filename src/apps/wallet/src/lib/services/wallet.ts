@@ -24,7 +24,7 @@ export async function getWalletDetails(): Promise<WalletDetails> {
 }
 
 // eslint-disable-next-line max-len
-export async function getchUserWinnings(
+export async function fetchUserWinnings(
     userId: string,
     type: WinningsType,
     limit: number,
@@ -75,7 +75,7 @@ export const getPayments = async (
 ): Promise<{
     winnings: WinningDetail[],
     pagination: PaginationInfo
-}> => getchUserWinnings(
+}> => fetchUserWinnings(
     userId,
     WinningsType.PAYMENT,
     limit,
@@ -91,7 +91,7 @@ export const getPoints = async (
 ): Promise<{
     winnings: WinningDetail[],
     pagination: PaginationInfo
-}> => getchUserWinnings(
+}> => fetchUserWinnings(
     userId,
     WinningsType.POINTS,
     limit,
