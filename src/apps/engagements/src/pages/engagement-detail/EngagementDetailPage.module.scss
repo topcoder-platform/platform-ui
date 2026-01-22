@@ -131,6 +131,7 @@
     :global(ol) {
         margin: 0 0 12px 20px;
         padding: 0;
+        list-style-position: outside;
     }
 
     :global(ul) {
@@ -149,13 +150,31 @@
         margin-bottom: 0;
     }
 
-    :global(h1),
-    :global(h2),
-    :global(h3),
+    :global(h1) {
+        margin: 20px 0 10px;
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: $black-100;
+    }
+
+    :global(h2) {
+        margin: 18px 0 10px;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: $black-100;
+    }
+
+    :global(h3) {
+        margin: 16px 0 8px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: $black-100;
+    }
+
     :global(h4),
     :global(h5),
     :global(h6) {
-        margin: 16px 0 8px;
+        margin: 14px 0 8px;
         font-size: 1rem;
         font-weight: 600;
         color: $black-100;
@@ -165,8 +184,77 @@
         color: $black-100;
     }
 
+    :global(em) {
+        font-style: italic;
+    }
+
     :global(a) {
         color: $teal-100;
+        text-decoration: underline;
+    }
+
+    :global(blockquote) {
+        margin: 0 0 12px 0;
+        padding-left: 12px;
+        border-left: 3px solid $black-20;
+        color: $black-60;
+    }
+
+    :global(code) {
+        font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+        font-size: 0.9em;
+        background: $black-5;
+        border: 1px solid $black-10;
+        border-radius: 6px;
+        padding: 1px 4px;
+    }
+
+    :global(pre) {
+        margin: 0 0 12px 0;
+        background: $black-5;
+        border: 1px solid $black-10;
+        border-radius: 12px;
+        padding: 12px;
+        overflow-x: auto;
+    }
+
+    :global(pre code) {
+        background: transparent;
+        border: none;
+        padding: 0;
+        font-size: 0.9rem;
+    }
+
+    :global(table) {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 0 0 12px 0;
+    }
+
+    :global(th),
+    :global(td) {
+        border: 1px solid $black-10;
+        padding: 8px 10px;
+        text-align: left;
+        vertical-align: top;
+    }
+
+    :global(thead th) {
+        background: $black-5;
+        color: $black-100;
+    }
+
+    :global(img) {
+        max-width: 100%;
+        height: auto;
+        margin: 8px 0;
+        border-radius: 12px;
+    }
+
+    :global(hr) {
+        border: none;
+        border-top: 1px solid $black-10;
+        margin: 16px 0;
     }
 }
 
