@@ -1,7 +1,7 @@
 /* eslint-disable complexity */
 import { UserProfile, UserRole } from '~/libs/core'
 
-import { ADMIN_ROLES } from '../config'
+import { ADMIN_ROLES, PHONE_NUMBER_ROLES } from '../config'
 
 declare global {
     interface Window { tcUniNav: any }
@@ -173,26 +173,17 @@ export function canSeePhones(authProfile: UserProfile | undefined, profile: User
         return false
     }
 
-    // Check if user is viewing their own profile
     if (authProfile.handle === profile.handle) {
         return true
     }
 
-    // Check if user has admin roles
     if (authProfile.roles?.some(role => ADMIN_ROLES.includes(role.toLowerCase() as UserRole))) {
         return true
     }
 
-    // Check if user has autocomplete roles (Talent Manager, Project Manager, Copilot, etc.)
-    const autocompleteRoles = [
-        'administrator',
-        'admin',
-        'Talent Manager',
-        'Project Manager',
-    ]
     if (authProfile
         .roles?.some(
-            role => autocompleteRoles.some(allowed => role.toLowerCase() === allowed.toLowerCase()),
+            role => PHONE_NUMBER_ROLES.some(allowed => role.toLowerCase() === allowed.toLowerCase()),
         )
     ) {
         return true
