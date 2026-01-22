@@ -13,6 +13,10 @@ export interface UpdateProfileRequest {
     homeCountryCode?: string
     firstName?: string
     lastName?: string
+    phones?: Array<{
+        type: string
+        number: string
+    }>
     tracks?: TC_TRACKS[],
     description?: string
     namesAndHandleAppearance?: NamesAndHandleAppearance

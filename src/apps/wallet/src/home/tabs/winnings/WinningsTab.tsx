@@ -1,165 +1,43 @@
 /* eslint-disable max-len */
 /* eslint-disable react/jsx-no-bind */
-import React, { FC, useCallback, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
+import React, { FC, useEffect, useRef, useState } from 'react'
 
-import { Collapsible, LoadingCircles } from '~/libs/ui'
 import { UserProfile } from '~/libs/core'
 
-import { getPayments } from '../../../lib/services/wallet'
-import { Winning, WinningDetail } from '../../../lib/models/WinningDetail'
-import { FilterBar } from '../../../lib'
-import { PaginationInfo } from '../../../lib/models/PaginationInfo'
-import { useWalletDetails, WalletDetailsResponse } from '../../../lib/hooks/use-wallet-details'
-import { WalletDetails } from '../../../lib/models/WalletDetails'
-import PaymentsTable from '../../../lib/components/payments-table/PaymentTable'
-
-import ConfirmPaymentModal from './ConfirmPayment.modal'
+import PaymentsListView from './PaymentsListView'
+import PointsListView from './PointsListView'
 import styles from './Winnings.module.scss'
 
-interface ListViewProps {
+interface WinningsTabProps {
     profile: UserProfile
 }
 
-function formatIOSDateString(iosDateString: string): string {
-    const date = new Date(iosDateString)
-
-    if (Number.isNaN(date.getTime())) {
-        throw new Error('Invalid date string')
-    }
-
-    const options: Intl.DateTimeFormatOptions = {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-    }
-
-    return date.toLocaleDateString('en-GB', options)
-}
-
-function formatStatus(status: string): string {
-    switch (status) {
-        case 'ON_HOLD':
-            return 'On Hold'
-        case 'OWED':
-            return 'Available'
-        case 'PROCESSING':
-            return 'Processing'
-        case 'PAID':
-            return 'Paid'
-        case 'CANCELLED':
-            return 'Cancelled'
-        case 'FAILED':
-            return 'Failed'
-        case 'RETURNED':
-            return 'Returned'
-        default:
-            return status.replaceAll('_', ' ')
-    }
-}
-
-const formatCurrency = (amountStr: string, currency: string): string => {
-    let amount: number
-    try {
-        amount = parseFloat(amountStr)
-    } catch (error) {
-        return amountStr
-    }
-
-    return new Intl.NumberFormat('en-US', {
-        currency,
-        maximumFractionDigits: 2,
-        minimumFractionDigits: 2,
-        style: 'currency',
-    })
-        .format(amount)
-}
-
-const ListView: FC<ListViewProps> = (props: ListViewProps) => {
-    const [confirmPayments, setConfirmPayments] = React.useState<Winning[]>()
-    const [winnings, setWinnings] = React.useState<ReadonlyArray<Winning>>([])
-    const [selectedPayments, setSelectedPayments] = React.useState<{ [paymentId: string]: Winning }>({})
-    const [isLoading, setIsLoading] = React.useState<boolean>(false)
-    const [filters, setFilters] = React.useState<Record<string, string[]>>({})
-    const { data: walletDetails }: WalletDetailsResponse = useWalletDetails()
-
-    const [pagination, setPagination] = React.useState<PaginationInfo>({
-        currentPage: 1,
-        pageSize: 10,
-        totalItems: 0,
-        totalPages: 0,
-    })
-
-    const convertToWinnings = useCallback(
-        (payments: WinningDetail[]) => payments.map(payment => {
-            const now = new Date()
-            const releaseDate = new Date(payment.releaseDate)
-            const diffMs = releaseDate.getTime() - now.getTime()
-            const diffHours = diffMs / (1000 * 60 * 60)
-
-            let formattedReleaseDate
-            if (diffHours > 0 && diffHours <= 24) {
-                const diffMinutes = diffMs / (1000 * 60)
-                const hours = Math.floor(diffHours)
-                const minutes = Math.round(diffMinutes - hours * 60)
-                formattedReleaseDate = `${minutes} minute${minutes !== 1 ? 's' : ''}`
-                if (hours > 0) {
-                    formattedReleaseDate = `In ${hours} hour${hours !== 1 ? 's' : ''} ${formattedReleaseDate}`
-                } else if (minutes > 0) {
-                    formattedReleaseDate = `In ${minutes} minute${minutes !== 1 ? 's' : ''}`
-                }
-            } else {
-                formattedReleaseDate = formatIOSDateString(payment.releaseDate)
-            }
-
-            return {
-                canBeReleased: new Date(payment.releaseDate) <= new Date() && payment.details[0].status === 'OWED',
-                createDate: formatIOSDateString(payment.createdAt),
-                currency: payment.details[0].currency,
-                datePaid: payment.details[0].datePaid ? formatIOSDateString(payment.details[0].datePaid) : '-',
-                description: payment.description,
-                details: payment.details,
-                grossPayment: formatCurrency(payment.details[0].totalAmount, payment.details[0].currency),
-                id: payment.id,
-                releaseDate: formattedReleaseDate,
-                status: formatStatus(payment.details[0].status),
-                type: payment.category.replaceAll('_', ' ')
-                    .toLowerCase(),
-            }
-        }),
-        [],
-    )
-
-    const fetchWinnings = useCallback(async () => {
-        setIsLoading(true)
-        try {
-            const payments = await getPayments(props.profile.userId.toString(), pagination.pageSize, (pagination.currentPage - 1) * pagination.pageSize, filters)
-            const winningsData = convertToWinnings(payments.winnings)
-            setWinnings(winningsData)
-            setPagination(payments.pagination)
-        } catch (apiError) {
-            console.error('Failed to fetch winnings:', apiError)
-        } finally {
-            setIsLoading(false)
-        }
-    }, [props.profile.userId, convertToWinnings, filters, pagination.currentPage, pagination.pageSize])
+const WinningsTab: FC<WinningsTabProps> = (props: WinningsTabProps) => {
+    const location = useLocation()
+    const pointsRef = useRef<HTMLDivElement>(null)
+    const [paymentsCollapsed, setPaymentsCollapsed] = useState(false)
+    const [pointsCollapsed, setPointsCollapsed] = useState(false)
 
     useEffect(() => {
-        fetchWinnings()
-    }, [fetchWinnings])
+        // Parse URL query parameters from hash
+        const hashParts = location.hash.split('?')
+        if (hashParts.length > 1) {
+            const searchParams = new URLSearchParams(hashParts[1])
+            const type = searchParams.get('type')
 
-    function handlePayMeClick(
-        payments: { [paymentId: string]: Winning },
-    ): void {
-        setConfirmPayments(Object.values(payments))
-    }
+            if (type === 'points') {
+                // Collapse payments and scroll to points
+                setPaymentsCollapsed(true)
+                setPointsCollapsed(false)
 
-    function handleCloseConfirmModal(isDone?: boolean): void {
-        setConfirmPayments(undefined)
-        setSelectedPayments({})
-        if (isDone) {
-            fetchWinnings()
+                // Scroll to points section after a short delay to allow rendering
+                setTimeout(() => {
+                    pointsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                }, 100)
+            }
         }
-    }
+    }, [location.hash])
 
     return (
         <>
@@ -350,17 +228,26 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                         )}
                     </Collapsible>
                 </div>
+        <div className={styles.container}>
+            <div className={styles.header}>
+                <h3>Winnings</h3>
             </div>
-            {confirmPayments && (
-                <ConfirmPaymentModal
-                    userEmail={props.profile.email}
-                    payments={confirmPayments}
-                    walletDetails={walletDetails as WalletDetails}
-                    onClose={handleCloseConfirmModal}
+            <div className={styles.content}>
+                <PaymentsListView
+                    profile={props.profile}
+                    isCollapsed={paymentsCollapsed}
+                    onToggle={setPaymentsCollapsed}
                 />
-            )}
-        </>
+                <div ref={pointsRef}>
+                    <PointsListView
+                        profile={props.profile}
+                        isCollapsed={pointsCollapsed}
+                        onToggle={setPointsCollapsed}
+                    />
+                </div>
+            </div>
+        </div>
     )
 }
 
-export default ListView
+export default WinningsTab

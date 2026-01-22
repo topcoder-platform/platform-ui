@@ -13,5 +13,6 @@ export enum UserRole {
     taxFormAdmin = 'TaxForm Admin',
     taxFormViewer = 'TaxForm Viewer',
     copilot = 'copilot',
-    topcoderStaff = 'Topcoder Staff'
+    topcoderStaff = 'Topcoder Staff',
+    talentManager = 'Talent Manager',
 }

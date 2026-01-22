@@ -14,6 +14,7 @@ export enum AppSubdomain {
     review = 'review',
     calendar = 'calendar',
     engagements = 'engagements',
+    customer = 'customer'
 }
 
 export enum ToolTitle {
@@ -32,6 +33,7 @@ export enum ToolTitle {
     review = 'Review',
     calendar = 'Calendar',
     engagements = 'Engagements',
+    customer = 'Customer'
 }
 
 export const PageSubheaderPortalId: string = 'page-subheader-portal-el'
