@@ -18,17 +18,16 @@ interface FilterState {
     search?: string
     skills?: SearchUserSkill[]
     countries?: string[]
-    status?: string
 }
 
 const DEFAULT_FILTERS: FilterState = {
     countries: [],
     search: '',
     skills: [],
-    status: EngagementStatus.OPEN,
 }
 
 const PER_PAGE = 12
+const ANY_LOCATION = 'Any'
 
 type CountryMatch = {
     name?: string
@@ -76,12 +75,15 @@ const buildLocationFilters = (
     const countryFilters = new Set<string>()
     const timeZoneFilters = new Set<string>()
     const selectedCountryList = selectedCountries ?? []
+    let hasCountrySelection = false
 
     selectedCountryList.forEach(country => {
         const normalized = country.trim()
         if (!normalized) {
             return
         }
+
+        hasCountrySelection = true
 
         const match = resolveCountryMatch(normalized, countryLookup)
         countryFilters.add(normalized)
@@ -99,6 +101,11 @@ const buildLocationFilters = (
             countryFilters.add(match.iso3)
         }
     })
+
+    if (hasCountrySelection) {
+        countryFilters.add(ANY_LOCATION)
+        timeZoneFilters.add(ANY_LOCATION)
+    }
 
     return {
         countries: Array.from(countryFilters),
@@ -147,7 +154,7 @@ const EngagementListPage: FC = () => {
                 perPage: PER_PAGE,
                 search: filters.search || undefined,
                 skills: filters.skills?.map(skill => skill.id),
-                status: filters.status,
+                status: EngagementStatus.OPEN,
                 timeZones: locationFilters.timeZones,
             })
             if (requestId !== requestIdRef.current) {

@@ -15,12 +15,9 @@ import {
     FormInputRow,
     InputMultiselect,
     InputMultiselectOption,
-    InputSelect,
 } from '~/libs/ui'
 import { InputSkillSelector } from '~/libs/shared'
 import { SearchUserSkill, useCountryLookup } from '~/libs/core'
-
-import { EngagementStatus } from '../../lib/models'
 
 import styles from './EngagementFilters.module.scss'
 
@@ -28,7 +25,6 @@ export interface FilterState {
     search?: string
     skills?: SearchUserSkill[]
     countries?: string[]
-    status?: string
 }
 
 interface EngagementFiltersProps {
@@ -94,15 +90,6 @@ const EngagementFilters: FC<EngagementFiltersProps> = (props: EngagementFiltersP
         filters.skills ?? []
     ), [filters.skills])
 
-    const statusOptions = useMemo(() => ([
-        { label: 'All', value: '' },
-        { label: 'Open', value: EngagementStatus.OPEN },
-        { label: 'Pending Assignment', value: EngagementStatus.PENDING_ASSIGNMENT },
-        { label: 'Active', value: EngagementStatus.ACTIVE },
-        { label: 'Cancelled', value: EngagementStatus.CANCELLED },
-        { label: 'Closed', value: EngagementStatus.CLOSED },
-    ]), [])
-
     const searchInput: FormInputModel = useMemo(() => ({
         forceUpdateValue: true,
         label: 'Search',
@@ -155,23 +142,12 @@ const EngagementFilters: FC<EngagementFiltersProps> = (props: EngagementFiltersP
         })
     }, [filters, onFilterChange, searchValue])
 
-    const handleStatusChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
-        const status = event.target.value
-
-        onFilterChange({
-            ...filters,
-            search: searchValue.trim() || undefined,
-            status: status || undefined,
-        })
-    }, [filters, onFilterChange, searchValue])
-
     const handleClearFilters = useCallback(() => {
         setSearchValue('')
         onFilterChange({
             countries: [],
             search: '',
             skills: [],
-            status: EngagementStatus.OPEN,
         })
     }, [onFilterChange])
 
@@ -191,6 +167,7 @@ const EngagementFilters: FC<EngagementFiltersProps> = (props: EngagementFiltersP
                 <div className={styles.field}>
                     <FormInputRow index={0} input={{ name: 'skills', type: 'text' }}>
                         <InputSkillSelector
+                            className={styles.filterMultiselect}
                             label='Skills'
                             placeholder='Filter by skills'
                             value={selectedSkills}
@@ -201,25 +178,13 @@ const EngagementFilters: FC<EngagementFiltersProps> = (props: EngagementFiltersP
                 <div className={styles.field}>
                     <FormInputRow index={1} input={{ name: 'countries', type: 'text' }}>
                         <InputMultiselect
+                            className={styles.filterMultiselect}
                             label='Location'
                             name='countries'
                             placeholder='Select countries'
                             onFetchOptions={fetchCountryOptions}
                             onChange={handleCountriesChange}
                             value={selectedCountries}
-                            theme='clear'
-                        />
-                    </FormInputRow>
-                </div>
-                <div className={styles.field}>
-                    <FormInputRow index={2} input={{ name: 'status', type: 'text' }}>
-                        <InputSelect
-                            label='Status'
-                            name='status'
-                            placeholder='All'
-                            options={statusOptions}
-                            value={filters.status ?? ''}
-                            onChange={handleStatusChange}
                         />
                     </FormInputRow>
                 </div>

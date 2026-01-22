@@ -47,6 +47,23 @@ const compactMarkdownComponents: Components = {
     ul: renderInlineMarkdown,
 }
 
+const formatEnumLabel = (value?: string): string | undefined => {
+    if (!value) {
+        return undefined
+    }
+
+    const normalized = value
+        .replace(/_/g, ' ')
+        .trim()
+    if (!normalized) {
+        return undefined
+    }
+
+    return normalized
+        .toLowerCase()
+        .replace(/\b\w/g, character => character.toUpperCase())
+}
+
 interface EngagementCardProps {
     engagement: Engagement
     onClick?: () => void
@@ -61,6 +78,12 @@ const EngagementCard: FC<EngagementCardProps> = (props: EngagementCardProps) => 
     const deadlineText = engagement.applicationDeadline
         ? formatDate(engagement.applicationDeadline)
         : 'Deadline TBD'
+    const roleLabel = formatEnumLabel(engagement.role) ?? 'Not specified'
+    const workloadLabel = formatEnumLabel(engagement.workload) ?? 'Not specified'
+    const compensationLabel = typeof engagement.compensationRange === 'string'
+        && engagement.compensationRange.trim().length > 0
+        ? engagement.compensationRange
+        : 'Not specified'
 
     return (
         <button
@@ -93,6 +116,18 @@ const EngagementCard: FC<EngagementCardProps> = (props: EngagementCardProps) => 
                     <span>
                         {formatLocation(engagement.countries ?? [], engagement.timeZones ?? [])}
                     </span>
+                </div>
+                <div className={styles.metaItem}>
+                    <IconSolid.BriefcaseIcon className={styles.metaIcon} />
+                    <span>{`Role: ${roleLabel}`}</span>
+                </div>
+                <div className={styles.metaItem}>
+                    <IconSolid.ClockIcon className={styles.metaIcon} />
+                    <span>{`Workload: ${workloadLabel}`}</span>
+                </div>
+                <div className={styles.metaItem}>
+                    <IconSolid.CurrencyDollarIcon className={styles.metaIcon} />
+                    <span>{`Compensation: ${compensationLabel}`}</span>
                 </div>
             </div>
             <div className={styles.skills}>

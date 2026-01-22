@@ -181,7 +181,7 @@ const MyAssignmentsPage: FC = () => {
     const showEmptyState = !loading && !error && assignments.length === 0
 
     return (
-        <ContentLayout title='My Active Assignments' contentClass={styles.pageContent}>
+        <ContentLayout title='My Assignments' contentClass={styles.pageContent}>
             <EngagementsTabs activeTab='assignments' />
             {loading && (
                 <div className={styles.loadingState}>

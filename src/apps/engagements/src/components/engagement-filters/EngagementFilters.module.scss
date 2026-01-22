@@ -14,7 +14,7 @@
 .filterGrid {
     display: grid;
     gap: 16px;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     align-items: end;
 
     @include tablet {
@@ -28,6 +28,26 @@
 
 .field {
     min-width: 0;
+}
+
+.filterMultiselect {
+    &.filterMultiselect {
+        margin: $sp-1 0 0;
+    }
+
+    :global([class*='__value-container']) {
+        min-height: $sp-6;
+    }
+
+    :global([class*='__placeholder']),
+    :global([class*='__input-container']) {
+        font-size: 14px;
+        line-height: 22px;
+    }
+
+    :global([class*='__placeholder']) {
+        color: $black-60;
+    }
 }
 
 .actions {

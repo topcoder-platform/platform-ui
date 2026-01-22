@@ -501,25 +501,20 @@ const ApplicationFormPage: FC = () => {
         )
     }
 
-    const renderAddressField = (): JSX.Element | undefined => {
-        if (!userData?.address) {
-            return undefined
-        }
-
-        return (
-            <div className={styles.fieldGroup}>
-                <label className={styles.fieldLabel} htmlFor='applicant-address'>Address</label>
-                <input
-                    id='applicant-address'
-                    type='text'
-                    className={classNames(styles.inputField, styles.readOnlyField)}
-                    value={userData.address}
-                    readOnly
-                    aria-readonly='true'
-                />
-            </div>
-        )
-    }
+    const renderAddressField = (): JSX.Element => (
+        <div className={styles.fieldGroup}>
+            <label className={styles.fieldLabel} htmlFor='applicant-address'>Address</label>
+            <input
+                id='applicant-address'
+                type='text'
+                className={classNames(styles.inputField, styles.readOnlyField)}
+                value={userData?.address ?? ''}
+                placeholder='Not provided'
+                readOnly
+                aria-readonly='true'
+            />
+        </div>
+    )
 
     const renderForm = (): JSX.Element => (
         <div className={styles.formContainer}>
@@ -572,7 +567,10 @@ const ApplicationFormPage: FC = () => {
                 <section className={styles.section}>
                     <div className={styles.sectionTitle}>Application Details</div>
                     <div className={styles.fieldGroup}>
-                        <label className={styles.fieldLabel} htmlFor='cover-letter'>Cover Letter</label>
+                        <label className={styles.fieldLabel} htmlFor='cover-letter'>
+                            Cover Letter
+                            <span className={styles.requiredIndicator} aria-hidden='true'>*</span>
+                        </label>
                         <Controller
                             name='coverLetter'
                             control={control}

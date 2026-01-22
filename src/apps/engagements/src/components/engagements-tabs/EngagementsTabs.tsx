@@ -19,7 +19,7 @@ const EngagementsTabs: FC<EngagementsTabsProps> = (props: EngagementsTabsProps) 
     const tabsConfig = useMemo<TabsNavItem<EngagementsTab>[]>(() => ([
         { id: 'opportunities', title: 'Engagement Opportunities' },
         { id: 'applications', title: 'My Applications' },
-        { id: 'assignments', title: 'My Active Assignments' },
+        { id: 'assignments', title: 'My Assignments' },
     ]), [])
 
     const handleTabChange = useCallback((tabId: EngagementsTab) => {
