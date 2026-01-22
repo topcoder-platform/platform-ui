@@ -21,6 +21,8 @@ import { SearchUserSkill, useCountryLookup } from '~/libs/core'
 
 import styles from './EngagementFilters.module.scss'
 
+const ANY_LOCATION = 'Any'
+
 export interface FilterState {
     search?: string
     skills?: SearchUserSkill[]
@@ -57,12 +59,21 @@ const EngagementFilters: FC<EngagementFiltersProps> = (props: EngagementFiltersP
     }, [filters, onFilterChange, searchValue])
 
     const countryOptions = useMemo(() => {
-        const options = (countryLookup ?? []).map(country => ({
-            label: country.country,
-            value: country.country,
-        }))
+        const options = (countryLookup ?? [])
+            .map(country => ({
+                label: country.country,
+                value: country.country,
+            }))
+            .filter(option => (
+                option.value && option.value.toLowerCase() !== ANY_LOCATION.toLowerCase()
+            ))
 
-        return options.sort((a, b) => a.label.localeCompare(b.label))
+        const sortedOptions = options.sort((a, b) => a.label.localeCompare(b.label))
+
+        return [
+            { label: ANY_LOCATION, value: ANY_LOCATION },
+            ...sortedOptions,
+        ]
     }, [countryLookup])
 
     const fetchCountryOptions = useCallback(async (query: string): Promise<InputMultiselectOption[]> => {
