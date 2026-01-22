@@ -31,7 +31,7 @@ import {
     convertBackendSubmissionToScreening,
     convertBackendSubmissionToSubmissionInfo,
 } from '../models'
-import { fetchChallengeReviews } from '../services'
+import { fetchAllChallengeReviews } from '../services'
 import { SUBMISSION_TYPE_CHECKPOINT, SUBMISSION_TYPE_CONTEST } from '../constants'
 import { debugLog, DEBUG_CHECKPOINT_PHASES, isPhaseAllowedForReview, truncateForLog, warnLog } from '../utils'
 import { registerChallengeReviewKey } from '../utils/reviewCacheRegistry'
@@ -412,6 +412,7 @@ export interface useFetchScreeningReviewProps {
     postMortemReviews: SubmissionInfo[]
     postMortemMinimumPassingScore: number | null | undefined
     isLoading: boolean
+    isLoadingReviews: boolean
     reviewProgress: number
 }
 
@@ -717,7 +718,7 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
             ? `reviewBaseUrl/reviews/${challengeId}/${reviewerKey}`
             : undefined,
         {
-            fetcher: () => fetchChallengeReviews(challengeId ?? ''),
+            fetcher: () => fetchAllChallengeReviews(challengeId ?? '', 100),
         },
     )
 
@@ -2183,6 +2184,7 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
         checkpointReviewMinimumPassingScore: checkpointReviewScorecardBase?.minimumPassingScore,
         checkpointScreeningMinimumPassingScore: checkpointScreeningScorecardBase?.minimumPassingScore,
         isLoading: isLoading || shouldAwaitSubmitterReviews,
+        isLoadingReviews: isValidatingChallengeReviews,
         mappingReviewAppeal,
         postMortemMinimumPassingScore: postMortemScorecardBase?.minimumPassingScore,
         postMortemReviews,

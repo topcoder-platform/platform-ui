@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import useSWR, { SWRResponse } from 'swr'
 
 import { EnvironmentConfig } from '~/config'
-import { UserSkill, xhrGetAsync, xhrPostAsync, xhrPutAsync } from '~/libs/core'
+import { SearchUserSkill, UserSkill, xhrGetAsync, xhrPostAsync, xhrPutAsync } from '~/libs/core'
 
 const baseUrl = `${EnvironmentConfig.API.V5}/standardized-skills`
 
@@ -19,6 +19,19 @@ export async function autoCompleteSkills(queryTerm: string): Promise<UserSkill[]
 
     const encodedQuery = encodeURIComponent(queryTerm)
     return xhrGetAsync(`${baseUrl}/skills/autocomplete?term=${encodedQuery}`)
+}
+
+export async function fetchSkillsByIds(skillIds: string[]): Promise<SearchUserSkill[]> {
+    const uniqueIds = Array.from(new Set(skillIds.filter(Boolean)))
+    if (!uniqueIds.length) {
+        return []
+    }
+
+    const params = new URLSearchParams()
+    uniqueIds.forEach(skillId => params.append('skillId', skillId))
+    params.set('disablePagination', 'true')
+
+    return xhrGetAsync(`${baseUrl}/skills?${params.toString()}`)
 }
 
 export type FetchMemberSkillsConfig = {
@@ -93,10 +106,10 @@ export function useSkillsByIds(skillIds: string[] | undefined): SWRResponse<User
 }
 
 /**
- * Fetch skills by their IDs (legacy async function for backward compatibility)
+ * Fetch skills by their IDs using individual requests (legacy async function for backward compatibility)
  * @param skillIds Array of skill UUIDs
  * @returns Promise with array of UserSkill objects
  */
-export async function fetchSkillsByIds(skillIds: string[]): Promise<UserSkill[]> {
+export async function fetchSkillsByIdsLegacy(skillIds: string[]): Promise<UserSkill[]> {
     return fetchSkillsByIdsFetcher(skillIds)
 }

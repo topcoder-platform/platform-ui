@@ -75,8 +75,8 @@ export const ChallengeDetailContextProvider: FC<PropsWithChildren> = props => {
     )
 
     const isLoadingChallengeInfoCombined = useMemo(
-        () => isLoadingChallengeInfo || isLoadingChallengeSubmissions,
-        [isLoadingChallengeInfo, isLoadingChallengeSubmissions],
+        () => isLoadingChallengeInfo,
+        [isLoadingChallengeInfo],
     )
 
     const value = useMemo<ChallengeDetailContextModel>(

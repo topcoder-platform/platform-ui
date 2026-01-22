@@ -5,7 +5,7 @@
 import React from 'react'
 
 import { Button, Collapsible } from '~/libs/ui'
-import { TOPCODER_URL } from '~/config/environments/default.env'
+import { ENGAGEMENTS_URL, TOPCODER_URL } from '~/config/environments/default.env'
 
 import { WinningsAudit } from '../../models/WinningsAudit'
 import { Winning } from '../../models/WinningDetail'
@@ -81,7 +81,13 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
         return action
     }
 
-    const getLink = (externalId: string): string => `${TOPCODER_URL}/challenges/${externalId}`
+    const getLink = (payment: Winning): string => {
+        if (payment.type.toLowerCase() === 'engagement payment') {
+            return `${ENGAGEMENTS_URL}/${payment.externalId}`
+        }
+
+        return `${TOPCODER_URL}/challenges/${payment.externalId}`
+    }
 
     return (
         <div className={styles.formContainer}>
@@ -90,7 +96,7 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
                     <>
                         <div className={styles.infoItem}>
                             <span className={styles.label}>Description</span>
-                            <a href={getLink(props.payment.externalId)} target='_blank' rel='noreferrer'>
+                            <a href={getLink(props.payment)} target='_blank' rel='noreferrer'>
                                 {props.payment.description}
                             </a>
                         </div>

@@ -2,7 +2,7 @@
  * Markdown Review.
  */
 import { FC } from 'react'
-import ReactMarkdown from 'react-markdown'
+import ReactMarkdown, { type Options as ReactMarkdownOptions } from 'react-markdown'
 import classNames from 'classnames'
 import rehypeRaw from 'rehype-raw'
 import rehypeStringify from 'rehype-stringify'
@@ -18,10 +18,11 @@ interface Props {
     value: string
 }
 
+const Markdown = ReactMarkdown as unknown as FC<ReactMarkdownOptions>
+
 export const MarkdownReview: FC<Props> = (props: Props) => (
     <div className={classNames(styles.container, props.className)}>
-        {/* @ts-expect-error: TS2786: ReactMarkdown cannot be used as a JSX component */}
-        <ReactMarkdown
+        <Markdown
             remarkPlugins={[
                 remarkFrontmatter,
                 remarkParse as any,
@@ -31,7 +32,7 @@ export const MarkdownReview: FC<Props> = (props: Props) => (
             rehypePlugins={[rehypeStringify as any, rehypeRaw as any]}
         >
             {props.value}
-        </ReactMarkdown>
+        </Markdown>
     </div>
 )
 

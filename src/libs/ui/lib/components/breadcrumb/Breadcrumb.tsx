@@ -1,4 +1,4 @@
-import { FC, ReactElement } from 'react'
+import { ReactElement, ReactPortal } from 'react'
 import { createPortal } from 'react-dom'
 
 import { PageSubheaderPortalId } from '~/config'
@@ -11,8 +11,7 @@ interface BreadcrumbProps {
     renderInline?: boolean
 }
 
-// @ts-expect-error: TS2322: Type mismatch for FC return type
-const Breadcrumb: FC<BreadcrumbProps> = props => {
+const Breadcrumb = (props: BreadcrumbProps): ReactElement | ReactPortal => {
     const usePortal: boolean = !props.renderInline
 
     function renderBreadcrumbs(): ReactElement {

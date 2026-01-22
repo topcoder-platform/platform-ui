@@ -55,6 +55,15 @@ const getSubmissionPriority = (submission: SubmissionInfo): number => {
     return 1
 }
 
+const normalizePhaseId = (value: unknown): string | undefined => {
+    if (value === undefined || value === null) {
+        return undefined
+    }
+
+    const normalized = `${value}`.trim()
+    return normalized.length ? normalized : undefined
+}
+
 export const TabContentIterativeReview: FC<Props> = (props: Props) => {
     const {
         challengeInfo,
@@ -109,10 +118,41 @@ export const TabContentIterativeReview: FC<Props> = (props: Props) => {
         [sourceRows, myMemberIds, props.postMortemMinimumPassingScore],
     )
 
+    const phaseIdFilterSet = useMemo(() => {
+        const normalizedFilter = normalizePhaseId(props.phaseIdFilter)
+        if (!normalizedFilter) {
+            return undefined
+        }
+
+        const ids = new Set<string>([normalizedFilter])
+        const phases = challengeInfo?.phases ?? []
+        const matchingPhase = phases.find(phase => {
+            const phaseId = normalizePhaseId(phase.id)
+            const phaseTypeId = normalizePhaseId(phase.phaseId)
+            return phaseId === normalizedFilter || phaseTypeId === normalizedFilter
+        })
+
+        if (matchingPhase) {
+            const phaseId = normalizePhaseId(matchingPhase.id)
+            if (phaseId) {
+                ids.add(phaseId)
+            }
+
+            const phaseTypeId = normalizePhaseId(matchingPhase.phaseId)
+            if (phaseTypeId) {
+                ids.add(phaseTypeId)
+            }
+        }
+
+        return ids
+    }, [challengeInfo?.phases, props.phaseIdFilter])
+
     const filteredRows = useMemo(() => {
-        const phaseId = props.phaseIdFilter?.trim()
-        if (phaseId) {
-            return sourceRows.filter(s => s.review?.phaseId === phaseId)
+        if (phaseIdFilterSet?.size) {
+            return sourceRows.filter(submission => {
+                const reviewPhaseId = normalizePhaseId(submission.review?.phaseId)
+                return reviewPhaseId ? phaseIdFilterSet.has(reviewPhaseId) : false
+            })
         }
 
         if (!isPostMortemPhase) {
@@ -126,7 +166,7 @@ export const TabContentIterativeReview: FC<Props> = (props: Props) => {
         }
 
         return sourceRows
-    }, [sourceRows, props.phaseIdFilter, isPostMortemPhase, challengeInfo?.phases])
+    }, [sourceRows, phaseIdFilterSet, isPostMortemPhase, challengeInfo?.phases])
 
     const reviewRows = useMemo(() => {
         const map = new Map<string, SubmissionInfo>()
