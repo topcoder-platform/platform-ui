@@ -14,7 +14,7 @@ export const Layout: FC<PropsWithChildren> = props => (
     <>
         <NavTabs />
         <ContentLayout
-            innerClass={styles.contantentLayoutInner}
+            innerClass={styles.contentLayoutInner}
             outerClass={styles.contentLayoutOuter}
         >
             <div className={styles.layout}>

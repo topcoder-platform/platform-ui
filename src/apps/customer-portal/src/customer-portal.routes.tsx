@@ -7,6 +7,7 @@ import {
     LazyLoadedComponent,
     PlatformRoute,
     Rewrite,
+    UserRole,
 } from '~/libs/core'
 
 import {
@@ -22,6 +23,7 @@ export const toolTitle: string = ToolTitle.customer
 export const customerPortalRoutes: ReadonlyArray<PlatformRoute> = [
     // Customer portal App Root
     {
+        authRequired: true,
         children: [
             {
                 authRequired: true,
@@ -33,6 +35,11 @@ export const customerPortalRoutes: ReadonlyArray<PlatformRoute> = [
         domain: AppSubdomain.customer,
         element: <CustomerPortalApp />,
         id: toolTitle,
+        rolesRequired: [
+            UserRole.administrator,
+            UserRole.projectManager,
+            UserRole.talentManager,
+        ],
         route: rootRoute,
         title: toolTitle,
     },
