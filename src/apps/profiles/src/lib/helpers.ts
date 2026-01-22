@@ -161,3 +161,42 @@ export function canDownloadProfile(authProfile: UserProfile | undefined, profile
 
     return false
 }
+
+/**
+ * Check if the user can see phone numbers
+ * @param authProfile - The authenticated user profile
+ * @param profile - The profile to check if the user can see phone numbers
+ * @returns {boolean} - Whether the user can see phone numbers
+ */
+export function canSeePhones(authProfile: UserProfile | undefined, profile: UserProfile): boolean {
+    if (!authProfile) {
+        return false
+    }
+
+    // Check if user is viewing their own profile
+    if (authProfile.handle === profile.handle) {
+        return true
+    }
+
+    // Check if user has admin roles
+    if (authProfile.roles?.some(role => ADMIN_ROLES.includes(role.toLowerCase() as UserRole))) {
+        return true
+    }
+
+    // Check if user has autocomplete roles (Talent Manager, Project Manager, Copilot, etc.)
+    const autocompleteRoles = [
+        'administrator',
+        'admin',
+        'Talent Manager',
+        'Project Manager',
+    ]
+    if (authProfile
+        .roles?.some(
+            role => autocompleteRoles.some(allowed => role.toLowerCase() === allowed.toLowerCase()),
+        )
+    ) {
+        return true
+    }
+
+    return false
+}

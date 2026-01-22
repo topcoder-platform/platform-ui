@@ -28,13 +28,13 @@ const PHONE_TYPE_OPTIONS = [
     { label: 'Home', value: 'Home' },
 ]
 
-const PHONE_VALIDATION_REGEX = /^\+[1-9]\d{1,14}$/
+const PHONE_VALIDATION_REGEX = /^\+[1-9]\d{7,14}$/
 
 /**
- * Normalize phone number by removing spaces and dashes
+ * Normalize phone number by removing spaces, dashes, and brackets
  */
 function normalizePhoneNumber(phone: string): string {
-    return phone.replace(/[\s-]/g, '')
+    return phone.replace(/[\s\-()]/g, '')
 }
 
 const ModifyPhonesModal: FC<ModifyPhonesModalProps> = (props: ModifyPhonesModalProps) => {
@@ -125,8 +125,7 @@ const ModifyPhonesModal: FC<ModifyPhonesModalProps> = (props: ModifyPhonesModalP
             if (!PHONE_VALIDATION_REGEX.test(normalized)) {
                 setFormErrors({
                     ...formErrors,
-                    // eslint-disable-next-line max-len
-                    number: 'Phone number is not in valid E.164 format (must start with + followed by 1-9, then 1-14 more digits)',
+                    number: 'Phone number must start with + followed by 8-15 digits',
                 })
             } else {
                 // Clear error if valid
@@ -223,6 +222,41 @@ const ModifyPhonesModal: FC<ModifyPhonesModalProps> = (props: ModifyPhonesModalP
         }
     }
 
+    /**
+     * Check if the form is valid
+     * Form is valid when:
+     * - Type is selected (not empty)
+     * - Number is provided and matches E.164 format
+     * - No form errors exist
+     */
+    function isFormValid(): boolean {
+        // If not in add/edit mode, form is always valid (can save existing phones)
+        if (!addingNewItem && editedItemIndex === undefined) {
+            return true
+        }
+
+        const type = trim(formValues.type as string)
+        const number = trim(formValues.number as string)
+
+        // Check if required fields are filled
+        if (!type || !number) {
+            return false
+        }
+
+        // Check if there are any form errors
+        if (formErrors.type || formErrors.number) {
+            return false
+        }
+
+        // Validate phone number format
+        const normalized = normalizePhoneNumber(number)
+        if (!PHONE_VALIDATION_REGEX.test(normalized)) {
+            return false
+        }
+
+        return true
+    }
+
     return (
         <BaseModal
             onClose={props.onClose}
@@ -240,7 +274,7 @@ const ModifyPhonesModal: FC<ModifyPhonesModalProps> = (props: ModifyPhonesModalP
                         label='Save'
                         onClick={handleModifyPhonesSave}
                         primary
-                        disabled={isSaving}
+                        disabled={isSaving || !isFormValid()}
                     />
                 </div>
             )}
@@ -290,7 +324,6 @@ const ModifyPhonesModal: FC<ModifyPhonesModalProps> = (props: ModifyPhonesModalP
                     >
                         <div className={styles.row}>
                             <InputSelect
-                                tabIndex={0}
                                 options={PHONE_TYPE_OPTIONS}
                                 value={formValues.type as string}
                                 onChange={bind(handleFormValueChange, this, 'type')}
@@ -299,6 +332,7 @@ const ModifyPhonesModal: FC<ModifyPhonesModalProps> = (props: ModifyPhonesModalP
                                 placeholder='Select type'
                                 dirty
                                 error={formErrors.type}
+                                preventAutoFocus
                             />
                             <InputText
                                 name='number'
