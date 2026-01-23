@@ -151,7 +151,6 @@ const InputDatePicker: FC<InputDatePickerProps> = (props: InputDatePickerProps) 
             type='text'
             className={classNames(props.className, styles.container)}
         >
-            {/* @ts-expect-error: TS2786: DatePicker cannot be used as a JSX component */}
             <DatePicker
                 ref={datePickerRef}
                 customInput={<CustomInput stateHasFocus={stateHasFocus} datePickerRef={datePickerRef} />}

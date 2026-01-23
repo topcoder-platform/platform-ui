@@ -71,6 +71,36 @@ const normalizePhaseName = (name?: string): string => (name ? name.trim()
     .toLowerCase() : '')
 const SUBMISSION_PHASE_NAMES = new Set(['submission', 'topgear submission'])
 const REGISTRATION_PHASE_NAME = 'registration'
+const POST_MORTEM_PHASE_KEY = 'post-mortem'
+
+const isSubmissionDataTab = (label?: string): boolean => {
+    const normalized = normalizePhaseName(label)
+    if (!normalized) {
+        return false
+    }
+
+    return normalized.includes('submission')
+        || normalized.includes('screening')
+        || normalized.includes('checkpoint')
+        || normalized.includes('review')
+        || normalized.includes('appeal')
+        || normalized.includes('approval')
+        || normalized.includes(POST_MORTEM_PHASE_KEY)
+        || normalized.includes('post mortem')
+}
+
+const isReviewDataTab = (label?: string): boolean => {
+    const normalized = normalizePhaseName(label)
+    if (!normalized) {
+        return false
+    }
+
+    return normalized.includes('review')
+        || normalized.includes('appeal')
+        || normalized.includes('approval')
+        || normalized.includes(POST_MORTEM_PHASE_KEY)
+        || normalized.includes('post mortem')
+}
 
 // Helpers to keep UI hooks simple and under complexity limits
 
@@ -266,6 +296,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         checkpointReviewMinimumPassingScore,
         checkpointScreeningMinimumPassingScore,
         isLoading: isLoadingSubmission,
+        isLoadingReviews,
         mappingReviewAppeal,
         postMortemMinimumPassingScore,
         postMortemReviews,
@@ -288,6 +319,28 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         () => location.pathname.includes(`/${pastReviewAssignmentsRouteId}/`),
         [location.pathname],
     )
+    const tabItemsWithLoading = useMemo(() => {
+        if (!tabItems.length) {
+            return tabItems
+        }
+
+        return tabItems.map(item => {
+            const showIndicator = (isSubmissionDataTab(item.value) && isLoadingChallengeSubmissions)
+                || (isReviewDataTab(item.value) && isLoadingReviews)
+            if (!showIndicator) {
+                return item
+            }
+
+            const indicator = (
+                <>
+                    {item.indicator}
+                    <span className={styles.tabLoadingIndicator} aria-hidden='true' />
+                </>
+            )
+
+            return { ...item, indicator }
+        })
+    }, [isLoadingChallengeSubmissions, isLoadingReviews, tabItems])
     const latestReview = review.find(r => r.isLatest)
     const reviewInProgress = latestReview?.review?.status === 'IN_PROGRESS'
     const currentUserResource = useMemo<BackendResource | undefined>(() => myResources
@@ -1821,7 +1874,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
 
                             <div className={styles.blockTabsContainer}>
                                 <Tabs
-                                    items={tabItems}
+                                    items={tabItemsWithLoading}
                                     selected={selectedTab}
                                     onChange={switchTab}
                                 />

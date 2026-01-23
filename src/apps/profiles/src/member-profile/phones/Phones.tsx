@@ -5,7 +5,7 @@ import { UserProfile } from '~/libs/core'
 import { CopyButton } from '~/apps/admin/src/lib/components/CopyButton'
 import { IconOutline, IconSolid, Tooltip } from '~/libs/ui'
 
-import { AddButton, EmptySection } from '../../components'
+import { AddButton } from '../../components'
 import { canSeePhones } from '../../lib/helpers'
 
 import { ModifyPhonesModal } from './ModifyPhonesModal'
@@ -74,7 +74,7 @@ const Phones: FC<PhonesProps> = (props: PhonesProps) => {
 
             <div className={styles.phonesContent}>
                 {phones.length > 0
-                    ? phones.map((phone, index: number) => (
+                    && phones.map((phone, index: number) => (
                         <PhoneCard
                             key={`${phone.type}-${phone.number}`}
                             type={phone.type}
@@ -83,15 +83,7 @@ const Phones: FC<PhonesProps> = (props: PhonesProps) => {
                             phoneIndex={index}
                             onEdit={index === 0 ? handleEditPhonesClick : undefined}
                         />
-                    ))
-                    : (
-                        <EmptySection
-                            selfMessage='Adding contact information helps others reach you.'
-                            isSelf={canSeePhonesValue && canEdit}
-                        >
-                            This member has not added contact phone numbers.
-                        </EmptySection>
-                    )}
+                    ))}
                 {canSeePhonesValue && phones.length === 0 && (
                     <AddButton
                         label='Add phone number'

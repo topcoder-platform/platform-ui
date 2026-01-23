@@ -215,7 +215,7 @@
     "webpack-merge": "^5.10.0"
   },
   "resolutions": {
-    "@types/react": "18.0.35",
+    "@types/react": "18.3.27",
     "string-width": "4.2.0",
     "node-fetch": "2.6.7",
     "nth-check": "2.0.1",

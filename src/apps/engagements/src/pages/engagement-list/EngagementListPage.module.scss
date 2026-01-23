@@ -1,0 +1,132 @@
+@import '@libs/ui/styles/includes';
+@import '../../styles/responsive';
+
+.pageContent {
+    display: block;
+}
+
+.redirectMessage {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    background: $orange-25;
+    color: $orange-140;
+    border: 1px solid $orange-100;
+    font-size: 0.9rem;
+}
+
+.redirectIcon {
+    width: 18px;
+    height: 18px;
+    color: $orange-140;
+}
+
+.authHint {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    background: $teal-25;
+    color: $teal-140;
+    border: 1px solid $teal-50;
+    font-size: 0.9rem;
+}
+
+.authIcon {
+    width: 18px;
+    height: 18px;
+    color: $teal-120;
+}
+
+.loadingState {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: $black-60;
+    margin-bottom: 12px;
+}
+
+.loadingSpinner {
+    width: 20px;
+    height: 20px;
+}
+
+.errorState {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+    border-radius: 12px;
+    background: $red-25;
+    border: 1px solid $red-50;
+    margin-bottom: 16px;
+}
+
+.errorIcon {
+    width: 24px;
+    height: 24px;
+    color: $red-120;
+}
+
+.errorText {
+    margin: 0 0 8px 0;
+    color: $red-140;
+}
+
+.emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 8px;
+    padding: 32px;
+    border-radius: 16px;
+    border: 1px dashed $black-20;
+    color: $black-80;
+    margin-bottom: 16px;
+}
+
+.emptyIcon {
+    width: 32px;
+    height: 32px;
+    color: $black-60;
+}
+
+.grid {
+    @include gridColumns(3, 2, 1);
+    margin-top: 12px;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 24px;
+}
+
+.skeletonCard {
+    position: relative;
+    background: $black-5;
+    border-radius: 16px;
+    height: 230px;
+    overflow: hidden;
+}
+
+.skeletonCard::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgba($black-40, 0.2), transparent);
+    animation: shimmer 1.6s infinite;
+}
+
+@keyframes shimmer {
+    100% {
+        transform: translateX(100%);
+    }
+}

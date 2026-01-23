@@ -8,6 +8,7 @@ import { ReactComponent as GitlabIcon } from './gitlab.svg'
 import { ReactComponent as ArrowIcon } from './icon-arrow.svg'
 import { ReactComponent as BackArrowIcon } from './icon-back-arrow.svg'
 import { ReactComponent as IconCheck } from './icon-check-thin.svg'
+import { ReactComponent as IdentityVerifiedBadgeIcon } from './verified-badge.svg'
 import { ReactComponent as LogoIcon } from './logo.svg'
 import { ReactComponent as SaveForLaterIcon } from './save-for-later-icon.svg'
 import { ReactComponent as SocialIconFacebook } from './social-fb-icon.svg'
@@ -37,6 +38,7 @@ export {
     BackArrowIcon,
     IconOutline,
     IconSolid,
+    IdentityVerifiedBadgeIcon,
     LogoIcon,
     SocialIconFacebook,
     SocialIconInstagram,

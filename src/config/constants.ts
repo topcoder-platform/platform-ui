@@ -13,6 +13,7 @@ export enum AppSubdomain {
     admin = 'system-admin',
     review = 'review',
     calendar = 'calendar',
+    engagements = 'engagements',
     customer = 'customer'
 }
 
@@ -31,6 +32,7 @@ export enum ToolTitle {
     admin = 'Admin',
     review = 'Review',
     calendar = 'Calendar',
+    engagements = 'Engagements',
     customer = 'Customer'
 }
 
