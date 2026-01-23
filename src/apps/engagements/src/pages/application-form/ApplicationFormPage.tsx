@@ -349,7 +349,12 @@ const ApplicationFormPage: FC = () => {
     )
 
     const handleContactFieldChange = useCallback(
-        (field: ControllerRenderProps<ApplicationFormData, 'name' | 'email' | 'address'>) => (
+        (
+            field:
+                | ControllerRenderProps<ApplicationFormData, 'name'>
+                | ControllerRenderProps<ApplicationFormData, 'email'>
+                | ControllerRenderProps<ApplicationFormData, 'address'>,
+        ) => (
             (event: ChangeEvent<HTMLInputElement>): void => {
                 const nextValue = event.target.value
                 field.onChange(nextValue || undefined)

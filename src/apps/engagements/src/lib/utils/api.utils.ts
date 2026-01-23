@@ -121,9 +121,25 @@ export const formatLocation = (countries: string[], timeZones: string[]): string
     }
 
     if (timeZones.length > 0) {
-        const formattedTimeZones = timeZones
-            .map(zone => formatTimeZoneLabel(zone))
-            .filter(Boolean)
+        const formattedTimeZones = Array.from(
+            timeZones.reduce((acc, zone) => {
+                const formatted = formatTimeZoneLabel(zone)
+                if (!formatted) {
+                    return acc
+                }
+
+                const key = formatted
+                    .trim()
+                    .toLowerCase()
+                if (!key || acc.has(key)) {
+                    return acc
+                }
+
+                acc.set(key, formatted)
+                return acc
+            }, new Map<string, string>())
+                .values(),
+        )
 
         if (formattedTimeZones.length > 0) {
             parts.push(`(${formattedTimeZones.join(', ')})`)
