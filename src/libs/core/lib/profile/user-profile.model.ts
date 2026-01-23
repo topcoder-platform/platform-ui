@@ -44,4 +44,5 @@ export interface UserProfile {
     updatedAt: number
     userId: number
     namesAndHandleAppearance: NamesAndHandleAppearance
+    identityVerified?: boolean
 }
