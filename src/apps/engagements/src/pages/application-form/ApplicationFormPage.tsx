@@ -58,9 +58,12 @@ const ApplicationFormPage: FC = () => {
 
     const form = useForm<ApplicationFormData>({
         defaultValues: {
+            address: '',
             availability: '',
             coverLetter: '',
+            email: '',
             mobileNumber: undefined,
+            name: '',
             portfolioUrls: [],
             resumeUrl: undefined,
             yearsOfExperience: undefined,
@@ -75,6 +78,7 @@ const ApplicationFormPage: FC = () => {
     const isValid = form.formState.isValid
     const hasSubmitted = form.formState.submitCount > 0
     const getValues = form.getValues
+    const setValue = form.setValue
     const clearErrors = form.clearErrors
     const coverLetterValue = form.watch('coverLetter') ?? ''
     const availabilityValue = form.watch('availability') ?? ''
@@ -147,6 +151,28 @@ const ApplicationFormPage: FC = () => {
     }, [fetchEngagement, fetchUserData])
 
     useEffect(() => {
+        if (!userData) {
+            return
+        }
+
+        setValue('name', userData.name ?? '', {
+            shouldDirty: false,
+            shouldTouch: false,
+            shouldValidate: false,
+        })
+        setValue('email', userData.email ?? '', {
+            shouldDirty: false,
+            shouldTouch: false,
+            shouldValidate: false,
+        })
+        setValue('address', userData.address ?? '', {
+            shouldDirty: false,
+            shouldTouch: false,
+            shouldValidate: false,
+        })
+    }, [setValue, userData])
+
+    useEffect(() => {
         checkApplication()
     }, [checkApplication])
 
@@ -201,6 +227,46 @@ const ApplicationFormPage: FC = () => {
         navigate('/my-applications')
     }, [navigate])
 
+    const buildCreateApplicationRequest = useCallback(
+        (values: ApplicationFormData): CreateApplicationRequest => {
+            const trimmedName = values.name?.trim()
+            const trimmedEmail = values.email?.trim()
+            const trimmedAddress = values.address?.trim()
+            const trimmedAvailability = values.availability?.trim()
+            const trimmedCoverLetter = values.coverLetter?.trim() || ''
+            const portfolioUrls = values.portfolioUrls
+                .map(entry => entry.value)
+                .filter((url): url is string => !!url)
+
+            return {
+                address: trimmedAddress || undefined,
+                availability: trimmedAvailability || undefined,
+                coverLetter: trimmedCoverLetter,
+                email: trimmedEmail || undefined,
+                mobileNumber: values.mobileNumber?.trim() || undefined,
+                name: trimmedName || undefined,
+                portfolioUrls: portfolioUrls.length ? portfolioUrls : undefined,
+                resumeUrl: values.resumeUrl || undefined,
+                yearsOfExperience: values.yearsOfExperience,
+            }
+        },
+        [],
+    )
+
+    const handleSubmissionError = useCallback((err: any): void => {
+        const status = err?.response?.status
+        if (status === 409) {
+            toast.error('You have already applied for this engagement.')
+            return
+        }
+
+        const errorMessage = err?.response?.data?.message
+            || err?.message
+            || 'Unable to submit your application. Please try again.'
+
+        toast.error(errorMessage)
+    }, [])
+
     const onSubmit = useCallback(async (): Promise<void> => {
         if (!engagement?.id || submitting || !isEngagementOpen || deadlinePassed) {
             return
@@ -210,39 +276,28 @@ const ApplicationFormPage: FC = () => {
 
         try {
             const values = getValues()
-            const trimmedAvailability = values.availability?.trim()
-            const trimmedCoverLetter = values.coverLetter?.trim() || ''
-            const portfolioUrls = values.portfolioUrls
-                .map(entry => entry.value)
-                .filter((url): url is string => !!url)
-            const request: CreateApplicationRequest = {
-                availability: trimmedAvailability || undefined,
-                coverLetter: trimmedCoverLetter,
-                mobileNumber: values.mobileNumber?.trim() || undefined,
-                portfolioUrls: portfolioUrls.length ? portfolioUrls : undefined,
-                resumeUrl: values.resumeUrl || undefined,
-                yearsOfExperience: values.yearsOfExperience,
-            }
+            const request = buildCreateApplicationRequest(values)
 
             await createApplication(engagement.id, request)
             clearErrors()
             toast.success('Application submitted successfully!')
             navigate('/my-applications')
         } catch (err: any) {
-            const status = err?.response?.status
-            if (status === 409) {
-                toast.error('You have already applied for this engagement.')
-            } else {
-                const errorMessage = err?.response?.data?.message
-                    || err?.message
-                    || 'Unable to submit your application. Please try again.'
-
-                toast.error(errorMessage)
-            }
+            handleSubmissionError(err)
         } finally {
             setSubmitting(false)
         }
-    }, [clearErrors, deadlinePassed, engagement?.id, getValues, isEngagementOpen, navigate, submitting])
+    }, [
+        buildCreateApplicationRequest,
+        clearErrors,
+        deadlinePassed,
+        engagement?.id,
+        getValues,
+        handleSubmissionError,
+        isEngagementOpen,
+        navigate,
+        submitting,
+    ])
 
     const handleCoverLetterChange = useCallback(
         (field: ControllerRenderProps<ApplicationFormData, 'coverLetter'>) => (
@@ -285,6 +340,16 @@ const ApplicationFormPage: FC = () => {
 
     const handleMobileNumberChange = useCallback(
         (field: ControllerRenderProps<ApplicationFormData, 'mobileNumber'>) => (
+            (event: ChangeEvent<HTMLInputElement>): void => {
+                const nextValue = event.target.value
+                field.onChange(nextValue || undefined)
+            }
+        ),
+        [],
+    )
+
+    const handleContactFieldChange = useCallback(
+        (field: ControllerRenderProps<ApplicationFormData, 'name' | 'email' | 'address'>) => (
             (event: ChangeEvent<HTMLInputElement>): void => {
                 const nextValue = event.target.value
                 field.onChange(nextValue || undefined)
@@ -411,6 +476,66 @@ const ApplicationFormPage: FC = () => {
         [errors.mobileNumber, handleMobileNumberChange, isFormDisabled],
     )
 
+    const renderNameField = useCallback(
+        (renderProps: { field: ControllerRenderProps<ApplicationFormData, 'name'> }): JSX.Element => (
+            <input
+                id='applicant-name'
+                type='text'
+                className={classNames(
+                    styles.inputField,
+                    errors.name && styles.inputError,
+                )}
+                placeholder='Full name'
+                value={renderProps.field.value ?? ''}
+                onChange={handleContactFieldChange(renderProps.field)}
+                disabled={isFormDisabled}
+                aria-invalid={!!errors.name}
+                aria-describedby={errors.name ? 'applicant-name-error' : undefined}
+            />
+        ),
+        [errors.name, handleContactFieldChange, isFormDisabled],
+    )
+
+    const renderEmailField = useCallback(
+        (renderProps: { field: ControllerRenderProps<ApplicationFormData, 'email'> }): JSX.Element => (
+            <input
+                id='applicant-email'
+                type='email'
+                className={classNames(
+                    styles.inputField,
+                    errors.email && styles.inputError,
+                )}
+                placeholder='you@example.com'
+                value={renderProps.field.value ?? ''}
+                onChange={handleContactFieldChange(renderProps.field)}
+                disabled={isFormDisabled}
+                aria-invalid={!!errors.email}
+                aria-describedby={errors.email ? 'applicant-email-error' : undefined}
+            />
+        ),
+        [errors.email, handleContactFieldChange, isFormDisabled],
+    )
+
+    const renderAddressInput = useCallback(
+        (renderProps: { field: ControllerRenderProps<ApplicationFormData, 'address'> }): JSX.Element => (
+            <input
+                id='applicant-address'
+                type='text'
+                className={classNames(
+                    styles.inputField,
+                    errors.address && styles.inputError,
+                )}
+                placeholder='Street, City, State, ZIP'
+                value={renderProps.field.value ?? ''}
+                onChange={handleContactFieldChange(renderProps.field)}
+                disabled={isFormDisabled}
+                aria-invalid={!!errors.address}
+                aria-describedby={errors.address ? 'applicant-address-error' : undefined}
+            />
+        ),
+        [errors.address, handleContactFieldChange, isFormDisabled],
+    )
+
     const renderLoadingState = (): JSX.Element => (
         <div className={styles.loadingState}>
             <LoadingSpinner className={styles.loadingSpinner} inline />
@@ -504,15 +629,16 @@ const ApplicationFormPage: FC = () => {
     const renderAddressField = (): JSX.Element => (
         <div className={styles.fieldGroup}>
             <label className={styles.fieldLabel} htmlFor='applicant-address'>Address</label>
-            <input
-                id='applicant-address'
-                type='text'
-                className={classNames(styles.inputField, styles.readOnlyField)}
-                value={userData?.address ?? ''}
-                placeholder='Not provided'
-                readOnly
-                aria-readonly='true'
+            <Controller
+                name='address'
+                control={control}
+                render={renderAddressInput}
             />
+            {errors.address && (
+                <div className={styles.fieldError} id='applicant-address-error'>
+                    {errors.address.message}
+                </div>
+            )}
         </div>
     )
 
@@ -527,25 +653,29 @@ const ApplicationFormPage: FC = () => {
                     <div className={styles.readOnlyGrid}>
                         <div className={styles.fieldGroup}>
                             <label className={styles.fieldLabel} htmlFor='applicant-name'>Name</label>
-                            <input
-                                id='applicant-name'
-                                type='text'
-                                className={classNames(styles.inputField, styles.readOnlyField)}
-                                value={userData?.name ?? ''}
-                                readOnly
-                                aria-readonly='true'
+                            <Controller
+                                name='name'
+                                control={control}
+                                render={renderNameField}
                             />
+                            {errors.name && (
+                                <div className={styles.fieldError} id='applicant-name-error'>
+                                    {errors.name.message}
+                                </div>
+                            )}
                         </div>
                         <div className={styles.fieldGroup}>
                             <label className={styles.fieldLabel} htmlFor='applicant-email'>Email</label>
-                            <input
-                                id='applicant-email'
-                                type='email'
-                                className={classNames(styles.inputField, styles.readOnlyField)}
-                                value={userData?.email ?? ''}
-                                readOnly
-                                aria-readonly='true'
+                            <Controller
+                                name='email'
+                                control={control}
+                                render={renderEmailField}
                             />
+                            {errors.email && (
+                                <div className={styles.fieldError} id='applicant-email-error'>
+                                    {errors.email.message}
+                                </div>
+                            )}
                         </div>
                         {renderAddressField()}
                         <div className={styles.fieldGroup}>

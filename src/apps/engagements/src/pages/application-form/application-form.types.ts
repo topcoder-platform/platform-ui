@@ -3,6 +3,9 @@ export interface PortfolioUrlEntry {
 }
 
 export interface ApplicationFormData {
+    name?: string
+    email?: string
+    address?: string
     coverLetter: string
     resumeUrl?: string
     portfolioUrls: PortfolioUrlEntry[]

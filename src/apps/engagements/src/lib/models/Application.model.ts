@@ -36,6 +36,9 @@ export interface ApplicationListResponse {
 }
 
 export interface CreateApplicationRequest {
+    name?: string
+    email?: string
+    address?: string
     coverLetter: string
     resumeUrl?: string
     portfolioUrls?: string[]
