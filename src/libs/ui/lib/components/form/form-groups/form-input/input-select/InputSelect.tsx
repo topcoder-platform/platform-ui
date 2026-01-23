@@ -43,6 +43,7 @@ interface InputSelectProps {
     readonly tabIndex?: number
     readonly value?: string
     readonly classNameWrapper?: string
+    readonly preventAutoFocus?: boolean
 }
 
 const sameWidthModifier = {
@@ -154,7 +155,7 @@ const InputSelect: FC<InputSelectProps> = (props: InputSelectProps) => {
                 type='button'
                 disabled={!!props.disabled}
                 onFocus={function onFocus(event: FocusEvent<HTMLButtonElement> | undefined) {
-                    if (hasFocus.current) {
+                    if (hasFocus.current || props.preventAutoFocus) {
                         return
                     }
 

@@ -30,3 +30,9 @@ export enum profileEditModes {
 export const MAX_PRINCIPAL_SKILLS_COUNT = 10
 
 export const ADMIN_ROLES = [UserRole.administrator]
+
+export const PHONE_NUMBER_ROLES = [
+    UserRole.administrator,
+    UserRole.talentManager,
+    UserRole.projectManager,
+]

@@ -1,10 +1,12 @@
 import { Dispatch, FC, SetStateAction, useState } from 'react'
+import classNames from 'classnames'
 
 import { UserProfile } from '~/libs/core'
 import { CopyButton } from '~/apps/admin/src/lib/components/CopyButton'
-import { IconSolid } from '~/libs/ui'
+import { IconOutline, IconSolid, Tooltip } from '~/libs/ui'
 
 import { AddButton } from '../../components'
+import { canSeePhones } from '../../lib/helpers'
 
 import { ModifyPhonesModal } from './ModifyPhonesModal'
 import { PhoneCard } from './PhoneCard'
@@ -18,6 +20,7 @@ interface PhonesProps {
 
 const Phones: FC<PhonesProps> = (props: PhonesProps) => {
     const canEdit: boolean = props.authProfile?.handle === props.profile.handle
+    const canSeePhonesValue: boolean = canSeePhones(props.authProfile, props.profile)
 
     const [isEditMode, setIsEditMode]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
@@ -50,7 +53,14 @@ const Phones: FC<PhonesProps> = (props: PhonesProps) => {
     return (
         <div className={styles.container}>
             <div className={styles.titleWrap}>
-                <p className='body-main-bold'>Contact</p>
+                <p className={classNames('body-main-bold', styles.title)}>
+                    Contact
+                    {canEdit && (
+                        <Tooltip content='This information is visible to you only.' place='top'>
+                            <IconOutline.EyeOffIcon width={20} height={20} />
+                        </Tooltip>
+                    )}
+                </p>
                 {props.profile?.email && (
                     <div className={styles.email}>
                         <div className={styles.emailIcon}>
@@ -69,12 +79,12 @@ const Phones: FC<PhonesProps> = (props: PhonesProps) => {
                             key={`${phone.type}-${phone.number}`}
                             type={phone.type}
                             number={phone.number}
-                            canEdit={canEdit && index === 0}
+                            canEdit={canSeePhonesValue && canEdit && index === 0}
                             phoneIndex={index}
                             onEdit={index === 0 ? handleEditPhonesClick : undefined}
                         />
                     ))}
-                {canEdit && (
+                {canSeePhonesValue && phones.length === 0 && (
                     <AddButton
                         label='Add phone number'
                         onClick={handleEditPhonesClick}

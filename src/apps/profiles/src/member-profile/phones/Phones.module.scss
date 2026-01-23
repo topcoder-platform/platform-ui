@@ -2,6 +2,11 @@
 
 .container {
     margin-top: $sp-8;
+    .title {
+        display: flex;
+        align-items: center;
+        gap: $sp-2;
+    }
 }
 
 .email {

@@ -1,7 +1,7 @@
 /* eslint-disable complexity */
 import { UserProfile, UserRole } from '~/libs/core'
 
-import { ADMIN_ROLES } from '../config'
+import { ADMIN_ROLES, PHONE_NUMBER_ROLES } from '../config'
 
 declare global {
     interface Window { tcUniNav: any }
@@ -154,6 +154,36 @@ export function canDownloadProfile(authProfile: UserProfile | undefined, profile
     if (authProfile
         .roles?.some(
             role => allowedRoles.some(allowed => role.toLowerCase() === allowed.toLowerCase()),
+        )
+    ) {
+        return true
+    }
+
+    return false
+}
+
+/**
+ * Check if the user can see phone numbers
+ * @param authProfile - The authenticated user profile
+ * @param profile - The profile to check if the user can see phone numbers
+ * @returns {boolean} - Whether the user can see phone numbers
+ */
+export function canSeePhones(authProfile: UserProfile | undefined, profile: UserProfile): boolean {
+    if (!authProfile) {
+        return false
+    }
+
+    if (authProfile.handle === profile.handle) {
+        return true
+    }
+
+    if (authProfile.roles?.some(role => ADMIN_ROLES.includes(role.toLowerCase() as UserRole))) {
+        return true
+    }
+
+    if (authProfile
+        .roles?.some(
+            role => PHONE_NUMBER_ROLES.some(allowed => role.toLowerCase() === allowed.toLowerCase()),
         )
     ) {
         return true
