@@ -13,21 +13,21 @@ interface AssignmentCardProps {
     contactEmail?: string
     onViewPayments: () => void
     onDocumentExperience: () => void
-    onContactTaskManager: (contactEmail?: string) => void
-    canContactTaskManager?: boolean
+    onContactTalentManager: (contactEmail?: string) => void
+    canContactTalentManager?: boolean
 }
 
 const DESCRIPTION_MAX_LENGTH = 160
 
 const AssignmentCard: FC<AssignmentCardProps> = (props: AssignmentCardProps) => {
     const engagement = props.engagement
-    const canContactTaskManager = props.canContactTaskManager ?? true
+    const canContactTalentManager = props.canContactTalentManager ?? true
     const skills = engagement.requiredSkills ?? []
     const visibleSkills = skills.slice(0, 6)
     const extraSkillsCount = Math.max(0, skills.length - 6)
-    const handleContactTaskManagerClick = useCallback(() => {
-        props.onContactTaskManager(props.contactEmail)
-    }, [props.contactEmail, props.onContactTaskManager])
+    const handleContactTalentManagerClick = useCallback(() => {
+        props.onContactTalentManager(props.contactEmail)
+    }, [props.contactEmail, props.onContactTalentManager])
 
     const descriptionSnippet = useMemo(() => (
         truncateText(engagement.description, DESCRIPTION_MAX_LENGTH)
@@ -86,11 +86,11 @@ const AssignmentCard: FC<AssignmentCardProps> = (props: AssignmentCardProps) => 
                     className={styles.actionButton}
                 />
                 <Button
-                    label='Contact Task Manager'
-                    onClick={handleContactTaskManagerClick}
+                    label='Contact Talent Manager'
+                    onClick={handleContactTalentManagerClick}
                     secondary
                     className={styles.actionButton}
-                    disabled={!canContactTaskManager}
+                    disabled={!canContactTalentManager}
                 />
             </div>
         </div>

@@ -212,6 +212,10 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                                     value: 'REVIEW_BOARD_PAYMENT',
                                 },
                                 {
+                                    label: 'Engagement Payment',
+                                    value: 'ENGAGEMENT_PAYMENT',
+                                },
+                                {
                                     label: 'All',
                                     value: '',
                                 },

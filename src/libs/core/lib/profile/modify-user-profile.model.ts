@@ -11,6 +11,7 @@ export interface UpdateProfileRequest {
     availableForGigs?: boolean,
     competitionCountryCode?: string
     homeCountryCode?: string
+    email?: string
     firstName?: string
     lastName?: string
     phones?: Array<{

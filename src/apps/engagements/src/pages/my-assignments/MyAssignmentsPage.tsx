@@ -124,7 +124,7 @@ const MyAssignmentsPage: FC = () => {
         window.open(`https://${walletHost}`, '_blank')
     }, [])
 
-    const handleContactTaskManager = useCallback((contactEmail?: string) => {
+    const handleContactTalentManager = useCallback((contactEmail?: string) => {
         if (!contactEmail) {
             return
         }
@@ -223,8 +223,8 @@ const MyAssignmentsPage: FC = () => {
                                 contactEmail={contactEmail}
                                 onViewPayments={handleViewPayments}
                                 onDocumentExperience={handleDocumentExperienceClick}
-                                onContactTaskManager={handleContactTaskManager}
-                                canContactTaskManager={Boolean(contactEmail)}
+                                onContactTalentManager={handleContactTalentManager}
+                                canContactTalentManager={Boolean(contactEmail)}
                             />
                         )
                     })}

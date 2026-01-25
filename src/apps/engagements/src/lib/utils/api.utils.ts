@@ -106,23 +106,35 @@ export const formatEngagementDuration = (duration: {
 }
 
 export const formatLocation = (countries: string[], timeZones: string[]): string => {
-    if (countries.length === 0 && timeZones.length === 0) {
-        return 'Any (Fully Remote)'
-    }
-
-    if (countries.includes('Any') || timeZones.includes('Any')) {
-        return 'Any (Fully Remote)'
-    }
+    const normalizeValues = (values: string[]): string[] => (
+        (values ?? [])
+            .map(value => String(value)
+                .trim())
+            .filter(Boolean)
+    )
+    const normalizedCountries = normalizeValues(countries)
+    const normalizedTimeZones = normalizeValues(timeZones)
+    const isAnyValue = (value: string): boolean => (
+        value
+            .trim()
+            .toLowerCase() === 'any'
+    )
+    const hasAnyLocation = normalizedCountries.some(isAnyValue) || normalizedTimeZones.some(isAnyValue)
+    const filteredCountries = normalizedCountries.filter(value => !isAnyValue(value))
+    const filteredTimeZones = normalizedTimeZones.filter(value => !isAnyValue(value))
+    const hasLocationValues = filteredCountries.length > 0 || filteredTimeZones.length > 0
 
     const parts: string[] = []
 
-    if (countries.length > 0) {
-        parts.push(countries.join(', '))
+    if (hasAnyLocation || !hasLocationValues) {
+        parts.push('Remote')
+    } else if (filteredCountries.length > 0) {
+        parts.push(filteredCountries.join(', '))
     }
 
-    if (timeZones.length > 0) {
+    if (filteredTimeZones.length > 0) {
         const formattedTimeZones = Array.from(
-            timeZones.reduce((acc, zone) => {
+            filteredTimeZones.reduce((acc, zone) => {
                 const formatted = formatTimeZoneLabel(zone)
                 if (!formatted) {
                     return acc

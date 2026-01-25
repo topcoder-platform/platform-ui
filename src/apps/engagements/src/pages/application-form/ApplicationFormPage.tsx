@@ -14,6 +14,7 @@ import {
     createApplication,
     getEngagementByNanoId,
     getUserDataForApplication,
+    updateUserDataForApplication,
 } from '../../lib/services'
 import { isDeadlinePassed } from '../../lib/utils'
 import { rootRoute } from '../../engagements.routes'
@@ -170,6 +171,11 @@ const ApplicationFormPage: FC = () => {
             shouldTouch: false,
             shouldValidate: false,
         })
+        setValue('mobileNumber', userData.mobileNumber, {
+            shouldDirty: false,
+            shouldTouch: false,
+            shouldValidate: false,
+        })
     }, [setValue, userData])
 
     useEffect(() => {
@@ -276,6 +282,20 @@ const ApplicationFormPage: FC = () => {
 
         try {
             const values = getValues()
+            try {
+                await updateUserDataForApplication(
+                    {
+                        address: values.address ?? '',
+                        email: values.email ?? '',
+                        name: values.name ?? '',
+                    },
+                    userData,
+                )
+            } catch {
+                toast.error('Unable to save your contact details. Please try again.')
+                return
+            }
+
             const request = buildCreateApplicationRequest(values)
 
             await createApplication(engagement.id, request)
@@ -297,6 +317,8 @@ const ApplicationFormPage: FC = () => {
         isEngagementOpen,
         navigate,
         submitting,
+        updateUserDataForApplication,
+        userData,
     ])
 
     const handleCoverLetterChange = useCallback(

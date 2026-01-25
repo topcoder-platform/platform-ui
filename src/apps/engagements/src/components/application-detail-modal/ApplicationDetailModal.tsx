@@ -91,12 +91,12 @@ const ApplicantSection: FC<ApplicantSectionProps> = (
                     <span className={styles.metaLabel}>Email</span>
                     <span className={styles.metaValue}>{application.email}</span>
                 </div>
-                {application.address && (
-                    <div className={styles.metaItem}>
-                        <span className={styles.metaLabel}>Address</span>
-                        <span className={styles.metaValue}>{application.address}</span>
-                    </div>
-                )}
+                <div className={styles.metaItem}>
+                    <span className={styles.metaLabel}>Address</span>
+                    <span className={styles.metaValue}>
+                        {application.address || 'Not provided'}
+                    </span>
+                </div>
                 {application.mobileNumber && (
                     <div className={styles.metaItem}>
                         <span className={styles.metaLabel}>Mobile Number</span>
