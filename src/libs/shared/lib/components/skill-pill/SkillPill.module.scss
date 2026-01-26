@@ -69,3 +69,19 @@
         align-items: flex-start;
     }
 }
+
+.tootltipRow {
+    display: flex;
+    align-items: center;
+    gap: $sp-1;
+    text-align: left;
+    &.padLeft{
+        padding-left: $sp-2;
+    }
+}
+
+.tooltipDetails {
+    li {
+        margin-top: $sp-2;
+    }
+}

@@ -1,8 +1,8 @@
-import { Dispatch, FC, SetStateAction, useEffect, useMemo, useState } from 'react'
+import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { filter, orderBy } from 'lodash'
 
-import { UserProfile, UserSkill, UserSkillDisplayModes } from '~/libs/core'
+import { getMemberSkillDetails, UserProfile, UserSkill, UserSkillDisplayModes } from '~/libs/core'
 import { GroupedSkillsUI, HowSkillsWorkModal, isSkillVerified, SkillPill, useLocalStorage } from '~/libs/shared'
 import { Button } from '~/libs/ui'
 
@@ -23,6 +23,7 @@ interface MemberSkillsInfoProps {
 const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProps) => {
     const [queryParams]: [URLSearchParams, any] = useSearchParams()
     const editMode: string | null = queryParams.get(EDIT_MODE_QUERY_PARAM)
+    const [canFetchSkillDetails, setCanFetchSkillDetails] = useState(true)
 
     const canEdit: boolean = props.authProfile?.handle === props.profile.handle
     const [hasSeenPrincipalIntro, setHasSeenPrincipalIntro] = useLocalStorage('seen-principal-intro', {} as any)
@@ -131,6 +132,15 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
         setPrincipalIntroModalVisible(false)
     }
 
+    const fetchSkillDetails = useCallback((skillId: string) => {
+        return getMemberSkillDetails(props.profile.handle, skillId).catch(e => {
+            if (e.response.status === 403) {
+                setCanFetchSkillDetails(false)
+            }
+            throw e;
+        })
+    }, [props.profile.handle]);
+
     return (
         <div className={styles.container}>
             <div className={styles.titleWrap}>
@@ -174,6 +184,7 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
                                     skill={skill}
                                     key={skill.id}
                                     theme={isSkillVerified(skill) ? 'verified' : 'dark'}
+                                    fetchSkillDetails={canFetchSkillDetails ? fetchSkillDetails : undefined}
                                 />
                             ))}
                         </div>
@@ -188,6 +199,7 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
                         )}
                         <GroupedSkillsUI
                             groupedSkillsByCategory={groupedSkillsByCategory}
+                            fetchSkillDetails={canFetchSkillDetails ? fetchSkillDetails : undefined}
                         />
                     </div>
                 )}

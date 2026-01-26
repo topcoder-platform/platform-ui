@@ -1,14 +1,16 @@
 import { FC } from 'react'
 
-import { UserSkill } from '~/libs/core'
+import { UserSkill, UserSkillWithActivity } from '~/libs/core'
 import { SkillPill } from '~/libs/shared'
 
 import { SkillsList } from '../skills-list'
 
 import styles from './GroupedSkillsUI.module.scss'
+import { SkillPillProps } from '../skill-pill/SkillPill'
 
 interface GroupedSkillsUIProps {
     groupedSkillsByCategory: { [key: string]: UserSkill[] }
+    fetchSkillDetails: SkillPillProps['fetchSkillDetails']
 }
 const GroupedSkillsUI: FC<GroupedSkillsUIProps> = (props: GroupedSkillsUIProps) => (
     <div
@@ -29,6 +31,7 @@ const GroupedSkillsUI: FC<GroupedSkillsUIProps> = (props: GroupedSkillsUIProps) 
                                         skill={skill}
                                         key={skill.id}
                                         theme='catList'
+                                        fetchSkillDetails={props.fetchSkillDetails}
                                     />
                                 ))
                         }
