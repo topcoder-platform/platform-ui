@@ -32,6 +32,7 @@ const ModalAddWork: FC<ModalAddWorkProps> = (props: ModalAddWorkProps) => {
     const [formErrors, setFormErrors] = useState<any>({
         companyName: undefined,
         endDate: undefined,
+        otherIndustry: undefined,
         position: undefined,
         startDate: undefined,
     })
@@ -62,6 +63,10 @@ const ModalAddWork: FC<ModalAddWorkProps> = (props: ModalAddWorkProps) => {
 
         if (!workInfo.endDate && !workInfo.currentlyWorking) {
             errorTmp.endDate = 'Required'
+        }
+
+        if (workInfo.industry === 'Other' && !workInfo.otherIndustry?.trim()) {
+            errorTmp.otherIndustry = 'Please specify your industry'
         }
 
         setFormErrors(errorTmp)
@@ -164,6 +169,7 @@ const ModalAddWork: FC<ModalAddWorkProps> = (props: ModalAddWorkProps) => {
                             setWorkInfo({
                                 ...workInfo,
                                 industry: event.target.value,
+                                otherIndustry: event.target.value === 'Other' ? workInfo.otherIndustry : undefined,
                             })
                         }}
                         name='industry'
@@ -172,6 +178,27 @@ const ModalAddWork: FC<ModalAddWorkProps> = (props: ModalAddWorkProps) => {
                         dirty
                     />
                 </div>
+                {workInfo.industry === 'Other' && (
+                    <div className='full-width'>
+                        <InputText
+                            name='otherIndustry'
+                            label='Please specify your industry *'
+                            value={workInfo.otherIndustry || ''}
+                            onChange={function onChange(event: any) {
+                                setWorkInfo({
+                                    ...workInfo,
+                                    otherIndustry: event.target.value,
+                                })
+                            }}
+                            placeholder='Enter your industry'
+                            tabIndex={0}
+                            type='text'
+                            dirty
+                            error={formErrors.otherIndustry}
+                            maxLength={255}
+                        />
+                    </div>
+                )}
                 <div className='d-flex gap-16 full-width flex-wrap'>
                     <div
                         className='flex-1'

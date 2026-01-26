@@ -195,6 +195,13 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
             case 'endDate':
                 value = event as unknown as Date
                 break
+            case 'industry':
+                value = event.target.value
+                if (value !== 'Other') {
+                    oldFormValues.otherIndustry = undefined
+                }
+
+                break
             default:
                 value = event.target.value
                 break
@@ -272,6 +279,13 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
             }
         }
 
+        if (formValues.industry === 'Other' && !trim(formValues.otherIndustry as string)) {
+            setFormErrors({
+                otherIndustry: 'Please specify your industry',
+            })
+            return
+        }
+
         const companyName: string | undefined = formValues.company as string | undefined
         const startDateIso: string | undefined = formValues.startDate
             ? (formValues.startDate as Date).toISOString()
@@ -287,6 +301,7 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
             description: (formValues.description as string) || undefined,
             endDate: endDateIso,
             industry: formValues.industry,
+            otherIndustry: formValues.industry === 'Other' ? (formValues.otherIndustry as string) : undefined,
             position: formValues.position,
             startDate: startDateIso,
             timePeriodFrom: startDateIso,
@@ -343,6 +358,7 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
                 ? new Date(work.timePeriodTo)
                 : (work.endDate ? new Date(work.endDate) : undefined),
             industry: work.industry || '',
+            otherIndustry: work.otherIndustry || '',
             position: (work.position || '') as string,
             startDate: work.timePeriodFrom
                 ? new Date(work.timePeriodFrom)
@@ -483,6 +499,21 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
                             dirty
                             error={formErrors.industry}
                         />
+                        {formValues.industry === 'Other' && (
+                            <InputText
+                                name='otherIndustry'
+                                label='Please specify your industry *'
+                                error={formErrors.otherIndustry}
+                                placeholder='Enter your industry'
+                                dirty
+                                tabIndex={0}
+                                forceUpdateValue
+                                type='text'
+                                onChange={bind(handleFormValueChange, this, 'otherIndustry')}
+                                value={formValues.otherIndustry as string}
+                                maxLength={255}
+                            />
+                        )}
                         <div className={styles.row}>
                             <InputDatePicker
                                 label='Start Date'
