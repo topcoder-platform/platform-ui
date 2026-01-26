@@ -9,4 +9,5 @@ export const INDUSTRIES_OPTIONS: string[] = [
     'Telecoms',
     'Public sector',
     'Travel & hospitality',
+    'Others',
 ]
