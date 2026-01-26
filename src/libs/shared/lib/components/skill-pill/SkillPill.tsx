@@ -1,9 +1,10 @@
+/* eslint-disable complexity */
 import { FC, ReactNode, useCallback, useMemo, useState } from 'react'
+import { format } from 'date-fns'
 import classNames from 'classnames'
 import useSWR, { SWRResponse } from 'swr'
-import { format } from 'date-fns'
 
-
+import { EnvironmentConfig } from '~/config'
 import { IconOutline, Tooltip } from '~/libs/ui'
 import { UserSkill, UserSkillWithActivity } from '~/libs/core'
 
@@ -37,22 +38,24 @@ const SkillPill: FC<SkillPillProps> = props => {
     )
 
     const handleMouseEnter = useCallback(() => {
-      setLoadDetails(true);
-    }, []);
+        setLoadDetails(true)
+    }, [])
 
     const handleClick = useCallback(() => props.onClick?.call(undefined, props.skill as UserSkill), [
         props.onClick, props.skill,
     ])
 
-    const { data: skillDetails, isValidating: isLoadingDetails } = useSWR<UserSkillWithActivity>(
-        loadDetails &&
-        props.fetchSkillDetails
-        && props.skill?.id ? `user-skill-activity/${props.skill.id}` : null,
-        () => props.fetchSkillDetails!(props.skill.id!).catch((e) => {
-            setHideDetails(true)
-            return {} as any
-        })
-    )
+    const { data: skillDetails, isValidating: isLoadingDetails }: SWRResponse<UserSkillWithActivity>
+        = useSWR<UserSkillWithActivity>(
+            loadDetails
+            && props.fetchSkillDetails
+            && props.skill?.id ? `user-skill-activity/${props.skill.id}` : undefined,
+            () => props.fetchSkillDetails!(props.skill.id!)
+                .catch(() => {
+                    setHideDetails(true)
+                    return {} as any
+                }),
+        )
 
     const skillDetailsTooltipContent = useMemo(() => {
         if (!skillDetails || isLoadingDetails || hideDetails) {
@@ -69,10 +72,17 @@ const SkillPill: FC<SkillPillProps> = props => {
                     {skillDetails.activity.challenge && (
                         <li>
                             <div className={styles.tootltipRow}>
-                                Challenges ({skillDetails.activity.challenge.count}):
+                                Challenges (
+                                {skillDetails.activity.challenge.count}
+                                ):
                             </div>
                             {skillDetails.activity.challenge.lastSources.map(s => (
-                                <a key={s.id} className={classNames(styles.tootltipRow, styles.padLeft)} href={`https://topcoder-dev.com/challenges/${s.id}`} target='blank'>
+                                <a
+                                    key={s.id}
+                                    className={classNames(styles.tootltipRow, styles.padLeft)}
+                                    href={`${EnvironmentConfig.URLS.CHALLENGES_PAGE}/${s.id}`}
+                                    target='blank'
+                                >
                                     {s.name}
                                 </a>
                             ))}
@@ -81,10 +91,17 @@ const SkillPill: FC<SkillPillProps> = props => {
                     {skillDetails.activity.course && (
                         <li>
                             <div className={styles.tootltipRow}>
-                                Courses ({skillDetails.activity.course.count}):
+                                Courses (
+                                {skillDetails.activity.course.count}
+                                ):
                             </div>
                             {skillDetails.activity.course.lastSources.map(s => (
-                                <a key={s.completionEventId} className={classNames(styles.tootltipRow, styles.padLeft)} href={`https://academy.topcoder-dev.com/freeCodeCamp/${s.certification}`} target='blank'>
+                                <a
+                                    key={s.completionEventId}
+                                    className={classNames(styles.tootltipRow, styles.padLeft)}
+                                    href={`${EnvironmentConfig.URLS.ACADEMY_COURSE}/${s.certification}`}
+                                    target='blank'
+                                >
                                     {s.title}
                                 </a>
                             ))}
@@ -93,10 +110,17 @@ const SkillPill: FC<SkillPillProps> = props => {
                     {skillDetails.activity.certification && (
                         <li>
                             <div className={styles.tootltipRow}>
-                                TCA Certifications ({skillDetails.activity.certification.count}):
+                                TCA Certifications (
+                                {skillDetails.activity.certification.count}
+                                ):
                             </div>
                             {skillDetails.activity.certification.lastSources.map(s => (
-                                <a key={s.completionEventId} className={classNames(styles.tootltipRow, styles.padLeft)} href={`https://academy.topcoder-dev.com/tca-certifications/${s.dashedName}`} target='blank'>
+                                <a
+                                    key={s.completionEventId}
+                                    className={classNames(styles.tootltipRow, styles.padLeft)}
+                                    href={`${EnvironmentConfig.URLS.ACADEMY_CERTIFICATION}/${s.dashedName}`}
+                                    target='blank'
+                                >
                                     {s.title}
                                 </a>
                             ))}

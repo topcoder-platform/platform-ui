@@ -39,6 +39,8 @@ export interface GlobalConfig {
         API_VERSION: string | undefined
     }
     URLS: {
+        ACADEMY_CERTIFICATION: string
+        ACADEMY_COURSE: string
         USER_PROFILE: string
         ACCOUNT_SETTINGS: string
         UNIVERSAL_NAV: string

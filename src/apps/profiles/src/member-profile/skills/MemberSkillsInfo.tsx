@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 import { Dispatch, FC, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { filter, orderBy } from 'lodash'
@@ -132,14 +133,14 @@ const MemberSkillsInfo: FC<MemberSkillsInfoProps> = (props: MemberSkillsInfoProp
         setPrincipalIntroModalVisible(false)
     }
 
-    const fetchSkillDetails = useCallback((skillId: string) => {
-        return getMemberSkillDetails(props.profile.handle, skillId).catch(e => {
+    const fetchSkillDetails = useCallback((skillId: string) => getMemberSkillDetails(props.profile.handle, skillId)
+        .catch(e => {
             if (e.response.status === 403) {
                 setCanFetchSkillDetails(false)
             }
-            throw e;
-        })
-    }, [props.profile.handle]);
+
+            throw e
+        }), [props.profile.handle])
 
     return (
         <div className={styles.container}>

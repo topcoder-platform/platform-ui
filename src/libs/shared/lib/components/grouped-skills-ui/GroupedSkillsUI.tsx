@@ -1,12 +1,12 @@
 import { FC } from 'react'
 
-import { UserSkill, UserSkillWithActivity } from '~/libs/core'
+import { UserSkill } from '~/libs/core'
 import { SkillPill } from '~/libs/shared'
 
 import { SkillsList } from '../skills-list'
+import { SkillPillProps } from '../skill-pill/SkillPill'
 
 import styles from './GroupedSkillsUI.module.scss'
-import { SkillPillProps } from '../skill-pill/SkillPill'
 
 interface GroupedSkillsUIProps {
     groupedSkillsByCategory: { [key: string]: UserSkill[] }
