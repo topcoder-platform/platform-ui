@@ -78,6 +78,10 @@ const EngagementCard: FC<EngagementCardProps> = (props: EngagementCardProps) => 
     const deadlineText = engagement.applicationDeadline
         ? formatDate(engagement.applicationDeadline)
         : 'Deadline TBD'
+    const { locationLabel, timeZoneLabel }: ReturnType<typeof formatLocation> = formatLocation(
+        engagement.countries ?? [],
+        engagement.timeZones ?? [],
+    )
     const roleLabel = formatEnumLabel(engagement.role) ?? 'Not specified'
     const workloadLabel = formatEnumLabel(engagement.workload) ?? 'Not specified'
     const compensationLabel = typeof engagement.compensationRange === 'string'
@@ -112,10 +116,12 @@ const EngagementCard: FC<EngagementCardProps> = (props: EngagementCardProps) => 
                     <span>{formatDuration(engagement.duration)}</span>
                 </div>
                 <div className={styles.metaItem}>
+                    <IconSolid.GlobeAltIcon className={styles.metaIcon} />
+                    <span>{`Timezone: ${timeZoneLabel}`}</span>
+                </div>
+                <div className={styles.metaItem}>
                     <IconSolid.LocationMarkerIcon className={styles.metaIcon} />
-                    <span>
-                        {formatLocation(engagement.countries ?? [], engagement.timeZones ?? [])}
-                    </span>
+                    <span>{`Location: ${locationLabel}`}</span>
                 </div>
                 <div className={styles.metaItem}>
                     <IconSolid.BriefcaseIcon className={styles.metaIcon} />

@@ -25,6 +25,10 @@ const AssignmentCard: FC<AssignmentCardProps> = (props: AssignmentCardProps) => 
     const skills = engagement.requiredSkills ?? []
     const visibleSkills = skills.slice(0, 6)
     const extraSkillsCount = Math.max(0, skills.length - 6)
+    const { locationLabel, timeZoneLabel }: ReturnType<typeof formatLocation> = formatLocation(
+        engagement.countries ?? [],
+        engagement.timeZones ?? [],
+    )
     const handleContactTalentManagerClick = useCallback(() => {
         props.onContactTalentManager(props.contactEmail)
     }, [props.contactEmail, props.onContactTalentManager])
@@ -50,10 +54,12 @@ const AssignmentCard: FC<AssignmentCardProps> = (props: AssignmentCardProps) => 
                     <span>{formatDuration(engagement.duration)}</span>
                 </div>
                 <div className={styles.metaItem}>
+                    <IconSolid.GlobeAltIcon className={styles.metaIcon} />
+                    <span>{`Timezone: ${timeZoneLabel}`}</span>
+                </div>
+                <div className={styles.metaItem}>
                     <IconSolid.LocationMarkerIcon className={styles.metaIcon} />
-                    <span>
-                        {formatLocation(engagement.countries ?? [], engagement.timeZones ?? [])}
-                    </span>
+                    <span>{`Location: ${locationLabel}`}</span>
                 </div>
                 <div className={styles.metaItem}>
                     <IconSolid.CurrencyDollarIcon className={styles.metaIcon} />
@@ -77,18 +83,21 @@ const AssignmentCard: FC<AssignmentCardProps> = (props: AssignmentCardProps) => 
                     label='View Payments'
                     onClick={props.onViewPayments}
                     primary
+                    textWrap
                     className={styles.actionButton}
                 />
                 <Button
                     label='Document Experience'
                     onClick={props.onDocumentExperience}
                     secondary
+                    textWrap
                     className={styles.actionButton}
                 />
                 <Button
                     label='Contact Talent Manager'
                     onClick={handleContactTalentManagerClick}
                     secondary
+                    textWrap
                     className={styles.actionButton}
                     disabled={!canContactTalentManager}
                 />

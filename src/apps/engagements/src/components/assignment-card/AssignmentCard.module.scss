@@ -89,6 +89,12 @@
 
 .actionButton {
     width: 100%;
+    padding: $sp-1 $sp-3;
+    line-height: 1.4;
+}
+
+.actionButton:global(.btn-text-wrap) {
+    text-align: center;
 }
 
 @include mobile {

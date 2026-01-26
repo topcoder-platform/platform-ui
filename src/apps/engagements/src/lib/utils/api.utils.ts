@@ -1,5 +1,5 @@
 import { toast } from 'react-toastify'
-import moment from 'moment-timezone'
+import codes from 'country-calling-code'
 
 type TimeZoneNameStyle = 'short' | 'long'
 
@@ -28,19 +28,6 @@ const getIntlTimeZoneName = (timeZone: string, style: TimeZoneNameStyle): string
     }
 }
 
-const getMomentTimeZoneName = (timeZone: string): string | undefined => {
-    if (!moment?.tz?.zone || !moment.tz.zone(timeZone)) {
-        return undefined
-    }
-
-    try {
-        return moment.tz(new Date(), timeZone)
-            .format('z')
-    } catch (error) {
-        return undefined
-    }
-}
-
 const formatTimeZoneLabel = (timeZone: string): string => {
     if (!timeZone) {
         return ''
@@ -52,22 +39,67 @@ const formatTimeZoneLabel = (timeZone: string): string => {
         return ''
     }
 
-    if (normalized === 'Any') {
+    if (normalized.toLowerCase() === 'any') {
         return 'Any'
     }
 
-    const shortName = getMomentTimeZoneName(normalized) ?? getIntlTimeZoneName(normalized, 'short')
     const longName = getIntlTimeZoneName(normalized, 'long')
 
-    if (shortName && longName) {
-        if (shortName === longName) {
-            return shortName
+    return longName || normalized
+}
+
+const normalizeValues = (values: string[]): string[] => (
+    (values ?? [])
+        .map(value => String(value)
+            .trim())
+        .filter(Boolean)
+)
+
+const isAnyValue = (value: string): boolean => (
+    value
+        .trim()
+        .toLowerCase() === 'any'
+)
+
+const dedupeByLower = (values: string[]): string[] => Array.from(
+    values.reduce((acc, value) => {
+        const key = value
+            .trim()
+            .toLowerCase()
+        if (!key || acc.has(key)) {
+            return acc
         }
 
-        return `${shortName} - ${longName}`
+        acc.set(key, value)
+        return acc
+    }, new Map<string, string>())
+        .values(),
+)
+
+const formatCountryLabel = (country: string): string => {
+    if (!country) {
+        return ''
     }
 
-    return shortName || longName || normalized
+    const normalized = String(country)
+        .trim()
+    if (!normalized) {
+        return ''
+    }
+
+    const lowerValue = normalized.toLowerCase()
+    const match = codes.find(code => (
+        code.isoCode2?.toLowerCase() === lowerValue
+        || code.isoCode3?.toLowerCase() === lowerValue
+        || code.country?.toLowerCase() === lowerValue
+    ))
+
+    return match?.country ?? normalized
+}
+
+export type FormattedLocation = {
+    locationLabel: string
+    timeZoneLabel: string
 }
 
 export const handleApiError = (error: any): void => {
@@ -105,58 +137,34 @@ export const formatEngagementDuration = (duration: {
     return 'Duration not specified'
 }
 
-export const formatLocation = (countries: string[], timeZones: string[]): string => {
-    const normalizeValues = (values: string[]): string[] => (
-        (values ?? [])
-            .map(value => String(value)
-                .trim())
-            .filter(Boolean)
-    )
+export const formatLocation = (countries: string[], timeZones: string[]): FormattedLocation => {
     const normalizedCountries = normalizeValues(countries)
     const normalizedTimeZones = normalizeValues(timeZones)
-    const isAnyValue = (value: string): boolean => (
-        value
-            .trim()
-            .toLowerCase() === 'any'
-    )
     const hasAnyLocation = normalizedCountries.some(isAnyValue) || normalizedTimeZones.some(isAnyValue)
     const filteredCountries = normalizedCountries.filter(value => !isAnyValue(value))
     const filteredTimeZones = normalizedTimeZones.filter(value => !isAnyValue(value))
     const hasLocationValues = filteredCountries.length > 0 || filteredTimeZones.length > 0
 
-    const parts: string[] = []
+    const formattedCountries = dedupeByLower(
+        filteredCountries
+            .map(formatCountryLabel)
+            .filter(Boolean),
+    )
+    const formattedTimeZones = dedupeByLower(
+        filteredTimeZones
+            .map(formatTimeZoneLabel)
+            .filter(Boolean),
+    )
 
-    if (hasAnyLocation || !hasLocationValues) {
-        parts.push('Remote')
-    } else if (filteredCountries.length > 0) {
-        parts.push(filteredCountries.join(', '))
+    const locationLabel = (hasAnyLocation || !hasLocationValues || formattedCountries.length === 0)
+        ? 'Remote'
+        : formattedCountries.join(', ')
+    const timeZoneLabel = formattedTimeZones.length > 0
+        ? formattedTimeZones.join(', ')
+        : 'Any'
+
+    return {
+        locationLabel,
+        timeZoneLabel,
     }
-
-    if (filteredTimeZones.length > 0) {
-        const formattedTimeZones = Array.from(
-            filteredTimeZones.reduce((acc, zone) => {
-                const formatted = formatTimeZoneLabel(zone)
-                if (!formatted) {
-                    return acc
-                }
-
-                const key = formatted
-                    .trim()
-                    .toLowerCase()
-                if (!key || acc.has(key)) {
-                    return acc
-                }
-
-                acc.set(key, formatted)
-                return acc
-            }, new Map<string, string>())
-                .values(),
-        )
-
-        if (formattedTimeZones.length > 0) {
-            parts.push(`(${formattedTimeZones.join(', ')})`)
-        }
-    }
-
-    return parts.join(' ')
 }

@@ -422,6 +422,10 @@ const EngagementDetailPage: FC = () => {
 
         const roleLabel = formatEnumLabel(engagement.role)
         const workloadLabel = formatEnumLabel(engagement.workload)
+        const { locationLabel, timeZoneLabel }: ReturnType<typeof formatLocation> = formatLocation(
+            engagement.countries ?? [],
+            engagement.timeZones ?? [],
+        )
 
         return (
             <div className={styles.detail}>
@@ -454,12 +458,17 @@ const EngagementDetailPage: FC = () => {
                         </div>
                     </div>
                     <div className={styles.metaItem}>
+                        <IconSolid.GlobeAltIcon className={styles.metaIcon} />
+                        <div>
+                            <div className={styles.metaLabel}>Timezone</div>
+                            <div className={styles.metaValue}>{timeZoneLabel}</div>
+                        </div>
+                    </div>
+                    <div className={styles.metaItem}>
                         <IconSolid.LocationMarkerIcon className={styles.metaIcon} />
                         <div>
                             <div className={styles.metaLabel}>Location</div>
-                            <div className={styles.metaValue}>
-                                {formatLocation(engagement.countries ?? [], engagement.timeZones ?? [])}
-                            </div>
+                            <div className={styles.metaValue}>{locationLabel}</div>
                         </div>
                     </div>
                     <div className={styles.metaItem}>

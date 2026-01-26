@@ -515,12 +515,12 @@ const ApplicationFormPage: FC = () => {
                 placeholder='Full name'
                 value={renderProps.field.value ?? ''}
                 onChange={handleContactFieldChange(renderProps.field)}
-                disabled={isFormDisabled}
+                disabled
                 aria-invalid={!!errors.name}
                 aria-describedby={errors.name ? 'applicant-name-error' : undefined}
             />
         ),
-        [errors.name, handleContactFieldChange, isFormDisabled],
+        [errors.name, handleContactFieldChange],
     )
 
     const renderEmailField = useCallback(
@@ -535,12 +535,12 @@ const ApplicationFormPage: FC = () => {
                 placeholder='you@example.com'
                 value={renderProps.field.value ?? ''}
                 onChange={handleContactFieldChange(renderProps.field)}
-                disabled={isFormDisabled}
+                disabled
                 aria-invalid={!!errors.email}
                 aria-describedby={errors.email ? 'applicant-email-error' : undefined}
             />
         ),
-        [errors.email, handleContactFieldChange, isFormDisabled],
+        [errors.email, handleContactFieldChange],
     )
 
     const renderAddressInput = useCallback(
