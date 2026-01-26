@@ -1,9 +1,10 @@
+import { isWeekend } from 'date-fns'
 import { MouseEvent, useMemo } from 'react'
 import classNames from 'classnames'
 
 import { LoadingSpinner } from '~/libs/ui'
 
-import { LeaveDate } from '../../models'
+import { LeaveDate, LeaveStatus } from '../../models'
 import {
     getDateKey,
     getMonthDates,
@@ -86,9 +87,14 @@ export const Calendar = (props: CalendarProps): JSX.Element => {
                     }
 
                     const dateKey = getDateKey(date)
+                    const isWeekendDate = isWeekend(date)
                     const status = getStatusForDate(date, leaveDates)
+                    const displayStatus = isWeekendDate && status === LeaveStatus.AVAILABLE
+                        ? LeaveStatus.WEEKEND
+                        : status
                     const isSelected = selectedDates.has(dateKey)
-                    const statusClass = styles[getStatusColor(status)]
+                    const statusClass = styles[getStatusColor(displayStatus)]
+                    const isDisabled = isLoading || isWeekendDate
 
                     return (
                         <button
@@ -104,7 +110,7 @@ export const Calendar = (props: CalendarProps): JSX.Element => {
                             )}
                             data-date-key={dateKey}
                             onClick={handleDateClick}
-                            disabled={isLoading}
+                            disabled={isDisabled}
                         >
                             <span className={styles.dateNumber}>{date.getDate()}</span>
                         </button>
