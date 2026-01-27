@@ -64,14 +64,14 @@ const SkillPill: FC<SkillPillProps> = props => {
 
         return (
             <>
-                <div className={styles.tootltipRow}>
+                <div className={styles.tooltipRow}>
                     <strong>Last used:</strong>
                     <span>{format(new Date(skillDetails.lastUsedDate), 'MMM dd, yyyy HH:mm')}</span>
                 </div>
                 <ul className={styles.tooltipDetails}>
                     {skillDetails.activity.challenge && (
                         <li>
-                            <div className={styles.tootltipRow}>
+                            <div className={styles.tooltipRow}>
                                 Challenges (
                                 {skillDetails.activity.challenge.count}
                                 ):
@@ -79,9 +79,10 @@ const SkillPill: FC<SkillPillProps> = props => {
                             {skillDetails.activity.challenge.lastSources.map(s => (
                                 <a
                                     key={s.id}
-                                    className={classNames(styles.tootltipRow, styles.padLeft)}
+                                    className={classNames(styles.tooltipRow, styles.padLeft)}
                                     href={`${EnvironmentConfig.URLS.CHALLENGES_PAGE}/${s.id}`}
-                                    target='blank'
+                                    target='_blank'
+                                    rel='noopener noreferrer'
                                 >
                                     {s.name}
                                 </a>
@@ -90,7 +91,7 @@ const SkillPill: FC<SkillPillProps> = props => {
                     )}
                     {skillDetails.activity.course && (
                         <li>
-                            <div className={styles.tootltipRow}>
+                            <div className={styles.tooltipRow}>
                                 Courses (
                                 {skillDetails.activity.course.count}
                                 ):
@@ -98,9 +99,10 @@ const SkillPill: FC<SkillPillProps> = props => {
                             {skillDetails.activity.course.lastSources.map(s => (
                                 <a
                                     key={s.completionEventId}
-                                    className={classNames(styles.tootltipRow, styles.padLeft)}
+                                    className={classNames(styles.tooltipRow, styles.padLeft)}
                                     href={`${EnvironmentConfig.URLS.ACADEMY_COURSE}/${s.certification}`}
-                                    target='blank'
+                                    target='_blank'
+                                    rel='noopener noreferrer'
                                 >
                                     {s.title}
                                 </a>
@@ -109,7 +111,7 @@ const SkillPill: FC<SkillPillProps> = props => {
                     )}
                     {skillDetails.activity.certification && (
                         <li>
-                            <div className={styles.tootltipRow}>
+                            <div className={styles.tooltipRow}>
                                 TCA Certifications (
                                 {skillDetails.activity.certification.count}
                                 ):
@@ -117,9 +119,10 @@ const SkillPill: FC<SkillPillProps> = props => {
                             {skillDetails.activity.certification.lastSources.map(s => (
                                 <a
                                     key={s.completionEventId}
-                                    className={classNames(styles.tootltipRow, styles.padLeft)}
+                                    className={classNames(styles.tooltipRow, styles.padLeft)}
                                     href={`${EnvironmentConfig.URLS.ACADEMY_CERTIFICATION}/${s.dashedName}`}
-                                    target='blank'
+                                    target='_blank'
+                                    rel='noopener noreferrer'
                                 >
                                     {s.title}
                                 </a>
