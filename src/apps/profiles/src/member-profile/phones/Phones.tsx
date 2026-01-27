@@ -84,7 +84,7 @@ const Phones: FC<PhonesProps> = (props: PhonesProps) => {
                             onEdit={index === 0 ? handleEditPhonesClick : undefined}
                         />
                     ))}
-                {canSeePhonesValue && phones.length === 0 && (
+                {canEdit && phones.length === 0 && (
                     <AddButton
                         label='Add phone number'
                         onClick={handleEditPhonesClick}

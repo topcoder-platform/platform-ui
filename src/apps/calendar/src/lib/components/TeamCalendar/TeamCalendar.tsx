@@ -19,7 +19,15 @@ const getUserDisplayName = (user: TeamLeaveUser): string => {
         .filter(Boolean)
         .join(' ')
 
-    return fullName || user.handle || user.userId
+    if (fullName) {
+        return fullName
+    }
+
+    if (user.status === LeaveStatus.WIPRO_HOLIDAY || user.userId === 'wipro-holiday') {
+        return user.handle || user.userId
+    }
+
+    return user.userId
 }
 
 const compareUsersByName = (userA: TeamLeaveUser, userB: TeamLeaveUser): number => {

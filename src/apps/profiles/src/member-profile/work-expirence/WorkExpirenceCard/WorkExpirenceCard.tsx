@@ -61,8 +61,17 @@ const WorkExpirenceCard: FC<WorkExpirenceCardProps> = (props: WorkExpirenceCardP
                             {position || ''}
                             {
                                 position && industry
-                                    ? `, ${getIndustryOptionLabel(industry)}`
-                                    : (industry ? getIndustryOptionLabel(industry) : '')
+                                    ? `, ${industry === 'Other'
+                                        && props.work.otherIndustry
+                                        ? props.work.otherIndustry
+                                        : getIndustryOptionLabel(industry)}`
+                                    : (industry
+                                        ? (industry === 'Other'
+                                            && props.work.otherIndustry
+                                            ? props.work.otherIndustry
+                                            : getIndustryOptionLabel(industry))
+                                        : ''
+                                    )
                             }
                         </p>
                     )}
