@@ -31,7 +31,7 @@ const PhoneCard: FC<PhoneCardProps> = (props: PhoneCardProps) => {
                     )}
                 >
                     {
-                        props.canEdit && (
+                        props.phoneIndex === 0 && (
                             <div className={styles.phoneIcon}>
                                 <IconSolid.PhoneIcon />
                             </div>
