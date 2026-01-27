@@ -7,6 +7,7 @@ import { UpdateProfileRequest, UserPhotoUpdateResponse } from '../../modify-user
 import { ModifyUserPropertyRequest, ModifyUserPropertyResponse } from '../../modify-user-role.model'
 import { UserEmailPreferences } from '../../user-email-preference.model'
 import { UserProfile } from '../../user-profile.model'
+import { UserSkillWithActivity } from '../../user-skill.model'
 import { UserStats } from '../../user-stats.model'
 import { UserTraits } from '../../user-traits.model'
 
@@ -122,4 +123,8 @@ export async function updateMemberPhoto(handle: string, payload: FormData): Prom
 
 export async function downloadProfile(handle: string): Promise<Blob> {
     return xhrGetBlobAsync<Blob>(`${profileUrl(handle)}/profileDownload`)
+}
+
+export function getMemberSkillDetails(handle: string, skillId: string): Promise<UserSkillWithActivity> {
+    return xhrGetAsync<UserSkillWithActivity>(`${profileUrl(handle)}/skills/${skillId}`)
 }

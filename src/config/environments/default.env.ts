@@ -96,6 +96,8 @@ export const STRIPE = {
 }
 
 export const URLS = {
+    ACADEMY_CERTIFICATION: `https://academy.${TC_DOMAIN}/tca-certifications`,
+    ACADEMY_COURSE: `https://academy.${TC_DOMAIN}/freeCodeCamp`,
     ACCOUNT_SETTINGS: `https://account-settings.${TC_DOMAIN}/#account`,
     CHALLENGES_PAGE: `${TOPCODER_URL}/challenges`,
     UNIVERSAL_NAV: `https://uni-nav.${TC_DOMAIN}/v1/tc-universal-nav.js`,
