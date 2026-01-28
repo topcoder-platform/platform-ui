@@ -12,7 +12,7 @@ interface ProfileCompletenessProps {
 
 const ProfileCompleteness: FC<ProfileCompletenessProps> = props => {
     const completeness = useProfileCompleteness(props.profile.handle)
-    const completed = completeness.percent
+    const completed = Number(completeness.percent?.toFixed(2))
     const isLoading = completeness.isLoading
     const isCompleted = completed === 100
 

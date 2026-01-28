@@ -6,6 +6,7 @@ import moment from 'moment'
 import {
     NamesAndHandleAppearance,
     UserProfile,
+    UserRole,
 } from '~/libs/core'
 import { ProfilePicture, useCheckIsMobile } from '~/libs/shared'
 import { Tooltip } from '~/libs/ui'
@@ -32,6 +33,17 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
     const hasProfilePicture = !!props.profile.photoURL
 
     const canEdit: boolean = props.authProfile?.handle === props.profile.handle
+
+    const roles = props.authProfile?.roles || []
+
+    const isPrivilegedViewer
+    = !canEdit
+    && (
+        roles.includes(UserRole.administrator)
+        || roles.includes(UserRole.projectManager)
+        || roles.includes(UserRole.talentManager)
+    )
+
     const canSeeActivityBadge = props.profile.recentActivity
 
     const [isNameEditMode, setIsNameEditMode]: [boolean, Dispatch<SetStateAction<boolean>>]
@@ -95,9 +107,20 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
     }
 
     function renderOpenForWork(): JSX.Element {
+        const showMyStatusLabel = canEdit
+        const showAdminLabel = isPrivilegedViewer
+
         return (
             <div className={styles.profileActions}>
-                <span>My status:</span>
+                {showMyStatusLabel && <span>My status:</span>}
+
+                {showAdminLabel && (
+                    <span>
+                        {props.profile.firstName}
+                        {' '}
+                        is
+                    </span>
+                )}
                 <OpenForGigs
                     canEdit={canEdit}
                     authProfile={props.authProfile}
@@ -201,7 +224,7 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
             {
                 // Showing only when they can edit until we have the talent search app
                 // and enough data to make this useful
-                canEdit ? renderOpenForWork() : undefined
+                canEdit || isPrivilegedViewer ? renderOpenForWork() : undefined
             }
 
             {
