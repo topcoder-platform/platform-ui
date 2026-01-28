@@ -156,6 +156,14 @@
     }
 }
 
+.tooltipText {
+  z-index: 20;
+  white-space: normal;
+  max-width: 240px;
+  word-wrap: break-word;
+  font-size: 14px; 
+}
+
 :global(#start-hiring-form) {
     min-height: 380px;
 }

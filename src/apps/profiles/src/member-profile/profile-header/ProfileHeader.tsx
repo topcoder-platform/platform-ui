@@ -53,6 +53,9 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
         [state?.queriedSkills],
     )
 
+    const activeTooltipText = canEdit ? `You have been active in the past 3 months. 
+(this information is visible to you only)` : `${props.profile.firstName} has been active in the past 3 months.`
+
     useEffect(() => {
         if (props.authProfile && editMode === profileEditModes.names) {
             setIsNameEditMode(true)
@@ -111,9 +114,10 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
     function renderActivityStatus(): JSX.Element {
         return (
             <Tooltip
-                content='You have been active in the past 3 months. (this information is visible to you only)'
+                content={activeTooltipText}
                 triggerOn='hover'
                 place='top'
+                className={styles.tooltipText}
             >
                 <div className={styles.activeBadge}>
                     Active
