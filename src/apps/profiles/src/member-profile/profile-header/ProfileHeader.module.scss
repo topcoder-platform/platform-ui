@@ -62,6 +62,7 @@
         @include ltelg {
             flex-direction: column;
             align-items: flex-start;
+            margin-top: $sp-15;
         }
 
         .profileInfo {
@@ -127,6 +128,8 @@
 
         @include ltelg {
             margin-top: $sp-4;
+            padding: 6px 14px;
+            min-height: 44px;
         }
 
         >span {
@@ -153,6 +156,8 @@
 
    @include ltelg {
         margin-top: $sp-4;
+        margin-right: 0px;
+        padding: 10px 14px;
     }
 }
 
@@ -162,6 +167,17 @@
   max-width: 240px;
   word-wrap: break-word;
   font-size: 14px; 
+}
+
+.statusRow {
+    display: flex;
+
+    @include ltelg {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: $sp-2;
+    }
 }
 
 :global(#start-hiring-form) {

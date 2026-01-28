@@ -113,7 +113,7 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
         const showMyStatusLabel = canEdit
         const showAdminLabel = isPrivilegedViewer
 
-        return (
+        const content = (
             <div className={styles.profileActions}>
                 {showMyStatusLabel && <span>My status:</span>}
 
@@ -132,6 +132,17 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
                     isPrivilegedViewer={isPrivilegedViewer}
                 />
             </div>
+        )
+
+        return canEdit ? (
+            <Tooltip
+                content='This information is visible to you only'
+                place='top'
+            >
+                {content}
+            </Tooltip>
+        ) : (
+            content
         )
     }
 
@@ -222,15 +233,17 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
                     </p>
                 </div>
             </div>
-            {
-                canSeeActivityBadge ? renderActivityStatus() : undefined
-            }
+            <div className={styles.statusRow}>
+                {
+                    canSeeActivityBadge ? renderActivityStatus() : undefined
+                }
 
-            {
+                {
                 // Showing only when they can edit until we have the talent search app
                 // and enough data to make this useful
-                canEdit || isPrivilegedViewer ? renderOpenForWork() : undefined
-            }
+                    canEdit || isPrivilegedViewer ? renderOpenForWork() : undefined
+                }
+            </div>
 
             {
                 isMobile ? renderMemberPhotoWrap() : undefined
