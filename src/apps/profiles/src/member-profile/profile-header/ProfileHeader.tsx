@@ -129,6 +129,7 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
                     authProfile={props.authProfile}
                     profile={props.profile}
                     refreshProfile={props.refreshProfile}
+                    isPrivilegedViewer={isPrivilegedViewer}
                 />
             </div>
         )
