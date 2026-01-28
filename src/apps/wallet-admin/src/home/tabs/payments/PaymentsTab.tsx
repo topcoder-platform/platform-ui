@@ -285,9 +285,9 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
     }, [handleValueUpdated, editState, fetchWinnings])
 
     const isEditingAllowed = (): boolean => (
-        props.profile.roles.includes('Payment Admin') ||
-        props.profile.roles.includes('Payment BA Admin') ||
-        props.profile.roles.includes('Payment Editor')
+        props.profile.roles.includes('Payment Admin')
+        || props.profile.roles.includes('Payment BA Admin')
+        || props.profile.roles.includes('Payment Editor')
     )
 
     return (
