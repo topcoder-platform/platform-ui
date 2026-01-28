@@ -1,5 +1,6 @@
 export * from './challenge-management'
 export * from './FormEditUserEmail.model'
+export * from './FormEditUserHandle.model'
 export * from './FormEditUserGroup.model'
 export * from './FormEditUserRole.model'
 export * from './FormSearchByKey.model'

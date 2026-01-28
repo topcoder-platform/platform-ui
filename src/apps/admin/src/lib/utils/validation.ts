@@ -13,6 +13,7 @@ import {
     FormEditClient,
     FormEditUserEmail,
     FormEditUserGroup,
+    FormEditUserHandle,
     FormEditUserRole,
     FormGroupMembersFilters,
     FormNewBillingAccountResource,
@@ -440,6 +441,16 @@ export const formEditUserEmailSchema: Yup.ObjectSchema<FormEditUserEmail>
             .trim()
             .email('Invalid email address.')
             .required('Email address is required.'),
+    })
+
+/**
+ * validation schema for form edit user handle
+ */
+export const formEditUserHandleSchema: Yup.ObjectSchema<FormEditUserHandle>
+    = Yup.object({
+        newHandle: Yup.string()
+            .trim()
+            .required('Handle is required.'),
     })
 
 /**
