@@ -15,6 +15,7 @@ interface OpenForGigsProps {
     authProfile: UserProfile | undefined
     profile: UserProfile
     refreshProfile: (handle: string) => void
+    isPrivilegedViewer?: boolean
 }
 
 const OpenForGigs: FC<OpenForGigsProps> = (props: OpenForGigsProps) => {
@@ -48,7 +49,7 @@ const OpenForGigs: FC<OpenForGigsProps> = (props: OpenForGigsProps) => {
         }, 1000)
     }
 
-    return props.canEdit || openForWork ? (
+    return props.canEdit || openForWork || props.isPrivilegedViewer ? (
         <div className={styles.container}>
             <p className={classNames('body-main-bold', !openForWork ? styles.notOopenToWork : '')}>
                 {openForWork ? 'open to work' : 'not open to work'}
