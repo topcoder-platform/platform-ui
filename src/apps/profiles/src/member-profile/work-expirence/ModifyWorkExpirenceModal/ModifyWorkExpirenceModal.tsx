@@ -1,6 +1,6 @@
 /* eslint-disable complexity */
 import { ChangeEvent, Dispatch, FC, MutableRefObject, SetStateAction, useEffect, useRef, useState } from 'react'
-import { bind, sortBy, trim } from 'lodash'
+import { bind, trim } from 'lodash'
 import { toast } from 'react-toastify'
 import classNames from 'classnames'
 
@@ -13,8 +13,7 @@ import {
 } from '~/libs/core'
 import {
     FieldHtmlEditor,
-    getIndustryOptionLabel,
-    getIndustryOptionValue,
+    getIndustryOptionsWithOthersLast,
     INDUSTRIES_OPTIONS,
     InputSkillSelector,
 } from '~/libs/shared'
@@ -143,11 +142,7 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
         })
     }
 
-    const industryOptions: any = sortBy(INDUSTRIES_OPTIONS)
-        .map(v => ({
-            label: getIndustryOptionLabel(v),
-            value: getIndustryOptionValue(v),
-        }))
+    const industryOptions: any = getIndustryOptionsWithOthersLast(INDUSTRIES_OPTIONS)
 
     function handleModifyWorkExpirenceSave(): void {
         if (addingNewItem || editedItemIndex !== undefined) {

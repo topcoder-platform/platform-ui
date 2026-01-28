@@ -4,7 +4,7 @@ import classNames from 'classnames'
 import moment from 'moment'
 
 import { Button, IconSolid, InputDatePicker, InputSelect, InputText, Tooltip } from '~/libs/ui'
-import { getIndustryOptionLabel, getIndustryOptionValue, INDUSTRIES_OPTIONS } from '~/libs/shared'
+import { getIndustryOptionsWithOthersLast, INDUSTRIES_OPTIONS } from '~/libs/shared'
 
 import FormInputCheckbox from '../form-input-checkbox'
 import OnboardingBaseModal from '../onboarding-base-modal'
@@ -21,11 +21,7 @@ interface ModalAddWorkProps {
     onEdit?: (workInfo: WorkInfo) => void
 }
 
-const industryOptions: any = _.sortBy(INDUSTRIES_OPTIONS)
-    .map(v => ({
-        label: getIndustryOptionLabel(v),
-        value: getIndustryOptionValue(v),
-    }))
+const industryOptions: any = getIndustryOptionsWithOthersLast(INDUSTRIES_OPTIONS)
 
 const ModalAddWork: FC<ModalAddWorkProps> = (props: ModalAddWorkProps) => {
     const [workInfo, setWorkInfo] = useState(emptyWorkInfo())
