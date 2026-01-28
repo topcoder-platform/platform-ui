@@ -31,6 +31,7 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
     const hasProfilePicture = !!props.profile.photoURL
 
     const canEdit: boolean = props.authProfile?.handle === props.profile.handle
+    const canSeeActivityBadge = props.profile.recentActivity
 
     const [isNameEditMode, setIsNameEditMode]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
@@ -102,6 +103,14 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
                     profile={props.profile}
                     refreshProfile={props.refreshProfile}
                 />
+            </div>
+        )
+    }
+
+    function renderActivityStatus(): JSX.Element {
+        return (
+            <div className={styles.activeBadge}>
+                Active
             </div>
         )
     }
@@ -178,6 +187,9 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
                     </p>
                 </div>
             </div>
+            {
+                canSeeActivityBadge ? renderActivityStatus() : undefined
+            }
 
             {
                 // Showing only when they can edit until we have the talent search app

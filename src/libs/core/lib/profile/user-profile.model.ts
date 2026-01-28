@@ -45,4 +45,5 @@ export interface UserProfile {
     userId: number
     namesAndHandleAppearance: NamesAndHandleAppearance
     identityVerified?: boolean
+    recentActivity?: boolean
 }
