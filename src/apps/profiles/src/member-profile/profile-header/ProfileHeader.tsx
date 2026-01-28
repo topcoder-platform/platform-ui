@@ -8,6 +8,7 @@ import {
     UserProfile,
 } from '~/libs/core'
 import { ProfilePicture, useCheckIsMobile } from '~/libs/shared'
+import { Tooltip } from '~/libs/ui'
 
 import { AddButton, EditMemberPropertyBtn } from '../../components'
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
@@ -109,9 +110,15 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
 
     function renderActivityStatus(): JSX.Element {
         return (
-            <div className={styles.activeBadge}>
-                Active
-            </div>
+            <Tooltip
+                content='You have been active in the past 3 months. (this information is visible to you only)'
+                triggerOn='hover'
+                place='top'
+            >
+                <div className={styles.activeBadge}>
+                    Active
+                </div>
+            </Tooltip>
         )
     }
 
