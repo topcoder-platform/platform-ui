@@ -1,11 +1,12 @@
 import { FC, useEffect, useMemo, useState } from 'react'
 import { connect } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
+import { SWRResponse } from 'swr'
 import _ from 'lodash'
 import classNames from 'classnames'
 
 import { Button, IconOutline, PageDivider } from '~/libs/ui'
-import { UserTrait } from '~/libs/core'
+import { UserSkill, UserTrait } from '~/libs/core'
 import { AddEditWorkExperienceModal, WorkExperienceCard } from '~/libs/shared'
 import { useSkillsByIds } from '~/libs/shared/lib/services/standard-skills'
 
@@ -35,17 +36,21 @@ function workInfoToUserTrait(work: WorkInfo): UserTrait {
 
 function userTraitToWorkInfo(trait: UserTrait, id: number): WorkInfo {
     return {
-        id,
         associatedSkills: Array.isArray(trait.associatedSkills) ? trait.associatedSkills : undefined,
         city: trait.cityName || trait.cityTown || trait.city,
         companyName: trait.company || trait.companyName,
         currentlyWorking: trait.working,
         description: trait.description,
-        endDate: trait.timePeriodTo ? new Date(trait.timePeriodTo) : (trait.endDate ? new Date(trait.endDate) : undefined),
+        endDate: trait.timePeriodTo
+            ? new Date(trait.timePeriodTo)
+            : (trait.endDate ? new Date(trait.endDate) : undefined),
+        id,
         industry: trait.industry,
         otherIndustry: trait.otherIndustry,
         position: trait.position,
-        startDate: trait.timePeriodFrom ? new Date(trait.timePeriodFrom) : (trait.startDate ? new Date(trait.startDate) : undefined),
+        startDate: trait.timePeriodFrom
+            ? new Date(trait.timePeriodFrom)
+            : (trait.startDate ? new Date(trait.startDate) : undefined),
     }
 }
 
@@ -73,7 +78,9 @@ export const PageWorksContent: FC<{
         return Array.from(ids)
     }, [works])
 
-    const { data: fetchedSkills } = useSkillsByIds(allSkillIds.length > 0 ? allSkillIds : undefined)
+    const { data: fetchedSkills }: SWRResponse<UserSkill[], Error> = useSkillsByIds(
+        allSkillIds.length > 0 ? allSkillIds : undefined,
+    )
     const skillNamesMap = useMemo(() => {
         const map: Record<string, string> = {}
         if (fetchedSkills) {
@@ -81,6 +88,7 @@ export const PageWorksContent: FC<{
                 if (skill.id && skill.name) map[skill.id] = skill.name
             })
         }
+
         allSkillIds.forEach(id => {
             if (!map[id]) map[id] = id
         })
@@ -105,6 +113,7 @@ export const PageWorksContent: FC<{
             } else {
                 await props.updateMemberWorks(works || [])
             }
+
             setLoading(false)
         }
 
@@ -227,7 +236,8 @@ export const PageWorksContent: FC<{
                 onSave={function onSave(trait: UserTrait) {
                     if (editingWork) {
                         setWorks(
-                            (works || []).map(w => (w.id !== editingWork.id ? w : userTraitToWorkInfo(trait, editingWork.id))),
+                            (works || [])
+                                .map(w => (w.id !== editingWork.id ? w : userTraitToWorkInfo(trait, editingWork.id))),
                         )
                     } else {
                         const newId = workId + 1

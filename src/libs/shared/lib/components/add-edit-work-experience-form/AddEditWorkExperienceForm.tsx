@@ -1,5 +1,13 @@
 /* eslint-disable complexity */
-import { ChangeEvent, forwardRef, ForwardRefRenderFunction, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import {
+    ChangeEvent,
+    forwardRef,
+    ForwardRefRenderFunction,
+    useEffect,
+    useImperativeHandle,
+    useRef,
+    useState,
+} from 'react'
 import { bind, trim } from 'lodash'
 
 import { InputDatePicker, InputSelect, InputText } from '~/libs/ui'
@@ -14,8 +22,6 @@ import styles from './AddEditWorkExperienceForm.module.scss'
 export interface AddEditWorkExperienceFormProps {
     initialWork?: UserTrait
     onSave: (work: UserTrait) => void
-    onCancel?: () => void
-    isSaving?: boolean
 }
 
 export interface AddEditWorkExperienceFormRef {
@@ -24,7 +30,8 @@ export interface AddEditWorkExperienceFormRef {
 
 const industryOptions: any = getIndustryOptionsWithOthersLast(INDUSTRIES_OPTIONS)
 
-const AddEditWorkExperienceFormInner: ForwardRefRenderFunction<AddEditWorkExperienceFormRef, AddEditWorkExperienceFormProps> = (props, ref) => {
+const AddEditWorkExperienceFormInner
+: ForwardRefRenderFunction<AddEditWorkExperienceFormRef, AddEditWorkExperienceFormProps> = (props, ref) => {
     const [formValues, setFormValues] = useState<{
         [key: string]: string | boolean | Date | any[] | undefined
     }>({})
@@ -39,6 +46,7 @@ const AddEditWorkExperienceFormInner: ForwardRefRenderFunction<AddEditWorkExperi
         if (props.initialWork) {
             const work = props.initialWork
             const baseValues = {
+                associatedSkills: [] as any[],
                 city: (work.cityName || work.cityTown || work.city || '') as string,
                 company: (work.company || work.companyName || '') as string,
                 currentlyWorking: work.working || false,
@@ -52,7 +60,6 @@ const AddEditWorkExperienceFormInner: ForwardRefRenderFunction<AddEditWorkExperi
                 startDate: work.timePeriodFrom
                     ? new Date(work.timePeriodFrom)
                     : (work.startDate ? new Date(work.startDate) : undefined),
-                associatedSkills: [] as any[],
             }
             setFormValues(baseValues)
             if (work.associatedSkills && Array.isArray(work.associatedSkills) && work.associatedSkills.length > 0) {
@@ -96,6 +103,7 @@ const AddEditWorkExperienceFormInner: ForwardRefRenderFunction<AddEditWorkExperi
                 if (value) {
                     oldFormValues.endDate = undefined
                 }
+
                 break
             case 'startDate':
             case 'endDate':
@@ -106,6 +114,7 @@ const AddEditWorkExperienceFormInner: ForwardRefRenderFunction<AddEditWorkExperi
                 if (value !== 'Other') {
                     oldFormValues.otherIndustry = undefined
                 }
+
                 break
             default:
                 value = event.target.value
@@ -156,6 +165,7 @@ const AddEditWorkExperienceFormInner: ForwardRefRenderFunction<AddEditWorkExperi
                 setFormErrors(prev => ({ ...prev, startDate: 'Start date is required when end date is given' }))
                 return
             }
+
             if (formValues.startDate && !formValues.endDate && !formValues.currentlyWorking) {
                 setFormErrors(prev => ({ ...prev, endDate: 'End date is required when start date is given' }))
                 return
@@ -198,8 +208,8 @@ const AddEditWorkExperienceFormInner: ForwardRefRenderFunction<AddEditWorkExperi
         <form
             ref={formElRef}
             className={styles.formWrap}
-            onSubmit={e => {
-                e.preventDefault()
+            onSubmit={function (event: React.FormEvent<HTMLFormElement>): void {
+                event.preventDefault()
                 doSubmit()
             }}
         >
@@ -212,7 +222,7 @@ const AddEditWorkExperienceFormInner: ForwardRefRenderFunction<AddEditWorkExperi
                 tabIndex={0}
                 forceUpdateValue
                 type='text'
-                onChange={bind(handleFormValueChange, null, 'company')}
+                onChange={bind(handleFormValueChange, undefined, 'company')}
                 value={formValues.company as string}
             />
             <InputText
@@ -224,14 +234,14 @@ const AddEditWorkExperienceFormInner: ForwardRefRenderFunction<AddEditWorkExperi
                 tabIndex={0}
                 type='text'
                 forceUpdateValue
-                onChange={bind(handleFormValueChange, null, 'position')}
+                onChange={bind(handleFormValueChange, undefined, 'position')}
                 value={formValues.position as string}
             />
             <InputSelect
                 tabIndex={0}
                 options={industryOptions}
                 value={formValues.industry as string}
-                onChange={bind(handleFormValueChange, null, 'industry')}
+                onChange={bind(handleFormValueChange, undefined, 'industry')}
                 name='industry'
                 label='Industry'
                 placeholder='Select industry'
@@ -248,7 +258,7 @@ const AddEditWorkExperienceFormInner: ForwardRefRenderFunction<AddEditWorkExperi
                     tabIndex={0}
                     forceUpdateValue
                     type='text'
-                    onChange={bind(handleFormValueChange, null, 'otherIndustry')}
+                    onChange={bind(handleFormValueChange, undefined, 'otherIndustry')}
                     value={formValues.otherIndustry as string}
                     maxLength={255}
                 />
@@ -257,7 +267,7 @@ const AddEditWorkExperienceFormInner: ForwardRefRenderFunction<AddEditWorkExperi
                 <InputDatePicker
                     label='Start Date'
                     date={formValues.startDate as Date}
-                    onChange={bind(handleFormValueChange, null, 'startDate')}
+                    onChange={bind(handleFormValueChange, undefined, 'startDate')}
                     disabled={false}
                     error={formErrors.startDate}
                     dirty
@@ -266,7 +276,7 @@ const AddEditWorkExperienceFormInner: ForwardRefRenderFunction<AddEditWorkExperi
                 <InputDatePicker
                     label='End Date'
                     date={formValues.endDate as Date}
-                    onChange={bind(handleFormValueChange, null, 'endDate')}
+                    onChange={bind(handleFormValueChange, undefined, 'endDate')}
                     disabled={formValues.currentlyWorking as boolean}
                     error={formErrors.endDate}
                     dirty
@@ -306,7 +316,7 @@ const AddEditWorkExperienceFormInner: ForwardRefRenderFunction<AddEditWorkExperi
                 dirty
                 tabIndex={0}
                 type='checkbox'
-                onChange={bind(handleFormValueChange, null, 'currentlyWorking')}
+                onChange={bind(handleFormValueChange, undefined, 'currentlyWorking')}
                 checked={formValues.currentlyWorking as boolean}
             />
         </form>

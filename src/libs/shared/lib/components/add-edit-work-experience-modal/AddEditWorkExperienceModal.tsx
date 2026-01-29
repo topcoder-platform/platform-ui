@@ -2,6 +2,7 @@ import { FC, useRef } from 'react'
 
 import { BaseModal, Button } from '~/libs/ui'
 import { UserTrait } from '~/libs/core'
+
 import { AddEditWorkExperienceForm } from '../add-edit-work-experience-form'
 import type { AddEditWorkExperienceFormRef } from '../add-edit-work-experience-form'
 
@@ -49,11 +50,10 @@ const AddEditWorkExperienceModal: FC<AddEditWorkExperienceModalProps> = (props: 
             <AddEditWorkExperienceForm
                 ref={formRef}
                 initialWork={props.initialWork}
-                onSave={work => {
+                onSave={function (work: UserTrait): void {
                     props.onSave(work)
                     props.onClose()
                 }}
-                isSaving={props.isSaving}
             />
         </BaseModal>
     )

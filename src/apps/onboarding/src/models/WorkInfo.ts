@@ -14,6 +14,8 @@ export default interface WorkInfo {
 }
 
 export const emptyWorkInfo: () => WorkInfo = () => ({
+    associatedSkills: undefined,
+    city: undefined,
     companyName: '',
     currentlyWorking: false,
     dateDescription: '',
@@ -23,6 +25,4 @@ export const emptyWorkInfo: () => WorkInfo = () => ({
     otherIndustry: '',
     position: '',
     startDate: undefined,
-    city: undefined,
-    associatedSkills: undefined,
 })

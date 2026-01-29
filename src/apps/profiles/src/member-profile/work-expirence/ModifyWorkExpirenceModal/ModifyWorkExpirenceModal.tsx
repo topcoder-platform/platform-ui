@@ -16,7 +16,6 @@ import {
     WorkExperienceCard,
 } from '~/libs/shared'
 import type { AddEditWorkExperienceFormRef } from '~/libs/shared/lib/components/add-edit-work-experience-form'
-
 import { fetchSkillsByIds } from '~/libs/shared/lib/services/standard-skills'
 
 import styles from './ModifyWorkExpirenceModal.module.scss'
@@ -160,6 +159,7 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
         } else {
             setWorkExpirence([...(workExpirence || []), work])
         }
+
         setEditedItemIndex(undefined)
         setAddingNewItem(false)
     }
@@ -242,13 +242,13 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
                                             <Button
                                                 className={styles.ctaBtn}
                                                 icon={IconOutline.PencilIcon}
-                                                onClick={bind(handleWorkExpirenceEdit, null, indx)}
+                                                onClick={bind(handleWorkExpirenceEdit, undefined, indx)}
                                                 size='lg'
                                             />
                                             <Button
                                                 className={styles.ctaBtn}
                                                 icon={IconOutline.TrashIcon}
-                                                onClick={bind(handleWorkExpirenceDelete, null, indx)}
+                                                onClick={bind(handleWorkExpirenceDelete, undefined, indx)}
                                                 size='lg'
                                             />
                                         </div>
