@@ -18,6 +18,14 @@
         font-weight: 900;
     }
 
+    small {
+        font-family: $font-roboto;
+        font-weight: 400;
+        font-size: 16px;
+        line-height: 24px;
+        color: #EF476F;
+    }
+
     @include ltemd {
         font-size: 24px;
         line-height: 28px;

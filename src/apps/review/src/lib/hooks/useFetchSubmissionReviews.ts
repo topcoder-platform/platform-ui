@@ -42,8 +42,8 @@ import {
     createAppealResponse,
     createReview,
     deleteAppeal,
+    fetchAllChallengeReviews,
     fetchAppeals,
-    fetchChallengeReviews,
     fetchReview,
     fetchScorecard,
     updateAppeal,
@@ -260,7 +260,7 @@ const fetchFallbackReviewSafely = async (
     }
 
     try {
-        const challengeReviews = await fetchChallengeReviews(challengeId)
+        const challengeReviews = await fetchAllChallengeReviews(challengeId, 100)
         const fallbackReview = challengeReviews.find(candidate => candidate.id === reviewId)
         cacheReviewIfComplete(cache, reviewId, fallbackReview)
         return { review: fallbackReview }

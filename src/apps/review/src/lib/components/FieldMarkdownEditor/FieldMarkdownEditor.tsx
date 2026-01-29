@@ -34,6 +34,8 @@ import { uploadReviewAttachment } from '../../services'
 
 import styles from './FieldMarkdownEditor.module.scss'
 
+type UploadAttachment = typeof uploadReviewAttachment
+
 interface Props {
     className?: string
     placeholder?: string
@@ -44,7 +46,10 @@ interface Props {
     showBorder?: boolean
     disabled?: boolean
     uploadCategory?: string
+    uploadAttachment?: UploadAttachment
     maxCharactersAllowed?: number
+    textareaId?: string
+    ariaLabel?: string
 }
 const errorMessages = {
     fileTooLarge:
@@ -155,6 +160,7 @@ export const FieldMarkdownEditor: FC<Props> = (props: Props) => {
     )
     const { challengeId }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
     const uploadCategory: string = props.uploadCategory ?? 'general'
+    const uploadAttachment = props.uploadAttachment ?? uploadReviewAttachment
 
     /**
      * The state of CodeMirror at the given position.
@@ -611,7 +617,7 @@ export const FieldMarkdownEditor: FC<Props> = (props: Props) => {
         )
 
         try {
-            const result = await uploadReviewAttachment(file, {
+            const result = await uploadAttachment(file, {
                 category: uploadCategory,
                 challengeId,
                 onProgress: percent => {
@@ -641,6 +647,7 @@ export const FieldMarkdownEditor: FC<Props> = (props: Props) => {
         beforeUploadingFile,
         challengeId,
         resetFileInput,
+        uploadAttachment,
         uploadCategory,
     ])
 
@@ -881,7 +888,13 @@ export const FieldMarkdownEditor: FC<Props> = (props: Props) => {
                 [styles.showBorder]: !!props.showBorder,
             })}
         >
-            <textarea ref={elementRef} placeholder={props.placeholder} />
+            <textarea
+                ref={elementRef}
+                id={props.textareaId}
+                placeholder={props.placeholder}
+                aria-label={props.ariaLabel}
+                aria-invalid={!!props.error}
+            />
             {props.maxCharactersAllowed && (
                 <div className={styles.remainingCharacters}>
                     {remainingCharacters}

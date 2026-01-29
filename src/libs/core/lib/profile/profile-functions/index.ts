@@ -4,7 +4,6 @@ export {
     getLoggedInAsync as profileGetLoggedInAsync,
     getMemberStatsAsync,
     getPublicAsync as profileGetPublicAsync,
-    getVerificationStatusAsync,
     editNameAsync as profileEditNameAsync,
     updatePrimaryMemberRoleAsync,
     updateMemberEmailPreferencesAsync,
@@ -14,6 +13,7 @@ export {
     modifyTracksAsync,
     updateMemberProfileAsync,
     updateMemberPhotoAsync,
+    downloadProfileAsync,
     updateOrCreateMemberTraitsAsync,
     updateDeleteOrCreateMemberTraitAsync,
 } from './profile.functions'

@@ -2,6 +2,7 @@ export default interface WorkInfo {
     companyName?: string
     position?: string
     industry?: string
+    otherIndustry?: string
     startDate?: Date
     dateDescription?: string
     description?: string
@@ -17,6 +18,7 @@ export const emptyWorkInfo: () => WorkInfo = () => ({
     endDate: undefined,
     id: 0,
     industry: '',
+    otherIndustry: '',
     position: '',
     startDate: undefined,
 })

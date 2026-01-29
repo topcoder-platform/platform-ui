@@ -41,6 +41,7 @@ export const TC_DOMAIN: string = get(
 
 export const TOPCODER_URL: string = `https://www.${TC_DOMAIN}`
 export const PLATFORMUI_URL: string = `https://platform-ui.${TC_DOMAIN}`
+export const ENGAGEMENTS_URL: string = `https://engagements.${TC_DOMAIN}`
 export const USER_PROFILE_URL: string = `https://profiles.${TC_DOMAIN}`
 
 export const API = {
@@ -95,6 +96,8 @@ export const STRIPE = {
 }
 
 export const URLS = {
+    ACADEMY_CERTIFICATION: `https://academy.${TC_DOMAIN}/tca-certifications`,
+    ACADEMY_COURSE: `https://academy.${TC_DOMAIN}/freeCodeCamp`,
     ACCOUNT_SETTINGS: `https://account-settings.${TC_DOMAIN}/#account`,
     CHALLENGES_PAGE: `${TOPCODER_URL}/challenges`,
     UNIVERSAL_NAV: `https://uni-nav.${TC_DOMAIN}/v1/tc-universal-nav.js`,

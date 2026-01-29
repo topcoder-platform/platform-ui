@@ -38,4 +38,26 @@ export type UserSkill = {
     description?: string | null | undefined
 }
 
+export type UserSkillActivity = {
+    count: number
+    lastSources: Array<{
+        id?: string
+        completionEventId?: string
+        title?: string
+        name?: string
+        certification?: string
+        dashedName?: string
+    }>
+}
+
+export type UserSkillWithActivity = {
+    lastUsedDate: string
+    activity: {
+        certification?: UserSkillActivity
+        course?: UserSkillActivity
+        challenge?: UserSkillActivity
+        engagement?: UserSkillActivity
+    }
+} & UserSkill
+
 export type SearchUserSkill = Pick<UserSkill, 'id'|'name'> & Partial<Pick<UserSkill, 'levels'>>

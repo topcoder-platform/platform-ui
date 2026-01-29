@@ -1,5 +1,7 @@
 /* eslint-disable complexity */
-import { UserProfile } from '~/libs/core'
+import { UserProfile, UserRole } from '~/libs/core'
+
+import { ADMIN_ROLES, PHONE_NUMBER_ROLES } from '../config'
 
 declare global {
     interface Window { tcUniNav: any }
@@ -124,4 +126,68 @@ export function isValidURL(urlToValidate: string): boolean {
  */
 export function formatPlural(count: number, baseWord: string): string {
     return `${baseWord}${count === 1 ? '' : 's'}`
+}
+
+/**
+ * Check if the user can download the profile
+ * @param authProfile - The authenticated user profile
+ * @param profile - The profile to check if the user can download
+ * @returns {boolean} - Whether the user can download the profile
+ */
+export function canDownloadProfile(authProfile: UserProfile | undefined, profile: UserProfile): boolean {
+    if (!authProfile) {
+        return false
+    }
+
+    // Check if user is viewing their own profile
+    if (authProfile.handle === profile.handle) {
+        return true
+    }
+
+    // Check if user has admin roles
+    if (authProfile.roles?.some(role => ADMIN_ROLES.includes(role.toLowerCase() as UserRole))) {
+        return true
+    }
+
+    // Check if user has PM or Talent Manager roles
+    const allowedRoles = ['Project Manager', 'Talent Manager']
+    if (authProfile
+        .roles?.some(
+            role => allowedRoles.some(allowed => role.toLowerCase() === allowed.toLowerCase()),
+        )
+    ) {
+        return true
+    }
+
+    return false
+}
+
+/**
+ * Check if the user can see phone numbers
+ * @param authProfile - The authenticated user profile
+ * @param profile - The profile to check if the user can see phone numbers
+ * @returns {boolean} - Whether the user can see phone numbers
+ */
+export function canSeePhones(authProfile: UserProfile | undefined, profile: UserProfile): boolean {
+    if (!authProfile) {
+        return false
+    }
+
+    if (authProfile.handle === profile.handle) {
+        return true
+    }
+
+    if (authProfile.roles?.some(role => ADMIN_ROLES.includes(role.toLowerCase() as UserRole))) {
+        return true
+    }
+
+    if (authProfile
+        .roles?.some(
+            role => PHONE_NUMBER_ROLES.some(allowed => role.toLowerCase() === allowed.toLowerCase()),
+        )
+    ) {
+        return true
+    }
+
+    return false
 }

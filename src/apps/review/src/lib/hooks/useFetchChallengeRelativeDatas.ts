@@ -12,7 +12,7 @@ import {
     fetchAllResourceRoles,
     fetchChallengeResouces,
 } from '../services/resources.service'
-import { fetchSubmissions } from '../services'
+import { fetchAllSubmissions } from '../services'
 import { BackendResourceRole, BackendSubmission, ChallengeRealtiveInfosMapping } from '../models'
 
 const FALLBACK_RESOURCE_ROLES: BackendResourceRole[] = [
@@ -173,7 +173,7 @@ export function useFetchChallengeRelativeDatas(
                 setChallengeRelativeInfosMapping({
                     ...challengeRelativeInfosMappingRef.current,
                 })
-                fetchSubmissions(1, 1000, nextChallengeId)
+                fetchAllSubmissions(nextChallengeId, 1000)
                     .then(resSubmissions => {
                         const totalExpectedReviews = resSubmissions.length * reviewers.length
                         const totalReviews = reduce(

@@ -4,7 +4,7 @@ import classNames from 'classnames'
 import moment from 'moment'
 
 import { Button, IconSolid, InputDatePicker, InputSelect, InputText, Tooltip } from '~/libs/ui'
-import { getIndustryOptionLabel, getIndustryOptionValue, INDUSTRIES_OPTIONS } from '~/libs/shared'
+import { getIndustryOptionsWithOthersLast, INDUSTRIES_OPTIONS } from '~/libs/shared'
 
 import FormInputCheckbox from '../form-input-checkbox'
 import OnboardingBaseModal from '../onboarding-base-modal'
@@ -21,17 +21,14 @@ interface ModalAddWorkProps {
     onEdit?: (workInfo: WorkInfo) => void
 }
 
-const industryOptions: any = _.sortBy(INDUSTRIES_OPTIONS)
-    .map(v => ({
-        label: getIndustryOptionLabel(v),
-        value: getIndustryOptionValue(v),
-    }))
+const industryOptions: any = getIndustryOptionsWithOthersLast(INDUSTRIES_OPTIONS)
 
 const ModalAddWork: FC<ModalAddWorkProps> = (props: ModalAddWorkProps) => {
     const [workInfo, setWorkInfo] = useState(emptyWorkInfo())
     const [formErrors, setFormErrors] = useState<any>({
         companyName: undefined,
         endDate: undefined,
+        otherIndustry: undefined,
         position: undefined,
         startDate: undefined,
     })
@@ -62,6 +59,10 @@ const ModalAddWork: FC<ModalAddWorkProps> = (props: ModalAddWorkProps) => {
 
         if (!workInfo.endDate && !workInfo.currentlyWorking) {
             errorTmp.endDate = 'Required'
+        }
+
+        if (workInfo.industry === 'Other' && !workInfo.otherIndustry?.trim()) {
+            errorTmp.otherIndustry = 'Please specify your industry'
         }
 
         setFormErrors(errorTmp)
@@ -164,6 +165,7 @@ const ModalAddWork: FC<ModalAddWorkProps> = (props: ModalAddWorkProps) => {
                             setWorkInfo({
                                 ...workInfo,
                                 industry: event.target.value,
+                                otherIndustry: event.target.value === 'Other' ? workInfo.otherIndustry : undefined,
                             })
                         }}
                         name='industry'
@@ -172,6 +174,27 @@ const ModalAddWork: FC<ModalAddWorkProps> = (props: ModalAddWorkProps) => {
                         dirty
                     />
                 </div>
+                {workInfo.industry === 'Other' && (
+                    <div className='full-width'>
+                        <InputText
+                            name='otherIndustry'
+                            label='Please specify your industry *'
+                            value={workInfo.otherIndustry || ''}
+                            onChange={function onChange(event: any) {
+                                setWorkInfo({
+                                    ...workInfo,
+                                    otherIndustry: event.target.value,
+                                })
+                            }}
+                            placeholder='Enter your industry'
+                            tabIndex={0}
+                            type='text'
+                            dirty
+                            error={formErrors.otherIndustry}
+                            maxLength={255}
+                        />
+                    </div>
+                )}
                 <div className='d-flex gap-16 full-width flex-wrap'>
                     <div
                         className='flex-1'

@@ -1,0 +1,103 @@
+@import '@libs/ui/styles/includes';
+
+.form {
+    display: grid;
+    gap: 20px;
+}
+
+.fieldGroup {
+    display: grid;
+    gap: 6px;
+}
+
+.fieldLabel {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: $black-80;
+}
+
+.inputField {
+    width: 100%;
+    border: 1px solid $black-20;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 0.95rem;
+    color: $black-100;
+    background: $tc-white;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.inputField:focus {
+    outline: none;
+    border-color: $turq-160;
+    box-shadow: 0 0 0 3px rgba($turq-160, 0.15);
+}
+
+.inputField:disabled {
+    background: $black-5;
+    color: $black-60;
+    cursor: not-allowed;
+}
+
+.inputError {
+    border-color: $red-120;
+    box-shadow: 0 0 0 1px rgba($red-120, 0.15);
+}
+
+.textareaField {
+    min-height: 140px;
+    resize: vertical;
+}
+
+.fieldMeta {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.fieldError {
+    color: $red-120;
+    font-size: 0.8rem;
+}
+
+.characterCounter {
+    font-size: 0.75rem;
+    color: $black-60;
+}
+
+.characterCounterWarning {
+    color: $orange-140;
+}
+
+.characterCounterLimit {
+    color: $red-120;
+}
+
+.submitError {
+    color: $red-120;
+    font-size: 0.85rem;
+}
+
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+}
+
+.submitLabel {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.submitSpinner {
+    width: 16px;
+    height: 16px;
+    background: transparent;
+    position: static;
+}
+
+.submitSpinner svg {
+    width: 16px;
+    height: 16px;
+}

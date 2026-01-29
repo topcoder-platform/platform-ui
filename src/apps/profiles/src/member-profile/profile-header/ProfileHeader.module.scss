@@ -62,6 +62,7 @@
         @include ltelg {
             flex-direction: column;
             align-items: flex-start;
+            margin-top: $sp-15;
         }
 
         .profileInfo {
@@ -120,13 +121,15 @@
         display: flex;
         align-items: center;
         background-color: $tc-white;
-        padding: $sp-4;
+        padding: 12px 20px;
         border-radius: 200px;
         color: $black-100;
         margin-top: $sp-8;
 
         @include ltelg {
             margin-top: $sp-4;
+            padding: 6px 14px;
+            min-height: 44px;
         }
 
         >span {
@@ -136,6 +139,44 @@
         >button {
             margin-left: $sp-2;
         }
+    }
+}
+
+.activeBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 16px 20px;
+  margin-right: 24px;
+  border-radius: 200px;
+  background-color: $turq-120;
+  color: white;
+  font-size: 16px;
+  font-weight: 700;
+  margin-top: $sp-8;
+
+   @include ltelg {
+        margin-top: $sp-4;
+        margin-right: 0px;
+        padding: 10px 14px;
+    }
+}
+
+.tooltipText {
+  z-index: 20;
+  white-space: normal;
+  max-width: 240px;
+  word-wrap: break-word;
+  font-size: 14px; 
+}
+
+.statusRow {
+    display: flex;
+
+    @include ltelg {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: $sp-2;
     }
 }
 

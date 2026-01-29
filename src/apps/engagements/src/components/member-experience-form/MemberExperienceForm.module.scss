@@ -1,0 +1,51 @@
+@import '@libs/ui/styles/includes';
+
+.form {
+    display: grid;
+    gap: 20px;
+}
+
+.fieldGroup {
+    display: grid;
+    gap: 8px;
+}
+
+.fieldLabel {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: $black-80;
+}
+
+.editor {
+    min-height: 240px;
+}
+
+.submitError {
+    color: $red-120;
+    font-size: 0.85rem;
+}
+
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+}
+
+.submitLabel {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.submitSpinner {
+    width: 16px;
+    height: 16px;
+    background: transparent;
+    position: static;
+}
+
+.submitSpinner svg {
+    width: 16px;
+    height: 16px;
+}

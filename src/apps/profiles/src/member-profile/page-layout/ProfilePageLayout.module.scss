@@ -7,10 +7,66 @@
     height: 100%;
 
     .profileHeaderWrap {
+        position: relative;
         background: url('../../lib/assets/profile-header-bg.png') no-repeat right top / auto, linear-gradient(#0d83c5, #0e89d5);
 
         @include ltelg {
             background: url('../../lib/assets/profile-header-bg-mobile.png') no-repeat right top /100% 100%;
+        }
+
+        .downloadButtonWrap {
+            position: absolute;
+            top: $sp-4;
+            right: calc((100% - #{$xxl-min}) / 2);
+            max-width: $xxl-min;
+            width: 100%;
+            display: flex;
+            justify-content: flex-end;
+            padding-right: $sp-8;
+            z-index: 10;
+
+            @include ltexl {
+                right: $sp-8;
+            }
+
+            @include ltemd {
+                padding-right: $sp-6;
+                right: $sp-6;
+            }
+
+            @include ltesm {
+                padding-right: $sp-4;
+                right: $sp-4;
+            }
+
+            @include ltelg {
+                position: absolute;
+                top: $sp-4;
+                left: $sp-1;
+                right: auto;
+                justify-content: flex-start;
+                max-width: none;
+                width: auto;
+                pointer-events: auto;
+            }
+
+            > * {
+                pointer-events: auto;
+            }
+        }
+
+        .downloadButton {
+            color: $tc-white;
+            padding: $sp-2 $sp-4;
+            border-radius: 4px;
+            font-weight: $font-weight-bold;
+            font-family: $font-roboto;
+            font-size: 16px;
+
+            &:disabled {
+                opacity: 0.6;
+                cursor: not-allowed;
+            }
         }
 
         .profileHeaderContent {
@@ -103,7 +159,7 @@
 
         .expirenceWrap {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr;
             gap: 40px;
 
             @include ltelg {

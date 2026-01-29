@@ -7,6 +7,8 @@ import { NamesAndHandleAppearance, useMemberTraits, UserProfile, UserTraitIds, U
 
 import { AddButton, EditMemberPropertyBtn, EmptySection } from '../../components'
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
+import { canSeePhones } from '../../lib/helpers'
+import { Phones } from '../phones'
 
 import { ModifyAboutMeModal } from './ModifyAboutMeModal'
 import MemberRatingCard from './MemberRatingCard/MemberRatingCard'
@@ -119,6 +121,15 @@ const AboutMe: FC<AboutMeProps> = (props: AboutMeProps) => {
                     />
                 )
             }
+
+            {canSeePhones(props.authProfile, props.profile) && (
+                <Phones
+                    profile={props.profile}
+                    authProfile={props.authProfile}
+                    refreshProfile={props.refreshProfile}
+                />
+            )}
+
         </div>
     )
 }

@@ -6,8 +6,10 @@ import moment from 'moment'
 import {
     NamesAndHandleAppearance,
     UserProfile,
+    UserRole,
 } from '~/libs/core'
 import { ProfilePicture, useCheckIsMobile } from '~/libs/shared'
+import { Tooltip } from '~/libs/ui'
 
 import { AddButton, EditMemberPropertyBtn } from '../../components'
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
@@ -16,6 +18,7 @@ import { OpenForGigs } from './OpenForGigs'
 import { ModifyMemberNameModal } from './ModifyMemberNameModal'
 import { ModifyMemberPhotoModal } from './ModifyMemberPhotoModal'
 import { HiringFormModal } from './HiringFormModal'
+import IdentityVerifiedBadge from './IdentityVerifiedBadge'
 import styles from './ProfileHeader.module.scss'
 
 interface ProfileHeaderProps {
@@ -30,6 +33,18 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
     const hasProfilePicture = !!props.profile.photoURL
 
     const canEdit: boolean = props.authProfile?.handle === props.profile.handle
+
+    const roles = props.authProfile?.roles || []
+
+    const isPrivilegedViewer
+    = !canEdit
+    && (
+        roles.includes(UserRole.administrator)
+        || roles.includes(UserRole.projectManager)
+        || roles.includes(UserRole.talentManager)
+    )
+
+    const canSeeActivityBadge = props.profile.recentActivity
 
     const [isNameEditMode, setIsNameEditMode]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
@@ -49,6 +64,9 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
         () => (state?.queriedSkills || []).map((s: any) => s.name),
         [state?.queriedSkills],
     )
+
+    const activeTooltipText = canEdit ? `You have been active in the past 3 months. 
+(this information is visible to you only)` : `${props.profile.firstName} has been active in the past 3 months.`
 
     useEffect(() => {
         if (props.authProfile && editMode === profileEditModes.names) {
@@ -92,16 +110,54 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
     }
 
     function renderOpenForWork(): JSX.Element {
-        return (
+        const showMyStatusLabel = canEdit
+        const showAdminLabel = isPrivilegedViewer
+
+        const content = (
             <div className={styles.profileActions}>
-                <span>My status:</span>
+                {showMyStatusLabel && <span>My status:</span>}
+
+                {showAdminLabel && (
+                    <span>
+                        {props.profile.firstName}
+                        {' '}
+                        is
+                    </span>
+                )}
                 <OpenForGigs
                     canEdit={canEdit}
                     authProfile={props.authProfile}
                     profile={props.profile}
                     refreshProfile={props.refreshProfile}
+                    isPrivilegedViewer={isPrivilegedViewer}
                 />
             </div>
+        )
+
+        return canEdit ? (
+            <Tooltip
+                content='This information is visible to you only'
+                place='top'
+            >
+                {content}
+            </Tooltip>
+        ) : (
+            content
+        )
+    }
+
+    function renderActivityStatus(): JSX.Element {
+        return (
+            <Tooltip
+                content={activeTooltipText}
+                triggerOn='hover'
+                place='top'
+                className={styles.tooltipText}
+            >
+                <div className={styles.activeBadge}>
+                    Active
+                </div>
+            </Tooltip>
         )
     }
 
@@ -109,6 +165,7 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
         return (
             <div className={styles.photoWrap}>
                 <ProfilePicture member={props.profile} className={styles.profilePhoto} />
+                <IdentityVerifiedBadge identityVerified={props.profile.identityVerified} />
                 {canEdit && hasProfilePicture && (
                     <EditMemberPropertyBtn
                         className={styles.button}
@@ -176,12 +233,17 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
                     </p>
                 </div>
             </div>
+            <div className={styles.statusRow}>
+                {
+                    canSeeActivityBadge ? renderActivityStatus() : undefined
+                }
 
-            {
+                {
                 // Showing only when they can edit until we have the talent search app
                 // and enough data to make this useful
-                canEdit ? renderOpenForWork() : undefined
-            }
+                    canEdit || isPrivilegedViewer ? renderOpenForWork() : undefined
+                }
+            </div>
 
             {
                 isMobile ? renderMemberPhotoWrap() : undefined

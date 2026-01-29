@@ -20,14 +20,15 @@ type WalletDetailsData = NonNullable<WalletDetailsResponse['data']>
 interface WalletInfoRowsProps {
     walletDetails: WalletDetailsData
     profile: UserProfile
-    balanceSum: number
+    paymentsBalance: number
+    pointsBalance?: number
 }
 
 const WalletInfoRows: FC<WalletInfoRowsProps> = props => (
     <div className={styles['info-row-container']}>
         <InfoRow
             title='Account Balance'
-            value={`$${props.balanceSum}`}
+            value={`$${props.paymentsBalance}`}
             action={
                 <LinkButton
                     label='MANAGE YOUR WINNINGS'
@@ -39,6 +40,23 @@ const WalletInfoRows: FC<WalletInfoRowsProps> = props => (
                 />
             }
         />
+
+        {!!props.pointsBalance && (
+            <InfoRow
+                title='Points Balance'
+                value={`${props.pointsBalance} points`}
+                action={
+                    <LinkButton
+                        label='VIEW YOUR POINTS'
+                        iconToRight
+                        icon={IconOutline.ArrowRightIcon}
+                        size='md'
+                        link
+                        to='#winnings?type=points'
+                    />
+                }
+            />
+        )}
 
         <PayoutGuard profile={props.profile}>
             {props.walletDetails.withdrawalMethod.isSetupComplete && (
@@ -131,8 +149,18 @@ const HomeTab: FC<HomeTabProps> = props => {
 
     const { data: walletDetails, isLoading, error }: WalletDetailsResponse = useWalletDetails()
 
-    const balanceSum = useMemo(
-        () => (walletDetails ? walletDetails.account.balances.reduce((sum, balance) => sum + balance.amount, 0) : 0),
+    const [paymentsBalance, pointsBalance] = useMemo(
+        () => ((walletDetails?.account.balances ?? []).reduce((sums, balance) => {
+            if (balance.type === 'PAYMENT') {
+                sums[0] += balance.amount
+            }
+
+            if (balance.type === 'POINTS') {
+                sums[1] += balance.amount
+            }
+
+            return sums
+        }, [0, 0])),
         [walletDetails],
     )
 
@@ -156,7 +184,12 @@ const HomeTab: FC<HomeTabProps> = props => {
             </div>
             {isLoading && <LoadingCircles />}
             {!isLoading && walletDetails && (
-                <WalletInfoRows walletDetails={walletDetails} profile={props.profile} balanceSum={balanceSum} />
+                <WalletInfoRows
+                    walletDetails={walletDetails}
+                    profile={props.profile}
+                    paymentsBalance={paymentsBalance}
+                    pointsBalance={pointsBalance}
+                />
             )}
         </div>
     )
