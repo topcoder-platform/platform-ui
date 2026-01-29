@@ -20,6 +20,7 @@ import {
 
 import { CopyButton } from '../CopyButton'
 import { DialogEditUserEmail } from '../DialogEditUserEmail'
+import { DialogEditUserHandle } from '../DialogEditUserHandle'
 import { DialogEditUserRoles } from '../DialogEditUserRoles'
 import { DialogEditUserGroups } from '../DialogEditUserGroups'
 import { DialogEditUserSSOLogin } from '../DialogEditUserSSOLogin'
@@ -80,6 +81,9 @@ export const UsersTable: FC<Props> = props => {
             })
     }, [])
     const [showDialogEditUserEmail, setShowDialogEditUserEmail] = useState<
+        UserInfo | undefined
+    >()
+    const [showDialogEditUserHandle, setShowDialogEditUserHandle] = useState<
         UserInfo | undefined
     >()
     const [showDialogEditUserRoles, setShowDialogEditUserRoles] = useState<
@@ -309,6 +313,8 @@ export const UsersTable: FC<Props> = props => {
                     function onSelectOption(item: string): void {
                         if (item === 'Primary Email') {
                             setShowDialogEditUserEmail(data)
+                        } else if (item === 'Change Handle') {
+                            setShowDialogEditUserHandle(data)
                         } else if (item === 'Roles') {
                             setShowDialogEditUserRoles(data)
                         } else if (item === 'Groups') {
@@ -344,6 +350,7 @@ export const UsersTable: FC<Props> = props => {
                                 <DropdownMenuButton
                                     options={[
                                         'Primary Email',
+                                        'Change Handle',
                                         'Roles',
                                         'Groups',
                                         'Terms',
@@ -365,6 +372,7 @@ export const UsersTable: FC<Props> = props => {
                                     <DropdownMenuButton
                                         options={[
                                             'Primary Email',
+                                            'Change Handle',
                                             'Roles',
                                             'Groups',
                                             'Terms',
@@ -447,6 +455,15 @@ export const UsersTable: FC<Props> = props => {
                         setShowDialogEditUserEmail(undefined)
                     }}
                     userInfo={showDialogEditUserEmail}
+                />
+            )}
+            {showDialogEditUserHandle && (
+                <DialogEditUserHandle
+                    open
+                    setOpen={function setOpen() {
+                        setShowDialogEditUserHandle(undefined)
+                    }}
+                    userInfo={showDialogEditUserHandle}
                 />
             )}
             {showDialogEditUserRoles && (

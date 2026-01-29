@@ -223,6 +223,26 @@ export const updateUserEmail = async (
 }
 
 /**
+ * Update member handle.
+ * @param handle current handle.
+ * @param newHandle new handle.
+ * @returns resolves to member info
+ */
+export const changeUserHandle = async (
+    handle: string,
+    newHandle: string,
+): Promise<MemberInfo> => {
+    const payload = {
+        newHandle: newHandle.trim(),
+    }
+
+    return xhrPatchAsync<typeof payload, MemberInfo>(
+        `${EnvironmentConfig.API.V6}/members/${encodeURIComponent(handle)}/change_handle`,
+        payload,
+    )
+}
+
+/**
  * Update user status.
  * @param userId user id.
  * @param status new status.
