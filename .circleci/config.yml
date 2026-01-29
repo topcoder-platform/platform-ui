@@ -217,6 +217,7 @@ workflows:
                       branches:
                           only:
                               - master
+                              - temp-master
 
             - deployDev:
                   context: org-global
@@ -246,3 +247,4 @@ workflows:
                       branches:
                           only:
                               - master
+                              - temp-master
