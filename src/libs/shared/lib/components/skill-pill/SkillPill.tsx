@@ -129,6 +129,26 @@ const SkillPill: FC<SkillPillProps> = props => {
                             ))}
                         </li>
                     )}
+                    {skillDetails.activity.engagement && (
+                        <li>
+                            <div className={styles.tooltipRow}>
+                                Engagements (
+                                {skillDetails.activity.engagement.count}
+                                ):
+                            </div>
+                            {skillDetails.activity.engagement.lastSources.map(s => (
+                                <a
+                                    key={s.id}
+                                    className={classNames(styles.tooltipRow, styles.padLeft)}
+                                    href={`${EnvironmentConfig.ENGAGEMENTS_URL}/${s.id}`}
+                                    target='_blank'
+                                    rel='noopener noreferrer'
+                                >
+                                    {s.title}
+                                </a>
+                            ))}
+                        </li>
+                    )}
                 </ul>
             </>
         )
