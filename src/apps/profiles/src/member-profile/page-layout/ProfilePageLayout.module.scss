@@ -42,11 +42,11 @@
             @include ltelg {
                 position: absolute;
                 top: $sp-4;
-                right: $sp-4;
-                left: auto;
+                left: $sp-1;
+                right: auto;
+                justify-content: flex-start;
                 max-width: none;
                 width: auto;
-                padding: 0;
                 pointer-events: auto;
             }
 
