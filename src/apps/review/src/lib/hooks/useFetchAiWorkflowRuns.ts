@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { orderBy, uniqBy } from 'lodash'
 import useSWR, { SWRResponse } from 'swr'
 
 import { EnvironmentConfig } from '~/config'
@@ -141,9 +142,12 @@ export function useFetchAiWorkflowsRuns(
         }
     }, [fetchError])
 
+    const uniqueRuns = uniqBy(orderBy(runs, 'completedAt', 'desc'), 'workflow.id')
+        .reverse()
+
     return {
         isLoading,
-        runs,
+        runs: uniqueRuns,
     }
 }
 
