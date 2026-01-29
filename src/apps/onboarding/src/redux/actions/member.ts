@@ -126,14 +126,18 @@ export const fetchMemberTraits: any = () => async (dispatch: any) => {
     if (workExpValue) {
         // workExpValue is array of works. fill it to state
         const works: WorkInfo[] = workExpValue.map((j: any, index: number) => {
-            const startDate: Date | undefined = dateTimeToDate(j.startDate)
-            const endDate: Date | undefined = dateTimeToDate(j.endDate)
+            const startDate: Date | undefined = dateTimeToDate(j.startDate || j.timePeriodFrom)
+            const endDate: Date | undefined = dateTimeToDate(j.endDate || j.timePeriodTo)
             return ({
-                companyName: j.companyName,
+                associatedSkills: Array.isArray(j.associatedSkills) ? j.associatedSkills : undefined,
+                city: j.cityName || j.cityTown || j.city,
+                companyName: j.companyName || j.company,
                 currentlyWorking: j.working,
+                description: j.description,
                 endDate,
                 id: index + 1,
                 industry: j.industry,
+                otherIndustry: j.otherIndustry,
                 position: j.position,
                 startDate,
             })
@@ -207,18 +211,26 @@ export const fetchMemberTraits: any = () => async (dispatch: any) => {
 const createWorksPayloadData: any = (works: WorkInfo[]) => {
     const data: any = works.map(work => {
         const {
-            company,
+            companyName,
             position,
             industry,
+            otherIndustry,
             startDate,
             endDate,
             currentlyWorking,
+            description,
+            city,
+            associatedSkills,
         }: any = work
         return {
-            companyName: company || '',
+            associatedSkills: Array.isArray(associatedSkills) ? associatedSkills : undefined,
+            cityName: city,
+            companyName: companyName || '',
+            description: description || undefined,
             // eslint-disable-next-line unicorn/no-null
             endDate: endDate ? endDate.toISOString() : null,
             industry,
+            otherIndustry: otherIndustry || undefined,
             position,
             // eslint-disable-next-line unicorn/no-null
             startDate: startDate ? startDate.toISOString() : null,

@@ -3,17 +3,51 @@ import { connect } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import _ from 'lodash'
 import classNames from 'classnames'
-import moment from 'moment'
 
 import { Button, IconOutline, PageDivider } from '~/libs/ui'
+import { UserTrait } from '~/libs/core'
+import { AddEditWorkExperienceModal, WorkExperienceCard } from '~/libs/shared'
+import { useSkillsByIds } from '~/libs/shared/lib/services/standard-skills'
 
 import { createMemberWorks, updateMemberWorks } from '../../redux/actions/member'
 import { ProgressBar } from '../../components/progress-bar'
-import CardItem from '../../components/card-item'
-import ModalAddWork from '../../components/modal-add-work'
 import WorkInfo from '../../models/WorkInfo'
 
 import styles from './styles.module.scss'
+
+function workInfoToUserTrait(work: WorkInfo): UserTrait {
+    return {
+        associatedSkills: work.associatedSkills,
+        cityName: work.city,
+        company: work.companyName,
+        companyName: work.companyName,
+        description: work.description,
+        endDate: work.endDate?.toISOString(),
+        industry: work.industry,
+        otherIndustry: work.otherIndustry,
+        position: work.position,
+        startDate: work.startDate?.toISOString(),
+        timePeriodFrom: work.startDate?.toISOString(),
+        timePeriodTo: work.endDate?.toISOString(),
+        working: work.currentlyWorking,
+    }
+}
+
+function userTraitToWorkInfo(trait: UserTrait, id: number): WorkInfo {
+    return {
+        id,
+        associatedSkills: Array.isArray(trait.associatedSkills) ? trait.associatedSkills : undefined,
+        city: trait.cityName || trait.cityTown || trait.city,
+        companyName: trait.company || trait.companyName,
+        currentlyWorking: trait.working,
+        description: trait.description,
+        endDate: trait.timePeriodTo ? new Date(trait.timePeriodTo) : (trait.endDate ? new Date(trait.endDate) : undefined),
+        industry: trait.industry,
+        otherIndustry: trait.otherIndustry,
+        position: trait.position,
+        startDate: trait.timePeriodFrom ? new Date(trait.timePeriodFrom) : (trait.startDate ? new Date(trait.startDate) : undefined),
+    }
+}
 
 export const PageWorksContent: FC<{
     reduxWorks: WorkInfo[] | undefined
@@ -27,6 +61,32 @@ export const PageWorksContent: FC<{
     const [workId, setWorkId] = useState<number>(10)
     const [showAddWorkModal, setShowAddWorkModal] = useState(false)
     const [loading, setLoading] = useState<boolean>(false)
+
+    const allSkillIds = useMemo(() => {
+        if (!works) return []
+        const ids = new Set<string>()
+        works.forEach(w => {
+            if (w.associatedSkills) {
+                w.associatedSkills.forEach((id: string) => ids.add(id))
+            }
+        })
+        return Array.from(ids)
+    }, [works])
+
+    const { data: fetchedSkills } = useSkillsByIds(allSkillIds.length > 0 ? allSkillIds : undefined)
+    const skillNamesMap = useMemo(() => {
+        const map: Record<string, string> = {}
+        if (fetchedSkills) {
+            fetchedSkills.forEach(skill => {
+                if (skill.id && skill.name) map[skill.id] = skill.name
+            })
+        }
+        allSkillIds.forEach(id => {
+            if (!map[id]) map[id] = id
+        })
+        return map
+    }, [fetchedSkills, allSkillIds])
+
     useEffect(() => {
         if (!works && props.reduxWorks) {
             setWorks(props.reduxWorks)
@@ -45,7 +105,6 @@ export const PageWorksContent: FC<{
             } else {
                 await props.updateMemberWorks(works || [])
             }
-
             setLoading(false)
         }
 
@@ -56,26 +115,7 @@ export const PageWorksContent: FC<{
         /* eslint-disable react-hooks/exhaustive-deps */
     }, [works])
 
-    const displayWorks = useMemo(() => (works || []).map(workItem => {
-        const startDate: Date | undefined = workItem.startDate
-        const endDate: Date | undefined = workItem.endDate
-        let endDateString: string = endDate ? moment(endDate)
-            .format('YYYY') : ''
-        if (workItem.currentlyWorking) {
-            endDateString = 'current'
-        }
-
-        const startDateString: string = startDate ? moment(startDate)
-            .format('YYYY') : ''
-        return {
-            ...workItem,
-            dateDescription: [
-                ...(startDateString ? [startDateString] : []),
-                ...(endDateString ? [endDateString] : []),
-            ].join('-'),
-            description: workItem.companyName,
-        }
-    }), [works])
+    const displayWorks = works || []
 
     return (
         <div className={classNames('d-flex flex-column', styles.container)}>
@@ -96,19 +136,39 @@ export const PageWorksContent: FC<{
                                 + ' gap-column-16 gap-row-8 mobile-gap-row-16 full-width mt-24 mobile-mt-8'}
                         >
                             {displayWorks.map(work => (
-                                <CardItem
+                                <div
                                     key={work.id}
-                                    title={work.position || ''}
-                                    subTitle={work.description || ''}
-                                    description={work.dateDescription || ''}
-                                    onEdit={function onEdit() {
-                                        setEditingWork(work)
-                                        setShowAddWorkModal(true)
-                                    }}
-                                    onDelete={function onDelete() {
-                                        setWorks(_.filter(works, w => w.id !== work.id))
-                                    }}
-                                />
+                                    className={styles.workCardWrap}
+                                >
+                                    <div className='flex-1'>
+                                        <WorkExperienceCard
+                                            work={workInfoToUserTrait(work)}
+                                            isModalView
+                                            skillNamesMap={skillNamesMap}
+                                        />
+                                    </div>
+                                    <div className={styles.workCardActions}>
+                                        <button
+                                            aria-label='edit'
+                                            type='button'
+                                            onClick={function onEdit() {
+                                                setEditingWork(work)
+                                                setShowAddWorkModal(true)
+                                            }}
+                                        >
+                                            <IconOutline.PencilIcon width={24} height={24} />
+                                        </button>
+                                        <button
+                                            aria-label='delete'
+                                            type='button'
+                                            onClick={function onDelete() {
+                                                setWorks(_.filter(works, w => w.id !== work.id))
+                                            }}
+                                        >
+                                            <IconOutline.TrashIcon width={24} height={24} />
+                                        </button>
+                                    </div>
+                                </div>
                             ))}
                         </div>
                     ) : undefined}
@@ -157,27 +217,25 @@ export const PageWorksContent: FC<{
                     next
                 </Button>
             </div>
-            {showAddWorkModal ? (
-                <ModalAddWork
-                    editingWork={editingWork}
-                    onClose={function onClose() {
-                        setShowAddWorkModal(false)
-                        setEditingWork(undefined)
-                    }}
-                    onAdd={function onAdd(newWork: WorkInfo) {
-                        setWorks([...(works || []), {
-                            ...newWork,
-                            id: workId + 1,
-                        }])
-                        setWorkId(workId + 1)
-                    }}
-                    onEdit={function onEdit(editWork: WorkInfo) {
+            <AddEditWorkExperienceModal
+                open={showAddWorkModal}
+                onClose={function onClose() {
+                    setShowAddWorkModal(false)
+                    setEditingWork(undefined)
+                }}
+                initialWork={editingWork ? workInfoToUserTrait(editingWork) : undefined}
+                onSave={function onSave(trait: UserTrait) {
+                    if (editingWork) {
                         setWorks(
-                            (works || []).map(w => (w.id !== editWork.id ? w : editWork)),
+                            (works || []).map(w => (w.id !== editingWork.id ? w : userTraitToWorkInfo(trait, editingWork.id))),
                         )
-                    }}
-                />
-            ) : undefined}
+                    } else {
+                        const newId = workId + 1
+                        setWorks([...(works || []), userTraitToWorkInfo(trait, newId)])
+                        setWorkId(newId)
+                    }
+                }}
+            />
         </div>
     )
 }

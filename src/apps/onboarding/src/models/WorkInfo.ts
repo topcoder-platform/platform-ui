@@ -9,10 +9,12 @@ export default interface WorkInfo {
     endDate?: Date
     currentlyWorking?: boolean
     id: number
+    city?: string
+    associatedSkills?: string[]
 }
 
 export const emptyWorkInfo: () => WorkInfo = () => ({
-    company: '',
+    companyName: '',
     currentlyWorking: false,
     dateDescription: '',
     endDate: undefined,
@@ -21,4 +23,6 @@ export const emptyWorkInfo: () => WorkInfo = () => ({
     otherIndustry: '',
     position: '',
     startDate: undefined,
+    city: undefined,
+    associatedSkills: undefined,
 })
