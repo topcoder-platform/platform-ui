@@ -1,0 +1,31 @@
+@import '@libs/ui/styles/includes';
+
+.row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+
+    :global(.input-wrapper) {
+        flex: 1;
+
+        @include ltelg {
+            min-width: 100%;
+        }
+
+        &:first-child {
+            margin-right: $sp-2;
+
+            @include ltelg {
+                margin-right: 0;
+            }
+        }
+    }
+}
+
+.formWrap {
+    width: 100%;
+
+    :global(.input-wrapper) {
+        margin-bottom: $sp-2;
+    }
+}

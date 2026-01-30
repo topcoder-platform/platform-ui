@@ -3,13 +3,13 @@ import { useSearchParams } from 'react-router-dom'
 import { SWRResponse } from 'swr'
 
 import { MemberTraitsAPI, useMemberTraits, UserProfile, UserSkill, UserTrait, UserTraitIds } from '~/libs/core'
+import { WorkExperienceCard } from '~/libs/shared'
 import { useSkillsByIds } from '~/libs/shared/lib/services/standard-skills'
 
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
 import { AddButton, EditMemberPropertyBtn, EmptySection } from '../../components'
 
 import { ModifyWorkExpirenceModal } from './ModifyWorkExpirenceModal'
-import { WorkExpirenceCard } from './WorkExpirenceCard'
 import styles from './WorkExpirence.module.scss'
 
 interface WorkExpirenceProps {
@@ -142,7 +142,7 @@ const WorkExpirence: FC<WorkExpirenceProps> = (props: WorkExpirenceProps) => {
                                     .join('-')
 
                                 return (
-                                    <WorkExpirenceCard
+                                    <WorkExperienceCard
                                         key={uniqueKey || `${work.position || 'experience'}-${index}`}
                                         work={work}
                                         skillNamesMap={skillNamesMap}

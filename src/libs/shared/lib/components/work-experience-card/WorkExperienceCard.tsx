@@ -6,11 +6,11 @@ import classNames from 'classnames'
 import moment from 'moment'
 
 import { UserTrait } from '~/libs/core'
-import { getIndustryOptionLabel } from '~/libs/shared'
+import { getIndustryOptionLabel } from '~/libs/shared/lib/utils/industry'
 
-import styles from './WorkExpirenceCard.module.scss'
+import styles from './WorkExperienceCard.module.scss'
 
-interface WorkExpirenceCardProps {
+export interface WorkExperienceCardProps {
     work: UserTrait
     isModalView?: boolean
     skillNamesMap?: Record<string, string>
@@ -40,22 +40,22 @@ const formatDateRange = (work: UserTrait): string | undefined => {
     return formattedFrom || formattedTo || undefined
 }
 
-const WorkExpirenceCard: FC<WorkExpirenceCardProps> = (props: WorkExpirenceCardProps) => {
+const WorkExperienceCard: FC<WorkExperienceCardProps> = (props: WorkExperienceCardProps) => {
     const companyName: string | undefined = props.work.company || props.work.companyName
-    const city: string | undefined = props.work.cityTown || props.work.city
+    const city: string | undefined = props.work.cityName || props.work.cityTown || props.work.city
     const industry: string | undefined = props.work.industry
     const position: string | undefined = props.work.position
     const dateRange: string | undefined = formatDateRange(props.work)
 
     const containerClassName: string = classNames(
-        styles.workExpirenceCard,
-        props.isModalView ? styles.workExpirenceCardModalView : '',
+        styles.workExperienceCard,
+        props.isModalView ? styles.workExperienceCardModalView : '',
     )
 
     return (
         <div className={containerClassName}>
-            <div className={styles.workExpirenceCardHeader}>
-                <div className={styles.workExpirenceCardHeaderLeft}>
+            <div className={styles.workExperienceCardHeader}>
+                <div className={styles.workExperienceCardHeaderLeft}>
                     {(position || industry) && (
                         <p className='body-main-bold'>
                             {position || ''}
@@ -83,13 +83,13 @@ const WorkExpirenceCard: FC<WorkExpirenceCardProps> = (props: WorkExpirenceCardP
                     )}
                 </div>
                 {dateRange ? (
-                    <div className={styles.workExpirenceCardHeaderRight}>
+                    <div className={styles.workExperienceCardHeaderRight}>
                         <p>{dateRange}</p>
                     </div>
                 ) : undefined}
             </div>
             {props.work.description && !props.isModalView && (
-                <div className={styles.workExpirenceCardDescription}>
+                <div className={styles.workExperienceCardDescription}>
                     <div
                         className='body-main-normal'
                         // eslint-disable-next-line react/no-danger
@@ -127,7 +127,7 @@ const WorkExpirenceCard: FC<WorkExpirenceCardProps> = (props: WorkExpirenceCardP
                 && props.showSkills
                 && !props.isModalView
                 && (
-                    <div className={styles.workExpirenceCardSkills}>
+                    <div className={styles.workExperienceCardSkills}>
                         <p className='body-main-small-bold'>{'Skills: '}</p>
                         <div className={styles.skillsList}>
                             {props
@@ -143,4 +143,4 @@ const WorkExpirenceCard: FC<WorkExpirenceCardProps> = (props: WorkExpirenceCardP
     )
 }
 
-export default WorkExpirenceCard
+export default WorkExperienceCard
