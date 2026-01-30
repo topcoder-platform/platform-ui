@@ -11,6 +11,12 @@ export interface EngagementAssignment {
     engagementId: string
     memberId: string
     memberHandle: string
+    status?: string
+    termsAccepted?: boolean
+    agreementRate?: string
+    startDate?: string
+    endDate?: string
+    terminationReason?: string
     createdAt: string
     updatedAt: string
 }

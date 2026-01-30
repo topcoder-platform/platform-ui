@@ -6,8 +6,9 @@ import { EngagementStatus } from '../../lib/models'
 import styles from './StatusBadge.module.scss'
 
 interface StatusBadgeProps {
-    status: EngagementStatus
+    status: EngagementStatus | string
     size?: 'sm' | 'md' | 'lg'
+    label?: string
 }
 
 const STATUS_LABELS: Record<EngagementStatus, string> = {
@@ -18,15 +19,42 @@ const STATUS_LABELS: Record<EngagementStatus, string> = {
     [EngagementStatus.CLOSED]: 'Closed',
 }
 
+const formatStatusLabel = (value?: string): string => {
+    const normalized = value === undefined || value === null
+        ? undefined
+        : value.toString()
+            .trim()
+    if (!normalized) {
+        return 'TBD'
+    }
+
+    return normalized
+        .replace(/[_-]+/g, ' ')
+        .toLowerCase()
+        .replace(/\b\w/g, character => character.toUpperCase())
+}
+
 const StatusBadge: FC<StatusBadgeProps> = (props: StatusBadgeProps) => {
-    const label = STATUS_LABELS[props.status] ?? props.status
+    const statusValue = props.status === undefined || props.status === null
+        ? undefined
+        : props.status.toString()
+            .trim()
+    const statusKey = statusValue
+        ? statusValue
+            .toLowerCase()
+            .replace(/[\s-]+/g, '_')
+        : 'unknown'
+    const label = props.label
+        ?? STATUS_LABELS[statusKey as EngagementStatus]
+        ?? formatStatusLabel(statusValue)
     const size = props.size ?? 'md'
+    const statusClass = styles[`status-${statusKey}`] ?? styles['status-generic']
 
     return (
         <span
             className={classNames(
                 styles.badge,
-                styles[`status-${props.status}`],
+                statusClass,
                 styles[`size-${size}`],
             )}
         >

@@ -8,7 +8,7 @@ import { Button, ContentLayout, IconOutline, LoadingSpinner } from '~/libs/ui'
 import { Pagination } from '~/apps/admin/src/lib/components/common/Pagination'
 
 import { APPLICATIONS_PER_PAGE } from '../../config/constants'
-import type { Engagement } from '../../lib/models'
+import type { Engagement, EngagementAssignment } from '../../lib/models'
 import { getMyAssignedEngagements } from '../../lib/services/engagements.service'
 import { AssignmentCard, EngagementsTabs, MemberExperienceModal } from '../../components'
 import { rootRoute } from '../../engagements.routes'
@@ -132,20 +132,19 @@ const MyAssignmentsPage: FC = () => {
         window.open(`mailto:${contactEmail}`, '_blank')
     }, [])
 
-    const getUserAssignmentId = useCallback((engagement: Engagement): string | undefined => {
+    const getUserAssignment = useCallback((engagement: Engagement): EngagementAssignment | undefined => {
         if (!userId) {
             return undefined
         }
 
-        const assignment = engagement.assignments?.find(
+        return engagement.assignments?.find(
             candidate => candidate.memberId === String(userId),
         )
-
-        return assignment?.id
     }, [userId])
 
     const handleDocumentExperience = useCallback((engagement: Engagement) => {
-        const assignmentId = getUserAssignmentId(engagement)
+        const assignment = getUserAssignment(engagement)
+        const assignmentId = assignment?.id
 
         if (!assignmentId) {
             toast.error('Unable to find your assignment for this engagement.')
@@ -160,7 +159,7 @@ const MyAssignmentsPage: FC = () => {
         setSelectedEngagement(engagement)
         setSelectedAssignmentId(assignmentId)
         setModalOpen(true)
-    }, [getUserAssignmentId])
+    }, [getUserAssignment])
 
     const handleCloseModal = useCallback(() => {
         setModalOpen(false)
@@ -212,6 +211,7 @@ const MyAssignmentsPage: FC = () => {
                         <div key={`skeleton-${card}`} className={styles.skeletonCard} />
                     )) : assignments.map(engagement => {
                         const contactEmail = normalizeContactEmail(engagement.createdByEmail)
+                        const assignment = getUserAssignment(engagement)
                         const handleDocumentExperienceClick = function (): void {
                             handleDocumentExperience(engagement)
                         }
@@ -220,6 +220,7 @@ const MyAssignmentsPage: FC = () => {
                             <AssignmentCard
                                 key={engagement.id}
                                 engagement={engagement}
+                                assignment={assignment}
                                 contactEmail={contactEmail}
                                 onViewPayments={handleViewPayments}
                                 onDocumentExperience={handleDocumentExperienceClick}
