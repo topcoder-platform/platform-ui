@@ -706,7 +706,10 @@ const ApplicationFormPage: FC = () => {
                         </div>
                         {renderAddressField()}
                         <div className={styles.fieldGroup}>
-                            <label className={styles.fieldLabel} htmlFor='mobile-number'>Mobile Number</label>
+                            <label className={styles.fieldLabel} htmlFor='mobile-number'>
+                                Mobile Number
+                                <span className={styles.requiredIndicator} aria-hidden='true'>*</span>
+                            </label>
                             <Controller
                                 name='mobileNumber'
                                 control={control}

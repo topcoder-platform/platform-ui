@@ -5,14 +5,17 @@ import remarkBreaks from 'remark-breaks'
 import remarkFrontmatter from 'remark-frontmatter'
 import remarkGfm from 'remark-gfm'
 
+import { EnvironmentConfig } from '~/config'
 import { authUrlLogin, useProfileContext } from '~/libs/core'
-import { Button, ContentLayout, IconOutline, IconSolid, LoadingSpinner } from '~/libs/ui'
+import { BaseModal, Button, ContentLayout, IconOutline, IconSolid, LoadingSpinner } from '~/libs/ui'
 
-import type { Application, Engagement } from '../../lib/models'
+import type { Application, Engagement, TermDetails } from '../../lib/models'
 import { ApplicationStatus, EngagementStatus } from '../../lib/models'
 import {
+    agreeToTerm,
     checkExistingApplication,
     getEngagementByNanoId,
+    getTermDetails,
 } from '../../lib/services'
 import {
     formatDate,
@@ -54,6 +57,32 @@ const formatEnumLabel = (value?: string): string | undefined => {
         .toLowerCase()
         .replace(/\b\w/g, character => character.toUpperCase())
 }
+
+const extractTermsId = (termsUrl?: string): string | undefined => {
+    if (!termsUrl) {
+        return undefined
+    }
+
+    const trimmed = termsUrl.trim()
+    if (!trimmed) {
+        return undefined
+    }
+
+    try {
+        const parsed = new URL(trimmed)
+        const parts = parsed.pathname
+            .split('/')
+            .filter(Boolean)
+        return parts[parts.length - 1]
+    } catch {
+        const parts = trimmed
+            .split('/')
+            .filter(Boolean)
+        return parts[parts.length - 1]
+    }
+}
+
+const TERMS_ID = extractTermsId(EnvironmentConfig.TERMS_URL)
 
 const normalizeRoleNames = (roles?: string[]): string[] => (
     (roles ?? [])
@@ -124,6 +153,179 @@ const getPrivateEngagementAccess = ({
     }
 }
 
+const normalizeUserId = (userId?: number | string): string | undefined => {
+    if (userId === undefined || userId === null) {
+        return undefined
+    }
+
+    return String(userId)
+}
+
+const isEngagementCreatorMatch = ({
+    normalizedUserId,
+    normalizedCreatedBy,
+    normalizedCreatorEmail,
+    normalizedUserEmail,
+}: {
+    normalizedUserId?: string
+    normalizedCreatedBy?: string
+    normalizedCreatorEmail?: string
+    normalizedUserEmail?: string
+}): boolean => {
+    if (normalizedUserId && normalizedCreatedBy && normalizedCreatedBy === normalizedUserId) {
+        return true
+    }
+
+    if (normalizedCreatorEmail && normalizedUserEmail && normalizedCreatorEmail === normalizedUserEmail) {
+        return true
+    }
+
+    return false
+}
+
+const getApplicationStatusLabel = (application?: Application): string | undefined => {
+    if (!application?.status) {
+        return undefined
+    }
+
+    return APPLICATION_STATUS_LABELS[application.status]
+}
+
+type TermsViewData = {
+    termsTitle: string
+    termsBody?: string
+    isElectronicallyAgreeable: boolean
+}
+
+const getTermsViewData = (termsDetails?: TermDetails): TermsViewData => {
+    const termsTitle = termsDetails?.title || 'Terms & Conditions of Use'
+    const termsBody = termsDetails?.text
+        ? termsDetails.text.replace(/topcoder/gi, 'Topcoder')
+        : undefined
+    const isElectronicallyAgreeable = termsDetails?.agreeabilityType
+        ? termsDetails.agreeabilityType === 'Electronically-agreeable'
+        : true
+
+    return {
+        isElectronicallyAgreeable,
+        termsBody,
+        termsTitle,
+    }
+}
+
+const isDeadlineSoonWithinWeek = (daysUntilDeadline: number): boolean => (
+    daysUntilDeadline > 0 && daysUntilDeadline <= 7
+)
+
+const getPageTitle = (
+    engagement?: Engagement,
+    canViewPrivateEngagement?: boolean,
+): string => {
+    if (!engagement || !canViewPrivateEngagement) {
+        return 'Engagement Details'
+    }
+
+    return engagement.title
+}
+
+const renderApplicationStatus = (label?: string): JSX.Element | undefined => {
+    if (!label) {
+        return undefined
+    }
+
+    return (
+        <span className={styles.applicationStatus}>
+            {`Application status: ${label}`}
+        </span>
+    )
+}
+
+type TermsModalProps = {
+    open: boolean
+    onClose: () => void
+    termsTitle: string
+    termsBody?: string
+    termsLoading: boolean
+    termsError?: string
+    termsAgreeing: boolean
+    isElectronicallyAgreeable: boolean
+    termsUrl?: string
+    onAgree: () => void
+    onOpenTermsLink: () => void
+}
+
+const TermsModal: FC<TermsModalProps> = (props: TermsModalProps): JSX.Element => (
+    <BaseModal
+        open={props.open}
+        onClose={props.onClose}
+        size='lg'
+        title={props.termsTitle}
+        buttons={(
+            <>
+                <Button
+                    secondary
+                    label={props.isElectronicallyAgreeable ? 'I Disagree' : 'Close'}
+                    onClick={props.onClose}
+                    disabled={props.termsAgreeing}
+                />
+                {props.isElectronicallyAgreeable ? (
+                    <Button
+                        primary
+                        label='I Agree'
+                        onClick={props.onAgree}
+                        disabled={props.termsAgreeing || props.termsLoading}
+                        loading={props.termsAgreeing}
+                    />
+                ) : (
+                    <Button
+                        primary
+                        label='Open Terms'
+                        onClick={props.onOpenTermsLink}
+                        disabled={!props.termsUrl}
+                    />
+                )}
+            </>
+        )}
+    >
+        <div className={styles.termsModalDescription}>
+            You are seeing these Terms & Conditions because you are applying to an engagement.
+            You must agree to continue.
+        </div>
+        {props.termsLoading && (
+            <div className={styles.termsModalLoading}>
+                <LoadingSpinner className={styles.termsModalSpinner} />
+            </div>
+        )}
+        {!props.termsLoading && (
+            <div className={styles.termsModalBody}>
+                {props.termsBody ? (
+                    <div
+                        className={styles.description}
+                        dangerouslySetInnerHTML={{ __html: props.termsBody }}
+                    />
+                ) : (
+                    <div className={styles.termsModalFallback}>
+                        <p>We couldn’t load the full terms text.</p>
+                        {props.termsUrl && (
+                            <a
+                                className={styles.termsModalLink}
+                                href={props.termsUrl}
+                                target='_blank'
+                                rel='noreferrer'
+                            >
+                                Open Terms of Use
+                            </a>
+                        )}
+                    </div>
+                )}
+            </div>
+        )}
+        {props.termsError && props.open && (
+            <div className={styles.termsModalError}>{props.termsError}</div>
+        )}
+    </BaseModal>
+)
+
 const EngagementDetailPage: FC = () => {
     const params = useParams<{ nanoId: string }>()
     const nanoId = params.nanoId
@@ -140,7 +342,13 @@ const EngagementDetailPage: FC = () => {
     const [hasApplied, setHasApplied] = useState<boolean>(false)
     const [checkingApplication, setCheckingApplication] = useState<boolean>(false)
     const [applicationError, setApplicationError] = useState<string | undefined>(undefined)
-    const normalizedUserId = userId !== undefined && userId !== null ? String(userId) : undefined
+    const [termsModalOpen, setTermsModalOpen] = useState<boolean>(false)
+    const [termsDetails, setTermsDetails] = useState<TermDetails | undefined>(undefined)
+    const [termsLoading, setTermsLoading] = useState<boolean>(false)
+    const [termsError, setTermsError] = useState<string | undefined>(undefined)
+    const [termsAgreeing, setTermsAgreeing] = useState<boolean>(false)
+    const termsUrl = EnvironmentConfig.TERMS_URL
+    const normalizedUserId = normalizeUserId(userId)
     const normalizedCreatedBy = engagement?.createdBy?.trim()
     const normalizedCreatorEmail = engagement?.createdByEmail
         ?.trim()
@@ -148,10 +356,12 @@ const EngagementDetailPage: FC = () => {
     const normalizedUserEmail = profileContext.profile?.email
         ?.trim()
         .toLowerCase()
-    const isEngagementCreator = Boolean(
-        (normalizedUserId && normalizedCreatedBy && normalizedCreatedBy === normalizedUserId)
-        || (normalizedCreatorEmail && normalizedUserEmail && normalizedCreatorEmail === normalizedUserEmail),
-    )
+    const isEngagementCreator = isEngagementCreatorMatch({
+        normalizedCreatedBy,
+        normalizedCreatorEmail,
+        normalizedUserEmail,
+        normalizedUserId,
+    })
     const isPrivateEngagement = Boolean(engagement?.isPrivate)
 
     const fetchEngagement = useCallback(async (): Promise<void> => {
@@ -212,13 +422,39 @@ const EngagementDetailPage: FC = () => {
         checkApplication()
     }, [checkApplication])
 
-    const handleApplyClick = useCallback(() => {
+    const navigateToApply = useCallback(() => {
         if (!nanoId) {
             return
         }
 
         navigate(`${rootRoute}/${nanoId}/apply`)
     }, [nanoId, navigate])
+
+    const handleApplyClick = useCallback(async () => {
+        if (!TERMS_ID) {
+            setTermsError('Unable to verify terms of use. Please try again later.')
+            return
+        }
+
+        setTermsError(undefined)
+        setTermsLoading(true)
+
+        try {
+            const details = await getTermDetails(TERMS_ID)
+            setTermsDetails(details)
+
+            if (details.agreed) {
+                navigateToApply()
+                return
+            }
+
+            setTermsModalOpen(true)
+        } catch {
+            setTermsError('Unable to verify terms of use. Please try again.')
+        } finally {
+            setTermsLoading(false)
+        }
+    }, [navigateToApply])
 
     const handleBackClick = useCallback(() => navigate(rootRoute || '/'), [navigate])
 
@@ -228,6 +464,43 @@ const EngagementDetailPage: FC = () => {
     )
 
     const handleRetry = useCallback(() => fetchEngagement(), [fetchEngagement])
+
+    const handleTermsClose = useCallback(() => {
+        setTermsModalOpen(false)
+        setTermsError(undefined)
+    }, [])
+
+    const handleAgreeTerms = useCallback(async () => {
+        if (!TERMS_ID) {
+            setTermsError('Unable to verify terms of use. Please try again later.')
+            return
+        }
+
+        setTermsAgreeing(true)
+        setTermsError(undefined)
+
+        try {
+            const response = await agreeToTerm(TERMS_ID)
+            if (response?.success === false) {
+                throw new Error('Terms agreement failed')
+            }
+
+            setTermsModalOpen(false)
+            navigateToApply()
+        } catch {
+            setTermsError('Unable to save your agreement. Please try again.')
+        } finally {
+            setTermsAgreeing(false)
+        }
+    }, [navigateToApply])
+
+    const handleOpenTermsLink = useCallback(() => {
+        if (!termsUrl) {
+            return
+        }
+
+        window.open(termsUrl, '_blank', 'noopener,noreferrer')
+    }, [termsUrl])
 
     const deadlinePassed = useMemo(() => (
         engagement?.applicationDeadline
@@ -247,7 +520,7 @@ const EngagementDetailPage: FC = () => {
             : 'Deadline TBD'
     ), [engagement?.applicationDeadline])
 
-    const isDeadlineSoon = daysUntilDeadline > 0 && daysUntilDeadline <= 7
+    const isDeadlineSoon = isDeadlineSoonWithinWeek(daysUntilDeadline)
     const isEngagementOpen = engagement?.status === EngagementStatus.OPEN
 
     const normalizedRoles = normalizeRoleNames(profileContext.profile?.roles)
@@ -265,9 +538,8 @@ const EngagementDetailPage: FC = () => {
         isProfileReady,
     })
 
-    const applicationStatusLabel = application?.status
-        ? APPLICATION_STATUS_LABELS[application.status]
-        : undefined
+    const applicationStatusLabel = getApplicationStatusLabel(application)
+    const { termsTitle, termsBody, isElectronicallyAgreeable }: TermsViewData = getTermsViewData(termsDetails)
 
     const renderApplySection = (): JSX.Element => {
         if (!engagement) {
@@ -286,38 +558,36 @@ const EngagementDetailPage: FC = () => {
             )
         }
 
-        if (isLoggedIn && checkingApplication) {
-            return (
-                <div className={styles.applyMessage}>
-                    <LoadingSpinner className={styles.inlineSpinner} />
-                    <span>Checking your application status...</span>
-                </div>
-            )
-        }
-
-        if (isLoggedIn && applicationError) {
-            return (
-                <div className={styles.applyMessage}>
-                    <span>{applicationError}</span>
-                    <Button label='Retry' onClick={checkApplication} secondary />
-                </div>
-            )
-        }
-
-        if (isLoggedIn && hasApplied) {
-            return (
-                <div className={styles.applyMessage}>
-                    <div className={styles.appliedActions}>
-                        <Button label='Already Applied' secondary disabled />
-                        <Button label='View My Applications' onClick={handleViewApplications} link />
+        if (isLoggedIn) {
+            if (checkingApplication) {
+                return (
+                    <div className={styles.applyMessage}>
+                        <LoadingSpinner className={styles.inlineSpinner} />
+                        <span>Checking your application status...</span>
                     </div>
-                    {applicationStatusLabel && (
-                        <span className={styles.applicationStatus}>
-                            {`Application status: ${applicationStatusLabel}`}
-                        </span>
-                    )}
-                </div>
-            )
+                )
+            }
+
+            if (applicationError) {
+                return (
+                    <div className={styles.applyMessage}>
+                        <span>{applicationError}</span>
+                        <Button label='Retry' onClick={checkApplication} secondary />
+                    </div>
+                )
+            }
+
+            if (hasApplied) {
+                return (
+                    <div className={styles.applyMessage}>
+                        <div className={styles.appliedActions}>
+                            <Button label='Already Applied' secondary disabled />
+                            <Button label='View My Applications' onClick={handleViewApplications} link />
+                        </div>
+                        {renderApplicationStatus(applicationStatusLabel)}
+                    </div>
+                )
+            }
         }
 
         if (!isEngagementOpen) {
@@ -343,6 +613,24 @@ const EngagementDetailPage: FC = () => {
                     <a className={styles.signInLink} href={authUrlLogin()}>
                         Sign in
                     </a>
+                </div>
+            )
+        }
+
+        if (termsLoading) {
+            return (
+                <div className={styles.applyMessage}>
+                    <LoadingSpinner className={styles.inlineSpinner} />
+                    <span>Checking terms of use...</span>
+                </div>
+            )
+        }
+
+        if (termsError && !termsModalOpen) {
+            return (
+                <div className={styles.applyMessage}>
+                    <span className={styles.termsError}>{termsError}</span>
+                    <Button label='Try Again' onClick={handleApplyClick} primary />
                 </div>
             )
         }
@@ -388,7 +676,7 @@ const EngagementDetailPage: FC = () => {
             <h3>Private engagement</h3>
             <p>
                 {isLoggedIn
-                    ? 'Only task managers, talent managers, project managers, administrators, '
+                    ? 'Only talent managers, project managers, administrators, '
                         + 'and assigned members can view this engagement.'
                     : 'Sign in to confirm your access to this private engagement.'}
             </p>
@@ -561,9 +849,7 @@ const EngagementDetailPage: FC = () => {
         return renderDetailSection()
     }
 
-    const pageTitle = engagement && canViewPrivateEngagement
-        ? engagement.title
-        : 'Engagement Details'
+    const pageTitle = getPageTitle(engagement, canViewPrivateEngagement)
 
     return (
         <ContentLayout
@@ -574,6 +860,19 @@ const EngagementDetailPage: FC = () => {
             }}
         >
             {renderContent()}
+            <TermsModal
+                open={termsModalOpen}
+                onClose={handleTermsClose}
+                termsTitle={termsTitle}
+                termsBody={termsBody}
+                termsLoading={termsLoading}
+                termsError={termsError}
+                termsAgreeing={termsAgreeing}
+                isElectronicallyAgreeable={isElectronicallyAgreeable}
+                termsUrl={termsUrl}
+                onAgree={handleAgreeTerms}
+                onOpenTermsLink={handleOpenTermsLink}
+            />
         </ContentLayout>
     )
 }
