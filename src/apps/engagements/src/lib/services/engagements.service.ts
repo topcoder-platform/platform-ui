@@ -203,7 +203,7 @@ const normalizeAssignments = (assignments?: BackendEngagementAssignment[]): Enga
         startDate: normalizeEnumValue(assignment.startDate),
         status: normalizeAssignmentStatus(assignment.status),
         terminationReason: normalizeEnumValue(assignment.terminationReason),
-        termsAccepted: firstDefined(assignment.termsAccepted),
+        termsAccepted: assignment.termsAccepted ?? undefined,
         updatedAt: withDefault('', assignment.updatedAt),
     }))
 }
