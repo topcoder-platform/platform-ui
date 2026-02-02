@@ -7,6 +7,10 @@ type AgreeTermsResponse = {
     success?: boolean
 }
 
+type DocuSignResponse = {
+    recipientViewUrl?: string
+}
+
 const LEGACY_TERM_PATTERN = /^[\d]{5,8}$/
 
 export const getTermDetails = async (termId: string): Promise<TermDetails> => {
@@ -31,3 +35,19 @@ export const agreeToTerm = async (termId: string): Promise<AgreeTermsResponse> =
         {},
     )
 )
+
+export const getDocuSignUrl = async (
+    templateId: string | number,
+    returnUrl: string,
+): Promise<string> => {
+    const response = await xhrPostAsync<{ returnUrl: string; templateId: string | number }, DocuSignResponse>(
+        `${EnvironmentConfig.API.V5}/terms/docusignViewURL`,
+        { returnUrl, templateId },
+    )
+
+    if (!response?.recipientViewUrl) {
+        throw new Error('DocuSign URL missing')
+    }
+
+    return response.recipientViewUrl
+}

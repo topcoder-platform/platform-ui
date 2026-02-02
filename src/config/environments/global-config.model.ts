@@ -47,6 +47,7 @@ export interface GlobalConfig {
         CHALLENGES_PAGE: string
     }
     TERMS_URL?: string
+    NDA_TERMS_URL?: string
     MEMBER_VERIFY_LOOKER: number
     ENABLE_TCA_CERT_MONETIZATION: boolean
     VANILLA_FORUM: {

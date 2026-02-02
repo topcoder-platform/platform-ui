@@ -14,10 +14,12 @@ import { ApplicationStatus, EngagementStatus } from '../../lib/models'
 import {
     agreeToTerm,
     checkExistingApplication,
+    getDocuSignUrl,
     getEngagementByNanoId,
     getTermDetails,
 } from '../../lib/services'
 import {
+    extractTermId,
     formatDate,
     formatDeadlineCountdown,
     formatDuration,
@@ -58,31 +60,28 @@ const formatEnumLabel = (value?: string): string | undefined => {
         .replace(/\b\w/g, character => character.toUpperCase())
 }
 
-const extractTermsId = (termsUrl?: string): string | undefined => {
-    if (!termsUrl) {
-        return undefined
-    }
-
-    const trimmed = termsUrl.trim()
-    if (!trimmed) {
-        return undefined
-    }
-
-    try {
-        const parsed = new URL(trimmed)
-        const parts = parsed.pathname
-            .split('/')
-            .filter(Boolean)
-        return parts[parts.length - 1]
-    } catch {
-        const parts = trimmed
-            .split('/')
-            .filter(Boolean)
-        return parts[parts.length - 1]
-    }
+type TermsConfig = {
+    id: string
+    label: string
+    url?: string
 }
 
-const TERMS_ID = extractTermsId(EnvironmentConfig.TERMS_URL)
+const TERMS_ID = extractTermId(EnvironmentConfig.TERMS_URL)
+const NDA_TERMS_ID = extractTermId(EnvironmentConfig.NDA_TERMS_URL)
+
+const TERMS_CONFIG: TermsConfig[] = [
+    { id: TERMS_ID ?? '', label: 'Standard Topcoder Terms', url: EnvironmentConfig.TERMS_URL },
+    { id: NDA_TERMS_ID ?? '', label: 'Topcoder NDA', url: EnvironmentConfig.NDA_TERMS_URL },
+].filter(term => term.id)
+
+const DOCUSIGN_POLL_DELAY_MS = 5000
+const DOCUSIGN_POLL_MAX_ATTEMPTS = 5
+
+const delay = (durationMs: number): Promise<void> => (
+    new Promise(resolve => {
+        window.setTimeout(resolve, durationMs)
+    })
+)
 
 const normalizeRoleNames = (roles?: string[]): string[] => (
     (roles ?? [])
@@ -243,88 +242,222 @@ const renderApplicationStatus = (label?: string): JSX.Element | undefined => {
 type TermsModalProps = {
     open: boolean
     onClose: () => void
+    termsLabel?: string
     termsTitle: string
     termsBody?: string
     termsLoading: boolean
     termsError?: string
     termsAgreeing: boolean
     isElectronicallyAgreeable: boolean
+    isDocuSignTerm: boolean
+    docuSignUrl?: string
+    docuSignLoading: boolean
     termsUrl?: string
     onAgree: () => void
     onOpenTermsLink: () => void
 }
 
-const TermsModal: FC<TermsModalProps> = (props: TermsModalProps): JSX.Element => (
-    <BaseModal
-        open={props.open}
-        onClose={props.onClose}
-        size='lg'
-        title={props.termsTitle}
-        buttons={(
+type TermsModalButtonProps = Pick<
+    TermsModalProps,
+    | 'isDocuSignTerm'
+    | 'isElectronicallyAgreeable'
+    | 'termsAgreeing'
+    | 'termsLoading'
+    | 'termsUrl'
+    | 'onClose'
+    | 'onAgree'
+    | 'onOpenTermsLink'
+>
+
+type TermsModalDocuSignProps = Pick<
+    TermsModalProps,
+    | 'docuSignLoading'
+    | 'docuSignUrl'
+    | 'termsTitle'
+    | 'termsUrl'
+>
+
+type TermsModalBodyProps = Pick<
+    TermsModalProps,
+    | 'termsBody'
+    | 'termsUrl'
+>
+
+type TermsModalContentProps = TermsModalDocuSignProps
+    & TermsModalBodyProps
+    & Pick<TermsModalProps, 'isDocuSignTerm' | 'termsLoading'>
+
+const getTermsModalDescription = (termsLabel?: string): string => (
+    termsLabel
+        ? `You are seeing the ${termsLabel} because you are applying to an engagement. `
+            + 'You must agree to continue.'
+        : 'You are seeing these Terms & Conditions because you are applying to an engagement. '
+            + 'You must agree to continue.'
+)
+
+const renderTermsModalButtons = (props: TermsModalButtonProps): JSX.Element => {
+    if (props.isDocuSignTerm) {
+        return (
+            <Button
+                secondary
+                label='Close'
+                onClick={props.onClose}
+                disabled={props.termsAgreeing}
+            />
+        )
+    }
+
+    if (props.isElectronicallyAgreeable) {
+        return (
             <>
                 <Button
                     secondary
-                    label={props.isElectronicallyAgreeable ? 'I Disagree' : 'Close'}
+                    label='I Disagree'
                     onClick={props.onClose}
                     disabled={props.termsAgreeing}
                 />
-                {props.isElectronicallyAgreeable ? (
-                    <Button
-                        primary
-                        label='I Agree'
-                        onClick={props.onAgree}
-                        disabled={props.termsAgreeing || props.termsLoading}
-                        loading={props.termsAgreeing}
-                    />
-                ) : (
-                    <Button
-                        primary
-                        label='Open Terms'
-                        onClick={props.onOpenTermsLink}
-                        disabled={!props.termsUrl}
-                    />
-                )}
+                <Button
+                    primary
+                    label='I Agree'
+                    onClick={props.onAgree}
+                    disabled={props.termsAgreeing || props.termsLoading}
+                    loading={props.termsAgreeing}
+                />
             </>
-        )}
-    >
-        <div className={styles.termsModalDescription}>
-            You are seeing these Terms & Conditions because you are applying to an engagement.
-            You must agree to continue.
-        </div>
-        {props.termsLoading && (
+        )
+    }
+
+    return (
+        <>
+            <Button
+                secondary
+                label='Close'
+                onClick={props.onClose}
+                disabled={props.termsAgreeing}
+            />
+            <Button
+                primary
+                label='Open Terms'
+                onClick={props.onOpenTermsLink}
+                disabled={!props.termsUrl}
+            />
+        </>
+    )
+}
+
+const renderTermsDocuSignSection = (props: TermsModalDocuSignProps): JSX.Element => (
+    <div className={styles.termsDocuSign}>
+        {props.docuSignLoading && (
             <div className={styles.termsModalLoading}>
                 <LoadingSpinner className={styles.termsModalSpinner} />
             </div>
         )}
-        {!props.termsLoading && (
-            <div className={styles.termsModalBody}>
-                {props.termsBody ? (
-                    <div
-                        className={styles.description}
-                        dangerouslySetInnerHTML={{ __html: props.termsBody }}
-                    />
-                ) : (
-                    <div className={styles.termsModalFallback}>
-                        <p>We couldn’t load the full terms text.</p>
-                        {props.termsUrl && (
-                            <a
-                                className={styles.termsModalLink}
-                                href={props.termsUrl}
-                                target='_blank'
-                                rel='noreferrer'
-                            >
-                                Open Terms of Use
-                            </a>
-                        )}
-                    </div>
+        {!props.docuSignLoading && props.docuSignUrl && (
+            <iframe
+                className={styles.termsDocuSignFrame}
+                src={props.docuSignUrl}
+                title={props.termsTitle}
+            />
+        )}
+        {!props.docuSignLoading && !props.docuSignUrl && (
+            <div className={styles.termsModalFallback}>
+                <p>We couldn’t load the agreement.</p>
+                {props.termsUrl && (
+                    <a
+                        className={styles.termsModalLink}
+                        href={props.termsUrl}
+                        target='_blank'
+                        rel='noreferrer'
+                    >
+                        Open Terms of Use
+                    </a>
                 )}
             </div>
         )}
-        {props.termsError && props.open && (
-            <div className={styles.termsModalError}>{props.termsError}</div>
-        )}
-    </BaseModal>
+    </div>
 )
+
+const renderTermsBodySection = (props: TermsModalBodyProps): JSX.Element => (
+    <div className={styles.termsModalBody}>
+        {props.termsBody ? (
+            <div
+                className={styles.description}
+                dangerouslySetInnerHTML={{ __html: props.termsBody }}
+            />
+        ) : (
+            <div className={styles.termsModalFallback}>
+                <p>We couldn’t load the full terms text.</p>
+                {props.termsUrl && (
+                    <a
+                        className={styles.termsModalLink}
+                        href={props.termsUrl}
+                        target='_blank'
+                        rel='noreferrer'
+                    >
+                        Open Terms of Use
+                    </a>
+                )}
+            </div>
+        )}
+    </div>
+)
+
+const renderTermsModalContent = (props: TermsModalContentProps): JSX.Element => {
+    if (props.termsLoading) {
+        return (
+            <div className={styles.termsModalLoading}>
+                <LoadingSpinner className={styles.termsModalSpinner} />
+            </div>
+        )
+    }
+
+    if (props.isDocuSignTerm) {
+        return renderTermsDocuSignSection(props)
+    }
+
+    return renderTermsBodySection(props)
+}
+
+const TermsModal: FC<TermsModalProps> = (props: TermsModalProps): JSX.Element => {
+    const description = getTermsModalDescription(props.termsLabel)
+    const buttonProps: TermsModalButtonProps = {
+        isDocuSignTerm: props.isDocuSignTerm,
+        isElectronicallyAgreeable: props.isElectronicallyAgreeable,
+        onAgree: props.onAgree,
+        onClose: props.onClose,
+        onOpenTermsLink: props.onOpenTermsLink,
+        termsAgreeing: props.termsAgreeing,
+        termsLoading: props.termsLoading,
+        termsUrl: props.termsUrl,
+    }
+    const contentProps: TermsModalContentProps = {
+        docuSignLoading: props.docuSignLoading,
+        docuSignUrl: props.docuSignUrl,
+        isDocuSignTerm: props.isDocuSignTerm,
+        termsBody: props.termsBody,
+        termsLoading: props.termsLoading,
+        termsTitle: props.termsTitle,
+        termsUrl: props.termsUrl,
+    }
+
+    return (
+        <BaseModal
+            open={props.open}
+            onClose={props.onClose}
+            size='lg'
+            title={props.termsTitle}
+            buttons={renderTermsModalButtons(buttonProps)}
+        >
+            <div className={styles.termsModalDescription}>
+                {description}
+            </div>
+            {renderTermsModalContent(contentProps)}
+            {props.termsError && props.open && (
+                <div className={styles.termsModalError}>{props.termsError}</div>
+            )}
+        </BaseModal>
+    )
+}
 
 const EngagementDetailPage: FC = () => {
     const params = useParams<{ nanoId: string }>()
@@ -343,11 +476,14 @@ const EngagementDetailPage: FC = () => {
     const [checkingApplication, setCheckingApplication] = useState<boolean>(false)
     const [applicationError, setApplicationError] = useState<string | undefined>(undefined)
     const [termsModalOpen, setTermsModalOpen] = useState<boolean>(false)
+    const [activeTerm, setActiveTerm] = useState<TermsConfig | undefined>(undefined)
     const [termsDetails, setTermsDetails] = useState<TermDetails | undefined>(undefined)
     const [termsLoading, setTermsLoading] = useState<boolean>(false)
     const [termsError, setTermsError] = useState<string | undefined>(undefined)
     const [termsAgreeing, setTermsAgreeing] = useState<boolean>(false)
-    const termsUrl = EnvironmentConfig.TERMS_URL
+    const [docuSignUrl, setDocuSignUrl] = useState<string | undefined>(undefined)
+    const [docuSignLoading, setDocuSignLoading] = useState<boolean>(false)
+    const termsUrl = activeTerm?.url
     const normalizedUserId = normalizeUserId(userId)
     const normalizedCreatedBy = engagement?.createdBy?.trim()
     const normalizedCreatorEmail = engagement?.createdByEmail
@@ -430,31 +566,64 @@ const EngagementDetailPage: FC = () => {
         navigate(`${rootRoute}/${nanoId}/apply`)
     }, [nanoId, navigate])
 
-    const handleApplyClick = useCallback(async () => {
-        if (!TERMS_ID) {
-            setTermsError('Unable to verify terms of use. Please try again later.')
-            return
+    const fetchPendingTerm = useCallback(async (): Promise<{
+        pendingTerm?: TermsConfig
+        details?: TermDetails
+    } | undefined> => {
+        if (!TERMS_ID || !NDA_TERMS_ID) {
+            setTermsError('Unable to verify terms and NDA. Please try again later.')
+            return undefined
         }
 
         setTermsError(undefined)
         setTermsLoading(true)
 
         try {
-            const details = await getTermDetails(TERMS_ID)
-            setTermsDetails(details)
-
-            if (details.agreed) {
-                navigateToApply()
-                return
+            const results = await Promise.all(
+                TERMS_CONFIG.map(async term => ({
+                    details: await getTermDetails(term.id),
+                    term,
+                })),
+            )
+            const nextPending = results.find(entry => !entry.details?.agreed)
+            if (!nextPending) {
+                return {}
             }
 
-            setTermsModalOpen(true)
+            return {
+                details: nextPending.details,
+                pendingTerm: nextPending.term,
+            }
         } catch {
             setTermsError('Unable to verify terms of use. Please try again.')
+            return undefined
         } finally {
             setTermsLoading(false)
         }
-    }, [navigateToApply])
+    }, [])
+
+    const openNextPendingTerm = useCallback(async () => {
+        const pending = await fetchPendingTerm()
+        if (!pending) {
+            return
+        }
+
+        if (!pending.pendingTerm || !pending.details) {
+            setActiveTerm(undefined)
+            setTermsDetails(undefined)
+            setTermsModalOpen(false)
+            navigateToApply()
+            return
+        }
+
+        setActiveTerm(pending.pendingTerm)
+        setTermsDetails(pending.details)
+        setTermsModalOpen(true)
+    }, [fetchPendingTerm, navigateToApply])
+
+    const handleApplyClick = useCallback(() => {
+        openNextPendingTerm()
+    }, [openNextPendingTerm])
 
     const handleBackClick = useCallback(() => navigate(rootRoute || '/'), [navigate])
 
@@ -468,10 +637,15 @@ const EngagementDetailPage: FC = () => {
     const handleTermsClose = useCallback(() => {
         setTermsModalOpen(false)
         setTermsError(undefined)
+        setTermsAgreeing(false)
+        setDocuSignUrl(undefined)
+        setDocuSignLoading(false)
+        setActiveTerm(undefined)
+        setTermsDetails(undefined)
     }, [])
 
     const handleAgreeTerms = useCallback(async () => {
-        if (!TERMS_ID) {
+        if (!activeTerm?.id) {
             setTermsError('Unable to verify terms of use. Please try again later.')
             return
         }
@@ -480,19 +654,18 @@ const EngagementDetailPage: FC = () => {
         setTermsError(undefined)
 
         try {
-            const response = await agreeToTerm(TERMS_ID)
+            const response = await agreeToTerm(activeTerm.id)
             if (response?.success === false) {
                 throw new Error('Terms agreement failed')
             }
 
-            setTermsModalOpen(false)
-            navigateToApply()
+            await openNextPendingTerm()
         } catch {
             setTermsError('Unable to save your agreement. Please try again.')
         } finally {
             setTermsAgreeing(false)
         }
-    }, [navigateToApply])
+    }, [activeTerm?.id, openNextPendingTerm])
 
     const handleOpenTermsLink = useCallback(() => {
         if (!termsUrl) {
@@ -501,6 +674,86 @@ const EngagementDetailPage: FC = () => {
 
         window.open(termsUrl, '_blank', 'noopener,noreferrer')
     }, [termsUrl])
+
+    const handleDocuSignComplete = useCallback(async () => {
+        if (!activeTerm?.id) {
+            return
+        }
+
+        const termId = activeTerm.id
+        const checkAgreement = async (attempt: number): Promise<TermDetails> => {
+            const details = await getTermDetails(termId)
+            setTermsDetails(details)
+
+            if (details.agreed || attempt >= DOCUSIGN_POLL_MAX_ATTEMPTS) {
+                return details
+            }
+
+            await delay(DOCUSIGN_POLL_DELAY_MS)
+            return checkAgreement(attempt + 1)
+        }
+
+        setTermsAgreeing(true)
+        setTermsError(undefined)
+
+        try {
+            const details = await checkAgreement(1)
+            if (!details.agreed) {
+                setTermsError('We could not confirm your signature yet. Please try again.')
+                return
+            }
+
+            await openNextPendingTerm()
+        } catch {
+            setTermsError('Unable to verify your agreement. Please try again.')
+        } finally {
+            setTermsAgreeing(false)
+        }
+    }, [activeTerm?.id, openNextPendingTerm])
+
+    const docuSignTemplateId = termsDetails?.docusignTemplateId
+    const isDocuSignTerm = Boolean(
+        termsDetails?.agreeabilityType
+            && termsDetails.agreeabilityType !== 'Electronically-agreeable'
+            && docuSignTemplateId,
+    )
+
+    useEffect(() => {
+        if (!termsModalOpen || !isDocuSignTerm || !docuSignTemplateId) {
+            setDocuSignUrl(undefined)
+            setDocuSignLoading(false)
+            return
+        }
+
+        const returnUrl = window.location.href
+        setDocuSignLoading(true)
+        setDocuSignUrl(undefined)
+        getDocuSignUrl(docuSignTemplateId, returnUrl)
+            .then(url => setDocuSignUrl(url))
+            .catch(() => setTermsError('Unable to load the agreement. Please try again.'))
+            .finally(() => setDocuSignLoading(false))
+    }, [docuSignTemplateId, isDocuSignTerm, termsModalOpen])
+
+    useEffect(() => {
+        if (!termsModalOpen || !docuSignUrl) {
+            return undefined
+        }
+
+        const handler = (event: MessageEvent): void => {
+            if (!event?.data || event.data.type !== 'DocuSign') {
+                return
+            }
+
+            if (event.data.event === 'signing_complete' || event.data.event === 'viewing_complete') {
+                handleDocuSignComplete()
+            } else {
+                handleTermsClose()
+            }
+        }
+
+        window.addEventListener('message', handler)
+        return () => window.removeEventListener('message', handler)
+    }, [docuSignUrl, handleDocuSignComplete, handleTermsClose, termsModalOpen])
 
     const deadlinePassed = useMemo(() => (
         engagement?.applicationDeadline
@@ -539,6 +792,7 @@ const EngagementDetailPage: FC = () => {
     })
 
     const applicationStatusLabel = getApplicationStatusLabel(application)
+    const termsLabel = activeTerm?.label
     const { termsTitle, termsBody, isElectronicallyAgreeable }: TermsViewData = getTermsViewData(termsDetails)
 
     const renderApplySection = (): JSX.Element => {
@@ -621,7 +875,7 @@ const EngagementDetailPage: FC = () => {
             return (
                 <div className={styles.applyMessage}>
                     <LoadingSpinner className={styles.inlineSpinner} />
-                    <span>Checking terms of use...</span>
+                    <span>Checking terms and NDA...</span>
                 </div>
             )
         }
@@ -863,12 +1117,16 @@ const EngagementDetailPage: FC = () => {
             <TermsModal
                 open={termsModalOpen}
                 onClose={handleTermsClose}
+                termsLabel={termsLabel}
                 termsTitle={termsTitle}
                 termsBody={termsBody}
                 termsLoading={termsLoading}
                 termsError={termsError}
                 termsAgreeing={termsAgreeing}
                 isElectronicallyAgreeable={isElectronicallyAgreeable}
+                isDocuSignTerm={isDocuSignTerm}
+                docuSignUrl={docuSignUrl}
+                docuSignLoading={docuSignLoading}
                 termsUrl={termsUrl}
                 onAgree={handleAgreeTerms}
                 onOpenTermsLink={handleOpenTermsLink}
