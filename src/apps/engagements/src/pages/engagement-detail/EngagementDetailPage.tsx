@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useMemo, useState } from 'react'
+import { FC, SyntheticEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import ReactMarkdown, { type Options as ReactMarkdownOptions } from 'react-markdown'
 import remarkBreaks from 'remark-breaks'
@@ -76,12 +76,34 @@ const TERMS_CONFIG: TermsConfig[] = [
 
 const DOCUSIGN_POLL_DELAY_MS = 5000
 const DOCUSIGN_POLL_MAX_ATTEMPTS = 5
+const DOCUSIGN_RETURN_PARAM = 'docusignReturn'
+const DOCUSIGN_RETURN_VALUE = '1'
 
 const delay = (durationMs: number): Promise<void> => (
     new Promise(resolve => {
         window.setTimeout(resolve, durationMs)
     })
 )
+
+const buildDocuSignReturnUrl = (): string => {
+    const url = new URL(window.location.href)
+    url.searchParams.set(DOCUSIGN_RETURN_PARAM, DOCUSIGN_RETURN_VALUE)
+    return url.toString()
+}
+
+const isDocuSignReturnUrl = (url?: string): boolean => {
+    if (!url) {
+        return false
+    }
+
+    try {
+        const parsed = new URL(url)
+        return parsed.origin === window.location.origin
+            && parsed.searchParams.get(DOCUSIGN_RETURN_PARAM) === DOCUSIGN_RETURN_VALUE
+    } catch {
+        return false
+    }
+}
 
 const normalizeRoleNames = (roles?: string[]): string[] => (
     (roles ?? [])
@@ -255,6 +277,7 @@ type TermsModalProps = {
     termsUrl?: string
     onAgree: () => void
     onOpenTermsLink: () => void
+    onDocuSignFrameLoad?: (event: SyntheticEvent<HTMLIFrameElement>) => void
 }
 
 type TermsModalButtonProps = Pick<
@@ -273,8 +296,10 @@ type TermsModalDocuSignProps = Pick<
     TermsModalProps,
     | 'docuSignLoading'
     | 'docuSignUrl'
+    | 'termsAgreeing'
     | 'termsTitle'
     | 'termsUrl'
+    | 'onDocuSignFrameLoad'
 >
 
 type TermsModalBodyProps = Pick<
@@ -345,37 +370,46 @@ const renderTermsModalButtons = (props: TermsModalButtonProps): JSX.Element => {
     )
 }
 
-const renderTermsDocuSignSection = (props: TermsModalDocuSignProps): JSX.Element => (
-    <div className={styles.termsDocuSign}>
-        {props.docuSignLoading && (
-            <div className={styles.termsModalLoading}>
-                <LoadingSpinner className={styles.termsModalSpinner} />
-            </div>
-        )}
-        {!props.docuSignLoading && props.docuSignUrl && (
-            <iframe
-                className={styles.termsDocuSignFrame}
-                src={props.docuSignUrl}
-                title={props.termsTitle}
-            />
-        )}
-        {!props.docuSignLoading && !props.docuSignUrl && (
-            <div className={styles.termsModalFallback}>
-                <p>We couldn’t load the agreement.</p>
-                {props.termsUrl && (
-                    <a
-                        className={styles.termsModalLink}
-                        href={props.termsUrl}
-                        target='_blank'
-                        rel='noreferrer'
-                    >
-                        Open Terms of Use
-                    </a>
-                )}
-            </div>
-        )}
-    </div>
-)
+const renderTermsDocuSignSection = (props: TermsModalDocuSignProps): JSX.Element => {
+    const isProcessing = props.docuSignLoading || props.termsAgreeing
+    const statusMessage = props.docuSignLoading
+        ? 'Loading agreement...'
+        : 'Finalizing your agreement...'
+
+    return (
+        <div className={styles.termsDocuSign}>
+            {isProcessing && (
+                <div className={styles.termsDocuSignOverlay}>
+                    <LoadingSpinner className={styles.termsModalSpinner} />
+                    <span className={styles.termsDocuSignStatus}>{statusMessage}</span>
+                </div>
+            )}
+            {!isProcessing && props.docuSignUrl && (
+                <iframe
+                    className={styles.termsDocuSignFrame}
+                    src={props.docuSignUrl}
+                    title={props.termsTitle}
+                    onLoad={props.onDocuSignFrameLoad}
+                />
+            )}
+            {!isProcessing && !props.docuSignUrl && (
+                <div className={styles.termsModalFallback}>
+                    <p>We couldn’t load the agreement.</p>
+                    {props.termsUrl && (
+                        <a
+                            className={styles.termsModalLink}
+                            href={props.termsUrl}
+                            target='_blank'
+                            rel='noreferrer'
+                        >
+                            Open Terms of Use
+                        </a>
+                    )}
+                </div>
+            )}
+        </div>
+    )
+}
 
 const renderTermsBodySection = (props: TermsModalBodyProps): JSX.Element => (
     <div className={styles.termsModalBody}>
@@ -434,6 +468,8 @@ const TermsModal: FC<TermsModalProps> = (props: TermsModalProps): JSX.Element =>
         docuSignLoading: props.docuSignLoading,
         docuSignUrl: props.docuSignUrl,
         isDocuSignTerm: props.isDocuSignTerm,
+        onDocuSignFrameLoad: props.onDocuSignFrameLoad,
+        termsAgreeing: props.termsAgreeing,
         termsBody: props.termsBody,
         termsLoading: props.termsLoading,
         termsTitle: props.termsTitle,
@@ -483,6 +519,7 @@ const EngagementDetailPage: FC = () => {
     const [termsAgreeing, setTermsAgreeing] = useState<boolean>(false)
     const [docuSignUrl, setDocuSignUrl] = useState<string | undefined>(undefined)
     const [docuSignLoading, setDocuSignLoading] = useState<boolean>(false)
+    const docuSignCallbackHandledRef = useRef(false)
     const termsUrl = activeTerm?.url
     const normalizedUserId = normalizeUserId(userId)
     const normalizedCreatedBy = engagement?.createdBy?.trim()
@@ -642,6 +679,7 @@ const EngagementDetailPage: FC = () => {
         setDocuSignLoading(false)
         setActiveTerm(undefined)
         setTermsDetails(undefined)
+        docuSignCallbackHandledRef.current = false
     }, [])
 
     const handleAgreeTerms = useCallback(async () => {
@@ -711,6 +749,27 @@ const EngagementDetailPage: FC = () => {
         }
     }, [activeTerm?.id, openNextPendingTerm])
 
+    const handleDocuSignCallback = useCallback(() => {
+        if (docuSignCallbackHandledRef.current) {
+            return
+        }
+
+        docuSignCallbackHandledRef.current = true
+        setTermsModalOpen(false)
+        handleDocuSignComplete()
+    }, [handleDocuSignComplete])
+
+    const handleDocuSignFrameLoad = useCallback((event: SyntheticEvent<HTMLIFrameElement>) => {
+        try {
+            const frameLocation = event.currentTarget.contentWindow?.location?.href
+            if (isDocuSignReturnUrl(frameLocation)) {
+                handleDocuSignCallback()
+            }
+        } catch {
+            // Ignore cross-origin iframe loads.
+        }
+    }, [handleDocuSignCallback])
+
     const docuSignTemplateId = termsDetails?.docusignTemplateId
     const isDocuSignTerm = Boolean(
         termsDetails?.agreeabilityType
@@ -725,7 +784,8 @@ const EngagementDetailPage: FC = () => {
             return
         }
 
-        const returnUrl = window.location.href
+        docuSignCallbackHandledRef.current = false
+        const returnUrl = buildDocuSignReturnUrl()
         setDocuSignLoading(true)
         setDocuSignUrl(undefined)
         getDocuSignUrl(docuSignTemplateId, returnUrl)
@@ -745,7 +805,7 @@ const EngagementDetailPage: FC = () => {
             }
 
             if (event.data.event === 'signing_complete' || event.data.event === 'viewing_complete') {
-                handleDocuSignComplete()
+                handleDocuSignCallback()
             } else {
                 handleTermsClose()
             }
@@ -753,7 +813,7 @@ const EngagementDetailPage: FC = () => {
 
         window.addEventListener('message', handler)
         return () => window.removeEventListener('message', handler)
-    }, [docuSignUrl, handleDocuSignComplete, handleTermsClose, termsModalOpen])
+    }, [docuSignUrl, handleDocuSignCallback, handleTermsClose, termsModalOpen])
 
     const deadlinePassed = useMemo(() => (
         engagement?.applicationDeadline
@@ -794,6 +854,37 @@ const EngagementDetailPage: FC = () => {
     const applicationStatusLabel = getApplicationStatusLabel(application)
     const termsLabel = activeTerm?.label
     const { termsTitle, termsBody, isElectronicallyAgreeable }: TermsViewData = getTermsViewData(termsDetails)
+
+    const renderTermsGate = (): JSX.Element | undefined => {
+        if (termsLoading) {
+            return (
+                <div className={styles.applyMessage}>
+                    <LoadingSpinner className={styles.inlineSpinner} />
+                    <span>Checking terms and NDA...</span>
+                </div>
+            )
+        }
+
+        if (termsAgreeing && !termsModalOpen) {
+            return (
+                <div className={styles.applyMessage}>
+                    <LoadingSpinner className={styles.inlineSpinner} />
+                    <span>Finalizing your agreement...</span>
+                </div>
+            )
+        }
+
+        if (termsError && !termsModalOpen) {
+            return (
+                <div className={styles.applyMessage}>
+                    <span className={styles.termsError}>{termsError}</span>
+                    <Button label='Try Again' onClick={handleApplyClick} primary />
+                </div>
+            )
+        }
+
+        return undefined
+    }
 
     const renderApplySection = (): JSX.Element => {
         if (!engagement) {
@@ -871,22 +962,9 @@ const EngagementDetailPage: FC = () => {
             )
         }
 
-        if (termsLoading) {
-            return (
-                <div className={styles.applyMessage}>
-                    <LoadingSpinner className={styles.inlineSpinner} />
-                    <span>Checking terms and NDA...</span>
-                </div>
-            )
-        }
-
-        if (termsError && !termsModalOpen) {
-            return (
-                <div className={styles.applyMessage}>
-                    <span className={styles.termsError}>{termsError}</span>
-                    <Button label='Try Again' onClick={handleApplyClick} primary />
-                </div>
-            )
+        const termsGate = renderTermsGate()
+        if (termsGate) {
+            return termsGate
         }
 
         return (
@@ -1130,6 +1208,7 @@ const EngagementDetailPage: FC = () => {
                 termsUrl={termsUrl}
                 onAgree={handleAgreeTerms}
                 onOpenTermsLink={handleOpenTermsLink}
+                onDocuSignFrameLoad={handleDocuSignFrameLoad}
             />
         </ContentLayout>
     )
