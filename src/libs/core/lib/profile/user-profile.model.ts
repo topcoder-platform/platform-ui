@@ -8,6 +8,8 @@ export enum NamesAndHandleAppearance {
     nameOnly = 'namesOnly',
 }
 
+export type AvailabilityType = 'FULL_TIME' | 'PART_TIME'
+
 export interface UserProfile {
     addresses?: Array<{
         city?: string
@@ -46,4 +48,5 @@ export interface UserProfile {
     namesAndHandleAppearance: NamesAndHandleAppearance
     identityVerified?: boolean
     recentActivity?: boolean
+
 }

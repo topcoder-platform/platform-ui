@@ -358,17 +358,22 @@ export const createMemberEducations: any = (educations: EducationInfo[]) => asyn
     }
 }
 
-const createPersonalizationsPayloadData: any = (personalizations: PersonalizationInfo[]) => {
+export const createPersonalizationsPayloadData: any = (personalizations: PersonalizationInfo[]) => {
     const data: any = personalizations.map(personalization => {
         const {
             referAs,
             profileSelfTitle,
             shortBio,
             availableForGigs,
+            availability,
+            preferredRoles,
         }: any = personalization
         return _.omitBy({
-            ...personalization,
             availableForGigs,
+            openToWork: {
+                availability,
+                preferredRoles: preferredRoles ?? [],
+            },
             profileSelfTitle,
             referAs,
             shortBio,
