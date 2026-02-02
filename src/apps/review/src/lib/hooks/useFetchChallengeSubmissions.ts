@@ -8,7 +8,7 @@ import { handleError } from '~/libs/shared'
 import { UserRole } from '~/libs/core'
 
 import { BackendSubmission, BackendSubmissionStatus } from '../models'
-import { fetchSubmissions } from '../services'
+import { fetchAllSubmissions } from '../services'
 
 export interface useFetchChallengeSubmissionsProps {
     challengeSubmissions: BackendSubmission[]
@@ -48,7 +48,7 @@ export function useFetchChallengeSubmissions(
         Error
     >(`reviewBaseUrl/submissions/${challengeId}`, {
         fetcher: async () => {
-            const results = await fetchSubmissions(1, 100, challengeId ?? '')
+            const results = await fetchAllSubmissions(challengeId ?? '', 100)
             return results
         },
         isPaused: () => !challengeId,
