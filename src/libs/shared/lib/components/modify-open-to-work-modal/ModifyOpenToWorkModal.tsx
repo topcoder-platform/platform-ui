@@ -87,6 +87,7 @@ const OpenToWorkForm: FC<OpenToWorkFormProps> = (props: OpenToWorkFormProps) => 
                         value={props.value.availability}
                         onChange={handleAvailabilityChange}
                         disabled={props.disabled}
+                        preventAutoFocus
                         dirty
                     />
 
