@@ -3,7 +3,7 @@ import { Engagement } from './Engagement.model'
 export enum ApplicationStatus {
     SUBMITTED = 'submitted',
     UNDER_REVIEW = 'under_review',
-    ACCEPTED = 'accepted',
+    SELECTED = 'selected',
     REJECTED = 'rejected',
 }
 
@@ -36,6 +36,7 @@ export interface ApplicationListResponse {
 }
 
 export interface CreateApplicationRequest {
+    handle?: string
     name?: string
     email?: string
     address?: string

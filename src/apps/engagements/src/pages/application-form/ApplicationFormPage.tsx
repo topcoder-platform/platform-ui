@@ -5,6 +5,7 @@ import { toast } from 'react-toastify'
 import classNames from 'classnames'
 
 import { EnvironmentConfig } from '~/config'
+import { tokenGetAsync } from '~/libs/core'
 import { Button, ContentLayout, IconOutline, LoadingSpinner } from '~/libs/ui'
 import { yupResolver } from '@hookform/resolvers/yup'
 
@@ -18,7 +19,7 @@ import {
     getUserDataForApplication,
     updateUserDataForApplication,
 } from '../../lib/services'
-import { extractTermId, isDeadlinePassed } from '../../lib/utils'
+import { extractTermId } from '../../lib/utils'
 import { rootRoute } from '../../engagements.routes'
 
 import type { ApplicationFormData, PrePopulatedUserData } from './application-form.types'
@@ -245,12 +246,6 @@ const ApplicationFormPage: FC = () => {
         return () => window.clearTimeout(timeoutId)
     }, [hasApplied, navigate])
 
-    const deadlinePassed = useMemo(() => (
-        engagement?.applicationDeadline
-            ? isDeadlinePassed(engagement.applicationDeadline)
-            : false
-    ), [engagement?.applicationDeadline])
-
     const isEngagementOpen = engagement?.status === EngagementStatus.OPEN
 
     const isLoading = loading || userDataLoading || checkingApplication
@@ -329,7 +324,7 @@ const ApplicationFormPage: FC = () => {
     }, [])
 
     const onSubmit = useCallback(async (): Promise<void> => {
-        if (!engagement?.id || submitting || !isEngagementOpen || deadlinePassed) {
+        if (!engagement?.id || submitting || !isEngagementOpen) {
             return
         }
 
@@ -352,8 +347,18 @@ const ApplicationFormPage: FC = () => {
             }
 
             const request = buildCreateApplicationRequest(values)
+            let handle: string | undefined
+            try {
+                const token = await tokenGetAsync()
+                handle = typeof token?.handle === 'string' ? token.handle.trim() : undefined
+            } catch {
+                handle = undefined
+            }
 
-            await createApplication(engagement.id, request)
+            await createApplication(engagement.id, {
+                ...request,
+                ...(handle ? { handle } : {}),
+            })
             clearErrors()
             toast.success('Application submitted successfully!')
             navigate('/my-applications')
@@ -365,7 +370,6 @@ const ApplicationFormPage: FC = () => {
     }, [
         buildCreateApplicationRequest,
         clearErrors,
-        deadlinePassed,
         engagement?.id,
         getValues,
         handleSubmissionError,
@@ -440,7 +444,7 @@ const ApplicationFormPage: FC = () => {
         [],
     )
 
-    const isFormDisabled = submitting || deadlinePassed || !isEngagementOpen
+    const isFormDisabled = submitting || !isEngagementOpen
 
     const isSubmitDisabled = getIsSubmitDisabled({
         applicationError,
@@ -695,19 +699,6 @@ const ApplicationFormPage: FC = () => {
         )
     }
 
-    const renderDeadlinePassedBanner = (): JSX.Element | undefined => {
-        if (!isEngagementOpen || !deadlinePassed) {
-            return undefined
-        }
-
-        return (
-            <div className={styles.infoMessage} data-variant='warning'>
-                <IconOutline.ClockIcon className={styles.infoIcon} />
-                <div>The application deadline has passed.</div>
-            </div>
-        )
-    }
-
     const renderTermsStatus = (): JSX.Element => (
         <section className={styles.section}>
             <div className={styles.sectionTitle}>Terms Status</div>
@@ -774,7 +765,6 @@ const ApplicationFormPage: FC = () => {
     const renderForm = (): JSX.Element => (
         <div className={styles.formContainer}>
             {renderEngagementNotOpenBanner()}
-            {renderDeadlinePassedBanner()}
 
             <form className={styles.form} onSubmit={handleSubmit(onSubmit)}>
                 {renderTermsStatus()}

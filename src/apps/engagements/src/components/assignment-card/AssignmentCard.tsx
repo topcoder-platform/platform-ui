@@ -54,6 +54,8 @@ interface AssignmentCardProps {
     contactEmail?: string
     onViewPayments: () => void
     onDocumentExperience: () => void
+    onAcceptOffer?: () => void
+    onRejectOffer?: () => void
     onContactTalentManager: (contactEmail?: string) => void
     canContactTalentManager?: boolean
 }
@@ -148,6 +150,9 @@ const AssignmentCard: FC<AssignmentCardProps> = (props: AssignmentCardProps) => 
         () => formatAssignmentDate(assignment?.endDate),
         [assignment?.endDate],
     )
+    const assignmentStatus = assignment?.status?.toLowerCase()
+    const showAssignedActions = assignmentStatus === 'assigned'
+    const showOfferActions = assignmentStatus === 'selected'
 
     return (
         <div className={styles.card}>
@@ -201,20 +206,43 @@ const AssignmentCard: FC<AssignmentCardProps> = (props: AssignmentCardProps) => 
                 )}
             </div>
             <div className={styles.actions}>
-                <Button
-                    label='View Payments'
-                    onClick={props.onViewPayments}
-                    primary
-                    textWrap
-                    className={styles.actionButton}
-                />
-                <Button
-                    label='Document Experience'
-                    onClick={props.onDocumentExperience}
-                    secondary
-                    textWrap
-                    className={styles.actionButton}
-                />
+                {showAssignedActions && (
+                    <>
+                        <Button
+                            label='View Payments'
+                            onClick={props.onViewPayments}
+                            primary
+                            textWrap
+                            className={styles.actionButton}
+                        />
+                        <Button
+                            label='Document Experience'
+                            onClick={props.onDocumentExperience}
+                            secondary
+                            textWrap
+                            className={styles.actionButton}
+                        />
+                    </>
+                )}
+                {showOfferActions && props.onAcceptOffer && props.onRejectOffer && (
+                    <>
+                        <Button
+                            label='Accept Offer'
+                            onClick={props.onAcceptOffer}
+                            primary
+                            textWrap
+                            className={styles.actionButton}
+                        />
+                        <Button
+                            label='Reject Offer'
+                            onClick={props.onRejectOffer}
+                            secondary
+                            variant='danger'
+                            textWrap
+                            className={styles.actionButton}
+                        />
+                    </>
+                )}
                 <Button
                     label='Contact Talent Manager'
                     onClick={handleContactTalentManagerClick}

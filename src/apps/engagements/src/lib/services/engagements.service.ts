@@ -1,5 +1,5 @@
 import { EnvironmentConfig } from '~/config'
-import { xhrGetAsync, xhrGetPaginatedAsync } from '~/libs/core'
+import { xhrGetAsync, xhrGetPaginatedAsync, xhrPatchAsync } from '~/libs/core'
 import { fetchSkillsByIds } from '~/libs/shared'
 
 import { EngagementStatus } from '../models'
@@ -27,6 +27,7 @@ interface BackendEngagementAssignment {
     status?: string | null
     termsAccepted?: boolean | null
     agreementRate?: string | number | null
+    otherRemarks?: string | null
     startDate?: string | null
     endDate?: string | null
     terminationReason?: string | null
@@ -53,7 +54,7 @@ interface BackendEngagement {
     timeZones?: string[]
     countries?: string[]
     requiredSkills?: string[]
-    applicationDeadline?: string
+    anticipatedStart?: string | null
     status?: string
     createdAt?: string
     updatedAt?: string
@@ -200,6 +201,7 @@ const normalizeAssignments = (assignments?: BackendEngagementAssignment[]): Enga
         id: withDefault('', assignment.id),
         memberHandle: withDefault('', assignment.memberHandle),
         memberId: withDefault('', assignment.memberId),
+        otherRemarks: normalizeEnumValue(assignment.otherRemarks),
         startDate: normalizeEnumValue(assignment.startDate),
         status: normalizeAssignmentStatus(assignment.status),
         terminationReason: normalizeEnumValue(assignment.terminationReason),
@@ -220,7 +222,7 @@ const normalizeDuration = (data: BackendEngagement): Engagement['duration'] => {
 }
 
 const normalizeEngagement = (data: BackendEngagement): Engagement => ({
-    applicationDeadline: withDefault('', data.applicationDeadline),
+    anticipatedStart: normalizeEnumValue(data.anticipatedStart),
     assignments: normalizeAssignments(data.assignments),
     compensationRange: data.compensationRange ?? undefined,
     countries: withDefault([], data.countries),
@@ -370,6 +372,26 @@ export const getMyAssignedEngagements = async (
         ...normalized,
         data: hydratedWithEmails,
     }
+}
+
+export const acceptAssignmentOffer = async (
+    engagementId: string,
+    assignmentId: string,
+): Promise<void> => {
+    await xhrPatchAsync<Record<string, never>, BackendEngagementAssignment>(
+        `${BASE_URL}/${engagementId}/assignments/${assignmentId}/accept-offer`,
+        {},
+    )
+}
+
+export const rejectAssignmentOffer = async (
+    engagementId: string,
+    assignmentId: string,
+): Promise<void> => {
+    await xhrPatchAsync<Record<string, never>, BackendEngagementAssignment>(
+        `${BASE_URL}/${engagementId}/assignments/${assignmentId}/reject-offer`,
+        {},
+    )
 }
 
 export const getEngagementByNanoId = async (nanoId: string): Promise<Engagement> => {

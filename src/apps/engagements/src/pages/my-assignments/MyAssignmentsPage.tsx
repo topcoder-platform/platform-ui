@@ -9,8 +9,17 @@ import { Pagination } from '~/apps/admin/src/lib/components/common/Pagination'
 
 import { APPLICATIONS_PER_PAGE } from '../../config/constants'
 import type { Engagement, EngagementAssignment } from '../../lib/models'
-import { getMyAssignedEngagements } from '../../lib/services/engagements.service'
-import { AssignmentCard, EngagementsTabs, MemberExperienceModal } from '../../components'
+import {
+    acceptAssignmentOffer,
+    getMyAssignedEngagements,
+    rejectAssignmentOffer,
+} from '../../lib/services/engagements.service'
+import {
+    AssignmentCard,
+    AssignmentOfferModal,
+    EngagementsTabs,
+    MemberExperienceModal,
+} from '../../components'
 import { rootRoute } from '../../engagements.routes'
 
 import styles from './MyAssignmentsPage.module.scss'
@@ -54,6 +63,14 @@ const normalizeContactEmail = (contactEmail?: string): string | undefined => {
     return email
 }
 
+const getShowEmptyState = (
+    loading: boolean,
+    error: string | undefined,
+    assignments: Engagement[],
+): boolean => (
+    !loading && !error && assignments.length === 0
+)
+
 const MyAssignmentsPage: FC = () => {
     const navigate = useNavigate()
     const profileContext = useProfileContext()
@@ -69,6 +86,12 @@ const MyAssignmentsPage: FC = () => {
     const [selectedAssignmentId, setSelectedAssignmentId] = useState<string | undefined>(undefined)
     const [modalOpen, setModalOpen] = useState<boolean>(false)
     const closeTimeoutRef = useRef<number | undefined>(undefined)
+    const [offerModalOpen, setOfferModalOpen] = useState<boolean>(false)
+    const [offerAction, setOfferAction] = useState<'accept' | 'reject' | undefined>(undefined)
+    const [offerEngagement, setOfferEngagement] = useState<Engagement | undefined>(undefined)
+    const [offerAssignment, setOfferAssignment] = useState<EngagementAssignment | undefined>(undefined)
+    const [offerSaving, setOfferSaving] = useState<boolean>(false)
+    const offerCloseTimeoutRef = useRef<number | undefined>(undefined)
 
     const fetchAssignments = useCallback(async (): Promise<void> => {
         if (!isLoggedIn) {
@@ -101,6 +124,11 @@ const MyAssignmentsPage: FC = () => {
             if (closeTimeoutRef.current !== undefined) {
                 window.clearTimeout(closeTimeoutRef.current)
                 closeTimeoutRef.current = undefined
+            }
+
+            if (offerCloseTimeoutRef.current !== undefined) {
+                window.clearTimeout(offerCloseTimeoutRef.current)
+                offerCloseTimeoutRef.current = undefined
             }
         }
     ), [])
@@ -161,6 +189,27 @@ const MyAssignmentsPage: FC = () => {
         setModalOpen(true)
     }, [getUserAssignment])
 
+    const handleOpenOfferModal = useCallback((
+        engagement: Engagement,
+        action: 'accept' | 'reject',
+    ) => {
+        const assignment = getUserAssignment(engagement)
+        if (!assignment) {
+            toast.error('Unable to find your assignment for this engagement.')
+            return
+        }
+
+        if (offerCloseTimeoutRef.current !== undefined) {
+            window.clearTimeout(offerCloseTimeoutRef.current)
+            offerCloseTimeoutRef.current = undefined
+        }
+
+        setOfferEngagement(engagement)
+        setOfferAssignment(assignment)
+        setOfferAction(action)
+        setOfferModalOpen(true)
+    }, [getUserAssignment])
+
     const handleCloseModal = useCallback(() => {
         setModalOpen(false)
 
@@ -176,18 +225,85 @@ const MyAssignmentsPage: FC = () => {
         }, 200)
     }, [])
 
+    const handleCloseOfferModal = useCallback(() => {
+        setOfferModalOpen(false)
+
+        if (offerCloseTimeoutRef.current !== undefined) {
+            window.clearTimeout(offerCloseTimeoutRef.current)
+            offerCloseTimeoutRef.current = undefined
+        }
+
+        offerCloseTimeoutRef.current = window.setTimeout(() => {
+            setOfferEngagement(undefined)
+            setOfferAssignment(undefined)
+            setOfferAction(undefined)
+            offerCloseTimeoutRef.current = undefined
+        }, 200)
+    }, [])
+
+    const handleConfirmOffer = useCallback(async (): Promise<void> => {
+        if (offerSaving || !offerEngagement || !offerAssignment || !offerAction) {
+            return
+        }
+
+        setOfferSaving(true)
+
+        try {
+            if (offerAction === 'accept') {
+                await acceptAssignmentOffer(offerEngagement.id, offerAssignment.id)
+                toast.success('Offer accepted. Your assignment is now active.')
+            } else {
+                await rejectAssignmentOffer(offerEngagement.id, offerAssignment.id)
+                toast.success('Offer rejected.')
+            }
+
+            await fetchAssignments()
+            handleCloseOfferModal()
+        } catch (err: any) {
+            const message = err?.response?.data?.message
+                || err?.message
+                || 'Unable to update the offer status. Please try again.'
+            toast.error(message)
+        } finally {
+            setOfferSaving(false)
+        }
+    }, [
+        fetchAssignments,
+        handleCloseOfferModal,
+        offerAction,
+        offerAssignment,
+        offerEngagement,
+        offerSaving,
+    ])
+
     const skeletonCards = useMemo(() => Array.from({ length: 6 }, (_, index) => index), [])
-    const showEmptyState = !loading && !error && assignments.length === 0
+    const showEmptyState = getShowEmptyState(loading, error, assignments)
+    const showExperienceModal = useMemo(
+        () => [selectedEngagement, selectedAssignmentId].every(Boolean),
+        [selectedEngagement, selectedAssignmentId],
+    )
+    const showOfferModal = useMemo(
+        () => [offerEngagement, offerAssignment, offerAction].every(Boolean),
+        [offerAction, offerAssignment, offerEngagement],
+    )
+
+    const renderLoadingState = (): JSX.Element | undefined => {
+        if (!loading) {
+            return undefined
+        }
+
+        return (
+            <div className={styles.loadingState}>
+                <LoadingSpinner className={styles.loadingSpinner} />
+                <span>Loading your assignments...</span>
+            </div>
+        )
+    }
 
     return (
         <ContentLayout title='My Assignments' contentClass={styles.pageContent}>
             <EngagementsTabs activeTab='assignments' />
-            {loading && (
-                <div className={styles.loadingState}>
-                    <LoadingSpinner className={styles.loadingSpinner} />
-                    <span>Loading your assignments...</span>
-                </div>
-            )}
+            {renderLoadingState()}
             {error && (
                 <div className={styles.errorState}>
                     <IconOutline.ExclamationIcon className={styles.errorIcon} />
@@ -216,6 +332,14 @@ const MyAssignmentsPage: FC = () => {
                             handleDocumentExperience(engagement)
                         }
 
+                        const handleAcceptOfferClick = function (): void {
+                            handleOpenOfferModal(engagement, 'accept')
+                        }
+
+                        const handleRejectOfferClick = function (): void {
+                            handleOpenOfferModal(engagement, 'reject')
+                        }
+
                         return (
                             <AssignmentCard
                                 key={engagement.id}
@@ -224,6 +348,8 @@ const MyAssignmentsPage: FC = () => {
                                 contactEmail={contactEmail}
                                 onViewPayments={handleViewPayments}
                                 onDocumentExperience={handleDocumentExperienceClick}
+                                onAcceptOffer={handleAcceptOfferClick}
+                                onRejectOffer={handleRejectOfferClick}
                                 onContactTalentManager={handleContactTalentManager}
                                 canContactTalentManager={Boolean(contactEmail)}
                             />
@@ -241,12 +367,23 @@ const MyAssignmentsPage: FC = () => {
                     />
                 </div>
             )}
-            {selectedEngagement && selectedAssignmentId && (
+            {showExperienceModal && (
                 <MemberExperienceModal
                     open={modalOpen}
                     onClose={handleCloseModal}
-                    engagement={selectedEngagement}
-                    assignmentId={selectedAssignmentId}
+                    engagement={selectedEngagement as Engagement}
+                    assignmentId={selectedAssignmentId as string}
+                />
+            )}
+            {showOfferModal && (
+                <AssignmentOfferModal
+                    open={offerModalOpen}
+                    onClose={handleCloseOfferModal}
+                    onConfirm={handleConfirmOffer}
+                    engagement={offerEngagement as Engagement}
+                    assignment={offerAssignment as EngagementAssignment}
+                    mode={offerAction as 'accept' | 'reject'}
+                    loading={offerSaving}
                 />
             )}
         </ContentLayout>

@@ -1,0 +1,81 @@
+@import '@libs/ui/styles/includes';
+
+.modalBody {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.content {
+    display: grid;
+    gap: 16px;
+}
+
+.header {
+    display: grid;
+    gap: 6px;
+}
+
+.title {
+    margin: 0;
+    font-size: 1.05rem;
+    color: $black-100;
+}
+
+.subTitle {
+    margin: 0;
+    color: $black-60;
+    font-size: 0.85rem;
+}
+
+.section {
+    display: grid;
+    gap: 10px;
+}
+
+.section h4 {
+    margin: 0;
+    font-size: 0.95rem;
+    color: $black-100;
+}
+
+.metaGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 12px;
+}
+
+.metaItem {
+    display: grid;
+    gap: 6px;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid $black-10;
+    background: $black-5;
+}
+
+.metaItemWide {
+    grid-column: 1 / -1;
+}
+
+.metaLabel {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: $black-60;
+}
+
+.metaValue {
+    font-size: 0.9rem;
+    color: $black-80;
+    word-break: break-word;
+    white-space: pre-line;
+}
+
+.modalActions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    width: 100%;
+}

@@ -14,6 +14,7 @@ export interface EngagementAssignment {
     status?: string
     termsAccepted?: boolean
     agreementRate?: string
+    otherRemarks?: string
     startDate?: string
     endDate?: string
     terminationReason?: string
@@ -36,7 +37,7 @@ export interface Engagement {
     timeZones: string[]
     countries: string[]
     requiredSkills: string[]
-    applicationDeadline: string
+    anticipatedStart?: string
     status: EngagementStatus
     createdAt: string
     updatedAt: string

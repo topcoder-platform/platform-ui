@@ -13,7 +13,7 @@ interface ApplicationStatusBadgeProps {
 const APPLICATION_STATUS_LABELS: Record<ApplicationStatus, string> = {
     [ApplicationStatus.SUBMITTED]: 'Submitted',
     [ApplicationStatus.UNDER_REVIEW]: 'Under Review',
-    [ApplicationStatus.ACCEPTED]: 'Accepted',
+    [ApplicationStatus.SELECTED]: 'Selected',
     [ApplicationStatus.REJECTED]: 'Rejected',
 }
 

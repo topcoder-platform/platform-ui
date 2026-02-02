@@ -1,4 +1,4 @@
-import { FC, SyntheticEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { FC, SyntheticEvent, useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import ReactMarkdown, { type Options as ReactMarkdownOptions } from 'react-markdown'
 import remarkBreaks from 'remark-breaks'
@@ -21,11 +21,8 @@ import {
 import {
     extractTermId,
     formatDate,
-    formatDeadlineCountdown,
     formatDuration,
     formatLocation,
-    getDaysUntilDeadline,
-    isDeadlinePassed,
 } from '../../lib/utils'
 import { StatusBadge } from '../../components'
 import { rootRoute } from '../../engagements.routes'
@@ -37,7 +34,7 @@ const Markdown = ReactMarkdown as unknown as FC<ReactMarkdownOptions>
 const APPLICATION_STATUS_LABELS: Record<ApplicationStatus, string> = {
     [ApplicationStatus.SUBMITTED]: 'Submitted',
     [ApplicationStatus.UNDER_REVIEW]: 'Under review',
-    [ApplicationStatus.ACCEPTED]: 'Accepted',
+    [ApplicationStatus.SELECTED]: 'Selected',
     [ApplicationStatus.REJECTED]: 'Rejected',
 }
 
@@ -233,10 +230,6 @@ const getTermsViewData = (termsDetails?: TermDetails): TermsViewData => {
         termsTitle,
     }
 }
-
-const isDeadlineSoonWithinWeek = (daysUntilDeadline: number): boolean => (
-    daysUntilDeadline > 0 && daysUntilDeadline <= 7
-)
 
 const getPageTitle = (
     engagement?: Engagement,
@@ -815,25 +808,6 @@ const EngagementDetailPage: FC = () => {
         return () => window.removeEventListener('message', handler)
     }, [docuSignUrl, handleDocuSignCallback, handleTermsClose, termsModalOpen])
 
-    const deadlinePassed = useMemo(() => (
-        engagement?.applicationDeadline
-            ? isDeadlinePassed(engagement.applicationDeadline)
-            : false
-    ), [engagement?.applicationDeadline])
-
-    const daysUntilDeadline = useMemo(() => (
-        engagement?.applicationDeadline
-            ? getDaysUntilDeadline(engagement.applicationDeadline)
-            : 0
-    ), [engagement?.applicationDeadline])
-
-    const deadlineCountdown = useMemo(() => (
-        engagement?.applicationDeadline
-            ? formatDeadlineCountdown(engagement.applicationDeadline)
-            : 'Deadline TBD'
-    ), [engagement?.applicationDeadline])
-
-    const isDeadlineSoon = isDeadlineSoonWithinWeek(daysUntilDeadline)
     const isEngagementOpen = engagement?.status === EngagementStatus.OPEN
 
     const normalizedRoles = normalizeRoleNames(profileContext.profile?.roles)
@@ -943,14 +917,6 @@ const EngagementDetailPage: FC = () => {
             )
         }
 
-        if (deadlinePassed) {
-            return (
-                <div className={styles.applyMessage}>
-                    <span>The application deadline has passed.</span>
-                </div>
-            )
-        }
-
         if (!isLoggedIn) {
             return (
                 <div className={styles.applyMessage}>
@@ -1026,7 +992,7 @@ const EngagementDetailPage: FC = () => {
             return undefined
         }
 
-        if (isPrivateEngagement || !isEngagementOpen || deadlinePassed) {
+        if (isPrivateEngagement || !isEngagementOpen) {
             return undefined
         }
 
@@ -1042,6 +1008,7 @@ const EngagementDetailPage: FC = () => {
 
         const roleLabel = formatEnumLabel(engagement.role)
         const workloadLabel = formatEnumLabel(engagement.workload)
+        const anticipatedStartLabel = formatEnumLabel(engagement.anticipatedStart)
         const { locationLabel, timeZoneLabel }: ReturnType<typeof formatLocation> = formatLocation(
             engagement.countries ?? [],
             engagement.timeZones ?? [],
@@ -1094,17 +1061,8 @@ const EngagementDetailPage: FC = () => {
                     <div className={styles.metaItem}>
                         <IconSolid.CalendarIcon className={styles.metaIcon} />
                         <div>
-                            <div className={styles.metaLabel}>Application Deadline</div>
-                            <div className={styles.metaValue}>
-                                {formatDate(engagement.applicationDeadline)}
-                            </div>
-                            <span
-                                className={styles.deadlineCountdown}
-                                data-deadline-soon={isDeadlineSoon}
-                                data-deadline-passed={deadlinePassed}
-                            >
-                                {deadlineCountdown}
-                            </span>
+                            <div className={styles.metaLabel}>Anticipated Start</div>
+                            <div className={styles.metaValue}>{anticipatedStartLabel ?? 'Not specified'}</div>
                         </div>
                     </div>
                     <div className={styles.metaItem}>
