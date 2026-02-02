@@ -2,8 +2,12 @@ import { Dispatch, FC, SetStateAction, useState } from 'react'
 import { toast } from 'react-toastify'
 
 import { BaseModal, Button } from '~/libs/ui'
-import { updateMemberProfileAsync, UserProfile } from '~/libs/core'
+import { useMemberTraits, UserProfile, UserTraitIds, UserTraits } from '~/libs/core'
 import { OpenToWorkData } from '~/libs/shared/lib/components/modify-open-to-work-modal'
+import {
+    updateMemberProfile,
+    updateMemberTraits } from '~/libs/core/lib/profile/profile-functions/profile-store/profile-xhr.store'
+import { createPersonalizationsPayloadData } from '~/apps/onboarding/src/redux/actions/member'
 import OpenToWorkForm from '~/libs/shared/lib/components/modify-open-to-work-modal/ModifyOpenToWorkModal'
 
 import styles from './OpenForGigsModifyModal.module.scss'
@@ -18,19 +22,36 @@ const OpenForGigsModifyModal: FC<OpenForGigsModifyModalProps> = (props: OpenForG
     const [isSaving, setIsSaving]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
 
+    const { data: memberPersonalizationTraits }: {
+            data: UserTraits[] | undefined,
+        } = useMemberTraits(
+            props.profile.handle,
+            { traitIds: UserTraitIds.personalization },
+        )
+
+    const personalizationData = memberPersonalizationTraits?.[0]?.traits?.data?.[0] || {}
+
     const [formValue, setFormValue] = useState<OpenToWorkData>({
-        availability: props.profile.availability ?? 'FULL_TIME',
+        availability: personalizationData.availability ?? 'FULL_TIME',
         availableForGigs: !!props.profile.availableForGigs,
-        preferredRoles: props.profile.preferredRoles ?? [],
+        preferredRoles: personalizationData.preferredRoles ?? [],
     })
 
     function handleOpenForWorkSave(): void {
         setIsSaving(true)
 
-        updateMemberProfileAsync(
-            props.profile.handle,
-            formValue,
-        )
+        const traitsPayload = createPersonalizationsPayloadData([{
+            availability: formValue.availability,
+            preferredRoles: formValue.preferredRoles,
+        }])
+
+        Promise.all([
+        // 1️⃣ Update availableForGigs in member profile
+            updateMemberProfile(props.profile.handle, { availableForGigs: formValue.availableForGigs }),
+
+            // 2️⃣ Update personalization trait for availability & preferredRoles
+            updateMemberTraits(props.profile.handle, traitsPayload),
+        ])
             .then(() => {
                 toast.success('Work availability updated successfully.', { position: toast.POSITION.BOTTOM_RIGHT })
                 props.onSave()
@@ -39,8 +60,6 @@ const OpenForGigsModifyModal: FC<OpenForGigsModifyModalProps> = (props: OpenForG
                 toast.error('Failed to update your work availability', { position: toast.POSITION.BOTTOM_RIGHT })
                 setIsSaving(false)
             })
-
-        props.onSave()
     }
 
     return (

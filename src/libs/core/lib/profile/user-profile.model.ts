@@ -48,6 +48,5 @@ export interface UserProfile {
     namesAndHandleAppearance: NamesAndHandleAppearance
     identityVerified?: boolean
     recentActivity?: boolean
-    availability?: AvailabilityType
-    preferredRoles?: Array<string>
+
 }
