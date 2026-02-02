@@ -42,6 +42,24 @@
     }
 }
 
+.tabLoadingIndicator {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    margin-left: $sp-1;
+    border: 2px solid $blue-140;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: tab-loading-spin 0.8s linear infinite;
+    vertical-align: middle;
+}
+
+@keyframes tab-loading-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 .phaseDates {
     margin-bottom: $sp-3;
     font-family: "Nunito Sans", sans-serif;

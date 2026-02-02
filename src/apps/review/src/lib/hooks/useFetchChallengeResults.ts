@@ -20,7 +20,7 @@ import {
     ReviewResult,
     SubmissionInfo,
 } from '../models'
-import { fetchChallengeReviews } from '../services'
+import { fetchAllChallengeReviews } from '../services'
 import { ChallengeDetailContext } from '../contexts'
 import { PAST_CHALLENGE_STATUSES } from '../utils/challengeStatus'
 import {
@@ -298,7 +298,7 @@ export function useFetchChallengeResults(
         shouldFetchReviews
             ? `reviewBaseUrl/challengeReviews/${challengeUuid}`
             : undefined,
-        () => fetchChallengeReviews(challengeUuid),
+        () => fetchAllChallengeReviews(challengeUuid, 100),
     )
     // Show backend error when fetching data fail
     useEffect(() => {

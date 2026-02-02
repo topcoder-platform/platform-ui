@@ -187,6 +187,68 @@ export const fetchSubmissions = async (
 }
 
 /**
+ * Fetch a submissions page with meta data.
+ */
+export const fetchSubmissionsPage = async (
+    page: number,
+    perPage: number,
+    challengeId: string,
+): Promise<BackendResponseWithMeta<BackendSubmission[]>> => {
+    const results = await xhrGetAsync<
+        BackendResponseWithMeta<BackendSubmission[]>
+    >(
+        `${EnvironmentConfig.API.V6}/submissions?${qs.stringify({
+            challengeId,
+            page,
+            perPage,
+        })}`,
+    )
+
+    return {
+        ...results,
+        data: results.data.map(item => adjustBackendSubmission(item)),
+    }
+}
+
+/**
+ * Fetch all submissions for a challenge using API pagination metadata.
+ */
+export const fetchAllSubmissions = async (
+    challengeId: string,
+    perPage = 100,
+): Promise<BackendSubmission[]> => {
+    if (!challengeId) {
+        return []
+    }
+
+    const safePerPage = Number.isFinite(perPage) && perPage > 0 ? perPage : 100
+    const firstPage = await fetchSubmissionsPage(1, safePerPage, challengeId)
+    const combined = [...firstPage.data]
+    const totalPages = Math.max(firstPage.meta?.totalPages ?? 1, 1)
+
+    const fetchRemainingPages = async (
+        page: number,
+        currentTotal: number,
+    ): Promise<void> => {
+        if (page > currentTotal) {
+            return
+        }
+
+        const nextPage = await fetchSubmissionsPage(page, safePerPage, challengeId)
+        combined.push(...nextPage.data)
+        const nextTotal = typeof nextPage.meta?.totalPages === 'number'
+            ? Math.max(nextPage.meta.totalPages, currentTotal)
+            : currentTotal
+
+        await fetchRemainingPages(page + 1, nextTotal)
+    }
+
+    await fetchRemainingPages(2, totalPages)
+
+    return combined
+}
+
+/**
  * Fetch submission
  *
  * @param submissionId submission id
@@ -328,6 +390,61 @@ export const fetchChallengeReviews = async (
         })}`,
     )
     return results.data
+}
+
+/**
+ * Fetch a challenge reviews page with meta data.
+ */
+export const fetchChallengeReviewsPage = async (
+    challengeId: string,
+    page = 1,
+    perPage = 100,
+): Promise<BackendResponseWithMeta<BackendReview[]>> => (
+    xhrGetAsync<BackendResponseWithMeta<BackendReview[]>>(
+        `${EnvironmentConfig.API.V6}/reviews?${qs.stringify({
+            challengeId,
+            page,
+            perPage,
+        })}`,
+    )
+)
+
+/**
+ * Fetch all reviews for a challenge using API pagination metadata.
+ */
+export const fetchAllChallengeReviews = async (
+    challengeId: string,
+    perPage = 100,
+): Promise<BackendReview[]> => {
+    if (!challengeId) {
+        return []
+    }
+
+    const safePerPage = Number.isFinite(perPage) && perPage > 0 ? perPage : 100
+    const firstPage = await fetchChallengeReviewsPage(challengeId, 1, safePerPage)
+    const combined = [...firstPage.data]
+    const totalPages = Math.max(firstPage.meta?.totalPages ?? 1, 1)
+
+    const fetchRemainingPages = async (
+        page: number,
+        currentTotal: number,
+    ): Promise<void> => {
+        if (page > currentTotal) {
+            return
+        }
+
+        const nextPage = await fetchChallengeReviewsPage(challengeId, page, safePerPage)
+        combined.push(...nextPage.data)
+        const nextTotal = typeof nextPage.meta?.totalPages === 'number'
+            ? Math.max(nextPage.meta.totalPages, currentTotal)
+            : currentTotal
+
+        await fetchRemainingPages(page + 1, nextTotal)
+    }
+
+    await fetchRemainingPages(2, totalPages)
+
+    return combined
 }
 
 /**
