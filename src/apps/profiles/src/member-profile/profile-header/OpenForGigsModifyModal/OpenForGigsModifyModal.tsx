@@ -6,7 +6,7 @@ import { useMemberTraits, UserProfile, UserTraitIds, UserTraits } from '~/libs/c
 import { OpenToWorkData } from '~/libs/shared/lib/components/modify-open-to-work-modal'
 import {
     updateMemberProfile,
-    updateMemberTraits } from '~/libs/core/lib/profile/profile-functions/profile-store/profile-xhr.store'
+    upsertMemberTraits } from '~/libs/core/lib/profile/profile-functions/profile-store/profile-xhr.store'
 import { createPersonalizationsPayloadData } from '~/apps/onboarding/src/redux/actions/member'
 import OpenToWorkForm from '~/libs/shared/lib/components/modify-open-to-work-modal/ModifyOpenToWorkModal'
 
@@ -29,7 +29,9 @@ const OpenForGigsModifyModal: FC<OpenForGigsModifyModalProps> = (props: OpenForG
             { traitIds: UserTraitIds.personalization },
         )
 
-    const personalizationData = memberPersonalizationTraits?.[0]?.traits?.data?.[0] || {}
+    const personalizationData = memberPersonalizationTraits?.[0]?.traits?.data?.[0].openToWork || {}
+
+    const personalizationTrait = memberPersonalizationTraits?.[0] || undefined
 
     const [formValue, setFormValue] = useState<OpenToWorkData>({
         availability: personalizationData.availability ?? 'FULL_TIME',
@@ -46,11 +48,11 @@ const OpenForGigsModifyModal: FC<OpenForGigsModifyModalProps> = (props: OpenForG
         }])
 
         Promise.all([
-        // 1️⃣ Update availableForGigs in member profile
+        // Update availableForGigs in member profile
             updateMemberProfile(props.profile.handle, { availableForGigs: formValue.availableForGigs }),
 
-            // 2️⃣ Update personalization trait for availability & preferredRoles
-            updateMemberTraits(props.profile.handle, traitsPayload),
+            // Update personalization trait for availability & preferredRoles
+            upsertMemberTraits(props.profile.handle, traitsPayload, !!personalizationTrait),
         ])
             .then(() => {
                 toast.success('Work availability updated successfully.', { position: toast.POSITION.BOTTOM_RIGHT })

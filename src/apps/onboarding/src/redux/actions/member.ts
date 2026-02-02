@@ -369,11 +369,9 @@ export const createPersonalizationsPayloadData: any = (personalizations: Persona
             preferredRoles,
         }: any = personalization
         return _.omitBy({
-            ...personalization,
             availableForGigs,
             openToWork: {
                 availability,
-                availableForGigs,
                 preferredRoles: preferredRoles ?? [],
             },
             profileSelfTitle,
