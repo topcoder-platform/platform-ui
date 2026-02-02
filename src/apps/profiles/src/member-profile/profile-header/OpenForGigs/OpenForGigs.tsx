@@ -66,7 +66,6 @@ const OpenForGigs: FC<OpenForGigsProps> = (props: OpenForGigsProps) => {
                     <OpenForGigsModifyModal
                         onClose={handleModifyOpenForWorkClose}
                         onSave={handleModifyOpenForWorkSave}
-                        openForWork={openForWork ?? false}
                         profile={props.profile}
                     />
                 )

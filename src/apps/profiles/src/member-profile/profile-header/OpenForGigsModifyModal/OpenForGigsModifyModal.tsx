@@ -1,15 +1,16 @@
-import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
+import { Dispatch, FC, SetStateAction, useState } from 'react'
 import { toast } from 'react-toastify'
 
-import { BaseModal, Button, InputText } from '~/libs/ui'
+import { BaseModal, Button } from '~/libs/ui'
 import { updateMemberProfileAsync, UserProfile } from '~/libs/core'
+import { OpenToWorkData } from '~/libs/shared/lib/components/modify-open-to-work-modal'
+import OpenToWorkForm from '~/libs/shared/lib/components/modify-open-to-work-modal/ModifyOpenToWorkModal'
 
 import styles from './OpenForGigsModifyModal.module.scss'
 
 interface OpenForGigsModifyModalProps {
     onClose: () => void
     onSave: () => void
-    openForWork: boolean
     profile: UserProfile
 }
 
@@ -17,19 +18,18 @@ const OpenForGigsModifyModal: FC<OpenForGigsModifyModalProps> = (props: OpenForG
     const [isSaving, setIsSaving]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
 
-    const [openForWork, setOpenForWork]: [boolean, Dispatch<SetStateAction<boolean>>]
-        = useState<boolean>(props.openForWork)
-
-    useEffect(() => {
-        setOpenForWork(props.openForWork)
-    }, [props.openForWork])
+    const [formValue, setFormValue] = useState<OpenToWorkData>({
+        availability: props.profile.availability ?? 'FULL_TIME',
+        availableForGigs: !!props.profile.availableForGigs,
+        preferredRoles: props.profile.preferredRoles ?? [],
+    })
 
     function handleOpenForWorkSave(): void {
         setIsSaving(true)
 
         updateMemberProfileAsync(
             props.profile.handle,
-            { availableForGigs: openForWork },
+            formValue,
         )
             .then(() => {
                 toast.success('Work availability updated successfully.', { position: toast.POSITION.BOTTOM_RIGHT })
@@ -41,10 +41,6 @@ const OpenForGigsModifyModal: FC<OpenForGigsModifyModalProps> = (props: OpenForG
             })
 
         props.onSave()
-    }
-
-    function handleOpenForWorkToggle(): void {
-        setOpenForWork(!openForWork)
     }
 
     return (
@@ -73,15 +69,13 @@ const OpenForGigsModifyModal: FC<OpenForGigsModifyModalProps> = (props: OpenForG
                 <p>
                     By selecting “Open to Work” our customers will know that you are available for job opportunities.
                 </p>
-                <InputText
-                    name='openForWork'
-                    label='Yes, I’m open to work'
-                    tabIndex={-1}
-                    type='checkbox'
-                    onChange={handleOpenForWorkToggle}
-                    checked={openForWork}
-                />
             </div>
+
+            <OpenToWorkForm
+                value={formValue}
+                onChange={setFormValue}
+                disabled={isSaving}
+            />
         </BaseModal>
     )
 }
