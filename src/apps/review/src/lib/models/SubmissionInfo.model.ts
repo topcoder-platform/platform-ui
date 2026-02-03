@@ -88,6 +88,7 @@ export function adjustSubmissionInfo(
  */
 export function convertBackendSubmissionToSubmissionInfo(
     data: BackendSubmission,
+    registrants?: BackendResource[] | undefined,
 ): SubmissionInfo {
     const submittedDate = data.submittedDate ? new Date(data.submittedDate) : undefined
     const submittedDateString = submittedDate
@@ -119,6 +120,15 @@ export function convertBackendSubmissionToSubmissionInfo(
     const primaryReviewInfo = reviewInfos[0]
     const primaryReview = reviewEntries[0]
 
+    const registrantMap = new Map<string, BackendResource>()
+    if (Array.isArray(registrants)) {
+        registrants.forEach(r => {
+            if (r?.memberId !== undefined && r?.memberId !== null) {
+                registrantMap.set(String(r.memberId), r)
+            }
+        })
+    }
+
     return {
         aggregateScore,
         id: data.id,
@@ -133,6 +143,7 @@ export function convertBackendSubmissionToSubmissionInfo(
         submittedDate,
         submittedDateString,
         type: data.type,
+        userInfo: registrantMap.get(data.memberId),
         virusScan: data.virusScan,
     }
 }
