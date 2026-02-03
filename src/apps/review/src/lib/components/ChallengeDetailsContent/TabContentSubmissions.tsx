@@ -28,7 +28,7 @@ import {
     ReviewAppContextModel,
     SubmissionInfo,
 } from '../../models'
-import { getProfileUrl, getHandleColor } from '../common/columnUtils'
+import { getHandleColor, getProfileUrl } from '../common/columnUtils'
 import { TableNoRecord } from '../TableNoRecord'
 import { TableWrapper } from '../TableWrapper'
 import { SubmissionHistoryModal } from '../SubmissionHistoryModal'
@@ -72,7 +72,6 @@ export const TabContentSubmissions: FC<Props> = props => {
     }: UseSubmissionDownloadAccessResult = useSubmissionDownloadAccess()
     const { loginUserInfo }: ReviewAppContextModel = useContext(ReviewAppContext)
     const { canViewAllSubmissions, isProjectManager, hasCopilotRole }: UseRolePermissionsResult = useRolePermissions()
-
 
     const { challengeInfo, registrants }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
 
@@ -375,9 +374,9 @@ export const TabContentSubmissions: FC<Props> = props => {
                                 <a href={profileUrl} style={{ color: resolvedColor }} target='_blank' rel='noreferrer'>
                                     {handle}
                                 </a>
-                                {showEmail && userInfo?.memberEmail ? (
+                                {userInfo?.memberEmail ? (
                                     <div className={styles.submitterEmail}>{userInfo.memberEmail}</div>
-                                ) : null}
+                                ) : ''}
                             </div>
                         )
                     },
