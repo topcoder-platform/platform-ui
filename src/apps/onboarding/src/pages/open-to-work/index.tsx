@@ -36,6 +36,8 @@ export const PageOpenToWorkContent: FC<PageOpenToWorkContentProps> = props => {
 
     const personalizationTrait = memberPersonalizationTraits?.[0]
 
+    const hasOpenToWork = !!personalizationTrait?.traits?.data?.[0]?.openToWork
+
     const [formValue, setFormValue] = useState<OpenToWorkData>({
         availability: undefined,
         availableForGigs: !!props.availableForGigs,
@@ -86,7 +88,7 @@ export const PageOpenToWorkContent: FC<PageOpenToWorkContentProps> = props => {
                 upsertMemberTraits(
                     props.profileHandle,
                     traitsPayload,
-                    !!personalizationTrait,
+                    hasOpenToWork,
                 ),
             ])
 

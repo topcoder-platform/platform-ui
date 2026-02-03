@@ -31,6 +31,8 @@ const OpenForGigsModifyModal: FC<OpenForGigsModifyModalProps> = (props: OpenForG
 
     const personalizationTrait = memberPersonalizationTraits?.[0] || undefined
 
+    const hasOpenToWork = !!personalizationTrait?.traits?.data?.[0]?.openToWork
+
     const [formValue, setFormValue] = useState<OpenToWorkData>({
         availability: undefined,
         availableForGigs: !!props.profile.availableForGigs,
@@ -66,7 +68,7 @@ const OpenForGigsModifyModal: FC<OpenForGigsModifyModalProps> = (props: OpenForG
             updateMemberProfile(props.profile.handle, { availableForGigs: formValue.availableForGigs }),
 
             // Update personalization trait for availability & preferredRoles
-            upsertMemberTraits(props.profile.handle, traitsPayload, !!personalizationTrait),
+            upsertMemberTraits(props.profile.handle, traitsPayload, hasOpenToWork),
         ])
             .then(() => {
                 toast.success('Work availability updated successfully.', { position: toast.POSITION.BOTTOM_RIGHT })
