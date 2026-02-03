@@ -77,6 +77,9 @@
     width: 16px;
     height: 16px;
     color: $teal-100;
+    flex-shrink: 0;
+    min-width: 16px;
+    min-height: 16px;
 }
 
 .actions {

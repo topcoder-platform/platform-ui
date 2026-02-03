@@ -83,6 +83,14 @@ export async function updateMemberPassword(
     )
 }
 
+export async function upsertMemberTraits(handle: string, payload: any, exists: boolean): Promise<UserTraits[]> {
+    if (exists) {
+        return updateMemberTraits(handle, payload)
+    }
+
+    return createMemberTraits(handle, payload)
+}
+
 export async function updateMemberTraits(
     handle: string,
     traits: UserTraits[],

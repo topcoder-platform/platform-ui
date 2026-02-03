@@ -287,3 +287,78 @@
     flex-wrap: wrap;
     margin-top: 8px;
 }
+
+.termsStatusCard {
+    display: grid;
+    gap: 12px;
+    padding: 16px;
+    border-radius: 12px;
+    background: $black-5;
+    border: 1px solid $black-10;
+}
+
+.termsStatusList {
+    display: grid;
+    gap: 12px;
+}
+
+.termsStatusRow {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.termsStatusIcon {
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    flex-shrink: 0;
+
+    :global(svg) {
+        width: 24px;
+        height: 24px;
+    }
+}
+
+.termsStatusIconSuccess {
+    color: $green-120;
+}
+
+.termsStatusIconPending {
+    color: $black-40;
+}
+
+.termsStatusText {
+    display: grid;
+    gap: 2px;
+}
+
+.termsStatusLabel {
+    font-weight: 600;
+    color: $black-100;
+}
+
+.termsStatusValue {
+    font-size: 0.85rem;
+    color: $black-60;
+}
+
+.termsStatusLoading {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: $black-60;
+}
+
+.termsStatusError {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    color: $red-120;
+}
+
+.inlineSpinner {
+    width: 18px;
+    height: 18px;
+}
