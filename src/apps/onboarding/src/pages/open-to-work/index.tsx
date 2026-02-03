@@ -7,7 +7,7 @@ import classNames from 'classnames'
 import { Button, IconOutline, PageDivider } from '~/libs/ui'
 import { useMemberTraits, UserTraitIds, UserTraits } from '~/libs/core'
 import { OpenToWorkData } from '~/libs/shared/lib/components/modify-open-to-work-modal'
-import { upsertMemberTraits } from '~/libs/core/lib/profile/profile-functions/profile-store/profile-xhr.store'
+import { updateMemberTraits } from '~/libs/core/lib/profile/profile-functions/profile-store/profile-xhr.store'
 import OpenToWorkForm from '~/libs/shared/lib/components/modify-open-to-work-modal/ModifyOpenToWorkModal'
 
 import { ProgressBar } from '../../components/progress-bar'
@@ -33,8 +33,6 @@ export const PageOpenToWorkContent: FC<PageOpenToWorkContentProps> = props => {
         props.profileHandle,
         { traitIds: UserTraitIds.personalization },
     )
-
-    const personalizationTrait = memberPersonalizationTraits?.[0]
 
     const [formValue, setFormValue] = useState<OpenToWorkData>({
         availability: undefined,
@@ -83,10 +81,9 @@ export const PageOpenToWorkContent: FC<PageOpenToWorkContentProps> = props => {
                 props.updateMemberOpenForWork(formValue.availableForGigs),
 
                 // personalization trait
-                upsertMemberTraits(
+                updateMemberTraits(
                     props.profileHandle,
                     traitsPayload,
-                    !!personalizationTrait,
                 ),
             ])
 
