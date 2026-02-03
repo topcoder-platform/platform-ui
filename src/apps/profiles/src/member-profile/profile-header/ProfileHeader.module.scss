@@ -186,10 +186,10 @@
     flex-direction: column;
     gap: $sp-4;
     align-items: end;
+    max-width: 500px;
 }
 
 .openToWorkSummary {
-    width: 90%;
     text-align: right;
 }
 
