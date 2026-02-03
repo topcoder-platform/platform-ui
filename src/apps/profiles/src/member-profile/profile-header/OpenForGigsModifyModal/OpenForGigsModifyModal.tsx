@@ -1,4 +1,4 @@
-import { Dispatch, FC, SetStateAction, useState } from 'react'
+import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
 
 import { BaseModal, Button } from '~/libs/ui'
@@ -29,15 +29,28 @@ const OpenForGigsModifyModal: FC<OpenForGigsModifyModalProps> = (props: OpenForG
             { traitIds: UserTraitIds.personalization },
         )
 
-    const personalizationData = memberPersonalizationTraits?.[0]?.traits?.data?.[0].openToWork || {}
-
     const personalizationTrait = memberPersonalizationTraits?.[0] || undefined
 
     const [formValue, setFormValue] = useState<OpenToWorkData>({
-        availability: personalizationData.availability ?? 'FULL_TIME',
+        availability: 'FULL_TIME',
         availableForGigs: !!props.profile.availableForGigs,
-        preferredRoles: personalizationData.preferredRoles ?? [],
+        preferredRoles: [],
     })
+
+    useEffect(() => {
+        if (!memberPersonalizationTraits) return
+
+        const personalizationData = memberPersonalizationTraits?.[0]?.traits?.data?.[0]?.openToWork || {}
+
+        setFormValue({
+            availability: personalizationData.availability ?? 'FULL_TIME',
+            availableForGigs: !!props.profile.availableForGigs,
+            preferredRoles: personalizationData.preferredRoles ?? [],
+        })
+    }, [
+        memberPersonalizationTraits,
+        props.profile.availableForGigs,
+    ])
 
     function handleOpenForWorkSave(): void {
         setIsSaving(true)
