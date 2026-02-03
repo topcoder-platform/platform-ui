@@ -388,6 +388,48 @@ const resolvePassingScoreFromMap = (
     return undefined
 }
 
+const resolveMinimumPassingScore = (
+    submission: SubmissionRow,
+    metadataCandidates: unknown[],
+    map: Map<string, number | undefined> | undefined,
+    defaultMinimumPassingScore: number | undefined,
+): number | undefined => {
+    const metadataMinimumPassingScore = metadataCandidates
+        .map(candidate => extractMinimumPassingScoreFromMetadata(candidate))
+        .find((value): value is number => typeof value === 'number')
+
+    const mapMinimumPassingScore = resolvePassingScoreFromMap(submission, map)
+
+    return metadataMinimumPassingScore ?? mapMinimumPassingScore ?? defaultMinimumPassingScore
+}
+
+const resolveScoreOutcome = (
+    reviewScore: number | undefined,
+    minimumPassingScore: number | undefined,
+): ReviewOutcome | undefined => {
+    if (typeof minimumPassingScore !== 'number' || typeof reviewScore !== 'number') {
+        return undefined
+    }
+
+    return reviewScore >= minimumPassingScore ? 'PASS' : 'FAIL'
+}
+
+const resolveForcedOutcome = (
+    scoreOutcome: ReviewOutcome | undefined,
+    isPassingReview: boolean | undefined,
+): ReviewOutcome | undefined => {
+    if (typeof isPassingReview !== 'boolean') {
+        return undefined
+    }
+
+    const forcedOutcome: ReviewOutcome = isPassingReview ? 'PASS' : 'FAIL'
+    if (scoreOutcome && forcedOutcome !== scoreOutcome) {
+        return undefined
+    }
+
+    return forcedOutcome
+}
+
 export interface ResolveSubmissionReviewResultOptions {
     minimumPassingScoreByScorecardId?: Map<string, number | undefined>
     defaultMinimumPassingScore?: number
@@ -402,11 +444,7 @@ export function resolveSubmissionReviewResult(
         defaultMinimumPassingScore,
     }: ResolveSubmissionReviewResultOptions = options
 
-    if (hasInProgressReviewStatus(submission)) {
-        return undefined
-    }
-
-    if (shouldDeferAggregatedOutcome(submission)) {
+    if (hasInProgressReviewStatus(submission) || shouldDeferAggregatedOutcome(submission)) {
         return undefined
     }
 
@@ -416,31 +454,20 @@ export function resolveSubmissionReviewResult(
         .map(candidate => extractOutcomeFromMetadata(candidate))
         .find((value): value is ReviewOutcome => Boolean(value))
 
-    const metadataMinimumPassingScore = metadataCandidates
-        .map(candidate => extractMinimumPassingScoreFromMetadata(candidate))
-        .find((value): value is number => typeof value === 'number')
-
-    const mapMinimumPassingScore = resolvePassingScoreFromMap(
+    const minimumPassingScore = resolveMinimumPassingScore(
         submission,
+        metadataCandidates,
         minimumPassingScoreByScorecardId,
+        defaultMinimumPassingScore,
     )
-
-    const minimumPassingScore = metadataMinimumPassingScore
-        ?? mapMinimumPassingScore
-        ?? defaultMinimumPassingScore
 
     const reviewScore = resolveReviewScore(submission)
 
-    const scoreOutcome: ReviewOutcome | undefined = (
-        typeof minimumPassingScore === 'number'
-        && typeof reviewScore === 'number'
-    )
-        ? (reviewScore >= minimumPassingScore ? 'PASS' : 'FAIL')
-        : undefined
+    const scoreOutcome = resolveScoreOutcome(reviewScore, minimumPassingScore)
 
-    const forcedOutcome = submission.isPassingReview
-    if (typeof forcedOutcome === 'boolean') {
-        return forcedOutcome ? 'PASS' : 'FAIL'
+    const forcedOutcome = resolveForcedOutcome(scoreOutcome, submission.isPassingReview)
+    if (forcedOutcome) {
+        return forcedOutcome
     }
 
     if (metadataOutcome === 'FAIL') {

@@ -170,12 +170,12 @@ export function hasSubmitterPassedThreshold(
                 return true
             }
         } else if (isReviewSubmission(submission)) {
-            if (submission.isPassingReview === true) {
-                return true
-            }
-
             const aggregateScore = parseFiniteNumber(submission.aggregateScore)
-            if (aggregateScore !== undefined && minScore !== undefined && aggregateScore >= minScore) {
+            if (aggregateScore !== undefined && minScore !== undefined) {
+                if (aggregateScore >= minScore) {
+                    return true
+                }
+            } else if (submission.isPassingReview === true) {
                 return true
             }
         }
