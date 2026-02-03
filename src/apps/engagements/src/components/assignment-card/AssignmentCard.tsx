@@ -190,7 +190,7 @@ const AssignmentCard: FC<AssignmentCardProps> = (props: AssignmentCardProps) => 
                 </div>
                 <div className={styles.metaItem}>
                     <IconSolid.CurrencyDollarIcon className={styles.metaIcon} />
-                    <span>{`Payment: ${paymentLabel}`}</span>
+                    <span>{`Payment: $${paymentLabel} per week`}</span>
                 </div>
             </div>
             <div className={styles.skills}>
