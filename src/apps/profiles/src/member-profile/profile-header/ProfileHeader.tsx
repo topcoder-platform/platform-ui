@@ -5,14 +5,18 @@ import moment from 'moment'
 
 import {
     NamesAndHandleAppearance,
+    useMemberTraits,
     UserProfile,
     UserRole,
+    UserTraitIds,
+    UserTraits,
 } from '~/libs/core'
 import { ProfilePicture, useCheckIsMobile } from '~/libs/shared'
 import { Tooltip } from '~/libs/ui'
 
 import { AddButton, EditMemberPropertyBtn } from '../../components'
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
+import { formatRoleList, getAvailabilityLabel, getPreferredRoleLabels } from '../../lib'
 
 import { OpenForGigs } from './OpenForGigs'
 import { ModifyMemberNameModal } from './ModifyMemberNameModal'
@@ -161,6 +165,37 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
         )
     }
 
+    const { data: memberPersonalizationTraits }: {
+                    data: UserTraits[] | undefined,
+                } = useMemberTraits(
+                    props.profile.handle,
+                    { traitIds: UserTraitIds.personalization },
+                )
+    const personalizationData = memberPersonalizationTraits?.[0]?.traits?.data?.[0]?.openToWork || {}
+
+    function renderOpenToWorkSummary(): JSX.Element {
+        const openToWork = props.profile.availableForGigs
+
+        if (!openToWork) return <></>
+
+        if (!personalizationData.availability || !personalizationData.preferredRoles?.length) return <></>
+
+        const availabilityLabel = getAvailabilityLabel(personalizationData.availability)
+        const roleLabels = getPreferredRoleLabels(personalizationData.preferredRoles)
+
+        return (
+            <p className={styles.openToWorkSummary}>
+                Interested in
+                {' '}
+                <span>{availabilityLabel}</span>
+                {' '}
+                roles as
+                {' '}
+                <span className={styles.roleText}>{formatRoleList(roleLabels)}</span>
+            </p>
+        )
+    }
+
     function renderMemberPhotoWrap(): JSX.Element {
         return (
             <div className={styles.photoWrap}>
@@ -233,16 +268,14 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
                     </p>
                 </div>
             </div>
-            <div className={styles.statusRow}>
-                {
-                    canSeeActivityBadge ? renderActivityStatus() : undefined
-                }
+            <div className={styles.statusSection}>
+                <div className={styles.statusRow}>
+                    {canSeeActivityBadge ? renderActivityStatus() : undefined}
 
-                {
-                // Showing only when they can edit until we have the talent search app
-                // and enough data to make this useful
-                    canEdit || isPrivilegedViewer ? renderOpenForWork() : undefined
-                }
+                    {canEdit || isPrivilegedViewer ? renderOpenForWork() : undefined}
+                </div>
+
+                {canEdit || isPrivilegedViewer ? renderOpenToWorkSummary() : undefined}
             </div>
 
             {

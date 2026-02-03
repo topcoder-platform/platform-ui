@@ -55,7 +55,7 @@
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
-        margin-top: $sp-8;
+        margin-top: $sp-13;
         flex: 1;
         width: 100%;
 
@@ -171,6 +171,7 @@
 
 .statusRow {
     display: flex;
+    justify-content: flex-end;
 
     @include ltelg {
         display: flex;
@@ -178,6 +179,22 @@
         flex-wrap: wrap;
         gap: $sp-2;
     }
+}
+
+.statusSection {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-4;
+    align-items: end;
+}
+
+.openToWorkSummary {
+    width: 90%;
+    text-align: right;
+}
+
+.roleText {
+    font-weight: 500;
 }
 
 :global(#start-hiring-form) {

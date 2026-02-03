@@ -14,3 +14,11 @@
         margin-bottom: $sp-4;
     }
 }
+
+.container {
+    :global(.inputMultiSelect) {
+    > input {
+      min-width: 100px !important;
+    }
+  }
+}
