@@ -1,5 +1,6 @@
 /* eslint-disable complexity */
 import { UserProfile, UserRole } from '~/libs/core'
+import { availabilityOptions, preferredRoleOptions } from '~/libs/shared/lib/components/modify-open-to-work-modal'
 
 import { ADMIN_ROLES, PHONE_NUMBER_ROLES } from '../config'
 
@@ -190,4 +191,22 @@ export function canSeePhones(authProfile: UserProfile | undefined, profile: User
     }
 
     return false
+}
+
+export function getAvailabilityLabel(value?: string): string | undefined {
+    return availabilityOptions.find(o => o.value === value)?.label
+}
+
+export function getPreferredRoleLabels(values: string[] = []): string[] {
+    return values
+        .map(v => preferredRoleOptions.find(o => o.value === v)?.label)
+        .filter(Boolean) as string[]
+}
+
+export function formatRoleList(labels: string[]): string {
+    if (labels.length === 1) return labels[0]
+    if (labels.length === 2) return `${labels[0]} and ${labels[1]}`
+
+    return `${labels.slice(0, -1)
+        .join(', ')} and ${labels[labels.length - 1]}`
 }
