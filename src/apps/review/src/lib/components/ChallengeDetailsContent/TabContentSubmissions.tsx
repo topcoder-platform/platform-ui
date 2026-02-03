@@ -71,7 +71,12 @@ export const TabContentSubmissions: FC<Props> = props => {
         getRestrictionMessageForMember,
     }: UseSubmissionDownloadAccessResult = useSubmissionDownloadAccess()
     const { loginUserInfo }: ReviewAppContextModel = useContext(ReviewAppContext)
-    const { canViewAllSubmissions, isAdmin, isProjectManager, hasCopilotRole }: UseRolePermissionsResult = useRolePermissions()
+    const {
+        canViewAllSubmissions,
+        isAdmin,
+        isProjectManager,
+        hasCopilotRole,
+    }: UseRolePermissionsResult = useRolePermissions()
 
     const { challengeInfo, registrants }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
 
