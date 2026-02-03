@@ -32,7 +32,7 @@ const OpenForGigsModifyModal: FC<OpenForGigsModifyModalProps> = (props: OpenForG
     const personalizationTrait = memberPersonalizationTraits?.[0] || undefined
 
     const [formValue, setFormValue] = useState<OpenToWorkData>({
-        availability: 'FULL_TIME',
+        availability: undefined,
         availableForGigs: !!props.profile.availableForGigs,
         preferredRoles: [],
     })
@@ -42,11 +42,12 @@ const OpenForGigsModifyModal: FC<OpenForGigsModifyModalProps> = (props: OpenForG
 
         const personalizationData = memberPersonalizationTraits?.[0]?.traits?.data?.[0]?.openToWork || {}
 
-        setFormValue({
-            availability: personalizationData.availability ?? 'FULL_TIME',
+        setFormValue(prev => ({
+            ...prev,
+            availability: personalizationData?.availability,
             availableForGigs: !!props.profile.availableForGigs,
-            preferredRoles: personalizationData.preferredRoles ?? [],
-        })
+            preferredRoles: personalizationData?.preferredRoles ?? [],
+        }))
     }, [
         memberPersonalizationTraits,
         props.profile.availableForGigs,
