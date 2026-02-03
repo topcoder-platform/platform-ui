@@ -131,7 +131,7 @@ const EngagementCard: FC<EngagementCardProps> = (props: EngagementCardProps) => 
                 </div>
                 <div className={styles.metaItem}>
                     <IconSolid.CurrencyDollarIcon className={styles.metaIcon} />
-                    <span>{`Compensation: ${compensationLabel}`}</span>
+                    <span>{`Weekly Compensation: ${compensationLabel}`}</span>
                 </div>
             </div>
             <div className={styles.skills}>

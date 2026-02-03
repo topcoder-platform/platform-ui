@@ -276,6 +276,9 @@
     height: 20px;
     color: $teal-100;
     margin-top: 2px;
+    flex-shrink: 0;
+    min-width: 20px;
+    min-height: 20px;
 }
 
 .metaLabel {
