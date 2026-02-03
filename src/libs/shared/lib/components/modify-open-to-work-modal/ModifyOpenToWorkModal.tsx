@@ -18,12 +18,12 @@ interface OpenToWorkFormProps {
     disabled?: boolean
 }
 
-const availabilityOptions = [
+export const availabilityOptions = [
     { label: 'Full-time', value: 'FULL_TIME' },
     { label: 'Part-time', value: 'PART_TIME' },
 ]
 
-const preferredRoleOptions: InputMultiselectOption[] = [
+export const preferredRoleOptions: InputMultiselectOption[] = [
     { label: 'AI / ML Engineer', value: 'AI_ML_ENGINEER' },
     { label: 'Data Scientist / Data Engineer', value: 'DATA_SCIENTIST_ENGINEER' },
     { label: 'Cybersecurity Analyst / Security Engineer', value: 'CYBERSECURITY_ENGINEER' },
@@ -92,6 +92,7 @@ const OpenToWorkForm: FC<OpenToWorkFormProps> = (props: OpenToWorkFormProps) => 
                     />
 
                     <InputMultiselect
+                        className={styles.inputMultiSelect}
                         name='preferredRoles'
                         label='Preferred Roles'
                         placeholder='Select preferred roles'
