@@ -71,7 +71,12 @@ export const TabContentSubmissions: FC<Props> = props => {
         getRestrictionMessageForMember,
     }: UseSubmissionDownloadAccessResult = useSubmissionDownloadAccess()
     const { loginUserInfo }: ReviewAppContextModel = useContext(ReviewAppContext)
-    const { canViewAllSubmissions, isProjectManager, hasCopilotRole }: UseRolePermissionsResult = useRolePermissions()
+    const {
+        canViewAllSubmissions,
+        isAdmin,
+        isProjectManager,
+        hasCopilotRole,
+    }: UseRolePermissionsResult = useRolePermissions()
 
     const { challengeInfo, registrants }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
 
@@ -266,7 +271,7 @@ export const TabContentSubmissions: FC<Props> = props => {
 
     const columns = useMemo<TableColumn<BackendSubmission>[]>(
         () => {
-            const showEmail = Boolean(isProjectManager || hasCopilotRole)
+            const showEmail = Boolean(isAdmin || isProjectManager || hasCopilotRole)
 
             const baseColumns: TableColumn<BackendSubmission>[] = [
                 {
@@ -458,6 +463,7 @@ export const TabContentSubmissions: FC<Props> = props => {
             historyByMember,
             handleHistoryButtonClick,
             shouldShowHistoryActions,
+            isAdmin,
             isProjectManager,
             hasCopilotRole,
             submissionInfoById,
