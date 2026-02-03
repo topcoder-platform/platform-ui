@@ -36,7 +36,7 @@ const formatAgreementRate = (value?: string): string => {
 
     const normalized = value.toString()
         .trim()
-    return normalized || FALLBACK_LABEL
+    return `$ ${normalized}` || FALLBACK_LABEL
 }
 
 const formatRemarks = (value?: string): string => {
@@ -113,7 +113,7 @@ const AssignmentOfferModal: FC<AssignmentOfferModalProps> = (
                     <h4>Assignment details</h4>
                     <div className={styles.metaGrid}>
                         <div className={styles.metaItem}>
-                            <span className={styles.metaLabel}>Agreement rate</span>
+                            <span className={styles.metaLabel}>Agreement rate (per week)</span>
                             <span className={styles.metaValue}>{agreementRateLabel}</span>
                         </div>
                         <div className={styles.metaItem}>
