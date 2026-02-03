@@ -276,6 +276,9 @@
     height: 20px;
     color: $teal-100;
     margin-top: 2px;
+    flex-shrink: 0;
+    min-width: 20px;
+    min-height: 20px;
 }
 
 .metaLabel {
@@ -389,4 +392,94 @@
 .applyActions {
     display: flex;
     gap: 12px;
+}
+
+.termsError {
+    color: $red-120;
+    font-size: 0.9rem;
+}
+
+.termsModalDescription {
+    color: $black-80;
+    margin-bottom: 12px;
+    line-height: 1.5;
+}
+
+.termsModalLoading {
+    display: flex;
+    justify-content: center;
+    padding: 16px 0;
+}
+
+.termsModalSpinner {
+    width: 24px;
+    height: 24px;
+}
+
+.termsModalBody {
+    background: $tc-white;
+    border: 1px solid $black-10;
+    border-radius: 12px;
+    padding: 16px;
+    max-height: 60vh;
+    overflow-y: auto;
+
+    .description {
+        margin-top: 0;
+    }
+}
+
+.termsDocuSign {
+    position: relative;
+    background: $tc-white;
+    border: 1px solid $black-10;
+    border-radius: 12px;
+    padding: 16px;
+    max-height: 70vh;
+    overflow: hidden;
+}
+
+.termsDocuSignOverlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.85);
+    z-index: 1;
+    text-align: center;
+    padding: 16px;
+}
+
+.termsDocuSignStatus {
+    color: $black-80;
+    font-size: 0.95rem;
+}
+
+.termsDocuSignFrame {
+    width: 100%;
+    height: 60vh;
+    border: 0;
+}
+
+.termsModalFallback {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    color: $black-80;
+}
+
+.termsModalLink {
+    color: $turq-160;
+    font-weight: 600;
+    text-decoration: underline;
+    width: fit-content;
+}
+
+.termsModalError {
+    margin-top: 12px;
+    color: $red-120;
+    font-size: 0.9rem;
 }

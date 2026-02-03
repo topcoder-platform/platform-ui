@@ -6,7 +6,7 @@ import remarkGfm from 'remark-gfm'
 import { IconSolid } from '~/libs/ui'
 
 import type { Engagement } from '../../lib/models'
-import { formatDate, formatDuration, formatLocation } from '../../lib/utils'
+import { formatDuration, formatLocation } from '../../lib/utils'
 import { StatusBadge } from '../status-badge'
 
 import styles from './EngagementCard.module.scss'
@@ -75,9 +75,7 @@ const EngagementCard: FC<EngagementCardProps> = (props: EngagementCardProps) => 
     const skills = engagement.requiredSkills ?? []
     const visibleSkills = skills.slice(0, 6)
     const extraSkillsCount = Math.max(0, skills.length - 6)
-    const deadlineText = engagement.applicationDeadline
-        ? formatDate(engagement.applicationDeadline)
-        : 'Deadline TBD'
+    const anticipatedStartLabel = formatEnumLabel(engagement.anticipatedStart) ?? 'Not specified'
     const { locationLabel, timeZoneLabel }: ReturnType<typeof formatLocation> = formatLocation(
         engagement.countries ?? [],
         engagement.timeZones ?? [],
@@ -133,7 +131,7 @@ const EngagementCard: FC<EngagementCardProps> = (props: EngagementCardProps) => 
                 </div>
                 <div className={styles.metaItem}>
                     <IconSolid.CurrencyDollarIcon className={styles.metaIcon} />
-                    <span>{`Compensation: ${compensationLabel}`}</span>
+                    <span>{`Weekly Compensation: ${compensationLabel}`}</span>
                 </div>
             </div>
             <div className={styles.skills}>
@@ -150,7 +148,7 @@ const EngagementCard: FC<EngagementCardProps> = (props: EngagementCardProps) => 
             </div>
             <div className={styles.deadline}>
                 <IconSolid.CalendarIcon className={styles.metaIcon} />
-                <span>{`Apply by ${deadlineText}`}</span>
+                <span>{`Anticipated start: ${anticipatedStartLabel}`}</span>
             </div>
         </button>
     )

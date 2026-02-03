@@ -1,5 +1,5 @@
 import { EnvironmentConfig } from '~/config'
-import { xhrGetAsync, xhrGetPaginatedAsync } from '~/libs/core'
+import { xhrGetAsync, xhrGetPaginatedAsync, xhrPatchAsync } from '~/libs/core'
 import { fetchSkillsByIds } from '~/libs/shared'
 
 import { EngagementStatus } from '../models'
@@ -24,6 +24,13 @@ interface BackendEngagementAssignment {
     engagementId?: string
     memberId?: string
     memberHandle?: string
+    status?: string | null
+    termsAccepted?: boolean | null
+    agreementRate?: string | number | null
+    otherRemarks?: string | null
+    startDate?: string | null
+    endDate?: string | null
+    terminationReason?: string | null
     createdAt?: string
     updatedAt?: string
 }
@@ -47,7 +54,7 @@ interface BackendEngagement {
     timeZones?: string[]
     countries?: string[]
     requiredSkills?: string[]
-    applicationDeadline?: string
+    anticipatedStart?: string | null
     status?: string
     createdAt?: string
     updatedAt?: string
@@ -151,6 +158,17 @@ const normalizeEngagementStatus = (status?: string): EngagementStatus => {
     return EngagementStatus.OPEN
 }
 
+const normalizeAssignmentStatus = (status?: string | null): string | undefined => {
+    if (!status) {
+        return undefined
+    }
+
+    const normalized = status.toString()
+        .trim()
+        .toLowerCase()
+    return normalized || undefined
+}
+
 const firstDefined = <T>(...values: Array<T | undefined>): T | undefined => (
     values.reduce<T | undefined>((acc, value) => acc ?? value ?? undefined, undefined)
 )
@@ -176,11 +194,18 @@ const normalizeAssignments = (assignments?: BackendEngagementAssignment[]): Enga
     }
 
     return assignments.map(assignment => ({
+        agreementRate: normalizeEnumValue(assignment.agreementRate),
         createdAt: withDefault('', assignment.createdAt),
+        endDate: normalizeEnumValue(assignment.endDate),
         engagementId: withDefault('', assignment.engagementId),
         id: withDefault('', assignment.id),
         memberHandle: withDefault('', assignment.memberHandle),
         memberId: withDefault('', assignment.memberId),
+        otherRemarks: normalizeEnumValue(assignment.otherRemarks),
+        startDate: normalizeEnumValue(assignment.startDate),
+        status: normalizeAssignmentStatus(assignment.status),
+        terminationReason: normalizeEnumValue(assignment.terminationReason),
+        termsAccepted: assignment.termsAccepted ?? undefined,
         updatedAt: withDefault('', assignment.updatedAt),
     }))
 }
@@ -197,7 +222,7 @@ const normalizeDuration = (data: BackendEngagement): Engagement['duration'] => {
 }
 
 const normalizeEngagement = (data: BackendEngagement): Engagement => ({
-    applicationDeadline: withDefault('', data.applicationDeadline),
+    anticipatedStart: normalizeEnumValue(data.anticipatedStart),
     assignments: normalizeAssignments(data.assignments),
     compensationRange: data.compensationRange ?? undefined,
     countries: withDefault([], data.countries),
@@ -347,6 +372,26 @@ export const getMyAssignedEngagements = async (
         ...normalized,
         data: hydratedWithEmails,
     }
+}
+
+export const acceptAssignmentOffer = async (
+    engagementId: string,
+    assignmentId: string,
+): Promise<void> => {
+    await xhrPatchAsync<Record<string, never>, BackendEngagementAssignment>(
+        `${BASE_URL}/${engagementId}/assignments/${assignmentId}/accept-offer`,
+        {},
+    )
+}
+
+export const rejectAssignmentOffer = async (
+    engagementId: string,
+    assignmentId: string,
+): Promise<void> => {
+    await xhrPatchAsync<Record<string, never>, BackendEngagementAssignment>(
+        `${BASE_URL}/${engagementId}/assignments/${assignmentId}/reject-offer`,
+        {},
+    )
 }
 
 export const getEngagementByNanoId = async (nanoId: string): Promise<Engagement> => {

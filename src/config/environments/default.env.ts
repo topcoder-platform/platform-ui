@@ -113,6 +113,8 @@ export const ENABLE_TCA_CERT_MONETIZATION = false
 
 export const TERMS_URL
     = 'https://www.topcoder-dev.com/challenges/terms/detail/317cd8f9-d66c-4f2a-8774-63c612d99cd4'
+export const NDA_TERMS_URL
+    = 'https://www.topcoder-dev.com/challenges/terms/detail/e5811a7b-43d1-407a-a064-69e5015b4900'
 export const PRIVACY_POLICY_URL = `${TOPCODER_URL}/policy`
 
 export const GAMIFICATION_ORG_ID = getReactEnv<string>(
