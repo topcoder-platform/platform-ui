@@ -60,8 +60,8 @@ export const ChallengeDetailContextProvider: FC<PropsWithChildren> = props => {
     )
 
     const submissionInfos = useMemo<SubmissionInfo[]>(
-        () => challengeSubmissions.map(convertBackendSubmissionToSubmissionInfo),
-        [challengeSubmissions],
+        () => challengeSubmissions.map(s => convertBackendSubmissionToSubmissionInfo(s, registrants)),
+        [challengeSubmissions, registrants],
     )
 
     const enrichedChallengeInfo = useMemo(
