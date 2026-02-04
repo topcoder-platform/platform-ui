@@ -2,7 +2,6 @@ import { useNavigate } from 'react-router-dom'
 import { FC, MutableRefObject, useEffect, useRef, useState } from 'react'
 import { connect } from 'react-redux'
 import { toast } from 'react-toastify'
-import { reject } from 'lodash'
 import classNames from 'classnames'
 
 import { Button, IconOutline, PageDivider } from '~/libs/ui'
@@ -12,6 +11,7 @@ import { updateOrCreateMemberTraitsAsync,
     UserTraitIds,
     UserTraits } from '~/libs/core'
 import { OpenToWorkData } from '~/libs/shared/lib/components/modify-open-to-work-modal'
+import { upsertTrait } from '~/libs/shared'
 import OpenToWorkForm from '~/libs/shared/lib/components/modify-open-to-work-modal/ModifyOpenToWorkModal'
 
 import { ProgressBar } from '../../components/progress-bar'
@@ -72,7 +72,16 @@ export const PageOpenToWorkContent: FC<PageOpenToWorkContentProps> = props => {
     async function goToNextStep(): Promise<void> {
         setLoading(true)
 
-        const memberPersonalizationTraitsData = memberPersonalizationTraits?.[0]?.traits?.data || {}
+        const existingData = memberPersonalizationTraits?.[0]?.traits?.data || []
+
+        const personalizationData = upsertTrait(
+            'openToWork',
+            {
+                availability: formValue.availability,
+                preferredRoles: formValue.preferredRoles,
+            },
+            existingData,
+        )
 
         try {
             await Promise.all([
@@ -84,18 +93,7 @@ export const PageOpenToWorkContent: FC<PageOpenToWorkContentProps> = props => {
                     categoryName: UserTraitCategoryNames.personalization,
                     traitId: UserTraitIds.personalization,
                     traits: {
-                        data: [
-                            ...reject(
-                                memberPersonalizationTraitsData,
-                                (trait: any) => trait.openToWork,
-                            ),
-                            {
-                                openToWork: {
-                                    availability: formValue.availability,
-                                    preferredRoles: formValue.preferredRoles,
-                                },
-                            },
-                        ],
+                        data: personalizationData,
                     },
                 }]),
             ])

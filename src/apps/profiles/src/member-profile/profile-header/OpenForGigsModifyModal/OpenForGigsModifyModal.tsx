@@ -1,6 +1,5 @@
 import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
-import { reject } from 'lodash'
 
 import { BaseModal, Button } from '~/libs/ui'
 import {
@@ -14,6 +13,7 @@ import { OpenToWorkData } from '~/libs/shared/lib/components/modify-open-to-work
 import {
     updateMemberProfile,
 } from '~/libs/core/lib/profile/profile-functions/profile-store/profile-xhr.store'
+import { upsertTrait } from '~/libs/shared/lib/utils/methods'
 import OpenToWorkForm from '~/libs/shared/lib/components/modify-open-to-work-modal/ModifyOpenToWorkModal'
 
 import styles from './OpenForGigsModifyModal.module.scss'
@@ -29,13 +29,6 @@ interface OpenForGigsModifyModalProps {
 const OpenForGigsModifyModal: FC<OpenForGigsModifyModalProps> = (props: OpenForGigsModifyModalProps) => {
     const [isSaving, setIsSaving]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
-
-    // const { data: memberPersonalizationTraits }: {
-    //         data: UserTraits[] | undefined,
-    //     } = useMemberTraits(
-    //         props.profile.handle,
-    //         { traitIds: UserTraitIds.personalization },
-    //     )
 
     const memberPersonalizationTraits = props.memberPersonalizationTraits
 
@@ -64,7 +57,16 @@ const OpenForGigsModifyModal: FC<OpenForGigsModifyModalProps> = (props: OpenForG
     function handleOpenForWorkSave(): void {
         setIsSaving(true)
 
-        const memberPersonalizationTraitsData = memberPersonalizationTraits?.[0]?.traits?.data || {}
+        const existingData = memberPersonalizationTraits?.[0]?.traits?.data || []
+
+        const personalizationData = upsertTrait(
+            'openToWork',
+            {
+                availability: formValue.availability,
+                preferredRoles: formValue.preferredRoles,
+            },
+            existingData,
+        )
 
         Promise.all([
         // Update availableForGigs in member profile
@@ -75,18 +77,7 @@ const OpenForGigsModifyModal: FC<OpenForGigsModifyModalProps> = (props: OpenForG
                 categoryName: UserTraitCategoryNames.personalization,
                 traitId: UserTraitIds.personalization,
                 traits: {
-                    data: [
-                        ...reject(
-                            memberPersonalizationTraitsData,
-                            (trait: any) => trait.openToWork,
-                        ),
-                        {
-                            openToWork: {
-                                availability: formValue.availability,
-                                preferredRoles: formValue.preferredRoles,
-                            },
-                        },
-                    ],
+                    data: personalizationData,
                 },
             }]),
         ])
