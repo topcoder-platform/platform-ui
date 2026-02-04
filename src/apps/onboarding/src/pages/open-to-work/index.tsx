@@ -7,6 +7,7 @@ import classNames from 'classnames'
 import { Button, IconOutline, PageDivider } from '~/libs/ui'
 import { updateOrCreateMemberTraitsAsync,
     useMemberTraits,
+    UserTrait,
     UserTraitCategoryNames,
     UserTraitIds,
     UserTraits } from '~/libs/core'
@@ -47,14 +48,17 @@ export const PageOpenToWorkContent: FC<PageOpenToWorkContentProps> = props => {
     useEffect(() => {
         if (!memberPersonalizationTraits) return
 
-        const personalizationData
-      = memberPersonalizationTraits?.[0]?.traits?.data?.[0]?.openToWork || {}
+        const personalizationData = memberPersonalizationTraits?.[0]?.traits?.data || {}
+
+        const openToWorkItem = personalizationData.find(
+            (item: UserTrait) => item?.openToWork,
+        )?.openToWork ?? {}
 
         setFormValue(prev => ({
             ...prev,
-            availability: personalizationData?.availability,
+            availability: openToWorkItem?.availability,
             availableForGigs: !!props.availableForGigs,
-            preferredRoles: personalizationData?.preferredRoles ?? [],
+            preferredRoles: openToWorkItem?.preferredRoles ?? [],
         }))
     }, [memberPersonalizationTraits, props.availableForGigs])
 

@@ -9,6 +9,7 @@ import {
     useMemberTraits,
     UserProfile,
     UserRole,
+    UserTrait,
     UserTraitIds,
     UserTraits,
 } from '~/libs/core'
@@ -136,7 +137,15 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
             props.profile.handle,
             { traitIds: UserTraitIds.personalization },
         )
-    const personalizationData = memberPersonalizationTraits?.[0]?.traits?.data?.[0]?.openToWork || undefined
+    const personalizationData = memberPersonalizationTraits?.[0]?.traits?.data
+
+    const openToWorkItem = personalizationData?.find(
+        (item: UserTrait) => item?.openToWork,
+    )?.openToWork ?? {}
+
+    const hasOpenToWork = personalizationData?.some(
+        (item: UserTrait) => !!item?.openToWork,
+    )
 
     function renderOpenForWork(): JSX.Element {
         const showMyStatusLabel = canEdit
@@ -178,22 +187,21 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
     }
 
     function renderOpenToWorkSummary(): JSX.Element {
-        const openToWork = personalizationData
 
-        if (!openToWork) return <></>
+        if (!hasOpenToWork) return <></>
 
-        const availabilityLabel = getAvailabilityLabel(personalizationData.availability)
-        const roleLabels = getPreferredRoleLabels(personalizationData.preferredRoles)
+        const availabilityLabel = getAvailabilityLabel(openToWorkItem.availability)
+        const roleLabels = getPreferredRoleLabels(openToWorkItem.preferredRoles)
 
         return (
             <p className={styles.openToWorkSummary}>
                 Interested in
                 {' '}
-                {personalizationData.availability && <span>{availabilityLabel}</span>}
+                {openToWorkItem.availability && <span>{availabilityLabel}</span>}
                 {' '}
                 roles
                 {' '}
-                {personalizationData.preferredRoles?.length > 0 && (
+                {openToWorkItem.preferredRoles?.length > 0 && (
                     <span>
                         as
                         {' '}
