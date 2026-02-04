@@ -228,6 +228,7 @@ workflows:
                               - dev
                               - mm-final-2025-reveal
                               - engagements
+                              - HOTFIX-PM-3269
 
             - deployQa:
                   context: org-global
