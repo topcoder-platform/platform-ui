@@ -1,14 +1,19 @@
 import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
+import { reject } from 'lodash'
 
 import { BaseModal, Button } from '~/libs/ui'
-import { useMemberTraits, UserProfile, UserTraitIds, UserTraits } from '~/libs/core'
+import {
+    updateOrCreateMemberTraitsAsync,
+    useMemberTraits,
+    UserProfile,
+    UserTraitCategoryNames,
+    UserTraitIds,
+    UserTraits } from '~/libs/core'
 import { OpenToWorkData } from '~/libs/shared/lib/components/modify-open-to-work-modal'
 import {
     updateMemberProfile,
-    updateMemberTraits,
 } from '~/libs/core/lib/profile/profile-functions/profile-store/profile-xhr.store'
-import { createPersonalizationsPayloadData } from '~/apps/onboarding/src/redux/actions/member'
 import OpenToWorkForm from '~/libs/shared/lib/components/modify-open-to-work-modal/ModifyOpenToWorkModal'
 
 import styles from './OpenForGigsModifyModal.module.scss'
@@ -55,17 +60,31 @@ const OpenForGigsModifyModal: FC<OpenForGigsModifyModalProps> = (props: OpenForG
     function handleOpenForWorkSave(): void {
         setIsSaving(true)
 
-        const traitsPayload = createPersonalizationsPayloadData([{
-            availability: formValue.availability,
-            preferredRoles: formValue.preferredRoles,
-        }])
+        const memberPersonalizationTraitsData = memberPersonalizationTraits?.[0]?.traits?.data || {}
 
         Promise.all([
         // Update availableForGigs in member profile
             updateMemberProfile(props.profile.handle, { availableForGigs: formValue.availableForGigs }),
 
             // Update personalization trait for availability & preferredRoles
-            updateMemberTraits(props.profile.handle, traitsPayload),
+            updateOrCreateMemberTraitsAsync(props.profile.handle, [{
+                categoryName: UserTraitCategoryNames.personalization,
+                traitId: UserTraitIds.personalization,
+                traits: {
+                    data: [
+                        ...reject(
+                            memberPersonalizationTraitsData,
+                            (trait: any) => trait.openToWork,
+                        ),
+                        {
+                            openToWork: {
+                                availability: formValue.availability,
+                                preferredRoles: formValue.preferredRoles,
+                            },
+                        },
+                    ],
+                },
+            }]),
         ])
             .then(() => {
                 toast.success('Work availability updated successfully.', { position: toast.POSITION.BOTTOM_RIGHT })
