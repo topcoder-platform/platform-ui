@@ -188,10 +188,27 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
 
     function renderOpenToWorkSummary(): JSX.Element {
 
-        if (!hasOpenToWork) return <></>
+        if (!hasOpenToWork || !props.profile.availableForGigs) return <></>
 
         const availabilityLabel = getAvailabilityLabel(openToWorkItem.availability)
         const roleLabels = getPreferredRoleLabels(openToWorkItem.preferredRoles)
+
+        const MAX_VISIBLE_ROLES = 5
+        const visibleRoles = roleLabels.slice(0, MAX_VISIBLE_ROLES)
+        const hasMoreRoles = roleLabels.length > MAX_VISIBLE_ROLES
+        const tooltipContent = roleLabels.join(', ')
+
+        const rolesContent = (
+            <span className={styles.rolesText}>
+                as
+                {' '}
+                <span className={styles.roleText}>
+                    {formatRoleList(visibleRoles)}
+                    {hasMoreRoles && '…'}
+                </span>
+            </span>
+        )
+        const shouldShowTooltip = openToWorkItem.preferredRoles?.length > 5
 
         return (
             <p className={styles.openToWorkSummary}>
@@ -202,11 +219,13 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
                 roles
                 {' '}
                 {openToWorkItem.preferredRoles?.length > 0 && (
-                    <span>
-                        as
-                        {' '}
-                        <span className={styles.roleText}>{formatRoleList(roleLabels)}</span>
-                    </span>
+                    shouldShowTooltip ? (
+                        <Tooltip content={tooltipContent} triggerOn='hover'>
+                            {rolesContent}
+                        </Tooltip>
+                    ) : (
+                        rolesContent
+                    )
                 )}
             </p>
         )
