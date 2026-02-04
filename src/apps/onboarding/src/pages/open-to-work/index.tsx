@@ -48,7 +48,7 @@ export const PageOpenToWorkContent: FC<PageOpenToWorkContentProps> = props => {
     useEffect(() => {
         if (!memberPersonalizationTraits) return
 
-        const personalizationData = memberPersonalizationTraits?.[0]?.traits?.data || {}
+        const personalizationData = memberPersonalizationTraits?.[0]?.traits?.data || []
 
         const openToWorkItem = personalizationData.find(
             (item: UserTrait) => item?.openToWork,
