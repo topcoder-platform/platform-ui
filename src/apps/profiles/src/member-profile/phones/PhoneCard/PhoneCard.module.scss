@@ -1,0 +1,74 @@
+@import '@libs/ui/styles/includes';
+
+.phoneCard {
+
+    &.phoneCardModalView {
+        margin-bottom: $sp-2;
+    }
+
+    .phoneCardContent {
+        display: flex;
+        align-items: center;
+    }
+
+    .phoneCardLeft {
+        display: flex;
+        align-items: center;
+        flex: 1;
+    }
+
+    .phoneIcon {
+        width: 20px;
+        height: 20px;
+        margin-right: $sp-3;
+        font-size: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .phoneInfo {
+        display: flex;
+        flex-direction: column;
+        gap: $sp-1;
+    }
+
+    .phoneType {
+        font-size: 12px;
+        line-height: 16px;
+        color: $black-60;
+        text-transform: capitalize;
+    }
+
+    .phoneNumber {
+        font-size: 14px;
+        line-height: 22px;
+        color: $black-100;
+    }
+
+    .phoneCardRight {
+        display: flex;
+        align-items: center;
+        gap: $sp-1;
+    }
+
+    .editButton {
+        margin-left: auto;
+        padding: 0 !important;
+        padding-left: $sp-4 !important;
+        color: $black-100;
+
+        svg {
+            width: 20px;
+            height: 20px;
+        }
+    }
+
+    .copyButton {
+        margin-left: 10px;
+    }
+    .phoneCardNotFirst {
+        margin-left: 32px;
+    }
+}
+

@@ -1,0 +1,364 @@
+@import '@libs/ui/styles/includes';
+@import '../../styles/responsive';
+
+.formContainer {
+    display: grid;
+    gap: 20px;
+    max-width: 820px;
+    margin: 0 auto;
+}
+
+.form {
+    display: grid;
+    gap: 20px;
+}
+
+.section {
+    background: $tc-white;
+    border: 1px solid $black-10;
+    border-radius: 16px;
+    padding: 20px;
+    display: grid;
+    gap: 16px;
+}
+
+.sectionTitle {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: $black-100;
+}
+
+.readOnlyGrid {
+    @include gridColumns(2, 1, 1, 16px);
+}
+
+.readOnlyField {
+    background: $black-5;
+    color: $black-60;
+}
+
+.fieldGroup {
+    display: grid;
+    gap: 6px;
+}
+
+.fieldLabel {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: $black-80;
+}
+
+.requiredIndicator {
+    color: $red-120;
+    margin-left: 4px;
+}
+
+.fieldHint {
+    font-size: 0.8rem;
+    color: $black-60;
+}
+
+.inputField {
+    width: 100%;
+    border: 1px solid $black-20;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 0.95rem;
+    color: $black-100;
+    background: $tc-white;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.inputField:focus {
+    outline: none;
+    border-color: $turq-160;
+    box-shadow: 0 0 0 3px rgba($turq-160, 0.15);
+}
+
+.inputField:disabled {
+    background: $black-5;
+    color: $black-60;
+    cursor: not-allowed;
+}
+
+.inputError {
+    border-color: $red-120;
+    box-shadow: 0 0 0 1px rgba($red-120, 0.15);
+}
+
+.textareaField {
+    min-height: 140px;
+    resize: vertical;
+}
+
+.fieldMeta {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.fieldError {
+    color: $red-120;
+    font-size: 0.8rem;
+}
+
+.characterCounter {
+    font-size: 0.75rem;
+    color: $black-60;
+}
+
+.characterCounterWarning {
+    color: $orange-140;
+}
+
+.characterCounterLimit {
+    color: $red-120;
+}
+
+.portfolioList {
+    display: grid;
+    gap: 12px;
+}
+
+.portfolioItem {
+    display: grid;
+    gap: 6px;
+}
+
+.portfolioActions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.addButton,
+.removeButton {
+    border: none;
+    background: none;
+    color: $turq-160;
+    font-weight: 600;
+    padding: 0;
+    cursor: pointer;
+}
+
+.addButton:hover,
+.removeButton:hover {
+    color: $turq-140;
+}
+
+.addButton:disabled,
+.removeButton:disabled {
+    color: $black-40;
+    cursor: not-allowed;
+}
+
+.submitSection {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    padding-top: 12px;
+}
+
+.submitLabel {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.submitSpinner {
+    width: 16px;
+    height: 16px;
+    background: transparent;
+    position: static;
+}
+
+.submitSpinner svg {
+    width: 16px;
+    height: 16px;
+}
+
+.loadingState {
+    display: grid;
+    gap: 12px;
+    padding: 16px;
+    border-radius: 16px;
+    background: $black-5;
+    border: 1px solid $black-10;
+}
+
+.loadingSpinner {
+    width: 24px;
+    height: 24px;
+    background: transparent;
+    position: static;
+}
+
+.loadingSpinner svg {
+    width: 24px;
+    height: 24px;
+}
+
+.skeletonLine,
+.skeletonBlock {
+    position: relative;
+    background: $black-10;
+    overflow: hidden;
+    border-radius: 10px;
+}
+
+.skeletonLine {
+    height: 12px;
+    width: 80%;
+}
+
+.skeletonBlock {
+    height: 120px;
+    width: 100%;
+}
+
+.skeletonLine::after,
+.skeletonBlock::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgba($black-40, 0.35), transparent);
+    animation: shimmer 1.6s infinite;
+}
+
+@keyframes shimmer {
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+.errorState {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+    border-radius: 12px;
+    background: $red-25;
+    border: 1px solid $red-50;
+    color: $red-140;
+}
+
+.errorIcon {
+    width: 24px;
+    height: 24px;
+    color: $red-120;
+}
+
+.errorText {
+    margin: 0 0 8px 0;
+}
+
+.infoMessage {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+    border-radius: 12px;
+    background: $black-5;
+    border: 1px solid $black-10;
+    color: $black-80;
+}
+
+.infoMessage[data-variant='warning'] {
+    background: $orange-25;
+    border-color: $orange-100;
+    color: $orange-140;
+}
+
+.infoMessage[data-variant='error'] {
+    background: $red-25;
+    border-color: $red-50;
+    color: $red-140;
+}
+
+.infoIcon {
+    width: 22px;
+    height: 22px;
+}
+
+.infoActions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+}
+
+.termsStatusCard {
+    display: grid;
+    gap: 12px;
+    padding: 16px;
+    border-radius: 12px;
+    background: $black-5;
+    border: 1px solid $black-10;
+}
+
+.termsStatusList {
+    display: grid;
+    gap: 12px;
+}
+
+.termsStatusRow {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.termsStatusIcon {
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    flex-shrink: 0;
+
+    :global(svg) {
+        width: 24px;
+        height: 24px;
+    }
+}
+
+.termsStatusIconSuccess {
+    color: $green-120;
+}
+
+.termsStatusIconPending {
+    color: $black-40;
+}
+
+.termsStatusText {
+    display: grid;
+    gap: 2px;
+}
+
+.termsStatusLabel {
+    font-weight: 600;
+    color: $black-100;
+}
+
+.termsStatusValue {
+    font-size: 0.85rem;
+    color: $black-60;
+}
+
+.termsStatusLoading {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: $black-60;
+}
+
+.termsStatusError {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    color: $red-120;
+}
+
+.inlineSpinner {
+    width: 18px;
+    height: 18px;
+}

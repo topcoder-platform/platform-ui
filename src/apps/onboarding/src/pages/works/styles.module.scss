@@ -1,9 +1,39 @@
+@import '@libs/ui/styles/includes';
+
 .container {
   min-height: 100%;
 }
 
 .blockContent {
   margin-bottom: 40px;
+}
+
+.workCardWrap {
+  display: flex;
+  align-items: flex-start;
+  border: 1px solid $black-20;
+  border-radius: 8px;
+  padding: $sp-4;
+}
+
+.workCardActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: $sp-15;
+
+  :global(button) {
+    padding: $sp-2;
+    color: $turq-160;
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+
+  svg {
+    width: 24px;
+    height: 24px;
+  }
 }
 
 .ProgressBar {

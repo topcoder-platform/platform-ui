@@ -8,6 +8,8 @@ export enum NamesAndHandleAppearance {
     nameOnly = 'namesOnly',
 }
 
+export type AvailabilityType = 'FULL_TIME' | 'PART_TIME'
+
 export interface UserProfile {
     addresses?: Array<{
         city?: string
@@ -32,6 +34,10 @@ export interface UserProfile {
     maxRating: {
         rating: number
     }
+    phones?: Array<{
+        type: string
+        number: string
+    }>
     photoURL?: string
     roles: Array<string>
     skills: Array<UserSkill>
@@ -40,4 +46,7 @@ export interface UserProfile {
     updatedAt: number
     userId: number
     namesAndHandleAppearance: NamesAndHandleAppearance
+    identityVerified?: boolean
+    recentActivity?: boolean
+
 }

@@ -13,9 +13,18 @@
     color: $black-100;
 
     margin-bottom: $sp-10;
+    margin-top: $sp-6;
 
     strong {
         font-weight: 900;
+    }
+
+    small {
+        font-family: $font-roboto;
+        font-weight: 400;
+        font-size: 16px;
+        line-height: 24px;
+        color: #EF476F;
     }
 
     @include ltemd {

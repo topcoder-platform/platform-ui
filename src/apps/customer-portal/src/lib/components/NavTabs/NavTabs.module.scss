@@ -1,0 +1,121 @@
+@import '@libs/ui/styles/includes';
+
+.nav-bar {
+    background-color: #f7f5f1;
+    position: relative;
+    @include ltemd {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+    }
+    &::before {
+        content: '';
+        display: block;
+        height: 68px;
+        position: absolute;
+        inset: 0;
+        top: -68px;
+        pointer-events: none;
+        box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 12px;
+    }
+    .inner {
+        max-width: $xxl-min;
+        padding: $sp-3 0;
+        @include pagePaddings;
+        margin: 0 auto;
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        @include ltemd {
+            display: block;
+            position: relative;
+        }
+        .title {
+            font-family: 'Nunito Sans', sans-serif;
+            font-weight: 700;
+            color: var(--FontColor);
+            position: relative;
+            line-height: 22px;
+            @include ltemd {
+                cursor: pointer;
+                &::after {
+                    background: url('../../assets/chevron-down.svg')
+                        no-repeat;
+                    display: block;
+                    height: 24px;
+                    width: 24px;
+                    position: absolute;
+                    top: 0;
+                    right: 0;
+                    content: '';
+                }
+            }
+        }
+        .tab {
+            display: flex;
+            align-items: center;
+            font-size: 16px;
+            @include ltemd {
+                display: none;
+            }
+            li {
+                font-family: 'Nunito Sans', sans-serif;
+                margin-left: $sp-8;
+                cursor: pointer;
+                color: var(--FontColor);
+                line-height: 32px;
+                display: flex;
+                align-items: center;
+                gap: $sp-2;
+                &.active {
+                    font-weight: 700;
+                }
+                @include ltelg {
+                    margin-left: $sp-4;
+                }
+            }
+        }
+    }
+
+    @include ltemd {
+        &.open {
+            .inner {
+                .title {
+                    &::after {
+                        transform: rotate(-180deg);
+                    }
+                }
+                .tab {
+                    background-color: var(--Appeal);
+                    display: block;
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    margin-top: 56px;
+                    z-index: 100;
+                    li {
+                        padding: $sp-2 $sp-6;
+                        margin-left: 0;
+                        width: 100%;
+                        &.active {
+                            background-color: var(--Actived);
+                            color: var(--invertButtonColor);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+.tabLabel {
+    display: inline-flex;
+    align-items: center;
+}
+
+.externalIcon {
+    width: 16px;
+    height: 16px;
+}

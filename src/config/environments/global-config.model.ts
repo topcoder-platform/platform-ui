@@ -13,6 +13,7 @@ export interface GlobalConfig {
     TC_DOMAIN: string
     TOPCODER_URL: string
     PLATFORMUI_URL: string
+    ENGAGEMENTS_URL: string
     USER_PROFILE_URL: string
     API: {
         V1: string
@@ -38,11 +39,15 @@ export interface GlobalConfig {
         API_VERSION: string | undefined
     }
     URLS: {
+        ACADEMY_CERTIFICATION: string
+        ACADEMY_COURSE: string
         USER_PROFILE: string
         ACCOUNT_SETTINGS: string
         UNIVERSAL_NAV: string
         CHALLENGES_PAGE: string
     }
+    TERMS_URL?: string
+    NDA_TERMS_URL?: string
     MEMBER_VERIFY_LOOKER: number
     ENABLE_TCA_CERT_MONETIZATION: boolean
     VANILLA_FORUM: {

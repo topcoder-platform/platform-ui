@@ -4,7 +4,7 @@
 import { min } from 'date-fns'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 
-import { TOPCODER_URL } from '~/config/environments/default.env'
+import { ENGAGEMENTS_URL, TOPCODER_URL } from '~/config/environments/default.env'
 import { InputDatePicker, InputSelect, InputText } from '~/libs/ui'
 
 import { Winning } from '../../models/WinningDetail'
@@ -175,7 +175,13 @@ const PaymentEdit: React.FC<PaymentEditFormProps> = (props: PaymentEditFormProps
         }
     }, [dirty, auditNote, props, grossAmountErrorString.length, description, grossAmount, paymentStatus, releaseDate, initialValues])
 
-    const getLink = (externalId: string): string => `${TOPCODER_URL}/challenges/${externalId}`
+    const getLink = (payment: Winning): string => {
+        if (payment.type.toLowerCase() === 'engagement payment') {
+            return `${ENGAGEMENTS_URL}/${payment.externalId}`
+        }
+
+        return `${TOPCODER_URL}/challenges/${payment.externalId}`
+    }
 
     const options = useCallback(() => {
         if (props.payment.status.toUpperCase() !== 'PAID') {
@@ -205,7 +211,7 @@ const PaymentEdit: React.FC<PaymentEditFormProps> = (props: PaymentEditFormProps
             <div className={styles.inputGroup}>
                 <div className={styles.infoItem}>
                     <span className={styles.label}>Description</span>
-                    <a href={getLink(props.payment.externalId)} target='_blank' rel='noreferrer'>
+                    <a href={getLink(props.payment)} target='_blank' rel='noreferrer'>
                         {props.payment.description}
                     </a>
                 </div>

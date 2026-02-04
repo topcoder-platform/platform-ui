@@ -1,0 +1,96 @@
+@import '@libs/ui/styles/includes';
+
+.card {
+    display: grid;
+    gap: 12px;
+    padding: 18px;
+    border-radius: 16px;
+    border: 1px solid $black-10;
+    background: $tc-white;
+    transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+}
+
+.clickable {
+    cursor: pointer;
+}
+
+.clickable:hover {
+    border-color: $turq-160;
+    box-shadow: 0 12px 30px rgba($black-100, 0.08);
+    transform: translateY(-2px);
+}
+
+.header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.titleRow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.titleIcon {
+    width: 18px;
+    height: 18px;
+    color: $teal-100;
+}
+
+.title {
+    margin: 0;
+    font-size: 1rem;
+    color: $black-100;
+}
+
+.titleLink {
+    color: $turq-160;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.titleLink:hover,
+.titleLink:focus {
+    color: $turq-140;
+    text-decoration: underline;
+}
+
+.metaRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.metaItem {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    color: $black-80;
+}
+
+.metaIcon {
+    width: 16px;
+    height: 16px;
+    color: $teal-100;
+    flex-shrink: 0;
+    min-width: 16px;
+    min-height: 16px;
+}
+
+.actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.viewDetailsButton {
+    margin-left: auto;
+    padding: 0;
+    font-weight: 600;
+}

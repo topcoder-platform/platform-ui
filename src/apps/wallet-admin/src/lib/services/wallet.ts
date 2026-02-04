@@ -124,6 +124,7 @@ export async function getPayments(limit: number, offset: number, filters: Record
         limit,
         offset,
         ...filteredFilters,
+        type: 'PAYMENT',
     }
 
     if (filters.winnerIds && filters.winnerIds.length > 0) {

@@ -2,7 +2,7 @@ export {
     get as profileStoreGet,
     patchName as profileStorePatchName,
     getMemberStats,
-    getVerification,
+    getMemberSkillDetails,
 } from './profile-xhr.store'
 
 export {

@@ -9,13 +9,13 @@ import { UserEmailPreferences } from '../user-email-preference.model'
 import { UserProfile } from '../user-profile.model'
 import { UserStats } from '../user-stats.model'
 import { UserTrait, UserTraits } from '../user-traits.model'
-import { UserVerify } from '../user-verify.model'
 
 import { profileFactoryCreate } from './profile-factory'
-import { getMemberStats, getVerification, profileStoreGet, profileStorePatchName } from './profile-store'
+import { getMemberStats, profileStoreGet, profileStorePatchName } from './profile-store'
 import {
     createMemberTraits,
     deleteMemberTrait,
+    downloadProfile,
     getCountryLookup,
     modifyTracks,
     updateMemberEmailPreferences,
@@ -56,31 +56,6 @@ export async function getPublicAsync(handle: string): Promise<UserProfile | unde
 
 export async function editNameAsync(handle: string, profile: EditNameRequest): Promise<UserProfile> {
     return profileStorePatchName(handle, profile)
-}
-
-export async function getVerificationStatusAsync(handle: string): Promise<boolean> {
-
-    // get verification statuses
-    // in DEV this looker API is mocked data response
-    const verfiedMembers: UserVerify[] = await getVerification()
-
-    // filter by member
-    return verfiedMembers.some(member => {
-        let isVerified: boolean = false
-        if (member['user.handle'] && member['user.handle'].toLowerCase() === handle.toLowerCase()) {
-            isVerified = true
-        }
-
-        // On DEV we have a mocked data response with silghtly different structure
-        if (
-            member['member_verification_dev.handle']
-            && member['member_verification_dev.handle'].toLowerCase() === handle.toLowerCase()
-        ) {
-            isVerified = true
-        }
-
-        return isVerified
-    })
 }
 
 export async function getMemberStatsAsync(handle: string): Promise<UserStats | undefined> {
@@ -141,6 +116,26 @@ export async function updateMemberProfileAsync(handle: string, profile: UpdatePr
 
 export async function updateMemberPhotoAsync(handle: string, payload: FormData): Promise<UserPhotoUpdateResponse> {
     return updateMemberPhoto(handle, payload)
+}
+
+export async function downloadProfileAsync(handle: string): Promise<void> {
+    let url: string | undefined
+    try {
+        const blob = await downloadProfile(handle)
+        url = window.URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.setAttribute('download', `profile-${handle}.pdf`)
+        document.body.appendChild(link)
+        link.click()
+        link.parentNode?.removeChild(link)
+    } catch (error) {
+        console.error('Failed to download profile:', error)
+    } finally {
+        if (url) {
+            window.URL.revokeObjectURL(url)
+        }
+    }
 }
 
 export async function updateOrCreateMemberTraitsAsync(

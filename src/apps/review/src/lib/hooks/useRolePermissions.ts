@@ -64,7 +64,7 @@ export function useRolePermissions(): UseRolePermissionsResult {
     const isProjectManager = useMemo<boolean>(
         () => (loginUserInfo?.roles?.some(
             role => typeof role === 'string'
-                && role.toLowerCase() === UserRole.projectManager,
+                && role.toLowerCase() === UserRole.projectManager.toLowerCase(),
         ) ?? false)
             || normalizedRoles.some(role => role.includes('project manager')),
         [

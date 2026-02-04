@@ -1,5 +1,8 @@
+import { useMemo } from 'react'
+import useSWR, { SWRResponse } from 'swr'
+
 import { EnvironmentConfig } from '~/config'
-import { UserSkill, xhrGetAsync, xhrPostAsync, xhrPutAsync } from '~/libs/core'
+import { SearchUserSkill, UserSkill, xhrGetAsync, xhrPostAsync, xhrPutAsync } from '~/libs/core'
 
 const baseUrl = `${EnvironmentConfig.API.V5}/standardized-skills`
 
@@ -16,6 +19,19 @@ export async function autoCompleteSkills(queryTerm: string): Promise<UserSkill[]
 
     const encodedQuery = encodeURIComponent(queryTerm)
     return xhrGetAsync(`${baseUrl}/skills/autocomplete?term=${encodedQuery}`)
+}
+
+export async function fetchSkillsByIds(skillIds: string[]): Promise<SearchUserSkill[]> {
+    const uniqueIds = Array.from(new Set(skillIds.filter(Boolean)))
+    if (!uniqueIds.length) {
+        return []
+    }
+
+    const params = new URLSearchParams()
+    uniqueIds.forEach(skillId => params.append('skillId', skillId))
+    params.set('disablePagination', 'true')
+
+    return xhrGetAsync(`${baseUrl}/skills?${params.toString()}`)
 }
 
 export type FetchMemberSkillsConfig = {
@@ -42,4 +58,58 @@ export async function updateMemberSkills(
     return xhrPutAsync(`${baseUrl}/user-skills/${userId}`, {
         skills,
     })
+}
+
+/**
+ * Fetcher function for useSWR to fetch skills by their IDs
+ * @param skillIds Array of skill UUIDs
+ * @returns Promise with array of UserSkill objects
+ */
+async function fetchSkillsByIdsFetcher(skillIds: string[]): Promise<UserSkill[]> {
+    if (!skillIds || skillIds.length === 0) {
+        return []
+    }
+
+    try {
+        const skillPromises = skillIds.map(skillId => xhrGetAsync<UserSkill>(`${baseUrl}/skills/${skillId}`)
+            .catch(() => undefined))
+        const results = await Promise.all(skillPromises)
+        return results.filter((skill): skill is UserSkill => skill !== null && skill !== undefined)
+    } catch {
+        return []
+    }
+}
+
+/**
+ * Hook to fetch skills by their IDs using SWR
+ * @param skillIds Array of skill UUIDs
+ * @returns SWRResponse with array of UserSkill objects
+ */
+export function useSkillsByIds(skillIds: string[] | undefined): SWRResponse<UserSkill[], Error> {
+    const swrKey = useMemo(() => {
+        if (!skillIds || skillIds.length === 0) {
+            return undefined
+        }
+
+        return ['skills-by-ids', [...skillIds].sort()
+            .join(',')]
+    }, [skillIds])
+
+    return useSWR<UserSkill[], Error>(
+        swrKey,
+        () => fetchSkillsByIdsFetcher(skillIds!),
+        {
+            revalidateOnFocus: false,
+            revalidateOnReconnect: false,
+        },
+    )
+}
+
+/**
+ * Fetch skills by their IDs using individual requests (legacy async function for backward compatibility)
+ * @param skillIds Array of skill UUIDs
+ * @returns Promise with array of UserSkill objects
+ */
+export async function fetchSkillsByIdsLegacy(skillIds: string[]): Promise<UserSkill[]> {
+    return fetchSkillsByIdsFetcher(skillIds)
 }

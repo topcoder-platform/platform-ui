@@ -2,7 +2,7 @@ import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import classNames from 'classnames'
 
-import { UserProfile } from '~/libs/core'
+import { UserProfile, UserTrait } from '~/libs/core'
 
 import { EditMemberPropertyBtn } from '../../../components'
 import { OpenForGigsModifyModal } from '../OpenForGigsModifyModal'
@@ -15,6 +15,9 @@ interface OpenForGigsProps {
     authProfile: UserProfile | undefined
     profile: UserProfile
     refreshProfile: (handle: string) => void
+    isPrivilegedViewer?: boolean
+    memberPersonalizationTraits?: UserTrait[]
+    mutatePersonalizationTraits: () => void
 }
 
 const OpenForGigs: FC<OpenForGigsProps> = (props: OpenForGigsProps) => {
@@ -48,7 +51,7 @@ const OpenForGigs: FC<OpenForGigsProps> = (props: OpenForGigsProps) => {
         }, 1000)
     }
 
-    return props.canEdit || openForWork ? (
+    return props.canEdit || openForWork || props.isPrivilegedViewer ? (
         <div className={styles.container}>
             <p className={classNames('body-main-bold', !openForWork ? styles.notOopenToWork : '')}>
                 {openForWork ? 'open to work' : 'not open to work'}
@@ -65,8 +68,9 @@ const OpenForGigs: FC<OpenForGigsProps> = (props: OpenForGigsProps) => {
                     <OpenForGigsModifyModal
                         onClose={handleModifyOpenForWorkClose}
                         onSave={handleModifyOpenForWorkSave}
-                        openForWork={openForWork ?? false}
                         profile={props.profile}
+                        memberPersonalizationTraits={props.memberPersonalizationTraits}
+                        mutatePersonalizationTraits={props.mutatePersonalizationTraits}
                     />
                 )
             }

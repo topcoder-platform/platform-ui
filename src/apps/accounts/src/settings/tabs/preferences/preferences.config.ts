@@ -1,7 +1,7 @@
 /* eslint-disable max-len */
 export const newsletters: Array<{ id: string, name: string, desc: string }> = [
     {
-        desc: 'A weekly summary of available ways to earn, including gig work, challenges, and Thrive articles.',
+        desc: 'A weekly summary of available ways to earn, including engagements, challenges, and Thrive articles.',
         id: 'd0c48e9da3',
         name: 'Work Opportunities',
     },

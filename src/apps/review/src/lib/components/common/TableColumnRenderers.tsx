@@ -253,7 +253,8 @@ export function renderReviewScoreCell(
     }
 
     const rawScoreDisplay = submission.aggregated?.averageFinalScoreDisplay
-    if (!rawScoreDisplay) {
+    const aggregateScore = submission.aggregateScore
+    if (!rawScoreDisplay && !aggregateScore) {
         return (
             <span className={styles.notReviewed}>
                 --
@@ -276,7 +277,7 @@ export function renderReviewScoreCell(
         )
     }
 
-    return <span>{rawScoreDisplay}</span>
+    return <span>{rawScoreDisplay || aggregateScore}</span>
 }
 
 interface ReviewerDisplayData {

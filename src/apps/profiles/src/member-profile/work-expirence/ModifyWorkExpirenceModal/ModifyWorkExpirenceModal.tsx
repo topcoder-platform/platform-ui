@@ -1,19 +1,22 @@
 /* eslint-disable complexity */
-import { Dispatch, FC, MutableRefObject, SetStateAction, useRef, useState } from 'react'
-import { bind, sortBy, trim } from 'lodash'
+import { Dispatch, FC, SetStateAction, useEffect, useRef, useState } from 'react'
+import { bind } from 'lodash'
 import { toast } from 'react-toastify'
 import classNames from 'classnames'
 
-import { BaseModal, Button, IconOutline, InputDatePicker, InputSelect, InputText } from '~/libs/ui'
+import { BaseModal, Button, IconOutline } from '~/libs/ui'
 import {
     updateDeleteOrCreateMemberTraitAsync,
     UserProfile, UserTrait,
     UserTraitCategoryNames,
     UserTraitIds,
 } from '~/libs/core'
-import { getIndustryOptionLabel, getIndustryOptionValue, INDUSTRIES_OPTIONS } from '~/libs/shared'
-
-import { WorkExpirenceCard } from '../WorkExpirenceCard'
+import {
+    AddEditWorkExperienceForm,
+    WorkExperienceCard,
+} from '~/libs/shared'
+import type { AddEditWorkExperienceFormRef } from '~/libs/shared/lib/components/add-edit-work-experience-form'
+import { fetchSkillsByIds } from '~/libs/shared/lib/services/standard-skills'
 
 import styles from './ModifyWorkExpirenceModal.module.scss'
 
@@ -31,20 +34,6 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
     const [addingNewItem, setAddingNewItem]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(props.workExpirence?.length === 0 || false)
 
-    const [formValues, setFormValues]: [
-        { [key: string]: string | boolean | Date | undefined },
-        Dispatch<SetStateAction<{ [key: string]: string | boolean | Date | undefined }>>
-    ]
-        = useState<{ [key: string]: string | boolean | Date | undefined }>({})
-
-    const [formErrors, setFormErrors]: [
-        { [key: string]: string },
-        Dispatch<SetStateAction<{ [key: string]: string }>>
-    ]
-        = useState<{ [key: string]: string }>({})
-
-    const formElRef: MutableRefObject<HTMLDivElement | any> = useRef()
-
     const [editedItemIndex, setEditedItemIndex]: [
         number | undefined,
         Dispatch<SetStateAction<number | undefined>>
@@ -56,16 +45,89 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
     ]
         = useState<UserTrait[] | undefined>(props.workExpirence)
 
-    const industryOptions: any = sortBy(INDUSTRIES_OPTIONS)
-        .map(v => ({
-            label: getIndustryOptionLabel(v),
-            value: getIndustryOptionValue(v),
-        }))
+    const [skillNamesMap, setSkillNamesMap] = useState<Record<string, string>>({})
+    const [loadingSkills, setLoadingSkills] = useState<boolean>(false)
+    const fetchedSkillIdsRef = useRef<Set<string>>(new Set())
+    const formRef = useRef<AddEditWorkExperienceFormRef>(null)
+
+    useEffect(() => {
+        if (!workExpirence) {
+            setLoadingSkills(false)
+            return
+        }
+
+        const allSkillIds = new Set<string>()
+        workExpirence.forEach((work: UserTrait) => {
+            if (work.associatedSkills && Array.isArray(work.associatedSkills)) {
+                work.associatedSkills.forEach((skillId: string) => {
+                    if (skillId && typeof skillId === 'string') {
+                        allSkillIds.add(skillId)
+                    }
+                })
+            }
+        })
+
+        if (allSkillIds.size > 0) {
+            const skillIdsToFetch = Array.from(allSkillIds)
+                .filter(id => !fetchedSkillIdsRef.current.has(id))
+
+            if (skillIdsToFetch.length > 0) {
+                setLoadingSkills(true)
+                skillIdsToFetch.forEach(id => fetchedSkillIdsRef.current.add(id))
+
+                fetchSkillsByIds(skillIdsToFetch)
+                    .then(skills => {
+                        setSkillNamesMap(prevMap => {
+                            const newMap: Record<string, string> = { ...prevMap }
+                            skills.forEach(skill => {
+                                if (skill.id && skill.name) {
+                                    newMap[skill.id] = skill.name
+                                }
+                            })
+                            skillIdsToFetch.forEach(skillId => {
+                                if (!newMap[skillId]) {
+                                    newMap[skillId] = skillId
+                                }
+                            })
+                            return newMap
+                        })
+                    })
+                    .catch(() => {
+                        setSkillNamesMap(prevMap => {
+                            const fallbackMap: Record<string, string> = { ...prevMap }
+                            skillIdsToFetch.forEach(skillId => {
+                                if (!fallbackMap[skillId]) {
+                                    fallbackMap[skillId] = skillId
+                                }
+                            })
+                            return fallbackMap
+                        })
+                    })
+                    .finally(() => {
+                        setLoadingSkills(false)
+                    })
+            } else {
+                setLoadingSkills(false)
+            }
+        } else {
+            setLoadingSkills(false)
+        }
+    }, [workExpirence])
+
+    const areSkillsLoaded = (work: UserTrait): boolean => {
+        if (!work.associatedSkills || !Array.isArray(work.associatedSkills) || work.associatedSkills.length === 0) {
+            return true
+        }
+
+        return work.associatedSkills.every((skillId: string) => {
+            const skillName = skillNamesMap[skillId]
+            return skillName && skillName !== skillId
+        })
+    }
 
     function handleModifyWorkExpirenceSave(): void {
         if (addingNewItem || editedItemIndex !== undefined) {
-            handleFormAction()
-
+            formRef.current?.submit()
             return
         }
 
@@ -89,140 +151,25 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
             })
     }
 
-    function handleFormValueChange(key: string, event: React.ChangeEvent<HTMLInputElement>): void {
-        let value: string | boolean | Date | undefined
-        const oldFormValues = { ...formValues }
-
-        switch (key) {
-            case 'currentlyWorking':
-                value = event.target.checked
-                if (value) {
-                    oldFormValues.endDate = undefined
-                }
-
-                break
-            case 'startDate':
-            case 'endDate':
-                value = event as unknown as Date
-                break
-            default:
-                value = event.target.value
-                break
+    function handleFormSave(work: UserTrait): void {
+        if (editedItemIndex !== undefined && workExpirence) {
+            const updated = [...workExpirence]
+            updated[editedItemIndex] = work
+            setWorkExpirence(updated)
+        } else {
+            setWorkExpirence([...(workExpirence || []), work])
         }
 
-        setFormValues({
-            ...oldFormValues,
-            [key]: value,
-        })
-    }
-
-    function resetForm(): void {
-        setFormValues({})
-        setFormErrors({})
-        formElRef.current.reset()
         setEditedItemIndex(undefined)
         setAddingNewItem(false)
     }
 
-    function handleFormAction(): void {
-        setFormErrors({})
-
-        if (!trim(formValues.company as string)) {
-            setFormErrors({
-                company: 'Company is required',
-            })
-            return
-        }
-
-        if (!trim(formValues.position as string)) {
-            setFormErrors({
-                position: 'Position is required',
-            })
-            return
-        }
-
-        if (formValues.endDate && formValues.startDate && formValues.endDate <= formValues.startDate) {
-            setFormErrors({
-                endDate: 'End date must be greater than start date',
-            })
-            return
-        }
-
-        if (formValues.endDate || formValues.startDate) {
-            if (formValues.endDate && !formValues.startDate && !formValues.currentlyWorking) {
-                setFormErrors({
-                    startDate: 'Start date is required when end date is given',
-                })
-                return
-            }
-
-            if (formValues.startDate && !formValues.endDate && !formValues.currentlyWorking) {
-                setFormErrors({
-                    endDate: 'End date is required when start date is given',
-                })
-                return
-            }
-        }
-
-        const companyName: string | undefined = formValues.company as string | undefined
-        const startDateIso: string | undefined = formValues.startDate
-            ? (formValues.startDate as Date).toISOString()
-            : undefined
-        const endDateIso: string | undefined = formValues.endDate
-            ? (formValues.endDate as Date).toISOString()
-            : undefined
-
-        const updatedWorkExpirence: UserTrait = {
-            cityTown: formValues.city,
-            company: companyName,
-            companyName,
-            endDate: endDateIso,
-            industry: formValues.industry,
-            position: formValues.position,
-            startDate: startDateIso,
-            timePeriodFrom: startDateIso,
-            timePeriodTo: endDateIso,
-            working: formValues.currentlyWorking,
-        }
-
-        if (editedItemIndex !== undefined && workExpirence) {
-            workExpirence[editedItemIndex] = updatedWorkExpirence
-
-            setWorkExpirence([
-                ...workExpirence,
-            ])
-        } else {
-            setWorkExpirence(
-                [...workExpirence || [], updatedWorkExpirence],
-            )
-        }
-
-        resetForm()
-    }
-
     function handleWorkExpirenceEdit(indx: number): void {
-        const work: UserTrait = workExpirence ? workExpirence[indx] : {}
-
         setEditedItemIndex(indx)
-
-        setFormValues({
-            city: work.cityTown || work.city,
-            company: work.company || work.companyName,
-            currentlyWorking: work.working,
-            endDate: work.timePeriodTo
-                ? new Date(work.timePeriodTo)
-                : (work.endDate ? new Date(work.endDate) : undefined),
-            industry: work.industry,
-            position: work.position,
-            startDate: work.timePeriodFrom
-                ? new Date(work.timePeriodFrom)
-                : (work.startDate ? new Date(work.startDate) : undefined),
-        })
     }
 
     function handleWorkExpirenceDelete(indx: number): void {
         const updatedWorkExpirence: UserTrait[] = [...workExpirence || []]
-
         updatedWorkExpirence.splice(indx, 1)
         setWorkExpirence(updatedWorkExpirence)
     }
@@ -235,7 +182,6 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
         if (addingNewItem || editedItemIndex !== undefined) {
             setAddingNewItem(false)
             setEditedItemIndex(undefined)
-            resetForm()
         } else {
             props.onClose()
         }
@@ -286,18 +232,23 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
                                         className={styles.workExpirenceCardWrap}
                                         key={uniqueKey || `${work.position}-${indx}`}
                                     >
-                                        <WorkExpirenceCard work={work} isModalView />
+                                        <WorkExperienceCard
+                                            work={work}
+                                            isModalView
+                                            skillNamesMap={skillNamesMap}
+                                            showSkills={!loadingSkills && areSkillsLoaded(work)}
+                                        />
                                         <div className={styles.actionElements}>
                                             <Button
                                                 className={styles.ctaBtn}
                                                 icon={IconOutline.PencilIcon}
-                                                onClick={bind(handleWorkExpirenceEdit, this, indx)}
+                                                onClick={bind(handleWorkExpirenceEdit, undefined, indx)}
                                                 size='lg'
                                             />
                                             <Button
                                                 className={styles.ctaBtn}
                                                 icon={IconOutline.TrashIcon}
-                                                onClick={bind(handleWorkExpirenceDelete, this, indx)}
+                                                onClick={bind(handleWorkExpirenceDelete, undefined, indx)}
                                                 size='lg'
                                             />
                                         </div>
@@ -309,74 +260,13 @@ const ModifyWorkExpirenceModal: FC<ModifyWorkExpirenceModalProps> = (props: Modi
                 ) : undefined}
 
                 {editedItemIndex !== undefined || addingNewItem ? (
-                    <form
-                        ref={formElRef}
-                        className={styles.formWrap}
-                    >
-                        <InputText
-                            name='company'
-                            label='Company *'
-                            error={formErrors.company}
-                            placeholder='Enter a company'
-                            dirty
-                            tabIndex={0}
-                            type='text'
-                            onChange={bind(handleFormValueChange, this, 'company')}
-                            value={formValues.company as string}
-                        />
-                        <InputText
-                            name='position'
-                            label='Position *'
-                            error={formErrors.position}
-                            placeholder='Enter a position'
-                            dirty
-                            tabIndex={0}
-                            type='text'
-                            onChange={bind(handleFormValueChange, this, 'position')}
-                            value={formValues.position as string}
-                        />
-                        <InputSelect
-                            tabIndex={0}
-                            options={industryOptions}
-                            value={formValues.industry as string}
-                            onChange={bind(handleFormValueChange, this, 'industry')}
-                            name='industry'
-                            label='Industry'
-                            placeholder='Select industry'
-                            dirty
-                            error={formErrors.industry}
-                        />
-                        <div className={styles.row}>
-                            <InputDatePicker
-                                label='Start Date'
-                                date={formValues.startDate as Date}
-                                onChange={bind(handleFormValueChange, this, 'startDate')}
-                                disabled={false}
-                                error={formErrors.startDate}
-                                dirty
-                                maxDate={new Date()}
-                            />
-                            <InputDatePicker
-                                label='End Date'
-                                date={formValues.endDate as Date}
-                                onChange={bind(handleFormValueChange, this, 'endDate')}
-                                disabled={formValues.currentlyWorking as boolean}
-                                error={formErrors.endDate}
-                                dirty
-                                maxDate={new Date()}
-                            />
-                        </div>
-                        <InputText
-                            name='currentlyWorking'
-                            label='I am currently working in this role'
-                            error={formErrors.currentlyWorking}
-                            dirty
-                            tabIndex={0}
-                            type='checkbox'
-                            onChange={bind(handleFormValueChange, this, 'currentlyWorking')}
-                            checked={formValues.currentlyWorking as boolean}
-                        />
-                    </form>
+                    <AddEditWorkExperienceForm
+                        ref={formRef}
+                        initialWork={editedItemIndex !== undefined && workExpirence
+                            ? workExpirence[editedItemIndex]
+                            : undefined}
+                        onSave={handleFormSave}
+                    />
                 ) : (
                     <Button
                         label='+ Add experience'

@@ -9,7 +9,6 @@ interface PortalProps {
     portalRef?: MutableRefObject<HTMLElement>,
 }
 
-// @ts-expect-error: TS2322: Type mismatch for FC return type
 const Portal: FC<PortalProps> = (props: PortalProps) => {
     const portalNode: HTMLElement | null | undefined = props.portalId
         ? document.getElementById(props.portalId)

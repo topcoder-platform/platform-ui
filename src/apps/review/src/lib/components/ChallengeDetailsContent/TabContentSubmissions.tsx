@@ -28,6 +28,7 @@ import {
     ReviewAppContextModel,
     SubmissionInfo,
 } from '../../models'
+import { getHandleColor, getProfileUrl } from '../common/columnUtils'
 import { TableNoRecord } from '../TableNoRecord'
 import { TableWrapper } from '../TableWrapper'
 import { SubmissionHistoryModal } from '../SubmissionHistoryModal'
@@ -70,9 +71,14 @@ export const TabContentSubmissions: FC<Props> = props => {
         getRestrictionMessageForMember,
     }: UseSubmissionDownloadAccessResult = useSubmissionDownloadAccess()
     const { loginUserInfo }: ReviewAppContextModel = useContext(ReviewAppContext)
-    const { canViewAllSubmissions }: UseRolePermissionsResult = useRolePermissions()
+    const {
+        canViewAllSubmissions,
+        isAdmin,
+        isProjectManager,
+        hasCopilotRole,
+    }: UseRolePermissionsResult = useRolePermissions()
 
-    const { challengeInfo }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
+    const { challengeInfo, registrants }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
 
     const isCompletedDesignChallenge = useMemo(() => {
         if (!challengeInfo) return false
@@ -113,8 +119,8 @@ export const TabContentSubmissions: FC<Props> = props => {
     )
 
     const submissionInfos = useMemo<SubmissionInfo[]>(
-        () => props.submissions.map(convertBackendSubmissionToSubmissionInfo),
-        [props.submissions],
+        () => props.submissions.map(s => convertBackendSubmissionToSubmissionInfo(s, registrants)),
+        [props.submissions, registrants],
     )
 
     const submissionInfoById = useMemo(
@@ -265,6 +271,8 @@ export const TabContentSubmissions: FC<Props> = props => {
 
     const columns = useMemo<TableColumn<BackendSubmission>[]>(
         () => {
+            const showEmail = Boolean(isAdmin || isProjectManager || hasCopilotRole)
+
             const baseColumns: TableColumn<BackendSubmission>[] = [
                 {
                     className: styles.submissionColumn,
@@ -349,6 +357,36 @@ export const TabContentSubmissions: FC<Props> = props => {
                     },
                     type: 'element',
                 },
+                ...(showEmail ? [{
+                    label: 'Submitter',
+                    propertyName: 'memberId',
+                    renderer: (submission: BackendSubmission) => {
+                        const info = submission.id ? submissionInfoById.get(submission.id) : undefined
+                        const userInfo = info?.userInfo
+                        const handle = userInfo?.memberHandle?.trim()
+
+                        if (!handle) {
+                            return <span>-</span>
+                        }
+
+                        const explicitColor = userInfo?.handleColor
+                        const maxRating = userInfo?.maxRating ?? userInfo?.rating
+                        const resolvedColor = getHandleColor(explicitColor, handle, maxRating) ?? '#2a2a2a'
+                        const profileUrl = getProfileUrl(handle)
+
+                        return (
+                            <div>
+                                <a href={profileUrl} style={{ color: resolvedColor }} target='_blank' rel='noreferrer'>
+                                    {handle}
+                                </a>
+                                {userInfo?.memberEmail ? (
+                                    <div className={styles.submitterEmail}>{userInfo.memberEmail}</div>
+                                ) : ''}
+                            </div>
+                        )
+                    },
+                    type: 'element',
+                } as TableColumn<BackendSubmission>] : []),
                 {
                     label: 'Submitted Date',
                     propertyName: 'submittedDate',
@@ -425,6 +463,10 @@ export const TabContentSubmissions: FC<Props> = props => {
             historyByMember,
             handleHistoryButtonClick,
             shouldShowHistoryActions,
+            isAdmin,
+            isProjectManager,
+            hasCopilotRole,
+            submissionInfoById,
         ],
     )
 

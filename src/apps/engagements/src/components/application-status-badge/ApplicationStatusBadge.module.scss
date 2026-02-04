@@ -1,0 +1,50 @@
+@import '@libs/ui/styles/includes';
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    border: 1px solid transparent;
+}
+
+.size-sm {
+    font-size: 0.7rem;
+    padding: 4px 8px;
+}
+
+.size-md {
+    font-size: 0.8rem;
+    padding: 6px 10px;
+}
+
+.size-lg {
+    font-size: 0.9rem;
+    padding: 8px 14px;
+}
+
+.status-submitted {
+    background: $teal-25;
+    color: $teal-140;
+    border-color: $teal-100;
+}
+
+.status-under_review {
+    background: $orange-25;
+    color: $orange-140;
+    border-color: $orange-100;
+}
+
+.status-selected {
+    background: $turq-25;
+    color: $turq-180;
+    border-color: $turq-120;
+}
+
+.status-rejected {
+    background: $red-25;
+    color: $red-120;
+    border-color: $red-50;
+}

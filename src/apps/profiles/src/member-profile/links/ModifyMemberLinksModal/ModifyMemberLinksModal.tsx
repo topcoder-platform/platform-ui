@@ -1,4 +1,4 @@
-import { cloneDeep, findIndex, isEqual, omit, reject, uniqBy } from 'lodash'
+import { cloneDeep, findIndex, isEqual, omit, uniqBy } from 'lodash'
 import { FC, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'react-toastify'
 import classNames from 'classnames'
@@ -11,6 +11,7 @@ import {
     UserTraitCategoryNames,
     UserTraitIds,
 } from '~/libs/core'
+import { upsertTrait } from '~/libs/shared'
 
 import { LinkForm, UserLink } from './LinkForm'
 import { LinkFormHandle } from './LinkForm/LinkForm'
@@ -135,19 +136,17 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
     function handleLinksSave(): void {
         setIsSaving(true)
 
-        const updatedPersonalizationTraits: UserTrait[]
-            = reject(props.memberPersonalizationTraitsFullData, (trait: UserTrait) => trait.links)
+        const personalizationData = upsertTrait(
+            'links',
+            updatedLinks,
+            props.memberPersonalizationTraitsFullData ?? [],
+        )
 
         updateOrCreateMemberTraitsAsync(props.profile.handle, [{
             categoryName: UserTraitCategoryNames.personalization,
             traitId: UserTraitIds.personalization,
             traits: {
-                data: [
-                    ...(updatedPersonalizationTraits || []),
-                    {
-                        links: updatedLinks,
-                    },
-                ],
+                data: personalizationData,
             },
         }])
             .then(() => {

@@ -284,7 +284,11 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [handleValueUpdated, editState, fetchWinnings])
 
-    const isEditingAllowed = (): boolean => props.profile.roles.includes('Payment Admin') || props.profile.roles.includes('Payment Editor')
+    const isEditingAllowed = (): boolean => (
+        props.profile.roles.includes('Payment Admin')
+        || props.profile.roles.includes('Payment BA Admin')
+        || props.profile.roles.includes('Payment Editor')
+    )
 
     return (
         <>
@@ -346,6 +350,33 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                                         {
                                             label: 'Returned',
                                             value: 'RETURNED',
+                                        },
+                                    ],
+                                    type: 'dropdown',
+                                },
+                                {
+                                    key: 'type',
+                                    label: 'Type',
+                                    options: [
+                                        {
+                                            label: 'Task Payment',
+                                            value: 'TASK_PAYMENT',
+                                        },
+                                        {
+                                            label: 'Contest Payment',
+                                            value: 'CONTEST_PAYMENT',
+                                        },
+                                        {
+                                            label: 'Copilot Payment',
+                                            value: 'COPILOT_PAYMENT',
+                                        },
+                                        {
+                                            label: 'Review Board Payment',
+                                            value: 'REVIEW_BOARD_PAYMENT',
+                                        },
+                                        {
+                                            label: 'Engagement Payment',
+                                            value: 'ENGAGEMENT_PAYMENT',
                                         },
                                     ],
                                     type: 'dropdown',

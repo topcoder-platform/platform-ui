@@ -41,6 +41,7 @@ export const TC_DOMAIN: string = get(
 
 export const TOPCODER_URL: string = `https://www.${TC_DOMAIN}`
 export const PLATFORMUI_URL: string = `https://platform-ui.${TC_DOMAIN}`
+export const ENGAGEMENTS_URL: string = `https://engagements.${TC_DOMAIN}`
 export const USER_PROFILE_URL: string = `https://profiles.${TC_DOMAIN}`
 
 export const API = {
@@ -95,6 +96,8 @@ export const STRIPE = {
 }
 
 export const URLS = {
+    ACADEMY_CERTIFICATION: `https://academy.${TC_DOMAIN}/tca-certifications`,
+    ACADEMY_COURSE: `https://academy.${TC_DOMAIN}/freeCodeCamp`,
     ACCOUNT_SETTINGS: `https://account-settings.${TC_DOMAIN}/#account`,
     CHALLENGES_PAGE: `${TOPCODER_URL}/challenges`,
     UNIVERSAL_NAV: `https://uni-nav.${TC_DOMAIN}/v1/tc-universal-nav.js`,
@@ -110,6 +113,8 @@ export const ENABLE_TCA_CERT_MONETIZATION = false
 
 export const TERMS_URL
     = 'https://www.topcoder-dev.com/challenges/terms/detail/317cd8f9-d66c-4f2a-8774-63c612d99cd4'
+export const NDA_TERMS_URL
+    = 'https://www.topcoder-dev.com/challenges/terms/detail/e5811a7b-43d1-407a-a064-69e5015b4900'
 export const PRIVACY_POLICY_URL = `${TOPCODER_URL}/policy`
 
 export const GAMIFICATION_ORG_ID = getReactEnv<string>(

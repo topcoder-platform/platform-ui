@@ -68,7 +68,7 @@ export async function getMembersByIds(userIds: string[]): Promise<Array<{ userId
             perPage: userIds.length,
             userIds,
         },
-        { arrayFormat: 'repeat' },
+        { arrayFormat: userIds.length === 1 ? 'brackets' : 'repeat' },
     )
     return xhrGetAsync<Array<{ userId: string; handle: string }>>(
         `${EnvironmentConfig.API.V6}/members?${query}`,

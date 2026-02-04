@@ -1,21 +1,30 @@
 /* eslint-disable complexity */
 import { Dispatch, FC, SetStateAction, useEffect, useMemo, useState } from 'react'
 import { Location, useLocation, useSearchParams } from 'react-router-dom'
+import { KeyedMutator } from 'swr'
 import moment from 'moment'
 
 import {
     NamesAndHandleAppearance,
+    useMemberTraits,
     UserProfile,
+    UserRole,
+    UserTrait,
+    UserTraitIds,
+    UserTraits,
 } from '~/libs/core'
 import { ProfilePicture, useCheckIsMobile } from '~/libs/shared'
+import { Tooltip } from '~/libs/ui'
 
 import { AddButton, EditMemberPropertyBtn } from '../../components'
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
+import { formatRoleList, getAvailabilityLabel, getPreferredRoleLabels } from '../../lib'
 
 import { OpenForGigs } from './OpenForGigs'
 import { ModifyMemberNameModal } from './ModifyMemberNameModal'
 import { ModifyMemberPhotoModal } from './ModifyMemberPhotoModal'
 import { HiringFormModal } from './HiringFormModal'
+import IdentityVerifiedBadge from './IdentityVerifiedBadge'
 import styles from './ProfileHeader.module.scss'
 
 interface ProfileHeaderProps {
@@ -30,6 +39,18 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
     const hasProfilePicture = !!props.profile.photoURL
 
     const canEdit: boolean = props.authProfile?.handle === props.profile.handle
+
+    const roles = props.authProfile?.roles || []
+
+    const isPrivilegedViewer
+    = !canEdit
+    && (
+        roles.includes(UserRole.administrator)
+        || roles.includes(UserRole.projectManager)
+        || roles.includes(UserRole.talentManager)
+    )
+
+    const canSeeActivityBadge = props.profile.recentActivity
 
     const [isNameEditMode, setIsNameEditMode]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
@@ -49,6 +70,9 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
         () => (state?.queriedSkills || []).map((s: any) => s.name),
         [state?.queriedSkills],
     )
+
+    const activeTooltipText = canEdit ? `You have been active in the past 3 months. 
+(this information is visible to you only)` : `${props.profile.firstName} has been active in the past 3 months.`
 
     useEffect(() => {
         if (props.authProfile && editMode === profileEditModes.names) {
@@ -91,17 +115,119 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
         }, 1000)
     }
 
-    function renderOpenForWork(): JSX.Element {
+    function renderActivityStatus(): JSX.Element {
         return (
+            <Tooltip
+                content={activeTooltipText}
+                triggerOn='hover'
+                place='top'
+                className={styles.tooltipText}
+            >
+                <div className={styles.activeBadge}>
+                    Active
+                </div>
+            </Tooltip>
+        )
+    }
+
+    const { data: memberPersonalizationTraits, mutate: mutateTraits }: {
+            data: UserTraits[] | undefined,
+            mutate: KeyedMutator<any>,
+        } = useMemberTraits(
+            props.profile.handle,
+            { traitIds: UserTraitIds.personalization },
+        )
+    const personalizationData = memberPersonalizationTraits?.[0]?.traits?.data
+
+    const openToWorkItem = personalizationData?.find(
+        (item: UserTrait) => item?.openToWork,
+    )?.openToWork ?? {}
+
+    const hasOpenToWork = personalizationData?.some(
+        (item: UserTrait) => !!item?.openToWork,
+    )
+
+    function renderOpenForWork(): JSX.Element {
+        const showMyStatusLabel = canEdit
+        const showAdminLabel = isPrivilegedViewer
+
+        const content = (
             <div className={styles.profileActions}>
-                <span>My status:</span>
+                {showMyStatusLabel && <span>My status:</span>}
+
+                {showAdminLabel && (
+                    <span>
+                        {props.profile.firstName}
+                        {' '}
+                        is
+                    </span>
+                )}
                 <OpenForGigs
                     canEdit={canEdit}
                     authProfile={props.authProfile}
                     profile={props.profile}
                     refreshProfile={props.refreshProfile}
+                    isPrivilegedViewer={isPrivilegedViewer}
+                    memberPersonalizationTraits={memberPersonalizationTraits}
+                    mutatePersonalizationTraits={mutateTraits}
                 />
             </div>
+        )
+
+        return canEdit ? (
+            <Tooltip
+                content='This information is visible to you only'
+                place='top'
+            >
+                {content}
+            </Tooltip>
+        ) : (
+            content
+        )
+    }
+
+    function renderOpenToWorkSummary(): JSX.Element {
+
+        if (!hasOpenToWork || !props.profile.availableForGigs) return <></>
+
+        const availabilityLabel = getAvailabilityLabel(openToWorkItem.availability)
+        const roleLabels = getPreferredRoleLabels(openToWorkItem.preferredRoles)
+
+        const MAX_VISIBLE_ROLES = 5
+        const visibleRoles = roleLabels.slice(0, MAX_VISIBLE_ROLES)
+        const hasMoreRoles = roleLabels.length > MAX_VISIBLE_ROLES
+        const tooltipContent = roleLabels.join(', ')
+
+        const rolesContent = (
+            <span className={styles.rolesText}>
+                as
+                {' '}
+                <span className={styles.roleText}>
+                    {formatRoleList(visibleRoles)}
+                    {hasMoreRoles && '…'}
+                </span>
+            </span>
+        )
+        const shouldShowTooltip = openToWorkItem.preferredRoles?.length > 5
+
+        return (
+            <p className={styles.openToWorkSummary}>
+                Interested in
+                {' '}
+                {openToWorkItem.availability && <span>{availabilityLabel}</span>}
+                {' '}
+                roles
+                {' '}
+                {openToWorkItem.preferredRoles?.length > 0 && (
+                    shouldShowTooltip ? (
+                        <Tooltip content={tooltipContent} triggerOn='hover'>
+                            {rolesContent}
+                        </Tooltip>
+                    ) : (
+                        rolesContent
+                    )
+                )}
+            </p>
         )
     }
 
@@ -109,6 +235,7 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
         return (
             <div className={styles.photoWrap}>
                 <ProfilePicture member={props.profile} className={styles.profilePhoto} />
+                <IdentityVerifiedBadge identityVerified={props.profile.identityVerified} />
                 {canEdit && hasProfilePicture && (
                     <EditMemberPropertyBtn
                         className={styles.button}
@@ -176,12 +303,15 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
                     </p>
                 </div>
             </div>
+            <div className={styles.statusSection}>
+                <div className={styles.statusRow}>
+                    {canSeeActivityBadge ? renderActivityStatus() : undefined}
 
-            {
-                // Showing only when they can edit until we have the talent search app
-                // and enough data to make this useful
-                canEdit ? renderOpenForWork() : undefined
-            }
+                    {canEdit || isPrivilegedViewer ? renderOpenForWork() : undefined}
+                </div>
+
+                {canEdit || isPrivilegedViewer ? renderOpenToWorkSummary() : undefined}
+            </div>
 
             {
                 isMobile ? renderMemberPhotoWrap() : undefined

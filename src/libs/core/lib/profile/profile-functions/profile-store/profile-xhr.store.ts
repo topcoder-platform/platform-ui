@@ -1,4 +1,4 @@
-import { xhrDeleteAsync, xhrGetAsync, xhrPatchAsync, xhrPostAsync, xhrPutAsync } from '../../../xhr'
+import { xhrDeleteAsync, xhrGetAsync, xhrGetBlobAsync, xhrPatchAsync, xhrPostAsync, xhrPutAsync } from '../../../xhr'
 import { CountryLookup } from '../../country-lookup.model'
 import { EditNameRequest } from '../../edit-name-request.model'
 import { ModifyTracksRequest } from '../../modify-tracks.request'
@@ -7,16 +7,15 @@ import { UpdateProfileRequest, UserPhotoUpdateResponse } from '../../modify-user
 import { ModifyUserPropertyRequest, ModifyUserPropertyResponse } from '../../modify-user-role.model'
 import { UserEmailPreferences } from '../../user-email-preference.model'
 import { UserProfile } from '../../user-profile.model'
+import { UserSkillWithActivity } from '../../user-skill.model'
 import { UserStats } from '../../user-stats.model'
 import { UserTraits } from '../../user-traits.model'
-import { UserVerify } from '../../user-verify.model'
 
 import {
     countryLookupURL,
     memberEmailPreferencesURL,
     memberModifyURL,
     profile as profileUrl,
-    verify as verifyUrl,
 } from './profile-endpoint.config'
 
 export function get(handle: string): Promise<UserProfile> {
@@ -27,11 +26,6 @@ export function get(handle: string): Promise<UserProfile> {
 // but the underlying xhr request is actually a put b/c the api doesn't support patch
 export function patchName(handle: string, request: EditNameRequest): Promise<UserProfile> {
     return xhrPutAsync<EditNameRequest, UserProfile>(profileUrl(handle), request)
-}
-
-// reads from looker where member verified status is stored
-export function getVerification(): Promise<UserVerify[]> {
-    return xhrGetAsync<UserVerify[]>(verifyUrl())
 }
 
 export function getMemberStats(handle: string): Promise<UserStats | undefined> {
@@ -125,4 +119,12 @@ export async function updateMemberPhoto(handle: string, payload: FormData): Prom
             'Content-Type': 'multipart/form-data',
         },
     })
+}
+
+export async function downloadProfile(handle: string): Promise<Blob> {
+    return xhrGetBlobAsync<Blob>(`${profileUrl(handle)}/profileDownload`)
+}
+
+export function getMemberSkillDetails(handle: string, skillId: string): Promise<UserSkillWithActivity> {
+    return xhrGetAsync<UserSkillWithActivity>(`${profileUrl(handle)}/skills/${skillId}`)
 }

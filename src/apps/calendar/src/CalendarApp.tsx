@@ -1,7 +1,7 @@
 import { FC, useContext, useEffect, useMemo } from 'react'
 import { Outlet, Routes } from 'react-router-dom'
 
-import { routerContext, RouterContextData } from '~/libs/core'
+import { ProfileProvider, routerContext, RouterContextData } from '~/libs/core'
 
 import { CalendarContextProvider, Layout, SWRConfigProvider } from './lib'
 import { toolTitle } from './calendar-app.routes'
@@ -19,14 +19,16 @@ const CalendarApp: FC = () => {
     }, [])
 
     return (
-        <CalendarContextProvider>
-            <SWRConfigProvider>
-                <Layout>
-                    <Outlet />
-                    <Routes>{childRoutes}</Routes>
-                </Layout>
-            </SWRConfigProvider>
-        </CalendarContextProvider>
+        <ProfileProvider>
+            <CalendarContextProvider>
+                <SWRConfigProvider>
+                    <Layout>
+                        <Outlet />
+                        <Routes>{childRoutes}</Routes>
+                    </Layout>
+                </SWRConfigProvider>
+            </CalendarContextProvider>
+        </ProfileProvider>
     )
 }
 

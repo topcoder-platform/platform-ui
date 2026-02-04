@@ -1,0 +1,39 @@
+@import '@libs/ui/styles/includes';
+@import '../../styles/responsive';
+
+.modalBody {
+    display: grid;
+    gap: 16px;
+}
+
+.contentPanel {
+    display: grid;
+    gap: 16px;
+    padding: 18px;
+    border-radius: 16px;
+    border: 1px solid $black-10;
+    background: $black-5;
+}
+
+.actionsRow {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.addButton {
+    min-width: 200px;
+}
+
+@include mobile {
+    .contentPanel {
+        padding: 14px;
+    }
+
+    .actionsRow {
+        justify-content: stretch;
+    }
+
+    .addButton {
+        width: 100%;
+    }
+}

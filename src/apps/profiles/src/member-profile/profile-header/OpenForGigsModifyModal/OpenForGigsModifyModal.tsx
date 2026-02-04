@@ -1,50 +1,99 @@
 import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
 
-import { BaseModal, Button, InputText } from '~/libs/ui'
-import { updateMemberProfileAsync, UserProfile } from '~/libs/core'
+import { BaseModal, Button } from '~/libs/ui'
+import {
+    updateOrCreateMemberTraitsAsync,
+    UserProfile,
+    UserTrait,
+    UserTraitCategoryNames,
+    UserTraitIds,
+} from '~/libs/core'
+import { OpenToWorkData } from '~/libs/shared/lib/components/modify-open-to-work-modal'
+import {
+    updateMemberProfile,
+} from '~/libs/core/lib/profile/profile-functions/profile-store/profile-xhr.store'
+import { upsertTrait } from '~/libs/shared/lib/utils/methods'
+import OpenToWorkForm from '~/libs/shared/lib/components/modify-open-to-work-modal/ModifyOpenToWorkModal'
 
 import styles from './OpenForGigsModifyModal.module.scss'
 
 interface OpenForGigsModifyModalProps {
     onClose: () => void
     onSave: () => void
-    openForWork: boolean
     profile: UserProfile
+    memberPersonalizationTraits?: UserTrait[]
+    mutatePersonalizationTraits: () => void
 }
 
 const OpenForGigsModifyModal: FC<OpenForGigsModifyModalProps> = (props: OpenForGigsModifyModalProps) => {
     const [isSaving, setIsSaving]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
 
-    const [openForWork, setOpenForWork]: [boolean, Dispatch<SetStateAction<boolean>>]
-        = useState<boolean>(props.openForWork)
+    const memberPersonalizationTraits = props.memberPersonalizationTraits
+
+    const [formValue, setFormValue] = useState<OpenToWorkData>({
+        availability: undefined,
+        availableForGigs: !!props.profile.availableForGigs,
+        preferredRoles: [],
+    })
 
     useEffect(() => {
-        setOpenForWork(props.openForWork)
-    }, [props.openForWork])
+        if (!memberPersonalizationTraits) return
+
+        const personalizationData = memberPersonalizationTraits?.[0]?.traits?.data || []
+
+        const openToWorkItem = personalizationData.find(
+            (item: UserTrait) => item?.openToWork,
+        )?.openToWork ?? {}
+
+        setFormValue(prev => ({
+            ...prev,
+            availability: openToWorkItem?.availability,
+            availableForGigs: !!props.profile.availableForGigs,
+            preferredRoles: openToWorkItem?.preferredRoles ?? [],
+        }))
+    }, [
+        memberPersonalizationTraits,
+        props.profile.availableForGigs,
+    ])
 
     function handleOpenForWorkSave(): void {
         setIsSaving(true)
 
-        updateMemberProfileAsync(
-            props.profile.handle,
-            { availableForGigs: openForWork },
+        const existingData = memberPersonalizationTraits?.[0]?.traits?.data || []
+
+        const personalizationData = upsertTrait(
+            'openToWork',
+            {
+                availability: formValue.availability,
+                preferredRoles: formValue.preferredRoles,
+            },
+            existingData,
         )
+
+        Promise.all([
+        // Update availableForGigs in member profile
+            updateMemberProfile(props.profile.handle, { availableForGigs: formValue.availableForGigs }),
+
+            // Update personalization trait for availability & preferredRoles
+            updateOrCreateMemberTraitsAsync(props.profile.handle, [{
+                categoryName: UserTraitCategoryNames.personalization,
+                traitId: UserTraitIds.personalization,
+                traits: {
+                    data: personalizationData,
+                },
+            }]),
+        ])
             .then(() => {
                 toast.success('Work availability updated successfully.', { position: toast.POSITION.BOTTOM_RIGHT })
+                props.mutatePersonalizationTraits()
                 props.onSave()
             })
             .catch(() => {
                 toast.error('Failed to update your work availability', { position: toast.POSITION.BOTTOM_RIGHT })
                 setIsSaving(false)
             })
-
-        props.onSave()
-    }
-
-    function handleOpenForWorkToggle(): void {
-        setOpenForWork(!openForWork)
     }
 
     return (
@@ -73,15 +122,13 @@ const OpenForGigsModifyModal: FC<OpenForGigsModifyModalProps> = (props: OpenForG
                 <p>
                     By selecting “Open to Work” our customers will know that you are available for job opportunities.
                 </p>
-                <InputText
-                    name='openForWork'
-                    label='Yes, I’m open to work'
-                    tabIndex={-1}
-                    type='checkbox'
-                    onChange={handleOpenForWorkToggle}
-                    checked={openForWork}
-                />
             </div>
+
+            <OpenToWorkForm
+                value={formValue}
+                onChange={setFormValue}
+                disabled={isSaving}
+            />
         </BaseModal>
     )
 }
