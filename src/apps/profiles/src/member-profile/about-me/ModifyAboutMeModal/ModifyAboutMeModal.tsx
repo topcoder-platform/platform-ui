@@ -1,5 +1,5 @@
 import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
-import { reject, trim } from 'lodash'
+import { trim } from 'lodash'
 import { toast } from 'react-toastify'
 
 import { BaseModal, Button, InputText, InputTextarea } from '~/libs/ui'
@@ -11,6 +11,7 @@ import {
     UserTraitCategoryNames,
     UserTraitIds,
 } from '~/libs/core'
+import { upsertTrait } from '~/libs/shared'
 
 import styles from './ModifyAboutMeModal.module.scss'
 
@@ -68,6 +69,12 @@ const ModifyAboutMeModal: FC<ModifyAboutMeModalProps> = (props: ModifyAboutMeMod
         setIsSaving(true)
         setFormSaveError(undefined)
 
+        const personalizationData = upsertTrait(
+            'profileSelfTitle',
+            updatedTitle,
+            props.memberPersonalizationTraitsData,
+        )
+
         Promise.all([
             updateMemberProfileAsync(
                 props.profile.handle,
@@ -77,13 +84,7 @@ const ModifyAboutMeModal: FC<ModifyAboutMeModalProps> = (props: ModifyAboutMeMod
                 categoryName: UserTraitCategoryNames.personalization,
                 traitId: UserTraitIds.personalization,
                 traits: {
-                    data: [
-                        ...reject(
-                            props.memberPersonalizationTraitsData,
-                            (trait: any) => trait.profileSelfTitle,
-                        ),
-                        { profileSelfTitle: updatedTitle },
-                    ],
+                    data: personalizationData,
                 },
             }]),
         ])
