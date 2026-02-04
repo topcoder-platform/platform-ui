@@ -96,7 +96,7 @@ const OpenToWorkForm: FC<OpenToWorkFormProps> = (props: OpenToWorkFormProps) => 
                         name='preferredRoles'
                         label='Preferred Roles'
                         placeholder='Select preferred roles'
-                        additionalPlaceholder='Add more roles...'
+                        additionalPlaceholder='Add more...'
                         onFetchOptions={fetchPreferredRoles}
                         options={preferredRoleOptions}
                         value={preferredRoleOptions.filter(

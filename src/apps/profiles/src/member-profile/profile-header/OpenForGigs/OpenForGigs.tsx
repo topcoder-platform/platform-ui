@@ -2,7 +2,7 @@ import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import classNames from 'classnames'
 
-import { UserProfile } from '~/libs/core'
+import { UserProfile, UserTrait } from '~/libs/core'
 
 import { EditMemberPropertyBtn } from '../../../components'
 import { OpenForGigsModifyModal } from '../OpenForGigsModifyModal'
@@ -16,6 +16,8 @@ interface OpenForGigsProps {
     profile: UserProfile
     refreshProfile: (handle: string) => void
     isPrivilegedViewer?: boolean
+    memberPersonalizationTraits?: UserTrait[]
+    mutatePersonalizationTraits: () => void
 }
 
 const OpenForGigs: FC<OpenForGigsProps> = (props: OpenForGigsProps) => {
@@ -67,6 +69,8 @@ const OpenForGigs: FC<OpenForGigsProps> = (props: OpenForGigsProps) => {
                         onClose={handleModifyOpenForWorkClose}
                         onSave={handleModifyOpenForWorkSave}
                         profile={props.profile}
+                        memberPersonalizationTraits={props.memberPersonalizationTraits}
+                        mutatePersonalizationTraits={props.mutatePersonalizationTraits}
                     />
                 )
             }

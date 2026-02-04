@@ -1,6 +1,7 @@
 /* eslint-disable complexity */
 import { Dispatch, FC, SetStateAction, useEffect, useMemo, useState } from 'react'
 import { Location, useLocation, useSearchParams } from 'react-router-dom'
+import { KeyedMutator } from 'swr'
 import moment from 'moment'
 
 import {
@@ -113,6 +114,30 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
         }, 1000)
     }
 
+    function renderActivityStatus(): JSX.Element {
+        return (
+            <Tooltip
+                content={activeTooltipText}
+                triggerOn='hover'
+                place='top'
+                className={styles.tooltipText}
+            >
+                <div className={styles.activeBadge}>
+                    Active
+                </div>
+            </Tooltip>
+        )
+    }
+
+    const { data: memberPersonalizationTraits, mutate: mutateTraits }: {
+            data: UserTraits[] | undefined,
+            mutate: KeyedMutator<any>,
+        } = useMemberTraits(
+            props.profile.handle,
+            { traitIds: UserTraitIds.personalization },
+        )
+    const personalizationData = memberPersonalizationTraits?.[0]?.traits?.data?.[0]?.openToWork || undefined
+
     function renderOpenForWork(): JSX.Element {
         const showMyStatusLabel = canEdit
         const showAdminLabel = isPrivilegedViewer
@@ -134,6 +159,8 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
                     profile={props.profile}
                     refreshProfile={props.refreshProfile}
                     isPrivilegedViewer={isPrivilegedViewer}
+                    memberPersonalizationTraits={memberPersonalizationTraits}
+                    mutatePersonalizationTraits={mutateTraits}
                 />
             </div>
         )
@@ -150,35 +177,10 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
         )
     }
 
-    function renderActivityStatus(): JSX.Element {
-        return (
-            <Tooltip
-                content={activeTooltipText}
-                triggerOn='hover'
-                place='top'
-                className={styles.tooltipText}
-            >
-                <div className={styles.activeBadge}>
-                    Active
-                </div>
-            </Tooltip>
-        )
-    }
-
-    const { data: memberPersonalizationTraits }: {
-                    data: UserTraits[] | undefined,
-                } = useMemberTraits(
-                    props.profile.handle,
-                    { traitIds: UserTraitIds.personalization },
-                )
-    const personalizationData = memberPersonalizationTraits?.[0]?.traits?.data?.[0]?.openToWork || {}
-
     function renderOpenToWorkSummary(): JSX.Element {
-        const openToWork = props.profile.availableForGigs
+        const openToWork = personalizationData
 
         if (!openToWork) return <></>
-
-        if (!personalizationData.availability || !personalizationData.preferredRoles?.length) return <></>
 
         const availabilityLabel = getAvailabilityLabel(personalizationData.availability)
         const roleLabels = getPreferredRoleLabels(personalizationData.preferredRoles)
@@ -187,11 +189,17 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
             <p className={styles.openToWorkSummary}>
                 Interested in
                 {' '}
-                <span>{availabilityLabel}</span>
+                {personalizationData.availability && <span>{availabilityLabel}</span>}
                 {' '}
-                roles as
+                roles
                 {' '}
-                <span className={styles.roleText}>{formatRoleList(roleLabels)}</span>
+                {personalizationData.preferredRoles?.length > 0 && (
+                    <span>
+                        as
+                        {' '}
+                        <span className={styles.roleText}>{formatRoleList(roleLabels)}</span>
+                    </span>
+                )}
             </p>
         )
     }

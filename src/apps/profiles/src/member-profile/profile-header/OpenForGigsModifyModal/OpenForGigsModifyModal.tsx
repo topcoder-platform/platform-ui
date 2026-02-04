@@ -5,11 +5,11 @@ import { reject } from 'lodash'
 import { BaseModal, Button } from '~/libs/ui'
 import {
     updateOrCreateMemberTraitsAsync,
-    useMemberTraits,
     UserProfile,
+    UserTrait,
     UserTraitCategoryNames,
     UserTraitIds,
-    UserTraits } from '~/libs/core'
+} from '~/libs/core'
 import { OpenToWorkData } from '~/libs/shared/lib/components/modify-open-to-work-modal'
 import {
     updateMemberProfile,
@@ -22,18 +22,22 @@ interface OpenForGigsModifyModalProps {
     onClose: () => void
     onSave: () => void
     profile: UserProfile
+    memberPersonalizationTraits?: UserTrait[]
+    mutatePersonalizationTraits: () => void
 }
 
 const OpenForGigsModifyModal: FC<OpenForGigsModifyModalProps> = (props: OpenForGigsModifyModalProps) => {
     const [isSaving, setIsSaving]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
 
-    const { data: memberPersonalizationTraits }: {
-            data: UserTraits[] | undefined,
-        } = useMemberTraits(
-            props.profile.handle,
-            { traitIds: UserTraitIds.personalization },
-        )
+    // const { data: memberPersonalizationTraits }: {
+    //         data: UserTraits[] | undefined,
+    //     } = useMemberTraits(
+    //         props.profile.handle,
+    //         { traitIds: UserTraitIds.personalization },
+    //     )
+
+    const memberPersonalizationTraits = props.memberPersonalizationTraits
 
     const [formValue, setFormValue] = useState<OpenToWorkData>({
         availability: undefined,
@@ -88,6 +92,7 @@ const OpenForGigsModifyModal: FC<OpenForGigsModifyModalProps> = (props: OpenForG
         ])
             .then(() => {
                 toast.success('Work availability updated successfully.', { position: toast.POSITION.BOTTOM_RIGHT })
+                props.mutatePersonalizationTraits()
                 props.onSave()
             })
             .catch(() => {
