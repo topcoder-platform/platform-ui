@@ -1082,7 +1082,7 @@ const EngagementDetailPage: FC = () => {
                     <div className={styles.metaItem}>
                         <IconSolid.CurrencyDollarIcon className={styles.metaIcon} />
                         <div>
-                            <div className={styles.metaLabel}>Compensation</div>
+                            <div className={styles.metaLabel}>Weekly Compensation</div>
                             <div className={styles.metaValue}>
                                 {engagement.compensationRange || 'Not specified'}
                             </div>
