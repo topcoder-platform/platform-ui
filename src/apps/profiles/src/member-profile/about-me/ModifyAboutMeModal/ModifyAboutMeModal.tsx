@@ -68,8 +68,6 @@ const ModifyAboutMeModal: FC<ModifyAboutMeModalProps> = (props: ModifyAboutMeMod
         setIsSaving(true)
         setFormSaveError(undefined)
 
-        console.log('personalizationData in about me', props.memberPersonalizationTraitsData)
-
         const existing = props.memberPersonalizationTraitsData?.[0] || {}
 
         const personalizationData: UserTrait[] = [

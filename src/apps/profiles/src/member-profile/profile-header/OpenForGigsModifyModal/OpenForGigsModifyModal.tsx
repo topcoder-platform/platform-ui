@@ -42,8 +42,6 @@ const OpenForGigsModifyModal: FC<OpenForGigsModifyModalProps> = (props: OpenForG
 
         const personalizationData = memberPersonalizationTraits?.[0]?.traits?.data?.[0] || {}
 
-        console.log('personalizationData in Gigs [correct]', personalizationData)
-
         const openToWorkItem = personalizationData.openToWork || {}
 
         setFormValue(prev => ({
