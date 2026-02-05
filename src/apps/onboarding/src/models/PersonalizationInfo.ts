@@ -1,19 +1,16 @@
-export default interface PersonalizationInfo {
-    referAs?: string
-    profileSelfTitle?: string
-    shortBio?: string
-    openToWork?: {
-        availability?: string,
-        preferredRoles?: string[],
-    }
+export interface OpenToWorkTrait {
+    availability?: string
+    preferredRoles?: string[]
 }
 
-export const emptyPersonalizationInfo: () => PersonalizationInfo = () => ({
-    openToWork: {
-        availability: '',
-        preferredRoles: [],
-    },
-    profileSelfTitle: '',
-    referAs: '',
-    shortBio: '',
-})
+export type PersonalizationTrait =
+    | { profileSelfTitle: string }
+    | { shortBio: string }
+    | { referAs: string }
+    | { openToWork: OpenToWorkTrait }
+    | { links: Array<{ url: string; name: string }> }
+
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export default interface PersonalizationInfo extends Array<PersonalizationTrait> {}
+
+export const emptyPersonalizationInfo = (): PersonalizationInfo => []

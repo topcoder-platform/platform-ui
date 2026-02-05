@@ -1,5 +1,7 @@
-import { Dispatch, MutableRefObject, SetStateAction, useEffect, useMemo, useState } from 'react'
+import { Dispatch, MutableRefObject, SetStateAction, useEffect, useState } from 'react'
 import _ from 'lodash'
+
+import { updateOrCreateMemberTraitsAsync, UserTraitCategoryNames, UserTraitIds } from '~/libs/core'
 
 import PersonalizationInfo from '../models/PersonalizationInfo'
 
@@ -10,45 +12,34 @@ export interface useAutoSavePersonalizationType {
 }
 
 type useAutoSavePersonalizationFunctionType = (
-    reduxPersonalizations: PersonalizationInfo[] | undefined,
-    savingFields: string[],
+    reduxPersonalization: PersonalizationInfo | undefined,
     updateMemberPersonalizations: (infos: PersonalizationInfo[]) => void,
     createMemberPersonalizations: (infos: PersonalizationInfo[]) => void,
     shouldSavingData: MutableRefObject<boolean>,
+    profileHandle: string | undefined,
 ) => useAutoSavePersonalizationType
 
 export const useAutoSavePersonalization: useAutoSavePersonalizationFunctionType = (
-    reduxPersonalizations: PersonalizationInfo[] | undefined,
-    savingFields: string[],
-    updateMemberPersonalizations: (infos: PersonalizationInfo[]) => void,
-    createMemberPersonalizations: (infos: PersonalizationInfo[]) => void,
+    reduxPersonalization: PersonalizationInfo | undefined,
+    updateMemberPersonalizations: (infos: any[]) => void,
+    createMemberPersonalizations: (infos: any[]) => void,
     shouldSavingData: MutableRefObject<boolean>,
+    profileHandle: string | undefined,
 ) => {
     const [loading, setLoading] = useState<boolean>(false)
     const [personalizationInfo, setPersonalizationInfo] = useState<PersonalizationInfo | undefined>(undefined)
-    const reduxPersonalization = useMemo(() => (reduxPersonalizations || []).find(
-        (trait: any) => _.some(savingFields, (savingField: string) => trait[savingField] !== undefined),
-    ), [reduxPersonalizations, savingFields])
 
     const saveData: any = async () => {
-        if (!personalizationInfo) {
-            return
-        }
-
-        const datas: PersonalizationInfo[] = [
-            ..._.reject(
-                reduxPersonalizations || [],
-                (trait: any) => _.some(savingFields, (savingField: string) => trait[savingField] !== undefined),
-            ),
-            personalizationInfo,
-        ]
+        if (!personalizationInfo) return
 
         setLoading(true)
-        if (!reduxPersonalization) {
-            await createMemberPersonalizations(datas)
-        } else {
-            await updateMemberPersonalizations(datas)
-        }
+        updateOrCreateMemberTraitsAsync(profileHandle || '', [{
+            categoryName: UserTraitCategoryNames.personalization,
+            traitId: UserTraitIds.personalization,
+            traits: {
+                data: personalizationInfo,
+            },
+        }])
 
         setLoading(false)
     }
