@@ -13,16 +13,12 @@ export interface useAutoSavePersonalizationType {
 
 type useAutoSavePersonalizationFunctionType = (
     reduxPersonalization: PersonalizationInfo | undefined,
-    updateMemberPersonalizations: (infos: PersonalizationInfo[]) => void,
-    createMemberPersonalizations: (infos: PersonalizationInfo[]) => void,
     shouldSavingData: MutableRefObject<boolean>,
     profileHandle: string | undefined,
 ) => useAutoSavePersonalizationType
 
 export const useAutoSavePersonalization: useAutoSavePersonalizationFunctionType = (
     reduxPersonalization: PersonalizationInfo | undefined,
-    updateMemberPersonalizations: (infos: any[]) => void,
-    createMemberPersonalizations: (infos: any[]) => void,
     shouldSavingData: MutableRefObject<boolean>,
     profileHandle: string | undefined,
 ) => {
@@ -33,15 +29,17 @@ export const useAutoSavePersonalization: useAutoSavePersonalizationFunctionType 
         if (!personalizationInfo) return
 
         setLoading(true)
-        updateOrCreateMemberTraitsAsync(profileHandle || '', [{
-            categoryName: UserTraitCategoryNames.personalization,
-            traitId: UserTraitIds.personalization,
-            traits: {
-                data: personalizationInfo,
-            },
-        }])
-
-        setLoading(false)
+        try {
+            await updateOrCreateMemberTraitsAsync(profileHandle || '', [{
+                categoryName: UserTraitCategoryNames.personalization,
+                traitId: UserTraitIds.personalization,
+                traits: {
+                    data: personalizationInfo,
+                },
+            }])
+        } finally {
+            setLoading(false)
+        }
     }
 
     useEffect(() => {

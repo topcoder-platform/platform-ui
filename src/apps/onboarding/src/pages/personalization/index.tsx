@@ -47,8 +47,6 @@ interface PagePersonalizationContentReduxProps {
 }
 
 interface PagePersonalizationContentProps extends PagePersonalizationContentReduxProps {
-    updateMemberPersonalizations: (infos: PersonalizationInfo[]) => void
-    createMemberPersonalizations: (infos: PersonalizationInfo[]) => void
     setMemberPhotoUrl: (photoUrl: string) => void
     updateMemberPhotoUrl: (photoUrl: string) => void
     updateMemberDescription: (photoUrl: string) => void
@@ -70,8 +68,6 @@ const PagePersonalizationContent: FC<PagePersonalizationContentProps> = props =>
         setPersonalizationInfo,
     }: useAutoSavePersonalizationType = useAutoSavePersonalization(
         props.reduxPersonalizations,
-        props.updateMemberPersonalizations,
-        props.createMemberPersonalizations,
         shouldSavingData,
         props.memberInfo?.handle,
     )
