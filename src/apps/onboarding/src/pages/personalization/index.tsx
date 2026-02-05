@@ -46,8 +46,6 @@ interface PagePersonalizationContentReduxProps {
 }
 
 interface PagePersonalizationContentProps extends PagePersonalizationContentReduxProps {
-    updateMemberPersonalizations: (infos: PersonalizationInfo[]) => void
-    createMemberPersonalizations: (infos: PersonalizationInfo[]) => void
     setMemberPhotoUrl: (photoUrl: string) => void
     updateMemberPhotoUrl: (photoUrl: string) => void
     updateMemberDescription: (photoUrl: string) => void
@@ -69,10 +67,8 @@ const PagePersonalizationContent: FC<PagePersonalizationContentProps> = props =>
         setPersonalizationInfo,
     }: useAutoSavePersonalizationType = useAutoSavePersonalization(
         props.reduxPersonalizations,
-        ['profileSelfTitle'],
-        props.updateMemberPersonalizations,
-        props.createMemberPersonalizations,
         shouldSavingData,
+        props.memberInfo?.handle,
     )
 
     const {
@@ -84,6 +80,8 @@ const PagePersonalizationContent: FC<PagePersonalizationContentProps> = props =>
         props.updateMemberDescription,
         shouldSavingMemberData,
     )
+
+    const profileSelfTitle = personalizationInfo?.profileSelfTitle || ''
 
     useEffect(() => {
         if (
@@ -129,12 +127,12 @@ const PagePersonalizationContent: FC<PagePersonalizationContentProps> = props =>
                     <InputTextAutoSave
                         name='title'
                         label='Bio Title'
-                        value={personalizationInfo?.profileSelfTitle || ''}
+                        value={profileSelfTitle}
                         onChange={function onChange(value: string | undefined) {
-                            setPersonalizationInfo({
-                                ...(personalizationInfo || {}),
+                            setPersonalizationInfo(prev => ({
+                                ...(prev ?? props.reduxPersonalizations ?? {}),
                                 profileSelfTitle: value || '',
-                            })
+                            }))
                         }}
                         placeholder='Ex: I’m a creative rockstar'
                         tabIndex={0}

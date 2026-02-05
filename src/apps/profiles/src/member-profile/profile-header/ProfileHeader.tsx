@@ -188,7 +188,10 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
 
     function renderOpenToWorkSummary(): JSX.Element {
 
-        if (!hasOpenToWork || !props.profile.availableForGigs) return <></>
+        if (
+            !hasOpenToWork
+            || !props.profile.availableForGigs
+            || (openToWorkItem.preferredRoles?.length === 0 && openToWorkItem.availability === undefined)) return <></>
 
         const availabilityLabel = getAvailabilityLabel(openToWorkItem.availability)
         const roleLabels = getPreferredRoleLabels(openToWorkItem.preferredRoles)

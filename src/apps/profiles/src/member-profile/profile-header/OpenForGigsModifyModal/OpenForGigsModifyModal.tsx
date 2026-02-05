@@ -13,7 +13,6 @@ import { OpenToWorkData } from '~/libs/shared/lib/components/modify-open-to-work
 import {
     updateMemberProfile,
 } from '~/libs/core/lib/profile/profile-functions/profile-store/profile-xhr.store'
-import { upsertTrait } from '~/libs/shared/lib/utils/methods'
 import OpenToWorkForm from '~/libs/shared/lib/components/modify-open-to-work-modal/ModifyOpenToWorkModal'
 
 import styles from './OpenForGigsModifyModal.module.scss'
@@ -41,11 +40,9 @@ const OpenForGigsModifyModal: FC<OpenForGigsModifyModalProps> = (props: OpenForG
     useEffect(() => {
         if (!memberPersonalizationTraits) return
 
-        const personalizationData = memberPersonalizationTraits?.[0]?.traits?.data || []
+        const personalizationData = memberPersonalizationTraits?.[0]?.traits?.data?.[0] || {}
 
-        const openToWorkItem = personalizationData.find(
-            (item: UserTrait) => item?.openToWork,
-        )?.openToWork ?? {}
+        const openToWorkItem = personalizationData.openToWork || {}
 
         setFormValue(prev => ({
             ...prev,
@@ -61,16 +58,16 @@ const OpenForGigsModifyModal: FC<OpenForGigsModifyModalProps> = (props: OpenForG
     function handleOpenForWorkSave(): void {
         setIsSaving(true)
 
-        const existingData = memberPersonalizationTraits?.[0]?.traits?.data || []
+        const existing = memberPersonalizationTraits?.[0]?.traits?.data?.[0] || {}
 
-        const personalizationData = upsertTrait(
-            'openToWork',
-            {
+        const personalizationData = [{
+            ...existing,
+            openToWork: {
+                ...(existing.openToWork || {}),
                 availability: formValue.availability,
                 preferredRoles: formValue.preferredRoles,
             },
-            existingData,
-        )
+        }]
 
         Promise.all([
         // Update availableForGigs in member profile

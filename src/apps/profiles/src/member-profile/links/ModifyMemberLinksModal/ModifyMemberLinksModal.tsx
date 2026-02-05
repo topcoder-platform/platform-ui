@@ -11,7 +11,6 @@ import {
     UserTraitCategoryNames,
     UserTraitIds,
 } from '~/libs/core'
-import { upsertTrait } from '~/libs/shared'
 
 import { LinkForm, UserLink } from './LinkForm'
 import { LinkFormHandle } from './LinkForm/LinkForm'
@@ -136,11 +135,14 @@ const ModifyMemberLinksModal: FC<ModifyMemberLinksModalProps> = (props: ModifyMe
     function handleLinksSave(): void {
         setIsSaving(true)
 
-        const personalizationData = upsertTrait(
-            'links',
-            updatedLinks,
-            props.memberPersonalizationTraitsFullData ?? [],
-        )
+        const existing = props.memberPersonalizationTraitsFullData?.[0] || {}
+
+        const personalizationData: UserTrait[] = [
+            {
+                ...existing,
+                links: updatedLinks,
+            },
+        ]
 
         updateOrCreateMemberTraitsAsync(props.profile.handle, [{
             categoryName: UserTraitCategoryNames.personalization,
