@@ -1,4 +1,4 @@
-import { Dispatch, MutableRefObject, SetStateAction, useEffect, useState } from 'react'
+import { Dispatch, MutableRefObject, SetStateAction, useEffect, useMemo, useState } from 'react'
 import _ from 'lodash'
 
 import { updateOrCreateMemberTraitsAsync, UserTraitCategoryNames, UserTraitIds } from '~/libs/core'
@@ -12,18 +12,23 @@ export interface useAutoSavePersonalizationType {
 }
 
 type useAutoSavePersonalizationFunctionType = (
-    reduxPersonalization: PersonalizationInfo | undefined,
+    reduxPersonalizations: PersonalizationInfo[] | undefined,
     shouldSavingData: MutableRefObject<boolean>,
     profileHandle: string | undefined,
 ) => useAutoSavePersonalizationType
 
 export const useAutoSavePersonalization: useAutoSavePersonalizationFunctionType = (
-    reduxPersonalization: PersonalizationInfo | undefined,
+    reduxPersonalizations: PersonalizationInfo[] | undefined,
     shouldSavingData: MutableRefObject<boolean>,
     profileHandle: string | undefined,
 ) => {
     const [loading, setLoading] = useState<boolean>(false)
     const [personalizationInfo, setPersonalizationInfo] = useState<PersonalizationInfo | undefined>(undefined)
+
+    const reduxPersonalization = useMemo(
+        () => reduxPersonalizations?.[0],
+        [reduxPersonalizations],
+    )
 
     const saveData: any = async () => {
         if (!personalizationInfo) return
@@ -34,7 +39,7 @@ export const useAutoSavePersonalization: useAutoSavePersonalizationFunctionType 
                 categoryName: UserTraitCategoryNames.personalization,
                 traitId: UserTraitIds.personalization,
                 traits: {
-                    data: personalizationInfo,
+                    data: [personalizationInfo],
                 },
             }])
         } finally {

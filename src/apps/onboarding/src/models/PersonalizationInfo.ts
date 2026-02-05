@@ -3,14 +3,24 @@ export interface OpenToWorkTrait {
     preferredRoles?: string[]
 }
 
-export type PersonalizationTrait =
-    | { profileSelfTitle: string }
-    | { shortBio: string }
-    | { referAs: string }
-    | { openToWork: OpenToWorkTrait }
-    | { links: Array<{ url: string; name: string }> }
+export default interface PersonalizationInfo {
+    referAs?: string
+    profileSelfTitle?: string
+    shortBio?: string
+    links?: Array<{ url: string; name: string }>
+    openToWork?: {
+        availability?: string,
+        preferredRoles?: string[],
+    }
+}
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-export default interface PersonalizationInfo extends Array<PersonalizationTrait> {}
-
-export const emptyPersonalizationInfo = (): PersonalizationInfo => []
+export const emptyPersonalizationInfo: () => PersonalizationInfo = () => ({
+    links: [],
+    openToWork: {
+        availability: '',
+        preferredRoles: [],
+    },
+    profileSelfTitle: '',
+    referAs: '',
+    shortBio: '',
+})

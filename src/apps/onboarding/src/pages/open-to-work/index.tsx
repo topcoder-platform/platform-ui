@@ -7,12 +7,10 @@ import classNames from 'classnames'
 import { Button, IconOutline, PageDivider } from '~/libs/ui'
 import { updateOrCreateMemberTraitsAsync,
     useMemberTraits,
-    UserTrait,
     UserTraitCategoryNames,
     UserTraitIds,
     UserTraits } from '~/libs/core'
 import { OpenToWorkData } from '~/libs/shared/lib/components/modify-open-to-work-modal'
-import { upsertTrait } from '~/libs/shared'
 import OpenToWorkForm from '~/libs/shared/lib/components/modify-open-to-work-modal/ModifyOpenToWorkModal'
 
 import { ProgressBar } from '../../components/progress-bar'
@@ -48,11 +46,9 @@ export const PageOpenToWorkContent: FC<PageOpenToWorkContentProps> = props => {
     useEffect(() => {
         if (!memberPersonalizationTraits) return
 
-        const personalizationData = memberPersonalizationTraits?.[0]?.traits?.data || []
+        const personalizationData = memberPersonalizationTraits?.[0]?.traits?.data?.[0] || {}
 
-        const openToWorkItem = personalizationData.find(
-            (item: UserTrait) => item?.openToWork,
-        )?.openToWork ?? {}
+        const openToWorkItem = personalizationData.openToWork || {}
 
         setFormValue(prev => ({
             ...prev,
@@ -76,16 +72,16 @@ export const PageOpenToWorkContent: FC<PageOpenToWorkContentProps> = props => {
     async function goToNextStep(): Promise<void> {
         setLoading(true)
 
-        const existingData = memberPersonalizationTraits?.[0]?.traits?.data || []
+        const existing = memberPersonalizationTraits?.[0]?.traits?.data?.[0] || {}
 
-        const personalizationData = upsertTrait(
-            'openToWork',
-            {
+        const personalizationData = [{
+            ...existing,
+            openToWork: {
+                ...(existing.openToWork || {}),
                 availability: formValue.availability,
                 preferredRoles: formValue.preferredRoles,
             },
-            existingData,
-        )
+        }]
 
         try {
             await Promise.all([

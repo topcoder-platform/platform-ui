@@ -5,7 +5,6 @@ import classNames from 'classnames'
 
 import { Button, IconOutline, PageDivider } from '~/libs/ui'
 import { EnvironmentConfig } from '~/config'
-import { upsertTrait } from '~/libs/shared'
 
 import { ProgressBar } from '../../components/progress-bar'
 import {
@@ -38,7 +37,7 @@ import styles from './styles.module.scss'
 
 interface PagePersonalizationContentReduxProps {
     memberInfo?: MemberInfo,
-    reduxPersonalizations: PersonalizationInfo | undefined
+    reduxPersonalizations: PersonalizationInfo[] | undefined
     reduxEducations: EducationInfo[] | undefined
     reduxWorks: WorkInfo[] | undefined
     reduxOnboardingChecklist: OnboardingChecklistInfo | undefined
@@ -82,12 +81,7 @@ const PagePersonalizationContent: FC<PagePersonalizationContentProps> = props =>
         shouldSavingMemberData,
     )
 
-    const profileSelfTitle
-  = personalizationInfo
-      ?.find(
-          (t): t is { profileSelfTitle: string } => 'profileSelfTitle' in t,
-      )
-      ?.profileSelfTitle ?? ''
+    const profileSelfTitle = personalizationInfo?.profileSelfTitle || ''
 
     useEffect(() => {
         if (
@@ -135,11 +129,10 @@ const PagePersonalizationContent: FC<PagePersonalizationContentProps> = props =>
                         label='Bio Title'
                         value={profileSelfTitle}
                         onChange={function onChange(value: string | undefined) {
-                            setPersonalizationInfo(prev => upsertTrait(
-                                'profileSelfTitle',
-                                value || '',
-                                prev ?? props.reduxPersonalizations ?? [],
-                            ))
+                            setPersonalizationInfo(prev => ({
+                                ...(prev ?? props.reduxPersonalizations ?? {}),
+                                profileSelfTitle: value || '',
+                            }))
                         }}
                         placeholder='Ex: I’m a creative rockstar'
                         tabIndex={0}
