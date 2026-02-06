@@ -1,5 +1,5 @@
 import { Dispatch, FC, SetStateAction, useContext, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import _ from 'lodash'
 import cn from 'classnames'
 import moment from 'moment'
@@ -291,15 +291,15 @@ const ChallengeList: FC<ChallengeListProps> = props => {
                 label: 'Title',
                 propertyName: 'name',
                 renderer: (challenge: Challenge) => (
-                    // eslint-disable-next-line jsx-a11y/anchor-is-valid
-                    <a
-                        href={`${EnvironmentConfig.API.V6}/challenges/${challenge.id}`}
+                    <Link
+                        to={`${challenge.id}`}
                         className={styles.challengeTitle}
-                        target='_blank'
-                        rel='noreferrer'
+                        state={{
+                            previousChallengeListFilter: props.currentFilters,
+                        }}
                     >
                         {challenge.name}
-                    </a>
+                    </Link>
                 ),
                 type: 'element',
             },
