@@ -11,7 +11,7 @@ import {
 
 import { AddButton, EditMemberPropertyBtn } from '../../components'
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
-import { notifyUniNavi } from '../../lib'
+import { getPersonalizationLinks, notifyUniNavi } from '../../lib'
 
 import { ModifyMemberLinksModal } from './ModifyMemberLinksModal'
 import { ReactComponent as GitHubLinkIcon } from './assets/github-link-icon.svg'
@@ -57,10 +57,10 @@ const MemberLinks: FC<MemberLinksProps> = (props: MemberLinksProps) => {
     const { data: memberPersonalizationTraits, mutate: mutateTraits, loading }: MemberTraitsAPI
         = useMemberTraits(props.profile.handle, { traitIds: UserTraitIds.personalization })
 
-    const memberLinks: UserTrait | undefined
-        = useMemo(() => memberPersonalizationTraits?.[0]?.traits?.data?.find(
-            (trait: UserTrait) => trait.links,
-        ), [memberPersonalizationTraits])
+    const memberLinks: UserTrait[] = useMemo(
+        () => getPersonalizationLinks(memberPersonalizationTraits?.[0]?.traits?.data),
+        [memberPersonalizationTraits],
+    )
 
     useEffect(() => {
         if (props.authProfile && editMode === profileEditModes.links) {
@@ -85,12 +85,12 @@ const MemberLinks: FC<MemberLinksProps> = (props: MemberLinksProps) => {
         }, 1000)
     }
 
-    return !loading && (canEdit || memberLinks?.links?.length) ? (
+    return !loading && (canEdit || memberLinks.length) ? (
         <div className={styles.container}>
-            {memberLinks?.links.length ? (
+            {memberLinks.length ? (
                 <div className={styles.links}>
                     {
-                        memberLinks?.links.map((trait: UserTrait) => (
+                        memberLinks.map((trait: UserTrait) => (
                             <a
                                 href={trait.url}
                                 target='_blank'
@@ -104,13 +104,13 @@ const MemberLinks: FC<MemberLinksProps> = (props: MemberLinksProps) => {
                 </div>
             ) : undefined}
 
-            {canEdit && !!memberLinks?.links.length && (
+            {canEdit && !!memberLinks.length && (
                 <EditMemberPropertyBtn
                     onClick={handleEditClick}
                 />
             )}
 
-            {canEdit && !memberLinks?.links.length && (
+            {canEdit && !memberLinks.length && (
                 <AddButton
                     variant='mt0'
                     label='Add your social links'
@@ -124,7 +124,7 @@ const MemberLinks: FC<MemberLinksProps> = (props: MemberLinksProps) => {
                         onClose={handleEditModalClose}
                         onSave={handleEditModalSaved}
                         profile={props.profile}
-                        memberLinks={memberLinks ? memberLinks.links : undefined}
+                        memberLinks={memberLinks}
                         memberPersonalizationTraitsFullData={memberPersonalizationTraits?.[0]?.traits?.data}
                     />
                 )

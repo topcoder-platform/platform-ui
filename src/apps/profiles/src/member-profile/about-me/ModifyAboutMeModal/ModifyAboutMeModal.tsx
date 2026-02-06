@@ -12,6 +12,8 @@ import {
     UserTraitIds,
 } from '~/libs/core'
 
+import { getFirstProfileSelfTitle } from '../../../lib/helpers'
+
 import styles from './ModifyAboutMeModal.module.scss'
 
 interface ModifyAboutMeModalProps {
@@ -44,11 +46,7 @@ const ModifyAboutMeModal: FC<ModifyAboutMeModalProps> = (props: ModifyAboutMeMod
     ] = useState<string | undefined>()
 
     useEffect(() => {
-        const profileSelfTitleData: any
-            = props.memberPersonalizationTraitsData?.find(
-                (trait: any) => trait.profileSelfTitle,
-            )
-        setMemberTitle(profileSelfTitleData?.profileSelfTitle)
+        setMemberTitle(getFirstProfileSelfTitle(props.memberPersonalizationTraitsData))
     }, [props.memberPersonalizationTraitsData])
 
     function handleMemberTitleChange(event: React.ChangeEvent<HTMLInputElement>): void {

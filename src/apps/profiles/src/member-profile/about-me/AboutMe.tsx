@@ -7,7 +7,7 @@ import { NamesAndHandleAppearance, useMemberTraits, UserProfile, UserTraitIds, U
 
 import { AddButton, EditMemberPropertyBtn, EmptySection } from '../../components'
 import { EDIT_MODE_QUERY_PARAM, profileEditModes } from '../../config'
-import { canSeePhones } from '../../lib/helpers'
+import { canSeePhones, getFirstProfileSelfTitle } from '../../lib/helpers'
 import { Phones } from '../phones'
 
 import { ModifyAboutMeModal } from './ModifyAboutMeModal'
@@ -33,8 +33,10 @@ const AboutMe: FC<AboutMeProps> = (props: AboutMeProps) => {
     }
         = useMemberTraits(props.profile.handle, { traitIds: UserTraitIds.personalization })
 
-    const memberTitleTrait: any
-        = memberPersonalizationTraits?.[0]?.traits?.data?.find((trait: any) => trait.profileSelfTitle)
+    const memberTitle: string | undefined = useMemo(
+        () => getFirstProfileSelfTitle(memberPersonalizationTraits?.[0]?.traits?.data),
+        [memberPersonalizationTraits],
+    )
 
     const hasEmptyDescription = useMemo(() => (
         props.profile && !props.profile.description
@@ -82,7 +84,7 @@ const AboutMe: FC<AboutMeProps> = (props: AboutMeProps) => {
             <MemberRatingCard profile={props.profile} />
 
             <div className={classNames(styles.wizzardWrap, hasEmptyDescription && styles.emptyDesc)}>
-                <p className='body-main-medium'>{memberTitleTrait?.profileSelfTitle}</p>
+                <p className='body-main-medium'>{memberTitle}</p>
                 {canEdit && !hasEmptyDescription && (
                     <EditMemberPropertyBtn
                         onClick={handleEditClick}

@@ -17,16 +17,21 @@ import {
 } from '~/libs/ui'
 
 import { rootRoute } from '../../config/routes.config'
-import { FieldHandleSelect, PageWrapper } from '../../lib/components'
+import { PageWrapper } from '../../lib/components'
 import { useEventCallback } from '../../lib/hooks'
 import {
     Challenge,
     ChallengeFilterCriteria,
     ChallengePrizeSet,
+    ChallengeResource,
     ChallengeWinner,
-    SelectOption,
 } from '../../lib/models'
-import { getChallengeById, updateChallengeById } from '../../lib/services'
+import {
+    getChallengeById,
+    getChallengeResources,
+    getResourceRoles,
+    updateChallengeById,
+} from '../../lib/services'
 import { createChallengeQueryString, handleError } from '../../lib/utils'
 
 import styles from './ChallengeDetailsPage.module.scss'
@@ -49,7 +54,7 @@ const CHALLENGE_STATUS_OPTIONS: string[] = [
     'CANCELLED_PAYMENT_FAILED',
 ]
 
-type WinnersByPlacement = Record<number, SelectOption | undefined>
+type WinnersByPlacement = Record<number, string | undefined>
 
 type RouteState = {
     previousChallengeListFilter?: ChallengeFilterCriteria
@@ -120,14 +125,11 @@ function getPlacementCount(challenge?: Challenge): number {
 function createWinnersByPlacement(challenge?: Challenge): WinnersByPlacement {
     const totalPlacements = getPlacementCount(challenge)
     const winnersByPlacement: WinnersByPlacement = {}
-    const winnerLookup = new Map<number, SelectOption>()
+    const winnerLookup = new Map<number, string>()
     const winners = challenge?.winners ?? []
 
     winners.forEach(winner => {
-        winnerLookup.set(winner.placement, {
-            label: winner.handle,
-            value: winner.userId,
-        })
+        winnerLookup.set(winner.placement, `${winner.userId}`)
     })
 
     for (let placement = 1; placement <= totalPlacements; placement += 1) {
@@ -140,22 +142,30 @@ function createWinnersByPlacement(challenge?: Challenge): WinnersByPlacement {
 function createWinnerPayload(
     placements: number[],
     winnersByPlacement: WinnersByPlacement,
+    submitterHandleByUserId: Record<string, string>,
+    fallbackHandleByUserId: Record<string, string>,
 ): WinnerUpdate[] {
     const payload: WinnerUpdate[] = []
 
     placements.forEach(placement => {
-        const selectedWinner = winnersByPlacement[placement]
-        if (!selectedWinner) {
+        const selectedWinnerUserId = winnersByPlacement[placement]
+        if (!selectedWinnerUserId) {
             return
         }
 
-        const userId = Number(selectedWinner.value)
+        const userId = Number(selectedWinnerUserId)
         if (!Number.isFinite(userId) || userId <= 0) {
             return
         }
 
+        const handle = submitterHandleByUserId[selectedWinnerUserId]
+            || fallbackHandleByUserId[selectedWinnerUserId]
+        if (!handle) {
+            return
+        }
+
         payload.push({
-            handle: `${selectedWinner.label}`,
+            handle,
             placement,
             userId,
         })
@@ -178,6 +188,12 @@ export const ChallengeDetailsPage: FC = () => {
     const [isLoading, setIsLoading] = useState(false)
     const [isSavingStatus, setIsSavingStatus] = useState(false)
     const [isSavingWinners, setIsSavingWinners] = useState(false)
+    const [isLoadingSubmitters, setIsLoadingSubmitters] = useState(false)
+    const [submitterOptions, setSubmitterOptions] = useState<InputSelectOption[]>([
+        { label: 'Select submitter', value: '' },
+    ])
+    const [submitterHandleByUserId, setSubmitterHandleByUserId]
+        = useState<Record<string, string>>({})
 
     const hydrateChallenge = useEventCallback((challenge: Challenge): void => {
         setChallengeInfo(challenge)
@@ -201,9 +217,90 @@ export const ChallengeDetailsPage: FC = () => {
         }
     })
 
+    const loadChallengeSubmitters = useEventCallback(async () => {
+        if (!challengeId) {
+            return
+        }
+
+        setIsLoadingSubmitters(true)
+        try {
+            const roles = await getResourceRoles()
+            const submitterRoleIds = roles
+                .filter(role => role.name.toLowerCase()
+                    .includes('submitter'))
+                .map(role => role.id)
+
+            if (submitterRoleIds.length === 0) {
+                setSubmitterOptions([{ label: 'Select submitter', value: '' }])
+                setSubmitterHandleByUserId({})
+                return
+            }
+
+            const resourcesByRole = await Promise.all(
+                submitterRoleIds.map(async roleId => {
+                    const resources: ChallengeResource[] = []
+                    let page = 1
+                    const perPage = 200
+                    let totalPages = 1
+
+                    do {
+                        // eslint-disable-next-line no-await-in-loop
+                        const response = await getChallengeResources(challengeId, {
+                            page,
+                            perPage,
+                            roleId,
+                        })
+                        resources.push(...response.data)
+                        totalPages = response.totalPages
+                        page += 1
+                    } while (page <= totalPages)
+
+                    return resources
+                }),
+            )
+
+            const deduplicatedByMemberId = new Map<string, ChallengeResource>()
+            resourcesByRole.flat()
+                .forEach(resource => {
+                    if (!deduplicatedByMemberId.has(resource.memberId)) {
+                        deduplicatedByMemberId.set(resource.memberId, resource)
+                    }
+                })
+
+            const submitters = Array.from(deduplicatedByMemberId.values())
+                .sort((left, right) => (
+                    left.memberHandle.localeCompare(right.memberHandle)
+                ))
+
+            const handleMap: Record<string, string> = {}
+            const options: InputSelectOption[] = [
+                { label: 'Select submitter', value: '' },
+                ...submitters.map(submitter => {
+                    const userId = `${submitter.memberId}`
+                    handleMap[userId] = submitter.memberHandle
+                    return {
+                        label: `${submitter.memberHandle} (${submitter.memberId})`,
+                        value: userId,
+                    }
+                }),
+            ]
+
+            setSubmitterHandleByUserId(handleMap)
+            setSubmitterOptions(options)
+        } catch (error) {
+            handleError(error)
+        } finally {
+            setIsLoadingSubmitters(false)
+        }
+    })
+
     useEffect(() => {
         loadChallenge()
     }, [challengeId, loadChallenge])
+
+    useEffect(() => {
+        loadChallengeSubmitters()
+    }, [challengeId, loadChallengeSubmitters])
 
     const statusOptions = useMemo<InputSelectOption[]>(() => {
         const values = [...CHALLENGE_STATUS_OPTIONS]
@@ -231,6 +328,12 @@ export const ChallengeDetailsPage: FC = () => {
     }, [routeState.previousChallengeListFilter])
 
     const pageTitle = challengeInfo?.name || 'Challenge Details'
+    const currentWinnerHandleByUserId = useMemo(
+        () => Object.fromEntries(
+            (challengeInfo?.winners ?? []).map(winner => [`${winner.userId}`, winner.handle]),
+        ),
+        [challengeInfo?.winners],
+    )
 
     const handleStatusChange = useEventCallback(
         (event: ChangeEvent<HTMLInputElement>): void => {
@@ -263,18 +366,11 @@ export const ChallengeDetailsPage: FC = () => {
     })
 
     const createHandleWinnerChange = (placement: number) => (
-        selectedWinner: SelectOption,
+        event: ChangeEvent<HTMLInputElement>,
     ): void => {
         setWinnersByPlacement(previous => ({
             ...previous,
-            [placement]: selectedWinner,
-        }))
-    }
-
-    const createHandleWinnerClear = (placement: number) => (): void => {
-        setWinnersByPlacement(previous => ({
-            ...previous,
-            [placement]: undefined,
+            [placement]: event.target.value || undefined,
         }))
     }
 
@@ -286,6 +382,8 @@ export const ChallengeDetailsPage: FC = () => {
         const winnerPayload = createWinnerPayload(
             placementNumbers,
             winnersByPlacement,
+            submitterHandleByUserId,
+            currentWinnerHandleByUserId,
         )
         const payload: {
             status?: Challenge['status']
@@ -399,24 +497,16 @@ export const ChallengeDetailsPage: FC = () => {
                                 <div className={styles.winnersList}>
                                     {placementNumbers.map(placement => (
                                         <div key={placement} className={styles.winnerRow}>
-                                            <FieldHandleSelect
+                                            <InputSelect
+                                                name={`winner-${placement}`}
                                                 label={`${getOrdinal(placement)} Place`}
                                                 classNameWrapper={styles.selectWrapper}
                                                 value={winnersByPlacement[placement]}
                                                 onChange={createHandleWinnerChange(placement)}
-                                                disabled={isSavingWinners}
+                                                options={submitterOptions}
+                                                disabled={isSavingWinners || isLoadingSubmitters}
+                                                placeholder='Select submitter'
                                             />
-                                            <Button
-                                                secondary
-                                                size='lg'
-                                                onClick={createHandleWinnerClear(placement)}
-                                                disabled={
-                                                    !winnersByPlacement[placement]
-                                                    || isSavingWinners
-                                                }
-                                            >
-                                                Clear
-                                            </Button>
                                         </div>
                                     ))}
                                 </div>
