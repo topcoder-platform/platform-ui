@@ -14,7 +14,7 @@ type FilterOptions = {
     value: string;
 };
 
-type Filter = {
+export type Filter = {
     key: string;
     label: string;
     type: 'input' | 'dropdown' | 'member_autocomplete';

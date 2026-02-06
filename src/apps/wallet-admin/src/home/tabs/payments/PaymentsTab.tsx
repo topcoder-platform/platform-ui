@@ -17,6 +17,7 @@ import PaymentEditForm from '../../../lib/components/payment-edit/PaymentEdit'
 import PaymentsTable from '../../../lib/components/payments-table/PaymentTable'
 
 import styles from './Payments.module.scss'
+import { Filter } from '../../../lib/components/filter-bar/FilterBar'
 
 interface ListViewProps {
     // eslint-disable-next-line react/no-unused-prop-types
@@ -287,8 +288,11 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
     const isEditingAllowed = (): boolean => (
         props.profile.roles.includes('Payment Admin')
         || props.profile.roles.includes('Payment BA Admin')
+        || props.profile.roles.includes('Engagement Payment Approver')
         || props.profile.roles.includes('Payment Editor')
     )
+
+    const isEngagementPaymentApprover = props.profile.roles.includes('Engagement Payment Approver');
 
     return (
         <>
@@ -354,33 +358,35 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                                     ],
                                     type: 'dropdown',
                                 },
-                                {
-                                    key: 'type',
-                                    label: 'Type',
-                                    options: [
-                                        {
-                                            label: 'Task Payment',
-                                            value: 'TASK_PAYMENT',
-                                        },
-                                        {
-                                            label: 'Contest Payment',
-                                            value: 'CONTEST_PAYMENT',
-                                        },
-                                        {
-                                            label: 'Copilot Payment',
-                                            value: 'COPILOT_PAYMENT',
-                                        },
-                                        {
-                                            label: 'Review Board Payment',
-                                            value: 'REVIEW_BOARD_PAYMENT',
-                                        },
-                                        {
-                                            label: 'Engagement Payment',
-                                            value: 'ENGAGEMENT_PAYMENT',
-                                        },
-                                    ],
-                                    type: 'dropdown',
-                                },
+                                ...(isEngagementPaymentApprover ? [] : [
+                                    {
+                                        key: 'category',
+                                        label: 'Type',
+                                        options: [
+                                            {
+                                                label: 'Task Payment',
+                                                value: 'TASK_PAYMENT',
+                                            },
+                                            {
+                                                label: 'Contest Payment',
+                                                value: 'CONTEST_PAYMENT',
+                                            },
+                                            {
+                                                label: 'Copilot Payment',
+                                                value: 'COPILOT_PAYMENT',
+                                            },
+                                            {
+                                                label: 'Review Board Payment',
+                                                value: 'REVIEW_BOARD_PAYMENT',
+                                            },
+                                            {
+                                                label: 'Engagement Payment',
+                                                value: 'ENGAGEMENT_PAYMENT',
+                                            },
+                                        ],
+                                        type: 'dropdown',
+                                    },
+                                ] as Filter[]),
                                 {
                                     key: 'date',
                                     label: 'Date',
