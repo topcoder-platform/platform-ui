@@ -7,6 +7,7 @@ import classNames from 'classnames'
 import { Button, IconOutline, PageDivider } from '~/libs/ui'
 import { updateOrCreateMemberTraitsAsync,
     useMemberTraits,
+    UserTrait,
     UserTraitCategoryNames,
     UserTraitIds,
     UserTraits } from '~/libs/core'
@@ -15,6 +16,7 @@ import OpenToWorkForm from '~/libs/shared/lib/components/modify-open-to-work-mod
 
 import { ProgressBar } from '../../components/progress-bar'
 import { updateMemberOpenForWork, updatePersonalizations } from '../../redux/actions/member'
+import PersonalizationInfo from '../../models/PersonalizationInfo'
 
 import styles from './styles.module.scss'
 
@@ -22,7 +24,7 @@ interface PageOpenToWorkContentProps {
     profileHandle: string
     availableForGigs: boolean
     updateMemberOpenForWork: (isOpenForWork: boolean) => void
-    updatePersonalizations: (personalizations: any[]) => void
+    updatePersonalizations: (personalizations: PersonalizationInfo[]) => void
 }
 
 export const PageOpenToWorkContent: FC<PageOpenToWorkContentProps> = props => {
@@ -100,7 +102,7 @@ export const PageOpenToWorkContent: FC<PageOpenToWorkContentProps> = props => {
             ])
 
             const personalizationTrait = updatedTraits?.find(
-                (t: any) => t.traitId === UserTraitIds.personalization,
+                (t: UserTrait) => t.traitId === UserTraitIds.personalization,
             )
 
             const nextPersonalizations = personalizationTrait?.traits?.data
