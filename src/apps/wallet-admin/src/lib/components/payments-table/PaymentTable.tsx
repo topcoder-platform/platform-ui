@@ -10,8 +10,10 @@ import { Winning } from '../../models/WinningDetail'
 import styles from './PaymentTable.module.scss'
 
 interface PaymentTableProps {
+    enableBulkEdit?: boolean
     payments: ReadonlyArray<Winning>;
     selectedPayments?: { [paymentId: string]: Winning };
+    onSelectionChange?: (selected: { [paymentId: string]: Winning }) => void;
     currentPage: number;
     numPages: number;
     onPaymentEditClick: (payment: Winning) => void;
@@ -31,12 +33,61 @@ const PaymentsTable: React.FC<PaymentTableProps> = (props: PaymentTableProps) =>
         }
     }, [props.selectedPayments])
 
+    // Only rows with this status are selectable for bulk actions
+    const selectableStatus = 'On Hold (Admin)'
+
+    const onToggleRow = (payment: Winning, checked: boolean) => {
+        setSelectedPayments(prev => {
+            const next = { ...prev }
+            if (checked) {
+                next[payment.id] = payment
+            } else {
+                delete next[payment.id]
+            }
+
+            props.onSelectionChange?.(next)
+            return next
+        })
+    }
+
+    const visibleSelectablePayments = props.payments.filter(p => p.status === selectableStatus)
+    const allVisibleSelected = visibleSelectablePayments.length > 0 && visibleSelectablePayments.every(p => selectedPayments[p.id])
+    const someVisibleSelected = visibleSelectablePayments.some(p => selectedPayments[p.id]) && !allVisibleSelected
+
+    const onToggleSelectAll = (checked: boolean) => {
+        if (checked) {
+            const next: { [paymentId: string]: Winning } = {}
+            visibleSelectablePayments.forEach(p => { next[p.id] = p })
+            setSelectedPayments(next)
+            props.onSelectionChange?.(next)
+        } else {
+            // deselect all visible selectable rows
+            setSelectedPayments(prev => {
+                const next = { ...prev }
+                visibleSelectablePayments.forEach(p => { delete next[p.id] })
+                props.onSelectionChange?.(next)
+                return next
+            })
+        }
+    }
+
     return (
         <>
             <div className={styles.tableContainer}>
                 <table>
                     <thead>
                         <tr>
+                            {props.enableBulkEdit && (
+                                <th>
+                                    <input
+                                        type='checkbox'
+                                        aria-label='Select All'
+                                        checked={allVisibleSelected}
+                                        ref={(el) => { if (el) el.indeterminate = someVisibleSelected }}
+                                        onChange={e => onToggleSelectAll(e.target.checked)}
+                                    />
+                                </th>
+                            )}
                             <th className='body-ultra-small-bold'>HANDLE</th>
                             <th className={`body-ultra-small-bold ${styles.description}`}>DESCRIPTION</th>
                             <th className='body-ultra-small-bold'>CREATE DATE</th>
@@ -53,6 +104,17 @@ const PaymentsTable: React.FC<PaymentTableProps> = (props: PaymentTableProps) =>
                                 key={`${payment.id}`}
                                 className={selectedPayments[payment.id] ? 'selected' : ''}
                             >
+                                {props.enableBulkEdit && (
+                                    <td>
+                                        <input
+                                            type='checkbox'
+                                            aria-label={`Select ${payment.handle}`}
+                                            checked={!!selectedPayments[payment.id]}
+                                            disabled={payment.status !== selectableStatus}
+                                            onChange={e => onToggleRow(payment, e.target.checked)}
+                                        />
+                                    </td>
+                                )}
                                 <td className='body-small-bold'>{payment.handle}</td>
                                 <td className='body-small'>{payment.description}</td>
                                 <td className='body-small-bold'>{payment.createDate}</td>

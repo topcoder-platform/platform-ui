@@ -4,7 +4,7 @@ import { toast } from 'react-toastify'
 import { AxiosError } from 'axios'
 import React, { FC, useCallback, useEffect } from 'react'
 
-import { Collapsible, ConfirmModal, LoadingCircles } from '~/libs/ui'
+import { Collapsible, ConfirmModal, LoadingCircles, InputText } from '~/libs/ui'
 import { UserProfile } from '~/libs/core'
 import { downloadBlob } from '~/libs/shared'
 
@@ -293,6 +293,43 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
     )
 
     const isEngagementPaymentApprover = props.profile.roles.includes('Engagement Payment Approver');
+    const [bulkOpen, setBulkOpen] = React.useState(false)
+    const [bulkAuditNote, setBulkAuditNote] = React.useState('')
+
+    const onBulkApprove = async (auditNote: string) => {
+        const ids = Object.keys(selectedPayments)
+        if (ids.length === 0) return
+
+        toast.success('Starting bulk approve', { position: toast.POSITION.BOTTOM_RIGHT })
+
+        for (const id of ids) {
+            const updates: any = {
+                winningsId: id,
+                paymentStatus: 'OWED',
+                // attach audit note as part of the payload similar to single update
+                auditNote,
+            }
+
+            try {
+                // awaiting sequentially to preserve order and server load control
+                // errors for individual items are caught and reported
+                // eslint-disable-next-line no-await-in-loop
+                const msg = await editPayment(updates)
+                toast.success(msg, { position: toast.POSITION.BOTTOM_RIGHT })
+            } catch (err:any) {
+                if (err?.message) {
+                    toast.error(`Failed to update payment ${id}: ${err.message}`, { position: toast.POSITION.BOTTOM_RIGHT })
+                } else {
+                    toast.error(`Failed to update payment ${id}`, { position: toast.POSITION.BOTTOM_RIGHT })
+                }
+            }
+        }
+
+        setBulkAuditNote('')
+        setBulkOpen(false)
+        setSelectedPayments({})
+        await fetchWinnings()
+    }
 
     return (
         <>
@@ -304,6 +341,8 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                     <Collapsible header={<h3>Payment Listing</h3>}>
                         <FilterBar
                             showExportButton
+                            selectedCount={Object.keys(selectedPayments).length}
+                            onBulkClick={() => setBulkOpen(true)}
                             onExport={async () => {
                                 toast.success('Downloading payments report. This may take a few moments.', { position: toast.POSITION.BOTTOM_RIGHT })
                                 downloadBlob(
@@ -455,11 +494,13 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                         {isLoading && <LoadingCircles className={styles.centered} />}
                         {!isLoading && winnings.length > 0 && (
                             <PaymentsTable
+                                enableBulkEdit={isEngagementPaymentApprover}
                                 canEdit={isEditingAllowed()}
                                 currentPage={pagination.currentPage}
                                 numPages={pagination.totalPages}
                                 payments={winnings}
                                 selectedPayments={selectedPayments}
+                                onSelectionChange={(selected) => setSelectedPayments(selected)}
                                 onNextPageClick={async function onNextPageClicked() {
                                     if (pagination.currentPage === pagination.totalPages) {
                                         return
@@ -519,6 +560,35 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                     </Collapsible>
                 </div>
             </div>
+            {bulkOpen && (
+                <ConfirmModal
+                    maxWidth='800px'
+                    size='lg'
+                    showButtons
+                    title='Bulk Approve Payments'
+                    action='Approve'
+                    onClose={function onClose() {
+                        setBulkAuditNote('')
+                        setBulkOpen(false)
+                    }}
+                    onConfirm={function onConfirm() {
+                        onBulkApprove(bulkAuditNote)
+                    }}
+                    canSave={bulkAuditNote.trim().length > 0}
+                    open={bulkOpen}
+                >
+                    <div>
+                        <p>You are about to approve {Object.keys(selectedPayments).length} payments.</p>
+                        <InputText
+                            type="text"
+                            label='Audit Note'
+                            name='bulkAuditNote'
+                            value={bulkAuditNote}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setBulkAuditNote(e.target.value)}
+                        />
+                    </div>
+                </ConfirmModal>
+            )}
             {confirmFlow && (
                 <ConfirmModal
                     maxWidth='800px'
