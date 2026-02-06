@@ -1,6 +1,7 @@
 /* eslint-disable complexity */
 import { Dispatch, FC, SetStateAction, useEffect, useMemo, useState } from 'react'
 import { Location, useLocation, useSearchParams } from 'react-router-dom'
+import { KeyedMutator } from 'swr'
 import moment from 'moment'
 
 import {
@@ -8,6 +9,7 @@ import {
     useMemberTraits,
     UserProfile,
     UserRole,
+    UserTrait,
     UserTraitIds,
     UserTraits,
 } from '~/libs/core'
@@ -113,6 +115,38 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
         }, 1000)
     }
 
+    function renderActivityStatus(): JSX.Element {
+        return (
+            <Tooltip
+                content={activeTooltipText}
+                triggerOn='hover'
+                place='top'
+                className={styles.tooltipText}
+            >
+                <div className={styles.activeBadge}>
+                    Active
+                </div>
+            </Tooltip>
+        )
+    }
+
+    const { data: memberPersonalizationTraits, mutate: mutateTraits }: {
+            data: UserTraits[] | undefined,
+            mutate: KeyedMutator<any>,
+        } = useMemberTraits(
+            props.profile.handle,
+            { traitIds: UserTraitIds.personalization },
+        )
+    const personalizationData = memberPersonalizationTraits?.[0]?.traits?.data
+
+    const openToWorkItem = personalizationData?.find(
+        (item: UserTrait) => item?.openToWork,
+    )?.openToWork ?? {}
+
+    const hasOpenToWork = personalizationData?.some(
+        (item: UserTrait) => !!item?.openToWork,
+    )
+
     function renderOpenForWork(): JSX.Element {
         const showMyStatusLabel = canEdit
         const showAdminLabel = isPrivilegedViewer
@@ -134,6 +168,8 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
                     profile={props.profile}
                     refreshProfile={props.refreshProfile}
                     isPrivilegedViewer={isPrivilegedViewer}
+                    memberPersonalizationTraits={memberPersonalizationTraits}
+                    mutatePersonalizationTraits={mutateTraits}
                 />
             </div>
         )
@@ -150,48 +186,50 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
         )
     }
 
-    function renderActivityStatus(): JSX.Element {
-        return (
-            <Tooltip
-                content={activeTooltipText}
-                triggerOn='hover'
-                place='top'
-                className={styles.tooltipText}
-            >
-                <div className={styles.activeBadge}>
-                    Active
-                </div>
-            </Tooltip>
-        )
-    }
-
-    const { data: memberPersonalizationTraits }: {
-                    data: UserTraits[] | undefined,
-                } = useMemberTraits(
-                    props.profile.handle,
-                    { traitIds: UserTraitIds.personalization },
-                )
-    const personalizationData = memberPersonalizationTraits?.[0]?.traits?.data?.[0]?.openToWork || {}
-
     function renderOpenToWorkSummary(): JSX.Element {
-        const openToWork = props.profile.availableForGigs
 
-        if (!openToWork) return <></>
+        if (
+            !hasOpenToWork
+            || !props.profile.availableForGigs
+            || (openToWorkItem.preferredRoles?.length === 0 && openToWorkItem.availability === undefined)) return <></>
 
-        if (!personalizationData.availability || !personalizationData.preferredRoles?.length) return <></>
+        const availabilityLabel = getAvailabilityLabel(openToWorkItem.availability)
+        const roleLabels = getPreferredRoleLabels(openToWorkItem.preferredRoles)
 
-        const availabilityLabel = getAvailabilityLabel(personalizationData.availability)
-        const roleLabels = getPreferredRoleLabels(personalizationData.preferredRoles)
+        const MAX_VISIBLE_ROLES = 5
+        const visibleRoles = roleLabels.slice(0, MAX_VISIBLE_ROLES)
+        const hasMoreRoles = roleLabels.length > MAX_VISIBLE_ROLES
+        const tooltipContent = roleLabels.join(', ')
+
+        const rolesContent = (
+            <span className={styles.rolesText}>
+                as
+                {' '}
+                <span className={styles.roleText}>
+                    {formatRoleList(visibleRoles)}
+                    {hasMoreRoles && '…'}
+                </span>
+            </span>
+        )
+        const shouldShowTooltip = openToWorkItem.preferredRoles?.length > 5
 
         return (
             <p className={styles.openToWorkSummary}>
                 Interested in
                 {' '}
-                <span>{availabilityLabel}</span>
+                {openToWorkItem.availability && <span>{availabilityLabel}</span>}
                 {' '}
-                roles as
+                roles
                 {' '}
-                <span className={styles.roleText}>{formatRoleList(roleLabels)}</span>
+                {openToWorkItem.preferredRoles?.length > 0 && (
+                    shouldShowTooltip ? (
+                        <Tooltip content={tooltipContent} triggerOn='hover'>
+                            {rolesContent}
+                        </Tooltip>
+                    ) : (
+                        rolesContent
+                    )
+                )}
             </p>
         )
     }

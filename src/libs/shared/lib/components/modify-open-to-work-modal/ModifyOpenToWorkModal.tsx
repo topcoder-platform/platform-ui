@@ -1,4 +1,4 @@
-import { ChangeEvent, FC } from 'react'
+import { ChangeEvent, FC, useCallback } from 'react'
 
 import { InputMultiselect, InputMultiselectOption, InputSelect, InputText } from '~/libs/ui'
 
@@ -53,18 +53,28 @@ const OpenToWorkForm: FC<OpenToWorkFormProps> = (props: OpenToWorkFormProps) => 
         })
     }
 
-    function handleRolesChange(e: ChangeEvent<HTMLInputElement>): void {
+    const handleRolesChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
         const options = (e.target as unknown as { value: InputMultiselectOption[] }).value
 
         props.onChange({
             ...props.value,
             preferredRoles: options.map(o => o.value),
         })
-    }
+    }, [props])
 
-    function fetchPreferredRoles(): Promise<InputMultiselectOption[]> {
-        return Promise.resolve(preferredRoleOptions)
-    }
+    const fetchPreferredRoles = useCallback(async (query: string): Promise<InputMultiselectOption[]> => {
+        if (!query) {
+            return preferredRoleOptions
+        }
+
+        const normalizedQuery = query.toLowerCase()
+        return preferredRoleOptions.filter(option => {
+            const normalizedLabel = option.label?.toString()
+                .toLowerCase()
+
+            return normalizedLabel?.includes(normalizedQuery)
+        })
+    }, [])
 
     return (
         <div className={styles.container}>
@@ -96,7 +106,7 @@ const OpenToWorkForm: FC<OpenToWorkFormProps> = (props: OpenToWorkFormProps) => 
                         name='preferredRoles'
                         label='Preferred Roles'
                         placeholder='Select preferred roles'
-                        additionalPlaceholder='Add more roles...'
+                        additionalPlaceholder='Add more...'
                         onFetchOptions={fetchPreferredRoles}
                         options={preferredRoleOptions}
                         value={preferredRoleOptions.filter(

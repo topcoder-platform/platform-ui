@@ -5,13 +5,16 @@ import { toast } from 'react-toastify'
 import classNames from 'classnames'
 
 import { Button, IconOutline, PageDivider } from '~/libs/ui'
-import { useMemberTraits, UserTraitIds, UserTraits } from '~/libs/core'
+import { updateOrCreateMemberTraitsAsync,
+    useMemberTraits,
+    UserTraitCategoryNames,
+    UserTraitIds,
+    UserTraits } from '~/libs/core'
 import { OpenToWorkData } from '~/libs/shared/lib/components/modify-open-to-work-modal'
-import { updateMemberTraits } from '~/libs/core/lib/profile/profile-functions/profile-store/profile-xhr.store'
 import OpenToWorkForm from '~/libs/shared/lib/components/modify-open-to-work-modal/ModifyOpenToWorkModal'
 
 import { ProgressBar } from '../../components/progress-bar'
-import { createPersonalizationsPayloadData, updateMemberOpenForWork } from '../../redux/actions/member'
+import { updateMemberOpenForWork } from '../../redux/actions/member'
 
 import styles from './styles.module.scss'
 
@@ -43,14 +46,15 @@ export const PageOpenToWorkContent: FC<PageOpenToWorkContentProps> = props => {
     useEffect(() => {
         if (!memberPersonalizationTraits) return
 
-        const personalizationData
-      = memberPersonalizationTraits?.[0]?.traits?.data?.[0]?.openToWork || {}
+        const personalizationData = memberPersonalizationTraits?.[0]?.traits?.data?.[0] || {}
+
+        const openToWorkItem = personalizationData.openToWork || {}
 
         setFormValue(prev => ({
             ...prev,
-            availability: personalizationData?.availability,
+            availability: openToWorkItem?.availability,
             availableForGigs: !!props.availableForGigs,
-            preferredRoles: personalizationData?.preferredRoles ?? [],
+            preferredRoles: openToWorkItem?.preferredRoles ?? [],
         }))
     }, [memberPersonalizationTraits, props.availableForGigs])
 
@@ -68,12 +72,16 @@ export const PageOpenToWorkContent: FC<PageOpenToWorkContentProps> = props => {
     async function goToNextStep(): Promise<void> {
         setLoading(true)
 
-        const traitsPayload = createPersonalizationsPayloadData([
-            {
+        const existing = memberPersonalizationTraits?.[0]?.traits?.data?.[0] || {}
+
+        const personalizationData = [{
+            ...existing,
+            openToWork: {
+                ...(existing.openToWork || {}),
                 availability: formValue.availability,
                 preferredRoles: formValue.preferredRoles,
             },
-        ])
+        }]
 
         try {
             await Promise.all([
@@ -81,10 +89,13 @@ export const PageOpenToWorkContent: FC<PageOpenToWorkContentProps> = props => {
                 props.updateMemberOpenForWork(formValue.availableForGigs),
 
                 // personalization trait
-                updateMemberTraits(
-                    props.profileHandle,
-                    traitsPayload,
-                ),
+                updateOrCreateMemberTraitsAsync(props.profileHandle, [{
+                    categoryName: UserTraitCategoryNames.personalization,
+                    traitId: UserTraitIds.personalization,
+                    traits: {
+                        data: personalizationData,
+                    },
+                }]),
             ])
 
             navigate('../works')

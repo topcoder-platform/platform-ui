@@ -2,13 +2,17 @@ import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
 
 import { BaseModal, Button } from '~/libs/ui'
-import { useMemberTraits, UserProfile, UserTraitIds, UserTraits } from '~/libs/core'
+import {
+    updateOrCreateMemberTraitsAsync,
+    UserProfile,
+    UserTrait,
+    UserTraitCategoryNames,
+    UserTraitIds,
+} from '~/libs/core'
 import { OpenToWorkData } from '~/libs/shared/lib/components/modify-open-to-work-modal'
 import {
     updateMemberProfile,
-    updateMemberTraits,
 } from '~/libs/core/lib/profile/profile-functions/profile-store/profile-xhr.store'
-import { createPersonalizationsPayloadData } from '~/apps/onboarding/src/redux/actions/member'
 import OpenToWorkForm from '~/libs/shared/lib/components/modify-open-to-work-modal/ModifyOpenToWorkModal'
 
 import styles from './OpenForGigsModifyModal.module.scss'
@@ -17,18 +21,15 @@ interface OpenForGigsModifyModalProps {
     onClose: () => void
     onSave: () => void
     profile: UserProfile
+    memberPersonalizationTraits?: UserTrait[]
+    mutatePersonalizationTraits: () => void
 }
 
 const OpenForGigsModifyModal: FC<OpenForGigsModifyModalProps> = (props: OpenForGigsModifyModalProps) => {
     const [isSaving, setIsSaving]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
 
-    const { data: memberPersonalizationTraits }: {
-            data: UserTraits[] | undefined,
-        } = useMemberTraits(
-            props.profile.handle,
-            { traitIds: UserTraitIds.personalization },
-        )
+    const memberPersonalizationTraits = props.memberPersonalizationTraits
 
     const [formValue, setFormValue] = useState<OpenToWorkData>({
         availability: undefined,
@@ -39,13 +40,15 @@ const OpenForGigsModifyModal: FC<OpenForGigsModifyModalProps> = (props: OpenForG
     useEffect(() => {
         if (!memberPersonalizationTraits) return
 
-        const personalizationData = memberPersonalizationTraits?.[0]?.traits?.data?.[0]?.openToWork || {}
+        const personalizationData = memberPersonalizationTraits?.[0]?.traits?.data?.[0] || {}
+
+        const openToWorkItem = personalizationData.openToWork || {}
 
         setFormValue(prev => ({
             ...prev,
-            availability: personalizationData?.availability,
+            availability: openToWorkItem?.availability,
             availableForGigs: !!props.profile.availableForGigs,
-            preferredRoles: personalizationData?.preferredRoles ?? [],
+            preferredRoles: openToWorkItem?.preferredRoles ?? [],
         }))
     }, [
         memberPersonalizationTraits,
@@ -55,20 +58,33 @@ const OpenForGigsModifyModal: FC<OpenForGigsModifyModalProps> = (props: OpenForG
     function handleOpenForWorkSave(): void {
         setIsSaving(true)
 
-        const traitsPayload = createPersonalizationsPayloadData([{
-            availability: formValue.availability,
-            preferredRoles: formValue.preferredRoles,
-        }])
+        const existing = memberPersonalizationTraits?.[0]?.traits?.data?.[0] || {}
+
+        const personalizationData = [{
+            ...existing,
+            openToWork: {
+                ...(existing.openToWork || {}),
+                availability: formValue.availability,
+                preferredRoles: formValue.preferredRoles,
+            },
+        }]
 
         Promise.all([
         // Update availableForGigs in member profile
             updateMemberProfile(props.profile.handle, { availableForGigs: formValue.availableForGigs }),
 
             // Update personalization trait for availability & preferredRoles
-            updateMemberTraits(props.profile.handle, traitsPayload),
+            updateOrCreateMemberTraitsAsync(props.profile.handle, [{
+                categoryName: UserTraitCategoryNames.personalization,
+                traitId: UserTraitIds.personalization,
+                traits: {
+                    data: personalizationData,
+                },
+            }]),
         ])
             .then(() => {
                 toast.success('Work availability updated successfully.', { position: toast.POSITION.BOTTOM_RIGHT })
+                props.mutatePersonalizationTraits()
                 props.onSave()
             })
             .catch(() => {

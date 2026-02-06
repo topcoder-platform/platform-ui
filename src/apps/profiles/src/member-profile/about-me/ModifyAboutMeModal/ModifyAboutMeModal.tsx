@@ -1,5 +1,5 @@
 import { Dispatch, FC, SetStateAction, useEffect, useState } from 'react'
-import { reject, trim } from 'lodash'
+import { trim } from 'lodash'
 import { toast } from 'react-toastify'
 
 import { BaseModal, Button, InputText, InputTextarea } from '~/libs/ui'
@@ -68,6 +68,15 @@ const ModifyAboutMeModal: FC<ModifyAboutMeModalProps> = (props: ModifyAboutMeMod
         setIsSaving(true)
         setFormSaveError(undefined)
 
+        const existing = props.memberPersonalizationTraitsData?.[0] || {}
+
+        const personalizationData: UserTrait[] = [
+            {
+                ...existing,
+                profileSelfTitle: updatedTitle,
+            },
+        ]
+
         Promise.all([
             updateMemberProfileAsync(
                 props.profile.handle,
@@ -77,13 +86,7 @@ const ModifyAboutMeModal: FC<ModifyAboutMeModalProps> = (props: ModifyAboutMeMod
                 categoryName: UserTraitCategoryNames.personalization,
                 traitId: UserTraitIds.personalization,
                 traits: {
-                    data: [
-                        ...reject(
-                            props.memberPersonalizationTraitsData,
-                            (trait: any) => trait.profileSelfTitle,
-                        ),
-                        { profileSelfTitle: updatedTitle },
-                    ],
+                    data: personalizationData,
                 },
             }]),
         ])
