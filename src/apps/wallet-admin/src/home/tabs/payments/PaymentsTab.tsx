@@ -4,7 +4,7 @@ import { toast } from 'react-toastify'
 import { AxiosError } from 'axios'
 import React, { FC, useCallback, useEffect } from 'react'
 
-import { Collapsible, ConfirmModal, LoadingCircles, InputText } from '~/libs/ui'
+import { Collapsible, ConfirmModal, InputText, LoadingCircles } from '~/libs/ui'
 import { UserProfile } from '~/libs/core'
 import { downloadBlob } from '~/libs/shared'
 
@@ -13,11 +13,11 @@ import { Winning, WinningDetail } from '../../../lib/models/WinningDetail'
 import { FilterBar, formatIOSDateString, PaymentView } from '../../../lib'
 import { ConfirmFlowData } from '../../../lib/models/ConfirmFlowData'
 import { PaginationInfo } from '../../../lib/models/PaginationInfo'
+import { Filter } from '../../../lib/components/filter-bar/FilterBar'
 import PaymentEditForm from '../../../lib/components/payment-edit/PaymentEdit'
 import PaymentsTable from '../../../lib/components/payments-table/PaymentTable'
 
 import styles from './Payments.module.scss'
-import { Filter } from '../../../lib/components/filter-bar/FilterBar'
 
 interface ListViewProps {
     // eslint-disable-next-line react/no-unused-prop-types
@@ -292,11 +292,11 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
         || props.profile.roles.includes('Payment Editor')
     )
 
-    const isEngagementPaymentApprover = props.profile.roles.includes('Engagement Payment Approver');
+    const isEngagementPaymentApprover = props.profile.roles.includes('Engagement Payment Approver')
     const [bulkOpen, setBulkOpen] = React.useState(false)
     const [bulkAuditNote, setBulkAuditNote] = React.useState('')
 
-    const onBulkApprove = async (auditNote: string) => {
+    const onBulkApprove = useCallback(async (auditNote: string) => {
         const ids = Object.keys(selectedPayments)
         if (ids.length === 0) return
 
@@ -304,10 +304,9 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
 
         for (const id of ids) {
             const updates: any = {
-                winningsId: id,
-                paymentStatus: 'OWED',
-                // attach audit note as part of the payload similar to single update
                 auditNote,
+                paymentStatus: 'OWED',
+                winningsId: id,
             }
 
             try {
@@ -329,7 +328,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
         setBulkOpen(false)
         setSelectedPayments({})
         await fetchWinnings()
-    }
+    }, [selectedPayments, fetchWinnings])
 
     return (
         <>
@@ -500,7 +499,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                                 numPages={pagination.totalPages}
                                 payments={winnings}
                                 selectedPayments={selectedPayments}
-                                onSelectionChange={(selected) => setSelectedPayments(selected)}
+                                onSelectionChange={selected => setSelectedPayments(selected)}
                                 onNextPageClick={async function onNextPageClicked() {
                                     if (pagination.currentPage === pagination.totalPages) {
                                         return
@@ -578,9 +577,14 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                     open={bulkOpen}
                 >
                     <div>
-                        <p>You are about to approve {Object.keys(selectedPayments).length} payments.</p>
+                        <p>
+                            You are about to approve
+                            {Object.keys(selectedPayments).length}
+                            {' '}
+                            payments.
+                        </p>
                         <InputText
-                            type="text"
+                            type='text'
                             label='Audit Note'
                             name='bulkAuditNote'
                             value={bulkAuditNote}

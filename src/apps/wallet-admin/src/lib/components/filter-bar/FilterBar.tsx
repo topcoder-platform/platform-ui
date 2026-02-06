@@ -35,7 +35,6 @@ const FilterBar: React.FC<FilterBarProps> = (props: FilterBarProps) => {
     const [selectedValue, setSelectedValue] = React.useState<Map<string, string | any[]>>(new Map())
     const selectedMembers = useRef<MembersAutocompeteResult[]>([])
 
-
     const renderDropdown = (index: number, filter: Filter): JSX.Element => (
         <InputSelect
             tabIndex={index}

@@ -83,7 +83,7 @@ const PaymentsTable: React.FC<PaymentTableProps> = (props: PaymentTableProps) =>
                                         type='checkbox'
                                         aria-label='Select All'
                                         checked={allVisibleSelected}
-                                        ref={(el) => { if (el) el.indeterminate = someVisibleSelected }}
+                                        ref={el => { if (el) el.indeterminate = someVisibleSelected }}
                                         onChange={e => onToggleSelectAll(e.target.checked)}
                                     />
                                 </th>
