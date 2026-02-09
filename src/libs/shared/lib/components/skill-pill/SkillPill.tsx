@@ -63,7 +63,7 @@ const SkillPill: FC<SkillPillProps> = props => {
         }
 
         if (!skillDetails.lastUsedDate && !skillDetails.activity) {
-            return '';
+            return ''
         }
 
         return (
