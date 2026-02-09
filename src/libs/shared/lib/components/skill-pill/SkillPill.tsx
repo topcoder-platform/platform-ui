@@ -62,6 +62,10 @@ const SkillPill: FC<SkillPillProps> = props => {
             return 'Loading...'
         }
 
+        if (!skillDetails.lastUsedDate && !skillDetails.activity) {
+            return ''
+        }
+
         return (
             <>
                 <div className={styles.tooltipRow}>
