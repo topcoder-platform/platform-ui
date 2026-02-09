@@ -5,6 +5,7 @@ import {
     PaginatedResponse,
     xhrGetAsync,
     xhrGetPaginatedAsync,
+    xhrPatchAsync,
     xhrPostAsync,
     xhrRequestAsync,
 } from '~/libs/core'
@@ -15,6 +16,7 @@ import {
     ChallengeResource,
     ChallengeTrack,
     ChallengeType,
+    ChallengeWinner,
     ResourceEmail,
     ResourceRole,
 } from '../models'
@@ -138,3 +140,23 @@ export const addChallengeResource = async (data: {
 export const getChallengeById = async (
     id: Challenge['id'],
 ): Promise<Challenge> => xhrGetAsync<Challenge>(`${challengeBaseUrl}/challenges/${id}`)
+
+type UpdateChallengePayload = {
+    status?: Challenge['status']
+    winners?: Array<
+        Pick<ChallengeWinner, 'handle' | 'placement' | 'userId'>
+    >
+}
+
+/**
+ * Partially updates challenge details by id.
+ * @param {string} id the challenge id.
+ * @param {UpdateChallengePayload} data challenge update payload.
+ */
+export const updateChallengeById = async (
+    id: Challenge['id'],
+    data: UpdateChallengePayload,
+): Promise<Challenge> => xhrPatchAsync<UpdateChallengePayload, Challenge>(
+    `${challengeBaseUrl}/challenges/${id}`,
+    data,
+)

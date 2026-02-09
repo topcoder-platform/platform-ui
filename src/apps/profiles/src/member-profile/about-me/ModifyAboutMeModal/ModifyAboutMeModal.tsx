@@ -11,7 +11,8 @@ import {
     UserTraitCategoryNames,
     UserTraitIds,
 } from '~/libs/core'
-import { upsertTrait } from '~/libs/shared'
+
+import { getFirstProfileSelfTitle } from '../../../lib/helpers'
 
 import styles from './ModifyAboutMeModal.module.scss'
 
@@ -45,11 +46,7 @@ const ModifyAboutMeModal: FC<ModifyAboutMeModalProps> = (props: ModifyAboutMeMod
     ] = useState<string | undefined>()
 
     useEffect(() => {
-        const profileSelfTitleData: any
-            = props.memberPersonalizationTraitsData?.find(
-                (trait: any) => trait.profileSelfTitle,
-            )
-        setMemberTitle(profileSelfTitleData?.profileSelfTitle)
+        setMemberTitle(getFirstProfileSelfTitle(props.memberPersonalizationTraitsData))
     }, [props.memberPersonalizationTraitsData])
 
     function handleMemberTitleChange(event: React.ChangeEvent<HTMLInputElement>): void {
@@ -69,11 +66,14 @@ const ModifyAboutMeModal: FC<ModifyAboutMeModalProps> = (props: ModifyAboutMeMod
         setIsSaving(true)
         setFormSaveError(undefined)
 
-        const personalizationData = upsertTrait(
-            'profileSelfTitle',
-            updatedTitle,
-            props.memberPersonalizationTraitsData,
-        )
+        const existing = props.memberPersonalizationTraitsData?.[0] || {}
+
+        const personalizationData: UserTrait[] = [
+            {
+                ...existing,
+                profileSelfTitle: updatedTitle,
+            },
+        ]
 
         Promise.all([
             updateMemberProfileAsync(

@@ -1,0 +1,87 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-6;
+}
+
+.headerButtons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $sp-3;
+    justify-content: flex-end;
+}
+
+.section {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-3;
+}
+
+.sectionTitle {
+    margin: 0;
+    font-size: 20px;
+    line-height: 28px;
+    font-weight: 600;
+}
+
+.statusRow {
+    display: flex;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: $sp-3;
+}
+
+.winnersList {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-3;
+}
+
+.winnerRow {
+    display: flex;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: $sp-3;
+}
+
+.selectWrapper {
+    min-width: 360px;
+
+    :global(.input-el) {
+        margin-bottom: 0;
+    }
+}
+
+.sectionActions {
+    display: flex;
+}
+
+.apiResponse {
+    margin: 0;
+    max-height: 480px;
+    overflow: auto;
+    padding: $sp-4;
+    border: 1px solid #ddd;
+    border-radius: $sp-1;
+    background-color: #f7f7f7;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 12px;
+    line-height: 18px;
+}
+
+.loadingSpinnerContainer {
+    position: relative;
+    height: 100px;
+    margin-top: -30px;
+
+    .spinner {
+        background: none;
+    }
+}
+
+.noData {
+    margin: 0;
+    color: #555;
+}

@@ -1,5 +1,5 @@
 /* eslint-disable complexity */
-import { UserProfile, UserRole } from '~/libs/core'
+import { UserProfile, UserRole, UserTrait } from '~/libs/core'
 import { availabilityOptions, preferredRoleOptions } from '~/libs/shared/lib/components/modify-open-to-work-modal'
 
 import { ADMIN_ROLES, PHONE_NUMBER_ROLES } from '../config'
@@ -209,4 +209,62 @@ export function formatRoleList(labels: string[]): string {
 
     return `${labels.slice(0, -1)
         .join(', ')} and ${labels[labels.length - 1]}`
+}
+
+function isObjectLike(value: any): boolean {
+    return !!value && typeof value === 'object'
+}
+
+export function flattenPersonalizationData(personalizationData: UserTrait[] = []): UserTrait[] {
+    return personalizationData.reduce((accumulator: UserTrait[], item: UserTrait) => {
+        if (!isObjectLike(item)) return accumulator
+
+        accumulator.push(item)
+
+        if (Array.isArray(item.personalization)) {
+            item.personalization.forEach((nestedItem: UserTrait) => {
+                if (isObjectLike(nestedItem)) {
+                    accumulator.push(nestedItem)
+                }
+            })
+        }
+
+        return accumulator
+    }, [])
+}
+
+export function getFirstProfileSelfTitle(personalizationData: UserTrait[] = []): string | undefined {
+    return flattenPersonalizationData(personalizationData)
+        .map((trait: UserTrait) => (
+            typeof trait.profileSelfTitle === 'string' ? trait.profileSelfTitle.trim() : ''
+        ))
+        .find(Boolean)
+}
+
+export function getPersonalizationLinks(personalizationData: UserTrait[] = []): UserTrait[] {
+    const linksByKey = new Set<string>()
+
+    return flattenPersonalizationData(personalizationData)
+        .reduce((accumulator: UserTrait[], trait: UserTrait) => {
+            if (!Array.isArray(trait.links)) return accumulator
+
+            trait.links.forEach((link: UserTrait) => {
+                const name = typeof link?.name === 'string' ? link.name.trim() : ''
+                const url = typeof link?.url === 'string' ? link.url.trim() : ''
+
+                if (!name || !url) return
+
+                const dedupeKey = `${name.toLowerCase()}-${url}`
+                if (linksByKey.has(dedupeKey)) return
+
+                linksByKey.add(dedupeKey)
+                accumulator.push({
+                    ...link,
+                    name,
+                    url,
+                })
+            })
+
+            return accumulator
+        }, [])
 }

@@ -33,6 +33,10 @@ const ChallengeManagementPage: LazyLoadedComponent = lazyLoad(
     () => import('./challenge-management/ChallengeManagementPage'),
     'ChallengeManagementPage',
 )
+const ChallengeDetailsPage: LazyLoadedComponent = lazyLoad(
+    () => import('./challenge-management/ChallengeDetailsPage'),
+    'ChallengeDetailsPage',
+)
 const ManageUserPage: LazyLoadedComponent = lazyLoad(
     () => import('./challenge-management/ManageUserPage'),
     'ManageUserPage',
@@ -192,6 +196,11 @@ export const adminRoutes: ReadonlyArray<PlatformRoute> = [
                         element: <ChallengeManagementPage />,
                         id: 'challenge-management-page',
                         route: '',
+                    },
+                    {
+                        element: <ChallengeDetailsPage />,
+                        id: 'challenge-details-page',
+                        route: ':challengeId',
                     },
                     {
                         element: <ManageUserPage />,
