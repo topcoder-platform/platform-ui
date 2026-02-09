@@ -14,7 +14,7 @@ type FilterOptions = {
     value: string;
 };
 
-type Filter = {
+export type Filter = {
     key: string;
     label: string;
     type: 'input' | 'dropdown' | 'member_autocomplete';
@@ -27,6 +27,8 @@ interface FilterBarProps {
     onFilterChange: (key: string, value: string[]) => void;
     onResetFilters?: () => void;
     onExport?: () => void;
+    selectedCount?: number;
+    onBulkClick?: () => void;
 }
 
 const FilterBar: React.FC<FilterBarProps> = (props: FilterBarProps) => {
@@ -119,6 +121,17 @@ const FilterBar: React.FC<FilterBarProps> = (props: FilterBarProps) => {
                     onClick={props.onExport}
                     size='lg'
                 />
+            )}
+            {props.selectedCount && props.selectedCount > 0 && (
+                <>
+                    <Button
+                        primary
+                        className={styles.bulkButton}
+                        label={`${props.selectedCount > 1 ? 'Bulk ' : ''}Approve (${props.selectedCount})`}
+                        size='lg'
+                        onClick={() => props.onBulkClick?.()}
+                    />
+                </>
             )}
             <Button
                 primary

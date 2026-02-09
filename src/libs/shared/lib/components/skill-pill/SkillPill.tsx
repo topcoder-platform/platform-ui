@@ -62,33 +62,42 @@ const SkillPill: FC<SkillPillProps> = props => {
             return 'Loading...'
         }
 
+        if (!skillDetails.lastUsedDate && !skillDetails.activity) {
+            return ''
+        }
+
         return (
             <>
                 <div className={styles.tooltipRow}>
-                    <strong>Last used:</strong>
-                    <span>{format(new Date(skillDetails.lastUsedDate), 'MMM dd, yyyy HH:mm')}</span>
+                    <strong>Last activity:</strong>
+                    <span>{format(new Date(skillDetails.lastUsedDate), 'MMM dd, yyyy')}</span>
                 </div>
                 <ul className={styles.tooltipDetails}>
-                    {skillDetails.activity.challenge && (
-                        <li>
-                            <div className={styles.tooltipRow}>
-                                Challenges (
-                                {skillDetails.activity.challenge.count}
-                                ):
-                            </div>
-                            {skillDetails.activity.challenge.lastSources.map(s => (
-                                <a
-                                    key={s.id}
-                                    className={classNames(styles.tooltipRow, styles.padLeft)}
-                                    href={`${EnvironmentConfig.URLS.CHALLENGES_PAGE}/${s.id}`}
-                                    target='_blank'
-                                    rel='noopener noreferrer'
-                                >
-                                    {s.name}
-                                </a>
-                            ))}
-                        </li>
-                    )}
+                    {skillDetails.activity.challenge && Object.keys(skillDetails.activity.challenge)
+                        .map(role => (
+                            <li key={role}>
+                                <div className={styles.tooltipRow}>
+                                    Challenges -
+                                    {' '}
+                                    {role}
+                                    {' '}
+                                    (
+                                    {skillDetails.activity.challenge![role].count}
+                                    ):
+                                </div>
+                                {skillDetails.activity.challenge![role].lastSources.map(s => (
+                                    <a
+                                        key={s.id}
+                                        className={classNames(styles.tooltipRow, styles.padLeft)}
+                                        href={`${EnvironmentConfig.URLS.CHALLENGES_PAGE}/${s.id}`}
+                                        target='_blank'
+                                        rel='noopener noreferrer'
+                                    >
+                                        {s.name}
+                                    </a>
+                                ))}
+                            </li>
+                        ))}
                     {skillDetails.activity.course && (
                         <li>
                             <div className={styles.tooltipRow}>

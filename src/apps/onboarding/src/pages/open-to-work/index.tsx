@@ -7,6 +7,7 @@ import classNames from 'classnames'
 import { Button, IconOutline, PageDivider } from '~/libs/ui'
 import { updateOrCreateMemberTraitsAsync,
     useMemberTraits,
+    UserTrait,
     UserTraitCategoryNames,
     UserTraitIds,
     UserTraits } from '~/libs/core'
@@ -14,7 +15,8 @@ import { OpenToWorkData } from '~/libs/shared/lib/components/modify-open-to-work
 import OpenToWorkForm from '~/libs/shared/lib/components/modify-open-to-work-modal/ModifyOpenToWorkModal'
 
 import { ProgressBar } from '../../components/progress-bar'
-import { updateMemberOpenForWork } from '../../redux/actions/member'
+import { updateMemberOpenForWork, updatePersonalizations } from '../../redux/actions/member'
+import PersonalizationInfo from '../../models/PersonalizationInfo'
 
 import styles from './styles.module.scss'
 
@@ -22,6 +24,7 @@ interface PageOpenToWorkContentProps {
     profileHandle: string
     availableForGigs: boolean
     updateMemberOpenForWork: (isOpenForWork: boolean) => void
+    updatePersonalizations: (personalizations: PersonalizationInfo[]) => void
 }
 
 export const PageOpenToWorkContent: FC<PageOpenToWorkContentProps> = props => {
@@ -84,7 +87,7 @@ export const PageOpenToWorkContent: FC<PageOpenToWorkContentProps> = props => {
         }]
 
         try {
-            await Promise.all([
+            const [, updatedTraits] = await Promise.all([
                 // profile flag
                 props.updateMemberOpenForWork(formValue.availableForGigs),
 
@@ -97,6 +100,16 @@ export const PageOpenToWorkContent: FC<PageOpenToWorkContentProps> = props => {
                     },
                 }]),
             ])
+
+            const personalizationTrait = updatedTraits?.find(
+                (t: UserTrait) => t.traitId === UserTraitIds.personalization,
+            )
+
+            const nextPersonalizations = personalizationTrait?.traits?.data
+
+            if (Array.isArray(nextPersonalizations)) {
+                props.updatePersonalizations(nextPersonalizations)
+            }
 
             navigate('../works')
         } catch (e) {
@@ -166,6 +179,7 @@ const mapStateToProps: any = (state: any) => ({
 
 const mapDispatchToProps: any = {
     updateMemberOpenForWork,
+    updatePersonalizations,
 }
 
 export const PageOpenToWork: any = connect(mapStateToProps, mapDispatchToProps)(PageOpenToWorkContent)
