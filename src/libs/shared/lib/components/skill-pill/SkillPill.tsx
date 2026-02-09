@@ -66,7 +66,7 @@ const SkillPill: FC<SkillPillProps> = props => {
             <>
                 <div className={styles.tooltipRow}>
                     <strong>Last activity:</strong>
-                    <span>{format(new Date(skillDetails.lastUsedDate), 'MMM dd, yyyy HH:mm')}</span>
+                    <span>{format(new Date(skillDetails.lastUsedDate), 'MMM dd, yyyy')}</span>
                 </div>
                 <ul className={styles.tooltipDetails}>
                     {skillDetails.activity.challenge && Object.keys(skillDetails.activity.challenge)
