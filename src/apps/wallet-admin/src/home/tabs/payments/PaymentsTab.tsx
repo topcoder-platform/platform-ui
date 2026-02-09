@@ -4,7 +4,7 @@ import { toast } from 'react-toastify'
 import { AxiosError } from 'axios'
 import React, { FC, useCallback, useEffect } from 'react'
 
-import { Collapsible, ConfirmModal, LoadingCircles } from '~/libs/ui'
+import { Collapsible, ConfirmModal, InputText, LoadingCircles } from '~/libs/ui'
 import { UserProfile } from '~/libs/core'
 import { downloadBlob } from '~/libs/shared'
 
@@ -13,6 +13,7 @@ import { Winning, WinningDetail } from '../../../lib/models/WinningDetail'
 import { FilterBar, formatIOSDateString, PaymentView } from '../../../lib'
 import { ConfirmFlowData } from '../../../lib/models/ConfirmFlowData'
 import { PaginationInfo } from '../../../lib/models/PaginationInfo'
+import { Filter } from '../../../lib/components/filter-bar/FilterBar'
 import PaymentEditForm from '../../../lib/components/payment-edit/PaymentEdit'
 import PaymentsTable from '../../../lib/components/payments-table/PaymentTable'
 
@@ -287,8 +288,47 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
     const isEditingAllowed = (): boolean => (
         props.profile.roles.includes('Payment Admin')
         || props.profile.roles.includes('Payment BA Admin')
+        || props.profile.roles.includes('Engagement Payment Approver')
         || props.profile.roles.includes('Payment Editor')
     )
+
+    const isEngagementPaymentApprover = props.profile.roles.includes('Engagement Payment Approver')
+    const [bulkOpen, setBulkOpen] = React.useState(false)
+    const [bulkAuditNote, setBulkAuditNote] = React.useState('')
+
+    const onBulkApprove = useCallback(async (auditNote: string) => {
+        const ids = Object.keys(selectedPayments)
+        if (ids.length === 0) return
+
+        toast.success('Starting bulk approve', { position: toast.POSITION.BOTTOM_RIGHT })
+
+        for (const id of ids) {
+            const updates: any = {
+                auditNote,
+                paymentStatus: 'OWED',
+                winningsId: id,
+            }
+
+            try {
+                // awaiting sequentially to preserve order and server load control
+                // errors for individual items are caught and reported
+                // eslint-disable-next-line no-await-in-loop
+                const msg = await editPayment(updates)
+                toast.success(msg, { position: toast.POSITION.BOTTOM_RIGHT })
+            } catch (err:any) {
+                if (err?.message) {
+                    toast.error(`Failed to update payment ${id}: ${err.message}`, { position: toast.POSITION.BOTTOM_RIGHT })
+                } else {
+                    toast.error(`Failed to update payment ${id}`, { position: toast.POSITION.BOTTOM_RIGHT })
+                }
+            }
+        }
+
+        setBulkAuditNote('')
+        setBulkOpen(false)
+        setSelectedPayments({})
+        await fetchWinnings()
+    }, [selectedPayments, fetchWinnings])
 
     return (
         <>
@@ -300,6 +340,8 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                     <Collapsible header={<h3>Payment Listing</h3>}>
                         <FilterBar
                             showExportButton
+                            selectedCount={Object.keys(selectedPayments).length}
+                            onBulkClick={() => setBulkOpen(true)}
                             onExport={async () => {
                                 toast.success('Downloading payments report. This may take a few moments.', { position: toast.POSITION.BOTTOM_RIGHT })
                                 downloadBlob(
@@ -354,33 +396,35 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                                     ],
                                     type: 'dropdown',
                                 },
-                                {
-                                    key: 'type',
-                                    label: 'Type',
-                                    options: [
-                                        {
-                                            label: 'Task Payment',
-                                            value: 'TASK_PAYMENT',
-                                        },
-                                        {
-                                            label: 'Contest Payment',
-                                            value: 'CONTEST_PAYMENT',
-                                        },
-                                        {
-                                            label: 'Copilot Payment',
-                                            value: 'COPILOT_PAYMENT',
-                                        },
-                                        {
-                                            label: 'Review Board Payment',
-                                            value: 'REVIEW_BOARD_PAYMENT',
-                                        },
-                                        {
-                                            label: 'Engagement Payment',
-                                            value: 'ENGAGEMENT_PAYMENT',
-                                        },
-                                    ],
-                                    type: 'dropdown',
-                                },
+                                ...(isEngagementPaymentApprover ? [] : [
+                                    {
+                                        key: 'category',
+                                        label: 'Type',
+                                        options: [
+                                            {
+                                                label: 'Task Payment',
+                                                value: 'TASK_PAYMENT',
+                                            },
+                                            {
+                                                label: 'Contest Payment',
+                                                value: 'CONTEST_PAYMENT',
+                                            },
+                                            {
+                                                label: 'Copilot Payment',
+                                                value: 'COPILOT_PAYMENT',
+                                            },
+                                            {
+                                                label: 'Review Board Payment',
+                                                value: 'REVIEW_BOARD_PAYMENT',
+                                            },
+                                            {
+                                                label: 'Engagement Payment',
+                                                value: 'ENGAGEMENT_PAYMENT',
+                                            },
+                                        ],
+                                        type: 'dropdown',
+                                    },
+                                ] as Filter[]),
                                 {
                                     key: 'date',
                                     label: 'Date',
@@ -449,11 +493,13 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                         {isLoading && <LoadingCircles className={styles.centered} />}
                         {!isLoading && winnings.length > 0 && (
                             <PaymentsTable
+                                enableBulkEdit={isEngagementPaymentApprover}
                                 canEdit={isEditingAllowed()}
                                 currentPage={pagination.currentPage}
                                 numPages={pagination.totalPages}
                                 payments={winnings}
                                 selectedPayments={selectedPayments}
+                                onSelectionChange={selected => setSelectedPayments(selected)}
                                 onNextPageClick={async function onNextPageClicked() {
                                     if (pagination.currentPage === pagination.totalPages) {
                                         return
@@ -513,6 +559,40 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                     </Collapsible>
                 </div>
             </div>
+            {bulkOpen && (
+                <ConfirmModal
+                    maxWidth='800px'
+                    size='lg'
+                    showButtons
+                    title='Bulk Approve Payments'
+                    action='Approve'
+                    onClose={function onClose() {
+                        setBulkAuditNote('')
+                        setBulkOpen(false)
+                    }}
+                    onConfirm={function onConfirm() {
+                        onBulkApprove(bulkAuditNote)
+                    }}
+                    canSave={bulkAuditNote.trim().length > 0}
+                    open={bulkOpen}
+                >
+                    <div>
+                        <p>
+                            You are about to approve
+                            {Object.keys(selectedPayments).length}
+                            {' '}
+                            payments.
+                        </p>
+                        <InputText
+                            type='text'
+                            label='Audit Note'
+                            name='bulkAuditNote'
+                            value={bulkAuditNote}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setBulkAuditNote(e.target.value)}
+                        />
+                    </div>
+                </ConfirmModal>
+            )}
             {confirmFlow && (
                 <ConfirmModal
                     maxWidth='800px'
