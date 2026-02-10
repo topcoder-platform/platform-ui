@@ -21,6 +21,15 @@ export interface SkillPillProps {
     fetchSkillDetails?: (skillId: string) => Promise<UserSkillWithActivity>
 }
 
+const skillEventTypeMap = {
+    challenge_win: 'Win',
+    challenge_2nd_place: 'Win',
+    challenge_3rd_place: 'Win',
+    challenge_finisher: 'Submit',
+    challenge_copilot: 'Copilot',
+    challenge_review: 'Review',
+}
+
 const SkillPill: FC<SkillPillProps> = props => {
     const [hideDetails, setHideDetails] = useState(false)
     const [loadDetails, setLoadDetails] = useState(false)
@@ -79,7 +88,7 @@ const SkillPill: FC<SkillPillProps> = props => {
                                 <div className={styles.tooltipRow}>
                                     Challenges -
                                     {' '}
-                                    {role}
+                                    {skillEventTypeMap[role as keyof typeof skillEventTypeMap] ?? ''}
                                     {' '}
                                     (
                                     {skillDetails.activity.challenge![role].count}
