@@ -88,6 +88,7 @@ export async function exportSearchResults(filters: Record<string, string[]>): Pr
         winnerIds?: string[], [key: string]: string | number | string[] | undefined
     } = {
         ...filteredFilters,
+        type: 'PAYMENT',
     }
 
     if (filters.winnerIds && filters.winnerIds.length > 0) {
