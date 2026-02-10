@@ -70,7 +70,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
     const [isConfirmFormValid, setIsConfirmFormValid] = React.useState<boolean>(false)
     const [winnings, setWinnings] = React.useState<ReadonlyArray<Winning>>([])
     const [selectedPayments, setSelectedPayments] = React.useState<{ [paymentId: string]: Winning }>({})
-    const selectedPaymentsCount = Object.keys(selectedPayments).length;
+    const selectedPaymentsCount = Object.keys(selectedPayments).length
     const [isLoading, setIsLoading] = React.useState<boolean>(false)
     const [filters, setFilters] = React.useState<Record<string, string[]>>({})
     const [pagination, setPagination] = React.useState<PaginationInfo>({
@@ -302,7 +302,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
 
         toast.success('Starting bulk approve', { position: toast.POSITION.BOTTOM_RIGHT })
 
-        let successfullyUpdated = 0;
+        let successfullyUpdated = 0
         for (const id of ids) {
             const updates: any = {
                 auditNote,
@@ -588,7 +588,9 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                             {' '}
                             {selectedPaymentsCount}
                             {' '}
-                            payment{selectedPaymentsCount > 1 ? 's' : ''}.
+                            payment
+                            {selectedPaymentsCount > 1 ? 's' : ''}
+                            .
                         </p>
                         <br />
                         <InputText
