@@ -55,7 +55,9 @@ export type UserSkillWithActivity = {
     activity: {
         certification?: UserSkillActivity
         course?: UserSkillActivity
-        challenge?: UserSkillActivity
+        challenge?: {
+            [key: string]: UserSkillActivity,
+        }
         engagement?: UserSkillActivity
     }
 } & UserSkill

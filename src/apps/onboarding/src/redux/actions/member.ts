@@ -212,6 +212,7 @@ const createWorksPayloadData: any = (works: WorkInfo[]) => {
     const data: any = works.map(work => {
         const {
             companyName,
+            company,
             position,
             industry,
             otherIndustry,
@@ -222,10 +223,12 @@ const createWorksPayloadData: any = (works: WorkInfo[]) => {
             city,
             associatedSkills,
         }: any = work
+        const normalizedCompanyName: string = _.trim(companyName || company || '')
         return {
             associatedSkills: Array.isArray(associatedSkills) ? associatedSkills : undefined,
             cityName: city,
-            companyName: companyName || '',
+            company: normalizedCompanyName || undefined,
+            companyName: normalizedCompanyName,
             description: description || undefined,
             // eslint-disable-next-line unicorn/no-null
             endDate: endDate ? endDate.toISOString() : null,
