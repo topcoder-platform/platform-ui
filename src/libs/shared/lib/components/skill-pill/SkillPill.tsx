@@ -22,12 +22,12 @@ export interface SkillPillProps {
 }
 
 const skillEventTypeMap = {
-    challenge_win: 'Win',
     challenge_2nd_place: 'Win',
     challenge_3rd_place: 'Win',
-    challenge_finisher: 'Submit',
     challenge_copilot: 'Copilot',
+    challenge_finisher: 'Submit',
     challenge_review: 'Review',
+    challenge_win: 'Win',
 }
 
 const SkillPill: FC<SkillPillProps> = props => {
