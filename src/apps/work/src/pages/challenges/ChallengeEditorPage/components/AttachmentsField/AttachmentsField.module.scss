@@ -1,0 +1,59 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.unsavedHint {
+    color: #555;
+    font-size: 13px;
+}
+
+.uploadRow {
+    align-items: center;
+    display: flex;
+}
+
+.progress {
+    color: #444;
+    font-size: 12px;
+}
+
+.error {
+    color: #c00;
+    font-size: 12px;
+}
+
+.tableWrapper {
+    overflow-x: auto;
+}
+
+.table {
+    border-collapse: collapse;
+    width: 100%;
+
+    th,
+    td {
+        border: 1px solid #d1d3d4;
+        padding: 8px;
+        text-align: left;
+    }
+
+    th {
+        background: #f4f4f4;
+    }
+}
+
+.deleteButton {
+    background: none;
+    border: none;
+    color: #c00;
+    cursor: pointer;
+    font-size: 12px;
+    padding: 0;
+}
+
+.empty {
+    color: #666;
+    font-style: italic;
+}

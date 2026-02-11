@@ -1,0 +1,97 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.header {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: space-between;
+}
+
+.title {
+    color: $black-80;
+    font-size: 20px;
+    margin: 0;
+}
+
+.filters {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.filterLabel {
+    color: $black-60;
+    display: flex;
+    flex-direction: column;
+    font-size: 12px;
+    font-weight: 600;
+    gap: 6px;
+}
+
+.filterInput {
+    border: 1px solid $black-20;
+    border-radius: 6px;
+    color: $black-80;
+    font-size: 14px;
+    padding: 8px 10px;
+}
+
+.tableWrapper {
+    width: 100%;
+}
+
+.paginationWrapper {
+    border-top: 1px solid $black-10;
+    padding-top: 12px;
+}
+
+.privateState {
+    align-items: center;
+    border: 1px solid $black-10;
+    border-radius: 8px;
+    padding: 32px;
+    text-align: center;
+}
+
+.lockIcon {
+    height: 36px;
+    margin-bottom: 12px;
+    width: 36px;
+}
+
+.privateTitle {
+    color: $black-80;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.privateSubtitle {
+    color: $black-60;
+    font-size: 15px;
+    margin-top: 6px;
+}
+
+.privateDescription {
+    color: $black-60;
+    margin: 12px 0 0;
+    max-width: 600px;
+}
+
+.checkpointSection {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.checkpointTitle {
+    color: $black-80;
+    font-size: 16px;
+    margin: 0;
+}

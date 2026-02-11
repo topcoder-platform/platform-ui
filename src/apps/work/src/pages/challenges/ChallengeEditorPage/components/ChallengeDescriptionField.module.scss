@@ -1,0 +1,13 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.templateLink {
+    color: $black-60;
+    font-size: 13px;
+    margin: 0;
+}

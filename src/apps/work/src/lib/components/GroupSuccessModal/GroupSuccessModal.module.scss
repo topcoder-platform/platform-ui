@@ -1,0 +1,51 @@
+@import '@libs/ui/styles/includes';
+
+.overlay {
+    align-items: center;
+    background: rgb(44 44 44 / 45%);
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    left: 0;
+    padding: 20px;
+    position: fixed;
+    right: 0;
+    top: 0;
+    z-index: 1000;
+}
+
+.container {
+    background: $tc-white;
+    border-radius: 12px;
+    max-width: 460px;
+    width: 100%;
+}
+
+.header {
+    border-bottom: 1px solid $black-10;
+    padding: 18px 20px 12px;
+}
+
+.title {
+    color: $black-80;
+    font-size: 18px;
+    margin: 0;
+}
+
+.body {
+    padding: 18px 20px;
+}
+
+.message {
+    color: $black-60;
+    font-size: 14px;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.footer {
+    border-top: 1px solid $black-10;
+    display: flex;
+    justify-content: flex-end;
+    padding: 16px 20px;
+}

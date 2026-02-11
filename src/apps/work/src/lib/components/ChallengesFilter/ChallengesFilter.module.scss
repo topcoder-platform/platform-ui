@@ -1,0 +1,67 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(180px, 1fr));
+    gap: 16px;
+    padding: 20px;
+    margin-top: 20px;
+    border-radius: 8px;
+    background: rgba(224, 228, 232, 0.3);
+}
+
+.filterField {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    label {
+        font-size: 13px;
+        color: $black-80;
+    }
+}
+
+.searchInputWrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid $black-20;
+    border-radius: 4px;
+    background: #fff;
+    padding: 8px 12px;
+}
+
+.searchIcon {
+    color: $black-60;
+    width: 18px;
+    height: 18px;
+}
+
+.searchInput {
+    width: 100%;
+    border: 0;
+    background: transparent;
+    color: $black-80;
+    outline: none;
+}
+
+.actions {
+    display: flex;
+    align-items: flex-end;
+}
+
+.datePicker {
+    margin-bottom: 0;
+}
+
+@media (max-width: 1200px) {
+    .container {
+        grid-template-columns: repeat(2, minmax(180px, 1fr));
+    }
+}
+
+@media (max-width: 767px) {
+    .container {
+        grid-template-columns: 1fr;
+    }
+}

@@ -1,0 +1,79 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.headerActions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.empty {
+    color: #5b5b5b;
+    font-size: 14px;
+}
+
+.list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.card {
+    border: 1px solid #e6e6e6;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+}
+
+.cardHeader {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+}
+
+.memberHandle {
+    color: #2a2a2a;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.status {
+    background: #f3f5fb;
+    border-radius: 999px;
+    color: #2a62d5;
+    font-size: 12px;
+    padding: 4px 10px;
+}
+
+.metaGrid {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.label {
+    color: #767676;
+    display: block;
+    font-size: 12px;
+    margin-bottom: 4px;
+}
+
+.value {
+    color: #2a2a2a;
+    font-size: 14px;
+}
+
+.acceptedIcon {
+    color: #2cb85c;
+}
+
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}

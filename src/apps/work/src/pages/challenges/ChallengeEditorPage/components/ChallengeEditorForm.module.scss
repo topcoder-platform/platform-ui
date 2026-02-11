@@ -1,0 +1,82 @@
+@import '@libs/ui/styles/includes';
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.section {
+    border: 1px solid $black-10;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px;
+}
+
+.sectionTitle {
+    color: $black-80;
+    font-size: 18px;
+    margin: 0;
+}
+
+.grid {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.block {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.footer {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    justify-content: space-between;
+}
+
+.statusArea {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.statusText {
+    color: $black-80;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.lastSaved {
+    color: $black-60;
+    font-size: 12px;
+}
+
+.errorText {
+    color: $red-100;
+    font-size: 12px;
+}
+
+.actions {
+    align-items: center;
+    display: flex;
+    gap: 16px;
+}
+
+.cancelLink {
+    color: $black-60;
+    font-size: 13px;
+    text-decoration: none;
+
+    &:hover,
+    &:focus {
+        color: $black-80;
+        text-decoration: underline;
+    }
+}

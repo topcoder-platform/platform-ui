@@ -1,0 +1,44 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    background: rgba(224, 228, 232, 0.3);
+    border-radius: 8px;
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(4, minmax(180px, 1fr));
+    margin-top: 20px;
+    padding: 20px;
+}
+
+.filterField {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
+.checkboxWrap {
+    align-items: center;
+    display: flex;
+    min-height: 44px;
+}
+
+.actions {
+    align-items: flex-end;
+    display: flex;
+}
+
+.inputWrapper {
+    margin-bottom: 0;
+}
+
+@media (max-width: 1200px) {
+    .container {
+        grid-template-columns: repeat(2, minmax(180px, 1fr));
+    }
+}
+
+@media (max-width: 767px) {
+    .container {
+        grid-template-columns: 1fr;
+    }
+}

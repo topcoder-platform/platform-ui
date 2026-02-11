@@ -1,0 +1,60 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.label {
+    color: $black-80;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.fields {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.fieldLabel {
+    color: $black-60;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.input {
+    border: 1px solid $black-20;
+    border-radius: 8px;
+    color: $black-80;
+    font-size: 14px;
+    min-height: 40px;
+    padding: 8px 10px;
+
+    &:focus {
+        border-color: $link-blue-dark;
+        outline: none;
+    }
+
+    &:disabled {
+        background: $black-5;
+        color: $black-40;
+        cursor: not-allowed;
+    }
+}
+
+.error {
+    border-color: $red-100;
+}
+
+.errorMessage {
+    color: $red-100;
+    font-size: 12px;
+}

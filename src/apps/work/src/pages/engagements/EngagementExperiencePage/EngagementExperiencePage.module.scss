@@ -1,0 +1,22 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.meta {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+}
+
+.panel {
+    border: 1px solid #ececec;
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.sectionTitle {
+    font-size: 18px;
+    margin: 0 0 12px;
+}

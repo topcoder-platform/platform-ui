@@ -1,0 +1,122 @@
+@import '@libs/ui/styles/includes';
+
+.pageHeading {
+    color: $black-80;
+    font-size: $sp-8;
+    line-height: 36px;
+    margin: 0;
+
+    @include font-weight-bold;
+}
+
+.selectorGrid {
+    background: rgba(224, 228, 232, 0.3);
+    border-radius: 8px;
+    display: grid;
+    gap: 12px;
+    grid-template-columns: minmax(260px, 1fr) auto;
+    margin-top: 20px;
+    padding: 20px;
+}
+
+.loadMoreActions {
+    align-items: flex-end;
+    display: flex;
+}
+
+.buttonGroup {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.projectLink {
+    text-decoration: none;
+}
+
+.errorBanner {
+    align-items: center;
+    background: #fff4f4;
+    border: 1px solid #f2c9c9;
+    border-radius: 8px;
+    color: #8a1f1f;
+    display: flex;
+    gap: 12px;
+    justify-content: space-between;
+    margin-top: 16px;
+    padding: 12px;
+}
+
+.loadingWrapper {
+    margin-top: 20px;
+}
+
+.emptyState {
+    color: $black-60;
+    font-size: 14px;
+    margin-top: 20px;
+}
+
+.tableSection {
+    margin-top: 20px;
+}
+
+.sectionTitle {
+    color: $black-80;
+    font-size: 16px;
+    margin: 0 0 10px;
+}
+
+.tableHeader {
+    background: rgba(224, 228, 232, 0.45);
+    border: 1px solid $black-10;
+    border-bottom: 0;
+    border-radius: 8px 8px 0 0;
+    color: $black-60;
+    display: grid;
+    font-size: 13px;
+    font-weight: 700;
+    gap: 12px;
+    grid-template-columns: minmax(180px, 1.5fr) repeat(4, minmax(110px, 1fr)) minmax(120px, 1fr);
+    min-height: 48px;
+    padding: 0 16px;
+
+    > div {
+        align-items: center;
+        display: flex;
+    }
+}
+
+.headerAction {
+    justify-content: flex-end;
+}
+
+.tableBody {
+    background: $tc-white;
+    border: 1px solid $black-10;
+    border-radius: 0 0 8px 8px;
+}
+
+@media (max-width: 1024px) {
+    .tableHeader {
+        gap: 8px;
+        grid-template-columns: minmax(160px, 1.2fr) repeat(4, minmax(80px, 1fr)) minmax(110px, 1fr);
+    }
+}
+
+@media (max-width: 900px) {
+    .selectorGrid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .tableHeader {
+        display: none;
+    }
+
+    .tableBody {
+        border: 0;
+    }
+}

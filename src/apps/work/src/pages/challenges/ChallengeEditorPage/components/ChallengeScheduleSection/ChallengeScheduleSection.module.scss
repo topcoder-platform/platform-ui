@@ -1,0 +1,106 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    border: 1px solid $black-10;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+}
+
+.grid {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.configPanel {
+    border: 1px solid $black-10;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+}
+
+.checkboxRow {
+    align-items: center;
+    display: flex;
+}
+
+.hintText {
+    color: $black-60;
+    font-size: 12px;
+    margin: 0;
+}
+
+.numberInput {
+    border: 1px solid $black-20;
+    border-radius: 4px;
+    color: $black-80;
+    font-size: 14px;
+    height: 40px;
+    padding: 0 12px;
+    width: 100%;
+
+    &:disabled {
+        background-color: $black-10;
+        color: $black-40;
+    }
+}
+
+.header {
+    align-items: baseline;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: space-between;
+}
+
+.title {
+    color: $black-80;
+    font-size: 16px;
+    margin: 0;
+}
+
+.timezone {
+    color: $black-60;
+    font-size: 12px;
+}
+
+.toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.phaseList {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.phaseActions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.emptyText {
+    color: $black-60;
+    font-size: 13px;
+    margin: 0;
+}
+
+.message {
+    color: $green-100;
+    font-size: 12px;
+    margin: 0;
+}
+
+.errorText {
+    color: $red-100;
+    font-size: 12px;
+    margin: 0;
+}

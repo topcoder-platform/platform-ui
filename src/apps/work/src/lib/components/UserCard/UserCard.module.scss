@@ -1,0 +1,93 @@
+@import '@libs/ui/styles/includes';
+
+.row {
+    align-items: center;
+    border-top: 1px solid $black-10;
+    display: grid;
+    gap: 12px;
+    grid-template-columns: minmax(180px, 1.5fr) repeat(4, minmax(110px, 1fr)) minmax(120px, 1fr);
+    min-height: 64px;
+    padding: 8px 16px;
+}
+
+.userCell {
+    color: $black-80;
+    font-size: 14px;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.roleCell {
+    color: $black-60;
+    font-size: 13px;
+}
+
+.roleOption {
+    align-items: center;
+    color: $black-80;
+    cursor: pointer;
+    display: inline-flex;
+    font-size: 13px;
+    gap: 8px;
+    user-select: none;
+
+    input[type='radio'] {
+        margin: 0;
+    }
+}
+
+.actionCell {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.statusOverlay {
+    align-items: center;
+    background: rgb(44 44 44 / 45%);
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    left: 0;
+    padding: 20px;
+    position: fixed;
+    right: 0;
+    top: 0;
+    z-index: 1000;
+}
+
+.statusModal {
+    align-items: center;
+    background: $tc-white;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 240px;
+    padding: 24px 28px;
+}
+
+.statusText {
+    color: $black-60;
+    font-size: 14px;
+    margin: 0;
+}
+
+@media (max-width: 1024px) {
+    .row {
+        gap: 8px;
+        grid-template-columns: minmax(160px, 1.2fr) repeat(4, minmax(80px, 1fr)) minmax(110px, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .row {
+        grid-template-columns: 1fr;
+        min-height: 0;
+    }
+
+    .actionCell {
+        justify-content: flex-start;
+    }
+}

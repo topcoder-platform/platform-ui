@@ -1,0 +1,38 @@
+@import '@libs/ui/styles/includes';
+
+.textAreaContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.textArea {
+    border: 1px solid $black-20;
+    border-radius: 8px;
+    color: $black-80;
+    font-size: 14px;
+    min-height: 100px;
+    padding: 10px 12px;
+    resize: vertical;
+
+    &:focus {
+        border-color: $link-blue-dark;
+        outline: none;
+    }
+
+    &:disabled {
+        background: $black-5;
+        color: $black-40;
+        cursor: not-allowed;
+    }
+}
+
+.error {
+    border-color: $red-100;
+}
+
+.counter {
+    color: $black-60;
+    font-size: 12px;
+    text-align: right;
+}

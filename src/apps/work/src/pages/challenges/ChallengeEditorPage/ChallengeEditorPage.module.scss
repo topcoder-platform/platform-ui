@@ -1,0 +1,31 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    margin-top: 16px;
+}
+
+.tabs {
+    border-bottom: 1px solid $black-10;
+    display: flex;
+    gap: 8px;
+}
+
+.tabButton {
+    background: transparent;
+    border: 0;
+    border-bottom: 3px solid transparent;
+    color: $black-60;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 10px 14px;
+    text-transform: uppercase;
+}
+
+.activeTabButton {
+    border-bottom-color: #0d61bf;
+    color: #0d61bf;
+}

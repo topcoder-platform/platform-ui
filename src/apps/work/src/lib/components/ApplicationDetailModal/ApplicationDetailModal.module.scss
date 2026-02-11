@@ -1,0 +1,53 @@
+.content {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.grid {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.label {
+    color: #767676;
+    display: block;
+    font-size: 12px;
+    margin-bottom: 4px;
+}
+
+.value {
+    color: #2a2a2a;
+    font-size: 14px;
+}
+
+.link {
+    color: #2a62d5;
+    font-size: 14px;
+    text-decoration: none;
+}
+
+.link:hover {
+    text-decoration: underline;
+}
+
+.section {
+    border-top: 1px solid #e6e6e6;
+    padding-top: 16px;
+}
+
+.sectionTitle {
+    font-size: 16px;
+    margin: 0 0 10px;
+}
+
+.text {
+    margin: 0;
+    white-space: pre-wrap;
+}
+
+.empty {
+    color: #5b5b5b;
+    font-size: 14px;
+}

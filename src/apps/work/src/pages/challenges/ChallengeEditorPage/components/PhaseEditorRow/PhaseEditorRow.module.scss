@@ -1,0 +1,83 @@
+@import '@libs/ui/styles/includes';
+
+.row {
+    align-items: flex-start;
+    border: 1px solid $black-10;
+    border-radius: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 12px;
+}
+
+.phaseName {
+    color: $black-80;
+    flex: 1 1 200px;
+    font-size: 14px;
+    font-weight: 700;
+    margin-top: 8px;
+}
+
+.durationCell {
+    flex: 1 1 240px;
+}
+
+.endDateCell {
+    display: flex;
+    flex: 1 1 220px;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.endDateLabel {
+    color: $black-60;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.endDateValue {
+    color: $black-80;
+    font-size: 13px;
+}
+
+.actionsCell {
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    min-height: 40px;
+    width: 40px;
+}
+
+.deleteButton {
+    align-items: center;
+    background: transparent;
+    border: none;
+    color: $black-40;
+    cursor: pointer;
+    display: inline-flex;
+    justify-content: center;
+    padding: 4px;
+
+    &:hover,
+    &:focus {
+        color: $red-100;
+        outline: none;
+    }
+
+    &:disabled {
+        color: $black-20;
+        cursor: not-allowed;
+    }
+}
+
+.deleteIcon {
+    height: 20px;
+    width: 20px;
+}
+
+.placeholder {
+    display: inline-block;
+    height: 20px;
+    width: 20px;
+}

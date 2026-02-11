@@ -1,0 +1,46 @@
+.content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.infoGrid {
+    display: grid;
+    gap: 14px;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.fieldRow {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.label {
+    color: #5b5b5b;
+    font-size: 12px;
+}
+
+.value {
+    color: #2a2a2a;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.input,
+.textarea {
+    border: 1px solid #d5d5d5;
+    border-radius: 6px;
+    padding: 10px 12px;
+}
+
+.error {
+    color: #db3030;
+    font-size: 12px;
+    margin: 0;
+}
+
+.actions {
+    display: flex;
+    gap: 12px;
+}

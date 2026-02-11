@@ -1,0 +1,13 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.timezoneText {
+    color: $black-60;
+    font-size: 12px;
+    margin: 0;
+}

@@ -1,0 +1,16 @@
+@import '@libs/ui/styles/includes';
+@import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&display=swap');
+
+:root {
+    --Primary: #545f71;
+    --FontColor: #0a0a0a;
+    --ButtonColor: #0b3d56;
+    --Actived: #00797a;
+    --invertButtonColor: #fff;
+    --Appeal: #e9ecef;
+}
+
+.work-app {
+    background-color: #f4f6f8;
+    color: var(--FontColor);
+}

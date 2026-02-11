@@ -1,0 +1,62 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.headerActions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.tableWrap {
+    overflow-x: auto;
+}
+
+.table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.table th,
+.table td {
+    border-bottom: 1px solid #e6e6e6;
+    padding: 12px 10px;
+    text-align: left;
+    vertical-align: top;
+}
+
+.table th {
+    color: #5b5b5b;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.status {
+    background: #f3f5fb;
+    border-radius: 999px;
+    color: #2a62d5;
+    display: inline-block;
+    font-size: 12px;
+    padding: 4px 10px;
+}
+
+.actions {
+    display: flex;
+    gap: 10px;
+}
+
+.actionLink {
+    color: #2a62d5;
+    text-decoration: none;
+}
+
+.actionLink:hover {
+    text-decoration: underline;
+}
+
+.emptyRow {
+    color: #5b5b5b;
+    text-align: center;
+}

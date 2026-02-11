@@ -1,0 +1,70 @@
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.section {
+    border-bottom: 1px solid #ececec;
+    padding-bottom: 16px;
+}
+
+.sectionTitle {
+    font-size: 20px;
+    margin: 0 0 12px;
+}
+
+.grid {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.block {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.footer {
+    align-items: flex-start;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.statusArea {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.statusText {
+    color: #2a62d5;
+    font-size: 12px;
+}
+
+.lastSaved {
+    color: #767676;
+    font-size: 12px;
+}
+
+.errorText {
+    color: #db3030;
+    font-size: 12px;
+}
+
+.actions {
+    align-items: center;
+    display: flex;
+    gap: 12px;
+}
+
+.cancelLink {
+    color: #2a62d5;
+    text-decoration: none;
+}
+
+.cancelLink:hover {
+    text-decoration: underline;
+}

@@ -1,0 +1,77 @@
+@import '@libs/ui/styles/includes';
+
+.wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.topContainer {
+    align-items: center;
+    display: flex;
+    gap: 12px;
+    justify-content: space-between;
+}
+
+.title {
+    color: $black-80;
+    font-size: 24px;
+    margin: 0;
+}
+
+.container {
+    width: 100%;
+}
+
+.formContainer {
+    background: $tc-white;
+    border: 1px solid $black-10;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px;
+}
+
+.textRequired {
+    color: $red-100;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.jobsContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.buttonContainer {
+    align-items: center;
+    display: flex;
+    gap: 16px;
+    justify-content: flex-end;
+}
+
+.cancelLink {
+    color: $black-60;
+    font-size: 13px;
+    text-decoration: none;
+
+    &:hover,
+    &:focus {
+        color: $black-80;
+        text-decoration: underline;
+    }
+}

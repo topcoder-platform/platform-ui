@@ -1,0 +1,13 @@
+@import '@libs/ui/styles/includes';
+
+.value {
+    align-items: center;
+    background: $black-5;
+    border: 1px solid $black-20;
+    border-radius: 8px;
+    color: $black-80;
+    display: flex;
+    font-size: 14px;
+    min-height: 44px;
+    padding: 10px 12px;
+}

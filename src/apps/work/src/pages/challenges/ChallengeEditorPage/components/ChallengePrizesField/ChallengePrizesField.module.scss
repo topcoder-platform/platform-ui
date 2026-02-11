@@ -1,0 +1,95 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.typeToggle {
+    display: inline-flex;
+    gap: 8px;
+}
+
+.toggleButton {
+    background: $tc-white;
+    border: 1px solid $black-20;
+    border-radius: 999px;
+    color: $black-60;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 16px;
+
+    &:disabled {
+        background: $black-5;
+        color: $black-40;
+        cursor: not-allowed;
+    }
+}
+
+.active {
+    background: $link-blue-dark;
+    border-color: $link-blue-dark;
+    color: $tc-white;
+}
+
+.prizeRows {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.prizeRow {
+    align-items: center;
+    display: grid;
+    gap: 10px;
+    grid-template-columns: 86px minmax(0, 1fr) 28px;
+}
+
+.prizeLabel {
+    color: $black-60;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.trashButton {
+    align-items: center;
+    background: transparent;
+    border: 0;
+    color: $black-40;
+    cursor: pointer;
+    display: inline-flex;
+    justify-content: center;
+    padding: 0;
+
+    &:disabled {
+        color: $black-20;
+        cursor: not-allowed;
+    }
+}
+
+.trashIcon {
+    height: 18px;
+    width: 18px;
+}
+
+.trashPlaceholder {
+    height: 18px;
+    width: 18px;
+}
+
+.addButton {
+    align-self: flex-start;
+}
+
+@media (max-width: 640px) {
+    .prizeRow {
+        grid-template-columns: 1fr;
+    }
+
+    .trashButton,
+    .trashPlaceholder {
+        justify-self: flex-end;
+    }
+}

@@ -1,0 +1,99 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    border: 1px solid $black-10;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+}
+
+.summary {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.summaryLabel {
+    color: $black-60;
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.summaryValue {
+    color: $black-80;
+    font-size: 13px;
+}
+
+.chart {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.phaseRow {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.phaseMeta {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.phaseName {
+    color: $black-80;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.phaseInfo {
+    color: $black-60;
+    font-size: 12px;
+}
+
+.track {
+    background: $black-10;
+    border-radius: 999px;
+    height: 16px;
+    overflow: hidden;
+    position: relative;
+}
+
+.bar {
+    border-radius: 999px;
+    height: 100%;
+    position: absolute;
+}
+
+.open {
+    background: $green-100;
+}
+
+.closed {
+    background: $black-40;
+}
+
+.scheduled {
+    background: $link-blue-dark;
+}
+
+.emptyState {
+    border: 1px dashed $black-20;
+    border-radius: 8px;
+    color: $black-60;
+    font-size: 13px;
+    padding: 16px;
+}
+
+.accessibleList {
+    color: $black-60;
+    font-size: 12px;
+    margin: 0;
+    padding-left: 18px;
+}

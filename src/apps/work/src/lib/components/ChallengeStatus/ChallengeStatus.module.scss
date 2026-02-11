@@ -1,0 +1,38 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 90px;
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: capitalize;
+}
+
+.green {
+    background: rgba(33, 163, 79, 0.12);
+    color: #1d7f48;
+}
+
+.yellow {
+    background: rgba(245, 180, 39, 0.18);
+    color: #805b00;
+}
+
+.gray {
+    background: rgba(84, 95, 113, 0.15);
+    color: #4f5967;
+}
+
+.blue {
+    background: rgba(0, 121, 122, 0.14);
+    color: #006666;
+}
+
+.red {
+    background: rgba(211, 47, 47, 0.13);
+    color: #9f1f1f;
+}

@@ -15,6 +15,11 @@ export interface GlobalConfig {
     PLATFORMUI_URL: string
     ENGAGEMENTS_URL: string
     USER_PROFILE_URL: string
+    CHALLENGE_API_URL?: string
+    CHALLENGE_API_VERSION?: string
+    COMMUNITY_APP_URL?: string
+    REVIEW_APP_URL?: string
+    DIRECT_PROJECT_URL?: string
     API: {
         V1: string
         V3: string

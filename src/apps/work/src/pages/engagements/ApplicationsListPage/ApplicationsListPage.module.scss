@@ -1,0 +1,78 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.meta {
+    color: #5b5b5b;
+    display: flex;
+    gap: 20px;
+}
+
+.filters {
+    max-width: 280px;
+}
+
+.tableWrap {
+    overflow-x: auto;
+}
+
+.table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.table th,
+.table td {
+    border-bottom: 1px solid #ececec;
+    padding: 10px;
+    text-align: left;
+    vertical-align: middle;
+}
+
+.table th {
+    color: #767676;
+    font-size: 12px;
+    text-transform: uppercase;
+}
+
+.emptyRow {
+    color: #5b5b5b;
+    text-align: center;
+}
+
+.activeIcon {
+    color: #2cb85c;
+}
+
+.status {
+    background: #f3f5fb;
+    border-radius: 999px;
+    color: #2a62d5;
+    font-size: 12px;
+    padding: 4px 10px;
+}
+
+.actions {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+}
+
+.statusSelect {
+    min-width: 170px;
+}
+
+.backLink {
+    color: #2a62d5;
+    text-decoration: none;
+}
+
+.backLink:hover {
+    text-decoration: underline;
+}
+
+.successMessage {
+    margin: 0;
+}

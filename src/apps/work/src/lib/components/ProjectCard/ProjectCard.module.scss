@@ -1,0 +1,74 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    width: 100%;
+}
+
+.cardLink {
+    display: block;
+    border: 1px solid $black-10;
+    border-radius: 8px;
+    background: #fff;
+    padding: 12px;
+    text-decoration: none;
+
+    &:hover,
+    &:focus {
+        border-color: $black-20;
+    }
+}
+
+.selected {
+    border-color: $link-blue-dark;
+    box-shadow: 0 0 0 1px rgba(0, 74, 176, 0.2);
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.name {
+    font-size: 14px;
+    font-weight: 700;
+    color: $link-blue-dark;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.meta {
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+}
+
+.metaLabel {
+    color: $black-60;
+}
+
+.metaValue {
+    color: $black-80;
+}
+
+.actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 10px;
+}
+
+.actionLink {
+    color: $link-blue-dark;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+
+    &:hover,
+    &:focus {
+        text-decoration: underline;
+    }
+}

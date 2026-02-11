@@ -25,6 +25,7 @@ export enum ToolTitle {
     tcAcademy = 'Topcoder Academy',
     selfService = 'Self Service Challenges',
     onboarding = ' ',
+    work = 'Work',
     talentSearch = 'Expert Talent',
     wallet = 'Wallet',
     walletAdmin = 'Wallet Admin',
