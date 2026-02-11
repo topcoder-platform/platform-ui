@@ -21,6 +21,7 @@ interface PhonesProps {
 const Phones: FC<PhonesProps> = (props: PhonesProps) => {
     const canEdit: boolean = props.authProfile?.handle === props.profile.handle
     const canSeePhonesValue: boolean = canSeePhones(props.authProfile, props.profile)
+    const canSeeEmail: boolean = props.authProfile?.userId === props.profile.userId
 
     const [isEditMode, setIsEditMode]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
@@ -61,7 +62,7 @@ const Phones: FC<PhonesProps> = (props: PhonesProps) => {
                         </Tooltip>
                     )}
                 </p>
-                {props.profile?.email && (
+                {canSeeEmail && props.profile?.email && (
                     <div className={styles.email}>
                         <div className={styles.emailIcon}>
                             <IconSolid.MailIcon width={20} height={20} />
