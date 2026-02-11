@@ -45,6 +45,7 @@ import { resolveSubmissionReviewResult } from '../common/reviewResult'
 import { ProgressBar } from '../ProgressBar'
 import { TableWrapper } from '../TableWrapper'
 import { CollapsibleAiReviewsRow } from '../CollapsibleAiReviewsRow'
+import { SUBMISSION_DOWNLOAD_RESTRICTION_MESSAGE } from '../../constants'
 
 import styles from './TableIterativeReview.module.scss'
 
@@ -505,7 +506,7 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
     const isTablet = useMemo(() => screenWidth <= 744, [screenWidth])
     const { loginUserInfo }: ReviewAppContextModel = useContext(ReviewAppContext)
     const { actionChallengeRole, myChallengeResources }: useRoleProps = useRole()
-    const { isCopilotWithReviewerAssignments }: UseRolePermissionsResult = useRolePermissions()
+    const { isCopilotWithReviewerAssignments, canViewAllSubmissions }: UseRolePermissionsResult = useRolePermissions()
     const isSubmitterView = actionChallengeRole === SUBMITTER
     const ownedMemberIds: Set<string> = useMemo(
         (): Set<string> => new Set(
@@ -658,6 +659,31 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
     const isPostMortemColumn = columnLabelKey === 'postmortem'
     const isApprovalColumn = columnLabelKey === 'approval'
 
+    const isCompletedDesignChallenge = useMemo(() => {
+        if (!challengeInfo) return false
+        const type = challengeInfo.track.name ? String(challengeInfo.track.name)
+            .toLowerCase() : ''
+        const status = challengeInfo.status ? String(challengeInfo.status)
+            .toLowerCase() : ''
+        return type === 'design' && (
+            status === 'completed'
+        )
+    }, [challengeInfo])
+
+    const isSubmissionsViewable = useMemo(() => {
+        if (!challengeInfo?.metadata?.length) return false
+        return challengeInfo.metadata.some(m => m.name === 'submissionsViewable' && String(m.value)
+            .toLowerCase() === 'true')
+    }, [challengeInfo])
+
+    const canViewSubmissions = useMemo(() => {
+        if (isCompletedDesignChallenge) {
+            return canViewAllSubmissions || isSubmissionsViewable
+        }
+
+        return true
+    }, [isCompletedDesignChallenge, isSubmissionsViewable, canViewAllSubmissions])
+
     const submissionColumn: TableColumn<SubmissionInfo> = useMemo(
         () => ({
             className: styles.submissionColumn,
@@ -682,10 +708,14 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
                     ? undefined
                     : data.virusScan
                 const failedScan = normalizedVirusScan === false
+                const isDownloadDisabled = (
+                    !canViewSubmissions && String(data.memberId) !== String(loginUserInfo?.userId)
+                )
                 const isButtonDisabled = Boolean(
                     isDownloading[data.id]
                     || isRestrictedForMember
-                    || failedScan,
+                    || failedScan
+                    || isDownloadDisabled,
                 )
 
                 const downloadButton = (
@@ -712,13 +742,17 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
                     })
                 }
 
-                const tooltipContent = failedScan
+                let tooltipContent = failedScan
                     ? 'Submission failed virus scan'
                     : isRestrictedForMember
                         ? memberRestrictionMessage ?? restrictionMessage
                         : isOwnershipRestricted
                             ? DOWNLOAD_OWN_SUBMISSION_TOOLTIP
                             : (isSubmissionDownloadRestricted && restrictionMessage) || undefined
+
+                if (isDownloadDisabled) {
+                    tooltipContent = SUBMISSION_DOWNLOAD_RESTRICTION_MESSAGE
+                }
 
                 const downloadControl = isOwnershipRestricted ? (
                     <span className={styles.textBlue}>
