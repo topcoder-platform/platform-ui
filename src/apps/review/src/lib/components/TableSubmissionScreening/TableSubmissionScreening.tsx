@@ -45,7 +45,7 @@ import {
 import { ChallengeDetailContext, ReviewAppContext } from '../../contexts'
 import { updateReview } from '../../services'
 import { ConfirmModal } from '../ConfirmModal'
-import { useRole, useSubmissionDownloadAccess } from '../../hooks'
+import { useRole, useRolePermissions, UseRolePermissionsResult, useSubmissionDownloadAccess } from '../../hooks'
 import type { UseSubmissionDownloadAccessResult } from '../../hooks/useSubmissionDownloadAccess'
 import type { useRoleProps } from '../../hooks/useRole'
 import { CollapsibleAiReviewsRow } from '../CollapsibleAiReviewsRow'
@@ -69,6 +69,7 @@ interface SubmissionColumnConfig {
     getRestrictionMessageForMember: (memberId?: string) => string | undefined
     isDownloading: IsRemovingType
     isSubmissionDownloadRestrictedForMember: (memberId?: string) => boolean
+    isSubmissionNotViewable: (submission: Screening) => boolean
     restrictionMessage?: string
 }
 
@@ -132,7 +133,7 @@ const createSubmissionColumn = (config: SubmissionColumnConfig): TableColumn<Scr
             ? undefined
             : data.virusScan
         const failedScan = normalizedVirusScan === false
-        const isRestrictedForRow = isRestrictedBase || failedScan
+        const isRestrictedForRow = isRestrictedBase || failedScan || config.isSubmissionNotViewable(data)
         const tooltipMessage = failedScan
             ? 'Submission failed virus scan'
             : (config.getRestrictionMessageForMember(data.memberId) ?? config.restrictionMessage)
@@ -735,6 +736,32 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
         ),
         [props.screenings],
     )
+    const { canViewAllSubmissions }: UseRolePermissionsResult = useRolePermissions()
+
+    const isCompletedDesignChallenge = useMemo(() => {
+        if (!challengeInfo) return false
+        const type = challengeInfo.track.name ? String(challengeInfo.track.name)
+            .toLowerCase() : ''
+        const status = challengeInfo.status ? String(challengeInfo.status)
+            .toLowerCase() : ''
+        return type === 'design' && (
+            status === 'completed'
+        )
+    }, [challengeInfo])
+
+    const isSubmissionsViewable = useMemo(() => {
+        if (!challengeInfo?.metadata?.length) return false
+        return challengeInfo.metadata.some(m => m.name === 'submissionsViewable' && String(m.value)
+            .toLowerCase() === 'true')
+    }, [challengeInfo])
+
+    const canViewSubmissions = useMemo(() => {
+        if (isCompletedDesignChallenge) {
+            return canViewAllSubmissions || isSubmissionsViewable
+        }
+
+        return true
+    }, [isCompletedDesignChallenge, isSubmissionsViewable, canViewAllSubmissions])
 
     const filteredChallengeSubmissions = useMemo(
         () => {
@@ -1000,12 +1027,17 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
         (submissionId: string): SubmissionInfo | undefined => submissionMetaById.get(submissionId),
         [submissionMetaById],
     )
+
+    const isSubmissionNotViewable = (submission: Screening): boolean => (
+        !canViewSubmissions && String(submission.memberId) !== String(loginUserInfo?.userId)
+    )
     const submissionColumn = useMemo(
         () => createSubmissionColumn({
             downloadSubmission: props.downloadSubmission,
             getRestrictionMessageForMember,
             isDownloading: props.isDownloading,
             isSubmissionDownloadRestrictedForMember,
+            isSubmissionNotViewable,
             restrictionMessage,
         }),
         [
@@ -1013,6 +1045,7 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
             props.isDownloading,
             getRestrictionMessageForMember,
             isSubmissionDownloadRestrictedForMember,
+            isSubmissionNotViewable,
             restrictionMessage,
         ],
     )
