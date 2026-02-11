@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>LPU Leaderboard — Final Scores</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* Minor adjustments to ensure the leaderboard is centered */
+        body { font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; }
+        .page { display:flex; align-items:center; justify-content:center; min-height:100vh; padding:40px; box-sizing:border-box; }
+        .panel { width:100%; max-width:960px; background:var(--bg, #fff); border-radius:12px; padding:28px; box-shadow:0 6px 24px rgba(15,23,42,0.08); }
+        .section-header { margin-bottom:18px; }
+        .leaderboard-table { width:100%; border-collapse:collapse; }
+        .leaderboard-table th, .leaderboard-table td { padding:12px 10px; text-align:left; }
+        .rank-col { width:72px; }
+        .score-col { width:180px; text-align:right; }
+        .member-avatar img { width:40px; height:40px; border-radius:6px; object-fit:cover; }
+    </style>
+</head>
+
+<body>
+    <div class="page">
+        <div class="panel">
+            <div class="section-header">
+                <h1>The LPU Leaderboard</h1>
+                <p class="section-subtitle">Final scores — official standings</p>
+            </div>
+
+            <div class="leaderboard-table-wrapper">
+                <table class="leaderboard-table" id="lpu-leaderboard-table">
+                    <thead>
+                        <tr>
+                            <th class="rank-col">RANK</th>
+                            <th class="member-col">MEMBER</th>
+                            <th class="score-col">SCORE</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lpu-leaderboard-body">
+                        <!-- Populated by lpu.js -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="lpu.js"></script>
+</body>
+
+</html>
