@@ -2,7 +2,7 @@
 import { UserProfile, UserRole, UserTrait } from '~/libs/core'
 import { availabilityOptions, preferredRoleOptions } from '~/libs/shared/lib/components/modify-open-to-work-modal'
 
-import { ADMIN_ROLES, PHONE_NUMBER_ROLES } from '../config'
+import { ADMIN_ROLES, EMAIL_VIEW_ROLES, PHONE_NUMBER_ROLES } from '../config'
 
 declare global {
     interface Window { tcUniNav: any }
@@ -185,6 +185,32 @@ export function canSeePhones(authProfile: UserProfile | undefined, profile: User
     if (authProfile
         .roles?.some(
             role => PHONE_NUMBER_ROLES.some(allowed => role.toLowerCase() === allowed.toLowerCase()),
+        )
+    ) {
+        return true
+    }
+
+    return false
+}
+
+/**
+ * Check if the user can see email address
+ * @param authProfile - The authenticated user profile
+ * @param profile - The profile to check if the user can see email
+ * @returns {boolean} - Whether the user can see email
+ */
+export function canSeeEmail(authProfile: UserProfile | undefined, profile: UserProfile): boolean {
+    if (!authProfile) {
+        return false
+    }
+
+    if (authProfile.handle === profile.handle) {
+        return true
+    }
+
+    if (authProfile
+        .roles?.some(
+            role => EMAIL_VIEW_ROLES.some(allowed => role.toLowerCase() === allowed.toLowerCase()),
         )
     ) {
         return true

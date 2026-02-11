@@ -37,3 +37,9 @@ export const PHONE_NUMBER_ROLES = [
     UserRole.projectManager,
     UserRole.copilot,
 ]
+
+export const EMAIL_VIEW_ROLES = [
+    UserRole.administrator,
+    UserRole.talentManager,
+    UserRole.projectManager,
+]
