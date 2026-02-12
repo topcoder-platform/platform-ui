@@ -106,10 +106,10 @@ const WorkExperienceCard: FC<WorkExperienceCardProps> = (props: WorkExperienceCa
                                         color: true,
                                         'font-style': true,
                                         'font-weight': true,
+                                        'list-style-position': true,
+                                        'list-style-type': true,
                                         'text-align': true,
                                         'text-decoration': true,
-                                        'list-style-type': true,
-                                        'list-style-position': true,
                                     },
                                 },
                                 ALLOWED_TAGS: [
