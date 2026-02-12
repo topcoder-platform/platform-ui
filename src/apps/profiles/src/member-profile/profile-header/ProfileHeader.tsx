@@ -46,7 +46,6 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
     = !canEdit
     && (
         roles.includes(UserRole.administrator)
-        || roles.includes(UserRole.projectManager)
         || roles.includes(UserRole.talentManager)
     )
 
