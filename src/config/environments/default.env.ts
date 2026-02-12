@@ -45,7 +45,7 @@ export const ENGAGEMENTS_URL: string = `https://engagements.${TC_DOMAIN}`
 export const USER_PROFILE_URL: string = `https://profiles.${TC_DOMAIN}`
 export const CHALLENGE_API_URL: string = getReactEnv<string>(
     'CHALLENGE_API_URL',
-    `https://api.${TC_DOMAIN}/v5/challenges`,
+    `https://api.${TC_DOMAIN}/v6/challenges`,
 )
 export const CHALLENGE_API_VERSION: string = getReactEnv<string>(
     'CHALLENGE_API_VERSION',

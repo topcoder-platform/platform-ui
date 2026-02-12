@@ -26,7 +26,9 @@ interface Props {
 
 export const PageWrapper: FC<PropsWithChildren<Props>> = props => (
     <div className={classNames(styles.container, props.className)}>
-        <BreadCrumb list={props.breadCrumb} />
+        {props.breadCrumb.length > 0 && (
+            <BreadCrumb list={props.breadCrumb} />
+        )}
         <PageTitle>{props.pageTitle}</PageTitle>
         <div className={styles.blockHeader}>
             <div className={styles.blockHeaderRight}>

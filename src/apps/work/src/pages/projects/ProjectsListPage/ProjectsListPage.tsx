@@ -4,7 +4,6 @@ import {
     useCallback,
     useContext,
     useEffect,
-    useMemo,
     useRef,
     useState,
 } from 'react'
@@ -175,14 +174,6 @@ export const ProjectsListPage: FC = () => {
     const projectsErrorRef = useRef<string | undefined>()
     useErrorToast(projectsResult.error, projectsErrorRef)
 
-    const breadCrumb = useMemo(
-        () => [{
-            index: 1,
-            label: 'Projects',
-        }],
-        [],
-    )
-
     const handleFiltersChange = useCallback((newFilters: ProjectFilters) => {
         setFilters(newFilters)
         setPage(1)
@@ -275,7 +266,7 @@ export const ProjectsListPage: FC = () => {
     return (
         <PageWrapper
             pageTitle='Projects'
-            breadCrumb={breadCrumb}
+            breadCrumb={[]}
             rightHeader={canCreateProject
                 ? (
                     <Link to='/projects/new' className={styles.newProjectButton}>

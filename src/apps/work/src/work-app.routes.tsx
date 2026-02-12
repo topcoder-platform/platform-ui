@@ -43,82 +43,66 @@ const WorkApp: LazyLoadedComponent = lazyLoad(() => import('./WorkApp'))
 
 const ChallengesListPage: LazyLoadedComponent = lazyLoad(
     () => import('./pages/challenges/ChallengesListPage'),
-    'ChallengesListPage',
 )
 
 const ChallengeEditorPage: LazyLoadedComponent = lazyLoad(
     () => import('./pages/challenges/ChallengeEditorPage'),
-    'ChallengeEditorPage',
 )
 
 const ProjectsListPage: LazyLoadedComponent = lazyLoad(
     () => import('./pages/projects/ProjectsListPage'),
-    'ProjectsListPage',
 )
 
 const ProjectEditorPage: LazyLoadedComponent = lazyLoad(
     () => import('./pages/projects/ProjectEditorPage'),
-    'ProjectEditorPage',
 )
 
 const EngagementsListPage: LazyLoadedComponent = lazyLoad(
     () => import('./pages/engagements/EngagementsListPage'),
-    'EngagementsListPage',
 )
 
 const EngagementEditorPage: LazyLoadedComponent = lazyLoad(
     () => import('./pages/engagements/EngagementEditorPage'),
-    'EngagementEditorPage',
 )
 
 const ApplicationsListPage: LazyLoadedComponent = lazyLoad(
     () => import('./pages/engagements/ApplicationsListPage'),
-    'ApplicationsListPage',
 )
 
 const EngagementPaymentPage: LazyLoadedComponent = lazyLoad(
     () => import('./pages/engagements/EngagementPaymentPage'),
-    'EngagementPaymentPage',
 )
 
 const EngagementFeedbackPage: LazyLoadedComponent = lazyLoad(
     () => import('./pages/engagements/EngagementFeedbackPage'),
-    'EngagementFeedbackPage',
 )
 
 const EngagementExperiencePage: LazyLoadedComponent = lazyLoad(
     () => import('./pages/engagements/EngagementExperiencePage'),
-    'EngagementExperiencePage',
 )
 
 const TaasListPage: LazyLoadedComponent = lazyLoad(
     () => import('./pages/taas/TaasListPage'),
-    'TaasListPage',
 )
 
 const TaasProjectFormPage: LazyLoadedComponent = lazyLoad(
     () => import('./pages/taas/TaasProjectFormPage'),
-    'TaasProjectFormPage',
 )
 
 const UsersManagementPage: LazyLoadedComponent = lazyLoad(
     () => import('./pages/users/UsersManagementPage'),
-    'UsersManagementPage',
 )
 
 const ProjectInvitationsPage: LazyLoadedComponent = lazyLoad(
     () => import('./pages/invitations/ProjectInvitationsPage'),
-    'ProjectInvitationsPage',
 )
 
 const GroupsPage: LazyLoadedComponent = lazyLoad(
     () => import('./pages/groups/GroupsPage'),
-    'GroupsPage',
 )
 
 const GroupEditPage: LazyLoadedComponent = lazyLoad(
     () => import('./pages/groups/GroupEditPage'),
-    'GroupEditPage',
 )
 
 function canManageGroups(contextValue: WorkAppContextModel): boolean {
@@ -154,6 +138,12 @@ export const workRoutes: ReadonlyArray<PlatformRoute> = [
             },
             {
                 authRequired: true,
+                element: <ChallengesListPage />,
+                route: '/projects/:projectId/challenges',
+                title: 'Challenges',
+            },
+            {
+                authRequired: true,
                 element: <ChallengeEditorPage />,
                 id: challengeCreateRouteId,
                 route: `${challengesRouteId}/new`,
@@ -165,6 +155,12 @@ export const workRoutes: ReadonlyArray<PlatformRoute> = [
                 id: challengeEditRouteId,
                 route: `${challengesRouteId}/:challengeId/edit`,
                 title: 'Edit Challenge',
+            },
+            {
+                authRequired: true,
+                element: <ChallengeEditorPage />,
+                route: '/projects/:projectId/challenges/:challengeId/view',
+                title: 'View Challenge',
             },
             {
                 authRequired: true,

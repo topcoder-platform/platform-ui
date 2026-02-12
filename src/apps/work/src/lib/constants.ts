@@ -39,7 +39,7 @@ export const PHASE_STATUS = {
 export const CHALLENGE_API_URL = process.env.REACT_APP_CHALLENGE_API_URL
     || process.env.CHALLENGE_API_URL
     || EnvironmentConfig.CHALLENGE_API_URL
-    || `${EnvironmentConfig.API.V5}/challenges`
+    || `${EnvironmentConfig.API.V6}/challenges`
 
 export const ENGAGEMENTS_API_URL = process.env.REACT_APP_ENGAGEMENTS_API_URL
     || process.env.ENGAGEMENTS_API_URL
@@ -92,7 +92,7 @@ export const WORKFLOWS_API_URL = process.env.REACT_APP_WORKFLOWS_API_URL
 
 export const GROUPS_API_URL = process.env.REACT_APP_GROUPS_API_URL
     || process.env.GROUPS_API_URL
-    || `${EnvironmentConfig.API.V5}/groups`
+    || `${EnvironmentConfig.API.V6}/groups`
 
 export const TERMS_API_URL = process.env.REACT_APP_TERMS_API_URL
     || process.env.TERMS_API_URL
@@ -150,7 +150,7 @@ export const DIRECT_PROJECT_URL = process.env.REACT_APP_DIRECT_PROJECT_URL
 export const PROJECTS_API_URL = process.env.REACT_APP_PROJECTS_API_URL
     || process.env.PROJECTS_API_URL
     || process.env.PROJECT_API_URL
-    || `${EnvironmentConfig.API.V5}/projects`
+    || `${EnvironmentConfig.API.V6}/projects`
 
 export const SKILLS_V5_SKILLS_URL = process.env.REACT_APP_SKILLS_V5_SKILLS_URL
     || process.env.SKILLS_V5_SKILLS_URL

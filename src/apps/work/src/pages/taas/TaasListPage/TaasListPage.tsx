@@ -2,7 +2,6 @@ import {
     FC,
     useCallback,
     useContext,
-    useMemo,
     useState,
 } from 'react'
 import { Link } from 'react-router-dom'
@@ -72,14 +71,6 @@ export const TaasListPage: FC = () => {
     const projects = taasProjectsResult.data?.projects || []
     const totalProjects = metadata.total || 0
 
-    const breadCrumb = useMemo(
-        () => [{
-            index: 1,
-            label: 'Projects',
-        }],
-        [],
-    )
-
     const handleFiltersChange = useCallback((newFilters: ProjectFilters) => {
         setFilters(newFilters)
         setPage(1)
@@ -101,7 +92,7 @@ export const TaasListPage: FC = () => {
 
     return (
         <PageWrapper
-            breadCrumb={breadCrumb}
+            breadCrumb={[]}
             pageTitle='Projects'
             rightHeader={canCreateProject
                 ? (

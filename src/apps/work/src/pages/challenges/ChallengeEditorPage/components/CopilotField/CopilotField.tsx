@@ -8,6 +8,9 @@ import {
     useFormContext,
     useWatch,
 } from 'react-hook-form'
+import type {
+    UseFormReturn,
+} from 'react-hook-form'
 
 import { Button } from '~/libs/ui'
 
@@ -23,6 +26,8 @@ import {
 } from '../../../../../lib/models'
 
 import styles from './CopilotField.module.scss'
+
+const COPILOT_REQUIRED_MESSAGE = 'Copilot is required when copilot fee is greater than 0'
 
 function getCopilotFee(prizeSets: PrizeSet[] | undefined): number {
     if (!Array.isArray(prizeSets)) {
@@ -41,13 +46,26 @@ export const CopilotField: FC = () => {
         loginUserInfo,
     }: WorkAppContextModel = useContext(WorkAppContext)
 
-    const formContext = useFormContext<ChallengeEditorFormData>()
+    const {
+        clearErrors,
+        control,
+        getFieldState,
+        setError,
+        setValue,
+    }: Pick<UseFormReturn<ChallengeEditorFormData>,
+        'clearErrors'
+        | 'control'
+        | 'getFieldState'
+        | 'setError'
+        | 'setValue'
+    > = useFormContext<ChallengeEditorFormData>()
+
     const copilot = useWatch({
-        control: formContext.control,
+        control,
         name: 'copilot',
     }) as string | undefined
     const prizeSets = useWatch({
-        control: formContext.control,
+        control,
         name: 'prizeSets',
     }) as PrizeSet[] | undefined
 
@@ -56,17 +74,29 @@ export const CopilotField: FC = () => {
         const normalizedCopilot = typeof copilot === 'string'
             ? copilot.trim()
             : ''
+        const copilotError = getFieldState('copilot').error
 
         if (copilotFee > 0 && !normalizedCopilot) {
-            formContext.setError('copilot', {
-                message: 'Copilot is required when copilot fee is greater than 0',
-                type: 'manual',
-            })
+            if (
+                copilotError?.type !== 'manual'
+                || copilotError.message !== COPILOT_REQUIRED_MESSAGE
+            ) {
+                setError('copilot', {
+                    message: COPILOT_REQUIRED_MESSAGE,
+                    type: 'manual',
+                })
+            }
+
             return
         }
 
-        formContext.clearErrors('copilot')
-    }, [copilot, formContext, prizeSets])
+        if (
+            copilotError?.type === 'manual'
+            && copilotError.message === COPILOT_REQUIRED_MESSAGE
+        ) {
+            clearErrors('copilot')
+        }
+    }, [clearErrors, copilot, getFieldState, prizeSets, setError])
 
     const assignYourself = useCallback((): void => {
         const currentUserHandle = loginUserInfo?.handle
@@ -75,11 +105,11 @@ export const CopilotField: FC = () => {
             return
         }
 
-        formContext.setValue('copilot', currentUserHandle, {
+        setValue('copilot', currentUserHandle, {
             shouldDirty: true,
             shouldValidate: true,
         })
-    }, [formContext, loginUserInfo?.handle])
+    }, [loginUserInfo?.handle, setValue])
 
     return (
         <div className={styles.container}>

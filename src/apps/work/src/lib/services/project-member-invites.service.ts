@@ -3,11 +3,10 @@ import {
     xhrPatchAsync,
     xhrPostAsync,
 } from '~/libs/core'
-import { EnvironmentConfig } from '~/config'
 
+import { PROJECTS_API_URL } from '../constants'
 import { ProjectInvite } from '../models'
 
-const PROJECTS_API_URL = `${EnvironmentConfig.API.V5}/projects`
 const PROJECT_MEMBER_INVITE_FIELDS
     = 'id,projectId,userId,email,role,status,createdAt,updatedAt,createdBy,updatedBy,handle'
 

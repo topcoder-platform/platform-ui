@@ -78,15 +78,18 @@ export interface FetchProjectsListResponse {
 const PROJECT_TYPES_API_URL = `${PROJECTS_API_URL}/metadata/projectTypes`
 const PROJECTS_PER_PAGE = 100
 const PROJECTS_LIST_FIELDS: string[] = [
+    'members',
+    'invites',
+]
+const PROJECTS_LIST_SORT_FIELDS = new Set([
+    'createdAt',
     'id',
+    'lastActivityAt',
     'name',
     'status',
     'type',
-    'lastActivityAt',
-    'createdAt',
     'updatedAt',
-    'invites',
-]
+])
 
 function normalizeOptionalString(value: unknown): string | undefined {
     if (typeof value !== 'string') {
@@ -462,6 +465,18 @@ function appendArrayFilter(
         })
 }
 
+function buildProjectsSortValue(sortBy: string, sortOrder: 'asc' | 'desc'): string {
+    const normalizedSortBy = sortBy.trim()
+    const safeSortBy = PROJECTS_LIST_SORT_FIELDS.has(normalizedSortBy)
+        ? normalizedSortBy
+        : 'lastActivityAt'
+    const safeSortOrder = sortOrder === 'asc'
+        ? 'asc'
+        : 'desc'
+
+    return `${safeSortBy} ${safeSortOrder}`
+}
+
 function buildProjectsListUrl(
     {
         keyword,
@@ -477,8 +492,7 @@ function buildProjectsListUrl(
         fields: PROJECTS_LIST_FIELDS.join(','),
         page: String(page),
         perPage: String(perPage),
-        sortBy,
-        sortOrder,
+        sort: buildProjectsSortValue(sortBy, sortOrder),
     })
 
     if (keyword?.trim()) {

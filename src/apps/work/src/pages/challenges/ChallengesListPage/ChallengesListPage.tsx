@@ -8,7 +8,7 @@ import {
     useRef,
     useState,
 } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
 
 import { TableLoading } from '~/apps/admin/src/lib'
@@ -153,12 +153,17 @@ function renderChallengesContent(params: RenderChallengesContentParams): JSX.Ele
 }
 
 export const ChallengesListPage: FC = () => {
+    const { projectId: projectIdFromRoute }: Readonly<{ projectId?: string }> = useParams<'projectId'>()
+
     const {
         isAdmin,
         isManager,
     }: WorkAppContextModel = useContext(WorkAppContext)
 
-    const [filters, setFilters] = useState<ChallengeFilters>(DEFAULT_FILTERS)
+    const [filters, setFilters] = useState<ChallengeFilters>({
+        ...DEFAULT_FILTERS,
+        projectId: projectIdFromRoute,
+    })
     const [page, setPage] = useState<number>(1)
     const [perPage, setPerPage] = useState<number>(PAGE_SIZE)
     const [sortBy, setSortBy] = useState<string>('startDate')
@@ -172,6 +177,7 @@ export const ChallengesListPage: FC = () => {
         ...filters,
         page,
         perPage,
+        projectId: projectIdFromRoute || filters.projectId,
         sortBy,
         sortOrder,
     }
@@ -190,18 +196,13 @@ export const ChallengesListPage: FC = () => {
     useErrorToast(challengeTypesResult.error, challengeTypesErrorRef)
     useErrorToast(projectsResult.error, projectsErrorRef)
 
-    const breadCrumb = useMemo(
-        () => [{
-            index: 1,
-            label: 'Challenges',
-        }],
-        [],
-    )
-
     const handleFiltersChange = useCallback((newFilters: ChallengeFilters) => {
-        setFilters(newFilters)
+        setFilters({
+            ...newFilters,
+            projectId: projectIdFromRoute || newFilters.projectId,
+        })
         setPage(1)
-    }, [])
+    }, [projectIdFromRoute])
 
     const handlePageChange = useCallback((newPage: number) => {
         setPage(newPage)
@@ -248,6 +249,14 @@ export const ChallengesListPage: FC = () => {
             .sort((projectA, projectB) => projectA.label.localeCompare(projectB.label)),
         [projectsResult.projects],
     )
+
+    useEffect(() => {
+        setFilters(currentFilters => ({
+            ...currentFilters,
+            projectId: projectIdFromRoute,
+        }))
+        setPage(1)
+    }, [projectIdFromRoute])
 
     useEffect(() => {
         const listEndElement = listEndRef.current
@@ -300,7 +309,7 @@ export const ChallengesListPage: FC = () => {
     return (
         <PageWrapper
             pageTitle='Challenges'
-            breadCrumb={breadCrumb}
+            breadCrumb={[]}
             rightHeader={(
                 <Link to='/challenges/new' className={styles.newChallengeButton}>
                     <Button
@@ -321,7 +330,7 @@ export const ChallengesListPage: FC = () => {
                 filters={filters}
                 onFiltersChange={handleFiltersChange}
                 challengeTypes={challengeTypesResult.challengeTypes}
-                dashboardMode
+                dashboardMode={!projectIdFromRoute}
                 projectOptions={projectOptions}
                 isLoadingChallengeTypes={challengeTypesResult.isLoading}
             />
