@@ -56,15 +56,14 @@
             ul {
                 margin: $sp-2 0;
                 padding-left: $sp-6;
-                list-style-type: disc;
+                list-style-type: revert;
                 list-style-position: outside;
             }
-
 
             ol {
                 margin: $sp-2 0;
                 padding-left: $sp-6;
-                list-style-type: decimal;
+                list-style-type: revert;
                 list-style-position: outside;
             }
 

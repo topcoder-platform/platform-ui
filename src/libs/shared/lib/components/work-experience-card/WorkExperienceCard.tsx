@@ -98,7 +98,7 @@ const WorkExperienceCard: FC<WorkExperienceCardProps> = (props: WorkExperienceCa
                                 ALLOWED_ATTR: [
                                     'href', 'target', 'rel', 'style', 'align',
                                     'border', 'cellpadding', 'cellspacing', 'colspan',
-                                    'rowspan', 'width', 'height', 'class',
+                                    'rowspan', 'width', 'height', 'class', 'type',
                                 ],
                                 ALLOWED_STYLES: {
                                     '*': {
@@ -108,6 +108,8 @@ const WorkExperienceCard: FC<WorkExperienceCardProps> = (props: WorkExperienceCa
                                         'font-weight': true,
                                         'text-align': true,
                                         'text-decoration': true,
+                                        'list-style-type': true,
+                                        'list-style-position': true,
                                     },
                                 },
                                 ALLOWED_TAGS: [
