@@ -7,7 +7,7 @@ import classNames from 'classnames'
 import { profileContext, ProfileContextData } from '~/libs/core'
 import { Button, IconSolid, InputDatePicker, InputMultiselectOption,
     InputRadio, InputSelect, InputSelectReact, InputText, InputTextarea } from '~/libs/ui'
-import { InputSkillSelector } from '~/libs/shared'
+import { extractSkillsFromText, InputSkillSelector } from '~/libs/shared'
 
 import { getProject, getProjects, ProjectsResponse, useProjects } from '../../services/projects'
 import { ProjectTypes, ProjectTypeValues } from '../../constants'
@@ -16,6 +16,8 @@ import { Project } from '../../models/Project'
 import { rootRoute } from '../../copilots.routes'
 
 import styles from './styles.module.scss'
+
+const MIN_OVERVIEW_LENGTH = 50
 
 const editableFields = [
     'projectId',
@@ -46,6 +48,8 @@ const CopilotRequestForm: FC<{}> = () => {
     const [formErrors, setFormErrors] = useState<any>({})
     const [paymentType, setPaymentType] = useState<string>('')
     const [projectFromQuery, setProjectFromQuery] = useState<Project>()
+    const [isGeneratingSkills, setIsGeneratingSkills] = useState(false)
+    const [aiGenerationError, setAiGenerationError] = useState<string>()
     const activeProjectStatuses = ['active', 'approved', 'draft', 'new']
 
     const { data: copilotRequestData }: CopilotRequestResponse = useCopilotRequest(routeParams.requestId)
@@ -208,6 +212,61 @@ const CopilotRequestForm: FC<{}> = () => {
         })
         setIsFormChanged(true)
     }
+
+    async function handleGenerateSkillsWithAI(): Promise<void> {
+        setIsGeneratingSkills(true)
+        setAiGenerationError(undefined)
+
+        try {
+            const result = await extractSkillsFromText(formValues.overview)
+
+            if (!result.matches || result.matches.length === 0) {
+                setAiGenerationError('No skills were extracted. Try providing more details in the project overview.')
+                toast.warning(
+                    'No skills found for the provided project overview. Please add more details about the project.',
+                )
+                return
+            }
+
+            // Add extracted skills to existing skills (avoid duplicates)
+            const existingSkillIds = new Set((formValues.skills || []).map((s: any) => s.id))
+            const newSkills = result.matches.filter(skill => !existingSkillIds.has(skill.id))
+
+            if (newSkills.length === 0) {
+                toast.info('All extracted skills are already in the list.')
+                return
+            }
+
+            setFormValues((prevFormValues: any) => ({
+                ...prevFormValues,
+                skills: [...(prevFormValues.skills || []), ...newSkills],
+            }))
+
+            setFormErrors((prevFormErrors: any) => {
+                const updatedErrors = { ...prevFormErrors }
+                delete updatedErrors.skills
+                return updatedErrors
+            })
+            setIsFormChanged(true)
+
+            toast.success(
+                `Successfully added ${newSkills.length} skill${newSkills.length > 1 ? 's' : ''} from AI analysis!`,
+            )
+        } catch (error) {
+            const errorMessage = (error as Error).message
+            setAiGenerationError(errorMessage)
+            console.error('AI skills generation failed:', error)
+            toast.error(`Failed to generate skills: ${errorMessage}`)
+        } finally {
+            setIsGeneratingSkills(false)
+        }
+    }
+
+    // Check if overview has enough content for AI processing
+    const canGenerateSkills = useMemo(() => {
+        const overview = formValues.overview?.trim() || ''
+        return overview.length >= MIN_OVERVIEW_LENGTH && !isGeneratingSkills
+    }, [formValues.overview, isGeneratingSkills])
 
     function handleFormAction(): void {
         const updatedFormErrors: { [key: string]: string } = {}
@@ -478,8 +537,39 @@ const CopilotRequestForm: FC<{}> = () => {
                         error={formErrors.overview}
                         dirty
                     />
-                    <p className={styles.formRow}>Any specific skills or technology requirements that come to mind?</p>
-                    <div className={formErrors.skills ? styles.skillsError : styles.skillsWrapper}>
+                    <div className={styles.skillsSection}>
+                        <div className={styles.skillsHeader}>
+                            <p className={styles.formRowNoMargin}>
+                                Any specific skills or technology requirements that come to mind?
+                            </p>
+                            <Button
+                                secondary
+                                size='sm'
+                                label={isGeneratingSkills ? 'Generating...' : '✨ Generate with AI'}
+                                onClick={handleGenerateSkillsWithAI}
+                                disabled={!canGenerateSkills}
+                                className={styles.aiButton}
+                            />
+                        </div>
+                        {!canGenerateSkills
+                            && formValues.overview
+                            && formValues.overview.trim().length < MIN_OVERVIEW_LENGTH
+                            && (
+                                <p className={styles.helperText}>
+                                    Add at least
+                                    {' '}
+                                    {MIN_OVERVIEW_LENGTH}
+                                    {' '}
+                                    characters to the project overview to use AI generation
+                                </p>
+                            )}
+                    </div>
+                    <div className={classNames({
+                        [styles.skillsError]: formErrors.skills,
+                        [styles.skillsWrapper]: !formErrors.skills,
+                        [styles.disabled]: isGeneratingSkills,
+                    })}
+                    >
                         <InputSkillSelector
                             placeholder='Enter skills you are searching for...'
                             useWrapper={false}
@@ -488,10 +578,21 @@ const CopilotRequestForm: FC<{}> = () => {
                             onChange={handleSkillsChange}
                         />
                     </div>
+                    {isGeneratingSkills && (
+                        <p className={styles.loadingText}>
+                            🤖 AI is analyzing your project overview to extract relevant skills...
+                        </p>
+                    )}
                     {formErrors.skills && (
                         <p className={styles.error}>
                             <IconSolid.ExclamationIcon />
                             {formErrors.skills}
+                        </p>
+                    )}
+                    {aiGenerationError && (
+                        <p className={styles.warning}>
+                            <IconSolid.ExclamationIcon />
+                            {aiGenerationError}
                         </p>
                     )}
                     <p className={styles.formRow}>What&apos;s the planned start date for the copilot?</p>
