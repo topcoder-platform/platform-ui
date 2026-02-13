@@ -51,6 +51,10 @@ const Phones: FC<PhonesProps> = (props: PhonesProps) => {
         }, 1000)
     }
 
+    if (!canEdit && (!canSeeEmailValue || !(props.profile?.email || phones.length))) {
+        return <></>;
+    }
+
     return (
         <div className={styles.container}>
             <div className={styles.titleWrap}>
