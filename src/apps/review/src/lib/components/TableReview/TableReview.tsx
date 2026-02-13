@@ -17,7 +17,7 @@ import { MobileTableColumn } from '~/apps/admin/src/lib/models/MobileTableColumn
 import { handleError, useWindowSize, WindowSize } from '~/libs/shared'
 import { IconOutline, Table, TableColumn } from '~/libs/ui'
 
-import { ChallengeDetailContext } from '../../contexts'
+import { ChallengeDetailContext, ReviewAppContext } from '../../contexts'
 import { useRole, useScorecardPassingScores, useSubmissionDownloadAccess } from '../../hooks'
 import type { useRoleProps } from '../../hooks/useRole'
 import { useSubmissionHistory } from '../../hooks/useSubmissionHistory'
@@ -28,6 +28,7 @@ import type { UseSubmissionDownloadAccessResult } from '../../hooks/useSubmissio
 import {
     ChallengeDetailContextModel,
     MappingReviewAppeal,
+    ReviewAppContextModel,
     SubmissionInfo,
 } from '../../models'
 import {
@@ -120,6 +121,7 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
         isSubmissionDownloadRestrictedForMember,
         restrictionMessage,
     }: UseSubmissionDownloadAccessResult = useSubmissionDownloadAccess()
+    const { loginUserInfo }: ReviewAppContextModel = useContext(ReviewAppContext)
 
     const isTablet = useMemo<boolean>(() => screenWidth <= 744, [screenWidth])
     const reviewPhaseDatas = useMemo<SubmissionInfo[]>(
@@ -379,6 +381,37 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
         [],
     )
 
+    const { canViewAllSubmissions }: UseRolePermissionsResult = useRolePermissions()
+
+    const isCompletedDesignChallenge = useMemo(() => {
+        if (!challengeInfo) return false
+        const type = challengeInfo.track.name ? String(challengeInfo.track.name)
+            .toLowerCase() : ''
+        const status = challengeInfo.status ? String(challengeInfo.status)
+            .toLowerCase() : ''
+        return type === 'design' && (
+            status === 'completed'
+        )
+    }, [challengeInfo])
+
+    const isSubmissionsViewable = useMemo(() => {
+        if (!challengeInfo?.metadata?.length) return false
+        return challengeInfo.metadata.some(m => m.name === 'submissionsViewable' && String(m.value)
+            .toLowerCase() === 'true')
+    }, [challengeInfo])
+
+    const canViewSubmissions = useMemo(() => {
+        if (isCompletedDesignChallenge) {
+            return canViewAllSubmissions || isSubmissionsViewable
+        }
+
+        return true
+    }, [isCompletedDesignChallenge, isSubmissionsViewable, canViewAllSubmissions])
+
+    const isSubmissionNotViewable = (submission: SubmissionRow): boolean => (
+        !canViewSubmissions && String(submission.memberId) !== String(loginUserInfo?.userId)
+    )
+
     const downloadButtonConfig = useMemo<DownloadButtonConfig>(
         () => ({
             downloadSubmission,
@@ -386,6 +419,7 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
             isDownloading,
             isSubmissionDownloadRestricted,
             isSubmissionDownloadRestrictedForMember,
+            isSubmissionNotViewable,
             ownedMemberIds,
             restrictionMessage,
             shouldRestrictSubmitterToOwnSubmission: false,
@@ -396,6 +430,7 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
             isDownloading,
             isSubmissionDownloadRestricted,
             isSubmissionDownloadRestrictedForMember,
+            isSubmissionNotViewable,
             ownedMemberIds,
             restrictionMessage,
         ],

@@ -6,7 +6,7 @@ import { CopyButton } from '~/apps/admin/src/lib/components/CopyButton'
 import { IconOutline, IconSolid, Tooltip } from '~/libs/ui'
 
 import { AddButton } from '../../components'
-import { canSeePhones } from '../../lib/helpers'
+import { canSeeEmail, canSeePhones } from '../../lib/helpers'
 
 import { ModifyPhonesModal } from './ModifyPhonesModal'
 import { PhoneCard } from './PhoneCard'
@@ -21,6 +21,7 @@ interface PhonesProps {
 const Phones: FC<PhonesProps> = (props: PhonesProps) => {
     const canEdit: boolean = props.authProfile?.handle === props.profile.handle
     const canSeePhonesValue: boolean = canSeePhones(props.authProfile, props.profile)
+    const canSeeEmailValue: boolean = canSeeEmail(props.authProfile, props.profile)
 
     const [isEditMode, setIsEditMode]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
@@ -50,6 +51,12 @@ const Phones: FC<PhonesProps> = (props: PhonesProps) => {
         }, 1000)
     }
 
+    // Don't render anything if user cannot edit AND cannot see any contact info
+    const hasContactInfo = props.profile?.email || phones.length > 0
+    if (!canEdit && (!canSeeEmailValue || !hasContactInfo)) {
+        return <></>
+    }
+
     return (
         <div className={styles.container}>
             <div className={styles.titleWrap}>
@@ -61,7 +68,7 @@ const Phones: FC<PhonesProps> = (props: PhonesProps) => {
                         </Tooltip>
                     )}
                 </p>
-                {props.profile?.email && (
+                {canSeeEmailValue && props.profile?.email && (
                     <div className={styles.email}>
                         <div className={styles.emailIcon}>
                             <IconSolid.MailIcon width={20} height={20} />
