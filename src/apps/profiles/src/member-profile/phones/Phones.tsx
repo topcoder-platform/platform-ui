@@ -50,9 +50,10 @@ const Phones: FC<PhonesProps> = (props: PhonesProps) => {
             props.refreshProfile(props.profile.handle)
         }, 1000)
     }
+
     // Don't render anything if user cannot edit AND cannot see any contact info
     const hasContactInfo = props.profile?.email || phones.length > 0
-    if ( !canEdit && (!canSeeEmailValue || !hasContactInfo)) {
+    if (!canEdit && (!canSeeEmailValue || !hasContactInfo)) {
         return <></>
     }
 
