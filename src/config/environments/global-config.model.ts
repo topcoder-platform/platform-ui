@@ -25,6 +25,7 @@ export interface GlobalConfig {
     },
     STANDARDIZED_SKILLS_API: string,
     TC_FINANCE_API: string,
+    TC_AI_API: string,
     AUTH: {
         ACCOUNTS_APP_CONNECTOR: string
     }
@@ -98,6 +99,7 @@ export interface GlobalConfig {
         TIMEOUT: number
         PROGRESS_INTERVAL: number
     },
+    SKILLS_EXTRACTION_WORKFLOW_ID: string
     ADMIN_SSO_LOGIN_PROVIDERS: SSOLoginProviderConfig[]
     LOCAL_SERVICE_OVERRIDES?: LocalServiceOverride[]
     TROLLEY_WIDGET_ORIGIN: string

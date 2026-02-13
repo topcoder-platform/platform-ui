@@ -56,6 +56,7 @@ export const API = {
 
 export const STANDARDIZED_SKILLS_API = `${API.V5}/standardized-skills`
 export const TC_FINANCE_API = `${API.V6}/finance`
+export const TC_AI_API = `${API.V6}/ai`
 
 export const AUTH = {
     ACCOUNTS_APP_CONNECTOR: `https://accounts-auth0.${TC_DOMAIN}`,
@@ -144,6 +145,11 @@ export const USERFLOW_SURVEYS = {
 export const TROLLEY_WIDGET_ORIGIN = getReactEnv<string>(
     'TROLLEY_WIDGET_ORIGIN',
     'https://widget.trolley.com',
+)
+
+export const SKILLS_EXTRACTION_WORKFLOW_ID = getReactEnv<string>(
+    'AI_SKILLS_EXTRACTION_WORKFLOW_ID',
+    'skillExtractionWorkflow',
 )
 
 export const ADMIN = {
