@@ -145,17 +145,12 @@ export function canDownloadProfile(authProfile: UserProfile | undefined, profile
         return true
     }
 
-    // Check if user has admin roles
-    if (authProfile.roles?.some(role => ADMIN_ROLES.includes(role.toLowerCase() as UserRole))) {
-        return true
-    }
-
-    // Check if user has PM or Talent Manager roles
-    const allowedRoles = ['Project Manager', 'Talent Manager']
-    if (authProfile
-        .roles?.some(
-            role => allowedRoles.some(allowed => role.toLowerCase() === allowed.toLowerCase()),
-        )
+    // Check if user has admin roles or talent manager
+    if (
+        authProfile.roles?.some(role => [
+            UserRole.talentManager,
+            ...ADMIN_ROLES,
+        ].includes(role.toLowerCase() as UserRole))
     ) {
         return true
     }
