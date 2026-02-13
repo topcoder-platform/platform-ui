@@ -150,7 +150,8 @@ export function canDownloadProfile(authProfile: UserProfile | undefined, profile
         authProfile.roles?.some(role => [
             UserRole.talentManager,
             ...ADMIN_ROLES,
-        ].includes(role.toLowerCase() as UserRole))
+        ].map(r => r.toLowerCase())
+            .includes(role.toLowerCase() as UserRole))
     ) {
         return true
     }
