@@ -11,9 +11,11 @@ import { Link, useNavigate } from 'react-router-dom'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { Button } from '~/libs/ui'
 
+import { CHALLENGE_TRACKS } from '../../../../lib/constants'
 import { AUTOSAVE_DELAY_MS } from '../../../../lib/constants/challenge-editor.constants'
 import {
     useAutosave,
+    useFetchChallengeTracks,
     useFetchChallengeTypes,
 } from '../../../../lib/hooks'
 import {
@@ -131,6 +133,9 @@ interface SaveChallengeOptions {
     navigateAfterCreate?: boolean
 }
 
+const CHALLENGE_TYPE_CHALLENGE_ABBREVIATION = 'CH'
+const CHALLENGE_TYPE_CHALLENGE_NAME = 'CHALLENGE'
+
 function getStatusText(
     saveStatus: 'error' | 'idle' | 'saved' | 'saving',
 ): string {
@@ -171,6 +176,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const reset = formMethods.reset
     const watch = formMethods.watch
     const values = watch()
+    const challengeTracks = useFetchChallengeTracks().tracks
     const challengeTypes = useFetchChallengeTypes().challengeTypes
 
     const selectedChallengeType = useMemo<ChallengeType | undefined>(
@@ -180,6 +186,44 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             values.typeId,
         ],
     )
+    const selectedChallengeTrack = useMemo(
+        () => challengeTracks.find(challengeTrack => challengeTrack.id === values.trackId),
+        [
+            challengeTracks,
+            values.trackId,
+        ],
+    )
+    const isDesignTrackSelected = useMemo(
+        (): boolean => {
+            const normalizedTrack = (
+                selectedChallengeTrack?.track
+                || selectedChallengeTrack?.name
+                || selectedChallengeTrack?.abbreviation
+                || ''
+            )
+                .trim()
+                .toUpperCase()
+
+            return normalizedTrack === CHALLENGE_TRACKS.DESIGN
+        },
+        [selectedChallengeTrack],
+    )
+    const isChallengeTypeSelected = useMemo(
+        (): boolean => {
+            const normalizedChallengeTypeName = (selectedChallengeType?.name || '')
+                .trim()
+                .toUpperCase()
+            const normalizedChallengeTypeAbbreviation = (selectedChallengeType?.abbreviation || '')
+                .trim()
+                .toUpperCase()
+
+            return normalizedChallengeTypeName === CHALLENGE_TYPE_CHALLENGE_NAME
+                || normalizedChallengeTypeAbbreviation === CHALLENGE_TYPE_CHALLENGE_ABBREVIATION
+        },
+        [selectedChallengeType],
+    )
+    const showRoundTypeField = isDesignTrackSelected && Boolean(values.typeId?.trim())
+    const showSubmissionSettingsSection = isDesignTrackSelected && isChallengeTypeSelected
 
     useEffect(() => {
         setCurrentChallengeId(props.challenge?.id)
@@ -298,6 +342,9 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                         <ChallengeNameField />
                         <ChallengeTrackField disabled={!!props.challenge?.id} />
                         <ChallengeTypeField disabled={!!props.challenge?.id} />
+                        {showRoundTypeField
+                            ? <RoundTypeField />
+                            : undefined}
                     </div>
                 </section>
 
@@ -340,7 +387,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 <section className={styles.section}>
                     <h3 className={styles.sectionTitle}>Timeline &amp; Schedule</h3>
                     <div className={styles.block}>
-                        <ChallengeScheduleSection />
+                        <ChallengeScheduleSection showSchedulingApiToggle={!!props.challenge?.id} />
                     </div>
                 </section>
 
@@ -354,18 +401,21 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                         <DiscussionForumField />
                         <NDAField />
                         <ReviewTypeField />
-                        <RoundTypeField />
                     </div>
                 </section>
 
-                <section className={styles.section}>
-                    <h3 className={styles.sectionTitle}>Submission Settings</h3>
-                    <div className={styles.grid}>
-                        <SubmissionVisibilityField />
-                        <StockArtsField />
-                        <MaximumSubmissionsField />
-                    </div>
-                </section>
+                {showSubmissionSettingsSection
+                    ? (
+                        <section className={styles.section}>
+                            <h3 className={styles.sectionTitle}>Submission Settings</h3>
+                            <div className={styles.grid}>
+                                <SubmissionVisibilityField />
+                                <StockArtsField />
+                                <MaximumSubmissionsField />
+                            </div>
+                        </section>
+                    )
+                    : undefined}
 
                 <section className={styles.section}>
                     <h3 className={styles.sectionTitle}>Reviewers</h3>

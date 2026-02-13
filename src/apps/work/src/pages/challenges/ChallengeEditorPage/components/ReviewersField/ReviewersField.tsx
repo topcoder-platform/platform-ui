@@ -29,14 +29,12 @@ import {
     DefaultReviewer,
     Reviewer,
     Scorecard,
-    Workflow,
 } from '../../../../../lib/models'
 import {
     createResource,
     deleteResource,
     fetchDefaultReviewers,
     fetchScorecards,
-    fetchWorkflows,
 } from '../../../../../lib/services'
 
 import styles from './ReviewersField.module.scss'
@@ -69,7 +67,6 @@ export const ReviewersField: FC = () => {
 
     const [defaultReviewers, setDefaultReviewers] = useState<DefaultReviewer[]>([])
     const [scorecards, setScorecards] = useState<Scorecard[]>([])
-    const [workflows, setWorkflows] = useState<Workflow[]>([])
     const [isLoading, setIsLoading] = useState<boolean>(false)
     const [loadError, setLoadError] = useState<string | undefined>()
 
@@ -122,15 +119,6 @@ export const ReviewersField: FC = () => {
         [resourceRoles],
     )
 
-    const workflowOptions = useMemo<FormSelectOption[]>(
-        () => workflows
-            .map(workflow => ({
-                label: workflow.name,
-                value: workflow.id,
-            })),
-        [workflows],
-    )
-
     const estimatedReviewerCost = useMemo(
         () => reviewerRows
             .reduce((sum, reviewer) => {
@@ -153,20 +141,16 @@ export const ReviewersField: FC = () => {
         setIsLoading(true)
         setLoadError(undefined)
 
-        Promise.all([
-            fetchScorecards({
-                page: 1,
-                perPage: 200,
-            }),
-            fetchWorkflows(),
-        ])
-            .then(([fetchedScorecards, fetchedWorkflows]) => {
+        fetchScorecards({
+            page: 1,
+            perPage: 200,
+        })
+            .then(fetchedScorecards => {
                 if (!mounted) {
                     return
                 }
 
                 setScorecards(fetchedScorecards)
-                setWorkflows(fetchedWorkflows)
             })
             .catch((error: unknown) => {
                 if (!mounted) {
@@ -410,11 +394,10 @@ export const ReviewersField: FC = () => {
                                         />
                                     )
                                     : (
-                                        <FormSelectField
-                                            label='AI Workflow'
+                                        <FormTextField
+                                            label='AI Workflow ID'
                                             name={`${reviewerPrefix}.aiWorkflowId`}
-                                            options={workflowOptions}
-                                            placeholder='Select AI workflow'
+                                            placeholder='Enter AI workflow ID'
                                         />
                                     )}
                                 <FormTextField

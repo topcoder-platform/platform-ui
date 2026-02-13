@@ -158,6 +158,9 @@ export const ChallengesFilter: FC<ChallengesFilterProps> = (props: ChallengesFil
         : (filters.status || '')
     const selectedTypeValue = filters.type || ''
     const selectedProjectValue = String(filters.projectId || '')
+    const containerClassName = dashboardMode
+        ? styles.container
+        : `${styles.container} ${styles.projectMode}`
 
     const selectedStatus: SelectOption | undefined = statusOptions.find(
         option => option.value === selectedStatusValue,
@@ -240,8 +243,8 @@ export const ChallengesFilter: FC<ChallengesFilterProps> = (props: ChallengesFil
     }
 
     return (
-        <div className={styles.container}>
-            <div className={styles.filterField}>
+        <div className={containerClassName}>
+            <div className={`${styles.filterField} ${styles.searchField}`}>
                 <label htmlFor='work-challenges-search'>Search</label>
                 <div className={styles.searchInputWrap}>
                     <IconOutline.SearchIcon className={styles.searchIcon} />
@@ -257,7 +260,7 @@ export const ChallengesFilter: FC<ChallengesFilterProps> = (props: ChallengesFil
                 </div>
             </div>
 
-            <div className={styles.filterField}>
+            <div className={`${styles.filterField} ${styles.statusField}`}>
                 <label htmlFor='work-challenges-status'>Status</label>
                 <Select
                     inputId='work-challenges-status'
@@ -270,7 +273,7 @@ export const ChallengesFilter: FC<ChallengesFilterProps> = (props: ChallengesFil
                 />
             </div>
 
-            <div className={styles.filterField}>
+            <div className={`${styles.filterField} ${styles.typeField}`}>
                 <label htmlFor='work-challenges-type'>Type</label>
                 <Select
                     inputId='work-challenges-type'
@@ -299,7 +302,7 @@ export const ChallengesFilter: FC<ChallengesFilterProps> = (props: ChallengesFil
                 </div>
             )}
 
-            <div className={styles.filterField}>
+            <div className={`${styles.filterField} ${styles.startDateFromField}`}>
                 <InputDatePicker
                     label='Start date from'
                     date={toDate(filters.startDateStart)}
@@ -311,7 +314,7 @@ export const ChallengesFilter: FC<ChallengesFilterProps> = (props: ChallengesFil
                 />
             </div>
 
-            <div className={styles.filterField}>
+            <div className={`${styles.filterField} ${styles.startDateToField}`}>
                 <InputDatePicker
                     label='Start date to'
                     date={toDate(filters.startDateEnd)}
@@ -323,7 +326,7 @@ export const ChallengesFilter: FC<ChallengesFilterProps> = (props: ChallengesFil
                 />
             </div>
 
-            <div className={styles.filterField}>
+            <div className={`${styles.filterField} ${styles.endDateFromField}`}>
                 <InputDatePicker
                     label='End date from'
                     date={toDate(filters.endDateStart)}
@@ -335,7 +338,7 @@ export const ChallengesFilter: FC<ChallengesFilterProps> = (props: ChallengesFil
                 />
             </div>
 
-            <div className={styles.filterField}>
+            <div className={`${styles.filterField} ${styles.endDateToField}`}>
                 <InputDatePicker
                     label='End date to'
                     date={toDate(filters.endDateEnd)}
@@ -347,7 +350,7 @@ export const ChallengesFilter: FC<ChallengesFilterProps> = (props: ChallengesFil
                 />
             </div>
 
-            <div className={styles.actions}>
+            <div className={`${styles.actions} ${styles.actionsField}`}>
                 <Button
                     secondary
                     size='lg'

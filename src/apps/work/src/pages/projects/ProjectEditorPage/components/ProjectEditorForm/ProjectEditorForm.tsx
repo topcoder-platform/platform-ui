@@ -43,6 +43,7 @@ import {
     updateProject,
 } from '../../../../../lib/services'
 import {
+    formatDate,
     showErrorToast,
     showSuccessToast,
 } from '../../../../../lib/utils'
@@ -168,7 +169,11 @@ export const ProjectEditorForm: FC<ProjectEditorFormProps> = (props: ProjectEdit
 
     const billingAccountOptions = useMemo<FormSelectOption[]>(
         () => billingAccounts.map(billingAccount => ({
-            label: billingAccount.name,
+            label: `[${billingAccount.id}] - ${billingAccount.name} - ${formatDate(
+                typeof billingAccount.endDate === 'string'
+                    ? billingAccount.endDate
+                    : undefined,
+            )}`,
             value: String(billingAccount.id),
         })),
         [billingAccounts],

@@ -28,7 +28,15 @@
 }
 
 .inputWrapper {
-    margin-bottom: 0;
+    :global(.input-el) {
+        margin-bottom: 0;
+    }
+}
+
+.statusSelect {
+    :global([class*='__control']) {
+        margin-top: 0;
+    }
 }
 
 @media (max-width: 1200px) {

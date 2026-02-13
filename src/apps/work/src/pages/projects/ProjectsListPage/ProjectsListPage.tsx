@@ -42,33 +42,13 @@ const DEFAULT_FILTERS: ProjectFilters = {
     status: undefined,
 }
 
-interface ListEndObserverParams {
-    canLoadMorePages: boolean
+interface PaginationVisibilityParams {
     hasError: boolean
-    isLoading: boolean
-    isValidating: boolean
-    supportsInfiniteScroll: boolean
-    targetElement: HTMLDivElement | null
+    totalProjects: number
 }
 
-function canObserveListEnd(params: ListEndObserverParams): params is ListEndObserverParams & {
-    targetElement: HTMLDivElement
-} {
-    return params.supportsInfiniteScroll
-        && !!params.targetElement
-        && !params.isLoading
-        && !params.isValidating
-        && params.canLoadMorePages
-        && !params.hasError
-}
-
-function canRenderPagination(hasError: boolean, totalProjects: number): boolean {
-    return !hasError && totalProjects > 0
-}
-
-function supportsIntersectionObserver(): boolean {
-    return typeof window !== 'undefined'
-        && 'IntersectionObserver' in window
+function canRenderPagination(params: PaginationVisibilityParams): boolean {
+    return !params.hasError && params.totalProjects > 0
 }
 
 function useErrorToast(
@@ -87,14 +67,11 @@ function useErrorToast(
 interface RenderProjectsContentParams {
     canEditProjects: boolean
     projectsResult: UseFetchProjectsListResult
-    listEndRef: MutableRefObject<HTMLDivElement | null>
     onPageChange: (newPage: number) => void
     onPerPageChange: (newPerPage: number) => void
     onSort: (fieldName: string) => void
     page: number
     perPage: number
-    shouldShowInfiniteLoading: boolean
-    shouldShowInfiniteSentinel: boolean
     shouldShowPagination: boolean
     sortBy: string
     sortOrder: 'asc' | 'desc'
@@ -116,16 +93,6 @@ function renderProjectsContent(params: RenderProjectsContentParams): JSX.Element
                 sortOrder={params.sortOrder}
                 onSort={params.onSort}
             />
-            {params.shouldShowInfiniteSentinel
-                ? (
-                    <>
-                        <div ref={params.listEndRef} className={styles.scrollSentinel} />
-                        {params.shouldShowInfiniteLoading
-                            ? <div className={styles.loadingMore}>Loading more projects...</div>
-                            : undefined}
-                    </>
-                )
-                : undefined}
             {params.shouldShowPagination
                 ? (
                     <Pagination
@@ -154,14 +121,11 @@ export const ProjectsListPage: FC = () => {
     const [perPage, setPerPage] = useState<number>(PROJECTS_PAGE_SIZE)
     const [sortBy, setSortBy] = useState<string>('lastActivityAt')
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
-    const listEndRef = useRef<HTMLDivElement | null>(null)
 
-    const supportsInfiniteScroll = supportsIntersectionObserver()
     const canCreateProject = isAdmin || isCopilot
     const canEditProjects = isAdmin || isCopilot
 
     const fetchParams: UseFetchProjectsListParams = {
-        appendResults: supportsInfiniteScroll,
         ...filters,
         page,
         perPage,
@@ -206,62 +170,10 @@ export const ProjectsListPage: FC = () => {
     }, [projectsResult])
 
     const totalProjects = projectsResult.metadata.total ?? 0
-    const currentPage = projectsResult.metadata.page ?? page
-    const totalPages = projectsResult.metadata.totalPages ?? 0
-    const canLoadMorePages = currentPage < totalPages
-    const shouldShowPagination = canRenderPagination(!!projectsResult.error, totalProjects)
-    const shouldShowInfiniteSentinel = supportsInfiniteScroll && shouldShowPagination
-    const shouldShowInfiniteLoading = shouldShowInfiniteSentinel
-        && projectsResult.isValidating
-        && projectsResult.projects.length > 0
-
-    useEffect(() => {
-        const listEndElement = listEndRef.current
-        const observerParams: ListEndObserverParams = {
-            canLoadMorePages,
-            hasError: !!projectsResult.error,
-            isLoading: projectsResult.isLoading,
-            isValidating: projectsResult.isValidating,
-            supportsInfiniteScroll,
-            targetElement: listEndElement,
-        }
-
-        if (!canObserveListEnd(observerParams)) {
-            return undefined
-        }
-
-        const observer = new IntersectionObserver(
-            entries => {
-                const [entry] = entries
-
-                if (!entry?.isIntersecting) {
-                    return
-                }
-
-                setPage(current => (
-                    current < totalPages
-                        ? current + 1
-                        : current
-                ))
-            },
-            {
-                rootMargin: '200px 0px',
-            },
-        )
-
-        observer.observe(observerParams.targetElement)
-
-        return () => {
-            observer.disconnect()
-        }
-    }, [
-        canLoadMorePages,
-        projectsResult.error,
-        projectsResult.isLoading,
-        projectsResult.isValidating,
-        supportsInfiniteScroll,
-        totalPages,
-    ])
+    const shouldShowPagination = canRenderPagination({
+        hasError: !!projectsResult.error,
+        totalProjects,
+    })
 
     return (
         <PageWrapper
@@ -305,15 +217,12 @@ export const ProjectsListPage: FC = () => {
 
             {renderProjectsContent({
                 canEditProjects,
-                listEndRef,
                 onPageChange: handlePageChange,
                 onPerPageChange: handlePerPageChange,
                 onSort: handleSort,
                 page,
                 perPage,
                 projectsResult,
-                shouldShowInfiniteLoading,
-                shouldShowInfiniteSentinel,
                 shouldShowPagination,
                 sortBy,
                 sortOrder,

@@ -133,6 +133,8 @@ export const ProjectsFilter: FC<ProjectsFilterProps> = (props: ProjectsFilterPro
 
             <div className={styles.filterField}>
                 <InputSelectReact
+                    className={styles.statusSelect}
+                    classNameWrapper={styles.inputWrapper}
                     name='project-status'
                     label='Project status'
                     value={selectedStatus}

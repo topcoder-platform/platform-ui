@@ -1,5 +1,4 @@
 import {
-    ChangeEvent,
     FC,
     useCallback,
     useEffect,
@@ -15,7 +14,6 @@ import {
 } from '~/libs/ui'
 
 import {
-    FormFieldWrapper,
     StartDateTimeInput,
 } from '../../../../../lib/components/form'
 import { PHASE_STATUS } from '../../../../../lib/constants'
@@ -37,6 +35,7 @@ import styles from './ChallengeScheduleSection.module.scss'
 
 interface ChallengeScheduleSectionProps {
     disabled?: boolean
+    showSchedulingApiToggle?: boolean
 }
 
 interface RecalculatePhasesResult {
@@ -72,22 +71,6 @@ function normalizeDuration(duration: unknown): number {
         PHASE_DURATION_MIN_MINUTES,
         Math.min(maxDuration, Math.trunc(parsedDuration)),
     )
-}
-
-function parsePositiveInteger(value: string): number | undefined {
-    if (!value.trim()) {
-        return undefined
-    }
-
-    const parsedValue = Number(value)
-    if (!Number.isFinite(parsedValue)) {
-        return undefined
-    }
-
-    const normalizedValue = Math.trunc(parsedValue)
-    return normalizedValue > 0
-        ? normalizedValue
-        : undefined
 }
 
 function recalculatePhases(
@@ -162,17 +145,15 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
     const useSchedulingApi = formContext.watch('legacy.useSchedulingAPI') as boolean | undefined
     const timelineTemplateId = formContext.watch('timelineTemplateId') as string | undefined
     const startDate = formContext.watch('startDate') as Date | string | undefined
-    const milestoneEnabled = formContext.watch('milestoneConfiguration.enabled') as boolean | undefined
-    const milestoneCount = formContext.watch('milestoneConfiguration.milestoneCount') as number | undefined
-    const milestoneDurationDays = formContext.watch(
-        'milestoneConfiguration.milestoneDurationDays',
-    ) as number | undefined
     const watchedPhases = formContext.watch('phases') as ChallengePhase[] | undefined
+    const showSchedulingApiToggle = props.showSchedulingApiToggle !== false
     const phases = useMemo<ChallengePhase[]>(
         () => watchedPhases || [],
         [watchedPhases],
     )
-    const isSchedulingApiEnabled = useSchedulingApi !== false
+    const isSchedulingApiEnabled = showSchedulingApiToggle
+        ? useSchedulingApi !== false
+        : true
     const isSectionDisabled = !!props.disabled
 
     const [isGanttView, setIsGanttView] = useState<boolean>(false)
@@ -224,6 +205,21 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
         },
         [setValue, startDate],
     )
+
+    useEffect(() => {
+        if (showSchedulingApiToggle || useSchedulingApi === true) {
+            return
+        }
+
+        setValue('legacy.useSchedulingAPI', true, {
+            shouldDirty: true,
+            shouldValidate: true,
+        })
+    }, [
+        setValue,
+        showSchedulingApiToggle,
+        useSchedulingApi,
+    ])
 
     useEffect(() => {
         if (initializedRef.current) {
@@ -287,17 +283,6 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
         timelineTemplateId,
     ])
 
-    useEffect(() => {
-        if (isSchedulingApiEnabled || !milestoneEnabled) {
-            return
-        }
-
-        setValue('milestoneConfiguration.enabled', false, {
-            shouldDirty: false,
-            shouldValidate: true,
-        })
-    }, [isSchedulingApiEnabled, milestoneEnabled, setValue])
-
     const handleSchedulingToggle = useCallback((): void => {
         const nextValue = !isSchedulingApiEnabled
 
@@ -308,50 +293,6 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
 
         setPhaseMessage(undefined)
     }, [isSchedulingApiEnabled, setValue])
-
-    const handleMilestoneToggle = useCallback((): void => {
-        const nextEnabled = !milestoneEnabled
-
-        setValue('milestoneConfiguration.enabled', nextEnabled, {
-            shouldDirty: true,
-            shouldValidate: true,
-        })
-
-        if (!nextEnabled) {
-            setValue('milestoneConfiguration.milestoneCount', undefined, {
-                shouldDirty: true,
-                shouldValidate: true,
-            })
-            setValue('milestoneConfiguration.milestoneDurationDays', undefined, {
-                shouldDirty: true,
-                shouldValidate: true,
-            })
-        }
-    }, [milestoneEnabled, setValue])
-
-    const handleMilestoneCountChange = useCallback(
-        (event: ChangeEvent<HTMLInputElement>): void => {
-            const parsedValue = parsePositiveInteger(event.target.value)
-
-            setValue('milestoneConfiguration.milestoneCount', parsedValue, {
-                shouldDirty: true,
-                shouldValidate: true,
-            })
-        },
-        [setValue],
-    )
-
-    const handleMilestoneDurationChange = useCallback(
-        (event: ChangeEvent<HTMLInputElement>): void => {
-            const parsedValue = parsePositiveInteger(event.target.value)
-
-            setValue('milestoneConfiguration.milestoneDurationDays', parsedValue, {
-                shouldDirty: true,
-                shouldValidate: true,
-            })
-        },
-        [setValue],
-    )
 
     const handleStartDateChange = useCallback(
         (date: Date | null): void => {
@@ -477,69 +418,26 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
 
     return (
         <section className={styles.container}>
-            <div className={styles.configPanel}>
-                <div className={styles.checkboxRow}>
-                    <InputCheckbox
-                        checked={isSchedulingApiEnabled}
-                        disabled={isSectionDisabled}
-                        label='Enable Scheduling API'
-                        name='legacy.useSchedulingAPI'
-                        onChange={handleCheckboxChange}
-                        onClick={handleSchedulingToggle}
-                    />
-                </div>
+            {showSchedulingApiToggle
+                ? (
+                    <div className={styles.configPanel}>
+                        <div className={styles.checkboxRow}>
+                            <InputCheckbox
+                                checked={isSchedulingApiEnabled}
+                                disabled={isSectionDisabled}
+                                label='Enable Scheduling API'
+                                name='legacy.useSchedulingAPI'
+                                onChange={handleCheckboxChange}
+                                onClick={handleSchedulingToggle}
+                            />
+                        </div>
 
-                <p className={styles.hintText}>
-                    Turn this off to skip scheduling fields and phase submission.
-                </p>
-            </div>
-
-            <div className={styles.configPanel}>
-                <div className={styles.checkboxRow}>
-                    <InputCheckbox
-                        checked={!!milestoneEnabled}
-                        disabled={isSectionDisabled || !isSchedulingApiEnabled}
-                        label='Enable Milestone Configuration'
-                        name='milestoneConfiguration.enabled'
-                        onChange={handleCheckboxChange}
-                        onClick={handleMilestoneToggle}
-                    />
-                </div>
-
-                <div className={styles.grid}>
-                    <FormFieldWrapper
-                        label='Milestone Count'
-                        name='milestoneConfiguration.milestoneCount'
-                        required={!!milestoneEnabled}
-                    >
-                        <input
-                            className={styles.numberInput}
-                            disabled={isSectionDisabled || !isSchedulingApiEnabled || !milestoneEnabled}
-                            id='milestoneConfiguration.milestoneCount'
-                            min={1}
-                            onChange={handleMilestoneCountChange}
-                            type='number'
-                            value={milestoneCount ?? ''}
-                        />
-                    </FormFieldWrapper>
-
-                    <FormFieldWrapper
-                        label='Milestone Duration (days)'
-                        name='milestoneConfiguration.milestoneDurationDays'
-                        required={!!milestoneEnabled}
-                    >
-                        <input
-                            className={styles.numberInput}
-                            disabled={isSectionDisabled || !isSchedulingApiEnabled || !milestoneEnabled}
-                            id='milestoneConfiguration.milestoneDurationDays'
-                            min={1}
-                            onChange={handleMilestoneDurationChange}
-                            type='number'
-                            value={milestoneDurationDays ?? ''}
-                        />
-                    </FormFieldWrapper>
-                </div>
-            </div>
+                        <p className={styles.hintText}>
+                            Turn this off to skip scheduling fields and phase submission.
+                        </p>
+                    </div>
+                )
+                : undefined}
 
             {isSchedulingApiEnabled
                 ? (

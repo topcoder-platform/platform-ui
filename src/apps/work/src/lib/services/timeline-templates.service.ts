@@ -1,4 +1,5 @@
 import { xhrGetPaginatedAsync } from '~/libs/core'
+import { EnvironmentConfig } from '~/config'
 
 import {
     PhaseDefinition,
@@ -6,8 +7,8 @@ import {
     TimelineTemplatePhase,
 } from '../models'
 
-const TIMELINE_TEMPLATES_URL = '/v6/timeline-templates?page=1&perPage=100'
-const CHALLENGE_PHASES_URL = '/v5/challenge-phases?page=1&perPage=100'
+const TIMELINE_TEMPLATES_URL = `${EnvironmentConfig.API.V6}/timeline-templates?page=1&perPage=100`
+const CHALLENGE_PHASES_URL = `${EnvironmentConfig.API.V6}/challenge-phases?page=1&perPage=100`
 
 function normalizeError(error: unknown, fallbackMessage: string): Error {
     const typedError = error as {

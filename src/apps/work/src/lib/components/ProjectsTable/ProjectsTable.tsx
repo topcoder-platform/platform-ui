@@ -17,13 +17,57 @@ import {
     Project,
     ProjectStatusValue,
 } from '../../models'
-import { formatDateTime } from '../../utils'
 import { ProjectCard } from '../ProjectCard'
 import { ProjectStatus } from '../ProjectStatus'
 
 import styles from './ProjectsTable.module.scss'
 
 type SortOrder = 'asc' | 'desc'
+
+const PROJECT_TYPE_LABEL_OVERRIDES: Readonly<Record<string, string>> = {
+    'analytics-and-data-science': 'Analytics & Data Science',
+    app_dev: 'App Development',
+}
+
+const PROJECT_TYPE_WORD_OVERRIDES: Readonly<Record<string, string>> = {
+    ai: 'AI',
+    api: 'API',
+    qa: 'QA',
+    ui: 'UI',
+    ux: 'UX',
+}
+
+function formatProjectTypeLabel(projectType?: string): string {
+    const normalizedType = projectType?.trim()
+
+    if (!normalizedType) {
+        return '-'
+    }
+
+    const typeOverride = PROJECT_TYPE_LABEL_OVERRIDES[normalizedType.toLowerCase()]
+
+    if (typeOverride) {
+        return typeOverride
+    }
+
+    return normalizedType
+        .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+        .replace(/[_-]+/g, ' ')
+        .split(/\s+/)
+        .filter(Boolean)
+        .map(word => {
+            const lowerWord = word.toLowerCase()
+
+            if (PROJECT_TYPE_WORD_OVERRIDES[lowerWord]) {
+                return PROJECT_TYPE_WORD_OVERRIDES[lowerWord]
+            }
+
+            const firstCharacter = lowerWord.charAt(0)
+
+            return `${firstCharacter.toUpperCase()}${lowerWord.slice(1)}`
+        })
+        .join(' ')
+}
 
 interface ProjectsTableProps {
     canEditProjects?: boolean
@@ -78,19 +122,7 @@ export const ProjectsTable: FC<ProjectsTableProps> = (props: ProjectsTableProps)
             {
                 label: 'Type',
                 propertyName: 'type',
-                renderer: (project: Project) => <>{project.type || '-'}</>,
-                type: 'element',
-            },
-            {
-                label: 'Last Activity',
-                propertyName: 'lastActivityAt',
-                renderer: (project: Project) => (
-                    <>
-                        {formatDateTime(
-                            project.lastActivityAt || project.updatedAt || project.createdAt,
-                        )}
-                    </>
-                ),
+                renderer: (project: Project) => <>{formatProjectTypeLabel(project.type)}</>,
                 type: 'element',
             },
             {

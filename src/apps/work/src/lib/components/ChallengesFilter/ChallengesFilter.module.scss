@@ -58,10 +58,60 @@
     .container {
         grid-template-columns: repeat(2, minmax(180px, 1fr));
     }
+
+    .projectMode {
+        grid-template-areas:
+            'search status'
+            'type .'
+            'startDateFrom endDateFrom'
+            'startDateTo endDateTo'
+            'actions .';
+    }
+
+    .projectMode .searchField {
+        grid-area: search;
+    }
+
+    .projectMode .statusField {
+        grid-area: status;
+    }
+
+    .projectMode .typeField {
+        grid-area: type;
+    }
+
+    .projectMode .startDateFromField {
+        grid-area: startDateFrom;
+    }
+
+    .projectMode .startDateToField {
+        grid-area: startDateTo;
+    }
+
+    .projectMode .endDateFromField {
+        grid-area: endDateFrom;
+    }
+
+    .projectMode .endDateToField {
+        grid-area: endDateTo;
+    }
+
+    .projectMode .actionsField {
+        grid-area: actions;
+        justify-self: start;
+    }
 }
 
 @media (max-width: 767px) {
     .container {
         grid-template-columns: 1fr;
+    }
+
+    .projectMode {
+        grid-template-areas: none;
+    }
+
+    .projectMode > * {
+        grid-area: auto;
     }
 }

@@ -13,14 +13,11 @@ export const LOCAL_SERVICE_OVERRIDES: LocalServiceOverride[] = [
 
     { prefix: '/v6/challenge-settings', target: 'http://localhost:3000' },
     { prefix: '/v6/challenge-tracks', target: 'http://localhost:3000' },
-    { prefix: '/v6/challenge-phases', target: 'http://localhost:3000' },
     { prefix: '/v6/challenge-types', target: 'http://localhost:3000' },
     { prefix: '/v6/challenges', target: 'http://localhost:3000' },
     { prefix: '/v6/submissions', target: 'http://localhost:3005' },
-    { prefix: '/v6/timeline-templates', target: 'http://localhost:3000' },
     { prefix: '/v6/challenge-settings', target: 'http://localhost:3000' },
     { prefix: '/v6/challenge-tracks', target: 'http://localhost:3000' },
-    { prefix: '/v6/challenge-phases', target: 'http://localhost:3000' },
     { prefix: '/v6/challenge-types', target: 'http://localhost:3000' },
     { prefix: '/v6/challenges', target: 'http://localhost:3000' },
 

@@ -76,7 +76,7 @@ export const CHALLENGE_DEFAULT_REVIEWERS_URL = process.env.REACT_APP_CHALLENGE_D
 
 export const CHALLENGE_TRACKS_API_URL = process.env.REACT_APP_CHALLENGE_TRACKS_API_URL
     || process.env.CHALLENGE_TRACKS_API_URL
-    || `${EnvironmentConfig.API.V5}/challenge-tracks`
+    || `${EnvironmentConfig.API.V6}/challenge-tracks`
 
 export const REVIEW_TYPE_API_URL = process.env.REACT_APP_REVIEW_TYPE_API_URL
     || process.env.REVIEW_TYPE_API_URL

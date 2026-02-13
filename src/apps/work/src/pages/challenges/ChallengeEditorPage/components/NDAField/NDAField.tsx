@@ -29,10 +29,15 @@ const ndaOptions: FormRadioOption<boolean>[] = [
 
 export const NDAField: FC = () => {
     const formContext = useFormContext<ChallengeEditorFormData>()
+    const dynamicFormControl = formContext.control as any
     const terms = useWatch({
-        control: formContext.control,
+        control: dynamicFormControl,
         name: 'terms',
     }) as string[] | undefined
+    const ndaRequired = useWatch({
+        control: dynamicFormControl,
+        name: 'ndaRequired',
+    }) as boolean | undefined
 
     const normalizedTerms = useMemo(
         () => (Array.isArray(terms)
@@ -43,11 +48,13 @@ export const NDAField: FC = () => {
     const hasNdaTerm = normalizedTerms.includes(DEFAULT_NDA_UUID)
 
     useEffect(() => {
-        formContext.setValue('ndaRequired' as never, hasNdaTerm as never, {
-            shouldDirty: false,
-            shouldValidate: false,
-        })
-    }, [formContext, hasNdaTerm])
+        if (ndaRequired === undefined || ndaRequired !== hasNdaTerm) {
+            formContext.setValue('ndaRequired' as never, hasNdaTerm as never, {
+                shouldDirty: false,
+                shouldValidate: false,
+            })
+        }
+    }, [formContext, hasNdaTerm, ndaRequired])
 
     const handleNdaChange = useCallback(
         (value: boolean | string): void => {
