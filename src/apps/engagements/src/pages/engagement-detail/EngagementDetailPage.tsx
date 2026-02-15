@@ -6,7 +6,7 @@ import remarkFrontmatter from 'remark-frontmatter'
 import remarkGfm from 'remark-gfm'
 
 import { EnvironmentConfig } from '~/config'
-import { authUrlLogin, useProfileContext } from '~/libs/core'
+import { authUrlLogin, useProfileCompleteness, useProfileContext } from '~/libs/core'
 import { BaseModal, Button, ContentLayout, IconOutline, IconSolid, LoadingSpinner } from '~/libs/ui'
 
 import type { Application, Engagement, TermDetails } from '../../lib/models'
@@ -496,6 +496,8 @@ const EngagementDetailPage: FC = () => {
     const isProfileReady = profileContext.initialized
     const isLoggedIn = profileContext.isLoggedIn
     const userId = profileContext.profile?.userId
+    const profileHandle = profileContext.profile?.handle
+    const profileCompleteness = useProfileCompleteness(profileHandle)
 
     const [engagement, setEngagement] = useState<Engagement | undefined>(undefined)
     const [loading, setLoading] = useState<boolean>(true)
@@ -528,6 +530,8 @@ const EngagementDetailPage: FC = () => {
         normalizedUserEmail,
         normalizedUserId,
     })
+    const [profileGateError, setProfileGateError] = useState<string | undefined>()
+
     const isPrivateEngagement = Boolean(engagement?.isPrivate)
 
     const fetchEngagement = useCallback(async (): Promise<void> => {
@@ -652,8 +656,25 @@ const EngagementDetailPage: FC = () => {
     }, [fetchPendingTerm, navigateToApply])
 
     const handleApplyClick = useCallback(() => {
+        setProfileGateError(undefined)
+
+        if (profileCompleteness?.isLoading) {
+            return
+        }
+
+        if (
+            profileCompleteness
+    && typeof profileCompleteness.percent === 'number'
+    && profileCompleteness.percent < 100
+        ) {
+            setProfileGateError(
+                'Your profile must be 100% complete before applying.',
+            )
+            return
+        }
+
         openNextPendingTerm()
-    }, [openNextPendingTerm])
+    }, [openNextPendingTerm, profileCompleteness])
 
     const handleBackClick = useCallback(() => navigate(rootRoute || '/'), [navigate])
 
@@ -931,6 +952,22 @@ const EngagementDetailPage: FC = () => {
         const termsGate = renderTermsGate()
         if (termsGate) {
             return termsGate
+        }
+
+        if (profileGateError) {
+            return (
+                <div className={styles.applyMessage}>
+                    <span className={styles.termsError}>
+                        {profileGateError}
+                    </span>
+                    <a
+                        className={styles.signInLink}
+                        href={`${EnvironmentConfig.URLS.USER_PROFILE}/${profileHandle}`}
+                    >
+                        Please update your profile here.
+                    </a>
+                </div>
+            )
         }
 
         return (

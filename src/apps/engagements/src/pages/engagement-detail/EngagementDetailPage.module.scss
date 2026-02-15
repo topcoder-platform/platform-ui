@@ -483,3 +483,25 @@
     color: $red-120;
     font-size: 0.9rem;
 }
+
+.applyMessage {
+  display: flex;
+  flex-direction: column;
+  gap: $sp-3;
+  padding: $sp-4;
+  border-radius: 8px;
+}
+
+.signInLink {
+  display: inline-block;
+  width: fit-content;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--tc-primary);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
