@@ -80,7 +80,6 @@
 }
 
 .userItem {
-    width: 100%;
     border-radius: 8px;
     padding: 8px 10px;
     font-weight: 700;
@@ -129,16 +128,16 @@
 
 @media (max-width: 768px) {
     .teamCalendar {
-        padding: 12px;
+        padding: 5px;
     }
 
     .grid {
-        gap: 8px;
+        gap: 6px;
     }
 
     .cell {
-        min-height: 96px;
-        padding: 10px;
+        min-height: 60px;
+        padding: 6px;
     }
 
     .userItem {
@@ -148,4 +147,89 @@
     .dateNumber {
         font-size: 15px;
     }
+
+    .cellButton {
+        cursor: pointer;
+    }
+}
+
+.cellButton {
+  all: unset;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  gap: 8px;
+  cursor: default;
+}
+
+
+.countBadge {
+  align-self: center;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 4px 6px;
+  border-radius: 999px;
+  background: #acaeb3;
+  color: #ffffff;
+  line-height: 1;
+}
+
+.modalRoot {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(17, 24, 39, 0.35);
+}
+
+.popover {
+  position: relative;
+  z-index: 1;
+
+  width: calc(100vw - 32px);
+  max-width: 420px;
+  max-height: 70vh;
+  overflow-y: auto;
+
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.22);
+}
+
+.popoverHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.popoverTitle {
+  font-weight: 800;
+  color: #111827;
+}
+
+.closeBtn {
+  all: unset;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  padding: 6px 8px;
+  border-radius: 8px;
+}
+
+.popoverBody {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
