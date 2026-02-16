@@ -29,14 +29,23 @@ export interface ChallengeSubmissionsViewer {
     userId?: string | number | null
 }
 
+export interface ChallengeVisibilityFlags {
+    isDesign: boolean
+    isCompleted: boolean
+    submissionsViewable: boolean
+}
+
 /**
  * Fetch challenge submissions
  * @param challengeId challenge id
+ * @param viewer viewer roles and userId for filtering
+ * @param challengeVisibility when set and Design + completed + submissionsViewable, submitters see all submissions
  * @returns challenge submissions
  */
 export function useFetchChallengeSubmissions(
     challengeId?: string,
     viewer?: ChallengeSubmissionsViewer,
+    challengeVisibility?: ChallengeVisibilityFlags,
 ): useFetchChallengeSubmissionsProps {
     // Use swr hooks for submissions fetching
     const {
@@ -140,6 +149,20 @@ export function useFetchChallengeSubmissions(
         [viewer?.userId],
     )
 
+    const allowViewAllSubmissionsForDesign = useMemo<boolean>(
+        () => Boolean(
+            challengeVisibility
+            && challengeVisibility.isDesign
+            && challengeVisibility.isCompleted
+            && challengeVisibility.submissionsViewable,
+        ),
+        [
+            challengeVisibility?.isDesign,
+            challengeVisibility?.isCompleted,
+            challengeVisibility?.submissionsViewable,
+        ],
+    )
+
     // Show backend error when fetching data fail
     useEffect(() => {
         if (error) {
@@ -165,7 +188,8 @@ export function useFetchChallengeSubmissions(
         const activeSubmissions: BackendSubmission[] = []
         const shouldRestrictToCurrentMember = Boolean(
             hasSubmitterRole
-            && !canViewAllSubmissions,
+            && !canViewAllSubmissions
+            && !allowViewAllSubmissionsForDesign,
         )
 
         const normalizeStatus = (status: unknown): string => {
@@ -219,6 +243,7 @@ export function useFetchChallengeSubmissions(
         canViewAllSubmissions,
         hasSubmitterRole,
         viewerMemberId,
+        allowViewAllSubmissionsForDesign,
     ])
 
     return {
