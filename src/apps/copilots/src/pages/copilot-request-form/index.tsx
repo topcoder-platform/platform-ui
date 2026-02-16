@@ -1,5 +1,5 @@
 import { FC, useContext, useEffect, useMemo, useState } from 'react'
-import { bind, debounce, isEmpty } from 'lodash'
+import { bind, debounce, isEmpty, pick } from 'lodash'
 import { toast } from 'react-toastify'
 import { Params, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import classNames from 'classnames'
@@ -230,7 +230,9 @@ const CopilotRequestForm: FC<{}> = () => {
 
             // Add extracted skills to existing skills (avoid duplicates)
             const existingSkillIds = new Set((formValues.skills || []).map((s: any) => s.id))
-            const newSkills = result.matches.filter(skill => !existingSkillIds.has(skill.id))
+            const newSkills = result.matches
+                .filter(skill => !existingSkillIds.has(skill.id))
+                .map(skill => pick(skill, ['id', 'name']))
 
             if (newSkills.length === 0) {
                 toast.info('All extracted skills are already in the list.')
