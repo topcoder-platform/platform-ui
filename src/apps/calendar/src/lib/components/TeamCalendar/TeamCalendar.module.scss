@@ -187,7 +187,7 @@
 .backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(17, 24, 39, 0.35);
+  background: var(--text-secondary);
 }
 
 .popover {
@@ -202,7 +202,7 @@
   background: #fff;
   border: 1px solid #e5e7eb;
   border-radius: 16px;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.22);
+  box-shadow: 0 24px 64px $tc-black;
 }
 
 .popoverHeader {
