@@ -18,6 +18,7 @@ import {
     useFetchChallengeSubmissions,
     useFetchChallengeSubmissionsProps,
 } from '../hooks'
+import type { ChallengeVisibilityFlags } from '../hooks/useFetchChallengeSubmissions'
 
 import { ChallengeDetailContext } from './ChallengeDetailContext'
 import { ReviewAppContext } from './ReviewAppContext'
@@ -51,12 +52,43 @@ export const ChallengeDetailContextProvider: FC<PropsWithChildren> = props => {
         }),
         [loginUserInfo?.roles, loginUserInfo?.userId, myRoles],
     )
+    const challengeVisibility = useMemo<ChallengeVisibilityFlags | undefined>(
+        () => {
+            if (!challengeInfo) {
+                return undefined
+            }
+
+            const trackName = (challengeInfo.track?.name ?? '')
+                .toString()
+                .toLowerCase()
+            const status = (challengeInfo.status ?? '')
+                .toString()
+                .toLowerCase()
+            const isDesign = trackName === 'design'
+            const isCompleted = status === 'completed'
+            const submissionsViewable = Boolean(
+                challengeInfo.metadata?.some(
+                    m => m.name === 'submissionsViewable'
+                        && String(m.value)
+                            .toLowerCase() === 'true',
+                ),
+            )
+
+            return { isCompleted, isDesign, submissionsViewable }
+        },
+        [
+            challengeInfo?.track?.name,
+            challengeInfo?.status,
+            challengeInfo?.metadata,
+        ],
+    )
     const {
         challengeSubmissions,
         isLoading: isLoadingChallengeSubmissions,
     }: useFetchChallengeSubmissionsProps = useFetchChallengeSubmissions(
         challengeId,
         submissionViewer,
+        challengeVisibility,
     )
 
     const submissionInfos = useMemo<SubmissionInfo[]>(
