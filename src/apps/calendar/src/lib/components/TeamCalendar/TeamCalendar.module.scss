@@ -233,3 +233,18 @@
   flex-direction: column;
   gap: 8px;
 }
+
+.moreButton {
+  all: unset;
+  cursor: pointer;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 700;
+  display: inline-block;
+  padding: 2px 0;
+}
+
+.moreButton:hover {
+  text-decoration: underline;
+  cursor: pointer;
+}

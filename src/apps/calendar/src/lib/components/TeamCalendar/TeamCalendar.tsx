@@ -81,6 +81,13 @@ export const TeamCalendar: FC<TeamCalendarProps> = (props: TeamCalendarProps) =>
         [isMobile],
     )
 
+    const handleMoreClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+        if (isMobile) return // hover only matters on desktop
+        const dateKey = e.currentTarget.dataset.dateKey
+        if (!dateKey) return
+        setOpenDateKey(dateKey)
+    }, [isMobile])
+
     const monthDates = useMemo(
         () => getMonthDates(currentDate.getFullYear(), currentDate.getMonth()),
         [currentDate],
@@ -132,7 +139,7 @@ export const TeamCalendar: FC<TeamCalendarProps> = (props: TeamCalendarProps) =>
                     const leaveEntry = teamLeaveDates.find(item => item.date === dateKey)
                     const users = leaveEntry?.usersOnLeave ?? []
                     const sortedUsers = [...users].sort(compareUsersByName)
-                    const displayedUsers = sortedUsers.slice(0, 10)
+                    const displayedUsers = sortedUsers.slice(0, 2)
                     const overflowCount = sortedUsers.length - displayedUsers.length
                     const weekendClass = isWeekend(date) ? styles.weekend : undefined
 
@@ -191,7 +198,16 @@ export const TeamCalendar: FC<TeamCalendarProps> = (props: TeamCalendarProps) =>
                                         })}
                                         {overflowCount > 0 && (
                                             <div className={styles.overflowIndicator}>
-                                                {`+${overflowCount} more`}
+                                                <button
+                                                    type='button'
+                                                    className={styles.moreButton}
+                                                    data-date-key={dateKey}
+                                                    onClick={handleMoreClick}
+                                                    aria-haspopup='dialog'
+                                                    aria-label={`Show ${overflowCount} more for ${dateKey}`}
+                                                >
+                                                    {`+${overflowCount} more`}
+                                                </button>
                                             </div>
                                         )}
                                     </div>
@@ -202,7 +218,7 @@ export const TeamCalendar: FC<TeamCalendarProps> = (props: TeamCalendarProps) =>
                 })}
             </div>
 
-            {isMobile && openDateKey && (() => {
+            {openDateKey && (() => {
                 const selectedDate = paddedDates.find(d => d && getDateKey(d) === openDateKey)
                 if (!selectedDate) return undefined
 
