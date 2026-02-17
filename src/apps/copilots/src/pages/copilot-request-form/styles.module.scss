@@ -10,17 +10,17 @@ $gradient: linear-gradient(
     display: flex;
     justify-content: center;
     align-items: center;
-    background: $gradient; 
+    background: $gradient;
     padding: 20px;
 }
 
 .form {
-    background: white;  
-    padding: 30px;  
-    border-radius: 10px;  
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);  
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     width: 100%;
-    max-width: 1000px;  
+    max-width: 1000px;
     box-sizing: border-box;
 
     .heading {
@@ -73,16 +73,104 @@ $gradient: linear-gradient(
 
     .skillsWrapper {
         border: 1px solid #aaaaaa;
-        border-radius: 0.375rem;  
+        border-radius: 0.375rem;
+        transition: opacity 0.2s ease, border-color 0.2s ease;
+
+        &.disabled {
+            opacity: 0.6;
+            pointer-events: none;
+            background-color: #f5f5f5;
+        }
     }
 
     .skillsWrapper:hover {
-            border-color: #137D60;
+        border-color: #137D60;
+    }
+
+    .skillsWrapper.disabled:hover {
+        border-color: #aaaaaa;
     }
 
     .skillsError {
         border: 2px solid $red-100;
-        border-radius: 0.375rem; 
+        border-radius: 0.375rem;
+    }
+
+    .skillsSection {
+        margin-top: 2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .skillsHeader {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 0.5rem;
+        flex-wrap: wrap;
+
+        @media (max-width: 768px) {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+
+    .formRowNoMargin {
+        margin: 0;
+    }
+
+    .aiButton {
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+
+        svg {
+            @include icon-sm;
+        }
+
+        &:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    }
+
+    .helperText {
+        font-size: 0.875rem;
+        color: #666;
+        margin: 0 0 0.5rem 0;
+        font-style: italic;
+    }
+
+    .loadingText {
+        font-size: 0.875rem;
+        color: #137D60;
+        margin: 0.5rem 0;
+        font-weight: 500;
+        animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0.6;
+        }
+    }
+
+    .warning {
+        font-size: 11px;
+        display: flex;
+        align-items: center;
+        color: #ff9800;
+        margin-top: 0.5rem;
+
+        svg {
+            @include icon-md;
+            fill: #ff9800;
+            margin-right: $sp-1;
+        }
     }
 
     .error {
