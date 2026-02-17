@@ -16,6 +16,8 @@ interface OpenToWorkFormProps {
     value: OpenToWorkData
     onChange: (value: OpenToWorkData) => void
     disabled?: boolean
+    formErrors?: { [key: string]: string }
+    showErrors?: boolean
 }
 
 export const availabilityOptions = [
@@ -37,6 +39,22 @@ export const preferredRoleOptions: InputMultiselectOption[] = [
     { label: 'AI Prompt Engineer', value: 'AI_PROMPT_ENGINEER' },
     { label: 'Enterprise Architect', value: 'ENTERPRISE_ARCHITECT' },
 ]
+
+export const validateOpenToWork = (value: OpenToWorkData): { [key: string]: string } => {
+    if (!value.availableForGigs) return {}
+
+    const errors: { [key: string]: string } = {}
+
+    if (!value.availability) {
+        errors.availability = 'Availability is required.'
+    }
+
+    if (!value.preferredRoles || value.preferredRoles.length === 0) {
+        errors.preferredRoles = 'Select at least one preferred role.'
+    }
+
+    return errors
+}
 
 const OpenToWorkForm: FC<OpenToWorkFormProps> = (props: OpenToWorkFormProps) => {
     function toggleOpenForWork(): void {
@@ -98,7 +116,8 @@ const OpenToWorkForm: FC<OpenToWorkFormProps> = (props: OpenToWorkFormProps) => 
                         onChange={handleAvailabilityChange}
                         disabled={props.disabled}
                         preventAutoFocus
-                        dirty
+                        dirty={props.showErrors}
+                        error={props.showErrors ? props.formErrors?.availability : undefined}
                     />
 
                     <InputMultiselect
@@ -114,6 +133,8 @@ const OpenToWorkForm: FC<OpenToWorkFormProps> = (props: OpenToWorkFormProps) => 
                         )}
                         onChange={handleRolesChange}
                         disabled={props.disabled}
+                        dirty={props.showErrors}
+                        error={props.showErrors ? props.formErrors?.preferredRoles : undefined}
                     />
                 </>
             )}

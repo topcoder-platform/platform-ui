@@ -13,7 +13,8 @@ import { OpenToWorkData } from '~/libs/shared/lib/components/modify-open-to-work
 import {
     updateMemberProfile,
 } from '~/libs/core/lib/profile/profile-functions/profile-store/profile-xhr.store'
-import OpenToWorkForm from '~/libs/shared/lib/components/modify-open-to-work-modal/ModifyOpenToWorkModal'
+import OpenToWorkForm,
+{ validateOpenToWork } from '~/libs/shared/lib/components/modify-open-to-work-modal/ModifyOpenToWorkModal'
 
 import styles from './OpenForGigsModifyModal.module.scss'
 
@@ -37,6 +38,14 @@ const OpenForGigsModifyModal: FC<OpenForGigsModifyModalProps> = (props: OpenForG
         preferredRoles: [],
     })
 
+    const [submitAttempted, setSubmitAttempted] = useState(false)
+
+    const [formErrors, setFormErrors]: [
+        { [key: string]: string },
+        Dispatch<SetStateAction<{ [key: string]: string }>>
+    ]
+        = useState<{ [key: string]: string }>({})
+
     useEffect(() => {
         if (!memberPersonalizationTraits) return
 
@@ -55,7 +64,25 @@ const OpenForGigsModifyModal: FC<OpenForGigsModifyModalProps> = (props: OpenForG
         props.profile.availableForGigs,
     ])
 
+    function handleFormChange(nextValue: OpenToWorkData): void {
+        setFormValue(nextValue)
+
+        if (submitAttempted) {
+            setFormErrors(validateOpenToWork(nextValue))
+        }
+    }
+
     function handleOpenForWorkSave(): void {
+        setSubmitAttempted(true)
+
+        const errors = validateOpenToWork(formValue)
+        setFormErrors(errors)
+
+        if (Object.keys(errors).length > 0) {
+            // Don't submit
+            return
+        }
+
         setIsSaving(true)
 
         const existing = memberPersonalizationTraits?.[0]?.traits?.data?.[0] || {}
@@ -93,6 +120,14 @@ const OpenForGigsModifyModal: FC<OpenForGigsModifyModalProps> = (props: OpenForG
             })
     }
 
+    // reset error when open to work toggle off
+    useEffect(() => {
+        if (!formValue.availableForGigs) {
+            setFormErrors({})
+            setSubmitAttempted(false)
+        }
+    }, [formValue.availableForGigs])
+
     return (
         <BaseModal
             onClose={props.onClose}
@@ -123,8 +158,10 @@ const OpenForGigsModifyModal: FC<OpenForGigsModifyModalProps> = (props: OpenForG
 
             <OpenToWorkForm
                 value={formValue}
-                onChange={setFormValue}
+                onChange={handleFormChange}
                 disabled={isSaving}
+                formErrors={formErrors}
+                showErrors={submitAttempted}
             />
         </BaseModal>
     )
