@@ -189,9 +189,9 @@ export const challengeBasicInfoSchema: yup.ObjectSchema<ChallengeBasicInfoFormDa
     .object({
         billing: yup.object({
             billingAccountId: yup.mixed<number | string>()
-                .required('Billing account is required'),
+                .optional(),
         })
-            .required('Billing account is required'),
+            .optional(),
         challengeFee: yup.number()
             .optional(),
         description: yup

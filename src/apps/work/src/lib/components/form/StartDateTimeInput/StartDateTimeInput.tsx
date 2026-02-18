@@ -12,6 +12,7 @@ export interface StartDateTimeInputProps {
     onChange: (value: Date | null) => void
     disabled?: boolean
     minDate?: Date | null
+    showTimezone?: boolean
 }
 
 function toDate(value?: Date | string | null): Date | undefined {
@@ -54,11 +55,15 @@ export const StartDateTimeInput: FC<StartDateTimeInputProps> = (
                 timeFormat='HH:mm'
             />
 
-            <p className={styles.timezoneText}>
-                Timezone:
-                {' '}
-                {timezone}
-            </p>
+            {props.showTimezone === false
+                ? undefined
+                : (
+                    <p className={styles.timezoneText}>
+                        Timezone:
+                        {' '}
+                        {timezone}
+                    </p>
+                )}
         </div>
     )
 }

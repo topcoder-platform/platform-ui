@@ -85,7 +85,7 @@ export const FormTinyMceEditor: FC<FormTinyMceEditorProps> = (props: FormTinyMce
                         height: 400,
                         menubar: false,
                         placeholder,
-                        plugins: ['table', 'link', 'textcolor', 'contextmenu'],
+                        plugins: ['table', 'link'],
                         source_view: true,
                         statusbar: false,
                         toolbar: toolbar || DEFAULT_TOOLBAR,

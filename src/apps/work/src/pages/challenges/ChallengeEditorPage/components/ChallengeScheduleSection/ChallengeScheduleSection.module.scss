@@ -15,6 +15,18 @@
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
 }
 
+.startDateField {
+    display: flex;
+    flex-direction: column;
+}
+
+.startDateTimezone {
+    color: $black-60;
+    font-size: 12px;
+    line-height: 17px;
+    margin: 0 0 8px;
+}
+
 .configPanel {
     border: 1px solid $black-10;
     border-radius: 8px;
@@ -62,11 +74,6 @@
     color: $black-80;
     font-size: 16px;
     margin: 0;
-}
-
-.timezone {
-    color: $black-60;
-    font-size: 12px;
 }
 
 .toolbar {

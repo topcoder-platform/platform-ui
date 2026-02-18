@@ -51,9 +51,6 @@ import {
     ChallengeScheduleSection,
 } from './ChallengeScheduleSection'
 import {
-    BillingAccountField,
-} from './BillingAccountField'
-import {
     ChallengeFeeField,
 } from './ChallengeFeeField'
 import {
@@ -367,10 +364,6 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 <section className={styles.section}>
                     <h3 className={styles.sectionTitle}>Prizes &amp; Billing</h3>
                     <div className={styles.grid}>
-                        <BillingAccountField
-                            name='billing.billingAccountId'
-                            required
-                        />
                         <ChallengePrizesField
                             challengeTypeAbbreviation={selectedChallengeType?.abbreviation}
                             challengeTypeName={selectedChallengeType?.name}

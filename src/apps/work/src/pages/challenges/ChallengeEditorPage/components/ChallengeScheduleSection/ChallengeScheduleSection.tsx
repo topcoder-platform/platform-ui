@@ -10,7 +10,6 @@ import { useFormContext } from 'react-hook-form'
 
 import {
     Button,
-    InputCheckbox,
 } from '~/libs/ui'
 
 import {
@@ -35,7 +34,6 @@ import styles from './ChallengeScheduleSection.module.scss'
 
 interface ChallengeScheduleSectionProps {
     disabled?: boolean
-    showSchedulingApiToggle?: boolean
 }
 
 interface RecalculatePhasesResult {
@@ -142,18 +140,16 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
     const challengePhaseResult = useFetchChallengePhases()
     const timelineTemplateResult = useFetchTimelineTemplates()
 
+    const trackId = formContext.watch('trackId') as string | undefined
     const useSchedulingApi = formContext.watch('legacy.useSchedulingAPI') as boolean | undefined
     const timelineTemplateId = formContext.watch('timelineTemplateId') as string | undefined
+    const typeId = formContext.watch('typeId') as string | undefined
     const startDate = formContext.watch('startDate') as Date | string | undefined
     const watchedPhases = formContext.watch('phases') as ChallengePhase[] | undefined
-    const showSchedulingApiToggle = props.showSchedulingApiToggle !== false
     const phases = useMemo<ChallengePhase[]>(
         () => watchedPhases || [],
         [watchedPhases],
     )
-    const isSchedulingApiEnabled = showSchedulingApiToggle
-        ? useSchedulingApi !== false
-        : true
     const isSectionDisabled = !!props.disabled
 
     const [isGanttView, setIsGanttView] = useState<boolean>(false)
@@ -166,11 +162,34 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
             .timeZone,
         [],
     )
+    const challengePhaseNamesById = useMemo(
+        () => new Map(
+            challengePhaseResult.challengePhases.map(challengePhase => [
+                challengePhase.id,
+                challengePhase.name,
+            ]),
+        ),
+        [challengePhaseResult.challengePhases],
+    )
+    const availableTimelineTemplates = useMemo(
+        () => timelineTemplateResult.timelineTemplates
+            .filter(template => template.isActive)
+            .filter(template => template.trackId === trackId && template.typeId === typeId)
+            .sort((templateA, templateB) => templateA.name.localeCompare(templateB.name)),
+        [
+            timelineTemplateResult.timelineTemplates,
+            trackId,
+            typeId,
+        ],
+    )
 
     const selectedTimelineTemplate = useMemo(
-        () => timelineTemplateResult.timelineTemplates
+        () => availableTimelineTemplates
             .find(template => template.id === timelineTemplateId),
-        [timelineTemplateId, timelineTemplateResult.timelineTemplates],
+        [
+            availableTimelineTemplates,
+            timelineTemplateId,
+        ],
     )
 
     const initializedRef = useRef<boolean>(false)
@@ -207,17 +226,16 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
     )
 
     useEffect(() => {
-        if (showSchedulingApiToggle || useSchedulingApi === true) {
+        if (useSchedulingApi === true) {
             return
         }
 
         setValue('legacy.useSchedulingAPI', true, {
-            shouldDirty: true,
+            shouldDirty: false,
             shouldValidate: true,
         })
     }, [
         setValue,
-        showSchedulingApiToggle,
         useSchedulingApi,
     ])
 
@@ -246,12 +264,52 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
     }, [phases, setValue, startDate])
 
     useEffect(() => {
-        if (!timelineTemplateId) {
-            appliedTemplateIdRef.current = undefined
+        if (!trackId || !typeId) {
             return
         }
 
-        if (!isSchedulingApiEnabled) {
+        if (timelineTemplateResult.isLoading) {
+            return
+        }
+
+        const isCurrentTemplateAvailable = !!timelineTemplateId
+            && availableTimelineTemplates.some(template => template.id === timelineTemplateId)
+
+        if (isCurrentTemplateAvailable) {
+            return
+        }
+
+        const defaultTimelineTemplate = availableTimelineTemplates
+            .find(template => template.isDefault)
+            || availableTimelineTemplates[0]
+
+        if (!defaultTimelineTemplate?.id) {
+            if (timelineTemplateId) {
+                setValue('timelineTemplateId', undefined, {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                })
+            }
+
+            return
+        }
+
+        setValue('timelineTemplateId', defaultTimelineTemplate.id, {
+            shouldDirty: true,
+            shouldValidate: true,
+        })
+    }, [
+        availableTimelineTemplates,
+        setValue,
+        timelineTemplateId,
+        timelineTemplateResult.isLoading,
+        trackId,
+        typeId,
+    ])
+
+    useEffect(() => {
+        if (!timelineTemplateId) {
+            appliedTemplateIdRef.current = undefined
             return
         }
 
@@ -264,7 +322,7 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
             .map(phase => ({
                 duration: normalizeDuration(phase.duration),
                 isOpen: false,
-                name: phase.name,
+                name: phase.name || challengePhaseNamesById.get(phase.phaseId) || phase.phaseId,
                 phaseId: phase.phaseId,
                 predecessor: phase.predecessor,
                 status: PHASE_STATUS.SCHEDULED,
@@ -278,21 +336,10 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
         setPhaseMessage('Template phases loaded.')
     }, [
         applyPhases,
-        isSchedulingApiEnabled,
+        challengePhaseNamesById,
         selectedTimelineTemplate,
         timelineTemplateId,
     ])
-
-    const handleSchedulingToggle = useCallback((): void => {
-        const nextValue = !isSchedulingApiEnabled
-
-        setValue('legacy.useSchedulingAPI', nextValue, {
-            shouldDirty: true,
-            shouldValidate: true,
-        })
-
-        setPhaseMessage(undefined)
-    }, [isSchedulingApiEnabled, setValue])
 
     const handleStartDateChange = useCallback(
         (date: Date | null): void => {
@@ -414,140 +461,107 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
         setIsGanttView(previousValue => !previousValue)
     }, [])
 
-    const handleCheckboxChange = useCallback((): void => undefined, [])
-
     return (
         <section className={styles.container}>
-            {showSchedulingApiToggle
-                ? (
-                    <div className={styles.configPanel}>
-                        <div className={styles.checkboxRow}>
-                            <InputCheckbox
-                                checked={isSchedulingApiEnabled}
-                                disabled={isSectionDisabled}
-                                label='Enable Scheduling API'
-                                name='legacy.useSchedulingAPI'
-                                onChange={handleCheckboxChange}
-                                onClick={handleSchedulingToggle}
-                            />
-                        </div>
+            <div className={styles.grid}>
+                <TimelineTemplateField
+                    disabled={isSectionDisabled}
+                    name='timelineTemplateId'
+                    required
+                />
 
-                        <p className={styles.hintText}>
-                            Turn this off to skip scheduling fields and phase submission.
-                        </p>
+                <StartDateTimeInput
+                    disabled={isSectionDisabled}
+                    label='Challenge Start Date/Time'
+                    onChange={handleStartDateChange}
+                    value={startDate}
+                />
+            </div>
+
+            <div className={styles.header}>
+                <h4 className={styles.title}>Challenge Schedule</h4>
+                <span className={styles.timezone}>
+                    Timezone:
+                    {' '}
+                    {currentTimezone}
+                </span>
+            </div>
+
+            <div className={styles.toolbar}>
+                <Button
+                    disabled={isSectionDisabled || !phases.length}
+                    label={isGanttView ? 'Switch to Editor View' : 'Switch to Gantt View'}
+                    onClick={handleToggleView}
+                    secondary
+                    size='lg'
+                />
+
+                {!isGanttView
+                    ? (
+                        <Button
+                            disabled={isSectionDisabled}
+                            label='+ Add Phase'
+                            onClick={handleAddPhase}
+                            secondary
+                            size='lg'
+                        />
+                    )
+                    : undefined}
+            </div>
+
+            {isGanttView
+                ? (
+                    <TimelineVisualization
+                        challengePhases={challengePhaseResult.challengePhases}
+                        phases={phases}
+                        startDate={startDate}
+                    />
+                )
+                : (
+                    <div className={styles.phaseList}>
+                        {phases.length
+                            ? phases.map((phase, index) => (
+                                <PhaseEditorRow
+                                    disabled={isSectionDisabled}
+                                    endDate={phase.scheduledEndDate}
+                                    index={index}
+                                    key={phase.id || phase.phaseId || `${index}`}
+                                    onDelete={handleDeletePhase}
+                                    onDurationChange={handleDurationChange}
+                                    phase={phase}
+                                />
+                            ))
+                            : <p className={styles.emptyText}>Select a template to generate phases.</p>}
+                    </div>
+                )}
+
+            {!isGanttView
+                ? (
+                    <div className={styles.phaseActions}>
+                        <Button
+                            disabled={isSectionDisabled || !phases.length}
+                            label='Save Phases'
+                            onClick={handleSavePhases}
+                            primary
+                            size='lg'
+                        />
+
+                        <Button
+                            disabled={isSectionDisabled || !savedPhasesRef.current.length}
+                            label='Reset Phases'
+                            onClick={handleResetPhases}
+                            secondary
+                            size='lg'
+                        />
                     </div>
                 )
                 : undefined}
-
-            {isSchedulingApiEnabled
-                ? (
-                    <>
-                        <div className={styles.grid}>
-                            <TimelineTemplateField
-                                disabled={isSectionDisabled}
-                                name='timelineTemplateId'
-                                required
-                            />
-
-                            <StartDateTimeInput
-                                disabled={isSectionDisabled}
-                                label='Challenge Start Date/Time'
-                                onChange={handleStartDateChange}
-                                value={startDate}
-                            />
-                        </div>
-
-                        <div className={styles.header}>
-                            <h4 className={styles.title}>Challenge Schedule</h4>
-                            <span className={styles.timezone}>
-                                Timezone:
-                                {' '}
-                                {currentTimezone}
-                            </span>
-                        </div>
-
-                        <div className={styles.toolbar}>
-                            <Button
-                                disabled={isSectionDisabled || !phases.length}
-                                label={isGanttView ? 'Switch to Editor View' : 'Switch to Gantt View'}
-                                onClick={handleToggleView}
-                                secondary
-                                size='lg'
-                            />
-
-                            {!isGanttView
-                                ? (
-                                    <Button
-                                        disabled={isSectionDisabled}
-                                        label='+ Add Phase'
-                                        onClick={handleAddPhase}
-                                        secondary
-                                        size='lg'
-                                    />
-                                )
-                                : undefined}
-                        </div>
-
-                        {isGanttView
-                            ? (
-                                <TimelineVisualization
-                                    challengePhases={challengePhaseResult.challengePhases}
-                                    phases={phases}
-                                    startDate={startDate}
-                                />
-                            )
-                            : (
-                                <div className={styles.phaseList}>
-                                    {phases.length
-                                        ? phases.map((phase, index) => (
-                                            <PhaseEditorRow
-                                                disabled={isSectionDisabled}
-                                                endDate={phase.scheduledEndDate}
-                                                index={index}
-                                                key={phase.id || phase.phaseId || `${index}`}
-                                                onDelete={handleDeletePhase}
-                                                onDurationChange={handleDurationChange}
-                                                phase={phase}
-                                            />
-                                        ))
-                                        : <p className={styles.emptyText}>Select a template to generate phases.</p>}
-                                </div>
-                            )}
-
-                        {!isGanttView
-                            ? (
-                                <div className={styles.phaseActions}>
-                                    <Button
-                                        disabled={isSectionDisabled || !phases.length}
-                                        label='Save Phases'
-                                        onClick={handleSavePhases}
-                                        primary
-                                        size='lg'
-                                    />
-
-                                    <Button
-                                        disabled={isSectionDisabled || !savedPhasesRef.current.length}
-                                        label='Reset Phases'
-                                        onClick={handleResetPhases}
-                                        secondary
-                                        size='lg'
-                                    />
-                                </div>
-                            )
-                            : undefined}
-                    </>
-                )
-                : (
-                    <p className={styles.emptyText}>
-                        Scheduling is disabled. Enable Scheduling API to configure timeline and phases.
-                    </p>
-                )}
 
             {phaseMessage
                 ? <p className={styles.message}>{phaseMessage}</p>
                 : undefined}
 
-            {isSchedulingApiEnabled && calculationError
+            {calculationError
                 ? (
                     <p aria-live='polite' className={styles.errorText}>
                         {calculationError}

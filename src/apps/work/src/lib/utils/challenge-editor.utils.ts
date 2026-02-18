@@ -154,6 +154,23 @@ function normalizeOptionalString(value: unknown): string | undefined {
     return normalizedValue
 }
 
+function normalizeOptionalId(value: unknown): number | string | undefined {
+    if (value === undefined || value === null) {
+        return undefined
+    }
+
+    if (typeof value === 'number' && Number.isFinite(value)) {
+        return value
+    }
+
+    if (typeof value === 'string') {
+        const normalizedValue = value.trim()
+        return normalizedValue || undefined
+    }
+
+    return undefined
+}
+
 function normalizeRoundType(value: unknown): ChallengeEditorFormData['roundType'] | undefined {
     const normalizedValue = normalizeOptionalString(value)
 
@@ -595,13 +612,16 @@ export function transformChallengeToFormData(
     const milestoneConfiguration = normalizeMilestoneConfiguration(metadata)
     const roundType = normalizeRoundType(challenge?.roundType) || ROUND_TYPES.SINGLE_ROUND
     const reviewType = normalizeReviewType(challenge?.legacy?.reviewType) || REVIEW_TYPES.INTERNAL
+    const billingAccountId = normalizeOptionalId(challenge?.billing?.billingAccountId)
 
     return {
         assignedMemberId: normalizeOptionalString(challenge?.assignedMemberId),
         attachments: normalizeAttachments(challenge?.attachments),
-        billing: {
-            billingAccountId: challenge?.billing?.billingAccountId,
-        },
+        billing: billingAccountId !== undefined
+            ? {
+                billingAccountId,
+            }
+            : undefined,
         challengeFee: normalizeOptionalNumber(challenge?.challengeFee),
         copilot: normalizeOptionalString(challenge?.copilot),
         description,
@@ -654,10 +674,15 @@ export function transformFormDataToChallenge(
     ]
     const roundType = normalizeRoundType(formData.roundType) || ROUND_TYPES.SINGLE_ROUND
     const reviewType = normalizeReviewType(formData.legacy?.reviewType) || REVIEW_TYPES.INTERNAL
+    const billingAccountId = normalizeOptionalId(formData.billing?.billingAccountId)
 
     const challenge: Partial<Challenge> = {
         assignedMemberId: normalizeOptionalString(formData.assignedMemberId),
-        billing: formData.billing,
+        billing: billingAccountId !== undefined
+            ? {
+                billingAccountId,
+            }
+            : undefined,
         challengeFee: normalizeOptionalNumber(formData.challengeFee),
         copilot: normalizeOptionalString(formData.copilot),
         description: formData.description,

@@ -58,7 +58,7 @@ export const ChallengeSkillsField: FC = () => {
 
                         callback(skills.map(skill => ({
                             id: skill.id,
-                            label: `${skill.name} (${skill.id})`,
+                            label: skill.name,
                             name: skill.name,
                             value: skill.id,
                         })))
@@ -86,7 +86,7 @@ export const ChallengeSkillsField: FC = () => {
             .filter((item): item is SkillValue => !!item)
             .map(item => ({
                 id: item.id,
-                label: `${item.name} (${item.id})`,
+                label: item.name,
                 name: item.name,
                 value: item.id,
             }))
