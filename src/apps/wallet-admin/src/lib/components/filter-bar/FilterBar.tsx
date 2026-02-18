@@ -122,7 +122,7 @@ const FilterBar: React.FC<FilterBarProps> = (props: FilterBarProps) => {
                     size='lg'
                 />
             )}
-            {props.selectedCount && props.selectedCount > 0 && (
+            {!!props.selectedCount && props.selectedCount > 0 && (
                 <>
                     <Button
                         primary

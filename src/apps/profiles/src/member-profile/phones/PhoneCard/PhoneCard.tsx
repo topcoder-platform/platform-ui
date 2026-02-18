@@ -27,7 +27,7 @@ const PhoneCard: FC<PhoneCardProps> = (props: PhoneCardProps) => {
                 <div
                     className={classNames(
                         styles.phoneCardLeft,
-                        props.phoneIndex !== 0 ? styles.phoneCardNotFirst : '',
+                        !props.isModalView && props.phoneIndex !== 0 ? styles.phoneCardNotFirst : '',
                     )}
                 >
                     {

@@ -70,6 +70,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
     const [isConfirmFormValid, setIsConfirmFormValid] = React.useState<boolean>(false)
     const [winnings, setWinnings] = React.useState<ReadonlyArray<Winning>>([])
     const [selectedPayments, setSelectedPayments] = React.useState<{ [paymentId: string]: Winning }>({})
+    const selectedPaymentsCount = Object.keys(selectedPayments).length
     const [isLoading, setIsLoading] = React.useState<boolean>(false)
     const [filters, setFilters] = React.useState<Record<string, string[]>>({})
     const [pagination, setPagination] = React.useState<PaginationInfo>({
@@ -288,7 +289,6 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
     const isEditingAllowed = (): boolean => (
         props.profile.roles.includes('Payment Admin')
         || props.profile.roles.includes('Payment BA Admin')
-        || props.profile.roles.includes('Engagement Payment Approver')
         || props.profile.roles.includes('Payment Editor')
     )
 
@@ -302,6 +302,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
 
         toast.success('Starting bulk approve', { position: toast.POSITION.BOTTOM_RIGHT })
 
+        let successfullyUpdated = 0
         for (const id of ids) {
             const updates: any = {
                 auditNote,
@@ -313,15 +314,20 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                 // awaiting sequentially to preserve order and server load control
                 // errors for individual items are caught and reported
                 // eslint-disable-next-line no-await-in-loop
-                const msg = await editPayment(updates)
-                toast.success(msg, { position: toast.POSITION.BOTTOM_RIGHT })
+                await editPayment(updates)
+                successfullyUpdated += 1
             } catch (err:any) {
+                const paymentName = selectedPayments[id]?.handle || id
                 if (err?.message) {
-                    toast.error(`Failed to update payment ${id}: ${err.message}`, { position: toast.POSITION.BOTTOM_RIGHT })
+                    toast.error(`Failed to update payment ${paymentName} (${id}): ${err.message}`, { position: toast.POSITION.BOTTOM_RIGHT })
                 } else {
-                    toast.error(`Failed to update payment ${id}`, { position: toast.POSITION.BOTTOM_RIGHT })
+                    toast.error(`Failed to update payment ${paymentName} (${id})`, { position: toast.POSITION.BOTTOM_RIGHT })
                 }
             }
+        }
+
+        if (successfullyUpdated === ids.length) {
+            toast.success(`Successfully updated ${successfullyUpdated} winnings`, { position: toast.POSITION.BOTTOM_RIGHT })
         }
 
         setBulkAuditNote('')
@@ -340,7 +346,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                     <Collapsible header={<h3>Payment Listing</h3>}>
                         <FilterBar
                             showExportButton
-                            selectedCount={Object.keys(selectedPayments).length}
+                            selectedCount={selectedPaymentsCount}
                             onBulkClick={() => setBulkOpen(true)}
                             onExport={async () => {
                                 toast.success('Downloading payments report. This may take a few moments.', { position: toast.POSITION.BOTTOM_RIGHT })
@@ -564,7 +570,7 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                     maxWidth='800px'
                     size='lg'
                     showButtons
-                    title='Bulk Approve Payments'
+                    title={`${selectedPaymentsCount > 1 ? 'Bulk ' : ''}Approve Payment${selectedPaymentsCount > 1 ? 's' : ''}`}
                     action='Approve'
                     onClose={function onClose() {
                         setBulkAuditNote('')
@@ -579,10 +585,14 @@ const ListView: FC<ListViewProps> = (props: ListViewProps) => {
                     <div>
                         <p>
                             You are about to approve
-                            {Object.keys(selectedPayments).length}
                             {' '}
-                            payments.
+                            {selectedPaymentsCount}
+                            {' '}
+                            payment
+                            {selectedPaymentsCount > 1 ? 's' : ''}
+                            .
                         </p>
+                        <br />
                         <InputText
                             type='text'
                             label='Audit Note'

@@ -1,8 +1,9 @@
-import { isWeekend } from 'date-fns'
-import { FC, useMemo } from 'react'
+import { format, isWeekend } from 'date-fns'
+import { FC, useCallback, useMemo, useState } from 'react'
 import classNames from 'classnames'
 
 import { LoadingSpinner } from '~/libs/ui'
+import { useCheckIsMobile } from '~/libs/shared'
 
 import { LeaveStatus, TeamLeaveDate } from '../../models'
 import { getDateKey, getMonthDates } from '../../utils'
@@ -60,6 +61,32 @@ export const TeamCalendar: FC<TeamCalendarProps> = (props: TeamCalendarProps) =>
     const currentDate = props.currentDate
     const isLoading = props.isLoading
     const teamLeaveDates = props.teamLeaveDates
+    const [openDateKey, setOpenDateKey] = useState<string | undefined>(undefined)
+
+    const isMobile: boolean = useCheckIsMobile()
+
+    const closePopover = useCallback(() => {
+        setOpenDateKey(undefined)
+    }, [])
+
+    const handleCellClick = useCallback(
+        (e: React.MouseEvent<HTMLButtonElement>) => {
+            if (!isMobile) return
+
+            const dateKey = e.currentTarget.dataset.dateKey
+            if (!dateKey) return
+
+            setOpenDateKey(prev => (prev === dateKey ? undefined : dateKey))
+        },
+        [isMobile],
+    )
+
+    const handleMoreClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+        if (isMobile) return // hover only matters on desktop
+        const dateKey = e.currentTarget.dataset.dateKey
+        if (!dateKey) return
+        setOpenDateKey(dateKey)
+    }, [isMobile])
 
     const monthDates = useMemo(
         () => getMonthDates(currentDate.getFullYear(), currentDate.getMonth()),
@@ -112,48 +139,139 @@ export const TeamCalendar: FC<TeamCalendarProps> = (props: TeamCalendarProps) =>
                     const leaveEntry = teamLeaveDates.find(item => item.date === dateKey)
                     const users = leaveEntry?.usersOnLeave ?? []
                     const sortedUsers = [...users].sort(compareUsersByName)
-                    const displayedUsers = sortedUsers.slice(0, 10)
+                    const displayedUsers = sortedUsers.slice(0, 2)
                     const overflowCount = sortedUsers.length - displayedUsers.length
                     const weekendClass = isWeekend(date) ? styles.weekend : undefined
+
+                    // Mobile popover open/close
+                    const isOpen = openDateKey === dateKey
+                    const leaveCount = sortedUsers.length
 
                     return (
                         <div
                             key={dateKey}
                             className={classNames(styles.cell, weekendClass, {
                                 [styles.loading]: isLoading,
+                                [styles.hasLeave]: leaveCount > 0,
                             })}
                         >
-                            <span className={styles.dateNumber}>{date.getDate()}</span>
-                            <div className={styles.userList}>
-                                {displayedUsers.length > 0
-                                    && displayedUsers.map((user, userIndex) => {
-                                        const isHolidayStatus = user.status === LeaveStatus.WIPRO_HOLIDAY
-                                            || user.status === LeaveStatus.HOLIDAY
+                            {/* Whole cell tappable on mobile */}
+                            <button
+                                type='button'
+                                className={styles.cellButton}
+                                disabled={isLoading}
+                                onClick={handleCellClick}
+                                data-date-key={dateKey}
+                                aria-haspopup='dialog'
+                                aria-expanded={isMobile ? isOpen : undefined}
+                                aria-label={`Open leave list for ${dateKey}`}
+                            >
+                                <span className={styles.dateNumber}>{date.getDate()}</span>
+
+                                {/* MOBILE: only show count badge */}
+                                {isMobile && leaveCount > 0 && (
+                                    <span className={styles.countBadge}>{leaveCount}</span>
+                                )}
+
+                                {/* DESKTOP: show list in the cell (your existing UI) */}
+                                {!isMobile && (
+                                    <div className={styles.userList}>
+                                        {displayedUsers.length > 0
+                                        && displayedUsers.map((user, userIndex) => {
+                                            const isHolidayStatus
+                                        = user.status === LeaveStatus.WIPRO_HOLIDAY
+                                        || user.status === LeaveStatus.HOLIDAY
+
+                                            return (
+                                                <div
+                                                    key={`${dateKey}-${user.userId}-${userIndex.toString()}`}
+                                                    className={classNames(
+                                                        styles.userItem,
+                                                        isHolidayStatus
+                                                            ? styles.userHoliday
+                                                            : styles.userLeave,
+                                                    )}
+                                                >
+                                                    {getUserDisplayName(user)}
+                                                </div>
+                                            )
+                                        })}
+                                        {overflowCount > 0 && (
+                                            <div className={styles.overflowIndicator}>
+                                                <button
+                                                    type='button'
+                                                    className={styles.moreButton}
+                                                    data-date-key={dateKey}
+                                                    onClick={handleMoreClick}
+                                                    aria-haspopup='dialog'
+                                                    aria-label={`Show ${overflowCount} more for ${dateKey}`}
+                                                >
+                                                    {`+${overflowCount} more`}
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </button>
+                        </div>
+                    )
+                })}
+            </div>
+
+            {openDateKey && (() => {
+                const selectedDate = paddedDates.find(d => d && getDateKey(d) === openDateKey)
+                if (!selectedDate) return undefined
+
+                const selectedEntry = teamLeaveDates.find(item => item.date === openDateKey)
+                const selectedUsers = [...(selectedEntry?.usersOnLeave ?? [])].sort(compareUsersByName)
+
+                return (
+                    <div className={styles.modalRoot}>
+                        <div className={styles.backdrop} onClick={closePopover} />
+
+                        <div className={styles.popover} role='dialog' aria-label='Users on leave'>
+                            <div className={styles.popoverHeader}>
+                                <div className={styles.popoverTitle}>
+                                    {format(selectedDate, 'EEE, dd MMM yyyy')}
+                                </div>
+
+                                <button
+                                    type='button'
+                                    className={styles.closeBtn}
+                                    onClick={closePopover}
+                                    aria-label='Close'
+                                >
+                                    ✕
+                                </button>
+                            </div>
+
+                            <div className={styles.popoverBody}>
+                                {selectedUsers.length === 0 ? (
+                                    <div className={styles.emptyState}>No leave</div>
+                                ) : (
+                                    selectedUsers.map((user, idx) => {
+                                        const isHolidayStatus
+                                    = user.status === LeaveStatus.WIPRO_HOLIDAY
+                                    || user.status === LeaveStatus.HOLIDAY
 
                                         return (
                                             <div
-                                                key={`${dateKey}-${user.userId}-${userIndex.toString()}`}
+                                                key={`${openDateKey}-${user.userId}-${idx.toString()}`}
                                                 className={classNames(
                                                     styles.userItem,
-                                                    isHolidayStatus
-                                                        ? styles.userHoliday
-                                                        : styles.userLeave,
+                                                    isHolidayStatus ? styles.userHoliday : styles.userLeave,
                                                 )}
                                             >
                                                 {getUserDisplayName(user)}
                                             </div>
                                         )
-                                    })}
-                                {overflowCount > 0 && (
-                                    <div className={styles.overflowIndicator}>
-                                        {`+${overflowCount} more`}
-                                    </div>
+                                    })
                                 )}
                             </div>
                         </div>
-                    )
-                })}
-            </div>
+                    </div>
+                )
+            })()}
 
             {isLoading && (
                 <div className={styles.loadingOverlay}>
@@ -162,6 +280,7 @@ export const TeamCalendar: FC<TeamCalendarProps> = (props: TeamCalendarProps) =>
             )}
         </div>
     )
+
 }
 
 export default TeamCalendar

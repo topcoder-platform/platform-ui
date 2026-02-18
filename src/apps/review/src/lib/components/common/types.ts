@@ -59,6 +59,8 @@ export interface DownloadButtonConfig {
     virusScanFailedMessage?: string
     /** Tooltip used when a user is limited to downloading their own submission. */
     downloadOwnSubmissionTooltip?: string
+    /** Method to determine whether a submission is viewable. */
+    isSubmissionNotViewable?: (submission: SubmissionRow) => boolean
 }
 
 /**

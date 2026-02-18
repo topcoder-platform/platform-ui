@@ -5,6 +5,7 @@ import remarkFrontmatter from 'remark-frontmatter'
 import remarkGfm from 'remark-gfm'
 
 import { Button, IconSolid } from '~/libs/ui'
+import { EnvironmentConfig } from '~/config'
 
 import type { Engagement, EngagementAssignment } from '../../lib/models'
 import { formatDate, formatLocation, truncateText } from '../../lib/utils'
@@ -58,6 +59,8 @@ interface AssignmentCardProps {
     onRejectOffer?: () => void
     onContactTalentManager: (contactEmail?: string) => void
     canContactTalentManager?: boolean
+    profileGateError?: string
+    profileHandle?: string
 }
 
 const DESCRIPTION_MAX_LENGTH = 160
@@ -154,6 +157,42 @@ const AssignmentCard: FC<AssignmentCardProps> = (props: AssignmentCardProps) => 
     const showAssignedActions = assignmentStatus === 'assigned'
     const showOfferActions = assignmentStatus === 'selected'
 
+    const renderOfferActions = (
+        profileGateError?: string,
+        onAcceptOffer?: () => void,
+        onRejectOffer?: () => void,
+        actionButtonClass?: string,
+    ): JSX.Element | undefined => {
+        if (
+            profileGateError
+            || !showOfferActions
+            || !onAcceptOffer
+            || !onRejectOffer
+        ) {
+            return undefined
+        }
+
+        return (
+            <>
+                <Button
+                    label='Accept Offer'
+                    onClick={onAcceptOffer}
+                    primary
+                    textWrap
+                    className={actionButtonClass}
+                />
+                <Button
+                    label='Reject Offer'
+                    onClick={onRejectOffer}
+                    secondary
+                    variant='danger'
+                    textWrap
+                    className={actionButtonClass}
+                />
+            </>
+        )
+    }
+
     return (
         <div className={styles.card}>
             <div className={styles.header}>
@@ -205,6 +244,21 @@ const AssignmentCard: FC<AssignmentCardProps> = (props: AssignmentCardProps) => 
                     <span className={styles.moreSkills}>{`+${extraSkillsCount} more`}</span>
                 )}
             </div>
+            <div>
+                { props.profileGateError && (
+                    <div className={styles.applyMessage}>
+                        <span className={styles.termsError}>
+                            {props.profileGateError}
+                        </span>
+                        <a
+                            className={styles.signInLink}
+                            href={`${EnvironmentConfig.URLS.USER_PROFILE}/${props.profileHandle}`}
+                        >
+                            Please update your profile here.
+                        </a>
+                    </div>
+                )}
+            </div>
             <div className={styles.actions}>
                 {showAssignedActions && (
                     <>
@@ -224,24 +278,11 @@ const AssignmentCard: FC<AssignmentCardProps> = (props: AssignmentCardProps) => 
                         />
                     </>
                 )}
-                {showOfferActions && props.onAcceptOffer && props.onRejectOffer && (
-                    <>
-                        <Button
-                            label='Accept Offer'
-                            onClick={props.onAcceptOffer}
-                            primary
-                            textWrap
-                            className={styles.actionButton}
-                        />
-                        <Button
-                            label='Reject Offer'
-                            onClick={props.onRejectOffer}
-                            secondary
-                            variant='danger'
-                            textWrap
-                            className={styles.actionButton}
-                        />
-                    </>
+                {renderOfferActions(
+                    props.profileGateError,
+                    props.onAcceptOffer,
+                    props.onRejectOffer,
+                    styles.actionButton,
                 )}
                 <Button
                     label='Contact Talent Manager'
