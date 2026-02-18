@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { FC, MutableRefObject, useEffect, useRef, useState } from 'react'
+import { Dispatch, FC, MutableRefObject, SetStateAction, useEffect, useRef, useState } from 'react'
 import { connect } from 'react-redux'
 import { toast } from 'react-toastify'
 import classNames from 'classnames'
@@ -12,7 +12,8 @@ import { updateOrCreateMemberTraitsAsync,
     UserTraitIds,
     UserTraits } from '~/libs/core'
 import { OpenToWorkData } from '~/libs/shared/lib/components/modify-open-to-work-modal'
-import OpenToWorkForm from '~/libs/shared/lib/components/modify-open-to-work-modal/ModifyOpenToWorkModal'
+import OpenToWorkForm,
+{ validateOpenToWork } from '~/libs/shared/lib/components/modify-open-to-work-modal/ModifyOpenToWorkModal'
 
 import { ProgressBar } from '../../components/progress-bar'
 import { updateMemberOpenForWork, updatePersonalizations } from '../../redux/actions/member'
@@ -46,6 +47,14 @@ export const PageOpenToWorkContent: FC<PageOpenToWorkContentProps> = props => {
         preferredRoles: [],
     })
 
+    const [submitAttempted, setSubmitAttempted] = useState(false)
+
+    const [formErrors, setFormErrors]: [
+            { [key: string]: string },
+            Dispatch<SetStateAction<{ [key: string]: string }>>
+    ]
+        = useState<{ [key: string]: string }>({})
+
     useEffect(() => {
         if (!memberPersonalizationTraits) return
 
@@ -61,6 +70,14 @@ export const PageOpenToWorkContent: FC<PageOpenToWorkContentProps> = props => {
         }))
     }, [memberPersonalizationTraits, props.availableForGigs])
 
+    function handleFormChange(nextValue: OpenToWorkData): void {
+        setFormValue(nextValue)
+
+        if (submitAttempted) {
+            setFormErrors(validateOpenToWork(nextValue))
+        }
+    }
+
     useEffect(() => {
         if (!loading && !shouldSavingData.current && !!shouldNavigateTo.current) {
             navigate(shouldNavigateTo.current)
@@ -73,6 +90,16 @@ export const PageOpenToWorkContent: FC<PageOpenToWorkContentProps> = props => {
     }
 
     async function goToNextStep(): Promise<void> {
+        setSubmitAttempted(true)
+
+        const errors = validateOpenToWork(formValue)
+        setFormErrors(errors)
+
+        if (Object.keys(errors).length > 0) {
+            // Don't move to next step
+            return
+        }
+
         setLoading(true)
 
         const existing = memberPersonalizationTraits?.[0]?.traits?.data?.[0] || {}
@@ -118,6 +145,14 @@ export const PageOpenToWorkContent: FC<PageOpenToWorkContentProps> = props => {
         }
     }
 
+    // reset error when open to work toggle off
+    useEffect(() => {
+        if (!formValue.availableForGigs) {
+            setFormErrors({})
+            setSubmitAttempted(false)
+        }
+    }, [formValue.availableForGigs])
+
     return (
         <div className={classNames('d-flex flex-column', styles.container)}>
             <h2>
@@ -136,8 +171,10 @@ export const PageOpenToWorkContent: FC<PageOpenToWorkContentProps> = props => {
                     <div className='mt-26'>
                         <OpenToWorkForm
                             value={formValue}
-                            onChange={setFormValue}
+                            onChange={handleFormChange}
                             disabled={loading}
+                            formErrors={formErrors}
+                            showErrors={submitAttempted}
                         />
                     </div>
                 </div>

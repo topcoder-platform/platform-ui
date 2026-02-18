@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 
 import { EnvironmentConfig } from '~/config'
-import { useProfileContext } from '~/libs/core'
+import { useProfileCompleteness, useProfileContext } from '~/libs/core'
 import { Button, ContentLayout, IconOutline, LoadingSpinner } from '~/libs/ui'
 import { Pagination } from '~/apps/admin/src/lib/components/common/Pagination'
 
@@ -76,6 +76,9 @@ const MyAssignmentsPage: FC = () => {
     const profileContext = useProfileContext()
     const isLoggedIn = profileContext.isLoggedIn
     const userId = profileContext.profile?.userId
+    const profileHandle = profileContext.profile?.handle
+    const profileCompleteness = useProfileCompleteness(profileHandle)
+    const [profileGateError, setProfileGateError] = useState<string | undefined>()
 
     const [assignments, setAssignments] = useState<Engagement[]>([])
     const [loading, setLoading] = useState<boolean>(false)
@@ -333,6 +336,23 @@ const MyAssignmentsPage: FC = () => {
                         }
 
                         const handleAcceptOfferClick = function (): void {
+                            setProfileGateError(undefined)
+
+                            if (profileCompleteness?.isLoading) {
+                                return
+                            }
+
+                            if (
+                                profileCompleteness
+                                && typeof profileCompleteness.percent === 'number'
+                                && profileCompleteness.percent < 100
+                            ) {
+                                setProfileGateError(
+                                    'Your profile must be 100% complete before applying.',
+                                )
+                                return
+                            }
+
                             handleOpenOfferModal(engagement, 'accept')
                         }
 
@@ -352,6 +372,8 @@ const MyAssignmentsPage: FC = () => {
                                 onRejectOffer={handleRejectOfferClick}
                                 onContactTalentManager={handleContactTalentManager}
                                 canContactTalentManager={Boolean(contactEmail)}
+                                profileGateError={profileGateError}
+                                profileHandle={profileHandle}
                             />
                         )
                     })}

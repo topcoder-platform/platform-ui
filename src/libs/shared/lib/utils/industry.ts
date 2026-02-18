@@ -2,6 +2,7 @@ export const IndustryEnumToLabel: {
   [key: string]: string
 } = {
     ConsumerGoods: 'Consumer goods',
+    HealthCare: 'Healthcare',
     Other: 'Others',
     PublicSector: 'Public sector',
     TechAndTechnologyService: 'Tech & technology services',
@@ -12,6 +13,7 @@ export const IndustryLabelToEnum: {
   [key: string]: string
 } = {
     'Consumer goods': 'ConsumerGoods',
+    Healthcare: 'HealthCare',
     Others: 'Other',
     'Public sector': 'PublicSector',
     'Tech & technology services': 'TechAndTechnologyService',
