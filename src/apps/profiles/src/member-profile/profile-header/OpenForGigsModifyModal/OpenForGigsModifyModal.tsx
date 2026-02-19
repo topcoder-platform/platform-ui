@@ -132,7 +132,7 @@ const OpenForGigsModifyModal: FC<OpenForGigsModifyModalProps> = (props: OpenForG
         <BaseModal
             onClose={props.onClose}
             open
-            title='Don’t miss gig and work opportunities.'
+            title='Don’t miss engagement opportunities.'
             size='lg'
             buttons={(
                 <div className={styles.modalButtons}>
