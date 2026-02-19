@@ -14,6 +14,8 @@ export interface AttachmentPayload {
 export interface ProjectAttachment {
     allowedUsers?: string[]
     category?: string
+    contentType?: string
+    createdBy?: number | string
     createdAt?: string
     description?: string
     id?: string
@@ -22,6 +24,7 @@ export interface ProjectAttachment {
     projectId?: string
     s3Bucket?: string
     tags?: string[]
+    size?: number
     title?: string
     type?: string
     updatedAt?: string

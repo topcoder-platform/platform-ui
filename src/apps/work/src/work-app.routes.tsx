@@ -13,6 +13,9 @@ import {
 } from '~/libs/core'
 
 import {
+    TALENT_MANAGER_ROLES,
+} from './config/index.config'
+import {
     challengeCreateRouteId,
     challengeEditRouteId,
     challengesRouteId,
@@ -25,6 +28,7 @@ import {
     engagementsRouteId,
     groupsEditRouteId,
     groupsRouteId,
+    projectAssetsRouteId,
     projectCreateRouteId,
     projectEditRouteId,
     projectInvitationsRouteId,
@@ -55,6 +59,10 @@ const ProjectsListPage: LazyLoadedComponent = lazyLoad(
 
 const ProjectEditorPage: LazyLoadedComponent = lazyLoad(
     () => import('./pages/projects/ProjectEditorPage'),
+)
+
+const ProjectAssetsPage: LazyLoadedComponent = lazyLoad(
+    () => import('./pages/assets/ProjectAssetsPage'),
 )
 
 const EngagementsListPage: LazyLoadedComponent = lazyLoad(
@@ -105,8 +113,16 @@ const GroupEditPage: LazyLoadedComponent = lazyLoad(
     () => import('./pages/groups/GroupEditPage'),
 )
 
+function hasAnyRole(userRoles: string[], allowedRoles: string[]): boolean {
+    return userRoles.some(role => allowedRoles.includes(role))
+}
+
 function canManageGroups(contextValue: WorkAppContextModel): boolean {
     return contextValue.isAdmin || contextValue.isCopilot || contextValue.isManager
+}
+
+function canViewAllEngagements(contextValue: WorkAppContextModel): boolean {
+    return contextValue.isAdmin || hasAnyRole(contextValue.userRoles, TALENT_MANAGER_ROLES)
 }
 
 const GroupsRouteGuard: FC<PropsWithChildren> = (props: PropsWithChildren) => {
@@ -114,6 +130,16 @@ const GroupsRouteGuard: FC<PropsWithChildren> = (props: PropsWithChildren) => {
 
     if (!canManageGroups(contextValue)) {
         return <ErrorMessage message='You do not have permission to manage groups.' />
+    }
+
+    return <>{props.children}</>
+}
+
+const EngagementsRouteGuard: FC<PropsWithChildren> = (props: PropsWithChildren) => {
+    const contextValue: WorkAppContextModel = useContext(WorkAppContext)
+
+    if (!canViewAllEngagements(contextValue)) {
+        return <ErrorMessage message='You need Admin or Talent Manager role to view all engagements.' />
     }
 
     return <>{props.children}</>
@@ -146,7 +172,7 @@ export const workRoutes: ReadonlyArray<PlatformRoute> = [
                 authRequired: true,
                 element: <ChallengeEditorPage />,
                 id: challengeCreateRouteId,
-                route: `${challengesRouteId}/new`,
+                route: '/projects/:projectId/challenges/new',
                 title: 'Create Challenge',
             },
             {
@@ -161,6 +187,13 @@ export const workRoutes: ReadonlyArray<PlatformRoute> = [
                 element: <ChallengeEditorPage />,
                 route: '/projects/:projectId/challenges/:challengeId/view',
                 title: 'View Challenge',
+            },
+            {
+                authRequired: true,
+                element: <ProjectAssetsPage />,
+                id: projectAssetsRouteId,
+                route: '/projects/:projectId/assets',
+                title: 'Project Assets',
             },
             {
                 authRequired: true,
@@ -185,8 +218,18 @@ export const workRoutes: ReadonlyArray<PlatformRoute> = [
             },
             {
                 authRequired: true,
-                element: <EngagementsListPage />,
+                element: (
+                    <EngagementsRouteGuard>
+                        <EngagementsListPage />
+                    </EngagementsRouteGuard>
+                ),
                 id: engagementsRouteId,
+                route: engagementsRouteId,
+                title: 'Engagements',
+            },
+            {
+                authRequired: true,
+                element: <EngagementsListPage />,
                 route: '/projects/:projectId/engagements',
                 title: 'Engagements',
             },
@@ -264,7 +307,7 @@ export const workRoutes: ReadonlyArray<PlatformRoute> = [
                 authRequired: true,
                 element: <UsersManagementPage />,
                 id: usersRouteId,
-                route: usersRouteId,
+                route: '/projects/:projectId/users',
                 title: 'Users',
             },
             {

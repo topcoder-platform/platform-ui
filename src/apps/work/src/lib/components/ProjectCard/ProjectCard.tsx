@@ -17,8 +17,7 @@ interface ProjectCardProps {
 export const ProjectCard: FC<ProjectCardProps> = (props: ProjectCardProps) => {
     const project: Project = props.project
     const projectId: string = String(project.id)
-    const isInvited = project.isInvited ?? !!project.invites?.length
-    const path: string = `/projects/${projectId}/${isInvited ? 'invitations' : 'challenges'}`
+    const path: string = `/projects/${projectId}/challenges`
     const editPath = `/projects/${projectId}/edit`
 
     const lastActivity = formatDateTime(

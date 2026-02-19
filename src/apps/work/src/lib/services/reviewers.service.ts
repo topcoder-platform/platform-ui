@@ -83,6 +83,9 @@ function normalizeWorkflow(workflow: Partial<Workflow>): Workflow | undefined {
     return {
         id,
         name,
+        scorecardId: workflow.scorecardId !== undefined && workflow.scorecardId !== null
+            ? String(workflow.scorecardId)
+            : undefined,
     }
 }
 

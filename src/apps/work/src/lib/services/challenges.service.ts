@@ -249,13 +249,57 @@ function normalizeError(error: unknown, fallbackMessage: string): Error {
 function normalizeDefaultReviewer(
     reviewer: Partial<DefaultReviewer>,
 ): DefaultReviewer {
+    const toOptionalString = (value: unknown): string | undefined => {
+        if (value === undefined || value === null) {
+            return undefined
+        }
+
+        const normalizedValue = String(value)
+            .trim()
+        return normalizedValue || undefined
+    }
+
+    const toOptionalNumber = (value: unknown): number | undefined => {
+        if (value === undefined || value === null || value === '') {
+            return undefined
+        }
+
+        const parsedValue = Number(value)
+        return Number.isFinite(parsedValue)
+            ? parsedValue
+            : undefined
+    }
+
+    const toOptionalBoolean = (value: unknown): boolean | undefined => {
+        if (typeof value === 'boolean') {
+            return value
+        }
+
+        if (typeof value === 'string') {
+            const normalizedValue = value
+                .trim()
+                .toLowerCase()
+            if (normalizedValue === 'true') {
+                return true
+            }
+
+            if (normalizedValue === 'false') {
+                return false
+            }
+        }
+
+        return undefined
+    }
+
     return {
-        phaseId: reviewer.phaseId !== undefined && reviewer.phaseId !== null
-            ? String(reviewer.phaseId)
-            : undefined,
-        roleId: reviewer.roleId !== undefined && reviewer.roleId !== null
-            ? String(reviewer.roleId)
-            : undefined,
+        aiWorkflowId: toOptionalString((reviewer as Record<string, unknown>).aiWorkflowId),
+        baseCoefficient: toOptionalNumber((reviewer as Record<string, unknown>).baseCoefficient),
+        incrementalCoefficient: toOptionalNumber((reviewer as Record<string, unknown>).incrementalCoefficient),
+        isMemberReview: toOptionalBoolean((reviewer as Record<string, unknown>).isMemberReview),
+        memberReviewerCount: toOptionalNumber((reviewer as Record<string, unknown>).memberReviewerCount),
+        phaseId: toOptionalString(reviewer.phaseId),
+        roleId: toOptionalString(reviewer.roleId),
+        scorecardId: toOptionalString((reviewer as Record<string, unknown>).scorecardId),
     }
 }
 
@@ -274,6 +318,9 @@ function normalizeWorkflow(workflow: Partial<Workflow>): Workflow | undefined {
     return {
         id,
         name,
+        scorecardId: workflow.scorecardId !== undefined && workflow.scorecardId !== null
+            ? String(workflow.scorecardId)
+            : undefined,
     }
 }
 

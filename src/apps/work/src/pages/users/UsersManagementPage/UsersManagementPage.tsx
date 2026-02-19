@@ -7,10 +7,13 @@ import {
     useMemo,
     useState,
 } from 'react'
-import { FormProvider, useForm } from 'react-hook-form'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useParams } from 'react-router-dom'
 
-import { Button, PageTitle } from '~/libs/ui'
+import {
+    Button,
+    IconSolid,
+    PageTitle,
+} from '~/libs/ui'
 
 import {
     AddUserModal,
@@ -19,16 +22,10 @@ import {
     NullLayout,
     UserCard,
 } from '../../../lib/components'
-import {
-    FormSelectField,
-    FormSelectOption,
-} from '../../../lib/components/form'
 import { WorkAppContext } from '../../../lib/contexts'
 import {
+    useFetchProject,
     useFetchProjectMembers,
-    UseFetchProjectMembersResult,
-    useFetchUserProjects,
-    UseFetchUserProjectsResult,
 } from '../../../lib/hooks'
 import {
     ProjectInvite,
@@ -37,7 +34,6 @@ import {
 } from '../../../lib/models'
 import {
     deleteProjectMemberInvite,
-    ProjectSummary,
     removeMemberFromProject,
 } from '../../../lib/services'
 import {
@@ -48,51 +44,45 @@ import {
 
 import styles from './UsersManagementPage.module.scss'
 
-interface UsersPageFormData {
-    projectId: string
+function toOptionalString(value: unknown): string | undefined {
+    if (typeof value !== 'string') {
+        return undefined
+    }
+
+    const normalizedValue = value.trim()
+    return normalizedValue || undefined
 }
 
-function getLocationStateProjectId(locationState: unknown): string | undefined {
-    if (typeof locationState !== 'object' || !locationState || !('projectId' in locationState)) {
-        return undefined
+function resolveBackToPath(locationState: unknown, projectId: string): string {
+    const fallbackPath = projectId
+        ? `/projects/${projectId}/challenges`
+        : '/projects'
+
+    if (typeof locationState !== 'object' || !locationState || !('backTo' in locationState)) {
+        return fallbackPath
     }
 
-    const projectId = (locationState as {
-        projectId?: unknown
-    }).projectId
+    const backTo = toOptionalString((locationState as {
+        backTo?: unknown
+    }).backTo)
 
-    if (projectId === undefined || projectId === null) {
-        return undefined
+    if (!backTo || !projectId) {
+        return fallbackPath
     }
 
-    const normalizedProjectId = String(projectId)
-        .trim()
-
-    return normalizedProjectId || undefined
-}
-
-function getLocationStateProjectName(locationState: unknown): string | undefined {
-    if (typeof locationState !== 'object' || !locationState || !('projectName' in locationState)) {
-        return undefined
-    }
-
-    const projectName = (locationState as {
-        projectName?: unknown
-    }).projectName
-
-    if (typeof projectName !== 'string') {
-        return undefined
-    }
-
-    const normalizedProjectName = projectName.trim()
-
-    return normalizedProjectName || undefined
+    return backTo.startsWith(`/projects/${projectId}/`)
+        ? backTo
+        : fallbackPath
 }
 
 export const UsersManagementPage: FC = () => {
     const location = useLocation()
-    const locationProjectId = getLocationStateProjectId(location.state)
-    const locationProjectName = getLocationStateProjectName(location.state)
+    const {
+        projectId: projectIdFromRoute,
+    }: Readonly<{
+        projectId?: string
+    }> = useParams<'projectId'>()
+    const projectId = toOptionalString(projectIdFromRoute) || ''
 
     const [showAddUserModal, setShowAddUserModal] = useState<boolean>(false)
     const [showInviteUserModal, setShowInviteUserModal] = useState<boolean>(false)
@@ -104,84 +94,37 @@ export const UsersManagementPage: FC = () => {
         loginUserInfo,
     }: WorkAppContextModel = useContext(WorkAppContext)
 
-    const formMethods = useForm<UsersPageFormData>({
-        defaultValues: {
-            projectId: locationProjectId || '',
-        },
-        mode: 'onChange',
-    })
-
-    const selectedProjectId = formMethods.watch('projectId')
-
-    const userProjectsResult: UseFetchUserProjectsResult = useFetchUserProjects()
-    const projectsError: Error | undefined = userProjectsResult.error
-    const hasMore: boolean = userProjectsResult.hasMore
-    const isProjectsLoading: boolean = userProjectsResult.isLoading
-    const loadMore: () => void = userProjectsResult.loadMore
-    const projects: ProjectSummary[] = userProjectsResult.projects
-
-    const projectMembersResult: UseFetchProjectMembersResult
-        = useFetchProjectMembers(selectedProjectId || undefined)
+    const projectResult = useFetchProject(projectId || undefined)
+    const projectMembersResult = useFetchProjectMembers(projectId || undefined)
     const projectMembersError: Error | undefined = projectMembersResult.error
     const invites: ProjectInvite[] = projectMembersResult.invites
     const isProjectMembersLoading: boolean = projectMembersResult.isLoading
     const members: ProjectMember[] = projectMembersResult.members
     const mutateProjectMembers = projectMembersResult.mutate
 
-    const projectOptions = useMemo<FormSelectOption[]>(
-        () => projects
-            .map(project => ({
-                label: project.name,
-                value: String(project.id),
-            }))
-            .sort((projectA, projectB) => projectA.label.localeCompare(projectB.label)),
-        [projects],
-    )
-
-    const selectedProjectName = useMemo(() => {
-        const selectedProject = projects.find(project => String(project.id) === selectedProjectId)
-
-        if (selectedProject) {
-            return selectedProject.name
-        }
-
-        if (locationProjectId && selectedProjectId === locationProjectId) {
-            return locationProjectName
-        }
-
-        return undefined
-    }, [
-        locationProjectId,
-        locationProjectName,
-        projects,
-        selectedProjectId,
-    ])
-
+    const selectedProjectName = toOptionalString(projectResult.project?.name)
+    const pageHeading = selectedProjectName
+        ? `${selectedProjectName} users`
+        : 'Project users'
     const loginHandle = loginUserInfo?.handle || ''
     const canManageMembers = (isAdmin || isCopilot || isManager)
         || checkIsCopilotOrManager(members, loginHandle)
 
     const hasMembers = members.length > 0
     const hasInvites = invites.length > 0
+    const isLoading = projectResult.isLoading || isProjectMembersLoading
 
-    const projectSelectorHint = useMemo(() => {
-        if (isProjectsLoading) {
-            return 'Loading projects...'
-        }
-
-        if (projectsError) {
-            return projectsError.message
-        }
-
-        return undefined
-    }, [isProjectsLoading, projectsError])
+    const backToPath = useMemo(
+        () => resolveBackToPath(location.state, projectId),
+        [location.state, projectId],
+    )
 
     const handleRemove = useCallback(
         async (
             user: ProjectMember | ProjectInvite,
             isInvite: boolean,
         ): Promise<void> => {
-            const projectId = selectedProjectId
+            const targetProjectId = projectId
                 || (user.projectId !== undefined && user.projectId !== null
                     ? String(user.projectId)
                     : '')
@@ -189,16 +132,16 @@ export const UsersManagementPage: FC = () => {
                 ? String(user.id)
                 : ''
 
-            if (!projectId || !recordId) {
+            if (!targetProjectId || !recordId) {
                 throw new Error('Cannot remove user because project information is missing.')
             }
 
             try {
                 if (isInvite) {
-                    await deleteProjectMemberInvite(projectId, recordId)
+                    await deleteProjectMemberInvite(targetProjectId, recordId)
                     showSuccessToast('Invitation removed successfully')
                 } else {
-                    await removeMemberFromProject(projectId, recordId)
+                    await removeMemberFromProject(targetProjectId, recordId)
                     showSuccessToast('Member removed successfully')
                 }
 
@@ -210,7 +153,7 @@ export const UsersManagementPage: FC = () => {
                 throw error
             }
         },
-        [mutateProjectMembers, selectedProjectId],
+        [mutateProjectMembers, projectId],
     )
 
     const handleRoleUpdated = useCallback(async (): Promise<void> => {
@@ -237,21 +180,30 @@ export const UsersManagementPage: FC = () => {
             })
     }, [mutateProjectMembers])
 
+    const handleRefreshProject = useCallback(() => {
+        projectResult.mutate()
+            .catch(error => {
+                showErrorToast(error instanceof Error
+                    ? error.message
+                    : 'Failed to refresh project')
+            })
+    }, [projectResult])
+
     const openAddUserModal = useCallback(() => {
-        if (!canManageMembers || !selectedProjectId) {
+        if (!canManageMembers || !projectId) {
             return
         }
 
         setShowAddUserModal(true)
-    }, [canManageMembers, selectedProjectId])
+    }, [canManageMembers, projectId])
 
     const openInviteUserModal = useCallback(() => {
-        if (!canManageMembers || !selectedProjectId) {
+        if (!canManageMembers || !projectId) {
             return
         }
 
         setShowInviteUserModal(true)
-    }, [canManageMembers, selectedProjectId])
+    }, [canManageMembers, projectId])
 
     const closeAddUserModal = useCallback(() => {
         setShowAddUserModal(false)
@@ -263,37 +215,25 @@ export const UsersManagementPage: FC = () => {
 
     return (
         <NullLayout>
-            <PageTitle>Users</PageTitle>
-            <h3 className={styles.pageHeading}>Users</h3>
-            <div className={styles.selectorGrid}>
-                <FormProvider {...formMethods}>
-                    <FormSelectField
-                        hint={projectSelectorHint}
-                        label='Project'
-                        name='projectId'
-                        options={projectOptions}
-                        placeholder='Select a project'
-                    />
-                </FormProvider>
-                {hasMore
+            <PageTitle>{pageHeading}</PageTitle>
+            <div className={styles.pageHeadingRow}>
+                <div className={styles.pageHeadingMain}>
+                    {projectId
+                        ? (
+                            <Link
+                                aria-label='Go back'
+                                className={styles.backArrowLink}
+                                to={backToPath}
+                            >
+                                <IconSolid.ArrowLeftIcon className={styles.backArrowIcon} />
+                            </Link>
+                        )
+                        : undefined}
+                    <h3 className={styles.pageHeading}>{pageHeading}</h3>
+                </div>
+                {canManageMembers && projectId
                     ? (
-                        <div className={styles.loadMoreActions}>
-                            <Button
-                                disabled={isProjectsLoading}
-                                label='Load More Projects'
-                                onClick={loadMore}
-                                secondary
-                                size='lg'
-                            />
-                        </div>
-                    )
-                    : undefined}
-            </div>
-
-            <div className={styles.buttonGroup}>
-                {canManageMembers && selectedProjectId
-                    ? (
-                        <>
+                        <div className={styles.buttonGroup}>
                             <Button
                                 label='Add User'
                                 onClick={openAddUserModal}
@@ -306,21 +246,24 @@ export const UsersManagementPage: FC = () => {
                                 primary
                                 size='lg'
                             />
-                        </>
-                    )
-                    : undefined}
-                {selectedProjectId
-                    ? (
-                        <Link className={styles.projectLink} to={`/projects/${selectedProjectId}/challenges`}>
-                            <Button
-                                label='Go To Project'
-                                secondary
-                                size='lg'
-                            />
-                        </Link>
+                        </div>
                     )
                     : undefined}
             </div>
+
+            {projectResult.error
+                ? (
+                    <div className={styles.errorBanner}>
+                        <span>{projectResult.error.message}</span>
+                        <Button
+                            label='Retry'
+                            onClick={handleRefreshProject}
+                            secondary
+                            size='lg'
+                        />
+                    </div>
+                )
+                : undefined}
 
             {projectMembersError
                 ? (
@@ -336,11 +279,11 @@ export const UsersManagementPage: FC = () => {
                 )
                 : undefined}
 
-            {!selectedProjectId
-                ? <div className={styles.emptyState}>Select a project to manage users.</div>
+            {!projectId
+                ? <div className={styles.emptyState}>Project id is required.</div>
                 : undefined}
 
-            {selectedProjectId && isProjectMembersLoading
+            {projectId && isLoading
                 ? (
                     <div className={styles.loadingWrapper}>
                         <LoadingSpinner />
@@ -348,7 +291,7 @@ export const UsersManagementPage: FC = () => {
                 )
                 : undefined}
 
-            {selectedProjectId && !isProjectMembersLoading && !hasMembers && !hasInvites
+            {projectId && !isLoading && !projectResult.error && !projectMembersError && !hasMembers && !hasInvites
                 ? (
                     <div className={styles.emptyState}>
                         No project members yet for
@@ -359,7 +302,7 @@ export const UsersManagementPage: FC = () => {
                 )
                 : undefined}
 
-            {selectedProjectId && !isProjectMembersLoading && (hasMembers || hasInvites)
+            {projectId && !isLoading && !projectResult.error && !projectMembersError && (hasMembers || hasInvites)
                 ? (
                     <>
                         {hasMembers
@@ -392,17 +335,14 @@ export const UsersManagementPage: FC = () => {
                             ? (
                                 <div className={styles.tableSection}>
                                     <h4 className={styles.sectionTitle}>Invited Members</h4>
-                                    <div className={styles.tableHeader}>
+                                    <div className={`${styles.tableHeader} ${styles.invitesTableHeader}`}>
                                         <div>User</div>
-                                        <div>Read</div>
-                                        <div>Write</div>
-                                        <div>Full Access</div>
-                                        <div>Copilot</div>
                                         <div className={styles.headerAction}>Actions</div>
                                     </div>
                                     <div className={styles.tableBody}>
                                         {invites.map(invite => (
                                             <UserCard
+                                                compactInviteView
                                                 isEditable={canManageMembers}
                                                 isInvite
                                                 key={`invite-${invite.id || invite.email || invite.userId}`}
@@ -418,25 +358,25 @@ export const UsersManagementPage: FC = () => {
                 )
                 : undefined}
 
-            {showAddUserModal && selectedProjectId
+            {showAddUserModal && projectId
                 ? (
                     <AddUserModal
                         onClose={closeAddUserModal}
                         onSuccess={handleAddUserSuccess}
-                        projectId={selectedProjectId}
+                        projectId={projectId}
                         projectMembers={members}
                         projectName={selectedProjectName}
                     />
                 )
                 : undefined}
 
-            {showInviteUserModal && selectedProjectId
+            {showInviteUserModal && projectId
                 ? (
                     <InviteUserModal
                         invitedMembers={invites}
                         onClose={closeInviteUserModal}
                         onSuccess={handleInviteUserSuccess}
-                        projectId={selectedProjectId}
+                        projectId={projectId}
                         projectMembers={members}
                     />
                 )

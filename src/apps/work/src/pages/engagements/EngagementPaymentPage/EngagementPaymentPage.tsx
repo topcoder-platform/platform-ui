@@ -7,15 +7,16 @@ import {
     useMemo,
     useState,
 } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useLocation, useParams } from 'react-router-dom'
+import classNames from 'classnames'
 
 import { PageWrapper } from '~/apps/review/src/lib'
 import {
     Button,
-    IconSolid,
 } from '~/libs/ui'
 
 import {
+    CompleteAssignmentModal,
     ErrorMessage,
     LoadingSpinner,
     PaymentFormData,
@@ -62,6 +63,13 @@ function formatDate(value?: string): string {
     })
 }
 
+function formatRemarks(value?: string): string {
+    const remarks = String(value || '')
+        .trim()
+
+    return remarks || '-'
+}
+
 function isAssignedStatus(status: string): boolean {
     const normalized = status
         .trim()
@@ -70,13 +78,43 @@ function isAssignedStatus(status: string): boolean {
     return normalized === 'ASSIGNED'
 }
 
+function getAssignmentStatusPillClass(status: string): string {
+    const normalizedStatus = status.trim()
+        .toLowerCase()
+
+    if (normalizedStatus === 'active') {
+        return styles.statusGreen
+    }
+
+    if (normalizedStatus === 'assigned' || normalizedStatus === 'pending assignment') {
+        return styles.statusYellow
+    }
+
+    if (normalizedStatus === 'completed' || normalizedStatus === 'closed') {
+        return styles.statusBlue
+    }
+
+    if (normalizedStatus === 'terminated' || normalizedStatus === 'cancelled') {
+        return styles.statusRed
+    }
+
+    return styles.statusGray
+}
+
+interface AssignmentsLocationState {
+    backUrl?: string
+}
+
 export const EngagementPaymentPage: FC = () => {
     const params: Readonly<{ engagementId?: string; projectId?: string }> = useParams<'engagementId' | 'projectId'>()
+    const location = useLocation()
 
     const projectId = params.projectId || ''
     const engagementId = params.engagementId || ''
 
     const [historyMember, setHistoryMember] = useState<Assignment | undefined>()
+    const [completeMember, setCompleteMember] = useState<Assignment | undefined>()
+    const [isCompleting, setIsCompleting] = useState<boolean>(false)
     const [isSubmittingPayment, setIsSubmittingPayment] = useState<boolean>(false)
     const [isTerminating, setIsTerminating] = useState<boolean>(false)
     const [paymentMember, setPaymentMember] = useState<Assignment | undefined>()
@@ -96,20 +134,19 @@ export const EngagementPaymentPage: FC = () => {
     const pageTitle = engagementResult.engagement?.title
         ? `${engagementResult.engagement.title} Assignees`
         : 'Assignees'
+    const backUrl = useMemo(() => {
+        const locationState = location.state as AssignmentsLocationState | null
+        const stateBackUrl = String(locationState?.backUrl || '')
+            .trim()
 
-    const breadCrumb = useMemo(
-        () => [
-            {
-                index: 1,
-                label: 'Engagements',
-            },
-            {
-                index: 2,
-                label: 'Assignments',
-            },
-        ],
-        [],
-    )
+        if (stateBackUrl) {
+            return stateBackUrl
+        }
+
+        return projectId
+            ? `/projects/${projectId}/engagements`
+            : '/engagements'
+    }, [location.state, projectId])
 
     const handlePaymentSubmit = useCallback(async (
         data: PaymentFormData,
@@ -182,11 +219,37 @@ export const EngagementPaymentPage: FC = () => {
         }
     }, [engagementId, engagementResult, terminateMember])
 
+    const handleCompleteConfirm = useCallback(async (): Promise<void> => {
+        if (!completeMember) {
+            return
+        }
+
+        setIsCompleting(true)
+
+        try {
+            await updateEngagementAssignmentStatus(
+                engagementId,
+                completeMember.id,
+                'COMPLETED',
+            )
+            await engagementResult.mutate()
+            setCompleteMember(undefined)
+            showSuccessToast('Assignment completed successfully')
+        } catch (error) {
+            const message = error instanceof Error
+                ? error.message
+                : 'Failed to complete assignment'
+            showErrorToast(message)
+        } finally {
+            setIsCompleting(false)
+        }
+    }, [completeMember, engagementId, engagementResult])
+
     if (engagementResult.isLoading || projectResult.isLoading) {
         return (
             <PageWrapper
-                backUrl={`/projects/${projectId}/engagements`}
-                breadCrumb={breadCrumb}
+                backUrl={backUrl}
+                breadCrumb={[]}
                 pageTitle={pageTitle}
             >
                 <LoadingSpinner />
@@ -197,8 +260,8 @@ export const EngagementPaymentPage: FC = () => {
     if (engagementResult.error) {
         return (
             <PageWrapper
-                backUrl={`/projects/${projectId}/engagements`}
-                breadCrumb={breadCrumb}
+                backUrl={backUrl}
+                breadCrumb={[]}
                 pageTitle={pageTitle}
             >
                 <ErrorMessage
@@ -214,20 +277,11 @@ export const EngagementPaymentPage: FC = () => {
 
     return (
         <PageWrapper
-            backUrl={`/projects/${projectId}/engagements`}
-            breadCrumb={breadCrumb}
+            backUrl={backUrl}
+            breadCrumb={[]}
             pageTitle={pageTitle}
         >
             <div className={styles.container}>
-                <div className={styles.headerActions}>
-                    <Link to={`/projects/${projectId}/engagements`}>
-                        <Button
-                            label='Back to engagements list'
-                            secondary
-                        />
-                    </Link>
-                </div>
-
                 {assignments.length === 0
                     ? <div className={styles.empty}>No assigned members found.</div>
                     : (
@@ -239,29 +293,34 @@ export const EngagementPaymentPage: FC = () => {
                                 return (
                                     <article key={String(assignment.id)} className={styles.card}>
                                         <div className={styles.cardHeader}>
-                                            <div className={styles.memberHandle}>{assignment.memberHandle || '-'}</div>
-                                            <span className={styles.status}>{normalizedStatus || '-'}</span>
+                                            <div className={styles.memberHeader}>
+                                                <div className={styles.memberHandle}>{assignment.memberHandle || '-'}</div>
+                                                <span
+                                                    className={classNames(
+                                                        styles.statusPill,
+                                                        getAssignmentStatusPillClass(normalizedStatus),
+                                                    )}
+                                                >
+                                                    {normalizedStatus || '-'}
+                                                </span>
+                                            </div>
                                         </div>
 
                                         <div className={styles.metaGrid}>
                                             <div>
-                                                <span className={styles.label}>Terms Accepted</span>
-                                                <span className={styles.value}>
-                                                    {assignment.termsAccepted
-                                                        ? <IconSolid.CheckIcon className={styles.acceptedIcon} />
-                                                        : '-'}
-                                                </span>
+                                                <span className={styles.label}>Remarks</span>
+                                                <span className={styles.value}>{formatRemarks(assignment.otherRemarks)}</span>
                                             </div>
                                             <div>
                                                 <span className={styles.label}>Agreed Rate</span>
                                                 <span className={styles.value}>{formatCurrency(assignment.agreementRate)}</span>
                                             </div>
                                             <div>
-                                                <span className={styles.label}>Start Date</span>
+                                                <span className={styles.label}>Tentative Start</span>
                                                 <span className={styles.value}>{formatDate(assignment.startDate)}</span>
                                             </div>
                                             <div>
-                                                <span className={styles.label}>End Date</span>
+                                                <span className={styles.label}>Tentative End</span>
                                                 <span className={styles.value}>{formatDate(assignment.endDate)}</span>
                                             </div>
                                         </div>
@@ -297,13 +356,22 @@ export const EngagementPaymentPage: FC = () => {
                                                         <Button
                                                             label='Pay'
                                                             onClick={() => setPaymentMember(assignment)}
+                                                            variant='linkblue'
+                                                            primary
+                                                            size='sm'
+                                                        />
+                                                        <Button
+                                                            className={styles.completeButton}
+                                                            label='Complete'
+                                                            onClick={() => setCompleteMember(assignment)}
                                                             primary
                                                             size='sm'
                                                         />
                                                         <Button
                                                             label='Terminate'
                                                             onClick={() => setTerminateMember(assignment)}
-                                                            secondary
+                                                            variant='danger'
+                                                            primary
                                                             size='sm'
                                                         />
                                                     </>
@@ -339,6 +407,14 @@ export const EngagementPaymentPage: FC = () => {
                 onCancel={() => setTerminateMember(undefined)}
                 onConfirm={handleTerminateConfirm}
                 open={!!terminateMember}
+            />
+
+            <CompleteAssignmentModal
+                isProcessing={isCompleting}
+                memberHandle={completeMember?.memberHandle}
+                onCancel={() => setCompleteMember(undefined)}
+                onConfirm={handleCompleteConfirm}
+                open={!!completeMember}
             />
         </PageWrapper>
     )

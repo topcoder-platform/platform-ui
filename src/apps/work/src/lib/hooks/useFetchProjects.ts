@@ -3,6 +3,7 @@ import useSWR, { SWRResponse } from 'swr'
 import { fetchProjects, ProjectSummary } from '../services'
 
 export interface UseFetchProjectsParams {
+    enabled?: boolean
     memberOnly?: boolean
 }
 
@@ -15,16 +16,21 @@ export interface UseFetchProjectsResult {
 
 export function useFetchProjects(
     {
+        enabled = true,
         memberOnly = false,
     }: UseFetchProjectsParams = {},
 ): UseFetchProjectsResult {
+    const shouldFetch = enabled
+
     const {
         data,
         error,
         isValidating,
     }: SWRResponse<ProjectSummary[], Error>
         = useSWR<ProjectSummary[], Error>(
-            ['work/projects', memberOnly],
+            shouldFetch
+                ? ['work/projects', memberOnly]
+                : undefined,
             () => fetchProjects({
                 memberOnly,
             }),
@@ -36,7 +42,7 @@ export function useFetchProjects(
 
     return {
         error,
-        isLoading: !data && !error,
+        isLoading: shouldFetch && !data && !error,
         isValidating,
         projects: data || [],
     }

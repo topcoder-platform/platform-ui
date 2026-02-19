@@ -26,7 +26,6 @@ export * from './payments.service'
 export * from './project-member-invites.service'
 export * from './projects.service'
 export type {
-    InviteMember,
     ProjectSummary,
 } from './projects.service'
 export * from './resources.service'

@@ -37,6 +37,7 @@ import {
 import styles from '../../../lib/components/ProjectsListPage/ProjectsListPage.module.scss'
 
 const DEFAULT_FILTERS: ProjectFilters = {
+    billingAccountId: undefined,
     keyword: undefined,
     memberOnly: undefined,
     status: undefined,
@@ -201,6 +202,7 @@ export const ProjectsListPage: FC = () => {
                 filters={filters}
                 onFiltersChange={handleFiltersChange}
                 isManager={isManager}
+                projects={projectsResult.projects}
             />
 
             {projectsResult.error && (

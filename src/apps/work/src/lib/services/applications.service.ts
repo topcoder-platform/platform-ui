@@ -68,6 +68,9 @@ function normalizeApplication(application: Partial<Application>): Application {
             ? application.handle
             : '',
         id: application.id || '',
+        mobileNumber: typeof application.mobileNumber === 'string'
+            ? application.mobileNumber
+            : undefined,
         name: typeof application.name === 'string'
             ? application.name
             : '',

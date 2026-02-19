@@ -7,6 +7,9 @@ import {
     SKILLS_OPTIONAL_BILLING_ACCOUNT_IDS,
 } from '../constants/challenge-editor.constants'
 import {
+    CHALLENGE_STATUS,
+} from '../constants'
+import {
     Attachment,
     Challenge,
     ChallengeEditorFormData,
@@ -363,6 +366,51 @@ function normalizePrizeSets(prizeSets: unknown): PrizeSet[] {
         .filter((prizeSet): prizeSet is PrizeSet => !!prizeSet)
 }
 
+function getDefaultPlacementPrizeType(prizeSets: PrizeSet[]): 'POINT' | 'USD' {
+    const firstPrizeWithType = prizeSets
+        .flatMap(prizeSet => prizeSet.prizes || [])
+        .find(prize => prize.type === PRIZE_TYPES.POINT || prize.type === PRIZE_TYPES.USD)
+
+    return firstPrizeWithType?.type === PRIZE_TYPES.POINT
+        ? PRIZE_TYPES.POINT
+        : PRIZE_TYPES.USD
+}
+
+function ensurePlacementPrizeSet(prizeSets: PrizeSet[]): PrizeSet[] {
+    const placementPrizeSetIndex = prizeSets
+        .findIndex(prizeSet => prizeSet.type === PRIZE_SET_TYPES.PLACEMENT)
+    const defaultPrizeType = getDefaultPlacementPrizeType(prizeSets)
+    const defaultPlacementPrize: Prize = {
+        type: defaultPrizeType,
+        value: 0,
+    }
+
+    if (placementPrizeSetIndex < 0) {
+        return [
+            ...prizeSets,
+            {
+                prizes: [defaultPlacementPrize],
+                type: PRIZE_SET_TYPES.PLACEMENT,
+            },
+        ]
+    }
+
+    return prizeSets.map((prizeSet, index) => {
+        if (index !== placementPrizeSetIndex) {
+            return prizeSet
+        }
+
+        if (Array.isArray(prizeSet.prizes) && prizeSet.prizes.length > 0) {
+            return prizeSet
+        }
+
+        return {
+            ...prizeSet,
+            prizes: [defaultPlacementPrize],
+        }
+    })
+}
+
 function filterEmptyPrizeSets(prizeSets: PrizeSet[]): PrizeSet[] {
     return prizeSets.filter(prizeSet => Array.isArray(prizeSet.prizes) && prizeSet.prizes.length > 0)
 }
@@ -549,7 +597,6 @@ function removeEmptyValues(challenge: Partial<Challenge>): Partial<Challenge> {
 
 export function sanitizeChallengeName(value: string): string {
     return value
-        .replace(/[^a-zA-Z0-9 ]/g, '')
         .replace(/\s+/g, ' ')
         .trimStart()
 }
@@ -612,7 +659,13 @@ export function transformChallengeToFormData(
     const milestoneConfiguration = normalizeMilestoneConfiguration(metadata)
     const roundType = normalizeRoundType(challenge?.roundType) || ROUND_TYPES.SINGLE_ROUND
     const reviewType = normalizeReviewType(challenge?.legacy?.reviewType) || REVIEW_TYPES.INTERNAL
+    const status = normalizeOptionalString(challenge?.status)
+        ?.toUpperCase()
     const billingAccountId = normalizeOptionalId(challenge?.billing?.billingAccountId)
+    const normalizedPrizeSets = normalizePrizeSets(challenge?.prizeSets)
+    const prizeSetsForForm = challenge?.id && status !== CHALLENGE_STATUS.NEW
+        ? normalizedPrizeSets
+        : ensurePlacementPrizeSet(normalizedPrizeSets)
 
     return {
         assignedMemberId: normalizeOptionalString(challenge?.assignedMemberId),
@@ -641,11 +694,12 @@ export function transformChallengeToFormData(
         name,
         phases,
         privateDescription,
-        prizeSets: normalizePrizeSets(challenge?.prizeSets),
+        prizeSets: prizeSetsForForm,
         reviewers: normalizeReviewers(challenge?.reviewers),
         roundType,
         skills,
         startDate,
+        status,
         tags,
         terms: normalizeStringArray(challenge?.terms),
         timelineTemplateId: timelineTemplateId || undefined,
@@ -674,6 +728,8 @@ export function transformFormDataToChallenge(
     ]
     const roundType = normalizeRoundType(formData.roundType) || ROUND_TYPES.SINGLE_ROUND
     const reviewType = normalizeReviewType(formData.legacy?.reviewType) || REVIEW_TYPES.INTERNAL
+    const status = normalizeOptionalString(formData.status)
+        ?.toUpperCase()
     const billingAccountId = normalizeOptionalId(formData.billing?.billingAccountId)
 
     const challenge: Partial<Challenge> = {
@@ -707,6 +763,7 @@ export function transformFormDataToChallenge(
         startDate: isSchedulingEnabled
             ? toIsoDateString(formData.startDate)
             : undefined,
+        status,
         tags: normalizeTags(formData.tags),
         terms: normalizeStringArray(formData.terms),
         timelineTemplateId: isSchedulingEnabled

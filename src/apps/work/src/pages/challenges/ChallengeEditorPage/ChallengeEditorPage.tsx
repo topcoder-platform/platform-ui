@@ -2,7 +2,6 @@ import {
     FC,
     useCallback,
     useEffect,
-    useMemo,
     useState,
 } from 'react'
 import { useParams } from 'react-router-dom'
@@ -43,6 +42,7 @@ interface ChallengeEditorContentProps {
     challenge: UseFetchChallengeResult['challenge']
     challengeId?: string
     isEditMode: boolean
+    projectId?: string
 }
 
 function getErrorMessage(error: Error | undefined): string {
@@ -95,7 +95,12 @@ const ChallengeEditorContent: FC<ChallengeEditorContentProps> = (
     props: ChallengeEditorContentProps,
 ) => {
     if (!props.isEditMode || props.activeTab === 'details') {
-        return <ChallengeEditorForm challenge={props.challenge} />
+        return (
+            <ChallengeEditorForm
+                challenge={props.challenge}
+                projectId={props.projectId}
+            />
+        )
     }
 
     if (props.activeTab === 'resources' && props.challenge && props.challengeId) {
@@ -116,12 +121,19 @@ const ChallengeEditorContent: FC<ChallengeEditorContentProps> = (
         )
     }
 
-    return <ChallengeEditorForm challenge={props.challenge} />
+    return (
+        <ChallengeEditorForm
+            challenge={props.challenge}
+            projectId={props.projectId}
+        />
+    )
 }
 
 export const ChallengeEditorPage: FC = () => {
-    const params: Readonly<{ challengeId?: string }> = useParams<'challengeId'>()
+    const params: Readonly<{ challengeId?: string; projectId?: string }>
+        = useParams<'challengeId' | 'projectId'>()
     const challengeId = params.challengeId
+    const routeProjectId = params.projectId
 
     const isEditMode = !!challengeId
     const [activeTab, setActiveTab] = useState<EditorTab>('details')
@@ -140,6 +152,14 @@ export const ChallengeEditorPage: FC = () => {
         setActiveTab('submissions')
     }, [])
 
+    const challengeProjectId = challengeResult.challenge?.projectId
+        ? String(challengeResult.challenge.projectId)
+        : undefined
+    const projectId = routeProjectId || challengeProjectId
+    const challengesListPath = projectId
+        ? `/projects/${projectId}/challenges`
+        : '/challenges'
+
     useEffect(() => {
         if (isEditMode) {
             return
@@ -148,28 +168,13 @@ export const ChallengeEditorPage: FC = () => {
         setActiveTab('details')
     }, [isEditMode])
 
-    const breadCrumb = useMemo(
-        () => [
-            {
-                index: 1,
-                label: 'Challenges',
-            },
-            {
-                index: 2,
-                label: isEditMode ? 'Edit Challenge' : 'Create Challenge',
-            },
-        ],
-        [isEditMode],
-    )
-
     const pageTitle = isEditMode
-        ? 'Edit Challenge'
+        ? `Edit ${challengeResult.challenge?.name || 'Challenge'}`
         : 'Create Challenge'
-
     return (
         <PageWrapper
-            backUrl='/challenges'
-            breadCrumb={breadCrumb}
+            backUrl={challengesListPath}
+            breadCrumb={[]}
             pageTitle={pageTitle}
         >
             <div className={styles.container}>
@@ -204,6 +209,7 @@ export const ChallengeEditorPage: FC = () => {
                                 challenge={challengeResult.challenge}
                                 challengeId={challengeId}
                                 isEditMode={isEditMode}
+                                projectId={projectId}
                             />
                         </>
                     )

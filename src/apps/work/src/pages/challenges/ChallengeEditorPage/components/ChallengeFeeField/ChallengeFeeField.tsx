@@ -1,7 +1,5 @@
 import { FC, useMemo } from 'react'
 
-import { FormFieldWrapper } from '../../../../../lib/components/form'
-
 import styles from './ChallengeFeeField.module.scss'
 
 interface ChallengeFeeFieldProps {
@@ -13,20 +11,18 @@ export const ChallengeFeeField: FC<ChallengeFeeFieldProps> = (
 ) => {
     const formattedValue = useMemo(() => {
         if (!Number.isFinite(props.challengeFee)) {
-            return ''
+            return '$0'
         }
 
-        return `$ ${Math.trunc(props.challengeFee as number)
+        return `$${Math.trunc(props.challengeFee as number)
             .toLocaleString()}`
     }, [props.challengeFee])
 
     return (
-        <FormFieldWrapper
-            label='Challenge Fee'
-            name='challengeFee'
-        >
-            <div className={styles.value}>{formattedValue}</div>
-        </FormFieldWrapper>
+        <div className={styles.lineItem}>
+            <span className={styles.label}>Challenge Fee:</span>
+            <span className={styles.value}>{formattedValue}</span>
+        </div>
     )
 }
 

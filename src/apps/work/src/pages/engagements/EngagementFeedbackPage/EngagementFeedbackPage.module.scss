@@ -4,19 +4,266 @@
     gap: 16px;
 }
 
-.meta {
+.headerMeta {
     align-items: center;
     display: flex;
-    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.headerMetaItem {
+    align-items: center;
+    color: #2a2a2a;
+    display: flex;
+    font-size: 14px;
+    gap: 8px;
+}
+
+.headerMetaLabel {
+    color: #767676;
+    font-weight: 700;
+    white-space: nowrap;
 }
 
 .panel {
-    border: 1px solid #ececec;
+    background: #fff;
+    border: 1px solid #e8eaee;
     border-radius: 8px;
     padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
 
-.sectionTitle {
-    font-size: 18px;
-    margin: 0 0 12px;
+.panelHeader {
+    align-items: flex-start;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    justify-content: space-between;
+}
+
+.panelTitle {
+    color: #2a2a2a;
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.panelDescription {
+    color: #5b5b5b;
+    font-size: 14px;
+    margin-top: 4px;
+}
+
+.assignmentRow {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.assignmentLabel {
+    color: #767676;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+.assignmentValue {
+    color: #2a2a2a;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.panelActions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.notice {
+    background: #f8fafc;
+    border: 1px solid #e5edf7;
+    border-radius: 6px;
+    color: #4f5967;
+    font-size: 14px;
+    padding: 12px;
+}
+
+.loadingState,
+.emptyState {
+    color: #5b5b5b;
+    font-size: 14px;
+    padding: 20px;
+    text-align: center;
+}
+
+.errorState {
+    align-items: center;
+    background: #fff3f3;
+    border: 1px solid #ffd8d8;
+    border-radius: 6px;
+    color: #9f1f1f;
+    display: flex;
+    flex-wrap: wrap;
+    font-size: 14px;
+    gap: 12px;
+    justify-content: space-between;
+    padding: 12px;
+}
+
+.feedbackList {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.feedbackItem {
+    background: #fff;
+    border: 1px solid #ececec;
+    border-radius: 8px;
+    padding: 12px;
+}
+
+.feedbackText {
+    color: #2a2a2a;
+    font-size: 14px;
+    line-height: 1.45;
+    margin: 0 0 8px;
+    white-space: pre-wrap;
+}
+
+.pendingText {
+    color: #767676;
+    font-style: italic;
+}
+
+.feedbackMeta {
+    align-items: center;
+    color: #6e6e6e;
+    display: flex;
+    flex-wrap: wrap;
+    font-size: 12px;
+    gap: 12px;
+}
+
+.feedbackAuthor,
+.feedbackRating {
+    color: #4f5967;
+    font-weight: 600;
+}
+
+.feedbackDate {
+    color: #767676;
+}
+
+.modalContent {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.modalField {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.modalLabel {
+    color: #5b5b5b;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.modalAssignmentValue {
+    background: #f8fafc;
+    border: 1px solid #e6e6e6;
+    border-radius: 4px;
+    color: #2a2a2a;
+    font-size: 14px;
+    min-height: 41px;
+    padding: 10px 12px;
+}
+
+.input,
+.textarea {
+    background: #fff;
+    border: 1px solid #d6d6d6;
+    border-radius: 4px;
+    color: #2a2a2a;
+    font-size: 14px;
+    padding: 10px 12px;
+    width: 100%;
+}
+
+.input:disabled,
+.textarea:disabled {
+    background: #f3f4f6;
+    color: #8b8b8b;
+}
+
+.textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+.characterCount {
+    color: #8b8b8b;
+    font-size: 12px;
+    text-align: right;
+}
+
+.formError {
+    color: #c13030;
+    font-size: 12px;
+}
+
+.linkMessage {
+    color: #2a2a2a;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.linkMeta {
+    color: #6e6e6e;
+    font-size: 12px;
+}
+
+.linkDisplay {
+    align-items: center;
+    background: #f8fafc;
+    border: 1px solid #e6e6e6;
+    border-radius: 6px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px;
+}
+
+.linkInput {
+    background: #fff;
+    border: 1px solid #d6d6d6;
+    border-radius: 4px;
+    color: #2a2a2a;
+    flex: 1 1 220px;
+    font-size: 13px;
+    min-width: 220px;
+    padding: 8px 10px;
+}
+
+.copyLinkButton {
+    white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+    .panelActions {
+        width: 100%;
+    }
+
+    .linkInput {
+        min-width: 0;
+    }
 }

@@ -11,7 +11,7 @@
 
 The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/challenge-editor.schema.ts`.
 
-- `name`: required, max 200 chars, letters/numbers/spaces only.
+- `name`: required, max 200 chars; special and non-ASCII characters are allowed.
 - `trackId`: required.
 - `typeId`: required.
 - `description`: required, minimum length enforced.
@@ -29,7 +29,7 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 
 ## Field Components
 
-- `ChallengeNameField`: text input with sanitization.
+- `ChallengeNameField`: text input.
 - `ChallengeTrackField`: track selector from `useFetchChallengeTracks`.
 - `ChallengeTypeField`: active type selector from `useFetchChallengeTypes`.
 - `ChallengeDescriptionField`: public markdown spec editor.

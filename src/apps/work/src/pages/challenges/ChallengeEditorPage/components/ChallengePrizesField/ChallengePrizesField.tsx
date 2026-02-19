@@ -69,26 +69,29 @@ function hasMultiplePrizesSupport(
     challengeTypeName?: string,
     challengeTypeAbbreviation?: string,
 ): boolean {
-    const normalizedChallengeTypeName = (challengeTypeName || '')
-        .trim()
-        .toLowerCase()
-    const normalizedChallengeTypeAbbreviation = (challengeTypeAbbreviation || '')
-        .trim()
-        .toLowerCase()
+    const normalizedTypeValues = [
+        challengeTypeName,
+        challengeTypeAbbreviation,
+    ]
+        .map(value => (value || '')
+            .trim()
+            .toLowerCase())
+        .filter(Boolean)
 
-    if (!normalizedChallengeTypeName && !normalizedChallengeTypeAbbreviation) {
+    if (!normalizedTypeValues.length) {
         return false
     }
 
     return CHALLENGE_TYPES_WITH_MULTIPLE_PRIZES.some(challengeType => {
-        const hasMatchingName = normalizedChallengeTypeName
-            ? challengeType.name.toLowerCase() === normalizedChallengeTypeName
-            : false
-        const hasMatchingAbbreviation = normalizedChallengeTypeAbbreviation
-            ? challengeType.abbreviation.toLowerCase() === normalizedChallengeTypeAbbreviation
-            : false
+        const normalizedName = challengeType.name
+            .trim()
+            .toLowerCase()
+        const normalizedAbbreviation = challengeType.abbreviation
+            .trim()
+            .toLowerCase()
 
-        return hasMatchingName || hasMatchingAbbreviation
+        return normalizedTypeValues.includes(normalizedName)
+            || normalizedTypeValues.includes(normalizedAbbreviation)
     })
 }
 
@@ -155,8 +158,9 @@ export const ChallengePrizesField: FC<ChallengePrizesFieldProps> = (
         () => hasMultiplePrizesSupport(
             props.challengeTypeName,
             props.challengeTypeAbbreviation,
-        ),
+        ) || (Array.isArray(placementPrizes) && placementPrizes.length > 1),
         [
+            placementPrizes,
             props.challengeTypeAbbreviation,
             props.challengeTypeName,
         ],
@@ -213,8 +217,12 @@ export const ChallengePrizesField: FC<ChallengePrizesFieldProps> = (
             const previousPrize = Number(placementPrizes[index - 1]?.value) || 0
             const currentPrize = Number(placementPrizes[index]?.value) || 0
 
-            if (currentPrize > previousPrize) {
-                return 'Prize values must be in descending order.'
+            if (
+                previousPrize > 0
+                && currentPrize > 0
+                && currentPrize >= previousPrize
+            ) {
+                return 'Each subsequent prize must be less than the one above it.'
             }
         }
 

@@ -14,6 +14,14 @@ export interface EngagementEditorSchemaData {
     title: string
 }
 
+function emptyStringToUndefined(value: unknown, originalValue: unknown): unknown {
+    if (originalValue === '') {
+        return undefined
+    }
+
+    return value
+}
+
 export const engagementEditorSchema: yup.ObjectSchema<EngagementEditorSchemaData> = yup.object({
     anticipatedStart: yup
         .string()
@@ -47,6 +55,7 @@ export const engagementEditorSchema: yup.ObjectSchema<EngagementEditorSchemaData
         .required(),
     requiredMemberCount: yup
         .number()
+        .transform(emptyStringToUndefined)
         .when('isPrivate', {
             is: true,
             otherwise: schema => schema.optional(),

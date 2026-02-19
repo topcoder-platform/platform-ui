@@ -20,11 +20,28 @@
     flex-direction: column;
 }
 
+.startDateControls {
+    align-items: center;
+    display: flex;
+    gap: 12px;
+}
+
+.startDateInput {
+    flex: 1 1 auto;
+}
+
 .startDateTimezone {
-    color: $black-60;
-    font-size: 12px;
-    line-height: 17px;
+    color: $black-80;
+    font-size: 14px;
+    font-weight: 700;
     margin: 0 0 8px;
+}
+
+@media (max-width: 767px) {
+    .startDateControls {
+        align-items: stretch;
+        flex-direction: column;
+    }
 }
 
 .configPanel {
@@ -63,7 +80,7 @@
 }
 
 .header {
-    align-items: baseline;
+    align-items: center;
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
@@ -76,21 +93,9 @@
     margin: 0;
 }
 
-.toolbar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-}
-
 .phaseList {
     display: flex;
     flex-direction: column;
-    gap: 10px;
-}
-
-.phaseActions {
-    display: flex;
-    flex-wrap: wrap;
     gap: 10px;
 }
 

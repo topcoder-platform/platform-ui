@@ -33,6 +33,37 @@
     gap: 24px;
 }
 
+.billingSummary {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.prizesBillingGrid {
+    display: grid;
+    gap: 16px;
+}
+
+.prizeInputs {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.checkpointPrizeField {
+    grid-column: 1 / -1;
+}
+
+@media (min-width: 1024px) {
+    .prizesBillingGrid {
+        grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr);
+    }
+
+    .prizeInputs {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
 .footer {
     align-items: center;
     display: flex;

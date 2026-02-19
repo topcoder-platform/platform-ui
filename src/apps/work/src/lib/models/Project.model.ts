@@ -13,6 +13,7 @@ export interface Project {
     name: string
     status: ProjectStatus
     billingAccountId?: string | number
+    billingAccountName?: string
     description?: string
     type?: string
     cancelReason?: string
@@ -60,6 +61,7 @@ export interface ProjectFilters {
     keyword?: string
     status?: ProjectStatus | ProjectStatus[]
     memberOnly?: boolean
+    billingAccountId?: string
 }
 
 export interface ProjectPhaseProduct {

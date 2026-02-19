@@ -81,7 +81,7 @@ function asSkillOptions(value: unknown): SkillOption[] {
         .map(item => normalizeSkillValue(item))
         .filter((item): item is TaasSkill => !!item)
         .map(item => ({
-            label: `${item.name} (${item.skillId})`,
+            label: item.name,
             name: item.name,
             value: item.skillId,
         }))
@@ -98,7 +98,7 @@ export const TaasSkillsField: FC<TaasSkillsFieldProps> = (props: TaasSkillsField
 
     const options = useMemo<SkillOption[]>(
         () => skills.map(skill => ({
-            label: `${skill.name} (${skill.id})`,
+            label: skill.name,
             name: skill.name,
             value: skill.id,
         })),

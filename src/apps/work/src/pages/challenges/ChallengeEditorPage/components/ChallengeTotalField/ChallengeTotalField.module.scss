@@ -1,13 +1,18 @@
 @import '@libs/ui/styles/includes';
 
-.value {
-    align-items: center;
-    background: $black-5;
-    border: 1px solid $black-20;
-    border-radius: 8px;
+.lineItem {
     color: $black-80;
     display: flex;
+    flex-wrap: wrap;
     font-size: 14px;
-    min-height: 44px;
-    padding: 10px 12px;
+    gap: 6px;
+}
+
+.label {
+    color: $black-60;
+    font-weight: 600;
+}
+
+.value {
+    font-weight: 500;
 }

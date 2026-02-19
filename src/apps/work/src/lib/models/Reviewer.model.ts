@@ -25,11 +25,18 @@ export interface Scorecard {
 export interface Workflow {
     id: string
     name: string
+    scorecardId?: string
 }
 
 export interface DefaultReviewer {
+    aiWorkflowId?: string
+    baseCoefficient?: number
+    incrementalCoefficient?: number
+    isMemberReview?: boolean
+    memberReviewerCount?: number
     phaseId?: string
     roleId?: string
+    scorecardId?: string
 }
 
 export interface ScorecardFilters {

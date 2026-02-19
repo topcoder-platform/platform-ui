@@ -23,25 +23,30 @@ const STATUS_FROM_API: Record<string, EngagementStatus> = {
 }
 
 const ROLE_TO_API: Record<string, string> = {
-    CONTRACT: 'CONTRACT',
-    FULL_TIME: 'FULL_TIME',
-    PART_TIME: 'PART_TIME',
+    DATA_ENGINEER: 'DATA_ENGINEER',
+    DATA_SCIENTIST: 'DATA_SCIENTIST',
+    DESIGNER: 'DESIGNER',
+    SOFTWARE_DEVELOPER: 'SOFTWARE_DEVELOPER',
+    SOFTWARE_ENGINEER: 'SOFTWARE_DEVELOPER',
 }
 
 const ROLE_FROM_API: Record<string, EngagementRole> = {
-    CONTRACT: 'CONTRACT',
-    FULL_TIME: 'FULL_TIME',
-    PART_TIME: 'PART_TIME',
+    DATA_ENGINEER: 'DATA_ENGINEER',
+    DATA_SCIENTIST: 'DATA_SCIENTIST',
+    DESIGNER: 'DESIGNER',
+    SOFTWARE_DEVELOPER: 'SOFTWARE_DEVELOPER',
 }
 
 const WORKLOAD_TO_API: Record<string, string> = {
+    FRACTIONAL: 'FRACTIONAL',
     FULL_TIME: 'FULL_TIME',
-    PART_TIME: 'PART_TIME',
+    PART_TIME: 'FRACTIONAL',
 }
 
 const WORKLOAD_FROM_API: Record<string, EngagementWorkload> = {
+    FRACTIONAL: 'FRACTIONAL',
     FULL_TIME: 'FULL_TIME',
-    PART_TIME: 'PART_TIME',
+    PART_TIME: 'FRACTIONAL',
 }
 
 const ANTICIPATED_START_LABELS: Record<string, string> = {
@@ -93,6 +98,116 @@ function toNumber(value: unknown, fallback: number = 0): number {
     return parsed
 }
 
+function normalizeSkillValue(value: unknown): string {
+    if (typeof value === 'string') {
+        return value.trim()
+    }
+
+    if (typeof value === 'number' && Number.isFinite(value)) {
+        return String(value)
+            .trim()
+    }
+
+    return ''
+}
+
+function normalizeSkill(skill: unknown): Engagement['skills'][number] | undefined {
+    if (typeof skill === 'string' || typeof skill === 'number') {
+        const normalizedId = normalizeSkillValue(skill)
+
+        if (!normalizedId) {
+            return undefined
+        }
+
+        return {
+            id: normalizedId,
+            name: normalizedId,
+        }
+    }
+
+    if (!skill || typeof skill !== 'object') {
+        return undefined
+    }
+
+    const typedSkill = skill as {
+        id?: unknown
+        label?: unknown
+        name?: unknown
+        value?: unknown
+    }
+    const normalizedId = normalizeSkillValue(typedSkill.id ?? typedSkill.value)
+
+    if (!normalizedId) {
+        return undefined
+    }
+
+    const normalizedName = normalizeString(
+        typedSkill.name ?? typedSkill.label ?? normalizedId,
+    ) || normalizedId
+
+    return {
+        id: normalizedId,
+        name: normalizedName,
+    }
+}
+
+function normalizeEngagementSkills(data: Partial<Engagement>): Engagement['skills'] {
+    const normalizedData = data as Partial<Engagement> & {
+        requiredSkills?: unknown[]
+    }
+
+    const rawSkills = Array.isArray(data.skills) && data.skills.length
+        ? data.skills
+        : (Array.isArray(normalizedData.requiredSkills)
+            ? normalizedData.requiredSkills
+            : [])
+
+    return rawSkills
+        .map(skill => normalizeSkill(skill))
+        .filter((skill): skill is Engagement['skills'][number] => !!skill)
+}
+
+function normalizeDurationWeeks(data: Partial<Engagement>): number {
+    if (data.durationWeeks !== undefined) {
+        return toNumber(data.durationWeeks)
+    }
+
+    const legacyData = data as Partial<Engagement> & {
+        durationAmount?: unknown
+        durationUnit?: unknown
+        duration?: {
+            amount?: unknown
+            lengthInWeeks?: unknown
+            unit?: unknown
+        } | unknown
+    }
+
+    const legacyDuration = legacyData.duration
+
+    const durationUnit = normalizeString(
+        (legacyDuration && typeof legacyDuration === 'object'
+            ? (legacyDuration as { unit?: unknown }).unit
+            : undefined) ?? legacyData.durationUnit,
+    )
+        .toLowerCase()
+
+    const durationAmount = (legacyDuration && typeof legacyDuration === 'object'
+        ? (legacyDuration as { amount?: unknown }).amount
+        : undefined) ?? legacyData.durationAmount
+
+    if (durationUnit === 'weeks' && durationAmount !== undefined) {
+        return toNumber(durationAmount)
+    }
+
+    if (legacyDuration && typeof legacyDuration === 'object') {
+        return toNumber((legacyDuration as {
+            lengthInWeeks?: unknown
+        }).lengthInWeeks)
+    }
+
+    return toNumber(legacyDuration)
+}
+
 export function normalizeEngagementAssignmentStatus(status: string): string {
     if (!status) {
         return ''
@@ -133,14 +248,13 @@ export function getCountableEngagementAssignments(
     })
 }
 
+// eslint-disable-next-line complexity
 export function normalizeEngagement(data: Partial<Engagement> = {}): Engagement {
     const assignments = Array.isArray(data.assignments)
         ? data.assignments
         : []
 
-    const skills = Array.isArray(data.skills)
-        ? data.skills
-        : []
+    const skills = normalizeEngagementSkills(data)
 
     const assignedMemberHandles = Array.isArray(data.assignedMemberHandles)
         ? data.assignedMemberHandles
@@ -170,11 +284,31 @@ export function normalizeEngagement(data: Partial<Engagement> = {}): Engagement 
 
     const role = data.role
         ? fromEngagementRoleApi(data.role)
-        : 'FULL_TIME'
+        : 'DESIGNER'
 
     const workload = data.workload
         ? fromEngagementWorkloadApi(data.workload)
         : 'FULL_TIME'
+
+    const rawProject = (data as {
+        project?: {
+            id?: number | string
+            name?: string
+        }
+    }).project
+
+    const project = rawProject
+        ? {
+            id: rawProject.id,
+            name: normalizeString(rawProject.name),
+        }
+        : undefined
+
+    const projectName = normalizeString(
+        (data as {
+            projectName?: string
+        }).projectName || project?.name,
+    )
 
     return {
         anticipatedStart,
@@ -188,10 +322,12 @@ export function normalizeEngagement(data: Partial<Engagement> = {}): Engagement 
         countries,
         createdAt: toIsoString(data.createdAt),
         description: normalizeString(data.description),
-        durationWeeks: toNumber(data.durationWeeks),
+        durationWeeks: normalizeDurationWeeks(data),
         id: data.id || '',
         isPrivate: data.isPrivate === true,
-        projectId: data.projectId || '',
+        project,
+        projectId: data.projectId || project?.id || '',
+        projectName,
         requiredMemberCount: toNumber(data.requiredMemberCount),
         role,
         skills,
@@ -365,7 +501,7 @@ export function fromEngagementRoleApi(role: string): EngagementRole | string {
     const normalized = toUpperSnake(normalizeString(role))
 
     if (!normalized) {
-        return 'FULL_TIME'
+        return 'DESIGNER'
     }
 
     return ROLE_FROM_API[normalized] || role

@@ -27,14 +27,26 @@ export const TimelineTemplateField: FC<TimelineTemplateFieldProps> = (
     const timelineTemplates = timelineTemplatesResult.timelineTemplates
 
     const options = useMemo<FormSelectOption[]>(
-        () => timelineTemplates
-            .filter(template => template.isActive)
-            .filter(template => template.trackId === trackId && template.typeId === typeId)
-            .sort((templateA, templateB) => templateA.name.localeCompare(templateB.name))
-            .map(template => ({
-                label: template.name,
-                value: template.id,
-            })),
+        () => {
+            const seenTemplateIds = new Set<string>()
+
+            return timelineTemplates
+                .filter(template => template.isActive)
+                .filter(template => template.trackId === trackId && template.typeId === typeId)
+                .sort((templateA, templateB) => templateA.name.localeCompare(templateB.name))
+                .filter(template => {
+                    if (seenTemplateIds.has(template.id)) {
+                        return false
+                    }
+
+                    seenTemplateIds.add(template.id)
+                    return true
+                })
+                .map(template => ({
+                    label: template.name,
+                    value: template.id,
+                }))
+        },
         [timelineTemplates, trackId, typeId],
     )
 

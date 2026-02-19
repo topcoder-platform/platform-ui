@@ -137,6 +137,7 @@ export const TaasProjectsFilter: FC<TaasProjectsFilterProps> = (props: TaasProje
 
             <div className={styles.filterField}>
                 <InputSelectReact
+                    classNameWrapper={styles.inputWrapper}
                     isClearable
                     label='Project status'
                     name='taas-project-status'

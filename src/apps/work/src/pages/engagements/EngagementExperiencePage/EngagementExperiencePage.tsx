@@ -7,7 +7,7 @@ import {
     useMemo,
     useState,
 } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 
 import {
     MemberExperienceList,
@@ -16,7 +16,6 @@ import {
     MemberExperience,
 } from '~/apps/engagements/src/lib/models'
 import { PageWrapper } from '~/apps/review/src/lib'
-import { Button } from '~/libs/ui'
 
 import {
     ErrorMessage,
@@ -29,6 +28,10 @@ import {
     fetchMemberExperiences,
     MemberExperience as WorkMemberExperience,
 } from '../../../lib/services'
+import {
+    formatDate,
+    normalizeAssignmentStatus,
+} from '../../../lib/utils'
 
 import styles from './EngagementExperiencePage.module.scss'
 
@@ -49,14 +52,25 @@ function toMemberExperience(
     }
 }
 
+function getAssignmentUpdatedAt(assignment: unknown): string | undefined {
+    if (!assignment || typeof assignment !== 'object') {
+        return undefined
+    }
+
+    const updatedAt = (assignment as { updatedAt?: unknown }).updatedAt
+
+    return typeof updatedAt === 'string'
+        ? updatedAt
+        : undefined
+}
+
 export const EngagementExperiencePage: FC = () => {
     const params: Readonly<{
         assignmentId?: string
         engagementId?: string
-        projectId?: string
-    }> = useParams<'assignmentId' | 'engagementId' | 'projectId'>()
+    }> = useParams<'assignmentId' | 'engagementId'>()
+    const navigate = useNavigate()
 
-    const projectId = params.projectId || ''
     const engagementId = params.engagementId || ''
     const assignmentId = params.assignmentId || ''
 
@@ -72,6 +86,32 @@ export const EngagementExperiencePage: FC = () => {
         ),
         [assignmentId, engagementResult.engagement?.assignments],
     )
+    const assignmentHandle = selectedAssignment?.memberHandle || assignmentId
+    const assignmentStatus = normalizeAssignmentStatus(String(selectedAssignment?.status || '')) || '-'
+    const assignmentLastUpdated = formatDate(
+        getAssignmentUpdatedAt(selectedAssignment)
+            || engagementResult.engagement?.updatedAt
+            || '',
+    )
+    const rightHeader = useMemo(
+        () => (
+            <div className={styles.headerMeta}>
+                <div className={styles.headerMetaItem}>
+                    <span className={styles.headerMetaLabel}>Status:</span>
+                    <span>{assignmentStatus}</span>
+                </div>
+                <div className={styles.headerMetaItem}>
+                    <span className={styles.headerMetaLabel}>Last updated:</span>
+                    <span>{assignmentLastUpdated}</span>
+                </div>
+            </div>
+        ),
+        [assignmentLastUpdated, assignmentStatus],
+    )
+
+    const handleBackNavigation = useCallback(() => {
+        navigate(-1)
+    }, [navigate])
 
     const loadExperiences = useCallback(async (): Promise<void> => {
         if (!engagementId || !assignmentId) {
@@ -125,9 +165,10 @@ export const EngagementExperiencePage: FC = () => {
     if (engagementResult.isLoading) {
         return (
             <PageWrapper
-                backUrl={`/projects/${projectId}/engagements/${engagementId}/assignments`}
+                backAction={handleBackNavigation}
                 breadCrumb={breadCrumb}
                 pageTitle={pageTitle}
+                rightHeader={rightHeader}
             >
                 <LoadingSpinner />
             </PageWrapper>
@@ -137,9 +178,10 @@ export const EngagementExperiencePage: FC = () => {
     if (engagementResult.error) {
         return (
             <PageWrapper
-                backUrl={`/projects/${projectId}/engagements/${engagementId}/assignments`}
+                backAction={handleBackNavigation}
                 breadCrumb={breadCrumb}
                 pageTitle={pageTitle}
+                rightHeader={rightHeader}
             >
                 <ErrorMessage message={engagementResult.error.message} />
             </PageWrapper>
@@ -148,24 +190,14 @@ export const EngagementExperiencePage: FC = () => {
 
     return (
         <PageWrapper
-            backUrl={`/projects/${projectId}/engagements/${engagementId}/assignments`}
+            backAction={handleBackNavigation}
             breadCrumb={breadCrumb}
             pageTitle={pageTitle}
+            rightHeader={rightHeader}
         >
             <div className={styles.container}>
-                <div className={styles.meta}>
-                    <span>{`Assignment: ${selectedAssignment?.memberHandle || assignmentId}`}</span>
-                    <Link to={`/projects/${projectId}/engagements/${engagementId}/assignments`}>
-                        <Button
-                            label='Back to payment page'
-                            secondary
-                            size='md'
-                        />
-                    </Link>
-                </div>
-
                 <section className={styles.panel}>
-                    <h3 className={styles.sectionTitle}>Member Experience</h3>
+                    <h3 className={styles.sectionTitle}>{`Member experience: ${assignmentHandle}`}</h3>
                     <MemberExperienceList
                         error={error || undefined}
                         experiences={experiences}

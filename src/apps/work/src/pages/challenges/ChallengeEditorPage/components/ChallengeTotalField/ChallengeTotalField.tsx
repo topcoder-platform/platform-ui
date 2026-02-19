@@ -8,7 +8,6 @@ import {
 } from 'react-hook-form'
 import type { UseFormReturn } from 'react-hook-form'
 
-import { FormFieldWrapper } from '../../../../../lib/components/form'
 import {
     ChallengeEditorFormData,
     ChallengeReviewer,
@@ -39,7 +38,7 @@ export const ChallengeTotalField: FC = () => {
     )
 
     const formattedValue = useMemo(
-        () => `$ ${total.toLocaleString(undefined, {
+        () => `$${total.toLocaleString(undefined, {
             maximumFractionDigits: 2,
             minimumFractionDigits: 2,
         })}`,
@@ -47,12 +46,10 @@ export const ChallengeTotalField: FC = () => {
     )
 
     return (
-        <FormFieldWrapper
-            label='Estimated Challenge Total'
-            name='estimatedChallengeTotal'
-        >
-            <div className={styles.value}>{formattedValue}</div>
-        </FormFieldWrapper>
+        <div className={styles.lineItem}>
+            <span className={styles.label}>Estimated Challenge Total:</span>
+            <span className={styles.value}>{formattedValue}</span>
+        </div>
     )
 }
 

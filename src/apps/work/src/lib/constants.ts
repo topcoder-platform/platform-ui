@@ -118,9 +118,12 @@ export const REVIEWS_API_URL = process.env.REACT_APP_REVIEWS_API_URL
     || process.env.REVIEWS_API_URL
     || `${EnvironmentConfig.API.V6}/reviews`
 
-export const MEMBER_API_URL = process.env.REACT_APP_MEMBER_API_URL
+const rawMemberApiUrl = process.env.REACT_APP_MEMBER_API_URL
     || process.env.MEMBER_API_URL
-    || `${EnvironmentConfig.API.V5}/members`
+    || `${EnvironmentConfig.API.V6}/members`
+
+export const MEMBER_API_URL = rawMemberApiUrl
+    .replace(/\/v5\/members(?=\/|$)/, '/v6/members')
 
 export const RESOURCE_ROLES_API_URL = process.env.REACT_APP_RESOURCE_ROLES_API_URL
     || process.env.RESOURCE_ROLES_API_URL
@@ -239,9 +242,14 @@ export const ENGAGEMENT_STATUSES = [
     'Closed',
 ] as const
 
-export const ENGAGEMENT_ROLES = ['FULL_TIME', 'PART_TIME', 'CONTRACT'] as const
+export const ENGAGEMENT_ROLES = [
+    'DESIGNER',
+    'SOFTWARE_DEVELOPER',
+    'DATA_SCIENTIST',
+    'DATA_ENGINEER',
+] as const
 
-export const ENGAGEMENT_WORKLOADS = ['FULL_TIME', 'PART_TIME'] as const
+export const ENGAGEMENT_WORKLOADS = ['FULL_TIME', 'FRACTIONAL'] as const
 
 export const ANTICIPATED_START_OPTIONS = ['IMMEDIATE', 'FEW_DAYS', 'FEW_WEEKS'] as const
 

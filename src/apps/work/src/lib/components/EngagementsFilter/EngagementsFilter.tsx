@@ -9,7 +9,6 @@ import {
 import Select, { SingleValue } from 'react-select'
 
 import {
-    Button,
     IconOutline,
 } from '~/libs/ui'
 
@@ -25,36 +24,32 @@ interface SelectOption {
 }
 
 export interface EngagementsListFilters {
+    projectName?: string
     sortBy?: string
     sortOrder?: 'asc' | 'desc'
     status?: string
     title?: string
+    visibility?: 'private' | 'public'
 }
 
 interface EngagementsFilterProps {
     filters: EngagementsListFilters
+    showProjectNameFilter?: boolean
     onFiltersChange: (nextFilters: EngagementsListFilters) => void
 }
 
-const SORT_BY_OPTIONS: SelectOption[] = [
+const VISIBILITY_OPTIONS: SelectOption[] = [
     {
-        label: 'Anticipated Start',
-        value: 'anticipatedStart',
+        label: 'All',
+        value: 'all',
     },
     {
-        label: 'Created Date',
-        value: 'createdAt',
-    },
-]
-
-const SORT_ORDER_OPTIONS: SelectOption[] = [
-    {
-        label: 'Ascending',
-        value: 'asc',
+        label: 'Public',
+        value: 'public',
     },
     {
-        label: 'Descending',
-        value: 'desc',
+        label: 'Private',
+        value: 'private',
     },
 ]
 
@@ -73,14 +68,20 @@ function getStatusOptions(): SelectOption[] {
 
 export const EngagementsFilter: FC<EngagementsFilterProps> = (props: EngagementsFilterProps) => {
     const filters = props.filters
+    const showProjectNameFilter = !!props.showProjectNameFilter
     const onFiltersChange = props.onFiltersChange
 
     const [titleInput, setTitleInput] = useState<string>(filters.title || '')
+    const [projectNameInput, setProjectNameInput] = useState<string>(filters.projectName || '')
     const isFirstRender = useRef<boolean>(true)
 
     useEffect(() => {
         setTitleInput(filters.title || '')
     }, [filters.title])
+
+    useEffect(() => {
+        setProjectNameInput(filters.projectName || '')
+    }, [filters.projectName])
 
     useEffect(() => {
         if (isFirstRender.current) {
@@ -89,10 +90,19 @@ export const EngagementsFilter: FC<EngagementsFilterProps> = (props: Engagements
         }
 
         const timeout = window.setTimeout(() => {
-            if ((filters.title || '') !== titleInput) {
+            const normalizedTitle = titleInput.trim() || undefined
+            const normalizedProjectName = projectNameInput.trim() || undefined
+
+            if (
+                (filters.title || '') !== titleInput
+                || (filters.projectName || '') !== projectNameInput
+            ) {
                 onFiltersChange({
                     ...filters,
-                    title: titleInput.trim() || undefined,
+                    projectName: showProjectNameFilter
+                        ? normalizedProjectName
+                        : undefined,
+                    title: normalizedTitle,
                 })
             }
         }, 350)
@@ -100,7 +110,7 @@ export const EngagementsFilter: FC<EngagementsFilterProps> = (props: Engagements
         return () => {
             window.clearTimeout(timeout)
         }
-    }, [filters, onFiltersChange, titleInput])
+    }, [filters, onFiltersChange, projectNameInput, showProjectNameFilter, titleInput])
 
     const statusOptions = useMemo<SelectOption[]>(() => getStatusOptions(), [])
 
@@ -109,18 +119,17 @@ export const EngagementsFilter: FC<EngagementsFilterProps> = (props: Engagements
         [filters.status, statusOptions],
     )
 
-    const selectedSortBy = useMemo(
-        () => SORT_BY_OPTIONS.find(option => option.value === (filters.sortBy || 'anticipatedStart')),
-        [filters.sortBy],
-    )
-
-    const selectedSortOrder = useMemo(
-        () => SORT_ORDER_OPTIONS.find(option => option.value === (filters.sortOrder || 'asc')),
-        [filters.sortOrder],
+    const selectedVisibility = useMemo(
+        () => VISIBILITY_OPTIONS.find(option => option.value === (filters.visibility || 'all')),
+        [filters.visibility],
     )
 
     function handleSearchChange(event: ChangeEvent<HTMLInputElement>): void {
         setTitleInput(event.target.value)
+    }
+
+    function handleProjectSearchChange(event: ChangeEvent<HTMLInputElement>): void {
+        setProjectNameInput(event.target.value)
     }
 
     function handleStatusChange(nextOption: SingleValue<SelectOption>): void {
@@ -132,50 +141,53 @@ export const EngagementsFilter: FC<EngagementsFilterProps> = (props: Engagements
         })
     }
 
-    function handleSortByChange(nextOption: SingleValue<SelectOption>): void {
+    function handleVisibilityChange(nextOption: SingleValue<SelectOption>): void {
         onFiltersChange({
             ...filters,
-            sortBy: nextOption?.value || 'anticipatedStart',
-        })
-    }
-
-    function handleSortOrderChange(nextOption: SingleValue<SelectOption>): void {
-        onFiltersChange({
-            ...filters,
-            sortOrder: (nextOption?.value || 'asc') as 'asc' | 'desc',
-        })
-    }
-
-    function handleReset(): void {
-        setTitleInput('')
-        onFiltersChange({
-            sortBy: 'anticipatedStart',
-            sortOrder: 'asc',
-            status: undefined,
-            title: undefined,
+            visibility: nextOption?.value === 'all'
+                ? undefined
+                : nextOption?.value as 'private' | 'public',
         })
     }
 
     return (
         <div className={styles.container}>
             <div className={styles.filterField}>
-                <label htmlFor='work-engagements-search'>Search</label>
+                <label htmlFor='work-engagements-search'>Search by name</label>
                 <div className={styles.searchInputWrap}>
                     <IconOutline.SearchIcon className={styles.searchIcon} />
                     <input
                         id='work-engagements-search'
-                        aria-label='Search engagements by title'
+                        aria-label='Search engagements by name'
                         className={styles.searchInput}
                         onChange={handleSearchChange}
-                        placeholder='Search by title'
+                        placeholder='Search by name'
                         type='text'
                         value={titleInput}
                     />
                 </div>
             </div>
 
+            {showProjectNameFilter && (
+                <div className={styles.filterField}>
+                    <label htmlFor='work-engagements-project-search'>Search by project name</label>
+                    <div className={styles.searchInputWrap}>
+                        <IconOutline.SearchIcon className={styles.searchIcon} />
+                        <input
+                            id='work-engagements-project-search'
+                            aria-label='Search engagements by project name'
+                            className={styles.searchInput}
+                            onChange={handleProjectSearchChange}
+                            placeholder='Search by project name'
+                            type='text'
+                            value={projectNameInput}
+                        />
+                    </div>
+                </div>
+            )}
+
             <div className={styles.filterField}>
-                <label htmlFor='work-engagements-status'>Status</label>
+                <label htmlFor='work-engagements-status'>Engagement Status</label>
                 <Select
                     inputId='work-engagements-status'
                     className='react-select-container'
@@ -188,37 +200,15 @@ export const EngagementsFilter: FC<EngagementsFilterProps> = (props: Engagements
             </div>
 
             <div className={styles.filterField}>
-                <label htmlFor='work-engagements-sort-by'>Sort by</label>
+                <label htmlFor='work-engagements-visibility'>Visibility</label>
                 <Select
-                    inputId='work-engagements-sort-by'
+                    inputId='work-engagements-visibility'
                     className='react-select-container'
                     classNamePrefix='select'
-                    options={SORT_BY_OPTIONS}
-                    value={selectedSortBy}
-                    onChange={handleSortByChange}
+                    options={VISIBILITY_OPTIONS}
+                    value={selectedVisibility}
+                    onChange={handleVisibilityChange}
                     isClearable={false}
-                />
-            </div>
-
-            <div className={styles.filterField}>
-                <label htmlFor='work-engagements-sort-order'>Sort order</label>
-                <Select
-                    inputId='work-engagements-sort-order'
-                    className='react-select-container'
-                    classNamePrefix='select'
-                    options={SORT_ORDER_OPTIONS}
-                    value={selectedSortOrder}
-                    onChange={handleSortOrderChange}
-                    isClearable={false}
-                />
-            </div>
-
-            <div className={styles.actions}>
-                <Button
-                    label='Reset'
-                    onClick={handleReset}
-                    secondary
-                    size='md'
                 />
             </div>
         </div>

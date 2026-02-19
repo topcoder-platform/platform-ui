@@ -17,6 +17,8 @@ import {
     Project,
     ProjectStatusValue,
 } from '../../models'
+import { useFetchBillingAccounts } from '../../hooks'
+import type { UseFetchBillingAccountsResult } from '../../hooks'
 import { ProjectCard } from '../ProjectCard'
 import { ProjectStatus } from '../ProjectStatus'
 
@@ -80,9 +82,29 @@ interface ProjectsTableProps {
 
 function getProjectPath(project: Project): string {
     const projectId = String(project.id)
-    const isInvited = project.isInvited ?? !!project.invites?.length
 
-    return `/projects/${projectId}/${isInvited ? 'invitations' : 'challenges'}`
+    return `/projects/${projectId}/challenges`
+}
+
+function getBillingAccountDisplay(
+    project: Project,
+    billingAccountNames: Map<string, string>,
+): string {
+    const billingAccountId = project.billingAccountId !== undefined && project.billingAccountId !== null
+        ? String(project.billingAccountId)
+            .trim()
+        : ''
+    const billingAccountName = (project.billingAccountName || '').trim() || billingAccountNames.get(billingAccountId)
+
+    if (!billingAccountId && !billingAccountName) {
+        return '-'
+    }
+
+    if (!billingAccountId) {
+        return billingAccountName || '-'
+    }
+
+    return `${billingAccountName || 'Unknown'} / ${billingAccountId}`
 }
 
 export const ProjectsTable: FC<ProjectsTableProps> = (props: ProjectsTableProps) => {
@@ -92,6 +114,18 @@ export const ProjectsTable: FC<ProjectsTableProps> = (props: ProjectsTableProps)
     const onSort: (fieldName: string) => void = props.onSort
     const sortBy: string = props.sortBy
     const sortOrder: SortOrder = props.sortOrder
+    const {
+        billingAccounts,
+    }: UseFetchBillingAccountsResult = useFetchBillingAccounts()
+    const billingAccountNames = useMemo(
+        () => new Map(
+            billingAccounts.map(account => ([
+                String(account.id),
+                account.name,
+            ])),
+        ),
+        [billingAccounts],
+    )
 
     const columns: TableColumn<Project>[] = useMemo(
         () => [
@@ -127,6 +161,12 @@ export const ProjectsTable: FC<ProjectsTableProps> = (props: ProjectsTableProps)
             },
             {
                 isSortable: false,
+                label: 'Billing Account',
+                renderer: (project: Project) => <>{getBillingAccountDisplay(project, billingAccountNames)}</>,
+                type: 'element',
+            },
+            {
+                isSortable: false,
                 label: 'Actions',
                 renderer: (project: Project) => {
                     const projectPath = getProjectPath(project)
@@ -150,7 +190,7 @@ export const ProjectsTable: FC<ProjectsTableProps> = (props: ProjectsTableProps)
                 type: 'action',
             },
         ],
-        [canEditProjects],
+        [billingAccountNames, canEditProjects],
     )
 
     const forceSort = useMemo<Sort>(

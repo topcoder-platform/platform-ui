@@ -3,16 +3,23 @@ import {
     useCallback,
     useEffect,
     useMemo,
+    useRef,
     useState,
 } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 
 import { yupResolver } from '@hookform/resolvers/yup'
 import { Button } from '~/libs/ui'
 
-import { CHALLENGE_TRACKS } from '../../../../lib/constants'
-import { AUTOSAVE_DELAY_MS } from '../../../../lib/constants/challenge-editor.constants'
+import {
+    CHALLENGE_STATUS,
+    CHALLENGE_TRACKS,
+} from '../../../../lib/constants'
+import {
+    AUTOSAVE_DELAY_MS,
+    PRIZE_SET_TYPES,
+} from '../../../../lib/constants/challenge-editor.constants'
 import {
     useAutosave,
     useFetchChallengeTracks,
@@ -21,6 +28,7 @@ import {
 import {
     Challenge,
     ChallengeEditorFormData,
+    ChallengePhase,
     ChallengeType,
 } from '../../../../lib/models'
 import {
@@ -105,9 +113,6 @@ import {
     ReviewersField,
 } from './ReviewersField'
 import {
-    ReviewTypeField,
-} from './ReviewTypeField'
-import {
     RoundTypeField,
 } from './RoundTypeField'
 import {
@@ -123,15 +128,69 @@ import styles from './ChallengeEditorForm.module.scss'
 
 interface ChallengeEditorFormProps {
     challenge?: Challenge
+    projectId?: string
 }
 
 interface SaveChallengeOptions {
     isAutosave?: boolean
-    navigateAfterCreate?: boolean
 }
 
 const CHALLENGE_TYPE_CHALLENGE_ABBREVIATION = 'CH'
 const CHALLENGE_TYPE_CHALLENGE_NAME = 'CHALLENGE'
+const CHALLENGE_TYPE_TASK_NAME = 'TASK'
+const CHALLENGE_TYPE_TASK_SHORT_ABBREVIATION = 'TSK'
+const CHECKPOINT_REQUIRED_PHASES = [
+    'Checkpoint Submission',
+    'Checkpoint Screening',
+    'Checkpoint Review',
+]
+
+function normalizePhaseName(value: unknown): string {
+    if (typeof value !== 'string') {
+        return ''
+    }
+
+    return value
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, ' ')
+}
+
+function hasCheckpointPhases(phases: unknown): boolean {
+    if (!Array.isArray(phases)) {
+        return false
+    }
+
+    const phaseNames = new Set(
+        phases
+            .map(phase => normalizePhaseName((phase as ChallengePhase)?.name))
+            .filter(Boolean),
+    )
+
+    return CHECKPOINT_REQUIRED_PHASES
+        .every(phaseName => phaseNames.has(normalizePhaseName(phaseName)))
+}
+
+function isTaskChallengeType(challengeType?: ChallengeType): boolean {
+    if (!challengeType) {
+        return false
+    }
+
+    if (challengeType.isTask) {
+        return true
+    }
+
+    const normalizedChallengeTypeName = (challengeType.name || '')
+        .trim()
+        .toUpperCase()
+    const normalizedChallengeTypeAbbreviation = (challengeType.abbreviation || '')
+        .trim()
+        .toUpperCase()
+
+    return normalizedChallengeTypeName === CHALLENGE_TYPE_TASK_NAME
+        || normalizedChallengeTypeAbbreviation === CHALLENGE_TYPE_TASK_NAME
+        || normalizedChallengeTypeAbbreviation === CHALLENGE_TYPE_TASK_SHORT_ABBREVIATION
+}
 
 function getStatusText(
     saveStatus: 'error' | 'idle' | 'saved' | 'saving',
@@ -151,10 +210,65 @@ function getStatusText(
     return ''
 }
 
+function normalizeProjectId(value: unknown): string | undefined {
+    if (typeof value === 'number' && Number.isFinite(value)) {
+        return String(value)
+    }
+
+    if (typeof value === 'string') {
+        const normalizedValue = value.trim()
+        return normalizedValue || undefined
+    }
+
+    return undefined
+}
+
+function getChallengesListPath(projectId?: string): string {
+    return projectId
+        ? `/projects/${projectId}/challenges`
+        : '/challenges'
+}
+
+function normalizeStatus(value: unknown): string | undefined {
+    if (typeof value !== 'string') {
+        return undefined
+    }
+
+    const normalizedValue = value
+        .trim()
+        .toUpperCase()
+
+    return normalizedValue || undefined
+}
+
+function getSubmitButtonLabel(status?: string): string {
+    if (status === CHALLENGE_STATUS.NEW) {
+        return 'Save as Draft'
+    }
+
+    if (status === CHALLENGE_STATUS.ACTIVE) {
+        return 'Update Challenge'
+    }
+
+    return 'Save Challenge'
+}
+
+// eslint-disable-next-line complexity
 export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     props: ChallengeEditorFormProps,
 ) => {
-    const navigate = useNavigate()
+    const defaultedDiscussionForumTypeIdRef = useRef<string | undefined>()
+    const fallbackProjectId = useMemo(
+        () => normalizeProjectId(props.projectId) || normalizeProjectId(props.challenge?.projectId),
+        [
+            props.challenge?.projectId,
+            props.projectId,
+        ],
+    )
+    const challengesListPath = useMemo(
+        () => getChallengesListPath(fallbackProjectId),
+        [fallbackProjectId],
+    )
 
     const [currentChallengeId, setCurrentChallengeId] = useState<string | undefined>(props.challenge?.id)
     const [isSaving, setIsSaving] = useState<boolean>(false)
@@ -169,8 +283,11 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     })
 
     const formState = formMethods.formState
+    const getValues = formMethods.getValues
     const handleSubmit = formMethods.handleSubmit
     const reset = formMethods.reset
+    const setValue = formMethods.setValue
+    const trigger = formMethods.trigger
     const watch = formMethods.watch
     const values = watch()
     const challengeTracks = useFetchChallengeTracks().tracks
@@ -183,6 +300,40 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             values.typeId,
         ],
     )
+    const fallbackChallengeTypeName = useMemo(
+        (): string | undefined => {
+            const challengeType = props.challenge?.type
+
+            if (!challengeType) {
+                return undefined
+            }
+
+            if (typeof challengeType === 'string') {
+                return challengeType
+            }
+
+            return challengeType.name || challengeType.abbreviation
+        },
+        [props.challenge?.type],
+    )
+    const fallbackChallengeTypeAbbreviation = useMemo(
+        (): string | undefined => {
+            const challengeType = props.challenge?.type
+
+            if (!challengeType) {
+                return undefined
+            }
+
+            if (typeof challengeType === 'string') {
+                return challengeType
+            }
+
+            return challengeType.abbreviation || challengeType.name
+        },
+        [props.challenge?.type],
+    )
+    const resolvedChallengeTypeName = selectedChallengeType?.name || fallbackChallengeTypeName
+    const resolvedChallengeTypeAbbreviation = selectedChallengeType?.abbreviation || fallbackChallengeTypeAbbreviation
     const selectedChallengeTrack = useMemo(
         () => challengeTracks.find(challengeTrack => challengeTrack.id === values.trackId),
         [
@@ -221,17 +372,153 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     )
     const showRoundTypeField = isDesignTrackSelected && Boolean(values.typeId?.trim())
     const showSubmissionSettingsSection = isDesignTrackSelected && isChallengeTypeSelected
+    const showCheckpointPrizes = useMemo(
+        () => hasCheckpointPhases(values.phases),
+        [values.phases],
+    )
+    const normalizedChallengeStatus = useMemo(
+        () => normalizeStatus(values.status) || normalizeStatus(props.challenge?.status),
+        [
+            props.challenge?.status,
+            values.status,
+        ],
+    )
+    const isChallengeCreated = !!currentChallengeId
 
     useEffect(() => {
         setCurrentChallengeId(props.challenge?.id)
+        defaultedDiscussionForumTypeIdRef.current = undefined
         reset(transformChallengeToFormData(props.challenge))
     }, [props.challenge, reset])
+
+    useEffect(() => {
+        const normalizedTypeId = values.typeId?.trim()
+
+        if (!normalizedTypeId) {
+            defaultedDiscussionForumTypeIdRef.current = undefined
+            return
+        }
+
+        if (currentChallengeId) {
+            defaultedDiscussionForumTypeIdRef.current = normalizedTypeId
+            return
+        }
+
+        if (!selectedChallengeType || selectedChallengeType.id !== normalizedTypeId) {
+            return
+        }
+
+        if (defaultedDiscussionForumTypeIdRef.current === normalizedTypeId) {
+            return
+        }
+
+        defaultedDiscussionForumTypeIdRef.current = normalizedTypeId
+        setValue('discussionForum', !isTaskChallengeType(selectedChallengeType), {
+            shouldDirty: false,
+            shouldValidate: true,
+        })
+    }, [
+        currentChallengeId,
+        selectedChallengeType,
+        setValue,
+        values.typeId,
+    ])
+
+    useEffect(() => {
+        if (showCheckpointPrizes) {
+            return
+        }
+
+        if (!Array.isArray(values.prizeSets)) {
+            return
+        }
+
+        const hasCheckpointPrizeSet = values.prizeSets
+            .some(prizeSet => prizeSet?.type === PRIZE_SET_TYPES.CHECKPOINT)
+
+        if (!hasCheckpointPrizeSet) {
+            return
+        }
+
+        setValue('prizeSets', values.prizeSets
+            .filter(prizeSet => prizeSet?.type !== PRIZE_SET_TYPES.CHECKPOINT), {
+            shouldDirty: true,
+            shouldValidate: true,
+        })
+    }, [
+        setValue,
+        showCheckpointPrizes,
+        values.prizeSets,
+    ])
+
+    const createNewChallenge = useCallback(
+        async (): Promise<void> => {
+            const isBasicInfoValid = await trigger([
+                'name',
+                'trackId',
+                'typeId',
+            ])
+
+            if (!isBasicInfoValid) {
+                return
+            }
+
+            setIsSaving(true)
+            setSaveStatus('saving')
+            setSaveError(undefined)
+
+            try {
+                const formData = getValues()
+                const createProjectId = normalizeProjectId(formData.projectId) || fallbackProjectId
+                if (!createProjectId) {
+                    throw new Error('Project id is required to create challenge')
+                }
+
+                const savedChallenge = await createChallenge({
+                    name: formData.name,
+                    projectId: createProjectId,
+                    status: CHALLENGE_STATUS.NEW,
+                    trackId: formData.trackId,
+                    typeId: formData.typeId,
+                })
+                const nextValues = transformChallengeToFormData(savedChallenge)
+                const savedAt = new Date()
+
+                setCurrentChallengeId(savedChallenge.id)
+                setLastSaved(savedAt)
+                setSaveStatus('saved')
+
+                reset(nextValues)
+                showSuccessToast('Challenge created successfully')
+            } catch (error) {
+                const errorMessage = error instanceof Error
+                    ? error.message
+                    : 'Failed to create challenge'
+
+                setSaveError(errorMessage)
+                setSaveStatus('error')
+                showErrorToast('Failed to create challenge')
+            } finally {
+                setIsSaving(false)
+            }
+        },
+        [
+            fallbackProjectId,
+            getValues,
+            reset,
+            trigger,
+        ],
+    )
 
     const saveChallenge = useCallback(
         async (
             formData: ChallengeEditorFormData,
             options: SaveChallengeOptions = {},
         ): Promise<void> => {
+            if (!currentChallengeId) {
+                throw new Error('Challenge id is required to save challenge')
+            }
+
             if (!options.isAutosave) {
                 setIsSaving(true)
                 setSaveStatus('saving')
@@ -240,14 +527,17 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             setSaveError(undefined)
 
             try {
-                const payload = transformFormDataToChallenge(formData)
-                let savedChallenge: Challenge
-
-                if (currentChallengeId) {
-                    savedChallenge = await patchChallenge(currentChallengeId, payload)
-                } else {
-                    savedChallenge = await createChallenge(payload)
-                }
+                const currentStatus = normalizeStatus(formData.status)
+                const isSaveAsDraft = !options.isAutosave
+                    && currentStatus === CHALLENGE_STATUS.NEW
+                const payloadStatus = isSaveAsDraft
+                    ? CHALLENGE_STATUS.DRAFT
+                    : currentStatus
+                const payload = transformFormDataToChallenge({
+                    ...formData,
+                    status: payloadStatus,
+                })
+                const savedChallenge = await patchChallenge(currentChallengeId, payload)
 
                 const nextValues = transformChallengeToFormData(savedChallenge)
                 const savedAt = new Date()
@@ -259,15 +549,9 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 reset(nextValues)
 
                 if (!options.isAutosave) {
-                    if (!formData.id) {
-                        showSuccessToast('Challenge created successfully')
-                    } else {
-                        showSuccessToast('Challenge saved successfully')
-                    }
-                }
-
-                if (options.navigateAfterCreate && !formData.id) {
-                    navigate('/challenges')
+                    showSuccessToast(isSaveAsDraft
+                        ? 'Challenge saved as draft successfully'
+                        : 'Challenge saved successfully')
                 }
             } catch (error) {
                 const errorMessage = error instanceof Error
@@ -288,12 +572,18 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 }
             }
         },
-        [currentChallengeId, navigate, reset],
+        [
+            currentChallengeId,
+            reset,
+        ],
     )
 
     const autosaveResult = useAutosave<ChallengeEditorFormData>({
         delay: AUTOSAVE_DELAY_MS,
-        enabled: formState.isDirty && formState.isValid,
+        enabled: !!currentChallengeId
+            && formState.isDirty
+            && formState.isValid
+            && normalizedChallengeStatus !== CHALLENGE_STATUS.NEW,
         formValues: values,
         onSave: async formData => {
             await saveChallenge(formData, {
@@ -316,9 +606,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
 
     const onSubmit = useCallback(
         async (formData: ChallengeEditorFormData): Promise<void> => {
-            await saveChallenge(formData, {
-                navigateAfterCreate: true,
-            })
+            await saveChallenge(formData)
         },
         [saveChallenge],
     )
@@ -327,127 +615,177 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         () => getStatusText(isSaving ? 'saving' : saveStatus),
         [isSaving, saveStatus],
     )
+    const submitButtonLabel = useMemo(
+        () => getSubmitButtonLabel(normalizedChallengeStatus),
+        [normalizedChallengeStatus],
+    )
 
     return (
         <FormProvider {...formMethods}>
             <form className={styles.form} onSubmit={handleSubmit(onSubmit)}>
                 <input type='hidden' {...formMethods.register('id')} />
+                <input type='hidden' {...formMethods.register('status')} />
 
                 <section className={styles.section}>
                     <h3 className={styles.sectionTitle}>Basic Information</h3>
                     <div className={styles.grid}>
                         <ChallengeNameField />
-                        <ChallengeTrackField disabled={!!props.challenge?.id} />
-                        <ChallengeTypeField disabled={!!props.challenge?.id} />
-                        {showRoundTypeField
+                        <ChallengeTrackField disabled={isChallengeCreated} />
+                        <ChallengeTypeField disabled={isChallengeCreated} />
+                        {isChallengeCreated && showRoundTypeField
                             ? <RoundTypeField />
                             : undefined}
                     </div>
                 </section>
 
-                <section className={styles.section}>
-                    <h3 className={styles.sectionTitle}>Specification</h3>
-                    <div className={styles.block}>
-                        <ChallengeDescriptionField />
-                        <ChallengePrivateDescriptionField />
-                    </div>
-                </section>
-
-                <section className={styles.section}>
-                    <h3 className={styles.sectionTitle}>Metadata</h3>
-                    <div className={styles.grid}>
-                        <ChallengeTagsField />
-                        <ChallengeSkillsField />
-                    </div>
-                </section>
-
-                <section className={styles.section}>
-                    <h3 className={styles.sectionTitle}>Prizes &amp; Billing</h3>
-                    <div className={styles.grid}>
-                        <ChallengePrizesField
-                            challengeTypeAbbreviation={selectedChallengeType?.abbreviation}
-                            challengeTypeName={selectedChallengeType?.name}
-                            name='prizeSets'
-                        />
-                        <CheckpointPrizesField name='prizeSets' />
-                        <CopilotFeeField name='prizeSets' />
-                        <ReviewCostField name='prizeSets' />
-                        <ChallengeFeeField challengeFee={values.challengeFee} />
-                        <ChallengeTotalField />
-                    </div>
-                </section>
-
-                <section className={styles.section}>
-                    <h3 className={styles.sectionTitle}>Timeline &amp; Schedule</h3>
-                    <div className={styles.block}>
-                        <ChallengeScheduleSection showSchedulingApiToggle={!!props.challenge?.id} />
-                    </div>
-                </section>
-
-                <section className={styles.section}>
-                    <h3 className={styles.sectionTitle}>Advanced Options</h3>
-                    <div className={styles.grid}>
-                        <AssignedMemberField />
-                        <CopilotField />
-                        <GroupsField />
-                        <TermsField />
-                        <DiscussionForumField />
-                        <NDAField />
-                        <ReviewTypeField />
-                    </div>
-                </section>
-
-                {showSubmissionSettingsSection
+                {!isChallengeCreated
                     ? (
-                        <section className={styles.section}>
-                            <h3 className={styles.sectionTitle}>Submission Settings</h3>
-                            <div className={styles.grid}>
-                                <SubmissionVisibilityField />
-                                <StockArtsField />
-                                <MaximumSubmissionsField />
+                        <div className={styles.footer}>
+                            <div className={styles.statusArea}>
+                                {statusText
+                                    ? <span className={styles.statusText}>{statusText}</span>
+                                    : undefined}
+                                <span className={styles.lastSaved}>{formatLastSaved(lastSaved)}</span>
+                                {saveError
+                                    ? <span className={styles.errorText}>{saveError}</span>
+                                    : undefined}
                             </div>
-                        </section>
+
+                            <div className={styles.actions}>
+                                <Link className={styles.cancelLink} to={challengesListPath}>
+                                    Cancel
+                                </Link>
+                                <Button
+                                    disabled={isSaving}
+                                    label='New'
+                                    onClick={createNewChallenge}
+                                    primary
+                                    size='lg'
+                                    type='button'
+                                />
+                            </div>
+                        </div>
                     )
                     : undefined}
 
-                <section className={styles.section}>
-                    <h3 className={styles.sectionTitle}>Reviewers</h3>
-                    <div className={styles.block}>
-                        <ReviewersField />
-                    </div>
-                </section>
+                {isChallengeCreated
+                    ? (
+                        <>
+                            <section className={styles.section}>
+                                <h3 className={styles.sectionTitle}>Specification</h3>
+                                <div className={styles.block}>
+                                    <ChallengeDescriptionField />
+                                    <ChallengePrivateDescriptionField />
+                                </div>
+                            </section>
 
-                <section className={styles.section}>
-                    <h3 className={styles.sectionTitle}>Attachments</h3>
-                    <div className={styles.block}>
-                        <AttachmentsField />
-                    </div>
-                </section>
+                            <section className={styles.section}>
+                                <h3 className={styles.sectionTitle}>Metadata</h3>
+                                <div className={styles.grid}>
+                                    <ChallengeTagsField />
+                                    <ChallengeSkillsField />
+                                </div>
+                            </section>
 
-                <div className={styles.footer}>
-                    <div className={styles.statusArea}>
-                        {statusText
-                            ? <span className={styles.statusText}>{statusText}</span>
-                            : undefined}
-                        <span className={styles.lastSaved}>{formatLastSaved(lastSaved)}</span>
-                        {saveError
-                            ? <span className={styles.errorText}>{saveError}</span>
-                            : undefined}
-                    </div>
+                            <section className={styles.section}>
+                                <h3 className={styles.sectionTitle}>Prizes &amp; Billing</h3>
+                                <div className={styles.prizesBillingGrid}>
+                                    <div className={styles.prizeInputs}>
+                                        <ChallengePrizesField
+                                            challengeTypeAbbreviation={resolvedChallengeTypeAbbreviation}
+                                            challengeTypeName={resolvedChallengeTypeName}
+                                            name='prizeSets'
+                                        />
+                                        <CopilotFeeField name='prizeSets' />
+                                        {showCheckpointPrizes
+                                            ? (
+                                                <div className={styles.checkpointPrizeField}>
+                                                    <CheckpointPrizesField name='prizeSets' />
+                                                </div>
+                                            )
+                                            : undefined}
+                                    </div>
+                                    <div className={styles.billingSummary}>
+                                        <ReviewCostField name='prizeSets' />
+                                        <ChallengeFeeField challengeFee={values.challengeFee} />
+                                        <ChallengeTotalField />
+                                    </div>
+                                </div>
+                            </section>
 
-                    <div className={styles.actions}>
-                        <Link className={styles.cancelLink} to='/challenges'>
-                            Cancel
-                        </Link>
-                        <Button
-                            disabled={!formState.isValid || isSaving}
-                            label='Save challenge'
-                            primary
-                            size='lg'
-                            type='submit'
-                        />
-                    </div>
-                </div>
+                            <section className={styles.section}>
+                                <h3 className={styles.sectionTitle}>Timeline &amp; Schedule</h3>
+                                <div className={styles.block}>
+                                    <ChallengeScheduleSection />
+                                </div>
+                            </section>
+
+                            <section className={styles.section}>
+                                <h3 className={styles.sectionTitle}>Advanced Options</h3>
+                                <div className={styles.grid}>
+                                    <AssignedMemberField />
+                                    <CopilotField />
+                                    <GroupsField />
+                                    <TermsField />
+                                    <DiscussionForumField />
+                                    <NDAField />
+                                </div>
+                            </section>
+
+                            {showSubmissionSettingsSection
+                                ? (
+                                    <section className={styles.section}>
+                                        <h3 className={styles.sectionTitle}>Submission Settings</h3>
+                                        <div className={styles.grid}>
+                                            <SubmissionVisibilityField />
+                                            <StockArtsField />
+                                            <MaximumSubmissionsField />
+                                        </div>
+                                    </section>
+                                )
+                                : undefined}
+
+                            <section className={styles.section}>
+                                <h3 className={styles.sectionTitle}>Reviewers</h3>
+                                <div className={styles.block}>
+                                    <ReviewersField />
+                                </div>
+                            </section>
+
+                            <section className={styles.section}>
+                                <h3 className={styles.sectionTitle}>Attachments</h3>
+                                <div className={styles.block}>
+                                    <AttachmentsField />
+                                </div>
+                            </section>
+
+                            <div className={styles.footer}>
+                                <div className={styles.statusArea}>
+                                    {statusText
+                                        ? <span className={styles.statusText}>{statusText}</span>
+                                        : undefined}
+                                    <span className={styles.lastSaved}>{formatLastSaved(lastSaved)}</span>
+                                    {saveError
+                                        ? <span className={styles.errorText}>{saveError}</span>
+                                        : undefined}
+                                </div>
+
+                                <div className={styles.actions}>
+                                    <Link className={styles.cancelLink} to={challengesListPath}>
+                                        Cancel
+                                    </Link>
+                                    <Button
+                                        disabled={!formState.isValid || isSaving}
+                                        label={submitButtonLabel}
+                                        primary
+                                        size='lg'
+                                        type='submit'
+                                    />
+                                </div>
+                            </div>
+                        </>
+                    )
+                    : undefined}
             </form>
         </FormProvider>
     )

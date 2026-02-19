@@ -20,6 +20,7 @@ interface Props {
     backUrl?: string
     backAction?: () => void
     titleUrl?: string | 'emptyLink'
+    titleAction?: ReactNode
     rightHeader?: ReactNode,
     breadCrumb: BreadCrumbData[]
 }
@@ -48,6 +49,13 @@ export const PageWrapper: FC<PropsWithChildren<Props>> = props => (
                             {props.pageTitle}
                         </h3>
                     </PageHeader>
+                    {props.titleAction
+                        ? (
+                            <div className={styles.blockTitleAction}>
+                                {props.titleAction}
+                            </div>
+                        )
+                        : undefined}
                     {props.titleUrl && props.titleUrl !== 'emptyLink' && (
                         <a
                             className={styles.blockExternalLink}

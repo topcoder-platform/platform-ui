@@ -7,7 +7,7 @@ import { EnvironmentConfig } from '~/config'
 
 import { Project } from '../models/Project'
 
-const baseUrl = `${EnvironmentConfig.API.V5}/projects`
+const baseUrl = `${EnvironmentConfig.API.V6}/projects`
 
 export type ProjectsResponse = SWRResponse<Project[], Project[]>
 

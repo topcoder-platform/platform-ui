@@ -71,6 +71,13 @@ const AcceptApplicationModal: FC<AcceptApplicationModalProps> = (
         return startDate
     }, [minStartDate, startDate])
 
+    const timezone = useMemo(
+        () => Intl.DateTimeFormat()
+            .resolvedOptions()
+            .timeZone,
+        [],
+    )
+
     const resetState = useCallback((): void => {
         setAgreementRate('')
         setEndDate(undefined)
@@ -149,9 +156,17 @@ const AcceptApplicationModal: FC<AcceptApplicationModalProps> = (
                 </div>
 
                 <div className={styles.fieldRow}>
+                    <p className={styles.timezoneText}>
+                        Timezone:
+                        {' '}
+                        {timezone}
+                    </p>
+
                     <StartDateTimeInput
                         label='Tentative start date'
                         minDate={minStartDate}
+                        showTimeSelect={false}
+                        showTimezone={false}
                         value={startDate}
                         onChange={nextValue => {
                             setStartDate(nextValue || undefined)
@@ -170,6 +185,8 @@ const AcceptApplicationModal: FC<AcceptApplicationModalProps> = (
                     <StartDateTimeInput
                         label='Tentative end date'
                         minDate={minEndDate}
+                        showTimeSelect={false}
+                        showTimezone={false}
                         value={endDate}
                         onChange={nextValue => {
                             setEndDate(nextValue || undefined)

@@ -28,7 +28,15 @@
 }
 
 .inputWrapper {
-    margin-bottom: 0;
+    :global(.input-el) {
+        margin-bottom: 0;
+    }
+
+    :global([class*='__control']) {
+        height: 100%;
+        margin-top: 0;
+        min-height: 100%;
+    }
 }
 
 @media (max-width: 1200px) {

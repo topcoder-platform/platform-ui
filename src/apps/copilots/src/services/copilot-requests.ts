@@ -9,7 +9,7 @@ import { getPaginatedAsync, PaginatedResponse } from '~/libs/core/lib/xhr/xhr-fu
 
 import { CopilotRequest } from '../models/CopilotRequest'
 
-const baseUrl = `${EnvironmentConfig.API.V5}/projects`
+const baseUrl = `${EnvironmentConfig.API.V6}/projects`
 const PAGE_SIZE = 20
 
 /**

@@ -3,7 +3,6 @@
 import {
     FC,
     useContext,
-    useMemo,
 } from 'react'
 import { useParams } from 'react-router-dom'
 
@@ -18,6 +17,7 @@ import {
 } from '../../../lib/contexts'
 import {
     useFetchEngagement,
+    useFetchProject,
 } from '../../../lib/hooks'
 import {
     WorkAppContextModel,
@@ -36,6 +36,21 @@ function getErrorMessage(error: Error | undefined): string {
     return error.message || 'Unable to load engagement details.'
 }
 
+function getPageTitle(
+    isEditMode: boolean,
+    projectName: string | undefined,
+): string {
+    if (isEditMode) {
+        return 'Edit Engagement'
+    }
+
+    if (projectName) {
+        return `Create Engagement (${projectName})`
+    }
+
+    return 'Create Engagement'
+}
+
 export const EngagementEditorPage: FC = () => {
     const params: Readonly<{ engagementId?: string; projectId?: string }> = useParams<'engagementId' | 'projectId'>()
 
@@ -49,29 +64,14 @@ export const EngagementEditorPage: FC = () => {
     const canManage = contextValue.isAdmin || contextValue.isManager
 
     const engagementResult = useFetchEngagement(engagementId)
+    const projectResult = useFetchProject(projectId || undefined)
 
-    const breadCrumb = useMemo(
-        () => [
-            {
-                index: 1,
-                label: 'Engagements',
-            },
-            {
-                index: 2,
-                label: isEditMode ? 'Edit Engagement' : 'Create Engagement',
-            },
-        ],
-        [isEditMode],
-    )
-
-    const pageTitle = isEditMode
-        ? 'Edit Engagement'
-        : 'Create Engagement'
+    const pageTitle = getPageTitle(isEditMode, projectResult.project?.name)
 
     return (
         <PageWrapper
             backUrl={`/projects/${projectId}/engagements`}
-            breadCrumb={breadCrumb}
+            breadCrumb={[]}
             pageTitle={pageTitle}
         >
             <div className={styles.container}>

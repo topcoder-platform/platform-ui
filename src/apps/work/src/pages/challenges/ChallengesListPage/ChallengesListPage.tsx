@@ -8,12 +8,15 @@ import {
     useRef,
     useState,
 } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useLocation, useParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
 
 import { TableLoading } from '~/apps/admin/src/lib'
 import { PageWrapper } from '~/apps/review/src/lib'
-import { Button } from '~/libs/ui'
+import {
+    Button,
+    IconOutline,
+} from '~/libs/ui'
 
 import {
     PAGE_SIZE,
@@ -25,6 +28,8 @@ import {
     ChallengesFilter,
     ChallengesTable,
     Pagination,
+    ProjectBillingAccountExpiredNotice,
+    ProjectListTabs,
 } from '../../../lib/components'
 import {
     useFetchChallenges,
@@ -32,6 +37,8 @@ import {
     UseFetchChallengesResult,
     useFetchChallengeTypes,
     UseFetchChallengeTypesResult,
+    useFetchProject,
+    UseFetchProjectResult,
     useFetchProjects,
     UseFetchProjectsResult,
 } from '../../../lib/hooks'
@@ -53,33 +60,8 @@ const DEFAULT_FILTERS: ChallengeFilters = {
     type: undefined,
 }
 
-interface ListEndObserverParams {
-    canLoadMorePages: boolean
-    hasError: boolean
-    isLoading: boolean
-    isValidating: boolean
-    supportsInfiniteScroll: boolean
-    targetElement: HTMLDivElement | null
-}
-
-function canObserveListEnd(params: ListEndObserverParams): params is ListEndObserverParams & {
-    targetElement: HTMLDivElement
-} {
-    return params.supportsInfiniteScroll
-        && !!params.targetElement
-        && !params.isLoading
-        && !params.isValidating
-        && params.canLoadMorePages
-        && !params.hasError
-}
-
 function canRenderPagination(hasError: boolean, totalChallenges: number): boolean {
     return !hasError && totalChallenges > 0
-}
-
-function supportsIntersectionObserver(): boolean {
-    return typeof window !== 'undefined'
-        && 'IntersectionObserver' in window
 }
 
 function useErrorToast(
@@ -98,14 +80,11 @@ function useErrorToast(
 interface RenderChallengesContentParams {
     challengeTypes: UseFetchChallengeTypesResult['challengeTypes']
     challengesResult: UseFetchChallengesResult
-    listEndRef: MutableRefObject<HTMLDivElement | null>
     onPageChange: (newPage: number) => void
     onPerPageChange: (newPerPage: number) => void
     onSort: (fieldName: string) => void
     page: number
     perPage: number
-    shouldShowInfiniteLoading: boolean
-    shouldShowInfiniteSentinel: boolean
     shouldShowPagination: boolean
     sortBy: string
     sortOrder: 'asc' | 'desc'
@@ -127,16 +106,6 @@ function renderChallengesContent(params: RenderChallengesContentParams): JSX.Ele
                 sortOrder={params.sortOrder}
                 onSort={params.onSort}
             />
-            {params.shouldShowInfiniteSentinel
-                ? (
-                    <>
-                        <div ref={params.listEndRef} className={styles.scrollSentinel} />
-                        {params.shouldShowInfiniteLoading
-                            ? <div className={styles.loadingMore}>Loading more challenges...</div>
-                            : undefined}
-                    </>
-                )
-                : undefined}
             {params.shouldShowPagination
                 ? (
                     <Pagination
@@ -154,6 +123,7 @@ function renderChallengesContent(params: RenderChallengesContentParams): JSX.Ele
 
 export const ChallengesListPage: FC = () => {
     const { projectId: projectIdFromRoute }: Readonly<{ projectId?: string }> = useParams<'projectId'>()
+    const location = useLocation()
 
     const {
         isAdmin,
@@ -168,12 +138,9 @@ export const ChallengesListPage: FC = () => {
     const [perPage, setPerPage] = useState<number>(PAGE_SIZE)
     const [sortBy, setSortBy] = useState<string>('startDate')
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
-    const listEndRef = useRef<HTMLDivElement | null>(null)
     const isPrivilegedUser = isAdmin || isManager
-    const supportsInfiniteScroll = supportsIntersectionObserver()
 
     const fetchParams: UseFetchChallengesParams = {
-        appendResults: supportsInfiniteScroll,
         ...filters,
         page,
         perPage,
@@ -184,16 +151,19 @@ export const ChallengesListPage: FC = () => {
 
     const challengesResult: UseFetchChallengesResult = useFetchChallenges(fetchParams)
     const challengeTypesResult: UseFetchChallengeTypesResult = useFetchChallengeTypes()
+    const projectResult: UseFetchProjectResult = useFetchProject(projectIdFromRoute)
     const projectsResult: UseFetchProjectsResult = useFetchProjects({
         memberOnly: !isPrivilegedUser,
     })
 
     const challengeErrorRef = useRef<string | undefined>()
     const challengeTypesErrorRef = useRef<string | undefined>()
+    const projectErrorRef = useRef<string | undefined>()
     const projectsErrorRef = useRef<string | undefined>()
 
     useErrorToast(challengesResult.error, challengeErrorRef)
     useErrorToast(challengeTypesResult.error, challengeTypesErrorRef)
+    useErrorToast(projectResult.error, projectErrorRef)
     useErrorToast(projectsResult.error, projectsErrorRef)
 
     const handleFiltersChange = useCallback((newFilters: ChallengeFilters) => {
@@ -231,14 +201,7 @@ export const ChallengesListPage: FC = () => {
     }, [challengesResult])
 
     const totalChallenges = challengesResult.metadata.total ?? 0
-    const currentPage = challengesResult.metadata.page ?? page
-    const totalPages = challengesResult.metadata.totalPages ?? 0
-    const canLoadMorePages = currentPage < totalPages
     const shouldShowPagination = canRenderPagination(!!challengesResult.error, totalChallenges)
-    const shouldShowInfiniteSentinel = supportsInfiniteScroll && shouldShowPagination
-    const shouldShowInfiniteLoading = shouldShowInfiniteSentinel
-        && challengesResult.isValidating
-        && challengesResult.challenges.length > 0
 
     const projectOptions = useMemo(
         () => projectsResult.projects
@@ -258,68 +221,82 @@ export const ChallengesListPage: FC = () => {
         setPage(1)
     }, [projectIdFromRoute])
 
-    useEffect(() => {
-        const listEndElement = listEndRef.current
-        const observerParams: ListEndObserverParams = {
-            canLoadMorePages,
-            hasError: !!challengesResult.error,
-            isLoading: challengesResult.isLoading,
-            isValidating: challengesResult.isValidating,
-            supportsInfiniteScroll,
-            targetElement: listEndElement,
-        }
+    const pageTitle = projectIdFromRoute && projectResult.project?.name
+        ? projectResult.project.name
+        : 'Challenges'
 
-        if (!canObserveListEnd(observerParams)) {
-            return undefined
-        }
-
-        const observer = new IntersectionObserver(
-            entries => {
-                const [entry] = entries
-
-                if (!entry?.isIntersecting) {
-                    return
-                }
-
-                setPage(current => (
-                    current < totalPages
-                        ? current + 1
-                        : current
-                ))
-            },
-            {
-                rootMargin: '200px 0px',
-            },
-        )
-
-        observer.observe(observerParams.targetElement)
-
-        return () => {
-            observer.disconnect()
-        }
-    }, [
-        canLoadMorePages,
-        challengesResult.error,
-        challengesResult.isLoading,
-        challengesResult.isValidating,
-        supportsInfiniteScroll,
-        totalPages,
-    ])
-
-    return (
-        <PageWrapper
-            pageTitle='Challenges'
-            breadCrumb={[]}
-            rightHeader={(
-                <Link to='/challenges/new' className={styles.newChallengeButton}>
+    const rightHeader = projectIdFromRoute
+        ? (
+            <div className={styles.headerActions}>
+                <Link to={`/projects/${projectIdFromRoute}/challenges/new`} className={styles.headerActionLink}>
                     <Button
                         label='Create Challenge'
                         primary
-                        size='lg'
+                        size='md'
                     />
                 </Link>
-            )}
+
+                <Link to={`/projects/${projectIdFromRoute}/engagements/new`} className={styles.headerActionLink}>
+                    <Button
+                        label='Create Engagement'
+                        secondary
+                        size='md'
+                    />
+                </Link>
+            </div>
+        )
+        : undefined
+
+    const titleAction = projectIdFromRoute
+        ? (
+            <div className={styles.projectTitleActions}>
+                <Link
+                    aria-label='Edit project'
+                    className={styles.projectEditLink}
+                    to={`/projects/${projectIdFromRoute}/edit`}
+                >
+                    <IconOutline.PencilIcon className={styles.projectEditIcon} />
+                </Link>
+                <Link
+                    aria-label='Manage project users'
+                    className={styles.projectUsersLink}
+                    state={{
+                        backTo: `${location.pathname}${location.search}${location.hash}`,
+                    }}
+                    to={`/projects/${projectIdFromRoute}/users`}
+                >
+                    <IconOutline.UserIcon className={styles.projectUsersIcon} />
+                </Link>
+                <Link
+                    aria-label='Open project assets'
+                    className={styles.projectAssetsLink}
+                    to={`/projects/${projectIdFromRoute}/assets`}
+                >
+                    <IconOutline.DocumentTextIcon className={styles.projectAssetsIcon} />
+                </Link>
+            </div>
+        )
+        : undefined
+
+    return (
+        <PageWrapper
+            pageTitle={pageTitle}
+            breadCrumb={[]}
+            rightHeader={rightHeader}
+            titleAction={titleAction}
         >
+            {projectIdFromRoute
+                ? (
+                    <ProjectBillingAccountExpiredNotice
+                        billingAccountId={projectResult.project?.billingAccountId}
+                        projectId={projectIdFromRoute}
+                    />
+                )
+                : undefined}
+            {projectIdFromRoute
+                ? <ProjectListTabs projectId={projectIdFromRoute} />
+                : undefined}
+
             <div className={styles.totalChallenges}>
                 {totalChallenges}
                 {' '}
@@ -350,14 +327,11 @@ export const ChallengesListPage: FC = () => {
             {renderChallengesContent({
                 challengesResult,
                 challengeTypes: challengeTypesResult.challengeTypes,
-                listEndRef,
                 onPageChange: handlePageChange,
                 onPerPageChange: handlePerPageChange,
                 onSort: handleSort,
                 page,
                 perPage,
-                shouldShowInfiniteLoading,
-                shouldShowInfiniteSentinel,
                 shouldShowPagination,
                 sortBy,
                 sortOrder,

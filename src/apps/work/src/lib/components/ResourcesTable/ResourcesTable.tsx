@@ -376,7 +376,7 @@ export const ResourcesTable: FC<ResourcesTableProps> = (props: ResourcesTablePro
                         </th>
                         <th>Permissions</th>
                         {props.canEdit
-                            ? <th>Actions</th>
+                            ? <th className={styles.actionsCell}>Actions</th>
                             : undefined}
                     </tr>
                 </thead>

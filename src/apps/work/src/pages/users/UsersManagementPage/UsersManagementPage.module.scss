@@ -1,5 +1,39 @@
 @import '@libs/ui/styles/includes';
 
+.pageHeadingRow {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    justify-content: space-between;
+}
+
+.pageHeadingMain {
+    align-items: center;
+    display: flex;
+    gap: 12px;
+}
+
+.backArrowLink {
+    align-items: center;
+    color: $black-60;
+    display: inline-flex;
+    justify-content: center;
+    line-height: 0;
+    text-decoration: none;
+
+    &:hover,
+    &:focus {
+        color: #2a62d5;
+        outline: none;
+    }
+}
+
+.backArrowIcon {
+    height: 20px;
+    width: 20px;
+}
+
 .pageHeading {
     color: $black-80;
     font-size: $sp-8;
@@ -9,30 +43,11 @@
     @include font-weight-bold;
 }
 
-.selectorGrid {
-    background: rgba(224, 228, 232, 0.3);
-    border-radius: 8px;
-    display: grid;
-    gap: 12px;
-    grid-template-columns: minmax(260px, 1fr) auto;
-    margin-top: 20px;
-    padding: 20px;
-}
-
-.loadMoreActions {
-    align-items: flex-end;
-    display: flex;
-}
-
 .buttonGroup {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
-    margin-top: 16px;
-}
-
-.projectLink {
-    text-decoration: none;
+    margin-left: auto;
 }
 
 .errorBanner {
@@ -92,6 +107,10 @@
     justify-content: flex-end;
 }
 
+.invitesTableHeader {
+    grid-template-columns: minmax(180px, 1fr) minmax(120px, 1fr);
+}
+
 .tableBody {
     background: $tc-white;
     border: 1px solid $black-10;
@@ -103,15 +122,22 @@
         gap: 8px;
         grid-template-columns: minmax(160px, 1.2fr) repeat(4, minmax(80px, 1fr)) minmax(110px, 1fr);
     }
-}
 
-@media (max-width: 900px) {
-    .selectorGrid {
-        grid-template-columns: 1fr;
+    .invitesTableHeader {
+        grid-template-columns: minmax(160px, 1fr) minmax(110px, 1fr);
     }
 }
 
 @media (max-width: 768px) {
+    .pageHeadingRow {
+        align-items: flex-start;
+    }
+
+    .buttonGroup {
+        margin-left: 0;
+        width: 100%;
+    }
+
     .tableHeader {
         display: none;
     }

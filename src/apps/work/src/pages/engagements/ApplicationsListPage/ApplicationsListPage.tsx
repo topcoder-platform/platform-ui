@@ -9,8 +9,12 @@ import {
     useMemo,
     useState,
 } from 'react'
-import { Link, useParams } from 'react-router-dom'
-import Select, { SingleValue } from 'react-select'
+import { useParams } from 'react-router-dom'
+import Select, {
+    SingleValue,
+    StylesConfig,
+} from 'react-select'
+import classNames from 'classnames'
 
 import { PageWrapper } from '~/apps/review/src/lib'
 import {
@@ -46,6 +50,8 @@ import {
     updateApplicationStatus,
 } from '../../../lib/services'
 import {
+    formatAnticipatedStart,
+    formatEngagementStatus,
     showErrorToast,
     showSuccessToast,
 } from '../../../lib/utils'
@@ -57,6 +63,13 @@ interface SelectOption {
     value: string
 }
 
+function toLabel(value: string): string {
+    return value
+        .toLowerCase()
+        .replace(/_/g, ' ')
+        .replace(/(^\w)|\s+(\w)/g, match => match.toUpperCase())
+}
+
 function getStatusOptions(): SelectOption[] {
     return [
         {
@@ -64,10 +77,7 @@ function getStatusOptions(): SelectOption[] {
             value: 'all',
         },
         ...APPLICATION_STATUSES.map(status => ({
-            label: status
-                .toLowerCase()
-                .replace(/_/g, ' ')
-                .replace(/(^\w)|\s+(\w)/g, match => match.toUpperCase()),
+            label: toLabel(status),
             value: status,
         })),
     ]
@@ -77,6 +87,56 @@ function normalizeStatus(status: string): string {
     return status
         .toUpperCase()
         .trim()
+        .replace(/[\s-]+/g, '_')
+}
+
+function formatApplicationStatus(value?: string): string {
+    const normalized = normalizeStatus(String(value || ''))
+    if (!normalized) {
+        return '-'
+    }
+
+    return toLabel(normalized)
+}
+
+function getApplicationStatusPillClass(status: string): string {
+    const normalizedStatus = normalizeStatus(status)
+    if (normalizedStatus === 'SELECTED') {
+        return styles.statusGreen
+    }
+
+    if (normalizedStatus === 'UNDER_REVIEW') {
+        return styles.statusYellow
+    }
+
+    if (normalizedStatus === 'REJECTED') {
+        return styles.statusRed
+    }
+
+    return styles.statusGray
+}
+
+function getEngagementStatusPillClass(status: string): string {
+    const normalizedStatus = status.trim()
+        .toLowerCase()
+
+    if (normalizedStatus === 'active') {
+        return styles.statusGreen
+    }
+
+    if (normalizedStatus === 'open' || normalizedStatus === 'pending assignment') {
+        return styles.statusYellow
+    }
+
+    if (normalizedStatus === 'closed') {
+        return styles.statusBlue
+    }
+
+    if (normalizedStatus === 'cancelled') {
+        return styles.statusRed
+    }
+
+    return styles.statusGray
 }
 
 function formatDate(value?: string): string {
@@ -146,6 +206,23 @@ export const ApplicationsListPage: FC = () => {
     )
 
     const statusOptions = useMemo(() => getStatusOptions(), [])
+    const menuPortalTarget = useMemo(
+        () => (typeof document === 'undefined' ? undefined : document.body),
+        [],
+    )
+    const selectStyles = useMemo<StylesConfig<SelectOption, false>>(
+        () => ({
+            menu: provided => ({
+                ...provided,
+                zIndex: 9999,
+            }),
+            menuPortal: provided => ({
+                ...provided,
+                zIndex: 9999,
+            }),
+        }),
+        [],
+    )
 
     const selectedFilterOption = useMemo(
         () => statusOptions.find(option => option.value === filterStatus),
@@ -161,21 +238,28 @@ export const ApplicationsListPage: FC = () => {
         ? `${engagementResult.engagement.title} Applications`
         : 'Applications'
 
-    const breadCrumb = useMemo(
-        () => [
-            {
-                index: 1,
-                label: 'Engagements',
-            },
-            {
-                index: 2,
-                label: 'Applications',
-            },
-        ],
-        [],
-    )
-
     const statusUpdateOptions = statusOptions.filter(option => option.value !== 'all')
+    const engagementStatusText = formatEngagementStatus(engagementResult.engagement?.status || '')
+    const anticipatedStartText = formatAnticipatedStart(engagementResult.engagement?.anticipatedStart || '')
+    const rightHeader = (
+        <div className={styles.headerMeta}>
+            <div className={styles.headerMetaItem}>
+                <span className={styles.headerMetaLabel}>Status:</span>
+                <span
+                    className={classNames(
+                        styles.statusPill,
+                        getEngagementStatusPillClass(engagementStatusText),
+                    )}
+                >
+                    {engagementStatusText}
+                </span>
+            </div>
+            <div className={styles.headerMetaItem}>
+                <span className={styles.headerMetaLabel}>Anticipated Start:</span>
+                <span>{anticipatedStartText}</span>
+            </div>
+        </div>
+    )
 
     const handleStatusUpdate = useCallback(async (
         application: Application,
@@ -237,8 +321,9 @@ export const ApplicationsListPage: FC = () => {
         return (
             <PageWrapper
                 backUrl={`/projects/${projectId}/engagements`}
-                breadCrumb={breadCrumb}
+                breadCrumb={[]}
                 pageTitle={pageTitle}
+                rightHeader={rightHeader}
             >
                 <LoadingSpinner />
             </PageWrapper>
@@ -249,8 +334,9 @@ export const ApplicationsListPage: FC = () => {
         return (
             <PageWrapper
                 backUrl={`/projects/${projectId}/engagements`}
-                breadCrumb={breadCrumb}
+                breadCrumb={[]}
                 pageTitle={pageTitle}
+                rightHeader={rightHeader}
             >
                 <ErrorMessage
                     message={engagementResult.error?.message || applicationsResult.error?.message || 'Failed to load applications'}
@@ -269,22 +355,21 @@ export const ApplicationsListPage: FC = () => {
     return (
         <PageWrapper
             backUrl={`/projects/${projectId}/engagements`}
-            breadCrumb={breadCrumb}
+            breadCrumb={[]}
             pageTitle={pageTitle}
+            rightHeader={rightHeader}
         >
             <div className={styles.container}>
-                <div className={styles.meta}>
-                    <span>{`Status: ${engagementResult.engagement?.status || '-'}`}</span>
-                    <span>{`Anticipated Start: ${engagementResult.engagement?.anticipatedStart || '-'}`}</span>
-                </div>
-
                 <div className={styles.filters}>
                     <label htmlFor='applications-status-filter'>Status</label>
                     <Select
                         inputId='applications-status-filter'
                         className='react-select-container'
                         classNamePrefix='select'
+                        menuPortalTarget={menuPortalTarget}
+                        menuPosition='fixed'
                         options={statusOptions}
+                        styles={selectStyles}
                         value={selectedFilterOption}
                         onChange={(nextOption: SingleValue<SelectOption>) => {
                             setFilterStatus(nextOption?.value || 'all')
@@ -303,7 +388,7 @@ export const ApplicationsListPage: FC = () => {
                                 <th>Email</th>
                                 <th>Applied Date</th>
                                 <th>Years of Experience</th>
-                                <th>Availability</th>
+                                <th>Phone Number</th>
                                 <th>Status</th>
                                 <th>Actions</th>
                             </tr>
@@ -320,8 +405,10 @@ export const ApplicationsListPage: FC = () => {
                                 : applicationsResult.applications.map(application => {
                                     const profileUrl = `${PROFILE_URL}/${application.handle}`
                                     const active = hasActiveAssignment(application, assignmentList)
+                                    const normalizedStatus = normalizeStatus(application.status)
+                                    const statusLabel = formatApplicationStatus(application.status)
                                     const selectedStatus = statusUpdateOptions.find(
-                                        option => option.value === normalizeStatus(application.status),
+                                        option => option.value === normalizedStatus,
                                     )
 
                                     return (
@@ -333,6 +420,7 @@ export const ApplicationsListPage: FC = () => {
                                             </td>
                                             <td>
                                                 <a
+                                                    className={styles.profileLink}
                                                     href={profileUrl}
                                                     rel='noreferrer noopener'
                                                     target='_blank'
@@ -343,10 +431,17 @@ export const ApplicationsListPage: FC = () => {
                                             <td>{application.name || '-'}</td>
                                             <td>{application.email || '-'}</td>
                                             <td>{formatDate(application.createdAt)}</td>
-                                            <td>{application.yearsOfExperience || '-'}</td>
-                                            <td>{application.availability || '-'}</td>
+                                            <td>{application.yearsOfExperience ?? '-'}</td>
+                                            <td>{application.mobileNumber || '-'}</td>
                                             <td>
-                                                <span className={styles.status}>{application.status}</span>
+                                                <span
+                                                    className={classNames(
+                                                        styles.statusPill,
+                                                        getApplicationStatusPillClass(normalizedStatus),
+                                                    )}
+                                                >
+                                                    {statusLabel}
+                                                </span>
                                             </td>
                                             <td>
                                                 <div className={styles.actions}>
@@ -363,7 +458,10 @@ export const ApplicationsListPage: FC = () => {
                                                                 className={styles.statusSelect}
                                                                 classNamePrefix='select'
                                                                 isDisabled={isStatusUpdating}
+                                                                menuPortalTarget={menuPortalTarget}
+                                                                menuPosition='fixed'
                                                                 options={statusUpdateOptions}
+                                                                styles={selectStyles}
                                                                 value={selectedStatus}
                                                                 onChange={(
                                                                     nextOption: SingleValue<SelectOption>,
@@ -386,10 +484,6 @@ export const ApplicationsListPage: FC = () => {
                         </tbody>
                     </table>
                 </div>
-
-                <Link className={styles.backLink} to={`/projects/${projectId}/engagements`}>
-                    Back to engagements list
-                </Link>
             </div>
 
             <ApplicationDetailModal

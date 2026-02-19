@@ -4,6 +4,7 @@ import {
     useMemo,
     useState,
 } from 'react'
+import classNames from 'classnames'
 
 import { Button } from '~/libs/ui'
 
@@ -24,6 +25,7 @@ export interface UserCardProps {
     user: UserCardData
     isEditable?: boolean
     isInvite?: boolean
+    compactInviteView?: boolean
     onRemove: (user: UserCardData, isInvite: boolean) => Promise<void> | void
     onRoleUpdate?: (member: ProjectMember) => Promise<void> | void
 }
@@ -83,9 +85,36 @@ function formatInviteDate(value?: string): string {
     })}`
 }
 
+function isCompactInviteMode(
+    isInvite: boolean,
+    compactInviteView?: boolean,
+): boolean {
+    return isInvite && compactInviteView === true
+}
+
+function renderInviteRoleCells(
+    isCompactInviteView: boolean,
+    inviteDateLabel: string,
+): JSX.Element | undefined {
+    if (isCompactInviteView) {
+        return undefined
+    }
+
+    return (
+        <>
+            <div className={styles.roleCell}>{inviteDateLabel}</div>
+            <div className={styles.roleCell} />
+            <div className={styles.roleCell} />
+            <div className={styles.roleCell} />
+        </>
+    )
+}
+
 export const UserCard: FC<UserCardProps> = (props: UserCardProps) => {
     const isEditable = props.isEditable === true
     const isInvite = props.isInvite === true
+    const compactInviteView = props.compactInviteView
+    const isCompactInviteView = isCompactInviteMode(isInvite, compactInviteView)
     const [isRemoving, setIsRemoving] = useState<boolean>(false)
     const [isUpdatingRole, setIsUpdatingRole] = useState<boolean>(false)
     const [showRemoveConfirmation, setShowRemoveConfirmation] = useState<boolean>(false)
@@ -95,6 +124,10 @@ export const UserCard: FC<UserCardProps> = (props: UserCardProps) => {
     const userName = useMemo(
         () => props.user.handle || props.user.email || 'Unknown user',
         [props.user.email, props.user.handle],
+    )
+    const inviteDateLabel = useMemo(
+        () => formatInviteDate(props.user.createdAt),
+        [props.user.createdAt],
     )
     const userRecordId = props.user.id !== undefined && props.user.id !== null
         ? String(props.user.id)
@@ -235,6 +268,7 @@ export const UserCard: FC<UserCardProps> = (props: UserCardProps) => {
                 ? (
                     <ConfirmationModal
                         cancelText='Cancel'
+                        confirmButtonDanger
                         confirmText={isRemoving ? 'Removing...' : 'Remove'}
                         message={`Are you sure you want to remove ${userName} from this project?`}
                         onCancel={handleRemoveCancel}
@@ -244,18 +278,23 @@ export const UserCard: FC<UserCardProps> = (props: UserCardProps) => {
                 )
                 : undefined}
 
-            <div className={styles.row}>
-                <div className={styles.userCell}>{userName}</div>
+            <div className={classNames(styles.row, {
+                [styles.compactInviteRow]: isCompactInviteView,
+            })}
+            >
+                <div className={styles.userCell}>
+                    <span className={styles.userName}>{userName}</span>
+                    <span
+                        className={classNames(styles.inviteMeta, {
+                            [styles.inviteMetaHidden]: !isCompactInviteView,
+                        })}
+                    >
+                        {inviteDateLabel}
+                    </span>
+                </div>
 
                 {isInvite
-                    ? (
-                        <>
-                            <div className={styles.roleCell}>{formatInviteDate(props.user.createdAt)}</div>
-                            <div className={styles.roleCell} />
-                            <div className={styles.roleCell} />
-                            <div className={styles.roleCell} />
-                        </>
-                    )
+                    ? renderInviteRoleCells(isCompactInviteView, inviteDateLabel)
                     : ROLE_OPTIONS.map(option => (
                         <div className={styles.roleCell} key={`${option.key}-${userRecordId}`}>
                             <label className={styles.roleOption} htmlFor={`${option.key}-${userRecordId}`}>
@@ -280,7 +319,8 @@ export const UserCard: FC<UserCardProps> = (props: UserCardProps) => {
                                 label='Remove'
                                 onClick={handleRemoveRequest}
                                 secondary
-                                size='lg'
+                                variant='danger'
+                                size='md'
                             />
                         )
                         : undefined}

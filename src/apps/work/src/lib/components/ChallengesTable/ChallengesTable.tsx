@@ -93,7 +93,7 @@ function getSortIndicator(
 export const ChallengesTable: FC<ChallengesTableProps> = (props: ChallengesTableProps) => {
     const challengeTypes: ChallengeType[] = props.challengeTypes
     const challenges: Challenge[] = props.challenges
-    const createChallengePath = props.createChallengePath || '/challenges/new'
+    const createChallengePath = props.createChallengePath || '/projects'
     const isLoading: boolean = !!props.isLoading
     const onChallengeClick: ((challenge: Challenge) => void) | undefined = props.onChallengeClick
     const onSort: (fieldName: string) => void = props.onSort

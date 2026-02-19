@@ -14,10 +14,26 @@
     margin: 0 0 12px;
 }
 
-.grid {
+.basicInfoGrid {
     display: grid;
     gap: 16px;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.titleField {
+    grid-column: 1 / -1;
+}
+
+.detailsGrid {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.startStatusBlock {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
 
 .block {
@@ -39,16 +55,6 @@
     gap: 4px;
 }
 
-.statusText {
-    color: #2a62d5;
-    font-size: 12px;
-}
-
-.lastSaved {
-    color: #767676;
-    font-size: 12px;
-}
-
 .errorText {
     color: #db3030;
     font-size: 12px;
@@ -67,4 +73,21 @@
 
 .cancelLink:hover {
     text-decoration: underline;
+}
+
+@media (max-width: 1280px) {
+    .basicInfoGrid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .detailsGrid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .basicInfoGrid,
+    .detailsGrid {
+        grid-template-columns: minmax(0, 1fr);
+    }
 }

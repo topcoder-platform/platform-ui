@@ -19,9 +19,6 @@ import {
     ENGAGEMENT_WORKLOADS,
 } from '../../../../lib/constants'
 import {
-    ConfirmationModal,
-} from '../../../../lib/components'
-import {
     FormSelectField,
     FormSelectOption,
     FormTextField,
@@ -39,11 +36,9 @@ import {
 } from '../../../../lib/schemas/engagement-editor.schema'
 import {
     createEngagement,
-    deleteEngagement,
     updateEngagement,
 } from '../../../../lib/services'
 import {
-    formatLastSaved,
     showErrorToast,
     showSuccessToast,
 } from '../../../../lib/utils'
@@ -151,10 +146,14 @@ function getDefaultValues(
         compensationRange: defaultEngagement?.compensationRange || '',
         countries: defaultEngagement?.countries || [],
         description: defaultEngagement?.description || '',
-        durationWeeks: defaultEngagement?.durationWeeks || '',
+        durationWeeks: defaultEngagement?.durationWeeks
+            ? String(defaultEngagement.durationWeeks)
+            : '',
         isPrivate: defaultEngagement?.isPrivate === true,
         projectId,
-        requiredMemberCount: defaultEngagement?.requiredMemberCount || '',
+        requiredMemberCount: defaultEngagement?.requiredMemberCount
+            ? String(defaultEngagement.requiredMemberCount)
+            : '',
         role: defaultEngagement?.role || ENGAGEMENT_ROLES[0],
         skills: defaultEngagement?.skills || [],
         status: defaultEngagement?.status || 'Open',
@@ -165,42 +164,35 @@ function getDefaultValues(
 }
 
 function createRoleOptions(): FormSelectOption[] {
+    const labelsByRole: Record<string, string> = {
+        DATA_ENGINEER: 'Data Engineer',
+        DATA_SCIENTIST: 'Data Scientist',
+        DESIGNER: 'Designer',
+        SOFTWARE_DEVELOPER: 'Software Engineer',
+    }
+
     return ENGAGEMENT_ROLES.map(role => ({
-        label: role === 'CONTRACT'
-            ? 'Contract'
-            : role === 'PART_TIME'
-                ? 'Part Time'
-                : 'Full Time',
+        label: labelsByRole[role] || role,
         value: role,
     }))
 }
 
 function createWorkloadOptions(): FormSelectOption[] {
+    const labelsByWorkload: Record<string, string> = {
+        FRACTIONAL: 'Fractional',
+        FULL_TIME: 'Full-Time',
+    }
+
     return ENGAGEMENT_WORKLOADS.map(workload => ({
-        label: workload === 'PART_TIME' ? 'Part Time' : 'Full Time',
+        label: labelsByWorkload[workload] || workload,
         value: workload,
     }))
-}
-
-function getSaveStatusLabel(saveStatus: string): string {
-    if (saveStatus === 'error') {
-        return 'Save failed'
-    }
-
-    if (saveStatus === 'saved') {
-        return 'Saved'
-    }
-
-    if (saveStatus === 'saving') {
-        return 'Saving...'
-    }
-
-    return ''
 }
 
 function toPayload(values: EngagementEditorFormData): Partial<Engagement> & {
     assignmentDetails?: AssignmentDetailsFormValue[]
 } {
+    const requiredMemberCount = Number(values.requiredMemberCount)
     const payload: Partial<Engagement> & {
         assignmentDetails?: AssignmentDetailsFormValue[]
     } = {
@@ -211,15 +203,16 @@ function toPayload(values: EngagementEditorFormData): Partial<Engagement> & {
         durationWeeks: Number(values.durationWeeks),
         isPrivate: values.isPrivate,
         projectId: values.projectId,
-        requiredMemberCount: values.requiredMemberCount
-            ? Number(values.requiredMemberCount)
-            : 0,
         role: values.role,
         skills: values.skills,
         status: values.status,
         timezones: values.timezones,
         title: values.title,
         workload: values.workload,
+    }
+
+    if (Number.isFinite(requiredMemberCount) && requiredMemberCount > 0) {
+        payload.requiredMemberCount = requiredMemberCount
     }
 
     if (values.isPrivate) {
@@ -266,12 +259,8 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
             ? String(props.engagement.id)
             : undefined,
     )
-    const [isDeleting, setIsDeleting] = useState<boolean>(false)
     const [isSaving, setIsSaving] = useState<boolean>(false)
-    const [lastSaved, setLastSaved] = useState<Date | undefined>()
     const [saveError, setSaveError] = useState<string | undefined>()
-    const [saveStatus, setSaveStatus] = useState<string>('idle')
-    const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false)
 
     const roleOptions = useMemo<FormSelectOption[]>(() => createRoleOptions(), [])
     const workloadOptions = useMemo<FormSelectOption[]>(() => createWorkloadOptions(), [])
@@ -294,7 +283,6 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
         ): Promise<void> => {
             if (!options.isAutosave) {
                 setIsSaving(true)
-                setSaveStatus('saving')
             }
 
             setSaveError(undefined)
@@ -310,9 +298,6 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
                     savedEngagement = await createEngagement(payload)
                     setCurrentEngagementId(String(savedEngagement.id))
                 }
-
-                setLastSaved(new Date())
-                setSaveStatus('saved')
 
                 reset(getDefaultValues(savedEngagement, props.projectId))
 
@@ -333,7 +318,6 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
                     : 'Failed to save engagement'
 
                 setSaveError(message)
-                setSaveStatus('error')
 
                 if (!options.isAutosave) {
                     showErrorToast(message)
@@ -349,7 +333,7 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
         [currentEngagementId, navigate, props.isEditMode, props.projectId, reset],
     )
 
-    const autosave = useAutosave<EngagementEditorFormData>({
+    useAutosave<EngagementEditorFormData>({
         enabled: !!currentEngagementId && formState.isDirty && formState.isValid,
         formValues: values,
         onSave: async nextValues => {
@@ -366,38 +350,6 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
         reset(getDefaultValues(props.engagement, props.projectId))
     }, [props.engagement, props.projectId, reset])
 
-    useEffect(() => {
-        if (autosave.saveStatus !== 'idle') {
-            setSaveStatus(autosave.saveStatus)
-        }
-
-        if (autosave.lastSaved) {
-            setLastSaved(autosave.lastSaved)
-        }
-    }, [autosave.lastSaved, autosave.saveStatus])
-
-    const handleDelete = useCallback(async (): Promise<void> => {
-        if (!currentEngagementId || isDeleting) {
-            return
-        }
-
-        setIsDeleting(true)
-
-        try {
-            await deleteEngagement(currentEngagementId)
-            showSuccessToast('Engagement deleted successfully')
-            navigate(`/projects/${props.projectId}/engagements`)
-        } catch (error) {
-            const message = error instanceof Error
-                ? error.message
-                : 'Failed to delete engagement'
-            showErrorToast(message)
-        } finally {
-            setIsDeleting(false)
-            setShowDeleteModal(false)
-        }
-    }, [currentEngagementId, isDeleting, navigate, props.projectId])
-
     const onSubmit = useCallback(async (nextValues: EngagementEditorFormData): Promise<void> => {
         await saveEngagement(nextValues)
     }, [saveEngagement])
@@ -408,8 +360,9 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
                 <section className={styles.section}>
                     <h3 className={styles.sectionTitle}>Basic Information</h3>
 
-                    <div className={styles.grid}>
+                    <div className={styles.basicInfoGrid}>
                         <FormTextField
+                            className={styles.titleField}
                             label='Title'
                             name='title'
                             placeholder='Engagement title'
@@ -441,7 +394,7 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
                         <FormTextField
                             label='Compensation range'
                             name='compensationRange'
-                            placeholder='e.g. $2,000 - $3,000 weekly'
+                            placeholder='$600 - $1000'
                         />
                     </div>
 
@@ -456,79 +409,54 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
                 </section>
 
                 <section className={styles.section}>
-                    <h3 className={styles.sectionTitle}>Location</h3>
-
-                    <div className={styles.grid}>
-                        <EngagementLocationFields />
-                    </div>
-                </section>
-
-                <section className={styles.section}>
-                    <h3 className={styles.sectionTitle}>Skills</h3>
+                    <h3 className={styles.sectionTitle}>Details</h3>
 
                     <div className={styles.block}>
                         <EngagementSkillsField />
                     </div>
-                </section>
 
-                <section className={styles.section}>
-                    <h3 className={styles.sectionTitle}>Start &amp; Status</h3>
-
-                    <div className={styles.grid}>
-                        <EngagementStartDateField />
-                        <EngagementStatusField />
+                    <div className={styles.detailsGrid}>
+                        <div className={styles.startStatusBlock}>
+                            <EngagementStartDateField />
+                            <EngagementStatusField />
+                            <FormTextField
+                                label='Required Members'
+                                name='requiredMemberCount'
+                                placeholder='Number of members'
+                                required={values.isPrivate === true}
+                                type='number'
+                            />
+                        </div>
+                        <EngagementLocationFields />
                     </div>
                 </section>
 
                 <EngagementPrivateSection />
 
                 <div className={styles.footer}>
-                    <div className={styles.statusArea}>
-                        <span className={styles.statusText}>{getSaveStatusLabel(saveStatus)}</span>
-                        <span className={styles.lastSaved}>{formatLastSaved(lastSaved)}</span>
-                        {saveError
-                            ? <span className={styles.errorText}>{saveError}</span>
-                            : undefined}
-                    </div>
+                    {saveError
+                        ? (
+                            <div className={styles.statusArea}>
+                                <span className={styles.errorText}>{saveError}</span>
+                            </div>
+                        )
+                        : undefined}
 
                     <div className={styles.actions}>
-                        {props.isEditMode
-                            ? (
-                                <Button
-                                    label={isDeleting ? 'Deleting...' : 'Delete'}
-                                    onClick={() => setShowDeleteModal(true)}
-                                    secondary
-                                    size='md'
-                                />
-                            )
-                            : undefined}
-
                         <Link className={styles.cancelLink} to={`/projects/${props.projectId}/engagements`}>
                             Cancel
                         </Link>
 
                         <Button
-                            label='Save engagement'
+                            label='Save Engagement'
                             type='submit'
                             primary
                             size='lg'
-                            disabled={!formState.isValid || isSaving}
+                            disabled={isSaving}
                         />
                     </div>
                 </div>
             </form>
-
-            {showDeleteModal
-                ? (
-                    <ConfirmationModal
-                        confirmText='Delete'
-                        message='Do you want to delete this engagement?'
-                        onCancel={() => setShowDeleteModal(false)}
-                        onConfirm={handleDelete}
-                        title='Confirm Delete'
-                    />
-                )
-                : undefined}
         </FormProvider>
     )
 }

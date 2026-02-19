@@ -1,5 +1,4 @@
 .section {
-    border-top: 1px solid #e6e6e6;
     margin-top: 20px;
     padding-top: 20px;
 }
@@ -56,4 +55,24 @@
 .detailsText {
     color: #5b5b5b;
     font-size: 12px;
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.detailLabel {
+    color: #2a2a2a;
+    font-weight: 700;
+}
+
+.editLink {
+    background: none;
+    border: 0;
+    color: #2a62d5;
+    cursor: pointer;
+    font-size: 12px;
+    margin-left: 8px;
+    padding: 0;
+    text-decoration: underline;
 }

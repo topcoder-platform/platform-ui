@@ -37,15 +37,7 @@ export interface SaveTaasProjectPayload {
     jobs: TaasJob[]
 }
 
-const PROJECTS_API_URL = `${EnvironmentConfig.API.V5}/projects`
-const TAAS_LIST_FIELDS: string[] = [
-    'id',
-    'name',
-    'status',
-    'type',
-    'createdAt',
-    'updatedAt',
-]
+const PROJECTS_API_URL = `${EnvironmentConfig.API.V6}/projects`
 
 function normalizeOptionalString(value: unknown): string | undefined {
     if (typeof value !== 'string') {
@@ -249,11 +241,9 @@ function buildFetchTaasProjectsUrl(
     }: FetchTaasProjectsParams = {},
 ): string {
     const query = new URLSearchParams({
-        fields: TAAS_LIST_FIELDS.join(','),
         page: String(page),
         perPage: String(perPage),
-        sortBy: 'updatedAt',
-        sortOrder: 'desc',
+        sort: 'lastActivityAt desc',
         type: PROJECT_TYPE_TAAS,
     })
 

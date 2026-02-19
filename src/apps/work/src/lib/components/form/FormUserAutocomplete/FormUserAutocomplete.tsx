@@ -2,6 +2,7 @@ import {
     FC,
     useCallback,
     useMemo,
+    useState,
 } from 'react'
 import {
     useController,
@@ -29,6 +30,7 @@ interface FormUserAutocompleteProps {
     disabled?: boolean
     label: string
     name: string
+    onValueChange?: (value: string) => void
     placeholder?: string
     required?: boolean
     valueField?: FormUserAutocompleteValueField
@@ -89,6 +91,7 @@ export const FormUserAutocomplete: FC<FormUserAutocompleteProps> = (props: FormU
     const field = controller.field
     const fieldState = controller.fieldState
     const valueField: FormUserAutocompleteValueField = props.valueField || 'handle'
+    const [selectedOption, setSelectedOption] = useState<UserAutocompleteOption | undefined>(undefined)
 
     const menuPortalTarget = useMemo(
         () => (typeof document === 'undefined' ? undefined : document.body),
@@ -133,6 +136,10 @@ export const FormUserAutocomplete: FC<FormUserAutocompleteProps> = (props: FormU
         }
 
         if (typeof field.value === 'string' && field.value.trim()) {
+            if (selectedOption?.value === field.value) {
+                return selectedOption
+            }
+
             return {
                 label: field.value,
                 user: {
@@ -144,17 +151,20 @@ export const FormUserAutocomplete: FC<FormUserAutocompleteProps> = (props: FormU
         }
 
         return undefined
-    }, [field.value])
+    }, [field.value, selectedOption])
 
     const handleSelectionChange = useCallback(
-        (selectedOption: unknown): void => {
-            const typedSelectedOption = selectedOption as UserAutocompleteOption | undefined
+        (nextOption: unknown): void => {
+            const nextSelectedOption = nextOption as UserAutocompleteOption | undefined
+            const nextValue = nextSelectedOption
+                ? nextSelectedOption.value
+                : ''
 
-            field.onChange(typedSelectedOption
-                ? typedSelectedOption.value
-                : '')
+            setSelectedOption(nextSelectedOption)
+            field.onChange(nextValue)
+            props.onValueChange?.(nextValue)
         },
-        [field],
+        [field, props],
     )
 
     return (

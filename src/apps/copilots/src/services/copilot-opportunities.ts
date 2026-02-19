@@ -8,7 +8,7 @@ import { buildUrl } from '~/libs/shared/lib/utils/url'
 import { CopilotOpportunity } from '../models/CopilotOpportunity'
 import { CopilotApplication } from '../models/CopilotApplication'
 
-export const copilotBaseUrl = `${EnvironmentConfig.API.V5}/projects`
+export const copilotBaseUrl = `${EnvironmentConfig.API.V6}/projects`
 
 const PAGE_SIZE = 20
 

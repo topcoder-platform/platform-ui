@@ -1,0 +1,21 @@
+.content {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.message {
+    color: #2a2a2a;
+    margin: 0;
+}
+
+.actions {
+    display: flex;
+    gap: 12px;
+}
+
+.confirmButton {
+    --btn-variant: #64c98b;
+    --btn-variant--hover: #57ba7e;
+    --btn-variant--active: #49a86f;
+}

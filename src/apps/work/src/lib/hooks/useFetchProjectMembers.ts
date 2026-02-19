@@ -5,7 +5,6 @@ import {
     ProjectMember,
 } from '../models'
 import {
-    fetchInvitedMembers,
     fetchProjectById,
 } from '../services'
 
@@ -76,9 +75,6 @@ function normalizeMember(member: ProjectMember): ProjectMember | undefined {
 
 function normalizeInvite(
     invite: ProjectInvite,
-    inviteHandleMap: Record<number, {
-        handle: string
-    }>,
 ): ProjectInvite | undefined {
     const id = toOptionalString(invite.id)
     const email = toOptionalString(invite.email)
@@ -89,9 +85,6 @@ function normalizeInvite(
     const createdAt = toOptionalString(invite.createdAt)
     const updatedAt = toOptionalString(invite.updatedAt)
     const handle = toOptionalString(invite.handle)
-        || (userId !== undefined
-            ? inviteHandleMap[userId]?.handle
-            : undefined)
 
     if (!id && !email && userId === undefined && !role && !status && !handle) {
         return undefined
@@ -125,18 +118,10 @@ async function fetchProjectMembers(projectId: string): Promise<ProjectMembersDat
     const invites = Array.isArray(project.invites)
         ? project.invites
         : []
-    const invitedUserIds = Array.from(new Set(
-        invites
-            .map(invite => toOptionalNumber(invite.userId))
-            .filter((userId): userId is number => userId !== undefined),
-    ))
-    const inviteHandleMap = invitedUserIds.length
-        ? await fetchInvitedMembers(invitedUserIds)
-        : {}
 
     return {
         invites: invites
-            .map(invite => normalizeInvite(invite, inviteHandleMap))
+            .map(invite => normalizeInvite(invite))
             .filter((invite): invite is ProjectInvite => !!invite)
             .map(invite => ({
                 ...invite,

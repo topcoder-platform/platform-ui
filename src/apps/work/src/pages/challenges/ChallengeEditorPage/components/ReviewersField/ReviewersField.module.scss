@@ -8,8 +8,14 @@
     color: #555;
     display: flex;
     flex-direction: column;
-    font-size: 12px;
+    font-size: 13px;
     gap: 4px;
+}
+
+.estimatedCost {
+    color: #1f1f1f;
+    font-size: 16px;
+    font-weight: 600;
 }
 
 .error {
@@ -39,6 +45,47 @@
 }
 
 .grid {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.publicOpportunityField {
+    align-items: center;
+    display: flex;
+}
+
+.publicOpportunityLabel {
+    align-items: center;
+    color: #2a2a2a;
+    cursor: pointer;
+    display: flex;
+    font-size: 14px;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.publicOpportunityInput {
+    accent-color: #137d60;
+    cursor: pointer;
+    height: 16px;
+    margin: 0;
+    width: 16px;
+}
+
+.memberAssignments {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.memberAssignmentsLabel {
+    color: #333;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.memberAssignmentsGrid {
     display: grid;
     gap: 12px;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));

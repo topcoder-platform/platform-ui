@@ -39,6 +39,7 @@ import {
     createProjectEditorSchema,
 } from '../../../../../lib/schemas/project-editor.schema'
 import {
+    BillingAccount,
     createProject,
     updateProject,
 } from '../../../../../lib/services'
@@ -67,6 +68,14 @@ interface ProjectEditorFormValues {
     status: ProjectStatusValue | ''
     terms: string
     type: string
+}
+
+interface CurrentBillingAccountDetails {
+    endDate: string
+    id: string
+    name: string
+    startDate: string
+    status: string
 }
 
 function getDefaultFormValues(
@@ -121,6 +130,50 @@ function normalizeStringList(values: string[] | undefined): string[] | undefined
         : undefined
 }
 
+function formatBillingAccountStatus(status: string | undefined): string {
+    if (!status) {
+        return 'Unknown'
+    }
+
+    const normalizedStatus = status
+        .trim()
+        .replace(/_/g, ' ')
+        .toLowerCase()
+
+    if (!normalizedStatus) {
+        return 'Unknown'
+    }
+
+    return normalizedStatus.replace(/\b[a-z]/g, letter => letter.toUpperCase())
+}
+
+function getBillingAccountStatus(billingAccount: BillingAccount): string | undefined {
+    const directStatus = normalizeOptionalStringValue(billingAccount.status)
+
+    if (directStatus) {
+        return directStatus
+    }
+
+    if (typeof billingAccount.active === 'boolean') {
+        return billingAccount.active
+            ? 'ACTIVE'
+            : 'INACTIVE'
+    }
+
+    return undefined
+}
+
+function getBillingAccountName(billingAccount: BillingAccount): string {
+    return normalizeOptionalStringValue(billingAccount.name) || '-'
+}
+
+function getBillingAccountDate(
+    billingAccount: BillingAccount,
+    field: 'startDate' | 'endDate',
+): string {
+    return formatDate(normalizeOptionalStringValue(billingAccount[field]))
+}
+
 export const ProjectEditorForm: FC<ProjectEditorFormProps> = (props: ProjectEditorFormProps) => {
     const navigate = useNavigate()
     const [isSaving, setIsSaving] = useState<boolean>(false)
@@ -147,6 +200,7 @@ export const ProjectEditorForm: FC<ProjectEditorFormProps> = (props: ProjectEdit
     const reset = formMethods.reset
     const watch = formMethods.watch
 
+    const currentBillingAccountId = normalizeOptionalStringValue(props.projectDetail?.billingAccountId) || '-'
     const selectedStatus = watch('status')
 
     const isProjectCancelled = selectedStatus === PROJECT_STATUS.CANCELLED
@@ -168,14 +222,17 @@ export const ProjectEditorForm: FC<ProjectEditorFormProps> = (props: ProjectEdit
     )
 
     const billingAccountOptions = useMemo<FormSelectOption[]>(
-        () => billingAccounts.map(billingAccount => ({
-            label: `[${billingAccount.id}] - ${billingAccount.name} - ${formatDate(
-                typeof billingAccount.endDate === 'string'
-                    ? billingAccount.endDate
-                    : undefined,
-            )}`,
-            value: String(billingAccount.id),
-        })),
+        () => billingAccounts.map(billingAccount => {
+            const status = formatBillingAccountStatus(getBillingAccountStatus(billingAccount))
+            const startDate = getBillingAccountDate(billingAccount, 'startDate')
+            const endDate = getBillingAccountDate(billingAccount, 'endDate')
+
+            return {
+                label: `[${billingAccount.id}] ${getBillingAccountName(billingAccount)} | ${status} | `
+                    + `${startDate} - ${endDate}`,
+                value: String(billingAccount.id),
+            }
+        }),
         [billingAccounts],
     )
 
@@ -193,6 +250,57 @@ export const ProjectEditorForm: FC<ProjectEditorFormProps> = (props: ProjectEdit
         billingAccountsError,
         isBillingAccountsError,
         isBillingAccountsLoading,
+    ])
+    const billingAccountSelectionHint = useMemo(() => {
+        if (billingAccountHint) {
+            return billingAccountHint
+        }
+
+        return props.isEdit
+            ? 'Select a different billing account to replace the current one.'
+            : undefined
+    }, [billingAccountHint, props.isEdit])
+
+    const currentBillingAccountDetails = useMemo<CurrentBillingAccountDetails | undefined>(() => {
+        if (!props.isEdit) {
+            return undefined
+        }
+
+        if (!currentBillingAccountId || currentBillingAccountId === '-') {
+            return {
+                endDate: '-',
+                id: '-',
+                name: 'Not set',
+                startDate: '-',
+                status: 'Unknown',
+            }
+        }
+
+        const currentBillingAccount = billingAccounts.find(
+            billingAccount => String(billingAccount.id) === currentBillingAccountId,
+        )
+
+        if (!currentBillingAccount) {
+            return {
+                endDate: '-',
+                id: currentBillingAccountId,
+                name: 'Unavailable',
+                startDate: '-',
+                status: 'Unknown',
+            }
+        }
+
+        return {
+            endDate: getBillingAccountDate(currentBillingAccount, 'endDate'),
+            id: currentBillingAccountId,
+            name: getBillingAccountName(currentBillingAccount),
+            startDate: getBillingAccountDate(currentBillingAccount, 'startDate'),
+            status: formatBillingAccountStatus(getBillingAccountStatus(currentBillingAccount)),
+        }
+    }, [
+        billingAccounts,
+        currentBillingAccountId,
+        props.isEdit,
     ])
 
     useEffect(() => {
@@ -323,10 +431,47 @@ export const ProjectEditorForm: FC<ProjectEditorFormProps> = (props: ProjectEdit
                             )
                             : undefined}
 
+                        {currentBillingAccountDetails
+                            ? (
+                                <div className={styles.currentBillingAccount}>
+                                    <span className={styles.currentBillingAccountTitle}>
+                                        Current Billing Account
+                                    </span>
+                                    <span className={styles.currentBillingAccountValue}>
+                                        ID:
+                                        {' '}
+                                        {currentBillingAccountDetails.id}
+                                    </span>
+                                    <span className={styles.currentBillingAccountValue}>
+                                        Name:
+                                        {' '}
+                                        {currentBillingAccountDetails.name}
+                                    </span>
+                                    <span className={styles.currentBillingAccountValue}>
+                                        Status:
+                                        {' '}
+                                        {currentBillingAccountDetails.status}
+                                    </span>
+                                    <span className={styles.currentBillingAccountValue}>
+                                        Start Date:
+                                        {' '}
+                                        {currentBillingAccountDetails.startDate}
+                                    </span>
+                                    <span className={styles.currentBillingAccountValue}>
+                                        End Date:
+                                        {' '}
+                                        {currentBillingAccountDetails.endDate}
+                                    </span>
+                                </div>
+                            )
+                            : undefined}
+
                         <FormSelectField
                             disabled={isBillingAccountsLoading}
-                            hint={billingAccountHint}
-                            label='Billing Account'
+                            hint={billingAccountSelectionHint}
+                            label={props.isEdit
+                                ? 'Select New Billing Account'
+                                : 'Billing Account'}
                             name='billingAccountId'
                             options={billingAccountOptions}
                             placeholder='Select billing account'

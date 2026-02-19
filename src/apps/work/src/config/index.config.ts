@@ -44,6 +44,10 @@ export const TOPCODER_TASK_MANAGER = 'topcoder task manager'
 export const READ_ONLY_ROLES = [READ_ONLY]
 export const ADMIN_ROLES = [ADMIN, CONNECT_ADMIN]
 export const COPILOT_ROLES = [COPILOT]
+export const TALENT_MANAGER_ROLES = [
+    TALENT_MANAGER,
+    TOPCODER_TALENT_MANAGER,
+]
 export const MANAGER_ROLES = [
     PROJECT_MANAGER,
     TOPCODER_PROJECT_MANAGER,
@@ -59,7 +63,7 @@ export const TASK_MANAGER_ROLES = [
 
 export const DEFAULT_PAGE_SIZE = 10
 export const PROJECTS_PAGE_SIZE = 20
-export const ENGAGEMENTS_PAGE_SIZE = 20
+export const ENGAGEMENTS_PAGE_SIZE = 100
 export const TABLE_DATE_FORMAT = 'MMM DD YYYY, HH:mm A'
 
 export const PAGINATION_PER_PAGE_OPTIONS = [

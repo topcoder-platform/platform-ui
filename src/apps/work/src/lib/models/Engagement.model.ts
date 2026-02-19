@@ -1,8 +1,8 @@
 import { Skill } from './Skill.model'
 
-export type EngagementRole = 'CONTRACT' | 'FULL_TIME' | 'PART_TIME'
+export type EngagementRole = 'DESIGNER' | 'SOFTWARE_DEVELOPER' | 'DATA_SCIENTIST' | 'DATA_ENGINEER'
 
-export type EngagementWorkload = 'FULL_TIME' | 'PART_TIME'
+export type EngagementWorkload = 'FULL_TIME' | 'FRACTIONAL'
 
 export type EngagementAnticipatedStart = 'FEW_DAYS' | 'FEW_WEEKS' | 'IMMEDIATE'
 
@@ -33,6 +33,7 @@ export interface Application {
     engagementId: number | string
     handle: string
     id: number | string
+    mobileNumber?: string
     name: string
     status: ApplicationStatus | string
     updatedAt?: string
@@ -53,7 +54,12 @@ export interface Engagement {
     durationWeeks: number
     id: number | string
     isPrivate: boolean
+    project?: {
+        id?: number | string
+        name?: string
+    }
     projectId: number | string
+    projectName?: string
     requiredMemberCount: number
     role: EngagementRole | string
     skills: Skill[]

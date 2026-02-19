@@ -29,6 +29,10 @@ import {
     toEngagementWorkloadApi,
 } from '../utils'
 
+import {
+    fetchSkillsByIds,
+} from './skills.service'
+
 interface BackendMeta {
     page?: number
     perPage?: number
@@ -364,6 +368,64 @@ function normalizeEngagementRecord(data: Partial<Engagement>): Engagement {
     }
 }
 
+function normalizeSkillId(skill: Skill | undefined): string {
+    if (!skill || typeof skill !== 'object') {
+        return ''
+    }
+
+    return String(skill.id || '')
+        .trim()
+}
+
+async function hydrateEngagementSkillNames(
+    engagements: Engagement[],
+): Promise<Engagement[]> {
+    if (!Array.isArray(engagements) || !engagements.length) {
+        return engagements
+    }
+
+    const skillIds = Array.from(new Set(
+        engagements
+            .flatMap(engagement => (Array.isArray(engagement.skills) ? engagement.skills : []))
+            .map(skill => normalizeSkillId(skill))
+            .filter(Boolean),
+    ))
+
+    if (!skillIds.length) {
+        return engagements
+    }
+
+    try {
+        const skills = await fetchSkillsByIds(skillIds)
+        const skillNameById = new Map<string, string>(
+            skills.map(skill => [
+                String(skill.id),
+                String(skill.name || skill.id),
+            ]),
+        )
+
+        return engagements.map(engagement => ({
+            ...engagement,
+            skills: Array.isArray(engagement.skills)
+                ? engagement.skills.map(skill => {
+                    const id = normalizeSkillId(skill)
+
+                    if (!id) {
+                        return skill
+                    }
+
+                    return {
+                        ...skill,
+                        name: skillNameById.get(id) || skill.name || id,
+                    }
+                })
+                : [],
+        }))
+    } catch (error) {
+        return engagements
+    }
+}
+
 export async function fetchEngagements(
     filters: EngagementFilters = {},
     params: FetchEngagementsParams = {},
@@ -384,9 +446,12 @@ export async function fetchEngagements(
             params.perPage,
         )
 
+        const normalizedEngagements = normalizedResponse.data
+            .map(item => normalizeEngagementRecord(item))
+        const hydratedEngagements = await hydrateEngagementSkillNames(normalizedEngagements)
+
         return {
-            data: normalizedResponse.data
-                .map(item => normalizeEngagementRecord(item)),
+            data: hydratedEngagements,
             metadata: {
                 page: normalizedResponse.page,
                 perPage: normalizedResponse.perPage,
@@ -407,7 +472,10 @@ export async function fetchEngagement(
             `${ENGAGEMENTS_API_URL}/${engagementId}`,
         )
 
-        return normalizeEngagementRecord(response)
+        const normalized = normalizeEngagementRecord(response)
+        const [hydrated] = await hydrateEngagementSkillNames([normalized])
+
+        return hydrated || normalized
     } catch (error) {
         throw normalizeError(error, 'Failed to fetch engagement details')
     }
@@ -422,7 +490,10 @@ export async function createEngagement(
             serializeEngagementPayload(data),
         )
 
-        return normalizeEngagementRecord(response)
+        const normalized = normalizeEngagementRecord(response)
+        const [hydrated] = await hydrateEngagementSkillNames([normalized])
+
+        return hydrated || normalized
     } catch (error) {
         throw normalizeError(error, 'Failed to create engagement')
     }
@@ -438,7 +509,10 @@ export async function updateEngagement(
             serializeEngagementPayload(data),
         )
 
-        return normalizeEngagementRecord(response)
+        const normalized = normalizeEngagementRecord(response)
+        const [hydrated] = await hydrateEngagementSkillNames([normalized])
+
+        return hydrated || normalized
     } catch (error) {
         throw normalizeError(error, 'Failed to update engagement')
     }

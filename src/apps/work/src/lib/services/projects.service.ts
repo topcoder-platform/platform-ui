@@ -11,7 +11,6 @@ import {
     FILE_PICKER_SUBMISSION_CONTAINER_NAME,
     GENERIC_PROJECT_MILESTONE_PRODUCT_NAME,
     GENERIC_PROJECT_MILESTONE_PRODUCT_TYPE,
-    MEMBER_API_URL,
     PHASE_PRODUCT_CHALLENGE_ID_FIELD,
     PHASE_PRODUCT_TEMPLATE_ID,
     PROJECTS_API_URL,
@@ -36,9 +35,10 @@ import {
 import {
     createProjectMemberInvite,
 } from './project-member-invites.service'
-import { searchProfilesByUserIds } from './users.service'
 
 export type ProjectSummary = Pick<Project,
+    | 'billingAccountId'
+    | 'billingAccountName'
     | 'createdAt'
     | 'id'
     | 'invites'
@@ -50,17 +50,12 @@ export type ProjectSummary = Pick<Project,
     | 'updatedAt'
 >
 
-export interface InviteMember {
-    handle?: string
-    userId: number
-    [key: string]: unknown
-}
-
 interface FetchProjectsParams {
     memberOnly?: boolean
 }
 
 export interface FetchProjectsListParams {
+    billingAccountId?: string
     keyword?: string
     status?: ProjectStatusValue | ProjectStatusValue[]
     memberOnly?: boolean
@@ -73,6 +68,15 @@ export interface FetchProjectsListParams {
 export interface FetchProjectsListResponse {
     projects: ProjectSummary[]
     metadata: PaginationModel
+}
+
+export interface ProjectBillingAccount {
+    active?: boolean
+    endDate?: string
+}
+
+export interface FetchProjectBillingAccountResponse {
+    billingAccount?: ProjectBillingAccount
 }
 
 const PROJECT_TYPES_API_URL = `${PROJECTS_API_URL}/metadata/projectTypes`
@@ -99,6 +103,26 @@ function normalizeOptionalString(value: unknown): string | undefined {
     const trimmedValue = value.trim()
 
     return trimmedValue || undefined
+}
+
+function normalizeOptionalBoolean(value: unknown): boolean | undefined {
+    if (typeof value === 'boolean') {
+        return value
+    }
+
+    if (typeof value === 'string') {
+        const normalizedValue = value.trim()
+            .toLowerCase()
+        if (normalizedValue === 'true') {
+            return true
+        }
+
+        if (normalizedValue === 'false') {
+            return false
+        }
+    }
+
+    return undefined
 }
 
 function normalizeId(value: unknown): string {
@@ -169,15 +193,17 @@ function normalizeProjectInvite(invite: unknown): ProjectInvite | undefined {
         && Number.isFinite(Number(typedInvite.userId))
         ? Number(typedInvite.userId)
         : undefined
+    const handle = normalizeOptionalString(typedInvite.handle)
     const role = normalizeOptionalString(typedInvite.role)
     const status = normalizeOptionalString(typedInvite.status)
 
-    if (!id && !email && userId === undefined && !role && !status) {
+    if (!id && !email && userId === undefined && !handle && !role && !status) {
         return undefined
     }
 
     return {
         email,
+        handle,
         id,
         role,
         status,
@@ -234,6 +260,9 @@ function normalizeProject(project: Partial<Project>): Project {
 
     return {
         billingAccountId: normalizeOptionalId(project.billingAccountId),
+        billingAccountName: normalizeOptionalString((project as {
+            billingAccountName?: unknown
+        }).billingAccountName),
         cancelReason: normalizeOptionalString(project.cancelReason),
         createdAt: normalizeOptionalString(project.createdAt),
         description: typeof project.description === 'string'
@@ -479,6 +508,7 @@ function buildProjectsSortValue(sortBy: string, sortOrder: 'asc' | 'desc'): stri
 
 function buildProjectsListUrl(
     {
+        billingAccountId,
         keyword,
         memberOnly,
         page = 1,
@@ -497,6 +527,10 @@ function buildProjectsListUrl(
 
     if (keyword?.trim()) {
         query.set('keyword', keyword.trim())
+    }
+
+    if (billingAccountId?.trim()) {
+        query.set('billingAccountId', billingAccountId.trim())
     }
 
     if (memberOnly) {
@@ -583,6 +617,44 @@ export async function fetchProjectById(projectId: string): Promise<Project> {
         return normalizeProject(project)
     } catch (error) {
         throw normalizeError(error, 'Failed to fetch project')
+    }
+}
+
+/**
+ * Fetch billing account details for a project.
+ */
+export async function fetchProjectBillingAccount(
+    projectId: string,
+): Promise<FetchProjectBillingAccountResponse> {
+    try {
+        const billingAccount = await xhrGetAsync<{
+            active?: unknown
+            endDate?: unknown
+        }>(
+            `${PROJECTS_API_URL}/${encodeURIComponent(projectId)}/billingAccount`,
+        )
+
+        const normalizedBillingAccount: ProjectBillingAccount = {
+            active: normalizeOptionalBoolean(billingAccount?.active),
+            endDate: normalizeOptionalString(billingAccount?.endDate),
+        }
+
+        if (
+            normalizedBillingAccount.active === undefined
+            && !normalizedBillingAccount.endDate
+        ) {
+            return {
+                billingAccount: undefined,
+            }
+        }
+
+        return {
+            billingAccount: normalizedBillingAccount,
+        }
+    } catch {
+        return {
+            billingAccount: undefined,
+        }
     }
 }
 
@@ -1024,122 +1096,5 @@ export async function removeProjectAttachment(
         )
     } catch (error) {
         throw normalizeError(error, 'Failed to remove project attachment')
-    }
-}
-
-/**
- * Fetch member profiles for invite user IDs.
- */
-export async function fetchInviteMembers(
-    userIds: Array<number | string>,
-): Promise<Record<number, InviteMember>> {
-    const normalizedUserIds = Array.from(new Set(
-        userIds
-            .map(userId => String(userId)
-                .trim())
-            .filter(Boolean),
-    ))
-
-    if (!normalizedUserIds.length) {
-        return {}
-    }
-
-    const query = normalizedUserIds
-        .map(userId => `userIds[]=${encodeURIComponent(userId)}`)
-        .join('&')
-
-    try {
-        const response = await xhrGetAsync<unknown[]>(
-            `${MEMBER_API_URL}?${query}`,
-        )
-        const members = Array.isArray(response)
-            ? response
-            : []
-
-        return members.reduce<Record<number, InviteMember>>((accumulator, member) => {
-            if (!member || typeof member !== 'object') {
-                return accumulator
-            }
-
-            const typedMember = member as InviteMember
-            const memberUserId = Number(typedMember.userId)
-
-            if (!Number.isFinite(memberUserId)) {
-                return accumulator
-            }
-
-            accumulator[memberUserId] = {
-                ...typedMember,
-                handle: normalizeOptionalString(typedMember.handle),
-                userId: memberUserId,
-            }
-
-            return accumulator
-        }, {})
-    } catch (error) {
-        throw normalizeError(error, 'Failed to fetch invite members')
-    }
-}
-
-/**
- * Fetch invited members handles by user IDs.
- */
-export async function fetchInvitedMembers(
-    userIds: number[],
-): Promise<Record<number, {
-    handle: string
-}>> {
-    const uniqueUserIds = Array.from(new Set(
-        userIds
-            .filter(userId => Number.isFinite(userId))
-            .map(userId => String(userId)),
-    ))
-
-    if (!uniqueUserIds.length) {
-        return {}
-    }
-
-    try {
-        const invitedMembers: Record<number, {
-            handle: string
-        }> = {}
-        const inviteMembers = await fetchInviteMembers(uniqueUserIds)
-
-        Object.entries(inviteMembers)
-            .forEach(([userId, member]) => {
-                const normalizedUserId = Number(userId)
-                const normalizedHandle = normalizeOptionalString(member.handle)
-
-                if (!Number.isFinite(normalizedUserId) || !normalizedHandle) {
-                    return
-                }
-
-                invitedMembers[normalizedUserId] = {
-                    handle: normalizedHandle,
-                }
-            })
-
-        if (Object.keys(invitedMembers).length > 0) {
-            return invitedMembers
-        }
-
-        const users = await searchProfilesByUserIds(uniqueUserIds)
-
-        users.forEach(user => {
-            const normalizedUserId = Number(user.userId)
-            const normalizedHandle = normalizeOptionalString(user.handle)
-
-            if (!Number.isFinite(normalizedUserId) || !normalizedHandle) {
-                return
-            }
-
-            invitedMembers[normalizedUserId] = {
-                handle: normalizedHandle,
-            }
-        })
-
-        return invitedMembers
-    } catch (error) {
-        throw normalizeError(error, 'Failed to fetch invited member handles')
     }
 }

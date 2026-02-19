@@ -19,17 +19,46 @@
     color: #8a1f1f;
 }
 
-.scrollSentinel {
-    width: 100%;
-    height: 1px;
+.headerActions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
-.loadingMore {
-    margin-top: 12px;
-    font-size: 13px;
-    color: $black-60;
-}
-
-.newChallengeButton {
+.headerActionLink {
     text-decoration: none;
+}
+
+.projectTitleActions {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.projectAssetsLink,
+.projectUsersLink,
+.projectEditLink {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border: 1px solid $black-20;
+    border-radius: 6px;
+    color: $black-60;
+    text-decoration: none;
+
+    &:hover,
+    &:focus {
+        border-color: #2a62d5;
+        color: #2a62d5;
+        outline: none;
+    }
+}
+
+.projectAssetsIcon,
+.projectUsersIcon,
+.projectEditIcon {
+    width: 16px;
+    height: 16px;
 }

@@ -33,6 +33,29 @@
     gap: 16px;
 }
 
+.currentBillingAccount {
+    background: #f8f9fb;
+    border: 1px solid $black-10;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px;
+}
+
+.currentBillingAccountTitle {
+    color: $black-80;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    text-transform: uppercase;
+}
+
+.currentBillingAccountValue {
+    color: $black-60;
+    font-size: 13px;
+}
+
 .footer {
     display: flex;
     justify-content: flex-end;

@@ -1,18 +1,15 @@
 import {
-    xhrGetAsync,
     xhrGetPaginatedAsync,
 } from '~/libs/core'
 import { EnvironmentConfig } from '~/config'
 
 import {
-    ChallengeTimelineTemplate,
     PhaseDefinition,
     TimelineTemplate,
     TimelineTemplatePhase,
 } from '../models'
 
 const TIMELINE_TEMPLATES_URL = `${EnvironmentConfig.API.V6}/timeline-templates`
-const CHALLENGE_TIMELINES_URL = `${EnvironmentConfig.API.V6}/challenge-timelines`
 const CHALLENGE_PHASES_URL = `${EnvironmentConfig.API.V6}/challenge-phases?page=1&perPage=100`
 const TIMELINE_TEMPLATES_PER_PAGE = 100
 
@@ -87,33 +84,6 @@ function normalizeTimelineTemplate(
     }
 }
 
-function normalizeChallengeTimelineTemplate(
-    challengeTimelineTemplate: Partial<ChallengeTimelineTemplate>,
-): ChallengeTimelineTemplate | undefined {
-    if (
-        !challengeTimelineTemplate.id
-        || !challengeTimelineTemplate.timelineTemplateId
-        || !challengeTimelineTemplate.trackId
-        || !challengeTimelineTemplate.typeId
-    ) {
-        return undefined
-    }
-
-    return {
-        id: challengeTimelineTemplate.id,
-        isDefault: challengeTimelineTemplate.isDefault === true,
-        timelineTemplateId: challengeTimelineTemplate.timelineTemplateId,
-        trackId: challengeTimelineTemplate.trackId,
-        typeId: challengeTimelineTemplate.typeId,
-    }
-}
-
-function isChallengeTimelineTemplate(
-    challengeTimelineTemplate: ChallengeTimelineTemplate | undefined,
-): challengeTimelineTemplate is ChallengeTimelineTemplate {
-    return !!challengeTimelineTemplate
-}
-
 async function fetchAllTimelineTemplates(): Promise<NormalizedTimelineTemplate[]> {
     const firstPageResponse = await xhrGetPaginatedAsync<Partial<TimelineTemplate>[]>(
         `${TIMELINE_TEMPLATES_URL}?page=1&perPage=${TIMELINE_TEMPLATES_PER_PAGE}`,
@@ -147,43 +117,10 @@ async function fetchAllTimelineTemplates(): Promise<NormalizedTimelineTemplate[]
     ]
 }
 
-function mapTemplatesByChallengeTimeline(
+function mapTemplatesFromTimelineTemplatesResponse(
     timelineTemplates: NormalizedTimelineTemplate[],
-    challengeTimelineTemplates: ChallengeTimelineTemplate[],
 ): TimelineTemplate[] {
-    const timelineTemplatesById = new Map(
-        timelineTemplates.map(template => [
-            template.id,
-            template,
-        ]),
-    )
-
-    const mappedTemplates = challengeTimelineTemplates
-        .map((challengeTimelineTemplate): TimelineTemplate | undefined => {
-            const timelineTemplate = timelineTemplatesById.get(
-                challengeTimelineTemplate.timelineTemplateId,
-            )
-            if (!timelineTemplate) {
-                return undefined
-            }
-
-            return {
-                id: timelineTemplate.id,
-                isActive: timelineTemplate.isActive,
-                isDefault: challengeTimelineTemplate.isDefault,
-                name: timelineTemplate.name,
-                phases: timelineTemplate.phases,
-                trackId: challengeTimelineTemplate.trackId,
-                typeId: challengeTimelineTemplate.typeId,
-            }
-        })
-        .filter((template): template is TimelineTemplate => !!template)
-
-    if (mappedTemplates.length) {
-        return mappedTemplates
-    }
-
-    return timelineTemplates
+    return dedupeTimelineTemplates(timelineTemplates
         .filter(template => !!template.trackId && !!template.typeId)
         .map(template => ({
             id: template.id,
@@ -193,7 +130,30 @@ function mapTemplatesByChallengeTimeline(
             phases: template.phases,
             trackId: template.trackId as string,
             typeId: template.typeId as string,
-        }))
+        })))
+}
+
+function dedupeTimelineTemplates(
+    timelineTemplates: TimelineTemplate[],
+): TimelineTemplate[] {
+    const dedupedTemplatesByKey = new Map<string, TimelineTemplate>()
+
+    timelineTemplates.forEach(template => {
+        const key = `${template.trackId}:${template.typeId}:${template.id}`
+        const existingTemplate = dedupedTemplatesByKey.get(key)
+
+        if (!existingTemplate) {
+            dedupedTemplatesByKey.set(key, template)
+            return
+        }
+
+        dedupedTemplatesByKey.set(key, {
+            ...existingTemplate,
+            isDefault: existingTemplate.isDefault || template.isDefault,
+        })
+    })
+
+    return Array.from(dedupedTemplatesByKey.values())
 }
 
 function normalizePhaseDefinition(
@@ -213,19 +173,8 @@ function normalizePhaseDefinition(
 
 export async function fetchTimelineTemplates(): Promise<TimelineTemplate[]> {
     try {
-        const [
-            timelineTemplates,
-            challengeTimelineTemplatesResponse,
-        ] = await Promise.all([
-            fetchAllTimelineTemplates(),
-            xhrGetAsync<Partial<ChallengeTimelineTemplate>[]>(CHALLENGE_TIMELINES_URL),
-        ])
-
-        const challengeTimelineTemplates = (challengeTimelineTemplatesResponse || [])
-            .map(challengeTimelineTemplate => normalizeChallengeTimelineTemplate(challengeTimelineTemplate))
-            .filter(isChallengeTimelineTemplate)
-
-        return mapTemplatesByChallengeTimeline(timelineTemplates, challengeTimelineTemplates)
+        const timelineTemplates = await fetchAllTimelineTemplates()
+        return mapTemplatesFromTimelineTemplatesResponse(timelineTemplates)
     } catch (error) {
         throw normalizeError(error, 'Failed to fetch timeline templates')
     }

@@ -35,7 +35,7 @@ interface SkillOption extends FormSelectOption {
 
 function toSkillOptions(skills: Skill[]): SkillOption[] {
     return skills.map(skill => ({
-        label: `${skill.name} (${skill.id})`,
+        label: skill.name,
         name: skill.name,
         value: skill.id,
     }))
@@ -72,7 +72,7 @@ function toSelectedOptions(value: unknown): SkillOption[] {
                 }
 
                 return {
-                    label: `${name} (${id})`,
+                    label: name,
                     name,
                     value: id,
                 }

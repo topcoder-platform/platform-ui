@@ -35,6 +35,12 @@
     gap: 4px;
 }
 
+.blockTitleAction {
+    display: inline-flex;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
 .blockExternalLink {
     margin-left: $sp-2;
     margin-bottom: 6px;

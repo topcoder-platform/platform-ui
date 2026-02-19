@@ -1,73 +1,32 @@
 import {
     FC,
-    useCallback,
     useMemo,
 } from 'react'
 import {
-    useController,
     useFormContext,
+    useWatch,
 } from 'react-hook-form'
 import type {
     UseFormReturn,
 } from 'react-hook-form'
 
 import {
-    FormFieldWrapper,
-    PrizeInput,
-} from '../../../../../lib/components/form'
-import { PRIZE_SET_TYPES } from '../../../../../lib/constants/challenge-editor.constants'
+    PRIZE_SET_TYPES,
+    PRIZE_TYPES,
+} from '../../../../../lib/constants/challenge-editor.constants'
 import {
     ChallengeEditorFormData,
+    Prize,
     PrizeSet,
 } from '../../../../../lib/models'
-import { getPrizeType } from '../../../../../lib/utils'
-
-type PrizeType = 'USD' | 'POINT'
+import {
+    formatCurrency,
+    getPrizeType,
+} from '../../../../../lib/utils'
+import styles from '../ChallengeFeeField/ChallengeFeeField.module.scss'
 
 interface ReviewCostFieldProps {
-    disabled?: boolean
     name: string
-}
-
-function createSinglePrizeSet(
-    setType: string,
-    prizeType: PrizeType,
-    value: number,
-): PrizeSet {
-    return {
-        prizes: [
-            {
-                type: prizeType,
-                value,
-            },
-        ],
-        type: setType,
-    }
-}
-
-function upsertSinglePrizeSet(
-    prizeSets: PrizeSet[],
-    setType: string,
-    prizeType: PrizeType,
-    value: number,
-): PrizeSet[] {
-    const setIndex = prizeSets.findIndex(prizeSet => prizeSet.type === setType)
-    const nextPrizeSet = createSinglePrizeSet(
-        setType,
-        prizeType,
-        value,
-    )
-
-    if (setIndex < 0) {
-        return [
-            ...prizeSets,
-            nextPrizeSet,
-        ]
-    }
-
-    return prizeSets.map((prizeSet, index) => (index === setIndex
-        ? nextPrizeSet
-        : prizeSet))
 }
 
 export const ReviewCostField: FC<ReviewCostFieldProps> = (
@@ -75,53 +34,38 @@ export const ReviewCostField: FC<ReviewCostFieldProps> = (
 ) => {
     const formContext: UseFormReturn<ChallengeEditorFormData> = useFormContext<ChallengeEditorFormData>()
     const control = formContext.control
-    const prizeSetsController = useController({
+    const watchedPrizeSets = useWatch({
         control,
         name: props.name as never,
-    })
-    const field = prizeSetsController.field
+    }) as unknown
 
-    const prizeSets = useMemo<PrizeSet[]>(
-        () => (Array.isArray(field.value) ? field.value : []),
-        [field.value],
+    const normalizedPrizeSets = useMemo<PrizeSet[]>(
+        () => (Array.isArray(watchedPrizeSets) ? watchedPrizeSets : []),
+        [watchedPrizeSets],
     )
-    const prizeType = getPrizeType(prizeSets)
-    const reviewCostValue = Number(
-        prizeSets.find(prizeSet => prizeSet.type === PRIZE_SET_TYPES.REVIEWER)
-            ?.prizes?.[0]
-            ?.value,
-    ) || 0
 
-    const handleValueChange = useCallback(
-        (nextValue: number): void => {
-            const nextPrizeSets = upsertSinglePrizeSet(
-                prizeSets,
-                PRIZE_SET_TYPES.REVIEWER,
-                prizeType,
-                nextValue,
-            )
-
-            field.onChange(nextPrizeSets)
-        },
+    const reviewCostPrize = useMemo<Prize | undefined>(
+        () => normalizedPrizeSets
+            .find(prizeSet => prizeSet.type === PRIZE_SET_TYPES.REVIEWER)
+            ?.prizes?.[0],
+        [normalizedPrizeSets],
+    )
+    const reviewCostType = reviewCostPrize?.type === PRIZE_TYPES.POINT || reviewCostPrize?.type === PRIZE_TYPES.USD
+        ? reviewCostPrize.type
+        : getPrizeType(normalizedPrizeSets)
+    const formattedValue = useMemo(
+        () => formatCurrency(Number(reviewCostPrize?.value) || 0, reviewCostType),
         [
-            field,
-            prizeSets,
-            prizeType,
+            reviewCostPrize?.value,
+            reviewCostType,
         ],
     )
 
     return (
-        <FormFieldWrapper
-            label='Review Cost'
-            name={props.name}
-        >
-            <PrizeInput
-                disabled={props.disabled}
-                onChange={handleValueChange}
-                prizeType={prizeType}
-                value={reviewCostValue}
-            />
-        </FormFieldWrapper>
+        <div className={styles.lineItem}>
+            <span className={styles.label}>Review Cost:</span>
+            <span className={styles.value}>{formattedValue}</span>
+        </div>
     )
 }
 

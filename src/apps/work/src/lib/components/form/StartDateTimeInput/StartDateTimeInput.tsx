@@ -13,6 +13,7 @@ export interface StartDateTimeInputProps {
     disabled?: boolean
     minDate?: Date | null
     showTimezone?: boolean
+    showTimeSelect?: boolean
 }
 
 function toDate(value?: Date | string | null): Date | undefined {
@@ -34,6 +35,8 @@ function toDate(value?: Date | string | null): Date | undefined {
 export const StartDateTimeInput: FC<StartDateTimeInputProps> = (
     props: StartDateTimeInputProps,
 ) => {
+    const shouldShowTimeSelect = props.showTimeSelect !== false
+
     const timezone = useMemo(
         () => Intl.DateTimeFormat()
             .resolvedOptions()
@@ -45,14 +48,14 @@ export const StartDateTimeInput: FC<StartDateTimeInputProps> = (
         <div className={styles.container}>
             <InputDatePicker
                 date={toDate(props.value)}
-                dateFormat={DATE_TIME_FORMAT}
+                dateFormat={shouldShowTimeSelect ? DATE_TIME_FORMAT : undefined}
                 disabled={!!props.disabled}
                 label={props.label}
                 minDate={props.minDate}
                 onChange={props.onChange}
-                showTimeSelect
-                timeIntervals={DEFAULT_TIME_INTERVAL_MINUTES}
-                timeFormat='HH:mm'
+                showTimeSelect={shouldShowTimeSelect}
+                timeIntervals={shouldShowTimeSelect ? DEFAULT_TIME_INTERVAL_MINUTES : undefined}
+                timeFormat={shouldShowTimeSelect ? 'HH:mm' : undefined}
             />
 
             {props.showTimezone === false

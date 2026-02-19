@@ -223,16 +223,18 @@ export const TaasProjectFormPage: FC = () => {
     }, [isEdit, reset, taasProjectResult.data])
 
     const breadCrumb = useMemo(
-        () => [
-            {
-                index: 1,
-                label: 'Projects',
-            },
-            {
-                index: 2,
-                label: isEdit ? 'Edit TaaS Project' : 'Create TaaS Project',
-            },
-        ],
+        () => (isEdit
+            ? [
+                {
+                    index: 1,
+                    label: 'Projects',
+                },
+                {
+                    index: 2,
+                    label: 'Edit TaaS Project',
+                },
+            ]
+            : []),
         [isEdit],
     )
 
@@ -349,15 +351,11 @@ export const TaasProjectFormPage: FC = () => {
             backUrl='/taas'
             breadCrumb={breadCrumb}
             pageTitle={pageTitle}
+            rightHeader={projectStatus
+                ? <ProjectStatus status={projectStatus} />
+                : undefined}
         >
             <div className={styles.wrapper}>
-                <div className={styles.topContainer}>
-                    <h2 className={styles.title}>{pageTitle}</h2>
-                    {projectStatus
-                        ? <ProjectStatus status={projectStatus} />
-                        : undefined}
-                </div>
-
                 <div className={styles.container}>
                     <div className={styles.formContainer}>
                         <div className={styles.textRequired}>* Required</div>

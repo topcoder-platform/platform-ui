@@ -35,6 +35,7 @@ export interface UseFetchProjectsListResult {
 export function useFetchProjectsList(
     {
         appendResults = false,
+        billingAccountId,
         keyword,
         memberOnly,
         page = 1,
@@ -58,6 +59,7 @@ export function useFetchProjectsList(
 
     const requestParams = useMemo<FetchProjectsListParams>(
         () => ({
+            billingAccountId,
             keyword,
             memberOnly,
             page,
@@ -66,7 +68,7 @@ export function useFetchProjectsList(
             sortOrder,
             status,
         }),
-        [keyword, memberOnly, page, perPage, sortBy, sortOrder, status],
+        [billingAccountId, keyword, memberOnly, page, perPage, sortBy, sortOrder, status],
     )
 
     const statusKey = useMemo(
@@ -84,6 +86,7 @@ export function useFetchProjectsList(
 
     const appendKey = useMemo(
         () => [
+            billingAccountId || '',
             keyword || '',
             String(memberOnly ?? ''),
             String(perPage),
@@ -92,12 +95,13 @@ export function useFetchProjectsList(
             statusKey,
         ]
             .join('|'),
-        [keyword, memberOnly, perPage, sortBy, sortOrder, statusKey],
+        [billingAccountId, keyword, memberOnly, perPage, sortBy, sortOrder, statusKey],
     )
 
     const swrKey = useMemo(
         () => [
             'work/projects-list',
+            billingAccountId || '',
             keyword || '',
             statusKey,
             String(memberOnly ?? ''),
@@ -106,7 +110,7 @@ export function useFetchProjectsList(
             sortBy || '',
             sortOrder || '',
         ],
-        [keyword, memberOnly, page, perPage, sortBy, sortOrder, statusKey],
+        [billingAccountId, keyword, memberOnly, page, perPage, sortBy, sortOrder, statusKey],
     )
 
     const {

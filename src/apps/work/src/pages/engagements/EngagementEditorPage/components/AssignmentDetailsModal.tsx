@@ -3,6 +3,7 @@
 import {
     FC,
     useCallback,
+    useEffect,
     useMemo,
     useState,
 } from 'react'
@@ -63,11 +64,29 @@ export const AssignmentDetailsModal: FC<AssignmentDetailsModalProps> = (
     const [startDate, setStartDate] = useState<Date | undefined>(toDate(props.initialValue?.startDate))
 
     const minStartDate = useMemo(() => new Date(), [])
+    const timezone = useMemo(
+        () => Intl.DateTimeFormat()
+            .resolvedOptions()
+            .timeZone,
+        [],
+    )
 
     const minEndDate = useMemo(
         () => (startDate || minStartDate),
         [minStartDate, startDate],
     )
+
+    useEffect(() => {
+        if (!props.open) {
+            return
+        }
+
+        setAgreementRate(props.initialValue?.agreementRate || '')
+        setStartDate(toDate(props.initialValue?.startDate))
+        setEndDate(toDate(props.initialValue?.endDate))
+        setOtherRemarks(props.initialValue?.otherRemarks || '')
+        setErrors({})
+    }, [props.initialValue, props.open])
 
     const handleSave = useCallback((): void => {
         const nextErrors: ValidationErrors = {}
@@ -106,7 +125,7 @@ export const AssignmentDetailsModal: FC<AssignmentDetailsModalProps> = (
         <BaseModal
             open={props.open}
             onClose={props.onCancel}
-            title='Assignment Details'
+            title='Assign Member'
             size='lg'
             buttons={(
                 <div className={styles.actions}>
@@ -130,6 +149,11 @@ export const AssignmentDetailsModal: FC<AssignmentDetailsModalProps> = (
                 </div>
 
                 <div className={styles.fieldRow}>
+                    <p className={styles.timezoneText}>
+                        Timezone:
+                        {' '}
+                        {timezone}
+                    </p>
                     <StartDateTimeInput
                         label='Start date *'
                         minDate={minStartDate}
@@ -140,6 +164,8 @@ export const AssignmentDetailsModal: FC<AssignmentDetailsModalProps> = (
                                 startDate: undefined,
                             }))
                         }}
+                        showTimeSelect={false}
+                        showTimezone={false}
                         value={startDate}
                     />
                     {errors.startDate
@@ -158,6 +184,8 @@ export const AssignmentDetailsModal: FC<AssignmentDetailsModalProps> = (
                                 endDate: undefined,
                             }))
                         }}
+                        showTimeSelect={false}
+                        showTimezone={false}
                         value={endDate}
                     />
                     {errors.endDate

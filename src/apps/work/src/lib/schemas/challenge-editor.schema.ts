@@ -13,8 +13,6 @@ import {
 import { ChallengeEditorFormData } from '../models'
 import { isSkillsRequired } from '../utils/challenge-editor.utils'
 
-const challengeNamePattern = /^[a-zA-Z0-9 ]+$/
-
 function isSchedulingApiEnabled(value: unknown): boolean {
     return value !== false
 }
@@ -75,7 +73,11 @@ const prizeSetSchema = yup.object({
                     const previousValue = Number((prizes[index - 1] as { value?: number })?.value || 0)
                     const currentValue = Number((prizes[index] as { value?: number })?.value || 0)
 
-                    if (currentValue > previousValue) {
+                    if (
+                        previousValue > 0
+                        && currentValue > 0
+                        && currentValue >= previousValue
+                    ) {
                         return false
                     }
                 }
@@ -155,7 +157,11 @@ const attachmentSchema = yup.object({
 
 const reviewerSchema = yup.object({
     aiWorkflowId: yup.string()
-        .optional(),
+        .when('isMemberReview', {
+            is: false,
+            otherwise: schema => schema.optional(),
+            then: schema => schema.required('AI workflow is required for AI reviewer type'),
+        }),
     baseCoefficient: yup.number()
         .optional(),
     handle: yup.string()
@@ -165,7 +171,16 @@ const reviewerSchema = yup.object({
     isMemberReview: yup.boolean()
         .optional(),
     memberId: yup.string()
-        .optional(),
+        .when([
+            'isMemberReview',
+            'shouldOpenOpportunity',
+        ], {
+            is: (isMemberReview: boolean | undefined, shouldOpenOpportunity: boolean | undefined): boolean => (
+                isMemberReview !== false && shouldOpenOpportunity !== true
+            ),
+            otherwise: schema => schema.optional(),
+            then: schema => schema.required('Member is required when public review opportunity is closed'),
+        }),
     memberReviewerCount: yup.number()
         .optional(),
     phaseId: yup.string()
@@ -175,7 +190,11 @@ const reviewerSchema = yup.object({
     roleId: yup.string()
         .optional(),
     scorecardId: yup.string()
-        .optional(),
+        .when('isMemberReview', {
+            is: (isMemberReview: boolean | undefined): boolean => isMemberReview !== false,
+            otherwise: schema => schema.optional(),
+            then: schema => schema.required('Scorecard is required for member reviewer type'),
+        }),
     shouldOpenOpportunity: yup.boolean()
         .optional(),
 })
@@ -205,13 +224,32 @@ export const challengeBasicInfoSchema: yup.ObjectSchema<ChallengeBasicInfoFormDa
             .optional(),
         name: yup
             .string()
-            .matches(challengeNamePattern, 'Challenge name can only contain letters, numbers, and spaces')
             .max(MAX_CHALLENGE_NAME_LENGTH, `Challenge name cannot exceed ${MAX_CHALLENGE_NAME_LENGTH} characters`)
             .required('Challenge name is required'),
         privateDescription: yup.string()
             .optional(),
         prizeSets: yup.array()
             .of(prizeSetSchema)
+            .test(
+                'placement-prize-required',
+                'At least one first-place prize is required',
+                (value: unknown): boolean => {
+                    if (!Array.isArray(value)) {
+                        return false
+                    }
+
+                    const placementPrizeSet = value.find(prizeSet => (
+                        typeof prizeSet === 'object'
+                            && prizeSet
+                            && (prizeSet as { type?: string }).type === PRIZE_SET_TYPES.PLACEMENT
+                    )) as {
+                        prizes?: unknown[]
+                    } | undefined
+
+                    return Array.isArray(placementPrizeSet?.prizes)
+                        && (placementPrizeSet?.prizes?.length || 0) > 0
+                },
+            )
             .optional(),
         skills: yup
             .array()
@@ -276,11 +314,7 @@ export const challengeScheduleSchema = yup.object({
                 .required('Challenge start date is required'),
         }),
     timelineTemplateId: yup.string()
-        .when('legacy.useSchedulingAPI', {
-            is: isSchedulingApiEnabled,
-            otherwise: schema => schema.optional(),
-            then: schema => schema.required('Timeline template is required'),
-        }),
+        .optional(),
 })
 
 export const challengeAdvancedOptionsSchema = yup.object({

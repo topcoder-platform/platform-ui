@@ -11,12 +11,29 @@
 }
 
 .userCell {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow: hidden;
+}
+
+.userName {
     color: $black-80;
     font-size: 14px;
     font-weight: 600;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.inviteMeta {
+    color: $black-60;
+    font-size: 12px;
+    line-height: 16px;
+}
+
+.inviteMetaHidden {
+    display: none;
 }
 
 .roleCell {
@@ -41,6 +58,10 @@
 .actionCell {
     display: flex;
     justify-content: flex-end;
+}
+
+.compactInviteRow {
+    grid-template-columns: minmax(180px, 1fr) minmax(120px, 1fr);
 }
 
 .statusOverlay {
@@ -78,6 +99,10 @@
     .row {
         gap: 8px;
         grid-template-columns: minmax(160px, 1.2fr) repeat(4, minmax(80px, 1fr)) minmax(110px, 1fr);
+    }
+
+    .compactInviteRow {
+        grid-template-columns: minmax(160px, 1fr) minmax(110px, 1fr);
     }
 }
 

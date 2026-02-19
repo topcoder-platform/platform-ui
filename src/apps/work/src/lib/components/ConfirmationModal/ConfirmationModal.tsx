@@ -10,6 +10,7 @@ import styles from './ConfirmationModal.module.scss'
 
 export interface ConfirmationModalProps {
     cancelText?: string
+    confirmButtonDanger?: boolean
     confirmText?: string
     message: string
     onCancel: () => void
@@ -58,6 +59,9 @@ export const ConfirmationModal: FC<ConfirmationModalProps> = (
                         label={props.confirmText || 'Confirm'}
                         onClick={props.onConfirm}
                         primary
+                        variant={props.confirmButtonDanger
+                            ? 'danger'
+                            : undefined}
                         size='lg'
                     />
                 </footer>
