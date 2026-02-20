@@ -521,7 +521,6 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 const savedChallenge = await createChallenge({
                     name: formData.name,
                     projectId: createProjectId,
-                    roundType: formData.roundType,
                     status: CHALLENGE_STATUS.NEW,
                     trackId: formData.trackId,
                     typeId: formData.typeId,
