@@ -31,6 +31,8 @@ import { fetchMembersByUserIds } from '../../../../../lib/services'
 import type { MemberProfile } from '../../../../../lib/services'
 import {
     canDownloadSubmissions,
+    getSubmissionFinalScore,
+    getSubmissionInitialScore,
     showErrorToast,
 } from '../../../../../lib/utils'
 import { ReactComponent as LockIcon } from '../../../../../lib/assets/icons/lock.svg'
@@ -76,18 +78,6 @@ function normalizeChallengeTrack(challengeTrack: Challenge['track']): string {
     return normalizeValue(challengeTrack.track || challengeTrack.name || challengeTrack.abbreviation)
 }
 
-function normalizeChallengeType(challengeType: Challenge['type']): string {
-    if (typeof challengeType === 'string') {
-        return normalizeValue(challengeType)
-    }
-
-    if (typeof challengeType !== 'object' || !challengeType) {
-        return ''
-    }
-
-    return normalizeValue(challengeType.name || challengeType.abbreviation)
-}
-
 function toOptionalNumber(value: unknown): number | undefined {
     if (typeof value === 'number' && Number.isFinite(value)) {
         return value
@@ -103,19 +93,22 @@ function toOptionalNumber(value: unknown): number | undefined {
     return undefined
 }
 
+function toOptionalMemberId(value: unknown): string | undefined {
+    const normalizedValue = normalizeValue(value)
+    if (!normalizedValue) {
+        return undefined
+    }
+
+    return /^\d+$/.test(normalizedValue)
+        ? normalizedValue
+        : undefined
+}
+
 function getCreatedAt(submission: Submission): string {
     return submission.createdAt
         || submission.created
         || submission.submissionTime
         || ''
-}
-
-function getInitialScore(submission: Submission): number {
-    return toOptionalNumber(submission.review?.[0]?.score) || 0
-}
-
-function getFinalScore(submission: Submission): number {
-    return toOptionalNumber(submission.reviewSummation?.[0]?.aggregateScore) || 0
 }
 
 function parseDateToTimestamp(value: string): number {
@@ -131,10 +124,6 @@ function resolveSortValue(
     submission: Submission,
     sortBy: SubmissionSortBy,
 ): number | string {
-    if (sortBy === 'rating') {
-        return toOptionalNumber(submission.rating) || 0
-    }
-
     if (sortBy === 'memberHandle') {
         return normalizeValue(submission.memberHandle)
             .toLowerCase()
@@ -145,17 +134,12 @@ function resolveSortValue(
             .toLowerCase()
     }
 
-    if (sortBy === 'status') {
-        return normalizeValue(submission.status)
-            .toLowerCase()
-    }
-
     if (sortBy === 'initialScore') {
-        return getInitialScore(submission)
+        return getSubmissionInitialScore(submission)
     }
 
     if (sortBy === 'finalScore') {
-        return getFinalScore(submission)
+        return getSubmissionFinalScore(submission)
     }
 
     if (sortBy === 'submissionId') {
@@ -234,7 +218,11 @@ function getChallengeSubmissionViewable(challenge: Challenge): boolean {
 }
 
 function getSubmissionMemberId(submission: Submission): string {
-    return normalizeValue(submission.memberId)
+    return (
+        toOptionalMemberId(submission.memberId)
+        || toOptionalMemberId(submission.createdBy)
+        || ''
+    )
 }
 
 function enrichSubmission(
@@ -308,7 +296,7 @@ function matchesFilterScore(submission: Submission, minScore: string): boolean {
         return true
     }
 
-    return getFinalScore(submission) >= minimumScore
+    return getSubmissionFinalScore(submission) >= minimumScore
 }
 
 function matchesFilterHandle(submission: Submission, handleFilter: string): boolean {
@@ -343,23 +331,6 @@ function toDownloadAllItems(submissions: Submission[]): DownloadAllItem[] {
     }))
 }
 
-function isFirst2Finish(challengeType: string): boolean {
-    const normalizedType = challengeType
-        .toLowerCase()
-        .replace(/\s+/g, '')
-
-    return normalizedType === 'first2finish'
-}
-
-function isBugHunt(tags: string[] | undefined): boolean {
-    if (!Array.isArray(tags)) {
-        return false
-    }
-
-    return tags.some(tag => normalizeValue(tag)
-        .toLowerCase() === 'bug hunt')
-}
-
 export const SubmissionsSection: FC<SubmissionsSectionProps> = (
     props: SubmissionsSectionProps,
 ) => {
@@ -382,8 +353,6 @@ export const SubmissionsSection: FC<SubmissionsSectionProps> = (
     const pendingMemberIdsRef = useRef<Set<string>>(new Set())
 
     const challengeTrack = normalizeChallengeTrack(props.challenge.track)
-    const challengeType = normalizeChallengeType(props.challenge.type)
-    const hideRatingColumn = isFirst2Finish(challengeType) || isBugHunt(props.challenge.tags)
 
     const workAppContext = useContext(WorkAppContext)
     const canDownload = canDownloadSubmissions(workAppContext.userRoles)
@@ -685,7 +654,6 @@ export const SubmissionsSection: FC<SubmissionsSectionProps> = (
                 <SubmissionsTable
                     canDownloadSubmissions={canDownload}
                     challengeId={props.challengeId}
-                    hideRatingColumn={hideRatingColumn}
                     isLoading={submissionsResult.isLoading}
                     isLoadingMembers={isMembersLoading}
                     onDownloadSubmission={handleDownloadSubmission}
@@ -706,7 +674,6 @@ export const SubmissionsSection: FC<SubmissionsSectionProps> = (
                         <SubmissionsTable
                             canDownloadSubmissions={canDownload}
                             challengeId={props.challengeId}
-                            hideRatingColumn={hideRatingColumn}
                             isLoading={false}
                             isLoadingMembers={isMembersLoading}
                             onDownloadSubmission={handleDownloadSubmission}

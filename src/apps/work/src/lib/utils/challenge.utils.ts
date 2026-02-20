@@ -16,6 +16,7 @@ interface SubmissionScore {
 
 interface ScoredSubmissionLike {
     review?: Array<{
+        initialScore?: number
         finalScore?: number
         score?: number
     }>
@@ -72,25 +73,41 @@ function normalizeStatus(status?: string): string {
         .toUpperCase()
 }
 
-function getScoreFromSummation(
-    reviewSummation: ReviewSummation[] | undefined,
-    type: 'final' | 'provisional',
-): number {
-    if (!Array.isArray(reviewSummation) || !reviewSummation.length) {
-        return 0
-    }
-
-    const matchedSummation = reviewSummation.find(item => (
-        type === 'final'
-            ? item.isFinal
-            : item.isProvisional
-    ))
-
-    const score = Number(matchedSummation?.aggregateScore)
+function toValidScore(value: unknown): number | undefined {
+    const score = Number(value)
 
     return Number.isFinite(score) && score >= 0
         ? score
-        : 0
+        : undefined
+}
+
+function getAverageScore(scores: Array<number | undefined>): number | undefined {
+    const validScores = scores
+        .filter((score): score is number => score !== undefined)
+
+    if (!validScores.length) {
+        return undefined
+    }
+
+    const totalScore = validScores.reduce(
+        (result, score) => result + score,
+        0,
+    )
+
+    return totalScore / validScores.length
+}
+
+function getScoreFromSummation(
+    reviewSummation: ReviewSummation[] | undefined,
+    matcher: (entry: ReviewSummation) => boolean,
+): number | undefined {
+    if (!Array.isArray(reviewSummation) || !reviewSummation.length) {
+        return undefined
+    }
+
+    const matchedSummation = reviewSummation.find(matcher)
+
+    return toValidScore(matchedSummation?.aggregateScore)
 }
 
 function getChallengeTypeName(type: string | ChallengeTypeRef | undefined): string | undefined {
@@ -154,32 +171,76 @@ export function is2RoundsChallenge(challenge: Pick<Challenge, 'phases'>): boolea
 }
 
 export function getProvisionalScore(submission: ScoredSubmissionLike): number {
-    const legacyProvisionalScore = Number(submission.submissions?.[0]?.provisionalScore)
+    return getSubmissionInitialScore(submission)
+}
 
-    if (Number.isFinite(legacyProvisionalScore) && legacyProvisionalScore >= 0) {
+export function getSubmissionInitialScore(submission: ScoredSubmissionLike): number {
+    const initialScoreFromReviews = getAverageScore(
+        (submission.review || [])
+            .map(review => toValidScore(review.initialScore)),
+    )
+
+    if (initialScoreFromReviews !== undefined) {
+        return initialScoreFromReviews
+    }
+
+    const legacyProvisionalScore = toValidScore(
+        submission.submissions?.[0]?.provisionalScore,
+    )
+    if (legacyProvisionalScore !== undefined) {
         return legacyProvisionalScore
     }
 
-    return getScoreFromSummation(submission.reviewSummation, 'provisional')
+    const provisionalSummationScore = getScoreFromSummation(
+        submission.reviewSummation,
+        item => item.isProvisional === true || item.isFinal === false,
+    )
+    if (provisionalSummationScore !== undefined) {
+        return provisionalSummationScore
+    }
+
+    const fallbackInitialScore = getAverageScore(
+        (submission.review || [])
+            .map(review => toValidScore(review.score ?? review.finalScore)),
+    )
+
+    return fallbackInitialScore || 0
 }
 
 export function getFinalScore(submission: ScoredSubmissionLike): number {
-    const legacyFinalScore = Number(submission.submissions?.[0]?.finalScore)
+    return getSubmissionFinalScore(submission)
+}
 
-    if (Number.isFinite(legacyFinalScore) && legacyFinalScore >= 0) {
+export function getSubmissionFinalScore(submission: ScoredSubmissionLike): number {
+    const finalScoreFromReviews = getAverageScore(
+        (submission.review || [])
+            .map(review => toValidScore(review.finalScore ?? review.score)),
+    )
+    if (finalScoreFromReviews !== undefined) {
+        return finalScoreFromReviews
+    }
+
+    const legacyFinalScore = toValidScore(
+        submission.submissions?.[0]?.finalScore,
+    )
+    if (legacyFinalScore !== undefined) {
         return legacyFinalScore
     }
 
-    const summationScore = getScoreFromSummation(submission.reviewSummation, 'final')
-
-    if (summationScore > 0) {
-        return summationScore
+    const finalSummationScore = getScoreFromSummation(
+        submission.reviewSummation,
+        item => item.isFinal === true,
+    )
+    if (finalSummationScore !== undefined) {
+        return finalSummationScore
     }
 
-    const reviewScore = Number(submission.review?.[0]?.finalScore ?? submission.review?.[0]?.score)
-
-    if (Number.isFinite(reviewScore) && reviewScore >= 0) {
-        return reviewScore
+    const fallbackSummationScore = getScoreFromSummation(
+        submission.reviewSummation,
+        () => true,
+    )
+    if (fallbackSummationScore !== undefined) {
+        return fallbackSummationScore
     }
 
     return 0

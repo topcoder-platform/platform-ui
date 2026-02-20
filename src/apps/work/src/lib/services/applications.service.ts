@@ -49,6 +49,30 @@ function normalizeStatus(status: string): string {
         .toUpperCase()
 }
 
+function normalizePortfolioUrls(value: unknown): string[] | undefined {
+    if (!Array.isArray(value)) {
+        return undefined
+    }
+
+    const normalizedUrls = value
+        .map(url => (typeof url === 'string' ? url.trim() : ''))
+        .filter(Boolean)
+
+    return normalizedUrls.length
+        ? normalizedUrls
+        : undefined
+}
+
+function toOptionalString(value: unknown): string | undefined {
+    if (typeof value !== 'string') {
+        return undefined
+    }
+
+    const normalizedValue = value.trim()
+
+    return normalizedValue || undefined
+}
+
 function normalizeApplication(application: Partial<Application>): Application {
     return {
         availability: typeof application.availability === 'string'
@@ -74,6 +98,8 @@ function normalizeApplication(application: Partial<Application>): Application {
         name: typeof application.name === 'string'
             ? application.name
             : '',
+        portfolioUrls: normalizePortfolioUrls(application.portfolioUrls),
+        resumeUrl: toOptionalString(application.resumeUrl),
         status: normalizeStatus(application.status || ''),
         updatedAt: typeof application.updatedAt === 'string'
             ? application.updatedAt

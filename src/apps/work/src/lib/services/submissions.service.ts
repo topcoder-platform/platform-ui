@@ -110,6 +110,17 @@ function toOptionalString(value: unknown): string | undefined {
     return normalizedValue || undefined
 }
 
+function toOptionalMemberId(value: unknown): string | undefined {
+    const normalizedValue = toOptionalString(value)
+    if (!normalizedValue) {
+        return undefined
+    }
+
+    return /^\d+$/.test(normalizedValue)
+        ? normalizedValue
+        : undefined
+}
+
 function toRequiredString(value: unknown): string {
     return toOptionalString(value) || ''
 }
@@ -120,15 +131,17 @@ function normalizeReview(review: unknown): SubmissionReview | undefined {
     }
 
     const typedReview = review as UnknownRecord
+    const finalScore = toOptionalNumber(typedReview.finalScore ?? typedReview.score)
 
     return {
         createdAt: toOptionalString(typedReview.createdAt ?? typedReview.created),
+        finalScore,
         id: toOptionalString(typedReview.id),
         initialScore: toOptionalNumber(typedReview.initialScore),
         isPassing: toOptionalBoolean(typedReview.isPassing),
         reviewerHandle: toOptionalString(typedReview.reviewerHandle),
         reviewerId: toOptionalString(typedReview.reviewerId),
-        score: toOptionalNumber(typedReview.score ?? typedReview.finalScore),
+        score: finalScore,
         status: toOptionalString(typedReview.status),
         submissionId: toOptionalString(typedReview.submissionId),
         typeId: toOptionalString(typedReview.typeId),
@@ -223,9 +236,12 @@ function resolveEmail(
     submission: Partial<Submission>,
     registrant: SubmissionRegistrant | undefined,
 ): string | undefined {
+    const submissionRecord = submission as UnknownRecord
+
     return toOptionalString(
         submission.email
-            ?? registrant?.email,
+            ?? registrant?.email
+            ?? submissionRecord.submitterEmail,
     )
 }
 
@@ -233,9 +249,12 @@ function resolveMemberHandle(
     submission: Partial<Submission>,
     registrant: SubmissionRegistrant | undefined,
 ): string | undefined {
+    const submissionRecord = submission as UnknownRecord
+
     return toOptionalString(
         submission.memberHandle
-            ?? registrant?.memberHandle,
+            ?? registrant?.memberHandle
+            ?? submissionRecord.submitterHandle,
     )
 }
 
@@ -246,7 +265,8 @@ function resolveMemberId(
     return toOptionalString(
         submission.memberId
             ?? registrant?.memberId
-            ?? registrant?.userId,
+            ?? registrant?.userId
+            ?? toOptionalMemberId(submission.createdBy),
     )
 }
 
@@ -254,9 +274,12 @@ function resolveRating(
     submission: Partial<Submission>,
     registrant: SubmissionRegistrant | undefined,
 ): number | undefined {
+    const submissionRecord = submission as UnknownRecord
+
     return toOptionalNumber(
         submission.rating
-            ?? registrant?.rating,
+            ?? registrant?.rating
+            ?? submissionRecord.submitterMaxRating,
     )
 }
 

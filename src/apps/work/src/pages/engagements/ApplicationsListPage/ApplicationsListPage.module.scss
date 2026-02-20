@@ -83,7 +83,10 @@
 }
 
 .activeIcon {
-    color: #2cb85c;
+    color: $green-140;
+    display: inline-flex;
+    height: 18px;
+    width: 18px;
 }
 
 .profileLink {

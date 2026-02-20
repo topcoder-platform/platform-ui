@@ -1,7 +1,6 @@
 import {
     FC,
     MouseEvent,
-    useMemo,
 } from 'react'
 import classNames from 'classnames'
 
@@ -15,6 +14,8 @@ import { Submission } from '../../models'
 import {
     formatDateTime,
     getRatingLevel,
+    getSubmissionFinalScore,
+    getSubmissionInitialScore,
 } from '../../utils'
 
 import styles from './SubmissionsTable.module.scss'
@@ -25,8 +26,6 @@ export type SubmissionSortBy =
     | 'finalScore'
     | 'initialScore'
     | 'memberHandle'
-    | 'rating'
-    | 'status'
     | 'submissionId'
 
 type SortOrder = 'asc' | 'desc'
@@ -40,7 +39,6 @@ interface ColumnConfig {
 interface SubmissionsTableProps {
     canDownloadSubmissions: boolean
     challengeId: string
-    hideRatingColumn: boolean
     isLoading?: boolean
     isLoadingMembers?: boolean
     onDownloadSubmission: (submissionId: string) => void
@@ -55,11 +53,6 @@ interface SubmissionsTableProps {
 
 const BASE_COLUMNS: ColumnConfig[] = [
     {
-        fieldName: 'rating',
-        label: 'Rating',
-        sortable: true,
-    },
-    {
         fieldName: 'memberHandle',
         label: 'Username',
         sortable: true,
@@ -67,11 +60,6 @@ const BASE_COLUMNS: ColumnConfig[] = [
     {
         fieldName: 'email',
         label: 'Email',
-        sortable: true,
-    },
-    {
-        fieldName: 'status',
-        label: 'Status',
         sortable: true,
     },
     {
@@ -101,14 +89,6 @@ function getCreatedAt(submission: Submission): string {
         || ''
 }
 
-function getFinalScore(submission: Submission): number | undefined {
-    return submission.reviewSummation?.[0]?.aggregateScore
-}
-
-function getInitialScore(submission: Submission): number | undefined {
-    return submission.review?.[0]?.score
-}
-
 function formatScore(value?: number): string {
     if (typeof value !== 'number' || !Number.isFinite(value)) {
         return 'N/A'
@@ -131,25 +111,16 @@ function getSortIndicator(
         : ' \u2193'
 }
 
-function getRatingDisplay(
-    submission: Submission,
-    isLoadingMembers: boolean,
-): string {
-    if (submission.rating !== undefined && Number.isFinite(submission.rating)) {
-        return String(submission.rating)
-    }
-
-    return isLoadingMembers
-        ? 'Loading...'
-        : '-'
-}
-
 function getHandleDisplay(
     submission: Submission,
     isLoadingMembers: boolean,
 ): string {
     if (submission.memberHandle) {
         return submission.memberHandle
+    }
+
+    if (submission.createdBy) {
+        return submission.createdBy
     }
 
     return isLoadingMembers
@@ -170,27 +141,10 @@ function getEmailDisplay(
         : '-'
 }
 
-function getStatusDisplay(status: Submission['status']): string {
-    if (!status) {
-        return 'N/A'
-    }
-
-    return status
-        .replace(/[_-]+/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim()
-}
-
 export const SubmissionsTable: FC<SubmissionsTableProps> = (
     props: SubmissionsTableProps,
 ) => {
-    const columns = useMemo<ColumnConfig[]>(() => {
-        if (!props.hideRatingColumn) {
-            return BASE_COLUMNS
-        }
-
-        return BASE_COLUMNS.filter(column => column.fieldName !== 'rating')
-    }, [props.hideRatingColumn])
+    const columns = BASE_COLUMNS
 
     function handleSortButtonClick(event: MouseEvent<HTMLButtonElement>): void {
         const sortBy = event.currentTarget.dataset.fieldName as SubmissionSortBy | undefined
@@ -282,13 +236,11 @@ export const SubmissionsTable: FC<SubmissionsTableProps> = (
                     {!props.isLoading && props.submissions.map(submission => {
                         const rating = submission.rating || 0
                         const ratingLevel = getRatingLevel(rating)
-                        const ratingDisplay = getRatingDisplay(submission, !!props.isLoadingMembers)
                         const handleDisplay = getHandleDisplay(submission, !!props.isLoadingMembers)
                         const emailDisplay = getEmailDisplay(submission, !!props.isLoadingMembers)
-                        const statusDisplay = getStatusDisplay(submission.status)
                         const submissionDate = formatDateTime(getCreatedAt(submission))
-                        const initialScore = formatScore(getInitialScore(submission))
-                        const finalScore = formatScore(getFinalScore(submission))
+                        const initialScore = formatScore(getSubmissionInitialScore(submission))
+                        const finalScore = formatScore(getSubmissionFinalScore(submission))
                         const memberProfileUrl = submission.memberHandle
                             ? `${COMMUNITY_APP_URL}/members/${encodeURIComponent(submission.memberHandle)}`
                             : ''
@@ -296,14 +248,6 @@ export const SubmissionsTable: FC<SubmissionsTableProps> = (
 
                         return (
                             <tr key={submission.id}>
-                                {!props.hideRatingColumn
-                                    ? (
-                                        <td className={classNames(styles.ratingCell, styles[ratingLevel])}>
-                                            {ratingDisplay}
-                                        </td>
-                                    )
-                                    : undefined}
-
                                 <td>
                                     {submission.memberHandle
                                         ? (
@@ -316,15 +260,15 @@ export const SubmissionsTable: FC<SubmissionsTableProps> = (
                                                 {handleDisplay}
                                             </a>
                                         )
-                                        : <span>{handleDisplay}</span>}
+                                        : (
+                                            <span className={classNames(styles.handleLink, styles[ratingLevel])}>
+                                                {handleDisplay}
+                                            </span>
+                                        )}
                                 </td>
 
                                 <td>
                                     <span title={emailDisplay}>{emailDisplay}</span>
-                                </td>
-
-                                <td>
-                                    <span title={statusDisplay}>{statusDisplay}</span>
                                 </td>
 
                                 <td>

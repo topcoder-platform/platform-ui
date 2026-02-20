@@ -20,7 +20,7 @@ import { PageWrapper } from '~/apps/review/src/lib'
 import {
     BaseModal,
     Button,
-    IconSolid,
+    IconOutline,
 } from '~/libs/ui'
 
 import {
@@ -415,7 +415,7 @@ export const ApplicationsListPage: FC = () => {
                                         <tr key={String(application.id)}>
                                             <td>
                                                 {active
-                                                    ? <IconSolid.CheckIcon className={styles.activeIcon} />
+                                                    ? <IconOutline.CheckCircleIcon className={styles.activeIcon} />
                                                     : '-'}
                                             </td>
                                             <td>

@@ -35,6 +35,8 @@ export interface Application {
     id: number | string
     mobileNumber?: string
     name: string
+    portfolioUrls?: string[]
+    resumeUrl?: string
     status: ApplicationStatus | string
     updatedAt?: string
     userId: number | string

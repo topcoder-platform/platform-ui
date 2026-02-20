@@ -32,6 +32,40 @@
     text-decoration: underline;
 }
 
+.handleRow {
+    align-items: center;
+    display: flex;
+    gap: 10px;
+}
+
+.downloadButton {
+    align-items: center;
+    background: transparent;
+    border: 0;
+    color: #0d61bf;
+    cursor: pointer;
+    display: inline-flex;
+    height: 22px;
+    justify-content: center;
+    padding: 0;
+    width: 22px;
+}
+
+.downloadButton:hover {
+    color: #074f9c;
+}
+
+.downloadButton:focus-visible {
+    outline: 2px solid #0d61bf;
+    outline-offset: 2px;
+}
+
+.downloadIcon {
+    display: block;
+    height: 16px;
+    width: 16px;
+}
+
 .section {
     border-top: 1px solid #e6e6e6;
     padding-top: 16px;
@@ -40,6 +74,61 @@
 .sectionTitle {
     font-size: 16px;
     margin: 0 0 10px;
+}
+
+.links {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.linkRow {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.linkLabel {
+    color: #767676;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.linkList {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.statusPill {
+    border-radius: 999px;
+    display: inline-flex;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    line-height: 1;
+    padding: 6px 12px;
+    text-transform: uppercase;
+}
+
+.statusGreen {
+    background: #d8f8e5;
+    color: #0f6a3e;
+}
+
+.statusYellow {
+    background: #fff2cc;
+    color: #916b00;
+}
+
+.statusGray {
+    background: #edf0f3;
+    color: #4f5964;
+}
+
+.statusRed {
+    background: #ffe2de;
+    color: #a1261b;
 }
 
 .text {

@@ -2,6 +2,7 @@ export type SubmissionStatus = 'active' | 'completed' | 'deleted' | 'failed' | '
 
 export interface SubmissionReview {
     createdAt?: string
+    finalScore?: number
     id?: string
     initialScore?: number
     isPassing?: boolean

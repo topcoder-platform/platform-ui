@@ -17,6 +17,7 @@ import {
     PROJECT_STATUSES,
 } from '../../../../../lib/constants'
 import {
+    FormBillingAccountAutocomplete,
     FormGroupsSelect,
     FormRadioGroup,
     FormSelectField,
@@ -25,8 +26,6 @@ import {
     FormTextField,
 } from '../../../../../lib/components/form'
 import {
-    useFetchBillingAccounts,
-    UseFetchBillingAccountsResult,
     useFetchProjectBillingAccount,
     UseFetchProjectBillingAccountResult,
 } from '../../../../../lib/hooks'
@@ -41,7 +40,6 @@ import {
     createProjectEditorSchema,
 } from '../../../../../lib/schemas/project-editor.schema'
 import {
-    BillingAccount,
     createProject,
     ProjectBillingAccount,
     updateProject,
@@ -190,7 +188,6 @@ function getBillingAccountDate(
 }
 
 interface ResolveCurrentBillingAccountDetailsParams {
-    billingAccounts: BillingAccount[]
     currentBillingAccountId: string
     currentProjectBillingAccountName: string | undefined
     isEdit: boolean
@@ -214,14 +211,10 @@ function resolveCurrentBillingAccountDetails(
         }
     }
 
-    const currentBillingAccount = params.billingAccounts.find(
-        billingAccount => String(billingAccount.id) === params.currentBillingAccountId,
-    )
-    const billingAccountWithDetails: ProjectBillingAccount | BillingAccount | undefined
-        = params.projectBillingAccount || currentBillingAccount
+    const billingAccountWithDetails: ProjectBillingAccount | undefined
+        = params.projectBillingAccount
     const resolvedBillingAccountName = params.currentProjectBillingAccountName
         || normalizeOptionalStringValue(params.projectBillingAccount?.name)
-        || normalizeOptionalStringValue(currentBillingAccount?.name)
 
     if (!billingAccountWithDetails) {
         return {
@@ -256,12 +249,6 @@ function resolveProjectBillingAccountProjectId(
 export const ProjectEditorForm: FC<ProjectEditorFormProps> = (props: ProjectEditorFormProps) => {
     const navigate = useNavigate()
     const [isSaving, setIsSaving] = useState<boolean>(false)
-    const {
-        billingAccounts,
-        error: billingAccountsError,
-        isError: isBillingAccountsError,
-        isLoading: isBillingAccountsLoading,
-    }: UseFetchBillingAccountsResult = useFetchBillingAccounts()
     const projectId = normalizeOptionalStringValue(props.projectDetail?.id)
     const projectBillingAccountProjectId = resolveProjectBillingAccountProjectId(
         props.isEdit,
@@ -311,56 +298,21 @@ export const ProjectEditorForm: FC<ProjectEditorFormProps> = (props: ProjectEdit
         [props.projectTypes],
     )
 
-    const billingAccountOptions = useMemo<FormSelectOption[]>(
-        () => billingAccounts.map(billingAccount => {
-            const status = formatBillingAccountStatus(getBillingAccountStatus(billingAccount))
-            const startDate = getBillingAccountDate(billingAccount, 'startDate')
-            const endDate = getBillingAccountDate(billingAccount, 'endDate')
-
-            return {
-                label: `[${billingAccount.id}] ${getBillingAccountName(billingAccount)} | ${status} | `
-                    + `${startDate} - ${endDate}`,
-                value: String(billingAccount.id),
-            }
-        }),
-        [billingAccounts],
-    )
-
-    const billingAccountHint = useMemo(() => {
-        if (isBillingAccountsLoading) {
-            return 'Loading billing accounts...'
-        }
-
-        if (isBillingAccountsError) {
-            return billingAccountsError?.message || 'Failed to load billing accounts.'
-        }
-
-        return undefined
-    }, [
-        billingAccountsError,
-        isBillingAccountsError,
-        isBillingAccountsLoading,
-    ])
-    const billingAccountSelectionHint = useMemo(() => {
-        if (billingAccountHint) {
-            return billingAccountHint
-        }
-
-        return props.isEdit
+    const billingAccountSelectionHint = useMemo(
+        () => (props.isEdit
             ? 'Select a different billing account to replace the current one.'
-            : undefined
-    }, [billingAccountHint, props.isEdit])
+            : undefined),
+        [props.isEdit],
+    )
 
     const currentBillingAccountDetails = useMemo<CurrentBillingAccountDetails | undefined>(
         () => resolveCurrentBillingAccountDetails({
-            billingAccounts,
             currentBillingAccountId,
             currentProjectBillingAccountName,
             isEdit: props.isEdit,
             projectBillingAccount,
         }),
         [
-            billingAccounts,
             currentBillingAccountId,
             currentProjectBillingAccountName,
             projectBillingAccount,
@@ -531,15 +483,13 @@ export const ProjectEditorForm: FC<ProjectEditorFormProps> = (props: ProjectEdit
                             )
                             : undefined}
 
-                        <FormSelectField
-                            disabled={isBillingAccountsLoading}
+                        <FormBillingAccountAutocomplete
                             hint={billingAccountSelectionHint}
                             label={props.isEdit
                                 ? 'Select New Billing Account'
                                 : 'Billing Account'}
                             name='billingAccountId'
-                            options={billingAccountOptions}
-                            placeholder='Select billing account'
+                            placeholder='Search billing account by name'
                             required={!props.isEdit}
                         />
                     </div>
