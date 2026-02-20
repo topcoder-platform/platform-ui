@@ -8,7 +8,7 @@ import { useFormContext } from 'react-hook-form'
 
 import { Button } from '~/libs/ui'
 
-import { FormTinyMceEditor } from '../../../../lib/components/form'
+import { FormMarkdownEditor } from '../../../../lib/components/form'
 
 import styles from './ChallengePrivateDescriptionField.module.scss'
 
@@ -57,7 +57,7 @@ export const ChallengePrivateDescriptionField: FC = () => {
                 </p>
             </div>
 
-            <FormTinyMceEditor
+            <FormMarkdownEditor
                 label='Private Specification'
                 name='privateDescription'
             />

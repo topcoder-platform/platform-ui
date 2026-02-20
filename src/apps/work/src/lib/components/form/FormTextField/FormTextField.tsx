@@ -16,6 +16,7 @@ import styles from './FormTextField.module.scss'
 
 export interface FormTextFieldProps {
     className?: string
+    counterPosition?: 'below' | 'inline'
     disabled?: boolean
     hint?: string
     label: string
@@ -29,6 +30,7 @@ export interface FormTextFieldProps {
 
 export const FormTextField: FC<FormTextFieldProps> = (props: FormTextFieldProps) => {
     const className = props.className
+    const counterPosition = props.counterPosition || 'below'
     const disabled = props.disabled
     const hint = props.hint
     const label = props.label
@@ -69,6 +71,7 @@ export const FormTextField: FC<FormTextFieldProps> = (props: FormTextFieldProps)
                 ? String(field.value)
                 : ''
         )
+    const isCounterInline = !!maxLength && counterPosition === 'inline'
 
     return (
         <FormFieldWrapper
@@ -79,10 +82,16 @@ export const FormTextField: FC<FormTextFieldProps> = (props: FormTextFieldProps)
             name={name}
             required={required}
         >
-            <div className={styles.inputContainer}>
+            <div
+                className={classNames(
+                    styles.inputContainer,
+                    isCounterInline ? styles.inputContainerInlineCounter : undefined,
+                )}
+            >
                 <input
                     className={classNames(
                         styles.input,
+                        isCounterInline ? styles.inputWithInlineCounter : undefined,
                         fieldState.error ? styles.error : undefined,
                     )}
                     disabled={disabled}
@@ -97,7 +106,12 @@ export const FormTextField: FC<FormTextFieldProps> = (props: FormTextFieldProps)
                 />
                 {maxLength
                     ? (
-                        <div className={styles.counter}>
+                        <div
+                            className={classNames(
+                                styles.counter,
+                                isCounterInline ? styles.counterInline : undefined,
+                            )}
+                        >
                             {value.length}
                             /
                             {maxLength}

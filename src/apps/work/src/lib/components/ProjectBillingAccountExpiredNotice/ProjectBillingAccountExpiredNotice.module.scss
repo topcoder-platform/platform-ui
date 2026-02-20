@@ -16,6 +16,10 @@
 }
 
 .details {
+    display: inline-flex;
+    align-items: center;
+    column-gap: 12px;
+    flex-wrap: wrap;
     margin-top: 8px;
     margin-bottom: 4px;
     color: #4a5568;
@@ -32,4 +36,16 @@
 
 .link:hover {
     color: #912018;
+}
+
+.requestCopilotLink {
+    color: #137d60;
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: underline;
+    white-space: nowrap;
+}
+
+.requestCopilotLink:hover {
+    color: #0f5e48;
 }

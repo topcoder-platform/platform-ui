@@ -291,6 +291,7 @@ export const ChallengesListPage: FC = () => {
                         billingAccountId={projectResult.project?.billingAccountId}
                         billingAccountName={projectResult.project?.billingAccountName}
                         projectId={projectIdFromRoute}
+                        projectStatus={projectResult.project?.status}
                     />
                 )
                 : undefined}

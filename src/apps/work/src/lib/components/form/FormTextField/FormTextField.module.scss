@@ -6,6 +6,11 @@
     gap: 6px;
 }
 
+.inputContainerInlineCounter {
+    gap: 0;
+    position: relative;
+}
+
 .input {
     border: 1px solid $black-20;
     border-radius: 8px;
@@ -26,6 +31,10 @@
     }
 }
 
+.inputWithInlineCounter {
+    padding-right: 60px;
+}
+
 .error {
     border-color: $red-100;
 }
@@ -34,4 +43,12 @@
     color: $black-60;
     font-size: 12px;
     text-align: right;
+}
+
+.counterInline {
+    pointer-events: none;
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
 }

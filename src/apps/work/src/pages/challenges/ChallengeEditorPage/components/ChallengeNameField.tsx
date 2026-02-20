@@ -5,6 +5,7 @@ import { MAX_CHALLENGE_NAME_LENGTH } from '../../../../lib/constants/challenge-e
 
 export const ChallengeNameField: FC = () => (
     <FormTextField
+        counterPosition='inline'
         label='Challenge Name'
         maxLength={MAX_CHALLENGE_NAME_LENGTH}
         name='name'

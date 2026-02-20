@@ -345,6 +345,10 @@ const PublicOpportunityCheckboxField: FC<PublicOpportunityCheckboxFieldProps> = 
 
 export const ReviewersField: FC = () => {
     const formContext = useFormContext<ChallengeEditorFormData>()
+    const reviewersFieldState = useController({
+        control: formContext.control,
+        name: 'reviewers',
+    }).fieldState
     const challengeTracksResult = useFetchChallengeTracks()
     const challengeTypesResult = useFetchChallengeTypes()
     const challengeTracks = challengeTracksResult.tracks
@@ -525,6 +529,9 @@ export const ReviewersField: FC = () => {
         [challengeTypes, normalizedTypeId],
     )
     const isLoading = isScorecardsLoading || isWorkflowsLoading
+    const reviewersValidationError = typeof reviewersFieldState.error?.message === 'string'
+        ? reviewersFieldState.error.message
+        : undefined
     const firstPlacePrize = useMemo(
         () => getFirstPlacePrizeValue(prizeSets),
         [prizeSets],
@@ -1206,6 +1213,9 @@ export const ReviewersField: FC = () => {
                 </div>
                 {loadError
                     ? <div className={styles.error}>{loadError}</div>
+                    : undefined}
+                {reviewersValidationError
+                    ? <div className={styles.error}>{reviewersValidationError}</div>
                     : undefined}
             </div>
 

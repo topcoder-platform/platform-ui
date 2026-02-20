@@ -61,6 +61,12 @@ export const ENGAGEMENTS_APP_URL = process.env.REACT_APP_ENGAGEMENTS_APP_URL
     || process.env.ENGAGEMENTS_APP_URL
     || EnvironmentConfig.ENGAGEMENTS_URL
 
+export const COPILOTS_APP_URL = process.env.REACT_APP_COPILOTS_APP_URL
+    || process.env.COPILOTS_APP_URL
+    || process.env.REACT_APP_COPILOTS_URL
+    || process.env.COPILOTS_URL
+    || `https://copilots.${EnvironmentConfig.TC_DOMAIN}`
+
 export const CHALLENGE_API_VERSION = process.env.REACT_APP_CHALLENGE_API_VERSION
     || process.env.CHALLENGE_API_VERSION
     || EnvironmentConfig.CHALLENGE_API_VERSION
@@ -130,12 +136,37 @@ export const REVIEWS_API_URL = process.env.REACT_APP_REVIEWS_API_URL
     || process.env.REVIEWS_API_URL
     || `${EnvironmentConfig.API.V6}/reviews`
 
+function normalizeMemberApiUrl(url: string): string {
+    const normalizedUrl = url
+        .replace(/\/v5\/members(?=\/|$)/, '/v6/members')
+        .replace(/\/$/, '')
+
+    let memberApiUrl: URL
+    let envApiUrl: URL
+
+    try {
+        memberApiUrl = new URL(normalizedUrl)
+        envApiUrl = new URL(EnvironmentConfig.API.V6)
+    } catch {
+        return normalizedUrl
+    }
+
+    if (memberApiUrl.hostname !== 'api.topcoder.com' || envApiUrl.hostname === 'api.topcoder.com') {
+        return normalizedUrl
+    }
+
+    memberApiUrl.protocol = envApiUrl.protocol
+    memberApiUrl.host = envApiUrl.host
+
+    return memberApiUrl.toString()
+        .replace(/\/$/, '')
+}
+
 const rawMemberApiUrl = process.env.REACT_APP_MEMBER_API_URL
     || process.env.MEMBER_API_URL
     || `${EnvironmentConfig.API.V6}/members`
 
-export const MEMBER_API_URL = rawMemberApiUrl
-    .replace(/\/v5\/members(?=\/|$)/, '/v6/members')
+export const MEMBER_API_URL = normalizeMemberApiUrl(rawMemberApiUrl)
 
 export const RESOURCE_ROLES_API_URL = process.env.REACT_APP_RESOURCE_ROLES_API_URL
     || process.env.RESOURCE_ROLES_API_URL

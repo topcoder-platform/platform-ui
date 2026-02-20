@@ -33,6 +33,7 @@ import {
     ChallengeEditorFormData,
     ChallengePhase,
     ChallengeType,
+    Reviewer,
 } from '../../../../lib/models'
 import {
     challengeEditorSchema,
@@ -146,6 +147,8 @@ interface SaveStatusMetadata {
 
 const CHALLENGE_TYPE_CHALLENGE_ABBREVIATION = 'CH'
 const CHALLENGE_TYPE_CHALLENGE_NAME = 'CHALLENGE'
+const CHALLENGE_TYPE_MARATHON_MATCH_NAME = 'MARATHONMATCH'
+const CHALLENGE_TYPE_MARATHON_MATCH_SHORT_ABBREVIATION = 'MM'
 const CHALLENGE_TYPE_TASK_NAME = 'TASK'
 const CHALLENGE_TYPE_TASK_SHORT_ABBREVIATION = 'TSK'
 const CHECKPOINT_REQUIRED_PHASES = [
@@ -153,6 +156,18 @@ const CHECKPOINT_REQUIRED_PHASES = [
     'Checkpoint Screening',
     'Checkpoint Review',
 ]
+const REVIEWER_REQUIRED_PHASES = [
+    'Screening',
+    'Review',
+    'Post-mortem',
+    'Approval',
+    'Checkpoint Screening',
+    'Iterative Review',
+]
+const REVIEWER_REQUIRED_PHASE_KEYS = new Set(
+    REVIEWER_REQUIRED_PHASES
+        .map(phaseName => normalizeReviewerPhaseName(phaseName)),
+)
 
 function normalizePhaseName(value: unknown): string {
     if (typeof value !== 'string') {
@@ -189,16 +204,207 @@ function isTaskChallengeType(challengeType?: ChallengeType): boolean {
         return true
     }
 
-    const normalizedChallengeTypeName = (challengeType.name || '')
+    return isTaskChallengeTypeByNameAndAbbreviation({
+        abbreviation: challengeType.abbreviation,
+        name: challengeType.name,
+    })
+}
+
+function isTaskChallengeTypeByNameAndAbbreviation({
+    abbreviation,
+    name,
+}: {
+    abbreviation?: string
+    name?: string
+}): boolean {
+    const normalizedChallengeTypeName = (name || '')
         .trim()
         .toUpperCase()
-    const normalizedChallengeTypeAbbreviation = (challengeType.abbreviation || '')
+    const normalizedChallengeTypeAbbreviation = (abbreviation || '')
         .trim()
         .toUpperCase()
 
     return normalizedChallengeTypeName === CHALLENGE_TYPE_TASK_NAME
         || normalizedChallengeTypeAbbreviation === CHALLENGE_TYPE_TASK_NAME
         || normalizedChallengeTypeAbbreviation === CHALLENGE_TYPE_TASK_SHORT_ABBREVIATION
+}
+
+function normalizeTextValue(value: unknown): string {
+    if (typeof value !== 'string') {
+        return ''
+    }
+
+    return value.trim()
+}
+
+function normalizeChallengeTypeToken(value: unknown): string {
+    return normalizeTextValue(value)
+        .toUpperCase()
+        .replace(/[-_\s]/g, '')
+}
+
+function normalizeReviewerPhaseName(value: unknown): string {
+    return normalizeTextValue(value)
+        .toLowerCase()
+        .replace(/[-\s]/g, '')
+}
+
+function normalizeReviewerPhaseId(phase: {
+    id?: string
+    phaseId?: string
+} | undefined): string {
+    return normalizeTextValue(phase?.phaseId) || normalizeTextValue(phase?.id)
+}
+
+function isMarathonMatchChallengeTypeByNameAndAbbreviation({
+    abbreviation,
+    name,
+}: {
+    abbreviation?: string
+    name?: string
+}): boolean {
+    const normalizedChallengeTypeName = normalizeChallengeTypeToken(name)
+    const normalizedChallengeTypeAbbreviation = normalizeChallengeTypeToken(abbreviation)
+
+    return normalizedChallengeTypeName === CHALLENGE_TYPE_MARATHON_MATCH_NAME
+        || normalizedChallengeTypeAbbreviation === CHALLENGE_TYPE_MARATHON_MATCH_NAME
+        || normalizedChallengeTypeAbbreviation === CHALLENGE_TYPE_MARATHON_MATCH_SHORT_ABBREVIATION
+}
+
+function getRequiredReviewerPhases(
+    phases: ChallengeEditorFormData['phases'],
+): Array<{
+    id: string
+    name: string
+}> {
+    if (!Array.isArray(phases)) {
+        return []
+    }
+
+    const requiredPhases: Array<{
+        id: string
+        name: string
+    }> = []
+    const requiredPhaseIdSet = new Set<string>()
+
+    phases.forEach(phase => {
+        const phaseId = normalizeReviewerPhaseId(phase)
+        const phaseName = normalizeTextValue(phase.name)
+
+        if (!phaseId || !REVIEWER_REQUIRED_PHASE_KEYS.has(normalizeReviewerPhaseName(phaseName))) {
+            return
+        }
+
+        if (requiredPhaseIdSet.has(phaseId)) {
+            return
+        }
+
+        requiredPhaseIdSet.add(phaseId)
+        requiredPhases.push({
+            id: phaseId,
+            name: phaseName || phaseId,
+        })
+    })
+
+    return requiredPhases
+}
+
+function isAiReviewer(reviewer: Reviewer | undefined): boolean {
+    return normalizeTextValue(reviewer?.aiWorkflowId).length > 0
+        || reviewer?.isMemberReview === false
+}
+
+function getReviewerEntryValidationError(reviewer: Reviewer | undefined): string | undefined {
+    if (!reviewer) {
+        return undefined
+    }
+
+    if (isAiReviewer(reviewer)) {
+        if (!normalizeTextValue(reviewer.aiWorkflowId)) {
+            return 'AI workflow is required for AI reviewer type.'
+        }
+    } else {
+        if (!normalizeTextValue(reviewer.scorecardId)) {
+            return 'Scorecard is required for member reviewer type.'
+        }
+
+        const reviewerCountValue = Number(reviewer.memberReviewerCount)
+        const reviewerCount = Number.isFinite(reviewerCountValue)
+            ? Math.trunc(reviewerCountValue)
+            : 1
+
+        if (!Number.isInteger(reviewerCount) || reviewerCount < 1) {
+            return 'Number of reviewers must be a positive integer.'
+        }
+    }
+
+    return normalizeReviewerPhaseId(reviewer)
+        ? undefined
+        : 'Phase is required for each reviewer.'
+}
+
+function getMissingRequiredPhaseCoverageError(
+    reviewers: Reviewer[],
+    requiredPhases: Array<{
+        id: string
+        name: string
+    }>,
+): string | undefined {
+    const uncoveredPhase = requiredPhases
+        .find(requiredPhase => !reviewers.some(reviewer => (
+            normalizeReviewerPhaseId(reviewer) === requiredPhase.id
+            && !!normalizeTextValue(reviewer?.scorecardId)
+        )))
+
+    if (!uncoveredPhase) {
+        return undefined
+    }
+
+    return `At least one member reviewer with a scorecard is required for phase "${uncoveredPhase.name}".`
+}
+
+interface ReviewerLaunchValidationOptions {
+    challengeTypeAbbreviation?: string
+    challengeTypeName?: string
+    isTaskChallenge: boolean
+}
+
+/**
+ * Validates reviewer setup before launch using the same phase coverage checks as work-manager.
+ */
+function getReviewerLaunchValidationError(
+    formData: ChallengeEditorFormData,
+    options: ReviewerLaunchValidationOptions,
+): string | undefined {
+    if (options.isTaskChallenge) {
+        return undefined
+    }
+
+    const reviewers = Array.isArray(formData.reviewers)
+        ? formData.reviewers
+        : []
+    const requiredPhases = getRequiredReviewerPhases(formData.phases)
+    const isMarathonMatch = isMarathonMatchChallengeTypeByNameAndAbbreviation({
+        abbreviation: options.challengeTypeAbbreviation,
+        name: options.challengeTypeName,
+    })
+
+    if (!isMarathonMatch && reviewers.length === 0 && requiredPhases.length > 0) {
+        return 'Reviewers are required for configured review phases before launching.'
+    }
+
+    const invalidReviewer = reviewers
+        .map(reviewer => getReviewerEntryValidationError(reviewer))
+        .find(Boolean)
+    if (invalidReviewer) {
+        return invalidReviewer
+    }
+
+    if (isMarathonMatch) {
+        return undefined
+    }
+
+    return getMissingRequiredPhaseCoverageError(reviewers, requiredPhases)
 }
 
 function getStatusText(
@@ -330,6 +536,8 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const getValues = formMethods.getValues
     const handleSubmit = formMethods.handleSubmit
     const reset = formMethods.reset
+    const clearErrors = formMethods.clearErrors
+    const setError = formMethods.setError
     const setValue = formMethods.setValue
     const trigger = formMethods.trigger
     const watch = formMethods.watch
@@ -413,6 +621,18 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 || normalizedChallengeTypeAbbreviation === CHALLENGE_TYPE_CHALLENGE_ABBREVIATION
         },
         [selectedChallengeType],
+    )
+    const isTaskChallengeSelected = useMemo(
+        (): boolean => isTaskChallengeType(selectedChallengeType)
+            || isTaskChallengeTypeByNameAndAbbreviation({
+                abbreviation: resolvedChallengeTypeAbbreviation,
+                name: resolvedChallengeTypeName,
+            }),
+        [
+            resolvedChallengeTypeAbbreviation,
+            resolvedChallengeTypeName,
+            selectedChallengeType,
+        ],
     )
     const showRoundTypeField = isDesignTrackSelected && Boolean(values.typeId?.trim())
     const showSubmissionSettingsSection = isDesignTrackSelected && isChallengeTypeSelected
@@ -627,6 +847,22 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const launchChallenge = useCallback(async (): Promise<void> => {
         await handleSubmit(
             async formData => {
+                const reviewerValidationError = getReviewerLaunchValidationError(formData, {
+                    challengeTypeAbbreviation: resolvedChallengeTypeAbbreviation,
+                    challengeTypeName: resolvedChallengeTypeName,
+                    isTaskChallenge: isTaskChallengeSelected,
+                })
+
+                if (reviewerValidationError) {
+                    setError('reviewers', {
+                        message: reviewerValidationError,
+                        type: 'manual',
+                    })
+                    showErrorToast(reviewerValidationError)
+                    throw new Error('Challenge launch validation failed')
+                }
+
+                clearErrors('reviewers')
                 await saveChallenge(formData, {
                     statusOverride: CHALLENGE_STATUS.ACTIVE,
                     successMessage: 'Challenge launched successfully',
@@ -638,8 +874,13 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             },
         )()
     }, [
+        clearErrors,
         handleSubmit,
+        isTaskChallengeSelected,
+        resolvedChallengeTypeAbbreviation,
+        resolvedChallengeTypeName,
         saveChallenge,
+        setError,
     ])
 
     useEffect(() => {
@@ -805,7 +1046,9 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                             <section className={styles.section}>
                                 <h3 className={styles.sectionTitle}>Advanced Options</h3>
                                 <div className={styles.grid}>
-                                    <AssignedMemberField />
+                                    {isTaskChallengeSelected
+                                        ? <AssignedMemberField />
+                                        : undefined}
                                     <CopilotField />
                                     <GroupsField />
                                     <TermsField />

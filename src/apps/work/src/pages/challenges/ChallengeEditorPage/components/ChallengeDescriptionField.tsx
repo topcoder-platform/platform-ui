@@ -1,6 +1,6 @@
 import { FC } from 'react'
 
-import { FormTinyMceEditor } from '../../../../lib/components/form'
+import { FormMarkdownEditor } from '../../../../lib/components/form'
 
 import styles from './ChallengeDescriptionField.module.scss'
 
@@ -20,7 +20,7 @@ export const ChallengeDescriptionField: FC = () => (
             </a>
             .
         </p>
-        <FormTinyMceEditor
+        <FormMarkdownEditor
             label='Public Specification'
             name='description'
             required
