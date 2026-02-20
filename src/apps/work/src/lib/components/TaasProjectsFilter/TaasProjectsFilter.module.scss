@@ -13,6 +13,12 @@
 .filterField {
     display: flex;
     flex-direction: column;
+    gap: 8px;
+
+    label {
+        font-size: 13px;
+        color: $black-80;
+    }
 }
 
 .bottomAlignedField {
@@ -30,16 +36,28 @@
     display: flex;
 }
 
-.inputWrapper {
-    :global(.input-el) {
-        margin-bottom: 0;
-    }
+.searchInputWrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid $black-20;
+    border-radius: 4px;
+    background: #fff;
+    padding: 8px 12px;
+}
 
-    :global([class*='__control']) {
-        height: 100%;
-        margin-top: 0;
-        min-height: 100%;
-    }
+.searchIcon {
+    color: $black-60;
+    width: 18px;
+    height: 18px;
+}
+
+.searchInput {
+    width: 100%;
+    border: 0;
+    background: transparent;
+    color: $black-80;
+    outline: none;
 }
 
 @media (max-width: 1200px) {

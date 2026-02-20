@@ -1,29 +1,36 @@
 import {
     ChangeEvent,
     FC,
-    FocusEvent,
+    useCallback,
     useEffect,
     useMemo,
     useRef,
     useState,
 } from 'react'
+import AsyncSelect from 'react-select/async'
+import Select, { SingleValue } from 'react-select'
 import classNames from 'classnames'
 
 import {
     Button,
+    IconOutline,
     InputCheckbox,
-    InputSelectOption,
-    InputSelectReact,
-    InputText,
 } from '~/libs/ui'
 
 import { PROJECT_STATUSES } from '../../constants'
-import { useFetchBillingAccounts } from '../../hooks'
-import type { UseFetchBillingAccountsResult } from '../../hooks'
+import {
+    AUTOCOMPLETE_DEBOUNCE_TIME_MS,
+    AUTOCOMPLETE_MIN_LENGTH,
+} from '../../constants/challenge-editor.constants'
 import {
     Project,
     ProjectFilters,
 } from '../../models'
+import {
+    BillingAccount,
+    fetchBillingAccountById,
+    searchBillingAccounts,
+} from '../../services'
 
 import styles from './ProjectsFilter.module.scss'
 
@@ -32,6 +39,11 @@ interface ProjectsFilterProps {
     onFiltersChange: (newFilters: ProjectFilters) => void
     isManager: boolean
     projects: Project[]
+}
+
+interface SelectOption {
+    label: string
+    value: string
 }
 
 function normalizeBillingAccountId(value: number | string | undefined): string | undefined {
@@ -45,16 +57,66 @@ function normalizeBillingAccountId(value: number | string | undefined): string |
     return normalizedValue || undefined
 }
 
+function toBillingAccountOption(billingAccount: BillingAccount): SelectOption {
+    return {
+        label: `${billingAccount.name} / ${billingAccount.id}`,
+        value: String(billingAccount.id),
+    }
+}
+
+function createFallbackBillingAccountOption(
+    billingAccountId: string,
+): SelectOption {
+    return {
+        label: `Unknown / ${billingAccountId}`,
+        value: billingAccountId,
+    }
+}
+
+function mergeOptions(
+    currentOptions: SelectOption[],
+    incomingOptions: SelectOption[],
+): SelectOption[] {
+    const optionMap = new Map<string, SelectOption>()
+
+    currentOptions.forEach(option => {
+        optionMap.set(option.value, option)
+    })
+
+    incomingOptions.forEach(option => {
+        optionMap.set(option.value, option)
+    })
+
+    return Array.from(optionMap.values())
+}
+
+function createDebouncedLoader(
+    loader: (value: string) => Promise<SelectOption[]>,
+): (value: string) => Promise<SelectOption[]> {
+    let timeoutId: number | undefined
+
+    return (value: string): Promise<SelectOption[]> => new Promise(resolve => {
+        if (timeoutId !== undefined) {
+            window.clearTimeout(timeoutId)
+        }
+
+        timeoutId = window.setTimeout(async () => {
+            resolve(await loader(value))
+        }, AUTOCOMPLETE_DEBOUNCE_TIME_MS)
+    })
+}
+
 export const ProjectsFilter: FC<ProjectsFilterProps> = (props: ProjectsFilterProps) => {
     const filters: ProjectFilters = props.filters
     const isManager: boolean = props.isManager
     const onFiltersChange: (newFilters: ProjectFilters) => void = props.onFiltersChange
     const projects: Project[] = props.projects
-    const {
-        billingAccounts,
-    }: UseFetchBillingAccountsResult = useFetchBillingAccounts()
 
     const [keywordInput, setKeywordInput] = useState<string>(filters.keyword || '')
+    const [billingAccountOptionCache, setBillingAccountOptionCache] = useState<SelectOption[]>([])
+    const [billingAccountSearchError, setBillingAccountSearchError] = useState<string | undefined>(
+        undefined,
+    )
     const isFirstDebouncedRender = useRef<boolean>(true)
 
     useEffect(() => {
@@ -84,7 +146,7 @@ export const ProjectsFilter: FC<ProjectsFilterProps> = (props: ProjectsFilterPro
         }
     }, [filters, keywordInput, onFiltersChange])
 
-    const statusOptions = useMemo<InputSelectOption[]>(
+    const statusOptions = useMemo<SelectOption[]>(
         () => [
             {
                 label: 'All statuses',
@@ -95,86 +157,159 @@ export const ProjectsFilter: FC<ProjectsFilterProps> = (props: ProjectsFilterPro
         [],
     )
 
-    const selectedStatus = Array.isArray(filters.status)
+    const selectedStatusValue = Array.isArray(filters.status)
         ? (filters.status[0] || '')
         : (filters.status || '')
     const selectedBillingAccountId = filters.billingAccountId || ''
 
-    const billingAccountNames: Map<string, string> = useMemo<Map<string, string>>(
-        () => new Map(
-            billingAccounts.map(account => ([
-                String(account.id),
-                account.name,
-            ])),
-        ),
-        [billingAccounts],
-    )
-    const projectBillingAccountNames: Map<string, string> = useMemo<Map<string, string>>(
+    const projectBillingAccountOptions = useMemo<SelectOption[]>(
         () => {
-            const names = new Map<string, string>()
+            const billingAccountOptionMap = new Map<string, SelectOption>()
 
             projects.forEach(project => {
                 const billingAccountId = normalizeBillingAccountId(project.billingAccountId)
                 const billingAccountName = (project.billingAccountName || '').trim()
 
-                if (billingAccountId && billingAccountName) {
-                    names.set(billingAccountId, billingAccountName)
+                if (!billingAccountId || !billingAccountName) {
+                    return
                 }
+
+                billingAccountOptionMap.set(
+                    billingAccountId,
+                    {
+                        label: `${billingAccountName} / ${billingAccountId}`,
+                        value: billingAccountId,
+                    },
+                )
             })
 
-            return names
+            return Array.from(billingAccountOptionMap.values())
         },
         [projects],
     )
 
-    const billingAccountOptions = useMemo<InputSelectOption[]>(
-        () => {
-            const billingAccountIds = new Set<string>()
+    useEffect(() => {
+        if (!projectBillingAccountOptions.length) {
+            return
+        }
 
-            projects.forEach(project => {
-                const billingAccountId = normalizeBillingAccountId(project.billingAccountId)
+        setBillingAccountOptionCache(previousOptions => mergeOptions(
+            previousOptions,
+            projectBillingAccountOptions,
+        ))
+    }, [projectBillingAccountOptions])
 
-                if (billingAccountId) {
-                    billingAccountIds.add(billingAccountId)
+    const hasSelectedBillingAccountOption = useMemo(
+        () => !!selectedBillingAccountId
+            && billingAccountOptionCache.some(option => option.value === selectedBillingAccountId),
+        [billingAccountOptionCache, selectedBillingAccountId],
+    )
+
+    useEffect(() => {
+        if (!selectedBillingAccountId || hasSelectedBillingAccountOption) {
+            return undefined
+        }
+
+        let isMounted = true
+
+        fetchBillingAccountById(selectedBillingAccountId)
+            .then(billingAccount => {
+                if (!isMounted) {
+                    return
                 }
+
+                setBillingAccountOptionCache(previousOptions => mergeOptions(previousOptions, [
+                    toBillingAccountOption(billingAccount),
+                ]))
+            })
+            .catch(() => {
+                if (!isMounted) {
+                    return
+                }
+
+                setBillingAccountOptionCache(previousOptions => mergeOptions(previousOptions, [
+                    createFallbackBillingAccountOption(selectedBillingAccountId),
+                ]))
             })
 
-            if (selectedBillingAccountId) {
-                billingAccountIds.add(selectedBillingAccountId)
+        return () => {
+            isMounted = false
+        }
+    }, [hasSelectedBillingAccountOption, selectedBillingAccountId])
+
+    const loadBillingAccountOptions = useCallback(
+        async (inputValue: string): Promise<SelectOption[]> => {
+            const normalizedInputValue = inputValue.trim()
+
+            setBillingAccountSearchError(undefined)
+
+            if (normalizedInputValue.length < AUTOCOMPLETE_MIN_LENGTH) {
+                return []
             }
 
-            const options = Array.from(billingAccountIds)
-                .map(billingAccountId => ({
-                    billingAccountId,
-                    billingAccountName:
-                        projectBillingAccountNames.get(billingAccountId)
-                        || billingAccountNames.get(billingAccountId)
-                        || 'Unknown',
-                }))
-                .sort((accountA, accountB) => {
-                    const nameComparison = accountA.billingAccountName
-                        .localeCompare(accountB.billingAccountName)
-
-                    if (nameComparison !== 0) {
-                        return nameComparison
-                    }
-
-                    return accountA.billingAccountId.localeCompare(accountB.billingAccountId)
+            try {
+                const billingAccounts = await searchBillingAccounts({
+                    name: normalizedInputValue,
+                    page: 1,
+                    perPage: 20,
                 })
-                .map(account => ({
-                    label: `${account.billingAccountName} / ${account.billingAccountId}`,
-                    value: account.billingAccountId,
-                }))
+                const options = billingAccounts.map(account => toBillingAccountOption(account))
 
-            return [
-                {
-                    label: 'All billing accounts',
-                    value: '',
-                },
-                ...options,
-            ]
+                setBillingAccountOptionCache(previousOptions => mergeOptions(previousOptions, options))
+
+                return options
+            } catch (error) {
+                const errorMessage = error instanceof Error
+                    ? error.message
+                    : 'Failed to search billing accounts.'
+
+                setBillingAccountSearchError(errorMessage)
+
+                return []
+            }
         },
-        [billingAccountNames, projectBillingAccountNames, projects, selectedBillingAccountId],
+        [],
+    )
+
+    const debouncedLoadBillingAccountOptions = useMemo(
+        () => createDebouncedLoader(loadBillingAccountOptions),
+        [loadBillingAccountOptions],
+    )
+
+    const selectedStatus = useMemo<SelectOption | undefined>(
+        () => statusOptions.find(option => option.value === selectedStatusValue),
+        [selectedStatusValue, statusOptions],
+    )
+
+    const selectedBillingAccount = useMemo<SelectOption | undefined>(
+        () => {
+            if (!selectedBillingAccountId) {
+                return undefined
+            }
+
+            return billingAccountOptionCache.find(option => option.value === selectedBillingAccountId)
+                || createFallbackBillingAccountOption(selectedBillingAccountId)
+        },
+        [billingAccountOptionCache, selectedBillingAccountId],
+    )
+
+    const billingAccountNoOptionsMessage = useCallback(
+        ({
+            inputValue,
+        }: {
+            inputValue: string
+        }): string => {
+            if (billingAccountSearchError) {
+                return billingAccountSearchError
+            }
+
+            if (inputValue.trim().length < AUTOCOMPLETE_MIN_LENGTH) {
+                return `Type at least ${AUTOCOMPLETE_MIN_LENGTH} characters to search`
+            }
+
+            return 'No billing accounts found'
+        },
+        [billingAccountSearchError],
     )
 
     function updateFilters(partial: Partial<ProjectFilters>): void {
@@ -184,14 +319,14 @@ export const ProjectsFilter: FC<ProjectsFilterProps> = (props: ProjectsFilterPro
         })
     }
 
-    function handleKeywordInputChange(event: FocusEvent<HTMLInputElement>): void {
+    function handleKeywordInputChange(event: ChangeEvent<HTMLInputElement>): void {
         setKeywordInput(event.target.value)
     }
 
-    function handleStatusChange(event: ChangeEvent<HTMLInputElement>): void {
-        const selectedStatusValue = event.target.value
-        const normalizedStatus = PROJECT_STATUSES.some(item => item.value === selectedStatusValue)
-            ? selectedStatusValue as ProjectFilters['status']
+    function handleStatusChange(option: SingleValue<SelectOption>): void {
+        const nextStatus = option?.value || ''
+        const normalizedStatus = PROJECT_STATUSES.some(item => item.value === nextStatus)
+            ? nextStatus as ProjectFilters['status']
             : undefined
 
         updateFilters({
@@ -199,11 +334,9 @@ export const ProjectsFilter: FC<ProjectsFilterProps> = (props: ProjectsFilterPro
         })
     }
 
-    function handleBillingAccountChange(event: ChangeEvent<HTMLInputElement>): void {
-        const billingAccountId = event.target.value.trim()
-
+    function handleBillingAccountChange(option: SingleValue<SelectOption>): void {
         updateFilters({
-            billingAccountId: billingAccountId || undefined,
+            billingAccountId: option?.value || undefined,
         })
     }
 
@@ -231,41 +364,48 @@ export const ProjectsFilter: FC<ProjectsFilterProps> = (props: ProjectsFilterPro
         })}
         >
             <div className={styles.filterField}>
-                <InputText
-                    name='project-keyword'
-                    type='text'
-                    label='Search'
-                    placeholder='Keyword'
-                    value={keywordInput}
-                    forceUpdateValue
-                    onChange={handleKeywordInputChange}
-                    classNameWrapper={styles.inputWrapper}
-                />
+                <label htmlFor='work-projects-search'>Search</label>
+                <div className={styles.searchInputWrap}>
+                    <IconOutline.SearchIcon className={styles.searchIcon} />
+                    <input
+                        id='work-projects-search'
+                        aria-label='Search projects'
+                        className={styles.searchInput}
+                        onChange={handleKeywordInputChange}
+                        placeholder='Search project name'
+                        type='text'
+                        value={keywordInput}
+                    />
+                </div>
             </div>
 
             <div className={styles.filterField}>
-                <InputSelectReact
-                    classNameWrapper={styles.inputWrapper}
-                    name='project-status'
-                    label='Project status'
-                    value={selectedStatus}
+                <label htmlFor='work-projects-status'>Status</label>
+                <Select
+                    inputId='work-projects-status'
+                    className='react-select-container'
+                    classNamePrefix='select'
                     options={statusOptions}
-                    placeholder='All statuses'
+                    value={selectedStatus}
                     onChange={handleStatusChange}
                     isClearable
                 />
             </div>
 
             <div className={styles.filterField}>
-                <InputSelectReact
-                    classNameWrapper={styles.inputWrapper}
+                <label htmlFor='work-projects-billing-account'>Billing account</label>
+                <AsyncSelect
+                    inputId='work-projects-billing-account'
+                    cacheOptions
+                    className='react-select-container'
+                    classNamePrefix='select'
+                    defaultOptions={false}
                     isClearable
-                    label='Billing Account'
-                    name='project-billing-account'
+                    loadOptions={debouncedLoadBillingAccountOptions}
+                    noOptionsMessage={billingAccountNoOptionsMessage}
                     onChange={handleBillingAccountChange}
-                    options={billingAccountOptions}
                     placeholder='All billing accounts'
-                    value={selectedBillingAccountId}
+                    value={selectedBillingAccount}
                 />
             </div>
 

@@ -1,19 +1,17 @@
 import {
     ChangeEvent,
     FC,
-    FocusEvent,
     useEffect,
     useMemo,
     useRef,
     useState,
 } from 'react'
+import Select, { SingleValue } from 'react-select'
 
 import {
     Button,
+    IconOutline,
     InputCheckbox,
-    InputSelectOption,
-    InputSelectReact,
-    InputText,
 } from '~/libs/ui'
 
 import {
@@ -29,6 +27,11 @@ interface TaasProjectsFilterProps {
     filters: ProjectFilters
     isManager: boolean
     onFiltersChange: (newFilters: ProjectFilters) => void
+}
+
+interface SelectOption {
+    label: string
+    value: string
 }
 
 export const TaasProjectsFilter: FC<TaasProjectsFilterProps> = (props: TaasProjectsFilterProps) => {
@@ -66,7 +69,7 @@ export const TaasProjectsFilter: FC<TaasProjectsFilterProps> = (props: TaasProje
         }
     }, [filters, keywordInput, onFiltersChange])
 
-    const statusOptions = useMemo<InputSelectOption[]>(
+    const statusOptions = useMemo<SelectOption[]>(
         () => [
             {
                 label: 'All statuses',
@@ -77,9 +80,14 @@ export const TaasProjectsFilter: FC<TaasProjectsFilterProps> = (props: TaasProje
         [],
     )
 
-    const selectedStatus = Array.isArray(filters.status)
+    const selectedStatusValue = Array.isArray(filters.status)
         ? (filters.status[0] || '')
         : (filters.status || '')
+
+    const selectedStatus = useMemo<SelectOption | undefined>(
+        () => statusOptions.find(option => option.value === selectedStatusValue),
+        [selectedStatusValue, statusOptions],
+    )
 
     function updateFilters(partial: Partial<ProjectFilters>): void {
         onFiltersChange({
@@ -88,14 +96,14 @@ export const TaasProjectsFilter: FC<TaasProjectsFilterProps> = (props: TaasProje
         })
     }
 
-    function handleKeywordInputChange(event: FocusEvent<HTMLInputElement>): void {
+    function handleKeywordInputChange(event: ChangeEvent<HTMLInputElement>): void {
         setKeywordInput(event.target.value)
     }
 
-    function handleStatusChange(event: ChangeEvent<HTMLInputElement>): void {
-        const selectedStatusValue = event.target.value
-        const normalizedStatus = PROJECT_STATUSES.some(item => item.value === selectedStatusValue)
-            ? selectedStatusValue as ProjectFilters['status']
+    function handleStatusChange(option: SingleValue<SelectOption>): void {
+        const nextStatus = option?.value || ''
+        const normalizedStatus = PROJECT_STATUSES.some(item => item.value === nextStatus)
+            ? nextStatus as ProjectFilters['status']
             : undefined
 
         updateFilters({
@@ -123,34 +131,37 @@ export const TaasProjectsFilter: FC<TaasProjectsFilterProps> = (props: TaasProje
     return (
         <div className={styles.container}>
             <div className={styles.filterField}>
-                <InputText
-                    classNameWrapper={styles.inputWrapper}
-                    forceUpdateValue
-                    label='Search'
-                    name='taas-project-keyword'
-                    onChange={handleKeywordInputChange}
-                    placeholder='Keyword'
-                    type='text'
-                    value={keywordInput}
-                />
+                <label htmlFor='work-taas-projects-search'>Search</label>
+                <div className={styles.searchInputWrap}>
+                    <IconOutline.SearchIcon className={styles.searchIcon} />
+                    <input
+                        id='work-taas-projects-search'
+                        aria-label='Search TaaS projects'
+                        className={styles.searchInput}
+                        onChange={handleKeywordInputChange}
+                        placeholder='Search project name'
+                        type='text'
+                        value={keywordInput}
+                    />
+                </div>
             </div>
 
             <div className={styles.filterField}>
-                <InputSelectReact
-                    classNameWrapper={styles.inputWrapper}
-                    isClearable
-                    label='Project status'
-                    name='taas-project-status'
-                    onChange={handleStatusChange}
+                <label htmlFor='work-taas-projects-status'>Status</label>
+                <Select
+                    inputId='work-taas-projects-status'
+                    className='react-select-container'
+                    classNamePrefix='select'
                     options={statusOptions}
-                    placeholder='All statuses'
                     value={selectedStatus}
+                    onChange={handleStatusChange}
+                    isClearable
                 />
             </div>
 
-            <div className={`${styles.filterField} ${styles.bottomAlignedField}`}>
-                {isManager
-                    ? (
+            {isManager
+                ? (
+                    <div className={`${styles.filterField} ${styles.bottomAlignedField}`}>
                         <div className={styles.checkboxWrap}>
                             <InputCheckbox
                                 checked={!!filters.memberOnly}
@@ -160,9 +171,9 @@ export const TaasProjectsFilter: FC<TaasProjectsFilterProps> = (props: TaasProje
                                 onClick={handleOnlyMyProjectsToggle}
                             />
                         </div>
-                    )
-                    : undefined}
-            </div>
+                    </div>
+                )
+                : undefined}
 
             <div className={styles.actions}>
                 <Button

@@ -298,13 +298,6 @@ export const ProjectEditorForm: FC<ProjectEditorFormProps> = (props: ProjectEdit
         [props.projectTypes],
     )
 
-    const billingAccountSelectionHint = useMemo(
-        () => (props.isEdit
-            ? 'Select a different billing account to replace the current one.'
-            : undefined),
-        [props.isEdit],
-    )
-
     const currentBillingAccountDetails = useMemo<CurrentBillingAccountDetails | undefined>(
         () => resolveCurrentBillingAccountDetails({
             currentBillingAccountId,
@@ -484,7 +477,6 @@ export const ProjectEditorForm: FC<ProjectEditorFormProps> = (props: ProjectEdit
                             : undefined}
 
                         <FormBillingAccountAutocomplete
-                            hint={billingAccountSelectionHint}
                             label={props.isEdit
                                 ? 'Select New Billing Account'
                                 : 'Billing Account'}
