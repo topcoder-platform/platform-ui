@@ -39,7 +39,8 @@ export function validateS3URI(
         const parsedKey = key ?? undefined
         const isValid = Boolean(parsedBucket)
             && region === EnvironmentConfig.ADMIN.AWS_REGION
-            && parsedBucket === EnvironmentConfig.ADMIN.AWS_DMZ_BUCKET
+            && (parsedBucket === EnvironmentConfig.ADMIN.AWS_CLEAN_BUCKET
+                || parsedBucket === EnvironmentConfig.ADMIN.AWS_QUARANTINE_BUCKET)
 
         return {
             bucket: parsedBucket,
