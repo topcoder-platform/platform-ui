@@ -27,6 +27,8 @@ import {
 import {
     useFetchBillingAccounts,
     UseFetchBillingAccountsResult,
+    useFetchProjectBillingAccount,
+    UseFetchProjectBillingAccountResult,
 } from '../../../../../lib/hooks'
 import {
     CreateProjectPayload,
@@ -41,6 +43,7 @@ import {
 import {
     BillingAccount,
     createProject,
+    ProjectBillingAccount,
     updateProject,
 } from '../../../../../lib/services'
 import {
@@ -147,7 +150,12 @@ function formatBillingAccountStatus(status: string | undefined): string {
     return normalizedStatus.replace(/\b[a-z]/g, letter => letter.toUpperCase())
 }
 
-function getBillingAccountStatus(billingAccount: BillingAccount): string | undefined {
+function getBillingAccountStatus(
+    billingAccount: {
+        active?: unknown
+        status?: unknown
+    },
+): string | undefined {
     const directStatus = normalizeOptionalStringValue(billingAccount.status)
 
     if (directStatus) {
@@ -163,15 +171,86 @@ function getBillingAccountStatus(billingAccount: BillingAccount): string | undef
     return undefined
 }
 
-function getBillingAccountName(billingAccount: BillingAccount): string {
+function getBillingAccountName(
+    billingAccount: {
+        name?: unknown
+    },
+): string {
     return normalizeOptionalStringValue(billingAccount.name) || '-'
 }
 
 function getBillingAccountDate(
-    billingAccount: BillingAccount,
+    billingAccount: {
+        endDate?: unknown
+        startDate?: unknown
+    },
     field: 'startDate' | 'endDate',
 ): string {
     return formatDate(normalizeOptionalStringValue(billingAccount[field]))
+}
+
+interface ResolveCurrentBillingAccountDetailsParams {
+    billingAccounts: BillingAccount[]
+    currentBillingAccountId: string
+    currentProjectBillingAccountName: string | undefined
+    isEdit: boolean
+    projectBillingAccount: ProjectBillingAccount | undefined
+}
+
+function resolveCurrentBillingAccountDetails(
+    params: ResolveCurrentBillingAccountDetailsParams,
+): CurrentBillingAccountDetails | undefined {
+    if (!params.isEdit) {
+        return undefined
+    }
+
+    if (!params.currentBillingAccountId || params.currentBillingAccountId === '-') {
+        return {
+            endDate: '-',
+            id: '-',
+            name: 'Not set',
+            startDate: '-',
+            status: 'Unknown',
+        }
+    }
+
+    const currentBillingAccount = params.billingAccounts.find(
+        billingAccount => String(billingAccount.id) === params.currentBillingAccountId,
+    )
+    const billingAccountWithDetails: ProjectBillingAccount | BillingAccount | undefined
+        = params.projectBillingAccount || currentBillingAccount
+    const resolvedBillingAccountName = params.currentProjectBillingAccountName
+        || normalizeOptionalStringValue(params.projectBillingAccount?.name)
+        || normalizeOptionalStringValue(currentBillingAccount?.name)
+
+    if (!billingAccountWithDetails) {
+        return {
+            endDate: '-',
+            id: params.currentBillingAccountId,
+            name: resolvedBillingAccountName || 'Unavailable',
+            startDate: '-',
+            status: 'Unknown',
+        }
+    }
+
+    return {
+        endDate: getBillingAccountDate(billingAccountWithDetails, 'endDate'),
+        id: params.currentBillingAccountId,
+        name: resolvedBillingAccountName || getBillingAccountName(billingAccountWithDetails),
+        startDate: getBillingAccountDate(billingAccountWithDetails, 'startDate'),
+        status: formatBillingAccountStatus(getBillingAccountStatus(billingAccountWithDetails)),
+    }
+}
+
+function resolveProjectBillingAccountProjectId(
+    isEdit: boolean,
+    projectId: string | undefined,
+): string | undefined {
+    if (!isEdit) {
+        return undefined
+    }
+
+    return projectId
 }
 
 export const ProjectEditorForm: FC<ProjectEditorFormProps> = (props: ProjectEditorFormProps) => {
@@ -183,6 +262,16 @@ export const ProjectEditorForm: FC<ProjectEditorFormProps> = (props: ProjectEdit
         isError: isBillingAccountsError,
         isLoading: isBillingAccountsLoading,
     }: UseFetchBillingAccountsResult = useFetchBillingAccounts()
+    const projectId = normalizeOptionalStringValue(props.projectDetail?.id)
+    const projectBillingAccountProjectId = resolveProjectBillingAccountProjectId(
+        props.isEdit,
+        projectId,
+    )
+    const {
+        billingAccount: projectBillingAccount,
+    }: UseFetchProjectBillingAccountResult = useFetchProjectBillingAccount(
+        projectBillingAccountProjectId,
+    )
 
     const validationSchema = useMemo(
         () => createProjectEditorSchema(props.isEdit, props.canManage),
@@ -201,6 +290,7 @@ export const ProjectEditorForm: FC<ProjectEditorFormProps> = (props: ProjectEdit
     const watch = formMethods.watch
 
     const currentBillingAccountId = normalizeOptionalStringValue(props.projectDetail?.billingAccountId) || '-'
+    const currentProjectBillingAccountName = normalizeOptionalStringValue(props.projectDetail?.billingAccountName)
     const selectedStatus = watch('status')
 
     const isProjectCancelled = selectedStatus === PROJECT_STATUS.CANCELLED
@@ -261,47 +351,22 @@ export const ProjectEditorForm: FC<ProjectEditorFormProps> = (props: ProjectEdit
             : undefined
     }, [billingAccountHint, props.isEdit])
 
-    const currentBillingAccountDetails = useMemo<CurrentBillingAccountDetails | undefined>(() => {
-        if (!props.isEdit) {
-            return undefined
-        }
-
-        if (!currentBillingAccountId || currentBillingAccountId === '-') {
-            return {
-                endDate: '-',
-                id: '-',
-                name: 'Not set',
-                startDate: '-',
-                status: 'Unknown',
-            }
-        }
-
-        const currentBillingAccount = billingAccounts.find(
-            billingAccount => String(billingAccount.id) === currentBillingAccountId,
-        )
-
-        if (!currentBillingAccount) {
-            return {
-                endDate: '-',
-                id: currentBillingAccountId,
-                name: 'Unavailable',
-                startDate: '-',
-                status: 'Unknown',
-            }
-        }
-
-        return {
-            endDate: getBillingAccountDate(currentBillingAccount, 'endDate'),
-            id: currentBillingAccountId,
-            name: getBillingAccountName(currentBillingAccount),
-            startDate: getBillingAccountDate(currentBillingAccount, 'startDate'),
-            status: formatBillingAccountStatus(getBillingAccountStatus(currentBillingAccount)),
-        }
-    }, [
-        billingAccounts,
-        currentBillingAccountId,
-        props.isEdit,
-    ])
+    const currentBillingAccountDetails = useMemo<CurrentBillingAccountDetails | undefined>(
+        () => resolveCurrentBillingAccountDetails({
+            billingAccounts,
+            currentBillingAccountId,
+            currentProjectBillingAccountName,
+            isEdit: props.isEdit,
+            projectBillingAccount,
+        }),
+        [
+            billingAccounts,
+            currentBillingAccountId,
+            currentProjectBillingAccountName,
+            projectBillingAccount,
+            props.isEdit,
+        ],
+    )
 
     useEffect(() => {
         reset(getDefaultFormValues(props.isEdit, props.projectDetail))

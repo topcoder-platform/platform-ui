@@ -10,6 +10,13 @@
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
 }
 
+.infoItem {
+    align-items: baseline;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
 .fieldRow {
     display: flex;
     flex-direction: column;
@@ -21,7 +28,12 @@
     font-size: 12px;
 }
 
-.value {
+.infoLabel {
+    color: #5b5b5b;
+    font-size: 12px;
+}
+
+.infoValue {
     color: #2a2a2a;
     font-size: 14px;
     font-weight: 500;
@@ -43,4 +55,15 @@
 .actions {
     display: flex;
     gap: 12px;
+}
+
+.weekEndingPreview {
+    color: #5b5b5b;
+    font-size: 12px;
+    margin: 0;
+}
+
+:global(#react-date-portal) {
+    position: relative;
+    z-index: 10001;
 }

@@ -32,6 +32,9 @@ import {
 import {
     fetchSkillsByIds,
 } from './skills.service'
+import {
+    fetchProjectById,
+} from './projects.service'
 
 interface BackendMeta {
     page?: number
@@ -377,6 +380,38 @@ function normalizeSkillId(skill: Skill | undefined): string {
         .trim()
 }
 
+function getEngagementProjectId(engagement: Engagement): string {
+    return String(
+        engagement.projectId
+        || engagement.project?.id
+        || '',
+    )
+        .trim()
+}
+
+function getEngagementProjectName(engagement: Engagement): string {
+    return String(
+        engagement.projectName
+        || engagement.project?.name
+        || '',
+    )
+        .trim()
+}
+
+function shouldHydrateEngagementProjectName(engagement: Engagement): boolean {
+    const projectId = getEngagementProjectId(engagement)
+
+    if (!projectId) {
+        return false
+    }
+
+    const projectName = getEngagementProjectName(engagement)
+
+    return !projectName || projectName === projectId
+}
+
+const projectNameByProjectId = new Map<string, string>()
+
 async function hydrateEngagementSkillNames(
     engagements: Engagement[],
 ): Promise<Engagement[]> {
@@ -426,6 +461,70 @@ async function hydrateEngagementSkillNames(
     }
 }
 
+async function hydrateEngagementProjectNames(
+    engagements: Engagement[],
+): Promise<Engagement[]> {
+    if (!Array.isArray(engagements) || !engagements.length) {
+        return engagements
+    }
+
+    const projectIds = Array.from(
+        new Set(
+            engagements
+                .filter(shouldHydrateEngagementProjectName)
+                .map(getEngagementProjectId)
+                .filter(Boolean),
+        ),
+    )
+
+    if (!projectIds.length) {
+        return engagements
+    }
+
+    await Promise.all(
+        projectIds.map(async projectId => {
+            if (projectNameByProjectId.has(projectId)) {
+                return
+            }
+
+            try {
+                const project = await fetchProjectById(projectId)
+                const projectName = String(project?.name || '')
+                    .trim()
+
+                if (projectName) {
+                    projectNameByProjectId.set(projectId, projectName)
+                }
+            } catch {
+                // Project lookup failures should not break engagement loading.
+            }
+        }),
+    )
+
+    return engagements.map(engagement => {
+        if (!shouldHydrateEngagementProjectName(engagement)) {
+            return engagement
+        }
+
+        const projectId = getEngagementProjectId(engagement)
+        const projectName = projectNameByProjectId.get(projectId)
+
+        if (!projectName) {
+            return engagement
+        }
+
+        return {
+            ...engagement,
+            project: {
+                ...(engagement.project || {}),
+                id: engagement.project?.id || projectId,
+                name: projectName,
+            },
+            projectName,
+        }
+    })
+}
+
 export async function fetchEngagements(
     filters: EngagementFilters = {},
     params: FetchEngagementsParams = {},
@@ -448,7 +547,8 @@ export async function fetchEngagements(
 
         const normalizedEngagements = normalizedResponse.data
             .map(item => normalizeEngagementRecord(item))
-        const hydratedEngagements = await hydrateEngagementSkillNames(normalizedEngagements)
+        const hydratedEngagementsWithSkills = await hydrateEngagementSkillNames(normalizedEngagements)
+        const hydratedEngagements = await hydrateEngagementProjectNames(hydratedEngagementsWithSkills)
 
         return {
             data: hydratedEngagements,
@@ -473,7 +573,8 @@ export async function fetchEngagement(
         )
 
         const normalized = normalizeEngagementRecord(response)
-        const [hydrated] = await hydrateEngagementSkillNames([normalized])
+        const [hydratedWithSkills] = await hydrateEngagementSkillNames([normalized])
+        const [hydrated] = await hydrateEngagementProjectNames([hydratedWithSkills])
 
         return hydrated || normalized
     } catch (error) {
@@ -491,7 +592,8 @@ export async function createEngagement(
         )
 
         const normalized = normalizeEngagementRecord(response)
-        const [hydrated] = await hydrateEngagementSkillNames([normalized])
+        const [hydratedWithSkills] = await hydrateEngagementSkillNames([normalized])
+        const [hydrated] = await hydrateEngagementProjectNames([hydratedWithSkills])
 
         return hydrated || normalized
     } catch (error) {
@@ -510,7 +612,8 @@ export async function updateEngagement(
         )
 
         const normalized = normalizeEngagementRecord(response)
-        const [hydrated] = await hydrateEngagementSkillNames([normalized])
+        const [hydratedWithSkills] = await hydrateEngagementSkillNames([normalized])
+        const [hydrated] = await hydrateEngagementProjectNames([hydratedWithSkills])
 
         return hydrated || normalized
     } catch (error) {

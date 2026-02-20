@@ -326,40 +326,48 @@ export const EngagementPaymentPage: FC = () => {
                                         </div>
 
                                         <div className={styles.actions}>
-                                            <Link
-                                                to={`/projects/${projectId}/engagements/${engagementId}/assignments/${assignment.id}/feedback`}
-                                            >
-                                                <Button
-                                                    label='Feedback'
-                                                    secondary
-                                                    size='sm'
-                                                />
-                                            </Link>
-                                            <Link
-                                                to={`/projects/${projectId}/engagements/${engagementId}/assignments/${assignment.id}/experience`}
-                                            >
-                                                <Button
-                                                    label='Experience'
-                                                    secondary
-                                                    size='sm'
-                                                />
-                                            </Link>
+                                            <div className={styles.leftActions}>
+                                                <Link
+                                                    to={`/projects/${projectId}/engagements/${engagementId}/assignments/${assignment.id}/feedback`}
+                                                >
+                                                    <Button
+                                                        label='Feedback'
+                                                        secondary
+                                                        size='sm'
+                                                    />
+                                                </Link>
+                                                <Link
+                                                    to={`/projects/${projectId}/engagements/${engagementId}/assignments/${assignment.id}/experience`}
+                                                >
+                                                    <Button
+                                                        label='Experience'
+                                                        secondary
+                                                        size='sm'
+                                                    />
+                                                </Link>
+                                                {assignedStatus
+                                                    ? (
+                                                        <>
+                                                            <Button
+                                                                label='Show Payment History'
+                                                                onClick={() => setHistoryMember(assignment)}
+                                                                secondary
+                                                                size='sm'
+                                                            />
+                                                            <Button
+                                                                label='Pay'
+                                                                onClick={() => setPaymentMember(assignment)}
+                                                                variant='linkblue'
+                                                                primary
+                                                                size='sm'
+                                                            />
+                                                        </>
+                                                    )
+                                                    : undefined}
+                                            </div>
                                             {assignedStatus
                                                 ? (
-                                                    <>
-                                                        <Button
-                                                            label='Show Payment History'
-                                                            onClick={() => setHistoryMember(assignment)}
-                                                            secondary
-                                                            size='sm'
-                                                        />
-                                                        <Button
-                                                            label='Pay'
-                                                            onClick={() => setPaymentMember(assignment)}
-                                                            variant='linkblue'
-                                                            primary
-                                                            size='sm'
-                                                        />
+                                                    <div className={styles.rightActions}>
                                                         <Button
                                                             className={styles.completeButton}
                                                             label='Complete'
@@ -374,7 +382,7 @@ export const EngagementPaymentPage: FC = () => {
                                                             primary
                                                             size='sm'
                                                         />
-                                                    </>
+                                                    </div>
                                                 )
                                                 : undefined}
                                         </div>
@@ -394,11 +402,13 @@ export const EngagementPaymentPage: FC = () => {
 
             <PaymentFormModal
                 billingAccountId={projectResult.project?.billingAccountId}
+                engagementName={engagementResult.engagement?.title}
                 isSubmitting={isSubmittingPayment}
                 member={paymentMember}
                 onCancel={() => setPaymentMember(undefined)}
                 onConfirm={handlePaymentSubmit}
                 open={!!paymentMember}
+                projectName={projectResult.project?.name}
             />
 
             <TerminateAssignmentModal

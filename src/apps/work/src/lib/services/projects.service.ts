@@ -72,6 +72,9 @@ export interface FetchProjectsListResponse {
 
 export interface ProjectBillingAccount {
     active?: boolean
+    id?: string
+    name?: string
+    startDate?: string
     endDate?: string
 }
 
@@ -80,6 +83,7 @@ export interface FetchProjectBillingAccountResponse {
 }
 
 const PROJECT_TYPES_API_URL = `${PROJECTS_API_URL}/metadata/projectTypes`
+const PROJECT_METADATA_API_URL = `${PROJECTS_API_URL}/metadata`
 const PROJECTS_PER_PAGE = 100
 const PROJECTS_LIST_FIELDS: string[] = [
     'members',
@@ -427,28 +431,51 @@ function setValueByPath(
 }
 
 function extractProjectTypes(response: unknown): ProjectType[] {
+    const normalizeProjectTypes = (projectTypes: unknown[]): ProjectType[] => projectTypes
+        .map(projectType => normalizeProjectType(projectType as Partial<ProjectType>))
+        .filter((projectType): projectType is ProjectType => !!projectType)
+
     if (Array.isArray(response)) {
-        return response
-            .map(projectType => normalizeProjectType(projectType as Partial<ProjectType>))
-            .filter((projectType): projectType is ProjectType => !!projectType)
+        return normalizeProjectTypes(response)
     }
 
     if (typeof response === 'object' && response) {
         const typedResponse = response as {
             data?: unknown
+            projectTypes?: unknown
             result?: unknown
         }
 
+        if (Array.isArray(typedResponse.projectTypes)) {
+            return normalizeProjectTypes(typedResponse.projectTypes)
+        }
+
         if (Array.isArray(typedResponse.data)) {
-            return typedResponse.data
-                .map(projectType => normalizeProjectType(projectType as Partial<ProjectType>))
-                .filter((projectType): projectType is ProjectType => !!projectType)
+            return normalizeProjectTypes(typedResponse.data)
+        }
+
+        if (typedResponse.data && typeof typedResponse.data === 'object') {
+            const typedData = typedResponse.data as {
+                projectTypes?: unknown
+            }
+
+            if (Array.isArray(typedData.projectTypes)) {
+                return normalizeProjectTypes(typedData.projectTypes)
+            }
         }
 
         if (Array.isArray(typedResponse.result)) {
-            return typedResponse.result
-                .map(projectType => normalizeProjectType(projectType as Partial<ProjectType>))
-                .filter((projectType): projectType is ProjectType => !!projectType)
+            return normalizeProjectTypes(typedResponse.result)
+        }
+
+        if (typedResponse.result && typeof typedResponse.result === 'object') {
+            const typedResult = typedResponse.result as {
+                projectTypes?: unknown
+            }
+
+            if (Array.isArray(typedResult.projectTypes)) {
+                return normalizeProjectTypes(typedResult.projectTypes)
+            }
         }
     }
 
@@ -565,6 +592,27 @@ function normalizeError(error: unknown, fallbackMessage: string): Error {
     return new Error(errorMessage)
 }
 
+function hasAuthorizationMetadataError(error: unknown): boolean {
+    const typedError = error as {
+        message?: string
+        response?: {
+            status?: number
+            data?: {
+                message?: string
+            }
+        }
+    }
+
+    if (typedError?.response?.status !== 403) {
+        return false
+    }
+
+    const errorMessage = typedError?.response?.data?.message
+        || typedError?.message
+
+    return errorMessage === 'Authorization metadata is required'
+}
+
 /**
  * Fetch all available projects that can be used in the challenges filter.
  */
@@ -630,6 +678,10 @@ export async function fetchProjectBillingAccount(
         const billingAccount = await xhrGetAsync<{
             active?: unknown
             endDate?: unknown
+            id?: unknown
+            name?: unknown
+            startDate?: unknown
+            tcBillingAccountId?: unknown
         }>(
             `${PROJECTS_API_URL}/${encodeURIComponent(projectId)}/billingAccount`,
         )
@@ -637,11 +689,18 @@ export async function fetchProjectBillingAccount(
         const normalizedBillingAccount: ProjectBillingAccount = {
             active: normalizeOptionalBoolean(billingAccount?.active),
             endDate: normalizeOptionalString(billingAccount?.endDate),
+            id: normalizeOptionalId(billingAccount?.tcBillingAccountId)
+                || normalizeOptionalId(billingAccount?.id),
+            name: normalizeOptionalString(billingAccount?.name),
+            startDate: normalizeOptionalString(billingAccount?.startDate),
         }
 
         if (
             normalizedBillingAccount.active === undefined
+            && !normalizedBillingAccount.id
+            && !normalizedBillingAccount.name
             && !normalizedBillingAccount.endDate
+            && !normalizedBillingAccount.startDate
         ) {
             return {
                 billingAccount: undefined,
@@ -667,6 +726,16 @@ export async function fetchProjectTypes(): Promise<ProjectType[]> {
 
         return extractProjectTypes(response)
     } catch (error) {
+        if (hasAuthorizationMetadataError(error)) {
+            try {
+                const response = await xhrGetAsync<unknown>(PROJECT_METADATA_API_URL)
+
+                return extractProjectTypes(response)
+            } catch (fallbackError) {
+                throw normalizeError(fallbackError, 'Failed to fetch project types')
+            }
+        }
+
         throw normalizeError(error, 'Failed to fetch project types')
     }
 }

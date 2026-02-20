@@ -2,8 +2,12 @@ import { EnvironmentConfig } from '~/config'
 import { xhrGetAsync } from '~/libs/core'
 
 export interface BillingAccount {
+    active?: boolean
+    endDate?: string
     id: number | string
     name: string
+    startDate?: string
+    status?: string
     [key: string]: unknown
 }
 

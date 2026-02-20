@@ -2,7 +2,6 @@ import {
     FC,
     useCallback,
     useContext,
-    useMemo,
 } from 'react'
 import {
     Navigate,
@@ -176,20 +175,6 @@ export const ProjectEditorPage: FC = () => {
 
     const loadError = projectResult.error || projectTypesResult.error
 
-    const breadCrumb = useMemo(
-        () => [
-            {
-                index: 1,
-                label: 'Projects',
-            },
-            {
-                index: 2,
-                label: isEdit ? 'Edit Project' : 'Create Project',
-            },
-        ],
-        [isEdit],
-    )
-
     const pageTitle = isEdit
         ? 'Edit Project'
         : 'Create Project'
@@ -217,7 +202,7 @@ export const ProjectEditorPage: FC = () => {
     return (
         <PageWrapper
             backUrl={backUrl}
-            breadCrumb={breadCrumb}
+            breadCrumb={[]}
             pageTitle={pageTitle}
         >
             <div className={styles.container}>

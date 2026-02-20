@@ -624,7 +624,7 @@ export const EngagementFeedbackPage: FC = () => {
 
                     <div className={styles.modalField}>
                         <label className={styles.modalLabel} htmlFor='feedback-rating'>
-                            Communication with Customer (optional)
+                            Communication with Customer (optional) (out of 5)
                         </label>
                         <input
                             id='feedback-rating'

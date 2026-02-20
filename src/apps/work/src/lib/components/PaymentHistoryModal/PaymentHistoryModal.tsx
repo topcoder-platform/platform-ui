@@ -83,26 +83,37 @@ const PaymentHistoryModal: FC<PaymentHistoryModalProps> = (
                 && paymentsResult.payments.length > 0
                     ? (
                         <ul className={styles.list}>
-                            {paymentsResult.payments.map((payment, index) => (
-                                <li
-                                    key={payment.id || `${props.assignmentId || 'assignment'}-${index}`}
-                                    className={styles.item}
-                                >
-                                    <div className={styles.itemHeader}>
-                                        <strong>{formatCurrency(getPaymentAmount(payment))}</strong>
-                                        <span className={styles.status}>{getPaymentStatus(payment)}</span>
-                                    </div>
-                                    <div className={styles.itemBody}>
-                                        <div>{payment.title || payment.description || 'Payment'}</div>
-                                        <div className={styles.remarks}>
-                                            {payment.attributes?.remarks || 'No remarks'}
+                            {paymentsResult.payments.map((payment, index) => {
+                                const paymentStatus = getPaymentStatus(payment)
+                                const normalizedPaymentStatus = paymentStatus
+                                    .trim()
+                                    .toLowerCase()
+                                const showPaymentStatus = paymentStatus
+                                    && normalizedPaymentStatus !== 'unknown'
+
+                                return (
+                                    <li
+                                        key={payment.id || `${props.assignmentId || 'assignment'}-${index}`}
+                                        className={styles.item}
+                                    >
+                                        <div className={styles.itemHeader}>
+                                            <strong>{formatCurrency(getPaymentAmount(payment))}</strong>
+                                            {showPaymentStatus
+                                                ? <span className={styles.status}>{paymentStatus}</span>
+                                                : undefined}
                                         </div>
-                                        <div className={styles.date}>
-                                            {formatDate(payment.createdAt || payment.updatedAt)}
+                                        <div className={styles.itemBody}>
+                                            <div>{payment.title || payment.description || 'Payment'}</div>
+                                            <div className={styles.remarks}>
+                                                {payment.attributes?.remarks || 'No remarks'}
+                                            </div>
+                                            <div className={styles.date}>
+                                                {formatDate(payment.createdAt || payment.updatedAt)}
+                                            </div>
                                         </div>
-                                    </div>
-                                </li>
-                            ))}
+                                    </li>
+                                )
+                            })}
                         </ul>
                     )
                     : undefined}

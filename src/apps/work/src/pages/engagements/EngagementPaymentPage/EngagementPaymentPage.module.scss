@@ -99,9 +99,25 @@
 }
 
 .actions {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    justify-content: space-between;
+}
+
+.leftActions {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
+}
+
+.rightActions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-left: auto;
 }
 
 .completeButton {

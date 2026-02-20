@@ -2,9 +2,15 @@
 
 import {
     FC,
+    forwardRef,
+    InputHTMLAttributes,
     useCallback,
+    useEffect,
+    useMemo,
     useState,
 } from 'react'
+import DatePicker from 'react-datepicker'
+import 'react-datepicker/dist/react-datepicker.css'
 
 import {
     BaseModal,
@@ -28,17 +34,85 @@ export interface PaymentFormData {
 
 interface PaymentFormModalProps {
     billingAccountId?: number | string
+    engagementName?: string
     isSubmitting?: boolean
     member: Assignment | undefined
     onCancel: () => void
     onConfirm: (data: PaymentFormData) => Promise<void> | void
     open: boolean
+    projectName?: string
 }
 
 interface ValidationErrors {
     amount?: string
-    title?: string
+    weekEnding?: string
 }
+
+const SATURDAY_DAY_INDEX = 6
+
+function normalizeTitleSegment(value?: string): string {
+    return String(value || '')
+        .trim()
+}
+
+function formatTitleDate(value: Date): string {
+    return value.toLocaleDateString('en-US', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+    })
+}
+
+function formatWeekEndingTitle(value?: Date | null): string {
+    if (!value) {
+        return ''
+    }
+
+    return `Week Ending: ${formatTitleDate(value)}`
+}
+
+function buildPaymentTitle(
+    projectName?: string,
+    engagementName?: string,
+    weekEndingTitle?: string,
+): string {
+    return [
+        normalizeTitleSegment(projectName),
+        normalizeTitleSegment(engagementName),
+        normalizeTitleSegment(weekEndingTitle),
+    ]
+        .filter(Boolean)
+        .join(' - ')
+}
+
+function getDefaultWeekEndingDate(): Date {
+    const defaultDate = new Date()
+    defaultDate.setHours(0, 0, 0, 0)
+
+    const daysUntilSaturday = (SATURDAY_DAY_INDEX - defaultDate.getDay() + 7) % 7
+    defaultDate.setDate(defaultDate.getDate() + daysUntilSaturday)
+
+    return defaultDate
+}
+
+function isSaturday(value?: Date | null): boolean {
+    return Boolean(value) && value?.getDay() === SATURDAY_DAY_INDEX
+}
+
+const WeekEndingInput = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(
+    (props, ref): JSX.Element => (
+        <input
+            {...props}
+            className={`${styles.input} ${String(props.className || '')}`.trim()}
+            placeholder='Week ending: ...'
+            readOnly
+            ref={ref}
+            type='text'
+        />
+    ),
+)
+
+WeekEndingInput.displayName = 'WeekEndingInput'
 
 const PaymentFormModal: FC<PaymentFormModalProps> = (
     props: PaymentFormModalProps,
@@ -48,14 +122,37 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
     const [amount, setAmount] = useState<string>('')
     const [errors, setErrors] = useState<ValidationErrors>({})
     const [remarks, setRemarks] = useState<string>('')
-    const [title, setTitle] = useState<string>('')
+    const [weekEndingDate, setWeekEndingDate] = useState<Date | null>(() => getDefaultWeekEndingDate())
+
+    const paymentTitle = useMemo(
+        () => {
+            if (!isSaturday(weekEndingDate)) {
+                return ''
+            }
+
+            return buildPaymentTitle(
+                props.projectName,
+                props.engagementName,
+                formatWeekEndingTitle(weekEndingDate),
+            )
+        },
+        [props.engagementName, props.projectName, weekEndingDate],
+    )
 
     const resetState = useCallback((): void => {
         setAmount('')
         setErrors({})
         setRemarks('')
-        setTitle('')
+        setWeekEndingDate(getDefaultWeekEndingDate())
     }, [])
+
+    useEffect(() => {
+        if (!props.open) {
+            return
+        }
+
+        resetState()
+    }, [props.member?.id, props.member?.memberId, props.open, resetState])
 
     const handleCancel = useCallback((): void => {
         resetState()
@@ -66,8 +163,12 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
         const nextErrors: ValidationErrors = {}
         const parsedAmount = Number(amount)
 
-        if (!title.trim()) {
-            nextErrors.title = 'Payment title is required.'
+        if (!weekEndingDate) {
+            nextErrors.weekEnding = 'Week ending date is required.'
+        } else if (!isSaturday(weekEndingDate)) {
+            nextErrors.weekEnding = 'Week ending date must be a Saturday.'
+        } else if (!paymentTitle.trim()) {
+            nextErrors.weekEnding = 'Payment title cannot be generated from week ending.'
         }
 
         if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
@@ -87,11 +188,11 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
         await props.onConfirm({
             amount: parsedAmount,
             remarks: remarks.trim() || undefined,
-            title: title.trim(),
+            title: paymentTitle.trim(),
         })
 
         resetState()
-    }, [amount, props, remarks, resetState, title])
+    }, [amount, paymentTitle, props, remarks, resetState, weekEndingDate])
 
     return (
         <BaseModal
@@ -117,40 +218,50 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
         >
             <div className={styles.content}>
                 <div className={styles.infoGrid}>
-                    <div>
-                        <span className={styles.label}>Member</span>
-                        <span className={styles.value}>{props.member?.memberHandle || '-'}</span>
+                    <div className={styles.infoItem}>
+                        <span className={styles.infoLabel}>Member</span>
+                        <span className={styles.infoValue}>{props.member?.memberHandle || '-'}</span>
                     </div>
-                    <div>
-                        <span className={styles.label}>Agreed Rate</span>
-                        <span className={styles.value}>{formatCurrency(props.member?.agreementRate)}</span>
+                    <div className={styles.infoItem}>
+                        <span className={styles.infoLabel}>Agreed Rate</span>
+                        <span className={styles.infoValue}>{formatCurrency(props.member?.agreementRate)}</span>
                     </div>
-                    <div>
-                        <span className={styles.label}>Billing Account</span>
-                        <span className={styles.value}>{props.billingAccountId || 'Unavailable'}</span>
+                    <div className={styles.infoItem}>
+                        <span className={styles.infoLabel}>Billing Account</span>
+                        <span className={styles.infoValue}>{props.billingAccountId || 'Unavailable'}</span>
                     </div>
                 </div>
 
                 <div className={styles.fieldRow}>
-                    <label className={styles.label} htmlFor='payment-title'>
-                        Payment title *
-                    </label>
-                    <input
-                        id='payment-title'
-                        className={styles.input}
-                        onChange={event => {
-                            setTitle(event.target.value)
+                    <span className={styles.label}>
+                        Week ending *
+                    </span>
+                    <DatePicker
+                        customInput={<WeekEndingInput />}
+                        dateFormat='MM/dd/yyyy'
+                        disabled={isSubmitting}
+                        filterDate={isSaturday}
+                        onChange={date => {
+                            setWeekEndingDate(date)
                             setErrors(previous => ({
                                 ...previous,
-                                title: undefined,
+                                weekEnding: undefined,
                             }))
                         }}
-                        placeholder='Week ending: ...'
-                        type='text'
-                        value={title}
+                        placeholderText='Week ending: ...'
+                        portalId='react-date-portal'
+                        popperPlacement='bottom-start'
+                        selected={weekEndingDate}
                     />
-                    {errors.title
-                        ? <p className={styles.error}>{errors.title}</p>
+                    {paymentTitle
+                        ? (
+                            <p className={styles.weekEndingPreview}>
+                                {paymentTitle}
+                            </p>
+                        )
+                        : undefined}
+                    {errors.weekEnding
+                        ? <p className={styles.error}>{errors.weekEnding}</p>
                         : undefined}
                 </div>
 
