@@ -17,6 +17,7 @@ import styles from './ProjectBillingAccountExpiredNotice.module.scss'
 
 interface ProjectBillingAccountExpiredNoticeProps {
     billingAccountId?: number | string
+    billingAccountName?: string
     projectId: string
 }
 
@@ -60,7 +61,8 @@ export const ProjectBillingAccountExpiredNotice: FC<ProjectBillingAccountExpired
     const billingAccountsResult: UseFetchBillingAccountsResult = useFetchBillingAccounts()
     const billingAccount = projectBillingAccountResult.billingAccount
     const normalizedBillingAccountId = normalizeOptionalString(props.billingAccountId)
-    const billingAccountName: string | undefined = useMemo(
+    const normalizedBillingAccountName = normalizeOptionalString(props.billingAccountName)
+    const billingAccountNameFromLookup: string | undefined = useMemo(
         (): string | undefined => {
             if (!normalizedBillingAccountId) {
                 return undefined
@@ -77,6 +79,7 @@ export const ProjectBillingAccountExpiredNotice: FC<ProjectBillingAccountExpired
             normalizedBillingAccountId,
         ],
     )
+    const billingAccountName = normalizedBillingAccountName || billingAccountNameFromLookup
 
     const shouldShowExpiredBillingAccountNotice: boolean = isBillingAccountExpired(
         billingAccount?.active,

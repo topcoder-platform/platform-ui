@@ -289,6 +289,7 @@ export const ChallengesListPage: FC = () => {
                 ? (
                     <ProjectBillingAccountExpiredNotice
                         billingAccountId={projectResult.project?.billingAccountId}
+                        billingAccountName={projectResult.project?.billingAccountName}
                         projectId={projectIdFromRoute}
                     />
                 )

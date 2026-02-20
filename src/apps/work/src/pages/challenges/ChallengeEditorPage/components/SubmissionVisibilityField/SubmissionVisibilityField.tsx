@@ -1,5 +1,6 @@
 import {
     FC,
+    useCallback,
     useEffect,
 } from 'react'
 import {
@@ -35,24 +36,22 @@ export const SubmissionVisibilityField: FC = () => {
     const isSubmissionsViewable = metadataToBoolean(metadata, SUBMISSIONS_VIEWABLE_FIELD)
 
     useEffect(() => {
-        if (submissionsViewableToggle === undefined || submissionsViewableToggle !== isSubmissionsViewable) {
-            formContext.setValue(
-                SUBMISSIONS_VIEWABLE_TOGGLE_FIELD as never,
-                isSubmissionsViewable as never,
-                {
-                    shouldDirty: false,
-                    shouldValidate: false,
-                },
-            )
-        }
-    }, [formContext, isSubmissionsViewable, submissionsViewableToggle])
-
-    useEffect(() => {
-        if (typeof submissionsViewableToggle !== 'boolean') {
+        if (submissionsViewableToggle !== undefined) {
             return
         }
 
-        if (submissionsViewableToggle === isSubmissionsViewable) {
+        formContext.setValue(
+            SUBMISSIONS_VIEWABLE_TOGGLE_FIELD as never,
+            isSubmissionsViewable as never,
+            {
+                shouldDirty: false,
+                shouldValidate: false,
+            },
+        )
+    }, [formContext, isSubmissionsViewable, submissionsViewableToggle])
+
+    const handleSubmissionsViewableChange = useCallback((checked: boolean): void => {
+        if (checked === isSubmissionsViewable) {
             return
         }
 
@@ -61,7 +60,7 @@ export const SubmissionVisibilityField: FC = () => {
             booleanToMetadata(
                 metadata,
                 SUBMISSIONS_VIEWABLE_FIELD,
-                submissionsViewableToggle,
+                checked,
             ),
             {
                 shouldDirty: true,
@@ -72,13 +71,13 @@ export const SubmissionVisibilityField: FC = () => {
         formContext,
         isSubmissionsViewable,
         metadata,
-        submissionsViewableToggle,
     ])
 
     return (
         <FormCheckboxField
             label='Submissions are viewable after challenge ends'
             name={SUBMISSIONS_VIEWABLE_TOGGLE_FIELD}
+            onChange={handleSubmissionsViewableChange}
         />
     )
 }

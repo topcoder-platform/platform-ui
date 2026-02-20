@@ -50,6 +50,23 @@
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
+.memberScorecardField {
+    grid-column: 1 / -1;
+}
+
+.memberReviewSettings {
+    display: grid;
+    gap: 12px;
+    grid-column: 1 / -1;
+    grid-template-columns: minmax(130px, 160px) minmax(220px, 1fr);
+}
+
+@media (max-width: 767px) {
+    .memberReviewSettings {
+        grid-template-columns: 1fr;
+    }
+}
+
 .publicOpportunityField {
     align-items: center;
     display: flex;

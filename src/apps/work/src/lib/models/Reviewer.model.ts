@@ -14,12 +14,17 @@ export interface Reviewer {
 }
 
 export interface Scorecard {
+    challengeTrack?: string
+    challengeType?: string
     id: string
     name: string
     phaseId?: string
+    status?: string
+    type?: string
     track?: string
     trackId?: string
     typeId?: string
+    version?: string
 }
 
 export interface Workflow {
@@ -41,8 +46,11 @@ export interface DefaultReviewer {
 
 export interface ScorecardFilters {
     abbreviation?: string
+    challengeTrack?: string
+    challengeType?: string
     perPage?: number
     page?: number
+    status?: string
     track?: string
     typeId?: string
 }

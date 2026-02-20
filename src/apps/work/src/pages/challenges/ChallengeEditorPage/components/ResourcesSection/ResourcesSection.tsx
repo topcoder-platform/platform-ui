@@ -418,7 +418,6 @@ export const ResourcesSection: FC<ResourcesSectionProps> = (props: ResourcesSect
                             resources={sortedResources}
                             sortBy={sortBy}
                             sortOrder={sortOrder}
-                            track={props.challenge.track}
                         />
                         {hasReviewDeletionRuleError
                             ? (

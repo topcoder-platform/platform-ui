@@ -2,17 +2,27 @@ import {
     FC,
     useCallback,
     useMemo,
+    useState,
 } from 'react'
 import { useFormContext } from 'react-hook-form'
 import debounce from 'lodash/debounce'
+
+import { Button } from '~/libs/ui'
 
 import {
     FormSelectField,
     FormSelectOption,
 } from '../../../../lib/components/form'
 import { SKILLS_SEARCH_DEBOUNCE_MS } from '../../../../lib/constants/challenge-editor.constants'
-import { searchSkills } from '../../../../lib/services'
-import { isSkillsRequired } from '../../../../lib/utils'
+import {
+    extractSkillsFromText,
+    searchSkills,
+} from '../../../../lib/services'
+import {
+    isSkillsRequired,
+    showErrorToast,
+    showSuccessToast,
+} from '../../../../lib/utils'
 
 interface BillingData {
     billingAccountId?: number | string
@@ -42,9 +52,35 @@ function normalizeSkillValue(value: unknown): SkillValue | undefined {
     }
 }
 
+function normalizeSkillValues(value: unknown): SkillValue[] {
+    if (!Array.isArray(value)) {
+        return []
+    }
+
+    const addedSkillIds = new Set<string>()
+
+    return value
+        .map(item => normalizeSkillValue(item))
+        .filter((item): item is SkillValue => {
+            if (!item) {
+                return false
+            }
+
+            if (addedSkillIds.has(item.id)) {
+                return false
+            }
+
+            addedSkillIds.add(item.id)
+            return true
+        })
+}
+
 export const ChallengeSkillsField: FC = () => {
     const formContext = useFormContext()
     const billing = formContext.watch('billing') as BillingData | undefined
+    const description = String(formContext.watch('description') || '')
+        .trim()
+    const [isLoadingAI, setIsLoadingAI] = useState<boolean>(false)
 
     const loadOptions = useMemo(
         () => {
@@ -114,18 +150,79 @@ export const ChallengeSkillsField: FC = () => {
             .filter((item): item is SkillValue => !!item)
     }, [])
 
+    const handleAISuggest = useCallback(async (): Promise<void> => {
+        if (!description || isLoadingAI) {
+            return
+        }
+
+        setIsLoadingAI(true)
+
+        try {
+            const suggestedSkills = await extractSkillsFromText(description)
+
+            if (!suggestedSkills.length) {
+                showErrorToast('No matching standardized skills found based on the description.')
+                return
+            }
+
+            const existingSkills = normalizeSkillValues(formContext.getValues('skills'))
+            const existingSkillIds = new Set(existingSkills.map(skill => skill.id))
+            const newSkills = suggestedSkills
+                .filter(skill => !existingSkillIds.has(skill.id))
+
+            if (!newSkills.length) {
+                showSuccessToast('All suggested skills are already selected.')
+                return
+            }
+
+            formContext.setValue(
+                'skills',
+                [
+                    ...existingSkills,
+                    ...newSkills,
+                ],
+                {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                },
+            )
+            showSuccessToast(`${newSkills.length} skill(s) were added from AI suggestions.`)
+        } catch {
+            showErrorToast('Failed to extract skills. Please try again or add skills manually.')
+        } finally {
+            setIsLoadingAI(false)
+        }
+    }, [description, formContext, isLoadingAI])
+
     return (
-        <FormSelectField
-            fromFieldValue={mapFromFieldValue}
-            isAsync
-            isMulti
-            label='Skills'
-            loadOptions={loadOptions}
-            name='skills'
-            placeholder='Search skills'
-            required={isSkillsRequired(billing)}
-            toFieldValue={mapToFieldValue}
-        />
+        <div>
+            <FormSelectField
+                disabled={isLoadingAI}
+                fromFieldValue={mapFromFieldValue}
+                isAsync
+                isMulti
+                label='Skills'
+                loadOptions={loadOptions}
+                name='skills'
+                placeholder='Search skills'
+                required={isSkillsRequired(billing)}
+                toFieldValue={mapToFieldValue}
+            />
+
+            {description
+                ? (
+                    <div style={{ marginTop: '12px' }}>
+                        <Button
+                            disabled={isLoadingAI}
+                            label={isLoadingAI ? 'Suggesting...' : 'AI Suggest'}
+                            onClick={handleAISuggest}
+                            secondary
+                            size='sm'
+                        />
+                    </div>
+                )
+                : undefined}
+        </div>
     )
 }
 

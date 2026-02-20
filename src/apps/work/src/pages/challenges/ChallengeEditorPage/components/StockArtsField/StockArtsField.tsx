@@ -1,5 +1,6 @@
 import {
     FC,
+    useCallback,
     useEffect,
 } from 'react'
 import {
@@ -35,24 +36,22 @@ export const StockArtsField: FC = () => {
     const isStockArtAllowed = metadataToBoolean(metadata, ALLOW_STOCK_ART_FIELD)
 
     useEffect(() => {
-        if (allowStockArtToggle === undefined || allowStockArtToggle !== isStockArtAllowed) {
-            formContext.setValue(
-                ALLOW_STOCK_ART_TOGGLE_FIELD as never,
-                isStockArtAllowed as never,
-                {
-                    shouldDirty: false,
-                    shouldValidate: false,
-                },
-            )
-        }
-    }, [allowStockArtToggle, formContext, isStockArtAllowed])
-
-    useEffect(() => {
-        if (typeof allowStockArtToggle !== 'boolean') {
+        if (allowStockArtToggle !== undefined) {
             return
         }
 
-        if (allowStockArtToggle === isStockArtAllowed) {
+        formContext.setValue(
+            ALLOW_STOCK_ART_TOGGLE_FIELD as never,
+            isStockArtAllowed as never,
+            {
+                shouldDirty: false,
+                shouldValidate: false,
+            },
+        )
+    }, [allowStockArtToggle, formContext, isStockArtAllowed])
+
+    const handleAllowStockArtChange = useCallback((checked: boolean): void => {
+        if (checked === isStockArtAllowed) {
             return
         }
 
@@ -61,7 +60,7 @@ export const StockArtsField: FC = () => {
             booleanToMetadata(
                 metadata,
                 ALLOW_STOCK_ART_FIELD,
-                allowStockArtToggle,
+                checked,
             ),
             {
                 shouldDirty: true,
@@ -69,7 +68,6 @@ export const StockArtsField: FC = () => {
             },
         )
     }, [
-        allowStockArtToggle,
         formContext,
         isStockArtAllowed,
         metadata,
@@ -79,6 +77,7 @@ export const StockArtsField: FC = () => {
         <FormCheckboxField
             label='Is stock photography allowed?'
             name={ALLOW_STOCK_ART_TOGGLE_FIELD}
+            onChange={handleAllowStockArtChange}
         />
     )
 }

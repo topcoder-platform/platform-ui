@@ -11,6 +11,7 @@ import styles from './ConfirmationModal.module.scss'
 export interface ConfirmationModalProps {
     cancelText?: string
     confirmButtonDanger?: boolean
+    confirmDisabled?: boolean
     confirmText?: string
     message: string
     onCancel: () => void
@@ -56,6 +57,7 @@ export const ConfirmationModal: FC<ConfirmationModalProps> = (
                         size='lg'
                     />
                     <Button
+                        disabled={props.confirmDisabled}
                         label={props.confirmText || 'Confirm'}
                         onClick={props.onConfirm}
                         primary

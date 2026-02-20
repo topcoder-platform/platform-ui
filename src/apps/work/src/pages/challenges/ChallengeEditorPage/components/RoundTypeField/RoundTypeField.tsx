@@ -17,8 +17,13 @@ const roundTypeOptions: FormRadioOption<string>[] = [
     },
 ]
 
-export const RoundTypeField: FC = () => (
+interface RoundTypeFieldProps {
+    disabled?: boolean
+}
+
+export const RoundTypeField: FC<RoundTypeFieldProps> = (props: RoundTypeFieldProps) => (
     <FormRadioGroup
+        disabled={props.disabled}
         label='Round Type'
         name='roundType'
         options={roundTypeOptions}

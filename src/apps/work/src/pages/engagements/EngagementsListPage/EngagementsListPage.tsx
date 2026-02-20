@@ -638,6 +638,7 @@ export const EngagementsListPage: FC = () => {
         ? (
             <ProjectBillingAccountExpiredNotice
                 billingAccountId={projectResult.project?.billingAccountId}
+                billingAccountName={projectResult.project?.billingAccountName}
                 projectId={projectId}
             />
         )

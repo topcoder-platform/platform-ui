@@ -15,7 +15,6 @@ import {
     SubmitHandler,
     useForm,
 } from 'react-hook-form'
-import { Link } from 'react-router-dom'
 
 import { yupResolver } from '@hookform/resolvers/yup'
 import {
@@ -34,15 +33,12 @@ import { WorkAppContext } from '../../../lib/contexts'
 import type {
     UseBulkCreateGroupResult,
     UseBulkSearchMembersResult,
-    UseFetchGroupsResult,
 } from '../../../lib/hooks'
 import {
     useBulkCreateGroup,
     useBulkSearchMembers,
-    useFetchGroups,
 } from '../../../lib/hooks'
 import {
-    Group,
     GroupBulkCreateMemberResult,
     MemberValidationResult,
     WorkAppContextModel,
@@ -159,7 +155,6 @@ export const GroupsPage: FC = () => {
 
     const [apiErrorMessage, setApiErrorMessage] = useState<string | undefined>(undefined)
     const [fileErrorMessage, setFileErrorMessage] = useState<string | undefined>(undefined)
-    const [groupNameFilter, setGroupNameFilter] = useState<string>('')
     const [isParsingFile, setIsParsingFile] = useState<boolean>(false)
     const [memberResults, setMemberResults] = useState<GroupBulkCreateMemberResult[]>([])
     const [parsedIdentifiers, setParsedIdentifiers] = useState<string[]>([])
@@ -177,14 +172,6 @@ export const GroupsPage: FC = () => {
         mode: 'onChange',
         resolver: yupResolver(groupsFormSchema) as any,
     })
-
-    const groupsResult: UseFetchGroupsResult = useFetchGroups({
-        name: groupNameFilter,
-    })
-    const groups: Group[] = groupsResult.groups
-    const groupsError = groupsResult.error
-    const isGroupsLoading = groupsResult.isLoading
-    const refreshGroups = groupsResult.mutate
 
     const bulkCreateGroupResult: UseBulkCreateGroupResult = useBulkCreateGroup()
     const createGroup = bulkCreateGroupResult.createGroup
@@ -382,9 +369,6 @@ export const GroupsPage: FC = () => {
                     + ' Review the failed rows below.',
                 )
             }
-
-            await refreshGroups()
-                .catch(() => undefined)
         },
         [
             canManageGroups,
@@ -393,7 +377,6 @@ export const GroupsPage: FC = () => {
             isCreating,
             isParsingFile,
             isSearching,
-            refreshGroups,
             validationCompleted,
             validationResults,
         ],
@@ -402,8 +385,6 @@ export const GroupsPage: FC = () => {
     const onSubmit = formMethods.handleSubmit(handleCreateGroup)
 
     const isWorking = isCreating || isParsingFile || isSearching
-
-    const filteredGroupsCount = groups.length
 
     if (!canManageGroups) {
         return (
@@ -419,94 +400,6 @@ export const GroupsPage: FC = () => {
             <PageTitle>Groups</PageTitle>
 
             <div className={styles.pageContainer}>
-                <section className={styles.section}>
-                    <h3 className={styles.pageHeading}>Groups List</h3>
-
-                    <div className={styles.filterRow}>
-                        <input
-                            className={styles.textInput}
-                            onChange={event => {
-                                setGroupNameFilter(event.target.value)
-                            }}
-                            placeholder='Filter groups by name'
-                            type='text'
-                            value={groupNameFilter}
-                        />
-                        <Button
-                            disabled={!groupNameFilter.trim()}
-                            label='Clear Filter'
-                            onClick={() => {
-                                setGroupNameFilter('')
-                            }}
-                            secondary
-                            size='lg'
-                        />
-                    </div>
-
-                    <div className={styles.listSummary}>
-                        {filteredGroupsCount}
-                        {' '}
-                        groups found
-                    </div>
-
-                    {groupsError
-                        ? (
-                            <div className={styles.errorBanner} role='alert'>
-                                {groupsError.message}
-                            </div>
-                        )
-                        : undefined}
-
-                    {isGroupsLoading
-                        ? (
-                            <div className={styles.loadingState}>
-                                <LoadingSpinner inline />
-                                <span className={styles.loadingText}>Loading groups...</span>
-                            </div>
-                        )
-                        : undefined}
-
-                    {!isGroupsLoading && !groupsError && groups.length === 0
-                        ? <div className={styles.emptyState}>No groups match the current filter.</div>
-                        : undefined}
-
-                    {!isGroupsLoading && !groupsError && groups.length > 0
-                        ? (
-                            <div className={styles.tableWrapper}>
-                                <table className={styles.table}>
-                                    <thead>
-                                        <tr>
-                                            <th scope='col'>Name</th>
-                                            <th scope='col'>Description</th>
-                                            <th scope='col'>Private</th>
-                                            <th scope='col'>Self Register</th>
-                                            <th scope='col'>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {groups.map(group => (
-                                            <tr key={group.id}>
-                                                <td>{group.name}</td>
-                                                <td>{group.description || '-'}</td>
-                                                <td>{group.privateGroup ? 'Yes' : 'No'}</td>
-                                                <td>{group.selfRegister ? 'Yes' : 'No'}</td>
-                                                <td>
-                                                    <Link
-                                                        className={styles.editLink}
-                                                        to={`/groups/${group.id}/edit`}
-                                                    >
-                                                        Edit
-                                                    </Link>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )
-                        : undefined}
-                </section>
-
                 <section className={styles.section}>
                     <h3 className={styles.pageHeading}>Create Group</h3>
 

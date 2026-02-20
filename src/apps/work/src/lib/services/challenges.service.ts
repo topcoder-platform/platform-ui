@@ -35,6 +35,7 @@ import {
     DefaultReviewer,
     PaginationModel,
     PrizeSet,
+    Reviewer,
     ReviewTypeMetadata,
     Scorecard,
     ScorecardFilters,
@@ -97,6 +98,34 @@ function asIsoDateString(value: unknown): string | undefined {
     }
 
     return undefined
+}
+
+function toOptionalTrimmedString(value: unknown): string | undefined {
+    if (value === undefined || value === null) {
+        return undefined
+    }
+
+    const normalizedValue = String(value)
+        .trim()
+
+    return normalizedValue || undefined
+}
+
+function toOptionalFiniteNumber(value: unknown): number | undefined {
+    if (value === undefined || value === null || value === '') {
+        return undefined
+    }
+
+    const parsedValue = Number(value)
+    return Number.isFinite(parsedValue)
+        ? parsedValue
+        : undefined
+}
+
+function toOptionalBooleanValue(value: unknown): boolean | undefined {
+    return typeof value === 'boolean'
+        ? value
+        : undefined
 }
 
 function serializePrizeSets(prizeSets: unknown): PrizeSet[] | undefined {
@@ -178,11 +207,50 @@ function serializeChallengePhases(phases: unknown): ChallengePhase[] | undefined
     return serializedPhases
 }
 
+function serializeReviewers(reviewers: unknown): Reviewer[] | undefined {
+    if (!Array.isArray(reviewers)) {
+        return undefined
+    }
+
+    const serializedReviewers = reviewers
+        .map((reviewer: unknown): Reviewer | undefined => {
+            if (typeof reviewer !== 'object' || !reviewer) {
+                return undefined
+            }
+
+            const typedReviewer = reviewer as Record<string, unknown>
+            const aiWorkflowId = toOptionalTrimmedString(typedReviewer.aiWorkflowId)
+            const explicitMemberReview = toOptionalBooleanValue(typedReviewer.isMemberReview)
+            const isMemberReview = explicitMemberReview !== undefined
+                ? explicitMemberReview
+                : !aiWorkflowId
+
+            return {
+                aiWorkflowId: isMemberReview
+                    ? undefined
+                    : aiWorkflowId,
+                baseCoefficient: toOptionalFiniteNumber(typedReviewer.baseCoefficient),
+                incrementalCoefficient: toOptionalFiniteNumber(typedReviewer.incrementalCoefficient),
+                isMemberReview,
+                memberReviewerCount: isMemberReview
+                    ? toOptionalFiniteNumber(typedReviewer.memberReviewerCount)
+                    : undefined,
+                phaseId: toOptionalTrimmedString(typedReviewer.phaseId),
+                scorecardId: toOptionalTrimmedString(typedReviewer.scorecardId),
+                shouldOpenOpportunity: toOptionalBooleanValue(typedReviewer.shouldOpenOpportunity),
+            }
+        })
+        .filter((reviewer): reviewer is Reviewer => !!reviewer)
+
+    return serializedReviewers
+}
+
 function serializeChallengePayload(params: Partial<Challenge>): Partial<Challenge> {
     return {
         ...params,
         phases: serializeChallengePhases(params.phases),
         prizeSets: serializePrizeSets(params.prizeSets),
+        reviewers: serializeReviewers(params.reviewers),
         startDate: asIsoDateString(params.startDate),
         timelineTemplateId: params.timelineTemplateId,
     }
@@ -325,6 +393,17 @@ function normalizeWorkflow(workflow: Partial<Workflow>): Workflow | undefined {
 }
 
 function normalizeScorecard(scorecard: Partial<Scorecard>): Scorecard | undefined {
+    const toOptionalString = (value: unknown): string | undefined => {
+        if (value === undefined || value === null) {
+            return undefined
+        }
+
+        const normalizedValue = String(value)
+            .trim()
+
+        return normalizedValue || undefined
+    }
+
     const id = scorecard.id !== undefined && scorecard.id !== null
         ? String(scorecard.id)
         : ''
@@ -337,20 +416,17 @@ function normalizeScorecard(scorecard: Partial<Scorecard>): Scorecard | undefine
     }
 
     return {
+        challengeTrack: toOptionalString((scorecard as Record<string, unknown>).challengeTrack),
+        challengeType: toOptionalString((scorecard as Record<string, unknown>).challengeType),
         id,
         name,
-        phaseId: scorecard.phaseId !== undefined && scorecard.phaseId !== null
-            ? String(scorecard.phaseId)
-            : undefined,
-        track: typeof scorecard.track === 'string'
-            ? scorecard.track
-            : undefined,
-        trackId: scorecard.trackId !== undefined && scorecard.trackId !== null
-            ? String(scorecard.trackId)
-            : undefined,
-        typeId: scorecard.typeId !== undefined && scorecard.typeId !== null
-            ? String(scorecard.typeId)
-            : undefined,
+        phaseId: toOptionalString(scorecard.phaseId),
+        status: toOptionalString((scorecard as Record<string, unknown>).status),
+        track: toOptionalString(scorecard.track),
+        trackId: toOptionalString(scorecard.trackId),
+        type: toOptionalString((scorecard as Record<string, unknown>).type),
+        typeId: toOptionalString(scorecard.typeId),
+        version: toOptionalString((scorecard as Record<string, unknown>).version),
     }
 }
 
@@ -383,6 +459,7 @@ function mapItems<T>(response: unknown, normalize: (item: Partial<T>) => T | und
         const typedResponse = response as {
             data?: unknown
             result?: unknown
+            scoreCards?: unknown
         }
 
         if (Array.isArray(typedResponse.data)) {
@@ -393,6 +470,12 @@ function mapItems<T>(response: unknown, normalize: (item: Partial<T>) => T | und
 
         if (Array.isArray(typedResponse.result)) {
             return typedResponse.result
+                .map(item => normalize(item as Partial<T>))
+                .filter((item): item is T => !!item)
+        }
+
+        if (Array.isArray(typedResponse.scoreCards)) {
+            return typedResponse.scoreCards
                 .map(item => normalize(item as Partial<T>))
                 .filter((item): item is T => !!item)
         }
@@ -626,6 +709,18 @@ export async function fetchScorecards(filters: ScorecardFilters = {}): Promise<S
 
     if (filters.track?.trim()) {
         query.set('track', filters.track.trim())
+    }
+
+    if (filters.challengeTrack?.trim()) {
+        query.set('challengeTrack', filters.challengeTrack.trim())
+    }
+
+    if (filters.challengeType?.trim()) {
+        query.set('challengeType', filters.challengeType.trim())
+    }
+
+    if (filters.status?.trim()) {
+        query.set('status', filters.status.trim())
     }
 
     if (filters.typeId?.trim()) {

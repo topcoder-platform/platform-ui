@@ -23,9 +23,8 @@ import {
     FormUserAutocomplete,
 } from '../../../../../lib/components/form'
 import {
-    PRIZE_SET_TYPES,
-} from '../../../../../lib/constants/challenge-editor.constants'
-import {
+    useFetchChallengeTracks,
+    useFetchChallengeTypes,
     useFetchResourceRoles,
     UseFetchResourceRolesResult,
 } from '../../../../../lib/hooks'
@@ -44,6 +43,10 @@ import {
     fetchWorkflows,
     updateResourceRoleAssignment,
 } from '../../../../../lib/services'
+import {
+    calculateEstimatedReviewerCost,
+    getFirstPlacePrizeValue,
+} from '../../../../../lib/utils'
 
 import styles from './ReviewersField.module.scss'
 
@@ -58,7 +61,19 @@ const reviewerTypeOptions: FormRadioOption<boolean>[] = [
     },
 ]
 
-const ESTIMATED_SUBMISSIONS_COUNT = 2
+const SCORECARD_TRACK_ALIASES: Record<string, string> = {
+    DATA_SCIENCE: 'DATA_SCIENCE',
+    DATASCIENCE: 'DATA_SCIENCE',
+    DES: 'DESIGN',
+    DESIGN: 'DESIGN',
+    DEV: 'DEVELOPMENT',
+    DEVELOP: 'DEVELOPMENT',
+    DEVELOPMENT: 'DEVELOPMENT',
+    DS: 'DATA_SCIENCE',
+    QA: 'QUALITY_ASSURANCE',
+    QUALITY_ASSURANCE: 'QUALITY_ASSURANCE',
+    QUALITYASSURANCE: 'QUALITY_ASSURANCE',
+}
 
 function toNumber(value: unknown): number {
     const parsed = Number(value)
@@ -81,6 +96,42 @@ function normalizeKey(value: unknown): string {
     return normalizeText(value)
         .toLowerCase()
         .replace(/[-_\s]/g, '')
+}
+
+function normalizeTrackForScorecards(value: unknown): string {
+    const normalizedValue = normalizeText(value)
+        .toUpperCase()
+        .replace(/\s+/g, '_')
+
+    if (!normalizedValue) {
+        return ''
+    }
+
+    return SCORECARD_TRACK_ALIASES[normalizedValue] || normalizedValue
+}
+
+function normalizePhaseToken(value: unknown): string {
+    return normalizeText(value)
+        .toLowerCase()
+        .replace(/\bphase\b$/, '')
+        .replace(/[-_\s]/g, '')
+}
+
+function formatScorecardLabel(scorecard: Scorecard): string {
+    const scorecardName = normalizeText(scorecard.name) || scorecard.id
+    const scorecardType = normalizeText(scorecard.type)
+    const scorecardTrack = normalizeText(scorecard.challengeTrack) || normalizeText(scorecard.track)
+    const scorecardVersion = normalizeText(scorecard.version)
+
+    if (!scorecardType && !scorecardTrack && !scorecardVersion) {
+        return scorecardName
+    }
+
+    const details = `${scorecardType || 'Unknown'} (${scorecardTrack || 'Unknown'})`
+
+    return scorecardVersion
+        ? `${scorecardName} - ${details} v${scorecardVersion}`
+        : `${scorecardName} - ${details}`
 }
 
 function toUniqueValues(values: string[]): string[] {
@@ -113,18 +164,6 @@ function getAssignedMemberIds(reviewer?: Reviewer): string[] {
         normalizeText(reviewer?.memberId),
         ...getAdditionalMemberIds(reviewer),
     ]
-}
-
-function getFirstPlacePrizeValue(
-    prizeSets: ChallengeEditorFormData['prizeSets'],
-): number {
-    if (!Array.isArray(prizeSets)) {
-        return 0
-    }
-
-    const placementPrizeSet = prizeSets.find(prizeSet => prizeSet.type === PRIZE_SET_TYPES.PLACEMENT)
-
-    return toNumber(placementPrizeSet?.prizes?.[0]?.value)
 }
 
 function getMemberFieldName(
@@ -306,6 +345,10 @@ const PublicOpportunityCheckboxField: FC<PublicOpportunityCheckboxFieldProps> = 
 
 export const ReviewersField: FC = () => {
     const formContext = useFormContext<ChallengeEditorFormData>()
+    const challengeTracksResult = useFetchChallengeTracks()
+    const challengeTypesResult = useFetchChallengeTypes()
+    const challengeTracks = challengeTracksResult.tracks
+    const challengeTypes = challengeTypesResult.challengeTypes
 
     const {
         resourceRoles,
@@ -314,7 +357,8 @@ export const ReviewersField: FC = () => {
     const [defaultReviewers, setDefaultReviewers] = useState<DefaultReviewer[]>([])
     const [scorecards, setScorecards] = useState<Scorecard[]>([])
     const [workflows, setWorkflows] = useState<Workflow[]>([])
-    const [isLoading, setIsLoading] = useState<boolean>(false)
+    const [isScorecardsLoading, setIsScorecardsLoading] = useState<boolean>(false)
+    const [isWorkflowsLoading, setIsWorkflowsLoading] = useState<boolean>(false)
     const [loadError, setLoadError] = useState<string | undefined>()
 
     const challengeId = useWatch({
@@ -451,6 +495,36 @@ export const ReviewersField: FC = () => {
 
     const normalizedTrackId = normalizeText(trackId)
     const normalizedTypeId = normalizeText(typeId)
+    const selectedScorecardTrack = useMemo(
+        (): string => {
+            if (!normalizedTrackId) {
+                return ''
+            }
+
+            const selectedTrack = challengeTracks.find(track => normalizeText(track.id) === normalizedTrackId)
+            if (!selectedTrack) {
+                return ''
+            }
+
+            return normalizeTrackForScorecards(
+                selectedTrack.track || selectedTrack.name || selectedTrack.abbreviation,
+            )
+        },
+        [challengeTracks, normalizedTrackId],
+    )
+    const selectedScorecardType = useMemo(
+        (): string => {
+            if (!normalizedTypeId) {
+                return ''
+            }
+
+            const selectedType = challengeTypes.find(type => normalizeText(type.id) === normalizedTypeId)
+
+            return normalizeText(selectedType?.name)
+        },
+        [challengeTypes, normalizedTypeId],
+    )
+    const isLoading = isScorecardsLoading || isWorkflowsLoading
     const firstPlacePrize = useMemo(
         () => getFirstPlacePrizeValue(prizeSets),
         [prizeSets],
@@ -459,54 +533,81 @@ export const ReviewersField: FC = () => {
     const getScorecardOptionsForReviewer = useCallback(
         (reviewer: Reviewer | undefined): FormSelectOption[] => {
             const reviewerPhaseId = normalizeText(reviewer?.phaseId)
+            const reviewerPhaseName = reviewerPhaseId
+                ? phaseNameById.get(reviewerPhaseId)
+                : undefined
+            const normalizedReviewerPhase = normalizePhaseToken(reviewerPhaseName)
 
             const matchingScorecards = scorecards.filter(scorecard => {
-                const scorecardTrackId = normalizeText(scorecard.trackId)
-                const scorecardTypeId = normalizeText(scorecard.typeId)
                 const scorecardPhaseId = normalizeText(scorecard.phaseId)
+                const normalizedScorecardType = normalizePhaseToken(scorecard.type)
 
-                const matchesTrack = !normalizedTrackId || !scorecardTrackId || scorecardTrackId === normalizedTrackId
-                const matchesType = !normalizedTypeId || !scorecardTypeId || scorecardTypeId === normalizedTypeId
-                const matchesPhase = !reviewerPhaseId || !scorecardPhaseId || scorecardPhaseId === reviewerPhaseId
+                if (!reviewerPhaseId && !normalizedReviewerPhase) {
+                    return true
+                }
 
-                return matchesTrack && matchesType && matchesPhase
+                const matchesPhaseId = reviewerPhaseId
+                    && scorecardPhaseId
+                    && scorecardPhaseId === reviewerPhaseId
+                const matchesPhaseType = normalizedReviewerPhase
+                    && normalizedScorecardType
+                    && normalizedScorecardType === normalizedReviewerPhase
+
+                if (matchesPhaseId || matchesPhaseType) {
+                    return true
+                }
+
+                return !scorecardPhaseId && !normalizedScorecardType
             })
 
-            const scorecardsToUse = matchingScorecards.length
+            const filteredScorecards = matchingScorecards.length
                 ? matchingScorecards
                 : scorecards
+            const selectedScorecardId = normalizeText(reviewer?.scorecardId)
+            const selectedScorecard = selectedScorecardId
+                ? scorecards.find(scorecard => scorecard.id === selectedScorecardId)
+                : undefined
+            const scorecardsWithSelected = selectedScorecard
+                && !filteredScorecards.some(scorecard => scorecard.id === selectedScorecard.id)
+                ? [
+                    ...filteredScorecards,
+                    selectedScorecard,
+                ]
+                : filteredScorecards
+            const scorecardsWithFallback = selectedScorecardId
+                && !scorecardsWithSelected.some(scorecard => scorecard.id === selectedScorecardId)
+                ? [
+                    ...scorecardsWithSelected,
+                    {
+                        id: selectedScorecardId,
+                        name: selectedScorecardId,
+                    },
+                ]
+                : scorecardsWithSelected
+            const optionsById = new Map<string, FormSelectOption>()
 
-            return scorecardsToUse.map(scorecard => ({
-                label: scorecard.name,
-                value: scorecard.id,
-            }))
+            scorecardsWithFallback.forEach(scorecard => {
+                const scorecardId = normalizeText(scorecard.id)
+                if (!scorecardId || optionsById.has(scorecardId)) {
+                    return
+                }
+
+                optionsById.set(scorecardId, {
+                    label: formatScorecardLabel(scorecard),
+                    value: scorecardId,
+                })
+            })
+
+            return Array.from(optionsById.values())
         },
         [
-            normalizedTrackId,
-            normalizedTypeId,
+            phaseNameById,
             scorecards,
         ],
     )
 
     const estimatedReviewerCost = useMemo(
-        () => reviewerRows
-            .reduce((sum, reviewer) => {
-                if (reviewer?.isMemberReview === false) {
-                    return sum
-                }
-
-                const fixedAmount = toNumber((reviewer as {
-                    fixedAmount?: unknown
-                }).fixedAmount)
-                const baseCoefficient = toNumber(reviewer.baseCoefficient)
-                const incrementalCoefficient = toNumber(reviewer.incrementalCoefficient)
-                const reviewerCount = getReviewerCount(reviewer)
-                const reviewerCost = fixedAmount + (
-                    baseCoefficient + (incrementalCoefficient * ESTIMATED_SUBMISSIONS_COUNT)
-                ) * firstPlacePrize
-
-                return sum + reviewerCost * reviewerCount
-            }, 0),
+        () => calculateEstimatedReviewerCost(firstPlacePrize, reviewerRows),
         [
             firstPlacePrize,
             reviewerRows,
@@ -516,25 +617,15 @@ export const ReviewersField: FC = () => {
     useEffect(() => {
         let mounted = true
 
-        setIsLoading(true)
+        setIsWorkflowsLoading(true)
         setLoadError(undefined)
 
-        Promise.all([
-            fetchScorecards({
-                page: 1,
-                perPage: 200,
-            }),
-            fetchWorkflows(),
-        ])
-            .then(([
-                fetchedScorecards,
-                fetchedWorkflows,
-            ]) => {
+        fetchWorkflows()
+            .then(fetchedWorkflows => {
                 if (!mounted) {
                     return
                 }
 
-                setScorecards(fetchedScorecards)
                 setWorkflows(fetchedWorkflows)
             })
             .catch((error: unknown) => {
@@ -542,11 +633,11 @@ export const ReviewersField: FC = () => {
                     return
                 }
 
-                setLoadError(getErrorMessage(error, 'Failed to load reviewer metadata'))
+                setLoadError(getErrorMessage(error, 'Failed to load reviewer workflows'))
             })
             .finally(() => {
                 if (mounted) {
-                    setIsLoading(false)
+                    setIsWorkflowsLoading(false)
                 }
             })
 
@@ -554,6 +645,46 @@ export const ReviewersField: FC = () => {
             mounted = false
         }
     }, [])
+
+    useEffect(() => {
+        let mounted = true
+
+        setIsScorecardsLoading(true)
+        setLoadError(undefined)
+
+        const scorecardFilters = {
+            challengeTrack: selectedScorecardTrack || undefined,
+            challengeType: selectedScorecardType || undefined,
+            page: 1,
+            perPage: 200,
+            status: 'ACTIVE',
+        }
+
+        fetchScorecards(scorecardFilters)
+            .then(fetchedScorecards => {
+                if (!mounted) {
+                    return
+                }
+
+                setScorecards(fetchedScorecards)
+            })
+            .catch((error: unknown) => {
+                if (!mounted) {
+                    return
+                }
+
+                setLoadError(getErrorMessage(error, 'Failed to load reviewer scorecards'))
+            })
+            .finally(() => {
+                if (mounted) {
+                    setIsScorecardsLoading(false)
+                }
+            })
+
+        return () => {
+            mounted = false
+        }
+    }, [selectedScorecardTrack, selectedScorecardType])
 
     useEffect(() => {
         const selectedTypeId = typeId?.trim() || ''
@@ -1130,6 +1261,7 @@ export const ReviewersField: FC = () => {
                                 {isMemberReview
                                     ? (
                                         <FormSelectField
+                                            className={styles.memberScorecardField}
                                             label='Scorecard'
                                             name={`${reviewerPrefix}.scorecardId`}
                                             options={scorecardOptions}
@@ -1140,10 +1272,18 @@ export const ReviewersField: FC = () => {
                                     : undefined}
                                 {isMemberReview
                                     ? (
-                                        <PublicOpportunityCheckboxField
-                                            name={`${reviewerPrefix}.shouldOpenOpportunity`}
-                                            onChange={getPublicOpportunityChangeHandler(index)}
-                                        />
+                                        <div className={styles.memberReviewSettings}>
+                                            <FormTextField
+                                                label='Reviewer Count'
+                                                name={`${reviewerPrefix}.memberReviewerCount`}
+                                                sanitize={sanitizeIntegerValue}
+                                                type='number'
+                                            />
+                                            <PublicOpportunityCheckboxField
+                                                name={`${reviewerPrefix}.shouldOpenOpportunity`}
+                                                onChange={getPublicOpportunityChangeHandler(index)}
+                                            />
+                                        </div>
                                     )
                                     : (
                                         <FormSelectField
@@ -1154,16 +1294,6 @@ export const ReviewersField: FC = () => {
                                             toFieldValue={getWorkflowFieldValueHandler(index)}
                                         />
                                     )}
-                                {isMemberReview
-                                    ? (
-                                        <FormTextField
-                                            label='Reviewer Count'
-                                            name={`${reviewerPrefix}.memberReviewerCount`}
-                                            sanitize={sanitizeIntegerValue}
-                                            type='number'
-                                        />
-                                    )
-                                    : undefined}
                             </div>
 
                             {isMemberReview && !shouldOpenOpportunity

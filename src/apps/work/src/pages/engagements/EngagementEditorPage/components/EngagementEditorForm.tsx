@@ -192,7 +192,7 @@ function createWorkloadOptions(): FormSelectOption[] {
 function toPayload(values: EngagementEditorFormData): Partial<Engagement> & {
     assignmentDetails?: AssignmentDetailsFormValue[]
 } {
-    const requiredMemberCount = Number(values.requiredMemberCount)
+    const rawRequiredMemberCount = values.requiredMemberCount
     const payload: Partial<Engagement> & {
         assignmentDetails?: AssignmentDetailsFormValue[]
     } = {
@@ -211,8 +211,12 @@ function toPayload(values: EngagementEditorFormData): Partial<Engagement> & {
         workload: values.workload,
     }
 
-    if (Number.isFinite(requiredMemberCount) && requiredMemberCount > 0) {
-        payload.requiredMemberCount = requiredMemberCount
+    if (rawRequiredMemberCount !== '' && rawRequiredMemberCount !== undefined) {
+        const requiredMemberCount = Number(rawRequiredMemberCount)
+
+        if (Number.isFinite(requiredMemberCount)) {
+            payload.requiredMemberCount = requiredMemberCount
+        }
     }
 
     if (values.isPrivate) {

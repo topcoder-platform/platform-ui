@@ -1,4 +1,5 @@
 export * from './async.utils'
+export * from './assignment-dates.utils'
 export * from './auth.utils'
 export * from './challenge-editor.utils'
 export * from './challenge.utils'

@@ -731,6 +731,7 @@ export const ProjectAssetsPage: FC = () => {
         ? (
             <ProjectBillingAccountExpiredNotice
                 billingAccountId={projectResult.project?.billingAccountId}
+                billingAccountName={projectResult.project?.billingAccountName}
                 projectId={projectId}
             />
         )

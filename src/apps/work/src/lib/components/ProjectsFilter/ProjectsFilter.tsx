@@ -279,7 +279,7 @@ export const ProjectsFilter: FC<ProjectsFilterProps> = (props: ProjectsFilterPro
             </div>
 
             {isManager ? (
-                <div className={styles.filterField}>
+                <div className={classNames(styles.filterField, styles.bottomAlignedField)}>
                     <div className={styles.checkboxWrap}>
                         <InputCheckbox
                             checked={!!filters.memberOnly}

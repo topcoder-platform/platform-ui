@@ -90,6 +90,18 @@ export const WORKFLOWS_API_URL = process.env.REACT_APP_WORKFLOWS_API_URL
     || process.env.WORKFLOWS_API_URL
     || `${EnvironmentConfig.API.V6}/workflows`
 
+export const TC_AI_API_BASE_URL = process.env.REACT_APP_TC_AI_API_BASE_URL
+    || process.env.TC_AI_API_BASE_URL
+    || `${EnvironmentConfig.API.V6}/ai`
+
+export const TC_AI_SKILLS_EXTRACTION_WORKFLOW_ID = process.env.REACT_APP_TC_AI_SKILLS_EXTRACTION_WORKFLOW_ID
+    || process.env.TC_AI_SKILLS_EXTRACTION_WORKFLOW_ID
+    || 'skillExtractionWorkflow'
+
+export const AI_WORKFLOW_POLL_INTERVAL_MS = 1000
+
+export const AI_WORKFLOW_POLL_TIMEOUT_MS = 5 * 60 * 1000
+
 export const GROUPS_API_URL = process.env.REACT_APP_GROUPS_API_URL
     || process.env.GROUPS_API_URL
     || `${EnvironmentConfig.API.V6}/groups`

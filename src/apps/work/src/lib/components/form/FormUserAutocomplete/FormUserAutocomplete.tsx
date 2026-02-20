@@ -1,7 +1,9 @@
 import {
     FC,
     useCallback,
+    useEffect,
     useMemo,
+    useRef,
     useState,
 } from 'react'
 import {
@@ -18,6 +20,7 @@ import {
 import { User } from '../../../models'
 import {
     fetchProfile,
+    searchProfilesByUserIds,
     suggestProfiles,
 } from '../../../services'
 import { FormFieldWrapper } from '../FormFieldWrapper'
@@ -91,7 +94,9 @@ export const FormUserAutocomplete: FC<FormUserAutocompleteProps> = (props: FormU
     const field = controller.field
     const fieldState = controller.fieldState
     const valueField: FormUserAutocompleteValueField = props.valueField || 'handle'
+    const onValueChange = props.onValueChange
     const [selectedOption, setSelectedOption] = useState<UserAutocompleteOption | undefined>(undefined)
+    const lastResolvedValueRef = useRef<string>('')
 
     const menuPortalTarget = useMemo(
         () => (typeof document === 'undefined' ? undefined : document.body),
@@ -130,6 +135,52 @@ export const FormUserAutocomplete: FC<FormUserAutocompleteProps> = (props: FormU
         [loadUserOptions],
     )
 
+    useEffect(() => {
+        const normalizedValue = typeof field.value === 'string'
+            ? field.value.trim()
+            : ''
+        let mounted = true
+
+        if (!normalizedValue) {
+            setSelectedOption(undefined)
+            lastResolvedValueRef.current = ''
+        } else if (valueField !== 'userId') {
+            lastResolvedValueRef.current = ''
+        } else {
+            const hasResolvedLabel = selectedOption?.value === normalizedValue
+                && !!selectedOption.label.trim()
+                && selectedOption.label !== normalizedValue
+
+            if (!hasResolvedLabel && lastResolvedValueRef.current !== normalizedValue) {
+                lastResolvedValueRef.current = normalizedValue
+
+                searchProfilesByUserIds([normalizedValue])
+                    .then(users => {
+                        if (!mounted) {
+                            return
+                        }
+
+                        const matchedUser = users.find(user => user.userId === normalizedValue)
+                        if (!matchedUser) {
+                            return
+                        }
+
+                        setSelectedOption(toOption(matchedUser, valueField))
+                    })
+                    .catch(() => undefined)
+            }
+        }
+
+        return () => {
+            mounted = false
+        }
+    }, [
+        field.value,
+        selectedOption?.label,
+        selectedOption?.value,
+        valueField,
+    ])
+
     const value = useMemo<UserAutocompleteOption | undefined>(() => {
         if (typeof field.value === 'object' && field.value && 'value' in field.value) {
             return field.value as UserAutocompleteOption
@@ -162,9 +213,9 @@ export const FormUserAutocomplete: FC<FormUserAutocompleteProps> = (props: FormU
 
             setSelectedOption(nextSelectedOption)
             field.onChange(nextValue)
-            props.onValueChange?.(nextValue)
+            onValueChange?.(nextValue)
         },
-        [field, props],
+        [field, onValueChange],
     )
 
     return (

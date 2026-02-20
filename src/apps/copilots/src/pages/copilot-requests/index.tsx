@@ -158,7 +158,9 @@ const CopilotRequestsPage: FC = () => {
     }: CopilotRequestsResponse = useCopilotRequests(sort)
 
     const viewRequestDetails = useMemo(() => (
-        routeParams.requestId && find(requests, { id: +routeParams.requestId }) as CopilotRequest
+        routeParams.requestId
+            ? find(requests, request => `${request.id}` === routeParams.requestId) as CopilotRequest
+            : undefined
     ), [requests, routeParams.requestId])
 
     const hideRequestDetails = useCallback(() => {

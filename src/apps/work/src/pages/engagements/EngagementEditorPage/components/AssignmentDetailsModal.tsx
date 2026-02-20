@@ -16,6 +16,9 @@ import {
 import {
     StartDateTimeInput,
 } from '../../../../lib/components/form'
+import {
+    serializeTentativeAssignmentDate,
+} from '../../../../lib/utils'
 
 import styles from './AssignmentDetailsModal.module.scss'
 
@@ -114,10 +117,10 @@ export const AssignmentDetailsModal: FC<AssignmentDetailsModalProps> = (
 
         props.onSave({
             agreementRate: agreementRate.trim(),
-            endDate: endDate?.toISOString() || '',
+            endDate: serializeTentativeAssignmentDate(endDate),
             memberHandle: props.memberHandle || '',
             otherRemarks: otherRemarks.trim() || undefined,
-            startDate: startDate?.toISOString() || '',
+            startDate: serializeTentativeAssignmentDate(startDate),
         })
     }, [agreementRate, endDate, otherRemarks, props, startDate])
 

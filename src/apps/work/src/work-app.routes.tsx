@@ -13,9 +13,6 @@ import {
 } from '~/libs/core'
 
 import {
-    TALENT_MANAGER_ROLES,
-} from './config/index.config'
-import {
     challengeCreateRouteId,
     challengeEditRouteId,
     challengesRouteId,
@@ -51,6 +48,10 @@ const ChallengesListPage: LazyLoadedComponent = lazyLoad(
 
 const ChallengeEditorPage: LazyLoadedComponent = lazyLoad(
     () => import('./pages/challenges/ChallengeEditorPage'),
+)
+
+const ChallengeRouteRedirectPage: LazyLoadedComponent = lazyLoad(
+    () => import('./pages/challenges/ChallengeRouteRedirectPage/ChallengeRouteRedirectPage'),
 )
 
 const ProjectsListPage: LazyLoadedComponent = lazyLoad(
@@ -113,16 +114,12 @@ const GroupEditPage: LazyLoadedComponent = lazyLoad(
     () => import('./pages/groups/GroupEditPage'),
 )
 
-function hasAnyRole(userRoles: string[], allowedRoles: string[]): boolean {
-    return userRoles.some(role => allowedRoles.includes(role))
-}
-
 function canManageGroups(contextValue: WorkAppContextModel): boolean {
     return contextValue.isAdmin || contextValue.isCopilot || contextValue.isManager
 }
 
 function canViewAllEngagements(contextValue: WorkAppContextModel): boolean {
-    return contextValue.isAdmin || hasAnyRole(contextValue.userRoles, TALENT_MANAGER_ROLES)
+    return contextValue.isAdmin
 }
 
 const GroupsRouteGuard: FC<PropsWithChildren> = (props: PropsWithChildren) => {
@@ -139,7 +136,7 @@ const EngagementsRouteGuard: FC<PropsWithChildren> = (props: PropsWithChildren) 
     const contextValue: WorkAppContextModel = useContext(WorkAppContext)
 
     if (!canViewAllEngagements(contextValue)) {
-        return <ErrorMessage message='You need Admin or Talent Manager role to view all engagements.' />
+        return <ErrorMessage message='You need Admin role to view all engagements.' />
     }
 
     return <>{props.children}</>
@@ -185,8 +182,20 @@ export const workRoutes: ReadonlyArray<PlatformRoute> = [
             {
                 authRequired: true,
                 element: <ChallengeEditorPage />,
+                route: '/projects/:projectId/challenges/:challengeId/edit',
+                title: 'Edit Challenge',
+            },
+            {
+                authRequired: true,
+                element: <ChallengeEditorPage />,
                 route: '/projects/:projectId/challenges/:challengeId/view',
                 title: 'View Challenge',
+            },
+            {
+                authRequired: true,
+                element: <ChallengeRouteRedirectPage />,
+                route: '/challenges/:challengeId',
+                title: 'Edit Challenge',
             },
             {
                 authRequired: true,

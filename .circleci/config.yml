@@ -227,9 +227,8 @@ workflows:
                           only:
                               - dev
                               - mm-final-2025-reveal
-                              - engagements
                               - HOTFIX-PM-3269
-
+                              - work-manager
             - deployQa:
                   context: org-global
                   requires:

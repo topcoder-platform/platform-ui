@@ -7,7 +7,10 @@ import {
     useState,
 } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
-import { Link } from 'react-router-dom'
+import {
+    Link,
+    useNavigate,
+} from 'react-router-dom'
 
 import { yupResolver } from '@hookform/resolvers/yup'
 import { Button } from '~/libs/ui'
@@ -95,9 +98,6 @@ import {
     CopilotFeeField,
 } from './CopilotFeeField'
 import {
-    DiscussionForumField,
-} from './DiscussionForumField'
-import {
     GroupsField,
 } from './GroupsField'
 import {
@@ -128,11 +128,20 @@ import styles from './ChallengeEditorForm.module.scss'
 
 interface ChallengeEditorFormProps {
     challenge?: Challenge
+    isEditMode?: boolean
+    onRegisterLaunchAction?: (action: (() => Promise<void>) | undefined) => void
     projectId?: string
 }
 
 interface SaveChallengeOptions {
     isAutosave?: boolean
+    statusOverride?: string
+    successMessage?: string
+}
+
+interface SaveStatusMetadata {
+    isSaveAsDraft: boolean
+    payloadStatus?: string
 }
 
 const CHALLENGE_TYPE_CHALLENGE_ABBREVIATION = 'CH'
@@ -253,10 +262,45 @@ function getSubmitButtonLabel(status?: string): string {
     return 'Save Challenge'
 }
 
+function getSaveStatusMetadata(
+    status: unknown,
+    options: SaveChallengeOptions,
+): SaveStatusMetadata {
+    const currentStatus = normalizeStatus(status)
+    const isSaveAsDraft = !options.isAutosave
+        && !options.statusOverride
+        && currentStatus === CHALLENGE_STATUS.NEW
+    const payloadStatus = options.statusOverride
+        || (isSaveAsDraft
+            ? CHALLENGE_STATUS.DRAFT
+            : currentStatus)
+
+    return {
+        isSaveAsDraft,
+        payloadStatus,
+    }
+}
+
+function getSaveSuccessMessage(
+    isSaveAsDraft: boolean,
+    options: SaveChallengeOptions,
+): string {
+    if (options.successMessage) {
+        return options.successMessage
+    }
+
+    return isSaveAsDraft
+        ? 'Challenge saved as draft successfully'
+        : 'Challenge saved successfully'
+}
+
 // eslint-disable-next-line complexity
 export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     props: ChallengeEditorFormProps,
 ) => {
+    const navigate = useNavigate()
+    const isEditMode = props.isEditMode
+    const onRegisterLaunchAction = props.onRegisterLaunchAction
     const defaultedDiscussionForumTypeIdRef = useRef<string | undefined>()
     const fallbackProjectId = useMemo(
         () => normalizeProjectId(props.projectId) || normalizeProjectId(props.challenge?.projectId),
@@ -477,6 +521,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 const savedChallenge = await createChallenge({
                     name: formData.name,
                     projectId: createProjectId,
+                    roundType: formData.roundType,
                     status: CHALLENGE_STATUS.NEW,
                     trackId: formData.trackId,
                     typeId: formData.typeId,
@@ -527,12 +572,10 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             setSaveError(undefined)
 
             try {
-                const currentStatus = normalizeStatus(formData.status)
-                const isSaveAsDraft = !options.isAutosave
-                    && currentStatus === CHALLENGE_STATUS.NEW
-                const payloadStatus = isSaveAsDraft
-                    ? CHALLENGE_STATUS.DRAFT
-                    : currentStatus
+                const {
+                    isSaveAsDraft,
+                    payloadStatus,
+                }: SaveStatusMetadata = getSaveStatusMetadata(formData.status, options)
                 const payload = transformFormDataToChallenge({
                     ...formData,
                     status: payloadStatus,
@@ -549,9 +592,11 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 reset(nextValues)
 
                 if (!options.isAutosave) {
-                    showSuccessToast(isSaveAsDraft
-                        ? 'Challenge saved as draft successfully'
-                        : 'Challenge saved successfully')
+                    showSuccessToast(getSaveSuccessMessage(isSaveAsDraft, options))
+                }
+
+                if (isSaveAsDraft && !isEditMode) {
+                    navigate(`/challenges/${encodeURIComponent(savedChallenge.id)}/edit`)
                 }
             } catch (error) {
                 const errorMessage = error instanceof Error
@@ -574,9 +619,47 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         },
         [
             currentChallengeId,
+            isEditMode,
+            navigate,
             reset,
         ],
     )
+
+    const launchChallenge = useCallback(async (): Promise<void> => {
+        await handleSubmit(
+            async formData => {
+                await saveChallenge(formData, {
+                    statusOverride: CHALLENGE_STATUS.ACTIVE,
+                    successMessage: 'Challenge launched successfully',
+                })
+            },
+            () => {
+                showErrorToast('Please fix validation errors before launching')
+                throw new Error('Challenge launch validation failed')
+            },
+        )()
+    }, [
+        handleSubmit,
+        saveChallenge,
+    ])
+
+    useEffect(() => {
+        if (!onRegisterLaunchAction) {
+            return undefined
+        }
+
+        onRegisterLaunchAction(currentChallengeId
+            ? launchChallenge
+            : undefined)
+
+        return () => {
+            onRegisterLaunchAction(undefined)
+        }
+    }, [
+        currentChallengeId,
+        launchChallenge,
+        onRegisterLaunchAction,
+    ])
 
     const autosaveResult = useAutosave<ChallengeEditorFormData>({
         delay: AUTOSAVE_DELAY_MS,
@@ -632,8 +715,8 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                         <ChallengeNameField />
                         <ChallengeTrackField disabled={isChallengeCreated} />
                         <ChallengeTypeField disabled={isChallengeCreated} />
-                        {isChallengeCreated && showRoundTypeField
-                            ? <RoundTypeField />
+                        {showRoundTypeField
+                            ? <RoundTypeField disabled={isChallengeCreated} />
                             : undefined}
                     </div>
                 </section>
@@ -727,7 +810,6 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                     <CopilotField />
                                     <GroupsField />
                                     <TermsField />
-                                    <DiscussionForumField />
                                     <NDAField />
                                 </div>
                             </section>
@@ -775,7 +857,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                         Cancel
                                     </Link>
                                     <Button
-                                        disabled={!formState.isValid || isSaving}
+                                        disabled={!formState.isDirty || isSaving}
                                         label={submitButtonLabel}
                                         primary
                                         size='lg'

@@ -39,6 +39,17 @@ function normalizeError(error: unknown, fallbackMessage: string): Error {
 }
 
 function normalizeScorecard(scorecard: Partial<Scorecard>): Scorecard | undefined {
+    const toOptionalString = (value: unknown): string | undefined => {
+        if (value === undefined || value === null) {
+            return undefined
+        }
+
+        const normalizedValue = String(value)
+            .trim()
+
+        return normalizedValue || undefined
+    }
+
     const id = scorecard.id !== undefined && scorecard.id !== null
         ? String(scorecard.id)
         : ''
@@ -51,20 +62,17 @@ function normalizeScorecard(scorecard: Partial<Scorecard>): Scorecard | undefine
     }
 
     return {
+        challengeTrack: toOptionalString((scorecard as Record<string, unknown>).challengeTrack),
+        challengeType: toOptionalString((scorecard as Record<string, unknown>).challengeType),
         id,
         name,
-        phaseId: scorecard.phaseId !== undefined && scorecard.phaseId !== null
-            ? String(scorecard.phaseId)
-            : undefined,
-        track: typeof scorecard.track === 'string'
-            ? scorecard.track
-            : undefined,
-        trackId: scorecard.trackId !== undefined && scorecard.trackId !== null
-            ? String(scorecard.trackId)
-            : undefined,
-        typeId: scorecard.typeId !== undefined && scorecard.typeId !== null
-            ? String(scorecard.typeId)
-            : undefined,
+        phaseId: toOptionalString(scorecard.phaseId),
+        status: toOptionalString((scorecard as Record<string, unknown>).status),
+        track: toOptionalString(scorecard.track),
+        trackId: toOptionalString(scorecard.trackId),
+        type: toOptionalString((scorecard as Record<string, unknown>).type),
+        typeId: toOptionalString(scorecard.typeId),
+        version: toOptionalString((scorecard as Record<string, unknown>).version),
     }
 }
 
@@ -113,6 +121,7 @@ function mapItems<T>(response: unknown, normalize: (item: Partial<T>) => T | und
         const typedResponse = response as {
             data?: unknown
             result?: unknown
+            scoreCards?: unknown
         }
 
         if (Array.isArray(typedResponse.data)) {
@@ -123,6 +132,12 @@ function mapItems<T>(response: unknown, normalize: (item: Partial<T>) => T | und
 
         if (Array.isArray(typedResponse.result)) {
             return typedResponse.result
+                .map(item => normalize(item as Partial<T>))
+                .filter((item): item is T => !!item)
+        }
+
+        if (Array.isArray(typedResponse.scoreCards)) {
+            return typedResponse.scoreCards
                 .map(item => normalize(item as Partial<T>))
                 .filter((item): item is T => !!item)
         }
@@ -143,6 +158,18 @@ export async function fetchScorecards(filters: ScorecardFilters = {}): Promise<S
 
     if (filters.track) {
         query.set('track', filters.track)
+    }
+
+    if (filters.challengeTrack) {
+        query.set('challengeTrack', filters.challengeTrack)
+    }
+
+    if (filters.challengeType) {
+        query.set('challengeType', filters.challengeType)
+    }
+
+    if (filters.status) {
+        query.set('status', filters.status)
     }
 
     if (filters.typeId) {

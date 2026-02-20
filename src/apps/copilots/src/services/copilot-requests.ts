@@ -27,6 +27,7 @@ function copilotRequestFactory(data: any): CopilotRequest {
         createdAt: new Date(data.createdAt),
         data: undefined,
         opportunity: data.copilotOpportunity?.[0],
+        projectId: String(data?.projectId ?? data?.data?.projectId ?? ''),
         startDate: new Date(data.data?.startDate),
     }
 }

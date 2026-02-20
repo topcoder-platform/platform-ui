@@ -11,17 +11,13 @@ import type {
 } from 'react-hook-form'
 
 import {
-    PRIZE_SET_TYPES,
-    PRIZE_TYPES,
-} from '../../../../../lib/constants/challenge-editor.constants'
-import {
     ChallengeEditorFormData,
-    Prize,
     PrizeSet,
+    Reviewer,
 } from '../../../../../lib/models'
 import {
-    formatCurrency,
-    getPrizeType,
+    calculateEstimatedReviewerCost,
+    getFirstPlacePrizeValue,
 } from '../../../../../lib/utils'
 import styles from '../ChallengeFeeField/ChallengeFeeField.module.scss'
 
@@ -38,27 +34,37 @@ export const ReviewCostField: FC<ReviewCostFieldProps> = (
         control,
         name: props.name as never,
     }) as unknown
+    const watchedReviewers = useWatch({
+        control,
+        name: 'reviewers' as never,
+    }) as unknown
 
     const normalizedPrizeSets = useMemo<PrizeSet[]>(
         () => (Array.isArray(watchedPrizeSets) ? watchedPrizeSets : []),
         [watchedPrizeSets],
     )
+    const normalizedReviewers = useMemo<Reviewer[]>(
+        () => (Array.isArray(watchedReviewers) ? watchedReviewers : []),
+        [watchedReviewers],
+    )
 
-    const reviewCostPrize = useMemo<Prize | undefined>(
-        () => normalizedPrizeSets
-            .find(prizeSet => prizeSet.type === PRIZE_SET_TYPES.REVIEWER)
-            ?.prizes?.[0],
+    const firstPlacePrizeValue = useMemo(
+        () => getFirstPlacePrizeValue(normalizedPrizeSets),
         [normalizedPrizeSets],
     )
-    const reviewCostType = reviewCostPrize?.type === PRIZE_TYPES.POINT || reviewCostPrize?.type === PRIZE_TYPES.USD
-        ? reviewCostPrize.type
-        : getPrizeType(normalizedPrizeSets)
-    const formattedValue = useMemo(
-        () => formatCurrency(Number(reviewCostPrize?.value) || 0, reviewCostType),
+    const reviewCost = useMemo(
+        () => calculateEstimatedReviewerCost(firstPlacePrizeValue, normalizedReviewers),
         [
-            reviewCostPrize?.value,
-            reviewCostType,
+            firstPlacePrizeValue,
+            normalizedReviewers,
         ],
+    )
+    const formattedValue = useMemo(
+        () => `$${reviewCost.toLocaleString(undefined, {
+            maximumFractionDigits: 2,
+            minimumFractionDigits: 2,
+        })}`,
+        [reviewCost],
     )
 
     return (

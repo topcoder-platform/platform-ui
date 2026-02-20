@@ -16,6 +16,9 @@ import {
     Application,
 } from '../../models'
 import {
+    serializeTentativeAssignmentDate,
+} from '../../utils'
+import {
     StartDateTimeInput,
 } from '../form'
 
@@ -117,9 +120,9 @@ const AcceptApplicationModal: FC<AcceptApplicationModalProps> = (
 
         await props.onConfirm({
             agreementRate: agreementRate.trim(),
-            endDate: endDate?.toISOString() || '',
+            endDate: serializeTentativeAssignmentDate(endDate),
             otherRemarks: otherRemarks.trim() || undefined,
-            startDate: startDate?.toISOString() || '',
+            startDate: serializeTentativeAssignmentDate(startDate),
         })
 
         resetState()

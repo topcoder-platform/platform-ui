@@ -55,6 +55,11 @@ export interface ChallengeMetadata {
     value: unknown
 }
 
+export interface ChallengeTerm {
+    id: string
+    roleId?: string
+}
+
 export interface Challenge {
     id: string
     assignedMemberId?: string
@@ -101,7 +106,7 @@ export interface Challenge {
     discussionForum?: boolean
     groups?: string[]
     roundType?: string
-    terms?: string[]
+    terms?: Array<ChallengeTerm | string>
     updatedBy?: string
     reviewers?: Reviewer[]
     metadata?: ChallengeMetadata[]

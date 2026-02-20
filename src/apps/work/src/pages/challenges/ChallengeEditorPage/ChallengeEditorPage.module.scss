@@ -29,3 +29,42 @@
     border-bottom-color: #0d61bf;
     color: #0d61bf;
 }
+
+.launchButton {
+    --btn-variant: #35ac35;
+    --btn-variant--hover: #2f9630;
+    --btn-variant--active: #277c27;
+}
+
+.cancelAction {
+    position: relative;
+}
+
+.cancelMenu {
+    background: $tc-white;
+    border: 1px solid $black-20;
+    border-radius: 8px;
+    box-shadow: 0 10px 20px rgb(44 44 44 / 12%);
+    min-width: 280px;
+    padding: 4px 0;
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    z-index: 20;
+}
+
+.cancelMenuItem {
+    background: transparent;
+    border: 0;
+    color: $black-80;
+    cursor: pointer;
+    display: block;
+    font-size: 13px;
+    padding: 10px 14px;
+    text-align: left;
+    width: 100%;
+}
+
+.cancelMenuItem:hover {
+    background: $black-5;
+}

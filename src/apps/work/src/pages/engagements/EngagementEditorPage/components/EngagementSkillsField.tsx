@@ -2,6 +2,7 @@
 
 import {
     FC,
+    useCallback,
     useMemo,
     useState,
 } from 'react'
@@ -12,16 +13,25 @@ import {
 } from 'react-hook-form'
 import Select from 'react-select'
 
+import { Button } from '~/libs/ui'
+
 import {
     FormFieldWrapper,
     FormSelectOption,
 } from '../../../../lib/components/form'
 import {
+    useSearchSkills,
+} from '../../../../lib/hooks'
+import {
     Skill,
 } from '../../../../lib/models'
 import {
-    useSearchSkills,
-} from '../../../../lib/hooks'
+    extractSkillsFromText,
+} from '../../../../lib/services'
+import {
+    showErrorToast,
+    showSuccessToast,
+} from '../../../../lib/utils'
 
 import styles from './EngagementSkillsField.module.scss'
 
@@ -98,7 +108,10 @@ export const EngagementSkillsField: FC<EngagementSkillsFieldProps> = (
         control: formContext.control,
         name: 'skills',
     })
+    const description = String(formContext.watch('description') || '')
+        .trim()
 
+    const [isLoadingAI, setIsLoadingAI] = useState<boolean>(false)
     const [searchTerm, setSearchTerm] = useState<string>('')
 
     const searchedSkills = useSearchSkills(searchTerm)
@@ -118,6 +131,43 @@ export const EngagementSkillsField: FC<EngagementSkillsFieldProps> = (
         [],
     )
 
+    const handleAISuggest = useCallback(async (): Promise<void> => {
+        if (!description || isLoadingAI) {
+            return
+        }
+
+        setIsLoadingAI(true)
+
+        try {
+            const suggestedSkills = await extractSkillsFromText(description)
+
+            if (!suggestedSkills.length) {
+                showErrorToast('No matching standardized skills found based on the description.')
+                return
+            }
+
+            const existingSkills = toFieldValue(selectedOptions)
+            const existingSkillIds = new Set(existingSkills.map(skill => skill.id))
+            const newSkills = suggestedSkills
+                .filter(skill => !existingSkillIds.has(skill.id))
+
+            if (!newSkills.length) {
+                showSuccessToast('All suggested skills are already selected.')
+                return
+            }
+
+            controller.field.onChange([
+                ...existingSkills,
+                ...newSkills,
+            ])
+            showSuccessToast(`${newSkills.length} skill(s) were added from AI suggestions.`)
+        } catch {
+            showErrorToast('Failed to extract skills. Please try again or add skills manually.')
+        } finally {
+            setIsLoadingAI(false)
+        }
+    }, [controller.field, description, isLoadingAI, selectedOptions])
+
     return (
         <FormFieldWrapper
             error={controller.fieldState.error?.message}
@@ -126,30 +176,46 @@ export const EngagementSkillsField: FC<EngagementSkillsFieldProps> = (
             name='skills'
             required
         >
-            <Select
-                className={styles.select}
-                classNamePrefix='challenge-select'
-                id='skills'
-                isDisabled={props.disabled}
-                isLoading={searchedSkills.isLoading}
-                isMulti
-                menuPortalTarget={menuPortalTarget}
-                onBlur={controller.field.onBlur}
-                onChange={nextValue => {
-                    const selected = Array.isArray(nextValue)
-                        ? nextValue as SkillOption[]
-                        : []
+            <div className={styles.container}>
+                <Select
+                    className={styles.select}
+                    classNamePrefix='challenge-select'
+                    id='skills'
+                    isDisabled={props.disabled || isLoadingAI}
+                    isLoading={searchedSkills.isLoading}
+                    isMulti
+                    menuPortalTarget={menuPortalTarget}
+                    onBlur={controller.field.onBlur}
+                    onChange={nextValue => {
+                        const selected = Array.isArray(nextValue)
+                            ? nextValue as SkillOption[]
+                            : []
 
-                    controller.field.onChange(toFieldValue(selected))
-                }}
-                onInputChange={nextValue => {
-                    setSearchTerm(nextValue)
-                    return nextValue
-                }}
-                options={options}
-                placeholder='Search skills'
-                value={selectedOptions}
-            />
+                        controller.field.onChange(toFieldValue(selected))
+                    }}
+                    onInputChange={nextValue => {
+                        setSearchTerm(nextValue)
+                        return nextValue
+                    }}
+                    options={options}
+                    placeholder='Search skills'
+                    value={selectedOptions}
+                />
+
+                {description
+                    ? (
+                        <div className={styles.actions}>
+                            <Button
+                                disabled={props.disabled || isLoadingAI}
+                                label={isLoadingAI ? 'Suggesting...' : 'AI Suggest'}
+                                onClick={handleAISuggest}
+                                secondary
+                                size='sm'
+                            />
+                        </div>
+                    )
+                    : undefined}
+            </div>
         </FormFieldWrapper>
     )
 }

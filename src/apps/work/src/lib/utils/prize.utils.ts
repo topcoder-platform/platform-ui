@@ -8,10 +8,11 @@ import { PrizeSet } from '../models'
 type PrizeType = 'USD' | 'POINT'
 
 interface ReviewerInput {
-    baseCoefficient?: number
-    incrementalCoefficient?: number
+    baseCoefficient?: unknown
+    fixedAmount?: unknown
+    incrementalCoefficient?: unknown
     isMemberReview?: boolean
-    memberReviewerCount?: number
+    memberReviewerCount?: unknown
 }
 
 function toNumber(value: unknown): number {
@@ -85,6 +86,49 @@ export function validatePrizeValue(value: string): string {
     }
 
     return String(Math.min(parsedValue, MAX_PRIZE_VALUE))
+}
+
+export const DEFAULT_ESTIMATED_SUBMISSIONS_COUNT = 2
+
+export function getFirstPlacePrizeValue(prizeSets?: PrizeSet[]): number {
+    if (!Array.isArray(prizeSets)) {
+        return 0
+    }
+
+    const placementPrizeSet = prizeSets
+        .find(prizeSet => prizeSet.type === PRIZE_SET_TYPES.PLACEMENT)
+
+    return toNumber(placementPrizeSet?.prizes?.[0]?.value)
+}
+
+function getReviewerCount(reviewer?: ReviewerInput): number {
+    return Math.max(1, Math.trunc(toNumber(reviewer?.memberReviewerCount) || 1))
+}
+
+export function calculateEstimatedReviewerCost(
+    firstPlacePrizeValue: unknown,
+    reviewers?: ReviewerInput[],
+    estimatedSubmissionsCount: number = DEFAULT_ESTIMATED_SUBMISSIONS_COUNT,
+): number {
+    const normalizedFirstPlacePrize = toNumber(firstPlacePrizeValue)
+    const normalizedEstimatedSubmissionsCount = Math.max(0, toNumber(estimatedSubmissionsCount))
+
+    return (reviewers || [])
+        .reduce((sum, reviewer) => {
+            if (reviewer?.isMemberReview === false) {
+                return sum
+            }
+
+            const fixedAmount = toNumber(reviewer?.fixedAmount)
+            const baseCoefficient = toNumber(reviewer?.baseCoefficient)
+            const incrementalCoefficient = toNumber(reviewer?.incrementalCoefficient)
+            const reviewerCount = getReviewerCount(reviewer)
+            const reviewerCost = fixedAmount + (
+                baseCoefficient + (incrementalCoefficient * normalizedEstimatedSubmissionsCount)
+            ) * normalizedFirstPlacePrize
+
+            return sum + reviewerCost * reviewerCount
+        }, 0)
 }
 
 export function calculateChallengeTotal(

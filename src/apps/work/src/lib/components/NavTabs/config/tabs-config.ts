@@ -6,7 +6,6 @@ import {
     ADMIN_ROLES,
     COPILOT_ROLES,
     MANAGER_ROLES,
-    TALENT_MANAGER_ROLES,
     TASK_MANAGER_ROLES,
 } from '../../../../config/index.config'
 import {
@@ -27,7 +26,6 @@ export function getTabsConfig(userRoles: string[], isAnonymous: boolean): TabsNa
     }
 
     const isAdmin = hasAnyRole(userRoles, ADMIN_ROLES)
-    const isTalentManager = hasAnyRole(userRoles, TALENT_MANAGER_ROLES)
 
     const tabs: TabsNavItem[] = [
         {
@@ -36,7 +34,7 @@ export function getTabsConfig(userRoles: string[], isAnonymous: boolean): TabsNa
         },
     ]
 
-    if (isAdmin || isTalentManager) {
+    if (isAdmin) {
         tabs.push({
             id: engagementsRouteId,
             title: 'Engagements',

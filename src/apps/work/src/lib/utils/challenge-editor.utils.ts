@@ -17,6 +17,7 @@ import {
     ChallengePhase,
     ChallengeReviewer,
     ChallengeSkill,
+    ChallengeTerm,
     Prize,
     PrizeSet,
 } from '../models'
@@ -454,6 +455,108 @@ function normalizeStringArray(value: unknown): string[] | undefined {
         .filter((item): item is string => !!item)
 }
 
+function normalizeChallengeTermValue(value: unknown): string | undefined {
+    const normalizedValue = normalizeOptionalId(value)
+
+    if (normalizedValue === undefined) {
+        return undefined
+    }
+
+    return String(normalizedValue)
+}
+
+function normalizeChallengeTermId(term: unknown): string | undefined {
+    if (term === undefined || term === null) {
+        return undefined
+    }
+
+    if (typeof term === 'string' || typeof term === 'number') {
+        return normalizeChallengeTermValue(term)
+    }
+
+    if (typeof term !== 'object') {
+        return undefined
+    }
+
+    const typedTerm = term as {
+        id?: unknown
+        value?: unknown
+    }
+
+    return normalizeChallengeTermValue(typedTerm.id ?? typedTerm.value)
+}
+
+function normalizeChallengeTermRoleId(term: unknown): string | undefined {
+    if (typeof term !== 'object' || !term) {
+        return undefined
+    }
+
+    const typedTerm = term as {
+        roleId?: unknown
+    }
+
+    return normalizeChallengeTermValue(typedTerm.roleId)
+}
+
+function normalizeTermsForForm(value: unknown): string[] | undefined {
+    if (!Array.isArray(value)) {
+        return undefined
+    }
+
+    const seenTermIds = new Set<string>()
+
+    return value
+        .map(term => normalizeChallengeTermId(term))
+        .filter((termId): termId is string => !!termId)
+        .filter(termId => {
+            if (seenTermIds.has(termId)) {
+                return false
+            }
+
+            seenTermIds.add(termId)
+            return true
+        })
+}
+
+function normalizeTermsForApi(value: unknown): ChallengeTerm[] | undefined {
+    if (!Array.isArray(value)) {
+        return undefined
+    }
+
+    const seenTerms = new Set<string>()
+
+    return value
+        .map((term: unknown): ChallengeTerm | undefined => {
+            const id = normalizeChallengeTermId(term)
+
+            if (!id) {
+                return undefined
+            }
+
+            const roleId = normalizeChallengeTermRoleId(term)
+
+            return roleId
+                ? {
+                    id,
+                    roleId,
+                }
+                : {
+                    id,
+                }
+        })
+        .filter((term): term is ChallengeTerm => !!term)
+        .filter(term => {
+            const dedupeKey = `${term.id}::${term.roleId || ''}`
+
+            if (seenTerms.has(dedupeKey)) {
+                return false
+            }
+
+            seenTerms.add(dedupeKey)
+            return true
+        })
+}
+
 function normalizeAttachments(attachments: unknown): Attachment[] | undefined {
     if (!Array.isArray(attachments)) {
         return undefined
@@ -701,7 +804,7 @@ export function transformChallengeToFormData(
         startDate,
         status,
         tags,
-        terms: normalizeStringArray(challenge?.terms),
+        terms: normalizeTermsForForm(challenge?.terms),
         timelineTemplateId: timelineTemplateId || undefined,
         trackId,
         typeId,
@@ -765,7 +868,7 @@ export function transformFormDataToChallenge(
             : undefined,
         status,
         tags: normalizeTags(formData.tags),
-        terms: normalizeStringArray(formData.terms),
+        terms: normalizeTermsForApi(formData.terms),
         timelineTemplateId: isSchedulingEnabled
             ? formData.timelineTemplateId
             : undefined,

@@ -56,14 +56,14 @@ export const engagementEditorSchema: yup.ObjectSchema<EngagementEditorSchemaData
     requiredMemberCount: yup
         .number()
         .transform(emptyStringToUndefined)
+        .typeError('Required members must be a number')
+        .integer('Required members must be a whole number')
+        .min(1, 'Required members must be at least 1')
         .when('isPrivate', {
             is: true,
             otherwise: schema => schema.optional(),
             then: schema => schema
-                .typeError('Required members must be a number')
-                .required('Required members is required')
-                .integer('Required members must be a whole number')
-                .min(1, 'Required members must be at least 1'),
+                .required('Required members is required'),
         }),
     skills: yup
         .array()

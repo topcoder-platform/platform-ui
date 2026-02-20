@@ -148,7 +148,7 @@ export const TaasProjectsFilter: FC<TaasProjectsFilterProps> = (props: TaasProje
                 />
             </div>
 
-            <div className={styles.filterField}>
+            <div className={`${styles.filterField} ${styles.bottomAlignedField}`}>
                 {isManager
                     ? (
                         <div className={styles.checkboxWrap}>

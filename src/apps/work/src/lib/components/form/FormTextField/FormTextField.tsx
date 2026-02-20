@@ -64,7 +64,11 @@ export const FormTextField: FC<FormTextFieldProps> = (props: FormTextFieldProps)
 
     const value = typeof field.value === 'string'
         ? field.value
-        : ''
+        : (
+            typeof field.value === 'number' && Number.isFinite(field.value)
+                ? String(field.value)
+                : ''
+        )
 
     return (
         <FormFieldWrapper

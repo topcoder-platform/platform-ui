@@ -48,17 +48,19 @@ export const NDAField: FC = () => {
     const hasNdaTerm = normalizedTerms.includes(DEFAULT_NDA_UUID)
 
     useEffect(() => {
-        if (ndaRequired === undefined || ndaRequired !== hasNdaTerm) {
-            formContext.setValue('ndaRequired' as never, hasNdaTerm as never, {
-                shouldDirty: false,
-                shouldValidate: false,
-            })
+        if (ndaRequired !== undefined) {
+            return
         }
+
+        formContext.setValue('ndaRequired' as never, hasNdaTerm as never, {
+            shouldDirty: false,
+            shouldValidate: false,
+        })
     }, [formContext, hasNdaTerm, ndaRequired])
 
     const handleNdaChange = useCallback(
         (value: boolean | string): void => {
-            const isNdaRequired = value === true
+            const isNdaRequired = value === true || value === 'true'
 
             if (isNdaRequired && !hasNdaTerm) {
                 formContext.setValue('terms', [

@@ -10,7 +10,6 @@ import classNames from 'classnames'
 
 import { COMMUNITY_APP_URL } from '../../constants'
 import {
-    Challenge,
     Resource,
     ResourceRole,
 } from '../../models'
@@ -36,7 +35,6 @@ interface ResourcesTableProps {
     resources: Resource[]
     sortBy: string
     sortOrder: SortOrder
-    track?: Challenge['track']
 }
 
 interface RoleOption {
@@ -48,7 +46,6 @@ interface ResourceRowProps {
     canEdit: boolean
     deletableResourceIdsSet: Set<string>
     editableRoleResourceIdsSet: Set<string>
-    isDesignTrack: boolean
     isLoadingDeletionRules: boolean
     isUpdatingRoleResourceId?: string
     onDelete: (resource: Resource) => void
@@ -89,18 +86,6 @@ function getSortIndicator(
     return sortOrder === 'asc'
         ? ' \u2191'
         : ' \u2193'
-}
-
-function normalizeTrack(track: Challenge['track'] | undefined): string {
-    if (typeof track === 'string') {
-        return track
-    }
-
-    if (!track || typeof track !== 'object') {
-        return ''
-    }
-
-    return String(track.track || track.name || track.abbreviation || '')
 }
 
 function getRolePermissionSummary(role: ResourceRole): string {
@@ -258,9 +243,7 @@ const ResourceRow: FC<ResourceRowProps> = (props: ResourceRowProps) => {
 
     return (
         <tr>
-            {!props.isDesignTrack
-                ? <td>{role}</td>
-                : undefined}
+            <td>{role}</td>
             <ResourceHandleCell
                 handle={handle}
                 profileUrl={profileUrl}
@@ -306,10 +289,7 @@ export const ResourcesTable: FC<ResourcesTableProps> = (props: ResourcesTablePro
         ])),
         [props.resourceRoles],
     )
-    const isDesignTrack = normalizeTrack(props.track)
-        .toLowerCase() === 'design'
-    const tableColumnCount = (isDesignTrack ? 0 : 1)
-        + 4
+    const tableColumnCount = 5
         + (props.canEdit ? 1 : 0)
 
     function handleSortButtonClick(event: MouseEvent<HTMLButtonElement>): void {
@@ -326,21 +306,17 @@ export const ResourcesTable: FC<ResourcesTableProps> = (props: ResourcesTablePro
             <table className={styles.table}>
                 <thead>
                     <tr>
-                        {!isDesignTrack
-                            ? (
-                                <th>
-                                    <button
-                                        type='button'
-                                        className={styles.sortButton}
-                                        data-field-name='Role'
-                                        onClick={handleSortButtonClick}
-                                    >
-                                        Role
-                                        {getSortIndicator('Role', props.sortBy, props.sortOrder)}
-                                    </button>
-                                </th>
-                            )
-                            : undefined}
+                        <th>
+                            <button
+                                type='button'
+                                className={styles.sortButton}
+                                data-field-name='Role'
+                                onClick={handleSortButtonClick}
+                            >
+                                Role
+                                {getSortIndicator('Role', props.sortBy, props.sortOrder)}
+                            </button>
+                        </th>
                         <th>
                             <button
                                 type='button'
@@ -396,7 +372,6 @@ export const ResourcesTable: FC<ResourcesTableProps> = (props: ResourcesTablePro
                             canEdit={props.canEdit}
                             deletableResourceIdsSet={deletableResourceIdsSet}
                             editableRoleResourceIdsSet={editableRoleResourceIdsSet}
-                            isDesignTrack={isDesignTrack}
                             isLoadingDeletionRules={props.isLoadingDeletionRules}
                             isUpdatingRoleResourceId={props.isUpdatingRoleResourceId}
                             key={resource.id || `${resource.roleId}-${resource.memberHandle}`}
