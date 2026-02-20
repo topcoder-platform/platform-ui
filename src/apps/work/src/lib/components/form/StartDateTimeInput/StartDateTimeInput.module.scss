@@ -6,6 +6,29 @@
     gap: 8px;
 }
 
+.outsideLabel {
+    color: $black-60;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.externalLabelDatePicker {
+    :global(.input-el > label > div:first-child) {
+        display: none;
+    }
+
+    :global(.input-el) {
+        box-sizing: border-box;
+        height: 40px;
+        margin-bottom: 0;
+        padding-top: 8px;
+    }
+
+    :global(.input-el > label) {
+        margin-bottom: 0;
+    }
+}
+
 .timezoneText {
     color: $black-60;
     font-size: 12px;

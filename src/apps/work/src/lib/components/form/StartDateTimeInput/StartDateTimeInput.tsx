@@ -11,6 +11,8 @@ export interface StartDateTimeInputProps {
     value?: Date | string | null
     onChange: (value: Date | null) => void
     disabled?: boolean
+    error?: string
+    labelOutside?: boolean
     minDate?: Date | null
     showTimezone?: boolean
     showTimeSelect?: boolean
@@ -36,6 +38,7 @@ export const StartDateTimeInput: FC<StartDateTimeInputProps> = (
     props: StartDateTimeInputProps,
 ) => {
     const shouldShowTimeSelect = props.showTimeSelect !== false
+    const shouldRenderLabelOutside = props.labelOutside === true
 
     const timezone = useMemo(
         () => Intl.DateTimeFormat()
@@ -46,11 +49,25 @@ export const StartDateTimeInput: FC<StartDateTimeInputProps> = (
 
     return (
         <div className={styles.container}>
+            {shouldRenderLabelOutside
+                ? (
+                    <span className={styles.outsideLabel}>
+                        {props.label}
+                    </span>
+                )
+                : undefined}
+
             <InputDatePicker
+                classNameWrapper={shouldRenderLabelOutside
+                    ? styles.externalLabelDatePicker
+                    : undefined}
                 date={toDate(props.value)}
                 dateFormat={shouldShowTimeSelect ? DATE_TIME_FORMAT : undefined}
                 disabled={!!props.disabled}
-                label={props.label}
+                error={props.error}
+                label={shouldRenderLabelOutside
+                    ? ''
+                    : props.label}
                 minDate={props.minDate}
                 onChange={props.onChange}
                 showTimeSelect={shouldShowTimeSelect}

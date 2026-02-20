@@ -19,24 +19,9 @@
 }
 
 .durationCell {
-    flex: 1 1 240px;
+    flex: 1 1 260px;
 }
 
-.endDateCell {
-    display: flex;
-    flex: 1 1 220px;
-    flex-direction: column;
-    gap: 6px;
-    margin-top: 27px;
-}
-
-.endDateLabel {
-    color: $black-60;
-    font-size: 12px;
-    font-weight: 700;
-}
-
-.endDateValue {
-    color: $black-80;
-    font-size: 13px;
+.dateCell {
+    flex: 1 1 260px;
 }

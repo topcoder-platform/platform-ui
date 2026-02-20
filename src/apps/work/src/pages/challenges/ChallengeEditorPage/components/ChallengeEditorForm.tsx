@@ -1049,7 +1049,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                     {isTaskChallengeSelected
                                         ? <AssignedMemberField />
                                         : undefined}
-                                    <CopilotField />
+                                    <CopilotField projectId={fallbackProjectId} />
                                     <GroupsField />
                                     <TermsField />
                                     <NDAField />

@@ -16,14 +16,21 @@ import {
     StartDateTimeInput,
 } from '../../../../../lib/components/form'
 import {
+    CHALLENGE_TRACKS,
+} from '../../../../../lib/constants'
+import {
     PHASE_DURATION_MAX_HOURS,
     PHASE_DURATION_MIN_MINUTES,
 } from '../../../../../lib/constants/challenge-editor.constants'
 import {
     useFetchChallengePhases,
+    useFetchChallengeTracks,
 } from '../../../../../lib/hooks'
 import { ChallengePhase } from '../../../../../lib/models'
-import { getPhaseEndDateInDate } from '../../../../../lib/utils'
+import {
+    getPhaseDuration,
+    getPhaseEndDateInDate,
+} from '../../../../../lib/utils'
 import { PhaseEditorRow } from '../PhaseEditorRow'
 import { TimelineVisualization } from '../TimelineVisualization'
 
@@ -36,6 +43,15 @@ interface ChallengeScheduleSectionProps {
 interface RecalculatePhasesResult {
     phases: ChallengePhase[]
     error?: string
+}
+
+interface RecalculatePhasesOptions {
+    phaseStartOverrides?: ReadonlyMap<string, string>
+}
+
+interface ApplyPhasesOptions {
+    clearStartOverrides?: boolean
+    startDateOverride?: Date | string
 }
 
 function toDate(value?: Date | string | null): Date | undefined {
@@ -68,9 +84,50 @@ function normalizeDuration(duration: unknown): number {
     )
 }
 
+function normalizePhaseName(value: unknown): string {
+    if (typeof value !== 'string') {
+        return ''
+    }
+
+    return value
+        .trim()
+        .toLowerCase()
+}
+
+/**
+ * Builds a stable key for phase-local UI state in the schedule editor.
+ *
+ * @param phase phase currently rendered.
+ * @param index fallback index when ids are unavailable.
+ * @returns stable string key for phase-level editor state.
+ */
+function getPhaseKey(
+    phase: ChallengePhase,
+    index: number,
+): string {
+    return phase.id || phase.phaseId || `${index}`
+}
+
+function canEditPhaseStartDate(
+    phase: ChallengePhase,
+    index: number,
+    isTwoRoundDesignChallenge: boolean,
+): boolean {
+    const normalizedPhaseName = normalizePhaseName(phase.name)
+    const isRegistrationPhase = normalizedPhaseName === 'registration'
+    const isSubmissionPhase = normalizedPhaseName === 'submission'
+    const isCheckpointSubmissionPhase = normalizedPhaseName === 'checkpoint submission'
+
+    return index <= 0
+        || isRegistrationPhase
+        || isCheckpointSubmissionPhase
+        || (isSubmissionPhase && !isTwoRoundDesignChallenge)
+}
+
 function recalculatePhases(
     phases: ChallengePhase[],
     startDateValue?: Date | string,
+    options: RecalculatePhasesOptions = {},
 ): RecalculatePhasesResult {
     if (!phases.length) {
         return {
@@ -102,6 +159,11 @@ function recalculatePhases(
                 const phaseName = phase.name || phase.phaseId || `${index + 1}`
                 calculationError = `Invalid predecessor configured for phase ${phaseName}.`
             }
+        }
+
+        const overriddenStartDate = toDate(options.phaseStartOverrides?.get(getPhaseKey(phase, index)))
+        if (overriddenStartDate) {
+            phaseStartDate = overriddenStartDate
         }
 
         const phaseEndDate = phaseStartDate
@@ -138,6 +200,9 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
     const setValue = formContext.setValue
 
     const challengePhaseResult = useFetchChallengePhases()
+    const challengeTrackResult = useFetchChallengeTracks()
+    const challengeTracks = challengeTrackResult.tracks
+    const trackId = formContext.watch('trackId') as string | undefined
     const useSchedulingApi = formContext.watch('legacy.useSchedulingAPI') as boolean | undefined
     const startDate = formContext.watch('startDate') as Date | string | undefined
     const watchedPhases = formContext.watch('phases') as ChallengePhase[] | undefined
@@ -149,6 +214,7 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
 
     const [isGanttView, setIsGanttView] = useState<boolean>(false)
     const [calculationError, setCalculationError] = useState<string | undefined>()
+    const [phaseEndDateErrors, setPhaseEndDateErrors] = useState<Record<string, string>>({})
 
     const currentTimezone = useMemo(
         () => Intl.DateTimeFormat()
@@ -156,16 +222,81 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
             .timeZone,
         [],
     )
+    const selectedChallengeTrack = useMemo(
+        () => challengeTracks.find(challengeTrack => challengeTrack.id === trackId),
+        [
+            challengeTracks,
+            trackId,
+        ],
+    )
+    const isDesignTrackChallenge = useMemo(
+        (): boolean => {
+            const normalizedTrack = (
+                selectedChallengeTrack?.track
+                || selectedChallengeTrack?.name
+                || selectedChallengeTrack?.abbreviation
+                || ''
+            )
+                .trim()
+                .toUpperCase()
+
+            return normalizedTrack === CHALLENGE_TRACKS.DESIGN
+        },
+        [selectedChallengeTrack],
+    )
+    const hasCheckpointSubmissionPhase = useMemo(
+        (): boolean => phases.some(phase => normalizePhaseName(phase.name) === 'checkpoint submission'),
+        [phases],
+    )
+    const isTwoRoundDesignChallenge = isDesignTrackChallenge && hasCheckpointSubmissionPhase
+    const editablePhaseStartDateKeys = useMemo(
+        () => {
+            const editablePhaseKeys = new Set<string>()
+
+            phases.forEach((phase, index) => {
+                if (!canEditPhaseStartDate(phase, index, isTwoRoundDesignChallenge)) {
+                    return
+                }
+
+                editablePhaseKeys.add(getPhaseKey(phase, index))
+            })
+
+            return editablePhaseKeys
+        },
+        [isTwoRoundDesignChallenge, phases],
+    )
 
     const initializedRef = useRef<boolean>(false)
+    const phaseStartOverridesRef = useRef<Map<string, string>>(new Map<string, string>())
+
+    const prunePhaseStartOverrides = useCallback((nextPhases: ChallengePhase[]): void => {
+        if (!phaseStartOverridesRef.current.size) {
+            return
+        }
+
+        const validKeys = new Set(
+            nextPhases.map((phase, index) => getPhaseKey(phase, index)),
+        )
+
+        Array.from(phaseStartOverridesRef.current.keys())
+            .forEach(key => {
+                if (!validKeys.has(key)) {
+                    phaseStartOverridesRef.current.delete(key)
+                }
+            })
+    }, [])
 
     const applyPhases = useCallback(
         (
             nextPhases: ChallengePhase[],
-            options: {
-                startDateOverride?: Date | string
-            } = {},
+            options: ApplyPhasesOptions = {},
         ): void => {
+            if (options.clearStartOverrides) {
+                phaseStartOverridesRef.current.clear()
+            }
+
+            prunePhaseStartOverrides(nextPhases)
+
             const hasStartDateOverride = Object.prototype.hasOwnProperty.call(
                 options,
                 'startDateOverride',
@@ -175,6 +306,9 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
                 hasStartDateOverride
                     ? options.startDateOverride
                     : startDate,
+                {
+                    phaseStartOverrides: phaseStartOverridesRef.current,
+                },
             )
             const error = recalculationResult.error
             const recalculatedPhases = recalculationResult.phases
@@ -185,9 +319,38 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
             })
 
             setCalculationError(error)
+            setPhaseEndDateErrors({})
         },
-        [setValue, startDate],
+        [prunePhaseStartOverrides, setValue, startDate],
     )
+
+    useEffect(() => {
+        if (!phaseStartOverridesRef.current.size) {
+            return
+        }
+
+        let removedOverride = false
+
+        Array.from(phaseStartOverridesRef.current.keys())
+            .forEach(key => {
+                if (editablePhaseStartDateKeys.has(key)) {
+                    return
+                }
+
+                phaseStartOverridesRef.current.delete(key)
+                removedOverride = true
+            })
+
+        if (!removedOverride) {
+            return
+        }
+
+        applyPhases(phases)
+    }, [
+        applyPhases,
+        editablePhaseStartDateKeys,
+        phases,
+    ])
 
     useEffect(() => {
         if (useSchedulingApi === true) {
@@ -212,7 +375,9 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
             return
         }
 
-        const recalculationResult: RecalculatePhasesResult = recalculatePhases(phases, startDate)
+        const recalculationResult: RecalculatePhasesResult = recalculatePhases(phases, startDate, {
+            phaseStartOverrides: phaseStartOverridesRef.current,
+        })
         const error = recalculationResult.error
         const recalculatedPhases = recalculationResult.phases
 
@@ -236,6 +401,7 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
             })
 
             applyPhases(phases, {
+                clearStartOverrides: true,
                 startDateOverride: nextStartDate,
             })
         },
@@ -252,6 +418,88 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
                 return {
                     ...phase,
                     duration: normalizeDuration(durationMinutes),
+                }
+            })
+
+            applyPhases(nextPhases)
+        },
+        [applyPhases, phases],
+    )
+    const handlePhaseStartDateChange = useCallback(
+        (index: number, date: Date | null): void => {
+            const nextStartDate = date || undefined
+
+            if (!nextStartDate) {
+                return
+            }
+
+            if (index === 0) {
+                handleStartDateChange(nextStartDate)
+                return
+            }
+
+            const phase = phases[index]
+            if (!phase) {
+                return
+            }
+
+            const phaseKey = getPhaseKey(phase, index)
+            if (!editablePhaseStartDateKeys.has(phaseKey)) {
+                return
+            }
+
+            phaseStartOverridesRef.current.set(
+                phaseKey,
+                nextStartDate.toISOString(),
+            )
+
+            applyPhases(phases)
+        },
+        [applyPhases, editablePhaseStartDateKeys, handleStartDateChange, phases],
+    )
+    const handlePhaseEndDateChange = useCallback(
+        (index: number, date: Date | null): void => {
+            const nextEndDate = date || undefined
+            if (!nextEndDate) {
+                return
+            }
+
+            const phase = phases[index]
+            if (!phase) {
+                return
+            }
+
+            const phaseKey = getPhaseKey(phase, index)
+            const phaseStartDate = toDate(phase.scheduledStartDate)
+
+            if (!phaseStartDate) {
+                setPhaseEndDateErrors(previousState => ({
+                    ...previousState,
+                    [phaseKey]: 'Start date must be set before editing end date.',
+                }))
+                return
+            }
+
+            if (nextEndDate.getTime() <= phaseStartDate.getTime()) {
+                setPhaseEndDateErrors(previousState => ({
+                    ...previousState,
+                    [phaseKey]: 'End date must be after start date.',
+                }))
+                return
+            }
+
+            const nextPhases = phases.map((currentPhase, phaseIndex) => {
+                if (phaseIndex !== index) {
+                    return currentPhase
+                }
+
+                const nextDuration = normalizeDuration(
+                    getPhaseDuration(phaseStartDate, nextEndDate),
+                )
+
+                return {
+                    ...currentPhase,
+                    duration: nextDuration,
                 }
             })
 
@@ -328,10 +576,15 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
                                 <PhaseEditorRow
                                     disabled={isSectionDisabled}
                                     endDate={phase.scheduledEndDate}
+                                    endDateError={phaseEndDateErrors[getPhaseKey(phase, index)]}
                                     index={index}
+                                    isStartDateEditable={editablePhaseStartDateKeys.has(getPhaseKey(phase, index))}
                                     key={phase.id || phase.phaseId || `${index}`}
                                     onDurationChange={handleDurationChange}
+                                    onEndDateChange={handlePhaseEndDateChange}
+                                    onStartDateChange={handlePhaseStartDateChange}
                                     phase={phase}
+                                    startDate={phase.scheduledStartDate}
                                 />
                             ))
                             : <p className={styles.emptyText}>No schedule phases available.</p>}

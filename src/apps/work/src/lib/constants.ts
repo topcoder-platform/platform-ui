@@ -128,9 +128,35 @@ export const DEFAULT_NDA_UUID = process.env.REACT_APP_DEFAULT_NDA_UUID
     )
     || '21193'
 
-export const RESOURCES_API_URL = process.env.REACT_APP_RESOURCES_API_URL
+function normalizeApiUrlForEnvironment(url: string): string {
+    const normalizedUrl = url.replace(/\/$/, '')
+
+    let configuredApiUrl: URL
+    let envApiUrl: URL
+
+    try {
+        configuredApiUrl = new URL(normalizedUrl)
+        envApiUrl = new URL(EnvironmentConfig.API.V6)
+    } catch {
+        return normalizedUrl
+    }
+
+    if (configuredApiUrl.hostname !== 'api.topcoder.com' || envApiUrl.hostname === 'api.topcoder.com') {
+        return normalizedUrl
+    }
+
+    configuredApiUrl.protocol = envApiUrl.protocol
+    configuredApiUrl.host = envApiUrl.host
+
+    return configuredApiUrl.toString()
+        .replace(/\/$/, '')
+}
+
+const rawResourcesApiUrl = process.env.REACT_APP_RESOURCES_API_URL
     || process.env.RESOURCES_API_URL
     || `${EnvironmentConfig.API.V6}/resources`
+
+export const RESOURCES_API_URL = normalizeApiUrlForEnvironment(rawResourcesApiUrl)
 
 export const REVIEWS_API_URL = process.env.REACT_APP_REVIEWS_API_URL
     || process.env.REVIEWS_API_URL
@@ -139,27 +165,8 @@ export const REVIEWS_API_URL = process.env.REACT_APP_REVIEWS_API_URL
 function normalizeMemberApiUrl(url: string): string {
     const normalizedUrl = url
         .replace(/\/v5\/members(?=\/|$)/, '/v6/members')
-        .replace(/\/$/, '')
 
-    let memberApiUrl: URL
-    let envApiUrl: URL
-
-    try {
-        memberApiUrl = new URL(normalizedUrl)
-        envApiUrl = new URL(EnvironmentConfig.API.V6)
-    } catch {
-        return normalizedUrl
-    }
-
-    if (memberApiUrl.hostname !== 'api.topcoder.com' || envApiUrl.hostname === 'api.topcoder.com') {
-        return normalizedUrl
-    }
-
-    memberApiUrl.protocol = envApiUrl.protocol
-    memberApiUrl.host = envApiUrl.host
-
-    return memberApiUrl.toString()
-        .replace(/\/$/, '')
+    return normalizeApiUrlForEnvironment(normalizedUrl)
 }
 
 const rawMemberApiUrl = process.env.REACT_APP_MEMBER_API_URL
@@ -168,9 +175,11 @@ const rawMemberApiUrl = process.env.REACT_APP_MEMBER_API_URL
 
 export const MEMBER_API_URL = normalizeMemberApiUrl(rawMemberApiUrl)
 
-export const RESOURCE_ROLES_API_URL = process.env.REACT_APP_RESOURCE_ROLES_API_URL
+const rawResourceRolesApiUrl = process.env.REACT_APP_RESOURCE_ROLES_API_URL
     || process.env.RESOURCE_ROLES_API_URL
     || `${EnvironmentConfig.API.V6}/resource-roles`
+
+export const RESOURCE_ROLES_API_URL = normalizeApiUrlForEnvironment(rawResourceRolesApiUrl)
 
 export const SUBMISSIONS_API_URL = process.env.REACT_APP_SUBMISSIONS_API_URL
     || process.env.SUBMISSIONS_API_URL

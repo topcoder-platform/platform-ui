@@ -36,6 +36,7 @@ interface FormUserAutocompleteProps {
     onValueChange?: (value: string) => void
     placeholder?: string
     required?: boolean
+    users?: User[]
     valueField?: FormUserAutocompleteValueField
 }
 
@@ -95,6 +96,12 @@ export const FormUserAutocomplete: FC<FormUserAutocompleteProps> = (props: FormU
     const fieldState = controller.fieldState
     const valueField: FormUserAutocompleteValueField = props.valueField || 'handle'
     const onValueChange = props.onValueChange
+    const scopedUsers = useMemo(
+        () => (Array.isArray(props.users)
+            ? deduplicateUsers(props.users)
+            : undefined),
+        [props.users],
+    )
     const [selectedOption, setSelectedOption] = useState<UserAutocompleteOption | undefined>(undefined)
     const lastResolvedValueRef = useRef<string>('')
 
@@ -109,6 +116,16 @@ export const FormUserAutocomplete: FC<FormUserAutocompleteProps> = (props: FormU
 
             if (normalizedInputValue.length < AUTOCOMPLETE_MIN_LENGTH) {
                 return []
+            }
+
+            if (scopedUsers) {
+                const normalizedQuery = normalizedInputValue.toLowerCase()
+
+                return scopedUsers
+                    .filter(user => user.handle
+                        .toLowerCase()
+                        .includes(normalizedQuery))
+                    .map(user => toOption(user, valueField))
             }
 
             const [
@@ -127,7 +144,10 @@ export const FormUserAutocomplete: FC<FormUserAutocompleteProps> = (props: FormU
 
             return users.map(user => toOption(user, valueField))
         },
-        [valueField],
+        [
+            scopedUsers,
+            valueField,
+        ],
     )
 
     const debouncedLoadUserOptions = useMemo(

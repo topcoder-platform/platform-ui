@@ -10,4 +10,13 @@
     color: $black-60;
     font-size: 13px;
     margin: 0;
+
+    a {
+        color: $link-blue-dark;
+
+        &:hover,
+        &:focus {
+            color: $link-blue-dark;
+        }
+    }
 }

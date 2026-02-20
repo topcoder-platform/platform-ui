@@ -7,6 +7,44 @@
     margin-top: 16px;
 }
 
+.titleAction {
+    align-items: center;
+    display: inline-flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.quickLinks {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+}
+
+.quickLink {
+    align-items: center;
+    color: $link-blue-dark;
+    display: inline-flex;
+    font-size: 13px;
+    font-weight: 700;
+    gap: 4px;
+    line-height: 20px;
+    padding: 0;
+    text-decoration: none;
+
+    &:hover,
+    &:focus {
+        color: #2a62d5;
+        outline: none;
+        text-decoration: underline;
+    }
+}
+
+.quickLinkIcon {
+    width: 14px;
+    height: 14px;
+}
+
 .tabs {
     border-bottom: 1px solid $black-10;
     display: flex;

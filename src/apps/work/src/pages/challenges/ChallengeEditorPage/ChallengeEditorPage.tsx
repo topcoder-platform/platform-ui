@@ -6,10 +6,16 @@ import {
     useRef,
     useState,
 } from 'react'
-import { useParams } from 'react-router-dom'
+import {
+    useNavigate,
+    useParams,
+} from 'react-router-dom'
 
 import { PageWrapper } from '~/apps/review/src/lib'
-import { Button } from '~/libs/ui'
+import {
+    Button,
+    IconOutline,
+} from '~/libs/ui'
 
 import {
     ChallengeStatus,
@@ -19,15 +25,19 @@ import {
 } from '../../../lib/components'
 import {
     CHALLENGE_STATUS,
+    COMMUNITY_APP_URL,
+    REVIEW_APP_URL,
 } from '../../../lib/constants'
 import {
     useFetchChallenge,
     UseFetchChallengeResult,
 } from '../../../lib/hooks'
 import {
+    deleteChallenge,
     patchChallenge,
 } from '../../../lib/services'
 import {
+    extractErrorMessage,
     getStatusText,
     showErrorToast,
     showSuccessToast,
@@ -85,6 +95,13 @@ interface ChallengeEditorBodyProps {
     projectId?: string
 }
 
+interface ChallengeQuickLinksProps {
+    challenge: UseFetchChallengeResult['challenge']
+    challengeId?: string
+    isEditMode: boolean
+    projectId?: string
+}
+
 function getErrorMessage(error: Error | undefined): string {
     if (!error) {
         return 'Something went wrong while loading the challenge.'
@@ -125,6 +142,18 @@ function shouldShowCancelAction(
     return isEditMode
         && activeTab === 'details'
         && challengeStatus === CHALLENGE_STATUS.ACTIVE
+}
+
+function shouldShowDeleteAction(
+    isEditMode: boolean,
+    challengeStatus: string | undefined,
+): boolean {
+    const normalizedStatus = (challengeStatus || '')
+        .trim()
+        .toUpperCase()
+
+    return isEditMode
+        && normalizedStatus === CHALLENGE_STATUS.NEW
 }
 
 function formatCancelStatusLabel(status: string): string {
@@ -307,11 +336,14 @@ const CancelChallengeAction: FC<CancelChallengeActionProps> = (
 
 interface RenderHeaderActionParams {
     canCancelChallenge: boolean
+    canDeleteChallenge: boolean
     canLaunchChallenge: boolean
     challengeId?: string
     challengeName: string
+    isDeleting: boolean
     isLaunching: boolean
     onChallengeCancelled: () => void
+    onDeleteOpen: () => void
     onLaunchOpen: () => void
 }
 
@@ -338,6 +370,22 @@ function renderHeaderAction(params: RenderHeaderActionParams): JSX.Element | und
                 challengeId={params.challengeId}
                 challengeName={params.challengeName}
                 onCancelled={params.onChallengeCancelled}
+            />
+        )
+    }
+
+    if (params.canDeleteChallenge) {
+        return (
+            <Button
+                disabled={params.isDeleting}
+                label={params.isDeleting
+                    ? 'Deleting...'
+                    : 'Delete'}
+                onClick={params.onDeleteOpen}
+                primary
+                size='md'
+                type='button'
+                variant='danger'
             />
         )
     }
@@ -377,16 +425,26 @@ function renderLaunchModal(params: RenderLaunchModalParams): JSX.Element | undef
 function renderTitleAction(
     isEditMode: boolean,
     challengeStatus: string | undefined,
+    challengeQuickLinks?: JSX.Element,
 ): JSX.Element | undefined {
-    if (!isEditMode || !challengeStatus) {
+    const statusPill = isEditMode && challengeStatus
+        ? (
+            <ChallengeStatus
+                status={challengeStatus}
+                statusText={getStatusText(challengeStatus)}
+            />
+        )
+        : undefined
+
+    if (!statusPill && !challengeQuickLinks) {
         return undefined
     }
 
     return (
-        <ChallengeStatus
-            status={challengeStatus}
-            statusText={getStatusText(challengeStatus)}
-        />
+        <div className={styles.titleAction}>
+            {statusPill}
+            {challengeQuickLinks}
+        </div>
     )
 }
 
@@ -498,7 +556,78 @@ const ChallengeEditorBody: FC<ChallengeEditorBodyProps> = (
     )
 }
 
+function renderChallengeQuickLinks(
+    props: ChallengeQuickLinksProps,
+): JSX.Element | undefined {
+    if (!props.isEditMode) {
+        return undefined
+    }
+
+    const resolvedChallengeId = props.challenge?.id || props.challengeId
+
+    if (!resolvedChallengeId) {
+        return undefined
+    }
+
+    const reviewLink = `${REVIEW_APP_URL}/active-challenges/${resolvedChallengeId}/challenge-details`
+    const forumLink = props.challenge?.discussions?.find(discussion => !!discussion.url)?.url
+    const communityChallengeLink = `${COMMUNITY_APP_URL}/challenges/${resolvedChallengeId}`
+    const projectChallengesLink = props.projectId
+        ? `/projects/${props.projectId}/challenges`
+        : undefined
+
+    return (
+        <div className={styles.quickLinks}>
+            <a
+                className={styles.quickLink}
+                href={reviewLink}
+                rel='noopener noreferrer'
+                target='_blank'
+            >
+                Review
+                <IconOutline.ExternalLinkIcon className={styles.quickLinkIcon} />
+            </a>
+            {forumLink
+                ? (
+                    <a
+                        className={styles.quickLink}
+                        href={forumLink}
+                        rel='noopener noreferrer'
+                        target='_blank'
+                    >
+                        Forum
+                        <IconOutline.ExternalLinkIcon className={styles.quickLinkIcon} />
+                    </a>
+                )
+                : undefined}
+            {projectChallengesLink
+                ? (
+                    <a
+                        className={styles.quickLink}
+                        href={projectChallengesLink}
+                        rel='noopener noreferrer'
+                        target='_blank'
+                    >
+                        Project
+                        <IconOutline.ExternalLinkIcon className={styles.quickLinkIcon} />
+                    </a>
+                )
+                : undefined}
+            <a
+                className={styles.quickLink}
+                href={communityChallengeLink}
+                rel='noopener noreferrer'
+                target='_blank'
+            >
+                Community
+                <IconOutline.ExternalLinkIcon className={styles.quickLinkIcon} />
+            </a>
+        </div>
+    )
+}
+
 export const ChallengeEditorPage: FC = () => {
+    const navigate = useNavigate()
     const params: Readonly<{ challengeId?: string; projectId?: string }>
         = useParams<'challengeId' | 'projectId'>()
     const challengeId = params.challengeId
@@ -506,8 +635,10 @@ export const ChallengeEditorPage: FC = () => {
 
     const isEditMode = !!challengeId
     const [activeTab, setActiveTab] = useState<EditorTab>('details')
+    const [isDeleting, setIsDeleting] = useState<boolean>(false)
     const [isLaunching, setIsLaunching] = useState<boolean>(false)
     const [launchAction, setLaunchAction] = useState<(() => Promise<void>) | undefined>()
+    const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false)
     const [showLaunchModal, setShowLaunchModal] = useState<boolean>(false)
     const challengeResult: UseFetchChallengeResult = useFetchChallenge(challengeId)
     const handleRetry = useCallback((): void => {
@@ -560,6 +691,10 @@ export const ChallengeEditorPage: FC = () => {
         activeTab,
         challengeResult.challenge?.status,
     )
+    const canDeleteChallenge = shouldShowDeleteAction(
+        isEditMode,
+        challengeResult.challenge?.status,
+    )
     const handleLaunchOpen = useCallback((): void => {
         setShowLaunchModal(true)
     }, [])
@@ -601,13 +736,58 @@ export const ChallengeEditorPage: FC = () => {
         challengeResult.mutate()
             .catch(() => undefined)
     }, [challengeResult])
+    const handleDeleteOpen = useCallback((): void => {
+        if (isDeleting || !challengeId) {
+            return
+        }
+
+        setShowDeleteModal(true)
+    }, [challengeId, isDeleting])
+    const handleDeleteCancel = useCallback((): void => {
+        if (isDeleting) {
+            return
+        }
+
+        setShowDeleteModal(false)
+    }, [isDeleting])
+    const deleteChallengeName = challengeResult.challenge?.name || 'this challenge'
+    const handleDeleteConfirm = useCallback(async (): Promise<void> => {
+        if (isDeleting || !challengeId) {
+            return
+        }
+
+        setIsDeleting(true)
+
+        try {
+            await deleteChallenge(challengeId)
+            showSuccessToast('Challenge deleted successfully')
+            setShowDeleteModal(false)
+            navigate(challengesListPath)
+        } catch (error) {
+            showErrorToast(extractErrorMessage(error, 'Failed to delete challenge'))
+        } finally {
+            setIsDeleting(false)
+        }
+    }, [
+        challengeId,
+        challengesListPath,
+        isDeleting,
+        navigate,
+    ])
+    const handleDeleteConfirmClick = useCallback((): void => {
+        handleDeleteConfirm()
+            .catch(() => undefined)
+    }, [handleDeleteConfirm])
     const rightHeader = renderHeaderAction({
         canCancelChallenge,
+        canDeleteChallenge,
         canLaunchChallenge,
         challengeId,
         challengeName: launchChallengeName,
+        isDeleting,
         isLaunching,
         onChallengeCancelled: handleChallengeCancelled,
+        onDeleteOpen: handleDeleteOpen,
         onLaunchOpen: handleLaunchOpen,
     })
     const launchModal = renderLaunchModal({
@@ -618,9 +798,16 @@ export const ChallengeEditorPage: FC = () => {
         onLaunchConfirmClick: handleLaunchConfirmClick,
         showLaunchModal,
     })
+    const challengeQuickLinks = renderChallengeQuickLinks({
+        challenge: challengeResult.challenge,
+        challengeId,
+        isEditMode,
+        projectId,
+    })
     const titleAction = renderTitleAction(
         isEditMode,
         challengeResult.challenge?.status,
+        challengeQuickLinks,
     )
 
     return (
@@ -648,6 +835,22 @@ export const ChallengeEditorPage: FC = () => {
                 </div>
             </PageWrapper>
             {launchModal}
+            {showDeleteModal && canDeleteChallenge
+                ? (
+                    <ConfirmationModal
+                        cancelText='Cancel'
+                        confirmButtonDanger
+                        confirmDisabled={isDeleting}
+                        confirmText={isDeleting
+                            ? 'Deleting...'
+                            : 'Delete'}
+                        message={`Do you want to delete "${deleteChallengeName}"?`}
+                        onCancel={handleDeleteCancel}
+                        onConfirm={handleDeleteConfirmClick}
+                        title='Confirm Delete'
+                    />
+                )
+                : undefined}
         </>
     )
 }

@@ -34,6 +34,7 @@ export interface FormSelectFieldProps {
     ) => SelectValue
     hint?: string
     isAsync?: boolean
+    isClearable?: boolean
     isCreatable?: boolean
     isMulti?: boolean
     label: string
@@ -175,6 +176,7 @@ export const FormSelectField: FC<FormSelectFieldProps> = (props: FormSelectField
                 classNamePrefix='challenge-select'
                 defaultOptions={isAsync}
                 id={props.name}
+                isClearable={props.isClearable}
                 isDisabled={props.disabled}
                 isMulti={isMulti}
                 loadOptions={props.loadOptions}

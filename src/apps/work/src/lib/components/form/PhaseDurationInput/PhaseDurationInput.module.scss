@@ -33,8 +33,10 @@
 .input {
     border: 1px solid $black-20;
     border-radius: 8px;
+    box-sizing: border-box;
     color: $black-80;
     font-size: 14px;
+    height: 40px;
     min-height: 40px;
     padding: 8px 10px;
 

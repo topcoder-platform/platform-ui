@@ -3,6 +3,8 @@
 ## Structure
 
 - `ChallengeEditorPage.tsx`: route-level page for create/edit challenge modes.
+- `ChallengeEditorPage.tsx` also renders quick links inline with the header status in edit/view mode
+  (`Review`, `Forum` when present, `Project`, and `Community`).
 - `components/ChallengeEditorForm.tsx`: React Hook Form container with autosave and manual save.
 - `components/*Field.tsx`: field-level components for each challenge section.
 - `ChallengeEditorPage.module.scss` and `components/ChallengeEditorForm.module.scss`: page and form layout styling.
@@ -36,11 +38,18 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 - `ChallengePrivateDescriptionField`: optional private markdown spec editor.
 - `ChallengeTagsField`: multi creatable tag picker excluding special challenge tags.
 - `ChallengeSkillsField`: async multi skills picker with billing-account-based required behavior.
+- `CopilotField`: clearable dropdown populated with copilot handles from the current project.
 
 ## API Integration
 
 - Challenge fetch: `useFetchChallenge`.
-- Save create/update: `createChallenge`, `patchChallenge`.
+- Save create/update/delete: `createChallenge`, `patchChallenge`, `deleteChallenge`.
 - Skills search: `searchSkills`.
 - Tracks fetch: `fetchChallengeTracks`.
 - Markdown file uploads: `uploadChallengeAttachment`.
+
+## Header Actions
+
+- `Launch` is shown on the details tab for `DRAFT` challenges.
+- `Cancel` is shown on the details tab for `ACTIVE` challenges.
+- `Delete` is shown for existing challenges in `NEW` status and requires confirmation.
