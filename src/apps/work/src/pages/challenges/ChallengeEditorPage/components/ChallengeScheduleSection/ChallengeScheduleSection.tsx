@@ -215,6 +215,7 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
     const [isGanttView, setIsGanttView] = useState<boolean>(false)
     const [calculationError, setCalculationError] = useState<string | undefined>()
     const [phaseEndDateErrors, setPhaseEndDateErrors] = useState<Record<string, string>>({})
+    const minScheduleDate = useMemo(() => new Date(), [])
 
     const currentTimezone = useMemo(
         () => Intl.DateTimeFormat()
@@ -533,6 +534,7 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
                             <StartDateTimeInput
                                 disabled={isSectionDisabled}
                                 label='Challenge Start Date/Time'
+                                minDate={minScheduleDate}
                                 onChange={handleStartDateChange}
                                 showTimezone={false}
                                 value={startDate}
@@ -572,21 +574,29 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
                 : (
                     <div className={styles.phaseList}>
                         {phases.length
-                            ? phases.map((phase, index) => (
-                                <PhaseEditorRow
-                                    disabled={isSectionDisabled}
-                                    endDate={phase.scheduledEndDate}
-                                    endDateError={phaseEndDateErrors[getPhaseKey(phase, index)]}
-                                    index={index}
-                                    isStartDateEditable={editablePhaseStartDateKeys.has(getPhaseKey(phase, index))}
-                                    key={phase.id || phase.phaseId || `${index}`}
-                                    onDurationChange={handleDurationChange}
-                                    onEndDateChange={handlePhaseEndDateChange}
-                                    onStartDateChange={handlePhaseStartDateChange}
-                                    phase={phase}
-                                    startDate={phase.scheduledStartDate}
-                                />
-                            ))
+                            ? phases.map((phase, index) => {
+                                const phaseStartDate = toDate(phase.scheduledStartDate)
+
+                                return (
+                                    <PhaseEditorRow
+                                        disabled={isSectionDisabled}
+                                        endDate={phase.scheduledEndDate}
+                                        endDateError={phaseEndDateErrors[getPhaseKey(phase, index)]}
+                                        index={index}
+                                        isStartDateEditable={editablePhaseStartDateKeys.has(
+                                            getPhaseKey(phase, index),
+                                        )}
+                                        key={phase.id || phase.phaseId || `${index}`}
+                                        minEndDate={phaseStartDate || minScheduleDate}
+                                        minStartDate={minScheduleDate}
+                                        onDurationChange={handleDurationChange}
+                                        onEndDateChange={handlePhaseEndDateChange}
+                                        onStartDateChange={handlePhaseStartDateChange}
+                                        phase={phase}
+                                        startDate={phase.scheduledStartDate}
+                                    />
+                                )
+                            })
                             : <p className={styles.emptyText}>No schedule phases available.</p>}
                     </div>
                 )}

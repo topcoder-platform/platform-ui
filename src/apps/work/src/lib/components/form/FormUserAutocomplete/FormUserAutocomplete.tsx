@@ -50,10 +50,15 @@ function toOption(
     user: User,
     valueField: FormUserAutocompleteValueField,
 ): UserAutocompleteOption {
+    const rawValue = user[valueField]
+    const normalizedValue = rawValue === undefined || rawValue === null
+        ? ''
+        : String(rawValue)
+
     return {
         label: user.handle,
         user,
-        value: user[valueField],
+        value: normalizedValue,
     }
 }
 

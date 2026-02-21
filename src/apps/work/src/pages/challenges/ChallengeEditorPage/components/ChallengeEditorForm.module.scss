@@ -3,11 +3,12 @@
 .form {
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 28px;
 }
 
 .section {
-    border: 1px solid $black-10;
+    background-color: $tc-white;
+    border: 2px solid $black-20;
     border-radius: 12px;
     display: flex;
     flex-direction: column;
@@ -41,17 +42,25 @@
 
 .prizesBillingGrid {
     display: grid;
-    gap: 16px;
+    gap: 24px;
 }
 
 .prizeInputs {
     display: grid;
-    gap: 16px;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+    grid-template-columns: minmax(0, 1fr);
 }
 
-.checkpointPrizeField {
-    grid-column: 1 / -1;
+.challengePrizesColumn {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 0;
+}
+
+.copilotFeeColumn {
+    min-width: 0;
+    width: 100%;
 }
 
 @media (min-width: 1024px) {
@@ -60,7 +69,12 @@
     }
 
     .prizeInputs {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.95fr);
+    }
+
+    .copilotFeeColumn {
+        justify-self: end;
+        padding-left: 16px;
     }
 }
 

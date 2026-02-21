@@ -47,10 +47,27 @@
     grid-template-columns: 86px minmax(0, 1fr) 28px;
 }
 
+.prizeRowWithError {
+    align-items: flex-start;
+}
+
 .prizeLabel {
     color: $black-60;
     font-size: 13px;
     font-weight: 600;
+}
+
+.prizeInputField {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.prizeValueError {
+    color: $red-100;
+    font-size: 12px;
+    line-height: 1.4;
 }
 
 .trashButton {

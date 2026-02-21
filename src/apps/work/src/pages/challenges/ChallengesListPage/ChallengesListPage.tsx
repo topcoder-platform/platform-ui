@@ -43,9 +43,13 @@ import {
     UseFetchProjectsResult,
 } from '../../../lib/hooks'
 import {
+    Challenge,
     ChallengeFilters,
     WorkAppContextModel,
 } from '../../../lib/models'
+import {
+    getStatusText,
+} from '../../../lib/utils'
 
 import styles from './ChallengesListPage.module.scss'
 
@@ -59,6 +63,8 @@ const DEFAULT_FILTERS: ChallengeFilters = {
     status: undefined,
     type: undefined,
 }
+const DEFAULT_SORT_BY = 'startDate'
+const DEFAULT_SORT_ORDER: 'asc' | 'desc' = 'desc'
 
 function canRenderPagination(hasError: boolean, totalChallenges: number): boolean {
     return !hasError && totalChallenges > 0
@@ -78,6 +84,7 @@ function useErrorToast(
 }
 
 interface RenderChallengesContentParams {
+    challenges: Challenge[]
     challengeTypes: UseFetchChallengeTypesResult['challengeTypes']
     challengesResult: UseFetchChallengesResult
     onPageChange: (newPage: number) => void
@@ -99,9 +106,9 @@ function renderChallengesContent(params: RenderChallengesContentParams): JSX.Ele
     return (
         <>
             <ChallengesTable
-                challenges={params.challengesResult.challenges}
+                challenges={params.challenges}
                 challengeTypes={params.challengeTypes}
-                isLoading={params.challengesResult.isValidating && params.challengesResult.challenges.length === 0}
+                isLoading={params.challengesResult.isValidating && params.challenges.length === 0}
                 sortBy={params.sortBy}
                 sortOrder={params.sortOrder}
                 onSort={params.onSort}
@@ -136,8 +143,8 @@ export const ChallengesListPage: FC = () => {
     })
     const [page, setPage] = useState<number>(1)
     const [perPage, setPerPage] = useState<number>(PAGE_SIZE)
-    const [sortBy, setSortBy] = useState<string>('startDate')
-    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
+    const [sortBy, setSortBy] = useState<string>(DEFAULT_SORT_BY)
+    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(DEFAULT_SORT_ORDER)
     const isPrivilegedUser = isAdmin || isManager
 
     const fetchParams: UseFetchChallengesParams = {
@@ -195,6 +202,16 @@ export const ChallengesListPage: FC = () => {
         setSortOrder('desc')
     }, [sortBy])
 
+    const handleResetFilters = useCallback(() => {
+        setFilters({
+            ...DEFAULT_FILTERS,
+            projectId: projectIdFromRoute,
+        })
+        setPage(1)
+        setSortBy(DEFAULT_SORT_BY)
+        setSortOrder(DEFAULT_SORT_ORDER)
+    }, [projectIdFromRoute])
+
     const handleRetry = useCallback(() => {
         challengesResult.mutate()
             .catch(() => undefined)
@@ -202,6 +219,36 @@ export const ChallengesListPage: FC = () => {
 
     const totalChallenges = challengesResult.metadata.total ?? 0
     const shouldShowPagination = canRenderPagination(!!challengesResult.error, totalChallenges)
+
+    const sortedChallenges = useMemo<Challenge[]>(
+        () => {
+            const challenges = challengesResult.challenges
+            if (sortBy !== 'status') {
+                return challenges
+            }
+
+            const sortedByDisplayedStatus = [...challenges]
+                .sort((challengeA, challengeB) => {
+                    const statusA = getStatusText(challengeA.status)
+                        .toLowerCase()
+                    const statusB = getStatusText(challengeB.status)
+                        .toLowerCase()
+                    const statusCompare = statusA.localeCompare(statusB)
+
+                    if (statusCompare !== 0) {
+                        return sortOrder === 'asc'
+                            ? statusCompare
+                            : -statusCompare
+                    }
+
+                    return String(challengeA.name || '')
+                        .localeCompare(String(challengeB.name || ''))
+                })
+
+            return sortedByDisplayedStatus
+        },
+        [challengesResult.challenges, sortBy, sortOrder],
+    )
 
     const projectOptions = useMemo(
         () => projectsResult.projects
@@ -308,6 +355,7 @@ export const ChallengesListPage: FC = () => {
             <ChallengesFilter
                 filters={filters}
                 onFiltersChange={handleFiltersChange}
+                onResetFilters={handleResetFilters}
                 challengeTypes={challengeTypesResult.challengeTypes}
                 dashboardMode={!projectIdFromRoute}
                 projectOptions={projectOptions}
@@ -327,6 +375,7 @@ export const ChallengesListPage: FC = () => {
             )}
 
             {renderChallengesContent({
+                challenges: sortedChallenges,
                 challengesResult,
                 challengeTypes: challengeTypesResult.challengeTypes,
                 onPageChange: handlePageChange,

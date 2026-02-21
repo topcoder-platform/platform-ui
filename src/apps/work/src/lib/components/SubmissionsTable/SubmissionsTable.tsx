@@ -329,15 +329,16 @@ export const SubmissionsTable: FC<SubmissionsTableProps> = (
                                             <IconDownloadArtifacts />
                                         </button>
 
-                                        <a
-                                            aria-label='View ratings'
+                                        <button
+                                            data-submission-id={submission.id}
+                                            aria-label='View submission artifacts'
                                             className={styles.iconButton}
-                                            href={reviewLink}
-                                            rel='noreferrer'
-                                            target='_blank'
+                                            disabled={!props.canDownloadSubmissions}
+                                            onClick={handleSubmissionArtifactsClick}
+                                            type='button'
                                         >
                                             <IconReviewRatingList />
-                                        </a>
+                                        </button>
                                     </div>
                                 </td>
                             </tr>

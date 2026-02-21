@@ -10,6 +10,9 @@ import {
     CHALLENGE_STATUS,
 } from '../constants'
 import {
+    SUBMITTER_ROLE_UUID,
+} from '../constants/roles.constants'
+import {
     Attachment,
     Challenge,
     ChallengeEditorFormData,
@@ -173,6 +176,86 @@ function normalizeOptionalId(value: unknown): number | string | undefined {
     }
 
     return undefined
+}
+
+/**
+ * Normalizes persisted member selector values into a string token that can be
+ * used by form controls for assigned member and copilot fields.
+ *
+ * Supports string handles/ids, numeric ids, and member-like objects carrying
+ * `handle`, `userId`, or `id`.
+ */
+function normalizeMemberSelectorValue(value: unknown): string | undefined {
+    const normalizedString = normalizeOptionalString(value)
+    if (normalizedString) {
+        return normalizedString
+    }
+
+    if (typeof value === 'number' && Number.isFinite(value)) {
+        return String(value)
+    }
+
+    if (typeof value !== 'object' || !value) {
+        return undefined
+    }
+
+    const typedValue = value as Record<string, unknown>
+    const normalizedHandle = normalizeOptionalString(typedValue.handle)
+    if (normalizedHandle) {
+        return normalizedHandle
+    }
+
+    const normalizedUserId = normalizeOptionalId(typedValue.userId)
+    if (normalizedUserId !== undefined) {
+        return String(normalizedUserId)
+    }
+
+    const normalizedId = normalizeOptionalId(typedValue.id)
+    if (normalizedId !== undefined) {
+        return String(normalizedId)
+    }
+
+    return undefined
+}
+
+function getChallengeAssignedMemberSelectorValue(
+    challenge?: Partial<Challenge>,
+): string | undefined {
+    const directAssignedMemberValue = normalizeMemberSelectorValue(challenge?.assignedMemberId)
+    if (directAssignedMemberValue) {
+        return directAssignedMemberValue
+    }
+
+    const task = challenge?.task
+    if (typeof task !== 'object' || !task) {
+        return undefined
+    }
+
+    const typedTask = task as Record<string, unknown>
+
+    return normalizeMemberSelectorValue(typedTask.memberId)
+        || normalizeMemberSelectorValue(typedTask.assignedMemberId)
+        || normalizeMemberSelectorValue(typedTask.memberHandle)
+}
+
+function getChallengeCopilotSelectorValue(
+    challenge?: Partial<Challenge>,
+): string | undefined {
+    const directCopilotValue = normalizeMemberSelectorValue(challenge?.copilot)
+    if (directCopilotValue) {
+        return directCopilotValue
+    }
+
+    const task = challenge?.task
+    if (typeof task !== 'object' || !task) {
+        return undefined
+    }
+
+    const typedTask = task as Record<string, unknown>
+
+    return normalizeMemberSelectorValue(typedTask.copilot)
+        || normalizeMemberSelectorValue(typedTask.copilotHandle)
+        || normalizeMemberSelectorValue(typedTask.copilotId)
 }
 
 function normalizeRoundType(value: unknown): ChallengeEditorFormData['roundType'] | undefined {
@@ -535,14 +618,10 @@ function normalizeTermsForApi(value: unknown): ChallengeTerm[] | undefined {
 
             const roleId = normalizeChallengeTermRoleId(term)
 
-            return roleId
-                ? {
-                    id,
-                    roleId,
-                }
-                : {
-                    id,
-                }
+            return {
+                id,
+                roleId: roleId || SUBMITTER_ROLE_UUID,
+            }
         })
         .filter((term): term is ChallengeTerm => !!term)
         .filter(term => {
@@ -771,7 +850,7 @@ export function transformChallengeToFormData(
         : ensurePlacementPrizeSet(normalizedPrizeSets)
 
     return {
-        assignedMemberId: normalizeOptionalString(challenge?.assignedMemberId),
+        assignedMemberId: getChallengeAssignedMemberSelectorValue(challenge),
         attachments: normalizeAttachments(challenge?.attachments),
         billing: billingAccountId !== undefined
             ? {
@@ -779,7 +858,7 @@ export function transformChallengeToFormData(
             }
             : undefined,
         challengeFee: normalizeOptionalNumber(challenge?.challengeFee),
-        copilot: normalizeOptionalString(challenge?.copilot),
+        copilot: getChallengeCopilotSelectorValue(challenge),
         description,
         discussionForum: normalizeOptionalBoolean(challenge?.discussionForum),
         groups: normalizeStringArray(challenge?.groups),
@@ -836,14 +915,14 @@ export function transformFormDataToChallenge(
     const billingAccountId = normalizeOptionalId(formData.billing?.billingAccountId)
 
     const challenge: Partial<Challenge> = {
-        assignedMemberId: normalizeOptionalString(formData.assignedMemberId),
+        assignedMemberId: normalizeMemberSelectorValue(formData.assignedMemberId),
         billing: billingAccountId !== undefined
             ? {
                 billingAccountId,
             }
             : undefined,
         challengeFee: normalizeOptionalNumber(formData.challengeFee),
-        copilot: normalizeOptionalString(formData.copilot),
+        copilot: normalizeMemberSelectorValue(formData.copilot),
         description: formData.description,
         discussionForum: typeof formData.discussionForum === 'boolean'
             ? formData.discussionForum

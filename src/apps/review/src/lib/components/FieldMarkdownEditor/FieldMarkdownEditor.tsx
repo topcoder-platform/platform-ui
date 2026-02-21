@@ -43,6 +43,7 @@ interface Props {
     onChange?: (value: string) => void
     onBlur?: () => void
     error?: string
+    hideErrorMessage?: boolean
     showBorder?: boolean
     disabled?: boolean
     uploadCategory?: string
@@ -902,7 +903,7 @@ export const FieldMarkdownEditor: FC<Props> = (props: Props) => {
                     characters remaining
                 </div>
             )}
-            {props.error && (
+            {props.error && !props.hideErrorMessage && (
                 <div className={classNames(styles.error, 'errorMessage')}>
                     {props.error}
                 </div>

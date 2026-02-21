@@ -34,6 +34,7 @@ interface ChallengesFilterProps {
     filters: ChallengeFilters
     challengeTypes: ChallengeType[]
     onFiltersChange: (newFilters: ChallengeFilters) => void
+    onResetFilters?: () => void
     dashboardMode?: boolean
     projectOptions?: SelectOption[]
     isLoadingChallengeTypes?: boolean
@@ -78,6 +79,7 @@ export const ChallengesFilter: FC<ChallengesFilterProps> = (props: ChallengesFil
     const filters: ChallengeFilters = props.filters
     const isLoadingChallengeTypes: boolean = !!props.isLoadingChallengeTypes
     const onFiltersChange: (newFilters: ChallengeFilters) => void = props.onFiltersChange
+    const onResetFilters = props.onResetFilters
 
     const [nameInput, setNameInput] = useState<string>(filters.name || '')
     const isFirstDebouncedRender = useRef<boolean>(true)
@@ -229,6 +231,12 @@ export const ChallengesFilter: FC<ChallengesFilterProps> = (props: ChallengesFil
 
     function handleResetFilters(): void {
         setNameInput('')
+
+        if (onResetFilters) {
+            onResetFilters()
+            return
+        }
+
         onFiltersChange({
             ...filters,
             endDateEnd: undefined,

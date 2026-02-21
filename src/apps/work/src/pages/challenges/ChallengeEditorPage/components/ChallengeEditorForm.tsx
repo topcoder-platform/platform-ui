@@ -1014,19 +1014,19 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                 <h3 className={styles.sectionTitle}>Prizes &amp; Billing</h3>
                                 <div className={styles.prizesBillingGrid}>
                                     <div className={styles.prizeInputs}>
-                                        <ChallengePrizesField
-                                            challengeTypeAbbreviation={resolvedChallengeTypeAbbreviation}
-                                            challengeTypeName={resolvedChallengeTypeName}
-                                            name='prizeSets'
-                                        />
-                                        <CopilotFeeField name='prizeSets' />
-                                        {showCheckpointPrizes
-                                            ? (
-                                                <div className={styles.checkpointPrizeField}>
-                                                    <CheckpointPrizesField name='prizeSets' />
-                                                </div>
-                                            )
-                                            : undefined}
+                                        <div className={styles.challengePrizesColumn}>
+                                            <ChallengePrizesField
+                                                challengeTypeAbbreviation={resolvedChallengeTypeAbbreviation}
+                                                challengeTypeName={resolvedChallengeTypeName}
+                                                name='prizeSets'
+                                            />
+                                            {showCheckpointPrizes
+                                                ? <CheckpointPrizesField name='prizeSets' />
+                                                : undefined}
+                                        </div>
+                                        <div className={styles.copilotFeeColumn}>
+                                            <CopilotFeeField name='prizeSets' />
+                                        </div>
                                     </div>
                                     <div className={styles.billingSummary}>
                                         <ReviewCostField name='prizeSets' />

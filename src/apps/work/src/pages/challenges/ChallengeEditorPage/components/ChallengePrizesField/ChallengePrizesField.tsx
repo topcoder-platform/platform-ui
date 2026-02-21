@@ -368,26 +368,45 @@ export const ChallengePrizesField: FC<ChallengePrizesFieldProps> = (
                     <div className={styles.prizeRows}>
                         {fields.map((prizeField, index) => {
                             const prizeValue = Number(placementPrizes?.[index]?.value) || 0
-                            const hasValueError = !!get(
+                            const prizeValueError = get(
                                 formState.errors,
                                 `${placementPrizesName}.${index}.value`,
-                            )
+                            ) as { message?: string } | undefined
+                            const prizeValueErrorMessage = typeof prizeValueError?.message === 'string'
+                                ? prizeValueError.message
+                                : undefined
+                            const hasValueError = !!prizeValueError
 
                             return (
-                                <div className={styles.prizeRow} key={prizeField.id}>
+                                <div
+                                    className={classNames(
+                                        styles.prizeRow,
+                                        prizeValueErrorMessage ? styles.prizeRowWithError : undefined,
+                                    )}
+                                    key={prizeField.id}
+                                >
                                     <span className={styles.prizeLabel}>
                                         {supportsMultiplePrizes
                                             ? `Prize ${index + 1}`
                                             : 'Prize'}
                                     </span>
 
-                                    <PrizeInput
-                                        disabled={props.disabled}
-                                        error={hasValueError || !!descendingError}
-                                        onChange={prizeValueChangeHandlers[index]}
-                                        prizeType={currentPrizeType}
-                                        value={prizeValue}
-                                    />
+                                    <div className={styles.prizeInputField}>
+                                        <PrizeInput
+                                            disabled={props.disabled}
+                                            error={hasValueError || !!descendingError}
+                                            onChange={prizeValueChangeHandlers[index]}
+                                            prizeType={currentPrizeType}
+                                            value={prizeValue}
+                                        />
+                                        {prizeValueErrorMessage
+                                            ? (
+                                                <div className={styles.prizeValueError}>
+                                                    {prizeValueErrorMessage}
+                                                </div>
+                                            )
+                                            : undefined}
+                                    </div>
 
                                     {index > 0
                                         ? (
@@ -424,11 +443,15 @@ export const ChallengePrizesField: FC<ChallengePrizesFieldProps> = (
             {showPointsConfirmation
                 ? (
                     <ConfirmationModal
-                        confirmText='Switch to Points'
-                        message='Switching to points will apply to all configured prize sets. Continue?'
+                        confirmText='Confirm'
+                        message={
+                            'You have selected POINTS as a payment for this challenge.  '
+                            + 'Please be aware that POINTS are only approved for Wipro internal challenges '
+                            + 'and fun challenges.  POINTS are not acceptable for customer work.'
+                        }
                         onCancel={handleCancelPointType}
                         onConfirm={handleConfirmPointType}
-                        title='Switch Prize Type'
+                        title='Confirm Points Prize'
                     />
                 )
                 : undefined}

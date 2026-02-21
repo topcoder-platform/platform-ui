@@ -86,6 +86,7 @@ export const FormMarkdownEditor: FC<FormMarkdownEditorProps> = (props: FormMarkd
                     ariaLabel={label}
                     disabled={disabled}
                     error={fieldState.error?.message}
+                    hideErrorMessage
                     initialValue={value}
                     key={editorKey}
                     maxCharactersAllowed={maxCharacters}

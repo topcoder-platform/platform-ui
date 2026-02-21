@@ -21,6 +21,8 @@ export interface PhaseEditorRowProps {
     startDate?: Date | string
     endDate?: Date | string
     endDateError?: string
+    minStartDate?: Date | null
+    minEndDate?: Date | null
 }
 
 export const PhaseEditorRow: FC<PhaseEditorRowProps> = (props: PhaseEditorRowProps) => {
@@ -31,6 +33,8 @@ export const PhaseEditorRow: FC<PhaseEditorRowProps> = (props: PhaseEditorRowPro
     const isStartDateEditable = props.isStartDateEditable !== false
     const phase = props.phase
     const startDate = props.startDate
+    const minStartDate = props.minStartDate
+    const minEndDate = props.minEndDate
     const formContext = useFormContext()
     const durationError = get(formContext.formState.errors, `phases.${index}.duration.message`) as string | undefined
 
@@ -57,6 +61,7 @@ export const PhaseEditorRow: FC<PhaseEditorRowProps> = (props: PhaseEditorRowPro
                     disabled={disabled || !isStartDateEditable}
                     label='Start Date'
                     labelOutside
+                    minDate={minStartDate}
                     onChange={handleStartDateChange}
                     showTimezone={false}
                     value={startDate || phase.scheduledStartDate}
@@ -69,6 +74,7 @@ export const PhaseEditorRow: FC<PhaseEditorRowProps> = (props: PhaseEditorRowPro
                     error={endDateError}
                     label='End Date'
                     labelOutside
+                    minDate={minEndDate}
                     onChange={handleEndDateChange}
                     showTimezone={false}
                     value={endDate || phase.scheduledEndDate}
