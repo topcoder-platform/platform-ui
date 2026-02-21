@@ -8,7 +8,6 @@ import { LoadingSpinner } from '~/libs/ui'
 
 import { COMMUNITY_APP_URL, REVIEW_APP_URL } from '../../constants'
 import { ReactComponent as IconDownloadArtifacts } from '../../assets/icons/IconDownloadArtifacts.svg'
-import { ReactComponent as IconReviewRatingList } from '../../assets/icons/IconReviewRatingList.svg'
 import { ReactComponent as IconSquareDownload } from '../../assets/icons/IconSquareDownload.svg'
 import { Submission } from '../../models'
 import {
@@ -329,16 +328,6 @@ export const SubmissionsTable: FC<SubmissionsTableProps> = (
                                             <IconDownloadArtifacts />
                                         </button>
 
-                                        <button
-                                            data-submission-id={submission.id}
-                                            aria-label='View submission artifacts'
-                                            className={styles.iconButton}
-                                            disabled={!props.canDownloadSubmissions}
-                                            onClick={handleSubmissionArtifactsClick}
-                                            type='button'
-                                        >
-                                            <IconReviewRatingList />
-                                        </button>
                                     </div>
                                 </td>
                             </tr>
