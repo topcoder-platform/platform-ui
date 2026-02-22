@@ -27,6 +27,8 @@
     }
 
     @include ltemd {
+        width: 100%;
+
         &:not(.menu-is-visible) {
             + .menu-wrapper {
                 display: none;

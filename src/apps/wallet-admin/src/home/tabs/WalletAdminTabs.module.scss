@@ -1,6 +1,8 @@
 @import '@libs/ui/styles/includes';
 
 .container {
+    width: 100%;
+
     form {
         @include ltelg {
             :global(.input-el) {
