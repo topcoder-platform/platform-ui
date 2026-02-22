@@ -105,6 +105,7 @@ export interface Challenge {
     copilot?: string
     discussionForum?: boolean
     funChallenge?: boolean
+    wiproAllowed?: boolean
     groups?: string[]
     roundType?: string
     terms?: Array<ChallengeTerm | string>

@@ -889,6 +889,7 @@ export function transformChallengeToFormData(
         timelineTemplateId: timelineTemplateId || undefined,
         trackId,
         typeId,
+        wiproAllowed: normalizeOptionalBoolean(challenge?.wiproAllowed) || false,
     }
 }
 
@@ -958,6 +959,9 @@ export function transformFormDataToChallenge(
             : undefined,
         trackId: formData.trackId,
         typeId: formData.typeId,
+        wiproAllowed: typeof formData.wiproAllowed === 'boolean'
+            ? formData.wiproAllowed
+            : false,
     }
 
     return removeEmptyValues(challenge)

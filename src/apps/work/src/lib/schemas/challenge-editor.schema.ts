@@ -423,6 +423,9 @@ export const challengeAdvancedOptionsSchema = yup.object({
         .of(yup.string()
             .required())
         .optional(),
+    wiproAllowed: yup.boolean()
+        .default(false)
+        .optional(),
 })
 
 export const challengeEditorSchema: yup.ObjectSchema<ChallengeEditorFormData> = challengeBasicInfoSchema

@@ -19,6 +19,7 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 - `description`: required, minimum length enforced.
 - `privateDescription`: optional.
 - `funChallenge`: optional boolean, defaults to `false` (unchecked).
+- `wiproAllowed`: optional boolean, defaults to `false` (unchecked).
 - `tags`: optional string array.
 - `skills`: required unless billing account is listed in `SKILLS_OPTIONAL_BILLING_ACCOUNT_IDS`.
 
@@ -41,6 +42,7 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 - `ChallengeTagsField`: multi creatable tag picker excluding special challenge tags.
 - `ChallengeSkillsField`: async multi skills picker with billing-account-based required behavior.
 - `CopilotField`: clearable dropdown populated with copilot handles from the current project.
+- `Wipro Allowed` checkbox: advanced-option toggle that maps to the challenge `wiproAllowed` API flag.
 
 ## API Integration
 

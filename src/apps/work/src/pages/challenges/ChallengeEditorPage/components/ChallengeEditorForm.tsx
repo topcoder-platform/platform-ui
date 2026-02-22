@@ -15,6 +15,7 @@ import {
 import { yupResolver } from '@hookform/resolvers/yup'
 import { Button } from '~/libs/ui'
 
+import { FormCheckboxField } from '../../../../lib/components/form'
 import {
     CHALLENGE_STATUS,
     CHALLENGE_TRACKS,
@@ -1089,6 +1090,10 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                     <GroupsField />
                                     <TermsField />
                                     <NDAField />
+                                    <FormCheckboxField
+                                        label='Wipro Allowed'
+                                        name='wiproAllowed'
+                                    />
                                 </div>
                             </section>
 

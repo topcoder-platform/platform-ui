@@ -36,6 +36,7 @@ export interface ChallengeEditorFormData extends Omit<Partial<Challenge>, 'id' |
     description: string
     discussionForum?: boolean
     funChallenge?: boolean
+    wiproAllowed?: boolean
     groups?: string[]
     id?: string
     metadata?: ChallengeMetadata[]

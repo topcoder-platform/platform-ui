@@ -66,3 +66,47 @@ describe('challenge-editor utils funChallenge mapping', () => {
             .toBe(true)
     })
 })
+
+describe('challenge-editor utils wiproAllowed mapping', () => {
+    it('defaults wiproAllowed to false in form data', () => {
+        const result = transformChallengeToFormData({
+            description: 'Public specification',
+            name: 'MM Wipro Challenge',
+            trackId: 'track-id',
+            typeId: 'type-id',
+        })
+
+        expect(result.wiproAllowed)
+            .toBe(false)
+    })
+
+    it('keeps wiproAllowed true when converting challenge to form data', () => {
+        const result = transformChallengeToFormData({
+            description: 'Public specification',
+            name: 'MM Wipro Challenge',
+            trackId: 'track-id',
+            typeId: 'type-id',
+            wiproAllowed: true,
+        })
+
+        expect(result.wiproAllowed)
+            .toBe(true)
+    })
+
+    it('serializes wiproAllowed to API payload', () => {
+        const formData: Record<string, unknown> = {
+            description: 'Public specification',
+            name: 'MM Wipro Challenge',
+            skills: [],
+            tags: [],
+            trackId: 'track-id',
+            typeId: 'type-id',
+            wiproAllowed: true,
+        }
+
+        const result = transformFormDataToChallenge(formData as any)
+
+        expect(result.wiproAllowed)
+            .toBe(true)
+    })
+})
