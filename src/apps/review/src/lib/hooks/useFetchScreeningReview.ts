@@ -32,7 +32,7 @@ import {
     convertBackendSubmissionToSubmissionInfo,
 } from '../models'
 import { fetchAllChallengeReviews } from '../services'
-import { SUBMISSION_TYPE_CHECKPOINT, SUBMISSION_TYPE_CONTEST } from '../constants'
+import { isCheckpointSubmissionType, isContestSubmissionType } from '../constants'
 import { debugLog, DEBUG_CHECKPOINT_PHASES, isPhaseAllowedForReview, truncateForLog, warnLog } from '../utils'
 import { registerChallengeReviewKey } from '../utils/reviewCacheRegistry'
 import { normalizeReviewMetadata } from '../utils/metadataMatching'
@@ -66,15 +66,12 @@ import { useFetchChallengeSubmissions } from './useFetchChallengeSubmissions'
 import type { useRoleProps } from './useRole'
 import { useRole } from './useRole'
 
-const normalizeSubmissionType = (type?: string | null): string => type?.trim()
-    .toUpperCase() ?? ''
-
 const isContestSubmission = (submission: BackendSubmission): boolean => (
-    normalizeSubmissionType(submission?.type) === SUBMISSION_TYPE_CONTEST
+    isContestSubmissionType(submission?.type)
 )
 
 const isCheckpointSubmission = (submission: BackendSubmission): boolean => (
-    normalizeSubmissionType(submission?.type) === SUBMISSION_TYPE_CHECKPOINT
+    isCheckpointSubmissionType(submission?.type)
 )
 
 const resolveCheckpointSubmissionScore = (
@@ -1669,8 +1666,7 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
                     submissionsByLegacyId: visibleSubmissionsByLegacyId,
                 } satisfies SubmissionLookupArgs)
 
-                const submissionType = matchingSubmission?.type?.trim()
-                if (submissionType?.toUpperCase() !== 'CONTEST_SUBMISSION') {
+                if (!isContestSubmissionType(matchingSubmission?.type)) {
                     return undefined
                 }
 

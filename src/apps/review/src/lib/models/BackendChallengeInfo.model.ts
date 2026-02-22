@@ -1,7 +1,7 @@
 import moment from 'moment'
 
 import { formatDurationDate } from '../utils'
-import { SUBMISSION_TYPE_CONTEST } from '../constants'
+import { isContestSubmissionType } from '../constants'
 import { TABLE_DATE_FORMAT } from '../../config/index.config'
 
 import { BackendMetadata } from './BackendMetadata.model'
@@ -114,8 +114,9 @@ function mapWinners(
     }
 
     // Only expose contest submissions in the winners list
-    const contestWinners = winners.filter(winner => (
-        (winner.type ?? SUBMISSION_TYPE_CONTEST) === SUBMISSION_TYPE_CONTEST
+    const contestWinners = winners.filter(winner => isContestSubmissionType(
+        winner.type,
+        { defaultToContest: true },
     ))
 
     return contestWinners.map(winner => ({
