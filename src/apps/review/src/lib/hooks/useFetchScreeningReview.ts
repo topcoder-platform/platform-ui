@@ -1,4 +1,4 @@
-import { every, filter, forEach } from 'lodash'
+import { filter, forEach } from 'lodash'
 import { useContext, useEffect, useMemo } from 'react'
 import useSWR, { type SWRResponse } from 'swr'
 
@@ -40,7 +40,7 @@ import { resolvePhaseMeta } from '../utils/phaseResolution'
 import { buildReviewForResource } from '../utils/reviewBuilding'
 import { collectMatchingReviews, selectBestReview } from '../utils/reviewSelection'
 import { resolveReviewPhaseId, reviewMatchesPhase } from '../utils/reviewMatching'
-import { shouldIncludeInReviewPhase } from '../utils/reviewPhaseGuards'
+import { calculateReviewProgress } from '../utils/reviewProgress'
 import {
     buildResourceFromReviewHandle,
     determinePassFail,
@@ -1960,56 +1960,17 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
     }, [actionChallengeRole, loadResourceAppeal, review, submitterReviews])
 
     // get review progress from challenge review
-    const reviewProgress = useMemo(() => {
-        if (!review.length) {
-            return 0
-        }
-
-        const eligibleReviews = review.filter(submission => shouldIncludeInReviewPhase(
-            submission,
-            challengeInfo?.phases,
-        ))
-        if (!eligibleReviews.length) {
-            return 0
-        }
-
-        const isDesignChallenge = challengeInfo?.track?.name === DESIGN
-
-        const filteredReviews = isDesignChallenge
-            ? eligibleReviews
-            : eligibleReviews.filter(item => item.isLatest)
-
-        if (!filteredReviews.length) {
-            return 0
-        }
-
-        const completedReviews = filteredReviews.filter(item => {
-            const committed = item.review?.committed
-            if (typeof committed === 'boolean') {
-                return committed
-            }
-
-            const status = item.review?.status
-            if (typeof status === 'string' && status.trim()) {
-                return status.trim()
-                    .toUpperCase() === 'COMPLETED'
-            }
-
-            if (!item.reviews?.length) {
-                return false
-            }
-
-            return every(
-                item.reviews,
-                reviewResult => typeof reviewResult.score === 'number'
-                    && Number.isFinite(reviewResult.score),
-            )
-        })
-
-        return Math.round(
-            (completedReviews.length * 100) / filteredReviews.length,
-        )
-    }, [review, challengeInfo?.phases, challengeInfo?.track?.name])
+    const reviewProgress = useMemo(() => calculateReviewProgress({
+        challengePhases: challengeInfo?.phases,
+        isDesignChallenge: challengeInfo?.track?.name === DESIGN,
+        reviewRows: review,
+        screeningRows: screening,
+    }), [
+        challengeInfo?.phases,
+        challengeInfo?.track?.name,
+        review,
+        screening,
+    ])
 
     useEffect(() => () => {
         cancelLoadResourceAppeal()
