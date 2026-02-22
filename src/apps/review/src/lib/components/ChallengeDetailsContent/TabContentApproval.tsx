@@ -20,6 +20,7 @@ interface Props {
     reviews: SubmissionInfo[]
     submitterReviews: SubmissionInfo[]
     approvalMinimumPassingScore?: number | null
+    phaseIdFilter?: string
     isLoadingReview: boolean
     isDownloading: IsRemovingType
     downloadSubmission: (submissionId: string) => void
@@ -65,17 +66,67 @@ export const TabContentApproval: FC<Props> = (props: Props) => {
 
     // Only show Approval-phase reviews on the Approval tab
     const approvalPhaseIds = useMemo<Set<string>>(
-        () => new Set(
-            (challengeInfo?.phases ?? [])
-                .filter(p => (p.name || '').toLowerCase() === 'approval')
-                .map(p => p.id),
-        ),
+        () => (challengeInfo?.phases ?? [])
+            .reduce((ids, phase) => {
+                if ((phase.name || '').toLowerCase() !== 'approval') {
+                    return ids
+                }
+
+                const id = `${phase.id ?? ''}`.trim()
+                const phaseId = `${phase.phaseId ?? ''}`.trim()
+
+                if (id) {
+                    ids.add(id)
+                }
+
+                if (phaseId) {
+                    ids.add(phaseId)
+                }
+
+                return ids
+            }, new Set<string>()),
         [challengeInfo?.phases],
     )
+
+    const filteredPhaseIds = useMemo<Set<string>>(
+        () => {
+            const normalizedPhaseId = `${props.phaseIdFilter ?? ''}`.trim()
+            if (!normalizedPhaseId) {
+                return new Set<string>()
+            }
+
+            const matchingPhase = (challengeInfo?.phases ?? []).find(
+                phase => phase.id === normalizedPhaseId || phase.phaseId === normalizedPhaseId,
+            )
+
+            const identifiers = new Set<string>([normalizedPhaseId])
+            const matchingPhaseId = `${matchingPhase?.id ?? ''}`.trim()
+            const matchingPhasePhaseId = `${matchingPhase?.phaseId ?? ''}`.trim()
+
+            if (matchingPhaseId) {
+                identifiers.add(matchingPhaseId)
+            }
+
+            if (matchingPhasePhaseId) {
+                identifiers.add(matchingPhasePhaseId)
+            }
+
+            return identifiers
+        },
+        [challengeInfo?.phases, props.phaseIdFilter],
+    )
+
     const approvalRows: SubmissionInfo[] = useMemo(
         () => {
             if (!props.reviews.length) {
                 return []
+            }
+
+            if (filteredPhaseIds.size) {
+                return props.reviews.filter(row => {
+                    const phaseId = `${row.review?.phaseId ?? ''}`.trim()
+                    return phaseId ? filteredPhaseIds.has(phaseId) : false
+                })
             }
 
             if (approvalPhaseIds.size === 0) {
@@ -83,11 +134,11 @@ export const TabContentApproval: FC<Props> = (props: Props) => {
             }
 
             return props.reviews.filter(row => {
-                const phaseId = row.review?.phaseId
+                const phaseId = `${row.review?.phaseId ?? ''}`.trim()
                 return phaseId ? approvalPhaseIds.has(phaseId) : false
             })
         },
-        [props.reviews, approvalPhaseIds],
+        [props.reviews, approvalPhaseIds, filteredPhaseIds],
     )
 
     const filteredApprovalRows = useMemo<SubmissionInfo[]>(

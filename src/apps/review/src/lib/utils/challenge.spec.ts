@@ -153,4 +153,35 @@ describe('challenge phase tab helpers', () => {
         expect(checkpointPhase?.id)
             .toBe('a')
     })
+
+    it('adds winners tab for completed challenges when all phases are closed', () => {
+        const phases: PhaseLike[] = [
+            createPhase('1', 'Registration', '2025-01-01T00:00:00Z'),
+            createPhase('2', 'Approval', '2025-01-02T00:00:00Z'),
+        ]
+
+        const tabs = buildPhaseTabs(phases, 'COMPLETED')
+        expect(tabs.map(tab => tab.value))
+            .toEqual([
+                'Registration',
+                'Approval',
+                'Winners',
+            ])
+    })
+
+    it('does not add winners tab for completed challenges that still have an open phase', () => {
+        const phases: PhaseLike[] = [
+            createPhase('1', 'Registration', '2025-01-01T00:00:00Z'),
+            createPhase('2', 'Approval', '2025-01-02T00:00:00Z'),
+            createPhase('3', 'Approval', '2025-01-03T00:00:00Z', { isOpen: true }),
+        ]
+
+        const tabs = buildPhaseTabs(phases, 'COMPLETED')
+        expect(tabs.map(tab => tab.value))
+            .toEqual([
+                'Registration',
+                'Approval',
+                'Approval 2',
+            ])
+    })
 })

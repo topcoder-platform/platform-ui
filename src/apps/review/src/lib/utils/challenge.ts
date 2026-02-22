@@ -372,6 +372,7 @@ const orderPhasesForTabs = (
 
 /**
  * Build tabs for challenge phases using a consistent ordering.
+ * For completed challenges, add the Winners tab only when no phase is still open.
  */
 export function buildPhaseTabs(
     phases: PhaseLike[],
@@ -402,7 +403,8 @@ export function buildPhaseTabs(
     })
 
     const normalizedStatus = (status || '').toUpperCase()
-    if (normalizedStatus.startsWith('COMPLETED')) {
+    const hasOpenPhase = orderedPhases.some(phase => phase?.isOpen === true)
+    if (normalizedStatus.startsWith('COMPLETED') && !hasOpenPhase) {
         TAB_INSERTION_HELPERS.insertIfMissing(tabs, 'Winners', 'Winners', tabs.length)
     }
 
