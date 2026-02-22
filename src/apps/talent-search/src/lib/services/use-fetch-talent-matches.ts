@@ -2,9 +2,12 @@ import { uniqBy } from 'lodash'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import useSWR, { SWRResponse } from 'swr'
 
+import type { PaginatedResponse, UserSkill } from '~/libs/core'
 import { EnvironmentConfig } from '~/config'
-import { PaginatedResponse, UserSkill, xhrGetPaginatedAsync } from '~/libs/core'
-import Member from '@talentSearch/lib/models/Member'
+import { xhrGetPaginatedAsync } from '~/libs/core'
+import type Member from '@talentSearch/lib/models/Member'
+
+import { SKILL_SEARCH_MINIMUM } from '../../config'
 
 export interface TalentMatchesResponse {
     error: boolean,
@@ -16,11 +19,24 @@ export interface TalentMatchesResponse {
     totalPages: number,
 }
 
+export function canSearchTalentMatches(skills: ReadonlyArray<UserSkill>): boolean {
+    return skills.length >= SKILL_SEARCH_MINIMUM
+}
+
+export function isTalentSearchLoading(
+    canSearch: boolean,
+    data: PaginatedResponse<Member[]> | undefined,
+    error: unknown,
+): boolean {
+    return canSearch && !error && !data?.data
+}
+
 export function useFetchTalentMatches(
     skills: ReadonlyArray<UserSkill>,
     page: number,
     pageSize: number,
 ): TalentMatchesResponse {
+    const canSearch = canSearchTalentMatches(skills)
     const searchParams = [
         ...skills.map(s => `id=${s.id}`),
         'sortBy=skillScore',
@@ -31,17 +47,21 @@ export function useFetchTalentMatches(
 
     const url = `${EnvironmentConfig.API.V6}/members/searchBySkills?${searchParams}`
 
-    const { data, error }: SWRResponse<PaginatedResponse<Member[]>> = useSWR(url, xhrGetPaginatedAsync<Member[]>, {
-        isPaused: () => !skills?.length,
-        refreshInterval: 0,
-        revalidateOnFocus: false,
-    })
+    const { data, error }: SWRResponse<PaginatedResponse<Member[]>, unknown> = useSWR(
+        url,
+        xhrGetPaginatedAsync<Member[]>,
+        {
+            isPaused: () => !canSearch,
+            refreshInterval: 0,
+            revalidateOnFocus: false,
+        },
+    )
 
     const matches = useMemo(() => data?.data ?? [], [data])
 
     return {
         error: !!error,
-        loading: !data?.data,
+        loading: isTalentSearchLoading(canSearch, data, error),
         matches: matches ?? [],
         page: data?.page ?? 0,
         ready: !!data?.data,

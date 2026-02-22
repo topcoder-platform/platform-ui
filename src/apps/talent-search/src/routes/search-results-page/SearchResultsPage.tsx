@@ -12,6 +12,7 @@ import {
     useInfiniteTalentMatches,
 } from '../../lib/services'
 import { useUrlQuerySearchParms } from '../../lib/utils/search-query'
+import { SKILL_SEARCH_MINIMUM } from '../../config'
 
 import { getLetsTalkUrl } from './letsTalkUrl'
 import styles from './SearchResultsPage.module.scss'
@@ -92,6 +93,10 @@ const SearchResultsPage: FC = () => {
                     ) : !skills.length ? (
                         <span>
                             Search thousands of skills to match with our global experts.
+                        </span>
+                    ) : skills.length < SKILL_SEARCH_MINIMUM ? (
+                        <span>
+                            {`Please select at least ${SKILL_SEARCH_MINIMUM} skills to search`}
                         </span>
                     ) : !total ? (
                         <span>

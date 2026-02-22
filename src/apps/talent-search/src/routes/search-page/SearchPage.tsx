@@ -7,6 +7,7 @@ import { ContentLayout, IconOutline } from '~/libs/ui'
 import { SearchInput } from '../../components/search-input'
 import { PopularSkills } from '../../components/popular-skills'
 import { TALENT_SEARCH_PATHS } from '../../talent-search.routes'
+import { SKILL_SEARCH_MINIMUM } from '../../config'
 import { encodeUrlQuerySearch } from '../../lib/utils/search-query'
 
 import styles from './SearchPage.module.scss'
@@ -20,6 +21,10 @@ export const SearchPage: FC = () => {
     const [skillsFilter, setSkillsFilter] = useState<UserSkill[]>([])
 
     function navigateToResults(): void {
+        if (skillsFilter.length < SKILL_SEARCH_MINIMUM) {
+            return
+        }
+
         const searchParams = encodeUrlQuerySearch(skillsFilter)
         navigate(`${TALENT_SEARCH_PATHS.results}?${searchParams}`)
     }

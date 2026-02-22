@@ -5,7 +5,10 @@ import { IconOutline, InputMultiselectOption } from '~/libs/ui'
 import { InputSkillSelector } from '~/libs/shared'
 import { UserSkill } from '~/libs/core'
 
-import { SKILL_SEARCH_LIMIT } from '../../config'
+import {
+    SKILL_SEARCH_LIMIT,
+    SKILL_SEARCH_MINIMUM,
+} from '../../config'
 
 import styles from './SearchInput.module.scss'
 
@@ -25,6 +28,7 @@ const SearchInput: FC<SearchInputProps> = props => {
         levels: [],
         name: s.name,
     })), [props.skills])
+    const canSearch = skills.length >= SKILL_SEARCH_MINIMUM
 
     function onChange(ev: any): void {
         const options = (ev.target.value as unknown) as InputMultiselectOption[]
@@ -34,22 +38,30 @@ const SearchInput: FC<SearchInputProps> = props => {
         })))
     }
 
-    function handleSearchClick(ev: MouseEvent<HTMLDivElement>): void {
-        ev.preventDefault()
-        ev.stopPropagation()
+    function handleSearchSubmit(): void {
+        if (!canSearch) {
+            return
+        }
 
         props.onSearch?.()
     }
 
-    const searchIcon = useMemo(() => (
+    function handleSearchClick(ev: MouseEvent<HTMLDivElement>): void {
+        ev.preventDefault()
+        ev.stopPropagation()
+
+        handleSearchSubmit()
+    }
+
+    const searchIcon = (
         <div
-            className={classNames(styles.searchIcon, !skills.length && styles.disabled)}
+            className={classNames(styles.searchIcon, !canSearch && styles.disabled)}
             onClick={handleSearchClick}
             onTouchStart={handleSearchClick as any}
         >
             <IconOutline.SearchIcon />
         </div>
-    ), [props.onSearch, skills])
+    )
 
     return (
         <div className={styles.wrap}>
@@ -62,10 +74,15 @@ const SearchInput: FC<SearchInputProps> = props => {
                 dropdownIcon={searchIcon}
                 value={skills}
                 onChange={onChange}
-                onSubmit={props.onSearch}
+                onSubmit={handleSearchSubmit}
                 inputRef={props.inputRef}
                 limit={SKILL_SEARCH_LIMIT}
             />
+            {skills.length > 0 && skills.length < SKILL_SEARCH_MINIMUM && (
+                <div className={styles.maxLimit}>
+                    {`Please select at least ${SKILL_SEARCH_MINIMUM} skills to search`}
+                </div>
+            )}
             {skills.length >= SKILL_SEARCH_LIMIT && (
                 <div className={styles.maxLimit}>
                     {`You can only search up to ${SKILL_SEARCH_LIMIT} skills at one time`}
