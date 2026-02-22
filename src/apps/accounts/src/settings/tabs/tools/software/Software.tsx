@@ -7,6 +7,8 @@ import { createMemberTraitsAsync, updateMemberTraitsAsync, UserProfile, UserTrai
 import { Button, Collapsible, ConfirmModal, IconOutline, InputSelect, InputText } from '~/libs/ui'
 import { SettingSection, SoftwareIcon } from '~/apps/accounts/src/lib'
 
+import { shouldUseUpdateTraitAction } from '../trait-action.utils'
+
 import { softwareTypes } from './software-types.config'
 import styles from './Software.module.scss'
 
@@ -170,7 +172,9 @@ const Software: FC<SoftwareProps> = (props: SoftwareProps) => {
                     },
                 }]
 
-                const action = props.softwareTrait ? updateMemberTraitsAsync : createMemberTraitsAsync
+                const action = shouldUseUpdateTraitAction(props.softwareTrait, softwareTypesData)
+                    ? updateMemberTraitsAsync
+                    : createMemberTraitsAsync
 
                 action(
                     props.profile.handle,

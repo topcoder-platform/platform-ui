@@ -24,6 +24,8 @@ import {
     WearableIcon,
 } from '~/apps/accounts/src/lib'
 
+import { shouldUseUpdateTraitAction } from '../trait-action.utils'
+
 import styles from './Devices.module.scss'
 
 interface DevicesProps {
@@ -315,7 +317,9 @@ const Devices: FC<DevicesProps> = (props: DevicesProps) => {
                     },
                 }]
 
-                const action = props.devicesTrait ? updateMemberTraitsAsync : createMemberTraitsAsync
+                const action = shouldUseUpdateTraitAction(props.devicesTrait, deviceTypesData)
+                    ? updateMemberTraitsAsync
+                    : createMemberTraitsAsync
 
                 action(
                     props.profile.handle,

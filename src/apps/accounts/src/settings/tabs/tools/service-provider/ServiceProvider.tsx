@@ -14,6 +14,8 @@ import {
     TelevisionServiceProviderIcon,
 } from '~/apps/accounts/src/lib'
 
+import { shouldUseUpdateTraitAction } from '../trait-action.utils'
+
 import { serviceProviderTypes } from './service-provider-types.config'
 import styles from './ServiceProvider.module.scss'
 
@@ -216,7 +218,9 @@ const ServiceProvider: FC<ServiceProviderProps> = (props: ServiceProviderProps) 
                     },
                 }]
 
-                const action = props.serviceProviderTrait ? updateMemberTraitsAsync : createMemberTraitsAsync
+                const action = shouldUseUpdateTraitAction(props.serviceProviderTrait, serviceProviderTypesData)
+                    ? updateMemberTraitsAsync
+                    : createMemberTraitsAsync
 
                 action(
                     props.profile.handle,
