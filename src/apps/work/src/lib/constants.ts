@@ -108,9 +108,11 @@ export const AI_WORKFLOW_POLL_INTERVAL_MS = 1000
 
 export const AI_WORKFLOW_POLL_TIMEOUT_MS = 5 * 60 * 1000
 
-export const GROUPS_API_URL = process.env.REACT_APP_GROUPS_API_URL
+const rawGroupsApiUrl = process.env.REACT_APP_GROUPS_API_URL
     || process.env.GROUPS_API_URL
     || `${EnvironmentConfig.API.V6}/groups`
+
+export const GROUPS_API_URL = normalizeApiUrlForEnvironment(rawGroupsApiUrl)
 
 export const TERMS_API_URL = process.env.REACT_APP_TERMS_API_URL
     || process.env.TERMS_API_URL
