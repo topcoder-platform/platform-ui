@@ -24,6 +24,7 @@ import { Paging } from '../../models/challenge-management/Pagination'
 import { checkIsMM } from '../../utils/challenge'
 
 import { MobileListView } from './MobileListView'
+import { canOpenReviewUi, getReviewUiChallengeUrl } from './reviewUiLink'
 import styles from './ChallengeList.module.scss'
 
 export interface ChallengeListProps {
@@ -183,8 +184,7 @@ const Actions: FC<{
     const hasProjectId
         = 'projectId' in props.challenge
         && props.challenge.projectId !== undefined
-    const hasLegacyId
-        = 'legacyId' in props.challenge && props.challenge.legacyId !== undefined
+    const hasReviewUiAccess = canOpenReviewUi(props.challenge.id)
 
     return (
         <div className={styles.rowActions}>
@@ -257,19 +257,20 @@ const Actions: FC<{
                         )}
                         {!hasProjectId && <span>Work Manager</span>}
                     </li>
-                    <li className={cn({ disabled: !hasLegacyId })}>
-                        {hasLegacyId && (
+                    <li className={cn({ disabled: !hasReviewUiAccess })}>
+                        {hasReviewUiAccess && (
                             <a
-                                href={
-                                    `${EnvironmentConfig.ADMIN.REVIEW_UI_URL}/=${props.challenge.id}` /* eslint-disable-line max-len */
-                                }
+                                href={getReviewUiChallengeUrl(
+                                    EnvironmentConfig.ADMIN.REVIEW_UI_URL,
+                                    props.challenge.id,
+                                )}
                                 target='_blank'
                                 rel='noreferrer'
                             >
                                 Review UI
                             </a>
                         )}
-                        {!hasLegacyId && <span>Review UI</span>}
+                        {!hasReviewUiAccess && <span>Review UI</span>}
                     </li>
                 </ul>
             </DropdownMenu>
