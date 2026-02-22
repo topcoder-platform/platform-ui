@@ -29,6 +29,11 @@ import {
     REOPEN_MESSAGE_OTHER,
     REOPEN_MESSAGE_SELF,
 } from '../../utils'
+import {
+    isViewerAssignedToScreening,
+    resolveViewerReviewId,
+    resolveViewerReviewStatus,
+} from '../../utils/screeningAssignments'
 import { ChallengeDetailContext, ReviewAppContext } from '../../contexts'
 import { updateReview } from '../../services'
 import { ConfirmModal } from '../ConfirmModal'
@@ -478,7 +483,9 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
                     },
                 ]
 
-                const hasAnyMyAssignment = rows.some(row => Boolean(row.myReviewResourceId))
+                const hasAnyMyAssignment = rows.some(
+                    row => isViewerAssignedToScreening(row, myResourceIds),
+                )
                 const canShowReopenActions = rows.some(row => computeReopenEligibility(row).canReopen)
                 if (!hasAnyMyAssignment && !canShowReopenActions) {
                     return appendAiColumn(screeningColumns)
@@ -489,10 +496,12 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
                     propertyName: 'action',
                     renderer: (data: Screening) => {
                         const actions: Array<{ key: string; render: (isLast: boolean) => JSX.Element }> = []
-                        const status = (data.myReviewStatus || '').toUpperCase()
+                        const isOwnAssignment = isViewerAssignedToScreening(data, myResourceIds)
+                        const status = resolveViewerReviewStatus(data)
+                        const actionReviewId = resolveViewerReviewId(data)
 
                         if (
-                            data.myReviewResourceId
+                            isOwnAssignment
                         && ['COMPLETED', 'SUBMITTED'].includes(status)
                         ) {
                             actions.push({
@@ -510,12 +519,12 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
                                     </div>
                                 ),
                             })
-                        } else if (data.myReviewId) {
+                        } else if (isOwnAssignment && actionReviewId) {
                             actions.push({
-                                key: `complete-${data.myReviewId}`,
+                                key: `complete-${actionReviewId}`,
                                 render: isLast => (
                                     <Link
-                                        to={`./../reviews/${data.submissionId}?reviewId=${data.myReviewId}`}
+                                        to={`./../reviews/${data.submissionId}?reviewId=${actionReviewId}`}
                                         className={classNames(styles.submit, { 'last-element': isLast })}
                                     >
                                         <i className='icon-upload' />
@@ -642,7 +651,9 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
                 },
             ]
 
-            const hasAnyMyAssignment = rows.some(row => Boolean(row.myReviewResourceId))
+            const hasAnyMyAssignment = rows.some(
+                row => isViewerAssignedToScreening(row, myResourceIds),
+            )
             const canShowReopenActions = rows.some(row => computeReopenEligibility(row).canReopen)
             if (!hasAnyMyAssignment && !canShowReopenActions) {
                 return appendAiColumn(reviewColumns)
@@ -653,10 +664,12 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
                 propertyName: 'action',
                 renderer: (data: Screening) => {
                     const actions: Array<{ key: string; render: (isLast: boolean) => JSX.Element }> = []
-                    const status = (data.myReviewStatus || '').toUpperCase()
+                    const isOwnAssignment = isViewerAssignedToScreening(data, myResourceIds)
+                    const status = resolveViewerReviewStatus(data)
+                    const actionReviewId = resolveViewerReviewId(data)
 
                     if (
-                        data.myReviewResourceId
+                        isOwnAssignment
                     && ['COMPLETED', 'SUBMITTED'].includes(status)
                     ) {
                         actions.push({
@@ -674,12 +687,12 @@ export const TableCheckpointSubmissions: FC<Props> = (props: Props) => {
                                 </div>
                             ),
                         })
-                    } else if (data.myReviewId) {
+                    } else if (isOwnAssignment && actionReviewId) {
                         actions.push({
-                            key: `complete-${data.myReviewId}`,
+                            key: `complete-${actionReviewId}`,
                             render: isLast => (
                                 <Link
-                                    to={`./../reviews/${data.submissionId}?reviewId=${data.myReviewId}`}
+                                    to={`./../reviews/${data.submissionId}?reviewId=${actionReviewId}`}
                                     className={classNames(styles.submit, { 'last-element': isLast })}
                                 >
                                     <i className='icon-upload' />

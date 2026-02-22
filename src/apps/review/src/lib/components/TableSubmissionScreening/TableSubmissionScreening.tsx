@@ -42,6 +42,11 @@ import {
     REOPEN_MESSAGE_SELF,
     SubmissionHistoryPartition,
 } from '../../utils'
+import {
+    isViewerAssignedToScreening,
+    resolveViewerReviewId,
+    resolveViewerReviewStatus,
+} from '../../utils/screeningAssignments'
 import { ChallengeDetailContext, ReviewAppContext } from '../../contexts'
 import { updateReview } from '../../services'
 import { ConfirmModal } from '../ConfirmModal'
@@ -265,13 +270,14 @@ const createVirusScanColumn = (): TableColumn<Screening> => ({
 
 const createMyReviewActions = (
     data: Screening,
-    options: { allowCompleteScreeningAction: boolean },
+    options: { allowCompleteScreeningAction: boolean; myResourceIds: Set<string> },
 ): ActionRenderer[] => {
-    if (!data.myReviewResourceId) {
+    const isOwnAssignment = isViewerAssignedToScreening(data, options.myResourceIds)
+    if (!isOwnAssignment) {
         return []
     }
 
-    const status = (data.myReviewStatus ?? '').toUpperCase()
+    const status = resolveViewerReviewStatus(data)
     if (['COMPLETED', 'SUBMITTED'].includes(status)) {
         return [
             {
@@ -296,16 +302,17 @@ const createMyReviewActions = (
         return []
     }
 
-    if (!data.myReviewId) {
+    const reviewId = resolveViewerReviewId(data)
+    if (!reviewId) {
         return []
     }
 
     return [
         {
-            key: `complete-${data.myReviewId}`,
+            key: `complete-${reviewId}`,
             render: isLast => (
                 <Link
-                    to={`./../reviews/${data.submissionId}?reviewId=${data.myReviewId}`}
+                    to={`./../reviews/${data.submissionId}?reviewId=${reviewId}`}
                     className={classNames(
                         styles.submit,
                         { 'last-element': isLast },
@@ -590,7 +597,10 @@ const createActionColumn = ({
 
             actionRenderers.push(...createMyReviewActions(
                 data,
-                { allowCompleteScreeningAction },
+                {
+                    allowCompleteScreeningAction,
+                    myResourceIds,
+                },
             ))
 
             const reopenAction = createReopenAction({
@@ -877,8 +887,10 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
     ), [props.screenings, latestSubmissionIds])
 
     const hasAnyScreeningAssignment = useMemo(
-        () => props.screenings.some(screening => Boolean(screening.myReviewResourceId)),
-        [props.screenings],
+        () => props.screenings.some(
+            screening => isViewerAssignedToScreening(screening, myResourceIds),
+        ),
+        [props.screenings, myResourceIds],
     )
 
     const canShowReopenActions = useMemo(
