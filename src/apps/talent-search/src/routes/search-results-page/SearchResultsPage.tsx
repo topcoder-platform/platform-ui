@@ -1,17 +1,19 @@
 import { FC, useCallback, useEffect, useState } from 'react'
 import classNames from 'classnames'
 
+import { EnvironmentConfig } from '~/config'
 import { Button, ContentLayout, LinkButton, LoadingCircles } from '~/libs/ui'
 import { HowSkillsWorkModal } from '~/libs/shared'
 
 import { TalentCard } from '../../components/talent-card'
 import { SearchInput } from '../../components/search-input'
-import { useUrlQuerySearchParms } from '../../lib/utils/search-query'
 import {
     InfiniteTalentMatchesResposne,
     useInfiniteTalentMatches,
 } from '../../lib/services'
+import { useUrlQuerySearchParms } from '../../lib/utils/search-query'
 
+import { getLetsTalkUrl } from './letsTalkUrl'
 import styles from './SearchResultsPage.module.scss'
 
 const SearchResultsPage: FC = () => {
@@ -104,7 +106,7 @@ const SearchResultsPage: FC = () => {
                                     primary
                                     size='lg'
                                     label='TALK TO AN EXPERT'
-                                    to='https://go.topcoder.com/lets-talk/'
+                                    to={getLetsTalkUrl(EnvironmentConfig.TOPCODER_URL)}
                                 />
                             </div>
                         </span>
