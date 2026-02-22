@@ -27,6 +27,7 @@ import {
     useFetchChallengeTypes,
     useFetchResourceRoles,
     UseFetchResourceRolesResult,
+    useFetchResources,
 } from '../../../../../lib/hooks'
 import {
     ChallengeEditorFormData,
@@ -148,9 +149,7 @@ function getReviewerCount(reviewer?: Reviewer): number {
 }
 
 function getAdditionalMemberIds(reviewer?: Reviewer): string[] {
-    const additionalMemberIds = (reviewer as {
-        additionalMemberIds?: unknown
-    })?.additionalMemberIds
+    const additionalMemberIds = reviewer?.additionalMemberIds
 
     if (!Array.isArray(additionalMemberIds)) {
         return []
@@ -369,6 +368,9 @@ export const ReviewersField: FC = () => {
         control: formContext.control,
         name: 'id',
     }) as string | undefined
+    const normalizedChallengeId = normalizeText(challengeId)
+    const challengeResourcesResult = useFetchResources(normalizedChallengeId || undefined)
+    const mutateChallengeResources = challengeResourcesResult.mutate
     const phases = useWatch({
         control: formContext.control,
         name: 'phases',
@@ -396,6 +398,7 @@ export const ReviewersField: FC = () => {
             : []),
         [reviewers],
     )
+    const isFormDirty = formContext.formState.isDirty
 
     const phaseNameById = useMemo<Map<string, string>>(
         () => {
@@ -723,6 +726,75 @@ export const ReviewersField: FC = () => {
         }
     }, [trackId, typeId])
 
+    useEffect(() => {
+        if (
+            !normalizedChallengeId
+            || isFormDirty
+            || challengeResourcesResult.isLoading
+            || !resourceRoles.length
+            || !reviewerRows.length
+        ) {
+            return
+        }
+
+        reviewerRows.forEach((reviewer, reviewerIndex) => {
+            if (!reviewer || reviewer.isMemberReview === false || isPublicOpportunityOpen(reviewer)) {
+                return
+            }
+
+            const existingAssignedMemberIds = toUniqueValues(getAssignedMemberIds(reviewer))
+            if (existingAssignedMemberIds.length) {
+                return
+            }
+
+            const roleId = resolveRoleIdForReviewer(reviewer)
+            if (!roleId) {
+                return
+            }
+
+            const reviewerCount = getReviewerCount(reviewer)
+            const memberIdsForRole = toUniqueValues(
+                challengeResourcesResult.resources
+                    .filter(resource => normalizeText(resource.roleId) === roleId)
+                    .map(resource => normalizeText(resource.memberId)),
+            )
+                .slice(0, reviewerCount)
+
+            if (!memberIdsForRole.length) {
+                return
+            }
+
+            const [
+                memberId,
+                ...additionalMemberIds
+            ] = memberIdsForRole
+
+            formContext.setValue(`reviewers.${reviewerIndex}.memberId` as any, memberId || undefined, {
+                shouldDirty: false,
+                shouldValidate: true,
+            })
+            formContext.setValue(
+                `reviewers.${reviewerIndex}.additionalMemberIds` as any,
+                additionalMemberIds.length
+                    ? additionalMemberIds
+                    : undefined,
+                {
+                    shouldDirty: false,
+                    shouldValidate: true,
+                },
+            )
+        })
+    }, [
+        challengeResourcesResult.isLoading,
+        challengeResourcesResult.resources,
+        formContext,
+        isFormDirty,
+        normalizedChallengeId,
+        resolveRoleIdForReviewer,
+        resourceRoles.length,
+        reviewerRows,
+    ])
+
     const sanitizeIntegerValue = useCallback(
         (value: string): string => value.replace(/[^\d]/g, ''),
         [],
@@ -734,10 +806,19 @@ export const ReviewersField: FC = () => {
         },
         [],
     )
+    const refreshChallengeResources = useCallback((): void => {
+        if (!normalizedChallengeId) {
+            return
+        }
+
+        mutateChallengeResources()
+            .catch(() => undefined)
+    }, [
+        mutateChallengeResources,
+        normalizedChallengeId,
+    ])
 
     useEffect(() => {
-        const normalizedChallengeId = normalizeText(challengeId)
-
         reviewerRows.forEach((reviewer, reviewerIndex) => {
             if (!reviewer || reviewer.isMemberReview === false || isPublicOpportunityOpen(reviewer)) {
                 return
@@ -783,14 +864,18 @@ export const ReviewersField: FC = () => {
                 memberId,
                 roleId,
             })))
+                .then(() => {
+                    refreshChallengeResources()
+                })
                 .catch(error => {
                     handleResourceError(error, 'Failed to update reviewer assignments')
                 })
         })
     }, [
-        challengeId,
         formContext,
         handleResourceError,
+        normalizedChallengeId,
+        refreshChallengeResources,
         resolveRoleIdForReviewer,
         reviewerRows,
     ])
@@ -801,7 +886,6 @@ export const ReviewersField: FC = () => {
             reviewer: Reviewer | undefined,
             fallbackMessage: string,
         ): void => {
-            const normalizedChallengeId = normalizeText(challengeId)
             const roleId = resolveRoleIdForReviewer(reviewer)
             const assignedMemberIds = toUniqueValues(getAssignedMemberIds(reviewer))
 
@@ -823,14 +907,18 @@ export const ReviewersField: FC = () => {
                 memberId,
                 roleId,
             })))
+                .then(() => {
+                    refreshChallengeResources()
+                })
                 .catch(error => {
                     handleResourceError(error, fallbackMessage)
                 })
         },
         [
-            challengeId,
             formContext,
             handleResourceError,
+            normalizedChallengeId,
+            refreshChallengeResources,
             resolveRoleIdForReviewer,
         ],
     )
@@ -838,7 +926,6 @@ export const ReviewersField: FC = () => {
     const handleMemberSelectionChange = useCallback(
         (reviewerIndex: number, memberIndex: number, selectedMemberId: string): void => {
             const reviewer = reviewerRows[reviewerIndex]
-            const normalizedChallengeId = normalizeText(challengeId)
             const normalizedSelectedMemberId = normalizeText(selectedMemberId)
 
             if (
@@ -894,13 +981,17 @@ export const ReviewersField: FC = () => {
             }
 
             syncAssignedMember()
+                .then(() => {
+                    refreshChallengeResources()
+                })
                 .catch(error => {
                     handleResourceError(error, 'Failed to update reviewer assignment')
                 })
         },
         [
-            challengeId,
             handleResourceError,
+            normalizedChallengeId,
+            refreshChallengeResources,
             resolveRoleIdForReviewer,
             reviewerRows,
         ],
@@ -909,7 +1000,6 @@ export const ReviewersField: FC = () => {
     const handlePhaseChange = useCallback(
         (reviewerIndex: number, nextPhaseId: string): void => {
             const reviewer = reviewerRows[reviewerIndex]
-            const normalizedChallengeId = normalizeText(challengeId)
 
             if (!reviewer) {
                 return
@@ -947,14 +1037,18 @@ export const ReviewersField: FC = () => {
                 memberId,
                 newRoleId: nextRoleId,
             })))
+                .then(() => {
+                    refreshChallengeResources()
+                })
                 .catch(error => {
                     handleResourceError(error, 'Failed to update reviewer role assignment')
                 })
         },
         [
-            challengeId,
             formContext,
             handleResourceError,
+            normalizedChallengeId,
+            refreshChallengeResources,
             resolveRoleIdForPhase,
             resolveRoleIdForReviewer,
             reviewerRows,
@@ -1113,7 +1207,6 @@ export const ReviewersField: FC = () => {
     const removeReviewer = useCallback(
         async (reviewerIndex: number): Promise<void> => {
             const reviewer = reviewerRows[reviewerIndex]
-            const normalizedChallengeId = normalizeText(challengeId)
             const assignedMemberIds = toUniqueValues(getAssignedMemberIds(reviewer))
             const roleId = resolveRoleIdForReviewer(reviewer)
 
@@ -1131,6 +1224,7 @@ export const ReviewersField: FC = () => {
                         memberId,
                         roleId,
                     })))
+                    refreshChallengeResources()
                 } catch (error) {
                     handleResourceError(error, 'Failed to remove reviewer resource')
                 }
@@ -1143,9 +1237,10 @@ export const ReviewersField: FC = () => {
             })
         },
         [
-            challengeId,
             formContext,
             handleResourceError,
+            normalizedChallengeId,
+            refreshChallengeResources,
             resolveRoleIdForReviewer,
             reviewerRows,
         ],
@@ -1241,9 +1336,7 @@ export const ReviewersField: FC = () => {
                     const reviewerCount = getReviewerCount(reviewer)
                     const scorecardOptions = getScorecardOptionsForReviewer(reviewer)
                     const reviewerPrefix = `reviewers.${index}`
-                    const reviewerIdentity = reviewer.memberId
-                        || getAdditionalMemberIds(reviewer)
-                            .find(memberId => !!memberId)
+                    const reviewerIdentity = reviewer.resourceId
                         || reviewer.phaseId
                         || reviewer.aiWorkflowId
                         || index
@@ -1330,7 +1423,7 @@ export const ReviewersField: FC = () => {
                                                                 memberIndex,
                                                             )}
                                                             placeholder='Search member'
-                                                            required={memberIndex === 0}
+                                                            required
                                                             valueField='userId'
                                                         />
                                                     )

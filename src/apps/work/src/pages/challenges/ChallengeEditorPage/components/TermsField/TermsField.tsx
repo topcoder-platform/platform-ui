@@ -7,10 +7,16 @@ import {
     FormSelectField,
     FormSelectOption,
 } from '../../../../../lib/components/form'
+import { DEFAULT_NDA_UUID } from '../../../../../lib/constants/challenge-editor.constants'
 import {
     useFetchTerms,
     UseFetchTermsResult,
 } from '../../../../../lib/hooks'
+
+const DEFAULT_NDA_TERM_OPTION: FormSelectOption = {
+    label: 'Topcoder NDA',
+    value: DEFAULT_NDA_UUID,
+}
 
 export const TermsField: FC = () => {
     const {
@@ -19,11 +25,25 @@ export const TermsField: FC = () => {
     }: UseFetchTermsResult = useFetchTerms()
 
     const options = useMemo<FormSelectOption[]>(
-        () => terms
-            .map(term => ({
-                label: term.title,
-                value: term.id,
-            })),
+        () => {
+            const mappedTerms = terms
+                .map(term => ({
+                    label: term.title,
+                    value: term.id,
+                }))
+
+            const hasDefaultNdaOption = mappedTerms
+                .some(option => option.value === DEFAULT_NDA_UUID)
+
+            if (hasDefaultNdaOption) {
+                return mappedTerms
+            }
+
+            return [
+                ...mappedTerms,
+                DEFAULT_NDA_TERM_OPTION,
+            ]
+        },
         [terms],
     )
 

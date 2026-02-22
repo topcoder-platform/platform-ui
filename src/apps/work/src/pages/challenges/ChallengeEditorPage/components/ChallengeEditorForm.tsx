@@ -314,6 +314,30 @@ function isAiReviewer(reviewer: Reviewer | undefined): boolean {
         || reviewer?.isMemberReview === false
 }
 
+function getRequiredMemberReviewerCount(reviewer: Reviewer | undefined): number {
+    const reviewerCountValue = Number(reviewer?.memberReviewerCount)
+    const reviewerCount = Number.isFinite(reviewerCountValue)
+        ? Math.trunc(reviewerCountValue)
+        : 1
+
+    return reviewerCount
+}
+
+function getAssignedMemberReviewerSlots(reviewer: Reviewer | undefined): string[] {
+    if (!reviewer) {
+        return []
+    }
+
+    const additionalMemberIds = Array.isArray(reviewer.additionalMemberIds)
+        ? reviewer.additionalMemberIds
+        : []
+
+    return [
+        normalizeTextValue(reviewer.memberId),
+        ...additionalMemberIds.map(memberId => normalizeTextValue(memberId)),
+    ]
+}
+
 function getReviewerEntryValidationError(reviewer: Reviewer | undefined): string | undefined {
     if (!reviewer) {
         return undefined
@@ -328,13 +352,21 @@ function getReviewerEntryValidationError(reviewer: Reviewer | undefined): string
             return 'Scorecard is required for member reviewer type.'
         }
 
-        const reviewerCountValue = Number(reviewer.memberReviewerCount)
-        const reviewerCount = Number.isFinite(reviewerCountValue)
-            ? Math.trunc(reviewerCountValue)
-            : 1
+        const reviewerCount = getRequiredMemberReviewerCount(reviewer)
 
         if (!Number.isInteger(reviewerCount) || reviewerCount < 1) {
             return 'Number of reviewers must be a positive integer.'
+        }
+
+        if (reviewer.shouldOpenOpportunity !== true) {
+            const requiredAssignedMembers = getAssignedMemberReviewerSlots(reviewer)
+                .slice(0, reviewerCount)
+            const hasAllRequiredMembers = requiredAssignedMembers.length === reviewerCount
+                && requiredAssignedMembers.every(Boolean)
+
+            if (!hasAllRequiredMembers) {
+                return 'Assign all required members when public review opportunity is closed.'
+            }
         }
     }
 

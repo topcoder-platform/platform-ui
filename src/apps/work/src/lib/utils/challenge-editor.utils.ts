@@ -507,6 +507,7 @@ function normalizeReviewers(reviewers: unknown): ChallengeReviewer[] | undefined
     return reviewers
         .filter((reviewer): reviewer is ChallengeReviewer => typeof reviewer === 'object' && !!reviewer)
         .map(reviewer => ({
+            additionalMemberIds: normalizeStringArray(reviewer.additionalMemberIds),
             aiWorkflowId: isNonEmptyString(reviewer.aiWorkflowId)
                 ? reviewer.aiWorkflowId.trim()
                 : undefined,

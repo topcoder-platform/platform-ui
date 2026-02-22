@@ -155,7 +155,27 @@ const attachmentSchema = yup.object({
         .required('Attachment URL is required'),
 })
 
+function toNormalizedText(value: unknown): string {
+    return typeof value === 'string'
+        ? value.trim()
+        : ''
+}
+
+function getRequiredReviewerSlots(value: unknown): number {
+    const parsedValue = Number(value)
+
+    if (!Number.isFinite(parsedValue)) {
+        return 1
+    }
+
+    return Math.max(1, Math.trunc(parsedValue))
+}
+
 const reviewerSchema = yup.object({
+    additionalMemberIds: yup.array()
+        .of(yup.string()
+            .optional())
+        .optional(),
     aiWorkflowId: yup.string()
         .when('isMemberReview', {
             is: false,
@@ -198,6 +218,56 @@ const reviewerSchema = yup.object({
     shouldOpenOpportunity: yup.boolean()
         .optional(),
 })
+    .test(
+        'all-member-slots-required-when-opportunity-closed',
+        'All assigned member slots are required when public review opportunity is closed',
+        function validateMemberSlots(value: unknown): boolean | yup.ValidationError {
+            if (typeof value !== 'object' || !value) {
+                return true
+            }
+
+            const reviewer = value as {
+                additionalMemberIds?: unknown
+                isMemberReview?: boolean
+                memberId?: unknown
+                memberReviewerCount?: unknown
+                shouldOpenOpportunity?: boolean
+            }
+            const isMemberReview = reviewer.isMemberReview !== false
+            const shouldOpenOpportunity = reviewer.shouldOpenOpportunity === true
+
+            if (!isMemberReview || shouldOpenOpportunity) {
+                return true
+            }
+
+            const reviewerSlots = getRequiredReviewerSlots(reviewer.memberReviewerCount)
+            const additionalMemberIds = Array.isArray(reviewer.additionalMemberIds)
+                ? reviewer.additionalMemberIds
+                    .map(memberId => toNormalizedText(memberId))
+                : []
+            const assignedMemberSlots = [
+                toNormalizedText(reviewer.memberId),
+                ...additionalMemberIds,
+            ]
+                .slice(0, reviewerSlots)
+            const hasAllAssignments = assignedMemberSlots.length === reviewerSlots
+                && assignedMemberSlots.every(Boolean)
+
+            if (hasAllAssignments) {
+                return true
+            }
+
+            const rootPath = this.path || ''
+            const validationPath = rootPath
+                ? `${rootPath}.memberId`
+                : 'memberId'
+
+            return this.createError({
+                message: 'Assign all required members when public review opportunity is closed',
+                path: validationPath,
+            })
+        },
+    )
 
 type ChallengeBasicInfoFormData = Omit<
     ChallengeEditorFormData,

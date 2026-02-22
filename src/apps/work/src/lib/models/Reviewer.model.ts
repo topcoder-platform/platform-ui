@@ -1,4 +1,5 @@
 export interface Reviewer {
+    additionalMemberIds?: string[]
     aiWorkflowId?: string
     baseCoefficient?: number
     handle?: string
