@@ -1,4 +1,11 @@
-import { buildPhaseTabs, findPhaseByTabLabel, type PhaseLike } from './challenge'
+import type { BackendPhase } from '../models'
+
+import {
+    buildPhaseTabs,
+    collectReopenEligiblePhaseIds,
+    findPhaseByTabLabel,
+    type PhaseLike,
+} from './challenge'
 
 const createPhase = (
     id: string,
@@ -13,6 +20,26 @@ const createPhase = (
     isOpen: overrides.isOpen ?? false,
     name,
     phaseId: overrides.phaseId ?? id,
+    scheduledEndDate: overrides.scheduledEndDate ?? scheduledStartDate,
+    scheduledStartDate,
+})
+
+const createBackendPhase = (
+    id: string,
+    name: string,
+    scheduledStartDate: string,
+    overrides: Partial<BackendPhase> = {},
+): BackendPhase => ({
+    actualEndDate: overrides.actualEndDate ?? overrides.scheduledEndDate ?? scheduledStartDate,
+    actualStartDate: overrides.actualStartDate ?? scheduledStartDate,
+    constraints: overrides.constraints ?? [],
+    description: overrides.description ?? '',
+    duration: overrides.duration ?? 0,
+    id,
+    isOpen: overrides.isOpen ?? false,
+    name,
+    phaseId: overrides.phaseId ?? id,
+    predecessor: overrides.predecessor,
     scheduledEndDate: overrides.scheduledEndDate ?? scheduledStartDate,
     scheduledStartDate,
 })
@@ -183,5 +210,63 @@ describe('challenge phase tab helpers', () => {
                 'Approval',
                 'Approval 2',
             ])
+    })
+})
+
+describe('collectReopenEligiblePhaseIds', () => {
+    it('does not mark Registration as reopen-eligible in a two-round flow when Submission is open', () => {
+        const phases: BackendPhase[] = [
+            createBackendPhase('registration-id', 'Registration', '2025-12-05T10:55:00Z', {
+                phaseId: 'registration-phase-id',
+            }),
+            createBackendPhase('checkpoint-submission-id', 'Checkpoint Submission', '2025-12-05T10:57:00Z', {
+                phaseId: 'checkpoint-submission-phase-id',
+                predecessor: 'registration-phase-id',
+            }),
+            createBackendPhase('checkpoint-screening-id', 'Checkpoint Screening', '2025-12-05T11:03:00Z', {
+                phaseId: 'checkpoint-screening-phase-id',
+                predecessor: 'checkpoint-submission-phase-id',
+            }),
+            createBackendPhase('checkpoint-review-id', 'Checkpoint Review', '2025-12-05T11:05:00Z', {
+                phaseId: 'checkpoint-review-phase-id',
+                predecessor: 'checkpoint-screening-phase-id',
+            }),
+            createBackendPhase('submission-id', 'Submission', '2025-12-05T11:09:00Z', {
+                isOpen: true,
+                phaseId: 'submission-phase-id',
+                predecessor: 'checkpoint-review-phase-id',
+            }),
+        ]
+
+        const eligible = collectReopenEligiblePhaseIds(phases)
+
+        expect(eligible.has('checkpoint-review-id'))
+            .toBe(true)
+        expect(eligible.has('checkpoint-review-phase-id'))
+            .toBe(true)
+        expect(eligible.has('registration-id'))
+            .toBe(false)
+        expect(eligible.has('registration-phase-id'))
+            .toBe(false)
+    })
+
+    it('marks Registration as reopen-eligible when it is the direct predecessor of an open phase', () => {
+        const phases: BackendPhase[] = [
+            createBackendPhase('registration-id', 'Registration', '2025-12-05T10:55:00Z', {
+                phaseId: 'registration-phase-id',
+            }),
+            createBackendPhase('submission-id', 'Submission', '2025-12-05T11:09:00Z', {
+                isOpen: true,
+                phaseId: 'submission-phase-id',
+                predecessor: 'registration-phase-id',
+            }),
+        ]
+
+        const eligible = collectReopenEligiblePhaseIds(phases)
+
+        expect(eligible.has('registration-id'))
+            .toBe(true)
+        expect(eligible.has('registration-phase-id'))
+            .toBe(true)
     })
 })
