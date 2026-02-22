@@ -19,177 +19,34 @@ import {
     CHALLENGE_TRACKS,
 } from '../../../../../lib/constants'
 import {
-    PHASE_DURATION_MAX_HOURS,
-    PHASE_DURATION_MIN_MINUTES,
-} from '../../../../../lib/constants/challenge-editor.constants'
-import {
     useFetchChallengePhases,
     useFetchChallengeTracks,
 } from '../../../../../lib/hooks'
 import { ChallengePhase } from '../../../../../lib/models'
 import {
     getPhaseDuration,
-    getPhaseEndDateInDate,
 } from '../../../../../lib/utils'
 import { PhaseEditorRow } from '../PhaseEditorRow'
 import { TimelineVisualization } from '../TimelineVisualization'
 
+import {
+    canEditPhaseStartDate,
+    getPhaseKey,
+    normalizeDuration,
+    normalizePhaseName,
+    recalculatePhases,
+    toDate,
+} from './ChallengeScheduleSection.utils'
 import styles from './ChallengeScheduleSection.module.scss'
 
 interface ChallengeScheduleSectionProps {
     disabled?: boolean
 }
 
-interface RecalculatePhasesResult {
-    phases: ChallengePhase[]
-    error?: string
-}
-
-interface RecalculatePhasesOptions {
-    phaseStartOverrides?: ReadonlyMap<string, string>
-}
-
 interface ApplyPhasesOptions {
     clearStartOverrides?: boolean
+    resetRootPhasesToStartDate?: boolean
     startDateOverride?: Date | string
-}
-
-function toDate(value?: Date | string | null): Date | undefined {
-    if (!value) {
-        return undefined
-    }
-
-    const parsedDate = value instanceof Date
-        ? value
-        : new Date(value)
-
-    if (Number.isNaN(parsedDate.getTime())) {
-        return undefined
-    }
-
-    return parsedDate
-}
-
-function normalizeDuration(duration: unknown): number {
-    const parsedDuration = Number(duration)
-    const maxDuration = PHASE_DURATION_MAX_HOURS * 60
-
-    if (!Number.isFinite(parsedDuration)) {
-        return PHASE_DURATION_MIN_MINUTES
-    }
-
-    return Math.max(
-        PHASE_DURATION_MIN_MINUTES,
-        Math.min(maxDuration, Math.trunc(parsedDuration)),
-    )
-}
-
-function normalizePhaseName(value: unknown): string {
-    if (typeof value !== 'string') {
-        return ''
-    }
-
-    return value
-        .trim()
-        .toLowerCase()
-}
-
-/**
- * Builds a stable key for phase-local UI state in the schedule editor.
- *
- * @param phase phase currently rendered.
- * @param index fallback index when ids are unavailable.
- * @returns stable string key for phase-level editor state.
- */
-function getPhaseKey(
-    phase: ChallengePhase,
-    index: number,
-): string {
-    return phase.id || phase.phaseId || `${index}`
-}
-
-function canEditPhaseStartDate(
-    phase: ChallengePhase,
-    index: number,
-    isTwoRoundDesignChallenge: boolean,
-): boolean {
-    const normalizedPhaseName = normalizePhaseName(phase.name)
-    const isRegistrationPhase = normalizedPhaseName === 'registration'
-    const isSubmissionPhase = normalizedPhaseName === 'submission'
-    const isCheckpointSubmissionPhase = normalizedPhaseName === 'checkpoint submission'
-
-    return index <= 0
-        || isRegistrationPhase
-        || isCheckpointSubmissionPhase
-        || (isSubmissionPhase && !isTwoRoundDesignChallenge)
-}
-
-function recalculatePhases(
-    phases: ChallengePhase[],
-    startDateValue?: Date | string,
-    options: RecalculatePhasesOptions = {},
-): RecalculatePhasesResult {
-    if (!phases.length) {
-        return {
-            phases: [],
-        }
-    }
-
-    const calculatedPhases: ChallengePhase[] = []
-    const calculatedByPhaseId = new Map<string, ChallengePhase>()
-
-    const baseStartDate = toDate(startDateValue)
-    const shouldScheduleDates = !!baseStartDate
-    let previousPhaseEndDate = baseStartDate
-    let calculationError: string | undefined
-
-    phases.forEach((phase, index) => {
-        const duration = normalizeDuration(phase.duration)
-        let phaseStartDate = index === 0
-            ? baseStartDate
-            : previousPhaseEndDate
-
-        if (phase.predecessor) {
-            const predecessorPhase = calculatedByPhaseId.get(phase.predecessor)
-            const predecessorEndDate = toDate(predecessorPhase?.scheduledEndDate)
-
-            if (predecessorEndDate) {
-                phaseStartDate = predecessorEndDate
-            } else if (shouldScheduleDates && !calculationError) {
-                const phaseName = phase.name || phase.phaseId || `${index + 1}`
-                calculationError = `Invalid predecessor configured for phase ${phaseName}.`
-            }
-        }
-
-        const overriddenStartDate = toDate(options.phaseStartOverrides?.get(getPhaseKey(phase, index)))
-        if (overriddenStartDate) {
-            phaseStartDate = overriddenStartDate
-        }
-
-        const phaseEndDate = phaseStartDate
-            ? getPhaseEndDateInDate(phaseStartDate, duration)
-            : undefined
-
-        const nextPhase: ChallengePhase = {
-            ...phase,
-            duration,
-            scheduledEndDate: phaseEndDate?.toISOString(),
-            scheduledStartDate: phaseStartDate?.toISOString(),
-        }
-
-        calculatedPhases.push(nextPhase)
-
-        if (nextPhase.phaseId) {
-            calculatedByPhaseId.set(nextPhase.phaseId, nextPhase)
-        }
-
-        previousPhaseEndDate = phaseEndDate
-    })
-
-    return {
-        error: calculationError,
-        phases: calculatedPhases,
-    }
 }
 
 // eslint-disable-next-line complexity
@@ -302,13 +159,14 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
                 options,
                 'startDateOverride',
             )
-            const recalculationResult: RecalculatePhasesResult = recalculatePhases(
+            const recalculationResult = recalculatePhases(
                 nextPhases,
                 hasStartDateOverride
                     ? options.startDateOverride
                     : startDate,
                 {
                     phaseStartOverrides: phaseStartOverridesRef.current,
+                    resetRootPhasesToStartDate: options.resetRootPhasesToStartDate,
                 },
             )
             const error = recalculationResult.error
@@ -376,7 +234,7 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
             return
         }
 
-        const recalculationResult: RecalculatePhasesResult = recalculatePhases(phases, startDate, {
+        const recalculationResult = recalculatePhases(phases, startDate, {
             phaseStartOverrides: phaseStartOverridesRef.current,
         })
         const error = recalculationResult.error
@@ -403,6 +261,7 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
 
             applyPhases(phases, {
                 clearStartOverrides: true,
+                resetRootPhasesToStartDate: true,
                 startDateOverride: nextStartDate,
             })
         },
