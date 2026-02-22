@@ -1,0 +1,15 @@
+export const WORK_MANAGER_ALLOWED_ROLES: string[] = [
+    'administrator',
+    'Client Manager',
+    'Connect Admin',
+    'Connect Copilot',
+    'Connect Manager',
+    'copilot',
+    'Project Manager',
+    'Talent Manager',
+    'Task Manager',
+    'Topcoder Customer',
+    'Topcoder Project Manager',
+    'Topcoder Talent Manager',
+    'Topcoder Task Manager',
+]

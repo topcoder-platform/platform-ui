@@ -36,6 +36,7 @@ import {
     taasRouteId,
     usersRouteId,
 } from './config/routes.config'
+import { WORK_MANAGER_ALLOWED_ROLES } from './config/access.config'
 import { ErrorMessage } from './lib/components'
 import { WorkAppContext } from './lib/contexts'
 import { WorkAppContextModel } from './lib/models'
@@ -345,6 +346,7 @@ export const workRoutes: ReadonlyArray<PlatformRoute> = [
         domain: AppSubdomain.work,
         element: <WorkApp />,
         id: toolTitle,
+        rolesRequired: WORK_MANAGER_ALLOWED_ROLES,
         route: rootRoute,
         title: toolTitle,
     },
