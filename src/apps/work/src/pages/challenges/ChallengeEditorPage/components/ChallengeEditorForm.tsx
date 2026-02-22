@@ -99,6 +99,9 @@ import {
     CopilotFeeField,
 } from './CopilotFeeField'
 import {
+    FunChallengeField,
+} from './FunChallengeField'
+import {
     GroupsField,
 } from './GroupsField'
 import {
@@ -987,6 +990,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                         <ChallengeNameField />
                         <ChallengeTrackField disabled={isChallengeCreated} />
                         <ChallengeTypeField disabled={isChallengeCreated} />
+                        <FunChallengeField />
                         {showRoundTypeField
                             ? <RoundTypeField disabled={isChallengeCreated} />
                             : undefined}

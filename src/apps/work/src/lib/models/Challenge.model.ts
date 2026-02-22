@@ -104,6 +104,7 @@ export interface Challenge {
     createdBy?: string
     copilot?: string
     discussionForum?: boolean
+    funChallenge?: boolean
     groups?: string[]
     roundType?: string
     terms?: Array<ChallengeTerm | string>

@@ -290,6 +290,9 @@ export const challengeBasicInfoSchema: yup.ObjectSchema<ChallengeBasicInfoFormDa
                 `Public specification must be at least ${MIN_DESCRIPTION_LENGTH} characters`,
             )
             .required('Public specification is required'),
+        funChallenge: yup.boolean()
+            .default(false)
+            .optional(),
         id: yup.string()
             .optional(),
         name: yup

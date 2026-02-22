@@ -35,6 +35,7 @@ export interface ChallengeEditorFormData extends Omit<Partial<Challenge>, 'id' |
     copilot?: string
     description: string
     discussionForum?: boolean
+    funChallenge?: boolean
     groups?: string[]
     id?: string
     metadata?: ChallengeMetadata[]

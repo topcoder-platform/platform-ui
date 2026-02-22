@@ -862,6 +862,7 @@ export function transformChallengeToFormData(
         copilot: getChallengeCopilotSelectorValue(challenge),
         description,
         discussionForum: normalizeOptionalBoolean(challenge?.discussionForum),
+        funChallenge: normalizeOptionalBoolean(challenge?.funChallenge) || false,
         groups: normalizeStringArray(challenge?.groups),
         id: challenge?.id,
         legacy: {
@@ -928,6 +929,9 @@ export function transformFormDataToChallenge(
         discussionForum: typeof formData.discussionForum === 'boolean'
             ? formData.discussionForum
             : undefined,
+        funChallenge: typeof formData.funChallenge === 'boolean'
+            ? formData.funChallenge
+            : false,
         groups: normalizeStringArray(formData.groups),
         legacy: {
             reviewType,
