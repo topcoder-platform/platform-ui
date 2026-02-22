@@ -12,9 +12,10 @@ import { TableIterativeReview } from '../TableIterativeReview'
 import { useRole, useRoleProps } from '../../hooks'
 import {
     REVIEWER,
+    SUBMITTER,
 } from '../../../config/index.config'
 import { ChallengeDetailContext } from '../../contexts'
-import { hasSubmitterPassedThreshold } from '../../utils/reviewScoring'
+import { hasRoleBasedThresholdAccess } from '../../utils/reviewScoring'
 
 interface Props {
     reviews: SubmissionInfo[]
@@ -37,6 +38,7 @@ export const TabContentApproval: FC<Props> = (props: Props) => {
         approverResourceIds,
         isPrivilegedRole,
     }: useRoleProps = useRole()
+    const isSubmitterView = actionChallengeRole === SUBMITTER
     const hideHandleColumn = props.isActiveChallenge
         && actionChallengeRole === REVIEWER
 
@@ -46,12 +48,13 @@ export const TabContentApproval: FC<Props> = (props: Props) => {
     )
 
     const hasPassedApprovalThreshold = useMemo(
-        () => hasSubmitterPassedThreshold(
+        () => hasRoleBasedThresholdAccess(
+            isSubmitterView,
             props.submitterReviews ?? [],
             myMemberIds,
             props.approvalMinimumPassingScore,
         ),
-        [props.submitterReviews, myMemberIds, props.approvalMinimumPassingScore],
+        [isSubmitterView, props.submitterReviews, myMemberIds, props.approvalMinimumPassingScore],
     )
 
     const isChallengeCompleted = useMemo(

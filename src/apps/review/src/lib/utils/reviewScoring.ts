@@ -183,3 +183,25 @@ export function hasSubmitterPassedThreshold(
 
     return false
 }
+
+/**
+ * Resolves threshold visibility based on whether the current view belongs to the submitter.
+ *
+ * @param isSubmitterView - Indicates if the current role context is submitter.
+ * @param submissions - Submission rows used for threshold evaluation.
+ * @param myMemberIds - Current member ids to identify owned submissions.
+ * @param minimumPassingScore - Minimum passing score for the current review phase.
+ * @returns True for non-submitter views, otherwise the submitter threshold result.
+ */
+export function hasRoleBasedThresholdAccess(
+    isSubmitterView: boolean,
+    submissions: Array<Screening | SubmissionInfo>,
+    myMemberIds: Set<string>,
+    minimumPassingScore: number | null | undefined,
+): boolean {
+    if (!isSubmitterView) {
+        return true
+    }
+
+    return hasSubmitterPassedThreshold(submissions, myMemberIds, minimumPassingScore)
+}
