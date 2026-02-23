@@ -45,7 +45,7 @@ const MemberLocalInfo: FC<MemberLocalInfoProps> = (props: MemberLocalInfoProps) 
 
     const canEdit: boolean = props.authProfile?.handle === props.profile.handle
 
-    const isAdminOrTM = props.profile?.roles.includes(UserRole.administrator)
+    const isAdminOrTM = props.profile?.roles?.includes(UserRole.administrator)
     || props.profile?.roles?.includes(UserRole.talentManager)
 
     const [isEditMode, setIsEditMode]: [boolean, Dispatch<SetStateAction<boolean>>]

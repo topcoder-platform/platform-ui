@@ -52,13 +52,13 @@ const ModifyLocationModal: FC<ModifyLocationModalProps> = (props: ModifyLocation
     const [isFormChanged, setIsFormChanged] = useState(false)
 
     const handleFormValueChange = useCallback(
-        (key: string) => (event: any): void => {
-            const value = event?.target?.value ?? event?.value ?? event
+        (key: string) => (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>): void => {
+            const value: string = event.target.value
 
-            setFormValues((prev: any) => ({
-                ...prev,
+            setFormValues({
+                ...formValues,
                 [key]: value,
-            }))
+            })
 
             setIsFormChanged(true)
 
@@ -69,7 +69,7 @@ const ModifyLocationModal: FC<ModifyLocationModalProps> = (props: ModifyLocation
                 return next
             })
         },
-        [],
+        [formValues],
     )
 
     function validate(): boolean {
