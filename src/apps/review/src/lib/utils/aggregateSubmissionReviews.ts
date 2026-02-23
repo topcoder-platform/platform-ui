@@ -115,14 +115,14 @@ const resolveReviewerIdentityKey = ({
     resourceId,
     reviewerHandle,
 }: ReviewerIdentityArgs): string | undefined => {
-    const normalizedMemberId = normalizeStringValue(memberId)
-    if (normalizedMemberId) {
-        return `member:${normalizedMemberId}`
-    }
-
     const normalizedHandle = normalizeStringValue(reviewerHandle)
     if (normalizedHandle) {
         return `handle:${normalizedHandle.toLowerCase()}`
+    }
+
+    const normalizedMemberId = normalizeStringValue(memberId)
+    if (normalizedMemberId) {
+        return `member:${normalizedMemberId}`
     }
 
     const normalizedResourceId = normalizeStringValue(resourceId)
@@ -711,9 +711,24 @@ export function aggregateSubmissionReviews({
         })
 
         const orderedReviewsSet = new Set<AggregatedReviewDetail>(ordered)
+        const orderedReviewerKeys = new Set<string>(
+            ordered
+                .map(review => review.reviewerKey)
+                .filter((value): value is string => Boolean(value)),
+        )
         // Append any reviews that were not captured in the ordered reviewer list.
         const unmatched = group.reviews
-            .filter(r => !orderedReviewsSet.has(r))
+            .filter(r => {
+                if (orderedReviewsSet.has(r)) {
+                    return false
+                }
+
+                if (r.reviewerKey && orderedReviewerKeys.has(r.reviewerKey)) {
+                    return false
+                }
+
+                return true
+            })
             .slice()
             .sort((a, b) => (
                 (a.reviewerHandle || '')

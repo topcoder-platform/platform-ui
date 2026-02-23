@@ -114,9 +114,11 @@ const rawGroupsApiUrl = process.env.REACT_APP_GROUPS_API_URL
 
 export const GROUPS_API_URL = normalizeApiUrlForEnvironment(rawGroupsApiUrl)
 
-export const TERMS_API_URL = process.env.REACT_APP_TERMS_API_URL
+const rawTermsApiUrl = process.env.REACT_APP_TERMS_API_URL
     || process.env.TERMS_API_URL
     || `${EnvironmentConfig.API.V5}/terms`
+
+export const TERMS_API_URL = normalizeApiUrlForEnvironment(rawTermsApiUrl)
 
 const DEFAULT_NDA_UUID_FROM_CONFIG = (EnvironmentConfig as unknown as Record<string, unknown>)
     .DEFAULT_NDA_UUID

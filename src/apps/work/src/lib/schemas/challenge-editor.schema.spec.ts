@@ -139,3 +139,50 @@ describe('challenge-editor schema fun challenge prize validation', () => {
             .toBeTruthy()
     })
 })
+
+describe('challenge-editor schema reviewer slot assignment validation', () => {
+    const baseFormData = {
+        roundType: ROUND_TYPES.SINGLE_ROUND,
+    }
+
+    it('flags the next missing member slot when opportunity is closed', async () => {
+        await expect(
+            challengeAdvancedOptionsSchema.validate({
+                ...baseFormData,
+                reviewers: [
+                    {
+                        isMemberReview: true,
+                        memberId: '1111',
+                        memberReviewerCount: 2,
+                        scorecardId: 'scorecard-id',
+                        shouldOpenOpportunity: false,
+                    },
+                ],
+            }),
+        )
+            .rejects
+            .toMatchObject({
+                path: 'reviewers[0].additionalMemberIds.0',
+            })
+    })
+
+    it('accepts required reviewer slot assignments when opportunity is closed', async () => {
+        await expect(
+            challengeAdvancedOptionsSchema.validate({
+                ...baseFormData,
+                reviewers: [
+                    {
+                        additionalMemberIds: ['2222'],
+                        isMemberReview: true,
+                        memberId: '1111',
+                        memberReviewerCount: 2,
+                        scorecardId: 'scorecard-id',
+                        shouldOpenOpportunity: false,
+                    },
+                ],
+            }),
+        )
+            .resolves
+            .toBeTruthy()
+    })
+})

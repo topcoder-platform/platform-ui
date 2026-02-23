@@ -156,9 +156,15 @@ const attachmentSchema = yup.object({
 })
 
 function toNormalizedText(value: unknown): string {
-    return typeof value === 'string'
-        ? value.trim()
-        : ''
+    if (typeof value === 'string') {
+        return value.trim()
+    }
+
+    if (typeof value === 'number' && Number.isFinite(value)) {
+        return String(value)
+    }
+
+    return ''
 }
 
 function getRequiredReviewerSlots(value: unknown): number {
@@ -243,24 +249,31 @@ const reviewerSchema = yup.object({
             const reviewerSlots = getRequiredReviewerSlots(reviewer.memberReviewerCount)
             const additionalMemberIds = Array.isArray(reviewer.additionalMemberIds)
                 ? reviewer.additionalMemberIds
-                    .map(memberId => toNormalizedText(memberId))
                 : []
-            const assignedMemberSlots = [
-                toNormalizedText(reviewer.memberId),
+            const normalizedAssignedMemberSlots = [
+                reviewer.memberId,
                 ...additionalMemberIds,
             ]
                 .slice(0, reviewerSlots)
-            const hasAllAssignments = assignedMemberSlots.length === reviewerSlots
-                && assignedMemberSlots.every(Boolean)
+                .map(memberId => toNormalizedText(memberId))
+            const missingSlotIndex = normalizedAssignedMemberSlots.findIndex(memberId => !memberId)
+            const hasAllAssignments = normalizedAssignedMemberSlots.length === reviewerSlots
+                && missingSlotIndex === -1
 
             if (hasAllAssignments) {
                 return true
             }
 
             const rootPath = this.path || ''
+            const firstMissingSlotIndex = missingSlotIndex >= 0
+                ? missingSlotIndex
+                : normalizedAssignedMemberSlots.length
+            const missingSlotFieldPath = firstMissingSlotIndex === 0
+                ? 'memberId'
+                : `additionalMemberIds.${firstMissingSlotIndex - 1}`
             const validationPath = rootPath
-                ? `${rootPath}.memberId`
-                : 'memberId'
+                ? `${rootPath}.${missingSlotFieldPath}`
+                : missingSlotFieldPath
 
             return this.createError({
                 message: 'Assign all required members when public review opportunity is closed',

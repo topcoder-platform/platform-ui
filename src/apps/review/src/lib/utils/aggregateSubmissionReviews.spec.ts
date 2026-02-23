@@ -99,4 +99,55 @@ describe('aggregateSubmissionReviews', () => {
         expect(secondRowScores.get('bob'))
             .toBe(60)
     })
+
+    it('collapses duplicates when one source identifies reviewers by member and another by handle', () => {
+        const reviewers: BackendResource[] = [
+            createReviewer('assigned-alice', 'alice-member', 'alice'),
+            createReviewer('assigned-bob', 'bob-member', 'bob'),
+        ]
+
+        const submissions: SubmissionInfo[] = [
+            createSubmission('submission-1', [
+                createReviewResult('review-1-assigned-alice', 'assigned-alice', 'alice', Number.NaN),
+                createReviewResult('review-1-assigned-bob', 'assigned-bob', 'bob', Number.NaN),
+                createReviewResult('review-1-scored-alice', 'scored-alice-1', 'alice', 95),
+                createReviewResult('review-1-scored-bob', 'scored-bob-1', 'bob', 85),
+            ]),
+            createSubmission('submission-2', [
+                createReviewResult('review-2-assigned-alice', 'assigned-alice', 'alice', Number.NaN),
+                createReviewResult('review-2-assigned-bob', 'assigned-bob', 'bob', Number.NaN),
+                createReviewResult('review-2-scored-alice', 'scored-alice-2', 'alice', 75),
+                createReviewResult('review-2-scored-bob', 'scored-bob-2', 'bob', 65),
+            ]),
+        ]
+
+        const rows = aggregateSubmissionReviews({
+            mappingReviewAppeal: {} as MappingReviewAppeal,
+            reviewers,
+            submissions,
+        })
+
+        expect(rows)
+            .toHaveLength(2)
+        expect(rows[0].reviews)
+            .toHaveLength(2)
+        expect(rows[1].reviews)
+            .toHaveLength(2)
+
+        const firstRowScores = new Map(
+            rows[0].reviews.map(review => [review.reviewerHandle, review.finalScore]),
+        )
+        expect(firstRowScores.get('alice'))
+            .toBe(95)
+        expect(firstRowScores.get('bob'))
+            .toBe(85)
+
+        const secondRowScores = new Map(
+            rows[1].reviews.map(review => [review.reviewerHandle, review.finalScore]),
+        )
+        expect(secondRowScores.get('alice'))
+            .toBe(75)
+        expect(secondRowScores.get('bob'))
+            .toBe(65)
+    })
 })
