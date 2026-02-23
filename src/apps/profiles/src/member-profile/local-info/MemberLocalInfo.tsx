@@ -1,9 +1,10 @@
 import { Dispatch, FC, SetStateAction, useMemo, useState } from 'react'
+import { trim } from 'lodash'
 import cityTimezones from 'city-timezones'
 import moment from 'moment-timezone'
 
-import { useCountryName, UserProfile } from '~/libs/core'
-import { IconSolid } from '~/libs/ui'
+import { useCountryName, UserProfile, UserRole } from '~/libs/core'
+import { IconOutline, IconSolid, Tooltip } from '~/libs/ui'
 
 import { EditMemberPropertyBtn } from '../../components'
 
@@ -21,7 +22,9 @@ const MemberLocalInfo: FC<MemberLocalInfoProps> = (props: MemberLocalInfoProps) 
     const memberCountry: string | undefined
         = useCountryName(props.profile?.homeCountryCode || props.profile?.competitionCountryCode)
 
-    const city: string | undefined = props.profile?.addresses?.[0]?.city
+    const address = props.profile?.addresses?.[0]
+
+    const city: string | undefined = address?.city
 
     const memberCityTimezone: string | undefined = useMemo(() => {
         if (!city) {
@@ -41,6 +44,9 @@ const MemberLocalInfo: FC<MemberLocalInfoProps> = (props: MemberLocalInfoProps) 
     }, [city, memberCountry])
 
     const canEdit: boolean = props.authProfile?.handle === props.profile.handle
+
+    const isAdminOrTM = props.profile?.roles.includes(UserRole.administrator)
+    || props.profile?.roles?.includes(UserRole.talentManager)
 
     const [isEditMode, setIsEditMode]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
@@ -76,11 +82,44 @@ const MemberLocalInfo: FC<MemberLocalInfoProps> = (props: MemberLocalInfoProps) 
         return 'Unknown location'
     }, [city, memberCountry])
 
+    const hasDetailedAddress: boolean = useMemo(() => {
+        if (!address) return false
+        return !!(
+            trim(address.streetAddr1)
+      || trim(address.streetAddr2)
+      || trim(address.stateCode)
+      || trim(address.zip)
+        )
+    }, [address])
+
+    const canSeeDetailedAddressIcon = canEdit || isAdminOrTM
+
+    const tooltipContent: string | undefined = useMemo(() => {
+        if (!hasDetailedAddress) return undefined
+
+        const parts = [
+            trim(address?.streetAddr1),
+            trim(address?.streetAddr2),
+            trim(address?.city),
+            trim(address?.stateCode),
+            trim(address?.zip),
+        ].filter(Boolean)
+
+        return parts.join(', ')
+    }, [address, hasDetailedAddress])
+
     return (
         <div className={styles.container}>
             <div className={styles.localInfo}>
                 <IconSolid.LocationMarkerIcon />
                 {locationDisplay}
+                {hasDetailedAddress && canSeeDetailedAddressIcon && (
+                    <div className={styles.tooltip}>
+                        <Tooltip content={tooltipContent} triggerOn='hover'>
+                            <IconOutline.InformationCircleIcon className='tooltip-icon' />
+                        </Tooltip>
+                    </div>
+                )}
                 {
                     canEdit && (
                         <EditMemberPropertyBtn

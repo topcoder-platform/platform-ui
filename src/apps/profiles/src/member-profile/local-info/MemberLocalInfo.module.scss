@@ -19,4 +19,15 @@
             margin-left: auto;
         }
     }
+
+    .tooltip {
+        display: inline-block;
+        margin-left: $sp-2;
+        position: relative;
+
+        svg:global(.tooltip-icon) {
+            @include icon-xl;
+            cursor: pointer;
+        }
+    }
 }
