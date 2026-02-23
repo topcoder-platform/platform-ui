@@ -150,4 +150,52 @@ describe('aggregateSubmissionReviews', () => {
         expect(secondRowScores.get('bob'))
             .toBe(65)
     })
+
+    it('collapses duplicate reviewers when one reviewer resource is member-keyed and another is handle-keyed', () => {
+        const reviewers: BackendResource[] = [
+            createReviewer('alice-member-resource', 'alice-member', ''),
+            createReviewer('alice-handle-resource', 'alice-member', 'alice'),
+            createReviewer('bob-resource', 'bob-member', 'bob'),
+        ]
+
+        const submissions: SubmissionInfo[] = [
+            createSubmission('submission-1', [
+                createReviewResult('review-1-alice', 'alice-member-resource', '', 91),
+                createReviewResult('review-1-bob', 'bob-resource', 'bob', 81),
+            ]),
+            createSubmission('submission-2', [
+                createReviewResult('review-2-alice', 'alice-handle-resource', 'alice', 71),
+                createReviewResult('review-2-bob', 'bob-resource', 'bob', 61),
+            ]),
+        ]
+
+        const rows = aggregateSubmissionReviews({
+            mappingReviewAppeal: {} as MappingReviewAppeal,
+            reviewers,
+            submissions,
+        })
+
+        expect(rows)
+            .toHaveLength(2)
+        expect(rows[0].reviews)
+            .toHaveLength(2)
+        expect(rows[1].reviews)
+            .toHaveLength(2)
+
+        const firstRowScores = new Map(
+            rows[0].reviews.map(review => [review.reviewerHandle, review.finalScore]),
+        )
+        expect(firstRowScores.get('alice'))
+            .toBe(91)
+        expect(firstRowScores.get('bob'))
+            .toBe(81)
+
+        const secondRowScores = new Map(
+            rows[1].reviews.map(review => [review.reviewerHandle, review.finalScore]),
+        )
+        expect(secondRowScores.get('alice'))
+            .toBe(71)
+        expect(secondRowScores.get('bob'))
+            .toBe(61)
+    })
 })
