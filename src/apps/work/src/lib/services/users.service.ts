@@ -134,7 +134,9 @@ export async function searchProfilesByUserIds(userIds: string[]): Promise<User[]
                     fields: USER_PROFILE_FIELDS,
                     page: '1',
                     perPage: String(chunkUserIds.length),
-                    userIds: chunkUserIds.join(','),
+                })
+                chunkUserIds.forEach(userId => {
+                    searchQuery.append('userIds[]', userId)
                 })
 
                 return xhrGetAsync<unknown>(

@@ -263,7 +263,9 @@ export async function fetchMembersByUserIds(
                 fields,
                 page: '1',
                 perPage: String(userIdChunk.length),
-                userIds: userIdChunk.join(','),
+            })
+            userIdChunk.forEach(userId => {
+                query.append('userIds[]', userId)
             })
 
             return xhrGetAsync<unknown>(

@@ -699,7 +699,8 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     )
     const isChallengeCreated = !!currentChallengeId
     const isFunChallengeSelected = values.funChallenge === true
-    const showFunChallengeField = !isChallengeCreated && isMarathonMatchChallengeSelected
+    const showFunChallengeField = isMarathonMatchChallengeSelected
+        && (!isChallengeCreated || normalizedChallengeStatus === CHALLENGE_STATUS.NEW)
     const showPrizesAndBillingSection = !isFunChallengeSelected
 
     useEffect(() => {
@@ -818,6 +819,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 }
 
                 const savedChallenge = await createChallenge({
+                    funChallenge: formData.funChallenge === true,
                     name: formData.name,
                     projectId: createProjectId,
                     status: CHALLENGE_STATUS.NEW,
