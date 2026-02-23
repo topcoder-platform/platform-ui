@@ -402,18 +402,19 @@ function getMissingRequiredPhaseCoverageError(
     return `At least one member reviewer with a scorecard is required for phase "${uncoveredPhase.name}".`
 }
 
-interface ReviewerLaunchValidationOptions {
+interface ReviewerValidationOptions {
     challengeTypeAbbreviation?: string
     challengeTypeName?: string
+    requiredReviewersErrorMessage: string
     isTaskChallenge: boolean
 }
 
 /**
- * Validates reviewer setup before launch using the same phase coverage checks as work-manager.
+ * Validates reviewer setup using the same phase coverage checks as work-manager.
  */
-function getReviewerLaunchValidationError(
+function getReviewerValidationError(
     formData: ChallengeEditorFormData,
-    options: ReviewerLaunchValidationOptions,
+    options: ReviewerValidationOptions,
 ): string | undefined {
     if (options.isTaskChallenge) {
         return undefined
@@ -429,7 +430,7 @@ function getReviewerLaunchValidationError(
     })
 
     if (!isMarathonMatch && reviewers.length === 0 && requiredPhases.length > 0) {
-        return 'Reviewers are required for configured review phases before launching.'
+        return options.requiredReviewersErrorMessage
     }
 
     const invalidReviewer = reviewers
@@ -925,22 +926,6 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const launchChallenge = useCallback(async (): Promise<void> => {
         await handleSubmit(
             async formData => {
-                const reviewerValidationError = getReviewerLaunchValidationError(formData, {
-                    challengeTypeAbbreviation: resolvedChallengeTypeAbbreviation,
-                    challengeTypeName: resolvedChallengeTypeName,
-                    isTaskChallenge: isTaskChallengeSelected,
-                })
-
-                if (reviewerValidationError) {
-                    setError('reviewers', {
-                        message: reviewerValidationError,
-                        type: 'manual',
-                    })
-                    showErrorToast(reviewerValidationError)
-                    throw new Error('Challenge launch validation failed')
-                }
-
-                clearErrors('reviewers')
                 await saveChallenge(formData, {
                     statusOverride: CHALLENGE_STATUS.ACTIVE,
                     successMessage: 'Challenge launched successfully',
@@ -952,13 +937,8 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             },
         )()
     }, [
-        clearErrors,
         handleSubmit,
-        isTaskChallengeSelected,
-        resolvedChallengeTypeAbbreviation,
-        resolvedChallengeTypeName,
         saveChallenge,
-        setError,
     ])
 
     useEffect(() => {
@@ -1007,9 +987,40 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
 
     const onSubmit = useCallback(
         async (formData: ChallengeEditorFormData): Promise<void> => {
+            const {
+                isSaveAsDraft,
+            }: SaveStatusMetadata = getSaveStatusMetadata(formData.status, {})
+
+            if (isSaveAsDraft) {
+                const reviewerValidationError = getReviewerValidationError(formData, {
+                    challengeTypeAbbreviation: resolvedChallengeTypeAbbreviation,
+                    challengeTypeName: resolvedChallengeTypeName,
+                    isTaskChallenge: isTaskChallengeSelected,
+                    requiredReviewersErrorMessage:
+                        'Reviewers are required for configured review phases before saving as draft.',
+                })
+
+                if (reviewerValidationError) {
+                    setError('reviewers', {
+                        message: reviewerValidationError,
+                        type: 'manual',
+                    })
+                    showErrorToast(reviewerValidationError)
+                    return
+                }
+            }
+
+            clearErrors('reviewers')
             await saveChallenge(formData)
         },
-        [saveChallenge],
+        [
+            clearErrors,
+            isTaskChallengeSelected,
+            resolvedChallengeTypeAbbreviation,
+            resolvedChallengeTypeName,
+            saveChallenge,
+            setError,
+        ],
     )
 
     const statusText = useMemo(

@@ -13,6 +13,11 @@ interface ProjectMembersData {
     members: ProjectMember[]
 }
 
+const OPEN_INVITE_STATUSES = new Set([
+    'pending',
+    'requested',
+])
+
 export interface UseFetchProjectMembersResult {
     invites: ProjectInvite[]
     members: ProjectMember[]
@@ -122,7 +127,17 @@ async function fetchProjectMembers(projectId: string): Promise<ProjectMembersDat
     return {
         invites: invites
             .map(invite => normalizeInvite(invite))
-            .filter((invite): invite is ProjectInvite => !!invite)
+            .filter((invite): invite is ProjectInvite => {
+                if (!invite) {
+                    return false
+                }
+
+                const normalizedStatus = toOptionalString(invite.status)
+                    ?.toLowerCase()
+
+                return !normalizedStatus
+                    || OPEN_INVITE_STATUSES.has(normalizedStatus)
+            })
             .map(invite => ({
                 ...invite,
                 projectId: invite.projectId || normalizedProjectId,

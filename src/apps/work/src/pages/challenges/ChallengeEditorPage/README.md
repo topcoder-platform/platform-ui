@@ -24,6 +24,7 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 - `tags`: optional string array.
 - `skills`: required unless billing account is listed in `SKILLS_OPTIONAL_BILLING_ACCOUNT_IDS`.
 - `reviewer`: required for task challenges when `legacy.reviewType` is `INTERNAL`.
+- `reviewers`: when using `Save as Draft` from `NEW` status, non-task/non-marathon challenges must include reviewer coverage for configured review phases. If required phases are configured, each phase must have at least one member reviewer with a scorecard.
 
 ## Autosave Behavior
 
