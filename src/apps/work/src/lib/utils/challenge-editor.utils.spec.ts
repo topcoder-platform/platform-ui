@@ -186,3 +186,63 @@ describe('challenge-editor utils task reviewer mapping', () => {
             })
     })
 })
+
+describe('challenge-editor utils round type mapping', () => {
+    it('maps to two rounds when checkpoint phases are present and roundType is missing', () => {
+        const result = transformChallengeToFormData({
+            description: 'Public specification',
+            name: 'Design challenge',
+            phases: [
+                {
+                    duration: 3600,
+                    name: 'Registration',
+                    phaseId: 'registration',
+                },
+                {
+                    duration: 3600,
+                    name: 'Checkpoint Submission',
+                    phaseId: 'checkpoint-submission',
+                },
+                {
+                    duration: 3600,
+                    name: 'Checkpoint Screening',
+                    phaseId: 'checkpoint-screening',
+                },
+                {
+                    duration: 3600,
+                    name: 'Checkpoint Review',
+                    phaseId: 'checkpoint-review',
+                },
+            ],
+            trackId: 'track-id',
+            typeId: 'type-id',
+        })
+
+        expect(result.roundType)
+            .toBe('Two rounds')
+    })
+
+    it('maps to single round when checkpoint phases are not present and roundType is missing', () => {
+        const result = transformChallengeToFormData({
+            description: 'Public specification',
+            name: 'Design challenge',
+            phases: [
+                {
+                    duration: 3600,
+                    name: 'Registration',
+                    phaseId: 'registration',
+                },
+                {
+                    duration: 3600,
+                    name: 'Submission',
+                    phaseId: 'submission',
+                },
+            ],
+            trackId: 'track-id',
+            typeId: 'type-id',
+        })
+
+        expect(result.roundType)
+            .toBe('Single round')
+    })
+})

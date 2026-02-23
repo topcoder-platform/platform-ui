@@ -23,11 +23,13 @@ import {
 import {
     AUTOSAVE_DELAY_MS,
     PRIZE_SET_TYPES,
+    ROUND_TYPES,
 } from '../../../../lib/constants/challenge-editor.constants'
 import {
     useAutosave,
     useFetchChallengeTracks,
     useFetchChallengeTypes,
+    useFetchTimelineTemplates,
 } from '../../../../lib/hooks'
 import {
     Challenge,
@@ -132,6 +134,9 @@ import {
 import {
     TermsField,
 } from './TermsField'
+import {
+    resolveCreateTimelineTemplateId,
+} from './ChallengeEditorForm.utils'
 import styles from './ChallengeEditorForm.module.scss'
 
 interface ChallengeEditorFormProps {
@@ -584,6 +589,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const values = watch()
     const challengeTracks = useFetchChallengeTracks().tracks
     const challengeTypes = useFetchChallengeTypes().challengeTypes
+    const timelineTemplates = useFetchTimelineTemplates().timelineTemplates
 
     const selectedChallengeType = useMemo<ChallengeType | undefined>(
         () => challengeTypes.find(challengeType => challengeType.id === values.typeId),
@@ -818,11 +824,24 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                     throw new Error('Project id is required to create challenge')
                 }
 
+                const timelineTemplateId = resolveCreateTimelineTemplateId({
+                    roundType: formData.roundType,
+                    timelineTemplates,
+                    trackId: formData.trackId,
+                    typeId: formData.typeId,
+                })
+                if (formData.roundType === ROUND_TYPES.TWO_ROUNDS && !timelineTemplateId) {
+                    throw new Error(
+                        'Unable to find a two-round timeline template for the selected track and type',
+                    )
+                }
+
                 const savedChallenge = await createChallenge({
                     funChallenge: formData.funChallenge === true,
                     name: formData.name,
                     projectId: createProjectId,
                     status: CHALLENGE_STATUS.NEW,
+                    timelineTemplateId,
                     trackId: formData.trackId,
                     typeId: formData.typeId,
                 })
@@ -851,6 +870,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             fallbackProjectId,
             getValues,
             reset,
+            timelineTemplates,
             trigger,
         ],
     )

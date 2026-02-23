@@ -840,7 +840,20 @@ export function transformChallengeToFormData(
     const metadataWithoutMilestone = metadata
         .filter(metadataEntry => !MILESTONE_METADATA_KEYS.includes(metadataEntry.name))
     const milestoneConfiguration = normalizeMilestoneConfiguration(metadata)
-    const roundType = normalizeRoundType(challenge?.roundType) || ROUND_TYPES.SINGLE_ROUND
+    const checkpointPhaseNames = new Set([
+        'checkpoint submission',
+        'checkpoint screening',
+        'checkpoint review',
+    ])
+    const hasCheckpointPhases = checkpointPhaseNames.size > 0
+        && Array.from(checkpointPhaseNames)
+            .every(phaseName => phases
+                .some(phase => normalizeOptionalString(phase.name)
+                    ?.toLowerCase() === phaseName))
+    const roundType = normalizeRoundType(challenge?.roundType)
+        || (hasCheckpointPhases
+            ? ROUND_TYPES.TWO_ROUNDS
+            : ROUND_TYPES.SINGLE_ROUND)
     const reviewType = normalizeReviewType(challenge?.legacy?.reviewType) || REVIEW_TYPES.INTERNAL
     const isTask = normalizeOptionalBoolean(challenge?.task?.isTask) || false
     const reviewer = normalizeOptionalString(challenge?.reviewer)
