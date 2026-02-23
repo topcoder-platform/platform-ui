@@ -26,7 +26,6 @@ import { checkIsMM } from '../../utils/challenge'
 import { MobileListView } from './MobileListView'
 import {
     canOpenReviewUi,
-    getChallengeLinkId,
     getReviewUiChallengeUrl,
 } from './reviewUiLink'
 import styles from './ChallengeList.module.scss'
@@ -185,13 +184,12 @@ const Actions: FC<{
         },
     )
 
-    const challengeLinkId = getChallengeLinkId(props.challenge)
-    const hasChallengeDetailsAccess = Boolean(challengeLinkId)
+    const hasChallengeDetailsAccess = canOpenReviewUi(props.challenge.id)
     const hasProjectId
         = typeof props.challenge.projectId === 'number'
         && props.challenge.projectId > 0
     const hasWorkManagerAccess = hasProjectId && hasChallengeDetailsAccess
-    const hasReviewUiAccess = canOpenReviewUi(challengeLinkId)
+    const hasReviewUiAccess = canOpenReviewUi(props.challenge.id)
 
     return (
         <div className={styles.rowActions}>
@@ -244,7 +242,7 @@ const Actions: FC<{
                     <li className={cn({ disabled: !hasChallengeDetailsAccess })}>
                         {hasChallengeDetailsAccess && (
                             <a
-                                href={`${EnvironmentConfig.ADMIN.CHALLENGE_URL}/${challengeLinkId}`}
+                                href={`${EnvironmentConfig.ADMIN.CHALLENGE_URL}/${props.challenge.id}`}
                                 target='_blank'
                                 rel='noreferrer'
                             >
@@ -257,7 +255,7 @@ const Actions: FC<{
                         {hasWorkManagerAccess && (
                             <a
                                 href={
-                                    `${EnvironmentConfig.ADMIN.WORK_MANAGER_URL}/projects/${props.challenge.projectId}/challenges/${challengeLinkId}/view` /* eslint-disable-line max-len */
+                                    `${EnvironmentConfig.ADMIN.WORK_MANAGER_URL}/projects/${props.challenge.projectId}/challenges/${props.challenge.id}/view` /* eslint-disable-line max-len */
                                 }
                                 target='_blank'
                                 rel='noreferrer'
@@ -272,7 +270,7 @@ const Actions: FC<{
                             <a
                                 href={getReviewUiChallengeUrl(
                                     EnvironmentConfig.ADMIN.REVIEW_UI_URL,
-                                    challengeLinkId || '',
+                                    props.challenge.id,
                                 )}
                                 target='_blank'
                                 rel='noreferrer'
