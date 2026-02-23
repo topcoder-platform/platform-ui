@@ -23,6 +23,7 @@ import type {
     MappingReviewAppeal,
     ReviewAppContextModel,
     Screening,
+    ScreeningReviewDetail,
     SubmissionInfo,
 } from '../models'
 import {
@@ -84,6 +85,11 @@ const resolveCheckpointSubmissionScore = (
     }
 
     return parseSubmissionScore(submission.screeningScore)
+}
+
+const isCompletedReviewStatus = (status?: string): boolean => {
+    const normalizedStatus = (status ?? '').toUpperCase()
+    return normalizedStatus === 'COMPLETED' || normalizedStatus === 'SUBMITTED'
 }
 
 type CheckpointReviewDebugArgs = {
@@ -936,25 +942,6 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
                     item,
                 )
 
-                let numericScore = getNumericScore(matchedReview)
-                let scoreDisplay = scoreToDisplay(numericScore, base.score)
-
-                if (
-                    numericScore === undefined
-                    && matchedReview
-                    && ['COMPLETED', 'SUBMITTED'].includes((matchedReview.status || '').toUpperCase())
-                ) {
-                    const submissionScore = parseSubmissionScore(item.screeningScore)
-                    if (submissionScore !== undefined) {
-                        numericScore = submissionScore
-                        scoreDisplay = scoreToDisplay(numericScore, base.score)
-                    }
-                }
-
-                const reviewForHandle = matchedReview
-                const resolvedScreenerId = reviewForHandle?.resourceId ?? base.screenerId
-                const result = determinePassFail(numericScore, minPass, base.result, matchedReview?.metadata)
-
                 const normalizeResourceId = (resourceIdValue: BackendReview['resourceId']): string => {
                     if (typeof resourceIdValue === 'string') {
                         return resourceIdValue.trim()
@@ -1004,7 +991,10 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
                     memberHandle: 'Not assigned',
                 } as BackendResource
 
-                const screenerDisplay = (() => {
+                const resolveScreenerDisplay = (
+                    reviewForHandle: BackendReview | undefined,
+                    resolvedScreenerId: string | undefined,
+                ): BackendResource => {
                     if (resolvedScreenerId) {
                         const resourceMatch = (resources ?? []).find(resource => resource.id === resolvedScreenerId)
                         if (resourceMatch) {
@@ -1024,21 +1014,118 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
                     }
 
                     return defaultScreener
-                })()
+                }
+
+                const reviewEntries = candidateReviews.length
+                    ? candidateReviews
+                    : (matchedReview ? [matchedReview] : [])
+
+                const screeningReviewsWithScore = reviewEntries.map(reviewEntry => {
+                    let reviewNumericScore = getNumericScore(reviewEntry)
+
+                    if (
+                        reviewNumericScore === undefined
+                        && reviewEntries.length <= 1
+                        && reviewEntry
+                        && isCompletedReviewStatus(reviewEntry.status ?? undefined)
+                    ) {
+                        const submissionScore = parseSubmissionScore(item.screeningScore)
+                        if (submissionScore !== undefined) {
+                            reviewNumericScore = submissionScore
+                        }
+                    }
+
+                    const resolvedScreenerId = normalizeResourceId(reviewEntry?.resourceId) || base.screenerId
+                    const screenerDisplay = resolveScreenerDisplay(reviewEntry, resolvedScreenerId)
+
+                    const reviewDetail: ScreeningReviewDetail = {
+                        result: determinePassFail(
+                            reviewNumericScore,
+                            minPass,
+                            base.result,
+                            reviewEntry?.metadata,
+                        ),
+                        reviewId: reviewEntry?.id,
+                        reviewPhaseId: resolveReviewPhaseId(reviewEntry),
+                        reviewStatus: reviewEntry?.status ?? undefined,
+                        score: scoreToDisplay(reviewNumericScore, base.score),
+                        screener: screenerDisplay,
+                        screenerId: screenerDisplay?.id ?? resolvedScreenerId,
+                    }
+
+                    return {
+                        numericScore: reviewNumericScore,
+                        reviewDetail,
+                    }
+                })
+
+                const screeningReviews = screeningReviewsWithScore
+                    .map(({ reviewDetail }: { reviewDetail: ScreeningReviewDetail }) => reviewDetail)
+                    .sort((first, second) => (
+                        (first.screener?.memberHandle ?? '')
+                            .localeCompare(second.screener?.memberHandle ?? '', undefined, { sensitivity: 'base' })
+                        || (first.screenerId ?? '')
+                            .localeCompare(second.screenerId ?? '')
+                    ))
+
+                const hasMultipleScreeners = screeningReviews.length > 1
+                const hasIncompleteMultipleScreening = hasMultipleScreeners
+                    && screeningReviews.some(reviewDetail => !isCompletedReviewStatus(reviewDetail.reviewStatus))
+                const numericScores = screeningReviewsWithScore
+                    .map(({ numericScore }: { numericScore: number | undefined }) => numericScore)
+                    .filter((value): value is number => typeof value === 'number' && Number.isFinite(value))
+                const averageNumericScore = numericScores.length
+                    ? numericScores.reduce((sum, value) => sum + value, 0) / numericScores.length
+                    : undefined
+                const hasFailingResult = screeningReviews.some(reviewDetail => {
+                    const normalizedResult = (reviewDetail.result ?? '').toUpperCase()
+                    return normalizedResult === 'NO PASS' || normalizedResult === 'FAIL'
+                })
+                const hasPassingResult = screeningReviews.some(reviewDetail => (
+                    (reviewDetail.result ?? '').toUpperCase() === 'PASS'
+                ))
+                const aggregatedScoreFallback = hasMultipleScreeners
+                    ? base.score
+                    : (screeningReviews[0]?.score ?? base.score)
+                const aggregatedScore = hasIncompleteMultipleScreening
+                    ? '--'
+                    : scoreToDisplay(averageNumericScore, aggregatedScoreFallback)
+
+                let aggregatedResult: Screening['result'] = base.result
+                if (hasIncompleteMultipleScreening) {
+                    aggregatedResult = '-'
+                } else if (typeof averageNumericScore === 'number' && typeof minPass === 'number') {
+                    aggregatedResult = averageNumericScore >= minPass ? 'PASS' : 'NO PASS'
+                } else if (hasFailingResult) {
+                    aggregatedResult = 'NO PASS'
+                } else if (hasPassingResult) {
+                    aggregatedResult = 'PASS'
+                }
+
+                const primaryReview = myAssignment ?? matchedReview ?? reviewEntries[0]
+                const primaryScreener = screeningReviews.find(
+                    detail => detail.reviewId && detail.reviewId === primaryReview?.id,
+                ) ?? screeningReviews[0]
+                const primaryScreenerId = normalizeResourceId(primaryReview?.resourceId)
+                    || primaryScreener?.screenerId
+                    || base.screenerId
+                const primaryScreenerDisplay = primaryScreener?.screener
+                    ?? resolveScreenerDisplay(primaryReview, primaryScreenerId)
 
                 return {
                     ...base,
                     myReviewId: myAssignment?.id,
                     myReviewResourceId: myAssignment?.resourceId,
                     myReviewStatus: myAssignment?.status ?? undefined,
-                    phaseName: matchedReview?.phaseName ?? undefined,
-                    result,
-                    reviewId: matchedReview?.id,
-                    reviewPhaseId: resolveReviewPhaseId(matchedReview),
-                    reviewStatus: matchedReview?.status ?? undefined,
-                    score: scoreDisplay,
-                    screener: screenerDisplay,
-                    screenerId: screenerDisplay?.id ?? resolvedScreenerId,
+                    phaseName: primaryReview?.phaseName ?? matchedReview?.phaseName ?? undefined,
+                    result: aggregatedResult,
+                    reviewId: primaryReview?.id,
+                    reviewPhaseId: resolveReviewPhaseId(primaryReview),
+                    reviewStatus: primaryReview?.status ?? undefined,
+                    score: aggregatedScore,
+                    screener: primaryScreenerDisplay,
+                    screenerId: primaryScreenerDisplay?.id ?? primaryScreenerId,
+                    screeningReviews,
                     userInfo: resourceMemberIdMapping[base.memberId],
                 }
             })

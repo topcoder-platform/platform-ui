@@ -44,11 +44,13 @@ export interface ChallengeEditorFormData extends Omit<Partial<Challenge>, 'id' |
     prizeSets?: PrizeSet[]
     privateDescription?: string
     reviewers?: Reviewer[]
+    reviewer?: string
     roundType?: RoundType
     skills: ChallengeSkill[]
     tags: string[]
     terms?: string[]
     legacy?: {
+        isTask?: boolean
         reviewType?: ReviewType
         useSchedulingAPI?: boolean
     }

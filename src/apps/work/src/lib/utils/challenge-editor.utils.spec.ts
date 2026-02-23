@@ -65,6 +65,35 @@ describe('challenge-editor utils funChallenge mapping', () => {
         expect(result.funChallenge)
             .toBe(true)
     })
+
+    it('omits prizeSets from API payload for fun challenges', () => {
+        const formData: Record<string, unknown> = {
+            description: 'Public specification',
+            funChallenge: true,
+            name: 'MM Fun Challenge',
+            prizeSets: [
+                {
+                    prizes: [
+                        {
+                            type: 'USD',
+                            value: 500,
+                        },
+                    ],
+                    type: 'placement',
+                },
+            ],
+            skills: [],
+            tags: [],
+            trackId: 'track-id',
+            typeId: 'type-id',
+        }
+
+        const result = transformFormDataToChallenge(formData as any)
+
+        expect(result)
+            .not
+            .toHaveProperty('prizeSets')
+    })
 })
 
 describe('challenge-editor utils wiproAllowed mapping', () => {
@@ -108,5 +137,52 @@ describe('challenge-editor utils wiproAllowed mapping', () => {
 
         expect(result.wiproAllowed)
             .toBe(true)
+    })
+})
+
+describe('challenge-editor utils task reviewer mapping', () => {
+    it('maps task reviewer and task flag into form data', () => {
+        const result = transformChallengeToFormData({
+            description: 'Public specification',
+            name: 'Task challenge',
+            reviewer: 'jcori',
+            task: {
+                isTask: true,
+            },
+            trackId: 'track-id',
+            typeId: 'type-id',
+        })
+
+        expect(result.reviewer)
+            .toBe('jcori')
+        expect(result.legacy?.isTask)
+            .toBe(true)
+    })
+
+    it('serializes task reviewer but omits legacy.isTask from API payload', () => {
+        const formData: Record<string, unknown> = {
+            description: 'Public specification',
+            legacy: {
+                isTask: true,
+                reviewType: 'INTERNAL',
+                useSchedulingAPI: true,
+            },
+            name: 'Task challenge',
+            reviewer: 'jcori',
+            skills: [],
+            tags: [],
+            trackId: 'track-id',
+            typeId: 'type-id',
+        }
+
+        const result = transformFormDataToChallenge(formData as any)
+
+        expect(result.reviewer)
+            .toBe('jcori')
+        expect(result.legacy)
+            .toEqual({
+                reviewType: 'INTERNAL',
+                useSchedulingAPI: true,
+            })
     })
 })

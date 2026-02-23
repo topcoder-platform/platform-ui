@@ -19,9 +19,11 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 - `description`: required, minimum length enforced.
 - `privateDescription`: optional.
 - `funChallenge`: optional boolean, defaults to `false` (unchecked).
+- `prizeSets`: placement prizes are required unless `funChallenge` is `true`.
 - `wiproAllowed`: optional boolean, defaults to `false` (unchecked).
 - `tags`: optional string array.
 - `skills`: required unless billing account is listed in `SKILLS_OPTIONAL_BILLING_ACCOUNT_IDS`.
+- `reviewer`: required for task challenges when `legacy.reviewType` is `INTERNAL`.
 
 ## Autosave Behavior
 
@@ -36,13 +38,18 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 - `ChallengeNameField`: text input.
 - `ChallengeTrackField`: track selector from `useFetchChallengeTracks`.
 - `ChallengeTypeField`: active type selector from `useFetchChallengeTypes`.
-- `FunChallengeField`: checkbox to mark leaderboard-scoring-only fun challenges.
+- `FunChallengeField`: shown only during challenge creation for `Marathon Match` type.
 - `ChallengeDescriptionField`: public markdown spec editor.
 - `ChallengePrivateDescriptionField`: optional private markdown spec editor.
 - `ChallengeTagsField`: multi creatable tag picker excluding special challenge tags.
 - `ChallengeSkillsField`: async multi skills picker with billing-account-based required behavior.
 - `CopilotField`: clearable dropdown populated with copilot handles from the current project.
+- `ReviewTypeField`: task-only reviewer controls; enforces internal review type and requires selecting a reviewer from project members.
 - `Wipro Allowed` checkbox: advanced-option toggle that maps to the challenge `wiproAllowed` API flag.
+
+## Conditional Sections
+
+- `Prizes & Billing` is hidden when `funChallenge` is enabled.
 
 ## API Integration
 

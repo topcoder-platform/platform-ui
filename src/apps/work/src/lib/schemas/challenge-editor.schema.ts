@@ -302,28 +302,33 @@ export const challengeBasicInfoSchema: yup.ObjectSchema<ChallengeBasicInfoFormDa
         privateDescription: yup.string()
             .optional(),
         prizeSets: yup.array()
-            .of(prizeSetSchema)
-            .test(
-                'placement-prize-required',
-                'At least one first-place prize is required',
-                (value: unknown): boolean => {
-                    if (!Array.isArray(value)) {
-                        return false
-                    }
+            .when('funChallenge', {
+                is: true,
+                otherwise: schema => schema
+                    .of(prizeSetSchema)
+                    .test(
+                        'placement-prize-required',
+                        'At least one first-place prize is required',
+                        (value: unknown): boolean => {
+                            if (!Array.isArray(value)) {
+                                return false
+                            }
 
-                    const placementPrizeSet = value.find(prizeSet => (
-                        typeof prizeSet === 'object'
-                            && prizeSet
-                            && (prizeSet as { type?: string }).type === PRIZE_SET_TYPES.PLACEMENT
-                    )) as {
-                        prizes?: unknown[]
-                    } | undefined
+                            const placementPrizeSet = value.find(prizeSet => (
+                                typeof prizeSet === 'object'
+                                    && prizeSet
+                                    && (prizeSet as { type?: string }).type === PRIZE_SET_TYPES.PLACEMENT
+                            )) as {
+                                prizes?: unknown[]
+                            } | undefined
 
-                    return Array.isArray(placementPrizeSet?.prizes)
-                        && (placementPrizeSet?.prizes?.length || 0) > 0
-                },
-            )
-            .optional(),
+                            return Array.isArray(placementPrizeSet?.prizes)
+                                && (placementPrizeSet?.prizes?.length || 0) > 0
+                        },
+                    )
+                    .optional(),
+                then: schema => schema.optional(),
+            }),
         skills: yup
             .array()
             .of(skillSchema)
@@ -355,6 +360,8 @@ export const challengeBasicInfoSchema: yup.ObjectSchema<ChallengeBasicInfoFormDa
 
 export const challengeScheduleSchema = yup.object({
     legacy: yup.object({
+        isTask: yup.boolean()
+            .default(false),
         reviewType: yup.string()
             .oneOf(Object.values(REVIEW_TYPES))
             .default(REVIEW_TYPES.INTERNAL)
@@ -363,6 +370,7 @@ export const challengeScheduleSchema = yup.object({
             .default(true),
     })
         .default({
+            isTask: false,
             reviewType: REVIEW_TYPES.INTERNAL,
             useSchedulingAPI: true,
         }),
@@ -409,6 +417,24 @@ export const challengeAdvancedOptionsSchema = yup.object({
     metadata: yup.array()
         .of(metadataSchema)
         .optional(),
+    reviewer: yup.string()
+        .transform(emptyStringToUndefined)
+        .when([
+            'legacy.isTask',
+            'legacy.reviewType',
+        ], {
+            is: (
+                isTask: boolean | undefined,
+                reviewType: string | undefined,
+            ): boolean => (
+                isTask === true
+                && String(reviewType || '')
+                    .trim()
+                    .toUpperCase() === REVIEW_TYPES.INTERNAL
+            ),
+            otherwise: schema => schema.optional(),
+            then: schema => schema.required('Select a reviewer'),
+        }),
     reviewers: yup.array()
         .of(reviewerSchema)
         .optional(),

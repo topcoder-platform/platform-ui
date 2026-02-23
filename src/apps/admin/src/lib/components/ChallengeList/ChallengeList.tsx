@@ -24,7 +24,11 @@ import { Paging } from '../../models/challenge-management/Pagination'
 import { checkIsMM } from '../../utils/challenge'
 
 import { MobileListView } from './MobileListView'
-import { canOpenReviewUi, getReviewUiChallengeUrl } from './reviewUiLink'
+import {
+    canOpenReviewUi,
+    getChallengeLinkId,
+    getReviewUiChallengeUrl,
+} from './reviewUiLink'
 import styles from './ChallengeList.module.scss'
 
 export interface ChallengeListProps {
@@ -181,10 +185,13 @@ const Actions: FC<{
         },
     )
 
+    const challengeLinkId = getChallengeLinkId(props.challenge)
+    const hasChallengeDetailsAccess = Boolean(challengeLinkId)
     const hasProjectId
-        = 'projectId' in props.challenge
-        && props.challenge.projectId !== undefined
-    const hasReviewUiAccess = canOpenReviewUi(props.challenge.id)
+        = typeof props.challenge.projectId === 'number'
+        && props.challenge.projectId > 0
+    const hasWorkManagerAccess = hasProjectId && hasChallengeDetailsAccess
+    const hasReviewUiAccess = canOpenReviewUi(challengeLinkId)
 
     return (
         <div className={styles.rowActions}>
@@ -234,20 +241,23 @@ const Actions: FC<{
                 classNames={{ menu: 'challenge-list-actions-dropdown-menu' }}
             >
                 <ul>
-                    <li>
-                        <a
-                            href={`${EnvironmentConfig.ADMIN.CHALLENGE_URL}/${props.challenge.id}`}
-                            target='_blank'
-                            rel='noreferrer'
-                        >
-                            Challenge Details
-                        </a>
+                    <li className={cn({ disabled: !hasChallengeDetailsAccess })}>
+                        {hasChallengeDetailsAccess && (
+                            <a
+                                href={`${EnvironmentConfig.ADMIN.CHALLENGE_URL}/${challengeLinkId}`}
+                                target='_blank'
+                                rel='noreferrer'
+                            >
+                                Challenge Details
+                            </a>
+                        )}
+                        {!hasChallengeDetailsAccess && <span>Challenge Details</span>}
                     </li>
-                    <li className={cn({ disabled: !hasProjectId })}>
-                        {hasProjectId && (
+                    <li className={cn({ disabled: !hasWorkManagerAccess })}>
+                        {hasWorkManagerAccess && (
                             <a
                                 href={
-                                    `${EnvironmentConfig.ADMIN.WORK_MANAGER_URL}/projects/${props.challenge.projectId}/challenges/${props.challenge.id}/view` /* eslint-disable-line max-len */
+                                    `${EnvironmentConfig.ADMIN.WORK_MANAGER_URL}/projects/${props.challenge.projectId}/challenges/${challengeLinkId}/view` /* eslint-disable-line max-len */
                                 }
                                 target='_blank'
                                 rel='noreferrer'
@@ -255,14 +265,14 @@ const Actions: FC<{
                                 Work Manager
                             </a>
                         )}
-                        {!hasProjectId && <span>Work Manager</span>}
+                        {!hasWorkManagerAccess && <span>Work Manager</span>}
                     </li>
                     <li className={cn({ disabled: !hasReviewUiAccess })}>
                         {hasReviewUiAccess && (
                             <a
                                 href={getReviewUiChallengeUrl(
                                     EnvironmentConfig.ADMIN.REVIEW_UI_URL,
-                                    props.challenge.id,
+                                    challengeLinkId || '',
                                 )}
                                 target='_blank'
                                 rel='noreferrer'

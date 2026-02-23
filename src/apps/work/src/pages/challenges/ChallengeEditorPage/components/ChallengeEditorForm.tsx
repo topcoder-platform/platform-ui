@@ -118,6 +118,9 @@ import {
     ReviewersField,
 } from './ReviewersField'
 import {
+    ReviewTypeField,
+} from './ReviewTypeField'
+import {
     RoundTypeField,
 } from './RoundTypeField'
 import {
@@ -670,6 +673,16 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             selectedChallengeType,
         ],
     )
+    const isMarathonMatchChallengeSelected = useMemo(
+        (): boolean => isMarathonMatchChallengeTypeByNameAndAbbreviation({
+            abbreviation: resolvedChallengeTypeAbbreviation,
+            name: resolvedChallengeTypeName,
+        }),
+        [
+            resolvedChallengeTypeAbbreviation,
+            resolvedChallengeTypeName,
+        ],
+    )
     const showRoundTypeField = isDesignTrackSelected && Boolean(values.typeId?.trim())
     const showSubmissionSettingsSection = isDesignTrackSelected && isChallengeTypeSelected
     const showCheckpointPrizes = useMemo(
@@ -684,6 +697,9 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         ],
     )
     const isChallengeCreated = !!currentChallengeId
+    const isFunChallengeSelected = values.funChallenge === true
+    const showFunChallengeField = !isChallengeCreated && isMarathonMatchChallengeSelected
+    const showPrizesAndBillingSection = !isFunChallengeSelected
 
     useEffect(() => {
         setCurrentChallengeId(props.challenge?.id)
@@ -722,6 +738,32 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         selectedChallengeType,
         setValue,
         values.typeId,
+    ])
+
+    useEffect(() => {
+        setValue('legacy.isTask', isTaskChallengeSelected, {
+            shouldDirty: false,
+            shouldValidate: true,
+        })
+    }, [
+        isTaskChallengeSelected,
+        setValue,
+    ])
+
+    useEffect(() => {
+        if (isChallengeCreated || isMarathonMatchChallengeSelected || values.funChallenge !== true) {
+            return
+        }
+
+        setValue('funChallenge', false, {
+            shouldDirty: true,
+            shouldValidate: true,
+        })
+    }, [
+        isChallengeCreated,
+        isMarathonMatchChallengeSelected,
+        setValue,
+        values.funChallenge,
     ])
 
     useEffect(() => {
@@ -991,7 +1033,9 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                         <ChallengeNameField />
                         <ChallengeTrackField disabled={isChallengeCreated} />
                         <ChallengeTypeField disabled={isChallengeCreated} />
-                        <FunChallengeField />
+                        {showFunChallengeField
+                            ? <FunChallengeField />
+                            : undefined}
                         {showRoundTypeField
                             ? <RoundTypeField disabled={isChallengeCreated} />
                             : undefined}
@@ -1047,31 +1091,35 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                 </div>
                             </section>
 
-                            <section className={styles.section}>
-                                <h3 className={styles.sectionTitle}>Prizes &amp; Billing</h3>
-                                <div className={styles.prizesBillingGrid}>
-                                    <div className={styles.prizeInputs}>
-                                        <div className={styles.challengePrizesColumn}>
-                                            <ChallengePrizesField
-                                                challengeTypeAbbreviation={resolvedChallengeTypeAbbreviation}
-                                                challengeTypeName={resolvedChallengeTypeName}
-                                                name='prizeSets'
-                                            />
-                                            {showCheckpointPrizes
-                                                ? <CheckpointPrizesField name='prizeSets' />
-                                                : undefined}
+                            {showPrizesAndBillingSection
+                                ? (
+                                    <section className={styles.section}>
+                                        <h3 className={styles.sectionTitle}>Prizes &amp; Billing</h3>
+                                        <div className={styles.prizesBillingGrid}>
+                                            <div className={styles.prizeInputs}>
+                                                <div className={styles.challengePrizesColumn}>
+                                                    <ChallengePrizesField
+                                                        challengeTypeAbbreviation={resolvedChallengeTypeAbbreviation}
+                                                        challengeTypeName={resolvedChallengeTypeName}
+                                                        name='prizeSets'
+                                                    />
+                                                    {showCheckpointPrizes
+                                                        ? <CheckpointPrizesField name='prizeSets' />
+                                                        : undefined}
+                                                </div>
+                                                <div className={styles.copilotFeeColumn}>
+                                                    <CopilotFeeField name='prizeSets' />
+                                                </div>
+                                            </div>
+                                            <div className={styles.billingSummary}>
+                                                <ReviewCostField name='prizeSets' />
+                                                <ChallengeFeeField challengeFee={values.challengeFee} />
+                                                <ChallengeTotalField />
+                                            </div>
                                         </div>
-                                        <div className={styles.copilotFeeColumn}>
-                                            <CopilotFeeField name='prizeSets' />
-                                        </div>
-                                    </div>
-                                    <div className={styles.billingSummary}>
-                                        <ReviewCostField name='prizeSets' />
-                                        <ChallengeFeeField challengeFee={values.challengeFee} />
-                                        <ChallengeTotalField />
-                                    </div>
-                                </div>
-                            </section>
+                                    </section>
+                                )
+                                : undefined}
 
                             <section className={styles.section}>
                                 <h3 className={styles.sectionTitle}>Timeline &amp; Schedule</h3>
@@ -1087,6 +1135,14 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                         ? <AssignedMemberField />
                                         : undefined}
                                     <CopilotField projectId={fallbackProjectId} />
+                                    {isTaskChallengeSelected
+                                        ? (
+                                            <ReviewTypeField
+                                                isTaskChallenge={isTaskChallengeSelected}
+                                                projectId={fallbackProjectId}
+                                            />
+                                        )
+                                        : undefined}
                                     <GroupsField />
                                     <TermsField />
                                     <NDAField />

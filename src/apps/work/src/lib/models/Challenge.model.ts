@@ -103,6 +103,7 @@ export interface Challenge {
     updated?: string
     createdBy?: string
     copilot?: string
+    reviewer?: string
     discussionForum?: boolean
     funChallenge?: boolean
     wiproAllowed?: boolean

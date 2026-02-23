@@ -842,6 +842,8 @@ export function transformChallengeToFormData(
     const milestoneConfiguration = normalizeMilestoneConfiguration(metadata)
     const roundType = normalizeRoundType(challenge?.roundType) || ROUND_TYPES.SINGLE_ROUND
     const reviewType = normalizeReviewType(challenge?.legacy?.reviewType) || REVIEW_TYPES.INTERNAL
+    const isTask = normalizeOptionalBoolean(challenge?.task?.isTask) || false
+    const reviewer = normalizeOptionalString(challenge?.reviewer)
     const status = normalizeOptionalString(challenge?.status)
         ?.toUpperCase()
     const billingAccountId = normalizeOptionalId(challenge?.billing?.billingAccountId)
@@ -866,6 +868,7 @@ export function transformChallengeToFormData(
         groups: normalizeStringArray(challenge?.groups),
         id: challenge?.id,
         legacy: {
+            isTask,
             reviewType,
             useSchedulingAPI: isSchedulingEnabled,
         },
@@ -879,6 +882,7 @@ export function transformChallengeToFormData(
         phases,
         privateDescription,
         prizeSets: prizeSetsForForm,
+        reviewer,
         reviewers: normalizeReviewers(challenge?.reviewers),
         roundType,
         skills,
@@ -916,6 +920,9 @@ export function transformFormDataToChallenge(
     const status = normalizeOptionalString(formData.status)
         ?.toUpperCase()
     const billingAccountId = normalizeOptionalId(formData.billing?.billingAccountId)
+    const prizeSets = formData.funChallenge === true
+        ? []
+        : filterEmptyPrizeSets(normalizePrizeSets(formData.prizeSets))
 
     const challenge: Partial<Challenge> = {
         assignedMemberId: normalizeMemberSelectorValue(formData.assignedMemberId),
@@ -944,7 +951,8 @@ export function transformFormDataToChallenge(
             ? serializePhasesForApi(formData.phases)
             : undefined,
         privateDescription: formData.privateDescription,
-        prizeSets: filterEmptyPrizeSets(normalizePrizeSets(formData.prizeSets)),
+        prizeSets,
+        reviewer: normalizeOptionalString(formData.reviewer),
         reviewers: normalizeReviewers(formData.reviewers),
         roundType,
         skills: normalizedSkills,
