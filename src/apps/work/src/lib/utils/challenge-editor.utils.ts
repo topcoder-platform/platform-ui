@@ -44,6 +44,7 @@ const MILESTONE_METADATA_NAMES = {
 } as const
 
 const MILESTONE_METADATA_KEYS: readonly string[] = Object.values(MILESTONE_METADATA_NAMES)
+const ALLOW_EMPTY_ARRAY_PAYLOAD_KEYS = new Set<string>(['terms'])
 
 function isNonEmptyString(value: unknown): value is string {
     return typeof value === 'string' && value.trim().length > 0
@@ -808,9 +809,9 @@ function serializePhasesForApi(phases: unknown): ChallengePhase[] | undefined {
 
 function removeEmptyValues(challenge: Partial<Challenge>): Partial<Challenge> {
     const filteredEntries = Object.entries(challenge)
-        .filter(([, value]) => {
+        .filter(([key, value]) => {
             if (Array.isArray(value)) {
-                return value.length > 0
+                return value.length > 0 || ALLOW_EMPTY_ARRAY_PAYLOAD_KEYS.has(key)
             }
 
             if (typeof value === 'string') {
