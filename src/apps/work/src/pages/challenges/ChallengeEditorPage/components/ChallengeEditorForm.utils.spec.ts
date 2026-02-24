@@ -1,7 +1,10 @@
 import { ROUND_TYPES } from '../../../../lib/constants/challenge-editor.constants'
 import { TimelineTemplate } from '../../../../lib/models'
 
-import { resolveCreateTimelineTemplateId } from './ChallengeEditorForm.utils'
+import {
+    resolveCreateRoundType,
+    resolveCreateTimelineTemplateId,
+} from './ChallengeEditorForm.utils'
 
 const CHECKPOINT_SUBMISSION_PHASE_ID = 'd8a2cdbe-84d1-4687-ab75-78a6a7efdcc8'
 const CHECKPOINT_SCREENING_PHASE_ID = 'ce1afb4c-74f9-496b-9e4b-087ae73ab032'
@@ -176,5 +179,37 @@ describe('resolveCreateTimelineTemplateId', () => {
 
         expect(result)
             .toBe('two-round-template-with-unnamed-phases')
+    })
+})
+
+describe('resolveCreateRoundType', () => {
+    it('prefers the current form control value when two rounds is selected', () => {
+        const result = resolveCreateRoundType({
+            fallbackRoundType: ROUND_TYPES.SINGLE_ROUND,
+            formRoundTypeValue: ROUND_TYPES.TWO_ROUNDS,
+        })
+
+        expect(result)
+            .toBe(ROUND_TYPES.TWO_ROUNDS)
+    })
+
+    it('falls back to current form data when form control value is unavailable', () => {
+        const result = resolveCreateRoundType({
+            fallbackRoundType: ROUND_TYPES.TWO_ROUNDS,
+            formRoundTypeValue: undefined,
+        })
+
+        expect(result)
+            .toBe(ROUND_TYPES.TWO_ROUNDS)
+    })
+
+    it('defaults to single round when both values are unavailable', () => {
+        const result = resolveCreateRoundType({
+            fallbackRoundType: undefined,
+            formRoundTypeValue: undefined,
+        })
+
+        expect(result)
+            .toBe(ROUND_TYPES.SINGLE_ROUND)
     })
 })

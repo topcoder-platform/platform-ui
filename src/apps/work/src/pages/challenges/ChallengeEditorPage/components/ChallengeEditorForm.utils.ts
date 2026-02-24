@@ -11,6 +11,11 @@ interface ResolveCreateTimelineTemplateIdParams {
     typeId?: string
 }
 
+interface ResolveCreateRoundTypeParams {
+    fallbackRoundType: ChallengeEditorFormData['roundType']
+    formRoundTypeValue: FormDataEntryValue | null | undefined
+}
+
 const CHECKPOINT_PHASE_NAMES = [
     'checkpoint submission',
     'checkpoint screening',
@@ -52,6 +57,32 @@ function hasCheckpointPhases(template: TimelineTemplate): boolean {
         .every(phaseId => phaseIds.has(phaseId))
 
     return hasCheckpointPhasesByName || hasCheckpointPhasesById
+}
+
+/**
+ * Resolves the round type selected in the create form.
+ *
+ * The UI occasionally reads stale `react-hook-form` state during fast clicks,
+ * so this prioritizes the current DOM form value and falls back to form data.
+ */
+export function resolveCreateRoundType(
+    params: ResolveCreateRoundTypeParams,
+): ChallengeEditorFormData['roundType'] {
+    const normalizedFormRoundType = normalizeOptionalString(params.formRoundTypeValue)
+
+    if (normalizedFormRoundType === normalizeOptionalString(ROUND_TYPES.TWO_ROUNDS)) {
+        return ROUND_TYPES.TWO_ROUNDS
+    }
+
+    if (normalizedFormRoundType === normalizeOptionalString(ROUND_TYPES.SINGLE_ROUND)) {
+        return ROUND_TYPES.SINGLE_ROUND
+    }
+
+    if (params.fallbackRoundType === ROUND_TYPES.TWO_ROUNDS) {
+        return ROUND_TYPES.TWO_ROUNDS
+    }
+
+    return ROUND_TYPES.SINGLE_ROUND
 }
 
 /**

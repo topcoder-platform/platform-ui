@@ -140,6 +140,7 @@ import {
     TermsField,
 } from './TermsField'
 import {
+    resolveCreateRoundType,
     resolveCreateTimelineTemplateId,
 } from './ChallengeEditorForm.utils'
 import styles from './ChallengeEditorForm.module.scss'
@@ -524,6 +525,21 @@ function normalizeProjectId(value: unknown): string | undefined {
     return undefined
 }
 
+function getCreateRoundType(
+    fallbackRoundType: ChallengeEditorFormData['roundType'],
+    formElement: HTMLFormElement | null,
+): ChallengeEditorFormData['roundType'] {
+    const formRoundTypeValue = formElement
+        ? new FormData(formElement)
+            .get('roundType')
+        : undefined
+
+    return resolveCreateRoundType({
+        fallbackRoundType,
+        formRoundTypeValue,
+    })
+}
+
 function getChallengesListPath(projectId?: string): string {
     return projectId
         ? `/projects/${projectId}/challenges`
@@ -593,6 +609,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const navigate = useNavigate()
     const isEditMode = props.isEditMode
     const onRegisterLaunchAction = props.onRegisterLaunchAction
+    const formElementRef = useRef<HTMLFormElement>(null)
     const defaultedDiscussionForumTypeIdRef = useRef<string | undefined>()
     const fallbackProjectId = useMemo(
         () => normalizeProjectId(props.projectId) || normalizeProjectId(props.challenge?.projectId),
@@ -863,6 +880,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 'name',
                 'trackId',
                 'typeId',
+                'roundType',
             ])
 
             if (!isBasicInfoValid) {
@@ -875,18 +893,19 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
 
             try {
                 const formData = getValues()
+                const selectedRoundType = getCreateRoundType(formData.roundType, formElementRef.current)
                 const createProjectId = normalizeProjectId(formData.projectId) || fallbackProjectId
                 if (!createProjectId) {
                     throw new Error('Project id is required to create challenge')
                 }
 
                 const timelineTemplateId = resolveCreateTimelineTemplateId({
-                    roundType: formData.roundType,
+                    roundType: selectedRoundType,
                     timelineTemplates,
                     trackId: formData.trackId,
                     typeId: formData.typeId,
                 })
-                if (formData.roundType === ROUND_TYPES.TWO_ROUNDS && !timelineTemplateId) {
+                if (selectedRoundType === ROUND_TYPES.TWO_ROUNDS && !timelineTemplateId) {
                     throw new Error(
                         'Unable to find a two-round timeline template for the selected track and type',
                     )
@@ -910,8 +929,8 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 const nextValues = transformChallengeToFormData(savedChallenge)
                 const normalizedWorkType = normalizeDesignWorkType(formData.workType)
 
-                if (formData.roundType === ROUND_TYPES.TWO_ROUNDS && nextValues.roundType !== ROUND_TYPES.TWO_ROUNDS) {
-                    nextValues.roundType = formData.roundType
+                if (selectedRoundType === ROUND_TYPES.TWO_ROUNDS && nextValues.roundType !== ROUND_TYPES.TWO_ROUNDS) {
+                    nextValues.roundType = selectedRoundType
                 }
 
                 if (!nextValues.timelineTemplateId && timelineTemplateId) {
@@ -1133,7 +1152,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
 
     return (
         <FormProvider {...formMethods}>
-            <form className={styles.form} onSubmit={handleSubmit(onSubmit)}>
+            <form className={styles.form} onSubmit={handleSubmit(onSubmit)} ref={formElementRef}>
                 <input type='hidden' {...formMethods.register('id')} />
                 <input type='hidden' {...formMethods.register('status')} />
 
