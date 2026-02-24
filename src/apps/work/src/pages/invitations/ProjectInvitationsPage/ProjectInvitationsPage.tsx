@@ -291,7 +291,7 @@ export const ProjectInvitationsPage: FC = () => {
             return
         }
 
-        if (projectError) {
+        if (projectError && !canProcessByInviteLink) {
             showErrorToast(projectError.message)
             redirectToDefault()
             return
