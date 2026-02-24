@@ -1,6 +1,6 @@
-import { Dispatch, FC, SetStateAction, useMemo, useState } from 'react'
-import { bind, omit, trim } from 'lodash'
+import { omit, trim } from 'lodash'
 import { toast } from 'react-toastify'
+import React, { Dispatch, FC, SetStateAction, useCallback, useMemo, useState } from 'react'
 
 import { BaseModal, Button, InputSelect, InputText } from '~/libs/ui'
 import {
@@ -13,9 +13,9 @@ import {
 import styles from './ModifyLocationModal.module.scss'
 
 interface ModifyLocationModalProps {
-    onClose: () => void
-    onSave: () => void
-    profile: UserProfile
+  onClose: () => void
+  onSave: () => void
+  profile: UserProfile
 }
 
 const OMIT_ADDRESS_KEYS_ON_UPDATE = [
@@ -26,57 +26,92 @@ const ModifyLocationModal: FC<ModifyLocationModalProps> = (props: ModifyLocation
     const countryLookup: CountryLookup[] | undefined
         = useCountryLookup()
 
-    const contries = useMemo(() => (countryLookup || []).map((cl: CountryLookup) => ({
-        label: cl.country,
-        value: cl.countryCode,
-    }))
-        .sort((a, b) => a.label.localeCompare(b.label)), [countryLookup])
+    const countries = useMemo(
+        () => (countryLookup || []).map((cl: CountryLookup) => ({
+            label: cl.country,
+            value: cl.countryCode,
+        }))
+            .sort((a, b) => a.label.localeCompare(b.label)),
+        [countryLookup],
+    )
+
+    const existingAddress = props.profile.addresses ? props.profile.addresses[0] : {}
 
     const [formValues, setFormValues]: [any, Dispatch<any>] = useState({
-        country: props.profile.homeCountryCode || props.profile.competitionCountryCode,
-        ...props.profile.addresses ? props.profile.addresses[0] : {},
+        country: props.profile.homeCountryCode,
+        ...existingAddress,
     })
 
-    const [formSaveError, setFormSaveError]: [
-        string | undefined,
-        Dispatch<SetStateAction<string | undefined>>
-    ] = useState<string | undefined>()
+    const [formErrors, setFormErrors]: [
+    { [key: string]: string },
+    Dispatch<SetStateAction<{ [key: string]: string }>>
+  ] = useState({})
 
-    const [isSaving, setIsSaving]: [boolean, Dispatch<SetStateAction<boolean>>]
-        = useState<boolean>(false)
+    const [formSaveError, setFormSaveError] = useState<string | undefined>()
+    const [isSaving, setIsSaving] = useState(false)
+    const [isFormChanged, setIsFormChanged] = useState(false)
 
-    const [isFormChanged, setIsFormChanged]: [boolean, Dispatch<SetStateAction<boolean>>]
-        = useState<boolean>(false)
+    const handleFormValueChange = useCallback(
+        (key: string) => (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>): void => {
+            const value: string = event.target.value
 
-    function handleFormValueChange(key: string, event: React.ChangeEvent<HTMLInputElement>): void {
-        const oldFormValues = { ...formValues }
+            setFormValues({
+                ...formValues,
+                [key]: value,
+            })
 
-        setFormValues({
-            ...oldFormValues,
-            [key]: event.target.value,
-        })
-        setIsFormChanged(true)
+            setIsFormChanged(true)
+
+            setFormErrors(prev => {
+                if (!prev[key]) return prev
+                const next = { ...prev }
+                delete next[key]
+                return next
+            })
+        },
+        [formValues],
+    )
+
+    function validate(): boolean {
+        const nextErrors: { [key: string]: string } = {}
+
+        if (!trim(formValues.city)) nextErrors.city = 'Please select a city'
+        if (!formValues.country) nextErrors.country = 'Please select a country'
+
+        setFormErrors(nextErrors)
+        return Object.keys(nextErrors).length === 0
     }
 
     function handleLocationSave(): void {
-        updateMemberProfileAsync(
-            props.profile.handle,
-            {
-                addresses: [{
-                    ...props.profile.addresses ? omit(props.profile.addresses[0], OMIT_ADDRESS_KEYS_ON_UPDATE) : {},
+        if (!validate()) return
+
+        setIsSaving(true)
+
+        const baseAddressPayload = props.profile.addresses
+            ? omit(props.profile.addresses[0], OMIT_ADDRESS_KEYS_ON_UPDATE)
+            : {}
+
+        updateMemberProfileAsync(props.profile.handle, {
+            addresses: [
+                {
+                    ...baseAddressPayload,
                     city: trim(formValues.city),
-                }],
-                competitionCountryCode: formValues.country,
-                homeCountryCode: formValues.country,
-            },
-        )
+                    stateCode: trim(formValues.stateCode),
+                    streetAddr1: trim(formValues.streetAddr1),
+                    streetAddr2: trim(formValues.streetAddr2),
+                    zip: trim(formValues.zip),
+                },
+            ],
+            competitionCountryCode: formValues.country,
+            homeCountryCode: formValues.country,
+        })
             .then(() => {
                 toast.success('Your location has been updated.', { position: toast.POSITION.BOTTOM_RIGHT })
                 props.onSave()
             })
             .catch((error: any) => {
                 toast.error('Something went wrong. Please try again.', { position: toast.POSITION.BOTTOM_RIGHT })
-                setFormSaveError(error.message || error)
+                setFormSaveError(error?.message || error)
             })
             .finally(() => {
                 setIsFormChanged(false)
@@ -111,23 +146,77 @@ const ModifyLocationModal: FC<ModifyLocationModalProps> = (props: ModifyLocation
             )}
         >
             <p>Provide details on your location.</p>
+
             <form className={styles.editForm}>
                 <InputText
-                    label='City'
-                    name='city'
-                    onChange={bind(handleFormValueChange, this, 'city')}
-                    value={formValues.city}
+                    name='address'
+                    label='Address'
+                    error={formErrors.streetAddr1}
+                    placeholder='Your address'
+                    dirty
                     tabIndex={0}
                     type='text'
-                    placeholder='Select your city name'
+                    onChange={handleFormValueChange('streetAddr1')}
+                    value={formValues.streetAddr1}
                 />
+
+                <InputText
+                    name='address2'
+                    label='Address 2'
+                    error={formErrors.streetAddr2}
+                    placeholder='Your address continued'
+                    dirty
+                    tabIndex={0}
+                    type='text'
+                    onChange={handleFormValueChange('streetAddr2')}
+                    value={formValues.streetAddr2}
+                />
+
+                <InputText
+                    name='city'
+                    label='City *'
+                    error={formErrors.city}
+                    placeholder='Which city do you live in?'
+                    dirty
+                    tabIndex={0}
+                    type='text'
+                    onChange={handleFormValueChange('city')}
+                    value={formValues.city}
+                />
+
+                <InputText
+                    name='state'
+                    label='State'
+                    error={formErrors.stateCode}
+                    placeholder='State'
+                    dirty
+                    tabIndex={0}
+                    type='text'
+                    onChange={handleFormValueChange('stateCode')}
+                    value={formValues.stateCode}
+                />
+
+                <InputText
+                    name='zip'
+                    label='Zip/Postal Code'
+                    error={formErrors.zip}
+                    placeholder='Your Zip or Postal Code'
+                    dirty
+                    tabIndex={0}
+                    type='text'
+                    onChange={handleFormValueChange('zip')}
+                    value={formValues.zip}
+                />
+
                 <InputSelect
-                    options={contries}
+                    options={countries}
                     value={formValues.country}
-                    onChange={bind(handleFormValueChange, this, 'country')}
+                    onChange={handleFormValueChange('country')}
                     name='country'
                     label='Country *'
+                    error={formErrors.country}
                     placeholder='Select a Country'
+                    dirty
                 />
             </form>
 
