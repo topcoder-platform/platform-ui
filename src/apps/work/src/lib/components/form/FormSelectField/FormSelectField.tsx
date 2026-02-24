@@ -46,12 +46,16 @@ export interface FormSelectFieldProps {
     toFieldValue?: (selected: SelectValue) => unknown
 }
 
-function defaultToFieldValue(
+export function defaultToFieldValue(
     selected: SelectValue,
     isMulti: boolean,
 ): unknown {
     if (isMulti) {
-        return (selected as FormSelectOption[]).map(option => option.value)
+        const selectedOptions = Array.isArray(selected)
+            ? selected
+            : []
+
+        return selectedOptions.map(option => option.value)
     }
 
     return (selected as FormSelectOption | undefined)?.value || ''
