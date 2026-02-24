@@ -21,9 +21,10 @@
     }
 
     .tooltip {
-        display: inline-block;
+        display: flex;
         margin-left: $sp-2;
         position: relative;
+        flex-wrap: wrap;
 
         svg:global(.tooltip-icon) {
             @include icon-xl;

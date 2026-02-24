@@ -1,9 +1,9 @@
-import { Dispatch, FC, SetStateAction, useMemo, useState } from 'react'
+import { Dispatch, FC, SetStateAction, useContext, useMemo, useState } from 'react'
 import { trim } from 'lodash'
 import cityTimezones from 'city-timezones'
 import moment from 'moment-timezone'
 
-import { useCountryName, UserProfile, UserRole } from '~/libs/core'
+import { profileContext, ProfileContextData, useCountryName, UserProfile, UserRole } from '~/libs/core'
 import { IconOutline, IconSolid, Tooltip } from '~/libs/ui'
 
 import { EditMemberPropertyBtn } from '../../components'
@@ -45,7 +45,8 @@ const MemberLocalInfo: FC<MemberLocalInfoProps> = (props: MemberLocalInfoProps) 
 
     const canEdit: boolean = props.authProfile?.handle === props.profile.handle
 
-    const isAdminOrTM = props.profile?.roles?.includes(UserRole.administrator)
+    const { profile }: ProfileContextData = useContext(profileContext)
+    const isAdminOrTM = profile?.roles?.includes(UserRole.administrator)
     || props.profile?.roles?.includes(UserRole.talentManager)
 
     const [isEditMode, setIsEditMode]: [boolean, Dispatch<SetStateAction<boolean>>]
@@ -94,18 +95,30 @@ const MemberLocalInfo: FC<MemberLocalInfoProps> = (props: MemberLocalInfoProps) 
 
     const canSeeDetailedAddressIcon = canEdit || isAdminOrTM
 
-    const tooltipContent: string | undefined = useMemo(() => {
+    const tooltipContent = useMemo(() => {
         if (!hasDetailedAddress) return undefined
 
-        const parts = [
+        const addressLine = [
             trim(address?.streetAddr1),
             trim(address?.streetAddr2),
             trim(address?.city),
             trim(address?.stateCode),
-            trim(address?.zip),
         ].filter(Boolean)
+            .join(', ')
 
-        return parts.join(', ')
+        const postalCode = trim(address?.zip)
+
+        if (!postalCode) return addressLine
+
+        return (
+            <>
+                <div>{addressLine}</div>
+                <div>
+                    Zip/Postal code -
+                    {postalCode}
+                </div>
+            </>
+        )
     }, [address, hasDetailedAddress])
 
     return (
