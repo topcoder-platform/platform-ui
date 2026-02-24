@@ -1,11 +1,8 @@
 @import '@libs/ui/styles/includes';
 
 .modal {
-    width: 1100px !important;
-
-    @include ltelg {
-        width: calc(100vw - 32px) !important;
-    }
+    width: 1240px !important;
+    max-width: calc(100vw - 32px) !important;
 }
 
 .container {
@@ -29,6 +26,32 @@
     text-align: left !important;
 }
 
+.statusCell {
+    text-align: center !important;
+    width: 90px;
+}
+
+.emailStatus {
+    align-items: center;
+    display: inline-flex;
+    justify-content: center;
+    min-height: 24px;
+    min-width: 24px;
+
+    svg {
+        width: 20px;
+        height: 20px;
+    }
+}
+
+.emailStatusDelivered {
+    color: $green-120;
+}
+
+.emailStatusFailed {
+    color: $red-110;
+}
+
 .tableCell {
     min-width: 220px;
     white-space: break-spaces !important;
@@ -50,6 +73,16 @@
 }
 
 .desktopTable {
+    overflow-x: auto;
+    overflow-y: visible;
+
+    thead th {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: $tc-white;
+    }
+
     td {
         vertical-align: middle;
     }

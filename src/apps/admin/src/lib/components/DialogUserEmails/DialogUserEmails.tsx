@@ -9,6 +9,7 @@ import moment from 'moment'
 import {
     BaseModal,
     Button,
+    IconOutline,
     LoadingSpinner,
     Table,
     TableColumn,
@@ -81,24 +82,39 @@ export const DialogUserEmails: FC<Props> = (props: Props) => {
             },
             {
                 className: styles.tableCellNoWrap,
-                columnId: 'fromEmail',
-                label: 'From Email',
-                propertyName: 'fromEmail',
-                type: 'text',
-            },
-            {
-                className: styles.tableCellNoWrap,
                 columnId: 'toEmail',
                 label: 'To Email',
                 propertyName: 'toEmail',
                 type: 'text',
             },
             {
-                className: styles.tableCellNoWrap,
+                className: styles.statusCell,
                 columnId: 'status',
                 label: 'Status',
                 propertyName: 'status',
-                type: 'text',
+                renderer: (data: MemberSendgridEmail) => {
+                    const status = data.status || '-'
+                    const isDelivered = status.toLowerCase() === 'delivered'
+
+                    return (
+                        <span
+                            className={classNames(
+                                styles.emailStatus,
+                                isDelivered
+                                    ? styles.emailStatusDelivered
+                                    : styles.emailStatusFailed,
+                            )}
+                            title={status}
+                            aria-label={status}
+                            role='img'
+                        >
+                            {isDelivered
+                                ? <IconOutline.CheckCircleIcon aria-hidden />
+                                : <IconOutline.XCircleIcon aria-hidden />}
+                        </span>
+                    )
+                },
+                type: 'element',
             },
             {
                 className: styles.tableCellNoWrap,
