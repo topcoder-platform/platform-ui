@@ -154,6 +154,10 @@ export const ProjectInvitationsPage: FC = () => {
         () => inviteIdFromRoute || toOptionalString(invitation?.id),
         [inviteIdFromRoute, invitation?.id],
     )
+    const canProcessByInviteLink = useMemo(
+        () => !!automaticAction && !!inviteIdFromRoute,
+        [automaticAction, inviteIdFromRoute],
+    )
     const projectName = useMemo(
         () => toOptionalString(project?.name) || `Project ${projectId}`,
         [project?.name, projectId],
@@ -276,6 +280,17 @@ export const ProjectInvitationsPage: FC = () => {
             return
         }
 
+        if (!invitationId) {
+            redirectToDefault()
+            return
+        }
+
+        if (canProcessByInviteLink && automaticAction && !hasProcessedAutomaticAction) {
+            setHasProcessedAutomaticAction(true)
+            updateInvitationStatus(automaticAction)
+            return
+        }
+
         if (projectError) {
             showErrorToast(projectError.message)
             redirectToDefault()
@@ -286,17 +301,13 @@ export const ProjectInvitationsPage: FC = () => {
             return
         }
 
-        if (!invitationId) {
-            redirectToDefault()
-            return
-        }
-
         if (automaticAction && !hasProcessedAutomaticAction) {
             setHasProcessedAutomaticAction(true)
             updateInvitationStatus(automaticAction)
         }
     }, [
         automaticAction,
+        canProcessByInviteLink,
         hasProcessedAutomaticAction,
         invitationId,
         isProjectLoading,
@@ -308,9 +319,12 @@ export const ProjectInvitationsPage: FC = () => {
     ])
 
     const isUpdating = !!isUpdatingStatus
-    const shouldShowInvitationPrompt = !!project && !!invitation && !automaticAction && !processedStatus
+    const shouldShowInvitationPrompt = !!project
+        && !!invitation
+        && !automaticAction
+        && !processedStatus
 
-    if (!projectId || isProjectLoading || isUpdating) {
+    if (!projectId || isUpdating || (!canProcessByInviteLink && isProjectLoading)) {
         return (
             <div className={styles.loadingContainer}>
                 <LoadingSpinner />
@@ -318,7 +332,15 @@ export const ProjectInvitationsPage: FC = () => {
         )
     }
 
-    if (!project || !invitationId) {
+    if (!invitationId) {
+        return (
+            <div className={styles.loadingContainer}>
+                <LoadingSpinner />
+            </div>
+        )
+    }
+
+    if (!canProcessByInviteLink && !project) {
         return (
             <div className={styles.loadingContainer}>
                 <LoadingSpinner />
