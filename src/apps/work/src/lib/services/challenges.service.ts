@@ -246,13 +246,20 @@ function serializeReviewers(reviewers: unknown): Reviewer[] | undefined {
 }
 
 function serializeChallengePayload(params: Partial<Challenge>): Partial<Challenge> {
-    return {
+    // `roundType` is a UI-only selector used to choose a timeline template.
+    // The challenge API does not accept it in create/update payloads.
+    const serializedParams: Partial<Challenge> = {
         ...params,
-        phases: serializeChallengePhases(params.phases),
-        prizeSets: serializePrizeSets(params.prizeSets),
-        reviewers: serializeReviewers(params.reviewers),
-        startDate: asIsoDateString(params.startDate),
-        timelineTemplateId: params.timelineTemplateId,
+    }
+    delete serializedParams.roundType
+
+    return {
+        ...serializedParams,
+        phases: serializeChallengePhases(serializedParams.phases),
+        prizeSets: serializePrizeSets(serializedParams.prizeSets),
+        reviewers: serializeReviewers(serializedParams.reviewers),
+        startDate: asIsoDateString(serializedParams.startDate),
+        timelineTemplateId: serializedParams.timelineTemplateId,
     }
 }
 

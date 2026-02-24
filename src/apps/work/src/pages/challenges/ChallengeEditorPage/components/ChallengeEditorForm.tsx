@@ -897,7 +897,6 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                     funChallenge: formData.funChallenge === true,
                     name: formData.name,
                     projectId: createProjectId,
-                    roundType: formData.roundType,
                     status: CHALLENGE_STATUS.NEW,
                     tags: tags.length
                         ? tags
