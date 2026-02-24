@@ -39,7 +39,7 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 - `ChallengeNameField`: text input.
 - `ChallengeTrackField`: track selector from `useFetchChallengeTracks`.
 - `ChallengeTypeField`: active type selector from `useFetchChallengeTypes`.
-- `FunChallengeField`: shown for `Marathon Match` type while creating and while challenge status remains `NEW`.
+- `FunChallengeField`: shown for `Marathon Match` type; editable only before the challenge is created.
 - `ChallengeDescriptionField`: public markdown spec editor.
 - `ChallengePrivateDescriptionField`: optional private markdown spec editor.
 - `ChallengeTagsField`: multi creatable tag picker excluding special challenge tags.

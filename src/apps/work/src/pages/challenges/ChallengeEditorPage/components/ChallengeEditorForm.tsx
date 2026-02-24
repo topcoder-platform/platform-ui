@@ -706,7 +706,6 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const isChallengeCreated = !!currentChallengeId
     const isFunChallengeSelected = values.funChallenge === true
     const showFunChallengeField = isMarathonMatchChallengeSelected
-        && (!isChallengeCreated || normalizedChallengeStatus === CHALLENGE_STATUS.NEW)
     const showPrizesAndBillingSection = !isFunChallengeSelected
 
     useEffect(() => {
@@ -840,6 +839,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                     funChallenge: formData.funChallenge === true,
                     name: formData.name,
                     projectId: createProjectId,
+                    roundType: formData.roundType,
                     status: CHALLENGE_STATUS.NEW,
                     timelineTemplateId,
                     trackId: formData.trackId,
@@ -1067,7 +1067,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                         <ChallengeTrackField disabled={isChallengeCreated} />
                         <ChallengeTypeField disabled={isChallengeCreated} />
                         {showFunChallengeField
-                            ? <FunChallengeField />
+                            ? <FunChallengeField disabled={isChallengeCreated} />
                             : undefined}
                         {showRoundTypeField
                             ? <RoundTypeField disabled={isChallengeCreated} />
