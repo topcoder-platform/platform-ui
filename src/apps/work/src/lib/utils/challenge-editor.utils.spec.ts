@@ -246,3 +246,44 @@ describe('challenge-editor utils round type mapping', () => {
             .toBe('Single round')
     })
 })
+
+describe('challenge-editor utils design work type mapping', () => {
+    it('maps design work type from tags into form data', () => {
+        const result = transformChallengeToFormData({
+            description: 'Public specification',
+            name: 'Design challenge',
+            tags: [
+                'Application Front-End Design',
+                'tag-1',
+            ],
+            trackId: 'track-id',
+            typeId: 'type-id',
+        })
+
+        expect(result.workType)
+            .toBe('Application Front-End Design')
+    })
+
+    it('serializes selected design work type into tags and removes stale work type tag', () => {
+        const formData: Record<string, unknown> = {
+            description: 'Public specification',
+            name: 'Design challenge',
+            skills: [],
+            tags: [
+                'Wireframes',
+                'tag-1',
+            ],
+            trackId: 'track-id',
+            typeId: 'type-id',
+            workType: 'Application Front-End Design',
+        }
+
+        const result = transformFormDataToChallenge(formData as any)
+
+        expect(result.tags)
+            .toEqual([
+                'tag-1',
+                'Application Front-End Design',
+            ])
+    })
+})

@@ -85,6 +85,38 @@ function formatInviteDate(value?: string): string {
     })}`
 }
 
+function formatInviteMeta(
+    status: string | undefined,
+    createdAt?: string,
+    updatedAt?: string,
+): string {
+    const normalizedStatus = status?.trim()
+        .toLowerCase()
+
+    if (normalizedStatus !== 'refused') {
+        return formatInviteDate(createdAt)
+    }
+
+    if (!updatedAt && !createdAt) {
+        return 'Declined recently'
+    }
+
+    const declinedAt = updatedAt || createdAt
+    const dateValue = declinedAt
+        ? new Date(declinedAt)
+        : undefined
+
+    if (!dateValue || Number.isNaN(dateValue.getTime())) {
+        return 'Declined recently'
+    }
+
+    return `Declined ${dateValue.toLocaleDateString(undefined, {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+    })}`
+}
+
 function isCompactInviteMode(
     isInvite: boolean,
     compactInviteView?: boolean,
@@ -125,9 +157,15 @@ export const UserCard: FC<UserCardProps> = (props: UserCardProps) => {
         () => props.user.handle || props.user.email || 'Unknown user',
         [props.user.email, props.user.handle],
     )
+    const inviteStatus = useMemo(
+        () => ('status' in props.user
+            ? props.user.status
+            : undefined),
+        [props.user],
+    )
     const inviteDateLabel = useMemo(
-        () => formatInviteDate(props.user.createdAt),
-        [props.user.createdAt],
+        () => formatInviteMeta(inviteStatus, props.user.createdAt, props.user.updatedAt),
+        [inviteStatus, props.user.createdAt, props.user.updatedAt],
     )
     const userRecordId = props.user.id !== undefined && props.user.id !== null
         ? String(props.user.id)

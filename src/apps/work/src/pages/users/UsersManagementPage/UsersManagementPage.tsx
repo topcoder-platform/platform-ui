@@ -97,6 +97,7 @@ export const UsersManagementPage: FC = () => {
     const projectResult = useFetchProject(projectId || undefined)
     const projectMembersResult = useFetchProjectMembers(projectId || undefined)
     const projectMembersError: Error | undefined = projectMembersResult.error
+    const declinedInvites: ProjectInvite[] = projectMembersResult.declinedInvites
     const invites: ProjectInvite[] = projectMembersResult.invites
     const isProjectMembersLoading: boolean = projectMembersResult.isLoading
     const members: ProjectMember[] = projectMembersResult.members
@@ -111,6 +112,7 @@ export const UsersManagementPage: FC = () => {
         || checkIsCopilotOrManager(members, loginHandle)
 
     const hasMembers = members.length > 0
+    const hasDeclinedInvites = declinedInvites.length > 0
     const hasInvites = invites.length > 0
     const isLoading = projectResult.isLoading || isProjectMembersLoading
 
@@ -291,7 +293,8 @@ export const UsersManagementPage: FC = () => {
                 )
                 : undefined}
 
-            {projectId && !isLoading && !projectResult.error && !projectMembersError && !hasMembers && !hasInvites
+            {projectId && !isLoading && !projectResult.error && !projectMembersError
+                && !hasMembers && !hasInvites && !hasDeclinedInvites
                 ? (
                     <div className={styles.emptyState}>
                         No project members yet for
@@ -302,7 +305,8 @@ export const UsersManagementPage: FC = () => {
                 )
                 : undefined}
 
-            {projectId && !isLoading && !projectResult.error && !projectMembersError && (hasMembers || hasInvites)
+            {projectId && !isLoading && !projectResult.error && !projectMembersError
+                && (hasMembers || hasInvites || hasDeclinedInvites)
                 ? (
                     <>
                         {hasMembers
@@ -346,6 +350,30 @@ export const UsersManagementPage: FC = () => {
                                                 isEditable={canManageMembers}
                                                 isInvite
                                                 key={`invite-${invite.id || invite.email || invite.userId}`}
+                                                onRemove={handleRemove}
+                                                user={invite}
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
+                            )
+                            : undefined}
+
+                        {hasDeclinedInvites
+                            ? (
+                                <div className={styles.tableSection}>
+                                    <h4 className={styles.sectionTitle}>Declined Invitations</h4>
+                                    <div className={`${styles.tableHeader} ${styles.invitesTableHeader}`}>
+                                        <div>User</div>
+                                        <div className={styles.headerAction}>Actions</div>
+                                    </div>
+                                    <div className={styles.tableBody}>
+                                        {declinedInvites.map(invite => (
+                                            <UserCard
+                                                compactInviteView
+                                                isEditable={canManageMembers}
+                                                isInvite
+                                                key={`declined-invite-${invite.id || invite.email || invite.userId}`}
                                                 onRemove={handleRemove}
                                                 user={invite}
                                             />

@@ -1,4 +1,5 @@
 import {
+    DESIGN_WORK_TYPES,
     PHASE_DURATION_MAX_HOURS,
     PRIZE_SET_TYPES,
     PRIZE_TYPES,
@@ -104,6 +105,50 @@ function normalizeTags(tags: Array<string | { value?: string }> | undefined): st
             return ''
         })
         .filter(Boolean)
+}
+
+function normalizeTagToken(value: unknown): string {
+    if (typeof value !== 'string') {
+        return ''
+    }
+
+    return value
+        .trim()
+        .toLowerCase()
+}
+
+const DESIGN_WORK_TYPE_BY_TOKEN = new Map<string, string>(
+    DESIGN_WORK_TYPES
+        .map(workType => [
+            normalizeTagToken(workType),
+            workType,
+        ]),
+)
+
+function normalizeDesignWorkType(value: unknown): string | undefined {
+    const normalizedToken = normalizeTagToken(value)
+
+    return DESIGN_WORK_TYPE_BY_TOKEN.get(normalizedToken)
+}
+
+function extractDesignWorkType(tags: string[]): string | undefined {
+    return tags
+        .map(tag => normalizeDesignWorkType(tag))
+        .find((workType): workType is string => !!workType)
+}
+
+function mergeWorkTypeIntoTags(tags: string[], workType: string | undefined): string[] {
+    const tagsWithoutWorkType = tags
+        .filter(tag => !DESIGN_WORK_TYPE_BY_TOKEN.has(normalizeTagToken(tag)))
+
+    if (!workType) {
+        return tagsWithoutWorkType
+    }
+
+    return [
+        ...tagsWithoutWorkType,
+        workType,
+    ]
 }
 
 function normalizePrizeType(value: unknown): 'POINT' | 'USD' {
@@ -832,6 +877,7 @@ export function transformChallengeToFormData(
     const privateDescription = normalizeStringValue(challenge?.privateDescription)
     const startDate = normalizeStartDate(challenge?.startDate)
     const tags = normalizeTags(challenge?.tags as Array<string | { value?: string }> | undefined)
+    const workType = extractDesignWorkType(tags)
     const timelineTemplateId = normalizeStringValue(challenge?.timelineTemplateId)
     const trackId = normalizeStringValue(challenge?.trackId)
     const typeId = normalizeStringValue(challenge?.typeId)
@@ -907,6 +953,7 @@ export function transformChallengeToFormData(
         trackId,
         typeId,
         wiproAllowed: normalizeOptionalBoolean(challenge?.wiproAllowed) || false,
+        workType,
     }
 }
 
@@ -936,6 +983,10 @@ export function transformFormDataToChallenge(
     const prizeSets = formData.funChallenge === true
         ? []
         : filterEmptyPrizeSets(normalizePrizeSets(formData.prizeSets))
+    const tags = mergeWorkTypeIntoTags(
+        normalizeTags(formData.tags),
+        normalizeDesignWorkType(formData.workType),
+    )
 
     const challenge: Partial<Challenge> = {
         assignedMemberId: normalizeMemberSelectorValue(formData.assignedMemberId),
@@ -973,7 +1024,7 @@ export function transformFormDataToChallenge(
             ? toIsoDateString(formData.startDate)
             : undefined,
         status,
-        tags: normalizeTags(formData.tags),
+        tags,
         terms: normalizeTermsForApi(formData.terms),
         timelineTemplateId: isSchedulingEnabled
             ? formData.timelineTemplateId

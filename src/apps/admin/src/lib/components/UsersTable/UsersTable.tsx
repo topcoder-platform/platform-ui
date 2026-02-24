@@ -26,6 +26,7 @@ import { DialogEditUserGroups } from '../DialogEditUserGroups'
 import { DialogEditUserSSOLogin } from '../DialogEditUserSSOLogin'
 import { DialogEditUserTerms } from '../DialogEditUserTerms'
 import { DialogEditUserStatus } from '../DialogEditUserStatus'
+import { DialogUserEmails } from '../DialogUserEmails'
 import { DialogUserStatusHistory } from '../DialogUserStatusHistory'
 import { DialogDeleteUser } from '../DialogDeleteUser'
 import { DropdownMenuButton } from '../common/DropdownMenuButton'
@@ -109,6 +110,9 @@ export const UsersTable: FC<Props> = props => {
         | undefined
     >()
     const [showDialogStatusHistory, setShowDialogStatusHistory] = useState<
+        UserInfo | undefined
+    >()
+    const [showDialogUserEmails, setShowDialogUserEmails] = useState<
         UserInfo | undefined
     >()
     const [showDialogDeleteUser, setShowDialogDeleteUser] = useState<
@@ -323,6 +327,8 @@ export const UsersTable: FC<Props> = props => {
                             setShowDialogEditUserTerms(data)
                         } else if (item === 'SSO Logins') {
                             setShowDialogEditSSOLogin(data)
+                        } else if (item === 'View Emails') {
+                            setShowDialogUserEmails(data)
                         } else if (item === 'Deactivate') {
                             setShowDialogEditUserStatus(data)
                         } else if (item === 'Activate') {
@@ -355,6 +361,7 @@ export const UsersTable: FC<Props> = props => {
                                         'Groups',
                                         'Terms',
                                         'SSO Logins',
+                                        'View Emails',
                                         ...(data.active
                                             ? ['Deactivate', 'Delete']
                                             : ['Activate', 'Delete']),
@@ -388,6 +395,13 @@ export const UsersTable: FC<Props> = props => {
                                             Edit
                                         </Button>
                                     </DropdownMenuButton>
+                                    <Button
+                                        secondary
+                                        label='View Emails'
+                                        onClick={function onClick() {
+                                            onSelectOption('View Emails')
+                                        }}
+                                    />
                                     {data.active ? (
                                         <Button
                                             primary
@@ -512,6 +526,15 @@ export const UsersTable: FC<Props> = props => {
                     userInfo={showDialogEditUserStatus}
                     doUpdateStatus={props.doUpdateStatus}
                     isLoading={updatingStatusBool}
+                />
+            )}
+            {showDialogUserEmails && (
+                <DialogUserEmails
+                    open
+                    setOpen={function setOpen() {
+                        setShowDialogUserEmails(undefined)
+                    }}
+                    userInfo={showDialogUserEmails}
                 />
             )}
             {showDialogDeleteUser && (

@@ -61,6 +61,14 @@ export const ROUND_TYPES = {
     TWO_ROUNDS: 'Two rounds',
 } as const
 
+export const DESIGN_WORK_TYPES = [
+    'Application Front-End Design',
+    'Print/Presentation',
+    'Web Design',
+    'Widget or Mobile Screen Design',
+    'Wireframes',
+] as const
+
 export const REVIEW_TYPES = {
     COMMUNITY: 'COMMUNITY',
     EXAMPLE: 'EXAMPLE',

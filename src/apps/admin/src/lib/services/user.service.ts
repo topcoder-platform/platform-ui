@@ -17,6 +17,7 @@ import {
     adjustUserStatusHistoryResponse,
     ApiV3Response,
     MemberInfo,
+    MemberSendgridEmail,
     SSOUserLogin,
     UserInfo,
     UserStatusHistory,
@@ -199,6 +200,90 @@ export const getProfile = async (handle: string): Promise<MemberInfo> => {
     }
 
     return response
+}
+
+const getStringValue = (value: unknown): string | undefined => {
+    if (typeof value === 'string') {
+        const trimmedValue = value.trim()
+        return trimmedValue || undefined
+    }
+
+    if (typeof value === 'number') {
+        return `${value}`
+    }
+
+    return undefined
+}
+
+const getEmailValue = (value: unknown): string | undefined => {
+    if (Array.isArray(value)) {
+        const emails = value
+            .map(getStringValue)
+            .filter((item): item is string => Boolean(item))
+
+        return emails.length ? emails.join(', ') : undefined
+    }
+
+    return getStringValue(value)
+}
+
+const getFirstMatchingValue = (
+    record: Record<string, unknown>,
+    keys: string[],
+    isEmail = false,
+): string | undefined => {
+    for (const key of keys) {
+        const value = isEmail ? getEmailValue(record[key]) : getStringValue(record[key])
+        if (value) {
+            return value
+        }
+    }
+
+    return undefined
+}
+
+const mapMemberSendgridEmailResponse = (
+    emailRecord: Record<string, unknown>,
+): MemberSendgridEmail => ({
+    fromEmail: getFirstMatchingValue(
+        emailRecord,
+        ['from_email', 'fromEmail', 'from'],
+        true,
+    ) ?? '-',
+    status: getFirstMatchingValue(
+        emailRecord,
+        ['status', 'last_event_type', 'event_type', 'eventType'],
+    ) ?? '-',
+    subject: getFirstMatchingValue(emailRecord, ['subject']) ?? '-',
+    timestamp: getFirstMatchingValue(
+        emailRecord,
+        ['last_event_time', 'timestamp', 'created_at', 'createdAt'],
+    ) ?? '-',
+    toEmail: getFirstMatchingValue(
+        emailRecord,
+        ['to_email', 'toEmail', 'to', 'to_emails', 'toEmails'],
+        true,
+    ) ?? '-',
+})
+
+/**
+ * Fetch SendGrid email records for a member from the last 30 days.
+ * @param handle member handle.
+ * @returns resolves to normalized SendGrid activity records.
+ */
+export const fetchMemberSendgridEmails = async (
+    handle: string,
+): Promise<MemberSendgridEmail[]> => {
+    const sanitizedHandle = handle.trim()
+    if (!sanitizedHandle) {
+        return Promise.reject(new Error('Handle must be specified.'))
+    }
+
+    const response = await xhrGetAsync<Record<string, unknown>[]>(
+        `${EnvironmentConfig.API.V6}/members/${encodeURIComponent(sanitizedHandle)}/sendgrid-emails`,
+    )
+
+    return response.map(mapMemberSendgridEmailResponse)
 }
 
 /**

@@ -103,6 +103,29 @@ describe('resolveCreateTimelineTemplateId', () => {
             .toBe('preferred-two-round-template')
     })
 
+    it('prefers the canonical design two-round template id when available', () => {
+        const result = resolveCreateTimelineTemplateId({
+            roundType: ROUND_TYPES.TWO_ROUNDS,
+            timelineTemplates: [
+                buildTimelineTemplate({
+                    id: 'preferred-two-round-template',
+                    isDefault: true,
+                    phases: buildNamedCheckpointPhases(),
+                }),
+                buildTimelineTemplate({
+                    id: 'd4201ca4-8437-4d63-9957-3f7708184b07',
+                    isDefault: false,
+                    phases: buildNamedCheckpointPhases(),
+                }),
+            ],
+            trackId: 'track-id',
+            typeId: 'type-id',
+        })
+
+        expect(result)
+            .toBe('d4201ca4-8437-4d63-9957-3f7708184b07')
+    })
+
     it('ignores inactive timeline templates', () => {
         const result = resolveCreateTimelineTemplateId({
             roundType: ROUND_TYPES.TWO_ROUNDS,

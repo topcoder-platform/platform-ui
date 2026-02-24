@@ -21,6 +21,7 @@ const CHECKPOINT_PHASE_IDS = [
     'ce1afb4c-74f9-496b-9e4b-087ae73ab032',
     '84b43897-2aab-44d6-a95a-42c433657eed',
 ]
+const DESIGN_TWO_ROUND_TEMPLATE_ID = 'd4201ca4-8437-4d63-9957-3f7708184b07'
 
 function normalizeOptionalString(value: unknown): string | undefined {
     if (typeof value !== 'string') {
@@ -80,7 +81,8 @@ export function resolveCreateTimelineTemplateId(
         .filter(template => hasCheckpointPhases(template))
 
     const preferredTemplate = matchingTwoRoundTemplates
-        .find(template => template.isDefault)
+        .find(template => template.id === DESIGN_TWO_ROUND_TEMPLATE_ID)
+        || matchingTwoRoundTemplates.find(template => template.isDefault)
         || matchingTwoRoundTemplates[0]
 
     return preferredTemplate?.id

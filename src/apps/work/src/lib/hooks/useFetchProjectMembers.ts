@@ -9,6 +9,7 @@ import {
 } from '../services'
 
 interface ProjectMembersData {
+    declinedInvites: ProjectInvite[]
     invites: ProjectInvite[]
     members: ProjectMember[]
 }
@@ -17,8 +18,12 @@ const OPEN_INVITE_STATUSES = new Set([
     'pending',
     'requested',
 ])
+const DECLINED_INVITE_STATUSES = new Set([
+    'refused',
+])
 
 export interface UseFetchProjectMembersResult {
+    declinedInvites: ProjectInvite[]
     invites: ProjectInvite[]
     members: ProjectMember[]
     isLoading: boolean
@@ -120,28 +125,31 @@ async function fetchProjectMembers(projectId: string): Promise<ProjectMembersDat
                 projectId: member.projectId || normalizedProjectId,
             }))
         : []
-    const invites = Array.isArray(project.invites)
+    const normalizedInvites = (Array.isArray(project.invites)
         ? project.invites
-        : []
+        : [])
+        .map(invite => normalizeInvite(invite))
+        .filter((invite): invite is ProjectInvite => !!invite)
+        .map(invite => ({
+            ...invite,
+            projectId: invite.projectId || normalizedProjectId,
+        }))
 
     return {
-        invites: invites
-            .map(invite => normalizeInvite(invite))
-            .filter((invite): invite is ProjectInvite => {
-                if (!invite) {
-                    return false
-                }
+        declinedInvites: normalizedInvites.filter(invite => {
+            const normalizedStatus = toOptionalString(invite.status)
+                ?.toLowerCase()
 
-                const normalizedStatus = toOptionalString(invite.status)
-                    ?.toLowerCase()
+            return !!normalizedStatus
+                && DECLINED_INVITE_STATUSES.has(normalizedStatus)
+        }),
+        invites: normalizedInvites.filter(invite => {
+            const normalizedStatus = toOptionalString(invite.status)
+                ?.toLowerCase()
 
-                return !normalizedStatus
-                    || OPEN_INVITE_STATUSES.has(normalizedStatus)
-            })
-            .map(invite => ({
-                ...invite,
-                projectId: invite.projectId || normalizedProjectId,
-            })),
+            return !normalizedStatus
+                || OPEN_INVITE_STATUSES.has(normalizedStatus)
+        }),
         members,
     }
 }
@@ -166,6 +174,7 @@ export function useFetchProjectMembers(projectId: string | undefined): UseFetchP
         )
 
     return {
+        declinedInvites: data?.declinedInvites || [],
         error,
         invites: data?.invites || [],
         isLoading: !!projectId && !data && !error,

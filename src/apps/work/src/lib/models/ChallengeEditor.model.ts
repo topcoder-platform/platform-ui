@@ -49,6 +49,7 @@ export interface ChallengeEditorFormData extends Omit<Partial<Challenge>, 'id' |
     skills: ChallengeSkill[]
     tags: string[]
     terms?: string[]
+    workType?: string
     legacy?: {
         isTask?: boolean
         reviewType?: ReviewType

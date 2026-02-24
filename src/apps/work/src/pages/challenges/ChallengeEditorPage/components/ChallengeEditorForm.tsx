@@ -22,6 +22,7 @@ import {
 } from '../../../../lib/constants'
 import {
     AUTOSAVE_DELAY_MS,
+    DESIGN_WORK_TYPES,
     PRIZE_SET_TYPES,
     ROUND_TYPES,
 } from '../../../../lib/constants/challenge-editor.constants'
@@ -43,6 +44,7 @@ import {
 } from '../../../../lib/schemas/challenge-editor.schema'
 import {
     createChallenge,
+    fetchChallenge,
     patchChallenge,
 } from '../../../../lib/services'
 import {
@@ -101,6 +103,9 @@ import {
 import {
     CopilotFeeField,
 } from './CopilotFeeField'
+import {
+    DesignWorkTypeField,
+} from './DesignWorkTypeField'
 import {
     FunChallengeField,
 } from './FunChallengeField'
@@ -180,6 +185,13 @@ const REVIEWER_REQUIRED_PHASE_KEYS = new Set(
     REVIEWER_REQUIRED_PHASES
         .map(phaseName => normalizeReviewerPhaseName(phaseName)),
 )
+const DESIGN_WORK_TYPE_BY_TOKEN = new Map<string, string>(
+    DESIGN_WORK_TYPES
+        .map(workType => [
+            normalizeChallengeTypeToken(workType),
+            workType,
+        ]),
+)
 
 function normalizePhaseName(value: unknown): string {
     if (typeof value !== 'string') {
@@ -253,6 +265,35 @@ function normalizeChallengeTypeToken(value: unknown): string {
     return normalizeTextValue(value)
         .toUpperCase()
         .replace(/[-_\s]/g, '')
+}
+
+function normalizeDesignWorkType(value: unknown): string | undefined {
+    const normalizedToken = normalizeChallengeTypeToken(value)
+
+    return DESIGN_WORK_TYPE_BY_TOKEN.get(normalizedToken)
+}
+
+function mergeTagsWithDesignWorkType(
+    tags: unknown,
+    workType: unknown,
+): string[] {
+    const normalizedTags = Array.isArray(tags)
+        ? tags
+            .map(tag => normalizeTextValue(tag))
+            .filter(Boolean)
+        : []
+    const normalizedWorkType = normalizeDesignWorkType(workType)
+    const tagsWithoutWorkType = normalizedTags
+        .filter(tag => !DESIGN_WORK_TYPE_BY_TOKEN.has(normalizeChallengeTypeToken(tag)))
+
+    if (!normalizedWorkType) {
+        return tagsWithoutWorkType
+    }
+
+    return [
+        ...tagsWithoutWorkType,
+        normalizedWorkType,
+    ]
 }
 
 function normalizeReviewerPhaseName(value: unknown): string {
@@ -690,7 +731,8 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             resolvedChallengeTypeName,
         ],
     )
-    const showRoundTypeField = isDesignTrackSelected && Boolean(values.typeId?.trim())
+    const showRoundTypeField = isDesignTrackSelected && isChallengeTypeSelected
+    const showDesignWorkTypeField = isDesignTrackSelected && isChallengeTypeSelected
     const showSubmissionSettingsSection = isDesignTrackSelected && isChallengeTypeSelected
     const showCheckpointPrizes = useMemo(
         () => hasCheckpointPhases(values.phases),
@@ -755,6 +797,21 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     }, [
         isTaskChallengeSelected,
         setValue,
+    ])
+
+    useEffect(() => {
+        if (showDesignWorkTypeField || !values.workType) {
+            return
+        }
+
+        setValue('workType', undefined, {
+            shouldDirty: true,
+            shouldValidate: true,
+        })
+    }, [
+        setValue,
+        showDesignWorkTypeField,
+        values.workType,
     ])
 
     useEffect(() => {
@@ -835,17 +892,38 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                     )
                 }
 
-                const savedChallenge = await createChallenge({
+                const tags = mergeTagsWithDesignWorkType(formData.tags, formData.workType)
+                const createdChallenge = await createChallenge({
                     funChallenge: formData.funChallenge === true,
                     name: formData.name,
                     projectId: createProjectId,
                     roundType: formData.roundType,
                     status: CHALLENGE_STATUS.NEW,
+                    tags: tags.length
+                        ? tags
+                        : undefined,
                     timelineTemplateId,
                     trackId: formData.trackId,
                     typeId: formData.typeId,
                 })
+                const savedChallenge = await fetchChallenge(createdChallenge.id)
+                    .catch(() => createdChallenge)
                 const nextValues = transformChallengeToFormData(savedChallenge)
+                const normalizedWorkType = normalizeDesignWorkType(formData.workType)
+
+                if (formData.roundType === ROUND_TYPES.TWO_ROUNDS && nextValues.roundType !== ROUND_TYPES.TWO_ROUNDS) {
+                    nextValues.roundType = formData.roundType
+                }
+
+                if (!nextValues.timelineTemplateId && timelineTemplateId) {
+                    nextValues.timelineTemplateId = timelineTemplateId
+                }
+
+                if (normalizedWorkType) {
+                    nextValues.workType = normalizedWorkType
+                    nextValues.tags = mergeTagsWithDesignWorkType(nextValues.tags, normalizedWorkType)
+                }
+
                 const savedAt = new Date()
 
                 setCurrentChallengeId(savedChallenge.id)
@@ -1071,6 +1149,9 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                             : undefined}
                         {showRoundTypeField
                             ? <RoundTypeField disabled={isChallengeCreated} />
+                            : undefined}
+                        {showDesignWorkTypeField
+                            ? <DesignWorkTypeField disabled={isChallengeCreated} />
                             : undefined}
                     </div>
                 </section>

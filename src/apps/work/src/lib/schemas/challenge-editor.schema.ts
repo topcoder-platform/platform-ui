@@ -368,6 +368,9 @@ export const challengeBasicInfoSchema: yup.ObjectSchema<ChallengeBasicInfoFormDa
             .required('Challenge track is required'),
         typeId: yup.string()
             .required('Challenge type is required'),
+        workType: yup.string()
+            .transform(emptyStringToUndefined)
+            .optional(),
     })
     .required()
 

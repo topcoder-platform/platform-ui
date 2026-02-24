@@ -309,6 +309,18 @@ export const workRoutes: ReadonlyArray<PlatformRoute> = [
             {
                 authRequired: true,
                 element: <ProjectInvitationsPage />,
+                route: '/projects/:projectId/accept/:inviteId',
+                title: 'Project Invitations',
+            },
+            {
+                authRequired: true,
+                element: <ProjectInvitationsPage />,
+                route: '/projects/:projectId/decline/:inviteId',
+                title: 'Project Invitations',
+            },
+            {
+                authRequired: true,
+                element: <ProjectInvitationsPage />,
                 id: projectInvitationsRouteId,
                 route: '/projects/:projectId/invitations/:action?',
                 title: 'Project Invitations',
