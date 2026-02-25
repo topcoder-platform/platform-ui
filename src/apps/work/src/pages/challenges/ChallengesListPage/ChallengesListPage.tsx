@@ -229,16 +229,30 @@ export const ChallengesListPage: FC = () => {
 
             const sortedByDisplayedStatus = [...challenges]
                 .sort((challengeA, challengeB) => {
-                    const statusA = getStatusText(challengeA.status)
-                        .toLowerCase()
-                    const statusB = getStatusText(challengeB.status)
-                        .toLowerCase()
-                    const statusCompare = statusA.localeCompare(statusB)
+                    const normalizedStatusA = String(challengeA.status || '')
+                        .trim()
+                        .toUpperCase()
+                    const normalizedStatusB = String(challengeB.status || '')
+                        .trim()
+                        .toUpperCase()
+                    const statusCompare = normalizedStatusA.localeCompare(normalizedStatusB)
 
                     if (statusCompare !== 0) {
                         return sortOrder === 'asc'
                             ? statusCompare
                             : -statusCompare
+                    }
+
+                    const statusA = getStatusText(challengeA.status)
+                        .toLowerCase()
+                    const statusB = getStatusText(challengeB.status)
+                        .toLowerCase()
+                    const statusTextCompare = statusA.localeCompare(statusB)
+
+                    if (statusTextCompare !== 0) {
+                        return sortOrder === 'asc'
+                            ? statusTextCompare
+                            : -statusTextCompare
                     }
 
                     return String(challengeA.name || '')

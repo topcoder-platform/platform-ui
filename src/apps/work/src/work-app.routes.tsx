@@ -30,6 +30,8 @@ import {
     projectEditRouteId,
     projectInvitationsRouteId,
     projectsRouteId,
+    roleErrorRoute,
+    roleErrorRouteId,
     rootRoute,
     taasCreateRouteId,
     taasEditRouteId,
@@ -115,6 +117,10 @@ const GroupEditPage: LazyLoadedComponent = lazyLoad(
     () => import('./pages/groups/GroupEditPage'),
 )
 
+const RoleErrorPage: LazyLoadedComponent = lazyLoad(
+    () => import('./pages/role-error/RoleErrorPage'),
+)
+
 function canManageGroups(contextValue: WorkAppContextModel): boolean {
     return contextValue.isAdmin || contextValue.isCopilot || contextValue.isManager
 }
@@ -147,7 +153,14 @@ export const toolTitle: string = ToolTitle.work
 
 export const workRoutes: ReadonlyArray<PlatformRoute> = [
     {
+        authRequired: true,
         children: [
+            {
+                authRequired: true,
+                element: <RoleErrorPage />,
+                route: roleErrorRouteId,
+                title: 'Role Error',
+            },
             {
                 authRequired: true,
                 element: <Rewrite to={challengesRouteId} />,
@@ -358,6 +371,7 @@ export const workRoutes: ReadonlyArray<PlatformRoute> = [
         domain: AppSubdomain.work,
         element: <WorkApp />,
         id: toolTitle,
+        roleErrorRoute,
         rolesRequired: WORK_MANAGER_ALLOWED_ROLES,
         route: rootRoute,
         title: toolTitle,

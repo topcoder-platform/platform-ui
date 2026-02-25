@@ -103,7 +103,11 @@ export const RouterProvider: FC<RouterProviderProps> = (props: RouterProviderPro
         const routeElement: JSX.Element = !route.authRequired
             ? route.element
             : (
-                <RestrictedRoute loginUrl={authUrlLogin()} rolesRequired={route.rolesRequired}>
+                <RestrictedRoute
+                    loginUrl={authUrlLogin()}
+                    roleErrorRoute={route.roleErrorRoute}
+                    rolesRequired={route.rolesRequired}
+                >
                     {route.element}
                 </RestrictedRoute>
             )

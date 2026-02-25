@@ -26,3 +26,5 @@ export const usersRouteId = 'users'
 export const projectInvitationsRouteId = 'project-invitations'
 export const groupsRouteId = 'groups'
 export const groupsEditRouteId = 'group-edit'
+export const roleErrorRouteId = 'role-error'
+export const roleErrorRoute = `${rootRoute}/${roleErrorRouteId}`

@@ -15,7 +15,8 @@ The Work app provides work management capabilities for:
 - `taas`
 - `users`
 - `groups`
-- root-level role restriction for Work Manager access
+- `role-error` (shown when the user is authenticated but missing a required Work role)
+- root-level authentication and role restriction for Work Manager access
 
 `config/routes.config.ts` contains route ids and the `rootRoute` resolver based on the active subdomain.
 
