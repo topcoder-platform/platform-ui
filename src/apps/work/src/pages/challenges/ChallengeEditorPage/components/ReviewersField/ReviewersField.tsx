@@ -118,6 +118,40 @@ function normalizePhaseToken(value: unknown): string {
         .replace(/[-_\s]/g, '')
 }
 
+function getPhaseMatchedScorecards(
+    scorecards: Scorecard[],
+    phaseId: string | undefined,
+    phaseNameById: Map<string, string>,
+): Scorecard[] {
+    const reviewerPhaseId = normalizeText(phaseId)
+    const reviewerPhaseName = reviewerPhaseId
+        ? phaseNameById.get(reviewerPhaseId)
+        : undefined
+    const normalizedReviewerPhase = normalizePhaseToken(reviewerPhaseName)
+
+    return scorecards.filter(scorecard => {
+        const scorecardPhaseId = normalizeText(scorecard.phaseId)
+        const normalizedScorecardType = normalizePhaseToken(scorecard.type)
+
+        if (!reviewerPhaseId && !normalizedReviewerPhase) {
+            return true
+        }
+
+        const matchesPhaseId = reviewerPhaseId
+            && scorecardPhaseId
+            && scorecardPhaseId === reviewerPhaseId
+        const matchesPhaseType = normalizedReviewerPhase
+            && normalizedScorecardType
+            && normalizedScorecardType === normalizedReviewerPhase
+
+        if (matchesPhaseId || matchesPhaseType) {
+            return true
+        }
+
+        return !scorecardPhaseId && !normalizedScorecardType
+    })
+}
+
 function formatScorecardLabel(scorecard: Scorecard): string {
     const scorecardName = normalizeText(scorecard.name) || scorecard.id
     const scorecardType = normalizeText(scorecard.type)
@@ -539,36 +573,21 @@ export const ReviewersField: FC = () => {
         () => getFirstPlacePrizeValue(prizeSets),
         [prizeSets],
     )
+    const getPhaseMatchedScorecardsForPhase = useCallback(
+        (phaseId: string | undefined): Scorecard[] => getPhaseMatchedScorecards(
+            scorecards,
+            phaseId,
+            phaseNameById,
+        ),
+        [
+            phaseNameById,
+            scorecards,
+        ],
+    )
 
     const getScorecardOptionsForReviewer = useCallback(
         (reviewer: Reviewer | undefined): FormSelectOption[] => {
-            const reviewerPhaseId = normalizeText(reviewer?.phaseId)
-            const reviewerPhaseName = reviewerPhaseId
-                ? phaseNameById.get(reviewerPhaseId)
-                : undefined
-            const normalizedReviewerPhase = normalizePhaseToken(reviewerPhaseName)
-
-            const matchingScorecards = scorecards.filter(scorecard => {
-                const scorecardPhaseId = normalizeText(scorecard.phaseId)
-                const normalizedScorecardType = normalizePhaseToken(scorecard.type)
-
-                if (!reviewerPhaseId && !normalizedReviewerPhase) {
-                    return true
-                }
-
-                const matchesPhaseId = reviewerPhaseId
-                    && scorecardPhaseId
-                    && scorecardPhaseId === reviewerPhaseId
-                const matchesPhaseType = normalizedReviewerPhase
-                    && normalizedScorecardType
-                    && normalizedScorecardType === normalizedReviewerPhase
-
-                if (matchesPhaseId || matchesPhaseType) {
-                    return true
-                }
-
-                return !scorecardPhaseId && !normalizedScorecardType
-            })
+            const matchingScorecards = getPhaseMatchedScorecardsForPhase(reviewer?.phaseId)
 
             const filteredScorecards = matchingScorecards.length
                 ? matchingScorecards
@@ -611,7 +630,7 @@ export const ReviewersField: FC = () => {
             return Array.from(optionsById.values())
         },
         [
-            phaseNameById,
+            getPhaseMatchedScorecardsForPhase,
             scorecards,
         ],
     )
@@ -997,6 +1016,55 @@ export const ReviewersField: FC = () => {
         ],
     )
 
+    const syncReviewerScorecardForPhase = useCallback(
+        (reviewerIndex: number, reviewer: Reviewer, nextPhaseId: string): void => {
+            const normalizedCurrentPhaseId = normalizeText(reviewer.phaseId)
+            const normalizedNextPhaseId = normalizeText(nextPhaseId)
+            if (
+                reviewer.isMemberReview === false
+                || !normalizedNextPhaseId
+                || normalizedCurrentPhaseId === normalizedNextPhaseId
+            ) {
+                return
+            }
+
+            const matchingScorecards = getPhaseMatchedScorecardsForPhase(nextPhaseId)
+            const selectedScorecardId = normalizeText(reviewer.scorecardId)
+            const hasSelectedScorecard = selectedScorecardId
+                ? matchingScorecards.some(scorecard => normalizeText(scorecard.id) === selectedScorecardId)
+                : false
+            if (hasSelectedScorecard) {
+                return
+            }
+
+            const defaultScorecardId = normalizeText(
+                defaultReviewers
+                    .find(defaultReviewer => normalizeText(defaultReviewer.phaseId) === normalizedNextPhaseId)
+                    ?.scorecardId,
+            )
+            const hasDefaultScorecard = defaultScorecardId
+                ? matchingScorecards.some(scorecard => normalizeText(scorecard.id) === defaultScorecardId)
+                : false
+            const fallbackScorecardId = hasDefaultScorecard
+                ? defaultScorecardId
+                : normalizeText(matchingScorecards[0]?.id)
+
+            formContext.setValue(
+                `reviewers.${reviewerIndex}.scorecardId` as any,
+                fallbackScorecardId || undefined,
+                {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                },
+            )
+        },
+        [
+            defaultReviewers,
+            formContext,
+            getPhaseMatchedScorecardsForPhase,
+        ],
+    )
+
     const handlePhaseChange = useCallback(
         (reviewerIndex: number, nextPhaseId: string): void => {
             const reviewer = reviewerRows[reviewerIndex]
@@ -1012,6 +1080,8 @@ export const ReviewersField: FC = () => {
                     shouldValidate: true,
                 })
             }
+
+            syncReviewerScorecardForPhase(reviewerIndex, reviewer, nextPhaseId)
 
             if (
                 reviewer.isMemberReview === false
@@ -1052,6 +1122,7 @@ export const ReviewersField: FC = () => {
             resolveRoleIdForPhase,
             resolveRoleIdForReviewer,
             reviewerRows,
+            syncReviewerScorecardForPhase,
         ],
     )
 
