@@ -24,7 +24,6 @@ const ConfirmModal: FC<ConfirmModalProps> = (props: ConfirmModalProps) => {
     const isLoading = props.isLoading
     const handleConfirm = useCallback((): void => props.onConfirm(), [props.onConfirm])
     const handleClose = useCallback(() => {
-        console.log(isLoading, 'isLoading', props.onClose)
         if (!isLoading) {
             props.onClose?.()
         }
