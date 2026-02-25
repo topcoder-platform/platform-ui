@@ -65,11 +65,11 @@ const StatsSummaryBlock: FC<StatsSummaryBlockProps> = props => {
                 {isFieldVisible('wins') && (
                     <div className={styles.summaryItem}>
                         <span className={styles.summaryItemValue}>
-                            {props.wins}
+                            {props.wins ?? 0}
                         </span>
                         <span className={styles.summaryItemLabel}>
                             <span className='body-small'>
-                                {formatPlural(props.wins || 0, 'Win')}
+                                {formatPlural(props.wins ?? 0, 'Win')}
                             </span>
                         </span>
                     </div>
