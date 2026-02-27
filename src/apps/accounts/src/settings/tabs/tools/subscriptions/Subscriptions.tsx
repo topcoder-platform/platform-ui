@@ -301,6 +301,7 @@ const Subscriptions: FC<SubscriptionsProps> = (props: SubscriptionsProps) => {
                         type='text'
                         error={formErrors.subscriptionName}
                         dirty
+                        forceUpdateValue
                     />
                     <div className={styles.formCTAs}>
                         {!isEditMode && <IconOutline.PlusCircleIcon />}
