@@ -1,0 +1,78 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-3;
+}
+
+.description {
+    color: var(--GrayFontColor, #767676);
+    font-size: 14px;
+    line-height: 20px;
+    margin: 0;
+}
+
+.picker {
+    align-items: center;
+    background: #fff;
+    border: 1px dashed var(--GrayBorder, #d0d0d0);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: $sp-3;
+    min-height: 220px;
+    justify-content: center;
+    padding: $sp-5;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.drag {
+    background: #f3fbfb;
+    border-color: var(--turq-160, #0ab88a);
+}
+
+.topgear {
+    align-items: stretch;
+    min-height: 180px;
+}
+
+.filename {
+    color: var(--Black, #2a2a2a);
+    font-size: 14px;
+    font-weight: 500;
+    margin: 0;
+    word-break: break-word;
+}
+
+.upload {
+    color: var(--GrayFontColor, #767676);
+    font-size: 13px;
+    margin: 0;
+}
+
+.urlInputContainer {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-2;
+    width: 100%;
+
+    input {
+        border: 1px solid var(--GrayBorder, #d0d0d0);
+        border-radius: 6px;
+        font-size: 14px;
+        height: 42px;
+        padding: 0 $sp-3;
+        width: 100%;
+    }
+}
+
+.invalidMessage {
+    color: #ef476f;
+    font-size: 12px;
+    line-height: 18px;
+}
+
+.inputInvalid {
+    border-color: #ef476f !important;
+}

@@ -11,7 +11,7 @@ import {
     useState,
 } from 'react'
 import { NavigateFunction, useNavigate } from 'react-router-dom'
-import type { AuthUser as NavAuthUser } from 'universal-navigation'
+import type { AuthUser as NavAuthUser, NavigationType } from 'universal-navigation'
 import classNames from 'classnames'
 
 import { EnvironmentConfig, PageSubheaderPortalId } from '~/config'
@@ -36,7 +36,17 @@ interface NavigationRequest {
     path: string
 }
 
-const AppHeader: FC<{}> = () => {
+interface AppHeaderProps {
+    navType?: 'tool' | 'community'
+}
+
+/**
+ * Application header that initializes and maintains Topcoder universal navigation.
+ *
+ * @param props Optional uni-nav type override. Defaults to `'tool'`.
+ * @returns Universal navigation mount container.
+ */
+const AppHeader: FC<AppHeaderProps> = (props: AppHeaderProps) => {
 
     const { activeToolName, activeToolRoute, routeNavConfigs }: RouterContextData = useContext(routerContext)
     const { profile, initialized: profileReady }: ProfileContextData = useContext(profileContext)
@@ -45,6 +55,7 @@ const AppHeader: FC<{}> = () => {
     const headerInit: MutableRefObject<boolean> = useRef(false)
     const navElementId: string = PageSubheaderPortalId
     const navigate: NavigateFunction = useNavigate()
+    const navType: 'tool' | 'community' = props.navType ?? 'tool'
 
     // userinfo will be an empty object until profileReady=true
     // userinfo will be {user: undefined} if user is logged out
@@ -99,7 +110,7 @@ const AppHeader: FC<{}> = () => {
                 signUp() { window.location.href = authUrlSignup() },
                 toolName: activeToolName,
                 toolRoot: activeToolRoute,
-                type: 'tool',
+                type: navType as NavigationType,
                 ...userInfo,
             },
         )
@@ -112,6 +123,7 @@ const AppHeader: FC<{}> = () => {
         profileReady,
         logoutUrl,
         routeNavConfigs,
+        navType,
     ])
 
     // update uni-nav's tool details

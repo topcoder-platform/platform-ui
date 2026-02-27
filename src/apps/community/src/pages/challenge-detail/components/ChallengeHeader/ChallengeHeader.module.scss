@@ -1,0 +1,190 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    background: #fff;
+    border: 1px solid var(--GrayBorder);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: $sp-4;
+    padding: $sp-5;
+}
+
+.topRow {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-2;
+}
+
+.backLink {
+    color: var(--DarkBlue);
+    display: inline-flex;
+    font-size: 14px;
+    font-weight: 700;
+    gap: $sp-1;
+    text-decoration: none;
+}
+
+.title {
+    color: var(--DarkBlue);
+    font-size: 34px;
+    line-height: 1.2;
+    margin: 0;
+}
+
+.badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $sp-2;
+}
+
+.badge {
+    background: #eef6ff;
+    border-radius: 999px;
+    color: #0d61bf;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 10px;
+}
+
+.infoRow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $sp-3;
+}
+
+.prizes {
+    align-items: center;
+    display: inline-flex;
+    gap: $sp-1;
+}
+
+.label {
+    color: var(--GrayFontColor);
+    font-weight: 700;
+}
+
+.bonus {
+    color: #137d60;
+    font-weight: 700;
+}
+
+.meta {
+    color: var(--GrayFontColor);
+}
+
+.actions {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: $sp-2;
+}
+
+.actionLink {
+    background: #0d61bf;
+    border-radius: 4px;
+    color: #fff;
+    display: inline-flex;
+    font-size: 14px;
+    font-weight: 700;
+    justify-content: center;
+    padding: 10px 14px;
+    text-decoration: none;
+}
+
+.disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.deadlineBar {
+    align-items: center;
+    background: #f8f9fc;
+    border: 1px solid var(--GrayBorder);
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    padding: $sp-3;
+}
+
+.deadlineTitle {
+    color: var(--GrayFontColor);
+    font-size: 12px;
+    margin: 0;
+    text-transform: uppercase;
+}
+
+.deadlineValue {
+    color: var(--DarkBlue);
+    margin: $sp-1 0 0;
+}
+
+.toggleDeadlines {
+    background: transparent;
+    border: 0;
+    color: var(--DarkBlue);
+    cursor: pointer;
+    font-weight: 700;
+}
+
+.deadlinesPanel {
+    border: 1px solid var(--GrayBorder);
+    border-radius: 8px;
+    padding: $sp-3;
+}
+
+.timezone {
+    color: var(--GrayFontColor);
+    font-size: 12px;
+    margin: 0 0 $sp-3;
+}
+
+.deadlineItem {
+    &:not(:last-child) {
+        border-bottom: 1px solid var(--GrayBorder);
+        margin-bottom: $sp-2;
+        padding-bottom: $sp-2;
+    }
+}
+
+.deadlineName {
+    color: var(--DarkBlue);
+    font-weight: 700;
+    margin: 0;
+}
+
+.deadlineRange {
+    color: var(--GrayFontColor);
+    margin: $sp-1 0 0;
+}
+
+.tabsRow {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    gap: $sp-3;
+}
+
+.forumLink {
+    color: var(--DarkBlue);
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+    .title {
+        font-size: 26px;
+    }
+
+    .deadlineBar {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: $sp-2;
+    }
+
+    .tabsRow {
+        align-items: stretch;
+        flex-direction: column;
+    }
+}

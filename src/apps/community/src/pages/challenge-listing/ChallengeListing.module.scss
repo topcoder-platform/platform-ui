@@ -1,0 +1,69 @@
+@import '@libs/ui/styles/includes';
+
+.page {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-5;
+    margin: 0 auto;
+    max-width: 1200px;
+    padding: $sp-6 $sp-4 $sp-8;
+    width: 100%;
+}
+
+.header {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-2;
+}
+
+.title {
+    color: var(--DarkBlue);
+    font-size: 36px;
+    font-weight: 700;
+    line-height: 44px;
+    margin: 0;
+}
+
+.tabs {
+    border-bottom: 1px solid var(--GrayBorder);
+    padding-bottom: $sp-2;
+}
+
+.cardsTable {
+    :global(.TableCell) {
+        max-width: none;
+        padding: $sp-2 0;
+    }
+
+    :global(.TableCell_blockCell) {
+        display: block;
+    }
+}
+
+.emptyState {
+    background: #fff;
+    border: 1px solid var(--GrayBorder);
+    border-radius: 8px;
+    color: var(--GrayFontColor);
+    font-size: 16px;
+    line-height: 24px;
+    padding: $sp-6;
+    text-align: center;
+}
+
+.loadMore {
+    display: flex;
+    justify-content: center;
+    margin-top: $sp-2;
+}
+
+@media (max-width: 768px) {
+    .page {
+        padding: $sp-4 $sp-3 $sp-6;
+    }
+
+    .title {
+        font-size: 28px;
+        line-height: 36px;
+    }
+}

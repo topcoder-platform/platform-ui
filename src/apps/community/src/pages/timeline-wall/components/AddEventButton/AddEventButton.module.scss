@@ -1,0 +1,163 @@
+.container {
+    margin-bottom: 20px;
+}
+
+.noLogin {
+    background: #f8f8f8;
+    border: 1px dashed #c8c8c8;
+    border-radius: 8px;
+    color: #5a5a5a;
+    padding: 16px;
+}
+
+.addTriggerButton {
+    align-items: center;
+    background: linear-gradient(132deg, #0f56e8, #1296ff);
+    border: 0;
+    border-radius: 8px;
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    padding: 14px 16px;
+    width: 100%;
+}
+
+.addTriggerText {
+    font-size: 16px;
+    font-weight: 500;
+    text-align: left;
+}
+
+.iconsWrap {
+    align-items: center;
+    display: flex;
+    gap: 10px;
+}
+
+.iconItem {
+    align-items: center;
+    display: inline-flex;
+    font-size: 12px;
+    gap: 6px;
+}
+
+.separator {
+    background: rgba(255, 255, 255, 0.45);
+    display: block;
+    height: 18px;
+    width: 1px;
+}
+
+.addEventForm {
+    background: #fff;
+    border: 1px solid #d8d8d8;
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.header {
+    align-items: center;
+    display: flex;
+    font-size: 18px;
+    font-weight: 600;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}
+
+.closeButton {
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+.formFields {
+    display: grid;
+    gap: 8px;
+}
+
+.label {
+    color: #5b5b5b;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    margin-top: 4px;
+    text-transform: uppercase;
+}
+
+.input,
+.textArea {
+    border: 1px solid #cccccc;
+    border-radius: 6px;
+    font-size: 14px;
+    padding: 10px 12px;
+}
+
+.textArea {
+    line-height: 1.5;
+    min-height: 120px;
+    resize: vertical;
+}
+
+.filePickerWrap {
+    margin-top: 4px;
+}
+
+.fileHelpText {
+    color: #6a6a6a;
+    font-size: 12px;
+    margin: 8px 0 0;
+}
+
+.actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 16px;
+}
+
+.cancelButton,
+.submitButton {
+    border: 0;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    min-width: 128px;
+    padding: 10px 16px;
+    text-transform: uppercase;
+}
+
+.cancelButton {
+    background: #edf2ff;
+    color: #0d61ff;
+}
+
+.submitButton {
+    background: #0d61ff;
+    color: #fff;
+}
+
+.submitButton:disabled {
+    background: #b8c8ea;
+    cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+    .addTriggerButton {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .actions {
+        flex-direction: column;
+    }
+
+    .cancelButton,
+    .submitButton {
+        width: 100%;
+    }
+}

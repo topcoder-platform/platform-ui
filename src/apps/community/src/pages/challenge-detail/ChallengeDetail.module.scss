@@ -1,0 +1,51 @@
+@import '@libs/ui/styles/includes';
+
+.page {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-4;
+    margin: 0 auto;
+    max-width: 1240px;
+    padding: $sp-6 $sp-4 $sp-8;
+    width: 100%;
+}
+
+.header {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-2;
+}
+
+.tabContent {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-4;
+}
+
+.emptyState {
+    background: #fff;
+    border: 1px solid var(--GrayBorder);
+    border-radius: 8px;
+    color: var(--GrayFontColor);
+    padding: $sp-5;
+    text-align: center;
+}
+
+.spinnerWrap {
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    min-height: 320px;
+}
+
+.inlineLoading {
+    color: var(--GrayFontColor);
+    font-size: 12px;
+    text-align: right;
+}
+
+@media (max-width: 768px) {
+    .page {
+        padding: $sp-4 $sp-3 $sp-6;
+    }
+}

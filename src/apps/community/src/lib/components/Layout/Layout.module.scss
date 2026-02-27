@@ -1,0 +1,29 @@
+@import '@libs/ui/styles/includes';
+
+.contentLayoutOuter {
+    margin: $sp-6 auto !important;
+}
+
+.contentLayoutInner {
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.standardLayout {
+    position: relative;
+}
+
+.communityLayout {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+}
+
+.communityHeaderSlot,
+.communityFooterSlot {
+    width: 100%;
+}
+
+.communityContent {
+    flex: 1;
+}

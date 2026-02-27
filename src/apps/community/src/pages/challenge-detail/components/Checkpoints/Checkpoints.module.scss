@@ -1,0 +1,63 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    background: #fff;
+    border: 1px solid var(--GrayBorder);
+    border-radius: 8px;
+    padding: $sp-5;
+}
+
+.title {
+    color: var(--DarkBlue);
+    font-size: 24px;
+    margin: 0 0 $sp-2;
+}
+
+.subtitle {
+    color: var(--GrayFontColor);
+    margin: 0 0 $sp-4;
+}
+
+.generalFeedback {
+    border-bottom: 1px solid var(--GrayBorder);
+    margin-bottom: $sp-4;
+    padding-bottom: $sp-4;
+}
+
+.items {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-3;
+}
+
+.item {
+    border: 1px solid var(--GrayBorder);
+    border-radius: 8px;
+}
+
+.toggle {
+    align-items: center;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    padding: $sp-3;
+    width: 100%;
+}
+
+.toggleTitle {
+    color: var(--DarkBlue);
+    font-weight: 600;
+}
+
+.toggleIcon {
+    color: var(--GrayFontColor);
+    font-size: 12px;
+    text-transform: uppercase;
+}
+
+.feedback {
+    border-top: 1px solid var(--GrayBorder);
+    padding: $sp-3;
+}

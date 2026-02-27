@@ -1,0 +1,62 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    background: #fff;
+    border: 1px solid var(--GrayBorder);
+    border-radius: 8px;
+    padding: $sp-4;
+}
+
+.header {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: $sp-3;
+}
+
+.title {
+    color: var(--DarkBlue);
+    font-size: 22px;
+    margin: 0;
+}
+
+.viewAll {
+    color: var(--Link);
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.rows {
+    display: flex;
+    flex-direction: column;
+}
+
+.row {
+    border-top: 1px solid var(--GrayBorder);
+    padding: $sp-3 0;
+
+    &:first-child {
+        border-top: 0;
+        padding-top: 0;
+    }
+
+    &:last-child {
+        padding-bottom: 0;
+    }
+}
+
+.articleName {
+    color: var(--DarkBlue);
+    display: inline-block;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.loading {
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    min-height: 80px;
+}

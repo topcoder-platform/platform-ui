@@ -79,6 +79,8 @@ const isSubmissionDataTab = (label?: string): boolean => {
     }
 
     return normalized.includes('submission')
+        || normalized.includes('final fix')
+        || normalized.includes('finalfix')
         || normalized.includes('screening')
         || normalized.includes('checkpoint')
         || normalized.includes('review')

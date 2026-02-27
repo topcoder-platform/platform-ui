@@ -28,6 +28,15 @@ export interface GlobalConfig {
         V6: string
         URL: string
     },
+    CONTENTFUL: {
+        BASE_URL: string
+        SPACE_ID: string
+        ACCESS_TOKEN: string
+        EDU_SPACE_ID: string
+        EDU_ACCESS_TOKEN: string
+        CHANGELOG_ENTRY_ID: string
+    },
+    TIMELINE_WALL_API: string,
     STANDARDIZED_SKILLS_API: string,
     TC_FINANCE_API: string,
     TC_AI_API: string,
@@ -54,6 +63,7 @@ export interface GlobalConfig {
     }
     TERMS_URL?: string
     NDA_TERMS_URL?: string
+    TOPGEAR_ALLOWED_SUBMISSIONS_DOMAINS?: string
     MEMBER_VERIFY_LOOKER: number
     ENABLE_TCA_CERT_MONETIZATION: boolean
     VANILLA_FORUM: {

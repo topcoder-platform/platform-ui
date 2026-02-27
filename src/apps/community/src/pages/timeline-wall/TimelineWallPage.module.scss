@@ -1,0 +1,203 @@
+.container {
+    margin: 0 auto;
+    max-width: 1260px;
+    padding: 0 16px 28px;
+}
+
+.header {
+    align-items: center;
+    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+    min-height: 180px;
+    overflow: hidden;
+    position: relative;
+}
+
+.headerAdmin {
+    justify-content: flex-start;
+    padding: 0 18px;
+}
+
+.headerWithDiscuss {
+    justify-content: space-between;
+}
+
+.headerBg {
+    height: 100%;
+    left: 0;
+    object-fit: cover;
+    position: absolute;
+    top: 0;
+    width: 100%;
+    z-index: 0;
+}
+
+.hideDesktop {
+    display: none;
+}
+
+.headerTitle {
+    color: #fff;
+    font-size: 42px;
+    margin: 0;
+    position: relative;
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+    z-index: 1;
+}
+
+.headerTabs {
+    display: flex;
+    gap: 10px;
+    position: relative;
+    z-index: 1;
+}
+
+.tabItem {
+    align-items: center;
+    background: rgba(255, 255, 255, 0.14);
+    border: 0;
+    border-radius: 999px;
+    color: #fff;
+    cursor: pointer;
+    display: inline-flex;
+    font-size: 14px;
+    font-weight: 600;
+    gap: 8px;
+    min-height: 38px;
+    padding: 0 16px;
+    position: relative;
+}
+
+.selected {
+    background: #fff;
+    color: #0d61ff;
+}
+
+.selectIndicator {
+    border-radius: 2px;
+    bottom: -6px;
+    height: 2px;
+    left: 16px;
+    opacity: 0;
+    position: absolute;
+    right: 16px;
+}
+
+.selected .selectIndicator {
+    background: #0d61ff;
+    opacity: 1;
+}
+
+.tag {
+    align-items: center;
+    background: #f05a28;
+    border-radius: 999px;
+    color: #fff;
+    display: inline-flex;
+    font-size: 11px;
+    font-weight: 700;
+    height: 18px;
+    justify-content: center;
+    min-width: 18px;
+    padding: 0 6px;
+}
+
+.discussButton {
+    align-items: center;
+    background: #ffffff;
+    border-radius: 999px;
+    color: #0d61ff;
+    display: inline-flex;
+    font-size: 13px;
+    font-weight: 700;
+    gap: 8px;
+    letter-spacing: 0.02em;
+    padding: 11px 16px;
+    position: relative;
+    text-decoration: none;
+    z-index: 1;
+}
+
+.filterDropdown {
+    align-items: center;
+    background: rgba(255, 255, 255, 0.95);
+    border: 0;
+    border-radius: 999px;
+    color: #0d61ff;
+    cursor: pointer;
+    display: none;
+    font-size: 14px;
+    font-weight: 600;
+    gap: 8px;
+    padding: 8px 14px;
+    position: relative;
+    z-index: 1;
+}
+
+.tabContent {
+    margin-top: 6px;
+}
+
+.hidden {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 0 10px 22px;
+    }
+
+    .header {
+        border-radius: 0;
+        margin: 0 -10px 14px;
+        min-height: 130px;
+        padding: 0 12px;
+    }
+
+    .hideMobile {
+        display: none;
+    }
+
+    .hideDesktop {
+        display: block;
+    }
+
+    .headerTitle {
+        font-size: 26px;
+        padding-top: 16px;
+        text-align: center;
+    }
+
+    .headerTabs {
+        gap: 6px;
+        margin-top: 22px;
+    }
+
+    .tabItem {
+        font-size: 12px;
+        min-height: 34px;
+        padding: 0 10px;
+    }
+
+    .tag {
+        font-size: 10px;
+        height: 16px;
+        min-width: 16px;
+    }
+
+    .discussButton {
+        display: none;
+    }
+
+    .filterDropdown {
+        display: inline-flex;
+    }
+
+    .headerAdmin {
+        align-items: flex-start;
+        flex-direction: column;
+        justify-content: flex-end;
+    }
+}

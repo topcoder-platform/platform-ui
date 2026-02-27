@@ -1,0 +1,63 @@
+@import '@libs/ui/styles/includes';
+
+.filters {
+    align-items: flex-end;
+    display: grid;
+    gap: $sp-4;
+    grid-template-columns: minmax(240px, 1fr) auto auto;
+}
+
+.search {
+    min-width: 0;
+}
+
+.searchInput {
+    margin: 0;
+}
+
+.label {
+    color: var(--GrayFontColor);
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+}
+
+.sortSelect {
+    border: 1px solid var(--GrayBorder);
+    border-radius: 6px;
+    color: var(--FontColor);
+    font-size: 14px;
+    line-height: 20px;
+    min-height: 42px;
+    min-width: 220px;
+    padding: 10px 12px;
+}
+
+.actions {
+    display: flex;
+    align-items: flex-end;
+}
+
+.srOnly {
+    border: 0;
+    clip: rect(0 0 0 0);
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    width: 1px;
+}
+
+@media (max-width: 768px) {
+    .filters {
+        grid-template-columns: 1fr;
+    }
+
+    .sortSelect {
+        width: 100%;
+        min-width: 0;
+    }
+}

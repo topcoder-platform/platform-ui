@@ -1,0 +1,141 @@
+.container {
+    background: #fff;
+    border: 1px solid #d8d8d8;
+    border-radius: 10px;
+    margin-bottom: 16px;
+    padding: 14px;
+}
+
+.header {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.metaLeft {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.dateLabel {
+    color: #7a7a7a;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.avatar {
+    border-radius: 50%;
+    height: 24px;
+    object-fit: cover;
+    width: 24px;
+}
+
+.handleLink {
+    color: #0d61ff;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.title {
+    font-size: 20px;
+    line-height: 1.2;
+    margin: 0 0 8px;
+}
+
+.description {
+    color: #454545;
+    line-height: 1.55;
+    margin: 0;
+}
+
+.photoContainer {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-top: 12px;
+}
+
+.photoButton {
+    border: 0;
+    border-radius: 8px;
+    cursor: pointer;
+    overflow: hidden;
+    padding: 0;
+}
+
+.photoButton img {
+    display: block;
+    height: 112px;
+    object-fit: cover;
+    width: 100%;
+}
+
+.actions {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    margin-top: 14px;
+}
+
+.trashButton {
+    align-items: center;
+    background: transparent;
+    border: 0;
+    color: #c21b2d;
+    cursor: pointer;
+    display: inline-flex;
+    justify-content: center;
+    padding: 0;
+}
+
+.actionButtons {
+    display: flex;
+    gap: 8px;
+}
+
+.rejectButton,
+.approveButton {
+    border: 0;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 700;
+    min-width: 104px;
+    padding: 9px 14px;
+    text-transform: uppercase;
+}
+
+.rejectButton {
+    background: #edf2ff;
+    color: #0d61ff;
+}
+
+.approveButton {
+    background: #13a54a;
+    color: #fff;
+}
+
+@media (max-width: 768px) {
+    .photoContainer {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .actions {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .actionButtons {
+        width: 100%;
+    }
+
+    .rejectButton,
+    .approveButton {
+        flex: 1;
+    }
+}

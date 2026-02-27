@@ -1,0 +1,56 @@
+@import '@libs/ui/styles/includes';
+
+.panel {
+    align-items: center;
+    background: #fff;
+    border: 1px solid var(--GrayBorder, #d0d0d0);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: $sp-3;
+    margin: 0 auto;
+    max-width: 620px;
+    padding: $sp-6 $sp-5;
+    text-align: center;
+    width: 100%;
+}
+
+.title {
+    color: var(--Black, #2a2a2a);
+    font-size: 24px;
+    margin: 0;
+}
+
+.challengeName {
+    color: var(--GrayFontColor, #767676);
+    margin: 0;
+}
+
+.loading {
+    margin: $sp-1 0;
+}
+
+.progressText {
+    color: var(--GrayFontColor, #767676);
+    margin: 0;
+}
+
+.error {
+    color: #ef476f;
+    margin: 0;
+    max-width: 420px;
+}
+
+.actions {
+    display: flex;
+    gap: $sp-3;
+    justify-content: center;
+    margin-top: $sp-2;
+}
+
+@media (max-width: 768px) {
+    .actions {
+        flex-direction: column;
+        width: 100%;
+    }
+}

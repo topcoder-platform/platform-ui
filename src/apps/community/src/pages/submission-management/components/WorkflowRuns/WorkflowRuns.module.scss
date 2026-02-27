@@ -1,0 +1,23 @@
+@import '@libs/ui/styles/includes';
+
+.wrapper {
+    margin-bottom: $sp-3;
+}
+
+.table {
+    border-collapse: collapse;
+    width: 100%;
+
+    th,
+    td {
+        border-bottom: 1px solid var(--GrayBorder, #d0d0d0);
+        font-size: 13px;
+        padding: $sp-2;
+        text-align: left;
+    }
+
+    th {
+        color: var(--GrayFontColor, #767676);
+        text-transform: uppercase;
+    }
+}

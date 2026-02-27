@@ -65,6 +65,7 @@ export const RouterProvider: FC<RouterProviderProps> = (props: RouterProviderPro
                 : props.rootMember
 
         const contextData: RouterContextData = {
+            activeLayoutVariant: activeRoute?.layoutVariant ?? 'standard',
             activeToolName: activeRoute?.title || activeRoute?.id,
             activeToolRoute: !!activeRoute ? `https://${window.location.hostname}${activeRoute.route}` : undefined,
             allRoutes,

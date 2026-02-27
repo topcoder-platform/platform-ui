@@ -1,0 +1,168 @@
+.container {
+    background: #fff;
+    border: 1px solid #d8d8d8;
+    border-radius: 10px;
+    margin-bottom: 18px;
+    position: relative;
+}
+
+.colorGreen {
+    border-top: 3px solid #2dbd6d;
+}
+
+.colorRed {
+    border-top: 3px solid #f25f5c;
+}
+
+.colorPurple {
+    border-top: 3px solid #6e61ff;
+}
+
+.dot {
+    background: #1f74ff;
+    border-radius: 50%;
+    height: 10px;
+    position: absolute;
+    top: 28px;
+    width: 10px;
+}
+
+.dotLeft {
+    left: -26px;
+}
+
+.dotRight {
+    right: -26px;
+}
+
+.content {
+    padding: 14px;
+}
+
+.header {
+    align-items: center;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    display: flex;
+    font-size: 20px;
+    font-weight: 600;
+    justify-content: space-between;
+    line-height: 1.2;
+    margin-bottom: 8px;
+    text-align: left;
+    width: 100%;
+}
+
+.flipVertical {
+    transform: rotate(180deg);
+}
+
+.contentText {
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    background: transparent;
+    border: 0;
+    color: #454545;
+    cursor: pointer;
+    display: -webkit-box;
+    line-height: 1.5;
+    margin: 0;
+    overflow: hidden;
+    padding: 0;
+    text-align: left;
+    width: 100%;
+}
+
+.expanded {
+    -webkit-line-clamp: initial;
+    overflow: visible;
+}
+
+.photoContainer {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-top: 12px;
+}
+
+.onePhoto {
+    grid-template-columns: 1fr;
+}
+
+.twoPhoto {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.photoButton {
+    border: 0;
+    border-radius: 8px;
+    cursor: pointer;
+    overflow: hidden;
+    padding: 0;
+}
+
+.photoButton img {
+    display: block;
+    height: 145px;
+    object-fit: cover;
+    width: 100%;
+}
+
+.bottom {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    margin-top: 14px;
+}
+
+.bottomLeft {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.avatar {
+    border-radius: 50%;
+    height: 23px;
+    object-fit: cover;
+    width: 23px;
+}
+
+.handleLink {
+    color: #0d61ff;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.dateLabel {
+    color: #7e7e7e;
+    font-size: 13px;
+}
+
+.deleteButton {
+    align-items: center;
+    background: transparent;
+    border: 0;
+    color: #ca1f2f;
+    cursor: pointer;
+    display: inline-flex;
+    justify-content: center;
+    padding: 0;
+}
+
+@media (max-width: 768px) {
+    .dot {
+        display: none;
+    }
+
+    .header {
+        font-size: 18px;
+    }
+
+    .photoButton img {
+        height: 120px;
+    }
+}

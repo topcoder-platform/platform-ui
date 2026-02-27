@@ -1,0 +1,58 @@
+.page {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-height: 640px;
+}
+
+.header {
+    align-items: baseline;
+    display: flex;
+    gap: 16px;
+    justify-content: space-between;
+}
+
+.title {
+    color: #262628;
+    font-size: 28px;
+    font-weight: 600;
+    line-height: 34px;
+    margin: 0;
+}
+
+.message {
+    color: #555;
+    margin: 0;
+}
+
+.link {
+    color: #0d61bf;
+    font-size: 14px;
+    text-decoration: none;
+}
+
+.link:hover {
+    text-decoration: underline;
+}
+
+.frame {
+    background: #fff;
+    border: 0;
+    border-radius: 8px;
+    height: calc(100vh - 280px);
+    min-height: 520px;
+    width: 100%;
+}
+
+@media (max-width: 767px) {
+    .header {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .frame {
+        height: 70vh;
+        min-height: 420px;
+    }
+}

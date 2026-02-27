@@ -1,0 +1,89 @@
+@import '@libs/ui/styles/includes';
+
+.card {
+    border: 1px solid var(--GrayBorder);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: $sp-4;
+    padding: $sp-5;
+    background: #fff;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: $sp-4;
+}
+
+.title {
+    color: var(--Link);
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 28px;
+    text-decoration: none;
+
+    &:hover {
+        text-decoration: underline;
+    }
+}
+
+.badges {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: $sp-2;
+}
+
+.trackBadge,
+.typeBadge {
+    border-radius: 999px;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 16px;
+    padding: 4px 10px;
+    white-space: nowrap;
+}
+
+.typeBadge {
+    background: var(--DarkBlue);
+}
+
+.meta {
+    display: grid;
+    gap: $sp-3;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin: 0;
+}
+
+.metaItem {
+    dt {
+        color: var(--GrayFontColor);
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 16px;
+        margin-bottom: 2px;
+        text-transform: uppercase;
+    }
+
+    dd {
+        color: var(--FontColor);
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 20px;
+        margin: 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .meta {
+        grid-template-columns: 1fr;
+    }
+}

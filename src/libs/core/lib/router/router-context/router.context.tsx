@@ -1,11 +1,12 @@
 import { Context, createContext, ReactElement } from 'react'
 
-import { PlatformRoute } from '../platform-route.model'
+import { PlatformRoute, PlatformRouteLayoutVariant } from '../platform-route.model'
 import { RouteNavConfig } from '../route-nav-config.model'
 
 export interface RouterContextData {
     activeToolName?: string
     activeToolRoute?: string
+    activeLayoutVariant: PlatformRouteLayoutVariant
     routeNavConfigs?: RouteNavConfig
     allRoutes: Array<PlatformRoute>
     getChildren: (parent: string) => Array<PlatformRoute>
@@ -20,6 +21,7 @@ export interface RouterContextData {
 }
 
 export const routerContextDefaultData: RouterContextData = {
+    activeLayoutVariant: 'standard',
     allRoutes: [],
     getChildren: () => [],
     getChildRoutes: () => [],

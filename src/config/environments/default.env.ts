@@ -74,6 +74,20 @@ export const API = {
     V6: `https://api.${TC_DOMAIN}/v6`,
 }
 
+export const CONTENTFUL = {
+    ACCESS_TOKEN: getReactEnv<string>('CONTENTFUL_ACCESS_TOKEN', ''),
+    BASE_URL: 'https://cdn.contentful.com',
+    CHANGELOG_ENTRY_ID: getReactEnv<string>('CONTENTFUL_CHANGELOG_ENTRY_ID', ''),
+    EDU_ACCESS_TOKEN: getReactEnv<string>('CONTENTFUL_EDU_ACCESS_TOKEN', ''),
+    EDU_SPACE_ID: getReactEnv<string>('CONTENTFUL_EDU_SPACE_ID', ''),
+    SPACE_ID: getReactEnv<string>('CONTENTFUL_SPACE_ID', ''),
+}
+
+export const TIMELINE_WALL_API = getReactEnv<string>(
+    'TIMELINE_WALL_API',
+    `https://timeline-wall-api.${TC_DOMAIN}`,
+)
+
 export const STANDARDIZED_SKILLS_API = `${API.V5}/standardized-skills`
 export const TC_FINANCE_API = `${API.V6}/finance`
 export const TC_AI_API = `${API.V6}/ai`
@@ -136,6 +150,10 @@ export const TERMS_URL
     = 'https://www.topcoder-dev.com/challenges/terms/detail/317cd8f9-d66c-4f2a-8774-63c612d99cd4'
 export const NDA_TERMS_URL
     = 'https://www.topcoder-dev.com/challenges/terms/detail/e5811a7b-43d1-407a-a064-69e5015b4900'
+export const TOPGEAR_ALLOWED_SUBMISSIONS_DOMAINS = getReactEnv<string>(
+    'TOPGEAR_ALLOWED_SUBMISSIONS_DOMAINS',
+    '',
+)
 export const PRIVACY_POLICY_URL = `${TOPCODER_URL}/policy`
 
 export const GAMIFICATION_ORG_ID = getReactEnv<string>(

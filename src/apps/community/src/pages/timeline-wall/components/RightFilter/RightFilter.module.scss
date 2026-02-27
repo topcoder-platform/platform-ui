@@ -1,0 +1,96 @@
+.container {
+    align-self: flex-start;
+    background: #fff;
+    border: 1px solid #d8d8d8;
+    border-radius: 8px;
+    max-height: calc(100vh - 170px);
+    overflow: hidden;
+    position: sticky;
+    top: 90px;
+    width: 260px;
+}
+
+.header {
+    align-items: center;
+    border-bottom: 1px solid #ececec;
+    display: none;
+    justify-content: space-between;
+    padding: 12px 16px;
+}
+
+.closeButton {
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+.content {
+    max-height: calc(100vh - 220px);
+    overflow: auto;
+    padding: 12px;
+}
+
+.listItem {
+    margin-bottom: 8px;
+}
+
+.blockItem {
+    background: transparent;
+    border: 0;
+    border-radius: 6px;
+    color: #2a2a2a;
+    cursor: pointer;
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 8px 10px;
+    text-align: left;
+    width: 100%;
+}
+
+.blockItem:hover {
+    background: #f5f7ff;
+}
+
+.selected {
+    color: #0d61ff;
+}
+
+.fullSelected {
+    background: #edf3ff;
+}
+
+.blockItemTitle {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+}
+
+.childList {
+    margin-left: 10px;
+}
+
+.monthSelected {
+    border-left: 2px solid #0d61ff;
+    padding-left: 8px;
+}
+
+@media (max-width: 768px) {
+    .container {
+        border: 0;
+        border-radius: 0;
+        max-height: none;
+        position: static;
+        top: auto;
+        width: 100%;
+    }
+
+    .header {
+        display: flex;
+    }
+
+    .content {
+        max-height: 70vh;
+    }
+}

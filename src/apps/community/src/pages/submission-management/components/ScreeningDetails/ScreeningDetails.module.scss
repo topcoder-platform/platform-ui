@@ -1,0 +1,64 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    background: #f9fbfc;
+    border: 1px solid var(--GrayBorder, #d0d0d0);
+    border-radius: 6px;
+    padding: $sp-3;
+}
+
+.header {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    gap: $sp-2;
+}
+
+.title {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.message {
+    color: var(--GrayFontColor, #767676);
+    font-size: 13px;
+    margin: $sp-2 0 0;
+}
+
+.warnings {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-2;
+    margin-top: $sp-2;
+}
+
+.warningItem {
+    border-top: 1px solid var(--GrayBorder, #d0d0d0);
+    padding-top: $sp-2;
+}
+
+.warningTitle {
+    color: var(--Black, #2a2a2a);
+    font-size: 13px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.warningDetail {
+    color: var(--GrayFontColor, #767676);
+    font-size: 13px;
+    margin: $sp-1 0 0;
+}
+
+.passed {
+    color: #0ab88a;
+}
+
+.failed {
+    color: #ef476f;
+}
+
+.pending {
+    color: #ff8a00;
+}

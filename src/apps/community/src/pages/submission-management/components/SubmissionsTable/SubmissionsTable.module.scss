@@ -1,0 +1,39 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-2;
+}
+
+.idCell {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.v5Id {
+    color: var(--GrayFontColor, #767676);
+    font-size: 11px;
+}
+
+.actions {
+    align-items: center;
+    display: flex;
+    gap: $sp-1;
+    justify-content: center;
+}
+
+.detailsWrap {
+    display: block;
+    width: 100%;
+}
+
+.error {
+    color: #ef476f;
+    margin: 0;
+}
+
+:global(.TableCell.action) {
+    min-width: 220px;
+}

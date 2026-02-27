@@ -33,7 +33,11 @@ import {
     convertBackendSubmissionToSubmissionInfo,
 } from '../models'
 import { fetchAllChallengeReviews } from '../services'
-import { isCheckpointSubmissionType, isContestSubmissionType } from '../constants'
+import {
+    isCheckpointSubmissionType,
+    isContestSubmissionType,
+    isFinalFixSubmissionType,
+} from '../constants'
 import { debugLog, DEBUG_CHECKPOINT_PHASES, isPhaseAllowedForReview, truncateForLog, warnLog } from '../utils'
 import { registerChallengeReviewKey } from '../utils/reviewCacheRegistry'
 import { normalizeReviewMetadata } from '../utils/metadataMatching'
@@ -1753,7 +1757,10 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
                     submissionsByLegacyId: visibleSubmissionsByLegacyId,
                 } satisfies SubmissionLookupArgs)
 
-                if (!isContestSubmissionType(matchingSubmission?.type)) {
+                const isSupportedSubmissionType = isContestSubmissionType(matchingSubmission?.type)
+                    || isFinalFixSubmissionType(matchingSubmission?.type)
+
+                if (!isSupportedSubmissionType) {
                     return undefined
                 }
 

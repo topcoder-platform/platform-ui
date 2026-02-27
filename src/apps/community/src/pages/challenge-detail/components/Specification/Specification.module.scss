@@ -1,0 +1,101 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: grid;
+    gap: $sp-4;
+    grid-template-columns: minmax(0, 1fr) 320px;
+}
+
+.main {
+    background: #fff;
+    border: 1px solid var(--GrayBorder);
+    border-radius: 8px;
+    padding: $sp-5;
+}
+
+.section {
+    &:not(:last-child) {
+        border-bottom: 1px solid var(--GrayBorder);
+        margin-bottom: $sp-4;
+        padding-bottom: $sp-4;
+    }
+
+    h2 {
+        color: var(--DarkBlue);
+        margin: 0 0 $sp-2;
+    }
+
+    p,
+    li {
+        color: var(--GrayFontColor);
+        line-height: 1.5;
+    }
+
+    ol {
+        margin: 0;
+        padding-left: 20px;
+    }
+}
+
+.sideBar {
+    align-self: start;
+    background: #fff;
+    border: 1px solid var(--GrayBorder);
+    border-radius: 8px;
+    padding: $sp-4;
+    position: sticky;
+    top: 90px;
+}
+
+.sideBarTitle {
+    color: var(--DarkBlue);
+    font-size: 18px;
+    margin: 0 0 $sp-2;
+}
+
+.sideBarLink {
+    color: var(--DarkBlue);
+    display: block;
+    font-weight: 700;
+    margin-bottom: $sp-2;
+    text-decoration: none;
+}
+
+.sideBarText {
+    color: var(--GrayFontColor);
+    margin: 0;
+}
+
+.badge {
+    background: #eef6ff;
+    border-radius: 999px;
+    color: #0d61bf;
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 700;
+    margin: $sp-2 0;
+    padding: 4px 10px;
+    text-transform: uppercase;
+}
+
+.termsSection {
+    border-top: 1px solid var(--GrayBorder);
+    margin-top: $sp-3;
+    padding-top: $sp-3;
+}
+
+.termsList {
+    color: var(--GrayFontColor);
+    margin: 0;
+    padding-left: 16px;
+}
+
+@media (max-width: 1024px) {
+    .container {
+        grid-template-columns: 1fr;
+    }
+
+    .sideBar {
+        position: static;
+    }
+}

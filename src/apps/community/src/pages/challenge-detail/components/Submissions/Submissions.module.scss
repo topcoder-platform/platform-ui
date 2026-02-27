@@ -1,0 +1,108 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    background: #fff;
+    border: 1px solid var(--GrayBorder);
+    border-radius: 8px;
+    padding: $sp-4;
+}
+
+.downloadWrap {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: $sp-3;
+}
+
+.downloadButton {
+    background: #137d60;
+    border: 0;
+    border-radius: 4px;
+    color: #fff;
+    padding: $sp-2 $sp-3;
+}
+
+.banner {
+    background: #f0f9ff;
+    border: 1px solid #b9e2ff;
+    border-radius: 6px;
+    color: #005e9e;
+    margin-bottom: $sp-3;
+    padding: $sp-2 $sp-3;
+}
+
+.bannerMuted {
+    background: #f8f8f8;
+    border: 1px solid var(--GrayBorder);
+    border-radius: 6px;
+    color: var(--GrayFontColor);
+    margin-bottom: $sp-3;
+    padding: $sp-2 $sp-3;
+}
+
+.table {
+    border: 1px solid var(--GrayBorder);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.header {
+    background: #f5f7fa;
+    display: grid;
+    gap: $sp-2;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    padding: $sp-2 $sp-3;
+}
+
+.headCell {
+    background: transparent;
+    border: 0;
+    color: var(--DarkBlue);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: left;
+}
+
+.body {
+    display: flex;
+    flex-direction: column;
+}
+
+.row {
+    border-top: 1px solid var(--GrayBorder);
+    display: grid;
+    gap: $sp-2;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    padding: $sp-3;
+}
+
+.columns3 {
+    grid-column: span 1;
+}
+
+.rowColumns3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.cell {
+    color: var(--GrayFontColor);
+}
+
+.emptyState {
+    background: #fff;
+    border: 1px solid var(--GrayBorder);
+    border-radius: 8px;
+    color: var(--GrayFontColor);
+    padding: $sp-5;
+    text-align: center;
+}
+
+@media (max-width: 768px) {
+    .header {
+        display: none;
+    }
+
+    .row {
+        grid-template-columns: 1fr;
+    }
+}

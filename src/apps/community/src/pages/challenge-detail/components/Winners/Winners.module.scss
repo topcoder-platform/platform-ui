@@ -1,0 +1,86 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    background: #fff;
+    border: 1px solid var(--GrayBorder);
+    border-radius: 8px;
+    padding: $sp-4;
+}
+
+.downloadWrap {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: $sp-3;
+}
+
+.downloadButton {
+    background: #137d60;
+    border: 0;
+    border-radius: 4px;
+    color: #fff;
+    padding: $sp-2 $sp-3;
+}
+
+.table {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-2;
+}
+
+.row {
+    align-items: center;
+    border: 1px solid var(--GrayBorder);
+    border-radius: 8px;
+    display: grid;
+    gap: $sp-2;
+    grid-template-columns: 80px 1fr 160px;
+    padding: $sp-3;
+}
+
+.colPlacement {
+    color: var(--DarkBlue);
+    font-weight: 700;
+}
+
+.colHandle {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-1;
+
+    a {
+        color: var(--DarkBlue);
+        font-weight: 700;
+        text-decoration: none;
+    }
+}
+
+.submission {
+    color: var(--GrayFontColor);
+    font-size: 12px;
+}
+
+.colPrize {
+    color: var(--DarkBlue);
+    font-weight: 700;
+    text-align: right;
+}
+
+.emptyState {
+    background: #fff;
+    border: 1px solid var(--GrayBorder);
+    border-radius: 8px;
+    color: var(--GrayFontColor);
+    padding: $sp-5;
+    text-align: center;
+}
+
+@media (max-width: 768px) {
+    .row {
+        grid-template-columns: 60px 1fr;
+    }
+
+    .colPrize {
+        grid-column: 1 / span 2;
+        text-align: left;
+    }
+}

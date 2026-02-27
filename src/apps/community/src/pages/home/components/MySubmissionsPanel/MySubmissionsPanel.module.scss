@@ -1,0 +1,91 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    background: #fff;
+    border: 1px solid var(--GrayBorder);
+    border-radius: 8px;
+    padding: $sp-4;
+}
+
+.header {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: $sp-3;
+}
+
+.title {
+    color: var(--DarkBlue);
+    font-size: 22px;
+    margin: 0;
+}
+
+.viewAll {
+    color: var(--Link);
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.rows {
+    display: flex;
+    flex-direction: column;
+}
+
+.row {
+    align-items: center;
+    border-top: 1px solid var(--GrayBorder);
+    display: flex;
+    gap: $sp-3;
+    justify-content: space-between;
+    padding: $sp-3 0;
+
+    &:first-child {
+        border-top: 0;
+        padding-top: 0;
+    }
+
+    &:last-child {
+        padding-bottom: 0;
+    }
+}
+
+.details {
+    min-width: 0;
+}
+
+.challengeName {
+    color: var(--DarkBlue);
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.date {
+    color: var(--GrayFontColor);
+    font-size: 12px;
+    margin: $sp-1 0 0;
+}
+
+.submissionsLink {
+    color: var(--Link);
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.emptyState {
+    color: var(--GrayFontColor);
+    font-size: 14px;
+    margin: 0;
+}
+
+.loading {
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    min-height: 80px;
+}

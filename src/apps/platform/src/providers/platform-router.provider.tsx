@@ -1,5 +1,6 @@
 import { FC, ReactNode } from 'react'
 
+import { communityRootRoute } from '~/apps/community'
 import { learnRootRoute } from '~/apps/learn'
 import { RouterProvider } from '~/libs/core'
 
@@ -11,9 +12,9 @@ interface PlatformRouterProviderProps {
 
 export const PlatformRouterProvider: FC<PlatformRouterProviderProps> = props => (
     <RouterProvider
-        rootCustomer={learnRootRoute}
-        rootLoggedOut={learnRootRoute}
-        rootMember={learnRootRoute}
+        rootCustomer={learnRootRoute ?? communityRootRoute}
+        rootLoggedOut={learnRootRoute ?? communityRootRoute}
+        rootMember={learnRootRoute ?? communityRootRoute}
         allRoutes={platformRoutes}
     >
         {props.children}

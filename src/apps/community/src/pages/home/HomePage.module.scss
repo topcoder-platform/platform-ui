@@ -1,0 +1,27 @@
+@import '@libs/ui/styles/includes';
+
+.page {
+    display: grid;
+    gap: $sp-4;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr) minmax(0, 1fr);
+    margin: 0 auto;
+    max-width: 1280px;
+    padding: $sp-6 $sp-4 $sp-8;
+    width: 100%;
+}
+
+.leftColumn,
+.centerColumn,
+.rightColumn {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-4;
+    min-width: 0;
+}
+
+@media (max-width: 768px) {
+    .page {
+        grid-template-columns: 1fr;
+        padding: $sp-4 $sp-3 $sp-6;
+    }
+}

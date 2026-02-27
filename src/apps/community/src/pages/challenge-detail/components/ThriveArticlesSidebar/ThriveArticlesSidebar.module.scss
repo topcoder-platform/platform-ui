@@ -1,0 +1,70 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    background: #fff;
+    border: 1px solid var(--GrayBorder);
+    border-radius: 8px;
+    margin-top: $sp-5;
+    padding: $sp-5;
+}
+
+.header {
+    margin-bottom: $sp-4;
+}
+
+.title {
+    color: var(--DarkBlue);
+    font-size: 22px;
+    margin: 0;
+}
+
+.cards {
+    display: grid;
+    gap: $sp-3;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.card {
+    border: 1px solid var(--GrayBorder);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.imageWrap {
+    display: block;
+}
+
+.image {
+    display: block;
+    height: 150px;
+    object-fit: cover;
+    width: 100%;
+}
+
+.content {
+    padding: $sp-3;
+}
+
+.cardTitle {
+    color: var(--DarkBlue);
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.meta {
+    color: var(--GrayFontColor);
+    font-size: 12px;
+    margin: $sp-2 0 0;
+}
+
+@media (max-width: 1024px) {
+    .cards {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .cards {
+        grid-template-columns: 1fr;
+    }
+}

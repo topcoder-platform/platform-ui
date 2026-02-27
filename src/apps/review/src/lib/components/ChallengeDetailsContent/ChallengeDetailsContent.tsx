@@ -30,6 +30,10 @@ import { ITERATIVE_REVIEW, SUBMITTER } from '../../../config/index.config'
 import { TableNoRecord } from '../TableNoRecord'
 import { hasIsLatestFlag } from '../../utils'
 import { shouldIncludeInReviewPhase } from '../../utils/reviewPhaseGuards'
+import {
+    isContestSubmissionType,
+    isFinalFixSubmissionType,
+} from '../../constants'
 
 import TabContentApproval from './TabContentApproval'
 import TabContentCheckpoint from './TabContentCheckpoint'
@@ -85,6 +89,7 @@ const SUBMISSION_TAB_KEYS = new Set([
     normalizeType('screening'),
     normalizeType('submission / screening'),
     normalizeType('topgear submission'),
+    normalizeType('final fix'),
 ])
 
 const CHECKPOINT_REVIEW_KEY = normalizeType('checkpoint review')
@@ -145,17 +150,17 @@ const renderSubmissionTab = ({
 }: SubmissionTabParams): JSX.Element => {
     const isSubmissionTab = selectedTabNormalized === 'submission'
     const isTopgearSubmissionTab = selectedTabNormalized === 'topgearsubmission'
-    const shouldRestrictToContestSubmissions = selectedTabNormalized
-        .startsWith('submission')
+    const isFinalFixTab = selectedTabNormalized.startsWith('finalfix')
+    const shouldRestrictToContestSubmissions = selectedTabNormalized.startsWith('submission')
         || isTopgearSubmissionTab
-    const visibleSubmissions = shouldRestrictToContestSubmissions
-        ? submissions.filter(
-            submission => normalizeType(submission.type) === 'contestsubmission',
-        )
-        : submissions
+    const visibleSubmissions = isFinalFixTab
+        ? submissions.filter(submission => isFinalFixSubmissionType(submission.type))
+        : shouldRestrictToContestSubmissions
+            ? submissions.filter(submission => isContestSubmissionType(submission.type))
+            : submissions
     const canShowSubmissionList = (allowTopgearSubmissionList || !isTopgearSubmissionTab)
         && selectedTabNormalized !== 'screening'
-        && visibleSubmissions.length > 0
+        && (visibleSubmissions.length > 0 || isFinalFixTab)
 
     if (canShowSubmissionList) {
         return (

@@ -19,6 +19,7 @@
     "sb:build": "storybook build -o build/storybook"
   },
   "dependencies": {
+    "@contentful/rich-text-html-renderer": "^17.1.6",
     "@datadog/browser-logs": "^4.50.1",
     "@hello-pangea/dnd": "^18.0.1",
     "@heroicons/react": "^1.0.6",

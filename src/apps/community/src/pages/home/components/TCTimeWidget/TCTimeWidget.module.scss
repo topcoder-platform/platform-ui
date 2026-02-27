@@ -1,0 +1,21 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    background: #fff;
+    border: 1px solid var(--GrayBorder);
+    border-radius: 8px;
+    padding: $sp-4;
+}
+
+.title {
+    color: var(--DarkBlue);
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.time {
+    color: var(--GrayFontColor);
+    font-size: 16px;
+    margin: $sp-2 0 0;
+}

@@ -1,0 +1,20 @@
+@import '@libs/ui/styles/includes';
+
+.layout {
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.content {
+    flex: 1;
+}
+
+.footer {
+    background: #f8fafc;
+    border-top: 1px solid #e5e7eb;
+    color: var(--GrayFontColor);
+    font-size: 12px;
+    padding: $sp-3 $sp-4;
+}

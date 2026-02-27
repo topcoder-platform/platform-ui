@@ -1,0 +1,49 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-3;
+    min-height: 120px;
+}
+
+.loading {
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    min-height: 120px;
+}
+
+.list {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-2;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.listItem {
+    align-items: center;
+    border: 1px solid var(--GrayBorder, #d0d0d0);
+    border-radius: 6px;
+    display: flex;
+    justify-content: space-between;
+    padding: $sp-2 $sp-3;
+}
+
+.artifactId {
+    color: var(--Black, #2a2a2a);
+    font-size: 14px;
+    overflow-wrap: anywhere;
+}
+
+.error {
+    color: #ef476f;
+    margin: 0;
+}
+
+.empty {
+    color: var(--GrayFontColor, #767676);
+    margin: 0;
+}

@@ -1,0 +1,105 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    background: #fff;
+    border: 1px solid var(--GrayBorder);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.header {
+    background: #f5f7fa;
+    display: grid;
+    gap: $sp-2;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    padding: $sp-2 $sp-3;
+}
+
+.headCell {
+    background: transparent;
+    border: 0;
+    color: var(--DarkBlue);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: left;
+}
+
+.body {
+    display: flex;
+    flex-direction: column;
+}
+
+.row {
+    border-top: 1px solid var(--GrayBorder);
+    display: grid;
+    gap: $sp-2;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    padding: $sp-3;
+}
+
+.cell {
+    align-items: center;
+    color: var(--GrayFontColor);
+    display: flex;
+    flex-wrap: wrap;
+    gap: $sp-2;
+}
+
+.memberLink {
+    color: var(--DarkBlue);
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.flag {
+    border: 1px solid var(--GrayBorder);
+    border-radius: 999px;
+    height: 18px;
+    object-fit: cover;
+    width: 18px;
+}
+
+.placement {
+    background: #e9f8f2;
+    border-radius: 999px;
+    color: #137d60;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+}
+
+.note {
+    color: var(--GrayFontColor);
+    font-size: 11px;
+    text-transform: uppercase;
+}
+
+.emptyState {
+    background: #fff;
+    border: 1px solid var(--GrayBorder);
+    border-radius: 8px;
+    color: var(--GrayFontColor);
+    padding: $sp-5;
+    text-align: center;
+}
+
+@media (max-width: 1024px) {
+    .header {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .row {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .header {
+        display: none;
+    }
+
+    .row {
+        grid-template-columns: 1fr;
+    }
+}

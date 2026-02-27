@@ -1,0 +1,68 @@
+.modalBody {
+    padding: 0 0 16px;
+}
+
+.content {
+    align-items: center;
+    background: #000;
+    display: flex;
+    justify-content: center;
+    min-height: 420px;
+    position: relative;
+}
+
+.mainMedia {
+    max-height: 70vh;
+    max-width: 100%;
+    object-fit: contain;
+}
+
+.navButton {
+    align-items: center;
+    background: rgba(255, 255, 255, 0.9);
+    border: 0;
+    border-radius: 999px;
+    cursor: pointer;
+    display: inline-flex;
+    height: 38px;
+    justify-content: center;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 38px;
+}
+
+.leftButton {
+    left: 14px;
+}
+
+.rightButton {
+    right: 14px;
+}
+
+.bottom {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: repeat(auto-fill, minmax(68px, 1fr));
+    margin-top: 12px;
+}
+
+.thumbnail {
+    background: #fff;
+    border: 1px solid #d7d7d7;
+    border-radius: 6px;
+    cursor: pointer;
+    overflow: hidden;
+    padding: 0;
+}
+
+.thumbnail img {
+    display: block;
+    height: 68px;
+    object-fit: cover;
+    width: 100%;
+}
+
+.selected {
+    border-color: #0d61ff;
+}

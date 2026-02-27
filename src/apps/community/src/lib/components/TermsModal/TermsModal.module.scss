@@ -1,0 +1,140 @@
+@import '@libs/ui/styles/includes';
+
+.modalBody {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-3;
+    min-height: 520px;
+}
+
+.layout {
+    display: flex;
+    flex: 1;
+    gap: $sp-3;
+    min-height: 0;
+}
+
+.sidebar {
+    border: 1px solid var(--GrayBorder);
+    border-radius: 8px;
+    display: flex;
+    flex: 0 0 30%;
+    flex-direction: column;
+    gap: $sp-1;
+    min-height: 0;
+    overflow: auto;
+    padding: $sp-2;
+}
+
+.termItem {
+    align-items: center;
+    background: #fff;
+    border: 1px solid var(--GrayBorder);
+    border-radius: 6px;
+    color: var(--GrayFontColor);
+    cursor: pointer;
+    display: flex;
+    font-size: 13px;
+    gap: $sp-2;
+    justify-content: space-between;
+    padding: $sp-2;
+    text-align: left;
+}
+
+.termItemActive {
+    border-color: var(--teal-100);
+    box-shadow: inset 0 0 0 1px var(--teal-100);
+}
+
+.termTitle {
+    line-height: 1.4;
+}
+
+.agreedIcon {
+    color: var(--green-100);
+    flex: 0 0 auto;
+    height: 16px;
+    width: 16px;
+}
+
+.content {
+    border: 1px solid var(--GrayBorder);
+    border-radius: 8px;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+    padding: $sp-3;
+}
+
+.contentScroll {
+    color: var(--GrayFontColor);
+    flex: 1;
+    line-height: 1.5;
+    min-height: 0;
+    overflow: auto;
+    white-space: pre-wrap;
+}
+
+.docuSignFrame {
+    border: 0;
+    flex: 1;
+    min-height: 420px;
+    width: 100%;
+}
+
+.actions {
+    display: flex;
+    gap: $sp-2;
+    justify-content: flex-end;
+    margin-top: $sp-3;
+}
+
+.spinnerWrap {
+    align-items: center;
+    display: flex;
+    flex: 1;
+    justify-content: center;
+    min-height: 220px;
+}
+
+.emptyState {
+    align-items: center;
+    color: var(--GrayFontColor);
+    display: flex;
+    flex: 1;
+    justify-content: center;
+    text-align: center;
+}
+
+.link {
+    word-break: break-word;
+}
+
+.error {
+    background: #fff1f0;
+    border: 1px solid #f5c2c7;
+    border-radius: 6px;
+    color: #842029;
+    font-size: 12px;
+    padding: $sp-2;
+}
+
+@media (max-width: 768px) {
+    .modalBody {
+        min-height: 360px;
+    }
+
+    .layout {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        flex-basis: auto;
+        max-height: 180px;
+    }
+
+    .docuSignFrame {
+        min-height: 300px;
+    }
+}

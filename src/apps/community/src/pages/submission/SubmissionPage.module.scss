@@ -1,0 +1,132 @@
+@import '@libs/ui/styles/includes';
+
+.page {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-4;
+    margin: 0 auto;
+    max-width: 1240px;
+    padding: $sp-6 $sp-4 $sp-8;
+    width: 100%;
+}
+
+.header {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-2;
+
+    h1 {
+        color: var(--Black, #2a2a2a);
+        font-size: 30px;
+        margin: 0;
+    }
+}
+
+.form {
+    background: #fff;
+    border: 1px solid var(--GrayBorder, #d0d0d0);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+}
+
+.columns {
+    display: grid;
+    gap: $sp-5;
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 420px);
+    padding: $sp-5;
+}
+
+.leftColumn {
+    h2 {
+        margin: 0 0 $sp-2;
+    }
+}
+
+.rightColumn {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-2;
+}
+
+.instructions {
+    color: var(--GrayFontColor, #767676);
+    font-size: 14px;
+    line-height: 22px;
+}
+
+.subText {
+    margin: 0 0 $sp-2;
+}
+
+.steps {
+    margin: 0;
+    padding-left: $sp-5;
+}
+
+.warning {
+    color: #ef476f;
+    margin: $sp-2 0 0;
+}
+
+.terms {
+    border-top: 1px solid var(--GrayBorder, #d0d0d0);
+    display: flex;
+    flex-direction: column;
+    gap: $sp-2;
+    padding: $sp-4 $sp-5;
+
+    p {
+        color: var(--GrayFontColor, #767676);
+        margin: 0;
+    }
+}
+
+.agreeControl {
+    align-items: center;
+    display: inline-flex;
+    gap: $sp-2;
+    width: fit-content;
+}
+
+.submitRow {
+    border-top: 1px solid var(--GrayBorder, #d0d0d0);
+    display: flex;
+    justify-content: flex-end;
+    padding: $sp-4 $sp-5;
+}
+
+.accessDenied,
+.notPermitted {
+    background: #fff;
+    border: 1px solid var(--GrayBorder, #d0d0d0);
+    border-radius: 8px;
+    padding: $sp-5;
+    text-align: center;
+}
+
+.errorText {
+    color: #ef476f;
+    margin: 0;
+}
+
+.spinnerWrap {
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    min-height: 360px;
+}
+
+@media (max-width: 900px) {
+    .columns {
+        grid-template-columns: 1fr;
+    }
+
+    .submitRow {
+        justify-content: stretch;
+
+        :global(.btn) {
+            width: 100%;
+        }
+    }
+}

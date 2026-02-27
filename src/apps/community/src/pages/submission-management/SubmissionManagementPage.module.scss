@@ -1,0 +1,84 @@
+@import '@libs/ui/styles/includes';
+
+.page {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-4;
+    margin: 0 auto;
+    max-width: 1240px;
+    padding: $sp-6 $sp-4 $sp-8;
+    width: 100%;
+}
+
+.header {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-2;
+
+    h1 {
+        color: var(--Black, #2a2a2a);
+        font-size: 30px;
+        margin: 0;
+    }
+}
+
+.content {
+    background: #fff;
+    border: 1px solid var(--GrayBorder, #d0d0d0);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: $sp-3;
+    padding: $sp-4;
+}
+
+.contentHeader {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-1;
+
+    h2 {
+        margin: 0 0 $sp-1;
+    }
+}
+
+.deadline {
+    color: var(--GrayFontColor, #767676);
+    margin: 0;
+
+    span {
+        color: var(--Black, #2a2a2a);
+    }
+}
+
+.recommendation {
+    color: var(--GrayFontColor, #767676);
+    margin: $sp-2 0 0;
+}
+
+.footer {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.error {
+    color: #ef476f;
+    margin: 0;
+}
+
+.spinnerWrap {
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    min-height: 360px;
+}
+
+@media (max-width: 900px) {
+    .footer {
+        justify-content: stretch;
+
+        :global(.btn) {
+            width: 100%;
+        }
+    }
+}

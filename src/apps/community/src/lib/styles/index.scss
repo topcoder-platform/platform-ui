@@ -1,0 +1,30 @@
+@import '@libs/ui/styles/includes';
+@import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+
+:root {
+    --Yellow: #CF8835;
+    --Red: #C1294F;
+    --RedError: #D34E3B;
+    --Primary: #545f71;
+    --Secondary: #9ba5b7;
+    --Tertiary: #eef1f4;
+    --GrayBorder: #e2e8f0;
+    --DarkBlue: #2b3545;
+    --VeryLightBlue: #e0f3ff;
+    --Link: #0d61bf;
+    --FontColor: #0a0a0a;
+    --GrayFontColor: #767676;
+    --TableBorderColor: #A8A8A8;
+    --ButtonColor: #0B3D56;
+    --Actived: #00797A;
+    --TableSubHeader: #E0E4E8;
+    --TableColumn: rgba(224, 228, 232, 0.3);
+    --invertButtonColor: #fff;
+    --Appeal: #E9ECEF;
+    --EditorBorder: rgba(168, 168, 168, 0.5);
+}
+
+.community-app {
+    font-family: 'Nunito Sans', sans-serif;
+}
