@@ -10,12 +10,13 @@ export interface ExistingMembership {
 }
 
 export interface CopilotApplication {
-    id: number,
+    id?: number | string,
     notes?: string,
     createdAt: Date,
-    opportunityId: string,
+    opportunityId?: string,
     handle?: string,
-    userId: number,
+    userHandle?: string,
+    userId: number | string,
     status: CopilotApplicationStatus,
     opportunityStatus: string,
     existingMembership?: ExistingMembership,
