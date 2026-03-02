@@ -313,6 +313,7 @@ const Software: FC<SoftwareProps> = (props: SoftwareProps) => {
                         name='softwareName'
                         label='Software Name *'
                         value={selectedSoftwareName}
+                        forceUpdateValue
                         onChange={handleSoftwareNameChange}
                         placeholder='Type here the Software Name'
                         tabIndex={0}
