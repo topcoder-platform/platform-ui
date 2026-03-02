@@ -177,6 +177,10 @@ const PagePersonalizationContent: FC<PagePersonalizationContentProps> = props =>
                     iconToLeft
                     disabled={!!shouldNavigateTo.current}
                     onClick={async function onClick() {
+                        const url
+                        = `${EnvironmentConfig.USER_PROFILE_URL}/${props.memberInfo?.handle}`
+                        + '?edit-mode=onboardingCompleted'
+                        shouldNavigateTo.current = url
                         if (!props.reduxOnboardingChecklist) {
                             await props.createOnboardingChecklist({
                                 ...(props.reduxOnboardingChecklist || {}),
@@ -195,10 +199,7 @@ const PagePersonalizationContent: FC<PagePersonalizationContentProps> = props =>
                             })
                         }
 
-                        nextPage(
-                            `${EnvironmentConfig.USER_PROFILE_URL}/${props.memberInfo?.handle}`
-                                + '?edit-mode=onboardingCompleted',
-                        )
+                        nextPage(url)
                     }}
                 >
                     done
