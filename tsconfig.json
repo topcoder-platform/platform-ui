@@ -26,6 +26,9 @@
             "./node_modules/@types"
         ]
     },
+    "files": [
+        "src/apps/community/src/pages/communities/CommunityLoader.test.tsx"
+    ],
     "include": [
         "src",
     ],

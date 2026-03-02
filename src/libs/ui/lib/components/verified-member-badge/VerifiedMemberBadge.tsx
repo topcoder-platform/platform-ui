@@ -1,7 +1,8 @@
 import { FC } from 'react'
 import classNames from 'classnames'
 
-import { IconOutline, Tooltip, VerifiedMemberFlagSvg } from '~/libs/ui'
+import { Tooltip } from '../tooltip'
+import { IconOutline, VerifiedMemberFlagSvg } from '../svgs'
 
 import styles from './VerifiedMemberBadge.module.scss'
 

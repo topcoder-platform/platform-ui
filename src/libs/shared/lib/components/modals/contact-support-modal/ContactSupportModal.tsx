@@ -1,6 +1,7 @@
 import { Dispatch, FC, SetStateAction, useCallback, useState } from 'react'
 
-import { BaseModal, FormDefinition, formGetInputFields, formOnReset } from '~/libs/ui'
+import { FormDefinition, formGetInputFields, formOnReset } from '~/libs/ui/lib/components/form'
+import { BaseModal } from '~/libs/ui/lib/components/modals/base-modal'
 
 import { ContactSupportForm, contactSupportFormDef } from '../../contact-support-form'
 

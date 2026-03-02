@@ -13,8 +13,8 @@ import {
 } from 'react'
 import classNames from 'classnames'
 
-import { DropdownMenu } from '~/apps/admin/src/lib'
-import { useWindowSize, WindowSize } from '~/libs/shared'
+import { DropdownMenu } from '~/apps/admin/src/lib/components/common/DropdownMenu'
+import { useWindowSize, WindowSize } from '~/libs/shared/lib/hooks/use-window-size.hook'
 
 import { IconOutline } from '../svgs'
 

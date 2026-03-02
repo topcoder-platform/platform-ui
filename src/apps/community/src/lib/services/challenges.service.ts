@@ -40,6 +40,18 @@ export interface ChallengeListParams {
     sortOrder?: string
     status?: string
     tags?: string[]
+    /**
+     * Challenge tracks filter, e.g. `Dev`, `Des`, `DS`, `QA`.
+     */
+    tracks?: string[]
+    /**
+     * Challenge types filter, e.g. `CH`, `F2F`, `TSK`, `MM`.
+     */
+    types?: string[]
+    /**
+     * Challenge name search text.
+     */
+    name?: string
 }
 
 /**

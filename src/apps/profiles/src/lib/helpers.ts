@@ -1,5 +1,6 @@
 /* eslint-disable complexity */
-import { UserProfile, UserRole, UserTrait } from '~/libs/core'
+import { UserProfile, UserTrait } from '~/libs/core'
+import { UserRole } from '~/libs/core/lib/profile/profile-functions/profile-factory/user-role.enum'
 import { availabilityOptions, preferredRoleOptions } from '~/libs/shared/lib/components/modify-open-to-work-modal'
 
 import { ADMIN_ROLES, EMAIL_VIEW_ROLES, PHONE_NUMBER_ROLES } from '../config'

@@ -1,9 +1,9 @@
 import { ReactNode } from 'react'
 
-import { FormInputAutocompleteOption } from './form-groups'
+import type { FormInputAutocompleteOption } from './form-groups'
 import { InputEvent } from './form-input.event'
-import { ValidatorFn } from './validator-functions'
-import { InputSelectOption } from './form-groups/form-input'
+import type { ValidatorFn } from './validator-functions'
+import type { InputSelectOption } from './form-groups/form-input'
 
 export interface FormRadioButtonOption {
     checked: boolean

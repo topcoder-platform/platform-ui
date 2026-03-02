@@ -10,10 +10,10 @@ import { usePopper } from 'react-popper'
 import cn from 'classnames'
 
 import { Placement } from '@popperjs/core'
-import { Portal } from '~/libs/ui'
-import { useClickOutsideMultipleElements } from '~/libs/shared'
+import { Portal } from '~/libs/ui/lib/components/portal'
+import { useClickOutsideMultipleElements } from '~/libs/shared/lib/hooks/use-click-outside.hook'
 
-import { useOnScroll } from '../../../hooks'
+import { useOnScroll } from '../../../hooks/useOnScroll'
 
 import styles from './DropdownMenu.module.scss'
 

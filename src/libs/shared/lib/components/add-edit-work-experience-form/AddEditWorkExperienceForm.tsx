@@ -11,11 +11,13 @@ import {
 import { bind, trim } from 'lodash'
 
 import { InputDatePicker, InputSelect, InputText } from '~/libs/ui'
-import { UserTrait } from '~/libs/core'
-import { FieldHtmlEditor, InputSkillSelector } from '~/libs/shared'
 import { INDUSTRIES_OPTIONS } from '~/libs/shared/lib/constants'
 import { getIndustryOptionsWithOthersLast } from '~/libs/shared/lib/utils/industry'
-import { fetchSkillsByIds } from '~/libs/shared/lib/services/standard-skills'
+import { fetchSkillsByIds } from '~/libs/shared/lib/services/standard-skills/standard-skills.service'
+import type { UserTrait } from '~/libs/core/lib/profile/user-traits.model'
+
+import { FieldHtmlEditor } from '../field-html-editor'
+import { InputSkillSelector } from '../input-skill-selector'
 
 import styles from './AddEditWorkExperienceForm.module.scss'
 

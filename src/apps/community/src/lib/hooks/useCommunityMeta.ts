@@ -1,3 +1,4 @@
+import { useCallback } from 'react'
 import useSWR, { SWRResponse } from 'swr'
 
 import { CommunityMeta } from '../models'
@@ -15,19 +16,26 @@ export interface UseCommunityMetaResult {
  * @returns Community metadata and loading status.
  */
 export function useCommunityMeta(communityId?: string): UseCommunityMetaResult {
+    const fetcher = useCallback(
+        () => fetchCommunityMeta(communityId ?? ''),
+        [communityId],
+    )
     const {
         data: communityMeta,
         isValidating: isLoading,
     }: SWRResponse<CommunityMeta, Error> = useSWR<CommunityMeta, Error>(
-        `community/meta/${communityId}`,
+        communityId
+            ? `community/meta/${communityId}`
+            : undefined,
+        fetcher,
         {
-            fetcher: () => fetchCommunityMeta(communityId ?? ''),
-            isPaused: () => !communityId,
+            revalidateOnFocus: false,
+            revalidateOnReconnect: false,
         },
     )
 
     return {
         communityMeta,
-        isLoading,
+        isLoading: Boolean(communityId) && !communityMeta && isLoading,
     }
 }

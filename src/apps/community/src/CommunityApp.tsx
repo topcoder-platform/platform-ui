@@ -96,7 +96,7 @@ const CommunityApp: FC = () => {
     return (
         <Layout variant={variant}>
             <Outlet />
-            <Routes>{childRoutes}</Routes>
+            {childRoutes.length > 0 && <Routes>{childRoutes}</Routes>}
         </Layout>
     )
 }

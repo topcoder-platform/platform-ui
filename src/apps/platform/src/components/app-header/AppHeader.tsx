@@ -96,24 +96,30 @@ const AppHeader: FC<AppHeaderProps> = (props: AppHeaderProps) => {
             return
         }
 
-        headerInit.current = true
+        const tcUniNav = getTcUniNav()
+        if (!tcUniNav) {
+            return
+        }
 
-        getTcUniNav()?.(
-            'init',
-            navElementId,
-            {
-                handleNavigation: navigationHandler,
-                onReady() { setReady(true) },
-                showSalesCta: routeNavConfigs?.showSalesCta,
-                signIn() { window.location.href = authUrlLogin() },
-                signOut() { window.location.href = logoutUrl },
-                signUp() { window.location.href = authUrlSignup() },
-                toolName: activeToolName,
-                toolRoot: activeToolRoute,
-                type: navType as NavigationType,
-                ...userInfo,
-            },
-        )
+        try {
+            tcUniNav(
+                'init',
+                navElementId,
+                {
+                    handleNavigation: navigationHandler,
+                    onReady() { setReady(true) },
+                    showSalesCta: routeNavConfigs?.showSalesCta,
+                    signIn() { window.location.href = authUrlLogin() },
+                    signOut() { window.location.href = logoutUrl },
+                    signUp() { window.location.href = authUrlSignup() },
+                    toolName: activeToolName,
+                    toolRoot: activeToolRoute,
+                    type: navType as NavigationType,
+                    ...userInfo,
+                },
+            )
+            headerInit.current = true
+        } catch {}
     }, [
         activeToolName,
         activeToolRoute,
@@ -128,16 +134,26 @@ const AppHeader: FC<AppHeaderProps> = (props: AppHeaderProps) => {
 
     // update uni-nav's tool details
     useEffect(() => {
+        if (!headerInit.current) {
+            return
+        }
 
-        getTcUniNav()?.(
-            'update',
-            navElementId,
-            {
-                showSalesCta: routeNavConfigs?.showSalesCta,
-                toolName: activeToolName,
-                toolRoot: activeToolRoute,
-            },
-        )
+        const tcUniNav = getTcUniNav()
+        if (!tcUniNav) {
+            return
+        }
+
+        try {
+            tcUniNav(
+                'update',
+                navElementId,
+                {
+                    showSalesCta: routeNavConfigs?.showSalesCta,
+                    toolName: activeToolName,
+                    toolRoot: activeToolRoute,
+                },
+            )
+        } catch {}
     }, [
         activeToolName,
         activeToolRoute,
@@ -148,18 +164,25 @@ const AppHeader: FC<AppHeaderProps> = (props: AppHeaderProps) => {
     // update uni-nav's user/auth details
     useEffect(() => {
 
-        if (!profileReady) {
+        if (!profileReady || !headerInit.current) {
             return
         }
 
-        getTcUniNav()?.(
-            'update',
-            navElementId,
-            {
-                ...userInfo,
-                signOut() { window.location.href = logoutUrl },
-            },
-        )
+        const tcUniNav = getTcUniNav()
+        if (!tcUniNav) {
+            return
+        }
+
+        try {
+            tcUniNav(
+                'update',
+                navElementId,
+                {
+                    ...userInfo,
+                    signOut() { window.location.href = logoutUrl },
+                },
+            )
+        } catch {}
     }, [
         profileReady,
         userInfo,

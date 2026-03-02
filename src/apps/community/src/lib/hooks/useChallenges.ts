@@ -1,3 +1,4 @@
+import { useCallback } from 'react'
 import qs from 'qs'
 import useSWR, { SWRResponse } from 'swr'
 
@@ -27,14 +28,20 @@ export function useChallenges(params: ChallengeListParams): UseChallengesResult 
         arrayFormat: 'repeat',
         skipNulls: true,
     })}`
+    const fetcher = useCallback(
+        () => fetchChallenges(params),
+        [params],
+    )
     const {
         data,
         isValidating: isLoading,
     }: SWRResponse<PaginatedResponse<BackendChallengeInfo[]>, Error>
         = useSWR<PaginatedResponse<BackendChallengeInfo[]>, Error>(
             key,
+            fetcher,
             {
-                fetcher: () => fetchChallenges(params),
+                revalidateOnFocus: false,
+                revalidateOnReconnect: false,
             },
         )
 
@@ -42,7 +49,7 @@ export function useChallenges(params: ChallengeListParams): UseChallengesResult 
         challenges: (data?.data ?? [])
             .map((challenge, index) => convertBackendChallengeInfo(challenge, index))
             .filter((challenge): challenge is ChallengeInfo => Boolean(challenge)),
-        isLoading,
+        isLoading: !data && isLoading,
         total: data?.total ?? 0,
     }
 }

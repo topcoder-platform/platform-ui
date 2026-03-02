@@ -1,2 +1,6 @@
 export { default as ChallengeFilters } from './ChallengeFilters'
-export type { ChallengeFiltersProps } from './ChallengeFilters'
+export {
+    SIDEBAR_BUCKET_LABELS,
+    SidebarBucket,
+    type ChallengeFiltersProps,
+} from './ChallengeFilters'

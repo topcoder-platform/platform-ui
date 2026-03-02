@@ -37,7 +37,7 @@ export const Layout: FC<PropsWithChildren<LayoutProps>> = props => {
 
     return (
         <>
-            <AppHeader navType='community' />
+            <AppHeader navType='tool' />
             <ContentLayout
                 innerClass={styles.contentLayoutInner}
                 outerClass={styles.contentLayoutOuter}

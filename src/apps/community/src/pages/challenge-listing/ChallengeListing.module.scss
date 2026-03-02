@@ -5,7 +5,7 @@
     flex-direction: column;
     gap: $sp-5;
     margin: 0 auto;
-    max-width: 1200px;
+    max-width: 1280px;
     padding: $sp-6 $sp-4 $sp-8;
     width: 100%;
 }
@@ -26,17 +26,110 @@
 
 .tabs {
     border-bottom: 1px solid var(--GrayBorder);
-    padding-bottom: $sp-2;
+}
+
+.tabList {
+    align-items: flex-end;
+    background: #fff;
+    border-radius: 8px 8px 0 0;
+    display: flex;
+    gap: 24px;
+    min-height: 48px;
+    overflow-x: auto;
+    padding: 0 8px;
+}
+
+.tabButton {
+    background: transparent;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    color: #2a2a2a;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 24px;
+    padding: 12px 8px 10px;
+    text-transform: uppercase;
+    white-space: nowrap;
+
+    &:hover {
+        border-bottom-color: #16679a;
+        color: #16679a;
+    }
+}
+
+.tabButtonActive {
+    border-bottom-color: #16679a;
+    color: #16679a;
+    font-weight: 700;
+}
+
+.body {
+    display: grid;
+    gap: $sp-6;
+    grid-template-columns: 280px 1fr;
+}
+
+.mainPanel {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.panelHeader {
+    align-items: flex-end;
+    border-bottom: 1px solid var(--GrayBorder);
+    display: flex;
+    gap: $sp-4;
+    justify-content: space-between;
+    margin-bottom: $sp-2;
+    padding-bottom: $sp-3;
+}
+
+.panelTitle {
+    color: var(--DarkBlue);
+    font-size: 24px;
+    font-weight: 600;
+    line-height: 32px;
+    margin: 0;
+}
+
+.sort {
+    align-items: center;
+    display: flex;
+    gap: $sp-2;
+}
+
+.sortLabel {
+    color: var(--GrayFontColor);
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.sortSelect {
+    border: 1px solid var(--GrayBorder);
+    border-radius: 6px;
+    color: var(--FontColor);
+    font-size: 14px;
+    line-height: 20px;
+    min-height: 42px;
+    min-width: 220px;
+    padding: 10px 12px;
 }
 
 .cardsTable {
     :global(.TableCell) {
         max-width: none;
-        padding: $sp-2 0;
+        padding: 0;
     }
 
     :global(.TableCell_blockCell) {
         display: block;
+    }
+
+    :global(tbody > tr:first-child .TableCell) {
+        border-top: 0;
     }
 }
 
@@ -54,7 +147,13 @@
 .loadMore {
     display: flex;
     justify-content: center;
-    margin-top: $sp-2;
+    margin-top: $sp-4;
+}
+
+@media (max-width: 1024px) {
+    .body {
+        grid-template-columns: 1fr;
+    }
 }
 
 @media (max-width: 768px) {
@@ -65,5 +164,28 @@
     .title {
         font-size: 28px;
         line-height: 36px;
+    }
+
+    .tabList {
+        gap: 0;
+        padding: 0;
+    }
+
+    .tabButton {
+        padding: 12px 10px 10px;
+    }
+
+    .panelHeader {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .sort {
+        width: 100%;
+    }
+
+    .sortSelect {
+        min-width: 0;
+        width: 100%;
     }
 }

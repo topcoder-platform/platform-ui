@@ -1,4 +1,5 @@
-import { FormDefinition, validatorEmail, validatorRequired } from '~/libs/ui'
+import type { FormDefinition } from '~/libs/ui/lib/components/form/form-definition.model'
+import { validatorEmail, validatorRequired } from '~/libs/ui/lib/components/form/validator-functions'
 
 export enum ContactSupportFormField {
     email = 'email',

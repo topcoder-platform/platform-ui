@@ -3,7 +3,7 @@ import _ from 'lodash'
 import classNames from 'classnames'
 
 import { Sort } from '~/apps/admin/src/platform/gamification-admin/src/game-lib'
-import { useWindowSize, WindowSize } from '~/libs/shared'
+import { useWindowSize, WindowSize } from '~/libs/shared/lib/hooks/use-window-size.hook'
 
 import { Button } from '../button'
 import { IconOutline } from '../svgs'

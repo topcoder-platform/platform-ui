@@ -15,6 +15,11 @@ export const homeRoutes: ReadonlyArray<PlatformRoute> = [
     {
         authRequired: true,
         element: <HomePage />,
+        route: '',
+    },
+    {
+        authRequired: true,
+        element: <HomePage />,
         route: homeRouteId,
     },
 ]

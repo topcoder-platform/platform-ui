@@ -8,11 +8,11 @@ import {
     NamesAndHandleAppearance,
     useMemberTraits,
     UserProfile,
-    UserRole,
     UserTrait,
     UserTraitIds,
     UserTraits,
 } from '~/libs/core'
+import { UserRole } from '~/libs/core/lib/profile/profile-functions/profile-factory/user-role.enum'
 import { ProfilePicture, useCheckIsMobile } from '~/libs/shared'
 import { Tooltip } from '~/libs/ui'
 

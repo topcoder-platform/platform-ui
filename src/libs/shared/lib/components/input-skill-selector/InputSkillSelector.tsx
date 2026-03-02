@@ -3,8 +3,8 @@ import { SelectInstance } from 'react-select'
 import { noop } from 'lodash'
 
 import { InputMultiselect, InputMultiselectOption, InputMultiselectThemes } from '~/libs/ui'
-import { SearchUserSkill, UserSkill } from '~/libs/core'
 import { TCASkillType } from '~/apps/learn/src/lib'
+import type { SearchUserSkill, UserSkill } from '~/libs/core/lib/profile/user-skill.model'
 
 import { autoCompleteSkills, isSkillVerified } from '../../services/standard-skills'
 

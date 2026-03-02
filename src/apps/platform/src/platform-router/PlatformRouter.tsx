@@ -6,6 +6,10 @@ import { routerContext, RouterContextData } from '~/libs/core'
 const PlatformRouter: FC<{}> = () => {
     const { allRoutes, getRouteElement }: RouterContextData = useContext(routerContext)
 
+    if (!allRoutes.length) {
+        return <></>
+    }
+
     const routeElements: Array<ReactElement> = allRoutes
         .map(route => getRouteElement(route))
 

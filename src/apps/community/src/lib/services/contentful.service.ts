@@ -56,10 +56,26 @@ function isEntryId(value: string): boolean {
     return /^[A-Za-z0-9]{8,}$/.test(value)
 }
 
+function findBestTitleMatch(
+    items: Array<BackendContentfulEntry<BackendThriveArticleFields>>,
+    title: string,
+): BackendContentfulEntry<BackendThriveArticleFields> | undefined {
+    if (!items.length) {
+        return undefined
+    }
+
+    const normalizedTitle = title.trim()
+        .toLocaleLowerCase()
+    const exactMatch = items.find(item => item.fields.title?.trim()
+        .toLocaleLowerCase() === normalizedTitle)
+
+    return exactMatch ?? items[0]
+}
+
 function buildThriveQuery(params: ThriveArticleParams): ContentfulQuery {
     const query: ContentfulQuery = {
         content_type: 'article',
-        include: 2,
+        include: 3,
         limit: params.limit ?? 5,
         skip: params.skip ?? 0,
     }
@@ -195,6 +211,7 @@ export async function fetchThriveArticles(
 
 /**
  * Fetches a single Thrive article from the EDU Contentful space by slug.
+ * Falls back to legacy title-based matching when no slug match is found.
  *
  * @param slug Thrive article slug.
  * @returns Converted Thrive article when found.
@@ -206,18 +223,33 @@ export async function fetchThriveArticleBySlug(
         {
             content_type: 'article',
             'fields.slug': slug,
-            include: 2,
+            include: 3,
             limit: 1,
         },
         EnvironmentConfig.CONTENTFUL.EDU_SPACE_ID,
         EnvironmentConfig.CONTENTFUL.EDU_ACCESS_TOKEN,
     )
 
-    if (!collection.items.length) {
+    if (collection.items.length) {
+        return convertContentfulArticle(collection.items[0], collection.includes)
+    }
+
+    const titleFallbackCollection = await fetchContentfulEntries(
+        {
+            content_type: 'article',
+            'fields.title[match]': slug,
+            include: 3,
+            limit: 20,
+        },
+        EnvironmentConfig.CONTENTFUL.EDU_SPACE_ID,
+        EnvironmentConfig.CONTENTFUL.EDU_ACCESS_TOKEN,
+    )
+    const matchedEntry = findBestTitleMatch(titleFallbackCollection.items, slug)
+    if (!matchedEntry) {
         return undefined
     }
 
-    return convertContentfulArticle(collection.items[0], collection.includes)
+    return convertContentfulArticle(matchedEntry, titleFallbackCollection.includes)
 }
 
 /**

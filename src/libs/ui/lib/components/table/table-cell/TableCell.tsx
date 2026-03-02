@@ -1,12 +1,12 @@
 import { CSSProperties, ElementType, MouseEvent } from 'react'
 import classNames from 'classnames'
 
-import { IconOutline } from '~/libs/ui'
 import {
     textFormatDateLocaleShortString,
     textFormatMoneyLocaleString,
 } from '~/libs/shared/lib/utils'
 
+import { IconOutline } from '../../svgs'
 import { TableCellType } from '../table-cell.type'
 
 import styles from './TableCell.module.scss'

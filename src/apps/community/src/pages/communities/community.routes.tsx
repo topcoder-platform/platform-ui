@@ -109,14 +109,17 @@ function createCommunityChildRoutes(contentRoutes: ReadonlyArray<string>): Array
 
     return [
         {
+            authRequired: true,
             element: <CommunityContentPage />,
             route: '',
         },
         {
+            authRequired: true,
             element: <CommunityContentPage />,
             route: 'home',
         },
         {
+            authRequired: true,
             element: <CommunityLeaderboardPage />,
             route: 'leaderboard',
         },
@@ -141,6 +144,7 @@ function createCommunityChildRoutes(contentRoutes: ReadonlyArray<string>): Array
             route: submissionManagementRouteId,
         },
         ...normalizedContentRoutes.map(route => ({
+            authRequired: true,
             element: <CommunityContentPage />,
             route,
         })),

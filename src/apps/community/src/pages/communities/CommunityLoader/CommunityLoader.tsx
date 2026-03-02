@@ -47,6 +47,9 @@ function hasIntersection(left: string[], right: string[]): boolean {
 /**
  * Community route loader that resolves metadata, applies access checks and renders children.
  * The community layout base URL is derived from the resolved `communityId` and effective route id.
+ * Anonymous users can continue to child routes, where route-level `authRequired` controls public/private access.
+ * Authenticated users who are not in `authorizedGroupIds` are shown a not-authorized screen.
+ * The `wipro` community always redirects to TopGear (or to login if unauthenticated).
  *
  * @param props Optional fixed community and route ids for static route wiring.
  * @returns Community shell with nested routes or access denied state.
@@ -103,16 +106,7 @@ const CommunityLoader: FC<CommunityLoaderProps> = (props: CommunityLoaderProps) 
     const authorizedGroupIds = communityMeta.authorizedGroupIds ?? []
     const isAuthorized = hasIntersection(authorizedGroupIds, groupIds)
 
-    if (authorizedGroupIds.length > 0 && !profile) {
-        return (
-            <AccessDenied
-                cause={AccessDeniedCause.NOT_AUTHENTICATED}
-                communityId={communityId}
-            />
-        )
-    }
-
-    if (authorizedGroupIds.length > 0 && !isAuthorized) {
+    if (authorizedGroupIds.length > 0 && profile && !isAuthorized) {
         return <AccessDenied cause={AccessDeniedCause.NOT_AUTHORIZED} />
     }
 

@@ -1,9 +1,9 @@
 import { FC } from 'react'
 
-import { UserSkill } from '~/libs/core'
-import { SkillPill } from '~/libs/shared'
+import type { UserSkill } from '~/libs/core/lib/profile/user-skill.model'
 
 import { SkillsList } from '../skills-list'
+import { SkillPill } from '../skill-pill'
 import { SkillPillProps } from '../skill-pill/SkillPill'
 
 import styles from './GroupedSkillsUI.module.scss'

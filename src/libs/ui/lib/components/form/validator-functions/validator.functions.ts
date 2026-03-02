@@ -1,5 +1,4 @@
-import { formGetInput } from '../form-functions'
-import { InputValue } from '../form-input.model'
+import type { InputValue } from '../form-input.model'
 
 function checkForBooleanValueAndThrowError(value: InputValue): void {
     if (typeof value === 'boolean') {
@@ -183,7 +182,8 @@ function getOtherField(formElements?: HTMLFormControlsCollection, otherFieldName
     }
 
     // get the other form field
-    const otherField: HTMLInputElement | undefined = formGetInput(formElements, otherFieldName)
+    const otherField: HTMLInputElement | undefined
+        = formElements.namedItem(otherFieldName) as HTMLInputElement | undefined
 
     // if there is no other field, we have a problem
     if (!otherField) {

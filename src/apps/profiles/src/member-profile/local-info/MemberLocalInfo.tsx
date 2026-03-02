@@ -3,7 +3,8 @@ import { trim } from 'lodash'
 import cityTimezones from 'city-timezones'
 import moment from 'moment-timezone'
 
-import { profileContext, ProfileContextData, useCountryName, UserProfile, UserRole } from '~/libs/core'
+import { profileContext, ProfileContextData, useCountryName, UserProfile } from '~/libs/core'
+import { UserRole } from '~/libs/core/lib/profile/profile-functions/profile-factory/user-role.enum'
 import { IconOutline, IconSolid, Tooltip } from '~/libs/ui'
 
 import { EditMemberPropertyBtn } from '../../components'

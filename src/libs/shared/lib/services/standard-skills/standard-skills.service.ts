@@ -2,7 +2,8 @@ import { useMemo } from 'react'
 import useSWR, { SWRResponse } from 'swr'
 
 import { EnvironmentConfig } from '~/config'
-import { SearchUserSkill, UserSkill, xhrGetAsync, xhrPostAsync, xhrPutAsync } from '~/libs/core'
+import type { SearchUserSkill, UserSkill } from '~/libs/core/lib/profile/user-skill.model'
+import { xhrGetAsync, xhrPostAsync, xhrPutAsync } from '~/libs/core/lib/xhr/xhr-functions'
 
 const baseUrl = `${EnvironmentConfig.API.V5}/standardized-skills`
 

@@ -1,7 +1,7 @@
 import { FC, useRef } from 'react'
 
 import { BaseModal, Button } from '~/libs/ui'
-import { UserTrait } from '~/libs/core'
+import type { UserTrait } from '~/libs/core/lib/profile/user-traits.model'
 
 import { AddEditWorkExperienceForm } from '../add-edit-work-experience-form'
 import type { AddEditWorkExperienceFormRef } from '../add-edit-work-experience-form'

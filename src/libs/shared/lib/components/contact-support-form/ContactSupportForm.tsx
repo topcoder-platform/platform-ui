@@ -7,8 +7,8 @@ import {
     formGetInputModel,
     FormInputModel,
     FormValue,
-    LoadingSpinner,
-} from '~/libs/ui'
+} from '~/libs/ui/lib/components/form'
+import { LoadingSpinner } from '~/libs/ui/lib/components/loading-spinner'
 
 import { ContactSupportFormField } from './contact-support-form.config'
 import { ContactSupportRequest } from './contact-support-functions'

@@ -1,0 +1,111 @@
+@import '@libs/ui/styles/includes';
+
+.wrapper {
+    margin: 0 auto;
+    max-width: 1080px;
+    padding: $sp-6 $sp-4 $sp-8;
+    width: 100%;
+}
+
+.header {
+    margin: $sp-5 0 $sp-6;
+}
+
+.heading {
+    color: #2a2a2a;
+    font-family: BarlowCondensed, sans-serif;
+    font-size: 48px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    line-height: 52px;
+    margin: 0 0 $sp-2;
+    text-transform: uppercase;
+}
+
+.subheading {
+    color: #4a4a4a;
+    font-family: Roboto, sans-serif;
+    font-size: 14px;
+    letter-spacing: 0.3px;
+    line-height: 20px;
+    margin: 0;
+    text-transform: uppercase;
+}
+
+.loading {
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    min-height: 240px;
+}
+
+.list {
+    display: grid;
+    gap: $sp-4;
+}
+
+.articleCard {
+    background: #fff;
+    border: 1px solid #dfdfdf;
+    border-radius: 8px;
+    padding: $sp-4;
+}
+
+.articleTitle {
+    margin: 0 0 $sp-2;
+}
+
+.articleTitle a {
+    color: #0f6efc;
+    font-family: Barlow, sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    line-height: 30px;
+    text-decoration: none;
+}
+
+.articleTitle a:hover {
+    text-decoration: underline;
+}
+
+.meta {
+    color: #646464;
+    font-family: Roboto, sans-serif;
+    font-size: 13px;
+    line-height: 18px;
+    margin: 0 0 $sp-2;
+}
+
+.excerpt {
+    color: #2a2a2a;
+    font-family: Roboto, sans-serif;
+    font-size: 15px;
+    line-height: 24px;
+    margin: 0;
+    white-space: pre-wrap;
+}
+
+.emptyState {
+    color: #646464;
+    font-family: Roboto, sans-serif;
+    font-size: 16px;
+    line-height: 22px;
+    margin: $sp-4 0 0;
+}
+
+@media (max-width: 767px) {
+    .wrapper {
+        padding-top: $sp-4;
+    }
+
+    .heading {
+        font-size: 36px;
+        line-height: 40px;
+    }
+
+    .articleTitle a {
+        font-size: 21px;
+        line-height: 26px;
+    }
+}

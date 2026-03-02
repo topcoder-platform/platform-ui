@@ -5,8 +5,8 @@ import DOMPurify from 'dompurify'
 import classNames from 'classnames'
 import moment from 'moment'
 
-import { UserTrait } from '~/libs/core'
 import { getIndustryOptionLabel } from '~/libs/shared/lib/utils/industry'
+import type { UserTrait } from '~/libs/core/lib/profile/user-traits.model'
 
 import styles from './WorkExperienceCard.module.scss'
 
