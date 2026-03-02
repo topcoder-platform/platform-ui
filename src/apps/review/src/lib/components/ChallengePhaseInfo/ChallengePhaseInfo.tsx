@@ -56,6 +56,10 @@ interface PhaseDisplayInfo {
     timeLeftStatus?: string
 }
 
+const ROLE_TO_PRIZESET_TYPE: Record<string, string> = {
+    SUBMITTER: 'PLACEMENT',
+}
+
 export const ChallengePhaseInfo: FC<Props> = (props: Props) => {
     const { myChallengeRoles }: useRoleProps = useRole()
     const {
@@ -136,12 +140,23 @@ export const ChallengePhaseInfo: FC<Props> = (props: Props) => {
         const prizeSets = props.challengeInfo?.prizeSets
         if (!Array.isArray(prizeSets)) return undefined
 
-        const placementPrizeSet = prizeSets.find(prizeSet => prizeSet?.type === 'PLACEMENT')
-        if (!placementPrizeSet || !Array.isArray(placementPrizeSet.prizes) || !placementPrizeSet.prizes.length) {
-            return undefined
-        }
+        const normalizedRoles = myChallengeRoles.map(role => String(role)
+            .trim()
+            .toUpperCase())
 
-        const [firstPrize] = placementPrizeSet.prizes
+        // Determine which prize set types we should look for
+        const desiredPrizeSetTypes = normalizedRoles.map(role => ROLE_TO_PRIZESET_TYPE[role] ?? role)
+
+        // Find a prize set whose type matches any of the user's roles
+        const matchingPrizeSet = prizeSets.find(prizeSet => desiredPrizeSetTypes.includes(
+            String(prizeSet?.type ?? '')
+                .trim()
+                .toUpperCase(),
+        ))
+
+        if (!matchingPrizeSet?.prizes?.length) return undefined
+
+        const [firstPrize] = matchingPrizeSet.prizes
         if (typeof firstPrize?.value !== 'number' || typeof firstPrize?.type !== 'string') {
             return undefined
         }
@@ -150,7 +165,7 @@ export const ChallengePhaseInfo: FC<Props> = (props: Props) => {
             currency: firstPrize.type,
             value: firstPrize.value,
         }
-    }, [isTask, props.challengeInfo?.prizeSets])
+    }, [isTask, props.challengeInfo?.prizeSets, myChallengeRoles])
 
     const formattedTaskPayment = useMemo(() => {
         if (!taskPaymentFromPrizeSets) return undefined
