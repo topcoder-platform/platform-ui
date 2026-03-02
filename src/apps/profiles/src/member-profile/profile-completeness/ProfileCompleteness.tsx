@@ -7,7 +7,7 @@ import styles from './ProfileCompleteness.module.scss'
 
 interface ProfileCompletenessProps {
     profile: UserProfile
-    authProfile: UserProfile
+    authProfile: UserProfile | undefined
 }
 
 const ProfileCompleteness: FC<ProfileCompletenessProps> = props => {
@@ -16,7 +16,7 @@ const ProfileCompleteness: FC<ProfileCompletenessProps> = props => {
     const isLoading = completeness.isLoading
     const isCompleted = completed === 100
 
-    const isCustomer = props.authProfile.roles.some(r => r.indexOf(' Customer') > -1)
+    const isCustomer = props.authProfile?.roles.some(r => r.indexOf(' Customer') > -1)
 
     const hideCompletenessMeter = isLoading || isCompleted || isCustomer
 
