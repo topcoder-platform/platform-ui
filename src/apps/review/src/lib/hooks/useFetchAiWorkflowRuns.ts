@@ -70,8 +70,7 @@ export interface AiWorkflowRunArtifact {
 
 export type AiWorkflowRunItem = AiFeedbackItem
 
-// const TC_API_BASE_URL = EnvironmentConfig.API.V6
-const TC_API_BASE_URL = 'https://local.topcoder-dev.com:4443'
+const TC_API_BASE_URL = EnvironmentConfig.API.V6
 
 export const getAiWorkflowRunsCacheKey = (submissionId: string): string => (
     `${TC_API_BASE_URL}/workflows/runs?submissionId=${submissionId}`
