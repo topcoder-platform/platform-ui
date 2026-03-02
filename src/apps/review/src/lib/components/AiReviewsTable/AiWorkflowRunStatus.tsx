@@ -69,6 +69,7 @@ export const AiWorkflowRunStatus: FC<AiWorkflowRunStatusProps> = props => {
             toast.success('Workflow re-run triggered successfully.')
         } catch (error) {
             handleError(error as Error)
+            toast.error('Failed to trigger workflow re-run.')
         } finally {
             setIsRerunning(false)
         }
