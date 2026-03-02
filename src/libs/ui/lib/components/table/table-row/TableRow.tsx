@@ -25,6 +25,10 @@ interface Props<T> {
     colWidth?: {[key: string]: number}
     readonly preventDefault?: boolean
     allRows?: ReadonlyArray<T>
+    /** Per display-column rowSpan value; row spans this many rows. */
+    readonly rowSpanByColumn?: ReadonlyArray<number | undefined>
+    /** Per display-column: when true, do not render this cell (it is under a previous rowSpan). */
+    readonly skipCellByColumn?: ReadonlyArray<boolean>
 }
 
 export const TableRow: <T extends { [propertyName: string]: any }>(
@@ -49,9 +53,13 @@ export const TableRow: <T extends { [propertyName: string]: any }>(
         return _.filter(props.columns, item => !!item.isExpand)
     }, [props.columns, props.showExpand])
     // get the cells in the row
-    const cells: Array<JSX.Element> = displayColumns.map((col, colIndex) => {
+    const cells: Array<JSX.Element | null> = displayColumns.map((col, colIndex) => {
+        if (props.skipCellByColumn?.[colIndex]) {
+            return null
+        }
         const columnId = `column-id-${col.columnId}-`
         const colWidth = props.colWidth?.[columnId]
+        const rowSpan = props.rowSpanByColumn?.[colIndex]
         return (
             <TableCell
                 {...col}
@@ -69,6 +77,7 @@ export const TableRow: <T extends { [propertyName: string]: any }>(
                 }
                 style={colWidth ? { width: `${colWidth}px` } : {}}
                 allRows={props.allRows}
+                rowSpan={rowSpan}
             />
         )
     })
@@ -95,13 +104,19 @@ export const TableRow: <T extends { [propertyName: string]: any }>(
             >
                 {cells}
             </tr>
-            {props.showExpand && isExpanded && (
+            {props.showExpand && isExpanded && (() => {
+                const skippedCount = props.skipCellByColumn?.filter(Boolean).length ?? 0
+                const expandColSpan = displayColumns.length - skippedCount
+                return (
                 <tr
                     className={classNames(styles.tr, {
                         [styles.isEvenRow]: props.index % 2 === 1,
                     })}
                 >
-                    <td colSpan={displayColumns.length}>
+                    {Array.from({ length: skippedCount }, (_, i) => (
+                        <td key={`expand-pad-${i}`} />
+                    ))}
+                    <td colSpan={expandColSpan}>
                         {expandColumns.map((col, colIndex) => {
                             const columnId = `column-id-${col.columnId}-`
                             const colWidth = props.colWidth?.[columnId]
@@ -135,13 +150,15 @@ export const TableRow: <T extends { [propertyName: string]: any }>(
                                         )}
                                         style={colWidth ? { width: `${colWidth}px` } : {}}
                                         allRows={props.allRows}
+                                        rowSpan={undefined}
                                     />
                                 </div>
                             )
                         })}
                     </td>
                 </tr>
-            )}
+                )
+            })()}
         </>
     )
 }

@@ -98,7 +98,11 @@ export const TableWinners: FC<Props> = (props: Props) => {
             )
             const normalize = (value: string): string => value.trim()
                 .toLowerCase()
-            const reviewTab = tabs.find(tab => normalize(tab.value) === 'review')
+            const reviewTab = tabs.find(tab => {
+                const normalizedValue = normalize(tab.value)
+                return normalizedValue === 'review'
+                        || normalizedValue === 'review / appeals'
+            })
 
             if (reviewTab) {
                 targetSlug = _.kebabCase(reviewTab.value)

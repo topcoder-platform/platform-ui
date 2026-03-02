@@ -15,6 +15,11 @@ export interface SubmissionRow extends SubmissionInfo {
      * Aggregated review information for the submission, precomputed for renderers.
      */
     aggregated?: AggregatedSubmissionReviews
+    /**
+     * Index into submission.aggregated?.reviews for which reviewer this row represents.
+     * Used in combined Review/Appeals mode when one row is rendered per reviewer.
+     */
+    reviewRowIndex?: number
 }
 
 /**

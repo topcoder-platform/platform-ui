@@ -390,6 +390,7 @@ export function buildPhaseTabs(
     }
 
     const tabs: SelectOption[] = []
+    const reviewAppealsLabels: string[] = []
     const orderedPhases = orderPhasesForTabs(phases, opts)
     orderedPhases.forEach(phase => {
         const rawName = phase?.name?.trim() || ''
@@ -399,7 +400,40 @@ export function buildPhaseTabs(
 
         const label = nextLabel(rawName)
         tabs.push({ label, value: label })
+
+        const normalizedName = normalizePhaseName(rawName)
+        if (
+            normalizedName === 'review'
+            || normalizedName === 'appeals'
+            || normalizedName === 'appeals response'
+        ) {
+            reviewAppealsLabels.push(label)
+        }
     })
+
+    if (reviewAppealsLabels.length > 0) {
+        const combinedLabel = 'Review / Appeals'
+        let combinedInserted = false
+
+        const updatedTabs: SelectOption[] = []
+        tabs.forEach(tab => {
+            if (reviewAppealsLabels.includes(tab.value)) {
+                if (!combinedInserted) {
+                    updatedTabs.push({
+                        label: combinedLabel,
+                        value: combinedLabel,
+                    })
+                    combinedInserted = true
+                }
+
+                return
+            }
+
+            updatedTabs.push(tab)
+        })
+
+        tabs.splice(0, tabs.length, ...updatedTabs)
+    }
 
     const normalizedStatus = (status || '').toUpperCase()
     if (normalizedStatus.startsWith('COMPLETED')) {
@@ -417,6 +451,26 @@ export function findPhaseByTabLabel(
     label: string,
     opts?: PhaseOrderingOptions,
 ): PhaseLike | undefined {
+    const orderedPhases = orderPhasesForTabs(phases, opts)
+    const normalizedLabel = label.trim()
+        .toLowerCase()
+
+    if (normalizedLabel === 'review / appeals' || normalizedLabel === 'review/appeals') {
+        const reviewFamily = orderedPhases.filter(phase => {
+            const name = (phase.name || '')
+                .trim()
+                .toLowerCase()
+            return name === 'review'
+                || name === 'appeals'
+                || name === 'appeals response'
+        })
+
+        if (reviewFamily.length) {
+            const openPhase = reviewFamily.find(phase => phase.isOpen)
+            return openPhase || reviewFamily[0]
+        }
+    }
+
     const labelCounts = new Map<string, number>()
     const labelFor = (rawName: string): string => {
         const count = labelCounts.get(rawName) || 0
@@ -428,7 +482,6 @@ export function findPhaseByTabLabel(
         return `${rawName} ${count + 1}`
     }
 
-    const orderedPhases = orderPhasesForTabs(phases, opts)
     for (const phase of orderedPhases) {
         const rawName = phase?.name?.trim() || ''
         if (rawName) {

@@ -10,6 +10,8 @@ export interface TableColumn<T> {
     readonly tooltip?: string
     readonly isExpand?: boolean
     readonly colSpan?: number
+    /** When set, the cell spans this many rows. Rows below will skip this column. */
+    readonly rowSpan?: (row: T, rowIndex: number, allRows: ReadonlyArray<T>) => number | undefined
     readonly type: TableCellType
     readonly isSortable?: boolean
     readonly columnId?: string

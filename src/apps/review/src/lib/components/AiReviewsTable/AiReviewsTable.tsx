@@ -116,8 +116,9 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
             <table className={styles.reviewsTable}>
                 <thead>
                     <tr>
-                        <th>AI Reviewer</th>
+                        <th>Reviewer</th>
                         <th>Review Date</th>
+                        <th>Min Score</th>
                         <th className={styles.scoreCol}>Score</th>
                         <th>Result</th>
                     </tr>
@@ -126,7 +127,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                 <tbody>
                     {!runs.length && isLoading && (
                         <tr>
-                            <td colSpan={4}>Loading...</td>
+                            <td colSpan={5}>Loading...</td>
                         </tr>
                     )}
 
@@ -150,6 +151,9 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                                         .local()
                                         .format(TABLE_DATE_FORMAT)
                                 )}
+                            </td>
+                            <td>
+                                {run.workflow?.scorecard?.minimumPassingScore ?? '-'}
                             </td>
                             <td className={styles.scoreCol}>
                                 {run.status === 'SUCCESS' ? (

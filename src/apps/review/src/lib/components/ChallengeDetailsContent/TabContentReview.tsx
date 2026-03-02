@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 /**
  * Content of review tab.
  */
@@ -168,6 +169,10 @@ export const TabContentReview: FC<Props> = (props: Props) => {
     const shouldSortReviewTabByScore = useMemo(
         () => !props.isActiveChallenge && normalizedSelectedTab === 'review',
         [normalizedSelectedTab, props.isActiveChallenge],
+    )
+    const isCombinedReviewAppeals = useMemo(
+        () => normalizedSelectedTab === 'reviewappeals',
+        [normalizedSelectedTab],
     )
     const {
         challengeInfo,
@@ -630,6 +635,7 @@ export const TabContentReview: FC<Props> = (props: Props) => {
     )
     const filteredReviews = useMemo(
         () => {
+            console.log('resolvedReviewsWithSubmitter', resolvedReviewsWithSubmitter)
             if (!resolvedReviewsWithSubmitter.length) {
                 return resolvedReviewsWithSubmitter
             }
@@ -676,6 +682,7 @@ export const TabContentReview: FC<Props> = (props: Props) => {
     const hideHandleColumn = props.isActiveChallenge
         && actionChallengeRole === REVIEWER
 
+    console.log('reviewRows', isSubmitterView, shouldSortReviewTabByScore, reviewerRowsForReviewTab, filteredReviews)
     // show loading ui when fetching data
     const reviewRows = isSubmitterView
         ? (shouldSortReviewTabByScore ? submitterRowsForReviewTab : filteredSubmitterReviews)
@@ -685,7 +692,7 @@ export const TabContentReview: FC<Props> = (props: Props) => {
         return <TableLoading />
     }
 
-    if (selectedTab === 'Appeals Response') {
+    if (!isCombinedReviewAppeals && selectedTab === 'Appeals Response') {
         return (
             <TableAppealsResponse
                 datas={resolvedReviewsWithSubmitter}
@@ -703,7 +710,7 @@ export const TabContentReview: FC<Props> = (props: Props) => {
         return <TableNoRecord message='No reviews yet' />
     }
 
-    if (selectedTab === 'Appeals') {
+    if (!isCombinedReviewAppeals && selectedTab === 'Appeals') {
         return isSubmitterView ? (
             <TableAppealsForSubmitter
                 datas={filteredSubmitterReviews}
@@ -741,6 +748,7 @@ export const TabContentReview: FC<Props> = (props: Props) => {
             downloadSubmission={props.downloadSubmission}
             mappingReviewAppeal={props.mappingReviewAppeal}
             hideHandleColumn={hideHandleColumn}
+            mode={isCombinedReviewAppeals ? 'combined-review-appeals' : 'default'}
         />
     )
 }

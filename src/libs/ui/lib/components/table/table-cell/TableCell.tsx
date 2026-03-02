@@ -23,6 +23,7 @@ interface TableCellProps<T> {
     readonly showExpandIndicator?: boolean
     readonly isExpanded?: boolean
     readonly colSpan?: number
+    readonly rowSpan?: number
     readonly style?: CSSProperties
     allRows?: ReadonlyArray<T>
 }
@@ -82,6 +83,10 @@ const TableCell: <T extends { [propertyName: string]: any }>(
             className={classes}
             key={`${props.index}-${props.propertyName}`}
             colSpan={props.colSpan}
+            {...(typeof ContainerTag === 'string' && ContainerTag === 'td' && props.rowSpan != null
+                ? { rowSpan: props.rowSpan }
+                : {}
+            )}
         >
             <div
                 className={classNames(

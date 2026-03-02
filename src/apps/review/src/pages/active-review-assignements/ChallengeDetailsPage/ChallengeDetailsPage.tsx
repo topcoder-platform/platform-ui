@@ -717,7 +717,10 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
 
         const tab = searchParams.get('tab')
         if (tab) {
-            const match = tabItems.find(item => kebabCase(item.value) === tab)
+            const normalizedTab = ['review', 'appeals', 'appeals-response'].includes(tab)
+                ? 'review-appeals'
+                : tab
+            const match = tabItems.find(item => kebabCase(item.value) === normalizedTab)
             if (match) {
                 nextTab = match.value
             }
@@ -855,12 +858,13 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         const flagged = items.map(it => {
             const label = it.value.trim()
                 .toLowerCase()
+            const isCombinedReviewAppealsLabel = label === 'review / appeals'
             const phaseForTab = tabPhaseMap.get(it.value)
             if (!phaseForTab?.isOpen) {
                 return it
             }
 
-            if (label === 'review' && pendingReview) {
+            if ((label === 'review' || isCombinedReviewAppealsLabel) && pendingReview) {
                 return { ...it, warning: true }
             }
 
@@ -910,7 +914,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                         return it
                     }
 
-                    return normalized === 'appeals response'
+                    return normalized === 'appeals response' || normalized === 'review / appeals'
                         ? { ...it, warning: true }
                         : it
                 })
@@ -938,7 +942,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
                             return it
                         }
 
-                        return normalizedValue === 'appeals'
+                        return normalizedValue === 'appeals' || normalizedValue === 'review / appeals'
                             ? { ...it, warning: true }
                             : it
                     })
@@ -1043,8 +1047,10 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
 
         const iterativeReviewCompleted = hasAnyReviewAssignment && !hasAnyPendingReview
         const completedLabels = new Set<string>([
-            ...(iterativeReviewCompleted ? ['review'] : []),
-            ...((hasAppealsResponseObligation && appealsResponseComplete) ? ['appeals response'] : []),
+            ...(iterativeReviewCompleted ? ['review', 'review / appeals'] : []),
+            ...((hasAppealsResponseObligation && appealsResponseComplete)
+            && !isAppealsResponsePhase(challengeInfo)
+                ? ['appeals response', 'review / appeals'] : []),
             ...((hasAnyApprovalAssignment && !hasAnyPendingApproval) ? ['approval'] : []),
             ...((hasAnyScreeningAssignment && !hasAnyPendingScreening) ? ['screening'] : []),
             ...((hasAnyCheckpointScreeningAssignment && !hasAnyPendingCheckpointScreening)

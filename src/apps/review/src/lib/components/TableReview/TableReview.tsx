@@ -51,6 +51,7 @@ import { SubmissionHistoryModal } from '../SubmissionHistoryModal'
 import { ConfirmModal } from '../ConfirmModal'
 import { createSubmissionMetaMap } from '../common/columnUtils'
 import {
+    renderAppealsCell,
     renderReviewDateCell,
     renderReviewerCell,
     renderReviewScoreCell,
@@ -81,6 +82,7 @@ export interface TableReviewProps {
     downloadSubmission: (submissionId: string) => void
     mappingReviewAppeal: MappingReviewAppeal
     hideHandleColumn?: boolean
+    mode?: 'default' | 'combined-review-appeals'
 }
 
 interface PendingReopenState {
@@ -295,6 +297,46 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
 
         return rows.filter(row => row.id && latestSubmissionIds.has(row.id))
     }, [aggregatedSubmissionRows, latestSubmissionIds, restrictToLatest])
+
+    const expandedReviewRows = useMemo<SubmissionRow[]>(() => {
+        if (props.mode !== 'combined-review-appeals') {
+            return []
+        }
+
+        const list = restrictToLatest
+            ? aggregatedSubmissionRows.filter(
+                agg => agg.submission?.id && latestSubmissionIds.has(agg.submission.id),
+            )
+            : aggregatedSubmissionRows
+
+        const result: SubmissionRow[] = []
+        for (const aggregated of list) {
+            const base = {
+                ...(aggregated.submission ?? {}),
+                ...aggregated.submission,
+                aggregated,
+            } as SubmissionRow
+            const reviewCount = aggregated.reviews?.length ?? 0
+            if (reviewCount === 0) {
+                result.push({ ...base, reviewRowIndex: 0 })
+            } else {
+                for (let i = 0; i < reviewCount; i++) {
+                    result.push({ ...base, reviewRowIndex: i })
+                }
+            }
+        }
+        return result
+    }, [
+        aggregatedSubmissionRows,
+        latestSubmissionIds,
+        restrictToLatest,
+        props.mode,
+    ])
+
+    const tableRows = useMemo<SubmissionRow[]>(
+        () => (props.mode === 'combined-review-appeals' ? expandedReviewRows : aggregatedRows),
+        [props.mode, expandedReviewRows, aggregatedRows],
+    )
 
     const maxReviewCount = useMemo<number>(
         () => aggregatedSubmissionRows.reduce(
@@ -629,6 +671,170 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
             type: 'element',
         }
 
+        // Combined Review/Appeals layout
+        if (props.mode === 'combined-review-appeals') {
+            const submissionGroupRowSpan = (
+                _row: SubmissionRow,
+                rowIndex: number,
+                allRows: ReadonlyArray<SubmissionRow>,
+            ): number => {
+                const submissionId = _row.id
+                let count = 0
+                for (let i = rowIndex; i < allRows.length; i++) {
+                    if (allRows[i].id === submissionId) {
+                        count += 1
+                    } else {
+                        break
+                    }
+                }
+                // Return the number of data rows in this submission group; the shared
+                // Table component will translate this into the appropriate DOM rowSpan
+                // when expand rows are rendered.
+                return count
+            }
+            const isLastReviewerRow = (submission: SubmissionRow): boolean => {
+                const idx = submission.reviewRowIndex ?? 0
+                const total = submission.aggregated?.reviews?.length ?? 1
+                return idx === total - 1
+            }
+            const combinedColumns: TableColumn<SubmissionRow>[] = [
+                {
+                    ...submissionIdColumn,
+                    rowSpan: submissionGroupRowSpan,
+                },
+                {
+                    columnId: 'review-score',
+                    label: 'Review Score',
+                    renderer: (submission: SubmissionRow) => renderReviewScoreCell(
+                        submission,
+                        scoreVisibilityConfig,
+                    ),
+                    rowSpan: submissionGroupRowSpan,
+                    type: 'element',
+                },
+                {
+                    columnId: 'reviewer-primary',
+                    label: 'Reviewer',
+                    renderer: (submission: SubmissionRow) => renderReviewerCell(
+                        submission,
+                        submission.reviewRowIndex ?? 0,
+                    ),
+                    type: 'element',
+                },
+                {
+                    columnId: 'review-date',
+                    label: 'Review Date',
+                    renderer: (submission: SubmissionRow) => {
+                        const idx = submission.reviewRowIndex ?? 0
+                        const dateDisplay = submission.aggregated?.reviews?.[idx]?.reviewDateString
+                        if (!dateDisplay) {
+                            return (
+                                <span className={styles.notReviewed}>
+                                    Not Reviewed
+                                </span>
+                            )
+                        }
+                        return <span>{dateDisplay}</span>
+                    },
+                    type: 'element',
+                },
+                {
+                    columnId: 'score-primary',
+                    label: 'Score',
+                    renderer: (submission: SubmissionRow) => renderScoreCell(
+                        submission,
+                        submission.reviewRowIndex ?? 0,
+                        scoreVisibilityConfig,
+                        challengeInfo,
+                        pendingReopen,
+                        canManageCompletedReviews,
+                        isReopening,
+                        openReopenDialog,
+                    ),
+                    type: 'element',
+                },
+                {
+                    columnId: 'review-result',
+                    label: 'Result',
+                    renderer: (submission: SubmissionRow) => {
+                        const result = resolveSubmissionReviewResult(submission, {
+                            minimumPassingScoreByScorecardId,
+                        })
+                        if (result === 'PASS') {
+                            return (
+                                <span className={styles.resultPass}>
+                                    Pass
+                                </span>
+                            )
+                        }
+
+                        if (result === 'FAIL') {
+                            return (
+                                <span className={styles.resultFail}>
+                                    Fail
+                                </span>
+                            )
+                        }
+
+                        return <span>--</span>
+                    },
+                    type: 'element',
+                },
+                {
+                    columnId: 'appeals',
+                    label: 'Appeals',
+                    renderer: (submission: SubmissionRow) => renderAppealsCell(
+                        submission,
+                        submission.reviewRowIndex ?? 0,
+                        scoreVisibilityConfig,
+                    ),
+                    type: 'element',
+                },
+            ]
+
+            if (shouldShowAggregatedActions) {
+                combinedColumns.push({
+                    className: styles.textBlue,
+                    columnId: 'actions',
+                    label: 'Actions',
+                    renderer: (submission: SubmissionRow) => (
+                        isLastReviewerRow(submission)
+                            ? renderActionsCell(submission)
+                            : <span />
+                    ),
+                    type: 'element',
+                })
+            }
+
+            if (props.aiReviewers) {
+                combinedColumns.push({
+                    columnId: 'ai-reviews-table',
+                    isExpand: true,
+                    label: '',
+                    renderer: (submission: SubmissionRow, allRows: SubmissionRow[]) => {
+                        if (!isLastReviewerRow(submission)) {
+                            return <span />
+                        }
+                        if (!props.aiReviewers) {
+                            return undefined
+                        }
+                        return (
+                            <CollapsibleAiReviewsRow
+                                className={styles.aiReviews}
+                                aiReviewers={props.aiReviewers}
+                                submission={submission as any}
+                                defaultOpen={allRows ? allRows[0]?.id === submission.id : false}
+                            />
+                        )
+                    },
+                    type: 'element',
+                })
+            }
+
+            return combinedColumns
+        }
+
+        // Default layout
         const baseColumns: TableColumn<SubmissionRow>[] = [submissionIdColumn]
 
         if (!hideHandleColumn) {
@@ -756,6 +962,8 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
         challengeInfo,
         pendingReopen,
         reviewerColumnMetadata,
+        props.aiReviewers,
+        props.mode,
     ])
 
     const columnsMobile = useMemo<MobileTableColumn<SubmissionRow>[][]>(
@@ -843,14 +1051,14 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
             )}
         >
             {isTablet ? (
-                <TableMobile columns={columnsMobile} data={aggregatedRows} />
+                <TableMobile columns={columnsMobile} data={tableRows} />
             ) : (
                 <Table
                     key={tableKey}
                     showExpand
                     expandMode='always'
                     columns={columns}
-                    data={aggregatedRows}
+                    data={tableRows}
                     disableSorting
                     onToggleSort={_.noop}
                     removeDefaultSort
