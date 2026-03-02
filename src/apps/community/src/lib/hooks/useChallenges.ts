@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useMemo } from 'react'
 import qs from 'qs'
 import useSWR, { SWRResponse } from 'swr'
 
@@ -45,10 +45,15 @@ export function useChallenges(params: ChallengeListParams): UseChallengesResult 
             },
         )
 
-    return {
-        challenges: (data?.data ?? [])
+    const challenges = useMemo<ChallengeInfo[]>(
+        () => (data?.data ?? [])
             .map((challenge, index) => convertBackendChallengeInfo(challenge, index))
             .filter((challenge): challenge is ChallengeInfo => Boolean(challenge)),
+        [data?.data],
+    )
+
+    return {
+        challenges,
         isLoading: !data && isLoading,
         total: data?.total ?? 0,
     }

@@ -205,25 +205,26 @@ const ChallengeListing: FC = () => {
     )
     const sortParams = useMemo(() => getSortParams(sortBy), [sortBy])
     const groupIds = communityMeta?.challengeFilter?.groupIds
+    const trimmedSearch = useMemo<string>(() => search.trim(), [search])
 
     const listingParams = useMemo<ChallengeListParams>(() => ({
         ...tabParams,
         ...sidebarParams,
         ...sortParams,
         groups: groupIds?.length ? groupIds : undefined,
-        name: search.trim() || undefined,
+        name: trimmedSearch || undefined,
         page,
         tracks: selectedTracks.length ? selectedTracks : undefined,
         types: selectedTypes.length ? selectedTypes : undefined,
     }), [
         groupIds,
         page,
-        search,
         selectedTracks,
         selectedTypes,
         sidebarParams,
         sortParams,
         tabParams,
+        trimmedSearch,
     ])
 
     const {
@@ -237,17 +238,17 @@ const ChallengeListing: FC = () => {
         ...sidebarParams,
         ...sortParams,
         groups: groupIds ?? [],
-        name: search.trim(),
+        name: trimmedSearch,
         tracks: selectedTracks,
         types: selectedTypes,
     }), [
         groupIds,
-        search,
         selectedTracks,
         selectedTypes,
         sidebarParams,
         sortParams,
         tabParams,
+        trimmedSearch,
     ])
     const listingPath = useMemo(() => {
         const route = withLeadingSlash(`${rootRoute}/${challengeListingRouteId}`)
@@ -322,7 +323,15 @@ const ChallengeListing: FC = () => {
     }, [challenges, page])
 
     const hasFilterSelection = selectedTracks.length > 0 && selectedTypes.length > 0
-    const visibleChallenges = hasFilterSelection ? allChallenges : []
+    const visibleChallenges = useMemo<ChallengeInfo[]>(
+        () => (
+            hasFilterSelection
+                ? allChallenges
+                : []
+        ),
+        [allChallenges, hasFilterSelection],
+    )
+    const hasMoreChallenges = allChallenges.length < total
     const isLoading = (isLoadingChallenges || (!!communityId && isLoadingCommunityMeta)) && hasFilterSelection
     const title = communityMeta?.communityName
         ? `${communityMeta.communityName} Challenges`
@@ -362,6 +371,10 @@ const ChallengeListing: FC = () => {
     }, [])
     const handleSortChange = useCallback((event: ChangeEvent<HTMLSelectElement>): void => {
         setSortBy(event.target.value)
+        setPage(1)
+    }, [])
+    const handleSearchChange = useCallback((value: string): void => {
+        setSearch(value)
         setPage(1)
     }, [])
     const handleLoadMore = useCallback((): void => {
@@ -427,7 +440,7 @@ const ChallengeListing: FC = () => {
                     isLoggedIn={isLoggedIn}
                     onBucketChange={handleBucketChange}
                     onClear={handleClearFilters}
-                    onSearchChange={setSearch}
+                    onSearchChange={handleSearchChange}
                     onTrackToggle={handleTrackToggle}
                     onTypeToggle={handleTypeToggle}
                     search={search}
@@ -475,7 +488,7 @@ const ChallengeListing: FC = () => {
                         />
                     )}
 
-                    {!isLoading && visibleChallenges.length < total && (
+                    {!isLoading && hasMoreChallenges && (
                         <div className={styles.loadMore}>
                             <Button
                                 label='Load More'
