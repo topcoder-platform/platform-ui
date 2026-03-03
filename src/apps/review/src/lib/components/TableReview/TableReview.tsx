@@ -326,6 +326,7 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
                 }
             }
         }
+
         return result
     }, [
         aggregatedSubmissionRows,
@@ -715,16 +716,19 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
                         break
                     }
                 }
+
                 // Return the number of data rows in this submission group; the shared
                 // Table component will translate this into the appropriate DOM rowSpan
                 // based on which rows actually render an expand row.
                 return count
             }
+
             const isLastReviewerRow = (submission: SubmissionRow): boolean => {
                 const idx = submission.reviewRowIndex ?? 0
                 const total = submission.aggregated?.reviews?.length ?? 1
                 return idx === total - 1
             }
+
             const combinedColumns: TableColumn<SubmissionRow>[] = [
                 {
                     ...submissionIdColumn,
@@ -762,6 +766,7 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
                                 </span>
                             )
                         }
+
                         return <span>{dateDisplay}</span>
                     },
                     type: 'element',
@@ -822,9 +827,11 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
                         if (!isLastReviewerRow(submission)) {
                             return <span />
                         }
+
                         if (!props.aiReviewers) {
                             return undefined
                         }
+
                         return (
                             <CollapsibleAiReviewsRow
                                 className={styles.aiReviews}

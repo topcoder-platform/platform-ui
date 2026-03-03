@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 import { CSSProperties, ElementType, MouseEvent } from 'react'
 import classNames from 'classnames'
 
@@ -26,7 +27,6 @@ interface TableCellProps<T> {
     readonly rowSpan?: number
     readonly style?: CSSProperties
     allRows?: ReadonlyArray<T>
-    /** Column index for styling (e.g. remove border on first two columns). */
     readonly dataColIndex?: number
 }
 
@@ -85,13 +85,13 @@ const TableCell: <T extends { [propertyName: string]: any }>(
             className={classes}
             key={`${props.index}-${props.propertyName}`}
             colSpan={props.colSpan}
-            {...(typeof ContainerTag === 'string' && ContainerTag === 'td' && props.rowSpan != null
+            {...(typeof ContainerTag === 'string' && ContainerTag === 'td' && props.rowSpan !== undefined
                 ? { rowSpan: props.rowSpan }
                 : {}
             )}
-            {...(typeof ContainerTag === 'string' &&
-            ContainerTag === 'td' &&
-            props.dataColIndex != null
+            {...(typeof ContainerTag === 'string'
+            && ContainerTag === 'td'
+            && props.dataColIndex !== undefined
                 ? { 'data-col-index': props.dataColIndex }
                 : {}
             )}

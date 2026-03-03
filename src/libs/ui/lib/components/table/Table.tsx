@@ -246,56 +246,58 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
                 )
             })
 
-        const { rowSpanByRow, skipCellByRow } = useMemo(() => {
-            const numRows = sortedData.length
-            const numCols = displayColumns.length
-            const rowSpanValues: (number | undefined)[][] = []
-            const skipValues: boolean[][] = []
+        const { rowSpanByRow, skipCellByRow }
+            : { rowSpanByRow: (number | undefined)[][], skipCellByRow: boolean[][] } = useMemo(() => {
+                const numRows = sortedData.length
+                const numCols = displayColumns.length
+                const rowSpanValues: (number | undefined)[][] = []
+                const skipValues: boolean[][] = []
 
-            for (let i = 0; i < numRows; i++) {
-                const rSpan: (number | undefined)[] = []
-                const skip: boolean[] = []
+                for (let i = 0; i < numRows; i++) {
+                    const rSpan: (number | undefined)[] = []
+                    const skip: boolean[] = []
 
-                for (let c = 0; c < numCols; c++) {
-                    const col = displayColumns[c]
-                    const val = col.rowSpan
-                        ? (col.rowSpan(sortedData[i], i, sortedData) ?? 1)
-                        : 1
+                    for (let c = 0; c < numCols; c++) {
+                        const col = displayColumns[c]
+                        const val = col.rowSpan
+                            ? (col.rowSpan(sortedData[i], i, sortedData) ?? 1)
+                            : 1
 
-                    rSpan.push(val > 1 ? val : undefined)
+                        rSpan.push(val > 1 ? val : undefined)
 
-                    let shouldSkip = false
-                    for (let j = 0; j < i; j++) {
-                        const jSpan = rowSpanValues[j][c] ?? 1
-                        if (i - j < jSpan) {
-                            shouldSkip = true
-                            break
+                        let shouldSkip = false
+                        for (let j = 0; j < i; j++) {
+                            const jSpan = rowSpanValues[j][c] ?? 1
+                            if (i - j < jSpan) {
+                                shouldSkip = true
+                                break
+                            }
                         }
+
+                        skip.push(shouldSkip)
                     }
-                    skip.push(shouldSkip)
+
+                    rowSpanValues.push(rSpan)
+                    skipValues.push(skip)
                 }
 
-                rowSpanValues.push(rSpan)
-                skipValues.push(skip)
-            }
+                // rowSpanValues are expressed in terms of data rows. When the table
+                // renders an expand row for each data row, the DOM rowSpan must
+                // cover those extra rows as well so that grouped cells continue to
+                // span the visual block correctly. We keep skip logic in data-row
+                // units and only translate to DOM units for the rendered rowSpan.
+                const displayRowSpanByRow: (number | undefined)[][] = props.showExpand
+                    ? rowSpanValues.map(row => row.map(value => {
+                        const n = value ?? 1
+                        return n > 1 ? (2 * n) - 1 : value
+                    }))
+                    : rowSpanValues
 
-            // rowSpanValues are expressed in terms of data rows. When the table
-            // renders an expand row for each data row, the DOM rowSpan must
-            // cover those extra rows as well so that grouped cells continue to
-            // span the visual block correctly. We keep skip logic in data-row
-            // units and only translate to DOM units for the rendered rowSpan.
-            const displayRowSpanByRow: (number | undefined)[][] = props.showExpand
-                ? rowSpanValues.map(row => row.map(value => {
-                    const n = value ?? 1
-                    return n > 1 ? (2 * n) - 1 : value
-                }))
-                : rowSpanValues
-
-            return {
-                rowSpanByRow: displayRowSpanByRow,
-                skipCellByRow: skipValues,
-            }
-        }, [sortedData, displayColumns, props.showExpand])
+                return {
+                    rowSpanByRow: displayRowSpanByRow,
+                    skipCellByRow: skipValues,
+                }
+            }, [sortedData, displayColumns, props.showExpand])
         const bodyRows: Array<JSX.Element> = sortedData
             .map((sorted, index) => (
                 <TableRow

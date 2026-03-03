@@ -59,10 +59,11 @@ export const TableRow: <T extends { [propertyName: string]: any }>(
         return _.filter(props.columns, item => !!item.isExpand)
     }, [props.columns, props.showExpand])
     // get the cells in the row
-    const cells: Array<JSX.Element | null> = displayColumns.map((col, colIndex) => {
+    const cells: Array<JSX.Element | undefined> = displayColumns.map((col, colIndex) => {
         if (props.skipCellByColumn?.[colIndex]) {
-            return null
+            return undefined
         }
+
         const columnId = `column-id-${col.columnId}-`
         const colWidth = props.colWidth?.[columnId]
         const rowSpan = props.rowSpanByColumn?.[colIndex]
@@ -118,55 +119,56 @@ export const TableRow: <T extends { [propertyName: string]: any }>(
                 const effectiveSkippedCount = Math.max(skippedByRowSpan, minLeftOffset)
                 const expandColSpan = displayColumns.length - effectiveSkippedCount
                 return (
-                <tr
-                    className={classNames(styles.tr, styles.expandRow, 'expand-row', {
-                        [styles.isEvenRow]: props.index % 2 === 1,
-                    })}
-                >
-                    {Array.from({ length: effectiveSkippedCount }, (_, i) => (
-                        <td key={`expand-pad-${i}`} />
-                    ))}
-                    <td className={styles.expandContentCell} colSpan={expandColSpan}>
-                        {expandColumns.map((col, colIndex) => {
-                            const columnId = `column-id-${col.columnId}-`
-                            const colWidth = props.colWidth?.[columnId]
-                            return (
-                                <div
-                                    key={getKey(`${props.index}${colIndex}`)}
-                                    className={styles.blockExpandItem}
-                                >
-                                    {!!col.label && (
-                                        <strong
+                    <tr
+                        className={classNames(styles.tr, styles.expandRow, 'expand-row', {
+                            [styles.isEvenRow]: props.index % 2 === 1,
+                        })}
+                    >
+                        {Array.from({ length: effectiveSkippedCount }, (each, i) => (
+                            // eslint-disable-next-line jsx-a11y/control-has-associated-label
+                            <td key={`expand-pad-${i}`} />
+                        ))}
+                        <td className={styles.expandContentCell} colSpan={expandColSpan}>
+                            {expandColumns.map((col, colIndex) => {
+                                const columnId = `column-id-${col.columnId}-`
+                                const colWidth = props.colWidth?.[columnId]
+                                return (
+                                    <div
+                                        key={getKey(`${props.index}${colIndex}`)}
+                                        className={styles.blockExpandItem}
+                                    >
+                                        {!!col.label && (
+                                            <strong
+                                                className={classNames(
+                                                    styles.blockExpandCell,
+                                                    styles.blockExpandTitle,
+                                                    'TableRow_blockExpandTitle',
+                                                )}
+                                            >
+                                                {col.label as string}
+                                                :
+                                            </strong>
+                                        )}
+                                        <TableCell
+                                            {...col}
+                                            data={props.data}
+                                            index={props.index}
+                                            as='div'
                                             className={classNames(
                                                 styles.blockExpandCell,
-                                                styles.blockExpandTitle,
-                                                'TableRow_blockExpandTitle',
+                                                styles.blockExpandValue,
+                                                col.className,
+                                                'TableCell_blockExpandValue',
                                             )}
-                                        >
-                                            {col.label as string}
-                                            :
-                                        </strong>
-                                    )}
-                                    <TableCell
-                                        {...col}
-                                        data={props.data}
-                                        index={props.index}
-                                        as='div'
-                                        className={classNames(
-                                            styles.blockExpandCell,
-                                            styles.blockExpandValue,
-                                            col.className,
-                                            'TableCell_blockExpandValue',
-                                        )}
-                                        style={colWidth ? { width: `${colWidth}px` } : {}}
-                                        allRows={props.allRows}
-                                        rowSpan={undefined}
-                                    />
-                                </div>
-                            )
-                        })}
-                    </td>
-                </tr>
+                                            style={colWidth ? { width: `${colWidth}px` } : {}}
+                                            allRows={props.allRows}
+                                            rowSpan={undefined}
+                                        />
+                                    </div>
+                                )
+                            })}
+                        </td>
+                    </tr>
                 )
             })()}
         </>
