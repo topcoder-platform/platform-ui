@@ -11,9 +11,8 @@ import {
 } from '~/libs/core'
 
 import {
-    rootRoute,
     profileCompletionRouteId,
-    talentSearchRouteId,
+    rootRoute,
 } from './config/routes.config'
 import { customerPortalTalentSearchRoutes } from './pages/talent-search/talent-search.routes'
 import { customerPortalProfileCompletionRoutes } from './pages/profile-completion/profile-completion.routes'

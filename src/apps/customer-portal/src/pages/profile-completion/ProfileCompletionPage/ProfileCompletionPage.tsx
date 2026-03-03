@@ -1,3 +1,4 @@
+/* eslint-disable react/jsx-no-bind */
 import { ChangeEvent, FC, useMemo, useState } from 'react'
 import useSWR, { SWRResponse } from 'swr'
 
@@ -57,8 +58,8 @@ export const ProfileCompletionPage: FC = () => {
     )
 
     const countryMap = useMemo(() => {
-        const map = new Map<string, string>()
-        ;(countryLookup || []).forEach(country => {
+        const map = new Map<string, string>();
+        (countryLookup || []).forEach(country => {
             if (country.countryCode) {
                 map.set(country.countryCode, country.country)
             }
@@ -68,8 +69,8 @@ export const ProfileCompletionPage: FC = () => {
     }, [countryLookup])
 
     const countryOptions = useMemo<InputSelectOption[]>(() => {
-        const dynamicCodes = new Set<string>()
-        ;(data || []).forEach(profile => {
+        const dynamicCodes = new Set<string>();
+        (data || []).forEach(profile => {
             if (profile.countryCode) {
                 dynamicCodes.add(profile.countryCode)
             }
@@ -80,7 +81,8 @@ export const ProfileCompletionPage: FC = () => {
                 label: countryMap.get(code) || code,
                 value: code,
             }))
-            .sort((a, b) => String(a.label).localeCompare(String(b.label)))
+            .sort((a, b) => String(a.label)
+                .localeCompare(String(b.label)))
 
         return [
             {
@@ -165,7 +167,13 @@ export const ProfileCompletionPage: FC = () => {
                             {displayedRows.map(profile => (
                                 <tr key={profile.userId || profile.handle}>
                                     <td>
-                                        <a href={`${EnvironmentConfig.USER_PROFILE_URL}/${profile.handle}`} target='_blank' rel='noreferrer noopener'>{profile.handle}</a>
+                                        <a
+                                            href={`${EnvironmentConfig.USER_PROFILE_URL}/${profile.handle}`}
+                                            target='_blank'
+                                            rel='noreferrer noopener'
+                                        >
+                                            {profile.handle}
+                                        </a>
                                     </td>
                                     <td>{profile.countryLabel}</td>
                                 </tr>
