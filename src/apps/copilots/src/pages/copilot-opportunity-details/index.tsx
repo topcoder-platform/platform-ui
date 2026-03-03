@@ -66,7 +66,9 @@ const CopilotOpportunityDetails: FC<{}> = () => {
     )
     const { data: copilotApplications }: { data?: CopilotApplication[] } = useCopilotApplications(opportunityId)
     const appliedCopilotApplications = useMemo(
-        () => copilotApplications?.filter(item => item.userId === profile?.userId),
+        () => copilotApplications?.filter(
+            item => String(item.userId) === String(profile?.userId),
+        ),
         [copilotApplications, profile],
     )
     const { data: members }: { data?: FormattedMembers[]} = useMembers(
@@ -153,7 +155,7 @@ const CopilotOpportunityDetails: FC<{}> = () => {
         onClick: cancelCopilotOpportunityHandler,
     }
 
-    const application = copilotApplications && copilotApplications[0]
+    const application = appliedCopilotApplications && appliedCopilotApplications[0]
 
     const getOpportunityType = (type: string): ProjectType => {
         switch (type) {
