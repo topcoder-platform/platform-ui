@@ -1048,6 +1048,11 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
                     disableSorting
                     onToggleSort={_.noop}
                     removeDefaultSort
+                    expandContentStartIndex={
+                        props.mode === 'combined-review-appeals'
+                            ? columns.findIndex(col => col.columnId === 'reviewer-primary')
+                            : undefined
+                    }
                 />
             )}
 

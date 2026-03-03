@@ -29,6 +29,12 @@ interface Props<T> {
     readonly rowSpanByColumn?: ReadonlyArray<number | undefined>
     /** Per display-column: when true, do not render this cell (it is under a previous rowSpan). */
     readonly skipCellByColumn?: ReadonlyArray<boolean>
+    /**
+     * Optional minimum index in displayColumns where expand content should start.
+     * Used to ensure expand rows align under a specific column group when rowSpan
+     * data alone is insufficient (e.g., single-row groups).
+     */
+    readonly expandContentStartIndex?: number
 }
 
 export const TableRow: <T extends { [propertyName: string]: any }>(
@@ -107,15 +113,17 @@ export const TableRow: <T extends { [propertyName: string]: any }>(
                 {cells}
             </tr>
             {props.showExpand && isExpanded && (() => {
-                const skippedCount = props.skipCellByColumn?.filter(Boolean).length ?? 0
-                const expandColSpan = displayColumns.length - skippedCount
+                const skippedByRowSpan = props.skipCellByColumn?.filter(Boolean).length ?? 0
+                const minLeftOffset = props.expandContentStartIndex ?? 0
+                const effectiveSkippedCount = Math.max(skippedByRowSpan, minLeftOffset)
+                const expandColSpan = displayColumns.length - effectiveSkippedCount
                 return (
                 <tr
                     className={classNames(styles.tr, styles.expandRow, 'expand-row', {
                         [styles.isEvenRow]: props.index % 2 === 1,
                     })}
                 >
-                    {Array.from({ length: skippedCount }, (_, i) => (
+                    {Array.from({ length: effectiveSkippedCount }, (_, i) => (
                         <td key={`expand-pad-${i}`} />
                     ))}
                     <td className={styles.expandContentCell} colSpan={expandColSpan}>

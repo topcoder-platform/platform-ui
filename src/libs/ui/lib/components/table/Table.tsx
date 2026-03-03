@@ -39,6 +39,12 @@ interface TableProps<T> {
     readonly setColWidth?: Dispatch<SetStateAction<colWidthType>> | undefined
     readonly className?: string
     readonly preventDefault?: boolean
+    /**
+     * Optional minimum index in displayColumns where expand content should start.
+     * When provided, expand rows will render their content starting at or after
+     * this index, even if rowSpan-based skipCell data does not require it.
+     */
+    readonly expandContentStartIndex?: number
 }
 
 interface DefaultSortDirectionMap {
@@ -305,6 +311,7 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
                     preventDefault={props.preventDefault}
                     rowSpanByColumn={rowSpanByRow[index]}
                     skipCellByColumn={skipCellByRow[index]}
+                    expandContentStartIndex={props.expandContentStartIndex}
                 />
             ))
 
