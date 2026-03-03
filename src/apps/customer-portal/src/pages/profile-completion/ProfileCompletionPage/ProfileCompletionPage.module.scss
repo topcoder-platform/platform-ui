@@ -30,9 +30,9 @@
 }
 
 .counterCard {
-    border: 1px solid var(--GrayBorder);
+    border: 1px solid $black-20;
     border-radius: $sp-2;
-    background: var(--invertButtonColor);
+    background: $tc-white;
     padding: $sp-4;
     min-width: 260px;
     display: flex;
@@ -41,7 +41,7 @@
 }
 
 .counterLabel {
-    color: var(--GrayFontColor);
+    color: $black-60;
     font-size: 12px;
     line-height: 16px;
     font-weight: 600;
@@ -49,7 +49,7 @@
 }
 
 .counterValue {
-    color: var(--FontColor);
+    color: $black-100;
     font-size: 32px;
     line-height: 36px;
     font-weight: 700;
@@ -66,21 +66,21 @@
 }
 
 .errorMessage {
-    color: var(--RedError);
+    color: $red-100;
     font-size: 14px;
     line-height: 20px;
     font-weight: 700;
 }
 
 .emptyMessage {
-    color: var(--GrayFontColor);
+    color: $black-60;
     font-size: 14px;
     line-height: 20px;
 }
 
 .tableWrap {
     overflow: auto;
-    border: 1px solid var(--GrayBorder);
+    border: 1px solid $black-20;
     border-radius: $sp-2;
 
     table {
@@ -93,19 +93,19 @@
     td {
         text-align: left;
         padding: $sp-3 $sp-4;
-        border-bottom: 1px solid var(--GrayBorder);
+        border-bottom: 1px solid $black-20;
         font-size: 14px;
         line-height: 20px;
     }
 
     th {
-        color: var(--FontColor);
+        color: $black-100;
         font-weight: 700;
-        background: var(--TableSubHeader);
+        background: $black-5;
     }
 
     td {
-        color: var(--FontColor);
+        color: $black-100;
     }
 
     tr:last-child td {
