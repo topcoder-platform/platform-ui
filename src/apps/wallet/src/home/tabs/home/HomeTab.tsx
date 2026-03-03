@@ -188,6 +188,7 @@ const HomeTab: FC<HomeTabProps> = props => {
                         iconToRight
                         icon={IconOutline.ExternalLinkIcon}
                         target='_blank'
+                        rel='noopener noreferrer'
                         to='https://www.topcoder.com/thrive/articles/payment-policies-and-instructions'
                         className={styles.paymentGuideLink}
                     />
