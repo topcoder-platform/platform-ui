@@ -8,6 +8,7 @@ import styles from './ProfileCompleteness.module.scss'
 interface ProfileCompletenessProps {
     profile: UserProfile
     authProfile: UserProfile | undefined
+    canSeeProfileCompleteness: boolean
 }
 
 const ProfileCompleteness: FC<ProfileCompletenessProps> = props => {
@@ -42,19 +43,32 @@ const ProfileCompleteness: FC<ProfileCompletenessProps> = props => {
         <div className={styles.wrap}>
             <strong>Profile: </strong>
             {`${completed}% Complete`}
-            <div>
-                <small>
-                    Only
-                    {' '}
-                    {incompleteEntries}
-                    {' '}
-                    left to fill. Please add
-                    {' '}
-                    {count === 1 ? 'it' : 'them'}
-                    {' '}
-                    to make your profile more discoverable.
-                </small>
-            </div>
+            {!props.canSeeProfileCompleteness
+            && (
+                <div>
+                    <small>
+                        Only
+                        {' '}
+                        {incompleteEntries}
+                        {' '}
+                        left to fill. Please add
+                        {' '}
+                        {count === 1 ? 'it' : 'them'}
+                        {' '}
+                        to make your profile more discoverable.
+                    </small>
+                </div>
+            )}
+            {props.canSeeProfileCompleteness
+            && (
+                <div>
+                    <small>
+                        {incompleteEntries}
+                        {' '}
+                        left to fill by the member.
+                    </small>
+                </div>
+            )}
         </div>
     )
 }
