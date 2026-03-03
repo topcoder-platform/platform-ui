@@ -125,7 +125,7 @@ const ProfilePageLayout: FC<ProfilePageLayoutProps> = (props: ProfilePageLayoutP
                             <ProfileCompleteness
                                 profile={props.profile}
                                 authProfile={props.authProfile}
-                                canSeeProfileCompleteness={canSeeProfileCompleteness}
+                                isAdminOrTM={isAdminOrTM}
                             />
                         )}
                         <div className={styles.sectionWrap}>

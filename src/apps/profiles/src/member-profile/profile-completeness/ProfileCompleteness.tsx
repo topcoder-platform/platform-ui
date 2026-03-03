@@ -8,7 +8,7 @@ import styles from './ProfileCompleteness.module.scss'
 interface ProfileCompletenessProps {
     profile: UserProfile
     authProfile: UserProfile | undefined
-    canSeeProfileCompleteness: boolean
+    isAdminOrTM: boolean
 }
 
 const ProfileCompleteness: FC<ProfileCompletenessProps> = props => {
@@ -43,7 +43,7 @@ const ProfileCompleteness: FC<ProfileCompletenessProps> = props => {
         <div className={styles.wrap}>
             <strong>Profile: </strong>
             {`${completed}% Complete`}
-            {!props.canSeeProfileCompleteness
+            {!props.isAdminOrTM
             && (
                 <div>
                     <small>
@@ -59,7 +59,7 @@ const ProfileCompleteness: FC<ProfileCompletenessProps> = props => {
                     </small>
                 </div>
             )}
-            {props.canSeeProfileCompleteness
+            {props.isAdminOrTM
             && (
                 <div>
                     <small>
