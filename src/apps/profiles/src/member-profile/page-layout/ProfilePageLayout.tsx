@@ -34,7 +34,9 @@ const ProfilePageLayout: FC<ProfilePageLayoutProps> = (props: ProfilePageLayoutP
     const isAdminOrTM = props.authProfile?.roles?.includes(UserRole.administrator)
         || props.authProfile?.roles?.includes(UserRole.talentManager)
 
-    const canSeeProfileCompleteness = props.authProfile?.handle === props.profile.handle || isAdminOrTM
+    const isSelf = props.authProfile?.handle === props.profile.handle
+
+    const canSeeProfileCompleteness = isSelf || isAdminOrTM
 
     const [isDownloading, setIsDownloading]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
@@ -124,8 +126,8 @@ const ProfilePageLayout: FC<ProfilePageLayoutProps> = (props: ProfilePageLayoutP
                         {canSeeProfileCompleteness && (
                             <ProfileCompleteness
                                 profile={props.profile}
-                                authProfile={props.authProfile}
                                 isAdminOrTM={isAdminOrTM}
+                                isSelf={isSelf}
                             />
                         )}
                         <div className={styles.sectionWrap}>
