@@ -1,17 +1,31 @@
-import { FC, useMemo } from 'react'
+import { FC, PropsWithChildren, useCallback, useMemo, useState } from 'react'
+import { toast } from 'react-toastify'
+import { useSWRConfig } from 'swr'
+import { FullConfiguration } from 'swr/dist/types'
 
-import { IconOutline } from '~/libs/ui'
+import { IconOutline, Tooltip } from '~/libs/ui'
+import { handleError } from '~/libs/shared/lib/utils/handle-error'
 
-import { aiRunFailed, aiRunInProgress, AiWorkflowRun } from '../../hooks'
+import {
+    aiRunFailed,
+    aiRunInProgress,
+    AiWorkflowRun,
+    getAiWorkflowRunsCacheKey,
+    retriggerAiWorkflowRun,
+    useRolePermissions,
+    UseRolePermissionsResult,
+} from '../../hooks'
 
 import StatusLabel from './StatusLabel'
+import styles from './AiWorkflowRunStatus.module.scss'
 
 interface AiWorkflowRunStatusProps {
-    run?: Pick<AiWorkflowRun, 'status'|'score'|'workflow'>
+    run?: Pick<AiWorkflowRun, 'status'|'score'|'workflow'|'id'>
     status?: 'passed' | 'pending' | 'failed-score'
     score?: number
     hideLabel?: boolean
     showScore?: boolean
+    submissionId?: string
 }
 
 const aiRunStatus = (run: Pick<AiWorkflowRun, 'status'|'score'|'workflow'>): string => {
@@ -27,6 +41,10 @@ const aiRunStatus = (run: Pick<AiWorkflowRun, 'status'|'score'|'workflow'>): str
 }
 
 export const AiWorkflowRunStatus: FC<AiWorkflowRunStatusProps> = props => {
+    const [isRerunning, setIsRerunning] = useState(false)
+    const { isAdmin }: UseRolePermissionsResult = useRolePermissions()
+    const { mutate }: FullConfiguration = useSWRConfig()
+
     const status = useMemo(() => {
         if (props.status) {
             return props.status
@@ -39,46 +57,101 @@ export const AiWorkflowRunStatus: FC<AiWorkflowRunStatusProps> = props => {
         return ''
     }, [props.status, props.run])
 
-    const score = props.showScore ? (props.score ?? props.run?.score) : undefined
+    const displayStatus = status
+
+    const handleRerun = useCallback(async (): Promise<void> => {
+        const runId = props.run?.id
+        if (!runId || runId === '-1') {
+            return
+        }
+
+        setIsRerunning(true)
+
+        try {
+            await retriggerAiWorkflowRun(runId)
+
+            if (props.submissionId) {
+                await mutate(getAiWorkflowRunsCacheKey(props.submissionId))
+            } else {
+                await mutate(
+                    (key: unknown) => typeof key === 'string' && key.includes('/workflows/runs?submissionId='),
+                )
+            }
+
+            toast.success('Workflow re-run triggered successfully.')
+        } catch (error) {
+            handleError(error as Error)
+            toast.error('Failed to trigger workflow re-run.')
+        } finally {
+            setIsRerunning(false)
+        }
+    }, [mutate, props.run, props.submissionId])
+
+    const score: number | undefined = props.showScore ? (props.score ?? props.run?.score) : undefined
+
+    const Wrapper: FC<PropsWithChildren> = useCallback(({ children }: PropsWithChildren) => {
+        if (!isAdmin || displayStatus === 'pending' || !props.run?.id || props.run?.id === '-1') {
+            return <>{children}</>
+        }
+
+        return (
+            <Tooltip
+                clickable
+                content={(
+                    <button
+                        type='button'
+                        className={styles.reRunButton}
+                        disabled={isRerunning}
+                        onClick={handleRerun}
+                    >
+                        <IconOutline.ArrowRightIcon className='icon-sm' style={{ marginRight: '0.5rem' }} />
+                        {isRerunning ? 'Re-running...' : 'Re-run'}
+                    </button>
+                )}
+            >
+                {children}
+            </Tooltip>
+        )
+    }, [isAdmin, displayStatus, props.run, isRerunning, handleRerun])
 
     return (
-        <>
-            {status === 'passed' && (
+        <Wrapper>
+            {displayStatus === 'passed' && (
                 <StatusLabel
                     icon={<IconOutline.CheckIcon className='icon-xl' />}
                     hideLabel={props.hideLabel}
                     label='Passed'
-                    status={status}
+                    status={displayStatus}
                     score={score}
                 />
             )}
-            {status === 'failed-score' && (
+            {displayStatus === 'failed-score' && (
                 <StatusLabel
                     icon={<IconOutline.MinusCircleIcon className='icon-xl' />}
                     hideLabel={props.hideLabel}
                     label='Failed'
-                    status={status}
+                    status={displayStatus}
                     score={score}
                 />
             )}
-            {status === 'pending' && (
+            {displayStatus === 'pending' && (
                 <StatusLabel
                     icon={<IconOutline.MinusIcon className='icon-md' />}
                     hideLabel={props.hideLabel}
                     label='To be filled'
-                    status={status}
+                    status={displayStatus}
                     score={score}
                 />
             )}
-            {status === 'failed' && (
+            {displayStatus === 'failed' && (
                 <StatusLabel
                     icon={<IconOutline.XCircleIcon className='icon-xl' />}
                     hideLabel={props.hideLabel}
-                    status={status}
+                    status={displayStatus}
                     label='Failure'
                     score={score}
                 />
             )}
-        </>
+        </Wrapper>
     )
 }

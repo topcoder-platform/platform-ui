@@ -377,9 +377,6 @@ export const TabContentSubmissions: FC<Props> = props => {
                                 <a href={profileUrl} style={{ color: resolvedColor }} target='_blank' rel='noreferrer'>
                                     {handle}
                                 </a>
-                                {userInfo?.memberEmail ? (
-                                    <div className={styles.submitterEmail}>{userInfo.memberEmail}</div>
-                                ) : ''}
                             </div>
                         )
                     },

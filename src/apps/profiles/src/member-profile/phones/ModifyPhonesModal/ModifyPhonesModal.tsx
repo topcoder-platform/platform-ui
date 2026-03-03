@@ -91,8 +91,13 @@ const ModifyPhonesModal: FC<ModifyPhonesModalProps> = (props: ModifyPhonesModalP
                 toast.success('Phone numbers updated successfully.', { position: toast.POSITION.BOTTOM_RIGHT })
                 props.onSave()
             })
-            .catch(() => {
-                toast.error('Failed to update phone numbers.', { position: toast.POSITION.BOTTOM_RIGHT })
+            .catch(error => {
+                const apiMessage
+                = error?.message || 'Failed to update phone numbers.'
+
+                toast.error(apiMessage, {
+                    position: toast.POSITION.BOTTOM_RIGHT,
+                })
                 setIsSaving(false)
             })
     }

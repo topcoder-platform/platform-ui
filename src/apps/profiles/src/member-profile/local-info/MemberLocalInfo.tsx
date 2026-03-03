@@ -47,7 +47,7 @@ const MemberLocalInfo: FC<MemberLocalInfoProps> = (props: MemberLocalInfoProps) 
 
     const { profile }: ProfileContextData = useContext(profileContext)
     const isAdminOrTM = profile?.roles?.includes(UserRole.administrator)
-    || props.profile?.roles?.includes(UserRole.talentManager)
+    || profile?.roles?.includes(UserRole.talentManager)
 
     const [isEditMode, setIsEditMode]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
