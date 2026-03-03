@@ -1,6 +1,17 @@
 @use '../../../styles/typography';
 @import '../../../styles/includes';
 
+.expandRow {
+    td {
+        border: none !important;
+        border-bottom: 1px solid $black-20 !important;
+    }
+    td.expandContentCell {
+        border-top: 1px solid $black-20 !important;
+        border-bottom: 1px solid $black-20 !important;
+    }
+}
+
 .tr {
     &.clickable {
         position: relative;

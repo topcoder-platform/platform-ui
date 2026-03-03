@@ -26,6 +26,8 @@ interface TableCellProps<T> {
     readonly rowSpan?: number
     readonly style?: CSSProperties
     allRows?: ReadonlyArray<T>
+    /** Column index for styling (e.g. remove border on first two columns). */
+    readonly dataColIndex?: number
 }
 
 const TableCell: <T extends { [propertyName: string]: any }>(
@@ -85,6 +87,12 @@ const TableCell: <T extends { [propertyName: string]: any }>(
             colSpan={props.colSpan}
             {...(typeof ContainerTag === 'string' && ContainerTag === 'td' && props.rowSpan != null
                 ? { rowSpan: props.rowSpan }
+                : {}
+            )}
+            {...(typeof ContainerTag === 'string' &&
+            ContainerTag === 'td' &&
+            props.dataColIndex != null
+                ? { 'data-col-index': props.dataColIndex }
                 : {}
             )}
         >

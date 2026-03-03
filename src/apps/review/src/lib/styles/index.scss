@@ -94,6 +94,10 @@ $icons: review appeal submission warning error event timer upload reopen 1st 2nd
                 }
             }
         }
+        // Single 1px row separators: no top border on data rows (avoids double line from shared Table clickable row border)
+        tbody tr:not(.expand-row) td {
+            border-top: none !important;
+        }
     }
 }
 

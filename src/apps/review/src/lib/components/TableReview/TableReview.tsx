@@ -689,7 +689,7 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
                 }
                 // Return the number of data rows in this submission group; the shared
                 // Table component will translate this into the appropriate DOM rowSpan
-                // when expand rows are rendered.
+                // based on which rows actually render an expand row.
                 return count
             }
             const isLastReviewerRow = (submission: SubmissionRow): boolean => {

@@ -78,6 +78,7 @@ export const TableRow: <T extends { [propertyName: string]: any }>(
                 style={colWidth ? { width: `${colWidth}px` } : {}}
                 allRows={props.allRows}
                 rowSpan={rowSpan}
+                dataColIndex={colIndex}
             />
         )
     })
@@ -88,6 +89,7 @@ export const TableRow: <T extends { [propertyName: string]: any }>(
                 className={classNames(
                     styles.tr,
                     props.onRowClick ? styles.clickable : undefined,
+                    props.showExpand && isExpanded && 'row-before-expand',
                     {
                         [styles.isEvenRow]: props.index % 2 === 1,
                     },
@@ -109,14 +111,14 @@ export const TableRow: <T extends { [propertyName: string]: any }>(
                 const expandColSpan = displayColumns.length - skippedCount
                 return (
                 <tr
-                    className={classNames(styles.tr, {
+                    className={classNames(styles.tr, styles.expandRow, 'expand-row', {
                         [styles.isEvenRow]: props.index % 2 === 1,
                     })}
                 >
                     {Array.from({ length: skippedCount }, (_, i) => (
                         <td key={`expand-pad-${i}`} />
                     ))}
-                    <td colSpan={expandColSpan}>
+                    <td className={styles.expandContentCell} colSpan={expandColSpan}>
                         {expandColumns.map((col, colIndex) => {
                             const columnId = `column-id-${col.columnId}-`
                             const colWidth = props.colWidth?.[columnId]

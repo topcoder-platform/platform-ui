@@ -4,6 +4,18 @@
     display: flex;
     flex-direction: column;
 
+    // Remove bottom border only from Submission ID and Review Score cells so the line
+    // between human and AI reviewers spans Reviewer through Appeals (data-col-index set by TableRow)
+    &:global(.enhanced-table) table tbody tr:global(.row-before-expand) td[data-col-index='0'],
+    &:global(.enhanced-table) table tbody tr:global(.row-before-expand) td[data-col-index='1'] {
+        border-bottom: none !important;
+    }
+
+    // Use only bottom borders for row separation so all horizontal lines are 1px (no double border)
+    &:global(.enhanced-table) table tbody tr:not(:global(.expand-row)) td {
+        border-top: none !important;
+    }
+
     @include ltemd {
         &:global(.enhanced-table) {
             table {
