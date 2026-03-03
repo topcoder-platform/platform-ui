@@ -67,6 +67,7 @@ import type {
 import { resolveSubmissionReviewResult } from '../common/reviewResult'
 import { shouldIncludeInReviewPhase } from '../../utils/reviewPhaseGuards'
 import { CollapsibleAiReviewsRow } from '../CollapsibleAiReviewsRow'
+import StatusLabel from '../AiReviewsTable/StatusLabel'
 
 import styles from './TableReview.module.scss'
 
@@ -419,8 +420,9 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
             canDisplayScores: () => true,
             canViewScorecard: true,
             isAppealsTab: false,
+            showAppealsProgress: props.mode === 'combined-review-appeals',
         }),
-        [],
+        [props.mode],
     )
 
     const { canViewAllSubmissions }: UseRolePermissionsResult = useRolePermissions()
@@ -658,6 +660,32 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
         shouldShowHistoryActions,
     ])
 
+    const renderManualResult = (submission: SubmissionRow): JSX.Element => {
+        const result = resolveSubmissionReviewResult(submission, {
+            minimumPassingScoreByScorecardId,
+        })
+
+        if (result === 'PASS') {
+            return (
+                <StatusLabel
+                    icon={<IconOutline.CheckIcon className='icon-xl' />}
+                    label='Passed'
+                    status='passed'
+                />
+            )
+        }
+
+        if (result === 'FAIL') {
+            return (
+                <span className={styles.resultFail}>
+                    Fail
+                </span>
+            )
+        }
+
+        return <span>--</span>
+    }
+
     const columns = useMemo<TableColumn<SubmissionRow>[]>(() => {
         const submissionIdColumn: TableColumn<SubmissionRow> = {
             className: styles.submissionColumn,
@@ -756,28 +784,7 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
                 {
                     columnId: 'review-result',
                     label: 'Result',
-                    renderer: (submission: SubmissionRow) => {
-                        const result = resolveSubmissionReviewResult(submission, {
-                            minimumPassingScoreByScorecardId,
-                        })
-                        if (result === 'PASS') {
-                            return (
-                                <span className={styles.resultPass}>
-                                    Pass
-                                </span>
-                            )
-                        }
-
-                        if (result === 'FAIL') {
-                            return (
-                                <span className={styles.resultFail}>
-                                    Fail
-                                </span>
-                            )
-                        }
-
-                        return <span>--</span>
-                    },
+                    renderer: (submission: SubmissionRow) => renderManualResult(submission),
                     type: 'element',
                 },
                 {
@@ -892,28 +899,7 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
             {
                 columnId: 'review-result',
                 label: 'Review Result',
-                renderer: (submission: SubmissionRow) => {
-                    const result = resolveSubmissionReviewResult(submission, {
-                        minimumPassingScoreByScorecardId,
-                    })
-                    if (result === 'PASS') {
-                        return (
-                            <span className={styles.resultPass}>
-                                Pass
-                            </span>
-                        )
-                    }
-
-                    if (result === 'FAIL') {
-                        return (
-                            <span className={styles.resultFail}>
-                                Fail
-                            </span>
-                        )
-                    }
-
-                    return <span>--</span>
-                },
+                renderer: (submission: SubmissionRow) => renderManualResult(submission),
                 type: 'element',
             },
         )

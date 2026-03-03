@@ -29,6 +29,13 @@
             }
         }
     }
+
+    // AI expand row: draw a single 1px separator while keeping other expand
+    // rows borderless. The CollapsibleAiReviewsRow uses the local .aiReviews
+    // class so we can detect the AI row here.
+    &:global(.enhanced-table) table tbody tr:global(.expand-row):has(.aiReviews) td {
+        border-bottom: var(--TableBorderColor) solid 1px !important;
+    }
 }
 
 .textBlue {
@@ -226,8 +233,7 @@
 .aiReviews {
     margin: $sp-2 0;
     :global(.trigger) {
-        width: fit-content;
-        margin-left: auto;
+        margin-left: 16px;
     }
 
     :global(.reviews-table) {

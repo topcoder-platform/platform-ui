@@ -4,11 +4,9 @@
 .expandRow {
     td {
         border: none !important;
-        border-bottom: 1px solid $black-20 !important;
     }
     td.expandContentCell {
-        border-top: 1px solid $black-20 !important;
-        border-bottom: 1px solid $black-20 !important;
+        border: none !important;
     }
 }
 

@@ -628,6 +628,7 @@ export function renderAppealsCell(
         viewOwnScorecardTooltip = VIEW_OWN_SCORECARD_TOOLTIP,
         getReviewUrl,
         canRespondToAppeals,
+        showAppealsProgress,
     }: ScoreVisibilityConfig = configWithDefaults
 
     const reviewDetail = submission.aggregated?.reviews?.[reviewIndex]
@@ -652,6 +653,7 @@ export function renderAppealsCell(
     }
 
     const totalAppeals = reviewDetail.totalAppeals ?? 0
+    const finishedAppeals = reviewDetail.finishedAppeals ?? 0
     const reviewStatus = (reviewInfo.status ?? '').toUpperCase()
 
     if (!totalAppeals && reviewStatus !== 'COMPLETED') {
@@ -684,6 +686,32 @@ export function renderAppealsCell(
     const reviewUrl = getReviewUrl
         ? getReviewUrl(reviewId)
         : getReviewRoute(submission.id, reviewId, canRespondToAppeals)
+
+    if (showAppealsProgress) {
+        return (
+            <span
+                className={classNames(
+                    styles.appealsLink,
+                    'last-element',
+                )}
+            >
+                [
+                {' '}
+                <Link
+                    className={styles.textBlue}
+                    to={reviewUrl}
+                >
+                    {finishedAppeals}
+                    {' '}
+                    /
+                    {' '}
+                    {totalAppeals}
+                </Link>
+                {' '}
+                ]
+            </span>
+        )
+    }
 
     return (
         <Link

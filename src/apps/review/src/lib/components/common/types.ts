@@ -84,6 +84,11 @@ export interface ScoreVisibilityConfig {
     getReviewUrl?: (reviewId: string) => string
     /** Indicates whether the viewer can appeal to respond. */
     canRespondToAppeals?: boolean
+    /**
+     * When true, appeals-related renderers should display progress as
+     * [responded/total] instead of a single total count.
+     */
+    showAppealsProgress?: boolean
 }
 
 export type { AggregatedReviewDetail, AggregatedSubmissionReviews }
