@@ -61,7 +61,12 @@ const ReviewsSidebar: FC<ReviewsSidebarProps> = props => {
                                 hideLabel
                             />
                         ) : (
-                            <AiWorkflowRunStatus run={workflowRun} showScore hideLabel />
+                            <AiWorkflowRunStatus
+                                run={workflowRun}
+                                showScore
+                                hideLabel
+                                submissionId={submissionId}
+                            />
                         )}
                         <div className={styles.mobileMenuIcon}>
                             <IconOutline.MenuIcon className='icon-xl' />
@@ -100,7 +105,12 @@ const ReviewsSidebar: FC<ReviewsSidebarProps> = props => {
                                         <span className={styles.workflowName}>{run.workflow.name}</span>
                                     </span>
                                 </Tooltip>
-                                <AiWorkflowRunStatus run={run} showScore hideLabel />
+                                <AiWorkflowRunStatus
+                                    run={run}
+                                    showScore
+                                    hideLabel
+                                    submissionId={submissionId}
+                                />
                             </li>
                         ))}
 

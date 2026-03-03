@@ -1,5 +1,7 @@
 import { FC, PropsWithChildren, useCallback, useMemo, useState } from 'react'
 import { toast } from 'react-toastify'
+import { useSWRConfig } from 'swr'
+import { FullConfiguration } from 'swr/dist/types'
 
 import { IconOutline, Tooltip } from '~/libs/ui'
 import { handleError } from '~/libs/shared/lib/utils/handle-error'
@@ -8,6 +10,7 @@ import {
     aiRunFailed,
     aiRunInProgress,
     AiWorkflowRun,
+    getAiWorkflowRunsCacheKey,
     retriggerAiWorkflowRun,
     useRolePermissions,
     UseRolePermissionsResult,
@@ -22,6 +25,7 @@ interface AiWorkflowRunStatusProps {
     score?: number
     hideLabel?: boolean
     showScore?: boolean
+    submissionId?: string
 }
 
 const aiRunStatus = (run: Pick<AiWorkflowRun, 'status'|'score'|'workflow'>): string => {
@@ -38,8 +42,8 @@ const aiRunStatus = (run: Pick<AiWorkflowRun, 'status'|'score'|'workflow'>): str
 
 export const AiWorkflowRunStatus: FC<AiWorkflowRunStatusProps> = props => {
     const [isRerunning, setIsRerunning] = useState(false)
-    const [isLocallyPending, setIsLocallyPending] = useState(false)
     const { isAdmin }: UseRolePermissionsResult = useRolePermissions()
+    const { mutate }: FullConfiguration = useSWRConfig()
 
     const status = useMemo(() => {
         if (props.status) {
@@ -53,7 +57,7 @@ export const AiWorkflowRunStatus: FC<AiWorkflowRunStatusProps> = props => {
         return ''
     }, [props.status, props.run])
 
-    const displayStatus = isLocallyPending ? 'pending' : status
+    const displayStatus = status
 
     const handleRerun = useCallback(async (): Promise<void> => {
         const runId = props.run?.id
@@ -65,7 +69,15 @@ export const AiWorkflowRunStatus: FC<AiWorkflowRunStatusProps> = props => {
 
         try {
             await retriggerAiWorkflowRun(runId)
-            setIsLocallyPending(true)
+
+            if (props.submissionId) {
+                await mutate(getAiWorkflowRunsCacheKey(props.submissionId))
+            } else {
+                await mutate(
+                    (key: unknown) => typeof key === 'string' && key.includes('/workflows/runs?submissionId='),
+                )
+            }
+
             toast.success('Workflow re-run triggered successfully.')
         } catch (error) {
             handleError(error as Error)
@@ -73,7 +85,7 @@ export const AiWorkflowRunStatus: FC<AiWorkflowRunStatusProps> = props => {
         } finally {
             setIsRerunning(false)
         }
-    }, [props.run])
+    }, [mutate, props.run, props.submissionId])
 
     const score: number | undefined = props.showScore ? (props.score ?? props.run?.score) : undefined
 
@@ -100,7 +112,7 @@ export const AiWorkflowRunStatus: FC<AiWorkflowRunStatusProps> = props => {
                 {children}
             </Tooltip>
         )
-    }, [isAdmin, displayStatus, props.run, isRerunning])
+    }, [isAdmin, displayStatus, props.run, isRerunning, handleRerun])
 
     return (
         <Wrapper>
