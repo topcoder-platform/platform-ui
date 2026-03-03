@@ -102,7 +102,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                         <div className={styles.mobileRow}>
                             <div className={styles.label}>Result</div>
                             <div className={`${styles.value} ${styles.resultCol}`}>
-                                <AiWorkflowRunStatus run={run} />
+                                    <AiWorkflowRunStatus run={run} submissionId={props.submission.id} />
                             </div>
                         </div>
                     </div>
@@ -163,7 +163,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                                 ) : '-'}
                             </td>
                             <td className={styles.resultCol}>
-                                <AiWorkflowRunStatus run={run} />
+                                <AiWorkflowRunStatus run={run} submissionId={props.submission.id} />
                             </td>
                         </tr>
                     ))}
