@@ -1,6 +1,7 @@
 import { FC, PropsWithChildren, useCallback, useMemo, useState } from 'react'
 import { toast } from 'react-toastify'
 import { useSWRConfig } from 'swr'
+import { FullConfiguration } from 'swr/dist/types'
 
 import { IconOutline, Tooltip } from '~/libs/ui'
 import { handleError } from '~/libs/shared/lib/utils/handle-error'
@@ -42,7 +43,7 @@ const aiRunStatus = (run: Pick<AiWorkflowRun, 'status'|'score'|'workflow'>): str
 export const AiWorkflowRunStatus: FC<AiWorkflowRunStatusProps> = props => {
     const [isRerunning, setIsRerunning] = useState(false)
     const { isAdmin }: UseRolePermissionsResult = useRolePermissions()
-    const { mutate } = useSWRConfig()
+    const { mutate }: FullConfiguration = useSWRConfig()
 
     const status = useMemo(() => {
         if (props.status) {
