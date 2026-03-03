@@ -1,0 +1,114 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-4;
+}
+
+.headerRow {
+    display: flex;
+    align-items: flex-end;
+    gap: $sp-4;
+    justify-content: space-between;
+
+    @include ltemd {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+
+.filterWrap {
+    min-width: 280px;
+    max-width: 360px;
+
+    @include ltemd {
+        max-width: unset;
+        min-width: unset;
+        width: 100%;
+    }
+}
+
+.counterCard {
+    border: 1px solid var(--GrayBorder);
+    border-radius: $sp-2;
+    background: var(--invertButtonColor);
+    padding: $sp-4;
+    min-width: 260px;
+    display: flex;
+    flex-direction: column;
+    gap: $sp-1;
+}
+
+.counterLabel {
+    color: var(--GrayFontColor);
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.counterValue {
+    color: var(--FontColor);
+    font-size: 32px;
+    line-height: 36px;
+    font-weight: 700;
+    font-family: 'Nunito Sans', sans-serif;
+}
+
+.loadingWrap {
+    position: relative;
+    height: 90px;
+
+    .spinner {
+        background: none;
+    }
+}
+
+.errorMessage {
+    color: var(--RedError);
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 700;
+}
+
+.emptyMessage {
+    color: var(--GrayFontColor);
+    font-size: 14px;
+    line-height: 20px;
+}
+
+.tableWrap {
+    overflow: auto;
+    border: 1px solid var(--GrayBorder);
+    border-radius: $sp-2;
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 420px;
+    }
+
+    th,
+    td {
+        text-align: left;
+        padding: $sp-3 $sp-4;
+        border-bottom: 1px solid var(--GrayBorder);
+        font-size: 14px;
+        line-height: 20px;
+    }
+
+    th {
+        color: var(--FontColor);
+        font-weight: 700;
+        background: var(--TableSubHeader);
+    }
+
+    td {
+        color: var(--FontColor);
+    }
+
+    tr:last-child td {
+        border-bottom: 0;
+    }
+}
