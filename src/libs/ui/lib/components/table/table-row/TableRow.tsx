@@ -25,15 +25,8 @@ interface Props<T> {
     colWidth?: {[key: string]: number}
     readonly preventDefault?: boolean
     allRows?: ReadonlyArray<T>
-    /** Per display-column rowSpan value; row spans this many rows. */
     readonly rowSpanByColumn?: ReadonlyArray<number | undefined>
-    /** Per display-column: when true, do not render this cell (it is under a previous rowSpan). */
     readonly skipCellByColumn?: ReadonlyArray<boolean>
-    /**
-     * Optional minimum index in displayColumns where expand content should start.
-     * Used to ensure expand rows align under a specific column group when rowSpan
-     * data alone is insufficient (e.g., single-row groups).
-     */
     readonly expandContentStartIndex?: number
 }
 

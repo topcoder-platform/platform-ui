@@ -635,7 +635,6 @@ export const TabContentReview: FC<Props> = (props: Props) => {
     )
     const filteredReviews = useMemo(
         () => {
-            console.log('resolvedReviewsWithSubmitter', resolvedReviewsWithSubmitter)
             if (!resolvedReviewsWithSubmitter.length) {
                 return resolvedReviewsWithSubmitter
             }
@@ -682,7 +681,6 @@ export const TabContentReview: FC<Props> = (props: Props) => {
     const hideHandleColumn = props.isActiveChallenge
         && actionChallengeRole === REVIEWER
 
-    console.log('reviewRows', isSubmitterView, shouldSortReviewTabByScore, reviewerRowsForReviewTab, filteredReviews)
     // show loading ui when fetching data
     const reviewRows = isSubmitterView
         ? (shouldSortReviewTabByScore ? submitterRowsForReviewTab : filteredSubmitterReviews)

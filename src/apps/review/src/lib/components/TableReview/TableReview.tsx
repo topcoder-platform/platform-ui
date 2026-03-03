@@ -703,11 +703,11 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
         // Combined Review/Appeals layout
         if (props.mode === 'combined-review-appeals') {
             const submissionGroupRowSpan = (
-                _row: SubmissionRow,
+                submissionRow: SubmissionRow,
                 rowIndex: number,
                 allRows: ReadonlyArray<SubmissionRow>,
             ): number => {
-                const submissionId = _row.id
+                const submissionId = submissionRow.id
                 let count = 0
                 for (let i = rowIndex; i < allRows.length; i++) {
                     if (allRows[i].id === submissionId) {
@@ -717,9 +717,6 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
                     }
                 }
 
-                // Return the number of data rows in this submission group; the shared
-                // Table component will translate this into the appropriate DOM rowSpan
-                // based on which rows actually render an expand row.
                 return count
             }
 

@@ -4,14 +4,11 @@
     display: flex;
     flex-direction: column;
 
-    // Remove bottom border only from Submission ID and Review Score cells so the line
-    // between human and AI reviewers spans Reviewer through Appeals (data-col-index set by TableRow)
     &:global(.enhanced-table) table tbody tr:global(.row-before-expand) td[data-col-index='0'],
     &:global(.enhanced-table) table tbody tr:global(.row-before-expand) td[data-col-index='1'] {
         border-bottom: none !important;
     }
 
-    // Use only bottom borders for row separation so all horizontal lines are 1px (no double border)
     &:global(.enhanced-table) table tbody tr:not(:global(.expand-row)) td {
         border-top: none !important;
     }
@@ -30,9 +27,6 @@
         }
     }
 
-    // AI expand row: draw a single 1px separator while keeping other expand
-    // rows borderless. The CollapsibleAiReviewsRow uses the local .aiReviews
-    // class so we can detect the AI row here.
     &:global(.enhanced-table) table tbody tr:global(.expand-row):has(.aiReviews) td {
         border-bottom: var(--TableBorderColor) solid 1px !important;
     }

@@ -39,11 +39,6 @@ interface TableProps<T> {
     readonly setColWidth?: Dispatch<SetStateAction<colWidthType>> | undefined
     readonly className?: string
     readonly preventDefault?: boolean
-    /**
-     * Optional minimum index in displayColumns where expand content should start.
-     * When provided, expand rows will render their content starting at or after
-     * this index, even if rowSpan-based skipCell data does not require it.
-     */
     readonly expandContentStartIndex?: number
 }
 
@@ -281,11 +276,6 @@ const Table: <T extends { [propertyName: string]: any }>(props: TableProps<T>) =
                     skipValues.push(skip)
                 }
 
-                // rowSpanValues are expressed in terms of data rows. When the table
-                // renders an expand row for each data row, the DOM rowSpan must
-                // cover those extra rows as well so that grouped cells continue to
-                // span the visual block correctly. We keep skip logic in data-row
-                // units and only translate to DOM units for the rendered rowSpan.
                 const displayRowSpanByRow: (number | undefined)[][] = props.showExpand
                     ? rowSpanValues.map(row => row.map(value => {
                         const n = value ?? 1
