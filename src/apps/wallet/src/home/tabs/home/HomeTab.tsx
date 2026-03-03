@@ -3,6 +3,7 @@ import { FC, useMemo } from 'react'
 
 import { UserProfile } from '~/libs/core'
 import { IconOutline, LinkButton, LoadingCircles } from '~/libs/ui'
+import { EnvironmentConfig } from '~/config'
 
 import { InfoRow, PayoutGuard } from '../../../lib'
 import { BannerImage, BannerText } from '../../../lib/assets/home'
@@ -189,7 +190,7 @@ const HomeTab: FC<HomeTabProps> = props => {
                         icon={IconOutline.ExternalLinkIcon}
                         target='_blank'
                         rel='noopener noreferrer'
-                        to='https://www.topcoder.com/thrive/articles/payment-policies-and-instructions'
+                        to={`${EnvironmentConfig.TOPCODER_URL}/thrive/articles/payment-policies-and-instructions`}
                         className={styles.paymentGuideLink}
                     />
                 </div>
