@@ -2,6 +2,7 @@
 /* eslint-disable unicorn/no-null */
 /* eslint-disable max-len */
 /* eslint-disable react/jsx-no-bind */
+/* eslint-disable complexity */
 import React from 'react'
 
 import { Button, Collapsible } from '~/libs/ui'
@@ -15,6 +16,7 @@ import { fetchAuditLogs, fetchPayoutAuditLogs, getMemberHandle } from '../../ser
 import styles from './PaymentView.module.scss'
 
 interface PaymentViewProps {
+    isPoints?: boolean
     payment: Winning
 }
 
@@ -115,9 +117,9 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
                         </div>
 
                         <div className={styles.infoItem}>
-                            <span className={styles.label}>Payment</span>
+                            <span className={styles.label}>{props.isPoints ? 'Points' : 'Payment'}</span>
                             <p className={styles.value}>
-                                {props.payment.grossAmountNumber.toLocaleString(undefined, {
+                                {props.isPoints ? `${props.payment.grossAmountNumber}` : props.payment.grossAmountNumber.toLocaleString(undefined, {
                                     currency: 'USD',
                                     style: 'currency',
                                 })}
