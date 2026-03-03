@@ -8,7 +8,7 @@ import styles from './ProfileCompleteness.module.scss'
 interface ProfileCompletenessProps {
     profile: UserProfile
     authProfile: UserProfile | undefined
-    isAdminOrTM: boolean
+    isAdminOrTM?: boolean
 }
 
 const ProfileCompleteness: FC<ProfileCompletenessProps> = props => {
