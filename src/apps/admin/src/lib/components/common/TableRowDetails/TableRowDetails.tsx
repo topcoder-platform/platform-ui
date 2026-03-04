@@ -31,7 +31,10 @@ export const TableRowDetails: <T extends { [propertyName: string]: any }>(
                         <tr key={getKey([indexColumns])} className={classNames({})}>
                             {itemColumns.map(
                                 (itemItemColumns, indexItemColumns) => {
-                                    const { rowSpan: rowSpanOrFn, ...cellColumnProps } = itemItemColumns
+                                    const {
+                                        rowSpan: rowSpanOrFn,
+                                        ...cellColumnProps
+                                    }: DetailsTableColumn<T> = itemItemColumns
                                     const rowSpan = typeof rowSpanOrFn === 'function'
                                         ? rowSpanOrFn(props.data, 0, [props.data])
                                         : rowSpanOrFn
