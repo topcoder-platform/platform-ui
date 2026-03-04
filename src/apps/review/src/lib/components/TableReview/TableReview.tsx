@@ -64,8 +64,7 @@ import type {
     SubmissionReviewerRow,
     SubmissionRow,
 } from '../common/types'
-import { buildSubmissionReviewerRows } from '../common/types'
-import { resolveSubmissionReviewResult } from '../common/reviewResult'
+import { buildSubmissionReviewerRows, resolveSubmissionReviewResult } from '../common/reviewResult'
 import { shouldIncludeInReviewPhase } from '../../utils/reviewPhaseGuards'
 import { CollapsibleAiReviewsRow } from '../CollapsibleAiReviewsRow'
 

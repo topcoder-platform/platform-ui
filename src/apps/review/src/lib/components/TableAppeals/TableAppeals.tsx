@@ -45,9 +45,9 @@ import type {
     SubmissionReviewerRow,
     SubmissionRow,
 } from '../common/types'
-import { buildSubmissionReviewerRows } from '../common/types'
 import type { AggregatedSubmissionReviews } from '../../utils/aggregateSubmissionReviews'
 import { CollapsibleAiReviewsRow } from '../CollapsibleAiReviewsRow'
+import { buildSubmissionReviewerRows } from '../common/reviewResult'
 
 import styles from './TableAppeals.module.scss'
 

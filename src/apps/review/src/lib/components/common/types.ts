@@ -30,33 +30,6 @@ export interface SubmissionReviewerRow extends SubmissionRow {
     /** True when this is the last reviewer row for the submission. */
     isLastReviewerRow: boolean
 }
-
-/**
- * Build a flattened list of per-reviewer rows from aggregated submission rows.
- * Each SubmissionRow is expanded to one or more SubmissionReviewerRow entries.
- */
-export function buildSubmissionReviewerRows(
-    submissions: SubmissionRow[],
-): SubmissionReviewerRow[] {
-    const rows: SubmissionReviewerRow[] = []
-
-    submissions.forEach(submission => {
-        const reviews = submission.aggregated?.reviews ?? []
-        const reviewCount = reviews.length || 1
-
-        for (let reviewerIndex = 0; reviewerIndex < reviewCount; reviewerIndex += 1) {
-            rows.push({
-                ...submission,
-                isFirstReviewerRow: reviewerIndex === 0,
-                isLastReviewerRow: reviewerIndex === reviewCount - 1,
-                reviewerIndex,
-            })
-        }
-    })
-
-    return rows
-}
-
 /**
  * Shared configuration available to column renderers that need challenge-level context.
  */
