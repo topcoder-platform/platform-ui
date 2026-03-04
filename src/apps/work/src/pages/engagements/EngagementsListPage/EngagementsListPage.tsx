@@ -21,6 +21,7 @@ import {
 import {
     ENGAGEMENTS_APP_URL,
     PAGE_SIZE,
+    PROJECT_STATUS,
 } from '../../../lib/constants'
 import {
     WorkAppContext,
@@ -571,31 +572,57 @@ export const EngagementsListPage: FC = () => {
     const assignmentsBackUrl = isAllEngagementsPage
         ? '/engagements'
         : `/projects/${projectId}/engagements`
+    const isProjectActive = String(projectResult.project?.status || '')
+        .trim()
+        .toLowerCase() === PROJECT_STATUS.ACTIVE
+    const isCreateActionDisabled = !!projectId && !isProjectActive
 
     const rightHeader = projectId
         ? (
             <div className={styles.headerActions}>
-                <Link
-                    className={styles.headerActionLink}
-                    to={`/projects/${projectId}/challenges/new`}
-                >
-                    <Button
-                        label='Create Challenge'
-                        primary
-                        size='md'
-                    />
-                </Link>
+                {isCreateActionDisabled
+                    ? (
+                        <Button
+                            label='Create Challenge'
+                            primary
+                            size='md'
+                            disabled
+                        />
+                    )
+                    : (
+                        <Link
+                            className={styles.headerActionLink}
+                            to={`/projects/${projectId}/challenges/new`}
+                        >
+                            <Button
+                                label='Create Challenge'
+                                primary
+                                size='md'
+                            />
+                        </Link>
+                    )}
 
-                <Link
-                    className={styles.headerActionLink}
-                    to={`/projects/${projectId}/engagements/new`}
-                >
-                    <Button
-                        label='Create Engagement'
-                        secondary
-                        size='md'
-                    />
-                </Link>
+                {isCreateActionDisabled
+                    ? (
+                        <Button
+                            label='Create Engagement'
+                            secondary
+                            size='md'
+                            disabled
+                        />
+                    )
+                    : (
+                        <Link
+                            className={styles.headerActionLink}
+                            to={`/projects/${projectId}/engagements/new`}
+                        >
+                            <Button
+                                label='Create Engagement'
+                                secondary
+                                size='md'
+                            />
+                        </Link>
+                    )}
             </div>
         )
         : undefined

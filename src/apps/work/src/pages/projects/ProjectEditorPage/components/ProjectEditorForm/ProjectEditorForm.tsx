@@ -322,7 +322,7 @@ export const ProjectEditorForm: FC<ProjectEditorFormProps> = (props: ProjectEdit
             setIsSaving(true)
 
             try {
-                const billingAccountId = normalizeOptionalStringValue(formData.billingAccountId)
+                const normalizedBillingAccountId = normalizeOptionalStringValue(formData.billingAccountId)
                 const termsValue = normalizeOptionalStringValue(formData.terms)
                 const terms = termsValue
                     ? [termsValue]
@@ -331,7 +331,7 @@ export const ProjectEditorForm: FC<ProjectEditorFormProps> = (props: ProjectEdit
 
                 if (!props.isEdit) {
                     const payload: CreateProjectPayload = {
-                        billingAccountId,
+                        billingAccountId: normalizedBillingAccountId,
                         description: formData.description,
                         groups,
                         name: formData.name,
@@ -354,7 +354,7 @@ export const ProjectEditorForm: FC<ProjectEditorFormProps> = (props: ProjectEdit
                 }
 
                 const payload: UpdateProjectPayload = {
-                    billingAccountId,
+                    billingAccountId: normalizedBillingAccountId || '',
                     description: formData.description,
                     groups,
                     name: formData.name,

@@ -20,6 +20,7 @@ import {
 
 import {
     PAGE_SIZE,
+    PROJECT_STATUS,
 } from '../../../lib'
 import {
     WorkAppContext,
@@ -81,6 +82,61 @@ function useErrorToast(
             toast.error(message)
         }
     }, [error, messageRef])
+}
+
+interface RenderCreateActionButtonParams {
+    actionPath: string
+    disabled: boolean
+    label: string
+    primary?: boolean
+    secondary?: boolean
+}
+
+function renderCreateActionButton(params: RenderCreateActionButtonParams): JSX.Element {
+    const button = (
+        <Button
+            label={params.label}
+            primary={params.primary}
+            secondary={params.secondary}
+            size='md'
+            disabled={params.disabled}
+        />
+    )
+
+    if (params.disabled) {
+        return button
+    }
+
+    return (
+        <Link to={params.actionPath} className={styles.headerActionLink}>
+            {button}
+        </Link>
+    )
+}
+
+interface RenderHeaderActionsParams {
+    disabled: boolean
+    projectId: string
+}
+
+function renderHeaderActions(params: RenderHeaderActionsParams): JSX.Element {
+    return (
+        <div className={styles.headerActions}>
+            {renderCreateActionButton({
+                actionPath: `/projects/${params.projectId}/challenges/new`,
+                disabled: params.disabled,
+                label: 'Create Challenge',
+                primary: true,
+            })}
+
+            {renderCreateActionButton({
+                actionPath: `/projects/${params.projectId}/engagements/new`,
+                disabled: params.disabled,
+                label: 'Create Engagement',
+                secondary: true,
+            })}
+        </div>
+    )
 }
 
 interface RenderChallengesContentParams {
@@ -285,27 +341,16 @@ export const ChallengesListPage: FC = () => {
     const pageTitle = projectIdFromRoute && projectResult.project?.name
         ? projectResult.project.name
         : 'Challenges'
+    const isProjectActive = String(projectResult.project?.status || '')
+        .trim()
+        .toLowerCase() === PROJECT_STATUS.ACTIVE
+    const isCreateActionDisabled = !!projectIdFromRoute && !isProjectActive
 
     const rightHeader = projectIdFromRoute
-        ? (
-            <div className={styles.headerActions}>
-                <Link to={`/projects/${projectIdFromRoute}/challenges/new`} className={styles.headerActionLink}>
-                    <Button
-                        label='Create Challenge'
-                        primary
-                        size='md'
-                    />
-                </Link>
-
-                <Link to={`/projects/${projectIdFromRoute}/engagements/new`} className={styles.headerActionLink}>
-                    <Button
-                        label='Create Engagement'
-                        secondary
-                        size='md'
-                    />
-                </Link>
-            </div>
-        )
+        ? renderHeaderActions({
+            disabled: isCreateActionDisabled,
+            projectId: projectIdFromRoute,
+        })
         : undefined
 
     const titleAction = projectIdFromRoute

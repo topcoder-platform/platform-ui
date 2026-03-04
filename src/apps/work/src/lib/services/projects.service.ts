@@ -719,24 +719,28 @@ export async function fetchProjectBillingAccount(
 
 /**
  * Fetch project type metadata.
+ *
+ * Uses the consolidated metadata endpoint first to avoid known 403 responses
+ * from `/metadata/projectTypes` in environments that enforce explicit route
+ * authorization metadata.
  */
 export async function fetchProjectTypes(): Promise<ProjectType[]> {
     try {
-        const response = await xhrGetAsync<unknown>(PROJECT_TYPES_API_URL)
+        const response = await xhrGetAsync<unknown>(PROJECT_METADATA_API_URL)
 
         return extractProjectTypes(response)
-    } catch (error) {
-        if (hasAuthorizationMetadataError(error)) {
-            try {
-                const response = await xhrGetAsync<unknown>(PROJECT_METADATA_API_URL)
+    } catch (metadataError) {
+        try {
+            const response = await xhrGetAsync<unknown>(PROJECT_TYPES_API_URL)
 
-                return extractProjectTypes(response)
-            } catch (fallbackError) {
-                throw normalizeError(fallbackError, 'Failed to fetch project types')
+            return extractProjectTypes(response)
+        } catch (projectTypesError) {
+            if (hasAuthorizationMetadataError(projectTypesError)) {
+                throw normalizeError(metadataError, 'Failed to fetch project types')
             }
-        }
 
-        throw normalizeError(error, 'Failed to fetch project types')
+            throw normalizeError(projectTypesError, 'Failed to fetch project types')
+        }
     }
 }
 
