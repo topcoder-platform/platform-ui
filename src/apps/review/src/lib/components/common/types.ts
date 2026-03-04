@@ -18,6 +18,46 @@ export interface SubmissionRow extends SubmissionInfo {
 }
 
 /**
+ * Flattened row shape representing a single reviewer entry for a submission.
+ * Each logical submission can expand to multiple SubmissionReviewerRow entries
+ * (one per reviewer), while preserving the original submission fields.
+ */
+export interface SubmissionReviewerRow extends SubmissionRow {
+    /** Zero-based index of the reviewer within aggregated.reviews for this submission. */
+    reviewerIndex: number
+    /** True when this is the first reviewer row for the submission. */
+    isFirstReviewerRow: boolean
+    /** True when this is the last reviewer row for the submission. */
+    isLastReviewerRow: boolean
+}
+
+/**
+ * Build a flattened list of per-reviewer rows from aggregated submission rows.
+ * Each SubmissionRow is expanded to one or more SubmissionReviewerRow entries.
+ */
+export function buildSubmissionReviewerRows(
+    submissions: SubmissionRow[],
+): SubmissionReviewerRow[] {
+    const rows: SubmissionReviewerRow[] = []
+
+    submissions.forEach(submission => {
+        const reviews = submission.aggregated?.reviews ?? []
+        const reviewCount = reviews.length || 1
+
+        for (let reviewerIndex = 0; reviewerIndex < reviewCount; reviewerIndex += 1) {
+            rows.push({
+                ...submission,
+                reviewerIndex,
+                isFirstReviewerRow: reviewerIndex === 0,
+                isLastReviewerRow: reviewerIndex === reviewCount - 1,
+            })
+        }
+    })
+
+    return rows
+}
+
+/**
  * Shared configuration available to column renderers that need challenge-level context.
  */
 export interface ColumnRendererConfig {

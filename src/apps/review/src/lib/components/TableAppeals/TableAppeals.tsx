@@ -43,7 +43,9 @@ import type {
     DownloadButtonConfig,
     ScoreVisibilityConfig,
     SubmissionRow,
+    SubmissionReviewerRow,
 } from '../common/types'
+import { buildSubmissionReviewerRows } from '../common/types'
 import type { AggregatedSubmissionReviews } from '../../utils/aggregateSubmissionReviews'
 import { CollapsibleAiReviewsRow } from '../CollapsibleAiReviewsRow'
 
@@ -209,15 +211,9 @@ export const TableAppeals: FC<TableAppealsProps> = (props: TableAppealsProps) =>
         restrictToLatest,
     ])
 
-    const maxReviewCount = useMemo<number>(
-        () => aggregatedResults.reduce(
-            (maxCount, result) => {
-                const reviewCount = result.reviews?.length ?? 0
-                return reviewCount > maxCount ? reviewCount : maxCount
-            },
-            0,
-        ),
-        [aggregatedResults],
+    const reviewerRows = useMemo<SubmissionReviewerRow[]>(
+        () => buildSubmissionReviewerRows(aggregatedRows),
+        [aggregatedRows],
     )
 
     const { canViewAllSubmissions }: UseRolePermissionsResult = useRolePermissions()
@@ -302,95 +298,89 @@ export const TableAppeals: FC<TableAppealsProps> = (props: TableAppealsProps) =>
         ],
     )
 
-    const columns = useMemo<TableColumn<SubmissionRow>[]>(() => {
-        const submissionIdColumn: TableColumn<SubmissionRow> = {
+    const columns = useMemo<TableColumn<SubmissionReviewerRow>[]>(() => {
+        const submissionIdColumn: TableColumn<SubmissionReviewerRow> = {
             className: styles.submissionColumn,
             columnId: 'submission-id',
             label: 'Submission ID',
             propertyName: 'id',
-            renderer: (submission: SubmissionRow) => renderSubmissionIdCell(
-                submission,
-                downloadButtonConfig,
+            renderer: (row: SubmissionReviewerRow) => (
+                row.isFirstReviewerRow
+                    ? renderSubmissionIdCell(row, downloadButtonConfig)
+                    : <span />
             ),
             type: 'element',
         }
 
-        const baseColumns: TableColumn<SubmissionRow>[] = [submissionIdColumn]
+        const baseColumns: TableColumn<SubmissionReviewerRow>[] = [submissionIdColumn]
 
         if (!hideHandleColumn) {
             baseColumns.push({
                 columnId: 'handle-aggregated',
                 label: 'Submitter',
                 propertyName: 'handle',
-                renderer: renderSubmitterHandleCell,
+                renderer: (row: SubmissionReviewerRow) => (
+                    row.isFirstReviewerRow
+                        ? renderSubmitterHandleCell(row)
+                        : <span />
+                ),
                 type: 'element',
             })
         }
-
-        baseColumns.push({
-            columnId: 'review-date',
-            label: 'Review Date',
-            renderer: renderReviewDateCell,
-            type: 'element',
-        })
 
         if (shouldShowAggregatedReviewScore) {
             baseColumns.push({
                 columnId: 'review-score',
                 label: 'Review Score',
-                renderer: (submission: SubmissionRow) => renderReviewScoreCell(
-                    submission,
-                    scoreVisibilityConfig,
+                renderer: (row: SubmissionReviewerRow) => (
+                    row.isFirstReviewerRow
+                        ? renderReviewScoreCell(row, scoreVisibilityConfig)
+                        : <span />
                 ),
                 type: 'element',
             })
         }
 
-        for (let index = 0; index < maxReviewCount; index += 1) {
-            const reviewerLabel = maxReviewCount === 1
-                ? 'Reviewer'
-                : `Reviewer ${index + 1}`
-            const scoreLabel = maxReviewCount === 1
-                ? 'Score'
-                : `Score ${index + 1}`
-            const appealsLabel = maxReviewCount === 1
-                ? 'Appeals'
-                : `Appeals ${index + 1}`
-
-            baseColumns.push({
-                columnId: `reviewer-${index}`,
-                label: reviewerLabel,
-                renderer: (submission: SubmissionRow) => renderReviewerCell(
-                    submission,
-                    index,
+        baseColumns.push(
+            {
+                columnId: 'reviewer',
+                label: 'Reviewer',
+                renderer: (row: SubmissionReviewerRow) => renderReviewerCell(
+                    row,
+                    row.reviewerIndex,
                 ),
                 type: 'element',
-            })
+            },
+            {
+                columnId: 'review-date',
+                label: 'Review Date',
+                renderer: (row: SubmissionReviewerRow) => renderReviewDateCell(row),
+                type: 'element',
+            },
+            {
+                columnId: 'score',
+                label: 'Score',
+                renderer: (row: SubmissionReviewerRow) => renderScoreCell(
+                    row,
+                    row.reviewerIndex,
+                    scoreVisibilityConfig,
+                ),
+                type: 'element',
+            },
+        )
 
+        if (allowsAppeals) {
             baseColumns.push({
-                columnId: `score-${index}`,
-                label: scoreLabel,
-                renderer: (submission: SubmissionRow) => renderScoreCell(
-                    submission,
-                    index,
+                className: styles.tableCellNoWrap,
+                columnId: 'appeals',
+                label: 'Appeals',
+                renderer: (row: SubmissionReviewerRow) => renderAppealsCell(
+                    row,
+                    row.reviewerIndex,
                     scoreVisibilityConfig,
                 ),
                 type: 'element',
             })
-
-            if (allowsAppeals) {
-                baseColumns.push({
-                    className: styles.tableCellNoWrap,
-                    columnId: `appeals-${index}`,
-                    label: appealsLabel,
-                    renderer: (submission: SubmissionRow) => renderAppealsCell(
-                        submission,
-                        index,
-                        scoreVisibilityConfig,
-                    ),
-                    type: 'element',
-                })
-            }
         }
 
         if (props.aiReviewers) {
@@ -398,16 +388,25 @@ export const TableAppeals: FC<TableAppealsProps> = (props: TableAppealsProps) =>
                 columnId: 'ai-reviews-table',
                 isExpand: true,
                 label: '',
-                renderer: (submission: SubmissionRow, allRows: SubmissionRow[]) => (
-                    props.aiReviewers && (
+                renderer: (row: SubmissionReviewerRow, allRows: SubmissionReviewerRow[]) => {
+                    if (!row.isLastReviewerRow || !props.aiReviewers) {
+                        return <span />
+                    }
+
+                    const firstIndexForSubmission = allRows.findIndex(candidate => (
+                        candidate.id === row.id && candidate.isFirstReviewerRow
+                    ))
+                    const defaultOpen = firstIndexForSubmission === 0
+
+                    return (
                         <CollapsibleAiReviewsRow
                             className={styles.aiReviews}
                             aiReviewers={props.aiReviewers}
-                            submission={submission as any}
-                            defaultOpen={allRows ? !allRows.indexOf(submission) : false}
+                            submission={row as any}
+                            defaultOpen={defaultOpen}
                         />
                     )
-                ),
+                },
                 type: 'element',
             })
         }
@@ -417,12 +416,11 @@ export const TableAppeals: FC<TableAppealsProps> = (props: TableAppealsProps) =>
         allowsAppeals,
         downloadButtonConfig,
         hideHandleColumn,
-        maxReviewCount,
         scoreVisibilityConfig,
         shouldShowAggregatedReviewScore,
     ])
 
-    const columnsMobile = useMemo<MobileTableColumn<SubmissionRow>[][]>(
+    const columnsMobile = useMemo<MobileTableColumn<SubmissionReviewerRow>[][]>(
         () => columns.map(column => ([
             column.label && {
                 columnId: `${column.columnId}-label`,
@@ -444,7 +442,7 @@ export const TableAppeals: FC<TableAppealsProps> = (props: TableAppealsProps) =>
                 label: '',
                 mobileType: 'last-value',
             },
-        ]).filter(Boolean) as MobileTableColumn<SubmissionRow>[]),
+        ]).filter(Boolean) as MobileTableColumn<SubmissionReviewerRow>[]),
         [columns],
     )
 
@@ -459,11 +457,11 @@ export const TableAppeals: FC<TableAppealsProps> = (props: TableAppealsProps) =>
             )}
         >
             {isTablet ? (
-                <TableMobile columns={columnsMobile} data={aggregatedRows} />
+                <TableMobile columns={columnsMobile} data={reviewerRows} />
             ) : (
                 <Table
                     columns={columns}
-                    data={aggregatedRows}
+                    data={reviewerRows}
                     showExpand
                     expandMode='always'
                     disableSorting
