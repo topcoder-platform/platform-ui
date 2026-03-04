@@ -736,12 +736,13 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
                 columnId: 'ai-reviews-table',
                 isExpand: true,
                 label: '',
-                renderer: (row: SubmissionReviewerRow, allRows: SubmissionReviewerRow[]) => {
+                renderer: (row: SubmissionReviewerRow, allRows?: SubmissionReviewerRow[]) => {
                     if (!row.isLastReviewerRow || !props.aiReviewers) {
                         return <span />
                     }
 
-                    const firstIndexForSubmission = allRows.findIndex(candidate => (
+                    const rows = allRows ?? []
+                    const firstIndexForSubmission = rows.findIndex(candidate => (
                         candidate.id === row.id && candidate.isFirstReviewerRow
                     ))
                     const defaultOpen = firstIndexForSubmission === 0
