@@ -61,8 +61,8 @@ import {
 import type {
     DownloadButtonConfig,
     ScoreVisibilityConfig,
-    SubmissionRow,
     SubmissionReviewerRow,
+    SubmissionRow,
 } from '../common/types'
 import { buildSubmissionReviewerRows } from '../common/types'
 import { resolveSubmissionReviewResult } from '../common/reviewResult'

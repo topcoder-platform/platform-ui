@@ -47,9 +47,9 @@ export function buildSubmissionReviewerRows(
         for (let reviewerIndex = 0; reviewerIndex < reviewCount; reviewerIndex += 1) {
             rows.push({
                 ...submission,
-                reviewerIndex,
                 isFirstReviewerRow: reviewerIndex === 0,
                 isLastReviewerRow: reviewerIndex === reviewCount - 1,
+                reviewerIndex,
             })
         }
     })
