@@ -324,7 +324,7 @@ export const TableAppealsResponse: FC<TableAppealsResponseProps> = (props: Table
 
     const columns = useMemo<TableColumn<SubmissionReviewerRow>[]>(() => {
         const submissionIdColumn: TableColumn<SubmissionReviewerRow> = {
-            className: styles.submissionColumn,
+            className: classNames(styles.submissionColumn, 'no-row-border'),
             columnId: 'submission-id',
             label: 'Submission ID',
             propertyName: 'id',
@@ -340,6 +340,7 @@ export const TableAppealsResponse: FC<TableAppealsResponseProps> = (props: Table
 
         if (!hideHandleColumn) {
             baseColumns.push({
+                className: 'no-row-border',
                 columnId: 'handle-aggregated',
                 label: 'Submitter',
                 propertyName: 'handle',
@@ -353,6 +354,7 @@ export const TableAppealsResponse: FC<TableAppealsResponseProps> = (props: Table
         }
 
         baseColumns.push({
+            className: 'no-row-border',
             columnId: 'review-score',
             label: 'Review Score',
             renderer: (row: SubmissionReviewerRow) => (

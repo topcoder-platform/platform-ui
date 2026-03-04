@@ -610,7 +610,7 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
 
     const columns = useMemo<TableColumn<SubmissionReviewerRow>[]>(() => {
         const submissionIdColumn: TableColumn<SubmissionReviewerRow> = {
-            className: styles.submissionColumn,
+            className: classNames(styles.submissionColumn, 'no-row-border'),
             columnId: 'submission-id',
             label: 'Submission ID',
             propertyName: 'id',
@@ -626,6 +626,7 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
 
         if (!hideHandleColumn) {
             baseColumns.push({
+                className: 'no-row-border',
                 columnId: 'handle-aggregated',
                 label: 'Submitter',
                 propertyName: 'handle',
@@ -637,6 +638,18 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
                 type: 'element',
             })
         }
+
+        baseColumns.push({
+            className: 'no-row-border',
+            columnId: 'review-score',
+            label: 'Review Score',
+            renderer: (row: SubmissionReviewerRow) => (
+                row.isFirstReviewerRow
+                    ? renderReviewScoreCell(row, scoreVisibilityConfig)
+                    : <span />
+            ),
+            type: 'element',
+        })
 
         baseColumns.push(
             {
@@ -652,16 +665,6 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
                 columnId: 'review-date',
                 label: 'Review Date',
                 renderer: (row: SubmissionReviewerRow) => renderReviewDateCell(row),
-                type: 'element',
-            },
-            {
-                columnId: 'review-score',
-                label: 'Review Score',
-                renderer: (row: SubmissionReviewerRow) => (
-                    row.isFirstReviewerRow
-                        ? renderReviewScoreCell(row, scoreVisibilityConfig)
-                        : <span />
-                ),
                 type: 'element',
             },
             {
