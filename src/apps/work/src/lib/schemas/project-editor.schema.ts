@@ -21,11 +21,7 @@ export function createProjectEditorSchema(
         .object({
             billingAccountId: yup
                 .string()
-                .when([], {
-                    is: () => !isEdit,
-                    otherwise: schema => schema.optional(),
-                    then: schema => schema.required('Billing account is required'),
-                }),
+                .required('Billing account is required'),
             cancelReason: yup
                 .string()
                 .when('status', {

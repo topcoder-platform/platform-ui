@@ -31,6 +31,7 @@ import {
     Pagination,
     ProjectBillingAccountExpiredNotice,
     ProjectListTabs,
+    ProjectStatus,
 } from '../../../lib/components'
 import {
     useFetchChallenges,
@@ -356,6 +357,9 @@ export const ChallengesListPage: FC = () => {
     const titleAction = projectIdFromRoute
         ? (
             <div className={styles.projectTitleActions}>
+                {projectResult.project?.status
+                    ? <ProjectStatus status={projectResult.project.status} />
+                    : undefined}
                 <Link
                     aria-label='Edit project'
                     className={styles.projectEditLink}
