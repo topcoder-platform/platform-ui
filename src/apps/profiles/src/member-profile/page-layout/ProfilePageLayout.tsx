@@ -1,6 +1,6 @@
 import { Dispatch, FC, SetStateAction, useState } from 'react'
 
-import { downloadProfileAsync, UserProfile } from '~/libs/core'
+import { downloadProfileAsync, UserProfile, UserRole } from '~/libs/core'
 import { Button, ContentLayout, IconSolid, PageTitle } from '~/libs/ui'
 
 // import { MemberTCActivityInfo } from '../tc-activity'
@@ -30,6 +30,13 @@ interface ProfilePageLayoutProps {
 const ProfilePageLayout: FC<ProfilePageLayoutProps> = (props: ProfilePageLayoutProps) => {
 
     const canDownload: boolean = canDownloadProfile(props.authProfile, props.profile)
+
+    const isAdminOrTM = props.authProfile?.roles?.includes(UserRole.administrator)
+        || props.authProfile?.roles?.includes(UserRole.talentManager)
+
+    const isSelf = props.authProfile?.handle === props.profile.handle
+
+    const canSeeProfileCompleteness = isSelf || isAdminOrTM
 
     const [isDownloading, setIsDownloading]: [boolean, Dispatch<SetStateAction<boolean>>]
         = useState<boolean>(false)
@@ -116,8 +123,12 @@ const ProfilePageLayout: FC<ProfilePageLayoutProps> = (props: ProfilePageLayoutP
                         )}
                     </div>
                     <div className={styles.profileInfoRight}>
-                        {props.authProfile?.handle === props.profile.handle && (
-                            <ProfileCompleteness profile={props.profile} authProfile={props.authProfile} />
+                        {canSeeProfileCompleteness && (
+                            <ProfileCompleteness
+                                profile={props.profile}
+                                isAdminOrTM={isAdminOrTM}
+                                isSelf={isSelf}
+                            />
                         )}
                         <div className={styles.sectionWrap}>
                             <div className={styles.skillsWrap}>

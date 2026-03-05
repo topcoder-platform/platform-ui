@@ -3,7 +3,7 @@ import { orderBy, uniqBy } from 'lodash'
 import useSWR, { SWRResponse } from 'swr'
 
 import { EnvironmentConfig } from '~/config'
-import { xhrGetAsync, xhrGetBlobAsync } from '~/libs/core'
+import { xhrGetAsync, xhrGetBlobAsync, xhrPostAsync } from '~/libs/core'
 import { handleError } from '~/libs/shared/lib/utils/handle-error'
 
 import { AiFeedbackItem, Scorecard } from '../models'
@@ -72,6 +72,10 @@ export type AiWorkflowRunItem = AiFeedbackItem
 
 const TC_API_BASE_URL = EnvironmentConfig.API.V6
 
+export const getAiWorkflowRunsCacheKey = (submissionId: string): string => (
+    `${TC_API_BASE_URL}/workflows/runs?submissionId=${submissionId}`
+)
+
 export interface AiWorkflowRunsResponse {
     runs: AiWorkflowRun[]
     isLoading: boolean
@@ -98,6 +102,10 @@ export interface AiWorkflowRunArtifactDownloadResponse {
     isDownloading: boolean
 }
 
+interface RetriggerAiWorkflowRunRequest {
+    workflowRunId: string
+}
+
 export const aiRunInProgress = (aiRun: Pick<AiWorkflowRun, 'status'>): boolean => [
     AiWorkflowRunStatusEnum.INIT,
     AiWorkflowRunStatusEnum.QUEUED,
@@ -120,7 +128,7 @@ export function useFetchAiWorkflowsRuns(
         error: fetchError,
         isValidating: isLoading,
     }: SWRResponse<AiWorkflowRun[], Error> = useSWR<AiWorkflowRun[], Error>(
-        `${TC_API_BASE_URL}/workflows/runs?submissionId=${submissionId}`,
+        getAiWorkflowRunsCacheKey(submissionId),
         {
             isPaused: () => !submissionId,
             refreshInterval: hasInProgress.current ? 10 * 1000 : 0,
@@ -142,7 +150,7 @@ export function useFetchAiWorkflowsRuns(
         }
     }, [fetchError])
 
-    const uniqueRuns = uniqBy(orderBy(runs, 'completedAt', 'desc'), 'workflow.id')
+    const uniqueRuns = uniqBy(orderBy(runs, ['startedAt', 'completedAt'], ['desc', 'desc']), 'workflow.id')
         .reverse()
 
     return {
@@ -253,3 +261,10 @@ export function useDownloadAiWorkflowsRunArtifact(
         isDownloading,
     }
 }
+
+export const retriggerAiWorkflowRun = async (workflowRunId: string): Promise<AiWorkflowRun> => (
+    xhrPostAsync<RetriggerAiWorkflowRunRequest, AiWorkflowRun>(
+        `${TC_API_BASE_URL}/workflows/runs/retrigger`,
+        { workflowRunId },
+    )
+)

@@ -11,10 +11,11 @@ import {
 } from '~/libs/core'
 
 import {
+    profileCompletionRouteId,
     rootRoute,
-    talentSearchRouteId,
 } from './config/routes.config'
 import { customerPortalTalentSearchRoutes } from './pages/talent-search/talent-search.routes'
+import { customerPortalProfileCompletionRoutes } from './pages/profile-completion/profile-completion.routes'
 
 const CustomerPortalApp: LazyLoadedComponent = lazyLoad(() => import('./CustomerPortalApp'))
 
@@ -27,9 +28,10 @@ export const customerPortalRoutes: ReadonlyArray<PlatformRoute> = [
         children: [
             {
                 authRequired: true,
-                element: <Rewrite to={talentSearchRouteId} />,
+                element: <Rewrite to={profileCompletionRouteId} />,
                 route: '',
             },
+            ...customerPortalProfileCompletionRoutes,
             ...customerPortalTalentSearchRoutes,
         ],
         domain: AppSubdomain.customer,
@@ -37,7 +39,6 @@ export const customerPortalRoutes: ReadonlyArray<PlatformRoute> = [
         id: toolTitle,
         rolesRequired: [
             UserRole.administrator,
-            UserRole.projectManager,
             UserRole.talentManager,
         ],
         route: rootRoute,

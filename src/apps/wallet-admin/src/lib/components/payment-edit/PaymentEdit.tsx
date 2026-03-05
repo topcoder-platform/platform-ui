@@ -14,6 +14,7 @@ import styles from './PaymentEdit.module.scss'
 interface PaymentEditFormProps {
     payment: Winning
     canSave?: (canSave: boolean) => void
+    isPointsEdit?: boolean
     onValueUpdated?: ({
         releaseDate, grossAmount, paymentStatus, auditNote,
     }: {
@@ -231,10 +232,10 @@ const PaymentEdit: React.FC<PaymentEditFormProps> = (props: PaymentEditFormProps
 
                 <InputText
                     name='grossPayment'
-                    label='Gross Payment'
+                    label={props.isPointsEdit ? 'Points amount' : 'Gross Payment'}
                     type='number'
                     disabled={disableEdits}
-                    placeholder='Modify Gross Payment Amount'
+                    placeholder={props.isPointsEdit ? 'Modify Points Amount' : 'Modify Gross Payment Amount'}
                     dirty
                     tabIndex={0}
                     error={grossAmountErrorString}
@@ -255,19 +256,21 @@ const PaymentEdit: React.FC<PaymentEditFormProps> = (props: PaymentEditFormProps
                     onChange={e => handleInputChange('description', e.target.value)}
                 />
 
-                <InputSelect
-                    tabIndex={-1}
-                    dirty
-                    name='paymentStatus'
-                    label='Payment Status'
-                    options={options()}
-                    value={paymentStatus}
-                    onChange={e => {
-                        setDisableEdits(e.target.value === 'Cancel')
-                        handleInputChange('paymentStatus', e.target.value)
-                    }}
-                />
-                {props.payment.status.toUpperCase() !== 'PAID' && (
+                {!props.isPointsEdit && (
+                    <InputSelect
+                        tabIndex={-1}
+                        dirty
+                        name='paymentStatus'
+                        label='Payment Status'
+                        options={options()}
+                        value={paymentStatus}
+                        onChange={e => {
+                            setDisableEdits(e.target.value === 'Cancel')
+                            handleInputChange('paymentStatus', e.target.value)
+                        }}
+                    />
+                )}
+                {props.payment.status.toUpperCase() !== 'PAID' && !props.isPointsEdit && (
                     <InputDatePicker
                         tabIndex={-2}
                         disabled={disableEdits}

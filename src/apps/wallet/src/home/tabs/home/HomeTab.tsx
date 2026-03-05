@@ -3,6 +3,7 @@ import { FC, useMemo } from 'react'
 
 import { UserProfile } from '~/libs/core'
 import { IconOutline, LinkButton, LoadingCircles } from '~/libs/ui'
+import { EnvironmentConfig } from '~/config'
 
 import { InfoRow, PayoutGuard } from '../../../lib'
 import { BannerImage, BannerText } from '../../../lib/assets/home'
@@ -179,7 +180,20 @@ const HomeTab: FC<HomeTabProps> = props => {
     return (
         <div className={styles.container}>
             <div className={styles.banner}>
-                <BannerText />
+                <div className={styles.bannerContent}>
+                    <BannerText />
+                    <LinkButton
+                        label='Read our Payment Setup Guide'
+                        size='lg'
+                        link
+                        iconToRight
+                        icon={IconOutline.ExternalLinkIcon}
+                        target='_blank'
+                        rel='noopener noreferrer'
+                        to={`${EnvironmentConfig.TOPCODER_URL}/thrive/articles/payment-policies-and-instructions`}
+                        className={styles.paymentGuideLink}
+                    />
+                </div>
                 <BannerImage />
             </div>
             {isLoading && <LoadingCircles />}
