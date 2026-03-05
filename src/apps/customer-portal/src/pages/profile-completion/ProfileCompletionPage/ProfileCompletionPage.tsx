@@ -6,7 +6,7 @@ import useSWR, { SWRResponse } from 'swr'
 
 import { EnvironmentConfig } from '~/config'
 import { CountryLookup, useCountryLookup, UserSkill, UserSkillDisplayModes } from '~/libs/core'
-import { Button, InputSelect, InputSelectOption, LoadingSpinner } from '~/libs/ui'
+import { Button, InputSelect, InputSelectOption, LoadingSpinner, Tooltip } from '~/libs/ui'
 
 import { PageWrapper } from '../../../lib'
 import {
@@ -116,9 +116,15 @@ export const ProfileCompletionPage: FC = () => {
     const displayedRows = useMemo(() => profiles
         .map(profile => {
             const userSkills = profile.userId ? (memberSkills.get(profile.userId) || []) : []
-            const principalSkills = userSkills
-                .filter(skill => skill.displayMode?.name === UserSkillDisplayModes.principal)
-                .slice(0, 5)
+
+            // Prioritize principal skills, then add additional skills
+            const allSkillsByPriority = [
+                ...userSkills.filter(skill => skill.displayMode?.name === UserSkillDisplayModes.principal),
+                ...userSkills.filter(skill => skill.displayMode?.name !== UserSkillDisplayModes.principal),
+            ]
+
+            const displayedSkills = allSkillsByPriority.slice(0, 5)
+            const additionalSkillsCount = Math.max(0, allSkillsByPriority.length - 5)
 
             return {
                 ...profile,
@@ -133,7 +139,8 @@ export const ProfileCompletionPage: FC = () => {
                     : profile.countryName]
                     .filter(Boolean)
                     .join(', '),
-                principalSkills,
+                displayedSkills,
+                additionalSkillsCount,
             }
         })
         .sort((a, b) => a.handle.localeCompare(b.handle)), [profiles, countryMap, memberSkills])
@@ -226,13 +233,22 @@ export const ProfileCompletionPage: FC = () => {
                                         <td>{profile.locationLabel || profile.countryLabel}</td>
                                         <td>{profile.skillCount ?? '-'}</td>
                                         <td>
-                                            {profile.principalSkills && profile.principalSkills.length > 0 ? (
+                                            {profile.displayedSkills && profile.displayedSkills.length > 0 ? (
                                                 <div className={styles.skillsList}>
-                                                    {profile.principalSkills.map(skill => (
+                                                    {profile.displayedSkills.map(skill => (
                                                         <span key={skill.id} className={styles.skillTag}>
                                                             {skill.name}
                                                         </span>
                                                     ))}
+                                                    {profile.additionalSkillsCount > 0 && (
+                                                        <Tooltip
+                                                            content={`${profile.additionalSkillsCount} more skill${profile.additionalSkillsCount === 1 ? '' : 's'}`}
+                                                        >
+                                                            <span className={styles.moreIndicator}>
+                                                                +
+                                                            </span>
+                                                        </Tooltip>
+                                                    )}
                                                 </div>
                                             ) : (
                                                 '-'

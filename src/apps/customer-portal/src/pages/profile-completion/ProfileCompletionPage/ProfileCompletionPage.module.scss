@@ -169,3 +169,18 @@
     color: $black-80;
     white-space: nowrap;
 }
+
+.moreIndicator {
+    display: inline-block;
+    background: $black-5;
+    border: 1px solid $black-20;
+    border-radius: $sp-1;
+    padding: $sp-1 $sp-2;
+    font-size: 12px;
+    line-height: 16px;
+    color: $black-80;
+    font-weight: 700;
+    min-width: 24px;
+    text-align: center;
+    cursor: help;
+}
