@@ -1,4 +1,6 @@
 /* eslint-disable react/jsx-no-bind */
+/* eslint-disable no-await-in-loop */
+/* eslint-disable complexity */
 import { ChangeEvent, FC, useEffect, useMemo, useState } from 'react'
 import useSWR, { SWRResponse } from 'swr'
 
@@ -36,7 +38,7 @@ export const ProfileCompletionPage: FC = () => {
     useEffect(() => {
         if (!data?.data || data.data.length === 0) return
 
-        const fetchAllMemberSkills = async () => {
+        const fetchAllMemberSkills = async (): Promise<void> => {
             const skillsMap = new Map<string | number, UserSkill[]>()
 
             for (const profile of data.data) {
@@ -80,16 +82,22 @@ export const ProfileCompletionPage: FC = () => {
                 label: country.country,
                 value: country.countryCode,
             }))
-            .sort((a, b) => String(a.label).localeCompare(String(b.label)))
+            .sort((a, b) => String(a.label)
+                .localeCompare(String(b.label)))
 
         const seen = new Set<string>(staticOptions.map(option => option.value))
         const dynamicOptions = (data?.data || [])
             .filter(profile => !!profile.countryCode && !seen.has(String(profile.countryCode)))
             .map(profile => ({
-                label: countryMap.get(String(profile.countryCode)) || profile.countryName || String(profile.countryCode),
+                label: (
+                    countryMap.get(String(profile.countryCode))
+                    || profile.countryName
+                    || String(profile.countryCode)
+                ),
                 value: String(profile.countryCode),
             }))
-            .sort((a, b) => String(a.label).localeCompare(String(b.label)))
+            .sort((a, b) => String(a.label)
+                .localeCompare(String(b.label)))
 
         return [
             {
@@ -114,10 +122,12 @@ export const ProfileCompletionPage: FC = () => {
 
             return {
                 ...profile,
-                fullName: [profile.firstName, profile.lastName].filter(Boolean).join(' ').trim(),
                 countryLabel: profile.countryCode
                     ? countryMap.get(profile.countryCode) || profile.countryName || profile.countryCode
                     : profile.countryName || '-',
+                fullName: [profile.firstName, profile.lastName].filter(Boolean)
+                    .join(' ')
+                    .trim(),
                 locationLabel: [profile.city, profile.countryCode
                     ? countryMap.get(profile.countryCode) || profile.countryName || profile.countryCode
                     : profile.countryName]
@@ -244,7 +254,13 @@ export const ProfileCompletionPage: FC = () => {
                     </div>
                     <div className={styles.paginationRow}>
                         <span className={styles.paginationInfo}>
-                            Page {currentPage} of {totalPages}
+                            Page
+                            {' '}
+                            {currentPage}
+                            {' '}
+                            of
+                            {' '}
+                            {totalPages}
                         </span>
                         <div className={styles.paginationButtons}>
                             <Button

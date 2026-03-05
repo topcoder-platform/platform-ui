@@ -115,4 +115,3 @@ export async function fetchMemberSkillsData(userId: string | number | undefined)
         return []
     }
 }
-
