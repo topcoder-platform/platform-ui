@@ -240,7 +240,10 @@ export const ProfileCompletionPage: FC = () => {
                                                     ))}
                                                     {profile.additionalSkillsCount > 0 && (
                                                         <span className={styles.moreIndicator}>
-                                                            + {profile.additionalSkillsCount} skills
+                                                            +
+                                                            {profile.additionalSkillsCount}
+                                                            {' '}
+                                                            skills
                                                         </span>
                                                     )}
                                                 </div>
