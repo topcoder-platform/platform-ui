@@ -116,15 +116,23 @@ export const ProfileCompletionPage: FC = () => {
     const displayedRows = useMemo(() => profiles
         .map(profile => {
             const userSkills = profile.userId ? (memberSkills.get(profile.userId) || []) : []
-            const principalSkills = userSkills
-                .filter(skill => skill.displayMode?.name === UserSkillDisplayModes.principal)
-                .slice(0, 5)
+
+            // Prioritize principal skills, then add additional skills
+            const allSkillsByPriority = [
+                ...userSkills.filter(skill => skill.displayMode?.name === UserSkillDisplayModes.principal),
+                ...userSkills.filter(skill => skill.displayMode?.name !== UserSkillDisplayModes.principal),
+            ]
+
+            const displayedSkills = allSkillsByPriority.slice(0, 5)
+            const additionalSkillsCount = Math.max(0, allSkillsByPriority.length - 5)
 
             return {
                 ...profile,
+                additionalSkillsCount,
                 countryLabel: profile.countryCode
                     ? countryMap.get(profile.countryCode) || profile.countryName || profile.countryCode
                     : profile.countryName || '-',
+                displayedSkills,
                 fullName: [profile.firstName, profile.lastName].filter(Boolean)
                     .join(' ')
                     .trim(),
@@ -133,7 +141,6 @@ export const ProfileCompletionPage: FC = () => {
                     : profile.countryName]
                     .filter(Boolean)
                     .join(', '),
-                principalSkills,
             }
         })
         .sort((a, b) => a.handle.localeCompare(b.handle)), [profiles, countryMap, memberSkills])
@@ -195,8 +202,7 @@ export const ProfileCompletionPage: FC = () => {
                                     <th>Handle</th>
                                     <th>Location</th>
                                     <th>Skills</th>
-                                    <th>Principal Skills</th>
-                                    <th>Go to profile</th>
+                                    <th>{' '}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -224,15 +230,22 @@ export const ProfileCompletionPage: FC = () => {
                                             </a>
                                         </td>
                                         <td>{profile.locationLabel || profile.countryLabel}</td>
-                                        <td>{profile.skillCount ?? '-'}</td>
                                         <td>
-                                            {profile.principalSkills && profile.principalSkills.length > 0 ? (
+                                            {profile.displayedSkills && profile.displayedSkills.length > 0 ? (
                                                 <div className={styles.skillsList}>
-                                                    {profile.principalSkills.map(skill => (
+                                                    {profile.displayedSkills.map(skill => (
                                                         <span key={skill.id} className={styles.skillTag}>
                                                             {skill.name}
                                                         </span>
                                                     ))}
+                                                    {profile.additionalSkillsCount > 0 && (
+                                                        <span className={styles.moreIndicator}>
+                                                            +
+                                                            {profile.additionalSkillsCount}
+                                                            {' '}
+                                                            skills
+                                                        </span>
+                                                    )}
                                                 </div>
                                             ) : (
                                                 '-'
@@ -240,6 +253,7 @@ export const ProfileCompletionPage: FC = () => {
                                         </td>
                                         <td>
                                             <a
+                                                className={styles.link}
                                                 href={`${EnvironmentConfig.USER_PROFILE_URL}/${profile.handle}`}
                                                 target='_blank'
                                                 rel='noreferrer noopener'
