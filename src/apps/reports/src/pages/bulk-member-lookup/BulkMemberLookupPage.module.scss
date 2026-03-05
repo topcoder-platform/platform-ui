@@ -1,0 +1,39 @@
+.page {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.instructions {
+    color: #565a5f;
+    max-width: 720px;
+}
+
+.uploadSection {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.resultsHeader {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.tableWrapper {
+    width: 100%;
+}
+
+.emptyState {
+    color: #6b6f75;
+    font-style: italic;
+}

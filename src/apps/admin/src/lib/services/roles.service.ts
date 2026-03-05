@@ -1,21 +1,24 @@
 /**
  * Roles service
  */
+import type { AxiosInstance } from 'axios'
 import _ from 'lodash'
 
 import { EnvironmentConfig } from '~/config'
 import {
+    xhrCreateInstance,
     xhrDeleteAsync,
     xhrGetAsync,
     xhrPatchAsync,
     xhrPostAsync,
-} from '~/libs/core'
+} from '~/libs/core/lib/xhr'
 
 import { adjustUserRoleResponse, UserRole } from '../models'
 import { PaginatedResponseV6 } from '../models/PaginatedResponseV6.model'
 import { RoleMemberInfo } from '../models/RoleMemberInfo.model'
 
 type RoleMemberRaw = { userId?: number; handle?: string | null; email?: string | null }
+const reportsDownloadClient: AxiosInstance = xhrCreateInstance()
 
 /**
  * Fetchs roles of the specified subject
@@ -230,4 +233,25 @@ export const fetchRoleMembersPaginated = async (
         total: safeTotal,
         totalPages: computedTotalPages,
     }
+}
+
+/**
+ * Exports users assigned to a role in CSV format.
+ * @param roleId role id.
+ * @returns resolves to CSV blob.
+ */
+export const exportRoleUsersCsv = async (
+    roleId: string,
+): Promise<Blob> => {
+    const response = await reportsDownloadClient.get<Blob>(
+        `${EnvironmentConfig.REPORTS_API}/identity/users-by-role?roleId=${encodeURIComponent(roleId)}`,
+        {
+            headers: {
+                Accept: 'text/csv',
+            },
+            responseType: 'blob',
+        },
+    )
+
+    return response.data
 }

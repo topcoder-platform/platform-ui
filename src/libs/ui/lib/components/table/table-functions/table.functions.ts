@@ -63,15 +63,17 @@ export function getSorted<T extends { [propertyName: string]: any }>(
 
     return sortedData
         .sort((a: T, b: T) => {
-            const aField: string = a[sort.fieldName]
-            const bField: string = b[sort.fieldName]
+            const aField: unknown = a[sort.fieldName]
+            const bField: unknown = b[sort.fieldName]
 
-            // Handle undefined/null values safely
-            if (aField === undefined && bField === undefined) return 0
-            if (aField === undefined) return 1
-            if (bField === undefined) return -1
+            // Keep nullish values at the bottom for both sort directions.
+            const aValue = String(aField ?? '')
+            const bValue = String(bField ?? '')
+            if (aValue === '' && bValue === '') return 0
+            if (aValue === '') return 1
+            if (bValue === '') return -1
             return sort.direction === 'asc'
-                ? aField.localeCompare(bField)
-                : bField.localeCompare(aField)
+                ? aValue.localeCompare(bValue)
+                : bValue.localeCompare(aValue)
         })
 }
