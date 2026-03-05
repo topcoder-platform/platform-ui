@@ -44,6 +44,7 @@ export const TableMobile: <T extends { [propertyName: string]: any }>(
                                             {...itemItemColumns}
                                             data={itemData}
                                             index={indexData}
+                                            allRows={props.data}
                                             key={getKey([
                                                 indexData,
                                                 indexColumns,

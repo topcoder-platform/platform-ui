@@ -18,6 +18,19 @@ export interface SubmissionRow extends SubmissionInfo {
 }
 
 /**
+ * Flattened row shape representing a single reviewer entry for a submission.
+ * Each logical submission can expand to multiple SubmissionReviewerRow entries
+ * (one per reviewer), while preserving the original submission fields.
+ */
+export interface SubmissionReviewerRow extends SubmissionRow {
+    /** Zero-based index of the reviewer within aggregated.reviews for this submission. */
+    reviewerIndex: number
+    /** True when this is the first reviewer row for the submission. */
+    isFirstReviewerRow: boolean
+    /** True when this is the last reviewer row for the submission. */
+    isLastReviewerRow: boolean
+}
+/**
  * Shared configuration available to column renderers that need challenge-level context.
  */
 export interface ColumnRendererConfig {
