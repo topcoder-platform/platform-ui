@@ -1,4 +1,5 @@
 /* eslint-disable complexity */
+/* eslint-disable unicorn/no-null */
 import { Dispatch, FC, SetStateAction, useEffect, useMemo, useState } from 'react'
 import { Location, useLocation, useSearchParams } from 'react-router-dom'
 import { KeyedMutator } from 'swr'
@@ -7,7 +8,6 @@ import moment from 'moment'
 import {
     NamesAndHandleAppearance,
     useMemberTraits,
-    useProfileCompleteness,
     UserProfile,
     UserRole,
     UserTrait,

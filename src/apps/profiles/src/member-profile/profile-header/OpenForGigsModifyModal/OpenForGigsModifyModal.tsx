@@ -153,7 +153,8 @@ const OpenForGigsModifyModal: FC<OpenForGigsModifyModalProps> = (props: OpenForG
         >
             <div className={styles.modalBody}>
                 <p>
-                    By selecting “Open to Work” our customers will know that you are available for engagement opportunities.
+                    By selecting “Open to Work” our customers will know that
+                    you are available for engagement opportunities.
                 </p>
             </div>
 

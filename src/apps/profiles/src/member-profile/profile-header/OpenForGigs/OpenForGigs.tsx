@@ -58,7 +58,7 @@ const OpenForGigs: FC<OpenForGigsProps> = (props: OpenForGigsProps) => {
                 <p className={classNames('body-main-bold', styles.unknownOopenToWork)}>
                     Unknown
                 </p>
-            ): (
+            ) : (
                 <p className={classNames('body-main-bold', !openForWork ? styles.notOopenToWork : '')}>
                     {openForWork ? 'open to work' : 'not open to work'}
                 </p>
