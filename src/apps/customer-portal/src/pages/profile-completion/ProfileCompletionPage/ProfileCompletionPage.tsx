@@ -6,7 +6,7 @@ import useSWR, { SWRResponse } from 'swr'
 
 import { EnvironmentConfig } from '~/config'
 import { CountryLookup, useCountryLookup, UserSkill, UserSkillDisplayModes } from '~/libs/core'
-import { Button, InputSelect, InputSelectOption, LoadingSpinner, Tooltip } from '~/libs/ui'
+import { Button, InputSelect, InputSelectOption, LoadingSpinner } from '~/libs/ui'
 
 import { PageWrapper } from '../../../lib'
 import {
@@ -202,7 +202,6 @@ export const ProfileCompletionPage: FC = () => {
                                     <th>Handle</th>
                                     <th>Location</th>
                                     <th>Skills</th>
-                                    <th>Principal Skills</th>
                                     <th>{' '}</th>
                                 </tr>
                             </thead>
@@ -231,7 +230,6 @@ export const ProfileCompletionPage: FC = () => {
                                             </a>
                                         </td>
                                         <td>{profile.locationLabel || profile.countryLabel}</td>
-                                        <td>{profile.skillCount ?? '-'}</td>
                                         <td>
                                             {profile.displayedSkills && profile.displayedSkills.length > 0 ? (
                                                 <div className={styles.skillsList}>
@@ -241,19 +239,9 @@ export const ProfileCompletionPage: FC = () => {
                                                         </span>
                                                     ))}
                                                     {profile.additionalSkillsCount > 0 && (
-                                                        <Tooltip
-                                                            content={
-                                                                `${
-                                                                    profile.additionalSkillsCount
-                                                                } more skill${
-                                                                    profile.additionalSkillsCount === 1 ? '' : 's'
-                                                                }`
-                                                            }
-                                                        >
-                                                            <span className={styles.moreIndicator}>
-                                                                +
-                                                            </span>
-                                                        </Tooltip>
+                                                        <span className={styles.moreIndicator}>
+                                                            + {profile.additionalSkillsCount} skills
+                                                        </span>
                                                     )}
                                                 </div>
                                             ) : (
