@@ -184,3 +184,11 @@
     text-align: center;
     cursor: help;
 }
+
+.link {
+    display: flex;
+    gap: $sp-1;
+    text-decoration: underline;
+    color: $link-blue;
+    cursor: pointer;
+}

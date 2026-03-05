@@ -128,9 +128,11 @@ export const ProfileCompletionPage: FC = () => {
 
             return {
                 ...profile,
+                additionalSkillsCount,
                 countryLabel: profile.countryCode
                     ? countryMap.get(profile.countryCode) || profile.countryName || profile.countryCode
                     : profile.countryName || '-',
+                displayedSkills,
                 fullName: [profile.firstName, profile.lastName].filter(Boolean)
                     .join(' ')
                     .trim(),
@@ -139,8 +141,6 @@ export const ProfileCompletionPage: FC = () => {
                     : profile.countryName]
                     .filter(Boolean)
                     .join(', '),
-                displayedSkills,
-                additionalSkillsCount,
             }
         })
         .sort((a, b) => a.handle.localeCompare(b.handle)), [profiles, countryMap, memberSkills])
@@ -203,7 +203,7 @@ export const ProfileCompletionPage: FC = () => {
                                     <th>Location</th>
                                     <th>Skills</th>
                                     <th>Principal Skills</th>
-                                    <th>Go to profile</th>
+                                    <th>{' '}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -242,7 +242,13 @@ export const ProfileCompletionPage: FC = () => {
                                                     ))}
                                                     {profile.additionalSkillsCount > 0 && (
                                                         <Tooltip
-                                                            content={`${profile.additionalSkillsCount} more skill${profile.additionalSkillsCount === 1 ? '' : 's'}`}
+                                                            content={
+                                                                `${
+                                                                    profile.additionalSkillsCount
+                                                                } more skill${
+                                                                    profile.additionalSkillsCount === 1 ? '' : 's'
+                                                                }`
+                                                            }
                                                         >
                                                             <span className={styles.moreIndicator}>
                                                                 +
@@ -256,6 +262,7 @@ export const ProfileCompletionPage: FC = () => {
                                         </td>
                                         <td>
                                             <a
+                                                className={styles.link}
                                                 href={`${EnvironmentConfig.USER_PROFILE_URL}/${profile.handle}`}
                                                 target='_blank'
                                                 rel='noreferrer noopener'
