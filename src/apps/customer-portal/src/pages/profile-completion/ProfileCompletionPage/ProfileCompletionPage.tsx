@@ -1,65 +1,70 @@
 /* eslint-disable react/jsx-no-bind */
-import { ChangeEvent, FC, useMemo, useState } from 'react'
+import { ChangeEvent, FC, useEffect, useMemo, useState } from 'react'
 import useSWR, { SWRResponse } from 'swr'
 
 import { EnvironmentConfig } from '~/config'
-import { CountryLookup, useCountryLookup, xhrGetAsync } from '~/libs/core'
-import { InputSelect, InputSelectOption, LoadingSpinner } from '~/libs/ui'
+import { CountryLookup, useCountryLookup, UserSkill, UserSkillDisplayModes } from '~/libs/core'
+import { Button, InputSelect, InputSelectOption, LoadingSpinner } from '~/libs/ui'
 
 import { PageWrapper } from '../../../lib'
+import {
+    CompletedProfilesResponse,
+    DEFAULT_PAGE_SIZE,
+    fetchCompletedProfiles,
+    fetchMemberSkillsData,
+} from '../../../lib/services/profileCompletion.service'
 
 import styles from './ProfileCompletionPage.module.scss'
 
-type CompletedProfile = {
-    countryCode?: string
-    countryName?: string
-    handle: string
-    userId?: number | string
-}
-
-function normalizeToList(raw: any): any[] {
-    if (Array.isArray(raw)) {
-        return raw
-    }
-
-    if (Array.isArray(raw?.data)) {
-        return raw.data
-    }
-
-    if (Array.isArray(raw?.result?.content)) {
-        return raw.result.content
-    }
-
-    if (Array.isArray(raw?.result)) {
-        return raw.result
-    }
-
-    return []
-}
-
-async function fetchCompletedProfiles(): Promise<CompletedProfile[]> {
-    const response = await xhrGetAsync<CompletedProfile[]>(
-        `${EnvironmentConfig.REPORTS_API}/topcoder/completed-profiles`,
-    )
-
-    return normalizeToList(response)
-}
-
 export const ProfileCompletionPage: FC = () => {
     const [selectedCountry, setSelectedCountry] = useState<string>('all')
+    const [currentPage, setCurrentPage] = useState<number>(1)
+    const [memberSkills, setMemberSkills] = useState<Map<string | number, UserSkill[]>>(new Map())
     const countryLookup: CountryLookup[] | undefined = useCountryLookup()
 
-    const { data, error, isValidating }: SWRResponse<CompletedProfile[]> = useSWR(
-        'customer-portal-completed-profiles',
-        fetchCompletedProfiles,
+    const countryCodeFilter = selectedCountry === 'all' ? undefined : selectedCountry
+
+    const { data, error, isValidating }: SWRResponse<CompletedProfilesResponse> = useSWR(
+        `customer-portal-completed-profiles:${countryCodeFilter || 'all'}:${currentPage}:${DEFAULT_PAGE_SIZE}`,
+        () => fetchCompletedProfiles(countryCodeFilter, currentPage, DEFAULT_PAGE_SIZE),
         {
             revalidateOnFocus: false,
         },
     )
 
+    // Fetch member skills for all profiles on the current page
+    useEffect(() => {
+        if (!data?.data || data.data.length === 0) return
+
+        const fetchAllMemberSkills = async () => {
+            const skillsMap = new Map<string | number, UserSkill[]>()
+
+            for (const profile of data.data) {
+                if (profile.userId && !memberSkills.has(profile.userId)) {
+                    const skills = await fetchMemberSkillsData(profile.userId)
+                    skillsMap.set(profile.userId, skills)
+                }
+            }
+
+            if (skillsMap.size > 0) {
+                setMemberSkills(prevSkills => {
+                    const newMap = new Map(prevSkills)
+                    skillsMap.forEach((skills, userId) => {
+                        newMap.set(userId, skills)
+                    })
+                    return newMap
+                })
+            }
+        }
+
+        fetchAllMemberSkills()
+    }, [data?.data])
+
     const countryMap = useMemo(() => {
-        const map = new Map<string, string>();
-        (countryLookup || []).forEach(country => {
+        const map = new Map<string, string>()
+        const countries = countryLookup || []
+
+        countries.forEach((country: CountryLookup) => {
             if (country.countryCode) {
                 map.set(country.countryCode, country.country)
             }
@@ -69,47 +74,62 @@ export const ProfileCompletionPage: FC = () => {
     }, [countryLookup])
 
     const countryOptions = useMemo<InputSelectOption[]>(() => {
-        const dynamicCodes = new Set<string>();
-        (data || []).forEach(profile => {
-            if (profile.countryCode) {
-                dynamicCodes.add(profile.countryCode)
-            }
-        })
-
-        const dynamicOptions = Array.from(dynamicCodes)
-            .map(code => ({
-                label: countryMap.get(code) || code,
-                value: code,
+        const staticOptions = (countryLookup || [])
+            .filter(country => !!country.countryCode)
+            .map(country => ({
+                label: country.country,
+                value: country.countryCode,
             }))
-            .sort((a, b) => String(a.label)
-                .localeCompare(String(b.label)))
+            .sort((a, b) => String(a.label).localeCompare(String(b.label)))
+
+        const seen = new Set<string>(staticOptions.map(option => option.value))
+        const dynamicOptions = (data?.data || [])
+            .filter(profile => !!profile.countryCode && !seen.has(String(profile.countryCode)))
+            .map(profile => ({
+                label: countryMap.get(String(profile.countryCode)) || profile.countryName || String(profile.countryCode),
+                value: String(profile.countryCode),
+            }))
+            .sort((a, b) => String(a.label).localeCompare(String(b.label)))
 
         return [
             {
                 label: 'All Countries',
                 value: 'all',
             },
+            ...staticOptions,
             ...dynamicOptions,
         ]
-    }, [countryMap, data])
+    }, [countryLookup, countryMap, data?.data])
 
-    const profiles = useMemo(() => {
-        const source = data || []
-        if (selectedCountry === 'all') {
-            return source
-        }
-
-        return source.filter(profile => profile.countryCode === selectedCountry)
-    }, [data, selectedCountry])
+    const profiles = data?.data || []
+    const totalProfiles = data?.total || 0
+    const totalPages = data?.totalPages || 1
 
     const displayedRows = useMemo(() => profiles
-        .map(profile => ({
-            ...profile,
-            countryLabel: profile.countryCode
-                ? countryMap.get(profile.countryCode) || profile.countryName || profile.countryCode
-                : profile.countryName || '-',
-        }))
-        .sort((a, b) => a.handle.localeCompare(b.handle)), [profiles, countryMap])
+        .map(profile => {
+            const userSkills = profile.userId ? (memberSkills.get(profile.userId) || []) : []
+            const principalSkills = userSkills
+                .filter(skill => skill.displayMode?.name === UserSkillDisplayModes.principal)
+                .slice(0, 5)
+
+            return {
+                ...profile,
+                fullName: [profile.firstName, profile.lastName].filter(Boolean).join(' ').trim(),
+                countryLabel: profile.countryCode
+                    ? countryMap.get(profile.countryCode) || profile.countryName || profile.countryCode
+                    : profile.countryName || '-',
+                locationLabel: [profile.city, profile.countryCode
+                    ? countryMap.get(profile.countryCode) || profile.countryName || profile.countryCode
+                    : profile.countryName]
+                    .filter(Boolean)
+                    .join(', '),
+                principalSkills,
+            }
+        })
+        .sort((a, b) => a.handle.localeCompare(b.handle)), [profiles, countryMap, memberSkills])
+
+    const isPreviousDisabled = currentPage <= 1 || isValidating
+    const isNextDisabled = isValidating || currentPage >= totalPages
 
     return (
         <PageWrapper
@@ -126,13 +146,14 @@ export const ProfileCompletionPage: FC = () => {
                         value={selectedCountry}
                         onChange={(event: ChangeEvent<HTMLInputElement>) => {
                             setSelectedCountry(event.target.value || 'all')
+                            setCurrentPage(1)
                         }}
                         placeholder='Select country'
                     />
                 </div>
                 <div className={styles.counterCard}>
                     <span className={styles.counterLabel}>Fully Completed Profiles</span>
-                    <strong className={styles.counterValue}>{profiles.length}</strong>
+                    <strong className={styles.counterValue}>{totalProfiles}</strong>
                 </div>
             </div>
 
@@ -155,32 +176,96 @@ export const ProfileCompletionPage: FC = () => {
             )}
 
             {!error && displayedRows.length > 0 && (
-                <div className={styles.tableWrap}>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Handle</th>
-                                <th>Country</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {displayedRows.map(profile => (
-                                <tr key={profile.userId || profile.handle}>
-                                    <td>
-                                        <a
-                                            href={`${EnvironmentConfig.USER_PROFILE_URL}/${profile.handle}`}
-                                            target='_blank'
-                                            rel='noreferrer noopener'
-                                        >
-                                            {profile.handle}
-                                        </a>
-                                    </td>
-                                    <td>{profile.countryLabel}</td>
+                <>
+                    <div className={styles.tableWrap}>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Member</th>
+                                    <th>Handle</th>
+                                    <th>Location</th>
+                                    <th>Skills</th>
+                                    <th>Principal Skills</th>
+                                    <th>Go to profile</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                            </thead>
+                            <tbody>
+                                {displayedRows.map(profile => (
+                                    <tr key={profile.userId || profile.handle}>
+                                        <td>
+                                            <div className={styles.memberCell}>
+                                                {profile.photoURL && (
+                                                    <img
+                                                        src={profile.photoURL}
+                                                        alt={profile.handle}
+                                                        className={styles.avatar}
+                                                    />
+                                                )}
+                                                <span>{profile.fullName || '-'}</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <a
+                                                href={`${EnvironmentConfig.USER_PROFILE_URL}/${profile.handle}`}
+                                                target='_blank'
+                                                rel='noreferrer noopener'
+                                            >
+                                                {profile.handle}
+                                            </a>
+                                        </td>
+                                        <td>{profile.locationLabel || profile.countryLabel}</td>
+                                        <td>{profile.skillCount ?? '-'}</td>
+                                        <td>
+                                            {profile.principalSkills && profile.principalSkills.length > 0 ? (
+                                                <div className={styles.skillsList}>
+                                                    {profile.principalSkills.map(skill => (
+                                                        <span key={skill.id} className={styles.skillTag}>
+                                                            {skill.name}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                '-'
+                                            )}
+                                        </td>
+                                        <td>
+                                            <a
+                                                href={`${EnvironmentConfig.USER_PROFILE_URL}/${profile.handle}`}
+                                                target='_blank'
+                                                rel='noreferrer noopener'
+                                            >
+                                                Go to profile
+                                            </a>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div className={styles.paginationRow}>
+                        <span className={styles.paginationInfo}>
+                            Page {currentPage} of {totalPages}
+                        </span>
+                        <div className={styles.paginationButtons}>
+                            <Button
+                                secondary
+                                noCaps
+                                disabled={isPreviousDisabled}
+                                onClick={() => setCurrentPage(previousPage => Math.max(previousPage - 1, 1))}
+                            >
+                                Previous
+                            </Button>
+                            <Button
+                                secondary
+                                noCaps
+                                disabled={isNextDisabled}
+                                onClick={() => setCurrentPage(previousPage => Math.min(previousPage + 1, totalPages))}
+                            >
+                                Next
+                            </Button>
+                        </div>
+                    </div>
+                </>
             )}
         </PageWrapper>
     )
