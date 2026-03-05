@@ -7,6 +7,7 @@ import moment from 'moment'
 import {
     NamesAndHandleAppearance,
     useMemberTraits,
+    useProfileCompleteness,
     UserProfile,
     UserRole,
     UserTrait,
@@ -70,7 +71,7 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
         [state?.queriedSkills],
     )
 
-    const activeTooltipText = canEdit ? `You have been active in the past 3 months. 
+    const activeTooltipText = canEdit ? `You have been active in the past 3 months.
 (this information is visible to you only)` : `${props.profile.firstName} has been active in the past 3 months.`
 
     useEffect(() => {
@@ -146,13 +147,15 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
         (item: UserTrait) => !!item?.openToWork,
     )
 
+    const isOpenToWork = hasOpenToWork ? props.profile.availableForGigs : null
+
     function renderOpenForWork(): JSX.Element {
         const showMyStatusLabel = canEdit
         const showAdminLabel = isPrivilegedViewer
 
         const content = (
             <div className={styles.profileActions}>
-                {showMyStatusLabel && <span>My status:</span>}
+                {showMyStatusLabel && <span>Engagement status:</span>}
 
                 {showAdminLabel && (
                     <span>
@@ -169,6 +172,7 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
                     isPrivilegedViewer={isPrivilegedViewer}
                     memberPersonalizationTraits={memberPersonalizationTraits}
                     mutatePersonalizationTraits={mutateTraits}
+                    isOpenToWork={isOpenToWork}
                 />
             </div>
         )
