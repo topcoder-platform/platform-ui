@@ -85,7 +85,7 @@ const ApplicationFormPage: FC = () => {
             availability: '',
             coverLetter: '',
             email: '',
-            mobileNumber: undefined,
+            mobileNumber: '',
             name: '',
             portfolioUrls: [],
             resumeUrl: undefined,
@@ -223,7 +223,7 @@ const ApplicationFormPage: FC = () => {
             shouldTouch: false,
             shouldValidate: false,
         })
-        setValue('mobileNumber', userData.mobileNumber, {
+        setValue('mobileNumber', userData.mobileNumber ?? '', {
             shouldDirty: false,
             shouldTouch: false,
             shouldValidate: false,
@@ -422,14 +422,10 @@ const ApplicationFormPage: FC = () => {
     const handleMobileNumberChange = useCallback(
         (field: ControllerRenderProps<ApplicationFormData, 'mobileNumber'>) => (
             (event: ChangeEvent<HTMLInputElement>): void => {
-                const nextValue = event.target.value
-                field.onChange(nextValue || undefined)
-                setValue('mobileNumber', nextValue === '' ? undefined : nextValue, {
-                    shouldValidate: true,
-                })
+                field.onChange(event.target.value)
             }
         ),
-        [setValue],
+        [],
     )
 
     const handleContactFieldChange = useCallback(
