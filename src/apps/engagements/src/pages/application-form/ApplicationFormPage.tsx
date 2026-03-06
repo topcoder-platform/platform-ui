@@ -424,9 +424,12 @@ const ApplicationFormPage: FC = () => {
             (event: ChangeEvent<HTMLInputElement>): void => {
                 const nextValue = event.target.value
                 field.onChange(nextValue || undefined)
+                setValue('mobileNumber', nextValue === '' ? undefined : nextValue, {
+                    shouldValidate: true,
+                })
             }
         ),
-        [],
+        [setValue],
     )
 
     const handleContactFieldChange = useCallback(

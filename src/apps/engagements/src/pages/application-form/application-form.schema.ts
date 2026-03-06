@@ -32,7 +32,7 @@ export const applicationFormSchema: yup.ObjectSchema<ApplicationFormData> = yup.
         .optional(),
     mobileNumber: yup
         .string()
-        .required(requiredMessage)
+        .required('Mobile Number must be defined')
         .test(
             'not-whitespace',
             requiredMessage,
@@ -47,7 +47,7 @@ export const applicationFormSchema: yup.ObjectSchema<ApplicationFormData> = yup.
             'Mobile number must contain only digits, spaces, hyphens, plus signs, and parentheses',
         )
         .max(20, 'Mobile number must be 20 characters or less')
-        .defined(),
+        .required('Mobile Number must be defined'),
     name: yup
         .string()
         .optional(),
