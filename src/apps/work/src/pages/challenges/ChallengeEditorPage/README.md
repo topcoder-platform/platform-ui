@@ -7,6 +7,7 @@
   (`Review`, `Forum` when present, `Project`, and `Community`).
 - `components/ChallengeEditorForm.tsx`: React Hook Form container with autosave and manual save.
 - `components/*Field.tsx`: field-level components for each challenge section.
+- `components/ReviewersField/*`: tabbed human/AI reviewer configuration. Human reviewers stay on the challenge form, while AI reviewer configs load/save through the review API and sync saved AI workflows back into the challenge `reviewers` array.
 - `ChallengeEditorPage.module.scss` and `components/ChallengeEditorForm.module.scss`: page and form layout styling.
 
 ## Validation Rules
@@ -25,6 +26,7 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 - `skills`: required unless billing account is listed in `SKILLS_OPTIONAL_BILLING_ACCOUNT_IDS`.
 - `reviewer`: required for task challenges when `legacy.reviewType` is `INTERNAL`.
 - `reviewers`: when using `Save as Draft` from `NEW` status, non-task/non-marathon challenges must include reviewer coverage for configured review phases. If required phases are configured, each phase must have at least one member reviewer with a scorecard.
+- `AI review configuration`: templates and manual configs autosave separately once valid, and the AI tab becomes read-only after the challenge has submissions.
 
 ## Autosave Behavior
 
@@ -61,6 +63,8 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 - Skills search: `searchSkills`.
 - Tracks fetch: `fetchChallengeTracks`.
 - Markdown file uploads: `uploadChallengeAttachment`.
+- AI review config CRUD: `fetchAiReviewConfigByChallenge`, `createAiReviewConfig`, `updateAiReviewConfig`, `deleteAiReviewConfig`.
+- AI review templates: `fetchAiReviewTemplates`.
 
 ## Header Actions
 

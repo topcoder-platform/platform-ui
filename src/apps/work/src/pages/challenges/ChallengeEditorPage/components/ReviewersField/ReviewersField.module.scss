@@ -1,3 +1,40 @@
+.tabsContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.tabsHeader {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.tabButton {
+    background: #f4f7f9;
+    border: 1px solid #d7dadc;
+    border-radius: 999px;
+    color: #3a3f45;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 10px 16px;
+}
+
+.tabButtonActive {
+    background: #137d60;
+    border-color: #137d60;
+    color: #fff;
+}
+
+.tabPanel {
+    display: block;
+}
+
+.tabPanelHidden {
+    display: none;
+}
+
 .container {
     display: flex;
     flex-direction: column;
