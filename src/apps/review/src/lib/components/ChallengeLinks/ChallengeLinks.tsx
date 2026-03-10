@@ -40,7 +40,10 @@ export const ChallengeLinks: FC<Props> = (props: Props) => {
 
     // Payments button visibility: only copilots and admins
     const canShowPaymentsButton = useMemo(
-        () => [ADMIN, COPILOT].includes(actionChallengeRole as any),
+        () => (
+            [ADMIN, COPILOT].includes(actionChallengeRole as any) ||
+            myResources.some(resource => resource.roleName?.toLowerCase() === 'copilot')
+        ),
         [actionChallengeRole],
     )
 
