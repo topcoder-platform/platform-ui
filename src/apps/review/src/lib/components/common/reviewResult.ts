@@ -1,4 +1,4 @@
-import type { AggregatedReviewDetail, SubmissionRow } from './types'
+import type { AggregatedReviewDetail, SubmissionReviewerRow, SubmissionRow } from './types'
 
 export type ReviewOutcome = 'PASS' | 'FAIL'
 
@@ -479,4 +479,26 @@ export function resolveSubmissionReviewResult(
     }
 
     return scoreOutcome ?? metadataOutcome
+}
+
+export function buildSubmissionReviewerRows(
+    submissions: SubmissionRow[],
+): SubmissionReviewerRow[] {
+    const rows: SubmissionReviewerRow[] = []
+
+    submissions.forEach(submission => {
+        const reviews = submission.aggregated?.reviews ?? []
+        const reviewCount = reviews.length || 1
+
+        for (let reviewerIndex = 0; reviewerIndex < reviewCount; reviewerIndex += 1) {
+            rows.push({
+                ...submission,
+                isFirstReviewerRow: reviewerIndex === 0,
+                isLastReviewerRow: reviewerIndex === reviewCount - 1,
+                reviewerIndex,
+            })
+        }
+    })
+
+    return rows
 }
