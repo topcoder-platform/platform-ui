@@ -68,6 +68,22 @@
     gap: 12px;
 }
 
+.postReportNotice {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 720px;
+    padding: 12px;
+    border: 1px solid #e0b458;
+    border-radius: 4px;
+    background: #fff8e6;
+    color: #5f4a00;
+}
+
+.postReportHint {
+    font-size: 12px;
+}
+
 .spinnerWrapper {
     padding: 40px 0;
     display: flex;
