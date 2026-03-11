@@ -158,11 +158,7 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
                 {showMyStatusLabel && <span>Engagement status:</span>}
 
                 {showAdminLabel && (
-                    <span>
-                        {props.profile.firstName}
-                        {' '}
-                        is
-                    </span>
+                    <span>Engagement status is</span>
                 )}
                 <OpenForGigs
                     canEdit={canEdit}
