@@ -18,7 +18,7 @@ import {
 
 import styles from './ProfileCompletionPage.module.scss'
 
-const DISPLAY_SKILLS_COUNT = 5;
+const DISPLAY_SKILLS_COUNT = 5
 
 export const ProfileCompletionPage: FC = () => {
     const [selectedCountry, setSelectedCountry] = useState<string>('all')
@@ -123,7 +123,6 @@ export const ProfileCompletionPage: FC = () => {
             const principalSkills = [
                 ...userSkills.filter(skill => skill.displayMode?.name === UserSkillDisplayModes.principal),
             ]
-
 
             const displayedSkills = principalSkills.slice(0, DISPLAY_SKILLS_COUNT)
             const additionalSkillsCount = Math.max(0, principalSkills.length - DISPLAY_SKILLS_COUNT)
