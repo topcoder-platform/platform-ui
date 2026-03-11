@@ -5,6 +5,7 @@ import { Button, InputSelect, InputSelectOption, InputText, LoadingSpinner, Page
 import { PageContent, PageHeader } from '../lib'
 import { handleError } from '../lib/utils'
 import {
+    downloadBlobFile,
     downloadReportAsCsv,
     downloadReportAsJson,
     fetchReportsIndex,
@@ -18,14 +19,26 @@ import styles from './ReportsPage.module.scss'
 
 const pageTitle = 'Reports'
 
-const buildDownloadName = (name: string, extension: 'json' | 'csv'): string => {
+const buildDownloadName = (
+    name: string,
+    extension: 'json' | 'csv',
+    suffix?: string,
+): string => {
     const normalized = name
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/(^-|-$)+/g, '')
+    const normalizedSuffix = suffix
+        ? suffix
+            .toLowerCase()
+            .replace(/[^a-z0-9-]+/g, '-')
+            .replace(/(^-|-$)+/g, '')
+        : ''
 
     const base = normalized || 'report'
-    return `${base}.${extension}`
+    return normalizedSuffix
+        ? `${base}_${normalizedSuffix}.${extension}`
+        : `${base}.${extension}`
 }
 
 const formatMethod = (method?: string): string => (
@@ -174,22 +187,19 @@ export const ReportsPage: FC = () => {
                 ? await downloadReportAsJson(requestPath)
                 : await downloadReportAsCsv(requestPath)
 
-            const link = document.createElement('a')
-            const fileName = buildDownloadName(selectedReport.name, format)
-            const url = window.URL.createObjectURL(blob)
-
-            link.href = url
-            link.setAttribute('download', fileName)
-            document.body.appendChild(link)
-            link.click()
-            link.parentNode?.removeChild(link)
-            window.URL.revokeObjectURL(url)
+            const challengeIdSuffix = parameterValues.challengeId?.trim()
+            const fileName = buildDownloadName(
+                selectedReport.name,
+                format,
+                challengeIdSuffix,
+            )
+            downloadBlobFile(blob, fileName)
         } catch (error) {
             handleError(error)
         } finally {
             setDownloadingFormat(undefined)
         }
-    }, [buildReportPathWithParams, selectedReport])
+    }, [buildReportPathWithParams, parameterValues.challengeId, selectedReport])
 
     const isDownloading = downloadingFormat !== undefined
 

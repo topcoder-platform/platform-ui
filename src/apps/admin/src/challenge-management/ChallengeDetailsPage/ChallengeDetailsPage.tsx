@@ -1,6 +1,7 @@
 import {
     ChangeEvent,
     FC,
+    MouseEvent,
     useEffect,
     useMemo,
     useState,
@@ -27,6 +28,8 @@ import {
     ChallengeWinner,
 } from '../../lib/models'
 import {
+    downloadBlobFile,
+    downloadReportAsCsv,
     getChallengeById,
     getChallengeResources,
     getResourceRoles,
@@ -61,6 +64,22 @@ type RouteState = {
 }
 
 type WinnerUpdate = Pick<ChallengeWinner, 'handle' | 'placement' | 'userId'>
+
+type ChallengeExportReportKey =
+    | 'registered-users'
+    | 'submitters'
+    | 'valid-submitters'
+    | 'winners'
+
+const CHALLENGE_EXPORT_REPORTS: Array<{
+    key: ChallengeExportReportKey
+    label: string
+}> = [
+    { key: 'registered-users', label: 'Registered Users' },
+    { key: 'submitters', label: 'Submitters' },
+    { key: 'valid-submitters', label: 'Valid Submitters' },
+    { key: 'winners', label: 'Winners' },
+]
 
 function formatStatusLabel(rawStatus: string): string {
     const normalized = rawStatus
@@ -188,6 +207,8 @@ export const ChallengeDetailsPage: FC = () => {
     const [isLoading, setIsLoading] = useState(false)
     const [isSavingStatus, setIsSavingStatus] = useState(false)
     const [isSavingWinners, setIsSavingWinners] = useState(false)
+    const [downloadingReportKey, setDownloadingReportKey]
+        = useState<ChallengeExportReportKey | undefined>()
     const [isLoadingSubmitters, setIsLoadingSubmitters] = useState(false)
     const [submitterOptions, setSubmitterOptions] = useState<InputSelectOption[]>([
         { label: 'Select submitter', value: '' },
@@ -328,6 +349,7 @@ export const ChallengeDetailsPage: FC = () => {
     }, [routeState.previousChallengeListFilter])
 
     const pageTitle = challengeInfo?.name || 'Challenge Details'
+    const isMarathonMatch = challengeInfo?.type?.name === 'Marathon Match'
     const currentWinnerHandleByUserId = useMemo(
         () => Object.fromEntries(
             (challengeInfo?.winners ?? []).map(winner => [`${winner.userId}`, winner.handle]),
@@ -414,6 +436,37 @@ export const ChallengeDetailsPage: FC = () => {
         }
     })
 
+    const handleExportReport = useEventCallback(async (reportKey: ChallengeExportReportKey) => {
+        if (!challengeId) {
+            return
+        }
+
+        setDownloadingReportKey(reportKey)
+
+        try {
+            const path = `/challenges/${encodeURIComponent(challengeId)}/${reportKey}`
+            const blob = await downloadReportAsCsv(path)
+            const fileName = `challenge-${reportKey}_${challengeId}.csv`
+
+            downloadBlobFile(blob, fileName)
+        } catch (error) {
+            handleError(error)
+        } finally {
+            setDownloadingReportKey(undefined)
+        }
+    })
+
+    const handleExportButtonClick = useEventCallback(
+        (event: MouseEvent<HTMLButtonElement>) => {
+            const reportKey = event.currentTarget.value as ChallengeExportReportKey
+            if (!reportKey) {
+                return
+            }
+
+            handleExportReport(reportKey)
+        },
+    )
+
     return (
         <PageWrapper
             pageTitle={pageTitle}
@@ -457,6 +510,34 @@ export const ChallengeDetailsPage: FC = () => {
             )}
             {!isLoading && challengeInfo && (
                 <>
+                    <section className={styles.section}>
+                        <h4 className={styles.sectionTitle}>Exports</h4>
+                        <p className={styles.exportDescription}>
+                            Download challenge detail reports as CSV.
+                            {isMarathonMatch && (
+                                ' Marathon Match submission-based exports include provisional '
+                                + 'score and final rank.'
+                            )}
+                        </p>
+                        <div className={styles.exportActions}>
+                            {CHALLENGE_EXPORT_REPORTS.map(report => (
+                                <Button
+                                    key={report.key}
+                                    secondary
+                                    size='lg'
+                                    className={styles.exportButton}
+                                    value={report.key}
+                                    disabled={downloadingReportKey !== undefined}
+                                    onClick={handleExportButtonClick}
+                                >
+                                    {downloadingReportKey === report.key
+                                        ? `Downloading ${report.label}…`
+                                        : `Export ${report.label}`}
+                                </Button>
+                            ))}
+                        </div>
+                    </section>
+
                     <section className={styles.section}>
                         <h4 className={styles.sectionTitle}>Status</h4>
                         <div className={styles.statusRow}>

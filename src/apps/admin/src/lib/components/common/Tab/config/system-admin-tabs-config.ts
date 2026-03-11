@@ -1,6 +1,7 @@
 import _ from 'lodash'
 
 import { TabsNavItem } from '~/libs/ui'
+import { canAccessAdminReports, isAdministrator } from '~/apps/admin/src/lib/utils'
 import {
     billingAccountRouteId,
     defaultReviewersRouteId,
@@ -89,16 +90,34 @@ export const SystemAdminTabsConfig: TabsNavItem[] = [
     },
 ]
 
-export function getTabIdFromPathName(pathname: string): string {
-    const matchItem = _.find(SystemAdminTabsConfig, item => pathname.includes(`/${item.id}`))
+/**
+ * Returns the visible system-admin tabs for the current user.
+ */
+export function getSystemAdminTabs(roles?: string[]): TabsNavItem[] {
+    if (isAdministrator(roles)) {
+        return SystemAdminTabsConfig
+    }
+
+    if (canAccessAdminReports(roles)) {
+        return SystemAdminTabsConfig.filter(item => item.id === reportsRouteId)
+    }
+
+    return []
+}
+
+/**
+ * Resolves the active tab id for the current location and visible tab set.
+ */
+export function getTabIdFromPathName(pathname: string, tabs: TabsNavItem[] = SystemAdminTabsConfig): string {
+    const matchItem = _.find(tabs, item => pathname.includes(`/${item.id}`))
 
     if (matchItem) {
         return matchItem.id
     }
 
-    if (pathname.includes(`/${manageReviewRouteId}`)) {
+    if (tabs.some(item => item.id === manageReviewRouteId) && pathname.includes(`/${manageReviewRouteId}`)) {
         return manageReviewRouteId
     }
 
-    return manageChallengeRouteId
+    return (tabs[0]?.id as string) || reportsRouteId
 }
