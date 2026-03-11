@@ -1,5 +1,4 @@
 import { FC, useCallback, useContext, useMemo, useState } from 'react'
-import { find } from 'lodash'
 import { NavigateFunction, Params, useNavigate, useParams } from 'react-router-dom'
 import classNames from 'classnames'
 
@@ -158,7 +157,9 @@ const CopilotRequestsPage: FC = () => {
     }: CopilotRequestsResponse = useCopilotRequests(sort)
 
     const viewRequestDetails = useMemo(() => (
-        routeParams.requestId && find(requests, { id: +routeParams.requestId }) as CopilotRequest
+        routeParams.requestId
+            ? requests.find(request => request.id === routeParams.requestId)
+            : undefined
     ), [requests, routeParams.requestId])
 
     const hideRequestDetails = useCallback(() => {

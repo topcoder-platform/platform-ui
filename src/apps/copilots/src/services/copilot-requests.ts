@@ -13,6 +13,16 @@ const baseUrl = `${EnvironmentConfig.API.V6}/projects`
 const PAGE_SIZE = 20
 
 /**
+ * Normalizes ids returned by the API so the app can use a consistent string shape.
+ *
+ * @param value - The raw id value from the API response.
+ * @returns The normalized string id, or an empty string when the id is missing.
+ */
+function normalizeId(value: string | number | undefined): string {
+    return value === undefined ? '' : String(value)
+}
+
+/**
  * Creates a CopilotRequest object by merging the provided data and its nested data,
  * setting specific properties, and formatting the createdAt date.
  *
@@ -20,14 +30,18 @@ const PAGE_SIZE = 20
  * @returns A new CopilotRequest object with the transformed properties.
  */
 function copilotRequestFactory(data: any): CopilotRequest {
+    const requestData = data.data ?? {}
+
     return {
         ...data,
-        ...data.data,
+        ...requestData,
         copilotOpportunity: undefined,
         createdAt: new Date(data.createdAt),
         data: undefined,
+        id: normalizeId(data.id ?? requestData.id),
         opportunity: data.copilotOpportunity?.[0],
-        startDate: new Date(data.data?.startDate),
+        projectId: normalizeId(data.projectId ?? requestData.projectId),
+        startDate: new Date(requestData.startDate),
     }
 }
 
