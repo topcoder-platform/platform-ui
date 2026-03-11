@@ -236,3 +236,41 @@
         }
     }
 }
+
+.escalationModal {
+    width: min(820px, 92vw);
+}
+
+.escalationDescription {
+    margin-bottom: $sp-4;
+    line-height: 1.5;
+}
+
+.verifySubmission {
+    margin-bottom: $sp-3;
+    font-weight: 700;
+}
+
+.verifyDetails {
+    margin-bottom: $sp-4;
+
+    > * + * {
+        margin-top: $sp-2;
+    }
+}
+
+.escalationTextarea {
+    width: 100%;
+    min-height: 160px;
+    border: 1px solid $black-40;
+    border-radius: 4px;
+    padding: $sp-3;
+    resize: vertical;
+    margin-bottom: $sp-4;
+}
+
+.escalationActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: $sp-3;
+}
