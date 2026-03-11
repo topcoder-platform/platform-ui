@@ -104,6 +104,7 @@ export async function fetchCompletedProfiles(
     if (openToWorkFilter === 'yes') {
         queryParams.set('openToWork', 'true')
     }
+
     if (openToWorkFilter === 'no') {
         queryParams.set('openToWork', 'false')
     }
