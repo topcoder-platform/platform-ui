@@ -685,8 +685,17 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
                 columnId: 'review-result',
                 label: 'Review Result',
                 renderer: (row: SubmissionReviewerRow) => {
+                    const isLocked = row.status === 'AI_FAILED_REVIEW'
                     if (!row.isFirstReviewerRow) {
                         return <span />
+                    }
+
+                    if (isLocked) {
+                        return (
+                            <span className={styles.statusLocked}>
+                                AI Locked
+                            </span>
+                        )
                     }
 
                     const result = resolveSubmissionReviewResult(row, {

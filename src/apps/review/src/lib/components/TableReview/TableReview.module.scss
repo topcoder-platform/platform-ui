@@ -36,6 +36,12 @@
     display: inline-block;
 }
 
+.statusLocked {
+    @extend .resultPill;
+    background-color: $black-5;
+    color: $red-100;
+}
+
 .submissionColumn {
     width: 240px;
     min-width: 220px;
