@@ -237,9 +237,8 @@ export const ProfileCompletionPage: FC = () => {
                                     <th>Member</th>
                                     <th>Handle</th>
                                     <th>Location</th>
-                                    <th>Principal Skills</th>
                                     <th>Open to Work</th>
-                                    <th>Skills</th>
+                                    <th>Principal Skills</th>
                                     <th>{' '}</th>
                                 </tr>
                             </thead>
