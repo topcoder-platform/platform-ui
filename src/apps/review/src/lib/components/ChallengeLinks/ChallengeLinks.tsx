@@ -44,7 +44,7 @@ export const ChallengeLinks: FC<Props> = (props: Props) => {
             [ADMIN, COPILOT].includes(actionChallengeRole as any)
             || myResources.some(resource => resource.roleName?.toLowerCase() === 'copilot')
         ),
-        [actionChallengeRole],
+        [actionChallengeRole, myResources],
     )
 
     return (
