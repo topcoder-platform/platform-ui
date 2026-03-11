@@ -286,7 +286,6 @@ const ReviewViewer: FC = () => {
                                 hasChallengeAdminRole
                                 || hasTopcoderAdminRole
                                 || hasChallengeManagerRole
-                                || hasChallengeCopilotRole
                             }
                             saveReviewInfo={saveReviewInfo}
                             addAppeal={addAppeal}
