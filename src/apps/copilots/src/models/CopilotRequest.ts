@@ -5,7 +5,7 @@ import { ProjectType } from '../constants'
 import { CopilotOpportunity } from './CopilotOpportunity'
 
 export interface CopilotRequest {
-    id: number,
+    id: string,
     projectId: string,
     projectType: ProjectType,
     complexity: 'high' | 'medium' | 'low',
