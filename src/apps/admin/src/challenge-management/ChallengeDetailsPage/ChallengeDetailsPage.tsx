@@ -28,13 +28,15 @@ import {
     ChallengeWinner,
 } from '../../lib/models'
 import {
-    downloadBlobFile,
-    downloadReportAsCsv,
     getChallengeById,
     getChallengeResources,
     getResourceRoles,
     updateChallengeById,
 } from '../../lib/services'
+import {
+    downloadBlobFile,
+    downloadReportAsCsv,
+} from '../../lib/services/reports.service'
 import { createChallengeQueryString, handleError } from '../../lib/utils'
 
 import styles from './ChallengeDetailsPage.module.scss'

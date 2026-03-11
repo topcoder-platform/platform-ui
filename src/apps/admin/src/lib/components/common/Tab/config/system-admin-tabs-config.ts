@@ -1,7 +1,7 @@
 import _ from 'lodash'
 
 import { TabsNavItem } from '~/libs/ui'
-import { canAccessAdminReports, isAdministrator } from '~/apps/admin/src/lib/utils'
+import { isAdministrator } from '~/apps/admin/src/lib/utils'
 import {
     billingAccountRouteId,
     defaultReviewersRouteId,
@@ -11,7 +11,6 @@ import {
     paymentsRouteId,
     permissionManagementRouteId,
     platformRouteId,
-    reportsRouteId,
     termsRouteId,
     userManagementRouteId,
 } from '~/apps/admin/src/config/routes.config'
@@ -84,10 +83,6 @@ export const SystemAdminTabsConfig: TabsNavItem[] = [
         id: paymentsRouteId,
         title: 'Payments',
     },
-    {
-        id: reportsRouteId,
-        title: 'Reports',
-    },
 ]
 
 /**
@@ -96,10 +91,6 @@ export const SystemAdminTabsConfig: TabsNavItem[] = [
 export function getSystemAdminTabs(roles?: string[]): TabsNavItem[] {
     if (isAdministrator(roles)) {
         return SystemAdminTabsConfig
-    }
-
-    if (canAccessAdminReports(roles)) {
-        return SystemAdminTabsConfig.filter(item => item.id === reportsRouteId)
     }
 
     return []
@@ -119,5 +110,5 @@ export function getTabIdFromPathName(pathname: string, tabs: TabsNavItem[] = Sys
         return manageReviewRouteId
     }
 
-    return (tabs[0]?.id as string) || reportsRouteId
+    return (tabs[0]?.id as string) || manageChallengeRouteId
 }

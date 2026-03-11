@@ -1,9 +1,10 @@
 import { ChangeEvent, FC, useCallback, useEffect, useMemo, useState } from 'react'
+import { NavigateFunction, useNavigate } from 'react-router-dom'
 
 import { Button, InputSelect, InputSelectOption, InputText, LoadingSpinner, PageTitle } from '~/libs/ui'
 
-import { PageContent, PageHeader } from '../lib'
-import { handleError } from '../lib/utils'
+import { bulkMemberLookupRouteId } from '../../config/routes.config'
+import { handleError } from '../../lib/utils'
 import {
     downloadBlobFile,
     downloadReportAsCsv,
@@ -13,11 +14,12 @@ import {
     ReportGroup,
     ReportParameter,
     ReportsIndexResponse,
-} from '../lib/services'
+} from '../../lib/services'
 
 import styles from './ReportsPage.module.scss'
 
 const pageTitle = 'Reports'
+const bulkMembersByHandlesPath = '/identity/users-by-handles'
 
 const buildDownloadName = (
     name: string,
@@ -46,6 +48,7 @@ const formatMethod = (method?: string): string => (
 )
 
 export const ReportsPage: FC = () => {
+    const navigate: NavigateFunction = useNavigate()
     const [reportsIndex, setReportsIndex] = useState<ReportsIndexResponse>({})
     const [selectedBasePath, setSelectedBasePath] = useState<string>('')
     const [selectedReportPath, setSelectedReportPath] = useState<string>('')
@@ -201,6 +204,10 @@ export const ReportsPage: FC = () => {
         }
     }, [buildReportPathWithParams, parameterValues.challengeId, selectedReport])
 
+    const handleOpenBulkMemberLookup = useCallback(() => {
+        navigate(bulkMemberLookupRouteId)
+    }, [navigate])
+
     const isDownloading = downloadingFormat !== undefined
 
     const requiredParamsMissing = useMemo(() => {
@@ -214,7 +221,13 @@ export const ReportsPage: FC = () => {
             .some(param => !parameterValues[param.name]?.trim())
     ), [parameterValues, selectedReport])
 
-    const isDownloadDisabled = !selectedReport || isDownloading || requiredParamsMissing || hasUnresolvedPathParams
+    const isPostReport = selectedReport?.method?.toUpperCase() === 'POST'
+    const isHandleLookupPostReport = isPostReport && selectedReport.path === bulkMembersByHandlesPath
+    const isDownloadDisabled = !selectedReport
+        || isPostReport
+        || isDownloading
+        || requiredParamsMissing
+        || hasUnresolvedPathParams
 
     const handleJsonDownload = useCallback(() => {
         handleDownload('json')
@@ -223,6 +236,54 @@ export const ReportsPage: FC = () => {
     const handleCsvDownload = useCallback(() => {
         handleDownload('csv')
     }, [handleDownload])
+
+    const reportActions = useMemo(() => {
+        if (isPostReport) {
+            return (
+                <div className={styles.postReportNotice}>
+                    <div>
+                        This report uses a POST request body and cannot be downloaded from this
+                        page.
+                    </div>
+                    {isHandleLookupPostReport ? (
+                        <Button primary onClick={handleOpenBulkMemberLookup}>
+                            Open Bulk Member Lookup
+                        </Button>
+                    ) : (
+                        <div className={styles.postReportHint}>
+                            Run this report from its dedicated workflow.
+                        </div>
+                    )}
+                </div>
+            )
+        }
+
+        return (
+            <div className={styles.actions}>
+                <Button
+                    primary
+                    disabled={isDownloadDisabled}
+                    onClick={handleJsonDownload}
+                >
+                    Download as JSON
+                </Button>
+                <Button
+                    secondary
+                    disabled={isDownloadDisabled}
+                    onClick={handleCsvDownload}
+                >
+                    Download as CSV
+                </Button>
+            </div>
+        )
+    }, [
+        handleCsvDownload,
+        handleJsonDownload,
+        handleOpenBulkMemberLookup,
+        isDownloadDisabled,
+        isHandleLookupPostReport,
+        isPostReport,
+    ])
 
     const renderParameterInput = useCallback((parameter: ReportParameter) => {
         const commonProps = {
@@ -276,126 +337,106 @@ export const ReportsPage: FC = () => {
 
     return (
         <>
-            <PageHeader>
+            {isDownloading && (
+                <LoadingSpinner overlay message='Generating Report…' />
+            )}
+            <div className={styles.page}>
                 <PageTitle>{pageTitle}</PageTitle>
-            </PageHeader>
-            <PageContent>
-                <div className={styles.page}>
-                    <p className={styles.instructions}>
-                        Select a base path to view the available reports. After choosing a report, provide any
-                        required parameters and download the data as JSON or CSV directly from the reports API.
-                    </p>
+                <p className={styles.instructions}>
+                    Select a base path to view the available reports. After choosing a report, provide any
+                    required parameters and download the data as JSON or CSV directly from the reports API.
+                </p>
 
-                    {isLoading ? (
-                        <div className={styles.spinnerWrapper}>
-                            <LoadingSpinner />
-                        </div>
-                    ) : (
-                        <>
-                            {basePathOptions.length ? (
-                                <div className={styles.selectors}>
+                {isLoading ? (
+                    <div className={styles.spinnerWrapper}>
+                        <LoadingSpinner />
+                    </div>
+                ) : (
+                    <>
+                        {basePathOptions.length ? (
+                            <div className={styles.selectors}>
+                                <InputSelect
+                                    classNameWrapper={styles.select}
+                                    label='Report category'
+                                    name='reports-base-path'
+                                    options={basePathOptions}
+                                    placeholder='Select a base path'
+                                    value={selectedBasePath}
+                                    onChange={handleBasePathChange}
+                                />
+
+                                {selectedGroup && (
                                     <InputSelect
                                         classNameWrapper={styles.select}
-                                        label='Report category'
-                                        name='reports-base-path'
-                                        options={basePathOptions}
-                                        placeholder='Select a base path'
-                                        value={selectedBasePath}
-                                        onChange={handleBasePathChange}
+                                        label='Report'
+                                        name='reports-path'
+                                        options={reportOptions}
+                                        placeholder='Select a report'
+                                        value={selectedReportPath}
+                                        onChange={handleReportChange}
+                                        disabled={!reportOptions.length}
                                     />
+                                )}
+                            </div>
+                        ) : (
+                            <div className={styles.emptyState}>
+                                No reports are currently available.
+                            </div>
+                        )}
 
-                                    {selectedGroup && (
-                                        <InputSelect
-                                            classNameWrapper={styles.select}
-                                            label='Report'
-                                            name='reports-path'
-                                            options={reportOptions}
-                                            placeholder='Select a report'
-                                            value={selectedReportPath}
-                                            onChange={handleReportChange}
-                                            disabled={!reportOptions.length}
-                                        />
-                                    )}
-                                </div>
-                            ) : (
-                                <div className={styles.emptyState}>
-                                    No reports are currently available.
-                                </div>
-                            )}
-
-                            {selectedReport && (
-                                <>
-                                    <div className={styles.reportDetails}>
-                                        <div className={styles.reportTitle}>{selectedReport.name}</div>
-                                        {selectedReport.description && (
-                                            <div className={styles.reportDescription}>
-                                                {selectedReport.description}
-                                            </div>
-                                        )}
-                                        <div className={styles.reportMeta}>
-                                            {formatMethod(selectedReport.method)}
-                                            {' '}
-                                            {selectedReport.path}
+                        {selectedReport && (
+                            <>
+                                <div className={styles.reportDetails}>
+                                    <div className={styles.reportTitle}>{selectedReport.name}</div>
+                                    {selectedReport.description && (
+                                        <div className={styles.reportDescription}>
+                                            {selectedReport.description}
                                         </div>
+                                    )}
+                                    <div className={styles.reportMeta}>
+                                        {formatMethod(selectedReport.method)}
+                                        {' '}
+                                        {selectedReport.path}
                                     </div>
+                                </div>
 
-                                    {(selectedReport.parameters?.length ?? 0) > 0 && (
-                                        <div className={styles.params}>
-                                            {selectedReport.parameters?.map(parameter => (
-                                                <div key={parameter.name}>
-                                                    <div className={styles.paramLabel}>
-                                                        {parameter.name}
-                                                        {parameter.required ? ' *' : ''}
-                                                    </div>
-                                                    {parameter.description && (
-                                                        <div className={styles.paramMeta}>{parameter.description}</div>
-                                                    )}
-                                                    <div className={styles.paramMeta}>
-                                                        Location:
-                                                        {' '}
-                                                        {parameter.location || 'query'}
-                                                        {' '}
-                                                        • Type:
-                                                        {' '}
-                                                        {parameter.type}
-                                                    </div>
-                                                    {parameter.type.endsWith('[]') && (
-                                                        <div className={styles.paramHint}>
-                                                            Use comma-separated values for lists.
-                                                        </div>
-                                                    )}
-                                                    {renderParameterInput(parameter)}
+                                {(selectedReport.parameters?.length ?? 0) > 0 && (
+                                    <div className={styles.params}>
+                                        {selectedReport.parameters?.map(parameter => (
+                                            <div key={parameter.name}>
+                                                <div className={styles.paramLabel}>
+                                                    {parameter.name}
+                                                    {parameter.required ? ' *' : ''}
                                                 </div>
-                                            ))}
-                                        </div>
-                                    )}
-
-                                    <div className={styles.actions}>
-                                        <Button
-                                            primary
-                                            disabled={isDownloadDisabled}
-                                            onClick={handleJsonDownload}
-                                        >
-                                            {downloadingFormat === 'json'
-                                                ? 'Downloading JSON…'
-                                                : 'Download as JSON'}
-                                        </Button>
-                                        <Button
-                                            secondary
-                                            disabled={isDownloadDisabled}
-                                            onClick={handleCsvDownload}
-                                        >
-                                            {downloadingFormat === 'csv'
-                                                ? 'Downloading CSV…'
-                                                : 'Download as CSV'}
-                                        </Button>
+                                                {parameter.description && (
+                                                    <div className={styles.paramMeta}>{parameter.description}</div>
+                                                )}
+                                                <div className={styles.paramMeta}>
+                                                    Location:
+                                                    {' '}
+                                                    {parameter.location || 'query'}
+                                                    {' '}
+                                                    • Type:
+                                                    {' '}
+                                                    {parameter.type}
+                                                </div>
+                                                {parameter.type.endsWith('[]') && (
+                                                    <div className={styles.paramHint}>
+                                                        Use comma-separated values for lists.
+                                                    </div>
+                                                )}
+                                                {renderParameterInput(parameter)}
+                                            </div>
+                                        ))}
                                     </div>
-                                </>
-                            )}
-                        </>
-                    )}
-                </div>
-            </PageContent>
+                                )}
+
+                                {reportActions}
+                            </>
+                        )}
+                    </>
+                )}
+            </div>
         </>
     )
 }

@@ -1,9 +1,10 @@
 import { FC } from 'react'
 import { Navigate } from 'react-router-dom'
 
+import { reportsRootRoute } from '~/apps/reports'
 import { ProfileContextData, useProfileContext } from '~/libs/core'
 
-import { manageChallengeRouteId, reportsRouteId } from './config/routes.config'
+import { manageChallengeRouteId } from './config/routes.config'
 import { isAdministrator } from './lib/utils'
 
 /**
@@ -13,7 +14,7 @@ const AdminHomeRedirect: FC = () => {
     const { profile }: ProfileContextData = useProfileContext()
     const defaultRoute: string = isAdministrator(profile?.roles)
         ? manageChallengeRouteId
-        : reportsRouteId
+        : reportsRootRoute
 
     return <Navigate replace to={defaultRoute} />
 }
