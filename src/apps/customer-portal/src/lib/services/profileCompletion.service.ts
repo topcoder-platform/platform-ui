@@ -11,6 +11,11 @@ export type CompletedProfile = {
     photoURL?: string
     skillCount?: number
     userId?: number | string
+    isOpenToWork?: boolean | null
+    openToWork?: {
+        availability?: string
+        preferredRoles?: string[]
+    } | null
 }
 
 export type CompletedProfilesResponse = {
@@ -79,10 +84,13 @@ function normalizeCompletedProfilesResponse(
     }
 }
 
+export type OpenToWorkFilter = 'all' | 'yes' | 'no'
+
 export async function fetchCompletedProfiles(
     countryCode: string | undefined,
     page: number,
     perPage: number,
+    openToWorkFilter?: OpenToWorkFilter,
 ): Promise<CompletedProfilesResponse> {
     const queryParams = new URLSearchParams({
         page: String(page),
@@ -91,6 +99,13 @@ export async function fetchCompletedProfiles(
 
     if (countryCode) {
         queryParams.set('countryCode', countryCode)
+    }
+
+    if (openToWorkFilter === 'yes') {
+        queryParams.set('openToWork', 'true')
+    }
+    if (openToWorkFilter === 'no') {
+        queryParams.set('openToWork', 'false')
     }
 
     const response = await xhrGetAsync<any>(
