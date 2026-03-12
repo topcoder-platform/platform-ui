@@ -1,4 +1,4 @@
-import { FC, MouseEvent as ReactMouseEvent, useContext, useMemo } from 'react'
+import { FC, MouseEvent as ReactMouseEvent, useContext, useMemo, useState, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import classNames from 'classnames'
 import moment from 'moment'
@@ -13,7 +13,15 @@ import {
     AiWorkflowRunsResponse,
     AiWorkflowRunStatusEnum,
     useFetchAiWorkflowsRuns,
+    getAiWorkflowRunsCacheKey,
+    retriggerAiWorkflowRun,
+    useRolePermissions,
+    UseRolePermissionsResult,
 } from '../../hooks'
+import { toast } from 'react-toastify'
+import { useSWRConfig } from 'swr'
+import { FullConfiguration } from 'swr/dist/types'
+import { handleError } from '~/libs/shared/lib/utils/handle-error'
 import { IconAiReview } from '../../assets/icons'
 import { TABLE_DATE_FORMAT } from '../../../config/index.config'
 import {
@@ -170,7 +178,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                 ?? configured?.workflow?.scorecard?.minimumPassingScore
 
             const status = fromDecision
-                ? normalizeStatus(fromDecision.runStatus, fromDecision.runScore, minScore)
+                ? normalizeStatus(run && aiRunInProgress(run) ? null : fromDecision.runStatus, fromDecision.runScore, minScore)
                 : undefined
 
             return {
@@ -229,6 +237,26 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
     ])
 
     const loading = isLoading || isLoadingAiReviewConfig || isLoadingAiReviewDecisions
+
+    const { isAdmin }: UseRolePermissionsResult = useRolePermissions()
+    const { mutate }: FullConfiguration = useSWRConfig()
+    const [rerunningRunId, setRerunningRunId] = useState<string | null>(null)
+
+    const handleRerun = useCallback(async (runId?: string): Promise<void> => {
+        if (!runId || runId === '-1') return
+
+        setRerunningRunId(runId)
+        try {
+            await retriggerAiWorkflowRun(runId)
+            await mutate(getAiWorkflowRunsCacheKey(props.submission.id))
+            toast.success('Workflow re-run triggered successfully.')
+        } catch (error) {
+            handleError(error as Error)
+            toast.error('Failed to trigger workflow re-run.')
+        } finally {
+            setRerunningRunId(null)
+        }
+    }, [mutate, props.submission.id])
 
     const failedGatingReviewers = useMemo(
         () => reviewerRows
@@ -333,18 +361,21 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
 
                         <div className={styles.mobileRow}>
                             <div className={styles.label}>Result</div>
-                            <div className={`${styles.value} ${styles.resultCol}`}>
-                                {row.status ? (
+                                <div className={`${styles.value} ${styles.resultCol}`}>
                                     <AiWorkflowRunStatus
+                                        run={row.run}
                                         status={row.status}
-                                        score={row.score ?? undefined}
-                                        showScore={false}
+                                        action={row.run?.id && row.run?.id !== '-1' && isAdmin && row.status !== 'pending' && (
+                                            <Tooltip content='Re-run the workflow'>
+                                                <IconOutline.RefreshIcon
+                                                    className={classNames('icon-lg', styles.reRunIcon)}
+                                                    onClick={() => handleRerun(row.run!.id)}
+                                                />
+                                            </Tooltip>
+                                        )}
                                     />
-                                ) : (
-                                    <AiWorkflowRunStatus run={row.run} submissionId={props.submission.id} />
-                                )}
+                                </div>
                             </div>
-                        </div>
                     </div>
                 ))}
             </div>
@@ -380,7 +411,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                 <tbody>
                     {!reviewerRows.length && loading && (
                         <tr>
-                            <td colSpan={hasConfig ? 6 : 4}>Loading...</td>
+                                <td colSpan={hasConfig ? 7 : 5}>Loading...</td>
                         </tr>
                     )}
 
@@ -427,15 +458,18 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                                 ) : '-'}
                             </td>
                             <td className={styles.resultCol}>
-                                {row.status ? (
-                                    <AiWorkflowRunStatus
-                                        status={row.status}
-                                        score={row.score ?? undefined}
-                                        showScore={false}
-                                    />
-                                ) : (
-                                    <AiWorkflowRunStatus run={row.run} submissionId={props.submission.id} />
-                                )}
+                                <AiWorkflowRunStatus
+                                    status={row.status}
+                                    run={row.run}
+                                    action={row.run?.id && row.run?.id !== '-1' && isAdmin && row.status !== 'pending' && (
+                                        <Tooltip content='Re-run the workflow'>
+                                            <IconOutline.RefreshIcon
+                                                className={classNames('icon-lg', styles.reRunIcon)}
+                                                onClick={() => handleRerun(row.run!.id)}
+                                            />
+                                        </Tooltip>
+                                    )}
+                                />
                             </td>
                         </tr>
                     ))}
