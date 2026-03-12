@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 import { FC, Fragment, MouseEvent, useCallback, useContext, useMemo, useState } from 'react'
 import { toast } from 'react-toastify'
 import classNames from 'classnames'
@@ -107,15 +108,19 @@ function normalizeDecisionStatus(
     if (!status || status === 'PENDING') {
         return 'pending'
     }
+
     if (status === 'PASSED') {
         return 'passed'
     }
+
     if (status === 'FAILED') {
         return 'failed-score'
     }
+
     if (status === 'ERROR') {
         return 'failed'
     }
+
     return 'pending'
 }
 
@@ -285,7 +290,7 @@ export const SubmissionHistoryModal: FC<SubmissionHistoryModalProps> = (props: S
             = challengeDetailContext.aiReviewDecisionsBySubmissionId
         const currentDecision = aiReviewDecisionsBySubmissionId[submission.id]
         const hasDecisionScore = currentDecision?.totalScore !== null && currentDecision?.totalScore !== undefined
-        const normalizedStatus = normalizeDecisionStatus(currentDecision?.status ?? null)
+        const normalizedStatus = normalizeDecisionStatus(currentDecision?.status ?? undefined)
 
         return (
             <Fragment key={submission.id}>

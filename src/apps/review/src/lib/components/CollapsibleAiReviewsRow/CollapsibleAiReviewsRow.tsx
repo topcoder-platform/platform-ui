@@ -26,6 +26,7 @@ function formatScore(value?: number | null): string {
     if (typeof value !== 'number' || Number.isNaN(value)) {
         return '-'
     }
+
     return value.toFixed(2)
 }
 
@@ -33,6 +34,7 @@ function formatWeight(value?: number): string {
     if (typeof value !== 'number' || Number.isNaN(value)) {
         return '-'
     }
+
     return `${value.toFixed(0)}%`
 }
 
@@ -42,15 +44,19 @@ function normalizeDecisionStatus(
     if (!status || status === 'PENDING') {
         return 'pending'
     }
+
     if (status === 'PASSED') {
         return 'passed'
     }
+
     if (status === 'FAILED') {
         return 'failed-score'
     }
+
     if (status === 'ERROR') {
         return 'failed'
     }
+
     return 'pending'
 }
 
@@ -107,9 +113,10 @@ const CollapsibleAiReviewsRow: FC<CollapsibleAiReviewsRowProps> = props => {
                     {' '}
                     {formulaLines[0]}
                 </div>
-                {formulaLines.slice(1).map(line => (
-                    <div key={line} className={classNames(styles.infoTooltipLine, styles.indent)}>{line}</div>
-                ))}
+                {formulaLines.slice(1)
+                    .map(line => (
+                        <div key={line} className={classNames(styles.infoTooltipLine, styles.indent)}>{line}</div>
+                    ))}
             </div>
         )
     }, [aiReviewConfig, configuredWorkflows])
@@ -137,7 +144,9 @@ const CollapsibleAiReviewsRow: FC<CollapsibleAiReviewsRowProps> = props => {
                         <span className={classNames(
                             styles.score,
                             normalizedStatus === 'passed' && styles.scorePassed,
-                            (normalizedStatus === 'failed' || normalizedStatus === 'failed-score') && styles.scoreFailed,
+                            (
+                                normalizedStatus === 'failed' || normalizedStatus === 'failed-score'
+                            ) && styles.scoreFailed,
                         )}
                         >
                             {formulaTooltip && (
