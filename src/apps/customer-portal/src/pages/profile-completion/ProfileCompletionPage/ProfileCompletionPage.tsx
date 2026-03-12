@@ -18,6 +18,8 @@ import {
 
 import styles from './ProfileCompletionPage.module.scss'
 
+const DISPLAY_SKILLS_COUNT = 5
+
 export const ProfileCompletionPage: FC = () => {
     const [selectedCountry, setSelectedCountry] = useState<string>('all')
     const [currentPage, setCurrentPage] = useState<number>(1)
@@ -118,13 +120,12 @@ export const ProfileCompletionPage: FC = () => {
             const userSkills = profile.userId ? (memberSkills.get(profile.userId) || []) : []
 
             // Prioritize principal skills, then add additional skills
-            const allSkillsByPriority = [
+            const principalSkills = [
                 ...userSkills.filter(skill => skill.displayMode?.name === UserSkillDisplayModes.principal),
-                ...userSkills.filter(skill => skill.displayMode?.name !== UserSkillDisplayModes.principal),
             ]
 
-            const displayedSkills = allSkillsByPriority.slice(0, 5)
-            const additionalSkillsCount = Math.max(0, allSkillsByPriority.length - 5)
+            const displayedSkills = principalSkills.slice(0, DISPLAY_SKILLS_COUNT)
+            const additionalSkillsCount = Math.max(0, principalSkills.length - DISPLAY_SKILLS_COUNT)
 
             return {
                 ...profile,
@@ -201,7 +202,7 @@ export const ProfileCompletionPage: FC = () => {
                                     <th>Member</th>
                                     <th>Handle</th>
                                     <th>Location</th>
-                                    <th>Skills</th>
+                                    <th>Principal Skills</th>
                                     <th>{' '}</th>
                                 </tr>
                             </thead>
