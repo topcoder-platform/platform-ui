@@ -6,7 +6,15 @@ import useSWR, { SWRResponse } from 'swr'
 
 import { EnvironmentConfig } from '~/config'
 import { CountryLookup, useCountryLookup, UserSkill, UserSkillDisplayModes, xhrGetAsync } from '~/libs/core'
-import { Button, InputSelect, InputSelectOption, InputMultiselect, InputMultiselectOption, LoadingSpinner, Tooltip } from '~/libs/ui'
+import {
+    Button,
+    InputMultiselect,
+    InputMultiselectOption,
+    InputSelect,
+    InputSelectOption,
+    LoadingSpinner,
+    Tooltip,
+} from '~/libs/ui'
 import { getPreferredRoleLabelByValue } from '~/libs/shared/lib/utils/roles'
 
 import { PageWrapper } from '../../../lib'
@@ -64,7 +72,9 @@ export const ProfileCompletionPage: FC = () => {
 
     const { data, error, isValidating }: SWRResponse<CompletedProfilesResponse> = useSWR(
         // eslint-disable-next-line max-len
-        `customer-portal-completed-profiles:${countryCodeFilter || 'all'}:${selectedOpenToWork}:${currentPage}:${DEFAULT_PAGE_SIZE}:${selectedSkills.map(skill => skill.value).sort().join(',')}`,
+        `customer-portal-completed-profiles:${countryCodeFilter || 'all'}:${selectedOpenToWork}:${currentPage}:${DEFAULT_PAGE_SIZE}:${selectedSkills.map(skill => skill.value)
+            .sort()
+            .join(',')}`,
         () => fetchCompletedProfiles(
             countryCodeFilter,
             currentPage,
