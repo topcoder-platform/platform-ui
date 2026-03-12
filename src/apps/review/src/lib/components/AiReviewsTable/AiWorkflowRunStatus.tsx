@@ -21,7 +21,7 @@ import styles from './AiWorkflowRunStatus.module.scss'
 
 interface AiWorkflowRunStatusProps {
     run?: Pick<AiWorkflowRun, 'status'|'score'|'workflow'|'id'>
-    status?: 'passed' | 'pending' | 'failed-score'
+    status?: 'passed' | 'pending' | 'failed-score' | 'failed'
     score?: number
     hideLabel?: boolean
     showScore?: boolean

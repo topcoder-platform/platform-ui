@@ -5,19 +5,84 @@
     text-align: left;
 }
 
-.reviewersDropown {
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    gap: $sp-4;
+}
+
+.reviewersDropdown {
     display: flex;
     align-items: center;
     gap: $sp-2;
     cursor: pointer;
-
-    @include ltelg {
-        justify-content: space-between;
-        font-weight: 600;
-    }
+    flex: 1;
 
     svg {
         color: #767676;
+    }
+}
+
+.statusContainer {
+    display: flex;
+    align-items: center;
+    gap: $sp-6;
+    flex-shrink: 0;
+}
+
+.score {
+    display: flex;
+    align-items: center;
+    gap: $sp-1;
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.scorePassed {
+    color: $link-blue-dark;
+}
+
+.scoreFailed {
+    color: $red-100;
+}
+
+.infoIcon {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    color: $black-60;
+}
+
+.infoTooltipContent {
+    min-width: 220px;
+    font-size: 12px;
+    color: $tc-white;
+}
+
+.runStatus {
+    min-width: 105px;
+}
+
+.infoTooltipRow {
+    display: flex;
+    justify-content: space-between;
+    gap: $sp-2;
+    margin-bottom: $sp-1;
+    border-bottom: 1px solid $black-10;
+}
+
+.infoTooltipTitle {
+    font-weight: 700;
+    margin-top: $sp-1;
+    margin-bottom: $sp-1;
+}
+
+.infoTooltipLine {
+    line-height: 1.4;
+    &.indent {
+        text-indent: 85px;
     }
 }
 
