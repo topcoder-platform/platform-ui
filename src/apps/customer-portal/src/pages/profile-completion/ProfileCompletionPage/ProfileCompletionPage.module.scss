@@ -4,6 +4,10 @@
     display: flex;
     flex-direction: column;
     gap: $sp-4;
+
+    :global([class*='__value-container']) {
+        min-height: 18px;
+    }
 }
 
 .headerRow {
