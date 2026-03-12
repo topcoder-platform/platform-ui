@@ -157,9 +157,7 @@ const CollapsibleAiReviewsRow: FC<CollapsibleAiReviewsRowProps> = props => {
                 createdRowRef.current = undefined
             }
 
-            if (portalContainer) {
-                setPortalContainer(undefined)
-            }
+            setPortalContainer(undefined)
         }
     }, [isOpen])
 

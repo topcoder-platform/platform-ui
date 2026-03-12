@@ -419,7 +419,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                 <tbody>
                     {!reviewerRows.length && loading && (
                         <tr>
-                            <td colSpan={hasConfig ? 7 : 5}>Loading...</td>
+                            <td colSpan={hasConfig ? 6 : 4}>Loading...</td>
                         </tr>
                     )}
 
