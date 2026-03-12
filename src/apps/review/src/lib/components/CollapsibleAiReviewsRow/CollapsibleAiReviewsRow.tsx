@@ -1,6 +1,6 @@
-import { FC, useCallback, useContext, useMemo, useState, useRef, useEffect } from 'react'
-import classNames from 'classnames'
+import { FC, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import classNames from 'classnames'
 
 import { IconOutline, Tooltip } from '~/libs/ui'
 
@@ -123,9 +123,9 @@ const CollapsibleAiReviewsRow: FC<CollapsibleAiReviewsRowProps> = props => {
     }, [aiReviewConfig, configuredWorkflows])
 
     const [isOpen, setIsOpen] = useState(props.defaultOpen ?? false)
-    const [portalContainer, setPortalContainer] = useState<HTMLTableCellElement | null>(null)
+    const [portalContainer, setPortalContainer] = useState<HTMLTableCellElement | undefined>(undefined)
     const wrapperRef = useRef<HTMLDivElement | null>(null)
-    const createdRowRef = useRef<HTMLTableRowElement | null>(null)
+    const createdRowRef = useRef<HTMLTableRowElement | undefined>(undefined)
 
     const toggleOpen = useCallback(() => {
         setIsOpen(wasOpen => !wasOpen)
@@ -154,10 +154,11 @@ const CollapsibleAiReviewsRow: FC<CollapsibleAiReviewsRowProps> = props => {
             const createdTr = createdRowRef.current
             if (createdTr && createdTr.parentElement) {
                 createdTr.parentElement.removeChild(createdTr)
-                createdRowRef.current = null
+                createdRowRef.current = undefined
             }
+
             if (portalContainer) {
-                setPortalContainer(null)
+                setPortalContainer(undefined)
             }
         }
     }, [isOpen])
