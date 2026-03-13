@@ -67,11 +67,6 @@ const CollapsibleAiReviewsRow: FC<CollapsibleAiReviewsRowProps> = props => {
         [currentDecision?.status],
     )
 
-    const formulaTooltip = useMemo(
-        () => <AiScoreFormulaTooltip aiReviewConfig={aiReviewConfig} />,
-        [aiReviewConfig],
-    )
-
     const [isOpen, setIsOpen] = useState(props.defaultOpen ?? false)
     const [portalContainer, setPortalContainer] = useState<HTMLTableCellElement | undefined>(undefined)
     const wrapperRef = useRef<HTMLDivElement | null>(null)
@@ -133,13 +128,14 @@ const CollapsibleAiReviewsRow: FC<CollapsibleAiReviewsRowProps> = props => {
                             ) && styles.scoreFailed,
                         )}
                         >
-                            {formulaTooltip && (
-                                <Tooltip content={formulaTooltip} triggerOn='hover'>
-                                    <span className={styles.infoIcon}>
-                                        <IconOutline.InformationCircleIcon className='icon-lg' />
-                                    </span>
-                                </Tooltip>
-                            )}
+                            <Tooltip
+                                content={<AiScoreFormulaTooltip aiReviewConfig={aiReviewConfig} />}
+                                triggerOn='hover'
+                            >
+                                <span className={styles.infoIcon}>
+                                    <IconOutline.InformationCircleIcon className='icon-lg' />
+                                </span>
+                            </Tooltip>
                             {formatScore(currentDecision!.totalScore)}
                         </span>
                     )}

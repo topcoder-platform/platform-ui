@@ -44,10 +44,7 @@ const ReviewsSidebar: FC<ReviewsSidebarProps> = props => {
         `../reviews/${submissionId}?workflowId=${runWorkflowId}&reviewId=${reviewId}`
     ), [reviewId, submissionId])
 
-    const formulaTooltip = useMemo(
-        () => <AiScoreFormulaTooltip aiReviewConfig={aiReviewConfig} />,
-        [aiReviewConfig],
-    )
+    const hasAiReviewConfig = Boolean(aiReviewConfig?.workflows?.length)
 
     return (
         <div className={classNames(props.className, styles.wrap)}>
@@ -157,27 +154,30 @@ const ReviewsSidebar: FC<ReviewsSidebarProps> = props => {
                         )}
                     </ul>
                 </div>
-                <div className={styles.legend}>
-                    <div className={styles.legendLabel}>
-                        Score Info
-                    </div>
-                    <div className={styles.scoreInfoRow}>
-                        <span>Min Passing Score</span>
-                        <span>{formatScore(aiReviewConfig?.minPassingThreshold)}</span>
-                    </div>
+                {hasAiReviewConfig
+                && (
+                    <div className={styles.legend}>
+                        <div className={styles.legendLabel}>
+                            Score Info
+                        </div>
+                        <div className={styles.scoreInfoRow}>
+                            <span>Min Passing Score</span>
+                            <span>{formatScore(aiReviewConfig?.minPassingThreshold)}</span>
+                        </div>
 
-                    <div className={styles.scoreInfoRow}>
-                        <span>AI Score Formula</span>
-
-                        {formulaTooltip && (
-                            <Tooltip content={formulaTooltip} triggerOn='hover'>
+                        <div className={styles.scoreInfoRow}>
+                            <span>AI Score Formula</span>
+                            <Tooltip
+                                content={<AiScoreFormulaTooltip aiReviewConfig={aiReviewConfig} />}
+                                triggerOn='hover'
+                            >
                                 <span className={styles.infoIcon}>
                                     <IconOutline.InformationCircleIcon className='icon-lg' />
                                 </span>
                             </Tooltip>
-                        )}
+                        </div>
                     </div>
-                </div>
+                )}
 
                 <div className={styles.legend}>
                     <div className={styles.legendLabel}>
