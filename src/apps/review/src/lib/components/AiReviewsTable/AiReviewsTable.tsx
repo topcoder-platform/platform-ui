@@ -1,8 +1,12 @@
-import { FC, MouseEvent as ReactMouseEvent, useContext, useMemo } from 'react'
+import { FC, MouseEvent as ReactMouseEvent, useCallback, useContext, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { toast } from 'react-toastify'
+import { useSWRConfig } from 'swr'
+import { FullConfiguration } from 'swr/dist/types'
 import classNames from 'classnames'
 import moment from 'moment'
 
+import { handleError } from '~/libs/shared/lib/utils/handle-error'
 import { useWindowSize, WindowSize } from '~/libs/shared'
 import { IconOutline, Tooltip } from '~/libs/ui'
 
@@ -12,7 +16,11 @@ import {
     AiWorkflowRun,
     AiWorkflowRunsResponse,
     AiWorkflowRunStatusEnum,
+    getAiWorkflowRunsCacheKey,
+    retriggerAiWorkflowRun,
     useFetchAiWorkflowsRuns,
+    useRolePermissions,
+    UseRolePermissionsResult,
 } from '../../hooks'
 import { IconAiReview } from '../../assets/icons'
 import { TABLE_DATE_FORMAT } from '../../../config/index.config'
@@ -170,7 +178,9 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                 ?? configured?.workflow?.scorecard?.minimumPassingScore
 
             const status = fromDecision
-                ? normalizeStatus(fromDecision.runStatus, fromDecision.runScore, minScore)
+                ? normalizeStatus(run && aiRunInProgress(run)
+                    ? undefined
+                    : fromDecision.runStatus, fromDecision.runScore, minScore)
                 : undefined
 
             return {
@@ -229,6 +239,26 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
     ])
 
     const loading = isLoading || isLoadingAiReviewConfig || isLoadingAiReviewDecisions
+
+    const { isAdmin }: UseRolePermissionsResult = useRolePermissions()
+    const { mutate }: FullConfiguration = useSWRConfig()
+    const [, setRerunningRunId] = useState<string | undefined>(undefined)
+
+    const handleRerun = useCallback(async (runId?: string): Promise<void> => {
+        if (!runId || runId === '-1') return
+
+        setRerunningRunId(runId)
+        try {
+            await retriggerAiWorkflowRun(runId)
+            await mutate(getAiWorkflowRunsCacheKey(props.submission.id))
+            toast.success('Workflow re-run triggered successfully.')
+        } catch (error) {
+            handleError(error as Error)
+            toast.error('Failed to trigger workflow re-run.')
+        } finally {
+            setRerunningRunId(undefined)
+        }
+    }, [mutate, props.submission.id])
 
     const failedGatingReviewers = useMemo(
         () => reviewerRows
@@ -334,15 +364,24 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                         <div className={styles.mobileRow}>
                             <div className={styles.label}>Result</div>
                             <div className={`${styles.value} ${styles.resultCol}`}>
-                                {row.status ? (
-                                    <AiWorkflowRunStatus
-                                        status={row.status}
-                                        score={row.score ?? undefined}
-                                        showScore={false}
-                                    />
-                                ) : (
-                                    <AiWorkflowRunStatus run={row.run} submissionId={props.submission.id} />
-                                )}
+                                <AiWorkflowRunStatus
+                                    run={row.run}
+                                    status={row.status}
+                                    action={
+                                        row.run?.id
+                                        && row.run?.id !== '-1'
+                                        && isAdmin
+                                        && row.status !== 'pending'
+                                        && (
+                                            <Tooltip content='Re-run the workflow'>
+                                                <IconOutline.RefreshIcon
+                                                    className={classNames('icon-lg', styles.reRunIcon)}
+                                                    onClick={function onClick() { handleRerun(row.run!.id) }}
+                                                />
+                                            </Tooltip>
+                                        )
+                                    }
+                                />
                             </div>
                         </div>
                     </div>
@@ -427,15 +466,24 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                                 ) : '-'}
                             </td>
                             <td className={styles.resultCol}>
-                                {row.status ? (
-                                    <AiWorkflowRunStatus
-                                        status={row.status}
-                                        score={row.score ?? undefined}
-                                        showScore={false}
-                                    />
-                                ) : (
-                                    <AiWorkflowRunStatus run={row.run} submissionId={props.submission.id} />
-                                )}
+                                <AiWorkflowRunStatus
+                                    status={row.status}
+                                    run={row.run}
+                                    action={
+                                        row.run?.id
+                                        && row.run?.id !== '-1'
+                                        && isAdmin
+                                        && row.status !== 'pending'
+                                        && (
+                                            <Tooltip content='Re-run the workflow'>
+                                                <IconOutline.RefreshIcon
+                                                    className={classNames('icon-lg', styles.reRunIcon)}
+                                                    onClick={function onClick() { handleRerun(row.run!.id) }}
+                                                />
+                                            </Tooltip>
+                                        )
+                                    }
+                                />
                             </td>
                         </tr>
                     ))}
