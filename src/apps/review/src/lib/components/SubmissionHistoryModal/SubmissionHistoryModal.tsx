@@ -1,4 +1,5 @@
-import { FC, Fragment, MouseEvent, useCallback, useMemo, useState } from 'react'
+/* eslint-disable complexity */
+import { FC, Fragment, MouseEvent, useCallback, useContext, useMemo, useState } from 'react'
 import { toast } from 'react-toastify'
 import classNames from 'classnames'
 import moment from 'moment'
@@ -7,9 +8,10 @@ import { IsRemovingType } from '~/apps/admin/src/lib/models'
 import { copyTextToClipboard } from '~/libs/shared'
 import { BaseModal, IconOutline, Tooltip } from '~/libs/ui'
 
-import { SubmissionInfo } from '../../models'
+import { ChallengeDetailContextModel, SubmissionInfo } from '../../models'
 import { TABLE_DATE_FORMAT } from '../../../config/index.config'
-import { AiReviewsTable } from '../AiReviewsTable'
+import { AiReviewsTable, AiWorkflowRunStatus } from '../AiReviewsTable'
+import { ChallengeDetailContext } from '../../contexts'
 
 import styles from './SubmissionHistoryModal.module.scss'
 
@@ -92,6 +94,36 @@ function formatSubmissionDate(
     return '—'
 }
 
+function formatScore(value?: number | null): string {
+    if (typeof value !== 'number' || Number.isNaN(value)) {
+        return '-'
+    }
+
+    return value.toFixed(2)
+}
+
+function normalizeDecisionStatus(
+    status?: string | null,
+): 'passed' | 'failed-score' | 'pending' | 'failed' {
+    if (!status || status === 'PENDING') {
+        return 'pending'
+    }
+
+    if (status === 'PASSED') {
+        return 'passed'
+    }
+
+    if (status === 'FAILED') {
+        return 'failed-score'
+    }
+
+    if (status === 'ERROR') {
+        return 'failed'
+    }
+
+    return 'pending'
+}
+
 export const SubmissionHistoryModal: FC<SubmissionHistoryModalProps> = (props: SubmissionHistoryModalProps) => {
     const sortedSubmissions = useMemo<SubmissionInfo[]>(
         () => props.submissions
@@ -99,9 +131,14 @@ export const SubmissionHistoryModal: FC<SubmissionHistoryModalProps> = (props: S
             .sort((a, b) => getTimestamp(b) - getTimestamp(a)),
         [props.submissions],
     )
+    const challengeDetailContext: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
+    const aiReviewConfig: ChallengeDetailContextModel['aiReviewConfig'] = challengeDetailContext.aiReviewConfig
 
     const aiReviewers = useMemo(() => props.aiReviewers ?? [], [props.aiReviewers])
-    const aiReviewersCount = useMemo(() => (aiReviewers.length ?? 0) + 1, [aiReviewers])
+    const aiReviewersCount = useMemo(
+        () => ((aiReviewers.length || aiReviewConfig?.workflows?.length || 0) + 1),
+        [aiReviewConfig?.workflows?.length, aiReviewers.length],
+    )
 
     const [toggledRows, setToggledRows] = useState(new Set<string>())
 
@@ -249,6 +286,12 @@ export const SubmissionHistoryModal: FC<SubmissionHistoryModalProps> = (props: S
             toggleRow(submission.id)
         }
 
+        const aiReviewDecisionsBySubmissionId: ChallengeDetailContextModel['aiReviewDecisionsBySubmissionId']
+            = challengeDetailContext.aiReviewDecisionsBySubmissionId
+        const currentDecision = aiReviewDecisionsBySubmissionId[submission.id]
+        const hasDecisionScore = currentDecision?.totalScore !== null && currentDecision?.totalScore !== undefined
+        const normalizedStatus = normalizeDecisionStatus(currentDecision?.status ?? undefined)
+
         return (
             <Fragment key={submission.id}>
                 <tr key={submission.id}>
@@ -274,12 +317,24 @@ export const SubmissionHistoryModal: FC<SubmissionHistoryModalProps> = (props: S
                             </span>
                         )}
                     </td>
+                    {aiReviewersCount > 0 && (
+                        <>
+                            <td className={styles.cellVirusScan}>
+                                {hasDecisionScore ? formatScore(currentDecision!.totalScore) : '-'}
+                            </td>
+                            <td className={styles.cellVirusScan}>
+                                {currentDecision ? (
+                                    <AiWorkflowRunStatus status={normalizedStatus} showScore={false} />
+                                ) : '-'}
+                            </td>
+                        </>
+                    )}
                 </tr>
                 {toggledRows.has(submission.id) && (
                     <tr>
-                        <td className={styles.aiReviewersTableRow} colSpan={4}>
+                        <td className={styles.aiReviewersTableRow} colSpan={aiReviewersCount ? 6 : 4}>
                             <div className={styles.aiReviewersTable}>
-                                <AiReviewsTable submission={submission} />
+                                <AiReviewsTable submission={submission} aiReviewers={aiReviewers} />
                             </div>
                         </td>
                     </tr>
@@ -300,7 +355,7 @@ export const SubmissionHistoryModal: FC<SubmissionHistoryModalProps> = (props: S
             open={props.open}
             onClose={props.onClose}
             title={modalTitle}
-            size='lg'
+            size='body'
             classNames={{ modal: styles.modal }}
         >
             {sortedSubmissions.length === 0 ? (
@@ -313,6 +368,12 @@ export const SubmissionHistoryModal: FC<SubmissionHistoryModalProps> = (props: S
                                 <th className={styles.cellSubmission}>Submission ID</th>
                                 <th className={styles.cellDate}>Submitted</th>
                                 <th className={styles.cellVirusScan}>Reviewer</th>
+                                {aiReviewersCount > 0 && (
+                                    <>
+                                        <th className={styles.cellVirusScan}>Score</th>
+                                        <th className={styles.cellVirusScan}>Status</th>
+                                    </>
+                                )}
                             </tr>
                         </thead>
                         <tbody>

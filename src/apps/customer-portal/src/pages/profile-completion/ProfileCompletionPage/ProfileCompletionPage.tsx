@@ -6,7 +6,8 @@ import useSWR, { SWRResponse } from 'swr'
 
 import { EnvironmentConfig } from '~/config'
 import { CountryLookup, useCountryLookup, UserSkill, UserSkillDisplayModes } from '~/libs/core'
-import { Button, InputSelect, InputSelectOption, LoadingSpinner } from '~/libs/ui'
+import { Button, InputSelect, InputSelectOption, LoadingSpinner, Tooltip } from '~/libs/ui'
+import { getPreferredRoleLabelByValue } from '~/libs/shared/lib/utils/roles'
 
 import { PageWrapper } from '../../../lib'
 import {
@@ -14,6 +15,7 @@ import {
     DEFAULT_PAGE_SIZE,
     fetchCompletedProfiles,
     fetchMemberSkillsData,
+    type OpenToWorkFilter,
 } from '../../../lib/services/profileCompletion.service'
 
 import styles from './ProfileCompletionPage.module.scss'
@@ -23,14 +25,16 @@ const DISPLAY_SKILLS_COUNT = 5
 export const ProfileCompletionPage: FC = () => {
     const [selectedCountry, setSelectedCountry] = useState<string>('all')
     const [currentPage, setCurrentPage] = useState<number>(1)
+    const [selectedOpenToWork, setSelectedOpenToWork] = useState<OpenToWorkFilter>('all')
     const [memberSkills, setMemberSkills] = useState<Map<string | number, UserSkill[]>>(new Map())
     const countryLookup: CountryLookup[] | undefined = useCountryLookup()
 
     const countryCodeFilter = selectedCountry === 'all' ? undefined : selectedCountry
 
     const { data, error, isValidating }: SWRResponse<CompletedProfilesResponse> = useSWR(
-        `customer-portal-completed-profiles:${countryCodeFilter || 'all'}:${currentPage}:${DEFAULT_PAGE_SIZE}`,
-        () => fetchCompletedProfiles(countryCodeFilter, currentPage, DEFAULT_PAGE_SIZE),
+        // eslint-disable-next-line max-len
+        `customer-portal-completed-profiles:${countryCodeFilter || 'all'}:${selectedOpenToWork}:${currentPage}:${DEFAULT_PAGE_SIZE}`,
+        () => fetchCompletedProfiles(countryCodeFilter, currentPage, DEFAULT_PAGE_SIZE, selectedOpenToWork),
         {
             revalidateOnFocus: false,
         },
@@ -127,6 +131,15 @@ export const ProfileCompletionPage: FC = () => {
             const displayedSkills = principalSkills.slice(0, DISPLAY_SKILLS_COUNT)
             const additionalSkillsCount = Math.max(0, principalSkills.length - DISPLAY_SKILLS_COUNT)
 
+            const availability = profile.openToWork?.availability
+            const isOpenToWork = typeof availability === 'string' && availability.trim().length > 0
+            const openToWorkLabel = isOpenToWork ? 'Yes' : 'No'
+            const openToWorkRolesText = profile.openToWork?.preferredRoles && profile.openToWork.preferredRoles.length
+                ? profile.openToWork.preferredRoles.map(getPreferredRoleLabelByValue)
+                    .filter(Boolean)
+                    .join(', ')
+                : 'No role preferences set'
+
             return {
                 ...profile,
                 additionalSkillsCount,
@@ -137,11 +150,14 @@ export const ProfileCompletionPage: FC = () => {
                 fullName: [profile.firstName, profile.lastName].filter(Boolean)
                     .join(' ')
                     .trim(),
+                isOpenToWork,
                 locationLabel: [profile.city, profile.countryCode
                     ? countryMap.get(profile.countryCode) || profile.countryName || profile.countryCode
                     : profile.countryName]
                     .filter(Boolean)
                     .join(', '),
+                openToWorkLabel,
+                openToWorkRolesText,
             }
         })
         .sort((a, b) => a.handle.localeCompare(b.handle)), [profiles, countryMap, memberSkills])
@@ -156,18 +172,37 @@ export const ProfileCompletionPage: FC = () => {
             className={styles.container}
         >
             <div className={styles.headerRow}>
-                <div className={styles.filterWrap}>
-                    <InputSelect
-                        name='country'
-                        label='Country'
-                        options={countryOptions}
-                        value={selectedCountry}
-                        onChange={(event: ChangeEvent<HTMLInputElement>) => {
-                            setSelectedCountry(event.target.value || 'all')
-                            setCurrentPage(1)
-                        }}
-                        placeholder='Select country'
-                    />
+                <div className={styles.filterWrapper}>
+                    <div className={styles.filterWrap}>
+                        <InputSelect
+                            name='country'
+                            label='Country'
+                            options={countryOptions}
+                            value={selectedCountry}
+                            onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                                setSelectedCountry(event.target.value || 'all')
+                                setCurrentPage(1)
+                            }}
+                            placeholder='Select country'
+                        />
+                    </div>
+                    <div className={styles.filterWrap}>
+                        <InputSelect
+                            name='openToWork'
+                            label='Open to Work'
+                            options={[
+                                { label: 'All', value: 'all' },
+                                { label: 'Yes', value: 'yes' },
+                                { label: 'No', value: 'no' },
+                            ]}
+                            value={selectedOpenToWork}
+                            onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                                setSelectedOpenToWork((event.target.value || 'all') as OpenToWorkFilter)
+                                setCurrentPage(1)
+                            }}
+                            placeholder='Select'
+                        />
+                    </div>
                 </div>
                 <div className={styles.counterCard}>
                     <span className={styles.counterLabel}>Fully Completed Profiles</span>
@@ -202,6 +237,7 @@ export const ProfileCompletionPage: FC = () => {
                                     <th>Member</th>
                                     <th>Handle</th>
                                     <th>Location</th>
+                                    <th>Open to Work</th>
                                     <th>Principal Skills</th>
                                     <th>{' '}</th>
                                 </tr>
@@ -231,6 +267,24 @@ export const ProfileCompletionPage: FC = () => {
                                             </a>
                                         </td>
                                         <td>{profile.locationLabel || profile.countryLabel}</td>
+                                        <td>
+                                            {
+                                                profile.openToWorkLabel === 'Yes' ? (
+                                                    <Tooltip content={profile.openToWorkRolesText}>
+                                                        <span className={styles.openToWorkYes}>
+                                                            {profile.openToWorkLabel}
+                                                        </span>
+                                                    </Tooltip>
+                                                ) : (
+                                                    <span
+                                                        className={styles.openToWorkNo}
+                                                        title={profile.openToWorkRolesText}
+                                                    >
+                                                        {profile.openToWorkLabel}
+                                                    </span>
+                                                )
+                                            }
+                                        </td>
                                         <td>
                                             {profile.displayedSkills && profile.displayedSkills.length > 0 ? (
                                                 <div className={styles.skillsList}>

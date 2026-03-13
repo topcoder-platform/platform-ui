@@ -1325,6 +1325,7 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
                 isDownloading={isDownloading}
                 getRestriction={getHistoryRestriction}
                 getSubmissionMeta={resolveSubmissionMeta}
+                aiReviewers={props.aiReviewers}
             />
 
             <ConfirmModal

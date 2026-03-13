@@ -16,6 +16,7 @@ import {
     ReportsIndexResponse,
 } from '../../lib/services'
 
+import { getReportParameterValidationError } from './reports-page.validation'
 import styles from './ReportsPage.module.scss'
 
 const pageTitle = 'Reports'
@@ -46,6 +47,119 @@ const buildDownloadName = (
 const formatMethod = (method?: string): string => (
     method ? method.toUpperCase() : 'GET'
 )
+
+type ReportActionsProps = {
+    handleCsvDownload: () => void
+    handleJsonDownload: () => void
+    handleOpenBulkMemberLookup: () => void
+    isDownloadDisabled: boolean
+    isHandleLookupPostReport: boolean
+    isPostReport: boolean
+}
+
+const ReportActions = (props: ReportActionsProps): JSX.Element => {
+    if (props.isPostReport) {
+        return (
+            <div className={styles.postReportNotice}>
+                <div>
+                    This report uses a POST request body and cannot be downloaded from this
+                    page.
+                </div>
+                {props.isHandleLookupPostReport ? (
+                    <Button primary onClick={props.handleOpenBulkMemberLookup}>
+                        Open Bulk Member Lookup
+                    </Button>
+                ) : (
+                    <div className={styles.postReportHint}>
+                        Run this report from its dedicated workflow.
+                    </div>
+                )}
+            </div>
+        )
+    }
+
+    return (
+        <div className={styles.actions}>
+            <Button
+                primary
+                disabled={props.isDownloadDisabled}
+                onClick={props.handleJsonDownload}
+            >
+                Download as JSON
+            </Button>
+            <Button
+                secondary
+                disabled={props.isDownloadDisabled}
+                onClick={props.handleCsvDownload}
+            >
+                Download as CSV
+            </Button>
+        </div>
+    )
+}
+
+type SelectedReportSectionProps = {
+    renderParameterInput: (parameter: ReportParameter) => JSX.Element
+    reportActions: JSX.Element
+    selectedReport?: ReportDefinition
+}
+
+const SelectedReportSection = (props: SelectedReportSectionProps): JSX.Element => {
+    if (!props.selectedReport) {
+        return <></>
+    }
+
+    return (
+        <>
+            <div className={styles.reportDetails}>
+                <div className={styles.reportTitle}>{props.selectedReport.name}</div>
+                {props.selectedReport.description && (
+                    <div className={styles.reportDescription}>
+                        {props.selectedReport.description}
+                    </div>
+                )}
+                <div className={styles.reportMeta}>
+                    {formatMethod(props.selectedReport.method)}
+                    {' '}
+                    {props.selectedReport.path}
+                </div>
+            </div>
+
+            {(props.selectedReport.parameters?.length ?? 0) > 0 && (
+                <div className={styles.params}>
+                    {props.selectedReport.parameters?.map(parameter => (
+                        <div key={parameter.name}>
+                            <div className={styles.paramLabel}>
+                                {parameter.name}
+                                {parameter.required ? ' *' : ''}
+                            </div>
+                            {parameter.description && (
+                                <div className={styles.paramMeta}>{parameter.description}</div>
+                            )}
+                            <div className={styles.paramMeta}>
+                                Location:
+                                {' '}
+                                {parameter.location || 'query'}
+                                {' '}
+                                • Type:
+                                {' '}
+                                {parameter.type}
+                            </div>
+                            {parameter.type.endsWith('[]') && (
+                                <div className={styles.paramHint}>
+                                    Use comma-separated values for lists.
+                                </div>
+                            )}
+                            {props.renderParameterInput(parameter)}
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {props.reportActions}
+        </>
+    )
+}
 
 export const ReportsPage: FC = () => {
     const navigate: NavigateFunction = useNavigate()
@@ -176,8 +290,24 @@ export const ReportsPage: FC = () => {
         return queryString ? `${path}?${queryString}` : path
     }, [parameterValues])
 
+    const parameterErrors = useMemo<Record<string, string>>(() => (
+        (selectedReport?.parameters ?? []).reduce<Record<string, string>>((errors, parameter) => {
+            const error = getReportParameterValidationError(parameter, parameterValues[parameter.name])
+
+            if (error) {
+                errors[parameter.name] = error
+            }
+
+            return errors
+        }, {})
+    ), [parameterValues, selectedReport])
+
+    const hasInvalidParameterValues = useMemo(() => (
+        Object.keys(parameterErrors).length > 0
+    ), [parameterErrors])
+
     const handleDownload = useCallback(async (format: 'json' | 'csv') => {
-        if (!selectedReport) {
+        if (!selectedReport || hasInvalidParameterValues) {
             return
         }
 
@@ -202,7 +332,7 @@ export const ReportsPage: FC = () => {
         } finally {
             setDownloadingFormat(undefined)
         }
-    }, [buildReportPathWithParams, parameterValues.challengeId, selectedReport])
+    }, [buildReportPathWithParams, hasInvalidParameterValues, parameterValues.challengeId, selectedReport])
 
     const handleOpenBulkMemberLookup = useCallback(() => {
         navigate(bulkMemberLookupRouteId)
@@ -227,6 +357,7 @@ export const ReportsPage: FC = () => {
         || isPostReport
         || isDownloading
         || requiredParamsMissing
+        || hasInvalidParameterValues
         || hasUnresolvedPathParams
 
     const handleJsonDownload = useCallback(() => {
@@ -237,59 +368,24 @@ export const ReportsPage: FC = () => {
         handleDownload('csv')
     }, [handleDownload])
 
-    const reportActions = useMemo(() => {
-        if (isPostReport) {
-            return (
-                <div className={styles.postReportNotice}>
-                    <div>
-                        This report uses a POST request body and cannot be downloaded from this
-                        page.
-                    </div>
-                    {isHandleLookupPostReport ? (
-                        <Button primary onClick={handleOpenBulkMemberLookup}>
-                            Open Bulk Member Lookup
-                        </Button>
-                    ) : (
-                        <div className={styles.postReportHint}>
-                            Run this report from its dedicated workflow.
-                        </div>
-                    )}
-                </div>
-            )
-        }
-
-        return (
-            <div className={styles.actions}>
-                <Button
-                    primary
-                    disabled={isDownloadDisabled}
-                    onClick={handleJsonDownload}
-                >
-                    Download as JSON
-                </Button>
-                <Button
-                    secondary
-                    disabled={isDownloadDisabled}
-                    onClick={handleCsvDownload}
-                >
-                    Download as CSV
-                </Button>
-            </div>
-        )
-    }, [
-        handleCsvDownload,
-        handleJsonDownload,
-        handleOpenBulkMemberLookup,
-        isDownloadDisabled,
-        isHandleLookupPostReport,
-        isPostReport,
-    ])
+    const reportActions = (
+        <ReportActions
+            handleCsvDownload={handleCsvDownload}
+            handleJsonDownload={handleJsonDownload}
+            handleOpenBulkMemberLookup={handleOpenBulkMemberLookup}
+            isDownloadDisabled={isDownloadDisabled}
+            isHandleLookupPostReport={isHandleLookupPostReport}
+            isPostReport={isPostReport}
+        />
+    )
 
     const renderParameterInput = useCallback((parameter: ReportParameter) => {
         const commonProps = {
             label: parameter.name,
             name: parameter.name,
-            placeholder: parameter.type.endsWith('[]') ? 'Comma-separated values' : 'Enter value',
+            placeholder: parameter.type === 'date'
+                ? 'YYYY-MM-DD'
+                : (parameter.type.endsWith('[]') ? 'Comma-separated values' : 'Enter value'),
         }
 
         if (parameter.type === 'boolean') {
@@ -329,11 +425,13 @@ export const ReportsPage: FC = () => {
                 {...commonProps}
                 value={parameterValues[parameter.name] ?? ''}
                 onChange={handleParameterChange}
+                error={parameterErrors[parameter.name]}
+                dirty={!!parameterErrors[parameter.name]}
                 type={parameter.type === 'number' ? 'number' : 'text'}
-                hint={parameter.type === 'date' ? 'Use ISO format (e.g. 2024-01-31)' : undefined}
+                hint={parameter.type === 'date' ? 'Use ISO 8601 format (e.g. 2024-01-31)' : undefined}
             />
         )
-    }, [createSelectParamChange, handleParameterChange, parameterValues])
+    }, [createSelectParamChange, handleParameterChange, parameterErrors, parameterValues])
 
     return (
         <>
@@ -384,56 +482,11 @@ export const ReportsPage: FC = () => {
                             </div>
                         )}
 
-                        {selectedReport && (
-                            <>
-                                <div className={styles.reportDetails}>
-                                    <div className={styles.reportTitle}>{selectedReport.name}</div>
-                                    {selectedReport.description && (
-                                        <div className={styles.reportDescription}>
-                                            {selectedReport.description}
-                                        </div>
-                                    )}
-                                    <div className={styles.reportMeta}>
-                                        {formatMethod(selectedReport.method)}
-                                        {' '}
-                                        {selectedReport.path}
-                                    </div>
-                                </div>
-
-                                {(selectedReport.parameters?.length ?? 0) > 0 && (
-                                    <div className={styles.params}>
-                                        {selectedReport.parameters?.map(parameter => (
-                                            <div key={parameter.name}>
-                                                <div className={styles.paramLabel}>
-                                                    {parameter.name}
-                                                    {parameter.required ? ' *' : ''}
-                                                </div>
-                                                {parameter.description && (
-                                                    <div className={styles.paramMeta}>{parameter.description}</div>
-                                                )}
-                                                <div className={styles.paramMeta}>
-                                                    Location:
-                                                    {' '}
-                                                    {parameter.location || 'query'}
-                                                    {' '}
-                                                    • Type:
-                                                    {' '}
-                                                    {parameter.type}
-                                                </div>
-                                                {parameter.type.endsWith('[]') && (
-                                                    <div className={styles.paramHint}>
-                                                        Use comma-separated values for lists.
-                                                    </div>
-                                                )}
-                                                {renderParameterInput(parameter)}
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-
-                                {reportActions}
-                            </>
-                        )}
+                        <SelectedReportSection
+                            renderParameterInput={renderParameterInput}
+                            reportActions={reportActions}
+                            selectedReport={selectedReport}
+                        />
                     </>
                 )}
             </div>

@@ -7,9 +7,12 @@ import { ChallengeDetailContextModel } from '../models'
 
 export const ChallengeDetailContext: Context<ChallengeDetailContextModel>
     = createContext<ChallengeDetailContextModel>({
+        aiReviewDecisionsBySubmissionId: {},
         challengeId: undefined,
         challengeInfo: undefined,
         challengeSubmissions: [],
+        isLoadingAiReviewConfig: false,
+        isLoadingAiReviewDecisions: false,
         isLoadingChallengeInfo: false,
         isLoadingChallengeResources: false,
         isLoadingChallengeSubmissions: false,
