@@ -55,35 +55,8 @@
     color: $black-60;
 }
 
-.infoTooltipContent {
-    min-width: 220px;
-    font-size: 12px;
-    color: $tc-white;
-}
-
 .runStatus {
     min-width: 105px;
-}
-
-.infoTooltipRow {
-    display: flex;
-    justify-content: space-between;
-    gap: $sp-2;
-    margin-bottom: $sp-1;
-    border-bottom: 1px solid $black-10;
-}
-
-.infoTooltipTitle {
-    font-weight: 700;
-    margin-top: $sp-1;
-    margin-bottom: $sp-1;
-}
-
-.infoTooltipLine {
-    line-height: 1.4;
-    &.indent {
-        text-indent: 85px;
-    }
 }
 
 .table {
