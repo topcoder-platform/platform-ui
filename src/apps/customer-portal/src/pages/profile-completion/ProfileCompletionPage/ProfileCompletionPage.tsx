@@ -131,8 +131,7 @@ export const ProfileCompletionPage: FC = () => {
             const displayedSkills = principalSkills.slice(0, DISPLAY_SKILLS_COUNT)
             const additionalSkillsCount = Math.max(0, principalSkills.length - DISPLAY_SKILLS_COUNT)
 
-            const availability = profile.openToWork?.availability
-            const isOpenToWork = typeof availability === 'string' && availability.trim().length > 0
+            const isOpenToWork = profile.isOpenToWork === true
             const openToWorkLabel = isOpenToWork ? 'Yes' : 'No'
             const openToWorkRolesText = profile.openToWork?.preferredRoles && profile.openToWork.preferredRoles.length
                 ? profile.openToWork.preferredRoles.map(getPreferredRoleLabelByValue)
@@ -278,7 +277,6 @@ export const ProfileCompletionPage: FC = () => {
                                                 ) : (
                                                     <span
                                                         className={styles.openToWorkNo}
-                                                        title={profile.openToWorkRolesText}
                                                     >
                                                         {profile.openToWorkLabel}
                                                     </span>
