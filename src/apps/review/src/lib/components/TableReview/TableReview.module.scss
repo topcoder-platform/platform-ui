@@ -17,6 +17,10 @@
             }
         }
     }
+
+    :global(.TableCell) {
+        vertical-align: middle;
+    }
 }
 
 .textBlue {
@@ -217,6 +221,12 @@
     color: $red-140;
 }
 
+.resultPending {
+    @extend .resultPill;
+    background-color: $yellow-25;
+    color: $yellow-140;
+}
+
 
 .aiReviews {
     margin: $sp-2 0;
@@ -274,3 +284,4 @@
     justify-content: flex-end;
     gap: $sp-3;
 }
+

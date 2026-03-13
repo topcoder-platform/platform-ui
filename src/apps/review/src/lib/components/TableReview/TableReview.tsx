@@ -55,15 +55,14 @@ import { getSubmissionHistoryKey } from '../../utils/submissionHistory'
 import {
     AiReviewDecisionEscalation,
     AiReviewEscalationDecision,
-    createAiReviewEscalation,
     getAiReviewEscalationsCacheKey,
-    updateAiReviewEscalation,
     updateReview,
 } from '../../services'
 import { TableWrapper } from '../TableWrapper'
+import EscalationModals from './EscalationModals'
 import { SubmissionHistoryModal } from '../SubmissionHistoryModal'
 import { ConfirmModal } from '../ConfirmModal'
-import { createSubmissionMetaMap } from '../common/columnUtils'
+import { createSubmissionMetaMap, getProfileUrl } from '../common/columnUtils'
 import {
     renderReviewDateCell,
     renderReviewerCell,
@@ -330,15 +329,18 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
         [escalationDecisions],
     )
 
-    const handleByMemberId = useMemo<Map<string, string>>(
+    const handleByMemberId = useMemo<Map<string, { handle?: string; color?: string }>>(
         () => {
-            const map = new Map<string, string>()
+            const map = new Map<string, { handle?: string; color?: string }>()
             ;[
                 ...resources,
                 ...reviewers,
             ].forEach(resource => {
-                if (resource.memberId && resource.memberHandle) {
-                    map.set(String(resource.memberId), resource.memberHandle)
+                if (resource.memberId) {
+                    map.set(String(resource.memberId), {
+                        handle: resource.memberHandle,
+                        color: (resource as any).handleColor ?? undefined,
+                    })
                 }
             })
 
@@ -356,10 +358,6 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
         decision: AiReviewEscalationDecision
         escalation: AiReviewDecisionEscalation
     } | undefined>(undefined)
-    const [escalationNotes, setEscalationNotes] = useState('')
-    const [unlockNotes, setUnlockNotes] = useState('')
-    const [verifyNotes, setVerifyNotes] = useState('')
-    const [isEscalationSubmitting, setIsEscalationSubmitting] = useState(false)
 
     const openReopenDialog = useCallback((submission: SubmissionRow, review: AggregatedReviewDetail): void => {
         const resourceId = review.reviewInfo?.resourceId ?? review.resourceId
@@ -376,30 +374,6 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
         setPendingReopen(undefined)
     }, [])
 
-    const closeEscalateDialog = useCallback((): void => {
-        if (isEscalationSubmitting) {
-            return
-        }
-        setEscalateTarget(undefined)
-        setEscalationNotes('')
-    }, [isEscalationSubmitting])
-
-    const closeUnlockDialog = useCallback((): void => {
-        if (isEscalationSubmitting) {
-            return
-        }
-        setUnlockTarget(undefined)
-        setUnlockNotes('')
-    }, [isEscalationSubmitting])
-
-    const closeVerifyDialog = useCallback((): void => {
-        if (isEscalationSubmitting) {
-            return
-        }
-        setVerifyTarget(undefined)
-        setVerifyNotes('')
-    }, [isEscalationSubmitting])
-
     const revalidateEscalationData = useCallback(async (): Promise<void> => {
         if (!challengeInfo?.id) {
             return
@@ -411,134 +385,7 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
         }))
     }, [challengeInfo?.id, mutate])
 
-    const handleSubmitEscalation = useCallback(async (): Promise<void> => {
-        if (!escalateTarget?.id) {
-            return
-        }
 
-        const decision = escalationDecisionBySubmissionId.get(escalateTarget.id)
-        if (!decision?.aiReviewDecisionId) {
-            toast.error('Unable to find AI review decision for this submission.')
-            return
-        }
-
-        const notes = escalationNotes.trim()
-        if (!notes) {
-            toast.error('Escalation notes are required.')
-            return
-        }
-
-        setIsEscalationSubmitting(true)
-
-        try {
-            await createAiReviewEscalation(decision.aiReviewDecisionId, {
-                escalationNotes: notes,
-            })
-            toast.success('Escalation request submitted.')
-            closeEscalateDialog()
-            if (challengeInfo?.id) {
-                await refreshChallengeReviewData(challengeInfo.id)
-            }
-            await revalidateEscalationData()
-        } catch (error) {
-            handleError(error)
-        } finally {
-            setIsEscalationSubmitting(false)
-        }
-    }, [
-        escalateTarget?.id,
-        escalationDecisionBySubmissionId,
-        escalationNotes,
-        closeEscalateDialog,
-        challengeInfo?.id,
-        revalidateEscalationData,
-    ])
-
-    const handleSubmitUnlock = useCallback(async (): Promise<void> => {
-        if (!unlockTarget?.id) {
-            return
-        }
-
-        const decision = escalationDecisionBySubmissionId.get(unlockTarget.id)
-        if (!decision?.aiReviewDecisionId) {
-            toast.error('Unable to find AI review decision for this submission.')
-            return
-        }
-
-        const notes = unlockNotes.trim()
-        if (!notes) {
-            toast.error('Reason is required to unlock this submission.')
-            return
-        }
-
-        setIsEscalationSubmitting(true)
-
-        try {
-            await createAiReviewEscalation(decision.aiReviewDecisionId, {
-                approverNotes: notes,
-            })
-            toast.success('Submission unlocked successfully.')
-            closeUnlockDialog()
-            if (challengeInfo?.id) {
-                await refreshChallengeReviewData(challengeInfo.id)
-            }
-            await revalidateEscalationData()
-        } catch (error) {
-            handleError(error)
-        } finally {
-            setIsEscalationSubmitting(false)
-        }
-    }, [
-        unlockTarget?.id,
-        escalationDecisionBySubmissionId,
-        unlockNotes,
-        closeUnlockDialog,
-        challengeInfo?.id,
-        revalidateEscalationData,
-    ])
-
-    const handleVerifyEscalation = useCallback(async (
-        status: 'APPROVED' | 'REJECTED',
-    ): Promise<void> => {
-        if (!verifyTarget?.decision.aiReviewDecisionId || !verifyTarget.escalation.id) {
-            return
-        }
-
-        const notes = verifyNotes.trim()
-        if (!notes) {
-            toast.error('Reason is required to approve or reject this request.')
-            return
-        }
-
-        setIsEscalationSubmitting(true)
-
-        try {
-            await updateAiReviewEscalation(
-                verifyTarget.decision.aiReviewDecisionId,
-                verifyTarget.escalation.id,
-                {
-                    approverNotes: notes,
-                    status,
-                },
-            )
-            toast.success(status === 'APPROVED' ? 'Escalation approved.' : 'Escalation rejected.')
-            closeVerifyDialog()
-            if (challengeInfo?.id) {
-                await refreshChallengeReviewData(challengeInfo.id)
-            }
-            await revalidateEscalationData()
-        } catch (error) {
-            handleError(error)
-        } finally {
-            setIsEscalationSubmitting(false)
-        }
-    }, [
-        verifyTarget,
-        verifyNotes,
-        closeVerifyDialog,
-        challengeInfo?.id,
-        revalidateEscalationData,
-    ])
 
     const handleConfirmReopen = useCallback(async (): Promise<void> => {
         const reviewId = pendingReopen?.review?.reviewInfo?.id
@@ -803,6 +650,41 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
                 String(escalation.createdBy ?? '') === String(loginUserInfo?.userId ?? '')
             ))
             if (hasOwnEscalation) {
+                // If there are escalations already, show the latest status pill
+                const escalations = decision.escalations ?? []
+                if (escalations.length) {
+                    const latest = escalations.slice().sort((a, b) => (
+                        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+                    ))[0]
+
+                    if (latest) {
+                        const status = (latest.status ?? '').toUpperCase()
+                        if (status === 'PENDING_APPROVAL') {
+                            return (
+                                <span className={styles.resultPending}>
+                                    Pending
+                                </span>
+                            )
+                        }
+
+                        if (status === 'APPROVED') {
+                            return (
+                                <span className={styles.resultPass}>
+                                    Approved
+                                </span>
+                            )
+                        }
+
+                        if (status === 'REJECTED') {
+                            return (
+                                <span className={styles.resultFail}>
+                                    Rejected
+                                </span>
+                            )
+                        }
+                    }
+                }
+
                 return undefined
             }
 
@@ -813,9 +695,9 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
                     className={classNames(styles.actionButton, styles.textBlue)}
                     onClick={() => {
                         setEscalateTarget(submission)
-                        setEscalationNotes('')
                     }}
                 >
+                    <IconOutline.ArrowCircleUpIcon className='icon-lg' />
                     Escalate
                 </button>
             )
@@ -851,9 +733,9 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
                             escalation: pendingEscalation,
                             submission,
                         })
-                        setVerifyNotes('')
                     }}
                 >
+                    <IconOutline.SearchIcon className='icon-lg' />
                     Verify
                 </button>
             )
@@ -877,9 +759,9 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
                     className={classNames(styles.actionButton, styles.textBlue)}
                     onClick={() => {
                         setUnlockTarget(submission)
-                        setUnlockNotes('')
                     }}
                 >
+                    <IconOutline.LockOpenIcon className='icon-lg' />
                     Unlock
                 </button>
             )
@@ -1181,141 +1063,18 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
                 />
             )}
 
-            <BaseModal
-                open={Boolean(escalateTarget)}
-                onClose={closeEscalateDialog}
-                title={`Escalate Submission #${escalateTarget?.id ?? ''}`}
-                classNames={{
-                    modal: styles.escalationModal,
-                }}
-            >
-                <div className={styles.escalationDescription}>
-                    Escalate this submission to the copilot. Add your reason below why you think
-                    the submission should pass the AI Review.
-                </div>
-                <textarea
-                    className={styles.escalationTextarea}
-                    placeholder='Add your notes here...'
-                    value={escalationNotes}
-                    onChange={event => setEscalationNotes(event.target.value)}
-                    disabled={isEscalationSubmitting}
-                />
-                <div className={styles.escalationActions}>
-                    <button
-                        type='button'
-                        className='borderButton'
-                        onClick={closeEscalateDialog}
-                        disabled={isEscalationSubmitting}
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        type='button'
-                        className='filledButton'
-                        onClick={handleSubmitEscalation}
-                        disabled={isEscalationSubmitting}
-                    >
-                        Send to Copilot
-                    </button>
-                </div>
-            </BaseModal>
-
-            <BaseModal
-                open={Boolean(verifyTarget)}
-                onClose={closeVerifyDialog}
-                title='Verify Escalation Request'
-                classNames={{
-                    modal: styles.escalationModal,
-                }}
-            >
-                <div className={styles.verifySubmission}>Submission: #{verifyTarget?.submission.id ?? ''}</div>
-                <div className={styles.escalationDescription}>
-                    The AI reviewers failed submission #{verifyTarget?.submission.id ?? ''}. The reviewer
-                    has challenged this result and is requesting a manual override. Review their
-                    reasoning below and decide whether to approve or reject this escalation.
-                </div>
-                <div className={styles.verifyDetails}>
-                    <div>
-                        <strong>Reviewer:</strong>{' '}
-                        {handleByMemberId.get(String(verifyTarget?.escalation.createdBy ?? ''))
-                            ?? verifyTarget?.escalation.createdBy
-                            ?? '--'}
-                    </div>
-                    <div>
-                        <strong>Reviewer’s Note:</strong>
-                    </div>
-                    <div>{verifyTarget?.escalation.escalationNotes ?? '--'}</div>
-                </div>
-                <textarea
-                    className={styles.escalationTextarea}
-                    placeholder='Add your reasoning before approving or rejecting...'
-                    value={verifyNotes}
-                    onChange={event => setVerifyNotes(event.target.value)}
-                    disabled={isEscalationSubmitting}
-                />
-                <div className={styles.escalationActions}>
-                    <button
-                        type='button'
-                        className='borderButton'
-                        onClick={() => {
-                            handleVerifyEscalation('REJECTED')
-                        }}
-                        disabled={isEscalationSubmitting}
-                    >
-                        Reject Request
-                    </button>
-                    <button
-                        type='button'
-                        className='filledButton'
-                        onClick={() => {
-                            handleVerifyEscalation('APPROVED')
-                        }}
-                        disabled={isEscalationSubmitting}
-                    >
-                        Approve Override
-                    </button>
-                </div>
-            </BaseModal>
-
-            <BaseModal
-                open={Boolean(unlockTarget)}
-                onClose={closeUnlockDialog}
-                title='Unlock Submission'
-                classNames={{
-                    modal: styles.escalationModal,
-                }}
-            >
-                <div className={styles.verifySubmission}>Submission: #{unlockTarget?.id ?? ''}</div>
-                <div className={styles.escalationDescription}>
-                    The AI reviewers failed submission #{unlockTarget?.id ?? ''}. As a copilot/admin,
-                    you can unlock it and allow it to proceed to human review. Add your reason below.
-                </div>
-                <textarea
-                    className={styles.escalationTextarea}
-                    placeholder='Add your reasoning for approving the submission...'
-                    value={unlockNotes}
-                    onChange={event => setUnlockNotes(event.target.value)}
-                    disabled={isEscalationSubmitting}
-                />
-                <div className={styles.escalationActions}>
-                    <button
-                        type='button'
-                        className='borderButton'
-                        onClick={closeUnlockDialog}
-                        disabled={isEscalationSubmitting}
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        type='button'
-                        className='filledButton'
-                        onClick={handleSubmitUnlock}
-                        disabled={isEscalationSubmitting}
-                    >
-                        Unlock Submission
-                    </button>
-                </div>
-            </BaseModal>
+            <EscalationModals
+                challengeId={challengeInfo?.id}
+                escalateTarget={escalateTarget}
+                setEscalateTarget={setEscalateTarget}
+                unlockTarget={unlockTarget}
+                setUnlockTarget={setUnlockTarget}
+                verifyTarget={verifyTarget}
+                setVerifyTarget={setVerifyTarget}
+                escalationDecisionBySubmissionId={escalationDecisionBySubmissionId}
+                revalidateEscalationData={revalidateEscalationData}
+                handleByMemberId={handleByMemberId}
+            />
 
             <SubmissionHistoryModal
                 open={Boolean(historyKey)}
