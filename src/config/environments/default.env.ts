@@ -77,6 +77,7 @@ export const API = {
 export const STANDARDIZED_SKILLS_API = `${API.V5}/standardized-skills`
 export const TC_FINANCE_API = `${API.V6}/finance`
 export const TC_AI_API = `${API.V6}/ai`
+export const MARATHON_MATCH_API = `${API.V6}/marathon-match`
 
 export const AUTH = {
     ACCOUNTS_APP_CONNECTOR: `https://accounts-auth0.${TC_DOMAIN}`,

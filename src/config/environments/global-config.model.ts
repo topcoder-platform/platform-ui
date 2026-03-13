@@ -31,6 +31,7 @@ export interface GlobalConfig {
     STANDARDIZED_SKILLS_API: string,
     TC_FINANCE_API: string,
     TC_AI_API: string,
+    MARATHON_MATCH_API?: string,
     AUTH: {
         ACCOUNTS_APP_CONNECTOR: string
     }

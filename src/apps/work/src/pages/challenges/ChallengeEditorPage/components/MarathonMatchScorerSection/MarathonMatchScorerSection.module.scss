@@ -1,0 +1,330 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.headerRow {
+    align-items: flex-start;
+    display: flex;
+    gap: 16px;
+    justify-content: space-between;
+}
+
+.headerRow h3,
+.sectionHeader h3,
+.sectionHeader h4 {
+    color: $black-80;
+    margin: 0;
+}
+
+.headerRow p,
+.sectionHeader p {
+    color: $black-60;
+    font-size: 14px;
+    line-height: 1.5;
+    margin: 4px 0 0;
+}
+
+.saveIndicator {
+    background: #eef7f3;
+    border: 1px solid #b5d8c7;
+    border-radius: 999px;
+    color: #137d60;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 8px 12px;
+    white-space: nowrap;
+}
+
+.infoBanner,
+.emptyState,
+.loading,
+.error {
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.5;
+    padding: 12px 14px;
+}
+
+.infoBanner {
+    background: #eef4ff;
+    border: 1px solid #bfd0f9;
+    color: #2f4b84;
+}
+
+.emptyState,
+.loading {
+    background: #f6f8fa;
+    color: $black-60;
+}
+
+.error {
+    background: #fff1f0;
+    border: 1px solid #efc0bb;
+    color: #b04337;
+}
+
+.sectionCard,
+.phaseCard,
+.summaryCard {
+    background: $tc-white;
+    border: 1px solid $black-20;
+    border-radius: 10px;
+}
+
+.sectionCard {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 18px;
+}
+
+.sectionHeader {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.testerToolbar,
+.fieldGrid,
+.summaryGrid,
+.phaseGrid,
+.modalGrid {
+    display: grid;
+    gap: 16px;
+}
+
+.testerToolbar,
+.fieldGrid,
+.summaryGrid {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.phaseGrid,
+.modalGrid {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.inlineActions,
+.footerActions,
+.modalActions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.inlineActions,
+.footerActions {
+    align-items: flex-end;
+    justify-content: flex-end;
+}
+
+.fieldGroup,
+.checkboxField {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.fieldGroup span {
+    color: $black-80;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.fieldGroup input,
+.fieldGroup select,
+.sourceEditor {
+    border: 1px solid #c9ced3;
+    border-radius: 8px;
+    font-size: 14px;
+    min-height: 42px;
+    padding: 10px 12px;
+}
+
+.checkboxField {
+    align-items: flex-start;
+    justify-content: center;
+    min-height: 42px;
+}
+
+.checkboxField input {
+    accent-color: #137d60;
+}
+
+.checkboxField span {
+    color: $black-80;
+    font-size: 14px;
+}
+
+.fieldError {
+    color: $red-100;
+    font-size: 12px;
+}
+
+.phaseCards {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.phaseCard {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 16px;
+}
+
+.summaryCard {
+    padding: 16px;
+}
+
+.summaryCard strong {
+    color: $black-80;
+    display: block;
+    font-size: 18px;
+    margin-top: 6px;
+}
+
+.summaryLabel {
+    color: $black-60;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.validationCard {
+    border-radius: 8px;
+    padding: 14px;
+}
+
+.validationCardValid {
+    background: #eef7f3;
+    border: 1px solid #b5d8c7;
+    color: #137d60;
+}
+
+.validationCardInvalid {
+    background: #fff1f0;
+    border: 1px solid #efc0bb;
+    color: #b04337;
+}
+
+.validationList {
+    margin: 10px 0 0;
+    padding-left: 18px;
+}
+
+.modalContent {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.sourceEditorShell {
+    background: #f8fafc;
+    border: 1px solid #c9ced3;
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+}
+
+.lineNumbers {
+    background: #eef2f6;
+    border-right: 1px solid #d7dadc;
+    bottom: 0;
+    color: #70757a;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 12px;
+    left: 0;
+    line-height: 1.6;
+    overflow: hidden;
+    padding: 12px 8px 12px 12px;
+    position: absolute;
+    text-align: right;
+    top: 0;
+    user-select: none;
+    width: 56px;
+}
+
+.sourceEditor {
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    height: 320px;
+    line-height: 1.6;
+    overflow-y: auto;
+    padding: 12px 14px 12px 70px;
+    resize: vertical;
+    tab-size: 4;
+    white-space: pre;
+    width: 100%;
+}
+
+.sourceEditor:focus {
+    outline: none;
+}
+
+.previewPanel {
+    border: 1px solid $black-20;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.previewHeader {
+    background: #f6f8fa;
+    border-bottom: 1px solid $black-20;
+    color: $black-80;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 10px 14px;
+}
+
+.codePreview {
+    background: #fdfdfd;
+    margin: 0;
+    max-height: 320px;
+    overflow: auto;
+    padding: 16px;
+}
+
+.codePreview :global(.hljs) {
+    background: transparent;
+    padding: 0;
+}
+
+.codePreview :global(code),
+.codePreview :global(.hljs) {
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+@media (max-width: 767px) {
+    .headerRow {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .inlineActions,
+    .footerActions,
+    .modalActions {
+        justify-content: stretch;
+    }
+
+    .sourceEditorShell {
+        min-height: 320px;
+    }
+
+    .lineNumbers {
+        width: 44px;
+    }
+
+    .sourceEditor {
+        padding-left: 58px;
+    }
+}

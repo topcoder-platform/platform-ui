@@ -116,6 +116,9 @@ import {
     MaximumSubmissionsField,
 } from './MaximumSubmissionsField'
 import {
+    MarathonMatchScorerSection,
+} from './MarathonMatchScorerSection'
+import {
     NDAField,
 } from './NDAField'
 import {
@@ -628,6 +631,8 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const [lastSaved, setLastSaved] = useState<Date | undefined>()
     const [saveError, setSaveError] = useState<string | undefined>()
     const [saveStatus, setSaveStatus] = useState<'error' | 'idle' | 'saved' | 'saving'>('idle')
+    const [scorerHasUnsavedChanges, setScorerHasUnsavedChanges] = useState<boolean>(false)
+    const [scorerHasError, setScorerHasError] = useState<boolean>(false)
 
     const formMethods = useForm<ChallengeEditorFormData>({
         defaultValues: transformChallengeToFormData(props.challenge),
@@ -765,7 +770,18 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const isChallengeCreated = !!currentChallengeId
     const isFunChallengeSelected = values.funChallenge === true
     const showFunChallengeField = isMarathonMatchChallengeSelected
+    const showMarathonMatchScorerSection = isMarathonMatchChallengeSelected && isChallengeCreated
     const showPrizesAndBillingSection = !isFunChallengeSelected
+    const isScorerBlockingChallengeActions = showMarathonMatchScorerSection
+        && (scorerHasUnsavedChanges || scorerHasError)
+
+    const handleScorerConfigChange = useCallback(
+        (hasUnsavedChanges: boolean, hasError: boolean): void => {
+            setScorerHasUnsavedChanges(hasUnsavedChanges)
+            setScorerHasError(hasError)
+        },
+        [],
+    )
 
     useEffect(() => {
         setCurrentChallengeId(props.challenge?.id)
@@ -873,6 +889,15 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         showCheckpointPrizes,
         values.prizeSets,
     ])
+
+    useEffect(() => {
+        if (showMarathonMatchScorerSection) {
+            return
+        }
+
+        setScorerHasUnsavedChanges(false)
+        setScorerHasError(false)
+    }, [showMarathonMatchScorerSection])
 
     const createNewChallenge = useCallback(
         async (): Promise<void> => {
@@ -1042,6 +1067,11 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     )
 
     const launchChallenge = useCallback(async (): Promise<void> => {
+        if (isScorerBlockingChallengeActions) {
+            showErrorToast('Save a valid scorer configuration before launching the challenge')
+            throw new Error('Scorer configuration is blocking challenge launch')
+        }
+
         await handleSubmit(
             async formData => {
                 await saveChallenge(formData, {
@@ -1056,6 +1086,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         )()
     }, [
         handleSubmit,
+        isScorerBlockingChallengeActions,
         saveChallenge,
     ])
 
@@ -1064,7 +1095,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             return undefined
         }
 
-        onRegisterLaunchAction(currentChallengeId
+        onRegisterLaunchAction(currentChallengeId && !isScorerBlockingChallengeActions
             ? launchChallenge
             : undefined)
 
@@ -1073,6 +1104,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         }
     }, [
         currentChallengeId,
+        isScorerBlockingChallengeActions,
         launchChallenge,
         onRegisterLaunchAction,
     ])
@@ -1082,6 +1114,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         enabled: !!currentChallengeId
             && formState.isDirty
             && formState.isValid
+            && !isScorerBlockingChallengeActions
             && normalizedChallengeStatus !== CHALLENGE_STATUS.NEW,
         formValues: values,
         onSave: async formData => {
@@ -1109,6 +1142,11 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 isSaveAsDraft,
             }: SaveStatusMetadata = getSaveStatusMetadata(formData.status, {})
 
+            if (isScorerBlockingChallengeActions) {
+                showErrorToast('Save a valid scorer configuration before saving the challenge')
+                return
+            }
+
             if (isSaveAsDraft) {
                 const reviewerValidationError = getReviewerValidationError(formData, {
                     challengeTypeAbbreviation: resolvedChallengeTypeAbbreviation,
@@ -1133,6 +1171,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         },
         [
             clearErrors,
+            isScorerBlockingChallengeActions,
             isTaskChallengeSelected,
             resolvedChallengeTypeAbbreviation,
             resolvedChallengeTypeName,
@@ -1260,6 +1299,21 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                 </div>
                             </section>
 
+                            {showMarathonMatchScorerSection
+                                ? (
+                                    <section className={styles.section}>
+                                        <h3 className={styles.sectionTitle}>Scorer</h3>
+                                        <div className={styles.block}>
+                                            <MarathonMatchScorerSection
+                                                challengeId={currentChallengeId || ''}
+                                                onScorerConfigChange={handleScorerConfigChange}
+                                                phases={values.phases ?? []}
+                                            />
+                                        </div>
+                                    </section>
+                                )
+                                : undefined}
+
                             <section className={styles.section}>
                                 <h3 className={styles.sectionTitle}>Advanced Options</h3>
                                 <div className={styles.grid}>
@@ -1321,6 +1375,15 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                     {saveError
                                         ? <span className={styles.errorText}>{saveError}</span>
                                         : undefined}
+                                    {isScorerBlockingChallengeActions
+                                        ? (
+                                            <span className={styles.warningText}>
+                                                The scorer configuration must be saved and valid before the
+                                                {' '}
+                                                challenge can be saved or launched.
+                                            </span>
+                                        )
+                                        : undefined}
                                 </div>
 
                                 <div className={styles.actions}>
@@ -1328,7 +1391,10 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                         Cancel
                                     </Link>
                                     <Button
-                                        disabled={!formState.isDirty || isSaving}
+                                        disabled={
+                                            (!formState.isDirty || isSaving)
+                                            || isScorerBlockingChallengeActions
+                                        }
                                         label={submitButtonLabel}
                                         primary
                                         size='lg'
