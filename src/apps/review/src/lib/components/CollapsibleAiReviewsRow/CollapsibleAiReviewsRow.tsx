@@ -5,13 +5,14 @@ import { IconOutline, Tooltip } from '~/libs/ui'
 
 import { AiReviewsTable, AiWorkflowRunStatus } from '../AiReviewsTable'
 import {
-    AiReviewConfigWorkflow,
     AiReviewDecision,
     AiReviewDecisionStatus,
     BackendSubmission,
     ChallengeDetailContextModel,
 } from '../../models'
 import { ChallengeDetailContext } from '../../contexts'
+import { AiScoreFormulaTooltip } from '../AiScoreFormulaTooltip'
+import { formatScore } from '../AiScoreFormulaTooltip/AiScoreFormulaTooltip'
 
 import styles from './CollapsibleAiReviewsRow.module.scss'
 
@@ -20,22 +21,6 @@ interface CollapsibleAiReviewsRowProps {
     defaultOpen?: boolean
     aiReviewers: { aiWorkflowId: string }[]
     submission: Pick<BackendSubmission, 'id'|'virusScan'>
-}
-
-function formatScore(value?: number | null): string {
-    if (typeof value !== 'number' || Number.isNaN(value)) {
-        return '-'
-    }
-
-    return value.toFixed(2)
-}
-
-function formatWeight(value?: number): string {
-    if (typeof value !== 'number' || Number.isNaN(value)) {
-        return '-'
-    }
-
-    return `${value.toFixed(0)}%`
 }
 
 function normalizeDecisionStatus(
@@ -60,11 +45,6 @@ function normalizeDecisionStatus(
     return 'pending'
 }
 
-function getConfiguredWorkflowName(workflow?: AiReviewConfigWorkflow['workflow']): string | undefined {
-    const configuredName = workflow?.name?.trim()
-    return configuredName || undefined
-}
-
 const CollapsibleAiReviewsRow: FC<CollapsibleAiReviewsRowProps> = props => {
     const challengeDetailContext: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
     const aiReviewConfig: ChallengeDetailContextModel['aiReviewConfig'] = challengeDetailContext.aiReviewConfig
@@ -81,45 +61,15 @@ const CollapsibleAiReviewsRow: FC<CollapsibleAiReviewsRowProps> = props => {
         [aiReviewDecisionsBySubmissionId, props.submission.id],
     )
 
-    const configuredWorkflows = useMemo<AiReviewConfigWorkflow[]>(
-        () => aiReviewConfig?.workflows ?? [],
-        [aiReviewConfig],
-    )
-
     const normalizedStatus = useMemo(
         () => normalizeDecisionStatus(currentDecision?.status),
         [currentDecision?.status],
     )
 
-    const formulaTooltip = useMemo(() => {
-        if (!aiReviewConfig || !configuredWorkflows.length) {
-            return undefined
-        }
-
-        const formulaLines = configuredWorkflows.map((workflow, i) => {
-            const label = getConfiguredWorkflowName(workflow.workflow) ?? 'AI Reviewer'
-            return `${!i ? '' : '+ '}${formatWeight(workflow.weightPercent)} * ${label}`
-        })
-
-        return (
-            <div className={styles.infoTooltipContent}>
-                <div className={styles.infoTooltipRow}>
-                    <strong>Min Passing Score</strong>
-                    <span>{formatScore(aiReviewConfig.minPassingThreshold)}</span>
-                </div>
-                <div className={styles.infoTooltipTitle}>AI Score Formula</div>
-                <div className={styles.infoTooltipLine}>
-                    Overall Score =
-                    {' '}
-                    {formulaLines[0]}
-                </div>
-                {formulaLines.slice(1)
-                    .map(line => (
-                        <div key={line} className={classNames(styles.infoTooltipLine, styles.indent)}>{line}</div>
-                    ))}
-            </div>
-        )
-    }, [aiReviewConfig, configuredWorkflows])
+    const formulaTooltip = useMemo(
+        () => <AiScoreFormulaTooltip aiReviewConfig={aiReviewConfig} />,
+        [aiReviewConfig],
+    )
 
     const [isOpen, setIsOpen] = useState(props.defaultOpen ?? false)
 
