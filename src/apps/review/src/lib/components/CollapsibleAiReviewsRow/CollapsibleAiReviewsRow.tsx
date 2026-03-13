@@ -1,4 +1,5 @@
-import { FC, useCallback, useContext, useMemo, useState } from 'react'
+import { FC, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import classNames from 'classnames'
 
 import { IconOutline, Tooltip } from '~/libs/ui'
@@ -72,15 +73,48 @@ const CollapsibleAiReviewsRow: FC<CollapsibleAiReviewsRowProps> = props => {
     )
 
     const [isOpen, setIsOpen] = useState(props.defaultOpen ?? false)
+    const [portalContainer, setPortalContainer] = useState<HTMLTableCellElement | undefined>(undefined)
+    const wrapperRef = useRef<HTMLDivElement | null>(null)
+    const createdRowRef = useRef<HTMLTableRowElement | undefined>(undefined)
 
     const toggleOpen = useCallback(() => {
         setIsOpen(wasOpen => !wasOpen)
     }, [])
 
+    useEffect(() => {
+        // create portal row when opened
+        if (isOpen && wrapperRef.current) {
+            const parentTr = wrapperRef.current.closest('tr') as HTMLTableRowElement | null
+            const parentTd = wrapperRef.current.closest('td') as HTMLTableCellElement | null
+            const tbody = parentTr?.parentElement as HTMLTableSectionElement | null
+            if (parentTr && tbody) {
+                const createdTr = document.createElement('tr')
+                const createdTd = document.createElement('td')
+                const colCount = parentTd?.getAttribute('colSpan') ? parentTd.colSpan : parentTr.children.length || 1
+                createdTd.colSpan = colCount
+                createdTr.appendChild(createdTd)
+                parentTr.insertAdjacentElement('afterend', createdTr)
+                createdRowRef.current = createdTr
+                setPortalContainer(createdTd)
+            }
+        }
+
+        return () => {
+            // cleanup created row
+            const createdTr = createdRowRef.current
+            if (createdTr && createdTr.parentElement) {
+                createdTr.parentElement.removeChild(createdTr)
+                createdRowRef.current = undefined
+            }
+
+            setPortalContainer(undefined)
+        }
+    }, [isOpen])
+
     const hasScore = currentDecision?.totalScore !== null && currentDecision?.totalScore !== undefined
 
     return (
-        <div className={classNames(props.className, styles.wrap)}>
+        <div ref={wrapperRef} className={classNames(props.className, styles.wrap)}>
             <div className={classNames(styles.header, 'trigger')} onClick={toggleOpen}>
                 <span className={classNames(styles.reviewersDropdown)}>
                     {aiReviewersCount}
@@ -116,10 +150,11 @@ const CollapsibleAiReviewsRow: FC<CollapsibleAiReviewsRowProps> = props => {
                     )}
                 </div>
             </div>
-            {isOpen && (
+            {isOpen && portalContainer && createPortal(
                 <div className={classNames(styles.table, 'reviews-table')}>
                     <AiReviewsTable submission={props.submission} aiReviewers={props.aiReviewers} />
-                </div>
+                </div>,
+                portalContainer,
             )}
         </div>
     )

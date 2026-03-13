@@ -9,6 +9,7 @@ interface StatusLabelProps {
     label?: string
     score?: number
     status: 'pending' | 'failed' | 'passed' | 'failed-score'
+    action?: ReactNode
 }
 
 const StatusLabel: FC<StatusLabelProps> = props => (
@@ -22,6 +23,7 @@ const StatusLabel: FC<StatusLabelProps> = props => (
             </span>
         )}
         {!props.hideLabel && props.label}
+        {props.action}
     </div>
 )
 

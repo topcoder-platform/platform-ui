@@ -73,7 +73,6 @@ const ReviewsSidebar: FC<ReviewsSidebarProps> = props => {
                                 run={workflowRun}
                                 showScore
                                 hideLabel
-                                submissionId={submissionId}
                             />
                         )}
                         <div className={styles.mobileMenuIcon}>
@@ -126,7 +125,6 @@ const ReviewsSidebar: FC<ReviewsSidebarProps> = props => {
                                         run={run}
                                         showScore
                                         hideLabel
-                                        submissionId={submissionId}
                                     />
                                 </li>
                             )

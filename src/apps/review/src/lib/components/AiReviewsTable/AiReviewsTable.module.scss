@@ -11,7 +11,7 @@
     color: #C1294F;
     border-radius: $sp-1;
     padding: $sp-4;
-    margin-bottom: $sp-2;
+    margin: $sp-2 $sp-3;
 
     display: flex;
     gap: $sp-2;
@@ -30,6 +30,11 @@
     font-size: 14px;
     max-width: 720px;
     white-space: normal;
+}
+
+.reRunIcon {
+    color: $black-80;
+    cursor: pointer;
 }
 
 .reviewsTable {
