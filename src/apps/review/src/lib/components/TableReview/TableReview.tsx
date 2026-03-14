@@ -9,8 +9,6 @@ import {
 } from 'react'
 import { Link } from 'react-router-dom'
 import { toast } from 'react-toastify'
-import { useSWRConfig } from 'swr'
-import { FullConfiguration } from 'swr/dist/types'
 import _ from 'lodash'
 import classNames from 'classnames'
 
@@ -22,8 +20,6 @@ import { IconOutline, Table, TableColumn } from '~/libs/ui'
 
 import { ChallengeDetailContext, ReviewAppContext } from '../../contexts'
 import {
-    AiReviewEscalationsResponse,
-    useFetchAiReviewEscalations,
     useRole,
     useScorecardPassingScores,
     useSubmissionDownloadAccess,
@@ -57,7 +53,6 @@ import { getSubmissionHistoryKey } from '../../utils/submissionHistory'
 import {
     AiReviewDecisionEscalation,
     AiReviewEscalationDecision,
-    getAiReviewEscalationsCacheKey,
     updateReview,
 } from '../../services'
 import { TableWrapper } from '../TableWrapper'
@@ -119,6 +114,7 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
     const mappingReviewAppeal: MappingReviewAppeal = props.mappingReviewAppeal
     const {
         challengeInfo,
+        aiReviewDecisionsBySubmissionId,
         reviewers,
         resources,
         myResources,
@@ -139,7 +135,6 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
         restrictionMessage,
     }: UseSubmissionDownloadAccessResult = useSubmissionDownloadAccess()
     const { loginUserInfo }: ReviewAppContextModel = useContext(ReviewAppContext)
-    const { mutate }: FullConfiguration = useSWRConfig()
 
     const isTablet = useMemo<boolean>(() => screenWidth <= 744, [screenWidth])
     const reviewPhaseDatas = useMemo<SubmissionInfo[]>(
@@ -319,17 +314,48 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
         [aggregatedRows],
     )
 
-    const {
-        decisions: escalationDecisions,
-    }: AiReviewEscalationsResponse = useFetchAiReviewEscalations({
-        challengeId: challengeInfo?.id,
-        submissionLocked: true,
-    })
-
     const escalationDecisionBySubmissionId = useMemo<Map<string, AiReviewEscalationDecision>>(
-        () => new Map(escalationDecisions.map(decision => [decision.submissionId, decision])),
-        [escalationDecisions],
+        () => aggregatedRows.reduce((result, row) => {
+            const aiDecision = row.id
+                ? aiReviewDecisionsBySubmissionId[row.id]
+                : undefined
+
+            if (!row.id || !aiDecision?.id) {
+                return result
+            }
+
+            result.set(row.id, {
+                aiReviewDecisionId: aiDecision.id,
+                challengeId: challengeInfo?.id ?? null,
+                decisionStatus: aiDecision.status,
+                escalations: aiDecision.escalations ?? [],
+                submissionId: row.id,
+                submissionLocked: aiDecision.submissionLocked,
+            })
+
+            return result
+        }, new Map<string, AiReviewEscalationDecision>()),
+        [aggregatedRows, aiReviewDecisionsBySubmissionId, challengeInfo?.id],
     )
+
+    const isSubmissionAiLocked = useCallback((
+        submission: SubmissionReviewerRow,
+        decision?: AiReviewEscalationDecision,
+    ): boolean => {
+        if (submission.status !== 'AI_FAILED_REVIEW') {
+            return false
+        }
+
+        const hasApprovedEscalation = Boolean(decision?.escalations?.some(escalation => (
+            (escalation.status ?? '').toUpperCase() === 'APPROVED'
+        )))
+
+        if (decision && decision.submissionLocked === false && hasApprovedEscalation) {
+            return false
+        }
+
+        return true
+    }, [])
 
     const handleByMemberId = useMemo<Map<string, { handle?: string; color?: string }>>(
         () => {
@@ -377,15 +403,10 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
     }, [])
 
     const revalidateEscalationData = useCallback(async (): Promise<void> => {
-        if (!challengeInfo?.id) {
-            return
+        if (challengeInfo?.id) {
+            await refreshChallengeReviewData(challengeInfo.id)
         }
-
-        await mutate(getAiReviewEscalationsCacheKey({
-            challengeId: challengeInfo.id,
-            submissionLocked: true,
-        }))
-    }, [challengeInfo?.id, mutate])
+    }, [challengeInfo?.id])
 
     const handleConfirmReopen = useCallback(async (): Promise<void> => {
         const reviewId = pendingReopen?.review?.reviewInfo?.id
@@ -630,12 +651,16 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
         }
 
         const buildEscalateAction = (): JSX.Element | undefined => {
-            const isLocked = submission.status === 'AI_FAILED_REVIEW'
-            if (!isLocked || !submission.id) {
+            if (!submission.id) {
                 return undefined
             }
 
             const decision = escalationDecisionBySubmissionId.get(submission.id)
+            const isLocked = isSubmissionAiLocked(submission, decision)
+            if (!isLocked) {
+                return undefined
+            }
+
             if (!decision?.submissionLocked) {
                 return undefined
             }
@@ -707,12 +732,16 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
         }
 
         const buildVerifyAction = (): JSX.Element | undefined => {
-            const isLocked = submission.status === 'AI_FAILED_REVIEW'
-            if (!isLocked || !submission.id || !canManageCompletedReviews) {
+            if (!submission.id || !canManageCompletedReviews) {
                 return undefined
             }
 
             const decision = escalationDecisionBySubmissionId.get(submission.id)
+            const isLocked = isSubmissionAiLocked(submission, decision)
+            if (!isLocked) {
+                return undefined
+            }
+
             if (!decision?.submissionLocked) {
                 return undefined
             }
@@ -745,12 +774,16 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
         }
 
         const buildUnlockAction = (): JSX.Element | undefined => {
-            const isLocked = submission.status === 'AI_FAILED_REVIEW'
-            if (!isLocked || !submission.id || !canManageCompletedReviews) {
+            if (!submission.id || !canManageCompletedReviews) {
                 return undefined
             }
 
             const decision = escalationDecisionBySubmissionId.get(submission.id)
+            const isLocked = isSubmissionAiLocked(submission, decision)
+            if (!isLocked) {
+                return undefined
+            }
+
             if (!decision?.submissionLocked) {
                 return undefined
             }
@@ -817,6 +850,7 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
         myReviewerResourceIds,
         openReopenDialog,
         pendingReopen,
+        isSubmissionAiLocked,
         shouldShowHistoryActions,
     ])
 
@@ -898,7 +932,11 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
                 columnId: 'review-result',
                 label: 'Review Result',
                 renderer: (row: SubmissionReviewerRow) => {
-                    const isLocked = row.status === 'AI_FAILED_REVIEW'
+                    const decision = row.id
+                        ? escalationDecisionBySubmissionId.get(row.id)
+                        : undefined
+                    const isLocked = isSubmissionAiLocked(row, decision)
+
                     if (!row.isFirstReviewerRow) {
                         return <span />
                     }
@@ -990,6 +1028,8 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
         scoreVisibilityConfig,
         shouldShowAggregatedActions,
         canManageCompletedReviews,
+        escalationDecisionBySubmissionId,
+        isSubmissionAiLocked,
         isReopening,
         openReopenDialog,
         challengeInfo,
