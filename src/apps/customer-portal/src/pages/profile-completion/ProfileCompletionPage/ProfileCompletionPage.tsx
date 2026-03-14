@@ -1,7 +1,7 @@
 /* eslint-disable react/jsx-no-bind */
 /* eslint-disable no-await-in-loop */
 /* eslint-disable complexity */
-import { ChangeEvent, FC, useEffect, useMemo, useState } from 'react'
+import { ChangeEvent, FC, useCallback, useEffect, useMemo, useState } from 'react'
 import useSWR, { SWRResponse } from 'swr'
 
 import { EnvironmentConfig } from '~/config'
@@ -41,7 +41,7 @@ export const ProfileCompletionPage: FC = () => {
 
     const countryCodeFilter = selectedCountry === 'all' ? undefined : selectedCountry
 
-    const loadSkillOptions = async (query: string): Promise<InputMultiselectOption[]> => {
+    const loadSkillOptions = useCallback(async (query: string): Promise<InputMultiselectOption[]> => {
         setSkillOptionsLoading(true)
         try {
             const baseUrl = `${EnvironmentConfig.API.V5}/standardized-skills`
@@ -68,7 +68,7 @@ export const ProfileCompletionPage: FC = () => {
         } finally {
             setSkillOptionsLoading(false)
         }
-    }
+    }, [])
 
     const { data, error, isValidating }: SWRResponse<CompletedProfilesResponse> = useSWR(
         // eslint-disable-next-line max-len
