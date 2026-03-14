@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 import {
     FC,
     MouseEvent,
@@ -8,19 +9,20 @@ import {
 } from 'react'
 import { Link } from 'react-router-dom'
 import { toast } from 'react-toastify'
-import _ from 'lodash'
-import classNames from 'classnames'
 import { useSWRConfig } from 'swr'
 import { FullConfiguration } from 'swr/dist/types'
+import _ from 'lodash'
+import classNames from 'classnames'
 
 import { TableMobile } from '~/apps/admin/src/lib/components/common/TableMobile'
 import { IsRemovingType } from '~/apps/admin/src/lib/models'
 import { MobileTableColumn } from '~/apps/admin/src/lib/models/MobileTableColumn.model'
 import { handleError, useWindowSize, WindowSize } from '~/libs/shared'
-import { BaseModal, IconOutline, Table, TableColumn } from '~/libs/ui'
+import { IconOutline, Table, TableColumn } from '~/libs/ui'
 
 import { ChallengeDetailContext, ReviewAppContext } from '../../contexts'
 import {
+    AiReviewEscalationsResponse,
     useFetchAiReviewEscalations,
     useRole,
     useScorecardPassingScores,
@@ -59,10 +61,9 @@ import {
     updateReview,
 } from '../../services'
 import { TableWrapper } from '../TableWrapper'
-import EscalationModals from './EscalationModals'
 import { SubmissionHistoryModal } from '../SubmissionHistoryModal'
 import { ConfirmModal } from '../ConfirmModal'
-import { createSubmissionMetaMap, getProfileUrl } from '../common/columnUtils'
+import { createSubmissionMetaMap } from '../common/columnUtils'
 import {
     renderReviewDateCell,
     renderReviewerCell,
@@ -81,6 +82,7 @@ import { buildSubmissionReviewerRows, resolveSubmissionReviewResult } from '../c
 import { shouldIncludeInReviewPhase } from '../../utils/reviewPhaseGuards'
 import { CollapsibleAiReviewsRow } from '../CollapsibleAiReviewsRow'
 
+import { EscalationModals } from './EscalationModals'
 import styles from './TableReview.module.scss'
 
 export interface TableReviewProps {
@@ -319,7 +321,7 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
 
     const {
         decisions: escalationDecisions,
-    } = useFetchAiReviewEscalations({
+    }: AiReviewEscalationsResponse = useFetchAiReviewEscalations({
         challengeId: challengeInfo?.id,
         submissionLocked: true,
     })
@@ -331,15 +333,15 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
 
     const handleByMemberId = useMemo<Map<string, { handle?: string; color?: string }>>(
         () => {
-            const map = new Map<string, { handle?: string; color?: string }>()
-            ;[
+            const map = new Map<string, { handle?: string; color?: string }>();
+            [
                 ...resources,
                 ...reviewers,
             ].forEach(resource => {
                 if (resource.memberId) {
                     map.set(String(resource.memberId), {
-                        handle: resource.memberHandle,
                         color: (resource as any).handleColor ?? undefined,
+                        handle: resource.memberHandle,
                     })
                 }
             })
@@ -384,8 +386,6 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
             submissionLocked: true,
         }))
     }, [challengeInfo?.id, mutate])
-
-
 
     const handleConfirmReopen = useCallback(async (): Promise<void> => {
         const reviewId = pendingReopen?.review?.reviewInfo?.id
@@ -653,9 +653,12 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
                 // If there are escalations already, show the latest status pill
                 const escalations = decision.escalations ?? []
                 if (escalations.length) {
-                    const latest = escalations.slice().sort((a, b) => (
-                        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-                    ))[0]
+                    const latest = escalations.slice()
+                        .sort((a, b) => (
+                            new Date(b.createdAt)
+                                .getTime() - new Date(a.createdAt)
+                                .getTime()
+                        ))[0]
 
                     if (latest) {
                         const status = (latest.status ?? '').toUpperCase()
@@ -693,7 +696,7 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
                     key='escalate-submission'
                     type='button'
                     className={classNames(styles.actionButton, styles.textBlue)}
-                    onClick={() => {
+                    onClick={function onClick() {
                         setEscalateTarget(submission)
                     }}
                 >
@@ -727,7 +730,7 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
                     key='verify-escalation'
                     type='button'
                     className={classNames(styles.actionButton, styles.textBlue)}
-                    onClick={() => {
+                    onClick={function onClick() {
                         setVerifyTarget({
                             decision,
                             escalation: pendingEscalation,
@@ -757,7 +760,7 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
                     key='unlock-submission'
                     type='button'
                     className={classNames(styles.actionButton, styles.textBlue)}
-                    onClick={() => {
+                    onClick={function onClick() {
                         setUnlockTarget(submission)
                     }}
                 >

@@ -1,5 +1,5 @@
-import React, { useCallback, useState } from 'react'
 import { toast } from 'react-toastify'
+import React, { ChangeEvent, useCallback, useState } from 'react'
 
 import { BaseModal } from '~/libs/ui'
 import { handleError } from '~/libs/shared'
@@ -11,9 +11,10 @@ import {
     updateAiReviewEscalation,
 } from '../../services'
 import { refreshChallengeReviewData } from '../../utils'
-import styles from './TableReview.module.scss'
 import type { SubmissionReviewerRow } from '../common/types'
 import { getProfileUrl } from '../common'
+
+import styles from './TableReview.module.scss'
 
 interface Props {
     challengeId?: string
@@ -32,18 +33,7 @@ interface Props {
     handleByMemberId: Map<string, { handle?: string; color?: string }>
 }
 
-export default function EscalationModals({
-    challengeId,
-    escalateTarget,
-    setEscalateTarget,
-    unlockTarget,
-    setUnlockTarget,
-    verifyTarget,
-    setVerifyTarget,
-    escalationDecisionBySubmissionId,
-    revalidateEscalationData,
-    handleByMemberId,
-}: Props): JSX.Element {
+export const EscalationModals = (props: Props): JSX.Element => {
     const [escalationNotes, setEscalationNotes] = useState('')
     const [unlockNotes, setUnlockNotes] = useState('')
     const [verifyNotes, setVerifyNotes] = useState('')
@@ -51,25 +41,25 @@ export default function EscalationModals({
 
     function closeEscalateDialog(): void {
         if (isSubmitting) return
-        setEscalateTarget(undefined)
+        props.setEscalateTarget(undefined)
         setEscalationNotes('')
     }
 
     function closeUnlockDialog(): void {
         if (isSubmitting) return
-        setUnlockTarget(undefined)
+        props.setUnlockTarget(undefined)
         setUnlockNotes('')
     }
 
     function closeVerifyDialog(): void {
         if (isSubmitting) return
-        setVerifyTarget(undefined)
+        props.setVerifyTarget(undefined)
         setVerifyNotes('')
     }
 
     const renderEscalationReviewer = useCallback((createdBy?: string | number | null) => {
         const memberId = String(createdBy ?? '')
-        const info = handleByMemberId.get(memberId)
+        const info = props.handleByMemberId.get(memberId)
         const handle = info?.handle ?? (createdBy ? String(createdBy) : '--')
         const color = info?.color ?? '#2a2a2a'
         const profileUrl = info?.handle ? getProfileUrl(info.handle) : undefined
@@ -81,12 +71,12 @@ export default function EscalationModals({
         ) : (
             <span style={{ color }}>{handle}</span>
         )
-    }, [handleByMemberId])
+    }, [props.handleByMemberId])
 
     async function handleSubmitEscalation(): Promise<void> {
-        if (!escalateTarget?.id) return
+        if (!props.escalateTarget?.id) return
 
-        const decision = escalationDecisionBySubmissionId.get(escalateTarget.id)
+        const decision = props.escalationDecisionBySubmissionId.get(props.escalateTarget.id)
         if (!decision?.aiReviewDecisionId) {
             toast.error('Unable to find AI review decision for this submission.')
             return
@@ -106,10 +96,11 @@ export default function EscalationModals({
             })
             toast.success('Escalation request submitted.')
             closeEscalateDialog()
-            if (challengeId) {
-                await refreshChallengeReviewData(challengeId)
+            if (props.challengeId) {
+                await refreshChallengeReviewData(props.challengeId)
             }
-            await revalidateEscalationData()
+
+            await props.revalidateEscalationData()
         } catch (error) {
             handleError(error)
         } finally {
@@ -118,9 +109,9 @@ export default function EscalationModals({
     }
 
     async function handleSubmitUnlock(): Promise<void> {
-        if (!unlockTarget?.id) return
+        if (!props.unlockTarget?.id) return
 
-        const decision = escalationDecisionBySubmissionId.get(unlockTarget.id)
+        const decision = props.escalationDecisionBySubmissionId.get(props.unlockTarget.id)
         if (!decision?.aiReviewDecisionId) {
             toast.error('Unable to find AI review decision for this submission.')
             return
@@ -140,10 +131,11 @@ export default function EscalationModals({
             })
             toast.success('Submission unlocked successfully.')
             closeUnlockDialog()
-            if (challengeId) {
-                await refreshChallengeReviewData(challengeId)
+            if (props.challengeId) {
+                await refreshChallengeReviewData(props.challengeId)
             }
-            await revalidateEscalationData()
+
+            await props.revalidateEscalationData()
         } catch (error) {
             handleError(error)
         } finally {
@@ -152,7 +144,7 @@ export default function EscalationModals({
     }
 
     async function handleVerifyEscalation(status: 'APPROVED' | 'REJECTED'): Promise<void> {
-        if (!verifyTarget?.decision.aiReviewDecisionId || !verifyTarget.escalation.id) return
+        if (!props.verifyTarget?.decision.aiReviewDecisionId || !props.verifyTarget.escalation.id) return
 
         const notes = verifyNotes.trim()
         if (!notes) {
@@ -164,8 +156,8 @@ export default function EscalationModals({
 
         try {
             await updateAiReviewEscalation(
-                verifyTarget.decision.aiReviewDecisionId,
-                verifyTarget.escalation.id,
+                props.verifyTarget.decision.aiReviewDecisionId,
+                props.verifyTarget.escalation.id,
                 {
                     approverNotes: notes,
                     status,
@@ -173,10 +165,11 @@ export default function EscalationModals({
             )
             toast.success(status === 'APPROVED' ? 'Escalation approved.' : 'Escalation rejected.')
             closeVerifyDialog()
-            if (challengeId) {
-                await refreshChallengeReviewData(challengeId)
+            if (props.challengeId) {
+                await refreshChallengeReviewData(props.challengeId)
             }
-            await revalidateEscalationData()
+
+            await props.revalidateEscalationData()
         } catch (error) {
             handleError(error)
         } finally {
@@ -187,9 +180,9 @@ export default function EscalationModals({
     return (
         <>
             <BaseModal
-                open={Boolean(escalateTarget)}
+                open={Boolean(props.escalateTarget)}
                 onClose={closeEscalateDialog}
-                title={`Escalate Submission #${escalateTarget?.id ?? ''}`}
+                title={`Escalate Submission #${props.escalateTarget?.id ?? ''}`}
                 size='body'
                 classNames={{ modal: styles.escalationModal }}
             >
@@ -201,73 +194,130 @@ export default function EscalationModals({
                     className={styles.escalationTextarea}
                     placeholder='Add your notes here...'
                     value={escalationNotes}
-                    onChange={event => setEscalationNotes(event.target.value)}
+                    onChange={function onChange(event: ChangeEvent<HTMLTextAreaElement>) {
+                        setEscalationNotes(event.target.value)
+                    }}
                     disabled={isSubmitting}
                 />
                 <div className={styles.escalationActions}>
-                    <button type='button' className='borderButton' onClick={closeEscalateDialog} disabled={isSubmitting}>Cancel</button>
-                    <button type='button' className='filledButton' onClick={handleSubmitEscalation} disabled={isSubmitting}>Send to Copilot</button>
+                    <button
+                        type='button'
+                        className='borderButton'
+                        onClick={closeEscalateDialog}
+                        disabled={isSubmitting}
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type='button'
+                        className='filledButton'
+                        onClick={handleSubmitEscalation}
+                        disabled={isSubmitting}
+                    >
+                        Send to Copilot
+                    </button>
                 </div>
             </BaseModal>
 
             <BaseModal
-                open={Boolean(verifyTarget)}
+                open={Boolean(props.verifyTarget)}
                 onClose={closeVerifyDialog}
                 title='Verify Escalation Request'
                 size='body'
                 classNames={{ modal: styles.escalationModal }}
             >
-                <div className={styles.verifySubmission}>Submission: #{verifyTarget?.submission.id ?? ''}</div>
+                <div className={styles.verifySubmission}>
+                    Submission: #
+                    {props.verifyTarget?.submission.id ?? ''}
+                </div>
                 <div className={styles.escalationDescription}>
-                    The AI reviewers failed submission #{verifyTarget?.submission.id ?? ''}. The reviewer
+                    The AI reviewers failed submission #
+                    {props.verifyTarget?.submission.id ?? ''}
+                    . The reviewer
                     has challenged this result and is requesting a manual override. Review their
                     reasoning below and decide whether to approve or reject this escalation.
                 </div>
                 <div className={styles.verifyDetails}>
                     <div>
-                        <strong>Reviewer:</strong>{' '}
-                        {renderEscalationReviewer ? renderEscalationReviewer(verifyTarget?.escalation.createdBy) : (verifyTarget?.escalation.createdBy ?? '--')}
+                        <strong>Reviewer:</strong>
+                        {' '}
+                        {renderEscalationReviewer
+                            ? renderEscalationReviewer(props.verifyTarget?.escalation.createdBy)
+                            : (props.verifyTarget?.escalation.createdBy ?? '--')}
                     </div>
                     <div>
                         <strong>Reviewer’s Note:</strong>
                     </div>
-                    <div>{verifyTarget?.escalation.escalationNotes ?? '--'}</div>
+                    <div>{props.verifyTarget?.escalation.escalationNotes ?? '--'}</div>
                 </div>
                 <textarea
                     className={styles.escalationTextarea}
                     placeholder='Add your reasoning before approving or rejecting...'
                     value={verifyNotes}
-                    onChange={event => setVerifyNotes(event.target.value)}
+                    onChange={function (event: ChangeEvent<HTMLTextAreaElement>) { setVerifyNotes(event.target.value) }}
                     disabled={isSubmitting}
                 />
                 <div className={styles.escalationActions}>
-                    <button type='button' className='borderButton' onClick={() => handleVerifyEscalation('REJECTED')} disabled={isSubmitting}>Reject Request</button>
-                    <button type='button' className='filledButton' onClick={() => handleVerifyEscalation('APPROVED')} disabled={isSubmitting}>Approve Override</button>
+                    <button
+                        type='button'
+                        className='borderButton'
+                        onClick={function onClick() { handleVerifyEscalation('REJECTED') }}
+                        disabled={isSubmitting}
+                    >
+                        Reject Request
+                    </button>
+                    <button
+                        type='button'
+                        className='filledButton'
+                        onClick={function onClick() { handleVerifyEscalation('APPROVED') }}
+                        disabled={isSubmitting}
+                    >
+                        Approve Override
+                    </button>
                 </div>
             </BaseModal>
 
             <BaseModal
-                open={Boolean(unlockTarget)}
+                open={Boolean(props.unlockTarget)}
                 onClose={closeUnlockDialog}
                 title='Unlock Submission'
                 size='body'
                 classNames={{ modal: styles.escalationModal }}
             >
-                <div className={styles.verifySubmission}>Submission: #{unlockTarget?.id ?? ''}</div>
+                <div className={styles.verifySubmission}>
+                    Submission: #
+                    {props.unlockTarget?.id ?? ''}
+                </div>
                 <div className={styles.escalationDescription}>
-                    The AI reviewers failed submission #{unlockTarget?.id ?? ''}. As a copilot/admin,
+                    The AI reviewers failed submission #
+                    {props.unlockTarget?.id ?? ''}
+                    . As a copilot/admin,
                     you can unlock it and allow it to proceed to human review. Add your reason below.
                 </div>
                 <textarea
                     className={styles.escalationTextarea}
                     placeholder='Add your reasoning for approving the submission...'
                     value={unlockNotes}
-                    onChange={event => setUnlockNotes(event.target.value)}
+                    onChange={function (event: ChangeEvent<HTMLTextAreaElement>) { setUnlockNotes(event.target.value) }}
                     disabled={isSubmitting}
                 />
                 <div className={styles.escalationActions}>
-                    <button type='button' className='borderButton' onClick={closeUnlockDialog} disabled={isSubmitting}>Cancel</button>
-                    <button type='button' className='filledButton' onClick={handleSubmitUnlock} disabled={isSubmitting}>Unlock Submission</button>
+                    <button
+                        type='button'
+                        className='borderButton'
+                        onClick={closeUnlockDialog}
+                        disabled={isSubmitting}
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type='button'
+                        className='filledButton'
+                        onClick={handleSubmitUnlock}
+                        disabled={isSubmitting}
+                    >
+                        Unlock Submission
+                    </button>
                 </div>
             </BaseModal>
         </>
