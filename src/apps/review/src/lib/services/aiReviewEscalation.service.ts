@@ -18,7 +18,7 @@ export interface AiReviewDecisionEscalation {
 export interface AiReviewEscalationDecision {
     aiReviewDecisionId: string
     submissionId: string
-    challengeId: string | null
+    challengeId: string | undefined
     decisionStatus: string
     submissionLocked: boolean
     escalations: AiReviewDecisionEscalation[]

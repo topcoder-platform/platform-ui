@@ -9,6 +9,8 @@ import {
 } from 'react'
 import { Link } from 'react-router-dom'
 import { toast } from 'react-toastify'
+import { useSWRConfig } from 'swr'
+import { FullConfiguration } from 'swr/dist/types'
 import _ from 'lodash'
 import classNames from 'classnames'
 
@@ -53,6 +55,7 @@ import { getSubmissionHistoryKey } from '../../utils/submissionHistory'
 import {
     AiReviewDecisionEscalation,
     AiReviewEscalationDecision,
+    getAiReviewDecisionsCacheKey,
     updateReview,
 } from '../../services'
 import { TableWrapper } from '../TableWrapper'
@@ -114,11 +117,13 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
     const mappingReviewAppeal: MappingReviewAppeal = props.mappingReviewAppeal
     const {
         challengeInfo,
+        aiReviewConfig,
         aiReviewDecisionsBySubmissionId,
         reviewers,
         resources,
         myResources,
     }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
+    const { mutate }: FullConfiguration = useSWRConfig()
     const { width: screenWidth }: WindowSize = useWindowSize()
     const { actionChallengeRole }: useRoleProps = useRole()
     const {
@@ -326,7 +331,7 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
 
             result.set(row.id, {
                 aiReviewDecisionId: aiDecision.id,
-                challengeId: challengeInfo?.id ?? null,
+                challengeId: challengeInfo?.id ?? undefined,
                 decisionStatus: aiDecision.status,
                 escalations: aiDecision.escalations ?? [],
                 submissionId: row.id,
@@ -403,10 +408,14 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
     }, [])
 
     const revalidateEscalationData = useCallback(async (): Promise<void> => {
+        if (aiReviewConfig?.id) {
+            await mutate(getAiReviewDecisionsCacheKey(aiReviewConfig.id))
+        }
+
         if (challengeInfo?.id) {
             await refreshChallengeReviewData(challengeInfo.id)
         }
-    }, [challengeInfo?.id])
+    }, [aiReviewConfig?.id, challengeInfo?.id, mutate])
 
     const handleConfirmReopen = useCallback(async (): Promise<void> => {
         const reviewId = pendingReopen?.review?.reviewInfo?.id
@@ -690,7 +699,7 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
                         if (status === 'PENDING_APPROVAL') {
                             return (
                                 <span className={styles.resultPending}>
-                                    Pending
+                                    Escalation Pending
                                 </span>
                             )
                         }
@@ -698,7 +707,7 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
                         if (status === 'APPROVED') {
                             return (
                                 <span className={styles.resultPass}>
-                                    Approved
+                                    Escalation Approved
                                 </span>
                             )
                         }
@@ -706,7 +715,7 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
                         if (status === 'REJECTED') {
                             return (
                                 <span className={styles.resultFail}>
-                                    Rejected
+                                    Escalation Rejected
                                 </span>
                             )
                         }
