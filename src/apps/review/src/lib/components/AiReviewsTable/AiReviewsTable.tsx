@@ -317,7 +317,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                                         triggerOn='hover'
                                     >
                                         <IconOutline.LightningBoltIcon
-                                            className={classNames('icon-lg', styles.gatingIcon)}
+                                            className={classNames('icon-lg', styles.gatingMarker)}
                                         />
                                     </Tooltip>
                                 )}
