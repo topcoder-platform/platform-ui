@@ -7,7 +7,7 @@
   (`Review`, `Forum` when present, `Project`, and `Community`).
 - `components/ChallengeEditorForm.tsx`: React Hook Form container with autosave and manual save.
 - `components/*Field.tsx`: field-level components for each challenge section.
-- `components/ReviewersField/*`: tabbed human/AI reviewer configuration. Human reviewers stay on the challenge form, while AI reviewer configs load/save through the review API and sync saved AI workflows back into the challenge `reviewers` array.
+- `components/ReviewersField/*`: tabbed human/AI reviewer configuration. Human reviewers stay on the challenge form, while AI reviewer configs load/save through the review API and sync saved AI workflows back into the challenge `reviewers` array. This section is hidden for `Marathon Match` challenges because review setup is handled by the scorer/tester flow.
 - `ChallengeEditorPage.module.scss` and `components/ChallengeEditorForm.module.scss`: page and form layout styling.
 
 ## Validation Rules
@@ -43,6 +43,7 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 - `ChallengeTypeField`: active type selector from `useFetchChallengeTypes`.
 - `DesignWorkTypeField`: shown for Design + Challenge, with the legacy work-type options (`Application Front-End Design`, `Print/Presentation`, `Web Design`, `Widget or Mobile Screen Design`, `Wireframes`). The selected value is stored in challenge tags.
 - `FunChallengeField`: shown for `Marathon Match` type and remains editable after creation so the form can switch between fun-challenge and standard marathon-match fields.
+- `ReviewersField`: hidden for `Marathon Match` challenges because manual reviewer assignment is not used there.
 - `ChallengeDescriptionField`: public markdown spec editor.
 - `ChallengePrivateDescriptionField`: optional private markdown spec editor.
 - `ChallengeTagsField`: multi creatable tag picker excluding special challenge tags.
@@ -54,6 +55,7 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 ## Conditional Sections
 
 - `Prizes & Billing` is hidden when `funChallenge` is enabled.
+- `Reviewers` is hidden when the selected challenge type is `Marathon Match`.
 
 ## API Integration
 

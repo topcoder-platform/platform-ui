@@ -203,10 +203,10 @@ function getErrorMessage(error: unknown, fallbackMessage: string): string {
  * Used when scorer actions must stay disabled until tester details load successfully.
  */
 function buildTesterLoadErrorMessage(error: unknown): string {
-    const baseMessage = getErrorMessage(error, 'Failed to load tester details')
+    const baseMessage = getErrorMessage(error, 'Failed to load scorer details')
 
-    return `${baseMessage}. Save and launch stay disabled until tester details `
-        + 'load successfully or you choose a different tester.'
+    return `${baseMessage}. Save and launch stay disabled until scorer details `
+        + 'load successfully or you choose a different scorer.'
 }
 
 function normalizePhaseName(value: unknown): string {
@@ -308,8 +308,8 @@ function buildDefaultDraft(
             'system',
             getPreferredPhaseId(phases, PHASE_DEFAULTS.system.phaseName),
         ),
-        taskDefinitionName: '',
-        taskDefinitionVersion: '',
+        taskDefinitionName: defaults.taskDefinitionName,
+        taskDefinitionVersion: defaults.taskDefinitionVersion,
         testerId: '',
         testTimeout: defaults.testTimeout,
     }
@@ -422,7 +422,7 @@ function buildValidationErrors(
             : 'Task definition version is required.',
         testerId: draft.testerId?.trim()
             ? undefined
-            : 'Tester selection is required.',
+            : 'Scorer selection is required.',
         testTimeout: !Number.isSafeInteger(draft.testTimeout)
             ? 'Test timeout must be an integer.'
             : Number(draft.testTimeout) < 1
@@ -891,7 +891,7 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
             const blockingErrorMessage = loadError
                 || testerLoadError
                 || (hasFailedTester
-                    ? 'Selected tester compilation must succeed before saving.'
+                    ? 'Selected scorer compilation must succeed before saving.'
                     : undefined)
                 || (isLoading
                     ? 'Scorer configuration is still loading.'
@@ -1150,7 +1150,7 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
                 <div>
                     <h3>Marathon Match Scorer</h3>
                     <p>
-                        Configure the tester, review scorecard, and phase execution
+                        Configure the scorer, review scorecard, and phase execution
                         settings used by the marathon match scoring flow.
                     </p>
                 </div>
@@ -1163,7 +1163,7 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
             {selectedTester?.compilationStatus === 'PENDING'
                 ? (
                     <div className={styles.infoBanner}>
-                        Tester compilation is in progress. The status refreshes every 5 seconds.
+                        Scorer compilation is in progress. The status refreshes every 5 seconds.
                     </div>
                 )
                 : undefined}
@@ -1171,7 +1171,7 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
             {selectedTester?.compilationStatus === 'FAILED'
                 ? (
                     <div className={styles.error}>
-                        <strong>Tester compilation failed.</strong>
+                        <strong>Scorer compilation failed.</strong>
                         <div>{selectedTester.compilationError || 'Compilation failed without an error message.'}</div>
                     </div>
                 )
@@ -1183,18 +1183,18 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
 
             <section className={styles.sectionCard}>
                 <div className={styles.sectionHeader}>
-                    <h3>Tester</h3>
-                    <p>Select the compiled tester that will execute challenge submissions.</p>
+                    <h3>Scorer</h3>
+                    <p>Select the compiled scorer that will execute challenge submissions.</p>
                 </div>
 
                 <div className={styles.testerToolbar}>
                     <label className={styles.fieldGroup}>
-                        <span>Tester</span>
+                        <span>Scorer</span>
                         <select
                             onChange={handleTesterSelectionChangeCapture}
                             value={currentTesterId}
                         >
-                            <option value=''>Select tester</option>
+                            <option value=''>Select scorer</option>
                             {testerGroups.map(group => (
                                 <optgroup key={group.name} label={group.name}>
                                     {group.testers.map(tester => (
@@ -1215,7 +1215,7 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
 
                     <div className={styles.inlineActions}>
                         <Button
-                            label='New Tester'
+                            label='New Scorer'
                             onClick={handleOpenNewTesterModal}
                             secondary
                             size='sm'
@@ -1243,7 +1243,7 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
                     ? (
                         <div className={styles.summaryGrid}>
                             <div className={styles.summaryCard}>
-                                <span className={styles.summaryLabel}>Selected Tester</span>
+                                <span className={styles.summaryLabel}>Selected Scorer</span>
                                 <strong>
                                     {selectedTester.name}
                                     {' '}
@@ -1262,13 +1262,13 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
                         </div>
                     )
                     : testers.length === 0
-                        ? <div className={styles.emptyState}>No testers found yet. Create one to continue.</div>
+                        ? <div className={styles.emptyState}>No scorers found yet. Create one to continue.</div>
                         : undefined}
             </section>
 
             <section className={styles.sectionCard}>
                 <div className={styles.sectionHeader}>
-                    <h3>Scoring Settings</h3>
+                    <h3>Scorer Settings</h3>
                     <p>Set the scorecard, timeout, and runner task definition used by the scorer.</p>
                 </div>
 
@@ -1420,7 +1420,7 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
                                 {hasFailedTester
                                     ? (
                                         <li>
-                                            Selected tester compilation must succeed before challenge
+                                            Selected scorer compilation must succeed before challenge
                                             {' '}
                                             actions are re-enabled.
                                         </li>

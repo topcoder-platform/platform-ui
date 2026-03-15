@@ -136,8 +136,7 @@
 }
 
 .fieldGroup input,
-.fieldGroup select,
-.sourceEditor {
+.fieldGroup select {
     border: 1px solid #c9ced3;
     border-radius: 8px;
     font-size: 14px;
@@ -224,84 +223,73 @@
     gap: 16px;
 }
 
-.sourceEditorShell {
-    background: #f8fafc;
+.codeEditor {
     border: 1px solid #c9ced3;
     border-radius: 10px;
     overflow: hidden;
-    position: relative;
 }
 
-.lineNumbers {
-    background: #eef2f6;
-    border-right: 1px solid #d7dadc;
-    bottom: 0;
-    color: #70757a;
+.codeEditor:focus-within {
+    border-color: #137d60;
+    box-shadow: 0 0 0 3px rgba(19, 125, 96, 0.12);
+}
+
+.codeEditor :global(.cm-editor) {
+    background: #fdfdfd;
     font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-    font-size: 12px;
-    left: 0;
-    line-height: 1.6;
-    overflow: hidden;
-    padding: 12px 8px 12px 12px;
-    position: absolute;
-    text-align: right;
-    top: 0;
-    user-select: none;
-    width: 56px;
+    font-size: 13px;
 }
 
-.sourceEditor {
-    background: transparent;
-    border: 0;
-    border-radius: 0;
-    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-    height: 320px;
-    line-height: 1.6;
-    overflow-y: auto;
-    padding: 12px 14px 12px 70px;
-    resize: vertical;
-    tab-size: 4;
-    white-space: pre;
-    width: 100%;
-}
-
-.sourceEditor:focus {
+.codeEditor :global(.cm-focused) {
     outline: none;
 }
 
-.previewPanel {
-    border: 1px solid $black-20;
-    border-radius: 10px;
-    overflow: hidden;
-}
-
-.previewHeader {
-    background: #f6f8fa;
-    border-bottom: 1px solid $black-20;
-    color: $black-80;
-    font-size: 13px;
-    font-weight: 600;
-    padding: 10px 14px;
-}
-
-.codePreview {
-    background: #fdfdfd;
-    margin: 0;
-    max-height: 320px;
+.codeEditor :global(.cm-scroller) {
     overflow: auto;
-    padding: 16px;
 }
 
-.codePreview :global(.hljs) {
-    background: transparent;
-    padding: 0;
-}
-
-.codePreview :global(code),
-.codePreview :global(.hljs) {
+.codeEditor :global(.cm-content),
+.codeEditor :global(.cm-gutterElement) {
     font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
     font-size: 13px;
     line-height: 1.6;
+}
+
+.codeEditor :global(.cm-content) {
+    min-height: 320px;
+    padding: 12px 0;
+}
+
+.codeEditor :global(.cm-line) {
+    padding: 0 14px;
+}
+
+.codeEditor :global(.cm-gutters) {
+    background: #eef2f6;
+    border-right: 1px solid #d7dadc;
+    color: #70757a;
+    flex-shrink: 0;
+    min-height: 100%;
+}
+
+.codeEditor :global(.cm-gutterElement) {
+    padding: 0 12px 0 8px;
+}
+
+.codeEditor :global(.cm-activeLine) {
+    background: rgba(19, 125, 96, 0.04);
+}
+
+.codeEditor :global(.cm-activeLineGutter) {
+    background: rgba(19, 125, 96, 0.08);
+}
+
+.codeEditor :global(.cm-cursor) {
+    border-left-color: #137d60;
+}
+
+.codeEditor :global(.cm-selectionBackground) {
+    background: rgba(19, 125, 96, 0.16) !important;
 }
 
 @media (max-width: 767px) {
@@ -314,17 +302,5 @@
     .footerActions,
     .modalActions {
         justify-content: stretch;
-    }
-
-    .sourceEditorShell {
-        min-height: 320px;
-    }
-
-    .lineNumbers {
-        width: 44px;
-    }
-
-    .sourceEditor {
-        padding-left: 58px;
     }
 }

@@ -18,12 +18,14 @@ export type MarathonMatchCompilationStatus = 'PENDING' | 'SUCCESS' | 'FAILED'
 
 /**
  * Configurable default values for creating a marathon match scorer config.
- * Used to pre-populate the scorer editor before a config exists.
+ * Used to pre-populate the scorer editor before a config exists, including runner task definition defaults.
  */
 export interface MarathonMatchDefaults {
     reviewScorecardId: string
     testTimeout: number
     compileTimeout: number
+    taskDefinitionName: string
+    taskDefinitionVersion: string
 }
 
 /**

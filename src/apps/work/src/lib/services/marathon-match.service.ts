@@ -296,6 +296,12 @@ function normalizeMarathonMatchDefaults(
     const reviewScorecardId = normalizeText(typedDefaults.reviewScorecardId)
     const testTimeout = normalizeNumber(typedDefaults.testTimeout)
     const compileTimeout = normalizeNumber(typedDefaults.compileTimeout)
+    const taskDefinitionName = typeof typedDefaults.taskDefinitionName === 'string'
+        ? typedDefaults.taskDefinitionName.trim()
+        : ''
+    const taskDefinitionVersion = typeof typedDefaults.taskDefinitionVersion === 'string'
+        ? typedDefaults.taskDefinitionVersion.trim()
+        : ''
 
     if (!reviewScorecardId || testTimeout === undefined || compileTimeout === undefined) {
         return undefined
@@ -304,6 +310,8 @@ function normalizeMarathonMatchDefaults(
     return {
         compileTimeout,
         reviewScorecardId,
+        taskDefinitionName,
+        taskDefinitionVersion,
         testTimeout,
     }
 }
@@ -446,7 +454,7 @@ function buildTesterListUrl(
 }
 
 /**
- * Loads the default review scorecard and timeout values for the scorer editor.
+ * Loads the default review scorecard, timeout, and task definition values for the scorer editor.
  * @returns Default scorer values used to initialize new marathon match configs.
  * @throws Error When the API request fails or returns an invalid defaults payload.
  * Used by `MarathonMatchScorerSection` before a challenge-specific config exists.

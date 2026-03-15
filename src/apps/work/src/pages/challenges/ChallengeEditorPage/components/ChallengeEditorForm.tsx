@@ -899,6 +899,29 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         setScorerHasError(false)
     }, [showMarathonMatchScorerSection])
 
+    useEffect(() => {
+        if (!isMarathonMatchChallengeSelected) {
+            return
+        }
+
+        clearErrors('reviewers')
+
+        if (!Array.isArray(values.reviewers) || values.reviewers.length === 0) {
+            return
+        }
+
+        // Marathon matches use scorer/tester automation instead of manual reviewers.
+        setValue('reviewers', [], {
+            shouldDirty: false,
+            shouldValidate: true,
+        })
+    }, [
+        clearErrors,
+        isMarathonMatchChallengeSelected,
+        setValue,
+        values.reviewers,
+    ])
+
     const createNewChallenge = useCallback(
         async (): Promise<void> => {
             const isBasicInfoValid = await trigger([
@@ -1019,6 +1042,9 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 }: SaveStatusMetadata = getSaveStatusMetadata(formData.status, options)
                 const payload = transformFormDataToChallenge({
                     ...formData,
+                    reviewers: isMarathonMatchChallengeSelected
+                        ? []
+                        : formData.reviewers,
                     status: payloadStatus,
                 })
                 const savedChallenge = await patchChallenge(currentChallengeId, payload)
@@ -1061,6 +1087,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         [
             currentChallengeId,
             isEditMode,
+            isMarathonMatchChallengeSelected,
             navigate,
             reset,
         ],
@@ -1352,12 +1379,16 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                 )
                                 : undefined}
 
-                            <section className={styles.section}>
-                                <h3 className={styles.sectionTitle}>Reviewers</h3>
-                                <div className={styles.block}>
-                                    <ReviewersField />
-                                </div>
-                            </section>
+                            {!isMarathonMatchChallengeSelected
+                                ? (
+                                    <section className={styles.section}>
+                                        <h3 className={styles.sectionTitle}>Reviewers</h3>
+                                        <div className={styles.block}>
+                                            <ReviewersField />
+                                        </div>
+                                    </section>
+                                )
+                                : undefined}
 
                             <section className={styles.section}>
                                 <h3 className={styles.sectionTitle}>Attachments</h3>

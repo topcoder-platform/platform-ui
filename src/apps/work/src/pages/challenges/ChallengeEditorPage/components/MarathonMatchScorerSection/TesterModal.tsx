@@ -7,14 +7,13 @@ import {
     useRef,
     useState,
 } from 'react'
-import hljs from 'highlight.js/lib/core'
-import javaLanguage from 'highlight.js/lib/languages/java'
-import 'highlight.js/styles/github.css'
 
 import {
     BaseModal,
     Button,
 } from '~/libs/ui'
+import { java } from '@codemirror/lang-java'
+import CodeMirror from '@uiw/react-codemirror'
 
 import { ConfirmationModal } from '../../../../../lib/components'
 import { MarathonMatchTester } from '../../../../../lib/models'
@@ -29,11 +28,13 @@ import {
 
 import styles from './MarathonMatchScorerSection.module.scss'
 
-if (!hljs.getLanguage('java')) {
-    hljs.registerLanguage('java', javaLanguage)
+const SOURCE_EDITOR_EXTENSIONS = [java()]
+const SOURCE_EDITOR_SETUP = {
+    foldGutter: false,
+    lineNumbers: true,
+    searchKeymap: false,
+    tabSize: 4,
 }
-
-const PREVIEW_DEBOUNCE_MS = 300
 
 interface ValidationErrors {
     className?: string
@@ -63,16 +64,6 @@ function compareVersionStrings(left: string, right: string): number {
     }
 
     return 0
-}
-
-function highlightJavaCode(sourceCode: string): string {
-    if (!sourceCode.trim()) {
-        return ''
-    }
-
-    return hljs.highlight(sourceCode, {
-        language: 'java',
-    }).value
 }
 
 function getErrorMessage(error: unknown, fallbackMessage: string): string {
@@ -116,7 +107,6 @@ export const TesterModal: FC<TesterModalProps> = (
     const [version, setVersion] = useState<string>(initialVersion)
     const [className, setClassName] = useState<string>(initialClassName)
     const [sourceCode, setSourceCode] = useState<string>(initialSourceCode)
-    const [previewHtml, setPreviewHtml] = useState<string>(highlightJavaCode(initialSourceCode))
     const [errorMessage, setErrorMessage] = useState<string | undefined>()
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
     const [showDiscardConfirmation, setShowDiscardConfirmation] = useState<boolean>(false)
@@ -126,7 +116,7 @@ export const TesterModal: FC<TesterModalProps> = (
         const comparisonVersion = maxExistingVersion?.trim() || existingTester?.version?.trim()
 
         if (mode === 'create' && !name.trim()) {
-            errors.name = 'Tester name is required.'
+            errors.name = 'Scorer name is required.'
         }
 
         if (!version.trim()) {
@@ -182,12 +172,6 @@ export const TesterModal: FC<TesterModalProps> = (
             version,
         ],
     )
-    const lineNumbers = useMemo(
-        (): number[] => Array.from({
-            length: Math.max(sourceCode.split('\n').length, 1),
-        }, (_, index) => index + 1),
-        [sourceCode],
-    )
 
     const handleNameChange = useCallback((event: ChangeEvent<HTMLInputElement>): void => {
         setName(event.target.value)
@@ -201,13 +185,9 @@ export const TesterModal: FC<TesterModalProps> = (
         setClassName(event.target.value)
     }, [])
 
-    const handleSourceCodeChange = useCallback((event: ChangeEvent<HTMLTextAreaElement>): void => {
-        setSourceCode(event.target.value)
+    const handleSourceCodeChange = useCallback((value: string): void => {
+        setSourceCode(value)
     }, [])
-
-    const handleSourceCodeBlur = useCallback((): void => {
-        setPreviewHtml(highlightJavaCode(sourceCode))
-    }, [sourceCode])
 
     const handleModalClose = useCallback((): void => {
         if (isSubmitting) {
@@ -241,7 +221,7 @@ export const TesterModal: FC<TesterModalProps> = (
         }
 
         if (hasValidationError) {
-            setErrorMessage('Please fix tester validation errors before submitting.')
+            setErrorMessage('Please fix scorer validation errors before submitting.')
             return
         }
 
@@ -262,10 +242,10 @@ export const TesterModal: FC<TesterModalProps> = (
                     version: version.trim(),
                 })
 
-            showSuccessToast('Tester submitted - compiling...')
+            showSuccessToast('Scorer submitted - compiling...')
             onCreated(tester)
         } catch (error) {
-            const nextErrorMessage = getErrorMessage(error, 'Failed to submit tester')
+            const nextErrorMessage = getErrorMessage(error, 'Failed to submit scorer')
 
             if (isMountedRef.current) {
                 setErrorMessage(nextErrorMessage)
@@ -294,16 +274,6 @@ export const TesterModal: FC<TesterModalProps> = (
             .catch(() => undefined)
     }, [handleSubmit])
 
-    useEffect(() => {
-        const timeoutId = window.setTimeout(() => {
-            setPreviewHtml(highlightJavaCode(sourceCode))
-        }, PREVIEW_DEBOUNCE_MS)
-
-        return () => {
-            window.clearTimeout(timeoutId)
-        }
-    }, [sourceCode])
-
     useEffect(() => () => {
         isMountedRef.current = false
     }, [])
@@ -320,7 +290,7 @@ export const TesterModal: FC<TesterModalProps> = (
                 onClose={handleModalClose}
                 size='lg'
                 title={mode === 'create'
-                    ? 'New Tester'
+                    ? 'New Scorer'
                     : `New Version for ${existingTester?.name}`}
                 buttons={(
                     <div className={styles.modalActions}>
@@ -334,7 +304,7 @@ export const TesterModal: FC<TesterModalProps> = (
                             label={isSubmitting
                                 ? 'Submitting...'
                                 : mode === 'create'
-                                    ? 'Create Tester'
+                                    ? 'Create Scorer'
                                     : 'Create Version'}
                             onClick={handleSubmitClick}
                             primary
@@ -351,7 +321,7 @@ export const TesterModal: FC<TesterModalProps> = (
                         {mode === 'create'
                             ? (
                                 <label className={styles.fieldGroup}>
-                                    <span>Tester Name</span>
+                                    <span>Scorer Name</span>
                                     <input onChange={handleNameChange} type='text' value={name} />
                                     {validationErrors.name
                                         ? <small className={styles.fieldError}>{validationErrors.name}</small>
@@ -379,34 +349,21 @@ export const TesterModal: FC<TesterModalProps> = (
 
                     <label className={styles.fieldGroup}>
                         <span>Source Code</span>
-                        <div className={styles.sourceEditorShell}>
-                            <div className={styles.lineNumbers}>
-                                {lineNumbers.map(lineNumber => (
-                                    <div key={lineNumber}>{lineNumber}</div>
-                                ))}
-                            </div>
-                            <textarea
-                                className={styles.sourceEditor}
-                                onBlur={handleSourceCodeBlur}
-                                onChange={handleSourceCodeChange}
-                                spellCheck={false}
-                                value={sourceCode}
-                            />
-                        </div>
+                        <CodeMirror
+                            basicSetup={SOURCE_EDITOR_SETUP}
+                            className={styles.codeEditor}
+                            extensions={SOURCE_EDITOR_EXTENSIONS}
+                            height='320px'
+                            indentWithTab
+                            onChange={handleSourceCodeChange}
+                            spellCheck={false}
+                            theme='light'
+                            value={sourceCode}
+                        />
                         {validationErrors.sourceCode
                             ? <small className={styles.fieldError}>{validationErrors.sourceCode}</small>
                             : undefined}
                     </label>
-
-                    <div className={styles.previewPanel}>
-                        <div className={styles.previewHeader}>Java Preview</div>
-                        <pre
-                            className={styles.codePreview}
-                            dangerouslySetInnerHTML={{
-                                __html: previewHtml || '&nbsp;',
-                            }}
-                        />
-                    </div>
                 </div>
             </BaseModal>
 
@@ -415,10 +372,10 @@ export const TesterModal: FC<TesterModalProps> = (
                     <ConfirmationModal
                         cancelText='Keep Editing'
                         confirmText='Discard'
-                        message='Discard the tester changes in this modal?'
+                        message='Discard the scorer changes in this modal?'
                         onCancel={handleDiscardCancel}
                         onConfirm={handleDiscardConfirm}
-                        title='Discard tester changes?'
+                        title='Discard scorer changes?'
                     />
                 )
                 : undefined}
