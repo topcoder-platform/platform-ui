@@ -63,7 +63,30 @@ export interface ProgressAndScore {
 }
 
 /**
- * Calculate progress and score from review form data
+ * Review answers come back as `Yes`/`No` from form controls and `YES`/`NO`
+ * from persisted API data. Normalize both formats before applying score logic.
+ */
+const isAffirmativeYesNoAnswer = (
+    answer?: string | number | null,
+): boolean => {
+    if (answer === undefined || answer === null) {
+        return false
+    }
+
+    if (typeof answer === 'number') {
+        return answer === 1
+    }
+
+    const normalizedAnswer = `${answer}`.trim()
+        .toUpperCase()
+
+    return normalizedAnswer === 'YES' || normalizedAnswer === '1'
+}
+
+/**
+ * Calculate progress and score from review form data.
+ * YES/NO answers are normalized so the viewer scores both UI (`Yes`) and
+ * API (`YES`) representations consistently.
  */
 export const calculateProgressAndScore = (
     reviewFormDatas: {scorecardQuestionId: string; initialAnswer: string;}[],
@@ -113,7 +136,7 @@ export const calculateProgressAndScore = (
 
                             if (
                                 question.type === 'YES_NO'
-                                && (initialAnswer === 'Yes' || initialAnswer === 1)
+                                && isAffirmativeYesNoAnswer(initialAnswer)
                             ) {
                                 questionPoint = 100
                             } else if (
