@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 import { FC, useCallback, useState } from 'react'
 import { Link } from 'react-router-dom'
 import classNames from 'classnames'
@@ -8,6 +9,9 @@ import { IconAiReview, IconPhaseReview } from '~/apps/review/src/lib/assets/icon
 import { IconOutline, IconSolid, Tooltip } from '~/libs/ui'
 import { AiScoreFormulaTooltip } from '~/apps/review/src/lib/components/AiScoreFormulaTooltip'
 import { formatScore } from '~/apps/review/src/lib/components/AiScoreFormulaTooltip/AiScoreFormulaTooltip'
+import {
+    normalizeDecisionStatus,
+} from '~/apps/review/src/lib/components/CollapsibleAiReviewsRow/CollapsibleAiReviewsRow'
 import StatusLabel from '~/apps/review/src/lib/components/AiReviewsTable/StatusLabel'
 
 import { useReviewsContext } from '../../ReviewsContext'
@@ -29,6 +33,7 @@ const ReviewsSidebar: FC<ReviewsSidebarProps> = props => {
         reviewId,
         reviewStatus,
         aiReviewConfig,
+        aiReviewDecisionsBySubmissionId,
     }: ReviewsContextModel = useReviewsContext()
     const isReviewActive = !workflowRun
 
@@ -45,6 +50,17 @@ const ReviewsSidebar: FC<ReviewsSidebarProps> = props => {
     ), [reviewId, submissionId])
 
     const hasAiReviewConfig = Boolean(aiReviewConfig?.workflows?.length)
+
+    const currentDecision = submissionId
+        ? aiReviewDecisionsBySubmissionId?.[submissionId]
+        : undefined
+
+    const hasScore
+    = currentDecision?.totalScore !== null
+    && currentDecision?.totalScore !== undefined
+
+    const overallStatus = normalizeDecisionStatus(currentDecision?.status)
+    const overallScore = currentDecision?.totalScore
 
     return (
         <div className={classNames(props.className, styles.wrap)}>
@@ -114,7 +130,9 @@ const ReviewsSidebar: FC<ReviewsSidebarProps> = props => {
                                             <IconAiReview />
                                             <span className={styles.workflowName}>{run.workflow.name}</span>
                                             {isGating && (
-                                                <span className={styles.gatingMarker}>⚡</span>
+                                                <IconOutline.LightningBoltIcon
+                                                    className={classNames('icon-lg', styles.gatingIcon)}
+                                                />
                                             )}
                                         </span>
                                     </Tooltip>
@@ -126,6 +144,34 @@ const ReviewsSidebar: FC<ReviewsSidebarProps> = props => {
                                 </li>
                             )
                         })}
+                        {hasAiReviewConfig && (
+                            <li
+                                className={classNames(
+                                    styles.runEntry,
+                                    styles.overallRow,
+                                )}
+                            >
+                                <span className={styles.workflowNameWrap}>
+                                    <IconAiReview />
+                                    <span className={styles.overallScore}>Overall Score</span>
+                                </span>
+
+                                {hasScore ? (
+                                    <AiWorkflowRunStatus
+                                        status={overallStatus}
+                                        score={overallScore ?? undefined}
+                                        showScore
+                                        hideLabel
+                                    />
+                                ) : (
+                                    <AiWorkflowRunStatus
+                                        status='pending'
+                                        showScore={false}
+                                        hideLabel={false}
+                                    />
+                                )}
+                            </li>
+                        )}
 
                         {submissionId && reviewId && (
                             <li
@@ -152,6 +198,7 @@ const ReviewsSidebar: FC<ReviewsSidebarProps> = props => {
                                 )}
                             </li>
                         )}
+
                     </ul>
                 </div>
                 {hasAiReviewConfig
@@ -203,6 +250,18 @@ const ReviewsSidebar: FC<ReviewsSidebarProps> = props => {
                                 icon={<IconOutline.MinusIcon className='icon-md' />}
                                 label='To be filled'
                                 status='pending'
+                            />
+                        </li>
+                        <li>
+                            <StatusLabel
+                                icon={(
+                                    <IconOutline.LightningBoltIcon
+                                        className={classNames('icon-lg', styles.gatingIcon)}
+                                    />
+                                )}
+                                label='Gating Indicator'
+                                status='pending'
+                                isAiIcon
                             />
                         </li>
                     </ul>

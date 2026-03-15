@@ -316,7 +316,9 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                                         content='Must pass independently to avoid automatic failure.'
                                         triggerOn='hover'
                                     >
-                                        <span className={styles.gatingMarker}>⚡</span>
+                                        <IconOutline.LightningBoltIcon
+                                            className={classNames('icon-lg', styles.gatingIcon)}
+                                        />
                                     </Tooltip>
                                 )}
                             </div>
@@ -440,7 +442,9 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                                             content='Must pass independently to avoid automatic failure.'
                                             triggerOn='hover'
                                         >
-                                            <span className={styles.gatingMarker}>⚡</span>
+                                            <IconOutline.LightningBoltIcon
+                                                className={classNames('icon-lg', styles.gatingMarker)}
+                                            />
                                         </Tooltip>
                                     )}
                                 </div>
