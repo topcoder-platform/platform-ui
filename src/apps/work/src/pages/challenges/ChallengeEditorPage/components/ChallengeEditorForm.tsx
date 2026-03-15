@@ -1202,7 +1202,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                         <ChallengeTrackField disabled={isChallengeCreated} />
                         <ChallengeTypeField disabled={isChallengeCreated} />
                         {showFunChallengeField
-                            ? <FunChallengeField disabled={isChallengeCreated} />
+                            ? <FunChallengeField />
                             : undefined}
                         {showRoundTypeField
                             ? <RoundTypeField disabled={isChallengeCreated} />

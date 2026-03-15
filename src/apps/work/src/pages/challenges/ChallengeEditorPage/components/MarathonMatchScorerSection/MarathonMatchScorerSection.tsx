@@ -18,6 +18,7 @@ import {
     MarathonMatchDefaults,
     MarathonMatchPhaseConfig,
     MarathonMatchTester,
+    MarathonMatchTesterSummary,
     UpdateMarathonMatchConfigInput,
 } from '../../../../../lib/models'
 import {
@@ -100,7 +101,7 @@ interface ValidationErrors {
 
 interface TesterGroup {
     name: string
-    testers: MarathonMatchTester[]
+    testers: MarathonMatchTesterSummary[]
 }
 
 interface PhaseOption {
@@ -495,9 +496,9 @@ function serializeDraftForComparison(
 }
 
 function upsertTester(
-    testers: MarathonMatchTester[],
-    tester: MarathonMatchTester,
-): MarathonMatchTester[] {
+    testers: MarathonMatchTesterSummary[],
+    tester: MarathonMatchTesterSummary,
+): MarathonMatchTesterSummary[] {
     let nextTesters = [
         ...testers,
         tester,
@@ -578,7 +579,7 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
 
     const [config, setConfig] = useState<MarathonMatchConfig | undefined>()
     const [defaults, setDefaults] = useState<MarathonMatchDefaults | undefined>()
-    const [testers, setTesters] = useState<MarathonMatchTester[]>([])
+    const [testers, setTesters] = useState<MarathonMatchTesterSummary[]>([])
     const [selectedTester, setSelectedTester] = useState<MarathonMatchTester | undefined>()
     const [draft, setDraft] = useState<UpdateMarathonMatchConfigInput | undefined>()
     const [savedSnapshot, setSavedSnapshot] = useState<UpdateMarathonMatchConfigInput | undefined>()
@@ -646,13 +647,13 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
     )
     const testerGroups = useMemo(
         (): TesterGroup[] => {
-            const groups = testers.reduce<Map<string, MarathonMatchTester[]>>((currentGroups, tester) => {
+            const groups = testers.reduce<Map<string, MarathonMatchTesterSummary[]>>((currentGroups, tester) => {
                 const currentGroup = currentGroups.get(tester.name) || []
                 currentGroup.push(tester)
                 currentGroups.set(tester.name, currentGroup)
 
                 return currentGroups
-            }, new Map<string, MarathonMatchTester[]>())
+            }, new Map<string, MarathonMatchTesterSummary[]>())
 
             return Array.from(groups.entries())
                 .sort(([leftName], [rightName]) => leftName.localeCompare(rightName))

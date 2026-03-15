@@ -63,19 +63,26 @@ export interface MarathonMatchConfig {
 }
 
 /**
- * Persisted tester metadata used by the scorer editor.
- * Used for tester selection, versioning, and compilation status polling.
+ * Persisted tester summary metadata used by the scorer editor.
+ * Used for tester selection and version grouping from GET /testers responses.
  */
-export interface MarathonMatchTester {
+export interface MarathonMatchTesterSummary {
     id: string
     name: string
     version: string
-    sourceCode: string
     className: string
     compilationStatus: MarathonMatchCompilationStatus
     compilationError: string | null
     createdAt: string | Date
     updatedAt: string | Date
+}
+
+/**
+ * Persisted full tester metadata used by the scorer editor.
+ * Used for individual tester reads, versioning, and compilation status polling.
+ */
+export interface MarathonMatchTester extends MarathonMatchTesterSummary {
+    sourceCode: string
 }
 
 /**

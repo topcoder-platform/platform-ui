@@ -42,7 +42,7 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 - `ChallengeTrackField`: track selector from `useFetchChallengeTracks`.
 - `ChallengeTypeField`: active type selector from `useFetchChallengeTypes`.
 - `DesignWorkTypeField`: shown for Design + Challenge, with the legacy work-type options (`Application Front-End Design`, `Print/Presentation`, `Web Design`, `Widget or Mobile Screen Design`, `Wireframes`). The selected value is stored in challenge tags.
-- `FunChallengeField`: shown for `Marathon Match` type; editable only before the challenge is created.
+- `FunChallengeField`: shown for `Marathon Match` type and remains editable after creation so the form can switch between fun-challenge and standard marathon-match fields.
 - `ChallengeDescriptionField`: public markdown spec editor.
 - `ChallengePrivateDescriptionField`: optional private markdown spec editor.
 - `ChallengeTagsField`: multi creatable tag picker excluding special challenge tags.

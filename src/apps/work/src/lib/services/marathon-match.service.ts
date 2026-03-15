@@ -18,6 +18,7 @@ import {
     MarathonMatchPhaseConfig,
     MarathonMatchScoreDirection,
     MarathonMatchTester,
+    MarathonMatchTesterSummary,
     UpdateMarathonMatchConfigInput,
 } from '../models'
 
@@ -215,12 +216,12 @@ function normalizeMarathonMatchConfig(
 }
 
 /**
- * Normalizes a raw tester API response into a typed tester object.
- * Returns `undefined` when required tester fields are missing.
+ * Normalizes a raw tester-list API response into a typed tester summary object.
+ * Returns `undefined` when required tester summary fields are missing.
  */
-function normalizeTester(
+function normalizeTesterSummary(
     tester: unknown,
-): MarathonMatchTester | undefined {
+): MarathonMatchTesterSummary | undefined {
     if (typeof tester !== 'object' || !tester) {
         return undefined
     }
@@ -229,7 +230,6 @@ function normalizeTester(
     const id = normalizeText(typedTester.id)
     const name = normalizeText(typedTester.name)
     const version = normalizeText(typedTester.version)
-    const sourceCode = normalizeCodeText(typedTester.sourceCode)
     const className = normalizeText(typedTester.className)
     const compilationStatus = normalizeText(typedTester.compilationStatus) as MarathonMatchCompilationStatus | undefined
     const createdAt = normalizeText(typedTester.createdAt)
@@ -239,7 +239,6 @@ function normalizeTester(
         !id
         || !name
         || !version
-        || !sourceCode
         || !className
         || !compilationStatus
         || !createdAt
@@ -255,9 +254,34 @@ function normalizeTester(
         createdAt,
         id,
         name,
-        sourceCode,
         updatedAt,
         version,
+    }
+}
+
+/**
+ * Normalizes a raw tester API response into a typed tester object.
+ * Returns `undefined` when required tester fields are missing.
+ */
+function normalizeTester(
+    tester: unknown,
+): MarathonMatchTester | undefined {
+    const testerSummary = normalizeTesterSummary(tester)
+
+    if (!testerSummary || typeof tester !== 'object' || !tester) {
+        return undefined
+    }
+
+    const typedTester = tester as Record<string, unknown>
+    const sourceCode = normalizeCodeText(typedTester.sourceCode)
+
+    if (!sourceCode) {
+        return undefined
+    }
+
+    return {
+        ...testerSummary,
+        sourceCode,
     }
 }
 
@@ -351,11 +375,11 @@ function serializeUpdateInput(
     }
 }
 
-function normalizeTesterCollection(response: unknown): MarathonMatchTester[] {
+function normalizeTesterCollection(response: unknown): MarathonMatchTesterSummary[] {
     if (Array.isArray(response)) {
         return response
-            .map(normalizeTester)
-            .filter((tester): tester is MarathonMatchTester => !!tester)
+            .map(normalizeTesterSummary)
+            .filter((tester): tester is MarathonMatchTesterSummary => !!tester)
     }
 
     if (typeof response !== 'object' || !response) {
@@ -368,8 +392,8 @@ function normalizeTesterCollection(response: unknown): MarathonMatchTester[] {
         : []
 
     return rawTesters
-        .map(normalizeTester)
-        .filter((tester): tester is MarathonMatchTester => !!tester)
+        .map(normalizeTesterSummary)
+        .filter((tester): tester is MarathonMatchTesterSummary => !!tester)
 }
 
 /**
@@ -545,13 +569,13 @@ export async function updateMarathonMatchConfig(
  * Lists available testers for scorer configuration.
  * @param params Optional tester-name filter and pagination controls.
  * Pass `fetchAll: false` to read only the requested page; otherwise all pages are merged.
- * @returns A normalized list of testers available for selection.
+ * @returns A normalized list of tester summaries available for selection.
  * @throws Error When the API request fails.
  * Used by `MarathonMatchScorerSection` to populate the tester dropdown.
  */
 export async function fetchTesters(
     params: FetchTestersParams = {},
-): Promise<MarathonMatchTester[]> {
+): Promise<MarathonMatchTesterSummary[]> {
     try {
         const page = normalizePositiveInteger(params.page) || 1
         const perPage = normalizePositiveInteger(params.perPage) || TESTERS_PER_PAGE
@@ -596,11 +620,11 @@ export async function fetchTesters(
                 ...firstPageTesters,
                 ...remainingPageResponses.flatMap(response => normalizeTesterCollection(response.data)),
             ]
-                .reduce<Map<string, MarathonMatchTester>>((testerMap, tester) => {
+                .reduce<Map<string, MarathonMatchTesterSummary>>((testerMap, tester) => {
                     testerMap.set(tester.id, tester)
 
                     return testerMap
-                }, new Map<string, MarathonMatchTester>())
+                }, new Map<string, MarathonMatchTesterSummary>())
                 .values(),
         )
     } catch (error) {
@@ -702,4 +726,5 @@ export async function createTesterVersion(
 export {
     normalizeMarathonMatchConfig,
     normalizeTester,
+    normalizeTesterSummary,
 }
