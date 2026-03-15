@@ -2,6 +2,7 @@ export enum EngagementStatus {
     OPEN = 'open',
     PENDING_ASSIGNMENT = 'pending_assignment',
     ACTIVE = 'active',
+    ON_HOLD = 'on_hold',
     CANCELLED = 'cancelled',
     CLOSED = 'closed',
 }

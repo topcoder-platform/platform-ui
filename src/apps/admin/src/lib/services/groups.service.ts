@@ -1,11 +1,17 @@
 /**
  * Groups service
  */
+import type { AxiosInstance } from 'axios'
 import _ from 'lodash'
 import qs from 'qs'
 
 import { EnvironmentConfig } from '~/config'
-import { xhrDeleteAsync, xhrGetAsync, xhrPostAsync } from '~/libs/core'
+import {
+    xhrCreateInstance,
+    xhrDeleteAsync,
+    xhrGetAsync,
+    xhrPostAsync,
+} from '~/libs/core/lib/xhr'
 
 import {
     adjustUserGroupMemberResponse,
@@ -14,6 +20,8 @@ import {
     UserGroup,
     UserGroupMember,
 } from '../models'
+
+const reportsDownloadClient: AxiosInstance = xhrCreateInstance()
 
 /**
  * Get a groups of the particular member
@@ -145,4 +153,25 @@ export const removeGroupMember = async (
         `${EnvironmentConfig.API.V6}/groups/${groupId}/members/${memberId}`,
     )
     return result
+}
+
+/**
+ * Exports users assigned to a group in CSV format.
+ * @param groupId group id.
+ * @returns resolves to CSV blob.
+ */
+export const exportGroupUsersCsv = async (
+    groupId: string,
+): Promise<Blob> => {
+    const response = await reportsDownloadClient.get<Blob>(
+        `${EnvironmentConfig.REPORTS_API}/identity/users-by-group?groupId=${encodeURIComponent(groupId)}`,
+        {
+            headers: {
+                Accept: 'text/csv',
+            },
+            responseType: 'blob',
+        },
+    )
+
+    return response.data
 }

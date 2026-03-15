@@ -22,6 +22,7 @@ interface OpenForGigsModifyModalProps {
     onClose: () => void
     onSave: () => void
     profile: UserProfile
+    openForWork: boolean | null
     memberPersonalizationTraits?: UserTrait[]
     mutatePersonalizationTraits: () => void
 }
@@ -34,7 +35,7 @@ const OpenForGigsModifyModal: FC<OpenForGigsModifyModalProps> = (props: OpenForG
 
     const [formValue, setFormValue] = useState<OpenToWorkData>({
         availability: undefined,
-        availableForGigs: !!props.profile.availableForGigs,
+        availableForGigs: props.openForWork,
         preferredRoles: [],
     })
 
@@ -56,12 +57,12 @@ const OpenForGigsModifyModal: FC<OpenForGigsModifyModalProps> = (props: OpenForG
         setFormValue(prev => ({
             ...prev,
             availability: openToWorkItem?.availability,
-            availableForGigs: !!props.profile.availableForGigs,
+            availableForGigs: props.openForWork,
             preferredRoles: openToWorkItem?.preferredRoles ?? [],
         }))
     }, [
         memberPersonalizationTraits,
-        props.profile.availableForGigs,
+        props.openForWork,
     ])
 
     function handleFormChange(nextValue: OpenToWorkData): void {
@@ -152,8 +153,8 @@ const OpenForGigsModifyModal: FC<OpenForGigsModifyModalProps> = (props: OpenForG
         >
             <div className={styles.modalBody}>
                 <p>
-                    By selecting “Open to Work” our talent management team will know
-                    that you are available for engagement opportunities.
+                    By selecting “Open to Work” our customers will know that
+                    you are available for engagement opportunities.
                 </p>
             </div>
 

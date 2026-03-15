@@ -5,31 +5,70 @@
     text-align: left;
 }
 
-.reviewersDropown {
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    gap: $sp-4;
+}
+
+.reviewersDropdown {
     display: flex;
     align-items: center;
     gap: $sp-2;
     cursor: pointer;
-
-    @include ltelg {
-        justify-content: space-between;
-        font-weight: 600;
-    }
+    flex: 1;
 
     svg {
         color: #767676;
     }
 }
 
-.table {
-    margin-top: $sp-2;
-    margin-left: -1 * $sp-4;
-    @include ltelg {
-        margin-top: 0;
-        margin-left: -1 * $sp-4;
-        margin-right: -1 * $sp-4;
-    }
+.statusContainer {
+    display: flex;
+    align-items: center;
+    gap: $sp-6;
+    flex-shrink: 0;
 }
+
+.score {
+    display: flex;
+    align-items: center;
+    gap: $sp-1;
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.scorePassed {
+    color: $link-blue-dark;
+}
+
+.scoreFailed {
+    color: $red-100;
+}
+
+.infoIcon {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    color: $black-60;
+}
+
+.runStatus {
+    min-width: 105px;
+}
+
+.table {
+    margin-top: -1px;
+}
+//     margin-left: -1 * $sp-4;
+//     @include ltelg {
+//         margin-top: 0;
+//         margin-left: -1 * $sp-4;
+//         margin-right: -1 * $sp-4;
+//     }
+// }
 
 .rotated {
     transform: rotate(180deg);

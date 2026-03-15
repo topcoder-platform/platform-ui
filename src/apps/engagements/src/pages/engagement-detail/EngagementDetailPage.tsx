@@ -39,6 +39,7 @@ const APPLICATION_STATUS_LABELS: Record<ApplicationStatus, string> = {
 }
 
 const PRIVATE_ENGAGEMENT_ROLE_KEYWORDS = ['project manager', 'task manager', 'talent manager', 'admin']
+const PRIVATE_ENGAGEMENT_ACCESS_DENIED_MESSAGE = 'You are not authorized to access this private engagement.'
 
 const formatEnumLabel = (value?: string): string | undefined => {
     if (!value) {
@@ -207,6 +208,28 @@ const getApplicationStatusLabel = (application?: Application): string | undefine
     }
 
     return APPLICATION_STATUS_LABELS[application.status]
+}
+
+const getApiErrorMessage = (error: any): string | undefined => {
+    const message = error?.response?.data?.message ?? error?.data?.message ?? error?.message
+
+    if (Array.isArray(message)) {
+        const firstMessage = message.find(value => typeof value === 'string' && value.trim())
+        return firstMessage?.trim()
+    }
+
+    return typeof message === 'string' ? message.trim() : undefined
+}
+
+const isPrivateEngagementAccessDeniedError = (error: any): boolean => {
+    const status = error?.response?.status
+    const message = getApiErrorMessage(error)
+
+    if (status !== 401 && status !== 403) {
+        return false
+    }
+
+    return message === PRIVATE_ENGAGEMENT_ACCESS_DENIED_MESSAGE
 }
 
 type TermsViewData = {
@@ -502,6 +525,7 @@ const EngagementDetailPage: FC = () => {
     const [engagement, setEngagement] = useState<Engagement | undefined>(undefined)
     const [loading, setLoading] = useState<boolean>(true)
     const [error, setError] = useState<string | undefined>(undefined)
+    const [privateAccessDenied, setPrivateAccessDenied] = useState<boolean>(false)
     const [application, setApplication] = useState<Application | undefined>(undefined)
     const [hasApplied, setHasApplied] = useState<boolean>(false)
     const [checkingApplication, setCheckingApplication] = useState<boolean>(false)
@@ -545,6 +569,7 @@ const EngagementDetailPage: FC = () => {
 
         setLoading(true)
         setError(undefined)
+        setPrivateAccessDenied(false)
 
         try {
             const response = await getEngagementByNanoId(nanoId)
@@ -556,6 +581,11 @@ const EngagementDetailPage: FC = () => {
                     replace: true,
                     state: { engagementError: 'Engagement not found.' },
                 })
+                return
+            }
+
+            if (isPrivateEngagementAccessDeniedError(err)) {
+                setPrivateAccessDenied(true)
                 return
             }
 
@@ -1009,17 +1039,7 @@ const EngagementDetailPage: FC = () => {
         <div className={styles.emptyState}>
             <IconOutline.LockClosedIcon className={styles.emptyIcon} />
             <h3>Private engagement</h3>
-            <p>
-                {isLoggedIn
-                    ? 'Only talent managers, project managers, administrators, '
-                        + 'and assigned members can view this engagement.'
-                    : 'Sign in to confirm your access to this private engagement.'}
-            </p>
-            {!isLoggedIn && (
-                <a className={styles.signInLink} href={authUrlLogin()}>
-                    Sign in
-                </a>
-            )}
+            <p>Only talent managers, administrators, and assigned members can view this engagement.</p>
             <Button label='Back to Engagements' secondary onClick={handleBackClick} />
         </div>
     )
@@ -1155,6 +1175,10 @@ const EngagementDetailPage: FC = () => {
     const renderContent = (): JSX.Element => {
         if (loading) {
             return renderLoadingState()
+        }
+
+        if (privateAccessDenied) {
+            return renderRestrictedEngagementState()
         }
 
         if (error) {

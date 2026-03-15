@@ -61,9 +61,10 @@ import {
 import type {
     DownloadButtonConfig,
     ScoreVisibilityConfig,
+    SubmissionReviewerRow,
     SubmissionRow,
 } from '../common/types'
-import { resolveSubmissionReviewResult } from '../common/reviewResult'
+import { buildSubmissionReviewerRows, resolveSubmissionReviewResult } from '../common/reviewResult'
 import { shouldIncludeInReviewPhase } from '../../utils/reviewPhaseGuards'
 import { CollapsibleAiReviewsRow } from '../CollapsibleAiReviewsRow'
 
@@ -296,22 +297,10 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
         return rows.filter(row => row.id && latestSubmissionIds.has(row.id))
     }, [aggregatedSubmissionRows, latestSubmissionIds, restrictToLatest])
 
-    const maxReviewCount = useMemo<number>(
-        () => aggregatedSubmissionRows.reduce(
-            (max, aggregated) => Math.max(max, aggregated.reviews?.length ?? 0),
-            0,
-        ),
-        [aggregatedSubmissionRows],
+    const reviewerRows = useMemo<SubmissionReviewerRow[]>(
+        () => buildSubmissionReviewerRows(aggregatedRows),
+        [aggregatedRows],
     )
-    interface ReviewerColumnMetadata {
-        label: string
-        renderLabel?: () => JSX.Element
-    }
-    const reviewerColumnMetadata = useMemo<ReviewerColumnMetadata[]>(() => (
-        Array.from({ length: maxReviewCount }, (_unused, index) => ({
-            label: `Reviewer ${index + 1}`,
-        }))
-    ), [maxReviewCount])
 
     const [isReopening, setIsReopening] = useState(false)
     const [pendingReopen, setPendingReopen] = useState<PendingReopenState | undefined>(undefined)
@@ -436,7 +425,9 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
         ],
     )
 
-    const renderActionsCell = useCallback<(submission: SubmissionRow) => JSX.Element>((submission: SubmissionRow) => {
+    const renderActionsCell = useCallback<(submission: SubmissionReviewerRow) => JSX.Element>((
+        submission: SubmissionReviewerRow,
+    ) => {
         const reviews = submission.aggregated?.reviews ?? []
         const myReviewDetail = reviews.find(review => {
             const resourceId = review.reviewInfo?.resourceId ?? review.resourceId
@@ -616,78 +607,89 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
         shouldShowHistoryActions,
     ])
 
-    const columns = useMemo<TableColumn<SubmissionRow>[]>(() => {
-        const submissionIdColumn: TableColumn<SubmissionRow> = {
-            className: styles.submissionColumn,
+    const columns = useMemo<TableColumn<SubmissionReviewerRow>[]>(() => {
+        const submissionIdColumn: TableColumn<SubmissionReviewerRow> = {
+            className: classNames(styles.submissionColumn, 'no-row-border'),
             columnId: 'submission-id',
             label: 'Submission ID',
             propertyName: 'id',
-            renderer: (submission: SubmissionRow) => renderSubmissionIdCell(
-                submission,
-                downloadButtonConfig,
+            renderer: (row: SubmissionReviewerRow) => (
+                row.isFirstReviewerRow
+                    ? renderSubmissionIdCell(row, downloadButtonConfig)
+                    : <span />
             ),
             type: 'element',
         }
 
-        const baseColumns: TableColumn<SubmissionRow>[] = [submissionIdColumn]
+        const baseColumns: TableColumn<SubmissionReviewerRow>[] = [submissionIdColumn]
 
         if (!hideHandleColumn) {
             baseColumns.push({
+                className: 'no-row-border',
                 columnId: 'handle-aggregated',
                 label: 'Submitter',
                 propertyName: 'handle',
-                renderer: renderSubmitterHandleCell,
+                renderer: (row: SubmissionReviewerRow) => (
+                    row.isFirstReviewerRow
+                        ? renderSubmitterHandleCell(row)
+                        : <span />
+                ),
                 type: 'element',
             })
         }
 
-        for (let index = 0; index < maxReviewCount; index += 1) {
-            const metadata = reviewerColumnMetadata[index] ?? {
-                label: `Reviewer ${index + 1}`,
-            }
-            baseColumns.push(
-                {
-                    columnId: `reviewer-${index}`,
-                    label: metadata.renderLabel ?? metadata.label,
-                    renderer: (submission: SubmissionRow) => renderReviewerCell(submission, index),
-                    type: 'element',
-                },
-                {
-                    columnId: `score-${index}`,
-                    label: `Score ${index + 1}`,
-                    renderer: (submission: SubmissionRow) => renderScoreCell(
-                        submission,
-                        index,
-                        scoreVisibilityConfig,
-                        challengeInfo,
-                        pendingReopen,
-                        canManageCompletedReviews,
-                        isReopening,
-                        openReopenDialog,
-                    ),
-                    type: 'element',
-                },
-            )
-        }
+        baseColumns.push({
+            className: 'no-row-border',
+            columnId: 'review-score',
+            label: 'Review Score',
+            renderer: (row: SubmissionReviewerRow) => (
+                row.isFirstReviewerRow
+                    ? renderReviewScoreCell(row, scoreVisibilityConfig)
+                    : <span />
+            ),
+            type: 'element',
+        })
 
         baseColumns.push(
             {
-                columnId: 'review-date',
-                label: 'Review Date',
-                renderer: renderReviewDateCell,
+                columnId: 'reviewer',
+                label: 'Reviewer',
+                renderer: (row: SubmissionReviewerRow) => renderReviewerCell(
+                    row,
+                    row.reviewerIndex,
+                ),
                 type: 'element',
             },
             {
-                columnId: 'review-score',
-                label: 'Review Score',
-                renderer: (submission: SubmissionRow) => renderReviewScoreCell(submission, scoreVisibilityConfig),
+                columnId: 'review-date',
+                label: 'Review Date',
+                renderer: (row: SubmissionReviewerRow) => renderReviewDateCell(row),
+                type: 'element',
+            },
+            {
+                columnId: 'score',
+                label: 'Score',
+                renderer: (row: SubmissionReviewerRow) => renderScoreCell(
+                    row,
+                    row.reviewerIndex,
+                    scoreVisibilityConfig,
+                    challengeInfo,
+                    pendingReopen,
+                    canManageCompletedReviews,
+                    isReopening,
+                    openReopenDialog,
+                ),
                 type: 'element',
             },
             {
                 columnId: 'review-result',
                 label: 'Review Result',
-                renderer: (submission: SubmissionRow) => {
-                    const result = resolveSubmissionReviewResult(submission, {
+                renderer: (row: SubmissionReviewerRow) => {
+                    if (!row.isFirstReviewerRow) {
+                        return <span />
+                    }
+
+                    const result = resolveSubmissionReviewResult(row, {
                         minimumPassingScoreByScorecardId,
                     })
                     if (result === 'PASS') {
@@ -717,7 +719,13 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
                 className: styles.textBlue,
                 columnId: 'actions',
                 label: 'Actions',
-                renderer: renderActionsCell,
+                renderer: (row: SubmissionReviewerRow) => (
+                    row.isFirstReviewerRow ? renderActionsCell(row) : (
+                        <span className={styles.notReviewed}>
+                            --
+                        </span>
+                    )
+                ),
                 type: 'element',
             })
         }
@@ -727,16 +735,26 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
                 columnId: 'ai-reviews-table',
                 isExpand: true,
                 label: '',
-                renderer: (submission: SubmissionRow, allRows: SubmissionRow[]) => (
-                    props.aiReviewers && (
+                renderer: (row: SubmissionReviewerRow, allRows?: SubmissionReviewerRow[]) => {
+                    if (!row.isLastReviewerRow || !props.aiReviewers) {
+                        return <span />
+                    }
+
+                    const rows = allRows ?? []
+                    const firstIndexForSubmission = rows.findIndex(candidate => (
+                        candidate.id === row.id && candidate.isFirstReviewerRow
+                    ))
+                    const defaultOpen = firstIndexForSubmission === 0
+
+                    return (
                         <CollapsibleAiReviewsRow
                             className={styles.aiReviews}
                             aiReviewers={props.aiReviewers}
-                            submission={submission as any}
-                            defaultOpen={allRows ? !allRows.indexOf(submission) : false}
+                            submission={row as any}
+                            defaultOpen={defaultOpen}
                         />
                     )
-                ),
+                },
                 type: 'element',
             })
         }
@@ -745,7 +763,6 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
     }, [
         downloadButtonConfig,
         hideHandleColumn,
-        maxReviewCount,
         minimumPassingScoreByScorecardId,
         renderActionsCell,
         scoreVisibilityConfig,
@@ -755,43 +772,13 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
         openReopenDialog,
         challengeInfo,
         pendingReopen,
-        reviewerColumnMetadata,
     ])
 
-    const columnsMobile = useMemo<MobileTableColumn<SubmissionRow>[][]>(
+    const columnsMobile = useMemo<MobileTableColumn<SubmissionReviewerRow>[][]>(
         () => columns.map(column => {
-            const resolveLabelString = (): string => {
-                if (typeof column.label === 'string') {
-                    return column.label
-                }
-
-                if (typeof column.label === 'function') {
-                    const labelResult = column.label()
-                    if (typeof labelResult === 'string') {
-                        return labelResult
-                    }
-
-                    const columnId = column.columnId ?? ''
-                    if (columnId.startsWith('reviewer-')) {
-                        const reviewerIndexRaw = columnId.split('-')[1]
-                        const reviewerIndex = reviewerIndexRaw
-                            ? Number.parseInt(reviewerIndexRaw, 10)
-                            : NaN
-                        if (!Number.isNaN(reviewerIndex)) {
-                            return reviewerColumnMetadata[reviewerIndex]?.label
-                                ?? `Reviewer ${reviewerIndex + 1}`
-                        }
-
-                        return 'Reviewer'
-                    }
-
-                    return ''
-                }
-
-                return column.label ?? ''
-            }
-
-            const resolvedLabel = resolveLabelString()
+            const resolvedLabel = typeof column.label === 'function'
+                ? column.label() ?? ''
+                : (column.label ?? '')
             const labelForAction = typeof column.label === 'string'
                 ? column.label
                 : resolvedLabel
@@ -829,9 +816,9 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
                     colSpan: labelText ? 1 : 2,
                     mobileType: 'last-value',
                 },
-            ].filter(Boolean) as MobileTableColumn<SubmissionRow>[]
+            ].filter(Boolean) as MobileTableColumn<SubmissionReviewerRow>[]
         }),
-        [columns, reviewerColumnMetadata],
+        [columns],
     )
 
     return (
@@ -843,14 +830,14 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
             )}
         >
             {isTablet ? (
-                <TableMobile columns={columnsMobile} data={aggregatedRows} />
+                <TableMobile columns={columnsMobile} data={reviewerRows} />
             ) : (
                 <Table
                     key={tableKey}
                     showExpand
                     expandMode='always'
                     columns={columns}
-                    data={aggregatedRows}
+                    data={reviewerRows}
                     disableSorting
                     onToggleSort={_.noop}
                     removeDefaultSort
@@ -865,6 +852,7 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
                 isDownloading={isDownloading}
                 getRestriction={getHistoryRestriction}
                 getSubmissionMeta={resolveSubmissionMeta}
+                aiReviewers={props.aiReviewers}
             />
 
             <ConfirmModal

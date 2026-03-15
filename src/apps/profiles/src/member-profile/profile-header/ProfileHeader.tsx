@@ -1,4 +1,5 @@
 /* eslint-disable complexity */
+/* eslint-disable unicorn/no-null */
 import { Dispatch, FC, SetStateAction, useEffect, useMemo, useState } from 'react'
 import { Location, useLocation, useSearchParams } from 'react-router-dom'
 import { KeyedMutator } from 'swr'
@@ -70,7 +71,7 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
         [state?.queriedSkills],
     )
 
-    const activeTooltipText = canEdit ? `You have been active in the past 3 months. 
+    const activeTooltipText = canEdit ? `You have been active in the past 3 months.
 (this information is visible to you only)` : `${props.profile.firstName} has been active in the past 3 months.`
 
     useEffect(() => {
@@ -146,20 +147,18 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
         (item: UserTrait) => !!item?.openToWork,
     )
 
+    const isOpenToWork = hasOpenToWork ? props.profile.availableForGigs : null
+
     function renderOpenForWork(): JSX.Element {
         const showMyStatusLabel = canEdit
         const showAdminLabel = isPrivilegedViewer
 
         const content = (
             <div className={styles.profileActions}>
-                {showMyStatusLabel && <span>My status:</span>}
+                {showMyStatusLabel && <span>Engagement status:</span>}
 
                 {showAdminLabel && (
-                    <span>
-                        {props.profile.firstName}
-                        {' '}
-                        is
-                    </span>
+                    <span>Engagement status is</span>
                 )}
                 <OpenForGigs
                     canEdit={canEdit}
@@ -169,6 +168,7 @@ const ProfileHeader: FC<ProfileHeaderProps> = (props: ProfileHeaderProps) => {
                     isPrivilegedViewer={isPrivilegedViewer}
                     memberPersonalizationTraits={memberPersonalizationTraits}
                     mutatePersonalizationTraits={mutateTraits}
+                    isOpenToWork={isOpenToWork}
                 />
             </div>
         )

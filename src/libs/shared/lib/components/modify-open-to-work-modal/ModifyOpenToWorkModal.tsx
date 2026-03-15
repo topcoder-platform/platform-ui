@@ -1,13 +1,13 @@
 import { ChangeEvent, FC, useCallback } from 'react'
 
-import { InputMultiselect, InputMultiselectOption, InputSelect, InputText } from '~/libs/ui'
+import { InputMultiselect, InputMultiselectOption, InputRadio, InputSelect } from '~/libs/ui'
 
 import styles from './ModifyOpenToWorkModal.module.scss'
 
 export type AvailabilityType = 'FULL_TIME' | 'PART_TIME'
 
 export interface OpenToWorkData {
-    availableForGigs: boolean
+    availableForGigs: boolean | null
     availability?: AvailabilityType
     preferredRoles?: string[]
 }
@@ -57,10 +57,12 @@ export const validateOpenToWork = (value: OpenToWorkData): { [key: string]: stri
 }
 
 const OpenToWorkForm: FC<OpenToWorkFormProps> = (props: OpenToWorkFormProps) => {
-    function toggleOpenForWork(): void {
+    function handleOpenForWorkChange(e: ChangeEvent<HTMLInputElement>): void {
+        const openForWork = e.target.value === 'true'
+
         props.onChange({
             ...props.value,
-            availableForGigs: !props.value.availableForGigs,
+            availableForGigs: openForWork,
         })
     }
 
@@ -96,20 +98,32 @@ const OpenToWorkForm: FC<OpenToWorkFormProps> = (props: OpenToWorkFormProps) => 
 
     return (
         <div className={styles.container}>
-            <InputText
-                name='openForWork'
-                type='checkbox'
-                label='Yes, I’m open to work'
-                checked={props.value.availableForGigs}
-                onChange={toggleOpenForWork}
-                disabled={props.disabled}
-            />
+            <div className={styles.radioGroup}>
+                <InputRadio
+                    id='openForWorkYes'
+                    name='openForWork'
+                    value='true'
+                    label="Yes, I'm open to work"
+                    checked={props.value.availableForGigs === true}
+                    onChange={handleOpenForWorkChange}
+                    disabled={props.disabled}
+                />
+                <InputRadio
+                    id='openForWorkNo'
+                    name='openForWork'
+                    value='false'
+                    label="No, I'm not open to work"
+                    checked={props.value.availableForGigs === false}
+                    onChange={handleOpenForWorkChange}
+                    disabled={props.disabled}
+                />
+            </div>
 
             {props.value.availableForGigs && (
                 <>
                     <InputSelect
                         name='availability'
-                        label='Availability'
+                        label='Availability *'
                         placeholder='Select availability'
                         options={availabilityOptions}
                         value={props.value.availability}
@@ -123,7 +137,7 @@ const OpenToWorkForm: FC<OpenToWorkFormProps> = (props: OpenToWorkFormProps) => 
                     <InputMultiselect
                         className={styles.inputMultiSelect}
                         name='preferredRoles'
-                        label='Preferred Roles'
+                        label='Preferred Roles *'
                         placeholder='Select preferred roles'
                         additionalPlaceholder='Add more...'
                         onFetchOptions={fetchPreferredRoles}

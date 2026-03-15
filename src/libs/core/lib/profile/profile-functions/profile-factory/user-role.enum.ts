@@ -9,6 +9,7 @@ export enum UserRole {
     paymentViewer = 'Payment Viewer',
     paymentProviderAdmin = 'PaymentProvider Admin',
     paymentProviderViewer = 'PaymentProvider Viewer',
+    productManager = 'Product Manager',
     projectManager = 'Project Manager',
     taxFormAdmin = 'TaxForm Admin',
     taxFormViewer = 'TaxForm Viewer',

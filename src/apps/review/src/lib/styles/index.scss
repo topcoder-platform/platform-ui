@@ -53,6 +53,7 @@ $icons: review appeal submission warning error event timer upload reopen 1st 2nd
     }
     table {
         width: 100%;
+        border-collapse: collapse;
         thead {
             tr {
                 th {
@@ -73,7 +74,6 @@ $icons: review appeal submission warning error event timer upload reopen 1st 2nd
             }
         }
         td {
-            border-bottom: var(--TableBorderColor) solid 1px;
             color: var(--FontColor);
             font-family: "Nunito Sans", sans-serif;
             font-size: 14px;
@@ -93,6 +93,20 @@ $icons: review appeal submission warning error event timer upload reopen 1st 2nd
                     text-transform: none;
                 }
             }
+            &:not(.no-row-border) {
+                border-bottom: var(--TableBorderColor) solid 1px;
+            }
+            &.no-row-border {
+                border-bottom: none;
+                border-top: none;
+            }
+        }
+        tbody tr:has(td[colspan] .TableCell_blockExpandValue .TableCell_blockCell span:only-child:empty) td {
+            border-bottom: none;
+            border-top: none;
+            padding-top: 0;
+            padding-bottom: 0;
+            line-height: 0;
         }
     }
 }

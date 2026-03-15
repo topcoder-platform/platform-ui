@@ -4,7 +4,7 @@ import { xhrDeleteAsync, xhrGetAsync, xhrPatchAsync, xhrPostAsync } from '~/libs
 import { postAsyncWithBlobHandling } from '~/libs/core/lib/xhr/xhr-functions/xhr.functions'
 
 import { WalletDetails } from '../models/WalletDetails'
-import { WinningDetail } from '../models/WinningDetail'
+import { WinningDetail, WinningsType } from '../models/WinningDetail'
 import { TransactionResponse } from '../models/TransactionId'
 import { PaginationInfo } from '../models/PaginationInfo'
 import { WinningsAudit } from '../models/WinningsAudit'
@@ -73,7 +73,10 @@ export async function editPayment(updates: {
     return response.data
 }
 
-export async function exportSearchResults(filters: Record<string, string[]>): Promise<Blob> {
+export async function exportSearchResults(
+    filters: Record<string, string[]>,
+    type: WinningsType = WinningsType.PAYMENT,
+): Promise<Blob> {
     const url = `${baseUrl}/admin/winnings/export`
 
     const filteredFilters: Record<string, string> = {}
@@ -88,7 +91,7 @@ export async function exportSearchResults(filters: Record<string, string[]>): Pr
         winnerIds?: string[], [key: string]: string | number | string[] | undefined
     } = {
         ...filteredFilters,
-        type: 'PAYMENT',
+        type,
     }
 
     if (filters.winnerIds && filters.winnerIds.length > 0) {
@@ -107,7 +110,12 @@ export async function exportSearchResults(filters: Record<string, string[]>): Pr
 }
 
 // eslint-disable-next-line max-len
-export async function getPayments(limit: number, offset: number, filters: Record<string, string[]>): Promise<{
+export async function fetchWinnings(
+    type: WinningsType,
+    limit: number,
+    offset: number,
+    filters: Record<string, string[]>,
+): Promise<{
     winnings: WinningDetail[],
     pagination: PaginationInfo
 }> {
@@ -125,7 +133,7 @@ export async function getPayments(limit: number, offset: number, filters: Record
         limit,
         offset,
         ...filteredFilters,
-        type: 'PAYMENT',
+        type,
     }
 
     if (filters.winnerIds && filters.winnerIds.length > 0) {
@@ -141,7 +149,7 @@ export async function getPayments(limit: number, offset: number, filters: Record
     }>>(url, body)
 
     if (response.status === 'error') {
-        throw new Error('Error fetching payments')
+        throw new Error('Error fetching winnings')
     }
 
     if (response.data.winnings === null || response.data.winnings === undefined) {
@@ -149,6 +157,28 @@ export async function getPayments(limit: number, offset: number, filters: Record
     }
 
     return response.data
+}
+
+export async function getPayments(
+    limit: number,
+    offset: number,
+    filters: Record<string, string[]>,
+): Promise<{
+    winnings: WinningDetail[],
+    pagination: PaginationInfo
+}> {
+    return fetchWinnings(WinningsType.PAYMENT, limit, offset, filters)
+}
+
+export async function getPoints(
+    limit: number,
+    offset: number,
+    filters: Record<string, string[]>,
+): Promise<{
+    winnings: WinningDetail[],
+    pagination: PaginationInfo
+}> {
+    return fetchWinnings(WinningsType.POINTS, limit, offset, filters)
 }
 
 export async function setPaymentProvider(

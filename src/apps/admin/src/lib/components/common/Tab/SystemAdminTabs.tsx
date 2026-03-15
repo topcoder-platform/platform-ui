@@ -1,16 +1,22 @@
 import { Dispatch, FC, SetStateAction, useEffect, useMemo, useState } from 'react'
 import { NavigateFunction, useLocation, useNavigate } from 'react-router-dom'
 
+import { ProfileContextData, useProfileContext } from '~/libs/core'
 import { TabsNavbar } from '~/libs/ui'
 
-import { getTabIdFromPathName, SystemAdminTabsConfig } from './config'
+import { getSystemAdminTabs, getTabIdFromPathName } from './config'
 import styles from './SystemAdminTabs.module.scss'
 
 const SystemAdminTabs: FC = () => {
     const navigate: NavigateFunction = useNavigate()
+    const { profile }: ProfileContextData = useProfileContext()
 
     const { pathname }: { pathname: string } = useLocation()
-    const activeTabPathName: string = useMemo<string>(() => getTabIdFromPathName(pathname), [pathname])
+    const tabs = useMemo(() => getSystemAdminTabs(profile?.roles), [profile?.roles])
+    const activeTabPathName: string = useMemo<string>(
+        () => getTabIdFromPathName(pathname, tabs),
+        [pathname, tabs],
+    )
     const [activeTab, setActiveTab]: [string, Dispatch<SetStateAction<string>>]
         = useState<string>(activeTabPathName)
 
@@ -26,17 +32,21 @@ const SystemAdminTabs: FC = () => {
 
     // If url is changed by navigator on different tabs, we need set activeTab
     useEffect(() => {
-        const pathTabId = getTabIdFromPathName(pathname)
+        const pathTabId = getTabIdFromPathName(pathname, tabs)
         if (pathTabId !== activeTab) {
             setActiveTab(pathTabId)
         }
-    }, [pathname]) // eslint-disable-line react-hooks/exhaustive-deps
+    }, [activeTab, pathname, tabs])
+
+    if (!tabs.length) {
+        return <></>
+    }
 
     return (
         <div className={styles.container}>
             <TabsNavbar
                 defaultActive={activeTab}
-                tabs={SystemAdminTabsConfig}
+                tabs={tabs}
                 onChange={handleTabChange}
                 onChildChange={handleChildTabChange}
             />

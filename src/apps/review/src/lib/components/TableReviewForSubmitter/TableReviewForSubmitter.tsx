@@ -621,6 +621,7 @@ export const TableReviewForSubmitter: FC<TableReviewForSubmitterProps> = (props:
                 isDownloading={isDownloading}
                 getRestriction={getHistoryRestriction}
                 getSubmissionMeta={resolveSubmissionMeta}
+                aiReviewers={props.aiReviewers}
             />
         </TableWrapper>
     )
