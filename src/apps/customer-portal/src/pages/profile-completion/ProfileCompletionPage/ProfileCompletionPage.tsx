@@ -1,12 +1,20 @@
 /* eslint-disable react/jsx-no-bind */
 /* eslint-disable no-await-in-loop */
 /* eslint-disable complexity */
-import { ChangeEvent, FC, useEffect, useMemo, useState } from 'react'
+import { ChangeEvent, FC, useCallback, useEffect, useMemo, useState } from 'react'
 import useSWR, { SWRResponse } from 'swr'
 
 import { EnvironmentConfig } from '~/config'
-import { CountryLookup, useCountryLookup, UserSkill, UserSkillDisplayModes } from '~/libs/core'
-import { Button, InputSelect, InputSelectOption, LoadingSpinner, Tooltip } from '~/libs/ui'
+import { CountryLookup, useCountryLookup, UserSkill, UserSkillDisplayModes, xhrGetAsync } from '~/libs/core'
+import {
+    Button,
+    InputMultiselect,
+    InputMultiselectOption,
+    InputSelect,
+    InputSelectOption,
+    LoadingSpinner,
+    Tooltip,
+} from '~/libs/ui'
 import { getPreferredRoleLabelByValue } from '~/libs/shared/lib/utils/roles'
 
 import { PageWrapper } from '../../../lib'
@@ -26,15 +34,54 @@ export const ProfileCompletionPage: FC = () => {
     const [selectedCountry, setSelectedCountry] = useState<string>('all')
     const [currentPage, setCurrentPage] = useState<number>(1)
     const [selectedOpenToWork, setSelectedOpenToWork] = useState<OpenToWorkFilter>('all')
+    const [selectedSkills, setSelectedSkills] = useState<InputMultiselectOption[]>([])
     const [memberSkills, setMemberSkills] = useState<Map<string | number, UserSkill[]>>(new Map())
+    const [skillOptionsLoading, setSkillOptionsLoading] = useState<boolean>(false)
     const countryLookup: CountryLookup[] | undefined = useCountryLookup()
 
     const countryCodeFilter = selectedCountry === 'all' ? undefined : selectedCountry
 
+    const loadSkillOptions = useCallback(async (query: string): Promise<InputMultiselectOption[]> => {
+        setSkillOptionsLoading(true)
+        try {
+            const baseUrl = `${EnvironmentConfig.API.V5}/standardized-skills`
+            const params = new URLSearchParams({
+                size: '25',
+            })
+            if (query && query.trim().length > 0) {
+                params.append('term', query.trim())
+            }
+
+            const url = `${baseUrl}/skills/autocomplete?${params.toString()}`
+            const response: any = await xhrGetAsync(url)
+
+            const skills = Array.isArray(response) ? response : []
+
+            return skills
+                .map((skill: any) => ({
+                    label: skill.name,
+                    value: String(skill.id),
+                }))
+                .filter((option: InputMultiselectOption) => !!option.value)
+        } catch {
+            return []
+        } finally {
+            setSkillOptionsLoading(false)
+        }
+    }, [])
+
     const { data, error, isValidating }: SWRResponse<CompletedProfilesResponse> = useSWR(
         // eslint-disable-next-line max-len
-        `customer-portal-completed-profiles:${countryCodeFilter || 'all'}:${selectedOpenToWork}:${currentPage}:${DEFAULT_PAGE_SIZE}`,
-        () => fetchCompletedProfiles(countryCodeFilter, currentPage, DEFAULT_PAGE_SIZE, selectedOpenToWork),
+        `customer-portal-completed-profiles:${countryCodeFilter || 'all'}:${selectedOpenToWork}:${currentPage}:${DEFAULT_PAGE_SIZE}:${selectedSkills.map(skill => skill.value)
+            .sort()
+            .join(',')}`,
+        () => fetchCompletedProfiles(
+            countryCodeFilter,
+            currentPage,
+            DEFAULT_PAGE_SIZE,
+            selectedOpenToWork,
+            selectedSkills.map(skill => skill.value),
+        ),
         {
             revalidateOnFocus: false,
         },
@@ -200,6 +247,21 @@ export const ProfileCompletionPage: FC = () => {
                                 setCurrentPage(1)
                             }}
                             placeholder='Select'
+                        />
+                    </div>
+                    <div className={styles.filterWrap}>
+                        <InputMultiselect
+                            name='skills'
+                            label='Skills'
+                            placeholder='Filter by skills'
+                            value={selectedSkills}
+                            onFetchOptions={loadSkillOptions}
+                            loading={skillOptionsLoading}
+                            onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                                const value = (event.target.value || []) as InputMultiselectOption[]
+                                setSelectedSkills(value)
+                                setCurrentPage(1)
+                            }}
                         />
                     </div>
                 </div>

@@ -91,6 +91,7 @@ export async function fetchCompletedProfiles(
     page: number,
     perPage: number,
     openToWorkFilter?: OpenToWorkFilter,
+    skillIds?: string[],
 ): Promise<CompletedProfilesResponse> {
     const queryParams = new URLSearchParams({
         page: String(page),
@@ -107,6 +108,14 @@ export async function fetchCompletedProfiles(
 
     if (openToWorkFilter === 'no') {
         queryParams.set('openToWork', 'false')
+    }
+
+    if (Array.isArray(skillIds) && skillIds.length > 0) {
+        skillIds.forEach(id => {
+            if (id) {
+                queryParams.append('skillId', String(id))
+            }
+        })
     }
 
     const response = await xhrGetAsync<any>(

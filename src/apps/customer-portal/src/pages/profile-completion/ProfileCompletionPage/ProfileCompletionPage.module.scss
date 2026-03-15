@@ -22,6 +22,10 @@
     display: flex;
     gap: $sp-4;
 
+    :global([class*='__value-container']) {
+        min-height: 18px;
+    }
+
     @include ltemd {
         flex-direction: column;
         align-items: stretch;
