@@ -1,19 +1,7 @@
 import { EnvironmentConfig } from '~/config'
 import { xhrGetAsync, xhrPatchAsync, xhrPostAsync } from '~/libs/core'
 
-export type AiReviewEscalationStatus = 'PENDING_APPROVAL' | 'APPROVED' | 'REJECTED'
-
-export interface AiReviewDecisionEscalation {
-    id: string
-    aiReviewDecisionId: string
-    escalationNotes: string | null
-    approverNotes: string | null
-    status: AiReviewEscalationStatus
-    createdAt: string
-    createdBy: string | null
-    updatedAt: string
-    updatedBy: string | null
-}
+import { AiReviewDecisionEscalation, AiReviewDecisionEscalationStatus } from '../models/AiReview.model'
 
 export interface AiReviewEscalationDecision {
     aiReviewDecisionId: string
@@ -28,7 +16,7 @@ interface ListAiReviewEscalationsParams {
     challengeId?: string
     submissionId?: string
     aiReviewDecisionId?: string
-    status?: AiReviewEscalationStatus
+    status?: AiReviewDecisionEscalationStatus
     submissionLocked?: boolean
 }
 
@@ -39,7 +27,7 @@ interface CreateAiReviewEscalationPayload {
 
 interface UpdateAiReviewEscalationPayload {
     approverNotes: string
-    status: Extract<AiReviewEscalationStatus, 'APPROVED' | 'REJECTED'>
+    status: Extract<AiReviewDecisionEscalationStatus, 'APPROVED' | 'REJECTED'>
 }
 
 const v6BaseUrl = `${EnvironmentConfig.API.V6}`
