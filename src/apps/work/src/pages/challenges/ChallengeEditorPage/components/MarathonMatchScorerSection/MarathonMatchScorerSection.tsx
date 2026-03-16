@@ -228,11 +228,11 @@ function normalizePhaseName(value: unknown): string {
 }
 
 function getChallengePhaseId(phase: ChallengePhase): string {
-    if (phase.id) {
-        return phase.id
+    if (phase.phaseId) {
+        return phase.phaseId
     }
 
-    return phase.phaseId || ''
+    return phase.id || ''
 }
 
 function compareVersionStrings(left: string, right: string): number {
@@ -278,6 +278,68 @@ function getPreferredPhaseId(phases: ChallengePhase[], phaseName: string): strin
     return phases[0]
         ? getChallengePhaseId(phases[0])
         : ''
+}
+
+/**
+ * Maps a persisted scorer phase selection back to the canonical challenge `phaseId`.
+ * Accepts both canonical `phase.phaseId` and legacy challenge-phase `phase.id`.
+ */
+function normalizeConfiguredPhaseId(
+    phaseId: string | undefined,
+    phases: ChallengePhase[],
+): string {
+    const normalizedPhaseId = phaseId?.trim() || ''
+
+    if (!normalizedPhaseId) {
+        return ''
+    }
+
+    const matchedPhase = phases.find(phase => (
+        getChallengePhaseId(phase) === normalizedPhaseId
+        || phase.id?.trim() === normalizedPhaseId
+    ))
+
+    return matchedPhase
+        ? getChallengePhaseId(matchedPhase)
+        : normalizedPhaseId
+}
+
+/**
+ * Normalizes a single scorer phase draft to use the canonical challenge `phaseId`.
+ * Leaves undefined phase configs untouched.
+ */
+function normalizePhaseDraft(
+    phaseConfig: MarathonMatchPhaseConfig | undefined,
+    phases: ChallengePhase[],
+): MarathonMatchPhaseConfig | undefined {
+    if (!phaseConfig) {
+        return phaseConfig
+    }
+
+    const normalizedPhaseId = normalizeConfiguredPhaseId(phaseConfig.phaseId, phases)
+
+    return normalizedPhaseId === phaseConfig.phaseId
+        ? phaseConfig
+        : {
+            ...phaseConfig,
+            phaseId: normalizedPhaseId,
+        }
+}
+
+/**
+ * Normalizes all scorer phase selections in the current draft to canonical challenge `phaseId` values.
+ * Used after loading challenge phases so legacy saved ids still render and resave correctly.
+ */
+function normalizeDraftPhaseSelections(
+    draft: UpdateMarathonMatchConfigInput,
+    phases: ChallengePhase[],
+): UpdateMarathonMatchConfigInput {
+    return {
+        ...draft,
+        example: normalizePhaseDraft(draft.example, phases),
+        provisional: normalizePhaseDraft(draft.provisional, phases),
+        system: normalizePhaseDraft(draft.system, phases),
+    }
 }
 
 function createPhaseDraft(
@@ -1099,6 +1161,30 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
     }, [
         config,
         defaults,
+        draft,
+        phases,
+        savedSnapshot,
+    ])
+
+    useEffect(() => {
+        if (!draft || !phases.length) {
+            return
+        }
+
+        const nextDraft = normalizeDraftPhaseSelections(draft, phases)
+        const isSnapshotAligned = serializeDraftForComparison(draft) === serializeDraftForComparison(savedSnapshot)
+
+        if (serializeDraftForComparison(nextDraft) === serializeDraftForComparison(draft)) {
+            return
+        }
+
+        setDraft(nextDraft)
+        setNumericInputs(buildNumericInputState(nextDraft))
+
+        if (isSnapshotAligned) {
+            setSavedSnapshot(nextDraft)
+        }
+    }, [
         draft,
         phases,
         savedSnapshot,
