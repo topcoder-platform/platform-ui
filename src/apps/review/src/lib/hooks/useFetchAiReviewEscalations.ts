@@ -5,10 +5,10 @@ import { handleError } from '~/libs/shared/lib/utils/handle-error'
 
 import {
     AiReviewEscalationDecision,
-    AiReviewEscalationStatus,
     fetchAiReviewEscalations,
     getAiReviewEscalationsCacheKey,
 } from '../services'
+import { AiReviewDecisionEscalationStatus } from '../models'
 
 export interface AiReviewEscalationsResponse {
     decisions: AiReviewEscalationDecision[]
@@ -19,7 +19,7 @@ interface UseFetchAiReviewEscalationsArgs {
     challengeId?: string
     submissionId?: string
     aiReviewDecisionId?: string
-    status?: AiReviewEscalationStatus
+    status?: AiReviewDecisionEscalationStatus
     submissionLocked?: boolean
 }
 

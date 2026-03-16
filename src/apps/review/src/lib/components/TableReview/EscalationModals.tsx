@@ -5,19 +5,17 @@ import { BaseModal } from '~/libs/ui'
 import { handleError } from '~/libs/shared'
 
 import {
-    AiReviewDecisionEscalation,
     AiReviewEscalationDecision,
     createAiReviewEscalation,
     updateAiReviewEscalation,
 } from '../../services'
-import { refreshChallengeReviewData } from '../../utils'
 import type { SubmissionReviewerRow } from '../common/types'
 import { getProfileUrl } from '../common'
+import { AiReviewDecisionEscalation } from '../../models'
 
 import styles from './TableReview.module.scss'
 
 interface Props {
-    challengeId?: string
     escalateTarget?: SubmissionReviewerRow | undefined
     setEscalateTarget: (val?: SubmissionReviewerRow) => void
     unlockTarget?: SubmissionReviewerRow | undefined
@@ -96,9 +94,6 @@ export const EscalationModals = (props: Props): JSX.Element => {
             })
             toast.success('Escalation request submitted.')
             closeEscalateDialog()
-            if (props.challengeId) {
-                await refreshChallengeReviewData(props.challengeId)
-            }
 
             await props.revalidateEscalationData()
         } catch (error) {
@@ -131,9 +126,6 @@ export const EscalationModals = (props: Props): JSX.Element => {
             })
             toast.success('Submission unlocked successfully.')
             closeUnlockDialog()
-            if (props.challengeId) {
-                await refreshChallengeReviewData(props.challengeId)
-            }
 
             await props.revalidateEscalationData()
         } catch (error) {
@@ -165,9 +157,6 @@ export const EscalationModals = (props: Props): JSX.Element => {
             )
             toast.success(status === 'APPROVED' ? 'Escalation approved.' : 'Escalation rejected.')
             closeVerifyDialog()
-            if (props.challengeId) {
-                await refreshChallengeReviewData(props.challengeId)
-            }
 
             await props.revalidateEscalationData()
         } catch (error) {

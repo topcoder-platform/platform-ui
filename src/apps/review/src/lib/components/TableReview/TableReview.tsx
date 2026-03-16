@@ -33,6 +33,7 @@ import { useRolePermissions } from '../../hooks/useRolePermissions'
 import type { UseRolePermissionsResult } from '../../hooks/useRolePermissions'
 import type { UseSubmissionDownloadAccessResult } from '../../hooks/useSubmissionDownloadAccess'
 import {
+    AiReviewDecisionEscalation,
     ChallengeDetailContextModel,
     MappingReviewAppeal,
     ReviewAppContextModel,
@@ -53,7 +54,6 @@ import type {
 } from '../../utils'
 import { getSubmissionHistoryKey } from '../../utils/submissionHistory'
 import {
-    AiReviewDecisionEscalation,
     AiReviewEscalationDecision,
     getAiReviewDecisionsCacheKey,
     updateReview,
@@ -1116,7 +1116,6 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
             )}
 
             <EscalationModals
-                challengeId={challengeInfo?.id}
                 escalateTarget={escalateTarget}
                 setEscalateTarget={setEscalateTarget}
                 unlockTarget={unlockTarget}
