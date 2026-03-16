@@ -4,6 +4,7 @@ import { TimelineTemplate } from '../../../../lib/models'
 import {
     resolveCreateRoundType,
     resolveCreateTimelineTemplateId,
+    shouldUseManualReviewers,
 } from './ChallengeEditorForm.utils'
 
 const CHECKPOINT_SUBMISSION_PHASE_ID = 'd8a2cdbe-84d1-4687-ab75-78a6a7efdcc8'
@@ -211,5 +212,37 @@ describe('resolveCreateRoundType', () => {
 
         expect(result)
             .toBe(ROUND_TYPES.SINGLE_ROUND)
+    })
+})
+
+describe('shouldUseManualReviewers', () => {
+    it('returns false for task challenges', () => {
+        const result = shouldUseManualReviewers({
+            isMarathonMatchChallenge: false,
+            isTaskChallenge: true,
+        })
+
+        expect(result)
+            .toBe(false)
+    })
+
+    it('returns false for marathon match challenges', () => {
+        const result = shouldUseManualReviewers({
+            isMarathonMatchChallenge: true,
+            isTaskChallenge: false,
+        })
+
+        expect(result)
+            .toBe(false)
+    })
+
+    it('returns true for standard challenges', () => {
+        const result = shouldUseManualReviewers({
+            isMarathonMatchChallenge: false,
+            isTaskChallenge: false,
+        })
+
+        expect(result)
+            .toBe(true)
     })
 })

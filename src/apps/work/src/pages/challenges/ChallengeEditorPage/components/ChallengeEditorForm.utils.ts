@@ -16,6 +16,11 @@ interface ResolveCreateRoundTypeParams {
     formRoundTypeValue: FormDataEntryValue | null | undefined
 }
 
+interface ResolveManualReviewersParams {
+    isMarathonMatchChallenge: boolean
+    isTaskChallenge: boolean
+}
+
 const CHECKPOINT_PHASE_NAMES = [
     'checkpoint submission',
     'checkpoint screening',
@@ -83,6 +88,21 @@ export function resolveCreateRoundType(
     }
 
     return ROUND_TYPES.SINGLE_ROUND
+}
+
+/**
+ * Returns whether the shared reviewers matrix should be used for the current challenge type.
+ *
+ * Task challenges use the dedicated single-reviewer selector, and marathon matches use
+ * the scorer/tester workflow instead of manual reviewer assignments.
+ *
+ * @param params challenge-type flags derived from the selected type metadata.
+ * @returns `true` when the generic reviewers section should stay active.
+ */
+export function shouldUseManualReviewers(
+    params: ResolveManualReviewersParams,
+): boolean {
+    return !params.isMarathonMatchChallenge && !params.isTaskChallenge
 }
 
 /**

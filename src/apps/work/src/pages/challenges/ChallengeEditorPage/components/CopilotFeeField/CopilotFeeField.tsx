@@ -3,12 +3,12 @@ import {
     useCallback,
     useMemo,
 } from 'react'
-import {
-    useController,
-    useFormContext,
-} from 'react-hook-form'
 import type {
     UseFormReturn,
+} from 'react-hook-form'
+import {
+    useFormContext,
+    useWatch,
 } from 'react-hook-form'
 
 import {
@@ -24,52 +24,11 @@ import {
     PrizeSet,
 } from '../../../../../lib/models'
 
-type PrizeType = 'USD' | 'POINT'
+import { updateOptionalSinglePrizeSet } from './CopilotFeeField.utils'
 
 interface CopilotFeeFieldProps {
     disabled?: boolean
-    name: string
-}
-
-function createSinglePrizeSet(
-    setType: string,
-    prizeType: PrizeType,
-    value: number,
-): PrizeSet {
-    return {
-        prizes: [
-            {
-                type: prizeType,
-                value,
-            },
-        ],
-        type: setType,
-    }
-}
-
-function upsertSinglePrizeSet(
-    prizeSets: PrizeSet[],
-    setType: string,
-    prizeType: PrizeType,
-    value: number,
-): PrizeSet[] {
-    const setIndex = prizeSets.findIndex(prizeSet => prizeSet.type === setType)
-    const nextPrizeSet = createSinglePrizeSet(
-        setType,
-        prizeType,
-        value,
-    )
-
-    if (setIndex < 0) {
-        return [
-            ...prizeSets,
-            nextPrizeSet,
-        ]
-    }
-
-    return prizeSets.map((prizeSet, index) => (index === setIndex
-        ? nextPrizeSet
-        : prizeSet))
+    name: 'prizeSets'
 }
 
 export const CopilotFeeField: FC<CopilotFeeFieldProps> = (
@@ -77,15 +36,16 @@ export const CopilotFeeField: FC<CopilotFeeFieldProps> = (
 ) => {
     const formContext: UseFormReturn<ChallengeEditorFormData> = useFormContext<ChallengeEditorFormData>()
     const control = formContext.control
-    const prizeSetsController = useController({
+    const getValues = formContext.getValues
+    const setValue = formContext.setValue
+    const watchedPrizeSets = useWatch<ChallengeEditorFormData, 'prizeSets'>({
         control,
-        name: props.name as never,
+        name: props.name,
     })
-    const field = prizeSetsController.field
 
     const prizeSets = useMemo<PrizeSet[]>(
-        () => (Array.isArray(field.value) ? field.value : []),
-        [field.value],
+        () => (Array.isArray(watchedPrizeSets) ? watchedPrizeSets : []),
+        [watchedPrizeSets],
     )
     const copilotFeeValue = Number(
         prizeSets.find(prizeSet => prizeSet.type === PRIZE_SET_TYPES.COPILOT)
@@ -95,18 +55,23 @@ export const CopilotFeeField: FC<CopilotFeeFieldProps> = (
 
     const handleValueChange = useCallback(
         (nextValue: number): void => {
-            const nextPrizeSets = upsertSinglePrizeSet(
-                prizeSets,
+            const currentPrizeSets = getValues(props.name)
+            const nextPrizeSets = updateOptionalSinglePrizeSet(
+                Array.isArray(currentPrizeSets) ? currentPrizeSets : [],
                 PRIZE_SET_TYPES.COPILOT,
                 PRIZE_TYPES.USD,
                 nextValue,
             )
 
-            field.onChange(nextPrizeSets)
+            setValue(props.name, nextPrizeSets, {
+                shouldDirty: true,
+                shouldValidate: true,
+            })
         },
         [
-            field,
-            prizeSets,
+            getValues,
+            props.name,
+            setValue,
         ],
     )
 

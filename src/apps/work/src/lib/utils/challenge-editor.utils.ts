@@ -264,44 +264,108 @@ function normalizeMemberSelectorValue(value: unknown): string | undefined {
     return undefined
 }
 
-function getChallengeAssignedMemberSelectorValue(
-    challenge?: Partial<Challenge>,
+function getObjectValue(
+    value: unknown,
+): Record<string, unknown> | undefined {
+    return typeof value === 'object' && !!value
+        ? value as Record<string, unknown>
+        : undefined
+}
+
+/**
+ * Resolves a selector field from challenge payloads that may store assignee-like
+ * values on the challenge root, on the task object, or as nested member objects.
+ */
+function getChallengeMemberSelectorValue(
+    challenge: Partial<Challenge> | undefined,
+    rootKeys: readonly string[],
+    taskKeys: readonly string[],
 ): string | undefined {
-    const directAssignedMemberValue = normalizeMemberSelectorValue(challenge?.assignedMemberId)
-    if (directAssignedMemberValue) {
-        return directAssignedMemberValue
+    const typedChallenge = getObjectValue(challenge)
+
+    if (typedChallenge) {
+        for (const key of rootKeys) {
+            const normalizedValue = normalizeMemberSelectorValue(typedChallenge[key])
+
+            if (normalizedValue) {
+                return normalizedValue
+            }
+        }
     }
 
-    const task = challenge?.task
-    if (typeof task !== 'object' || !task) {
+    const typedTask = getObjectValue(challenge?.task)
+
+    if (!typedTask) {
         return undefined
     }
 
-    const typedTask = task as Record<string, unknown>
+    for (const key of taskKeys) {
+        const normalizedValue = normalizeMemberSelectorValue(typedTask[key])
 
-    return normalizeMemberSelectorValue(typedTask.memberId)
-        || normalizeMemberSelectorValue(typedTask.assignedMemberId)
-        || normalizeMemberSelectorValue(typedTask.memberHandle)
+        if (normalizedValue) {
+            return normalizedValue
+        }
+    }
+
+    return undefined
+}
+
+function getChallengeAssignedMemberSelectorValue(
+    challenge?: Partial<Challenge>,
+): string | undefined {
+    return getChallengeMemberSelectorValue(
+        challenge,
+        [
+            'assignedMemberId',
+            'assignedMember',
+            'assignedMemberHandle',
+            'memberId',
+            'memberHandle',
+        ],
+        [
+            'memberId',
+            'assignedMemberId',
+            'memberHandle',
+            'assignedMember',
+            'assignedMemberHandle',
+        ],
+    )
 }
 
 function getChallengeCopilotSelectorValue(
     challenge?: Partial<Challenge>,
 ): string | undefined {
-    const directCopilotValue = normalizeMemberSelectorValue(challenge?.copilot)
-    if (directCopilotValue) {
-        return directCopilotValue
-    }
+    return getChallengeMemberSelectorValue(
+        challenge,
+        [
+            'copilot',
+            'copilotHandle',
+            'copilotId',
+        ],
+        [
+            'copilot',
+            'copilotHandle',
+            'copilotId',
+        ],
+    )
+}
 
-    const task = challenge?.task
-    if (typeof task !== 'object' || !task) {
-        return undefined
-    }
-
-    const typedTask = task as Record<string, unknown>
-
-    return normalizeMemberSelectorValue(typedTask.copilot)
-        || normalizeMemberSelectorValue(typedTask.copilotHandle)
-        || normalizeMemberSelectorValue(typedTask.copilotId)
+function getChallengeReviewerSelectorValue(
+    challenge?: Partial<Challenge>,
+): string | undefined {
+    return getChallengeMemberSelectorValue(
+        challenge,
+        [
+            'reviewer',
+            'reviewerHandle',
+            'reviewerId',
+        ],
+        [
+            'reviewer',
+            'reviewerHandle',
+            'reviewerId',
+        ],
+    )
 }
 
 function normalizeRoundType(value: unknown): ChallengeEditorFormData['roundType'] | undefined {
@@ -903,7 +967,6 @@ export function transformChallengeToFormData(
             : ROUND_TYPES.SINGLE_ROUND)
     const reviewType = normalizeReviewType(challenge?.legacy?.reviewType) || REVIEW_TYPES.INTERNAL
     const isTask = normalizeOptionalBoolean(challenge?.task?.isTask) || false
-    const reviewer = normalizeOptionalString(challenge?.reviewer)
     const status = normalizeOptionalString(challenge?.status)
         ?.toUpperCase()
     const billingAccountId = normalizeOptionalId(challenge?.billing?.billingAccountId)
@@ -942,7 +1005,7 @@ export function transformChallengeToFormData(
         phases,
         privateDescription,
         prizeSets: prizeSetsForForm,
-        reviewer,
+        reviewer: getChallengeReviewerSelectorValue(challenge),
         reviewers: normalizeReviewers(challenge?.reviewers),
         roundType,
         skills,
@@ -1017,7 +1080,7 @@ export function transformFormDataToChallenge(
             : undefined,
         privateDescription: formData.privateDescription,
         prizeSets,
-        reviewer: normalizeOptionalString(formData.reviewer),
+        reviewer: normalizeMemberSelectorValue(formData.reviewer),
         reviewers: normalizeReviewers(formData.reviewers),
         roundType,
         skills: normalizedSkills,

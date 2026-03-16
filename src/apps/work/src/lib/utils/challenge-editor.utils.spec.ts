@@ -159,6 +159,46 @@ describe('challenge-editor utils task reviewer mapping', () => {
             .toBe(true)
     })
 
+    it('maps copilot and reviewer from alternate saved challenge payload shapes', () => {
+        const result = transformChallengeToFormData({
+            copilotHandle: 'copilotUser',
+            description: 'Public specification',
+            name: 'Task challenge',
+            task: {
+                isTask: true,
+                reviewerHandle: 'reviewerUser',
+            },
+            trackId: 'track-id',
+            typeId: 'type-id',
+        } as any)
+
+        expect(result.copilot)
+            .toBe('copilotUser')
+        expect(result.reviewer)
+            .toBe('reviewerUser')
+        expect(result.legacy?.isTask)
+            .toBe(true)
+    })
+
+    it('prefers reviewer handles from saved reviewer objects', () => {
+        const result = transformChallengeToFormData({
+            description: 'Public specification',
+            name: 'Task challenge',
+            reviewer: {
+                handle: 'reviewerUser',
+                userId: 123456,
+            } as any,
+            task: {
+                isTask: true,
+            },
+            trackId: 'track-id',
+            typeId: 'type-id',
+        } as any)
+
+        expect(result.reviewer)
+            .toBe('reviewerUser')
+    })
+
     it('serializes task reviewer but omits legacy.isTask from API payload', () => {
         const formData: Record<string, unknown> = {
             description: 'Public specification',

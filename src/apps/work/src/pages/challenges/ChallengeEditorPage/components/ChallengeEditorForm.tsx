@@ -145,6 +145,7 @@ import {
 import {
     resolveCreateRoundType,
     resolveCreateTimelineTemplateId,
+    shouldUseManualReviewers,
 } from './ChallengeEditorForm.utils'
 import styles from './ChallengeEditorForm.module.scss'
 
@@ -166,6 +167,7 @@ interface SaveStatusMetadata {
     payloadStatus?: string
 }
 
+const SAVE_VALIDATION_ERROR_MESSAGE = 'Please fix validation errors before saving.'
 const CHALLENGE_TYPE_CHALLENGE_ABBREVIATION = 'CH'
 const CHALLENGE_TYPE_CHALLENGE_NAME = 'CHALLENGE'
 const CHALLENGE_TYPE_MARATHON_MATCH_NAME = 'MARATHONMATCH'
@@ -630,6 +632,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const [isSaving, setIsSaving] = useState<boolean>(false)
     const [lastSaved, setLastSaved] = useState<Date | undefined>()
     const [saveError, setSaveError] = useState<string | undefined>()
+    const [saveValidationError, setSaveValidationError] = useState<string | undefined>()
     const [saveStatus, setSaveStatus] = useState<'error' | 'idle' | 'saved' | 'saving'>('idle')
     const [scorerHasUnsavedChanges, setScorerHasUnsavedChanges] = useState<boolean>(false)
     const [scorerHasError, setScorerHasError] = useState<boolean>(false)
@@ -772,6 +775,16 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const showFunChallengeField = isMarathonMatchChallengeSelected
     const showMarathonMatchScorerSection = isMarathonMatchChallengeSelected && isChallengeCreated
     const showPrizesAndBillingSection = !isFunChallengeSelected
+    const usesManualReviewers = useMemo(
+        (): boolean => shouldUseManualReviewers({
+            isMarathonMatchChallenge: isMarathonMatchChallengeSelected,
+            isTaskChallenge: isTaskChallengeSelected,
+        }),
+        [
+            isMarathonMatchChallengeSelected,
+            isTaskChallengeSelected,
+        ],
+    )
     const isScorerBlockingChallengeActions = showMarathonMatchScorerSection
         && (scorerHasUnsavedChanges || scorerHasError)
 
@@ -900,7 +913,15 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     }, [showMarathonMatchScorerSection])
 
     useEffect(() => {
-        if (!isMarathonMatchChallengeSelected) {
+        if (!saveValidationError || !formState.isValid) {
+            return
+        }
+
+        setSaveValidationError(undefined)
+    }, [formState.isValid, saveValidationError])
+
+    useEffect(() => {
+        if (usesManualReviewers) {
             return
         }
 
@@ -910,15 +931,15 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             return
         }
 
-        // Marathon matches use scorer/tester automation instead of manual reviewers.
+        // Task and marathon match challenges use dedicated reviewer flows instead.
         setValue('reviewers', [], {
             shouldDirty: false,
             shouldValidate: true,
         })
     }, [
         clearErrors,
-        isMarathonMatchChallengeSelected,
         setValue,
+        usesManualReviewers,
         values.reviewers,
     ])
 
@@ -938,6 +959,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             setIsSaving(true)
             setSaveStatus('saving')
             setSaveError(undefined)
+            setSaveValidationError(undefined)
 
             try {
                 const formData = getValues()
@@ -1034,6 +1056,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             }
 
             setSaveError(undefined)
+            setSaveValidationError(undefined)
 
             try {
                 const {
@@ -1042,9 +1065,9 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 }: SaveStatusMetadata = getSaveStatusMetadata(formData.status, options)
                 const payload = transformFormDataToChallenge({
                     ...formData,
-                    reviewers: isMarathonMatchChallengeSelected
-                        ? []
-                        : formData.reviewers,
+                    reviewers: usesManualReviewers
+                        ? formData.reviewers
+                        : [],
                     status: payloadStatus,
                 })
                 const savedChallenge = await patchChallenge(currentChallengeId, payload)
@@ -1087,9 +1110,9 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         [
             currentChallengeId,
             isEditMode,
-            isMarathonMatchChallengeSelected,
             navigate,
             reset,
+            usesManualReviewers,
         ],
     )
 
@@ -1188,6 +1211,8 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                         message: reviewerValidationError,
                         type: 'manual',
                     })
+                    setSaveStatus('idle')
+                    setSaveValidationError(reviewerValidationError)
                     showErrorToast(reviewerValidationError)
                     return
                 }
@@ -1207,6 +1232,11 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         ],
     )
 
+    const onInvalidSubmit = useCallback((): void => {
+        setSaveStatus('idle')
+        setSaveValidationError(SAVE_VALIDATION_ERROR_MESSAGE)
+    }, [])
+
     const statusText = useMemo(
         () => getStatusText(isSaving ? 'saving' : saveStatus),
         [isSaving, saveStatus],
@@ -1218,7 +1248,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
 
     return (
         <FormProvider {...formMethods}>
-            <form className={styles.form} onSubmit={handleSubmit(onSubmit)} ref={formElementRef}>
+            <form className={styles.form} onSubmit={handleSubmit(onSubmit, onInvalidSubmit)} ref={formElementRef}>
                 <input type='hidden' {...formMethods.register('id')} />
                 <input type='hidden' {...formMethods.register('status')} />
 
@@ -1248,6 +1278,9 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                     ? <span className={styles.statusText}>{statusText}</span>
                                     : undefined}
                                 <span className={styles.lastSaved}>{formatLastSaved(lastSaved)}</span>
+                                {saveValidationError
+                                    ? <span className={styles.errorText}>{saveValidationError}</span>
+                                    : undefined}
                                 {saveError
                                     ? <span className={styles.errorText}>{saveError}</span>
                                     : undefined}
@@ -1379,7 +1412,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                 )
                                 : undefined}
 
-                            {!isMarathonMatchChallengeSelected
+                            {usesManualReviewers
                                 ? (
                                     <section className={styles.section}>
                                         <h3 className={styles.sectionTitle}>Reviewers</h3>
@@ -1403,6 +1436,9 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                         ? <span className={styles.statusText}>{statusText}</span>
                                         : undefined}
                                     <span className={styles.lastSaved}>{formatLastSaved(lastSaved)}</span>
+                                    {saveValidationError
+                                        ? <span className={styles.errorText}>{saveValidationError}</span>
+                                        : undefined}
                                     {saveError
                                         ? <span className={styles.errorText}>{saveError}</span>
                                         : undefined}

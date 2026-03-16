@@ -7,7 +7,7 @@
   (`Review`, `Forum` when present, `Project`, and `Community`).
 - `components/ChallengeEditorForm.tsx`: React Hook Form container with autosave and manual save.
 - `components/*Field.tsx`: field-level components for each challenge section.
-- `components/ReviewersField/*`: tabbed human/AI reviewer configuration. Human reviewers stay on the challenge form, while AI reviewer configs load/save through the review API and sync saved AI workflows back into the challenge `reviewers` array. This section is hidden for `Marathon Match` challenges because review setup is handled by the scorer/tester flow.
+- `components/ReviewersField/*`: tabbed human/AI reviewer configuration. Human reviewers stay on the challenge form, while AI reviewer configs load/save through the review API and sync saved AI workflows back into the challenge `reviewers` array. This section is hidden for `Task` and `Marathon Match` challenges because those flows use dedicated reviewer assignment UIs.
 - `ChallengeEditorPage.module.scss` and `components/ChallengeEditorForm.module.scss`: page and form layout styling.
 
 ## Validation Rules
@@ -43,19 +43,21 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 - `ChallengeTypeField`: active type selector from `useFetchChallengeTypes`.
 - `DesignWorkTypeField`: shown for Design + Challenge, with the legacy work-type options (`Application Front-End Design`, `Print/Presentation`, `Web Design`, `Widget or Mobile Screen Design`, `Wireframes`). The selected value is stored in challenge tags.
 - `FunChallengeField`: shown for `Marathon Match` type and remains editable after creation so the form can switch between fun-challenge and standard marathon-match fields.
-- `ReviewersField`: hidden for `Marathon Match` challenges because manual reviewer assignment is not used there.
+- `ReviewersField`: hidden for `Task` and `Marathon Match` challenges because manual reviewer assignment is handled elsewhere.
 - `ChallengeDescriptionField`: public markdown spec editor.
 - `ChallengePrivateDescriptionField`: optional private markdown spec editor.
 - `ChallengeTagsField`: multi creatable tag picker excluding special challenge tags.
 - `ChallengeSkillsField`: async multi skills picker with billing-account-based required behavior.
 - `CopilotField`: clearable dropdown populated with copilot handles from the current project.
+- `CopilotFeeField`: optional copilot payment input that updates only the underlying copilot prize set, preserving placement prize edits and removing the copilot prize set when cleared so empty fees do not leave hidden validation errors.
 - `ReviewTypeField`: task-only reviewer controls; enforces internal review type and requires selecting a reviewer from project members.
 - `Wipro Allowed` checkbox: advanced-option toggle that maps to the challenge `wiproAllowed` API flag.
+- Saved assignee selectors (`assignedMemberId`, `copilot`, `reviewer`) are normalized from handle/id/object payloads on both the challenge root and `task` object so draft reloads preserve member selections from legacy API shapes.
 
 ## Conditional Sections
 
 - `Prizes & Billing` is hidden when `funChallenge` is enabled.
-- `Reviewers` is hidden when the selected challenge type is `Marathon Match`.
+- `Reviewers` is hidden when the selected challenge type is `Task` or `Marathon Match`.
 
 ## API Integration
 
