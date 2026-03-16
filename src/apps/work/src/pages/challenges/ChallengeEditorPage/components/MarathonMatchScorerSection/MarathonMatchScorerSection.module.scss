@@ -135,13 +135,44 @@
     font-weight: 600;
 }
 
-.fieldGroup input,
-.fieldGroup select {
+.fieldGroup input {
     border: 1px solid #c9ced3;
     border-radius: 8px;
     font-size: 14px;
     min-height: 42px;
     padding: 10px 12px;
+}
+
+.selectInput {
+    appearance: none;
+    -webkit-appearance: none;
+    background: $tc-white url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M5.99994 6.72682C5.87772 6.72682 5.76314 6.70773 5.65619 6.66953C5.54925 6.63134 5.44994 6.56641 5.35828 6.47474L1.14161 2.25807C0.973554 2.09002 0.889526 1.87613 0.889526 1.61641C0.889526 1.35668 0.973554 1.1428 1.14161 0.97474C1.30967 0.806684 1.52355 0.722656 1.78328 0.722656C2.043 0.722656 2.25689 0.806684 2.42494 0.97474L5.99994 4.54974L9.57494 0.97474C9.743 0.806684 9.95689 0.722656 10.2166 0.722656C10.4763 0.722656 10.6902 0.806684 10.8583 0.97474C11.0263 1.1428 11.1104 1.35668 11.1104 1.61641C11.1104 1.87613 11.0263 2.09002 10.8583 2.25807L6.64161 6.47474C6.54994 6.56641 6.45064 6.63134 6.34369 6.66953C6.23675 6.70773 6.12216 6.72682 5.99994 6.72682Z' fill='%23606B85'/%3E%3C/svg%3E") no-repeat right 14px center / 12px 8px;
+    border: 1px solid #c9ced3;
+    border-radius: 8px;
+    color: $black-80;
+    cursor: pointer;
+    font-size: 14px;
+    min-height: 42px;
+    padding: 10px 40px 10px 12px;
+
+    &:focus {
+        border-color: $link-blue-dark;
+        outline: none;
+    }
+
+    &:disabled {
+        background-color: $black-5;
+        color: $black-40;
+        cursor: not-allowed;
+    }
+
+    option {
+        color: $black-80;
+    }
+}
+
+.selectPlaceholder {
+    color: $black-60;
 }
 
 .checkboxField {

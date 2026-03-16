@@ -147,7 +147,14 @@ const PhaseConfigCard: FC<PhaseConfigCardProps> = (props: PhaseConfigCardProps) 
         <div className={styles.phaseGrid}>
             <label className={styles.fieldGroup}>
                 <span>Phase</span>
-                <select onChange={props.onPhaseChange} value={props.phaseId}>
+                <select
+                    className={classNames(
+                        styles.selectInput,
+                        !props.phaseId && styles.selectPlaceholder,
+                    )}
+                    onChange={props.onPhaseChange}
+                    value={props.phaseId}
+                >
                     <option value=''>Select phase</option>
                     {props.options.map(option => (
                         <option key={option.value} value={option.value}>
@@ -1112,16 +1119,38 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
             return undefined
         }
 
+        let isCancelled = false
+
+        /**
+         * Refreshes the pending scorer status and schedules the next poll while it remains unresolved.
+         * Used to keep the scorer summary in sync with background compilation without requiring a page reload.
+         */
+        const pollTesterStatus = async (): Promise<void> => {
+            try {
+                await loadTesterById(selectedTester.id, {
+                    clearSelectionOnFailure: false,
+                    setBlockingErrorOnFailure: false,
+                    showErrorToast: false,
+                })
+            } finally {
+                if (!isCancelled) {
+                    pollingTimerRef.current = window.setTimeout(() => {
+                        pollTesterStatus()
+                            .catch(() => undefined)
+                    }, POLL_INTERVAL_MS)
+                }
+            }
+        }
+
         pollingTimerRef.current = window.setTimeout(() => {
-            loadTesterById(selectedTester.id, {
-                clearSelectionOnFailure: false,
-                setBlockingErrorOnFailure: false,
-                showErrorToast: false,
-            })
+            pollTesterStatus()
                 .catch(() => undefined)
         }, POLL_INTERVAL_MS)
 
-        return clearPollingTimer
+        return (): void => {
+            isCancelled = true
+            clearPollingTimer()
+        }
     }, [
         clearPollingTimer,
         loadTesterById,
@@ -1191,6 +1220,10 @@ export const MarathonMatchScorerSection: FC<MarathonMatchScorerSectionProps> = (
                     <label className={styles.fieldGroup}>
                         <span>Scorer</span>
                         <select
+                            className={classNames(
+                                styles.selectInput,
+                                !currentTesterId && styles.selectPlaceholder,
+                            )}
                             onChange={handleTesterSelectionChangeCapture}
                             value={currentTesterId}
                         >
