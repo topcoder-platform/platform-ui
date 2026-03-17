@@ -48,6 +48,7 @@ import {
     ProjectListTabs,
 } from '../../../lib/components'
 import {
+    checkCanManageProject,
     formatEngagementStatus,
     getApplicationsCount,
     getAssignedMembersCount,
@@ -574,6 +575,12 @@ export const EngagementsListPage: FC = () => {
                 ? `${projectResult.project.name} Engagements`
                 : 'Engagements'
         )
+    const canManageProject = !!projectResult.project
+        && checkCanManageProject(
+            contextValue.userRoles,
+            contextValue.loginUserInfo?.userId,
+            projectResult.project,
+        )
     const assignmentsBackUrl = isAllEngagementsPage
         ? '/engagements'
         : `/projects/${projectId}/engagements`
@@ -637,13 +644,17 @@ export const EngagementsListPage: FC = () => {
     const titleAction = projectId
         ? (
             <div className={styles.projectTitleActions}>
-                <Link
-                    aria-label='Edit project'
-                    className={styles.projectEditLink}
-                    to={`/projects/${projectId}/edit`}
-                >
-                    <IconOutline.PencilIcon className={styles.projectEditIcon} />
-                </Link>
+                {canManageProject
+                    ? (
+                        <Link
+                            aria-label='Edit project'
+                            className={styles.projectEditLink}
+                            to={`/projects/${projectId}/edit`}
+                        >
+                            <IconOutline.PencilIcon className={styles.projectEditIcon} />
+                        </Link>
+                    )
+                    : undefined}
                 <Link
                     aria-label='Manage project users'
                     className={styles.projectUsersLink}
@@ -673,6 +684,7 @@ export const EngagementsListPage: FC = () => {
             <ProjectBillingAccountExpiredNotice
                 billingAccountId={projectResult.project?.billingAccountId}
                 billingAccountName={projectResult.project?.billingAccountName}
+                canManageProject={canManageProject}
                 projectId={projectId}
                 projectStatus={projectResult.project?.status}
             />

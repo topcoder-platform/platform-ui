@@ -31,9 +31,11 @@ import {
     UseFetchProjectsListResult,
 } from '../../../lib/hooks'
 import {
+    Project,
     ProjectFilters,
     WorkAppContextModel,
 } from '../../../lib/models'
+import { checkCanManageProject } from '../../../lib/utils'
 import styles from '../../../lib/components/ProjectsListPage/ProjectsListPage.module.scss'
 
 const DEFAULT_FILTERS: ProjectFilters = {
@@ -66,7 +68,7 @@ function useErrorToast(
 }
 
 interface RenderProjectsContentParams {
-    canEditProjects: boolean
+    canEditProject: (project: Project) => boolean
     projectsResult: UseFetchProjectsListResult
     onPageChange: (newPage: number) => void
     onPerPageChange: (newPerPage: number) => void
@@ -87,7 +89,7 @@ function renderProjectsContent(params: RenderProjectsContentParams): JSX.Element
     return (
         <>
             <ProjectsTable
-                canEditProjects={params.canEditProjects}
+                canEditProject={params.canEditProject}
                 projects={params.projectsResult.projects}
                 isLoading={params.projectsResult.isValidating && params.projectsResult.projects.length === 0}
                 sortBy={params.sortBy}
@@ -112,9 +114,9 @@ function renderProjectsContent(params: RenderProjectsContentParams): JSX.Element
 
 export const ProjectsListPage: FC = () => {
     const {
-        isAdmin,
-        isCopilot,
         isManager,
+        loginUserInfo,
+        userRoles,
     }: WorkAppContextModel = useContext(WorkAppContext)
 
     const [filters, setFilters] = useState<ProjectFilters>(DEFAULT_FILTERS)
@@ -123,8 +125,11 @@ export const ProjectsListPage: FC = () => {
     const [sortBy, setSortBy] = useState<string>('lastActivityAt')
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
 
-    const canCreateProject = isAdmin || isCopilot
-    const canEditProjects = isAdmin || isCopilot
+    const canCreateProject = checkCanManageProject(userRoles, loginUserInfo?.userId)
+    const canEditProject = useCallback(
+        (project: Project): boolean => checkCanManageProject(userRoles, loginUserInfo?.userId, project),
+        [loginUserInfo?.userId, userRoles],
+    )
 
     const fetchParams: UseFetchProjectsListParams = {
         ...filters,
@@ -218,7 +223,7 @@ export const ProjectsListPage: FC = () => {
             )}
 
             {renderProjectsContent({
-                canEditProjects,
+                canEditProject,
                 onPageChange: handlePageChange,
                 onPerPageChange: handlePerPageChange,
                 onSort: handleSort,

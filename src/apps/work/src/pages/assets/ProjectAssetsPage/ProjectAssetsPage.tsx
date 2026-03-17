@@ -58,6 +58,7 @@ import {
     removeProjectAttachment,
     updateProjectAttachment,
 } from '../../../lib/services'
+import { checkCanManageProject } from '../../../lib/utils'
 
 import styles from './ProjectAssetsPage.module.scss'
 
@@ -318,6 +319,12 @@ export const ProjectAssetsPage: FC = () => {
     const projectResult = useFetchProject(projectId || undefined)
     const projectMembersResult = useFetchProjectMembers(projectId || undefined)
     const attachmentsResult = useFetchProjectAttachments(projectId || undefined)
+    const canManageProject = !!projectResult.project
+        && checkCanManageProject(
+            workAppContext.userRoles,
+            workAppContext.loginUserInfo?.userId,
+            projectResult.project,
+        )
 
     const [activeTab, setActiveTab] = useState<AssetsTab>('files')
     const [isOpeningPicker, setIsOpeningPicker] = useState<boolean>(false)
@@ -732,6 +739,7 @@ export const ProjectAssetsPage: FC = () => {
             <ProjectBillingAccountExpiredNotice
                 billingAccountId={projectResult.project?.billingAccountId}
                 billingAccountName={projectResult.project?.billingAccountName}
+                canManageProject={canManageProject}
                 projectId={projectId}
                 projectStatus={projectResult.project?.status}
             />
@@ -740,13 +748,17 @@ export const ProjectAssetsPage: FC = () => {
     const titleAction = projectId
         ? (
             <div className={styles.projectTitleActions}>
-                <Link
-                    aria-label='Edit project'
-                    className={styles.projectEditLink}
-                    to={`/projects/${projectId}/edit`}
-                >
-                    <IconOutline.PencilIcon className={styles.projectEditIcon} />
-                </Link>
+                {canManageProject
+                    ? (
+                        <Link
+                            aria-label='Edit project'
+                            className={styles.projectEditLink}
+                            to={`/projects/${projectId}/edit`}
+                        >
+                            <IconOutline.PencilIcon className={styles.projectEditIcon} />
+                        </Link>
+                    )
+                    : undefined}
                 <Link
                     aria-label='Manage project users'
                     className={styles.projectUsersLink}

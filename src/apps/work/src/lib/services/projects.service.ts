@@ -44,6 +44,7 @@ export type ProjectSummary = Pick<Project,
     | 'invites'
     | 'isInvited'
     | 'lastActivityAt'
+    | 'members'
     | 'name'
     | 'status'
     | 'type'
@@ -483,6 +484,11 @@ function extractProjectTypes(response: unknown): ProjectType[] {
 }
 
 function normalizeProjectSummary(project: ProjectSummary): ProjectSummary {
+    const members = Array.isArray(project.members)
+        ? project.members
+            .map(member => normalizeProjectMember(member))
+            .filter((member): member is ProjectMember => !!member)
+        : []
     const invites = Array.isArray(project.invites)
         ? project.invites
         : []
@@ -491,6 +497,7 @@ function normalizeProjectSummary(project: ProjectSummary): ProjectSummary {
         ...project,
         invites,
         isInvited: invites.length > 0,
+        members,
     }
 }
 

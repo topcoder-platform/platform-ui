@@ -26,6 +26,8 @@ import styles from './ProjectsTable.module.scss'
 
 type SortOrder = 'asc' | 'desc'
 
+const NOOP_CAN_EDIT_PROJECT = (): boolean => false
+
 const PROJECT_TYPE_LABEL_OVERRIDES: Readonly<Record<string, string>> = {
     'analytics-and-data-science': 'Analytics & Data Science',
     app_dev: 'App Development',
@@ -72,7 +74,7 @@ function formatProjectTypeLabel(projectType?: string): string {
 }
 
 interface ProjectsTableProps {
-    canEditProjects?: boolean
+    canEditProject?: (project: Project) => boolean
     projects: Project[]
     isLoading?: boolean
     sortBy: string
@@ -108,7 +110,7 @@ function getBillingAccountDisplay(
 }
 
 export const ProjectsTable: FC<ProjectsTableProps> = (props: ProjectsTableProps) => {
-    const canEditProjects = !!props.canEditProjects
+    const canEditProject = props.canEditProject || NOOP_CAN_EDIT_PROJECT
     const projects: Project[] = props.projects
     const isLoading: boolean = !!props.isLoading
     const onSort: (fieldName: string) => void = props.onSort
@@ -171,13 +173,14 @@ export const ProjectsTable: FC<ProjectsTableProps> = (props: ProjectsTableProps)
                 renderer: (project: Project) => {
                     const projectPath = getProjectPath(project)
                     const editPath = `/projects/${project.id}/edit`
+                    const canEdit = canEditProject(project)
 
                     return (
                         <div className={styles.actions}>
                             <Link className={styles.actionLink} to={projectPath}>
                                 Open
                             </Link>
-                            {canEditProjects
+                            {canEdit
                                 ? (
                                     <Link className={styles.actionLink} to={editPath}>
                                         Edit
@@ -190,7 +193,7 @@ export const ProjectsTable: FC<ProjectsTableProps> = (props: ProjectsTableProps)
                 type: 'action',
             },
         ],
-        [billingAccountNames, canEditProjects],
+        [billingAccountNames, canEditProject],
     )
 
     const forceSort = useMemo<Sort>(
@@ -243,7 +246,7 @@ export const ProjectsTable: FC<ProjectsTableProps> = (props: ProjectsTableProps)
             <div className={styles.listView}>
                 {projects.map(project => (
                     <ProjectCard
-                        canEdit={canEditProjects}
+                        canEdit={canEditProject(project)}
                         key={String(project.id)}
                         project={project}
                     />

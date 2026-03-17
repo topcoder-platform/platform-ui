@@ -10,6 +10,7 @@ import {
     MANAGER_ROLES,
     READ_ONLY_ROLES,
     SUBMITTER_ROLE_UUID,
+    TALENT_MANAGER_ROLES,
     TASK_MANAGER_ROLES,
 } from '../constants/roles.constants'
 import {
@@ -43,6 +44,15 @@ function normalizeValue(value: unknown): string {
         ? value.trim()
             .toLowerCase()
         : ''
+}
+
+function normalizeUserId(userId: unknown): string {
+    if (userId === undefined || userId === null) {
+        return ''
+    }
+
+    return String(userId)
+        .trim()
 }
 
 function getTokenData(token: string): DecodedTokenData {
@@ -85,6 +95,19 @@ function hasTaskManagerRole(userRoles: string[]): boolean {
 
 function hasCopilotRole(userRoles: string[]): boolean {
     return hasRole(userRoles, COPILOT_ROLES)
+}
+
+function getProjectMemberByUserId(
+    project: Project | undefined,
+    userId: number | string | undefined,
+): ProjectMember | undefined {
+    const normalizedUserId = normalizeUserId(userId)
+
+    if (!project || !normalizedUserId || !Array.isArray(project.members)) {
+        return undefined
+    }
+
+    return project.members.find(member => normalizeUserId(member.userId) === normalizedUserId)
 }
 
 function hasDownloadSubmissionsRole(userRoles: string[]): boolean {
@@ -156,6 +179,96 @@ export function checkTaskManager(token: string): boolean {
     return hasTaskManagerRole(roles)
 }
 
+/**
+ * Returns whether the supplied user roles include a Talent Manager role.
+ *
+ * @param userRoles caller roles from the decoded auth token or app context.
+ * @returns `true` when the caller has a Talent Manager role; otherwise `false`.
+ */
+export function checkTalentManager(userRoles: string[]): boolean {
+    return hasRole(userRoles, TALENT_MANAGER_ROLES)
+}
+
+/**
+ * Returns the matching project member record for the supplied user id.
+ *
+ * User ids are normalized to trimmed strings so mixed number/string payloads
+ * from the projects API do not break membership checks.
+ *
+ * @param project project whose members should be inspected.
+ * @param userId logged-in user identifier.
+ * @returns the matching project member when found; otherwise `undefined`.
+ */
+export function getProjectMember(
+    project: Project | undefined,
+    userId: number | string | undefined,
+): ProjectMember | undefined {
+    return getProjectMemberByUserId(project, userId)
+}
+
+/**
+ * Returns the current caller's role within a project when a membership exists.
+ *
+ * @param project project whose members should be inspected.
+ * @param userId logged-in user identifier.
+ * @returns the project member role, or `undefined` when absent.
+ */
+export function getProjectMemberRole(
+    project: Project | undefined,
+    userId: number | string | undefined,
+): string | undefined {
+    return getProjectMemberByUserId(project, userId)?.role
+}
+
+/**
+ * Returns whether the supplied user belongs to the project's membership list.
+ *
+ * @param project project whose members should be inspected.
+ * @param userId logged-in user identifier.
+ * @returns `true` when the user is a project member; otherwise `false`.
+ */
+export function checkProjectMembership(
+    project: Project | undefined,
+    userId: number | string | undefined,
+): boolean {
+    return !!getProjectMemberByUserId(project, userId)
+}
+
+/**
+ * Returns whether the caller can manage project ownership and billing flows.
+ *
+ * Admins always qualify. Copilots and Talent Managers can create projects and
+ * can manage an existing project when they hold a manager or copilot
+ * membership on that project.
+ *
+ * @param userRoles caller roles from the decoded auth token or app context.
+ * @param userId logged-in user identifier used for project membership checks.
+ * @param project optional project context for edit/access checks.
+ * @returns `true` when the caller can manage the project or create a new one.
+ */
+export function checkCanManageProject(
+    userRoles: string[],
+    userId: number | string | undefined,
+    project?: Project,
+): boolean {
+    if (hasAdminRole(userRoles)) {
+        return true
+    }
+
+    if (!hasCopilotRole(userRoles) && !checkTalentManager(userRoles)) {
+        return false
+    }
+
+    if (!project) {
+        return true
+    }
+
+    const normalizedRole = normalizeValue(getProjectMemberByUserId(project, userId)?.role)
+
+    return normalizedRole === PROJECT_ROLES.COPILOT
+        || normalizedRole === PROJECT_ROLES.MANAGER
+}
+
 export function checkAdminOrPmOrTaskManager(
     token: string,
     project?: Project,
@@ -164,16 +277,7 @@ export function checkAdminOrPmOrTaskManager(
     const roles = Array.isArray(tokenData.roles)
         ? tokenData.roles
         : []
-    const userId = tokenData.userId !== undefined && tokenData.userId !== null
-        ? String(tokenData.userId)
-        : ''
-    const members = Array.isArray(project?.members)
-        ? project?.members
-        : []
-    const isProjectManager = !!members?.some(member => (
-        String(member.userId) === userId
-        && normalizeValue(member.role) === PROJECT_ROLES.MANAGER
-    ))
+    const isProjectManager = normalizeValue(getProjectMemberRole(project, tokenData.userId)) === PROJECT_ROLES.MANAGER
 
     return hasAdminRole(roles)
         || hasManagerRole(roles)
@@ -202,19 +306,18 @@ export function checkIsUserInvitedToProject(
     project: Project,
 ): ProjectInvite | undefined {
     const tokenData = getTokenData(token)
+    const normalizedUserId = normalizeUserId(tokenData.userId)
     const invites = Array.isArray(project.invites)
         ? project.invites
         : []
 
     return invites.find(invite => {
-        const inviteUserId = typeof invite.userId === 'number'
-            ? invite.userId
-            : undefined
+        const inviteUserId = normalizeUserId(invite.userId)
         const inviteEmail = normalizeValue(invite.email)
         const inviteHandle = normalizeValue(invite.handle)
 
         return (
-            (tokenData.userId !== undefined && inviteUserId === Number(tokenData.userId))
+            (!!normalizedUserId && inviteUserId === normalizedUserId)
             || (!!tokenData.email && inviteEmail === normalizeValue(tokenData.email))
             || (!!tokenData.handle && inviteHandle === normalizeValue(tokenData.handle))
         )

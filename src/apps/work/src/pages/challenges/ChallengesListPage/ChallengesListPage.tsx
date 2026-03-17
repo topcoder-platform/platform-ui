@@ -47,9 +47,11 @@ import {
 import {
     Challenge,
     ChallengeFilters,
+    ProjectStatusValue,
     WorkAppContextModel,
 } from '../../../lib/models'
 import {
+    checkCanManageProject,
     getStatusText,
 } from '../../../lib/utils'
 
@@ -140,6 +142,79 @@ function renderHeaderActions(params: RenderHeaderActionsParams): JSX.Element {
     )
 }
 
+interface RenderProjectTitleActionParams {
+    backTo: string
+    canManageProject: boolean
+    projectId: string | undefined
+    projectStatus: ProjectStatusValue | undefined
+}
+
+function renderProjectTitleAction(params: RenderProjectTitleActionParams): JSX.Element | undefined {
+    if (!params.projectId) {
+        return undefined
+    }
+
+    return (
+        <div className={styles.projectTitleActions}>
+            {params.projectStatus
+                ? <ProjectStatus status={params.projectStatus} />
+                : undefined}
+            {params.canManageProject
+                ? (
+                    <Link
+                        aria-label='Edit project'
+                        className={styles.projectEditLink}
+                        to={`/projects/${params.projectId}/edit`}
+                    >
+                        <IconOutline.PencilIcon className={styles.projectEditIcon} />
+                    </Link>
+                )
+                : undefined}
+            <Link
+                aria-label='Manage project users'
+                className={styles.projectUsersLink}
+                state={{
+                    backTo: params.backTo,
+                }}
+                to={`/projects/${params.projectId}/users`}
+            >
+                <IconOutline.UserIcon className={styles.projectUsersIcon} />
+            </Link>
+            <Link
+                aria-label='Open project assets'
+                className={styles.projectAssetsLink}
+                to={`/projects/${params.projectId}/assets`}
+            >
+                <IconOutline.DocumentTextIcon className={styles.projectAssetsIcon} />
+            </Link>
+        </div>
+    )
+}
+
+interface RenderBillingAccountNoticeParams {
+    billingAccountId?: number | string
+    billingAccountName?: string
+    canManageProject: boolean
+    projectId: string | undefined
+    projectStatus?: ProjectStatusValue
+}
+
+function renderBillingAccountNotice(params: RenderBillingAccountNoticeParams): JSX.Element | undefined {
+    if (!params.projectId) {
+        return undefined
+    }
+
+    return (
+        <ProjectBillingAccountExpiredNotice
+            billingAccountId={params.billingAccountId}
+            billingAccountName={params.billingAccountName}
+            canManageProject={params.canManageProject}
+            projectId={params.projectId}
+            projectStatus={params.projectStatus}
+        />
+    )
+}
+
 interface RenderChallengesContentParams {
     challenges: Challenge[]
     challengeTypes: UseFetchChallengeTypesResult['challengeTypes']
@@ -192,6 +267,8 @@ export const ChallengesListPage: FC = () => {
     const {
         isAdmin,
         isManager,
+        loginUserInfo,
+        userRoles,
     }: WorkAppContextModel = useContext(WorkAppContext)
 
     const [filters, setFilters] = useState<ChallengeFilters>({
@@ -342,6 +419,8 @@ export const ChallengesListPage: FC = () => {
     const pageTitle = projectIdFromRoute && projectResult.project?.name
         ? projectResult.project.name
         : 'Challenges'
+    const canManageProject = !!projectResult.project
+        && checkCanManageProject(userRoles, loginUserInfo?.userId, projectResult.project)
     const isProjectActive = String(projectResult.project?.status || '')
         .trim()
         .toLowerCase() === PROJECT_STATUS.ACTIVE
@@ -354,39 +433,12 @@ export const ChallengesListPage: FC = () => {
         })
         : undefined
 
-    const titleAction = projectIdFromRoute
-        ? (
-            <div className={styles.projectTitleActions}>
-                {projectResult.project?.status
-                    ? <ProjectStatus status={projectResult.project.status} />
-                    : undefined}
-                <Link
-                    aria-label='Edit project'
-                    className={styles.projectEditLink}
-                    to={`/projects/${projectIdFromRoute}/edit`}
-                >
-                    <IconOutline.PencilIcon className={styles.projectEditIcon} />
-                </Link>
-                <Link
-                    aria-label='Manage project users'
-                    className={styles.projectUsersLink}
-                    state={{
-                        backTo: `${location.pathname}${location.search}${location.hash}`,
-                    }}
-                    to={`/projects/${projectIdFromRoute}/users`}
-                >
-                    <IconOutline.UserIcon className={styles.projectUsersIcon} />
-                </Link>
-                <Link
-                    aria-label='Open project assets'
-                    className={styles.projectAssetsLink}
-                    to={`/projects/${projectIdFromRoute}/assets`}
-                >
-                    <IconOutline.DocumentTextIcon className={styles.projectAssetsIcon} />
-                </Link>
-            </div>
-        )
-        : undefined
+    const titleAction = renderProjectTitleAction({
+        backTo: `${location.pathname}${location.search}${location.hash}`,
+        canManageProject,
+        projectId: projectIdFromRoute,
+        projectStatus: projectResult.project?.status,
+    })
 
     return (
         <PageWrapper
@@ -395,16 +447,13 @@ export const ChallengesListPage: FC = () => {
             rightHeader={rightHeader}
             titleAction={titleAction}
         >
-            {projectIdFromRoute
-                ? (
-                    <ProjectBillingAccountExpiredNotice
-                        billingAccountId={projectResult.project?.billingAccountId}
-                        billingAccountName={projectResult.project?.billingAccountName}
-                        projectId={projectIdFromRoute}
-                        projectStatus={projectResult.project?.status}
-                    />
-                )
-                : undefined}
+            {renderBillingAccountNotice({
+                billingAccountId: projectResult.project?.billingAccountId,
+                billingAccountName: projectResult.project?.billingAccountName,
+                canManageProject,
+                projectId: projectIdFromRoute,
+                projectStatus: projectResult.project?.status,
+            })}
             {projectIdFromRoute
                 ? <ProjectListTabs projectId={projectIdFromRoute} />
                 : undefined}

@@ -11,9 +11,6 @@ import {
 import { PageWrapper } from '~/apps/review/src/lib'
 
 import {
-    PROJECT_ROLES,
-} from '../../../lib/constants'
-import {
     WorkAppContext,
 } from '../../../lib/contexts'
 import {
@@ -29,49 +26,12 @@ import {
     ErrorMessage,
     LoadingSpinner,
 } from '../../../lib/components'
+import { checkCanManageProject } from '../../../lib/utils'
 
 import {
     ProjectEditorForm,
 } from './components'
 import styles from './ProjectEditorPage.module.scss'
-
-function normalizeStringValue(value: unknown): string {
-    if (typeof value !== 'string') {
-        return ''
-    }
-
-    const normalizedValue = value.trim()
-
-    return normalizedValue.toLowerCase()
-}
-
-function normalizeUserId(userId: unknown): string | undefined {
-    if (userId === undefined || userId === null) {
-        return undefined
-    }
-
-    const normalizedUserId = String(userId)
-        .trim()
-
-    return normalizedUserId || undefined
-}
-
-function hasProjectManagePermission(project: Project | undefined, userId: string | undefined): boolean {
-    if (!project || !userId || !Array.isArray(project.members)) {
-        return false
-    }
-
-    return project.members.some(member => {
-        const memberUserId = normalizeUserId(member.userId)
-        const memberRole = normalizeStringValue(member.role)
-
-        return memberUserId === userId
-            && (
-                memberRole === PROJECT_ROLES.COPILOT
-                || memberRole === PROJECT_ROLES.MANAGER
-            )
-    })
-}
 
 function getErrorMessage(error: Error | undefined): string {
     if (!error) {
@@ -148,20 +108,16 @@ export const ProjectEditorPage: FC = () => {
     const isEdit = !!projectId
 
     const {
-        isAdmin,
-        isCopilot,
         loginUserInfo,
+        userRoles,
     }: WorkAppContextModel = useContext(WorkAppContext)
-
-    const currentUserId = normalizeUserId(loginUserInfo?.userId)
 
     const projectResult = useFetchProject(projectId)
     const projectTypesResult = useFetchProjectTypes()
 
-    const canCreateProject = isAdmin || isCopilot
-    const canManageProject = isAdmin
-        || isCopilot
-        || hasProjectManagePermission(projectResult.project, currentUserId)
+    const canCreateProject = checkCanManageProject(userRoles, loginUserInfo?.userId)
+    const canManageProject = !!projectResult.project
+        && checkCanManageProject(userRoles, loginUserInfo?.userId, projectResult.project)
     const shouldRedirect = shouldRedirectToProjects(
         isEdit,
         canCreateProject,

@@ -28,6 +28,7 @@ import styles from './ProjectBillingAccountExpiredNotice.module.scss'
 interface ProjectBillingAccountExpiredNoticeProps {
     billingAccountId?: number | string
     billingAccountName?: string
+    canManageProject: boolean
     projectId: string
     projectStatus?: ProjectStatusValue
 }
@@ -107,13 +108,21 @@ export const ProjectBillingAccountExpiredNotice: FC<ProjectBillingAccountExpired
     if (shouldShowExpiredBillingAccountNotice) {
         return (
             <div className={styles.container}>
-                <span>
-                    The billing account for this project has expired,
-                    {' '}
-                </span>
-                <Link className={styles.link} to={`/projects/${props.projectId}/edit`}>
-                    click here to update
-                </Link>
+                {props.canManageProject
+                    ? (
+                        <>
+                            <span>
+                                The billing account for this project has expired,
+                                {' '}
+                            </span>
+                            <Link className={styles.link} to={`/projects/${props.projectId}/edit`}>
+                                click here to update
+                            </Link>
+                        </>
+                    )
+                    : (
+                        <span>The billing account for this project has expired.</span>
+                    )}
             </div>
         )
     }
