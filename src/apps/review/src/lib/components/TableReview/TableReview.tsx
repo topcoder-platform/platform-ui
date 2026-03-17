@@ -256,7 +256,14 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
 
     const filterScreeningPassedReviews = useCallback(
         (submissions: SubmissionInfo[]): SubmissionInfo[] => submissions.filter(
-            submission => !props.screeningOutcome.failingSubmissionIds.has(submission.id ?? ''),
+            submission => {
+                const submissionId = submission.id ?? ''
+                if (!props.screeningOutcome.failingSubmissionIds.has(submissionId)) {
+                    return true
+                }
+
+                return (submission.status ?? '').toUpperCase() === 'AI_FAILED_REVIEW'
+            },
         ),
         [props.screeningOutcome.failingSubmissionIds],
     )
