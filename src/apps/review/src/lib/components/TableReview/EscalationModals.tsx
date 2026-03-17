@@ -1,5 +1,5 @@
 import { toast } from 'react-toastify'
-import React, { ChangeEvent, useCallback, useState } from 'react'
+import React, { ChangeEvent, useCallback, useMemo, useState } from 'react'
 
 import { BaseModal } from '~/libs/ui'
 import { handleError } from '~/libs/shared'
@@ -23,7 +23,7 @@ interface Props {
     verifyTarget?: {
         submission: SubmissionReviewerRow
         decision: AiReviewEscalationDecision
-        escalation: AiReviewDecisionEscalation
+        escalations: AiReviewDecisionEscalation[]
     } | undefined
     setVerifyTarget: (val?: any) => void
     escalationDecisionBySubmissionId: Map<string, AiReviewEscalationDecision>
@@ -36,6 +36,11 @@ export const EscalationModals = (props: Props): JSX.Element => {
     const [unlockNotes, setUnlockNotes] = useState('')
     const [verifyNotes, setVerifyNotes] = useState('')
     const [isSubmitting, setIsSubmitting] = useState(false)
+
+    const hasMultipleEscalations = useMemo<boolean>(
+        () => (props.verifyTarget?.escalations?.length ?? 0) > 1,
+        [props.verifyTarget?.escalations?.length],
+    )
 
     function closeEscalateDialog(): void {
         if (isSubmitting) return
@@ -70,6 +75,27 @@ export const EscalationModals = (props: Props): JSX.Element => {
             <span style={{ color }}>{handle}</span>
         )
     }, [props.handleByMemberId])
+
+    const renderEscalationItem = useCallback((
+        escalation: AiReviewDecisionEscalation,
+        index: number,
+    ): JSX.Element => (
+        <div key={escalation.id} className={styles.verifyDetails}>
+            <div>
+                <strong>
+                    {`Reviewer${hasMultipleEscalations ? ` ${index + 1}` : ''}:`}
+                </strong>
+                {' '}
+                {renderEscalationReviewer(escalation.createdBy)}
+            </div>
+            <div>
+                <strong>
+                    Reviewer&apos;s Note:
+                </strong>
+            </div>
+            <div>{escalation.escalationNotes ?? '--'}</div>
+        </div>
+    ), [hasMultipleEscalations, renderEscalationReviewer])
 
     async function handleSubmitEscalation(): Promise<void> {
         if (!props.escalateTarget?.id) return
@@ -136,7 +162,8 @@ export const EscalationModals = (props: Props): JSX.Element => {
     }
 
     async function handleVerifyEscalation(status: 'APPROVED' | 'REJECTED'): Promise<void> {
-        if (!props.verifyTarget?.decision.aiReviewDecisionId || !props.verifyTarget.escalation.id) return
+        const escalations = props.verifyTarget?.escalations ?? []
+        if (!props.verifyTarget?.decision.aiReviewDecisionId || !escalations.length) return
 
         const notes = verifyNotes.trim()
         if (!notes) {
@@ -147,15 +174,17 @@ export const EscalationModals = (props: Props): JSX.Element => {
         setIsSubmitting(true)
 
         try {
-            await updateAiReviewEscalation(
-                props.verifyTarget.decision.aiReviewDecisionId,
-                props.verifyTarget.escalation.id,
-                {
-                    approverNotes: notes,
-                    status,
-                },
+            await Promise.all(
+                escalations.map(escalation => updateAiReviewEscalation(
+                    props.verifyTarget!.decision.aiReviewDecisionId,
+                    escalation.id,
+                    {
+                        approverNotes: notes,
+                        status,
+                    },
+                )),
             )
-            toast.success(status === 'APPROVED' ? 'Escalation approved.' : 'Escalation rejected.')
+            toast.success(status === 'APPROVED' ? 'Escalation(s) approved.' : 'Escalation(s) rejected.')
             closeVerifyDialog()
 
             await props.revalidateEscalationData()
@@ -222,28 +251,30 @@ export const EscalationModals = (props: Props): JSX.Element => {
                 <div className={styles.escalationDescription}>
                     The AI reviewers failed submission #
                     {props.verifyTarget?.submission.id ?? ''}
-                    . The reviewer
-                    has challenged this result and is requesting a manual override. Review their
-                    reasoning below and decide whether to approve or reject this escalation.
+                    .
+                    {' '}
+                    {hasMultipleEscalations
+                        ? 'Multiple reviewers have'
+                        : 'The reviewer has'}
+                    {' '}
+                    challenged this result and
+                    {' '}
+                    {hasMultipleEscalations ? 'are' : 'is'}
+                    {' '}
+                    requesting a manual override. Review their
+                    reasoning below and decide whether to approve or reject
+                    {' '}
+                    {hasMultipleEscalations ? 'these escalations' : 'this escalation'}
+                    .
                 </div>
-                <div className={styles.verifyDetails}>
-                    <div>
-                        <strong>Reviewer:</strong>
-                        {' '}
-                        {renderEscalationReviewer
-                            ? renderEscalationReviewer(props.verifyTarget?.escalation.createdBy)
-                            : (props.verifyTarget?.escalation.createdBy ?? '--')}
-                    </div>
-                    <div>
-                        <strong>Reviewer’s Note:</strong>
-                    </div>
-                    <div>{props.verifyTarget?.escalation.escalationNotes ?? '--'}</div>
-                </div>
+                {(props.verifyTarget?.escalations ?? []).map(renderEscalationItem)}
                 <textarea
                     className={styles.escalationTextarea}
                     placeholder='Add your reasoning before approving or rejecting...'
                     value={verifyNotes}
-                    onChange={function (event: ChangeEvent<HTMLTextAreaElement>) { setVerifyNotes(event.target.value) }}
+                    onChange={function onChange(event: ChangeEvent<HTMLTextAreaElement>) {
+                        setVerifyNotes(event.target.value)
+                    }}
                     disabled={isSubmitting}
                 />
                 <div className={styles.escalationActions}>
@@ -253,7 +284,7 @@ export const EscalationModals = (props: Props): JSX.Element => {
                         onClick={function onClick() { handleVerifyEscalation('REJECTED') }}
                         disabled={isSubmitting}
                     >
-                        Reject Request
+                        {hasMultipleEscalations ? 'Reject Requests' : 'Reject Request'}
                     </button>
                     <button
                         type='button'

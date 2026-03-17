@@ -396,7 +396,7 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
     const [verifyTarget, setVerifyTarget] = useState<{
         submission: SubmissionReviewerRow
         decision: AiReviewEscalationDecision
-        escalation: AiReviewDecisionEscalation
+        escalations: AiReviewDecisionEscalation[]
     } | undefined>(undefined)
 
     const openReopenDialog = useCallback((submission: SubmissionRow, review: AggregatedReviewDetail): void => {
@@ -762,11 +762,11 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
                 return undefined
             }
 
-            const pendingEscalation = decision.escalations.find(escalation => (
+            const pendingEscalations = decision.escalations.filter(escalation => (
                 escalation.status === 'PENDING_APPROVAL'
             ))
 
-            if (!pendingEscalation) {
+            if (!pendingEscalations.length) {
                 return undefined
             }
 
@@ -778,7 +778,7 @@ export const TableReview: FC<TableReviewProps> = (props: TableReviewProps) => {
                     onClick={function onClick() {
                         setVerifyTarget({
                             decision,
-                            escalation: pendingEscalation,
+                            escalations: pendingEscalations,
                             submission,
                         })
                     }}
