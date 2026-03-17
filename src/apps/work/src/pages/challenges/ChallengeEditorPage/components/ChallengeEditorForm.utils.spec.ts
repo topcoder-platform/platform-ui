@@ -1,10 +1,21 @@
 import { ROUND_TYPES } from '../../../../lib/constants/challenge-editor.constants'
-import { TimelineTemplate } from '../../../../lib/models'
+import {
+    Resource,
+    ResourceRole,
+    TimelineTemplate,
+} from '../../../../lib/models'
 
 import {
+    COPILOT_RESOURCE_ROLE_NAMES,
+    findMatchingResourceRole,
     resolveCreateRoundType,
     resolveCreateTimelineTemplateId,
+    resolveResourceAssignmentHandle,
+    resolveResourceAssignmentValue,
+    REVIEWER_RESOURCE_ROLE_NAMES,
     shouldUseManualReviewers,
+    SUBMITTER_RESOURCE_ROLE_NAMES,
+    TASK_REVIEWER_RESOURCE_ROLE_NAMES,
 } from './ChallengeEditorForm.utils'
 
 const CHECKPOINT_SUBMISSION_PHASE_ID = 'd8a2cdbe-84d1-4687-ab75-78a6a7efdcc8'
@@ -244,5 +255,125 @@ describe('shouldUseManualReviewers', () => {
 
         expect(result)
             .toBe(true)
+    })
+})
+
+function buildResourceRole(overrides: Partial<ResourceRole>): ResourceRole {
+    return {
+        id: 'role-id',
+        name: 'Copilot',
+        ...overrides,
+    }
+}
+
+function buildResource(overrides: Partial<Resource>): Resource {
+    return {
+        challengeId: 'challenge-id',
+        roleId: 'role-id',
+        ...overrides,
+    }
+}
+
+describe('resource assignment helpers', () => {
+    it('finds a matching resource role by supported role name aliases', () => {
+        const resourceRoles: ResourceRole[] = [
+            buildResourceRole({
+                id: 'iterative-reviewer-role-id',
+                name: 'Iterative Reviewer',
+            }),
+            buildResourceRole({
+                id: 'reviewer-role-id',
+                name: 'Reviewer',
+            }),
+        ]
+
+        const result = findMatchingResourceRole(resourceRoles, TASK_REVIEWER_RESOURCE_ROLE_NAMES)
+
+        expect(result?.id)
+            .toBe('iterative-reviewer-role-id')
+    })
+
+    it('prefers the saved resource member handle over the legacy fallback value', () => {
+        const result = resolveResourceAssignmentHandle({
+            fallbackHandle: 'legacyCopilot',
+            resourceRoles: [
+                buildResourceRole({
+                    id: 'copilot-role-id',
+                    name: 'Copilot',
+                }),
+            ],
+            resources: [
+                buildResource({
+                    memberHandle: 'resourceCopilot',
+                    roleId: 'copilot-role-id',
+                }),
+            ],
+            roleNames: COPILOT_RESOURCE_ROLE_NAMES,
+        })
+
+        expect(result)
+            .toBe('resourceCopilot')
+    })
+
+    it('matches resource rows by role name when role metadata is unavailable', () => {
+        const result = resolveResourceAssignmentHandle({
+            resourceRoles: [],
+            resources: [
+                buildResource({
+                    memberHandle: 'iterativeReviewer',
+                    role: 'Iterative Review',
+                    roleId: '',
+                }),
+            ],
+            roleNames: TASK_REVIEWER_RESOURCE_ROLE_NAMES,
+        })
+
+        expect(result)
+            .toBe('iterativeReviewer')
+    })
+
+    it('falls back to the legacy value when no matching resource exists', () => {
+        const result = resolveResourceAssignmentHandle({
+            fallbackHandle: 'legacyReviewer',
+            resourceRoles: [
+                buildResourceRole({
+                    id: 'reviewer-role-id',
+                    name: 'Reviewer',
+                }),
+            ],
+            resources: [
+                buildResource({
+                    memberHandle: 'copilotUser',
+                    roleId: 'copilot-role-id',
+                }),
+            ],
+            roleNames: REVIEWER_RESOURCE_ROLE_NAMES,
+        })
+
+        expect(result)
+            .toBe('legacyReviewer')
+    })
+
+    it('resolves task assigned member ids from submitter resources', () => {
+        const result = resolveResourceAssignmentValue({
+            fallbackValue: '12345',
+            resourceRoles: [
+                buildResourceRole({
+                    id: 'submitter-role-id',
+                    name: 'Submitter',
+                }),
+            ],
+            resources: [
+                buildResource({
+                    memberId: '67890',
+                    roleId: 'submitter-role-id',
+                }),
+            ],
+            roleNames: SUBMITTER_RESOURCE_ROLE_NAMES,
+            valueField: 'memberId',
+        })
+
+        expect(result)
+            .toBe('67890')
     })
 })

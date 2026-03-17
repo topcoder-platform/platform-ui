@@ -30,6 +30,8 @@ import {
     useAutosave,
     useFetchChallengeTracks,
     useFetchChallengeTypes,
+    useFetchResourceRoles,
+    useFetchResources,
     useFetchTimelineTemplates,
 } from '../../../../lib/hooks'
 import {
@@ -44,7 +46,11 @@ import {
 } from '../../../../lib/schemas/challenge-editor.schema'
 import {
     createChallenge,
+    createResource,
+    deleteResource,
     fetchChallenge,
+    fetchResourceRoles,
+    fetchResources,
     patchChallenge,
 } from '../../../../lib/services'
 import {
@@ -143,9 +149,15 @@ import {
     TermsField,
 } from './TermsField'
 import {
+    COPILOT_RESOURCE_ROLE_NAMES,
+    findMatchingResourceRole,
     resolveCreateRoundType,
     resolveCreateTimelineTemplateId,
+    resolveResourceAssignmentValue,
+    ResourceAssignmentValueField,
     shouldUseManualReviewers,
+    SUBMITTER_RESOURCE_ROLE_NAMES,
+    TASK_REVIEWER_RESOURCE_ROLE_NAMES,
 } from './ChallengeEditorForm.utils'
 import styles from './ChallengeEditorForm.module.scss'
 
@@ -165,6 +177,19 @@ interface SaveChallengeOptions {
 interface SaveStatusMetadata {
     isSaveAsDraft: boolean
     payloadStatus?: string
+}
+
+type SingleAssignmentFieldName = 'assignedMemberId' | 'copilot' | 'reviewer'
+
+interface SingleAssignmentConfig {
+    fieldName: SingleAssignmentFieldName
+    roleNames: readonly string[]
+    valueField: ResourceAssignmentValueField
+}
+
+interface SyncSingleAssignmentResourceParams extends Omit<SingleAssignmentConfig, 'fieldName'> {
+    challengeId: string
+    nextValue?: string
 }
 
 const SAVE_VALIDATION_ERROR_MESSAGE = 'Please fix validation errors before saving.'
@@ -198,6 +223,21 @@ const DESIGN_WORK_TYPE_BY_TOKEN = new Map<string, string>(
             workType,
         ]),
 )
+const COPILOT_ASSIGNMENT_CONFIG: SingleAssignmentConfig = {
+    fieldName: 'copilot',
+    roleNames: COPILOT_RESOURCE_ROLE_NAMES,
+    valueField: 'memberHandle',
+}
+const TASK_ASSIGNED_MEMBER_ASSIGNMENT_CONFIG: SingleAssignmentConfig = {
+    fieldName: 'assignedMemberId',
+    roleNames: SUBMITTER_RESOURCE_ROLE_NAMES,
+    valueField: 'memberId',
+}
+const TASK_REVIEWER_ASSIGNMENT_CONFIG: SingleAssignmentConfig = {
+    fieldName: 'reviewer',
+    roleNames: TASK_REVIEWER_RESOURCE_ROLE_NAMES,
+    valueField: 'memberHandle',
+}
 
 function normalizePhaseName(value: unknown): string {
     if (typeof value !== 'string') {
@@ -265,6 +305,76 @@ function normalizeTextValue(value: unknown): string {
     }
 
     return value.trim()
+}
+
+function hasSameNormalizedValue(valueA: unknown, valueB: unknown): boolean {
+    return normalizeTextValue(valueA)
+        .toLowerCase() === normalizeTextValue(valueB)
+        .toLowerCase()
+}
+
+function getSingleAssignmentConfigs(isTaskChallenge: boolean): SingleAssignmentConfig[] {
+    return isTaskChallenge
+        ? [
+            COPILOT_ASSIGNMENT_CONFIG,
+            TASK_ASSIGNED_MEMBER_ASSIGNMENT_CONFIG,
+            TASK_REVIEWER_ASSIGNMENT_CONFIG,
+        ]
+        : [COPILOT_ASSIGNMENT_CONFIG]
+}
+
+function getSingleAssignmentFieldValue(
+    formData: ChallengeEditorFormData,
+    fieldName: SingleAssignmentFieldName,
+): string | undefined {
+    return normalizeTextValue(formData[fieldName]) || undefined
+}
+
+function applySingleAssignmentFieldValues(
+    formData: ChallengeEditorFormData,
+    sourceFormData: ChallengeEditorFormData,
+    isTaskChallenge: boolean,
+): ChallengeEditorFormData {
+    const nextFormData: ChallengeEditorFormData = {
+        ...formData,
+        copilot: getSingleAssignmentFieldValue(sourceFormData, 'copilot'),
+    }
+
+    if (!isTaskChallenge) {
+        nextFormData.assignedMemberId = undefined
+        nextFormData.reviewer = undefined
+
+        return nextFormData
+    }
+
+    nextFormData.assignedMemberId = getSingleAssignmentFieldValue(sourceFormData, 'assignedMemberId')
+    nextFormData.reviewer = getSingleAssignmentFieldValue(sourceFormData, 'reviewer')
+
+    return nextFormData
+}
+
+function buildSingleAssignmentPayload(
+    challengeId: string,
+    roleId: string,
+    valueField: ResourceAssignmentValueField,
+    memberValue: string,
+): {
+    challengeId: string
+    memberHandle?: string
+    memberId?: string
+    roleId: string
+} {
+    return valueField === 'memberId'
+        ? {
+            challengeId,
+            memberId: memberValue,
+            roleId,
+        }
+        : {
+            challengeId,
+            memberHandle: memberValue,
+            roleId,
+        }
 }
 
 function normalizeChallengeTypeToken(value: unknown): string {
@@ -656,6 +766,11 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const challengeTracks = useFetchChallengeTracks().tracks
     const challengeTypes = useFetchChallengeTypes().challengeTypes
     const timelineTemplates = useFetchTimelineTemplates().timelineTemplates
+    const challengeResourcesResult = useFetchResources(currentChallengeId)
+    const resourceRolesResult = useFetchResourceRoles()
+    const resourceRoles = resourceRolesResult.resourceRoles
+    const challengeResources = challengeResourcesResult.resources
+    const mutateChallengeResources = challengeResourcesResult.mutate
 
     const selectedChallengeType = useMemo<ChallengeType | undefined>(
         () => challengeTypes.find(challengeType => challengeType.id === values.typeId),
@@ -787,6 +902,187 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     )
     const isScorerBlockingChallengeActions = showMarathonMatchScorerSection
         && (scorerHasUnsavedChanges || scorerHasError)
+    const getPersistedAssignmentValue = useCallback((
+        fallbackValue: string | undefined,
+        roleNames: readonly string[],
+        valueField: ResourceAssignmentValueField,
+        resourcesOverride?: typeof challengeResources,
+        resourceRolesOverride?: typeof resourceRoles,
+    ): string | undefined => resolveResourceAssignmentValue({
+        fallbackValue,
+        resourceRoles: resourceRolesOverride || resourceRoles,
+        resources: resourcesOverride || challengeResources,
+        roleNames,
+        valueField,
+    }), [
+        challengeResources,
+        resourceRoles,
+    ])
+    const applyPersistedSingleAssignments = useCallback((
+        formData: ChallengeEditorFormData,
+        resourcesOverride?: typeof challengeResources,
+        resourceRolesOverride?: typeof resourceRoles,
+    ): ChallengeEditorFormData => {
+        const nextFormData: ChallengeEditorFormData = {
+            ...formData,
+            copilot: getPersistedAssignmentValue(
+                getSingleAssignmentFieldValue(formData, 'copilot'),
+                COPILOT_RESOURCE_ROLE_NAMES,
+                'memberHandle',
+                resourcesOverride,
+                resourceRolesOverride,
+            ),
+        }
+
+        if (formData.legacy?.isTask !== true) {
+            nextFormData.assignedMemberId = undefined
+            nextFormData.reviewer = undefined
+
+            return nextFormData
+        }
+
+        nextFormData.assignedMemberId = getPersistedAssignmentValue(
+            getSingleAssignmentFieldValue(formData, 'assignedMemberId'),
+            SUBMITTER_RESOURCE_ROLE_NAMES,
+            'memberId',
+            resourcesOverride,
+            resourceRolesOverride,
+        )
+        nextFormData.reviewer = getPersistedAssignmentValue(
+            getSingleAssignmentFieldValue(formData, 'reviewer'),
+            TASK_REVIEWER_RESOURCE_ROLE_NAMES,
+            'memberHandle',
+            resourcesOverride,
+            resourceRolesOverride,
+        )
+
+        return nextFormData
+    }, [
+        getPersistedAssignmentValue,
+    ])
+    const loadSingleAssignmentResourceRoles = useCallback(
+        async (): Promise<typeof resourceRoles> => (
+            resourceRoles.length
+                ? resourceRoles
+                : fetchResourceRoles()
+        ),
+        [resourceRoles],
+    )
+    const loadSingleAssignmentResources = useCallback(
+        async (challengeId: string): Promise<typeof challengeResources> => (
+            challengeResourcesResult.isLoading
+            || currentChallengeId !== challengeId
+                ? fetchResources(challengeId)
+                : challengeResources
+        ),
+        [
+            challengeResources,
+            challengeResourcesResult.isLoading,
+            currentChallengeId,
+        ],
+    )
+    const syncSingleAssignmentResource = useCallback(async (
+        params: SyncSingleAssignmentResourceParams,
+    ): Promise<void> => {
+        const resolvedResourceRoles = await loadSingleAssignmentResourceRoles()
+        const resolvedResources = await loadSingleAssignmentResources(params.challengeId)
+        const currentValue = resolveResourceAssignmentValue({
+            resourceRoles: resolvedResourceRoles,
+            resources: resolvedResources,
+            roleNames: params.roleNames,
+            valueField: params.valueField,
+        })
+        const normalizedCurrentValue = normalizeTextValue(currentValue)
+        const normalizedNextValue = normalizeTextValue(params.nextValue)
+        const role = findMatchingResourceRole(resolvedResourceRoles, params.roleNames)
+
+        if (hasSameNormalizedValue(normalizedCurrentValue, normalizedNextValue)) {
+            return
+        }
+
+        if (!role) {
+            if (!normalizedCurrentValue && !normalizedNextValue) {
+                return
+            }
+
+            throw new Error(`Unable to find resource role for ${params.roleNames.join(' / ')}`)
+        }
+
+        if (normalizedCurrentValue) {
+            await deleteResource(buildSingleAssignmentPayload(
+                params.challengeId,
+                role.id,
+                params.valueField,
+                normalizedCurrentValue,
+            ))
+        }
+
+        if (!normalizedNextValue) {
+            return
+        }
+
+        try {
+            await createResource(buildSingleAssignmentPayload(
+                params.challengeId,
+                role.id,
+                params.valueField,
+                normalizedNextValue,
+            ))
+        } catch (error) {
+            if (normalizedCurrentValue) {
+                try {
+                    await createResource(buildSingleAssignmentPayload(
+                        params.challengeId,
+                        role.id,
+                        params.valueField,
+                        normalizedCurrentValue,
+                    ))
+                } catch {
+                    // Preserve the original error when rollback also fails.
+                }
+            }
+
+            throw error
+        }
+    }, [
+        loadSingleAssignmentResourceRoles,
+        loadSingleAssignmentResources,
+    ])
+    const syncDraftSingleAssignments = useCallback(async (
+        challengeId: string,
+        formData: ChallengeEditorFormData,
+    ): Promise<void> => {
+        const resourceSyncOperations = getSingleAssignmentConfigs(formData.legacy?.isTask === true)
+            .map(config => {
+                const nextValue = getSingleAssignmentFieldValue(formData, config.fieldName)
+                const persistedValue = getPersistedAssignmentValue(
+                    undefined,
+                    config.roleNames,
+                    config.valueField,
+                )
+
+                return hasSameNormalizedValue(nextValue, persistedValue)
+                    ? undefined
+                    : syncSingleAssignmentResource({
+                        challengeId,
+                        nextValue,
+                        roleNames: config.roleNames,
+                        valueField: config.valueField,
+                    })
+            })
+            .filter((operation): operation is Promise<void> => !!operation)
+
+        if (resourceSyncOperations.length === 0) {
+            return
+        }
+
+        await Promise.all(resourceSyncOperations)
+        await mutateChallengeResources()
+    }, [
+        getPersistedAssignmentValue,
+        mutateChallengeResources,
+        syncSingleAssignmentResource,
+    ])
 
     const handleScorerConfigChange = useCallback(
         (hasUnsavedChanges: boolean, hasError: boolean): void => {
@@ -801,6 +1097,43 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         defaultedDiscussionForumTypeIdRef.current = undefined
         reset(transformChallengeToFormData(props.challenge))
     }, [props.challenge, reset])
+
+    useEffect(() => {
+        if (
+            !currentChallengeId
+            || formState.isDirty
+            || challengeResourcesResult.isLoading
+            || resourceRolesResult.isLoading
+        ) {
+            return
+        }
+
+        const currentFormValues = getValues()
+        const persistedValues = applyPersistedSingleAssignments(currentFormValues)
+
+        getSingleAssignmentConfigs(currentFormValues.legacy?.isTask === true)
+            .forEach(config => {
+                const currentValue = getSingleAssignmentFieldValue(currentFormValues, config.fieldName)
+                const persistedValue = getSingleAssignmentFieldValue(persistedValues, config.fieldName)
+
+                if (hasSameNormalizedValue(currentValue, persistedValue)) {
+                    return
+                }
+
+                setValue(config.fieldName, persistedValue, {
+                    shouldDirty: false,
+                    shouldValidate: true,
+                })
+            })
+    }, [
+        applyPersistedSingleAssignments,
+        currentChallengeId,
+        formState.isDirty,
+        getValues,
+        resourceRolesResult.isLoading,
+        setValue,
+        challengeResourcesResult.isLoading,
+    ])
 
     useEffect(() => {
         const normalizedTypeId = values.typeId?.trim()
@@ -1063,6 +1396,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                     isSaveAsDraft,
                     payloadStatus,
                 }: SaveStatusMetadata = getSaveStatusMetadata(formData.status, options)
+                const isTaskChallenge = formData.legacy?.isTask === true
                 const payload = transformFormDataToChallenge({
                     ...formData,
                     reviewers: usesManualReviewers
@@ -1071,8 +1405,15 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                     status: payloadStatus,
                 })
                 const savedChallenge = await patchChallenge(currentChallengeId, payload)
+                await syncDraftSingleAssignments(currentChallengeId, formData)
 
-                const nextValues = transformChallengeToFormData(savedChallenge)
+                const nextValues = applySingleAssignmentFieldValues(
+                    applyPersistedSingleAssignments(
+                        transformChallengeToFormData(savedChallenge),
+                    ),
+                    formData,
+                    isTaskChallenge,
+                )
                 const savedAt = new Date()
 
                 setCurrentChallengeId(savedChallenge.id)
@@ -1108,10 +1449,12 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             }
         },
         [
+            applyPersistedSingleAssignments,
             currentChallengeId,
             isEditMode,
             navigate,
             reset,
+            syncDraftSingleAssignments,
             usesManualReviewers,
         ],
     )

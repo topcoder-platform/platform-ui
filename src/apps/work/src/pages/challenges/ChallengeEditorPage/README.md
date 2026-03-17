@@ -48,11 +48,12 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 - `ChallengePrivateDescriptionField`: optional private markdown spec editor.
 - `ChallengeTagsField`: multi creatable tag picker excluding special challenge tags.
 - `ChallengeSkillsField`: async multi skills picker with billing-account-based required behavior.
-- `CopilotField`: clearable dropdown populated with copilot handles from the current project.
+- `AssignedMemberField`: task-only assignee selector backed by member ids; persisted through the challenge `Submitter` resource assignment and restored from resources when task payloads omit the legacy field.
+- `CopilotField`: clearable dropdown populated with copilot handles from the current project; persisted through the challenge `Copilot` resource assignment and restored from resources when draft payloads omit the legacy field.
 - `CopilotFeeField`: optional copilot payment input that updates only the underlying copilot prize set, preserving placement prize edits and removing the copilot prize set when cleared so empty fees do not leave hidden validation errors.
-- `ReviewTypeField`: task-only reviewer controls; enforces internal review type and requires selecting a reviewer from project members.
+- `ReviewTypeField`: task-only reviewer controls; enforces internal review type, requires selecting a reviewer from project members, and persists the selection through the challenge `Iterative Reviewer` resource assignment.
 - `Wipro Allowed` checkbox: advanced-option toggle that maps to the challenge `wiproAllowed` API flag.
-- Saved assignee selectors (`assignedMemberId`, `copilot`, `reviewer`) are normalized from handle/id/object payloads on both the challenge root and `task` object so draft reloads preserve member selections from legacy API shapes.
+- Saved selector values may come from legacy challenge fields or challenge resources. The editor restores task `assignedMemberId`, `copilot`, and task `reviewer` from matching resource assignments first, then falls back to legacy challenge payload shapes.
 
 ## Conditional Sections
 
