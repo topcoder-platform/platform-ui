@@ -927,6 +927,32 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         challengeResources,
         resourceRoles,
     ])
+    const isTaskSingleAssignmentChallenge = useCallback((
+        formData: ChallengeEditorFormData,
+        resourcesOverride?: typeof challengeResources,
+        resourceRolesOverride?: typeof resourceRoles,
+    ): boolean => {
+        if (formData.legacy?.isTask === true || isTaskChallengeSelected) {
+            return true
+        }
+
+        return !!getPersistedAssignmentValue(
+            getSingleAssignmentFieldValue(formData, 'reviewer'),
+            TASK_REVIEWER_RESOURCE_ROLE_NAMES,
+            'memberHandle',
+            resourcesOverride,
+            resourceRolesOverride,
+        ) || !!getPersistedAssignmentValue(
+            getSingleAssignmentFieldValue(formData, 'assignedMemberId'),
+            SUBMITTER_RESOURCE_ROLE_NAMES,
+            'memberId',
+            resourcesOverride,
+            resourceRolesOverride,
+        )
+    }, [
+        getPersistedAssignmentValue,
+        isTaskChallengeSelected,
+    ])
     const applyPersistedSingleAssignments = useCallback((
         formData: ChallengeEditorFormData,
         resourcesOverride?: typeof challengeResources,
@@ -943,7 +969,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             ),
         }
 
-        if (formData.legacy?.isTask !== true) {
+        if (!isTaskSingleAssignmentChallenge(formData, resourcesOverride, resourceRolesOverride)) {
             nextFormData.assignedMemberId = undefined
             nextFormData.reviewer = undefined
 
@@ -968,6 +994,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         return nextFormData
     }, [
         getPersistedAssignmentValue,
+        isTaskSingleAssignmentChallenge,
     ])
     const loadSingleAssignmentResourceRoles = useCallback(
         async (): Promise<typeof resourceRoles> => (
@@ -1061,7 +1088,9 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         challengeId: string,
         formData: ChallengeEditorFormData,
     ): Promise<void> => {
-        const resourceSyncOperations = getSingleAssignmentConfigs(formData.legacy?.isTask === true)
+        const resourceSyncOperations = getSingleAssignmentConfigs(
+            isTaskSingleAssignmentChallenge(formData),
+        )
             .map(config => {
                 const nextValue = getSingleAssignmentFieldValue(formData, config.fieldName)
                 const persistedValue = getPersistedAssignmentValue(
@@ -1089,6 +1118,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         await mutateChallengeResources()
     }, [
         getPersistedAssignmentValue,
+        isTaskSingleAssignmentChallenge,
         mutateChallengeResources,
         syncSingleAssignmentResource,
     ])
@@ -1117,10 +1147,58 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     ])
 
     useEffect(() => {
+        let isActive = true
+
         setCurrentChallengeId(props.challenge?.id)
         defaultedDiscussionForumTypeIdRef.current = undefined
-        reset(transformChallengeToFormData(props.challenge))
-    }, [props.challenge, reset])
+        const baseFormData = transformChallengeToFormData(props.challenge)
+        const challengeId = props.challenge?.id
+
+        if (!challengeId) {
+            reset(baseFormData)
+
+            return () => {
+                isActive = false
+            }
+        }
+
+        Promise.all([
+            fetchResources(challengeId),
+            resourceRoles.length
+                ? Promise.resolve(resourceRoles)
+                : fetchResourceRoles(),
+        ])
+            .then(([
+                fetchedResources,
+                fetchedResourceRoles,
+            ]) => {
+                if (!isActive) {
+                    return
+                }
+
+                reset(applyPersistedSingleAssignments(
+                    baseFormData,
+                    fetchedResources,
+                    fetchedResourceRoles,
+                ))
+            })
+            .catch(() => {
+                if (!isActive) {
+                    return
+                }
+
+                reset(baseFormData)
+            })
+
+        return () => {
+            isActive = false
+        }
+    }, [
+        applyPersistedSingleAssignments,
+        props.challenge,
+        reset,
+        resourceRoles,
+    ])
 
     useEffect(() => {
         if (
@@ -1135,7 +1213,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         const currentFormValues = getValues()
         const persistedValues = applyPersistedSingleAssignments(currentFormValues)
 
-        getSingleAssignmentConfigs(currentFormValues.legacy?.isTask === true)
+        getSingleAssignmentConfigs(isTaskSingleAssignmentChallenge(currentFormValues))
             .forEach(config => {
                 const currentValue = getSingleAssignmentFieldValue(currentFormValues, config.fieldName)
                 const persistedValue = getSingleAssignmentFieldValue(persistedValues, config.fieldName)
@@ -1154,6 +1232,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         currentChallengeId,
         formState.isDirty,
         getValues,
+        isTaskSingleAssignmentChallenge,
         resourceRolesResult.isLoading,
         setValue,
         challengeResourcesResult.isLoading,
@@ -1420,7 +1499,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                     isSaveAsDraft,
                     payloadStatus,
                 }: SaveStatusMetadata = getSaveStatusMetadata(formData.status, options)
-                const isTaskChallenge = formData.legacy?.isTask === true
+                const isTaskChallenge = isTaskSingleAssignmentChallenge(formData)
                 const payload = transformFormDataToChallenge({
                     ...formData,
                     reviewers: usesManualReviewers
@@ -1477,6 +1556,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             applyPersistedSingleAssignments,
             currentChallengeId,
             isEditMode,
+            isTaskSingleAssignmentChallenge,
             navigate,
             onChallengeStatusChange,
             reset,

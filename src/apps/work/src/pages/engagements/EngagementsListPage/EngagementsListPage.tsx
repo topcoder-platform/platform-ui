@@ -19,6 +19,9 @@ import {
 } from '~/libs/ui'
 
 import {
+    TALENT_MANAGER_ROLES,
+} from '../../../config/index.config'
+import {
     ENGAGEMENTS_APP_URL,
     PAGE_SIZE,
     PROJECT_STATUS,
@@ -365,6 +368,8 @@ export const EngagementsListPage: FC = () => {
     const contextValue = workAppContext as WorkAppContextModel
 
     const canManage = contextValue.isAdmin || contextValue.isManager
+    const canCreateEngagement = contextValue.isAdmin
+        || contextValue.userRoles.some(role => TALENT_MANAGER_ROLES.includes(role))
 
     const [filters, setFilters] = useState<EngagementsListFilters>(() => ({
         projectName: undefined,
@@ -602,27 +607,29 @@ export const EngagementsListPage: FC = () => {
                         </Link>
                     )}
 
-                {isCreateActionDisabled
-                    ? (
-                        <Button
-                            label='Create Engagement'
-                            secondary
-                            size='md'
-                            disabled
-                        />
-                    )
-                    : (
-                        <Link
-                            className={styles.headerActionLink}
-                            to={`/projects/${projectId}/engagements/new`}
-                        >
+                {canCreateEngagement && (
+                    isCreateActionDisabled
+                        ? (
                             <Button
                                 label='Create Engagement'
                                 secondary
                                 size='md'
+                                disabled
                             />
-                        </Link>
-                    )}
+                        )
+                        : (
+                            <Link
+                                className={styles.headerActionLink}
+                                to={`/projects/${projectId}/engagements/new`}
+                            >
+                                <Button
+                                    label='Create Engagement'
+                                    secondary
+                                    size='md'
+                                />
+                            </Link>
+                        )
+                )}
             </div>
         )
         : undefined
