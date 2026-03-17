@@ -120,6 +120,12 @@
     gap: 16px;
 }
 
+.launchButton {
+    --btn-variant: #35ac35;
+    --btn-variant--hover: #2f9630;
+    --btn-variant--active: #277c27;
+}
+
 .cancelLink {
     color: $black-60;
     font-size: 13px;

@@ -2,6 +2,7 @@ import {
     FC,
     MouseEvent as ReactMouseEvent,
     useCallback,
+    useContext,
     useEffect,
     useRef,
     useState,
@@ -15,6 +16,7 @@ import { PageWrapper } from '~/apps/review/src/lib'
 import {
     Button,
     IconOutline,
+    Tooltip,
 } from '~/libs/ui'
 
 import {
@@ -28,10 +30,13 @@ import {
     COMMUNITY_APP_URL,
     REVIEW_APP_URL,
 } from '../../../lib/constants'
+import { WorkAppContext } from '../../../lib/contexts'
 import {
     useFetchChallenge,
-    UseFetchChallengeResult,
+    useFetchResourceRoles,
+    useFetchResources,
 } from '../../../lib/hooks'
+import type { UseFetchChallengeResult } from '../../../lib/hooks'
 import {
     deleteChallenge,
     patchChallenge,
@@ -48,6 +53,14 @@ import {
     ResourcesSection,
     SubmissionsSection,
 } from './components'
+import {
+    buildTaskWinnerPayload,
+    getAssignedTaskMember,
+    getCompleteTaskConfirmationMessage,
+    getTaskPrizeAmount,
+    isSelfAssignedCopilot,
+    shouldShowCompleteTaskAction,
+} from './ChallengeEditorPage.utils'
 import styles from './ChallengeEditorPage.module.scss'
 
 interface ErrorWithStatus extends Error {
@@ -66,6 +79,10 @@ const CANCEL_CHALLENGE_STATUSES: string[] = [
     CHALLENGE_STATUS.CANCELLED_ZERO_REGISTRATIONS,
 ]
 
+const NO_TASK_ASSIGNEE_MESSAGE = 'Task is not assigned yet'
+const MARK_COMPLETE_TOOLTIP_MESSAGE
+    = 'This will close the task and generate a payment for the assignee and copilot.'
+
 interface EditorTabsProps {
     activeTab: EditorTab
     onDetailsTabClick: () => void
@@ -75,22 +92,34 @@ interface EditorTabsProps {
 
 interface ChallengeEditorContentProps {
     activeTab: EditorTab
+    canLaunchChallenge: boolean
     challenge: UseFetchChallengeResult['challenge']
     challengeId?: string
+    isLaunchDisabled: boolean
     isEditMode: boolean
+    launchButtonLabel: string
+    onChallengeStatusChange: (status?: string) => void
+    onLaunchOpen: () => void
     onRegisterLaunchAction: (action: (() => Promise<void>) | undefined) => void
+    onSavingChange: (isSaving: boolean) => void
     projectId?: string
 }
 
 interface ChallengeEditorBodyProps {
     activeTab: EditorTab
+    canLaunchChallenge: boolean
     challengeId?: string
     challengeResult: UseFetchChallengeResult
+    isLaunchDisabled: boolean
     isEditMode: boolean
+    launchButtonLabel: string
+    onChallengeStatusChange: (status?: string) => void
+    onLaunchOpen: () => void
     onDetailsTabClick: () => void
     onRegisterLaunchAction: (action: (() => Promise<void>) | undefined) => void
     onResourcesTabClick: () => void
     onRetry: () => void
+    onSavingChange: (isSaving: boolean) => void
     onSubmissionsTabClick: () => void
     projectId?: string
 }
@@ -156,6 +185,43 @@ function shouldShowDeleteAction(
         && normalizedStatus === CHALLENGE_STATUS.NEW
 }
 
+function useResolvedChallengeStatus(
+    challengeId: string | undefined,
+    fetchedChallengeStatus: string | undefined,
+): [
+    string | undefined,
+    (status?: string) => void,
+] {
+    const [challengeStatus, setChallengeStatus] = useState<string | undefined>()
+    const lastFetchedChallengeStatusRef = useRef<string | undefined>()
+
+    useEffect(() => {
+        lastFetchedChallengeStatusRef.current = undefined
+        setChallengeStatus(undefined)
+    }, [challengeId])
+
+    useEffect(() => {
+        if (
+            !fetchedChallengeStatus
+            || fetchedChallengeStatus === lastFetchedChallengeStatusRef.current
+        ) {
+            return
+        }
+
+        lastFetchedChallengeStatusRef.current = fetchedChallengeStatus
+        setChallengeStatus(fetchedChallengeStatus)
+    }, [fetchedChallengeStatus])
+
+    const handleChallengeStatusChange = useCallback((status?: string): void => {
+        setChallengeStatus(status)
+    }, [])
+
+    return [
+        challengeStatus || fetchedChallengeStatus,
+        handleChallengeStatusChange,
+    ]
+}
+
 function formatCancelStatusLabel(status: string): string {
     function capitalizeWord(word: string): string {
         if (!word) {
@@ -184,6 +250,21 @@ function getCancelConfirmationMessage(
     return `Do you want to cancel challenge ${challengeName} with status ${statusLabel}?`
 }
 
+function getChallengeEditorPageTitle(
+    isEditMode: boolean,
+    challengeName: string | undefined,
+): string {
+    return isEditMode
+        ? `Edit ${challengeName || 'Challenge'}`
+        : 'Create Challenge'
+}
+
+function getChallengesListPath(projectId?: string): string {
+    return projectId
+        ? `/projects/${projectId}/challenges`
+        : '/challenges'
+}
+
 interface CancelChallengeActionProps {
     challengeId: string
     challengeName: string
@@ -197,7 +278,11 @@ const CancelChallengeAction: FC<CancelChallengeActionProps> = (
     const [showCancelMenu, setShowCancelMenu] = useState<boolean>(false)
     const [showCancelModal, setShowCancelModal] = useState<boolean>(false)
     const [selectedCancelStatus, setSelectedCancelStatus] = useState<string | undefined>()
+    // eslint-disable-next-line unicorn/no-null
     const cancelActionRef = useRef<HTMLDivElement>(null)
+    const challengeId: string = props.challengeId
+    const challengeName: string = props.challengeName
+    const onCancelled: () => void = props.onCancelled
 
     const selectedCancelStatusLabel = selectedCancelStatus
         ? formatCancelStatusLabel(selectedCancelStatus)
@@ -234,12 +319,12 @@ const CancelChallengeAction: FC<CancelChallengeActionProps> = (
         setIsCancelling(true)
 
         try {
-            await patchChallenge(props.challengeId, {
+            await patchChallenge(challengeId, {
                 status: selectedCancelStatus,
             })
             showSuccessToast('Challenge cancelled successfully')
             setShowCancelModal(false)
-            props.onCancelled()
+            onCancelled()
         } catch (error) {
             const errorMessage = error instanceof Error
                 ? error.message
@@ -249,8 +334,9 @@ const CancelChallengeAction: FC<CancelChallengeActionProps> = (
             setIsCancelling(false)
         }
     }, [
+        challengeId,
         isCancelling,
-        props,
+        onCancelled,
         selectedCancelStatus,
     ])
     const handleCancelConfirmClick = useCallback((): void => {
@@ -321,7 +407,7 @@ const CancelChallengeAction: FC<CancelChallengeActionProps> = (
                             ? 'Cancelling...'
                             : 'Confirm'}
                         message={getCancelConfirmationMessage(
-                            props.challengeName,
+                            challengeName,
                             selectedCancelStatusLabel,
                         )}
                         onCancel={handleCancelModalClose}
@@ -334,25 +420,166 @@ const CancelChallengeAction: FC<CancelChallengeActionProps> = (
     )
 }
 
+interface CompleteTaskActionProps {
+    challenge: NonNullable<UseFetchChallengeResult['challenge']>
+    challengeId: string
+    onCompleted: () => void
+}
+
+const CompleteTaskAction = (
+    props: CompleteTaskActionProps,
+): JSX.Element => {
+    const [isCompleting, setIsCompleting] = useState<boolean>(false)
+    const [showCompleteModal, setShowCompleteModal] = useState<boolean>(false)
+    const challenge: NonNullable<UseFetchChallengeResult['challenge']> = props.challenge
+    const challengeId: string = props.challengeId
+    const onCompleted: () => void = props.onCompleted
+    const workAppContext = useContext(WorkAppContext)
+    const resourcesResult = useFetchResources(challengeId)
+    const resourceRolesResult = useFetchResourceRoles()
+    const assignedTaskMember = getAssignedTaskMember(
+        challenge,
+        resourcesResult.resources,
+        resourceRolesResult.resourceRoles,
+    )
+    const taskPrizeAmount = getTaskPrizeAmount(challenge.prizeSets)
+    const isHiddenForSelfAssignedCopilot = isSelfAssignedCopilot(
+        workAppContext,
+        assignedTaskMember,
+    )
+
+    const handleCompleteOpen = useCallback((): void => {
+        if (isCompleting || !assignedTaskMember) {
+            return
+        }
+
+        setShowCompleteModal(true)
+    }, [
+        assignedTaskMember,
+        isCompleting,
+    ])
+    const handleCompleteCancel = useCallback((): void => {
+        if (isCompleting) {
+            return
+        }
+
+        setShowCompleteModal(false)
+    }, [isCompleting])
+    const handleCompleteConfirm = useCallback(async (): Promise<void> => {
+        if (isCompleting || !assignedTaskMember) {
+            return
+        }
+
+        setIsCompleting(true)
+
+        try {
+            await patchChallenge(challengeId, {
+                status: CHALLENGE_STATUS.COMPLETED,
+                winners: buildTaskWinnerPayload(assignedTaskMember),
+            })
+            showSuccessToast('Task closed successfully')
+            setShowCompleteModal(false)
+            onCompleted()
+        } catch (error) {
+            showErrorToast(extractErrorMessage(error, 'Unable to close the task'))
+        } finally {
+            setIsCompleting(false)
+        }
+    }, [
+        assignedTaskMember,
+        challengeId,
+        isCompleting,
+        onCompleted,
+    ])
+    const handleCompleteConfirmClick = useCallback((): void => {
+        handleCompleteConfirm()
+            .catch(() => undefined)
+    }, [handleCompleteConfirm])
+    const isLoadingAssignee = resourcesResult.isLoading && !assignedTaskMember
+    const completeButton = (
+        <div>
+            <Button
+                className={styles.launchButton}
+                disabled={isCompleting || !assignedTaskMember || isLoadingAssignee}
+                label={isCompleting
+                    ? 'Completing...'
+                    : 'Mark Complete'}
+                onClick={handleCompleteOpen}
+                primary
+                size='md'
+                type='button'
+            />
+        </div>
+    )
+    const tooltipContent = assignedTaskMember
+        ? MARK_COMPLETE_TOOLTIP_MESSAGE
+        : (
+            isLoadingAssignee
+                ? undefined
+                : NO_TASK_ASSIGNEE_MESSAGE
+        )
+
+    if (isHiddenForSelfAssignedCopilot) {
+        return <></>
+    }
+
+    return (
+        <>
+            {tooltipContent
+                ? (
+                    <Tooltip content={tooltipContent}>
+                        {completeButton}
+                    </Tooltip>
+                )
+                : completeButton}
+            {showCompleteModal && assignedTaskMember
+                ? (
+                    <ConfirmationModal
+                        cancelText='Cancel'
+                        confirmDisabled={isCompleting}
+                        confirmText={isCompleting
+                            ? 'Completing...'
+                            : 'Confirm'}
+                        message={getCompleteTaskConfirmationMessage(
+                            challenge.name,
+                            taskPrizeAmount,
+                            assignedTaskMember,
+                        )}
+                        onCancel={handleCompleteCancel}
+                        onConfirm={handleCompleteConfirmClick}
+                        title='Complete Task Confirmation'
+                    />
+                )
+                : undefined}
+        </>
+    )
+}
+
 interface RenderHeaderActionParams {
     canCancelChallenge: boolean
+    canCompleteTask: boolean
     canDeleteChallenge: boolean
     canLaunchChallenge: boolean
+    challenge?: UseFetchChallengeResult['challenge']
     challengeId?: string
     challengeName: string
     isDeleting: boolean
     isLaunching: boolean
-    onChallengeCancelled: () => void
+    isSaving: boolean
+    onChallengeUpdated: () => void
     onDeleteOpen: () => void
     onLaunchOpen: () => void
 }
 
 function renderHeaderAction(params: RenderHeaderActionParams): JSX.Element | undefined {
+    const actions: JSX.Element[] = []
+
     if (params.canLaunchChallenge) {
-        return (
+        actions.push(
             <Button
+                key='launch'
                 className={styles.launchButton}
-                disabled={params.isLaunching}
+                disabled={params.isLaunching || params.isSaving}
                 label={params.isLaunching
                     ? 'Launching...'
                     : 'Launch'}
@@ -360,23 +587,36 @@ function renderHeaderAction(params: RenderHeaderActionParams): JSX.Element | und
                 primary
                 size='md'
                 type='button'
-            />
+            />,
         )
     }
 
     if (params.canCancelChallenge && params.challengeId) {
-        return (
+        actions.push(
             <CancelChallengeAction
+                key='cancel'
                 challengeId={params.challengeId}
                 challengeName={params.challengeName}
-                onCancelled={params.onChallengeCancelled}
-            />
+                onCancelled={params.onChallengeUpdated}
+            />,
+        )
+    }
+
+    if (params.canCompleteTask && params.challengeId && params.challenge) {
+        actions.push(
+            <CompleteTaskAction
+                key='complete'
+                challenge={params.challenge}
+                challengeId={params.challengeId}
+                onCompleted={params.onChallengeUpdated}
+            />,
         )
     }
 
     if (params.canDeleteChallenge) {
-        return (
+        actions.push(
             <Button
+                key='delete'
                 disabled={params.isDeleting}
                 label={params.isDeleting
                     ? 'Deleting...'
@@ -386,11 +626,17 @@ function renderHeaderAction(params: RenderHeaderActionParams): JSX.Element | und
                 size='md'
                 type='button'
                 variant='danger'
-            />
+            />,
         )
     }
 
-    return undefined
+    return actions.length > 0
+        ? (
+            <div className={styles.headerActions}>
+                {actions}
+            </div>
+        )
+        : undefined
 }
 
 interface RenderLaunchModalParams {
@@ -418,6 +664,36 @@ function renderLaunchModal(params: RenderLaunchModalParams): JSX.Element | undef
             onCancel={params.onLaunchCancel}
             onConfirm={params.onLaunchConfirmClick}
             title='Launch Challenge'
+        />
+    )
+}
+
+interface RenderDeleteModalParams {
+    canDeleteChallenge: boolean
+    challengeName: string
+    isDeleting: boolean
+    onDeleteCancel: () => void
+    onDeleteConfirmClick: () => void
+    showDeleteModal: boolean
+}
+
+function renderDeleteModal(params: RenderDeleteModalParams): JSX.Element | undefined {
+    if (!params.canDeleteChallenge || !params.showDeleteModal) {
+        return undefined
+    }
+
+    return (
+        <ConfirmationModal
+            cancelText='Cancel'
+            confirmButtonDanger
+            confirmDisabled={params.isDeleting}
+            confirmText={params.isDeleting
+                ? 'Deleting...'
+                : 'Delete'}
+            message={`Do you want to delete "${params.challengeName}"?`}
+            onCancel={params.onDeleteCancel}
+            onConfirm={params.onDeleteConfirmClick}
+            title='Confirm Delete'
         />
     )
 }
@@ -480,9 +756,15 @@ const ChallengeEditorContent: FC<ChallengeEditorContentProps> = (
     if (!props.isEditMode || props.activeTab === 'details') {
         return (
             <ChallengeEditorForm
+                canLaunchChallenge={props.canLaunchChallenge}
                 challenge={props.challenge}
+                isLaunchDisabled={props.isLaunchDisabled}
                 isEditMode={props.isEditMode}
+                launchButtonLabel={props.launchButtonLabel}
+                onChallengeStatusChange={props.onChallengeStatusChange}
+                onLaunchOpen={props.onLaunchOpen}
                 onRegisterLaunchAction={props.onRegisterLaunchAction}
+                onSavingChange={props.onSavingChange}
                 projectId={props.projectId}
             />
         )
@@ -508,9 +790,15 @@ const ChallengeEditorContent: FC<ChallengeEditorContentProps> = (
 
     return (
         <ChallengeEditorForm
+            canLaunchChallenge={props.canLaunchChallenge}
             challenge={props.challenge}
+            isLaunchDisabled={props.isLaunchDisabled}
             isEditMode={props.isEditMode}
+            launchButtonLabel={props.launchButtonLabel}
+            onChallengeStatusChange={props.onChallengeStatusChange}
+            onLaunchOpen={props.onLaunchOpen}
             onRegisterLaunchAction={props.onRegisterLaunchAction}
+            onSavingChange={props.onSavingChange}
             projectId={props.projectId}
         />
     )
@@ -546,10 +834,16 @@ const ChallengeEditorBody: FC<ChallengeEditorBodyProps> = (
                 : undefined}
             <ChallengeEditorContent
                 activeTab={props.activeTab}
+                canLaunchChallenge={props.canLaunchChallenge}
                 challenge={props.challengeResult.challenge}
                 challengeId={props.challengeId}
+                isLaunchDisabled={props.isLaunchDisabled}
                 isEditMode={props.isEditMode}
+                launchButtonLabel={props.launchButtonLabel}
+                onChallengeStatusChange={props.onChallengeStatusChange}
+                onLaunchOpen={props.onLaunchOpen}
                 onRegisterLaunchAction={props.onRegisterLaunchAction}
+                onSavingChange={props.onSavingChange}
                 projectId={props.projectId}
             />
         </>
@@ -637,10 +931,18 @@ export const ChallengeEditorPage: FC = () => {
     const [activeTab, setActiveTab] = useState<EditorTab>('details')
     const [isDeleting, setIsDeleting] = useState<boolean>(false)
     const [isLaunching, setIsLaunching] = useState<boolean>(false)
+    const [isSavingChallenge, setIsSavingChallenge] = useState<boolean>(false)
     const [launchAction, setLaunchAction] = useState<(() => Promise<void>) | undefined>()
     const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false)
     const [showLaunchModal, setShowLaunchModal] = useState<boolean>(false)
     const challengeResult: UseFetchChallengeResult = useFetchChallenge(challengeId)
+    const [
+        challengeStatus,
+        handleChallengeStatusChange,
+    ] = useResolvedChallengeStatus(
+        challengeId,
+        challengeResult.challenge?.status,
+    )
     const handleRetry = useCallback((): void => {
         challengeResult.mutate()
             .catch(() => undefined)
@@ -665,9 +967,7 @@ export const ChallengeEditorPage: FC = () => {
         ? String(challengeResult.challenge.projectId)
         : undefined
     const projectId = routeProjectId || challengeProjectId
-    const challengesListPath = projectId
-        ? `/projects/${projectId}/challenges`
-        : '/challenges'
+    const challengesListPath = getChallengesListPath(projectId)
 
     useEffect(() => {
         if (isEditMode) {
@@ -676,28 +976,53 @@ export const ChallengeEditorPage: FC = () => {
 
         setActiveTab('details')
     }, [isEditMode])
+    useEffect(() => {
+        setIsSavingChallenge(false)
+    }, [challengeId])
 
-    const pageTitle = isEditMode
-        ? `Edit ${challengeResult.challenge?.name || 'Challenge'}`
-        : 'Create Challenge'
+    const pageTitle = getChallengeEditorPageTitle(
+        isEditMode,
+        challengeResult.challenge?.name,
+    )
+    const headerChallenge = challengeResult.challenge
+        ? {
+            ...challengeResult.challenge,
+            status: challengeStatus || challengeResult.challenge.status,
+        }
+        : undefined
     const canLaunchChallenge = shouldShowLaunchAction(
         isEditMode,
         activeTab,
-        challengeResult.challenge?.status,
+        challengeStatus,
         !!launchAction,
     )
     const canCancelChallenge = shouldShowCancelAction(
         isEditMode,
         activeTab,
-        challengeResult.challenge?.status,
+        challengeStatus,
     )
     const canDeleteChallenge = shouldShowDeleteAction(
         isEditMode,
-        challengeResult.challenge?.status,
+        challengeStatus,
     )
-    const handleLaunchOpen = useCallback((): void => {
-        setShowLaunchModal(true)
+    const canCompleteTask = shouldShowCompleteTaskAction(
+        isEditMode,
+        activeTab,
+        headerChallenge,
+    )
+    const handleSavingChange = useCallback((isSaving: boolean): void => {
+        setIsSavingChallenge(isSaving)
     }, [])
+    const handleLaunchOpen = useCallback((): void => {
+        if (isLaunching || isSavingChallenge) {
+            return
+        }
+
+        setShowLaunchModal(true)
+    }, [
+        isLaunching,
+        isSavingChallenge,
+    ])
     const launchChallengeName = challengeResult.challenge?.name || 'Challenge'
     const handleLaunchCancel = useCallback((): void => {
         if (isLaunching) {
@@ -732,7 +1057,7 @@ export const ChallengeEditorPage: FC = () => {
         handleLaunchConfirm()
             .catch(() => undefined)
     }, [handleLaunchConfirm])
-    const handleChallengeCancelled = useCallback((): void => {
+    const handleChallengeUpdated = useCallback((): void => {
         challengeResult.mutate()
             .catch(() => undefined)
     }, [challengeResult])
@@ -780,15 +1105,26 @@ export const ChallengeEditorPage: FC = () => {
     }, [handleDeleteConfirm])
     const rightHeader = renderHeaderAction({
         canCancelChallenge,
+        canCompleteTask,
         canDeleteChallenge,
         canLaunchChallenge,
+        challenge: headerChallenge,
         challengeId,
         challengeName: launchChallengeName,
         isDeleting,
         isLaunching,
-        onChallengeCancelled: handleChallengeCancelled,
+        isSaving: isSavingChallenge,
+        onChallengeUpdated: handleChallengeUpdated,
         onDeleteOpen: handleDeleteOpen,
         onLaunchOpen: handleLaunchOpen,
+    })
+    const deleteModal = renderDeleteModal({
+        canDeleteChallenge,
+        challengeName: deleteChallengeName,
+        isDeleting,
+        onDeleteCancel: handleDeleteCancel,
+        onDeleteConfirmClick: handleDeleteConfirmClick,
+        showDeleteModal,
     })
     const launchModal = renderLaunchModal({
         canLaunchChallenge,
@@ -806,9 +1142,13 @@ export const ChallengeEditorPage: FC = () => {
     })
     const titleAction = renderTitleAction(
         isEditMode,
-        challengeResult.challenge?.status,
+        challengeStatus,
         challengeQuickLinks,
     )
+    const launchButtonLabel = isLaunching
+        ? 'Launching...'
+        : 'Launch'
+    const isLaunchDisabled = isLaunching || isSavingChallenge
 
     return (
         <>
@@ -822,35 +1162,26 @@ export const ChallengeEditorPage: FC = () => {
                 <div className={styles.container}>
                     <ChallengeEditorBody
                         activeTab={activeTab}
+                        canLaunchChallenge={canLaunchChallenge}
                         challengeId={challengeId}
                         challengeResult={challengeResult}
+                        isLaunchDisabled={isLaunchDisabled}
                         isEditMode={isEditMode}
+                        launchButtonLabel={launchButtonLabel}
+                        onChallengeStatusChange={handleChallengeStatusChange}
+                        onLaunchOpen={handleLaunchOpen}
                         onDetailsTabClick={handleDetailsTabClick}
                         onRegisterLaunchAction={handleRegisterLaunchAction}
                         onResourcesTabClick={handleResourcesTabClick}
                         onRetry={handleRetry}
+                        onSavingChange={handleSavingChange}
                         onSubmissionsTabClick={handleSubmissionsTabClick}
                         projectId={projectId}
                     />
                 </div>
             </PageWrapper>
             {launchModal}
-            {showDeleteModal && canDeleteChallenge
-                ? (
-                    <ConfirmationModal
-                        cancelText='Cancel'
-                        confirmButtonDanger
-                        confirmDisabled={isDeleting}
-                        confirmText={isDeleting
-                            ? 'Deleting...'
-                            : 'Delete'}
-                        message={`Do you want to delete "${deleteChallengeName}"?`}
-                        onCancel={handleDeleteCancel}
-                        onConfirm={handleDeleteConfirmClick}
-                        title='Confirm Delete'
-                    />
-                )
-                : undefined}
+            {deleteModal}
         </>
     )
 }

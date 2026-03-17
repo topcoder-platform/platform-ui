@@ -68,6 +68,14 @@
     color: #0d61bf;
 }
 
+.headerActions {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
 .launchButton {
     --btn-variant: #35ac35;
     --btn-variant--hover: #2f9630;

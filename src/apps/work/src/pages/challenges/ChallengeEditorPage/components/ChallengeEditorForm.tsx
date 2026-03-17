@@ -162,9 +162,15 @@ import {
 import styles from './ChallengeEditorForm.module.scss'
 
 interface ChallengeEditorFormProps {
+    canLaunchChallenge?: boolean
     challenge?: Challenge
+    isLaunchDisabled?: boolean
     isEditMode?: boolean
+    launchButtonLabel?: string
+    onChallengeStatusChange?: (status?: string) => void
+    onLaunchOpen?: () => void
     onRegisterLaunchAction?: (action: (() => Promise<void>) | undefined) => void
+    onSavingChange?: (isSaving: boolean) => void
     projectId?: string
 }
 
@@ -723,7 +729,10 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
 ) => {
     const navigate = useNavigate()
     const isEditMode = props.isEditMode
+    const onChallengeStatusChange = props.onChallengeStatusChange
+    const onLaunchOpen = props.onLaunchOpen
     const onRegisterLaunchAction = props.onRegisterLaunchAction
+    const onSavingChange = props.onSavingChange
     const formElementRef = useRef<HTMLFormElement>(null)
     const defaultedDiscussionForumTypeIdRef = useRef<string | undefined>()
     const fallbackProjectId = useMemo(
@@ -1093,6 +1102,21 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     )
 
     useEffect(() => {
+        if (!onSavingChange) {
+            return undefined
+        }
+
+        onSavingChange(isSaving)
+
+        return () => {
+            onSavingChange(false)
+        }
+    }, [
+        isSaving,
+        onSavingChange,
+    ])
+
+    useEffect(() => {
         setCurrentChallengeId(props.challenge?.id)
         defaultedDiscussionForumTypeIdRef.current = undefined
         reset(transformChallengeToFormData(props.challenge))
@@ -1421,6 +1445,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 setSaveStatus('saved')
 
                 reset(nextValues)
+                onChallengeStatusChange?.(normalizeStatus(nextValues.status))
 
                 if (!options.isAutosave) {
                     showSuccessToast(getSaveSuccessMessage(isSaveAsDraft, options))
@@ -1453,6 +1478,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             currentChallengeId,
             isEditMode,
             navigate,
+            onChallengeStatusChange,
             reset,
             syncDraftSingleAssignments,
             usesManualReviewers,
@@ -1810,6 +1836,19 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                         size='lg'
                                         type='submit'
                                     />
+                                    {props.canLaunchChallenge && onLaunchOpen
+                                        ? (
+                                            <Button
+                                                className={styles.launchButton}
+                                                disabled={props.isLaunchDisabled}
+                                                label={props.launchButtonLabel || 'Launch'}
+                                                onClick={onLaunchOpen}
+                                                primary
+                                                size='lg'
+                                                type='button'
+                                            />
+                                        )
+                                        : undefined}
                                 </div>
                             </div>
                         </>
