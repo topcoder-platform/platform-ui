@@ -240,7 +240,8 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
 
     const loading = isLoading || isLoadingAiReviewConfig || isLoadingAiReviewDecisions
 
-    const { isAdmin }: UseRolePermissionsResult = useRolePermissions()
+    const rolePermissions: UseRolePermissionsResult = useRolePermissions()
+    const { isAdmin, hasSubmitterRole }: UseRolePermissionsResult = rolePermissions
     const { mutate }: FullConfiguration = useSWRConfig()
     const [, setRerunningRunId] = useState<string | undefined>(undefined)
 
@@ -276,9 +277,26 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
             ? `Gating Reviewers failed: ${failedGatingReviewers.join(', ')}.`
             : ''
 
-        return `${failedReviewersText} This submission is automatically failed regardless of Overall Score. `
-            + 'Improve your submission and resubmit.'
-    }, [currentDecision?.submissionLocked, failedGatingReviewers])
+        // Message text varies by role
+        const roleBasedText = hasSubmitterRole
+            ? `This submission is automatically failed regardless of Overall Score.
+             Improve your submission and resubmit.`
+            : 'This submission is automatically failed regardless of Overall Score.'
+
+        return `${failedReviewersText} ${roleBasedText}`
+    }, [currentDecision?.submissionLocked, failedGatingReviewers, hasSubmitterRole])
+
+    const lockedBannerTitle = useMemo(() => {
+        if (!currentDecision?.submissionLocked) {
+            return ''
+        }
+
+        if (hasSubmitterRole) {
+            return 'Submission Locked - Your submission will not be reviewed in the Review Phase.'
+        }
+
+        return 'Submission Locked - This submission doesn\'t have to be reviewed in Review Phase.'
+    }, [currentDecision?.submissionLocked, hasSubmitterRole])
 
     if (isTablet) {
         return (
@@ -287,7 +305,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                     <div className={styles.lockedBanner}>
                         <div className={styles.lockedTitle}>
                             <IconOutline.LockClosedIcon className='icon-lg' />
-                            Submission Locked - Your submission will not be reviewed in the Review Phase.
+                            {lockedBannerTitle}
                         </div>
                         <div className={styles.lockedMessage}>{lockMessage}</div>
                     </div>
@@ -399,7 +417,7 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
                     <IconOutline.LockClosedIcon className='icon-xl' />
                     <div>
                         <div className={styles.lockedTitle}>
-                            Submission Locked - Your submission will not be reviewed in the Review Phase.
+                            {lockedBannerTitle}
                         </div>
                         <div className={styles.lockedMessage}>{lockMessage}</div>
                     </div>
