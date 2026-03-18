@@ -734,6 +734,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const onRegisterLaunchAction = props.onRegisterLaunchAction
     const onSavingChange = props.onSavingChange
     const formElementRef = useRef<HTMLFormElement>(null)
+    const challengeRef = useRef<Challenge | undefined>(props.challenge)
     const defaultedDiscussionForumTypeIdRef = useRef<string | undefined>()
     const fallbackProjectId = useMemo(
         () => normalizeProjectId(props.projectId) || normalizeProjectId(props.challenge?.projectId),
@@ -763,6 +764,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     })
 
     const formState = formMethods.formState
+    const isFormDirtyRef = useRef<boolean>(formState.isDirty)
     const getValues = formMethods.getValues
     const handleSubmit = formMethods.handleSubmit
     const reset = formMethods.reset
@@ -778,6 +780,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const challengeResourcesResult = useFetchResources(currentChallengeId)
     const resourceRolesResult = useFetchResourceRoles()
     const resourceRoles = resourceRolesResult.resourceRoles
+    const resourceRolesRef = useRef(resourceRoles)
     const challengeResources = challengeResourcesResult.resources
     const mutateChallengeResources = challengeResourcesResult.mutate
 
@@ -996,6 +999,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         getPersistedAssignmentValue,
         isTaskSingleAssignmentChallenge,
     ])
+    const applyPersistedSingleAssignmentsRef = useRef(applyPersistedSingleAssignments)
     const loadSingleAssignmentResourceRoles = useCallback(
         async (): Promise<typeof resourceRoles> => (
             resourceRoles.length
@@ -1147,57 +1151,70 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     ])
 
     useEffect(() => {
-        let isActive = true
+        challengeRef.current = props.challenge
+    }, [props.challenge])
 
-        setCurrentChallengeId(props.challenge?.id)
+    useEffect(() => {
+        resourceRolesRef.current = resourceRoles
+    }, [resourceRoles])
+
+    useEffect(() => {
+        isFormDirtyRef.current = formState.isDirty
+    }, [formState.isDirty])
+
+    useEffect(() => {
+        applyPersistedSingleAssignmentsRef.current = applyPersistedSingleAssignments
+    }, [applyPersistedSingleAssignments])
+
+    useEffect(() => {
+        let isActive = true
+        const challenge = challengeRef.current
+        const challengeId = challenge?.id
+        const baseFormData = transformChallengeToFormData(challenge)
+
+        setCurrentChallengeId(challengeId)
         defaultedDiscussionForumTypeIdRef.current = undefined
-        const baseFormData = transformChallengeToFormData(props.challenge)
-        const challengeId = props.challenge?.id
+
+        reset(baseFormData)
 
         if (!challengeId) {
-            reset(baseFormData)
-
             return () => {
                 isActive = false
             }
         }
 
+        const currentResourceRoles = resourceRolesRef.current
+
         Promise.all([
             fetchResources(challengeId),
-            resourceRoles.length
-                ? Promise.resolve(resourceRoles)
+            currentResourceRoles.length
+                ? Promise.resolve(currentResourceRoles)
                 : fetchResourceRoles(),
         ])
             .then(([
                 fetchedResources,
                 fetchedResourceRoles,
             ]) => {
-                if (!isActive) {
+                if (!isActive || isFormDirtyRef.current) {
                     return
                 }
 
-                reset(applyPersistedSingleAssignments(
+                reset(applyPersistedSingleAssignmentsRef.current(
                     baseFormData,
                     fetchedResources,
                     fetchedResourceRoles,
                 ))
             })
             .catch(() => {
-                if (!isActive) {
-                    return
-                }
-
-                reset(baseFormData)
+                // The base form data has already been applied above.
             })
 
         return () => {
             isActive = false
         }
     }, [
-        applyPersistedSingleAssignments,
-        props.challenge,
+        props.challenge?.id,
         reset,
-        resourceRoles,
     ])
 
     useEffect(() => {
