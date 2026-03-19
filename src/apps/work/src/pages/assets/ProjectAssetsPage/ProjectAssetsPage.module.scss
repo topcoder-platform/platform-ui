@@ -1,0 +1,303 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.headerRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.sectionTitle {
+    margin: 0;
+    color: $black-80;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.headerActions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.projectTitleActions {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.projectAssetsLink,
+.projectUsersLink,
+.projectEditLink {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border: 1px solid $black-20;
+    border-radius: 6px;
+    color: $black-60;
+    text-decoration: none;
+
+    &:hover,
+    &:focus {
+        border-color: #2a62d5;
+        color: #2a62d5;
+        outline: none;
+    }
+}
+
+.projectAssetsIcon,
+.projectUsersIcon,
+.projectEditIcon {
+    width: 16px;
+    height: 16px;
+}
+
+.backLink {
+    text-decoration: none;
+}
+
+.assetTabs {
+    display: flex;
+    gap: 8px;
+}
+
+.assetTabButton {
+    border: 1px solid $black-20;
+    background: #fff;
+    color: $black-60;
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.assetTabButtonActive {
+    border-color: #2a62d5;
+    color: #2a62d5;
+    background: #f3f7ff;
+}
+
+.assetTabCount {
+    color: $black-60;
+    font-weight: 500;
+}
+
+.tableWrap {
+    border: 1px solid $black-10;
+    border-radius: 8px;
+    background: #fff;
+    overflow-x: auto;
+}
+
+.table {
+    border-collapse: collapse;
+    min-width: 980px;
+    width: 100%;
+
+    thead tr {
+        background: #f7f8fa;
+    }
+}
+
+.table th,
+.table td {
+    border-bottom: 1px solid $black-10;
+    padding: 12px 10px;
+    text-align: left;
+    vertical-align: middle;
+}
+
+.table th {
+    color: $black-60;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    white-space: nowrap;
+}
+
+.table td {
+    color: $black-80;
+    font-size: 13px;
+}
+
+.nameCell {
+    max-width: 340px;
+}
+
+.nameLink,
+.downloadButton {
+    color: $link-blue-dark;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.downloadButton {
+    border: 0;
+    background: transparent;
+    padding: 0;
+    cursor: pointer;
+    text-align: left;
+}
+
+.downloadButton:disabled {
+    color: $black-40;
+    cursor: default;
+}
+
+.nameLink:hover,
+.nameLink:focus,
+.downloadButton:hover,
+.downloadButton:focus {
+    text-decoration: underline;
+    outline: none;
+}
+
+.sharedWith {
+    color: $black-60;
+}
+
+.typeBadge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 56px;
+    border-radius: 999px;
+    padding: 3px 8px;
+    background: rgba(42, 98, 213, 0.08);
+    color: #2a62d5;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+}
+
+.actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.actionButton {
+    border: 0;
+    background: transparent;
+    color: $link-blue-dark;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 0;
+    cursor: pointer;
+}
+
+.actionButton:hover,
+.actionButton:focus {
+    text-decoration: underline;
+    outline: none;
+}
+
+.actionDelete {
+    color: #be3a3a;
+}
+
+.readOnlyLabel {
+    color: $black-40;
+    font-size: 12px;
+}
+
+.emptyRow {
+    color: $black-60 !important;
+    padding: 24px !important;
+    text-align: center;
+}
+
+.modalContent {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.modalDescription {
+    margin: 0;
+    color: $black-80;
+    font-size: 14px;
+}
+
+.shareOptions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.radioLabel {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: $black-80;
+    font-size: 14px;
+}
+
+.membersList {
+    border: 1px solid $black-10;
+    border-radius: 8px;
+    max-height: 220px;
+    overflow-y: auto;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.memberOption {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: $black-80;
+    font-size: 13px;
+}
+
+.uploadSummary {
+    color: $black-60;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.fieldLabel {
+    color: $black-80;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    text-transform: uppercase;
+}
+
+.textField {
+    width: 100%;
+    border: 1px solid $black-20;
+    border-radius: 6px;
+    padding: 10px 12px;
+    color: $black-80;
+    font-size: 14px;
+    outline: none;
+}
+
+.textField:focus {
+    border-color: #2a62d5;
+}
+
+.formError {
+    color: #bf2e2e;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.viewerHint {
+    color: $black-60;
+    font-size: 12px;
+}

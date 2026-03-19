@@ -1,0 +1,57 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.toolbar {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: space-between;
+}
+
+.tabs {
+    border-bottom: 1px solid $black-10;
+    display: flex;
+    flex: 1;
+    gap: 6px;
+    overflow-x: auto;
+}
+
+.tabButton {
+    background: transparent;
+    border: 0;
+    border-bottom: 3px solid transparent;
+    color: $black-60;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    padding: 10px 14px;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.activeTab {
+    border-bottom-color: #0d61bf;
+    color: #0d61bf;
+}
+
+.loadingState {
+    align-items: center;
+    border: 1px solid $black-10;
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    min-height: 140px;
+}
+
+.warningText {
+    color: #b35d00;
+    font-size: 13px;
+    margin: 0;
+}

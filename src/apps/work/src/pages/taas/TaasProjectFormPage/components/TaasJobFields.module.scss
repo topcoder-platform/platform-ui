@@ -1,0 +1,57 @@
+@import '@libs/ui/styles/includes';
+
+.jobBlock {
+    border: 1px solid $black-10;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px;
+}
+
+.jobHeader {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+}
+
+.jobTitle {
+    color: $black-80;
+    font-size: 15px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.actions {
+    display: flex;
+    gap: 8px;
+}
+
+.iconButton {
+    align-items: center;
+    background: $black-5;
+    border: 0;
+    border-radius: 50%;
+    color: $black-60;
+    cursor: pointer;
+    display: inline-flex;
+    height: 30px;
+    justify-content: center;
+    width: 30px;
+
+    &:disabled {
+        color: $black-20;
+        cursor: not-allowed;
+    }
+}
+
+.icon {
+    height: 16px;
+    width: 16px;
+}
+
+.grid {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}

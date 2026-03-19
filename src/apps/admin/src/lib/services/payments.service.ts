@@ -3,6 +3,10 @@ import qs from 'qs'
 import { EnvironmentConfig } from '~/config'
 import { xhrGetAsync, xhrPostAsync } from '~/libs/core'
 
+import { type WinningType } from '../../payments/payment-types'
+
+export { WinningsTypeOptions } from '../../payments/payment-types'
+
 export type PaymentDetail = {
     id: string
     netAmount: string
@@ -16,7 +20,7 @@ export type PaymentDetail = {
 
 export type PaymentWinning = {
     id: string
-    type: 'PAYMENT' | 'REWARD'
+    type: WinningType
     handle?: string
     winnerId: string
     origin?: string
@@ -74,11 +78,6 @@ export async function getMembersByIds(userIds: string[]): Promise<Array<{ userId
         `${EnvironmentConfig.API.V6}/members?${query}`,
     )
 }
-
-export const WinningsTypeOptions = [
-    { label: 'Payment', value: 'PAYMENT' },
-    { label: 'Reward', value: 'REWARD' },
-]
 
 // Static list from tc-finance-api prisma enum winnings_category
 export const WinningsCategories: string[] = [

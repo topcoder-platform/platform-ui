@@ -1,0 +1,35 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    margin-top: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.perPageBlock {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    label {
+        font-size: 13px;
+        color: $black-60;
+    }
+
+    select {
+        border: 1px solid $black-20;
+        border-radius: 4px;
+        padding: 4px 8px;
+        font-size: 13px;
+        color: $black-80;
+        background: #fff;
+    }
+}
+
+.metaText {
+    font-size: 13px;
+    color: $black-60;
+}

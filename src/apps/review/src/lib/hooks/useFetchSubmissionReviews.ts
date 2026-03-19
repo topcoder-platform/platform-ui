@@ -57,6 +57,7 @@ import { ReviewItemComment } from '../models/ReviewItemComment.model'
 import { SUBMITTER } from '../../config/index.config'
 
 import { useRole, useRoleProps } from './useRole'
+import { applyAppealResponseScoreUpdate } from './useFetchSubmissionReviews.utils'
 
 const hasSubmitterReviewDetails = (review?: BackendReview): boolean => {
     if (!review) {
@@ -796,25 +797,12 @@ export function useFetchSubmissionReviews(reviewId: string = ''): useFetchSubmis
                             scorecardQuestionId: reviewItem.scorecardQuestionId,
                         })
                             .then(rs => {
-                                const result = map(
-                                    reviewInfo?.reviewItems ?? [],
-                                    existingReview => {
-                                        if (existingReview.id === reviewItem.id) {
-                                            return {
-                                                ...existingReview,
-                                                finalAnswer: updatedResponse,
-                                            }
-                                        }
-
-                                        return existingReview
-                                    },
-                                )
-                                if (updatedReviewInfo) {
-                                    setUpdatedReviewInfo({
-                                        ...updatedReviewInfo,
-                                        reviewItems: result,
-                                    })
-                                }
+                                setUpdatedReviewInfo(previousReviewInfo => applyAppealResponseScoreUpdate(
+                                    previousReviewInfo ?? reviewInfo,
+                                    reviewItem.id,
+                                    updatedResponse,
+                                    scorecardInfo,
+                                ))
 
                                 resolve(rs)
                             })
@@ -878,7 +866,7 @@ export function useFetchSubmissionReviews(reviewId: string = ''): useFetchSubmis
                     handleError(e)
                 })
         },
-        [resourceId, reviewInfo, setUpdatedReviewInfo, updatedReviewInfo, reviewId],
+        [resourceId, reviewInfo, reviewId, scorecardInfo],
     )
 
     /**

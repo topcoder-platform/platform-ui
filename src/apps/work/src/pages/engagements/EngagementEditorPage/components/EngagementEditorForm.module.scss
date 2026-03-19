@@ -1,0 +1,93 @@
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.section {
+    border-bottom: 1px solid #ececec;
+    padding-bottom: 16px;
+}
+
+.sectionTitle {
+    font-size: 20px;
+    margin: 0 0 12px;
+}
+
+.basicInfoGrid {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.titleField {
+    grid-column: 1 / -1;
+}
+
+.detailsGrid {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.startStatusBlock {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.block {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.footer {
+    align-items: flex-start;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.statusArea {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.errorText {
+    color: #db3030;
+    font-size: 12px;
+}
+
+.actions {
+    align-items: center;
+    display: flex;
+    gap: 12px;
+}
+
+.cancelLink {
+    color: #2a62d5;
+    text-decoration: none;
+}
+
+.cancelLink:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 1280px) {
+    .basicInfoGrid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .detailsGrid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .basicInfoGrid,
+    .detailsGrid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}

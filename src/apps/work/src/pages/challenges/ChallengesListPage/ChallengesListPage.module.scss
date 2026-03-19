@@ -1,0 +1,64 @@
+@import '@libs/ui/styles/includes';
+
+.totalChallenges {
+    margin-top: 10px;
+    font-size: 14px;
+    color: $black-60;
+}
+
+.errorBanner {
+    margin-top: 16px;
+    border: 1px solid #f2c9c9;
+    background: #fff4f4;
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    color: #8a1f1f;
+}
+
+.headerActions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.headerActionLink {
+    text-decoration: none;
+}
+
+.projectTitleActions {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.projectAssetsLink,
+.projectUsersLink,
+.projectEditLink {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border: 1px solid $black-20;
+    border-radius: 6px;
+    color: $black-60;
+    text-decoration: none;
+
+    &:hover,
+    &:focus {
+        border-color: #2a62d5;
+        color: #2a62d5;
+        outline: none;
+    }
+}
+
+.projectAssetsIcon,
+.projectUsersIcon,
+.projectEditIcon {
+    width: 16px;
+    height: 16px;
+}

@@ -23,6 +23,8 @@ interface StatsSummaryBlockProps {
     volatility?: number
 }
 
+const VOLATILITY_HIDDEN_TRACKS = new Set(['First2Finish', 'Bug Hunt'])
+
 const StatsSummaryBlock: FC<StatsSummaryBlockProps> = props => {
     const visibleFields = get(find(TracksSummaryStats, {
         ...(props.trackId ? { id: props.trackId } : {}),
@@ -32,6 +34,9 @@ const StatsSummaryBlock: FC<StatsSummaryBlockProps> = props => {
     const isFieldVisible = (field: string): boolean => (
         !visibleFields || visibleFields[field]
     )
+    const shouldShowVolatility = isFieldVisible('volatility')
+        && Number.isFinite(props.volatility)
+        && !VOLATILITY_HIDDEN_TRACKS.has(props.trackTitle)
 
     return (
         <div className={styles.wrap}>
@@ -60,11 +65,11 @@ const StatsSummaryBlock: FC<StatsSummaryBlockProps> = props => {
                 {isFieldVisible('wins') && (
                     <div className={styles.summaryItem}>
                         <span className={styles.summaryItemValue}>
-                            {props.wins}
+                            {props.wins ?? 0}
                         </span>
                         <span className={styles.summaryItemLabel}>
                             <span className='body-small'>
-                                {formatPlural(props.wins || 0, 'Win')}
+                                {formatPlural(props.wins ?? 0, 'Win')}
                             </span>
                         </span>
                     </div>
@@ -106,7 +111,7 @@ const StatsSummaryBlock: FC<StatsSummaryBlockProps> = props => {
                         </span>
                     </div>
                 )}
-                {isFieldVisible('volatility') && props.volatility !== undefined && (
+                {shouldShowVolatility && (
                     <div className={styles.summaryItem}>
                         <span className={styles.summaryItemValue}>
                             {props.volatility}

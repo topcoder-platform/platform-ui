@@ -81,12 +81,15 @@ const CopilotApplications: FC<{
     isAdminOrPM: boolean
 }> = props => {
     const getData = (): CopilotApplication[] => (props.copilotApplications ? props.copilotApplications.map(item => {
-        const member = props.members && props.members.find(each => each.userId === item.userId)
+        const member = props.members && props.members.find(
+            each => String(each.userId) === String(item.userId),
+        )
+
         return {
             ...item,
             activeProjects: member?.activeProjects || 0,
             fulfilment: member?.copilotFulfillment || 0,
-            handle: member?.handle,
+            handle: member?.handle || item.userHandle || item.handle,
             onApplied: props.onApplied,
             opportunityStatus: props.opportunity.status,
             pastProjects: member?.pastProjects || 0,

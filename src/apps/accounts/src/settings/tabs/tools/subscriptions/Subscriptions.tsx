@@ -7,6 +7,8 @@ import { createMemberTraitsAsync, updateMemberTraitsAsync, UserProfile, UserTrai
 import { Button, Collapsible, ConfirmModal, IconOutline, InputText } from '~/libs/ui'
 import { SettingSection, SubscriptionsIcon } from '~/apps/accounts/src/lib'
 
+import { shouldUseUpdateTraitAction } from '../trait-action.utils'
+
 import styles from './Subscriptions.module.scss'
 
 interface SubscriptionsProps {
@@ -150,7 +152,9 @@ const Subscriptions: FC<SubscriptionsProps> = (props: SubscriptionsProps) => {
                         setIsSaving(false)
                     })
             } else {
-                const action = props.subscriptionsTrait ? updateMemberTraitsAsync : createMemberTraitsAsync
+                const action = shouldUseUpdateTraitAction(props.subscriptionsTrait, subscriptionsTypesData)
+                    ? updateMemberTraitsAsync
+                    : createMemberTraitsAsync
                 action(
                     props.profile.handle,
                     [{

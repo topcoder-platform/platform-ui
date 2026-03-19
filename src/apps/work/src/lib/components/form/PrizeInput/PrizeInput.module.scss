@@ -1,0 +1,54 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    align-items: stretch;
+    border: 1px solid $black-20;
+    border-radius: 8px;
+    display: flex;
+    min-height: 44px;
+    overflow: hidden;
+}
+
+.prefix {
+    align-items: center;
+    background: $black-5;
+    border-right: 1px solid $black-20;
+    color: $black-60;
+    display: flex;
+    justify-content: center;
+    min-width: 48px;
+    padding: 0 10px;
+}
+
+.icon {
+    height: 16px;
+    width: 16px;
+}
+
+.points {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.input {
+    border: 0;
+    color: $black-80;
+    flex: 1;
+    font-size: 14px;
+    min-width: 0;
+    padding: 10px 12px;
+
+    &:focus {
+        outline: none;
+    }
+
+    &:disabled {
+        background: $black-5;
+        color: $black-40;
+        cursor: not-allowed;
+    }
+}
+
+.error {
+    border-color: $red-100;
+}

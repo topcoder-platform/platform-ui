@@ -1,0 +1,44 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 96px;
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.draft {
+    background: rgba(84, 95, 113, 0.15);
+    color: #4f5967;
+}
+
+.active {
+    background: rgba(33, 163, 79, 0.12);
+    color: #1d7f48;
+}
+
+.in_review,
+.reviewed {
+    background: rgba(245, 180, 39, 0.18);
+    color: #805b00;
+}
+
+.completed {
+    background: rgba(0, 121, 122, 0.14);
+    color: #006666;
+}
+
+.cancelled {
+    background: rgba(211, 47, 47, 0.13);
+    color: #9f1f1f;
+}
+
+.paused {
+    background: rgba(133, 78, 186, 0.16);
+    color: #6a3a97;
+}

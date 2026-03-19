@@ -1,0 +1,71 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    margin-top: 20px;
+}
+
+.tableView {
+    border-radius: 8px;
+    border: 1px solid $black-10;
+    background: #fff;
+    overflow: hidden;
+}
+
+.tableWrap {
+    margin-top: 0;
+}
+
+.projectLink,
+.actionLink {
+    color: $link-blue-dark;
+    font-weight: 700;
+    text-decoration: none;
+
+    &:hover,
+    &:focus {
+        text-decoration: underline;
+        outline: none;
+    }
+}
+
+.actions {
+    display: flex;
+    gap: 12px;
+}
+
+.listView {
+    display: none;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.loadingState,
+.emptyState {
+    margin-top: 20px;
+    border: 1px solid $black-10;
+    border-radius: 8px;
+    background: #fff;
+    min-height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: $black-60;
+}
+
+.loadingMore {
+    margin-top: 12px;
+    display: flex;
+    justify-content: center;
+}
+
+@media (max-width: 767px) {
+    .tableView {
+        display: none;
+    }
+
+    .listView {
+        display: grid;
+        grid-template-columns: 1fr;
+    }
+}

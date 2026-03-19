@@ -2,6 +2,7 @@ import {
     BackendPhase,
     SubmissionInfo,
 } from '../models'
+import { isContestSubmissionType } from '../constants'
 
 const EXCLUDED_REVIEW_TYPE_FRAGMENTS = [
     'approval',
@@ -136,10 +137,7 @@ export const isContestReviewPhaseSubmission = (
         return false
     }
 
-    const submissionType = (submission.type ?? '')
-        .trim()
-        .toUpperCase()
-    if (submissionType !== 'CONTEST_SUBMISSION') {
+    if (!isContestSubmissionType(submission.type)) {
         return false
     }
 

@@ -12,6 +12,10 @@ const baseUrl = `${EnvironmentConfig.API.V6}/projects`
 export type ProjectsResponse = SWRResponse<Project[], Project[]>
 
 const sleep = (ms: number): Promise<()=> void> => new Promise(resolve => { setTimeout(resolve, ms) })
+const normalizeProject = (project: Project): Project => ({
+    ...project,
+    id: String(project.id),
+})
 
 /**
  * Custom hook to fetch and manage projects data.
@@ -38,7 +42,7 @@ export const useProjects = (search?: string, config?: {isPaused?: () => boolean,
                 const response = await xhrGetAsync<Project[]>(
                     buildUrl(baseUrl, { ...params, id: chunkIds }),
                 )
-                allResults.push(...response)
+                allResults.push(...response.map(normalizeProject))
 
                 // Rate limit: delay 200ms between calls
                 // eslint-disable-next-line no-await-in-loop
@@ -49,6 +53,7 @@ export const useProjects = (search?: string, config?: {isPaused?: () => boolean,
         }
 
         return xhrGetAsync<Project[]>(url)
+            .then(response => response.map(normalizeProject))
     }
 
     return useSWR(url, fetcher, {
@@ -61,10 +66,12 @@ export const useProjects = (search?: string, config?: {isPaused?: () => boolean,
 export const getProject = (projectId: string): Promise<Project> => {
     const url = `${baseUrl}/${projectId}`
     return xhrGetAsync<Project>(url)
+        .then(normalizeProject)
 }
 
 export const getProjects = (search?: string, config?: {filter: any}): Promise<Project[]> => {
     const params = { name: search, ...config?.filter }
     const url = buildUrl(baseUrl, params)
     return xhrGetAsync<Project[]>(url)
+        .then(response => response.map(normalizeProject))
 }

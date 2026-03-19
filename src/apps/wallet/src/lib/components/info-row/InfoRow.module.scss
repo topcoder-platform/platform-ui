@@ -6,6 +6,7 @@
     background-color: $tc-white;
     padding: $sp-4 $sp-8;
     border-radius: 8px;
+    min-width: 0;
 }
 
 .title {
@@ -24,6 +25,7 @@
     flex-grow: 1;
     padding-left: 10px;
     gap: 50px;
+    min-width: 0;
 }
 
 .value {
@@ -35,4 +37,37 @@
     display: flex;
     min-width: 200px;
     justify-content: flex-end;
+}
+
+@media (max-width: 768px) {
+    .info-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: $sp-3;
+        padding: $sp-4;
+    }
+
+    .title {
+        font-size: 16px;
+        line-height: 22px;
+    }
+
+    .value-action-container {
+        width: 100%;
+        padding-left: 0;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: $sp-3;
+    }
+
+    .value {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .action {
+        width: 100%;
+        min-width: 0;
+        justify-content: flex-start;
+    }
 }

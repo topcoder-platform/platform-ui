@@ -1,0 +1,41 @@
+@import '@libs/ui/styles/includes';
+
+.totalProjects {
+    color: $black-60;
+    font-size: 14px;
+    margin-top: 10px;
+}
+
+.newTaasButton {
+    text-decoration: none;
+}
+
+.projectsList {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 18px;
+}
+
+.loadingWrapper {
+    margin-top: 24px;
+}
+
+.emptyState {
+    color: $black-60;
+    font-size: 14px;
+    margin-top: 24px;
+}
+
+.errorBanner {
+    align-items: center;
+    background: #fff4f4;
+    border: 1px solid #f2c9c9;
+    border-radius: 8px;
+    color: #8a1f1f;
+    display: flex;
+    gap: 12px;
+    justify-content: space-between;
+    margin-top: 16px;
+    padding: 12px;
+}

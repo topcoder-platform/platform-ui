@@ -16,17 +16,30 @@
     justify-content: center;
     align-items: center;
     flex-wrap: wrap;
+
     & > * {
         flex: 1 1 auto;
         display: flex;
         justify-content: center;
         align-items: center;
+        min-width: 0;
     }
 }
 
 @media (max-width: 768px) {
+    .container {
+        padding: $sp-4;
+        gap: $sp-6;
+    }
+
     .banner {
         flex-direction: column;
+        gap: $sp-4;
+    }
+
+    .info-row-container {
+        padding-left: 0;
+        padding-right: 0;
     }
 }
 

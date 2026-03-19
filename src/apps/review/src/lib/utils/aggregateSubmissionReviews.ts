@@ -19,6 +19,7 @@ export interface AggregatedReviewDetail {
     reviewInfo?: ReviewInfo
     reviewId?: string
     resourceId?: string
+    reviewerKey?: string
     finalScore?: number
     reviewProgress?: number
     status?: string | null
@@ -85,6 +86,54 @@ function resolveHandleColor(
             : undefined)
 }
 
+type ReviewerIdentityArgs = {
+    memberId?: string | null
+    resourceId?: string | null
+    reviewerHandle?: string | null
+}
+
+/**
+ * Normalizes optional string values by trimming whitespace and treating empty strings as undefined.
+ *
+ * @param value - Optional string candidate from review/resource payloads.
+ * @returns Trimmed string when present; otherwise undefined.
+ */
+const normalizeStringValue = (value?: string | null): string | undefined => {
+    const trimmed = value?.trim()
+    return trimmed?.length ? trimmed : undefined
+}
+
+/**
+ * Builds ordered reviewer identity keys from the available payload fields.
+ *
+ * @param args - Reviewer identity candidates from resource and review payloads.
+ * @returns Ordered keys: handle, member, then resource (when present).
+ */
+const buildReviewerIdentityKeys = ({
+    memberId,
+    resourceId,
+    reviewerHandle,
+}: ReviewerIdentityArgs): string[] => {
+    const keys: string[] = []
+    const normalizedHandle = normalizeStringValue(reviewerHandle)
+    const normalizedMemberId = normalizeStringValue(memberId)
+    const normalizedResourceId = normalizeStringValue(resourceId)
+
+    if (normalizedHandle) {
+        keys.push(`handle:${normalizedHandle.toLowerCase()}`)
+    }
+
+    if (normalizedMemberId) {
+        keys.push(`member:${normalizedMemberId}`)
+    }
+
+    if (normalizedResourceId) {
+        keys.push(`resource:${normalizedResourceId}`)
+    }
+
+    return keys
+}
+
 const deriveReviewResultFromReviewInfo = (reviewInfo: ReviewInfo): ReviewResult => {
     const reviewerHandle = reviewInfo.reviewerHandle?.trim() || undefined
     const reviewerMaxRating = normalizeRatingValue(reviewInfo.reviewerMaxRating)
@@ -129,6 +178,55 @@ export function aggregateSubmissionReviews({
         acc[r.id] = r.memberHandle
         return acc
     }, {})
+    const canonicalResourceIdByReviewerKey: Record<string, string> = {}
+    const canonicalReviewerKeyByAlias: Record<string, string> = {}
+    const reviewerKeyByResourceId: Record<string, string> = {}
+
+    const resolveCanonicalReviewerKey = (reviewerKey?: string): string | undefined => {
+        if (!reviewerKey) {
+            return undefined
+        }
+
+        return canonicalReviewerKeyByAlias[reviewerKey] ?? reviewerKey
+    }
+
+    const registerReviewerKeyAliases = (identityKeys: Array<string | undefined>): string | undefined => {
+        const normalizedKeys = identityKeys.filter(
+            (identityKey): identityKey is string => Boolean(identityKey),
+        )
+        if (!normalizedKeys.length) {
+            return undefined
+        }
+
+        const existingCanonical = normalizedKeys
+            .map(identityKey => canonicalReviewerKeyByAlias[identityKey])
+            .find((candidate): candidate is string => Boolean(candidate))
+        const canonicalKey = existingCanonical ?? normalizedKeys[0]
+
+        normalizedKeys.forEach(identityKey => {
+            canonicalReviewerKeyByAlias[identityKey] = canonicalKey
+        })
+
+        return canonicalKey
+    }
+
+    reviewers.forEach(reviewer => {
+        const reviewerIdentityKeys = buildReviewerIdentityKeys({
+            memberId: reviewer.memberId,
+            resourceId: reviewer.id,
+            reviewerHandle: reviewer.memberHandle,
+        })
+        const reviewerKey = registerReviewerKeyAliases(reviewerIdentityKeys)
+        if (!reviewerKey) {
+            return
+        }
+
+        if (!canonicalResourceIdByReviewerKey[reviewerKey]) {
+            canonicalResourceIdByReviewerKey[reviewerKey] = reviewer.id
+        }
+
+        reviewerKeyByResourceId[reviewer.id] = reviewerKey
+    })
 
     forEach(submissions, submission => {
         if (!grouped.has(submission.id)) {
@@ -202,28 +300,19 @@ export function aggregateSubmissionReviews({
         }
 
         forEach(reviewsToProcess, reviewResult => {
-            const resourceId = reviewResult.resourceId
+            const rawResourceId = reviewResult.resourceId
             const reviewResultId = reviewResult.id
             const reviewInfoFromId = reviewResultId
                 ? reviewInfoById.get(reviewResultId)
                 : undefined
             const reviewInfo = reviewInfoFromId
-                ?? (resourceId
-                    ? reviewInfoByResourceId.get(resourceId)
+                ?? (rawResourceId
+                    ? reviewInfoByResourceId.get(rawResourceId)
                     : submission.review && !submission.review.resourceId
                         ? submission.review
                         : undefined)
             const reviewId = reviewInfo?.id ?? reviewResultId
-            const reviewKey = reviewId ?? (resourceId ? `resource:${resourceId}` : undefined)
-
-            if (reviewKey && seenReviewIds.has(reviewKey)) {
-                return
-            }
-
-            const reviewerInfo = resourceId ? reviewerByResourceId[resourceId] : undefined
-            if (resourceId) {
-                discoveredResourceIds.add(resourceId)
-            }
+            const reviewerInfo = rawResourceId ? reviewerByResourceId[rawResourceId] : undefined
 
             const reviewDate = reviewInfo?.reviewDate
                 ? new Date(reviewInfo.reviewDate)
@@ -241,15 +330,59 @@ export function aggregateSubmissionReviews({
             const reviewHandle = reviewInfo?.reviewerHandle?.trim() || undefined
             const resultHandle = reviewResult.reviewerHandle?.trim() || undefined
             const resourceHandle = reviewerInfo?.memberHandle?.trim() || undefined
-            const fallbackMappedHandle = resourceId ? reviewerHandleByResourceId[resourceId]?.trim() : undefined
+            const fallbackMappedHandle = rawResourceId
+                ? reviewerHandleByResourceId[rawResourceId]?.trim()
+                : undefined
             const candidateReviewerHandle = reviewHandle
                 ?? resultHandle
                 ?? resourceHandle
             const resolvedReviewerHandle = candidateReviewerHandle
                 ?? fallbackMappedHandle
 
+            const reviewerIdentityKeys = buildReviewerIdentityKeys({
+                memberId: reviewerInfo?.memberId,
+                resourceId: rawResourceId,
+                reviewerHandle: resolvedReviewerHandle ?? fallbackMappedHandle,
+            })
+            const reviewerKey = registerReviewerKeyAliases(reviewerIdentityKeys)
+            const canonicalReviewerKey = resolveCanonicalReviewerKey(reviewerKey)
+
+            const canonicalResourceId = canonicalReviewerKey
+                ? (
+                    canonicalResourceIdByReviewerKey[canonicalReviewerKey]
+                    ?? rawResourceId
+                )
+                : rawResourceId
+            const resourceId = canonicalResourceId
+
+            if (canonicalReviewerKey && resourceId && !canonicalResourceIdByReviewerKey[canonicalReviewerKey]) {
+                canonicalResourceIdByReviewerKey[canonicalReviewerKey] = resourceId
+            }
+
+            if (resourceId && canonicalReviewerKey) {
+                reviewerKeyByResourceId[resourceId] = canonicalReviewerKey
+            }
+
+            if (rawResourceId && canonicalReviewerKey) {
+                reviewerKeyByResourceId[rawResourceId] = canonicalReviewerKey
+            }
+
             if (resourceId && resolvedReviewerHandle) {
                 reviewerHandleByResourceId[resourceId] = resolvedReviewerHandle
+            }
+
+            if (rawResourceId && resolvedReviewerHandle) {
+                reviewerHandleByResourceId[rawResourceId] = resolvedReviewerHandle
+            }
+
+            const reviewKey = reviewId ?? (resourceId ? `resource:${resourceId}` : undefined)
+
+            if (reviewKey && seenReviewIds.has(reviewKey)) {
+                return
+            }
+
+            if (resourceId) {
+                discoveredResourceIds.add(resourceId)
             }
 
             const finalReviewerMaxRating = normalizeRatingValue(
@@ -367,11 +500,48 @@ export function aggregateSubmissionReviews({
             const finishedAppeals = appealInfo?.finishAppeals ?? 0
             const totalAppeals = appealInfo?.totalAppeals ?? 0
             const unresolvedAppeals = totalAppeals - finishedAppeals
+            const reviewerHandleForDetail = resolvedReviewerHandle ?? fallbackMappedHandle
+            const normalizedReviewerHandleForDetail = normalizeStringValue(reviewerHandleForDetail)
+                ?.toLowerCase()
+            const reviewerCanonicalKey = resolveCanonicalReviewerKey(reviewerKey)
 
             const existingDetail = group.reviews.find(detail => {
                 const detailReviewId = detail.reviewInfo?.id ?? detail.reviewId
                 if (detailReviewId && reviewId) {
                     return detailReviewId === reviewId
+                }
+
+                if (reviewerCanonicalKey) {
+                    const detailResourceId = detail.resourceId ?? detail.reviewInfo?.resourceId
+                    const detailIdentityKeys = buildReviewerIdentityKeys({
+                        memberId: detailResourceId
+                            ? reviewerByResourceId[detailResourceId]?.memberId
+                            : undefined,
+                        resourceId: detailResourceId,
+                        reviewerHandle: detail.reviewerHandle
+                            ?? detail.reviewInfo?.reviewerHandle
+                            ?? (detailResourceId ? reviewerHandleByResourceId[detailResourceId] : undefined),
+                    })
+                    const detailReviewerKey = resolveCanonicalReviewerKey(registerReviewerKeyAliases([
+                        detail.reviewerKey,
+                        detailResourceId ? reviewerKeyByResourceId[detailResourceId] : undefined,
+                        ...detailIdentityKeys,
+                    ]))
+                    if (detailReviewerKey) {
+                        return detailReviewerKey === reviewerCanonicalKey
+                    }
+                }
+
+                if (normalizedReviewerHandleForDetail) {
+                    const detailResourceId = detail.resourceId ?? detail.reviewInfo?.resourceId
+                    const detailReviewerHandle = normalizeStringValue(
+                        detail.reviewerHandle
+                            ?? detail.reviewInfo?.reviewerHandle
+                            ?? (detailResourceId ? reviewerHandleByResourceId[detailResourceId] : undefined),
+                    )
+                    if (detailReviewerHandle?.toLowerCase() === normalizedReviewerHandleForDetail) {
+                        return true
+                    }
                 }
 
                 if (!detailReviewId && !reviewId && resourceId) {
@@ -382,7 +552,6 @@ export function aggregateSubmissionReviews({
                 return false
             })
 
-            const reviewerHandleForDetail = resolvedReviewerHandle ?? fallbackMappedHandle
             const resolvedStatus = normalizedReviewInfo?.status
                 ?? ((finalScore !== undefined && reviewDate)
                     ? 'COMPLETED'
@@ -396,6 +565,7 @@ export function aggregateSubmissionReviews({
                 reviewDateString,
                 reviewerHandle: reviewerHandleForDetail,
                 reviewerHandleColor: finalReviewerHandleColor,
+                reviewerKey,
                 reviewerMaxRating: finalReviewerMaxRating,
                 reviewId,
                 reviewInfo: normalizedReviewInfo,
@@ -439,6 +609,13 @@ export function aggregateSubmissionReviews({
 
                 if (finalReviewerMaxRating !== undefined) {
                     existingDetail.reviewerMaxRating = finalReviewerMaxRating
+                }
+
+                if (reviewerKey) {
+                    const existingReviewerKey = resolveCanonicalReviewerKey(existingDetail.reviewerKey)
+                    if (existingReviewerKey !== reviewerKey) {
+                        existingDetail.reviewerKey = reviewerKey
+                    }
                 }
 
                 if (normalizedReviewInfo) {
@@ -490,6 +667,11 @@ export function aggregateSubmissionReviews({
     // Establish a deterministic reviewer order across all submissions.
     // Prefer the explicit reviewers list; otherwise fall back to discovered resourceIds.
     const orderedResourceIds: string[] = (() => {
+        const compareReviewerIds = (a: string, b: string): number => (
+            (reviewerHandleByResourceId[a] || a)
+                .localeCompare(reviewerHandleByResourceId[b] || b, undefined, { sensitivity: 'base' })
+        )
+
         const base: string[] = reviewers.length
             ? reviewers
                 .slice()
@@ -502,49 +684,149 @@ export function aggregateSubmissionReviews({
                         )
                     || a.id.localeCompare(b.id)
                 ))
-                .map(r => r.id)
+                .map(r => {
+                    const reviewerIdentityKeys = buildReviewerIdentityKeys({
+                        memberId: r.memberId,
+                        resourceId: r.id,
+                        reviewerHandle: r.memberHandle ?? reviewerHandleByResourceId[r.id],
+                    })
+                    const reviewerKey = resolveCanonicalReviewerKey(
+                        reviewerKeyByResourceId[r.id]
+                            ?? registerReviewerKeyAliases(reviewerIdentityKeys),
+                    )
+                    const canonicalResourceId = reviewerKey
+                        ? (canonicalResourceIdByReviewerKey[reviewerKey] ?? r.id)
+                        : r.id
+
+                    if (reviewerKey) {
+                        reviewerKeyByResourceId[canonicalResourceId] = reviewerKey
+                        reviewerKeyByResourceId[r.id] = reviewerKey
+                        if (!canonicalResourceIdByReviewerKey[reviewerKey]) {
+                            canonicalResourceIdByReviewerKey[reviewerKey] = canonicalResourceId
+                        }
+                    }
+
+                    return canonicalResourceId
+                })
             : Array.from(discoveredResourceIds)
                 .slice()
-                .sort((a, b) => (reviewerHandleByResourceId[a] || a)
-                    .localeCompare(reviewerHandleByResourceId[b] || b, undefined, { sensitivity: 'base' }))
+                .sort(compareReviewerIds)
+
+        const uniqueBase = Array.from(new Set(base))
 
         // Ensure any discovered ids that aren't in base are appended deterministically
-        const baseSet = new Set(base)
+        const baseSet = new Set(uniqueBase)
         const extras = Array.from(discoveredResourceIds)
             .filter(id => !baseSet.has(id))
-            .sort((a, b) => (reviewerHandleByResourceId[a] || a)
-                .localeCompare(reviewerHandleByResourceId[b] || b, undefined, { sensitivity: 'base' }))
+            .sort(compareReviewerIds)
 
-        return [...base, ...extras]
+        return [...uniqueBase, ...extras]
     })()
 
     grouped.forEach(group => {
         // Reorder reviews to match the deterministic reviewer order and
         // insert placeholders for missing reviewers so columns align.
         const byResourceId: Record<string, AggregatedReviewDetail> = {}
+        const byReviewerKey: Record<string, AggregatedReviewDetail> = {}
         group.reviews.forEach(r => {
             if (r.resourceId) {
                 byResourceId[r.resourceId] = r
+            }
+
+            const reviewerIdentityKeys = buildReviewerIdentityKeys({
+                memberId: r.resourceId ? reviewerByResourceId[r.resourceId]?.memberId : undefined,
+                resourceId: r.resourceId,
+                reviewerHandle: r.reviewerHandle ?? r.reviewInfo?.reviewerHandle,
+            })
+            const reviewerKey = resolveCanonicalReviewerKey(registerReviewerKeyAliases([
+                r.reviewerKey,
+                r.resourceId ? reviewerKeyByResourceId[r.resourceId] : undefined,
+                ...reviewerIdentityKeys,
+            ]))
+            if (reviewerKey) {
+                r.reviewerKey = reviewerKey
+                if (r.resourceId) {
+                    reviewerKeyByResourceId[r.resourceId] = reviewerKey
+                }
+
+                if (!byReviewerKey[reviewerKey]) {
+                    byReviewerKey[reviewerKey] = r
+                }
             }
         })
 
         const ordered: AggregatedReviewDetail[] = []
         orderedResourceIds.forEach(id => {
-            if (byResourceId[id]) {
-                ordered.push(byResourceId[id])
-            } else {
-                ordered.push({
-                    finishedAppeals: 0,
-                    resourceId: id,
-                    totalAppeals: 0,
-                    unresolvedAppeals: 0,
-                })
+            const reviewerKey = resolveCanonicalReviewerKey(
+                reviewerKeyByResourceId[id]
+                    ?? registerReviewerKeyAliases(buildReviewerIdentityKeys({
+                        memberId: reviewerByResourceId[id]?.memberId,
+                        resourceId: id,
+                        reviewerHandle: reviewerHandleByResourceId[id],
+                    })),
+            )
+            const directMatch = byResourceId[id]
+            if (directMatch) {
+                ordered.push(directMatch)
+                return
             }
+
+            const reviewerKeyMatch = reviewerKey
+                ? byReviewerKey[reviewerKey]
+                : undefined
+            if (reviewerKeyMatch) {
+                ordered.push(reviewerKeyMatch)
+                return
+            }
+
+            ordered.push({
+                finishedAppeals: 0,
+                resourceId: id,
+                reviewerHandle: reviewerHandleByResourceId[id],
+                reviewerKey,
+                totalAppeals: 0,
+                unresolvedAppeals: 0,
+            })
         })
 
-        // Append any reviews without a resourceId (rare) in a deterministic way
+        const orderedReviewsSet = new Set<AggregatedReviewDetail>(ordered)
+        const orderedReviewerKeys = new Set<string>(
+            ordered
+                .map(review => review.reviewerKey)
+                .filter((value): value is string => Boolean(value)),
+        )
+        const orderedReviewerHandles = new Set<string>(
+            ordered
+                .map(review => normalizeStringValue(
+                    review.reviewerHandle
+                        ?? review.reviewInfo?.reviewerHandle
+                        ?? (review.resourceId ? reviewerHandleByResourceId[review.resourceId] : undefined),
+                ))
+                .filter((value): value is string => Boolean(value))
+                .map(handle => handle.toLowerCase()),
+        )
+        // Append any reviews that were not captured in the ordered reviewer list.
         const unmatched = group.reviews
-            .filter(r => !r.resourceId)
+            .filter(r => {
+                if (orderedReviewsSet.has(r)) {
+                    return false
+                }
+
+                if (r.reviewerKey && orderedReviewerKeys.has(r.reviewerKey)) {
+                    return false
+                }
+
+                const unmatchedHandle = normalizeStringValue(
+                    r.reviewerHandle
+                        ?? r.reviewInfo?.reviewerHandle
+                        ?? (r.resourceId ? reviewerHandleByResourceId[r.resourceId] : undefined),
+                )
+                if (unmatchedHandle && orderedReviewerHandles.has(unmatchedHandle.toLowerCase())) {
+                    return false
+                }
+
+                return true
+            })
             .slice()
             .sort((a, b) => (
                 (a.reviewerHandle || '')

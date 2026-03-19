@@ -1,0 +1,89 @@
+@import '@libs/ui/styles/includes';
+
+.modal {
+    width: 1240px !important;
+    max-width: calc(100vw - 32px) !important;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+
+    th:first-child {
+        padding-left: 16px !important;
+    }
+}
+
+.actionButtons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+}
+
+.tableCellNoWrap {
+    white-space: nowrap;
+    text-align: left !important;
+}
+
+.statusCell {
+    text-align: center !important;
+    width: 90px;
+}
+
+.emailStatus {
+    align-items: center;
+    display: inline-flex;
+    justify-content: center;
+    min-height: 24px;
+    min-width: 24px;
+
+    svg {
+        width: 20px;
+        height: 20px;
+    }
+}
+
+.emailStatusDelivered {
+    color: $green-120;
+}
+
+.emailStatusFailed {
+    color: $red-110;
+}
+
+.tableCell {
+    min-width: 220px;
+    white-space: break-spaces !important;
+    text-align: left !important;
+}
+
+.loadingSpinnerContainer {
+    position: relative;
+    height: 100px;
+
+    .spinner {
+        background: none;
+    }
+}
+
+.noRecordFound {
+    padding: 16px 16px 32px;
+    text-align: center;
+}
+
+.desktopTable {
+    overflow-x: auto;
+    overflow-y: visible;
+
+    thead th {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: $tc-white;
+    }
+
+    td {
+        vertical-align: middle;
+    }
+}

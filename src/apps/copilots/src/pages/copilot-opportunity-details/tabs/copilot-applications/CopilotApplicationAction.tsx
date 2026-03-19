@@ -44,7 +44,13 @@ const CopilotApplicationAction = (
                 return
             }
 
-            await assignCopilotOpportunity(opportunityId, copilotApplication.id)
+            const applicationId = Number(copilotApplication.id)
+            if (!Number.isFinite(applicationId)) {
+                toast.error('Unable to accept application due to invalid id')
+                return
+            }
+
+            await assignCopilotOpportunity(opportunityId, applicationId)
             toast.success('Accepted as copilot')
             copilotApplication.onApplied()
             setShowAlreadyMemberModal(false)

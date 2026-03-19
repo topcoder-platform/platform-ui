@@ -1,0 +1,23 @@
+@import '@libs/ui/styles/includes';
+
+.checkboxLabel {
+    align-items: center;
+    color: $black-80;
+    cursor: pointer;
+    display: flex;
+    font-size: 14px;
+    gap: 10px;
+}
+
+.checkbox {
+    accent-color: $link-blue-dark;
+    cursor: pointer;
+    height: 16px;
+    margin: 0;
+    width: 16px;
+}
+
+.disabled {
+    color: $black-40;
+    cursor: not-allowed;
+}

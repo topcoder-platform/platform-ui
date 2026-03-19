@@ -43,6 +43,26 @@ export const TOPCODER_URL: string = `https://www.${TC_DOMAIN}`
 export const PLATFORMUI_URL: string = `https://platform-ui.${TC_DOMAIN}`
 export const ENGAGEMENTS_URL: string = `https://engagements.${TC_DOMAIN}`
 export const USER_PROFILE_URL: string = `https://profiles.${TC_DOMAIN}`
+export const CHALLENGE_API_URL: string = getReactEnv<string>(
+    'CHALLENGE_API_URL',
+    `https://api.${TC_DOMAIN}/v6/challenges`,
+)
+export const CHALLENGE_API_VERSION: string = getReactEnv<string>(
+    'CHALLENGE_API_VERSION',
+    'v5',
+)
+export const COMMUNITY_APP_URL: string = getReactEnv<string>(
+    'COMMUNITY_APP_URL',
+    TOPCODER_URL,
+)
+export const REVIEW_APP_URL: string = getReactEnv<string>(
+    'REVIEW_APP_URL',
+    `https://review.${TC_DOMAIN}`,
+)
+export const DIRECT_PROJECT_URL: string = getReactEnv<string>(
+    'DIRECT_PROJECT_URL',
+    `https://www.${TC_DOMAIN}/direct`,
+)
 
 export const API = {
     URL: `https://api.${TC_DOMAIN}`,
@@ -57,6 +77,7 @@ export const API = {
 export const STANDARDIZED_SKILLS_API = `${API.V5}/standardized-skills`
 export const TC_FINANCE_API = `${API.V6}/finance`
 export const TC_AI_API = `${API.V6}/ai`
+export const MARATHON_MATCH_API = `${API.V6}/marathon-match`
 export const REPORTS_API = `${API.V6}/reports`
 
 export const AUTH = {

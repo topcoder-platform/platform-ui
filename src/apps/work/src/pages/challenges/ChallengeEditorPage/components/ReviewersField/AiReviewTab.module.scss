@@ -1,0 +1,355 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.headerRow {
+    align-items: flex-start;
+    display: flex;
+    gap: 16px;
+    justify-content: space-between;
+}
+
+.headerRow h3 {
+    color: #1f1f1f;
+    font-size: 18px;
+    margin: 0 0 4px;
+}
+
+.headerRow p {
+    color: #5f6368;
+    margin: 0;
+}
+
+.saveIndicator {
+    background: #eef7f3;
+    border: 1px solid #b5d8c7;
+    border-radius: 999px;
+    color: #137d60;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 8px 12px;
+    white-space: nowrap;
+}
+
+.infoBanner,
+.warningBanner {
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.5;
+    padding: 12px 14px;
+}
+
+.infoBanner {
+    background: #eef4ff;
+    border: 1px solid #bfd0f9;
+    color: #2f4b84;
+}
+
+.warningBanner {
+    background: #fff6e8;
+    border: 1px solid #f0c98d;
+    color: #7c5b1b;
+}
+
+.initialState {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.optionGrid {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.optionCard,
+.sectionCard,
+.workflowEditorCard,
+.summaryCard {
+    background: #fff;
+    border: 1px solid #d7dadc;
+    border-radius: 10px;
+}
+
+.optionCard {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 18px;
+}
+
+.optionCard h4,
+.sectionHeader h3,
+.workflowEditorHeader h4 {
+    color: #1f1f1f;
+    margin: 0;
+}
+
+.optionCard p,
+.sectionHeader p,
+.workflowEditorHeader p,
+.templateDescription {
+    color: #5f6368;
+    font-size: 14px;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.sectionCard {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 18px;
+}
+
+.sectionHeader {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.modeRow {
+    align-items: center;
+    display: flex;
+    gap: 12px;
+    justify-content: space-between;
+}
+
+.modePill {
+    background: #f4f7f9;
+    border: 1px solid #d7dadc;
+    border-radius: 999px;
+    color: #3a3f45;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 12px;
+}
+
+.settingsGrid,
+.workflowEditorGrid,
+.summaryGrid {
+    display: grid;
+    gap: 16px;
+}
+
+.settingsGrid,
+.summaryGrid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.workflowEditorGrid {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.fieldGroup,
+.checkboxField {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.fieldGroup span,
+.summaryLabel {
+    color: #3a3f45;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.fieldGroup select,
+.fieldGroup input {
+    border: 1px solid #c9ced3;
+    border-radius: 8px;
+    font-size: 14px;
+    min-height: 42px;
+    padding: 10px 12px;
+}
+
+.fieldGroup input[type='range'] {
+    min-height: auto;
+    padding: 0;
+}
+
+.fieldGroup small {
+    color: #70757a;
+    font-size: 12px;
+}
+
+.checkboxField {
+    align-items: flex-start;
+    justify-content: center;
+    min-height: 42px;
+}
+
+.checkboxField input {
+    accent-color: #137d60;
+}
+
+.checkboxField span {
+    color: #3a3f45;
+    font-size: 14px;
+}
+
+.workflowEditors {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.workflowEditorCard {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 16px;
+}
+
+.workflowEditorHeader {
+    align-items: flex-start;
+    display: flex;
+    gap: 12px;
+    justify-content: space-between;
+}
+
+.assignmentBanner {
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.4;
+    padding: 10px 12px;
+}
+
+.assignmentBannerAssigned,
+.syncStatusAssigned {
+    background: #eef7f3;
+    color: #137d60;
+}
+
+.assignmentBannerPending,
+.syncStatusPending {
+    background: #fff6e8;
+    color: #7c5b1b;
+}
+
+.workflowTableWrapper {
+    overflow-x: auto;
+}
+
+.workflowTable {
+    border-collapse: collapse;
+    min-width: 680px;
+    width: 100%;
+}
+
+.workflowTable th,
+.workflowTable td {
+    border-bottom: 1px solid #eceef0;
+    font-size: 13px;
+    padding: 12px 10px;
+    text-align: left;
+    vertical-align: top;
+}
+
+.workflowTable th {
+    color: #5f6368;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.workflowType,
+.syncStatus {
+    border-radius: 999px;
+    display: inline-flex;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 8px;
+}
+
+.gatingType {
+    background: #eef4ff;
+    color: #345795;
+}
+
+.scoringType {
+    background: #f2f4f5;
+    color: #3a3f45;
+}
+
+.validationCard {
+    border-radius: 8px;
+    padding: 14px;
+}
+
+.validationCardValid {
+    background: #eef7f3;
+    border: 1px solid #b5d8c7;
+    color: #137d60;
+}
+
+.validationCardInvalid {
+    background: #fff1f0;
+    border: 1px solid #efc0bb;
+    color: #b04337;
+}
+
+.validationList {
+    margin: 10px 0 0;
+    padding-left: 18px;
+}
+
+.summaryCard {
+    padding: 16px;
+}
+
+.summaryCard strong {
+    color: #1f1f1f;
+    display: block;
+    font-size: 18px;
+    margin-top: 6px;
+}
+
+.templateDescription {
+    background: #f6f8fa;
+    border-left: 4px solid #5091ff;
+    border-radius: 8px;
+    padding: 12px 14px;
+}
+
+.footerActions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.emptyState,
+.loading,
+.error {
+    border-radius: 8px;
+    font-size: 14px;
+    padding: 14px;
+}
+
+.emptyState,
+.loading {
+    background: #f6f8fa;
+    color: #5f6368;
+}
+
+.error {
+    background: #fff1f0;
+    border: 1px solid #efc0bb;
+    color: #b04337;
+}
+
+@media (max-width: 767px) {
+    .headerRow,
+    .modeRow,
+    .workflowEditorHeader {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .workflowTable {
+        min-width: 560px;
+    }
+}

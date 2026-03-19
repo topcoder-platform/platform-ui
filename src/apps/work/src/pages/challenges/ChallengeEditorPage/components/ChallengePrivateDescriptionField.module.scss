@@ -1,0 +1,23 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.infoRow {
+    color: $black-60;
+    display: flex;
+    flex-direction: column;
+    font-size: 13px;
+    gap: 8px;
+
+    p {
+        margin: 0;
+    }
+}
+
+.addButtonWrapper {
+    margin-top: 4px;
+}

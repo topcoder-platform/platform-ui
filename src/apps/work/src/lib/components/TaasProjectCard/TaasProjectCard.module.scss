@@ -1,0 +1,40 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    width: 100%;
+}
+
+.cardLink {
+    background: $tc-white;
+    border: 1px solid $black-10;
+    border-radius: 8px;
+    display: block;
+    padding: 14px 16px;
+    text-decoration: none;
+}
+
+.clickable {
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+    &:hover,
+    &:focus {
+        border-color: $black-20;
+        box-shadow: 0 0 0 1px rgba(0, 74, 176, 0.12);
+    }
+}
+
+.header {
+    align-items: center;
+    display: flex;
+    gap: 12px;
+    justify-content: space-between;
+}
+
+.name {
+    color: $link-blue-dark;
+    font-size: 14px;
+    font-weight: 700;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

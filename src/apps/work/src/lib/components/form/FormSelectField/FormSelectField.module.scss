@@ -1,0 +1,24 @@
+@import '@libs/ui/styles/includes';
+
+.select {
+    :global {
+        .challenge-select__control {
+            border: 1px solid $black-20;
+            border-radius: 8px;
+            min-height: 44px;
+        }
+
+        .challenge-select__control--is-focused {
+            border-color: $link-blue-dark;
+            box-shadow: none;
+        }
+
+        .challenge-select__menu {
+            z-index: 20;
+        }
+
+        .challenge-select__menu-portal {
+            z-index: 30;
+        }
+    }
+}

@@ -1,0 +1,179 @@
+import {
+    FC,
+    useCallback,
+    useContext,
+} from 'react'
+import {
+    Navigate,
+    useParams,
+} from 'react-router-dom'
+
+import { PageWrapper } from '~/apps/review/src/lib'
+
+import {
+    WorkAppContext,
+} from '../../../lib/contexts'
+import {
+    useFetchProject,
+    useFetchProjectTypes,
+} from '../../../lib/hooks'
+import {
+    Project,
+    ProjectType,
+    WorkAppContextModel,
+} from '../../../lib/models'
+import {
+    ErrorMessage,
+    LoadingSpinner,
+} from '../../../lib/components'
+import { checkCanManageProject } from '../../../lib/utils'
+
+import {
+    ProjectEditorForm,
+} from './components'
+import styles from './ProjectEditorPage.module.scss'
+
+function getErrorMessage(error: Error | undefined): string {
+    if (!error) {
+        return 'Something went wrong while loading project data.'
+    }
+
+    return error.message || 'Something went wrong while loading project data.'
+}
+
+function shouldRedirectToProjects(
+    isEdit: boolean,
+    canCreateProject: boolean,
+    canManageProject: boolean,
+    isProjectLoading: boolean,
+    hasProject: boolean,
+): boolean {
+    if (!isEdit) {
+        return !canCreateProject
+    }
+
+    if (isProjectLoading || !hasProject) {
+        return false
+    }
+
+    return !canManageProject
+}
+
+interface RenderEditorContentParams {
+    canManageProject: boolean
+    isEdit: boolean
+    isLoading: boolean
+    loadError: Error | undefined
+    onSuccess: (project: Project) => void
+    project: Project | undefined
+    projectTypes: ProjectType[]
+}
+
+function renderEditorContent(params: RenderEditorContentParams): JSX.Element {
+    if (params.isLoading) {
+        return <LoadingSpinner />
+    }
+
+    if (params.loadError) {
+        return (
+            <ErrorMessage
+                message={getErrorMessage(params.loadError)}
+            />
+        )
+    }
+
+    if (params.isEdit && !params.project) {
+        return (
+            <ErrorMessage
+                message='Project not found.'
+            />
+        )
+    }
+
+    return (
+        <ProjectEditorForm
+            canManage={params.canManageProject}
+            isEdit={params.isEdit}
+            onSuccess={params.onSuccess}
+            projectDetail={params.project}
+            projectTypes={params.projectTypes}
+        />
+    )
+}
+
+export const ProjectEditorPage: FC = () => {
+    const params: Readonly<{ projectId?: string }> = useParams<'projectId'>()
+    const projectId = params.projectId
+
+    const isEdit = !!projectId
+
+    const {
+        loginUserInfo,
+        userRoles,
+    }: WorkAppContextModel = useContext(WorkAppContext)
+
+    const projectResult = useFetchProject(projectId)
+    const projectTypesResult = useFetchProjectTypes()
+
+    const canCreateProject = checkCanManageProject(userRoles, loginUserInfo?.userId)
+    const canManageProject = !!projectResult.project
+        && checkCanManageProject(userRoles, loginUserInfo?.userId, projectResult.project)
+    const shouldRedirect = shouldRedirectToProjects(
+        isEdit,
+        canCreateProject,
+        canManageProject,
+        projectResult.isLoading,
+        !!projectResult.project,
+    )
+
+    const isLoading = projectTypesResult.isLoading
+        || (isEdit && projectResult.isLoading)
+
+    const loadError = projectResult.error || projectTypesResult.error
+
+    const pageTitle = isEdit
+        ? 'Edit Project'
+        : 'Create Project'
+
+    const backUrl = isEdit && projectId
+        ? `/projects/${projectId}/challenges`
+        : '/projects'
+
+    const handleSuccess = useCallback(
+        (project: Project): void => {
+            if (!isEdit) {
+                return
+            }
+
+            projectResult.mutate(project, false)
+                .catch(() => undefined)
+        },
+        [isEdit, projectResult],
+    )
+
+    if (shouldRedirect) {
+        return <Navigate replace to='/projects' />
+    }
+
+    return (
+        <PageWrapper
+            backUrl={backUrl}
+            breadCrumb={[]}
+            pageTitle={pageTitle}
+        >
+            <div className={styles.container}>
+                {renderEditorContent({
+                    canManageProject,
+                    isEdit,
+                    isLoading,
+                    loadError,
+                    onSuccess: handleSuccess,
+                    project: projectResult.project,
+                    projectTypes: projectTypesResult.projectTypes,
+                })}
+            </div>
+        </PageWrapper>
+    )
+}
+
+export default ProjectEditorPage

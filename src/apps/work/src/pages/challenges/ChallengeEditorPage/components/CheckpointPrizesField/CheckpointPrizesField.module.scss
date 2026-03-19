@@ -1,0 +1,25 @@
+@import '@libs/ui/styles/includes';
+
+.row {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.amountField {
+    min-width: 170px;
+}
+
+.text {
+    color: $black-60;
+    font-size: 13px;
+}
+
+.countField {
+    min-width: 140px;
+
+    > label {
+        display: none;
+    }
+}

@@ -1,0 +1,38 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.headerMeta {
+    align-items: center;
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.headerMetaItem {
+    align-items: center;
+    color: #2a2a2a;
+    display: flex;
+    font-size: 14px;
+    gap: 8px;
+}
+
+.headerMetaLabel {
+    color: #767676;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.panel {
+    background: #fff;
+    border: 1px solid #ececec;
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.sectionTitle {
+    font-size: 18px;
+    margin: 0 0 12px;
+}

@@ -4,10 +4,12 @@
     width: 100%;
     overflow-x: auto;
     margin-top: $sp-2;
+    -webkit-overflow-scrolling: touch;
 }
 
 table {
     width: 100%;
+    min-width: 980px;
     border-collapse: separate;
     border-spacing: 0;
     margin: 16px 0;

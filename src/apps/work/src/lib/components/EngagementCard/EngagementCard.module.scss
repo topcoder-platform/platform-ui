@@ -1,0 +1,64 @@
+.card {
+    background: #fff;
+    border: 1px solid #d5d5d5;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px;
+}
+
+.header {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+}
+
+.title {
+    font-size: 20px;
+    font-weight: 500;
+    margin: 0;
+}
+
+.status {
+    background: #f5f8ff;
+    border-radius: 999px;
+    color: #2a62d5;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 4px 10px;
+}
+
+.metaGrid {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+
+.label {
+    color: #767676;
+    display: block;
+    font-size: 12px;
+    margin-bottom: 4px;
+}
+
+.value {
+    color: #2a2a2a;
+    display: block;
+    font-size: 14px;
+}
+
+.actions {
+    display: flex;
+    gap: 12px;
+}
+
+.actionLink {
+    color: #2a62d5;
+    font-size: 14px;
+    text-decoration: none;
+}
+
+.actionLink:hover {
+    text-decoration: underline;
+}

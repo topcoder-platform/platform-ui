@@ -41,7 +41,7 @@ function copilotRequestFactory(data: any): CopilotRequest {
         id: normalizeId(data.id ?? requestData.id),
         opportunity: data.copilotOpportunity?.[0],
         projectId: normalizeId(data.projectId ?? requestData.projectId),
-        startDate: new Date(requestData.startDate),
+        startDate: new Date(data.startDate ?? requestData.startDate),
     }
 }
 

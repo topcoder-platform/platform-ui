@@ -50,6 +50,7 @@ import {
 import { REVIEWER, SUBMITTER, TAB, TABLE_DATE_FORMAT } from '../../../config/index.config'
 import {
     buildPhaseTabs,
+    collectReopenEligiblePhaseIds,
     findPhaseByTabLabel,
     isAppealsPhase,
     isAppealsResponsePhase,
@@ -69,8 +70,6 @@ interface Props {
 
 const normalizePhaseName = (name?: string): string => (name ? name.trim()
     .toLowerCase() : '')
-const SUBMISSION_PHASE_NAMES = new Set(['submission', 'topgear submission'])
-const REGISTRATION_PHASE_NAME = 'registration'
 const POST_MORTEM_PHASE_KEY = 'post-mortem'
 
 const isSubmissionDataTab = (label?: string): boolean => {
@@ -1143,49 +1142,10 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         return map
     }, [challengePhases])
 
-    const reopenEligiblePhaseIds = useMemo(() => {
-        const allowed = new Set<string>()
-        if (!challengePhases?.length) {
-            return allowed
-        }
-
-        const addPhaseIdentifiers = (phase?: BackendPhase): void => {
-            if (!phase) {
-                return
-            }
-
-            if (phase.id) {
-                allowed.add(phase.id)
-            }
-
-            if (phase.phaseId) {
-                allowed.add(phase.phaseId)
-            }
-        }
-
-        challengePhases.forEach(phase => {
-            if (!phase?.isOpen || !phase.predecessor) {
-                return
-            }
-
-            allowed.add(phase.predecessor)
-            addPhaseIdentifiers(phaseLookup.get(phase.predecessor))
-        })
-
-        const hasSubmissionVariantOpen = challengePhases.some(phase => (
-            phase?.isOpen && SUBMISSION_PHASE_NAMES.has(normalizePhaseName(phase.name))
-        ))
-
-        if (hasSubmissionVariantOpen) {
-            challengePhases.forEach(phase => {
-                if (normalizePhaseName(phase?.name) === REGISTRATION_PHASE_NAME) {
-                    addPhaseIdentifiers(phase)
-                }
-            })
-        }
-
-        return allowed
-    }, [challengePhases, phaseLookup])
+    const reopenEligiblePhaseIds = useMemo(
+        () => collectReopenEligiblePhaseIds(challengePhases),
+        [challengePhases],
+    )
 
     const timelineRows = useMemo<ChallengeTimelineRow[]>(() => {
         if (phaseOrderingOptions.isTask && !phaseOrderingOptions.isTopgearTask) {

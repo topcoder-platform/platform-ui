@@ -180,7 +180,7 @@ const FeedbackForm: FC<FeedbackFormProps> = (props: FeedbackFormProps) => {
 
             <div className={styles.fieldGroup}>
                 <label className={styles.fieldLabel} htmlFor='feedback-rating'>
-                    Communication with Customer (optional)
+                    Communication with Customer (optional) (out of 5)
                 </label>
                 <Controller
                     name='rating'
