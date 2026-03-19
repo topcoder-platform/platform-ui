@@ -3,7 +3,6 @@ import type { LocalServiceOverride } from './global-config.model'
 export * from './default.env'
 
 export const TC_FINANCE_API = 'http://localhost:3009/v6/finance'
-export const REPORTS_API = 'http://localhost:3013/v6/reports'
 export const DEBUG_CHECKPOINT_PHASES = true
 export const LOCAL_SERVICE_OVERRIDES: LocalServiceOverride[] = [
     { prefix: '/v5/billing-accounts', target: 'http://localhost:3010' },
@@ -34,7 +33,7 @@ export const LOCAL_SERVICE_OVERRIDES: LocalServiceOverride[] = [
     { prefix: '/v6/user-roles', target: 'http://localhost:3002' },
     { prefix: '/v6/identityproviders', target: 'http://localhost:3002' },
 
-    { prefix: '/v6/members', target: 'http://localhost:3003' },
+    // { prefix: '/v6/members', target: 'http://localhost:3003' },
 
     { prefix: '/v6/resources', target: 'http://localhost:3004' },
     { prefix: '/v6/resource-roles', target: 'http://localhost:3004' },
@@ -60,4 +59,7 @@ export const LOCAL_SERVICE_OVERRIDES: LocalServiceOverride[] = [
     { prefix: '/v6/contact-requests', target: 'http://localhost:3005' },
 
     { prefix: '/v5/standardized-skills', target: 'http://localhost:3006' },
+
+    { prefix: '/v6/problem', target: 'http://localhost:3008' },
+    { prefix: '/v6/tourney', target: 'http://localhost:3008' },
 ]

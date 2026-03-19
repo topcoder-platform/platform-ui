@@ -33,6 +33,15 @@ module.exports = {
         } },
     ],
 
+    devServer: {
+        proxy: {
+            '/arena-manager/api': {
+                target: 'http://localhost:8081',
+                changeOrigin: true,
+            },
+        },
+    },
+
     webpack: {
         alias: {
             // aliases used in JS/TS

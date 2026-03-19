@@ -26,7 +26,6 @@ export interface GlobalConfig {
     STANDARDIZED_SKILLS_API: string,
     TC_FINANCE_API: string,
     TC_AI_API: string,
-    REPORTS_API: string,
     AUTH: {
         ACCOUNTS_APP_CONNECTOR: string
     }

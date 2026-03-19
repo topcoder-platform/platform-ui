@@ -551,6 +551,7 @@ e.g.:
 The following summarizes the various [apps](#adding-a-new-platform-ui-application) in the Platform UI.
 
 - [Platform App](#platform-app)
+- [Arena Manager](#arena-manager)
 - [Dev Center](#dev-center)
 - [Earn](#earn)
 - [Gamification Admin](#gamification-admin)
@@ -564,6 +565,12 @@ It also renders the [Universal Navigation](https://github.com/topcoder-platform/
 
 [Platform README](./src/apps/platform/README.md)
 [Platform Routes](./src/apps/platform/src/platform.routes.tsx)
+
+## Arena Manager
+
+Application that hosts AI Arena problem-library and tournament-management workflows.
+
+[Arena Manager Routes](./src/apps/arena-manager/src/arena-manager.routes.tsx)
 
 ## Dev Center
 

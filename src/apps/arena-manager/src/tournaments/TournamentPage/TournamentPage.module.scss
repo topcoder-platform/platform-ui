@@ -1,0 +1,306 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+    margin: 0 auto;
+    max-width: 1440px;
+    padding: 0 $sp-8;
+    width: 100%;
+
+    @include ltelg {
+        padding: 0 $sp-4;
+    }
+}
+
+.pageHeader {
+    border-bottom: 1px solid $black-20;
+    padding: $sp-6 0 $sp-4;
+
+    h3 {
+        font-family: $font-roboto;
+        font-size: 24px;
+        font-weight: $font-weight-bold;
+        line-height: 32px;
+        margin: 0;
+        text-transform: none;
+    }
+}
+
+.pageContent {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-6;
+    padding: $sp-6 0;
+}
+
+.alert {
+    border: 1px solid;
+    border-radius: 8px;
+    font-weight: 500;
+    padding: $sp-4;
+}
+
+.alertSuccess {
+    background-color: #dcfce7;
+    border-color: #4ade80;
+    color: #15803d;
+}
+
+.alertError {
+    background-color: #f8d7da;
+    border-color: #dc3545;
+    color: #721c24;
+}
+
+.alertPending {
+    background-color: #fff3cd;
+    border-color: #ffc107;
+    color: #856404;
+}
+
+.card {
+    background: $tc-white;
+    border-radius: 12px;
+    box-shadow: 0 1px 4px rgb(0 0 0 / 0.1);
+    padding: $sp-6;
+}
+
+.cardTitle {
+    color: $black-100;
+    font-family: $font-barlow;
+    font-size: 20px;
+    font-weight: $font-weight-bold;
+    line-height: 22px;
+    margin: 0 0 $sp-4;
+    text-transform: none;
+}
+
+.formGrid {
+    display: grid;
+    gap: $sp-4;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+
+    @include ltelg {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    @include ltesm {
+        grid-template-columns: 1fr;
+    }
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-1;
+    margin-bottom: $sp-3;
+}
+
+.readOnlyRoundProblem {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-1;
+    margin-bottom: $sp-3;
+}
+
+.readOnlyRoundProblemValue {
+    background: $tc-white;
+    border: 1px solid $black-20;
+    border-radius: 6px;
+    color: $black-80;
+    font-size: 16px;
+    line-height: 24px;
+    padding: $sp-2 $sp-3;
+}
+
+.label {
+    color: $black-80;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 22px;
+}
+
+.input,
+.select {
+    border: 1px solid $black-20;
+    border-radius: 6px;
+    font-family: $font-roboto;
+    font-size: 16px;
+    line-height: 24px;
+    outline: none;
+    padding: $sp-2 $sp-3;
+
+    &:focus {
+        border-color: $turq-160;
+    }
+}
+
+.actions {
+    display: flex;
+    gap: $sp-3;
+    margin-top: $sp-5;
+}
+
+.meta {
+    color: $black-60;
+    font-size: 14px;
+    line-height: 22px;
+    margin: 0 0 $sp-4;
+}
+
+.bracketContainer {
+    align-items: flex-start;
+    display: flex;
+    gap: $sp-4;
+    overflow-x: auto;
+    padding-bottom: $sp-2;
+    padding-right: $sp-2;
+}
+
+.roundColumn {
+    background: #f3f4f6;
+    border: 1px solid #d4d8de;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 320px;
+    max-height: 78vh;
+    overflow: hidden;
+    padding: $sp-4;
+    position: relative;
+}
+
+.roundStickyHeader {
+    background: #f3f4f6;
+    margin-bottom: $sp-2;
+}
+
+.roundTitle {
+    background: #f3f4f6;
+    border-bottom: 1px solid #d1d5db;
+    color: $black-80;
+    font-size: 18px;
+    font-weight: $font-weight-bold;
+    margin: 0 0 $sp-3;
+    padding-bottom: $sp-2;
+}
+
+.contestList {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    gap: $sp-2;
+    min-height: 0;
+    overflow-y: auto;
+    padding-right: $sp-1;
+}
+
+.contestCard {
+    background: $tc-white;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgb(0 0 0 / 0.06);
+    padding: $sp-3;
+}
+
+.contestName {
+    color: #6b7280;
+    font-size: 13px;
+    font-weight: $font-weight-bold;
+    line-height: 18px;
+}
+
+.entrantsText {
+    color: $black-100;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 22px;
+    margin-top: 2px;
+}
+
+.problemText {
+    color: #6b7280;
+    font-size: 13px;
+    line-height: 20px;
+    margin-top: 4px;
+}
+
+.problemValue {
+    color: #2563eb;
+    font-weight: $font-weight-bold;
+}
+
+.problemValueUnassigned {
+    color: #6b7280;
+}
+
+.savedList {
+    display: grid;
+    gap: $sp-3;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    @include ltelg {
+        grid-template-columns: 1fr;
+    }
+}
+
+.savedItem {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: $sp-3;
+    padding: $sp-3;
+}
+
+.savedItemActive {
+    background: #eef5ff;
+    border-color: #93c5fd;
+}
+
+.savedName {
+    color: $black-100;
+    font-size: 16px;
+    font-weight: $font-weight-bold;
+    line-height: 24px;
+}
+
+.savedMeta {
+    color: $black-60;
+    font-size: 13px;
+    line-height: 20px;
+}
+
+.savedMetaGrid {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.savedActions {
+    display: flex;
+    gap: $sp-2;
+    justify-content: flex-start;
+    width: 100%;
+}
+
+.deleteButton {
+    color: #b91c1c !important;
+}
+
+.spinnerWrap {
+    display: flex;
+    justify-content: center;
+    padding: $sp-8 0;
+}
+
+.emptyText {
+    color: $black-60;
+    font-family: $font-roboto;
+    font-size: 16px;
+    line-height: 24px;
+    margin: 0;
+}

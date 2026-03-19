@@ -28,7 +28,7 @@ const ConfirmModal: FC<ConfirmModalProps> = (props: ConfirmModalProps) => {
             props.onClose?.()
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isLoading, props.open])
+    }, [isLoading])
 
     return (
         <BaseModal
