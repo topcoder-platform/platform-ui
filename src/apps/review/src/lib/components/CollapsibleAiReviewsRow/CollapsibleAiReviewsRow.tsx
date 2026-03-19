@@ -24,7 +24,7 @@ interface CollapsibleAiReviewsRowProps {
     submission: Pick<BackendSubmission, 'id'|'virusScan'>
 }
 
-function normalizeDecisionStatus(
+export function normalizeDecisionStatus(
     status?: AiReviewDecisionStatus,
 ): 'passed' | 'failed-score' | 'pending' | 'failed' {
     if (!status || status === 'PENDING') {

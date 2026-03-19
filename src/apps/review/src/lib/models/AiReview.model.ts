@@ -1,5 +1,19 @@
 export type AiReviewDecisionStatus = 'PENDING' | 'PASSED' | 'FAILED' | 'ERROR' | 'HUMAN_OVERRIDE'
 
+export type AiReviewDecisionEscalationStatus = 'PENDING_APPROVAL' | 'APPROVED' | 'REJECTED'
+
+export interface AiReviewDecisionEscalation {
+    id: string
+    aiReviewDecisionId: string
+    escalationNotes: string | null
+    approverNotes: string | null
+    status: AiReviewDecisionEscalationStatus
+    createdAt: string
+    createdBy: string | null
+    updatedAt: string
+    updatedBy: string | null
+}
+
 export interface AiReviewConfigWorkflow {
     id: string
     workflowId: string
@@ -61,4 +75,5 @@ export interface AiReviewDecision {
     finalizedAt: string | null
     createdAt: string
     updatedAt: string
+    escalations?: AiReviewDecisionEscalation[]
 }
