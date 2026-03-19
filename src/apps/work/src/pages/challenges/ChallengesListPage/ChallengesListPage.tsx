@@ -51,6 +51,7 @@ import {
     WorkAppContextModel,
 } from '../../../lib/models'
 import {
+    canCreateEngagement,
     checkCanManageProject,
     getStatusText,
 } from '../../../lib/utils'
@@ -118,6 +119,7 @@ function renderCreateActionButton(params: RenderCreateActionButtonParams): JSX.E
 }
 
 interface RenderHeaderActionsParams {
+    canCreateEngagement: boolean
     disabled: boolean
     projectId: string
 }
@@ -132,12 +134,14 @@ function renderHeaderActions(params: RenderHeaderActionsParams): JSX.Element {
                 primary: true,
             })}
 
-            {renderCreateActionButton({
-                actionPath: `/projects/${params.projectId}/engagements/new`,
-                disabled: params.disabled,
-                label: 'Create Engagement',
-                secondary: true,
-            })}
+            {params.canCreateEngagement
+                ? renderCreateActionButton({
+                    actionPath: `/projects/${params.projectId}/engagements/new`,
+                    disabled: params.disabled,
+                    label: 'Create Engagement',
+                    secondary: true,
+                })
+                : undefined}
         </div>
     )
 }
@@ -425,9 +429,11 @@ export const ChallengesListPage: FC = () => {
         .trim()
         .toLowerCase() === PROJECT_STATUS.ACTIVE
     const isCreateActionDisabled = !!projectIdFromRoute && !isProjectActive
+    const canCreateProjectEngagement = canCreateEngagement(userRoles)
 
     const rightHeader = projectIdFromRoute
         ? renderHeaderActions({
+            canCreateEngagement: canCreateProjectEngagement,
             disabled: isCreateActionDisabled,
             projectId: projectIdFromRoute,
         })

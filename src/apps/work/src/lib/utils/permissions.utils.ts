@@ -161,6 +161,20 @@ export function canEditTaasProject(userRoles: string[]): boolean {
     return hasAdminRole(userRoles) || hasCopilotRole(userRoles)
 }
 
+/**
+ * Returns whether the supplied user roles can create engagements.
+ *
+ * Engagement creation is restricted to admins and Talent Managers. Copilot-only
+ * callers should not see create actions unless they also hold one of those
+ * higher-privilege roles.
+ *
+ * @param userRoles caller roles from the decoded auth token or app context.
+ * @returns `true` when the caller can create engagements; otherwise `false`.
+ */
+export function canCreateEngagement(userRoles: string[]): boolean {
+    return hasAdminRole(userRoles) || checkTalentManager(userRoles)
+}
+
 export function checkIsAdmin(token: string): boolean {
     const roles = getTokenRoles(token)
 

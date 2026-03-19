@@ -3,6 +3,7 @@ import { decodeToken } from 'tc-auth-lib'
 import type { Project } from '../models'
 
 import {
+    canCreateEngagement,
     checkCanManageProject,
     checkIsUserInvitedToProject,
     checkProjectMembership,
@@ -62,6 +63,19 @@ describe('permissions.utils project management helpers', () => {
     it('does not expand project-manager creation access beyond the work-manager change', () => {
         expect(checkCanManageProject(['Project Manager'], '123'))
             .toBe(false)
+    })
+
+    it('limits engagement creation to admins and talent managers', () => {
+        expect(canCreateEngagement(['copilot']))
+            .toBe(false)
+        expect(canCreateEngagement(['project manager']))
+            .toBe(false)
+        expect(canCreateEngagement(['administrator']))
+            .toBe(true)
+        expect(canCreateEngagement(['topcoder talent manager']))
+            .toBe(true)
+        expect(canCreateEngagement(['copilot', 'talent manager']))
+            .toBe(true)
     })
 
     it('normalizes project membership checks and role lookups by user id', () => {

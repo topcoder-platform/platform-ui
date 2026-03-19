@@ -19,9 +19,6 @@ import {
 } from '~/libs/ui'
 
 import {
-    TALENT_MANAGER_ROLES,
-} from '../../../config/index.config'
-import {
     ENGAGEMENTS_APP_URL,
     PAGE_SIZE,
     PROJECT_STATUS,
@@ -48,6 +45,7 @@ import {
     ProjectListTabs,
 } from '../../../lib/components'
 import {
+    canCreateEngagement,
     checkCanManageProject,
     formatEngagementStatus,
     getApplicationsCount,
@@ -369,8 +367,7 @@ export const EngagementsListPage: FC = () => {
     const contextValue = workAppContext as WorkAppContextModel
 
     const canManage = contextValue.isAdmin || contextValue.isManager
-    const canCreateEngagement = contextValue.isAdmin
-        || contextValue.userRoles.some(role => TALENT_MANAGER_ROLES.includes(role))
+    const canCreateProjectEngagement = canCreateEngagement(contextValue.userRoles)
 
     const [filters, setFilters] = useState<EngagementsListFilters>(() => ({
         projectName: undefined,
@@ -614,7 +611,7 @@ export const EngagementsListPage: FC = () => {
                         </Link>
                     )}
 
-                {canCreateEngagement && (
+                {canCreateProjectEngagement && (
                     isCreateActionDisabled
                         ? (
                             <Button
