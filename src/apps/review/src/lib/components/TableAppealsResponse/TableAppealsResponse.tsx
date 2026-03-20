@@ -426,6 +426,9 @@ export const TableAppealsResponse: FC<TableAppealsResponseProps> = (props: Table
                 renderer: (row: SubmissionReviewerRow) => {
                     const reviewDetail = row.aggregated?.reviews?.[row.reviewerIndex]
                     const reviewId = reviewDetail?.reviewInfo?.id ?? reviewDetail?.reviewId
+                    const rowReviewerResourceId = reviewDetail?.resourceId ?? reviewDetail?.reviewInfo?.resourceId
+                    const canRespondThisRow = isAdmin
+                        || (!!rowReviewerResourceId && myReviewerResourceIds.has(rowReviewerResourceId))
 
                     if (!reviewDetail || !reviewId) {
                         return (
@@ -447,6 +450,14 @@ export const TableAppealsResponse: FC<TableAppealsResponseProps> = (props: Table
                         )
                     }
 
+                    if (!canRespondThisRow) {
+                        return (
+                            <span className={styles.notReviewed}>
+                                --
+                            </span>
+                        )
+                    }
+
                     return (
                         <span className={styles.actionsCell}>
                             <span
@@ -457,7 +468,7 @@ export const TableAppealsResponse: FC<TableAppealsResponseProps> = (props: Table
                             >
                                 <Link
                                     className={styles.respondButton}
-                                    to={getReviewRoute(row.id, reviewId, canRespondToAppeals)}
+                                    to={getReviewRoute(row.id, reviewId, canRespondThisRow)}
                                 >
                                     Respond to Appeals
                                 </Link>
@@ -504,6 +515,8 @@ export const TableAppealsResponse: FC<TableAppealsResponseProps> = (props: Table
         hideHandleColumn,
         canRespondToAppeals,
         isAppealsResponsePhaseOpen,
+        isAdmin,
+        myReviewerResourceIds,
         scoreVisibilityConfig,
     ])
 
