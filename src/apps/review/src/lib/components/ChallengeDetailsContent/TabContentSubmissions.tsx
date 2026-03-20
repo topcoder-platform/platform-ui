@@ -47,6 +47,7 @@ import { CollapsibleAiReviewsRow } from '../CollapsibleAiReviewsRow'
 import { useRolePermissions, UseRolePermissionsResult } from '../../hooks'
 import { SUBMISSION_DOWNLOAD_RESTRICTION_MESSAGE } from '../../constants'
 
+import { canDownloadSubmissionFromSubmissionsTab } from './submissionDownloadPermissions'
 import styles from './TabContentSubmissions.module.scss'
 
 interface Props {
@@ -278,10 +279,12 @@ export const TabContentSubmissions: FC<Props> = props => {
                             ? undefined
                             : submission.virusScan
                         const failedScan = normalizedVirusScan === false
-                        const cannotDownloadSubmission = (
-                            !canViewSubmissions && String(submission.memberId) === String(loginUserInfo?.userId)
-                        )
-                        const isRestricted = isRestrictedBase || failedScan || !cannotDownloadSubmission
+                        const isOwnSubmission = String(submission.memberId) === String(loginUserInfo?.userId)
+                        const canDownloadSubmission = canDownloadSubmissionFromSubmissionsTab({
+                            canViewSubmissions,
+                            isOwnSubmission,
+                        })
+                        const isRestricted = isRestrictedBase || failedScan || !canDownloadSubmission
                         let tooltipMessage = failedScan
                             ? VIRUS_SCAN_FAILED_MESSAGE
                             : (
@@ -289,7 +292,7 @@ export const TabContentSubmissions: FC<Props> = props => {
                                 ?? restrictionMessage
                             )
 
-                        if (!cannotDownloadSubmission) {
+                        if (!canDownloadSubmission) {
                             tooltipMessage = SUBMISSION_DOWNLOAD_RESTRICTION_MESSAGE
                         }
 
@@ -462,6 +465,8 @@ export const TabContentSubmissions: FC<Props> = props => {
             isProjectManager,
             hasCopilotRole,
             submissionInfoById,
+            canViewSubmissions,
+            loginUserInfo?.userId,
         ],
     )
 
