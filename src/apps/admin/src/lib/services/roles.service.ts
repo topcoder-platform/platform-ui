@@ -1,21 +1,25 @@
 /**
  * Roles service
  */
+import type { AxiosInstance } from 'axios'
 import _ from 'lodash'
 
 import { EnvironmentConfig } from '~/config'
 import {
+    xhrCreateInstance,
     xhrDeleteAsync,
     xhrGetAsync,
+    xhrGetPaginatedAsync,
     xhrPatchAsync,
     xhrPostAsync,
-} from '~/libs/core'
+} from '~/libs/core/lib/xhr'
 
 import { adjustUserRoleResponse, UserRole } from '../models'
 import { PaginatedResponseV6 } from '../models/PaginatedResponseV6.model'
 import { RoleMemberInfo } from '../models/RoleMemberInfo.model'
 
 type RoleMemberRaw = { userId?: number; handle?: string | null; email?: string | null }
+const reportsDownloadClient: AxiosInstance = xhrCreateInstance()
 
 /**
  * Fetchs roles of the specified subject
@@ -191,43 +195,40 @@ export const fetchRoleMembersPaginated = async (
         .map(([k, v]) => `${k}=${encodeURIComponent(String(v as string | number))}`)
     const url = params.length ? `${baseUrl}?${params.join('&')}` : baseUrl
 
-    const raw = await xhrGetAsync<any>(url)
-
-    // Support both array (non-paginated) and object (paginated) responses
-    if (Array.isArray(raw)) {
-        const mappedArr: RoleMemberInfo[] = (raw || []).map(
-            (m: RoleMemberRaw) => ({
-                email: m?.email ?? undefined,
-                handle: m?.handle ?? undefined,
-                id: String(m?.userId ?? ''),
-            }),
-        )
-        return {
-            data: mappedArr,
-            page: 1,
-            perPage: mappedArr.length,
-            total: mappedArr.length,
-            totalPages: 1,
-        }
-    }
-
-    const dataArray = (raw?.data ?? []) as Array<RoleMemberRaw>
-    const mapped: RoleMemberInfo[] = dataArray.map(m => ({
-        email: m.email ?? undefined,
-        handle: m.handle ?? undefined,
-        id: String(m.userId ?? ''),
+    const result = await xhrGetPaginatedAsync<RoleMemberRaw[]>(url)
+    const dataArray = Array.isArray(result.data) ? result.data : []
+    const mapped: RoleMemberInfo[] = dataArray.map((m: RoleMemberRaw) => ({
+        email: m?.email ?? undefined,
+        handle: m?.handle ?? undefined,
+        id: String(m?.userId ?? ''),
     }))
-
-    const safeTotal = Number(raw?.total ?? mapped.length)
-    const safePerPage = Number(raw?.perPage ?? mapped.length)
-    const computedTotalPages = raw?.totalPages
-        || (safePerPage ? Math.ceil(safeTotal / safePerPage) : 1)
 
     return {
         data: mapped,
-        page: raw?.page || 1,
-        perPage: safePerPage,
-        total: safeTotal,
-        totalPages: computedTotalPages,
+        page: result.page || 1,
+        perPage: result.perPage || mapped.length,
+        total: result.total || mapped.length,
+        totalPages: result.totalPages || 1,
     }
+}
+
+/**
+ * Exports users assigned to a role in CSV format.
+ * @param roleId role id.
+ * @returns resolves to CSV blob.
+ */
+export const exportRoleUsersCsv = async (
+    roleId: string,
+): Promise<Blob> => {
+    const response = await reportsDownloadClient.get<Blob>(
+        `${EnvironmentConfig.REPORTS_API}/identity/users-by-role?roleId=${encodeURIComponent(roleId)}`,
+        {
+            headers: {
+                Accept: 'text/csv',
+            },
+            responseType: 'blob',
+        },
+    )
+
+    return response.data
 }

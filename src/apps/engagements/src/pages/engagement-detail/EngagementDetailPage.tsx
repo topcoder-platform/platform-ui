@@ -1039,7 +1039,7 @@ const EngagementDetailPage: FC = () => {
         <div className={styles.emptyState}>
             <IconOutline.LockClosedIcon className={styles.emptyIcon} />
             <h3>Private engagement</h3>
-            <p>Only task managers, project managers, administrators, and assigned members can view this engagement.</p>
+            <p>Only talent managers, administrators, and assigned members can view this engagement.</p>
             <Button label='Back to Engagements' secondary onClick={handleBackClick} />
         </div>
     )

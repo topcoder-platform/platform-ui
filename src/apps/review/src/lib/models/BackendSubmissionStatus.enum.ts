@@ -9,4 +9,5 @@ export enum BackendSubmissionStatus {
     DELETED,
     FAILED_CHECKPOINT_SCREENING,
     FAILED_CHECKPOINT_REVIEW,
+    AI_FAILED_REVIEW,
 }

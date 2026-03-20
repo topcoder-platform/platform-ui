@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 import { FC, useCallback, useState } from 'react'
 import { Link } from 'react-router-dom'
 import classNames from 'classnames'
@@ -6,6 +7,11 @@ import { ReviewsContextModel } from '~/apps/review/src/lib/models'
 import { AiWorkflowRunStatus } from '~/apps/review/src/lib/components/AiReviewsTable'
 import { IconAiReview, IconPhaseReview } from '~/apps/review/src/lib/assets/icons'
 import { IconOutline, IconSolid, Tooltip } from '~/libs/ui'
+import { AiScoreFormulaTooltip } from '~/apps/review/src/lib/components/AiScoreFormulaTooltip'
+import { formatScore } from '~/apps/review/src/lib/components/AiScoreFormulaTooltip/AiScoreFormulaTooltip'
+import {
+    normalizeDecisionStatus,
+} from '~/apps/review/src/lib/components/CollapsibleAiReviewsRow/CollapsibleAiReviewsRow'
 import StatusLabel from '~/apps/review/src/lib/components/AiReviewsTable/StatusLabel'
 
 import { useReviewsContext } from '../../ReviewsContext'
@@ -26,6 +32,8 @@ const ReviewsSidebar: FC<ReviewsSidebarProps> = props => {
         submissionId,
         reviewId,
         reviewStatus,
+        aiReviewConfig,
+        aiReviewDecisionsBySubmissionId,
     }: ReviewsContextModel = useReviewsContext()
     const isReviewActive = !workflowRun
 
@@ -40,6 +48,19 @@ const ReviewsSidebar: FC<ReviewsSidebarProps> = props => {
     const runUrl = useCallback((runWorkflowId: string) => (
         `../reviews/${submissionId}?workflowId=${runWorkflowId}&reviewId=${reviewId}`
     ), [reviewId, submissionId])
+
+    const hasAiReviewConfig = Boolean(aiReviewConfig?.workflows?.length)
+
+    const currentDecision = submissionId
+        ? aiReviewDecisionsBySubmissionId?.[submissionId]
+        : undefined
+
+    const hasScore
+    = currentDecision?.totalScore !== null
+    && currentDecision?.totalScore !== undefined
+
+    const overallStatus = normalizeDecisionStatus(currentDecision?.status)
+    const overallScore = currentDecision?.totalScore
 
     return (
         <div className={classNames(props.className, styles.wrap)}>
@@ -65,7 +86,6 @@ const ReviewsSidebar: FC<ReviewsSidebarProps> = props => {
                                 run={workflowRun}
                                 showScore
                                 hideLabel
-                                submissionId={submissionId}
                             />
                         )}
                         <div className={styles.mobileMenuIcon}>
@@ -81,38 +101,77 @@ const ReviewsSidebar: FC<ReviewsSidebarProps> = props => {
                 </div>
                 <div className={styles.runsWrap}>
                     <ul>
-                        {workflowRuns.map(run => (
-                            <li
-                                className={
-                                    classNames(
-                                        styles.runEntry,
-                                        workflowId === run.workflow.id && styles.active,
-                                    )
-                                }
-                                key={run.id}
-                            >
-                                <Tooltip
-                                    content={run.workflow.name}
-                                    triggerOn='hover'
-                                    disableWrap
+                        {workflowRuns.map(run => {
+                            const isGating = aiReviewConfig?.workflows?.find(
+                                w => w.workflowId === run.workflow.id,
+                            )?.isGating
+
+                            return (
+
+                                <li
+                                    className={
+                                        classNames(
+                                            styles.runEntry,
+                                            workflowId === run.workflow.id && styles.active,
+                                        )
+                                    }
+                                    key={run.id}
                                 >
-                                    <Link
-                                        to={runUrl(run.workflow.id)}
-                                        onClick={close}
+                                    <Tooltip
+                                        content={run.workflow.name}
+                                        triggerOn='hover'
+                                        disableWrap
+                                    >
+                                        <Link
+                                            to={runUrl(run.workflow.id)}
+                                            onClick={close}
+                                        />
+                                        <span className={styles.workflowNameWrap}>
+                                            <IconAiReview />
+                                            <span className={styles.workflowName}>{run.workflow.name}</span>
+                                            {isGating && (
+                                                <IconOutline.LightningBoltIcon
+                                                    className={classNames('icon-lg', styles.gatingIcon)}
+                                                />
+                                            )}
+                                        </span>
+                                    </Tooltip>
+                                    <AiWorkflowRunStatus
+                                        run={run}
+                                        showScore
+                                        hideLabel
                                     />
-                                    <span className={styles.workflowNameWrap}>
-                                        <IconAiReview />
-                                        <span className={styles.workflowName}>{run.workflow.name}</span>
-                                    </span>
-                                </Tooltip>
-                                <AiWorkflowRunStatus
-                                    run={run}
-                                    showScore
-                                    hideLabel
-                                    submissionId={submissionId}
-                                />
+                                </li>
+                            )
+                        })}
+                        {hasAiReviewConfig && (
+                            <li
+                                className={classNames(
+                                    styles.runEntry,
+                                    styles.overallRow,
+                                )}
+                            >
+                                <span className={styles.workflowNameWrap}>
+                                    <IconAiReview />
+                                    <span className={styles.overallScore}>Overall Score</span>
+                                </span>
+
+                                {hasScore ? (
+                                    <AiWorkflowRunStatus
+                                        status={overallStatus}
+                                        score={overallScore ?? undefined}
+                                        showScore
+                                        hideLabel
+                                    />
+                                ) : (
+                                    <AiWorkflowRunStatus
+                                        status='pending'
+                                        showScore={false}
+                                        hideLabel={false}
+                                    />
+                                )}
                             </li>
-                        ))}
+                        )}
 
                         {submissionId && reviewId && (
                             <li
@@ -139,8 +198,33 @@ const ReviewsSidebar: FC<ReviewsSidebarProps> = props => {
                                 )}
                             </li>
                         )}
+
                     </ul>
                 </div>
+                {hasAiReviewConfig
+                && (
+                    <div className={styles.legend}>
+                        <div className={styles.legendLabel}>
+                            Score Info
+                        </div>
+                        <div className={styles.scoreInfoRow}>
+                            <span>Min Passing Score</span>
+                            <span>{formatScore(aiReviewConfig?.minPassingThreshold)}</span>
+                        </div>
+
+                        <div className={styles.scoreInfoRow}>
+                            <span>AI Score Formula</span>
+                            <Tooltip
+                                content={<AiScoreFormulaTooltip aiReviewConfig={aiReviewConfig} />}
+                                triggerOn='hover'
+                            >
+                                <span className={styles.infoIcon}>
+                                    <IconOutline.InformationCircleIcon className='icon-lg' />
+                                </span>
+                            </Tooltip>
+                        </div>
+                    </div>
+                )}
 
                 <div className={styles.legend}>
                     <div className={styles.legendLabel}>
@@ -166,6 +250,18 @@ const ReviewsSidebar: FC<ReviewsSidebarProps> = props => {
                                 icon={<IconOutline.MinusIcon className='icon-md' />}
                                 label='To be filled'
                                 status='pending'
+                            />
+                        </li>
+                        <li>
+                            <StatusLabel
+                                icon={(
+                                    <IconOutline.LightningBoltIcon
+                                        className={classNames('icon-lg', styles.gatingIcon)}
+                                    />
+                                )}
+                                label='Gating Indicator'
+                                status='pending'
+                                isAiIcon
                             />
                         </li>
                     </ul>
