@@ -28,6 +28,7 @@ const StatsSummaryBlock: FC<StatsSummaryBlockProps> = props => {
         ...(props.trackId ? { id: props.trackId } : {}),
         name: props.trackTitle,
     }), 'fields')
+    const wins = props.wins ?? 0
 
     const isFieldVisible = (field: string): boolean => (
         !visibleFields || visibleFields[field]
@@ -60,11 +61,11 @@ const StatsSummaryBlock: FC<StatsSummaryBlockProps> = props => {
                 {isFieldVisible('wins') && (
                     <div className={styles.summaryItem}>
                         <span className={styles.summaryItemValue}>
-                            {props.wins}
+                            {wins}
                         </span>
                         <span className={styles.summaryItemLabel}>
                             <span className='body-small'>
-                                {formatPlural(props.wins || 0, 'Win')}
+                                {formatPlural(wins, 'Win')}
                             </span>
                         </span>
                     </div>

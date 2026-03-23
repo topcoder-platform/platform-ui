@@ -20,6 +20,11 @@ interface DevelopTrackViewProps {
 const DevelopTrackView: FC<DevelopTrackViewProps> = props => {
     const trackName: string = (props.trackData as MemberStats).name ?? 'SRM'
     const trackHistory = useTrackHistory(props.profile?.handle, props.trackData)
+    const isFirst2FinishTrack = useMemo(() => [
+        'FIRST_2_FINISH',
+        'First2Finish',
+        'DESIGN_FIRST_2_FINISH',
+    ].includes(trackName), [trackName])
 
     const ratingDistribution: UserStatsDistributionResponse | undefined = useStatsDistribution({
         subTrack: trackName,
@@ -27,9 +32,12 @@ const DevelopTrackView: FC<DevelopTrackViewProps> = props => {
     })
 
     const showDetailsViewBtn = useMemo(() => (
-        (!!ratingDistribution && !isEmpty(ratingDistribution))
-        || (!!trackHistory && !isEmpty(trackHistory))
-    ), [ratingDistribution, trackHistory])
+        !isFirst2FinishTrack
+        && (
+            (!!ratingDistribution && !isEmpty(ratingDistribution))
+            || (!!trackHistory && !isEmpty(trackHistory))
+        )
+    ), [isFirst2FinishTrack, ratingDistribution, trackHistory])
 
     return (
         <DetailedTrackView

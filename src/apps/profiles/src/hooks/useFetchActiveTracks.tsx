@@ -5,6 +5,12 @@ import { MemberStats, SRMStats, useMemberStats, UserStats } from '~/libs/core'
 
 import { calcProportionalAverage } from '../lib/math.utils'
 
+const testingSubTrackNames = new Set([
+    'BUG_HUNT',
+    'TEST_SCENARIOS',
+    'TEST_SUITES',
+])
+
 /**
  * The structure of a track for a member.
  */
@@ -53,6 +59,20 @@ const isActiveSubTrack = (subTrack?: MemberStats): boolean => {
 
     return (submissionCount ?? subTrack?.challenges ?? 0) > 0
 }
+
+/**
+ * Determine whether the subtrack belongs in the legacy Testing track.
+ *
+ * Unified stats return generic development subtrack names such as `Challenge`
+ * and `Task`, so anything outside the explicit legacy testing set should stay
+ * visible under Development instead of being dropped.
+ *
+ * @param {MemberStats | undefined} subTrack - The subtrack to inspect.
+ * @returns {boolean} Whether the subtrack should render in Testing.
+ */
+const isTestingSubTrack = (subTrack?: MemberStats): boolean => (
+    !!subTrack?.name && testingSubTrackNames.has(subTrack.name)
+)
 
 /**
  * Helper function to build aggregated data for a track.
@@ -166,45 +186,24 @@ export const useFetchActiveTracks = (userHandle: string): MemberStatsTrack[] => 
     // Design
     const designTrackStats: MemberStatsTrack = useMemo(() => (
         enhanceDesignTrackData(
-            buildTrackData('Design', [
-                designSubTracks.DESIGN_FIRST_2_FINISH,
-                designSubTracks.WEB_DESIGNS,
-                designSubTracks.LOGO_DESIGN,
-                designSubTracks.WIREFRAMES,
-                designSubTracks.IDEA_GENERATION,
-                designSubTracks.FRONT_END_FLASH,
-                designSubTracks.PRINT_OR_PRESENTATION,
-                designSubTracks.STUDIO_OTHER,
-                designSubTracks.APPLICATION_FRONT_END_DESIGN,
-                designSubTracks.BANNERS_OR_ICONS,
-                designSubTracks.WIDGET_OR_MOBILE_SCREEN_DESIGN,
-            ].filter(Boolean)),
+            buildTrackData('Design', Object.values(designSubTracks)),
         )
-    ), [developSubTracks, designSubTracks])
+    ), [designSubTracks])
 
     // Development
     const developTrackStats: MemberStatsTrack = useMemo(() => (
-        buildTrackData('Development', [
-            developSubTracks.DESIGN,
-            developSubTracks.DEVELOPMENT,
-            developSubTracks.ARCHITECTURE,
-            developSubTracks.FIRST_2_FINISH,
-            developSubTracks.First2Finish,
-            developSubTracks.CODE,
-            developSubTracks.ASSEMBLY_COMPETITION,
-            developSubTracks.UI_PROTOTYPE_COMPETITION,
-            developSubTracks.SPECIFICATION,
-            developSubTracks.CONCEPTUALIZATION,
-        ].filter(Boolean))
+        buildTrackData(
+            'Development',
+            Object.values(developSubTracks).filter(subTrack => !isTestingSubTrack(subTrack)),
+        )
     ), [developSubTracks])
 
     // Testing
     const testingTrackStats: MemberStatsTrack = useMemo(() => (
-        buildTrackData('Testing', [
-            developSubTracks.BUG_HUNT,
-            developSubTracks.TEST_SCENARIOS,
-            developSubTracks.TEST_SUITES,
-        ].filter(Boolean))
+        buildTrackData(
+            'Testing',
+            Object.values(developSubTracks).filter(isTestingSubTrack),
+        )
     ), [developSubTracks])
 
     // Data science
