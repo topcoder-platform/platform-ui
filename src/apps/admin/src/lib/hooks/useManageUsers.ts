@@ -1,9 +1,11 @@
 /**
  * Manage users redux state
  */
-import { useCallback, useReducer, useRef } from 'react'
+import { useCallback, useReducer, useRef, useState } from 'react'
 import { toast } from 'react-toastify'
 import _ from 'lodash'
+
+import { Sort } from '~/apps/admin/src/platform/gamification-admin/src/game-lib'
 
 import { UserInfo } from '../models'
 import { deleteUser, searchUsersPaginated, updateUserStatus } from '../services'
@@ -177,7 +179,9 @@ export interface useManageUsersProps {
     doSearchUsers: (filter: string) => void
     page: number
     totalPages: number
+    sort: Sort | undefined
     onPageChange: (page: number) => void
+    onSortChange: (sort: Sort | undefined) => void
     updatingStatus: { [key: string]: boolean }
     deletingUsers: { [key: string]: boolean }
     doUpdateStatus: (
@@ -207,51 +211,32 @@ export function useManageUsers(): useManageUsersProps {
         updatingStatus: {},
         users: [],
     })
+    const [sort, setSort] = useState<Sort | undefined>()
     const filterRef = useRef('')
+    const hasSearchedRef = useRef(false)
+    const sortRef = useRef<Sort | undefined>()
 
-    const doSearchUsers = useCallback(
-        (filter: string) => {
+    /**
+     * Fetches one page of users with the current filter and optional server-side sort.
+     * @param filter Active legacy filter string.
+     * @param page Page number to request.
+     * @param sortToApply Current table sort, if any.
+     * @returns Resolves when the request completes and state is updated.
+     */
+    const fetchUsers = useCallback(
+        (filter: string, page: number, sortToApply?: Sort) => {
             dispatch({
                 type: UsersActionType.FETCH_USERS_INIT,
             })
-            filterRef.current = filter || ''
-            searchUsersPaginated({
-                filter: filterRef.current,
-                limit: TABLE_PAGINATION_ITEM_PER_PAGE,
-                offset: 0,
-            })
-                .then(result => {
-                    dispatch({
-                        payload: {
-                            page: result.page || 1,
-                            total: result.total || 0,
-                            totalPages: result.totalPages || 0,
-                            users: result.data,
-                        },
-                        type: UsersActionType.FETCH_USERS_DONE,
-                    })
-                })
-                .catch(e => {
-                    dispatch({
-                        type: UsersActionType.FETCH_USERS_FAILED,
-                    })
-                    handleError(e)
-                })
-        },
-        [dispatch],
-    )
 
-    const onPageChange = useCallback(
-        (page: number) => {
-            if (page < 1) return
-            dispatch({
-                type: UsersActionType.FETCH_USERS_INIT,
-            })
             const offset = (page - 1) * TABLE_PAGINATION_ITEM_PER_PAGE
-            searchUsersPaginated({
-                filter: filterRef.current,
+
+            return searchUsersPaginated({
+                filter,
                 limit: TABLE_PAGINATION_ITEM_PER_PAGE,
                 offset,
+                sortBy: sortToApply?.fieldName,
+                sortOrder: sortToApply?.direction,
             })
                 .then(result => {
                     dispatch({
@@ -272,6 +257,37 @@ export function useManageUsers(): useManageUsersProps {
                 })
         },
         [dispatch],
+    )
+
+    const doSearchUsers = useCallback(
+        (filter: string) => {
+            hasSearchedRef.current = true
+            filterRef.current = filter || ''
+            fetchUsers(filterRef.current, 1, sortRef.current)
+        },
+        [fetchUsers],
+    )
+
+    const onPageChange = useCallback(
+        (page: number) => {
+            if (page < 1 || !hasSearchedRef.current) return
+            fetchUsers(filterRef.current, page, sortRef.current)
+        },
+        [fetchUsers],
+    )
+
+    const onSortChange = useCallback(
+        (nextSort: Sort | undefined) => {
+            sortRef.current = nextSort
+            setSort(nextSort)
+
+            if (!hasSearchedRef.current) {
+                return
+            }
+
+            fetchUsers(filterRef.current, 1, nextSort)
+        },
+        [fetchUsers],
     )
 
     const doUpdateStatus = useCallback(
@@ -357,7 +373,9 @@ export function useManageUsers(): useManageUsersProps {
         doUpdateStatus,
         isLoading: state.isLoading,
         onPageChange,
+        onSortChange,
         page: state.page,
+        sort,
         totalPages: state.totalPages,
         updatingStatus: state.updatingStatus,
         users: state.users,

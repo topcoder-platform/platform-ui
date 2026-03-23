@@ -6,6 +6,7 @@ import _ from 'lodash'
 import classNames from 'classnames'
 import moment from 'moment'
 
+import { Sort } from '~/apps/admin/src/platform/gamification-admin/src/game-lib'
 import { EnvironmentConfig } from '~/config'
 import { useWindowSize, WindowSize } from '~/libs/shared'
 import {
@@ -29,7 +30,6 @@ import { DialogEditUserStatus } from '../DialogEditUserStatus'
 import { DialogUserStatusHistory } from '../DialogUserStatusHistory'
 import { DialogDeleteUser } from '../DialogDeleteUser'
 import { DropdownMenuButton } from '../common/DropdownMenuButton'
-import { useTableFilterLocal, useTableFilterLocalProps } from '../../hooks'
 import { TABLE_DATE_FORMAT } from '../../../config/index.config'
 import { SSOLoginProvider, UserInfo } from '../../models'
 import { fetchSSOLoginProviders } from '../../services'
@@ -38,12 +38,125 @@ import { ReactComponent as RectangleListRegularIcon } from '../../assets/i/recta
 
 import styles from './UsersTable.module.scss'
 
+const userSortCollator = new Intl.Collator(undefined, {
+    numeric: true,
+    sensitivity: 'base',
+})
+
+/**
+ * Resolves the value rendered by a sortable user column.
+ * @param data User row to inspect.
+ * @param fieldName Column field name requested by the table.
+ * @returns Comparable scalar value for the requested column.
+ */
+function getUserSortValue(
+    data: UserInfo,
+    fieldName: string,
+): boolean | Date | number | string | undefined {
+    switch (fieldName) {
+        case 'activationCode':
+            return data.credential?.activationCode
+        case 'firstName':
+            return `${data.firstName ?? ''} ${data.lastName ?? ''}`.trim()
+        default:
+            return (data as unknown as Record<string, boolean | Date | number | string | undefined>)[fieldName]
+    }
+}
+
+/**
+ * Checks whether a sortable value should be treated as empty.
+ * @param value Candidate sort value.
+ * @returns True when the value should remain at the bottom of the table.
+ */
+function isEmptySortValue(
+    value: boolean | Date | number | string | undefined,
+): boolean {
+    return value === undefined || value === null || value === ''
+}
+
+/**
+ * Compares two non-empty user sort values.
+ * @param leftValue Left-hand sort value.
+ * @param rightValue Right-hand sort value.
+ * @param directionMultiplier Asc/desc multiplier.
+ * @returns Standard Array.sort comparison result.
+ */
+function compareUserSortValues(
+    leftValue: boolean | Date | number | string,
+    rightValue: boolean | Date | number | string,
+    directionMultiplier: number,
+): number {
+    if (leftValue instanceof Date && rightValue instanceof Date) {
+        return directionMultiplier * (leftValue.getTime() - rightValue.getTime())
+    }
+
+    if (typeof leftValue === 'boolean' && typeof rightValue === 'boolean') {
+        return directionMultiplier * (Number(leftValue) - Number(rightValue))
+    }
+
+    if (typeof leftValue === 'number' && typeof rightValue === 'number') {
+        return directionMultiplier * (leftValue - rightValue)
+    }
+
+    return directionMultiplier * userSortCollator.compare(
+        String(leftValue),
+        String(rightValue),
+    )
+}
+
+/**
+ * Sorts one page of users while keeping empty values at the end.
+ * @param users Current page of users.
+ * @param sort Active sort requested by the table.
+ * @returns Sorted copy of the current page.
+ */
+function sortUsers(
+    users: UserInfo[],
+    sort: Sort | undefined,
+): UserInfo[] {
+    if (!sort?.fieldName) {
+        return users
+    }
+
+    const directionMultiplier = sort.direction === 'asc' ? 1 : -1
+
+    return [...users].sort((left, right) => {
+        const leftValue = getUserSortValue(left, sort.fieldName)
+        const rightValue = getUserSortValue(right, sort.fieldName)
+        const leftEmpty = isEmptySortValue(leftValue)
+        const rightEmpty = isEmptySortValue(rightValue)
+
+        if (leftEmpty && rightEmpty) {
+            return 0
+        }
+
+        if (leftEmpty) {
+            return 1
+        }
+
+        if (rightEmpty) {
+            return -1
+        }
+
+        const normalizedLeftValue = leftValue as boolean | Date | number | string
+        const normalizedRightValue = rightValue as boolean | Date | number | string
+
+        return compareUserSortValues(
+            normalizedLeftValue,
+            normalizedRightValue,
+            directionMultiplier,
+        )
+    })
+}
+
 interface Props {
     className?: string
     allUsers: UserInfo[]
     page: number
+    sort: Sort | undefined
     totalPages: number
     onPageChange: (page: number) => void
+    onSortChange: (sort: Sort | undefined) => void
     updatingStatus: { [key: string]: boolean }
     deletingUsers: { [key: string]: boolean }
     doUpdateStatus: (
@@ -123,11 +236,10 @@ export const UsersTable: FC<Props> = props => {
 
     const isTablet = useMemo(() => screenWidth <= 984, [screenWidth])
     const isMobile = useMemo(() => screenWidth <= 745, [screenWidth])
-    const { results, setSort }: useTableFilterLocalProps<UserInfo> = useTableFilterLocal(
-        props.allUsers ?? [],
-        undefined,
-        undefined,
-        true,
+
+    const results = useMemo(
+        () => sortUsers(props.allUsers ?? [], props.sort),
+        [props.allUsers, props.sort],
     )
     const columns = useMemo<TableColumn<UserInfo>[]>(
         () => [
@@ -446,9 +558,10 @@ export const UsersTable: FC<Props> = props => {
             <Table
                 columns={columns}
                 data={results}
-                onToggleSort={setSort}
+                onToggleSort={props.onSortChange}
                 showExpand
                 removeDefaultSort
+                forceSort={props.sort}
                 className={styles.desktopTable}
                 colWidth={colWidth}
                 setColWidth={setColWidth}
