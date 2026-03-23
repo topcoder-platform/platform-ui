@@ -25,6 +25,36 @@ export interface MemberStatsTrack {
 }
 
 /**
+ * Return the explicit submission count when the stats payload includes one.
+ *
+ * Legacy stats include submission counters, while unified stats may omit them.
+ *
+ * @param {MemberStats | undefined} subTrack - The subtrack to inspect.
+ * @returns {number | undefined} The submission count when available.
+ */
+const getSubTrackSubmissionCount = (subTrack?: MemberStats): number | undefined => {
+    const submissionCount = subTrack?.submissions?.submissions ?? subTrack?.submissions
+
+    return typeof submissionCount === 'number' ? submissionCount : undefined
+}
+
+/**
+ * Determine whether the subtrack should be considered active.
+ *
+ * Unified member stats do not currently include legacy submission counters for
+ * development/design rows, so fall back to the challenge count when the
+ * submission count is unavailable.
+ *
+ * @param {MemberStats | undefined} subTrack - The subtrack to inspect.
+ * @returns {boolean} Whether the subtrack has activity worth rendering.
+ */
+const isActiveSubTrack = (subTrack?: MemberStats): boolean => {
+    const submissionCount = getSubTrackSubmissionCount(subTrack)
+
+    return (submissionCount ?? subTrack?.challenges ?? 0) > 0
+}
+
+/**
  * Helper function to build aggregated data for a track.
  *
  * @param {string} trackName - The name of the track.
@@ -32,23 +62,22 @@ export interface MemberStatsTrack {
  * @returns {MemberStatsTrack} - Aggregated data for the track.
  */
 const buildTrackData = (trackName: string, allSubTracks: MemberStats[]): MemberStatsTrack => {
-    const subTracks = allSubTracks.filter(s => (
-        (s.submissions?.submissions ?? (s.submissions as unknown as number)) > 0
-    ))
+    const subTracks = allSubTracks.filter(isActiveSubTrack)
     // Calculate total wins, challenges, and submissions for the track
     const totalWins = subTracks.reduce((sum, subTrack) => (sum + (subTrack?.wins || 0)), 0)
     const challengesCount = subTracks.reduce((sum, subTrack) => (sum + (subTrack?.challenges || 0)), 0)
     const submissionsCount = subTracks.reduce((sum, subTrack) => (
-        sum + (subTrack?.submissions?.submissions ?? subTrack?.submissions ?? 0)
+        sum + (getSubTrackSubmissionCount(subTrack) ?? 0)
     ), 0)
+    const hasSubmissionCounts = subTracks.some(subTrack => getSubTrackSubmissionCount(subTrack) !== undefined)
 
     // Return aggregated track data
     return {
         challenges: challengesCount,
-        isActive: submissionsCount > 0,
+        isActive: subTracks.length > 0,
         name: trackName,
         order: 1,
-        submissions: submissionsCount,
+        submissions: hasSubmissionCounts ? submissionsCount : undefined,
         subTracks,
         wins: totalWins,
     }
@@ -160,6 +189,7 @@ export const useFetchActiveTracks = (userHandle: string): MemberStatsTrack[] => 
             developSubTracks.DEVELOPMENT,
             developSubTracks.ARCHITECTURE,
             developSubTracks.FIRST_2_FINISH,
+            developSubTracks.First2Finish,
             developSubTracks.CODE,
             developSubTracks.ASSEMBLY_COMPETITION,
             developSubTracks.UI_PROTOTYPE_COMPETITION,
