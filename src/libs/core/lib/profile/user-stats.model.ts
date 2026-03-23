@@ -105,7 +105,7 @@ export type UserStats = {
 }
 
 export type StatsHistory = {
-    challengeId: number
+    challengeId: string | number
     challengeName: string
     date?: number
     percentile?: number
