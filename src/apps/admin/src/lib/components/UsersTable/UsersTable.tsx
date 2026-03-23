@@ -153,12 +153,25 @@ export const UsersTable: FC<Props> = props => {
                         propertyName: 'email',
                         type: 'text',
                     } as TableColumn<UserInfo>,
+                    {
+                        columnId: 'ssoUserId',
+                        isExpand: true,
+                        label: 'SSO UserID',
+                        propertyName: 'ssoUserId',
+                        type: 'text',
+                    } as TableColumn<UserInfo>,
                 ]
                 : [
                     {
                         columnId: 'email',
                         label: 'Primary Email',
                         propertyName: 'email',
+                        type: 'text',
+                    } as TableColumn<UserInfo>,
+                    {
+                        columnId: 'ssoUserId',
+                        label: 'SSO UserID',
+                        propertyName: 'ssoUserId',
                         type: 'text',
                     } as TableColumn<UserInfo>,
                 ]),
