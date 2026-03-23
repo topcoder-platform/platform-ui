@@ -105,13 +105,29 @@ const formatAssignmentDate = (value?: string): string => {
     return formatted === 'Date TBD' ? FALLBACK_VALUE_LABEL : formatted
 }
 
-const formatAgreementRate = (value?: string | number): string => {
+const formatCurrencyAmount = (value?: string | number): string => {
     if (value === null || value === undefined) {
         return FALLBACK_VALUE_LABEL
     }
 
     const normalized = typeof value === 'string' ? value.trim() : value.toString()
-    return normalized || FALLBACK_VALUE_LABEL
+    return normalized ? `$${normalized}` : FALLBACK_VALUE_LABEL
+}
+
+const formatDurationMonths = (value?: number): string => {
+    if (!value) {
+        return FALLBACK_VALUE_LABEL
+    }
+
+    return `${value} month${value === 1 ? '' : 's'}`
+}
+
+const formatStandardHoursPerWeek = (value?: number): string => {
+    if (!value) {
+        return FALLBACK_VALUE_LABEL
+    }
+
+    return `${value} hrs`
 }
 
 const AssignmentCard: FC<AssignmentCardProps> = (props: AssignmentCardProps) => {
@@ -142,16 +158,24 @@ const AssignmentCard: FC<AssignmentCardProps> = (props: AssignmentCardProps) => 
         [assignment?.status],
     )
     const paymentLabel = useMemo(
-        () => formatAgreementRate(assignment?.agreementRate),
+        () => formatCurrencyAmount(assignment?.agreementRate),
         [assignment?.agreementRate],
+    )
+    const ratePerHourLabel = useMemo(
+        () => formatCurrencyAmount(assignment?.ratePerHour),
+        [assignment?.ratePerHour],
     )
     const startDateLabel = useMemo(
         () => formatAssignmentDate(assignment?.startDate),
         [assignment?.startDate],
     )
-    const endDateLabel = useMemo(
-        () => formatAssignmentDate(assignment?.endDate),
-        [assignment?.endDate],
+    const durationMonthsLabel = useMemo(
+        () => formatDurationMonths(assignment?.durationMonths),
+        [assignment?.durationMonths],
+    )
+    const standardHoursPerWeekLabel = useMemo(
+        () => formatStandardHoursPerWeek(assignment?.standardHoursPerWeek),
+        [assignment?.standardHoursPerWeek],
     )
     const assignmentStatus = assignment?.status?.toLowerCase()
     const showAssignedActions = assignmentStatus === 'assigned'
@@ -213,11 +237,11 @@ const AssignmentCard: FC<AssignmentCardProps> = (props: AssignmentCardProps) => 
             <div className={styles.meta}>
                 <div className={styles.metaItem}>
                     <IconSolid.CalendarIcon className={styles.metaIcon} />
-                    <span>{`Start: ${startDateLabel}`}</span>
+                    <span>{`Billing start: ${startDateLabel}`}</span>
                 </div>
                 <div className={styles.metaItem}>
                     <IconSolid.CalendarIcon className={styles.metaIcon} />
-                    <span>{`End: ${endDateLabel}`}</span>
+                    <span>{`Duration: ${durationMonthsLabel}`}</span>
                 </div>
                 <div className={styles.metaItem}>
                     <IconSolid.GlobeAltIcon className={styles.metaIcon} />
@@ -229,7 +253,15 @@ const AssignmentCard: FC<AssignmentCardProps> = (props: AssignmentCardProps) => 
                 </div>
                 <div className={styles.metaItem}>
                     <IconSolid.CurrencyDollarIcon className={styles.metaIcon} />
-                    <span>{`Payment: $${paymentLabel} per week`}</span>
+                    <span>{`Rate / hr: ${ratePerHourLabel}`}</span>
+                </div>
+                <div className={styles.metaItem}>
+                    <IconSolid.ClockIcon className={styles.metaIcon} />
+                    <span>{`Std hrs / week: ${standardHoursPerWeekLabel}`}</span>
+                </div>
+                <div className={styles.metaItem}>
+                    <IconSolid.CurrencyDollarIcon className={styles.metaIcon} />
+                    <span>{`Rate / week: ${paymentLabel}`}</span>
                 </div>
             </div>
             <div className={styles.skills}>

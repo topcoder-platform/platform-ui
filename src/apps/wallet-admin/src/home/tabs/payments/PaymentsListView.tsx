@@ -19,6 +19,11 @@ import PaymentsTable from '../../../lib/components/payments-table/PaymentTable'
 
 import styles from './Payments.module.scss'
 
+type PaymentRoleView = 'admin' | 'engagementApprover'
+
+const engagementPaymentCategory = 'ENGAGEMENT_PAYMENT'
+const defaultPageSize = 10
+
 interface PaymentsListViewProps {
     profile: UserProfile
     isCollapsed?: boolean
@@ -65,17 +70,29 @@ const formatCurrency = (amountStr: string, currency: string): string => {
         .format(amount)
 }
 
+// eslint-disable-next-line complexity
 const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProps) => {
+    const isPaymentAdmin = props.profile.roles.includes('Payment Admin')
+    const isEngagementPaymentApprover = props.profile.roles.includes('Engagement Payment Approver')
+    const canToggleRoleView = isPaymentAdmin && isEngagementPaymentApprover
     const [confirmFlow, setConfirmFlow] = React.useState<ConfirmFlowData | undefined>(undefined)
     const [isConfirmFormValid, setIsConfirmFormValid] = React.useState<boolean>(false)
     const [winnings, setWinnings] = React.useState<ReadonlyArray<Winning>>([])
     const [selectedPayments, setSelectedPayments] = React.useState<{ [paymentId: string]: Winning }>({})
     const selectedPaymentsCount = Object.keys(selectedPayments).length
     const [isLoading, setIsLoading] = React.useState<boolean>(false)
-    const [filters, setFilters] = React.useState<Record<string, string[]>>({})
+    const [paymentRoleView, setPaymentRoleView] = React.useState<PaymentRoleView>(
+        isPaymentAdmin ? 'admin' : 'engagementApprover',
+    )
+    const isEngagementApproverView = isEngagementPaymentApprover && (
+        !isPaymentAdmin || paymentRoleView === 'engagementApprover'
+    )
+    const [filters, setFilters] = React.useState<Record<string, string[]>>(
+        isEngagementPaymentApprover && !isPaymentAdmin ? { category: [engagementPaymentCategory] } : {},
+    )
     const [pagination, setPagination] = React.useState<PaginationInfo>({
         currentPage: 1,
-        pageSize: 10,
+        pageSize: defaultPageSize,
         totalItems: 0,
         totalPages: 0,
     })
@@ -292,9 +309,38 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
         || props.profile.roles.includes('Payment Editor')
     )
 
-    const isEngagementPaymentApprover = props.profile.roles.includes('Engagement Payment Approver')
     const [bulkOpen, setBulkOpen] = React.useState(false)
     const [bulkAuditNote, setBulkAuditNote] = React.useState('')
+
+    /**
+     * Switches the payments page between the full admin view and the engagement-only approver view.
+     * It preserves shared filters, reapplies the role-specific category constraint, and resets UI state
+     * that should not leak across views such as current selections and an open bulk-approve modal.
+     */
+    const onRoleViewChange = useCallback((nextView: PaymentRoleView) => {
+        if (nextView === paymentRoleView) {
+            return
+        }
+
+        setPaymentRoleView(nextView)
+        setBulkAuditNote('')
+        setBulkOpen(false)
+        setSelectedPayments({})
+        setPagination(prev => ({
+            ...prev,
+            currentPage: 1,
+        }))
+        setFilters(prev => {
+            const nextFilters = { ...prev }
+            delete nextFilters.category
+
+            if (nextView === 'engagementApprover') {
+                nextFilters.category = [engagementPaymentCategory]
+            }
+
+            return nextFilters
+        })
+    }, [paymentRoleView])
 
     const onBulkApprove = useCallback(async (auditNote: string) => {
         const ids = Object.keys(selectedPayments)
@@ -343,10 +389,35 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                 isCollapsed={props.isCollapsed}
                 onToggle={props.onToggle}
             >
+                {canToggleRoleView && (
+                    <div className={styles.roleViewToggle}>
+                        <span className='body-small-bold'>Role View</span>
+                        <div className={styles.roleViewButtons}>
+                            <button
+                                type='button'
+                                aria-pressed={!isEngagementApproverView}
+                                className={`${styles.roleViewButton} ${!isEngagementApproverView ? styles.roleViewButtonActive : ''}`}
+                                onClick={() => onRoleViewChange('admin')}
+                            >
+                                Admin View
+                            </button>
+                            <button
+                                type='button'
+                                aria-pressed={isEngagementApproverView}
+                                className={`${styles.roleViewButton} ${isEngagementApproverView ? styles.roleViewButtonActive : ''}`}
+                                onClick={() => onRoleViewChange('engagementApprover')}
+                            >
+                                Engagement Approver View
+                            </button>
+                        </div>
+                    </div>
+                )}
                 <FilterBar
                     showExportButton
                     selectedCount={selectedPaymentsCount}
                     onBulkClick={() => setBulkOpen(true)}
+                    hasActiveFilters={Object.entries(filters)
+                        .some(([key, value]) => value.length > 0 && !(isEngagementApproverView && key === 'category'))}
                     onExport={async () => {
                         toast.success('Downloading payments report. This may take a few moments.', { position: toast.POSITION.BOTTOM_RIGHT })
                         downloadBlob(
@@ -355,6 +426,9 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                                 .getTime()}.csv`,
                         )
                         toast.success('Download complete', { position: toast.POSITION.BOTTOM_RIGHT })
+                    }}
+                    selectedValueOverrides={{
+                        category: isEngagementApproverView ? engagementPaymentCategory : filters.category?.[0] ?? '',
                     }}
                     filters={[
                         {
@@ -401,7 +475,7 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                             ],
                             type: 'dropdown',
                         },
-                        ...(isEngagementPaymentApprover ? [] : [
+                        ...(isEngagementApproverView ? [] : [
                             {
                                 key: 'category',
                                 label: 'Type',
@@ -489,17 +563,17 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                         setPagination({
                             ...pagination,
                             currentPage: 1,
-                            pageSize: 10,
+                            pageSize: defaultPageSize,
                         })
-                        setFilters({})
+                        setFilters(isEngagementApproverView ? { category: [engagementPaymentCategory] } : {})
                         setSelectedPayments({})
                     }}
                 />
                 {isLoading && <LoadingCircles className={styles.centered} />}
                 {!isLoading && winnings.length > 0 && (
                     <PaymentsTable
-                        enableBulkEdit={isEngagementPaymentApprover}
-                        canEdit={isEditingAllowed()}
+                        enableBulkEdit={isEngagementApproverView}
+                        canEdit={isEditingAllowed() && !isEngagementApproverView}
                         currentPage={pagination.currentPage}
                         numPages={pagination.totalPages}
                         payments={winnings}

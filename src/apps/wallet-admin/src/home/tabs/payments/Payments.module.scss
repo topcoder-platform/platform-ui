@@ -24,6 +24,43 @@
     .content {
         border-radius: 4px;
         margin-top: $sp-4;
+
+        .roleViewToggle {
+            display: flex;
+            align-items: center;
+            gap: $sp-4;
+            flex-wrap: wrap;
+        }
+
+        .roleViewButtons {
+            display: inline-flex;
+            align-items: center;
+            gap: $sp-1;
+            padding: $sp-1;
+            border: 1px solid $black-20;
+            border-radius: 999px;
+            background-color: white;
+        }
+
+        .roleViewButton {
+            border: none;
+            border-radius: 999px;
+            background: transparent;
+            color: $black-60;
+            cursor: pointer;
+            padding: $sp-2 $sp-4;
+
+            &:focus-visible {
+                outline: 2px solid $turq-160;
+                outline-offset: 2px;
+            }
+        }
+
+        .roleViewButtonActive {
+            background-color: $turq-160;
+            color: white;
+        }
+
         .centered {
             height: 200px;
             display: flex;

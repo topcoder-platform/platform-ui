@@ -27,6 +27,9 @@ interface BackendEngagementAssignment {
     status?: string | null
     termsAccepted?: boolean | null
     agreementRate?: string | number | null
+    ratePerHour?: string | number | null
+    standardHoursPerWeek?: number | string | null
+    durationMonths?: number | string | null
     otherRemarks?: string | null
     startDate?: string | null
     endDate?: string | null
@@ -188,26 +191,52 @@ const normalizeEnumValue = (
     return normalized || undefined
 }
 
+const normalizeIntegerValue = (
+    value?: string | number | null,
+): number | undefined => {
+    if (value === null || value === undefined) {
+        return undefined
+    }
+
+    const parsed = typeof value === 'number' ? value : Number(value)
+    return Number.isInteger(parsed) ? parsed : undefined
+}
+
 const normalizeAssignments = (assignments?: BackendEngagementAssignment[]): EngagementAssignment[] => {
     if (!Array.isArray(assignments)) {
         return []
     }
 
-    return assignments.map(assignment => ({
-        agreementRate: normalizeEnumValue(assignment.agreementRate),
-        createdAt: withDefault('', assignment.createdAt),
-        endDate: normalizeEnumValue(assignment.endDate),
-        engagementId: withDefault('', assignment.engagementId),
-        id: withDefault('', assignment.id),
-        memberHandle: withDefault('', assignment.memberHandle),
-        memberId: withDefault('', assignment.memberId),
-        otherRemarks: normalizeEnumValue(assignment.otherRemarks),
-        startDate: normalizeEnumValue(assignment.startDate),
-        status: normalizeAssignmentStatus(assignment.status),
-        terminationReason: normalizeEnumValue(assignment.terminationReason),
-        termsAccepted: assignment.termsAccepted ?? undefined,
-        updatedAt: withDefault('', assignment.updatedAt),
-    }))
+    return assignments.map(assignment => {
+        const ratePerHour = normalizeEnumValue(assignment.ratePerHour)
+        const standardHoursPerWeek = normalizeIntegerValue(assignment.standardHoursPerWeek)
+        const agreementRate = normalizeEnumValue(assignment.agreementRate)
+            ?? (
+                ratePerHour && standardHoursPerWeek
+                    ? Number((Number(ratePerHour) * standardHoursPerWeek).toFixed(2))
+                        .toString()
+                    : undefined
+            )
+
+        return {
+            agreementRate,
+            createdAt: withDefault('', assignment.createdAt),
+            durationMonths: normalizeIntegerValue(assignment.durationMonths),
+            endDate: normalizeEnumValue(assignment.endDate),
+            engagementId: withDefault('', assignment.engagementId),
+            id: withDefault('', assignment.id),
+            memberHandle: withDefault('', assignment.memberHandle),
+            memberId: withDefault('', assignment.memberId),
+            otherRemarks: normalizeEnumValue(assignment.otherRemarks),
+            ratePerHour,
+            standardHoursPerWeek,
+            startDate: normalizeEnumValue(assignment.startDate),
+            status: normalizeAssignmentStatus(assignment.status),
+            terminationReason: normalizeEnumValue(assignment.terminationReason),
+            termsAccepted: assignment.termsAccepted ?? undefined,
+            updatedAt: withDefault('', assignment.updatedAt),
+        }
+    })
 }
 
 const normalizeDuration = (data: BackendEngagement): Engagement['duration'] => {
