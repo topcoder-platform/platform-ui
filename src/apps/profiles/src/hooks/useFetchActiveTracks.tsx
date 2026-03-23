@@ -32,7 +32,7 @@ export interface MemberStatsTrack {
  * @param {MemberStats | undefined} subTrack - The subtrack to inspect.
  * @returns {number | undefined} The submission count when available.
  */
-const getSubTrackSubmissionCount = (subTrack?: MemberStats): number | undefined => {
+export const getSubTrackSubmissionCount = (subTrack?: MemberStats): number | undefined => {
     const submissionCount = subTrack?.submissions?.submissions ?? subTrack?.submissions
 
     return typeof submissionCount === 'number' ? submissionCount : undefined

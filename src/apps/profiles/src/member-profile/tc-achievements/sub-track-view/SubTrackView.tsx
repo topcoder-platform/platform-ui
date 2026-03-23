@@ -22,16 +22,16 @@ const SubTrackView: FC<SubTrackViewProps> = props => {
     const { statsRoute }: MemberProfileContextValue = useMemberProfileContext()
     const params = useParams()
 
-    const { trackData, ...subTrackData }: any
-        = useFetchSubTrackData(props.profile.handle, params.trackType, params.subTrack)
+    const subTrackResult = useFetchSubTrackData(props.profile.handle, params.trackType, params.subTrack)
+    const { trackData, ...subTrackData }: any = subTrackResult ?? {}
 
     const [backRoute, prevTitle] = useMemo(() => {
-        const trackName = trackData.subTracks?.length === 1 ? '' : trackData.name
+        const trackName = trackData?.subTracks?.length === 1 ? '' : trackData?.name ?? ''
         return [
             statsRoute(props.profile.handle, trackName),
             trackName || 'Member Stats',
         ]
-    }, [props.profile.handle, statsRoute, trackData.name, trackData.subTracks])
+    }, [props.profile.handle, statsRoute, trackData?.name, trackData?.subTracks])
 
     return (!trackData || isEmpty(subTrackData)) ? props.renderDefault() : (
         <div className={styles.wrap}>
