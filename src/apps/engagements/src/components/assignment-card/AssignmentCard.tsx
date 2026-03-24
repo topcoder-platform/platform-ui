@@ -161,10 +161,28 @@ const AssignmentCard: FC<AssignmentCardProps> = (props: AssignmentCardProps) => 
         () => formatCurrencyAmount(assignment?.agreementRate),
         [assignment?.agreementRate],
     )
-    const ratePerHourLabel = useMemo(
-        () => formatCurrencyAmount(assignment?.ratePerHour),
-        [assignment?.ratePerHour],
-    )
+    const ratePerHourLabel = useMemo(() => {
+        const ratePerHour = assignment?.ratePerHour
+        if (ratePerHour === null || ratePerHour === undefined) {
+            return FALLBACK_VALUE_LABEL
+        }
+
+        const normalized = ratePerHour.trim()
+        if (!normalized) {
+            return FALLBACK_VALUE_LABEL
+        }
+
+        const parsedRatePerHour = Number(normalized)
+        if (!Number.isFinite(parsedRatePerHour)) {
+            return `$${normalized}`
+        }
+
+        return parsedRatePerHour.toLocaleString('en-US', {
+            maximumFractionDigits: 2,
+            minimumFractionDigits: 2,
+        })
+            .replace(/^/, '$')
+    }, [assignment?.ratePerHour])
     const startDateLabel = useMemo(
         () => formatAssignmentDate(assignment?.startDate),
         [assignment?.startDate],
