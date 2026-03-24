@@ -391,7 +391,7 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
             >
                 {canToggleRoleView && (
                     <div className={styles.roleViewToggle}>
-                        <span className='body-small-bold'>Role View</span>
+                        <span className='body-small-bold'>Role:</span>
                         <div className={styles.roleViewButtons}>
                             <button
                                 type='button'
