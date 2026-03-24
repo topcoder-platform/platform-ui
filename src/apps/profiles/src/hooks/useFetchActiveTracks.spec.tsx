@@ -1,3 +1,5 @@
+import { UserStats } from '~/libs/core'
+
 import { getActiveTracks, MemberStatsTrack } from './useFetchActiveTracks'
 
 describe('getActiveTracks', () => {
@@ -42,7 +44,7 @@ describe('getActiveTracks', () => {
                     },
                 ],
             },
-        })
+        } as UserStats)
         const trackNames: string[] = activeTracks.map(track => track.name)
         const designTrackNames: string[] | undefined = activeTracks
             .find(track => track.name === 'Design')
@@ -53,14 +55,17 @@ describe('getActiveTracks', () => {
             ?.subTracks
             .map(track => track.name)
 
-        expect(trackNames).toEqual(expect.arrayContaining([
-            'Design',
-            'Development',
-            'Data Science',
-        ]))
+        expect(trackNames)
+            .toEqual(expect.arrayContaining([
+                'Design',
+                'Development',
+                'Data Science',
+            ]))
         expect(trackNames).not.toContain('Testing')
-        expect(designTrackNames).toEqual(['Challenge'])
-        expect(developmentTrackNames).toEqual(['Challenge', 'Task'])
+        expect(designTrackNames)
+            .toEqual(['Challenge'])
+        expect(developmentTrackNames)
+            .toEqual(['Challenge', 'Task'])
     })
 
     it('keeps legacy testing subtracks in the testing track', () => {
@@ -85,7 +90,7 @@ describe('getActiveTracks', () => {
                     },
                 ],
             },
-        })
+        } as UserStats)
         const developmentTrackNames: string[] | undefined = activeTracks
             .find(track => track.name === 'Development')
             ?.subTracks
@@ -95,7 +100,9 @@ describe('getActiveTracks', () => {
             ?.subTracks
             .map(track => track.name)
 
-        expect(developmentTrackNames).toEqual(['DEVELOPMENT'])
-        expect(testingTrackNames).toEqual(['BUG_HUNT'])
+        expect(developmentTrackNames)
+            .toEqual(['DEVELOPMENT'])
+        expect(testingTrackNames)
+            .toEqual(['BUG_HUNT'])
     })
 })

@@ -75,6 +75,28 @@ const isTestingSubTrack = (subTrack?: MemberStats): boolean => (
 )
 
 /**
+ * Attach parent track metadata to legacy design/develop subtracks and index them by name.
+ *
+ * @param {string} parentTrack - The top-level track that owns these subtracks.
+ * @param {MemberStats[] | undefined} subTracks - The raw subtrack list from member stats.
+ * @returns {{[key: string]: MemberStats}} Map of subtracks keyed by subtrack name.
+ */
+const mapSubTracksByName = (
+    parentTrack: 'DESIGN' | 'DEVELOP',
+    subTracks?: MemberStats[],
+): {[key: string]: MemberStats} => (
+    subTracks?.reduce((all, subTrack) => {
+        all[subTrack.name] = {
+            ...subTrack,
+            parentTrack,
+            path: `${parentTrack}.subTracks`,
+        }
+
+        return all
+    }, {} as {[key: string]: MemberStats}) ?? {}
+)
+
+/**
  * Helper function to build aggregated data for a track.
  *
  * @param {string} trackName - The name of the track.
@@ -154,27 +176,15 @@ export const getActiveTracks = (memberStats?: UserStats): MemberStatsTrack[] => 
     }
 
     // Create mappings for design subtracks
-    const designSubTracks: {[key: string]: MemberStats} = (
-        memberStats?.DESIGN?.subTracks.reduce((all, subTrack) => {
-            all[subTrack.name] = {
-                ...subTrack,
-                parentTrack: 'DESIGN',
-                path: 'DESIGN.subTracks',
-            }
-            return all
-        }, {} as {[key: string]: MemberStats}) ?? {}
+    const designSubTracks: {[key: string]: MemberStats} = mapSubTracksByName(
+        'DESIGN',
+        memberStats?.DESIGN?.subTracks,
     )
 
     // Create mappings for develop subtracks
-    const developSubTracks: {[key: string]: MemberStats} = (
-        memberStats?.DEVELOP?.subTracks.reduce((all, subTrack) => {
-            all[subTrack.name] = {
-                ...subTrack,
-                parentTrack: 'DEVELOP',
-                path: 'DEVELOP.subTracks',
-            }
-            return all
-        }, {} as {[key: string]: MemberStats}) ?? {}
+    const developSubTracks: {[key: string]: MemberStats} = mapSubTracksByName(
+        'DEVELOP',
+        memberStats?.DEVELOP?.subTracks,
     )
 
     // Build aggregated stats for Design, Development, Testing, and Competitive Programming tracks
