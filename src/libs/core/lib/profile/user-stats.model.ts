@@ -120,6 +120,12 @@ export type UserStatsHistory = {
     handle: string
     handleLower: string
     userId: number
+    DESIGN?: {
+        subTracks: Array<{
+            name: string
+            history: Array<StatsHistory>
+        }>
+    }
     DATA_SCIENCE?: {
         SRM?: {
             history: Array<StatsHistory>
