@@ -1,20 +1,8 @@
-import { renderHook } from '@testing-library/react'
+import { getActiveTracks, MemberStatsTrack } from './useFetchActiveTracks'
 
-import { useMemberStats } from '~/libs/core'
-
-import { useFetchActiveTracks } from './useFetchActiveTracks'
-
-jest.mock('~/libs/core', () => ({
-    useMemberStats: jest.fn(),
-}))
-
-describe('useFetchActiveTracks', () => {
-    beforeEach(() => {
-        jest.clearAllMocks()
-    })
-
+describe('getActiveTracks', () => {
     it('keeps unified design and development subtracks visible', () => {
-        ;(useMemberStats as jest.Mock).mockReturnValue({
+        const activeTracks: MemberStatsTrack[] = getActiveTracks({
             DATA_SCIENCE: {
                 MARATHON_MATCH: {
                     challenges: 4,
@@ -55,9 +43,15 @@ describe('useFetchActiveTracks', () => {
                 ],
             },
         })
-
-        const { result } = renderHook(() => useFetchActiveTracks('taasintake800'))
-        const trackNames = result.current.map(track => track.name)
+        const trackNames: string[] = activeTracks.map(track => track.name)
+        const designTrackNames: string[] | undefined = activeTracks
+            .find(track => track.name === 'Design')
+            ?.subTracks
+            .map(track => track.name)
+        const developmentTrackNames: string[] | undefined = activeTracks
+            .find(track => track.name === 'Development')
+            ?.subTracks
+            .map(track => track.name)
 
         expect(trackNames).toEqual(expect.arrayContaining([
             'Design',
@@ -65,14 +59,12 @@ describe('useFetchActiveTracks', () => {
             'Data Science',
         ]))
         expect(trackNames).not.toContain('Testing')
-        expect(result.current.find(track => track.name === 'Design')?.subTracks.map(track => track.name))
-            .toEqual(['Challenge'])
-        expect(result.current.find(track => track.name === 'Development')?.subTracks.map(track => track.name))
-            .toEqual(['Challenge', 'Task'])
+        expect(designTrackNames).toEqual(['Challenge'])
+        expect(developmentTrackNames).toEqual(['Challenge', 'Task'])
     })
 
     it('keeps legacy testing subtracks in the testing track', () => {
-        ;(useMemberStats as jest.Mock).mockReturnValue({
+        const activeTracks: MemberStatsTrack[] = getActiveTracks({
             DEVELOP: {
                 subTracks: [
                     {
@@ -94,12 +86,16 @@ describe('useFetchActiveTracks', () => {
                 ],
             },
         })
+        const developmentTrackNames: string[] | undefined = activeTracks
+            .find(track => track.name === 'Development')
+            ?.subTracks
+            .map(track => track.name)
+        const testingTrackNames: string[] | undefined = activeTracks
+            .find(track => track.name === 'Testing')
+            ?.subTracks
+            .map(track => track.name)
 
-        const { result } = renderHook(() => useFetchActiveTracks('legacy-member'))
-
-        expect(result.current.find(track => track.name === 'Development')?.subTracks.map(track => track.name))
-            .toEqual(['DEVELOPMENT'])
-        expect(result.current.find(track => track.name === 'Testing')?.subTracks.map(track => track.name))
-            .toEqual(['BUG_HUNT'])
+        expect(developmentTrackNames).toEqual(['DEVELOPMENT'])
+        expect(testingTrackNames).toEqual(['BUG_HUNT'])
     })
 })

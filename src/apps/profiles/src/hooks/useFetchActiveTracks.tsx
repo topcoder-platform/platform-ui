@@ -130,14 +130,12 @@ const enhanceDesignTrackData = (trackData: MemberStatsTrack): MemberStatsTrack =
 /**
  * Custom hook to fetch active tracks for a user, sorted by wins & submissions.
  *
- * @param {string} userHandle - The user's handle.
+ * @param {UserStats | undefined} memberStats - The raw stats payload for the user.
  * @returns {MemberStatsTrack[]} - List of active tracks for the user.
  */
-export const useFetchActiveTracks = (userHandle: string): MemberStatsTrack[] => {
-    const memberStats: UserStats | undefined = useMemberStats(userHandle)
-
+export const getActiveTracks = (memberStats?: UserStats): MemberStatsTrack[] => {
     // Create mappings for data science subtracks
-    const dataScienceSubTracks: {[key: string]: MemberStats | SRMStats} = useMemo(() => ({
+    const dataScienceSubTracks: {[key: string]: MemberStats | SRMStats} = {
         // Map MARATHON_MATCH subtrack
         MARATHON_MATCH: (memberStats?.DATA_SCIENCE?.MARATHON_MATCH && ({
             ...memberStats.DATA_SCIENCE.MARATHON_MATCH,
@@ -153,10 +151,10 @@ export const useFetchActiveTracks = (userHandle: string): MemberStatsTrack[] => 
             parentTrack: 'DATA_SCIENCE',
             path: 'DATA_SCIENCE',
         })) as SRMStats & {name: string},
-    }), [memberStats])
+    }
 
     // Create mappings for design subtracks
-    const designSubTracks: {[key: string]: MemberStats} = useMemo(() => (
+    const designSubTracks: {[key: string]: MemberStats} = (
         memberStats?.DESIGN?.subTracks.reduce((all, subTrack) => {
             all[subTrack.name] = {
                 ...subTrack,
@@ -165,10 +163,10 @@ export const useFetchActiveTracks = (userHandle: string): MemberStatsTrack[] => 
             }
             return all
         }, {} as {[key: string]: MemberStats}) ?? {}
-    ), [memberStats])
+    )
 
     // Create mappings for develop subtracks
-    const developSubTracks: {[key: string]: MemberStats} = useMemo(() => (
+    const developSubTracks: {[key: string]: MemberStats} = (
         memberStats?.DEVELOP?.subTracks.reduce((all, subTrack) => {
             all[subTrack.name] = {
                 ...subTrack,
@@ -177,75 +175,68 @@ export const useFetchActiveTracks = (userHandle: string): MemberStatsTrack[] => 
             }
             return all
         }, {} as {[key: string]: MemberStats}) ?? {}
-    ), [memberStats])
+    )
 
     // Build aggregated stats for Design, Development, Testing, and Competitive Programming tracks
-    // Each track is constructed using the buildTrackData helper function
-    // The useMemo hook is used to memoize the results for performance optimization
-
     // Design
-    const designTrackStats: MemberStatsTrack = useMemo(() => (
+    const designTrackStats: MemberStatsTrack = (
         enhanceDesignTrackData(
             buildTrackData('Design', Object.values(designSubTracks)),
         )
-    ), [designSubTracks])
+    )
 
     // Development
-    const developTrackStats: MemberStatsTrack = useMemo(() => (
+    const developTrackStats: MemberStatsTrack = (
         buildTrackData(
             'Development',
-            Object.values(developSubTracks).filter(subTrack => !isTestingSubTrack(subTrack)),
+            Object.values(developSubTracks)
+                .filter(subTrack => !isTestingSubTrack(subTrack)),
         )
-    ), [developSubTracks])
+    )
 
     // Testing
-    const testingTrackStats: MemberStatsTrack = useMemo(() => (
+    const testingTrackStats: MemberStatsTrack = (
         buildTrackData(
             'Testing',
-            Object.values(developSubTracks).filter(isTestingSubTrack),
+            Object.values(developSubTracks)
+                .filter(isTestingSubTrack),
         )
-    ), [developSubTracks])
+    )
 
     // Data science
-    const dsTrackStats: MemberStatsTrack = useMemo(() => {
-        // Aggregate stats for DATA SCIENCE track
-        const subTracks = [
-            dataScienceSubTracks.MARATHON_MATCH,
-        ].filter(d => d?.challenges > 0) as MemberStats[]
+    const dsSubTracks: MemberStats[] = [
+        dataScienceSubTracks.MARATHON_MATCH,
+    ].filter(d => d?.challenges > 0) as MemberStats[]
 
-        return {
-            challenges: dataScienceSubTracks.MARATHON_MATCH?.challenges ?? 0,
-            isActive: (dataScienceSubTracks.MARATHON_MATCH?.challenges ?? 0) > 0,
-            isDSTrack: true,
-            name: 'Data Science',
-            order: -1,
-            percentile: dataScienceSubTracks.MARATHON_MATCH?.rank?.percentile ?? 0,
-            rating: dataScienceSubTracks.MARATHON_MATCH?.rank?.rating ?? 0,
-            subTracks,
-            wins: dataScienceSubTracks.MARATHON_MATCH?.wins ?? 0,
-        }
-    }, [dataScienceSubTracks])
+    const dsTrackStats: MemberStatsTrack = {
+        challenges: dataScienceSubTracks.MARATHON_MATCH?.challenges ?? 0,
+        isActive: (dataScienceSubTracks.MARATHON_MATCH?.challenges ?? 0) > 0,
+        isDSTrack: true,
+        name: 'Data Science',
+        order: -1,
+        percentile: dataScienceSubTracks.MARATHON_MATCH?.rank?.percentile ?? 0,
+        rating: dataScienceSubTracks.MARATHON_MATCH?.rank?.rating ?? 0,
+        subTracks: dsSubTracks,
+        wins: dataScienceSubTracks.MARATHON_MATCH?.wins ?? 0,
+    }
 
     // Competitive Programming
-    const cpTrackStats: MemberStatsTrack = useMemo(() => {
-        // Aggregate stats for Competitive Programming track
-        const subTracks = [
-            dataScienceSubTracks.SRM,
-        ].filter(d => d?.challenges > 0) as MemberStats[]
+    const cpSubTracks: MemberStats[] = [
+        dataScienceSubTracks.SRM,
+    ].filter(d => d?.challenges > 0) as MemberStats[]
 
-        return {
-            challenges: dataScienceSubTracks.SRM?.challenges ?? 0,
-            isActive: (dataScienceSubTracks.SRM?.challenges ?? 0) > 0,
-            isCPTrack: true,
-            isDSTrack: true,
-            name: 'Competitive Programming',
-            order: -2,
-            percentile: dataScienceSubTracks.SRM?.rank?.percentile ?? 0,
-            rating: dataScienceSubTracks.SRM?.rank?.rating ?? 0,
-            subTracks,
-            wins: dataScienceSubTracks.SRM?.wins ?? 0,
-        }
-    }, [dataScienceSubTracks])
+    const cpTrackStats: MemberStatsTrack = {
+        challenges: dataScienceSubTracks.SRM?.challenges ?? 0,
+        isActive: (dataScienceSubTracks.SRM?.challenges ?? 0) > 0,
+        isCPTrack: true,
+        isDSTrack: true,
+        name: 'Competitive Programming',
+        order: -2,
+        percentile: dataScienceSubTracks.SRM?.rank?.percentile ?? 0,
+        rating: dataScienceSubTracks.SRM?.rank?.rating ?? 0,
+        subTracks: cpSubTracks,
+        wins: dataScienceSubTracks.SRM?.wins ?? 0,
+    }
 
     // Order and filter active tracks based on wins and submissions
     return orderBy(filter([
@@ -255,6 +246,18 @@ export const useFetchActiveTracks = (userHandle: string): MemberStatsTrack[] => 
         developTrackStats,
         testingTrackStats,
     ], { isActive: true }), ['order', 'wins', 'submissions'], ['desc', 'desc', 'desc'])
+}
+
+/**
+ * Custom hook to fetch active tracks for a user, sorted by wins & submissions.
+ *
+ * @param {string} userHandle - The user's handle.
+ * @returns {MemberStatsTrack[]} - List of active tracks for the user.
+ */
+export const useFetchActiveTracks = (userHandle: string): MemberStatsTrack[] => {
+    const memberStats: UserStats | undefined = useMemberStats(userHandle)
+
+    return useMemo(() => getActiveTracks(memberStats), [memberStats])
 }
 
 /**
