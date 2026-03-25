@@ -8,7 +8,13 @@ import { Button, IconSolid } from '~/libs/ui'
 import { EnvironmentConfig } from '~/config'
 
 import type { Engagement, EngagementAssignment } from '../../lib/models'
-import { formatDate, formatLocation, truncateText } from '../../lib/utils'
+import {
+    formatCurrencyAmount,
+    formatDate,
+    formatLocation,
+    formatStandardHoursPerWeek,
+    truncateText,
+} from '../../lib/utils'
 import { StatusBadge } from '../status-badge'
 
 import styles from './AssignmentCard.module.scss'
@@ -105,29 +111,12 @@ const formatAssignmentDate = (value?: string): string => {
     return formatted === 'Date TBD' ? FALLBACK_VALUE_LABEL : formatted
 }
 
-const formatCurrencyAmount = (value?: string | number): string => {
-    if (value === null || value === undefined) {
-        return FALLBACK_VALUE_LABEL
-    }
-
-    const normalized = typeof value === 'string' ? value.trim() : value.toString()
-    return normalized ? `$${normalized}` : FALLBACK_VALUE_LABEL
-}
-
 const formatDurationMonths = (value?: number): string => {
     if (!value) {
         return FALLBACK_VALUE_LABEL
     }
 
     return `${value} month${value === 1 ? '' : 's'}`
-}
-
-const formatStandardHoursPerWeek = (value?: number): string => {
-    if (!value) {
-        return FALLBACK_VALUE_LABEL
-    }
-
-    return `${value} hrs`
 }
 
 const AssignmentCard: FC<AssignmentCardProps> = (props: AssignmentCardProps) => {
@@ -158,31 +147,13 @@ const AssignmentCard: FC<AssignmentCardProps> = (props: AssignmentCardProps) => 
         [assignment?.status],
     )
     const paymentLabel = useMemo(
-        () => formatCurrencyAmount(assignment?.agreementRate),
+        () => formatCurrencyAmount(assignment?.agreementRate, FALLBACK_VALUE_LABEL),
         [assignment?.agreementRate],
     )
-    const ratePerHourLabel = useMemo(() => {
-        const ratePerHour = assignment?.ratePerHour
-        if (ratePerHour === null || ratePerHour === undefined) {
-            return FALLBACK_VALUE_LABEL
-        }
-
-        const normalized = ratePerHour.trim()
-        if (!normalized) {
-            return FALLBACK_VALUE_LABEL
-        }
-
-        const parsedRatePerHour = Number(normalized)
-        if (!Number.isFinite(parsedRatePerHour)) {
-            return `$${normalized}`
-        }
-
-        return parsedRatePerHour.toLocaleString('en-US', {
-            maximumFractionDigits: 2,
-            minimumFractionDigits: 2,
-        })
-            .replace(/^/, '$')
-    }, [assignment?.ratePerHour])
+    const ratePerHourLabel = useMemo(
+        () => formatCurrencyAmount(assignment?.ratePerHour, FALLBACK_VALUE_LABEL),
+        [assignment?.ratePerHour],
+    )
     const startDateLabel = useMemo(
         () => formatAssignmentDate(assignment?.startDate),
         [assignment?.startDate],
@@ -192,7 +163,7 @@ const AssignmentCard: FC<AssignmentCardProps> = (props: AssignmentCardProps) => 
         [assignment?.durationMonths],
     )
     const standardHoursPerWeekLabel = useMemo(
-        () => formatStandardHoursPerWeek(assignment?.standardHoursPerWeek),
+        () => formatStandardHoursPerWeek(assignment?.standardHoursPerWeek, FALLBACK_VALUE_LABEL),
         [assignment?.standardHoursPerWeek],
     )
     const assignmentStatus = assignment?.status?.toLowerCase()

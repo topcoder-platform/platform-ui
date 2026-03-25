@@ -78,15 +78,16 @@ const assignment: EngagementAssignment = {
     engagementId: 'engagement-1',
     memberId: 'member-1',
     memberHandle: 'member',
+    agreementRate: '761.25',
     ratePerHour: '20.3',
-    standardHoursPerWeek: 40,
+    standardHoursPerWeek: 37.5,
     status: 'assigned',
     createdAt: '2026-03-25T00:00:00.000Z',
     updatedAt: '2026-03-25T00:00:00.000Z',
 }
 
 describe('AssignmentCard', () => {
-    it('formats the hourly rate with two decimal places', () => {
+    it('formats assignment currency values with two decimal places', () => {
         render(
             <AssignmentCard
                 engagement={engagement}
@@ -98,6 +99,10 @@ describe('AssignmentCard', () => {
         )
 
         expect(screen.getByText('Rate / hr: $20.30'))
+            .toBeInTheDocument()
+        expect(screen.getByText('Rate / week: $761.25'))
+            .toBeInTheDocument()
+        expect(screen.getByText('Std hrs / week: 37.5 hrs'))
             .toBeInTheDocument()
     })
 })
