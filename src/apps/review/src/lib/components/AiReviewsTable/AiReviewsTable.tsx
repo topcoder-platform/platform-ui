@@ -274,8 +274,10 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
         }
 
         const failedReviewersText = failedGatingReviewers.length
-            ? `Gating Reviewers failed: ${failedGatingReviewers.join(', ')}.`
-            : ''
+            ? `Gating Reviewers failed: ${failedGatingReviewers.join(', ')}.
+                This submission is automatically failed regardless of Overall Score.`
+            : `This submission is failed because ${hasSubmitterRole ? 'your' : 'the'}
+                Overall Score is bellow minimum threshold.`
 
         // Message text varies by role
         const roleBasedText = hasSubmitterRole
