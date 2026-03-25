@@ -281,9 +281,8 @@ const AiReviewsTable: FC<AiReviewsTableProps> = props => {
 
         // Message text varies by role
         const roleBasedText = hasSubmitterRole
-            ? 'This submission is automatically failed regardless of Overall Score.'
-              + 'Improve your submission and resubmit.'
-            : 'This submission is automatically failed regardless of Overall Score.'
+            ? 'Improve your submission and resubmit.'
+            : ''
 
         return `${failedReviewersText} ${roleBasedText}`
     }, [currentDecision?.submissionLocked, failedGatingReviewers, hasSubmitterRole])
