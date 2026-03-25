@@ -1,0 +1,67 @@
+@import '@libs/ui/styles/includes';
+
+.modalOverlay {
+    align-items: center;
+    background: rgb(15 23 42 / 0.45);
+    display: flex;
+    inset: 0;
+    justify-content: center;
+    padding: $sp-4;
+    position: fixed;
+    z-index: 1200;
+}
+
+.modal {
+    background: $tc-white;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgb(0 0 0 / 0.2);
+    max-width: 540px;
+    overflow: hidden;
+    width: 100%;
+}
+
+.modalHeader {
+    align-items: center;
+    border-bottom: 1px solid $black-20;
+    display: flex;
+    justify-content: space-between;
+    padding: $sp-4 $sp-5;
+}
+
+.modalTitle {
+    font-family: $font-barlow;
+    font-size: 22px;
+    font-weight: $font-weight-bold;
+    line-height: 30px;
+    margin: 0;
+    text-transform: none;
+}
+
+.modalClose {
+    background: transparent;
+    border: 0;
+    color: $black-60;
+    cursor: pointer;
+    font-size: 20px;
+    line-height: 1;
+    padding: 0;
+}
+
+.confirmBody {
+    padding: $sp-5;
+}
+
+.confirmText {
+    color: $black-80;
+    font-size: 16px;
+    line-height: 24px;
+    margin: 0;
+}
+
+.confirmActions {
+    display: flex;
+    gap: $sp-3;
+    justify-content: flex-end;
+    margin-top: $sp-5;
+}
+
