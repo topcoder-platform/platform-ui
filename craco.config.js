@@ -39,8 +39,11 @@ module.exports = {
                 target: 'http://localhost:8081',
                 changeOrigin: true,
             },
+            '/v6': {
+                target: 'http://localhost:8081',
+                changeOrigin: true,
+            },    
         },
-    },
 
     webpack: {
         alias: {

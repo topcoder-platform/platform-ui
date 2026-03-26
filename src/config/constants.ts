@@ -15,6 +15,7 @@ export enum AppSubdomain {
     calendar = 'calendar',
     engagements = 'engagements',
     customer = 'customer',
+    reports = 'reports',
     arenaManager = 'arena-manager'
 }
 
@@ -35,6 +36,7 @@ export enum ToolTitle {
     calendar = 'Calendar',
     engagements = 'Engagements',
     customer = 'Customer',
+    reports = 'reports',
     arenaManager = 'Arena Manager'
 }
 

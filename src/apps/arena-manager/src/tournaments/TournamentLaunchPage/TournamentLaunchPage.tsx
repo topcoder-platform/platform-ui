@@ -103,7 +103,7 @@ export const TournamentLaunchPage: FC = () => {
         setAlert({ message, type })
     }, [])
 
-    const isPublished = tournament?.status !== 'DRAFT'
+    const isPublished = tournament != null && tournament.status !== 'DRAFT'
 
     const populateForm = useCallback((loadedTournament: Tournament) => {
         const startDateParts = loadedTournament.status === 'DRAFT'
