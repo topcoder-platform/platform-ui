@@ -180,13 +180,6 @@ const ReviewViewer: FC = () => {
         })
     }, [challengeInfo?.id, mutate, navigate])
 
-    const hasChallengeCopilotRole = useMemo(
-        () => myChallengeResources.some(
-            resource => resource.roleName?.toLowerCase() === COPILOT.toLowerCase(),
-        ),
-        [myChallengeResources],
-    )
-
     const canEditScorecard = useMemo(() => {
         const challengeStatus = (challengeInfo?.status ?? '')
             .toString()
