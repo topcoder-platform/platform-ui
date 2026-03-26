@@ -36,7 +36,7 @@ export enum ToolTitle {
     calendar = 'Calendar',
     engagements = 'Engagements',
     customer = 'Customer',
-    reports = 'reports',
+    reports = 'Reports',
     arenaManager = 'Arena Manager'
 }
 
