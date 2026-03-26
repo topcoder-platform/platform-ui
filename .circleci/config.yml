@@ -226,11 +226,7 @@ workflows:
                       branches:
                           only:
                               - dev
-                              - mm-final-2025-reveal
-                              - engagements
-                              - HOTFIX-PM-3269
-                              - work-manager
-                              - reports
+
             - deployQa:
                   context: org-global
                   requires:
