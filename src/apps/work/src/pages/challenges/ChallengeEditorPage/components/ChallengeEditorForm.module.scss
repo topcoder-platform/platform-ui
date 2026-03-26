@@ -1,0 +1,139 @@
+@import '@libs/ui/styles/includes';
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+}
+
+.section {
+    background-color: $tc-white;
+    border: 2px solid $black-20;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px;
+}
+
+.sectionTitle {
+    color: $black-80;
+    font-size: 18px;
+    margin: 0;
+}
+
+.grid {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.block {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.billingSummary {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.prizesBillingGrid {
+    display: grid;
+    gap: 24px;
+}
+
+.prizeInputs {
+    display: grid;
+    gap: 20px;
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.challengePrizesColumn {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 0;
+}
+
+.copilotFeeColumn {
+    min-width: 0;
+    width: 100%;
+}
+
+@media (min-width: 1024px) {
+    .prizesBillingGrid {
+        grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr);
+    }
+
+    .prizeInputs {
+        grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.95fr);
+    }
+
+    .copilotFeeColumn {
+        justify-self: end;
+        padding-left: 16px;
+    }
+}
+
+.footer {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    justify-content: space-between;
+}
+
+.statusArea {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.statusText {
+    color: $black-80;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.lastSaved {
+    color: $black-60;
+    font-size: 12px;
+}
+
+.errorText {
+    color: $red-100;
+    font-size: 12px;
+}
+
+.warningText {
+    color: #7c5b1b;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.actions {
+    align-items: center;
+    display: flex;
+    gap: 16px;
+}
+
+.launchButton {
+    --btn-variant: #35ac35;
+    --btn-variant--hover: #2f9630;
+    --btn-variant--active: #277c27;
+}
+
+.cancelLink {
+    color: $black-60;
+    font-size: 13px;
+    text-decoration: none;
+
+    &:hover,
+    &:focus {
+        color: $black-80;
+        text-decoration: underline;
+    }
+}

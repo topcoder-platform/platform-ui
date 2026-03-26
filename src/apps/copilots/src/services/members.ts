@@ -59,7 +59,7 @@ const membersFactory = (members: Member[]): FormattedMembers[] => members.map(me
  * @param {string} userIds - List of user ids
  * @returns {MembersResponse} - The response containing the list of members data
  */
-export const useMembers = (userIds: number[]): MembersResponse => {
+export const useMembers = (userIds: Array<number | string>): MembersResponse => {
     let qs = ''
     userIds.forEach(userId => {
         qs += `&userIds[]=${userId}`

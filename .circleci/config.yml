@@ -226,7 +226,6 @@ workflows:
                       branches:
                           only:
                               - dev
-                              - PM-4401_stacked-view-for-submitter
 
             - deployQa:
                   context: org-global

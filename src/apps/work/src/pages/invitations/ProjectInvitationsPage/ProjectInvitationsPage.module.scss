@@ -1,0 +1,17 @@
+.container {
+    min-height: 100vh;
+}
+
+.loadingContainer {
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    min-height: 50vh;
+}
+
+.resultMessage {
+    color: #2a2a2a;
+    font-size: 16px;
+    line-height: 24px;
+    margin: 0;
+}

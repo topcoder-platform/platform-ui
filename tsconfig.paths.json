@@ -33,6 +33,9 @@
             "@walletAdmin/*": [
                 "./src/apps/wallet-admin/src/*"
             ],
+            "@work/*": [
+                "./src/apps/work/src/*"
+            ],
             "@libs/ui/styles/*": [
                 "./src/libs/ui/lib/styles/*"
             ]

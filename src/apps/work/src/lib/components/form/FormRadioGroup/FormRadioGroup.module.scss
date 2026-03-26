@@ -1,0 +1,27 @@
+@import '@libs/ui/styles/includes';
+
+.group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.option {
+    align-items: center;
+    color: $black-80;
+    cursor: pointer;
+    display: inline-flex;
+    font-size: 14px;
+    gap: 8px;
+}
+
+.radio {
+    accent-color: $link-blue-dark;
+    cursor: pointer;
+    margin: 0;
+}
+
+.disabled {
+    color: $black-40;
+    cursor: not-allowed;
+}

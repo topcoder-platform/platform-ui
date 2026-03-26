@@ -1,0 +1,29 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    align-items: flex-end;
+    gap: 24px;
+    margin-top: 8px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid #d5d5d5;
+}
+
+.tabLink {
+    display: inline-block;
+    padding: 10px 0;
+    border-bottom: 2px solid transparent;
+    color: $black-60;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.tabLink:hover {
+    color: #2a2a2a;
+}
+
+.active {
+    color: #2a62d5;
+    border-bottom-color: #2a62d5;
+}

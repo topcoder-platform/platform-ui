@@ -1,0 +1,56 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    margin-top: 20px;
+    border-radius: 8px;
+    border: 1px solid $black-10;
+    background: #fff;
+    overflow: auto;
+}
+
+.headerActions {
+    display: flex;
+    justify-content: flex-end;
+    padding: 12px;
+}
+
+.createButtonLink {
+    text-decoration: none;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 1080px;
+
+    thead tr {
+        background: #f7f8fa;
+    }
+
+    th {
+        text-align: left;
+        font-size: 12px;
+        font-weight: 700;
+        color: $black-60;
+        letter-spacing: 0.2px;
+        padding: 12px 10px;
+        border-bottom: 1px solid $black-10;
+        white-space: nowrap;
+    }
+}
+
+.sortButton {
+    border: 0;
+    background: transparent;
+    padding: 0;
+    color: inherit;
+    font-size: inherit;
+    font-weight: inherit;
+    cursor: pointer;
+}
+
+.loadingRow,
+.emptyRow {
+    padding: 24px !important;
+    text-align: center;
+}

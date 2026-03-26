@@ -1,0 +1,127 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.empty {
+    color: #5b5b5b;
+    font-size: 14px;
+}
+
+.list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.card {
+    background: #fbfcff;
+    border: 1px solid #e6e6e6;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+}
+
+.cardHeader {
+    align-items: center;
+    display: flex;
+}
+
+.memberHandle {
+    color: #2a2a2a;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.memberHeader {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.statusPill {
+    align-items: center;
+    border-radius: 999px;
+    display: inline-flex;
+    font-size: 12px;
+    font-weight: 700;
+    justify-content: center;
+    min-width: 90px;
+    padding: 4px 10px;
+    text-transform: capitalize;
+}
+
+.statusGreen {
+    background: rgba(33, 163, 79, 0.12);
+    color: #1d7f48;
+}
+
+.statusYellow {
+    background: rgba(245, 180, 39, 0.18);
+    color: #805b00;
+}
+
+.statusGray {
+    background: rgba(84, 95, 113, 0.15);
+    color: #4f5967;
+}
+
+.statusBlue {
+    background: rgba(0, 121, 122, 0.14);
+    color: #006666;
+}
+
+.statusRed {
+    background: rgba(211, 47, 47, 0.13);
+    color: #9f1f1f;
+}
+
+.metaGrid {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.label {
+    color: #767676;
+    display: block;
+    font-size: 12px;
+    margin-bottom: 4px;
+}
+
+.value {
+    color: #2a2a2a;
+    font-size: 14px;
+}
+
+.actions {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    justify-content: space-between;
+}
+
+.leftActions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.rightActions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-left: auto;
+}
+
+.completeButton {
+    --btn-variant: #64c98b;
+    --btn-variant--hover: #57ba7e;
+    --btn-variant--active: #49a86f;
+}
