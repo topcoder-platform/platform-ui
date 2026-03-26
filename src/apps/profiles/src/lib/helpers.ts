@@ -33,6 +33,7 @@ export function subTrackLabelToHumanName(label: string): string {
         case 'CODE':
             return 'Code'
         case 'FIRST_2_FINISH':
+        case 'First2Finish':
             return 'First2Finish'
         case 'CONCEPTUALIZATION':
             return 'Conceptualization'

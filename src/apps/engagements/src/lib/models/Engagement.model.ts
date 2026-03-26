@@ -15,6 +15,9 @@ export interface EngagementAssignment {
     status?: string
     termsAccepted?: boolean
     agreementRate?: string
+    ratePerHour?: string
+    standardHoursPerWeek?: number
+    durationMonths?: number
     otherRemarks?: string
     startDate?: string
     endDate?: string

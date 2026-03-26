@@ -2,9 +2,9 @@ import { FC, ReactElement, useMemo } from 'react'
 import { useParams } from 'react-router-dom'
 import { isEmpty } from 'lodash'
 
-import { UserProfile } from '~/libs/core'
+import { MemberStats, UserProfile } from '~/libs/core'
 
-import { useFetchSubTrackData } from '../../../hooks'
+import { useFetchSubTrackData, useTrackHistory } from '../../../hooks'
 import { StatsDetailsLayout } from '../../../components/tc-achievements/StatsDetailsLayout'
 import { DevelopTrackView } from '../../../components/tc-achievements/DevelopTrackView'
 import { SRMView } from '../../../components/tc-achievements/SRMView'
@@ -22,16 +22,32 @@ const SubTrackView: FC<SubTrackViewProps> = props => {
     const { statsRoute }: MemberProfileContextValue = useMemberProfileContext()
     const params = useParams()
 
-    const { trackData, ...subTrackData }: any
-        = useFetchSubTrackData(props.profile.handle, params.trackType, params.subTrack)
+    const subTrackResult = useFetchSubTrackData(props.profile.handle, params.trackType, params.subTrack)
+    const { trackData, ...subTrackData }: any = subTrackResult ?? {}
+    const trackHistory = useTrackHistory(props.profile.handle, subTrackData as MemberStats | undefined)
 
     const [backRoute, prevTitle] = useMemo(() => {
-        const trackName = trackData.subTracks?.length === 1 ? '' : trackData.name
+        const trackName = trackData?.subTracks?.length === 1 ? '' : trackData?.name ?? ''
         return [
             statsRoute(props.profile.handle, trackName),
             trackName || 'Member Stats',
         ]
-    }, [props.profile.handle, statsRoute, trackData.name, trackData.subTracks])
+    }, [props.profile.handle, statsRoute, trackData?.name, trackData?.subTracks])
+
+    const summaryTrackData = useMemo(() => {
+        const supportsHistoryBackedSummary = ['DATA_SCIENCE', 'DEVELOP'].includes(String(subTrackData?.parentTrack))
+
+        if (!supportsHistoryBackedSummary || trackHistory.length === 0) {
+            return subTrackData
+        }
+
+        return {
+            ...subTrackData,
+            challenges: trackHistory.length,
+            submissions: trackHistory.length,
+            wins: trackHistory.filter(challenge => challenge.placement === 1).length,
+        }
+    }, [subTrackData, trackHistory])
 
     return (!trackData || isEmpty(subTrackData)) ? props.renderDefault() : (
         <div className={styles.wrap}>
@@ -40,12 +56,12 @@ const SubTrackView: FC<SubTrackViewProps> = props => {
                 title={subTrackLabelToHumanName(subTrackData.name)}
                 backAction={backRoute}
                 closeAction={statsRoute(props.profile.handle)}
-                trackData={subTrackData}
+                trackData={summaryTrackData}
             >
                 {subTrackData.name === 'SRM' ? (
                     <SRMView trackData={subTrackData} profile={props.profile} />
                 ) : (
-                    <DevelopTrackView trackData={subTrackData} profile={props.profile} />
+                    <DevelopTrackView trackData={subTrackData} trackHistory={trackHistory} />
                 )}
             </StatsDetailsLayout>
         </div>

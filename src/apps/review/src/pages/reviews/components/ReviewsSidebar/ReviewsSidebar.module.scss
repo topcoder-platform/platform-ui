@@ -203,3 +203,24 @@
         display: none;
     }
 }
+
+.scoreInfoRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: $sp-2;
+
+    &:first-of-type {
+        margin-top: $sp-3;
+    }
+}
+
+.infoIcon {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.gatingIcon {
+    color: $red-160;
+}

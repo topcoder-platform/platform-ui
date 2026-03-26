@@ -4,6 +4,7 @@ import { TABLE_DATE_FORMAT } from '../../config/index.config'
 
 import { BackendResource } from './BackendResource.model'
 import { BackendSubmission } from './BackendSubmission.model'
+import { BackendSubmissionStatus } from './BackendSubmissionStatus.enum'
 import {
     adjustReviewInfo,
     convertBackendReviewToReviewInfo,
@@ -60,6 +61,27 @@ export interface SubmissionInfo {
      * Flag indicating whether the submission includes an uploaded file.
      */
     isFileSubmission?: boolean
+    /**
+     * Submission status (e.g. 'ACTIVE', 'FAILED_REVIEW', 'AI_FAILED_REVIEW').
+     */
+    status?: string
+}
+
+/**
+ * Normalize backend submission status to string representation
+ * @param status - The status value from backend (can be number or string)
+ * @returns Normalized status string
+ */
+function normalizeSubmissionStatus(status: BackendSubmissionStatus | string | undefined): string | undefined {
+    if (typeof status === 'number') {
+        return BackendSubmissionStatus[status] ?? String(status)
+    }
+
+    if (typeof status === 'string') {
+        return status
+    }
+
+    return undefined
 }
 
 /**
@@ -140,6 +162,7 @@ export function convertBackendSubmissionToSubmissionInfo(
         reviewInfos,
         reviews: reviewResults,
         reviewTypeId: primaryReview?.typeId ?? undefined,
+        status: normalizeSubmissionStatus(data.status),
         submittedDate,
         submittedDateString,
         type: data.type,

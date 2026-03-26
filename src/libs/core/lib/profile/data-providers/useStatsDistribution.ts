@@ -21,8 +21,9 @@ interface UserStatsDistributionQuery {
 }
 
 export function useStatsDistribution(query?: UserStatsDistributionQuery): UserStatsDistributionResponse | undefined {
+    const swrKey = query ? `${memberStatsDistroURL()}?${qs.stringify(query)}` : undefined
     const { data }: SWRResponse
-        = useSWR(`${memberStatsDistroURL()}?${qs.stringify(query)}`)
+        = useSWR(swrKey)
 
     return data
 }

@@ -60,9 +60,53 @@
         font-size: 14px;
         line-height: 20px;
         text-transform: none;
+        font-family: inherit;
+        font-weight: 700;
+        margin: 0 0 $sp-1;
+    }
+
+    h2 {
+        margin: $sp-2 0 $sp-1;
+    }
+
+    h3 {
+        margin: $sp-1 0 $sp-1;
+    }
+
+    pre {
+        margin: $sp-2 0;
+        padding: $sp-2 $sp-3;
+        border-radius: 8px;
+        background: var(--Tertiary);
+        overflow-x: auto;
+        word-break: break-word;
+        white-space: pre-wrap;
+
+        @include font-roboto-mono;
+        font-size: 13px;
+        line-height: 18px;
+        color: var(--FontColor);
+
+        code {
+            font: inherit;
+        }
+    }
+
+    :not(pre) > code {
+        @include font-roboto-mono;
+        font-size: 13px;
+        line-height: 18px;
+        padding: 1px 6px;
+        border-radius: 6px;
+        background: var(--Tertiary);
+        color: var(--FontColor);
     }
 
     ul {
         margin: $sp-4 0;
+    }
+
+    li + li {
+        margin-top: $sp-1;
     }
 }

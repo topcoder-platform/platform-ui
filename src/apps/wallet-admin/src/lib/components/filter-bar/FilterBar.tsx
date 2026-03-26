@@ -29,6 +29,8 @@ interface FilterBarProps {
     onExport?: () => void;
     selectedCount?: number;
     onBulkClick?: () => void;
+    selectedValueOverrides?: Record<string, string>;
+    hasActiveFilters?: boolean;
 }
 
 const FilterBar: React.FC<FilterBarProps> = (props: FilterBarProps) => {
@@ -38,8 +40,10 @@ const FilterBar: React.FC<FilterBarProps> = (props: FilterBarProps) => {
     const renderDropdown = (index: number, filter: Filter): JSX.Element => (
         <InputSelect
             tabIndex={index}
-            value={selectedValue.get(filter.key) as string ?? (filter.key === 'pageSize' ? '10' : '')}
-            options={filter.options!}
+            value={props.selectedValueOverrides?.[filter.key]
+                ?? selectedValue.get(filter.key) as string
+                ?? (filter.key === 'pageSize' ? '10' : '')}
+            options={filter.options ?? []}
             onChange={(event: ChangeEvent<HTMLInputElement>) => {
                 setSelectedValue(new Map(selectedValue.set(filter.key, event.target.value)))
                 props.onFilterChange(filter.key, [event.target.value])
@@ -138,7 +142,7 @@ const FilterBar: React.FC<FilterBarProps> = (props: FilterBarProps) => {
                 className={styles.resetButton}
                 label='Reset'
                 size='lg'
-                disabled={selectedValue.size === 0}
+                disabled={props.hasActiveFilters === undefined ? selectedValue.size === 0 : !props.hasActiveFilters}
                 onClick={() => {
                     selectedMembers.current = []
                     setSelectedValue(new Map())

@@ -1,7 +1,7 @@
 /**
  * Permission group members page.
  */
-import { FC, useContext, useEffect, useMemo, useState } from 'react'
+import { FC, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import _ from 'lodash'
 import classNames from 'classnames'
@@ -13,6 +13,7 @@ import {
     PageDivider,
     PageTitle,
 } from '~/libs/ui'
+import { downloadBlob } from '~/libs/shared/lib/utils/files'
 import { PlusIcon } from '@heroicons/react/solid'
 
 import { GroupMembersFilters } from '../../lib/components/GroupMembersFilters'
@@ -21,6 +22,8 @@ import { useManagePermissionGroupMembers, useManagePermissionGroupMembersProps }
 import { AdminAppContext, PageContent, PageHeader } from '../../lib'
 import { AdminAppContextType, FormGroupMembersFilters, UserGroupMember } from '../../lib/models'
 import { useTableSelection, useTableSelectionProps } from '../../lib/hooks/useTableSelection'
+import { exportGroupUsersCsv } from '../../lib/services'
+import { handleError } from '../../lib/utils'
 
 import styles from './PermissionGroupMembersPage.module.scss'
 
@@ -28,6 +31,19 @@ interface Props {
     className?: string
 }
 const pageTitle = 'Group Members'
+
+const normalizeFileNameSegment = (value: string): string => (
+    value
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)+/g, '')
+)
+
+const buildGroupExportFileName = (groupName: string | undefined, groupId: string): string => {
+    const normalizedName = normalizeFileNameSegment(groupName || groupId)
+    return `group-users-${normalizedName || groupId}.csv`
+}
 
 export const PermissionGroupMembersPage: FC<Props> = (props: Props) => {
     const memberTypes = useMemo(() => ['group', 'user'], [])
@@ -60,6 +76,7 @@ export const PermissionGroupMembersPage: FC<Props> = (props: Props) => {
         cancelLoadGroup,
         groupsMapping,
     )
+    const [isExporting, setIsExporting] = useState<boolean>(false)
     const [datasIdsMapping, setDatasIdsMapping] = useState<{
         [memberType: string]: number[]
     }>({
@@ -92,6 +109,26 @@ export const PermissionGroupMembersPage: FC<Props> = (props: Props) => {
         () => !groupsMapping[groupId],
         [groupsMapping, groupId],
     )
+    const handleExport = useCallback(() => {
+        if (!groupId || isExporting) {
+            return
+        }
+
+        setIsExporting(true)
+        exportGroupUsersCsv(groupId)
+            .then(blob => {
+                downloadBlob(
+                    blob,
+                    buildGroupExportFileName(groupsMapping[groupId], groupId),
+                )
+            })
+            .catch(error => {
+                handleError(error)
+            })
+            .finally(() => {
+                setIsExporting(false)
+            })
+    }, [groupId, groupsMapping, isExporting])
 
     return (
         <div className={classNames(styles.container, props.className)}>
@@ -99,6 +136,14 @@ export const PermissionGroupMembersPage: FC<Props> = (props: Props) => {
             <PageHeader>
                 <h3>{pageTitle}</h3>
                 <div className={styles.headerActions}>
+                    <Button
+                        primary
+                        size='lg'
+                        disabled={!groupId || loadingGroup || isExporting}
+                        onClick={handleExport}
+                    >
+                        {isExporting ? 'exporting...' : 'export'}
+                    </Button>
                     <LinkButton
                         primary
                         size='lg'

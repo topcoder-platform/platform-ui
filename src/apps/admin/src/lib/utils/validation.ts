@@ -41,6 +41,9 @@ export const formUsersFiltersSchema: Yup.ObjectSchema<FormUsersFilters>
             .optional(),
         handle: Yup.string()
             .optional(),
+        ssoUserId: Yup.string()
+            .trim()
+            .optional(),
         status: Yup.string()
             .optional(),
         userId: Yup.string()

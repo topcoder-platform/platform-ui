@@ -11,6 +11,10 @@ import type {
     SubmissionInfo,
 } from '../models'
 import {
+    useFetchAiReviewConfig,
+    UseFetchAiReviewConfigResult,
+    useFetchAiReviewDecisions,
+    UseFetchAiReviewDecisionsResult,
     useFetchChallengeInfo,
     useFetchChallengeInfoProps,
     useFetchChallengeResources,
@@ -96,6 +100,27 @@ export const ChallengeDetailContextProvider: FC<PropsWithChildren> = props => {
         [challengeSubmissions, registrants],
     )
 
+    const {
+        aiReviewConfig,
+        isLoading: isLoadingAiReviewConfig,
+    }: UseFetchAiReviewConfigResult = useFetchAiReviewConfig(challengeId)
+
+    const {
+        decisions: aiReviewDecisions,
+        isLoading: isLoadingAiReviewDecisions,
+    }: UseFetchAiReviewDecisionsResult = useFetchAiReviewDecisions(aiReviewConfig?.id)
+
+    const aiReviewDecisionsBySubmissionId = useMemo(
+        () => aiReviewDecisions.reduce<Record<string, typeof aiReviewDecisions[number]>>((result, decision) => {
+            if (decision.submissionId) {
+                result[decision.submissionId] = decision
+            }
+
+            return result
+        }, {}),
+        [aiReviewDecisions],
+    )
+
     const enrichedChallengeInfo = useMemo(
         () => (challengeInfo
             ? {
@@ -113,9 +138,13 @@ export const ChallengeDetailContextProvider: FC<PropsWithChildren> = props => {
 
     const value = useMemo<ChallengeDetailContextModel>(
         () => ({
+            aiReviewConfig,
+            aiReviewDecisionsBySubmissionId,
             challengeId,
             challengeInfo: enrichedChallengeInfo,
             challengeSubmissions,
+            isLoadingAiReviewConfig,
+            isLoadingAiReviewDecisions,
             isLoadingChallengeInfo: isLoadingChallengeInfoCombined,
             isLoadingChallengeResources,
             isLoadingChallengeSubmissions,
@@ -133,6 +162,10 @@ export const ChallengeDetailContextProvider: FC<PropsWithChildren> = props => {
             isLoadingChallengeInfoCombined,
             isLoadingChallengeResources,
             isLoadingChallengeSubmissions,
+            aiReviewConfig,
+            aiReviewDecisionsBySubmissionId,
+            isLoadingAiReviewConfig,
+            isLoadingAiReviewDecisions,
             myResources,
             myRoles,
             registrants,

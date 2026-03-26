@@ -4,8 +4,6 @@ import {
     lazyLoad,
     LazyLoadedComponent,
     PlatformRoute,
-    Rewrite,
-    UserRole,
 } from '~/libs/core'
 
 import {
@@ -17,12 +15,13 @@ import {
     paymentsRouteId,
     permissionManagementRouteId,
     platformRouteId,
-    reportsRouteId,
     rootRoute,
     termsRouteId,
     userManagementRouteId,
 } from './config/routes.config'
+import { administratorOnlyRoles, adminReportsAccessRoles } from './lib/utils'
 import { platformSkillRouteId } from './platform/routes.config'
+import AdminHomeRedirect from './AdminHomeRedirect'
 
 const AdminApp: LazyLoadedComponent = lazyLoad(() => import('./AdminApp'))
 
@@ -173,10 +172,6 @@ const PaymentsPage: LazyLoadedComponent = lazyLoad(
     () => import('./payments/PaymentsPage'),
     'PaymentsPage',
 )
-const ReportsPage: LazyLoadedComponent = lazyLoad(
-    () => import('./reports/ReportsPage'),
-    'ReportsPage',
-)
 
 export const toolTitle: string = ToolTitle.admin
 
@@ -186,7 +181,7 @@ export const adminRoutes: ReadonlyArray<PlatformRoute> = [
         authRequired: true,
         children: [
             {
-                element: <Rewrite to={manageChallengeRouteId} />,
+                element: <AdminHomeRedirect />,
                 route: '',
             },
             // Challenge Management Module
@@ -220,12 +215,14 @@ export const adminRoutes: ReadonlyArray<PlatformRoute> = [
                 ],
                 element: <ChallengeManagement />,
                 id: manageChallengeRouteId,
+                rolesRequired: administratorOnlyRoles,
                 route: manageChallengeRouteId,
             },
             // User Management Module
             {
                 element: <UserManagementPage />,
                 id: userManagementRouteId,
+                rolesRequired: administratorOnlyRoles,
                 route: userManagementRouteId,
             },
             // Reviewer Management Module
@@ -244,6 +241,7 @@ export const adminRoutes: ReadonlyArray<PlatformRoute> = [
                 ],
                 element: <ReviewManagement />,
                 id: manageReviewRouteId,
+                rolesRequired: administratorOnlyRoles,
                 route: manageReviewRouteId,
             },
             // Billing Account Module
@@ -297,6 +295,7 @@ export const adminRoutes: ReadonlyArray<PlatformRoute> = [
                 ],
                 element: <BillingAccount />,
                 id: billingAccountRouteId,
+                rolesRequired: administratorOnlyRoles,
                 route: billingAccountRouteId,
             },
             // Permission Management Module
@@ -335,6 +334,7 @@ export const adminRoutes: ReadonlyArray<PlatformRoute> = [
                 ],
                 element: <PermissionManagement />,
                 id: permissionManagementRouteId,
+                rolesRequired: administratorOnlyRoles,
                 route: permissionManagementRouteId,
             },
 
@@ -408,25 +408,21 @@ export const adminRoutes: ReadonlyArray<PlatformRoute> = [
                 ],
                 element: <Platform />,
                 id: platformRouteId,
+                rolesRequired: administratorOnlyRoles,
                 route: platformRouteId,
             },
             // Payments Module
             {
                 element: <PaymentsPage />,
                 id: paymentsRouteId,
+                rolesRequired: administratorOnlyRoles,
                 route: paymentsRouteId,
-            },
-            // Reports Module
-            {
-                element: <ReportsPage />,
-                id: reportsRouteId,
-                route: reportsRouteId,
             },
         ],
         domain: AppSubdomain.admin,
         element: <AdminApp />,
         id: toolTitle,
-        rolesRequired: [UserRole.administrator],
+        rolesRequired: adminReportsAccessRoles,
         route: rootRoute,
         title: toolTitle,
     },

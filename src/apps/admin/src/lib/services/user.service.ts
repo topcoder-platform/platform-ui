@@ -100,6 +100,7 @@ export const searchUsers = async (options?: {
                     'id',
                     'handle',
                     'email',
+                    'ssoUserId',
                     'active',
                     'emailActive',
                     'emailVerified',
@@ -135,6 +136,8 @@ export const searchUsersPaginated = async (options?: {
     filter?: string
     limit?: number
     offset?: number
+    sortBy?: string
+    sortOrder?: 'asc' | 'desc'
 }): Promise<PaginatedResponse<UserInfo[]>> => {
     let query = ''
     const opts: {
@@ -142,6 +145,8 @@ export const searchUsersPaginated = async (options?: {
         filter?: string
         limit?: number
         offset?: number
+        sortBy?: string
+        sortOrder?: 'asc' | 'desc'
     } = options || {}
     _.forOwn(
         {
@@ -151,6 +156,7 @@ export const searchUsersPaginated = async (options?: {
                     'id',
                     'handle',
                     'email',
+                    'ssoUserId',
                     'active',
                     'emailActive',
                     'emailVerified',
@@ -164,6 +170,8 @@ export const searchUsersPaginated = async (options?: {
             filter: opts.filter,
             limit: opts.limit,
             offset: opts.offset,
+            sortBy: opts.sortBy,
+            sortOrder: opts.sortOrder,
         },
         (value, key) => {
             if (value !== undefined && value !== null && value !== '') {

@@ -31,6 +31,15 @@
     }
 }
 
+.aiIcon {
+    display: flex;
+    width: 20px;
+    height: 20px;
+    background: #fff;
+    align-items: center;
+    justify-content: center;
+}
+
 .score {
     font-size: 14px;
     &.failed-score {

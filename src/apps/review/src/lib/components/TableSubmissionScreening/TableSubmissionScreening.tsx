@@ -1271,6 +1271,7 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
                 isDownloading={props.isDownloading}
                 getRestriction={getHistoryRestriction}
                 getSubmissionMeta={resolveSubmissionMeta}
+                aiReviewers={props.aiReviewers}
             />
             <ConfirmModal
                 title='Reopen Scorecard Confirmation'

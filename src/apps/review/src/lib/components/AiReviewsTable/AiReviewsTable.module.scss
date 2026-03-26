@@ -6,6 +6,37 @@
     overflow: hidden;
 }
 
+.lockedBanner {
+    background-color: $black-5;
+    color: #C1294F;
+    border-radius: $sp-1;
+    padding: $sp-4;
+    margin: $sp-2 $sp-3;
+
+    display: flex;
+    gap: $sp-2;
+}
+
+.lockedTitle {
+    display: flex;
+    align-items: center;
+    gap: $sp-1;
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.lockedMessage {
+    margin-top: $sp-1;
+    font-size: 14px;
+    max-width: 720px;
+    white-space: normal;
+}
+
+.reRunIcon {
+    color: $black-80;
+    cursor: pointer;
+}
+
 .reviewsTable {
     width: 100%;
     border-collapse: collapse;
@@ -33,6 +64,18 @@
 
     .scoreCol {
         text-align: left;
+        .flex {
+            display: flex;
+            align-items: center;
+            gap: $sp-1;
+        }
+    }
+
+    .infoIcon {
+        display: inline-flex;
+        align-items: center;
+        margin-left: $sp-1;
+        cursor: pointer;
     }
 }
 
@@ -54,6 +97,25 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
+    }
+}
+
+.gatingMarker {
+    color: $red-160;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.row-passed {
+    .resultCol {
+        color: $green-140;
+    }
+}
+
+.row-failed,
+.row-failed-score {
+    .resultCol {
+        color: $red-140;
     }
 }
 

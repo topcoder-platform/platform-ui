@@ -235,6 +235,7 @@ const normalizePhaseName = (name?: string): string => (name || '')
 
 const isRegistrationPhase = (name?: string): boolean => normalizePhaseName(name) === 'registration'
 const isSubmissionPhase = (name?: string): boolean => normalizePhaseName(name) === 'submission'
+const isAiScreeningPhase = (name?: string): boolean => normalizePhaseName(name) === 'ai screening'
 const isCheckpointSubmissionPhase = (name?: string): boolean => normalizePhaseName(name) === 'checkpoint submission'
 const isCheckpointScreeningPhase = (name?: string): boolean => normalizePhaseName(name) === 'checkpoint screening'
 const isIterativeReviewPhase = (name?: string): boolean => normalizePhaseName(name)
@@ -353,7 +354,8 @@ const orderPhasesForTabs = (
             const remaining = orderedResult.filter(phase => !isIterativeReviewPhase(phase.name))
             const registrationIdxAfter = remaining.findIndex(phase => isRegistrationPhase(phase.name))
             const submissionIdxAfter = remaining.findIndex(phase => isSubmissionPhase(phase.name))
-            const afterIdx = Math.max(registrationIdxAfter, submissionIdxAfter)
+            const aiScreeningIdxAfter = remaining.findIndex(phase => isAiScreeningPhase(phase.name))
+            const afterIdx = Math.max(registrationIdxAfter, submissionIdxAfter, aiScreeningIdxAfter)
 
             if (afterIdx >= 0 && afterIdx < remaining.length) {
                 orderedResult = [
