@@ -50,6 +50,19 @@ export type UserSkillActivity = {
     }>
 }
 
+export type MarathonMatchSkillActivity = {
+    sources: Array<{
+        createdAt: string
+        sourceId: string
+        skillEventType: {
+            name: string
+        }
+        sourceType: {
+            name: string
+        }
+    }>
+}
+
 export type UserSkillWithActivity = {
     lastUsedDate: string
     activity: {
@@ -59,6 +72,7 @@ export type UserSkillWithActivity = {
             [key: string]: UserSkillActivity,
         }
         engagement?: UserSkillActivity
+        'marathon match'?: MarathonMatchSkillActivity
     }
 } & UserSkill
 
