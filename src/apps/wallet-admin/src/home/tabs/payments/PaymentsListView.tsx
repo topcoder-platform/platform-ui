@@ -87,9 +87,17 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
     const isEngagementApproverView = isEngagementPaymentApprover && (
         !isPaymentAdmin || paymentRoleView === 'engagementApprover'
     )
-    const [filters, setFilters] = React.useState<Record<string, string[]>>(
-        isEngagementPaymentApprover && !isPaymentAdmin ? { category: [engagementPaymentCategory] } : {},
-    )
+    const [filters, setFilters] = React.useState<Record<string, string[]>>({})
+    const appliedFilters = React.useMemo<Record<string, string[]>>(() => {
+        if (!isEngagementApproverView) {
+            return filters
+        }
+
+        return {
+            ...filters,
+            category: [engagementPaymentCategory],
+        }
+    }, [filters, isEngagementApproverView])
     const [pagination, setPagination] = React.useState<PaginationInfo>({
         currentPage: 1,
         pageSize: defaultPageSize,
@@ -189,7 +197,11 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
 
         setIsLoading(true)
         try {
-            const payments = await getPayments(pagination.pageSize, (pagination.currentPage - 1) * pagination.pageSize, filters)
+            const payments = await getPayments(
+                pagination.pageSize,
+                (pagination.currentPage - 1) * pagination.pageSize,
+                appliedFilters,
+            )
             const winnerIds = payments.winnings.map(winning => winning.winnerId)
 
             const handleMap = await getMemberHandle(winnerIds)
@@ -206,7 +218,7 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
             setIsLoading(false)
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [convertToWinnings, filters, pagination.currentPage, pagination.pageSize])
+    }, [appliedFilters, convertToWinnings, pagination.currentPage, pagination.pageSize])
 
     const renderConfirmModalContent = React.useMemo(() => {
         if (confirmFlow?.content === undefined) {
@@ -314,8 +326,8 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
 
     /**
      * Switches the payments page between the full admin view and the engagement-only approver view.
-     * It preserves shared filters, reapplies the role-specific category constraint, and resets UI state
-     * that should not leak across views such as current selections and an open bulk-approve modal.
+     * The engagement category is derived from the selected role view, so shared filters stay reusable
+     * and hidden type restrictions do not leak across view changes.
      */
     const onRoleViewChange = useCallback((nextView: PaymentRoleView) => {
         if (nextView === paymentRoleView) {
@@ -333,10 +345,6 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
         setFilters(prev => {
             const nextFilters = { ...prev }
             delete nextFilters.category
-
-            if (nextView === 'engagementApprover') {
-                nextFilters.category = [engagementPaymentCategory]
-            }
 
             return nextFilters
         })
@@ -416,12 +424,12 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                     showExportButton
                     selectedCount={selectedPaymentsCount}
                     onBulkClick={() => setBulkOpen(true)}
-                    hasActiveFilters={Object.entries(filters)
-                        .some(([key, value]) => value.length > 0 && !(isEngagementApproverView && key === 'category'))}
+                    hasActiveFilters={Object.values(filters)
+                        .some(value => value.length > 0)}
                     onExport={async () => {
                         toast.success('Downloading payments report. This may take a few moments.', { position: toast.POSITION.BOTTOM_RIGHT })
                         downloadBlob(
-                            await exportSearchResults(filters, WinningsType.PAYMENT),
+                            await exportSearchResults(appliedFilters, WinningsType.PAYMENT),
                             `payments-${new Date()
                                 .getTime()}.csv`,
                         )
@@ -565,7 +573,7 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                             currentPage: 1,
                             pageSize: defaultPageSize,
                         })
-                        setFilters(isEngagementApproverView ? { category: [engagementPaymentCategory] } : {})
+                        setFilters({})
                         setSelectedPayments({})
                     }}
                 />
