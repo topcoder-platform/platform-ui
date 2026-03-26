@@ -35,6 +35,7 @@ import {
 import type {
     DownloadButtonConfig,
     ScoreVisibilityConfig,
+    SubmissionReviewerRow,
     SubmissionRow,
 } from '../common/types'
 import {
@@ -63,6 +64,7 @@ import {
 } from '../../../config/index.config'
 import { resolveSubmissionReviewResult } from '../common/reviewResult'
 import { CollapsibleAiReviewsRow } from '../CollapsibleAiReviewsRow'
+import { buildSubmissionReviewerRows } from '../common/reviewResult'
 
 import styles from './TableReviewForSubmitter.module.scss'
 
@@ -322,6 +324,11 @@ export const TableReviewForSubmitter: FC<TableReviewForSubmitterProps> = (props:
         [aggregatedRows],
     )
 
+    const reviewerRows = useMemo<SubmissionReviewerRow[]>(
+        () => buildSubmissionReviewerRows(aggregatedSubmissionRows),
+        [aggregatedSubmissionRows],
+    )
+
     const scorecardIds = useMemo<Set<string>>(() => {
         const ids = new Set<string>()
 
@@ -343,14 +350,6 @@ export const TableReviewForSubmitter: FC<TableReviewForSubmitterProps> = (props:
     }, [aggregatedRows])
 
     const minimumPassingScoreByScorecardId = useScorecardPassingScores(scorecardIds)
-
-    const maxReviewCount = useMemo<number>(
-        () => aggregatedRows.reduce(
-            (max, row) => Math.max(max, row.reviews.length),
-            0,
-        ),
-        [aggregatedRows],
-    )
 
     const isOwned = useCallback<(
         submission: SubmissionInfo | SubmissionRow) => boolean
@@ -385,37 +384,44 @@ export const TableReviewForSubmitter: FC<TableReviewForSubmitterProps> = (props:
         canViewSubmissions,
     ])
 
-    const columns = useMemo<TableColumn<SubmissionRow>[]>(() => {
-        const columnsList: TableColumn<SubmissionRow>[] = []
+    const columns = useMemo<TableColumn<SubmissionReviewerRow>[]>(() => {
+        const columnsList: TableColumn<SubmissionReviewerRow>[] = []
 
         columnsList.push({
-            className: styles.submissionColumn,
+            className: classNames(styles.submissionColumn, 'no-row-border'),
             columnId: 'submission-id',
             label: 'Submission ID',
-            renderer: submission => renderSubmissionIdCell(submission, downloadConfigBase),
+            renderer: submission => (
+                submission.isFirstReviewerRow
+                    ? renderSubmissionIdCell(submission, downloadConfigBase)
+                    : <span />
+            ),
             type: 'element',
         })
 
         if (isChallengeCompleted) {
             columnsList.push({
+                className: 'no-row-border',
                 columnId: 'submitter',
                 label: 'Submitter',
-                renderer: submission => renderSubmitterHandleCell(submission),
+                renderer: submission => (
+                    submission.isFirstReviewerRow
+                        ? renderSubmitterHandleCell(submission)
+                        : <span />
+                ),
                 type: 'element',
             })
         }
 
         columnsList.push({
-            columnId: 'review-date',
-            label: 'Review Date',
-            renderer: submission => renderReviewDateCell(submission),
-            type: 'element',
-        })
-
-        columnsList.push({
+            className: 'no-row-border',
             columnId: 'review-score',
             label: 'Review Score',
             renderer: submission => {
+                if (!submission.isFirstReviewerRow) {
+                    return <span />
+                }
+
                 const isOwnedSubmission = isOwned(submission)
                 const scoreConfig: ScoreVisibilityConfig = {
                     canDisplayScores,
@@ -429,9 +435,14 @@ export const TableReviewForSubmitter: FC<TableReviewForSubmitterProps> = (props:
         })
 
         columnsList.push({
+            className: 'no-row-border',
             columnId: 'review-result',
             label: 'Review Result',
             renderer: submission => {
+                if (!submission.isFirstReviewerRow) {
+                    return <span />
+                }
+
                 const result = resolveSubmissionReviewResult(submission, {
                     minimumPassingScoreByScorecardId,
                 })
@@ -456,30 +467,35 @@ export const TableReviewForSubmitter: FC<TableReviewForSubmitterProps> = (props:
             type: 'element',
         })
 
-        for (let index = 0; index < maxReviewCount; index += 1) {
-            columnsList.push({
-                columnId: `reviewer-${index}`,
-                label: `Reviewer ${index + 1}`,
-                renderer: submission => renderReviewerCell(submission, index),
-                type: 'element',
-            })
+        columnsList.push({
+            columnId: 'reviewer',
+            label: 'Reviewer',
+            renderer: submission => renderReviewerCell(submission, submission.reviewerIndex),
+            type: 'element',
+        })
 
-            columnsList.push({
-                columnId: `score-${index}`,
-                label: `Score ${index + 1}`,
-                renderer: submission => {
-                    const isOwnedSubmission = isOwned(submission)
-                    const scoreConfig: ScoreVisibilityConfig = {
-                        canDisplayScores,
-                        canViewScorecard: isChallengeCompleted || isOwnedSubmission,
-                        isAppealsTab: false,
-                    }
+        columnsList.push({
+            columnId: 'review-date',
+            label: 'Review Date',
+            renderer: submission => renderReviewDateCell(submission),
+            type: 'element',
+        })
 
-                    return renderScoreCell(submission, index, scoreConfig)
-                },
-                type: 'element',
-            })
-        }
+        columnsList.push({
+            columnId: 'score',
+            label: 'Score',
+            renderer: submission => {
+                const isOwnedSubmission = isOwned(submission)
+                const scoreConfig: ScoreVisibilityConfig = {
+                    canDisplayScores,
+                    canViewScorecard: isChallengeCompleted || isOwnedSubmission,
+                    isAppealsTab: false,
+                }
+
+                return renderScoreCell(submission, submission.reviewerIndex, scoreConfig)
+            },
+            type: 'element',
+        })
 
         const showActionsColumn = shouldShowHistoryActions && !shouldRestrictSubmitterToOwnSubmission
 
@@ -488,8 +504,8 @@ export const TableReviewForSubmitter: FC<TableReviewForSubmitterProps> = (props:
                 columnId: 'actions',
                 label: 'Actions',
                 renderer: submission => {
-                    if (!submission.id) {
-                        return <span>--</span>
+                    if (!submission.isFirstReviewerRow || !submission.id) {
+                        return <span />
                     }
 
                     const isOwnedSubmission = isOwned(submission)
@@ -534,16 +550,25 @@ export const TableReviewForSubmitter: FC<TableReviewForSubmitterProps> = (props:
                 columnId: 'ai-reviews-table',
                 isExpand: true,
                 label: '',
-                renderer: (submission: SubmissionRow, allRows: SubmissionRow[]) => (
-                    props.aiReviewers && (
+                renderer: (submission: SubmissionReviewerRow, allRows: SubmissionReviewerRow[]) => {
+                    if (!submission.isLastReviewerRow || !props.aiReviewers) {
+                        return <span />
+                    }
+
+                    const firstIndexForSubmission = allRows.findIndex(candidate => (
+                        candidate.id === submission.id && candidate.isFirstReviewerRow
+                    ))
+                    const defaultOpen = firstIndexForSubmission === 0
+
+                    return (
                         <CollapsibleAiReviewsRow
                             className={styles.aiReviews}
                             aiReviewers={props.aiReviewers}
                             submission={submission as any}
-                            defaultOpen={allRows ? !allRows.indexOf(submission) : false}
+                            defaultOpen={defaultOpen}
                         />
                     )
-                ),
+                },
                 type: 'element',
             })
         }
@@ -556,7 +581,6 @@ export const TableReviewForSubmitter: FC<TableReviewForSubmitterProps> = (props:
         historyByMember,
         isChallengeCompleted,
         latestSubmissionIds,
-        maxReviewCount,
         minimumPassingScoreByScorecardId,
         isOwned,
         restrictToLatest,
@@ -564,29 +588,50 @@ export const TableReviewForSubmitter: FC<TableReviewForSubmitterProps> = (props:
         shouldRestrictSubmitterToOwnSubmission,
     ])
 
-    const columnsMobile = useMemo<MobileTableColumn<SubmissionRow>[][]>(
-        () => columns.map(column => (
-            [
-                column.label && {
-                    ...column,
-                    className: '',
-                    label: `${column.label as string} label`,
-                    mobileType: 'label',
-                    renderer: () => (
-                        <div>
-                            {column.label as string}
-                            :
-                        </div>
-                    ),
-                    type: 'element',
-                },
+    const columnsMobile = useMemo<MobileTableColumn<SubmissionReviewerRow>[][]>(
+        () => columns.map(column => {
+            const resolvedLabel = typeof column.label === 'function'
+                ? column.label() ?? ''
+                : (column.label ?? '')
+            const labelForAction = typeof column.label === 'string'
+                ? column.label
+                : resolvedLabel
+
+            if (labelForAction === 'Action' || labelForAction === 'Actions') {
+                return [
+                    {
+                        ...column,
+                        colSpan: 2,
+                        mobileType: 'last-value',
+                    },
+                ]
+            }
+
+            const labelText = resolvedLabel || ''
+
+            return [
+                (labelText && (
+                    {
+                        ...column,
+                        className: '',
+                        label: labelText ? `${labelText} label` : 'label',
+                        mobileType: 'label',
+                        renderer: () => (
+                            <div>
+                                {labelText}
+                                :
+                            </div>
+                        ),
+                        type: 'element',
+                    }
+                )),
                 {
                     ...column,
-                    colSpan: column.label ? 1 : 2,
+                    colSpan: labelText ? 1 : 2,
                     mobileType: 'last-value',
                 },
-            ].filter(Boolean) as MobileTableColumn<SubmissionRow>[]
-        )),
+            ].filter(Boolean) as MobileTableColumn<SubmissionReviewerRow>[]
+        }),
         [columns],
     )
 
@@ -601,11 +646,11 @@ export const TableReviewForSubmitter: FC<TableReviewForSubmitterProps> = (props:
             )}
         >
             {isTablet ? (
-                <TableMobile columns={columnsMobile} data={aggregatedSubmissionRows} />
+                <TableMobile columns={columnsMobile} data={reviewerRows} />
             ) : (
                 <Table
                     columns={columns}
-                    data={aggregatedSubmissionRows}
+                    data={reviewerRows}
                     showExpand
                     expandMode='always'
                     disableSorting
