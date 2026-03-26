@@ -203,13 +203,11 @@ const ReviewViewer: FC = () => {
             reviewInfo?.committed
             && (hasChallengeAdminRole
                 || hasTopcoderAdminRole
-                || hasChallengeManagerRole
-                || hasChallengeCopilotRole),
+                || hasChallengeManagerRole),
         )
     }, [
         challengeInfo?.status,
         hasChallengeAdminRole,
-        hasChallengeCopilotRole,
         hasChallengeManagerRole,
         hasTopcoderAdminRole,
         reviewInfo?.committed,
