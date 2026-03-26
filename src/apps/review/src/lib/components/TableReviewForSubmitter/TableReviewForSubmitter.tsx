@@ -62,9 +62,8 @@ import {
     TRACK_CHALLENGE,
     WITHOUT_APPEAL,
 } from '../../../config/index.config'
-import { resolveSubmissionReviewResult } from '../common/reviewResult'
+import { buildSubmissionReviewerRows, resolveSubmissionReviewResult } from '../common/reviewResult'
 import { CollapsibleAiReviewsRow } from '../CollapsibleAiReviewsRow'
-import { buildSubmissionReviewerRows } from '../common/reviewResult'
 
 import styles from './TableReviewForSubmitter.module.scss'
 
