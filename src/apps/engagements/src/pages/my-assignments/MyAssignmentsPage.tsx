@@ -9,6 +9,7 @@ import { Pagination } from '~/apps/admin/src/lib/components/common/Pagination'
 
 import { APPLICATIONS_PER_PAGE } from '../../config/constants'
 import type { Engagement, EngagementAssignment } from '../../lib/models'
+import { useTermsAgreementGate } from '../../lib'
 import {
     acceptAssignmentOffer,
     getMyAssignedEngagements,
@@ -19,6 +20,7 @@ import {
     AssignmentOfferModal,
     EngagementsTabs,
     MemberExperienceModal,
+    TermsAgreementModal,
 } from '../../components'
 import { rootRoute } from '../../engagements.routes'
 
@@ -27,6 +29,12 @@ import styles from './MyAssignmentsPage.module.scss'
 const PER_PAGE = APPLICATIONS_PER_PAGE
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const IP_ADDRESS_PATTERN = /^(?:\d{1,3}\.){3}\d{1,3}$/
+const PROFILE_GATE_ERROR_MESSAGE = 'Your profile must be 100% complete before accepting this offer.'
+
+type ProfileGateState = {
+    engagementId: string
+    message: string
+}
 
 const getBaseDomainFromHostname = (hostname: string): string | undefined => {
     const normalized = hostname.trim()
@@ -78,7 +86,14 @@ const MyAssignmentsPage: FC = () => {
     const userId = profileContext.profile?.userId
     const profileHandle = profileContext.profile?.handle
     const profileCompleteness = useProfileCompleteness(profileHandle)
-    const [profileGateError, setProfileGateError] = useState<string | undefined>()
+    const [profileGateState, setProfileGateState] = useState<ProfileGateState | undefined>()
+    const {
+        modalState: termsModalState,
+        startTermsAgreementFlow,
+        termsError,
+    }: ReturnType<typeof useTermsAgreementGate> = useTermsAgreementGate({
+        contextDescription: 'you are accepting a private engagement offer',
+    })
 
     const [assignments, setAssignments] = useState<Engagement[]>([])
     const [loading, setLoading] = useState<boolean>(false)
@@ -121,6 +136,12 @@ const MyAssignmentsPage: FC = () => {
     useEffect(() => {
         fetchAssignments()
     }, [fetchAssignments])
+
+    useEffect(() => {
+        if (termsError && !termsModalState.open) {
+            toast.error(termsError)
+        }
+    }, [termsError, termsModalState.open])
 
     useEffect(() => (
         () => {
@@ -336,7 +357,7 @@ const MyAssignmentsPage: FC = () => {
                         }
 
                         const handleAcceptOfferClick = function (): void {
-                            setProfileGateError(undefined)
+                            setProfileGateState(undefined)
 
                             if (profileCompleteness?.isLoading) {
                                 return
@@ -347,13 +368,16 @@ const MyAssignmentsPage: FC = () => {
                                 && typeof profileCompleteness.percent === 'number'
                                 && profileCompleteness.percent < 100
                             ) {
-                                setProfileGateError(
-                                    'Your profile must be 100% complete before applying.',
-                                )
+                                setProfileGateState({
+                                    engagementId: engagement.id,
+                                    message: PROFILE_GATE_ERROR_MESSAGE,
+                                })
                                 return
                             }
 
-                            handleOpenOfferModal(engagement, 'accept')
+                            startTermsAgreementFlow(() => {
+                                handleOpenOfferModal(engagement, 'accept')
+                            })
                         }
 
                         const handleRejectOfferClick = function (): void {
@@ -372,7 +396,11 @@ const MyAssignmentsPage: FC = () => {
                                 onRejectOffer={handleRejectOfferClick}
                                 onContactTalentManager={handleContactTalentManager}
                                 canContactTalentManager={Boolean(contactEmail)}
-                                profileGateError={profileGateError}
+                                profileGateError={
+                                    profileGateState?.engagementId === engagement.id
+                                        ? profileGateState.message
+                                        : undefined
+                                }
                                 profileHandle={profileHandle}
                             />
                         )
@@ -408,6 +436,7 @@ const MyAssignmentsPage: FC = () => {
                     loading={offerSaving}
                 />
             )}
+            <TermsAgreementModal {...termsModalState} />
         </ContentLayout>
     )
 }

@@ -31,8 +31,10 @@ export const UserManagementPage: FC<Props> = (props: Props) => {
         doUpdateStatus,
         doDeleteUser,
         page,
+        sort,
         totalPages,
         onPageChange,
+        onSortChange,
     }: useManageUsersProps = useManageUsers()
 
     return (
@@ -64,8 +66,10 @@ export const UserManagementPage: FC<Props> = (props: Props) => {
                             <UsersTable
                                 allUsers={users}
                                 page={page}
+                                sort={sort}
                                 totalPages={totalPages}
                                 onPageChange={onPageChange}
+                                onSortChange={onSortChange}
                                 updatingStatus={updatingStatus}
                                 doUpdateStatus={doUpdateStatus}
                                 deletingUsers={deletingUsers}

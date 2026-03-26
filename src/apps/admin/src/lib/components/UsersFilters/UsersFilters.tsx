@@ -24,8 +24,31 @@ interface Props {
 const defaultValues: FormUsersFilters = {
     email: '',
     handle: '',
+    ssoUserId: '',
     status: undefined,
     userId: '',
+}
+
+function appendFilterValue(filter: string, key: string, value?: string | boolean): string {
+    if (value === undefined || value === null || value === '') {
+        return filter
+    }
+
+    const nextFilter = filter.length > 0 ? `${filter}&` : filter
+
+    return `${nextFilter}${key}=${value}`
+}
+
+function getActiveFilterValue(status?: string): boolean | undefined {
+    if (status === 'active') {
+        return true
+    }
+
+    if (status === 'inactive') {
+        return false
+    }
+
+    return undefined
 }
 
 export const UsersFilters: FC<Props> = props => {
@@ -42,40 +65,26 @@ export const UsersFilters: FC<Props> = props => {
     })
     const onSubmit = useCallback(
         (data: FormUsersFilters) => {
-            const { handle, email, status, userId }: FormUsersFilters = data
-            const active
-                = status === 'active'
-                    ? true
-                    : status === 'inactive'
-                        ? false
-                        : undefined
+            const {
+                handle,
+                email,
+                ssoUserId,
+                status,
+                userId,
+            }: FormUsersFilters = data
+            const active = getActiveFilterValue(status)
+            const like = [handle, email, ssoUserId].some(
+                value => value?.includes('*') === true,
+            )
+
             let filter = ''
-            let like = false
 
-            if (handle) {
-                like = handle.indexOf('*') >= 0
-                filter += `handle=${handle}`
-            }
-
-            if (email) {
-                like = email.indexOf('*') >= 0
-                if (filter.length > 0) filter += '&'
-                filter += `email=${email}`
-            }
-
-            if (active !== null && active !== undefined) {
-                if (filter.length > 0) filter += '&'
-                filter += `active=${active}`
-            }
-
-            if (like) {
-                filter += `&like=${like}`
-            }
-
-            if (userId) {
-                if (filter.length > 0) filter += '&'
-                filter += `id=${userId}`
-            }
+            filter = appendFilterValue(filter, 'handle', handle)
+            filter = appendFilterValue(filter, 'email', email)
+            filter = appendFilterValue(filter, 'ssoUserId', ssoUserId)
+            filter = appendFilterValue(filter, 'active', active)
+            filter = appendFilterValue(filter, 'like', like ? String(like) : undefined)
+            filter = appendFilterValue(filter, 'id', userId)
 
             props.onFindMembers?.(filter)
         },
@@ -113,6 +122,16 @@ export const UsersFilters: FC<Props> = props => {
                 />
                 <InputText
                     type='text'
+                    name='ssoUserId'
+                    label='SSO UserID'
+                    placeholder='Enter'
+                    tabIndex={0}
+                    onChange={_.noop}
+                    classNameWrapper={styles.field}
+                    inputControl={register('ssoUserId')}
+                />
+                <InputText
+                    type='text'
                     name='userId'
                     label='User Id'
                     placeholder='Enter'
@@ -146,8 +165,8 @@ export const UsersFilters: FC<Props> = props => {
                 <p className={styles.textTips}>
                     Tips:
                     <br />
-                    - Wildcard(*) is available for partial matching. (e.g.
-                    ChrisB*, chris*@wipro.com)
+                    - Wildcard(*) is available for partial matching on Handle, Email, and SSO
+                    UserID. (e.g. ChrisB*, j*@wipro.com)
                     <br />
                     - Maximum number of searched results is 500.
                 </p>

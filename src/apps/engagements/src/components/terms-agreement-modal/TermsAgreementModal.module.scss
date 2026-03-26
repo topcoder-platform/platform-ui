@@ -1,0 +1,225 @@
+@import '@libs/ui/styles/includes';
+
+.termsModalDescription {
+    color: $black-80;
+    margin-bottom: 12px;
+    line-height: 1.5;
+}
+
+.termsModalLoading {
+    display: flex;
+    justify-content: center;
+    padding: 16px 0;
+}
+
+.termsModalSpinner {
+    width: 24px;
+    height: 24px;
+}
+
+.termsModalBody {
+    background: $tc-white;
+    border: 1px solid $black-10;
+    border-radius: 12px;
+    padding: 16px;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.termsContent {
+    color: $black-80;
+    line-height: 1.6;
+
+    :global(p) {
+        margin: 0 0 12px 0;
+    }
+
+    :global(p:last-child) {
+        margin-bottom: 0;
+    }
+
+    :global(ul),
+    :global(ol) {
+        margin: 0 0 12px 20px;
+        padding: 0;
+        list-style-position: outside;
+    }
+
+    :global(ul) {
+        list-style: disc;
+    }
+
+    :global(ol) {
+        list-style: decimal;
+    }
+
+    :global(li) {
+        margin-bottom: 6px;
+    }
+
+    :global(li:last-child) {
+        margin-bottom: 0;
+    }
+
+    :global(h1) {
+        margin: 20px 0 10px;
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: $black-100;
+    }
+
+    :global(h2) {
+        margin: 18px 0 10px;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: $black-100;
+    }
+
+    :global(h3) {
+        margin: 16px 0 8px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: $black-100;
+    }
+
+    :global(h4),
+    :global(h5),
+    :global(h6) {
+        margin: 14px 0 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        color: $black-100;
+    }
+
+    :global(strong) {
+        color: $black-100;
+    }
+
+    :global(em) {
+        font-style: italic;
+    }
+
+    :global(a) {
+        color: $teal-100;
+        text-decoration: underline;
+    }
+
+    :global(blockquote) {
+        margin: 0 0 12px 0;
+        padding-left: 12px;
+        border-left: 3px solid $black-20;
+        color: $black-60;
+    }
+
+    :global(code) {
+        font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+        font-size: 0.9em;
+        background: $black-5;
+        border: 1px solid $black-10;
+        border-radius: 6px;
+        padding: 1px 4px;
+    }
+
+    :global(pre) {
+        margin: 0 0 12px 0;
+        background: $black-5;
+        border: 1px solid $black-10;
+        border-radius: 12px;
+        padding: 12px;
+        overflow-x: auto;
+    }
+
+    :global(pre code) {
+        background: transparent;
+        border: none;
+        padding: 0;
+        font-size: 0.9rem;
+    }
+
+    :global(table) {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 0 0 12px 0;
+    }
+
+    :global(th),
+    :global(td) {
+        border: 1px solid $black-10;
+        padding: 8px 10px;
+        text-align: left;
+        vertical-align: top;
+    }
+
+    :global(thead th) {
+        background: $black-5;
+        color: $black-100;
+    }
+
+    :global(img) {
+        max-width: 100%;
+        height: auto;
+        margin: 8px 0;
+        border-radius: 12px;
+    }
+
+    :global(hr) {
+        border: none;
+        border-top: 1px solid $black-10;
+        margin: 16px 0;
+    }
+}
+
+.termsDocuSign {
+    position: relative;
+    background: $tc-white;
+    border: 1px solid $black-10;
+    border-radius: 12px;
+    padding: 16px;
+    max-height: 70vh;
+    overflow: hidden;
+}
+
+.termsDocuSignOverlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.85);
+    z-index: 1;
+    text-align: center;
+    padding: 16px;
+}
+
+.termsDocuSignStatus {
+    color: $black-80;
+    font-size: 0.95rem;
+}
+
+.termsDocuSignFrame {
+    width: 100%;
+    height: 60vh;
+    border: 0;
+}
+
+.termsModalFallback {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    color: $black-80;
+}
+
+.termsModalLink {
+    color: $turq-160;
+    font-weight: 600;
+    text-decoration: underline;
+    width: fit-content;
+}
+
+.termsModalError {
+    margin-top: 12px;
+    color: $red-120;
+    font-size: 0.9rem;
+}
