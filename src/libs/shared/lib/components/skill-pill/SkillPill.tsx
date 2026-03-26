@@ -182,7 +182,7 @@ const SkillPill: FC<SkillPillProps> = props => {
                                     target='_blank'
                                     rel='noopener noreferrer'
                                 >
-                                    Marathon Match
+                                    {s.name || 'Marathon Match'}
                                 </a>
                             ))}
                         </li>
