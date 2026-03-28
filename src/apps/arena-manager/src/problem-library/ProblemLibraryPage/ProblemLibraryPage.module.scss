@@ -1,0 +1,406 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+    padding: 0 $sp-8;
+    max-width: 1440px;
+    margin: 0 auto;
+    width: 100%;
+
+    @include ltelg {
+        padding: 0 $sp-4;
+    }
+}
+
+.pageHeader {
+    padding: $sp-6 0 $sp-4;
+    border-bottom: 1px solid $black-20;
+
+    h3 {
+        font-family: $font-roboto;
+        font-size: 24px;
+        line-height: 32px;
+        font-weight: $font-weight-bold;
+        margin: 0;
+        text-transform: none;
+    }
+}
+
+.pageContent {
+    padding: $sp-6 0;
+    display: flex;
+    flex-direction: column;
+    gap: $sp-6;
+}
+
+.alert {
+    padding: $sp-4;
+    border-radius: 8px;
+    border-width: 1px;
+    border-style: solid;
+    font-weight: 500;
+}
+
+.alertSuccess {
+    background-color: #dcfce7;
+    border-color: #4ade80;
+    color: #15803d;
+}
+
+.alertError {
+    background-color: #f8d7da;
+    border-color: #dc3545;
+    color: #721c24;
+}
+
+.alertPending {
+    background-color: #fff3cd;
+    border-color: #ffc107;
+    color: #856404;
+}
+
+
+.card {
+    background: $tc-white;
+    border-radius: 12px;
+    padding: $sp-6;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.cardTitle {
+    font-weight: $font-weight-bold;
+    font-family: $font-barlow;
+    font-size: 20px;
+    line-height: 22px;
+    margin: 0 0 $sp-4;
+    color: $black-100;
+    text-transform: none;
+}
+
+.uploadForm {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-4;
+}
+
+.uploadButton {
+    align-self: flex-start;
+    background-color: #1a73e8 !important;
+    color: #fff !important;
+    border-radius: 9999px !important;
+    padding: 0.5rem 1rem !important;
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+    transition: background-color 0.2s !important;
+
+    &:hover:not(:disabled) {
+        background-color: #155bb5 !important;
+    }
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-1;
+}
+
+.label {
+    font-size: 14px;
+    line-height: 22px;
+    font-weight: 500;
+    color: $black-80;
+}
+
+.input {
+    padding: $sp-2 $sp-3;
+    border: 1px solid $black-20;
+    border-radius: 6px;
+    font-family: $font-roboto;
+    font-size: 16px;
+    line-height: 24px;
+    outline: none;
+    max-width: 480px;
+
+    &:focus {
+        border-color: $turq-160;
+    }
+}
+
+.fileInput {
+    display: block;
+    width: 100%;
+    max-width: 480px;
+    margin-top: 4px;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-weight: $font-weight-normal;
+    color: #6b7280;
+
+    &::file-selector-button {
+        margin-right: 1rem;
+        padding: 0.5rem 1rem;
+        border-radius: 9999px;
+        border: 0;
+        font-size: 0.875rem;
+        font-weight: 600;
+        background-color: #eff6ff;
+        color: #1d4ed8;
+        cursor: pointer;
+
+        &:hover {
+            background-color: #dbeafe;
+        }
+    }
+}
+
+.problemTable {
+    table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    table thead tr {
+        background-color: #f9fafb;
+    }
+
+    table thead tr th,
+    table thead tr th:first-child {
+        padding: 12px 24px !important;
+        font-size: 0.75rem;
+        color: #6b7280;
+        background-color: #f9fafb;
+        border-bottom: 2px solid #e5e7eb;
+        text-align: left;
+    }
+
+    table tbody tr {
+        border-top: 1px solid #e5e7eb;
+    }
+
+    table tbody tr td {
+        padding: 12px 24px;
+        font-size: 0.875rem;
+        vertical-align: middle;
+    }
+
+    table tbody tr td:last-child {
+        padding: 12px 24px !important;
+        text-align: left !important;
+    }
+}
+
+.tableHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.tableTitle {
+    font-weight: $font-weight-bold;
+    font-family: $font-barlow;
+    font-size: 20px;
+    line-height: 22px;
+    margin: 0;
+    color: $black-100;
+    text-transform: none;
+}
+
+.spinnerWrap {
+    display: flex;
+    justify-content: center;
+    padding: $sp-8 0;
+}
+
+.emptyText {
+    font-family: $font-roboto;
+    font-size: 16px;
+    line-height: 24px;
+    color: $black-60;
+    text-align: center;
+    padding: $sp-8 0;
+}
+
+
+.idCell {
+    font-size: 14px;
+    line-height: 22px;
+    font-weight: $font-weight-normal;
+    font-family: monospace;
+    color: $black-60;
+}
+
+.statusPassed {
+    color: #28a745;
+    font-weight: 600;
+}
+
+.statusFailed {
+    color: #dc3545;
+    font-weight: 600;
+}
+
+.statusPending {
+    color: #ffc107;
+    font-weight: 600;
+}
+
+.badgeReady {
+    background-color: #28a745;
+    color: $tc-white;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 14px;
+    line-height: 22px;
+    font-weight: 600;
+}
+
+.badgeDraft {
+    background-color: $black-20;
+    color: $black-60;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 14px;
+    line-height: 22px;
+    font-weight: $font-weight-normal;
+}
+
+.actionCell {
+    display: flex;
+    gap: $sp-2;
+    align-items: center;
+}
+
+
+.flagButton {
+    min-width: 122px !important;
+    justify-content: center !important;
+}
+
+
+.removeButton {
+    background-color: #ef4444 !important;
+    border-color: #ef4444 !important;
+    color: #fff !important;
+
+    &:hover:not(:disabled) {
+        background-color: #b02a37 !important;
+        border-color: #b02a37 !important;
+    }
+}
+
+.buildLogButton {
+    border-color: #dc3545 !important;
+    color: #dc3545 !important;
+
+    &:hover:not(:disabled) {
+        background-color: #fef2f2 !important;
+    }
+}
+
+
+.modalOverlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: $sp-4;
+}
+
+.modal {
+    background: $tc-white;
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    width: 100%;
+    max-width: 860px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.modalHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: $sp-4 $sp-6;
+    border-bottom: 1px solid $black-20;
+    flex-shrink: 0;
+}
+
+.modalTitle {
+    font-family: $font-barlow;
+    font-size: 18px;
+    font-weight: $font-weight-bold;
+    color: $black-100;
+    margin: 0;
+    text-transform: none;
+}
+
+.modalClose {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    color: $black-60;
+    padding: $sp-1;
+    border-radius: 4px;
+
+    &:hover {
+        color: $black-100;
+        background-color: $black-10;
+    }
+}
+
+.confirmBody {
+    padding: $sp-6;
+}
+
+.confirmText {
+    font-family: $font-roboto;
+    font-size: 15px;
+    line-height: 24px;
+    color: $black-80;
+    margin: 0 0 $sp-6;
+
+    strong {
+        color: $black-100;
+        font-weight: $font-weight-bold;
+    }
+}
+
+.confirmActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: $sp-3;
+}
+
+.confirmDeleteButton {
+    background-color: #dc3545 !important;
+    border-color: #dc3545 !important;
+    color: #fff !important;
+
+    &:hover:not(:disabled) {
+        background-color: #b02a37 !important;
+        border-color: #b02a37 !important;
+    }
+}
+
+.logContent {
+    margin: 0;
+    padding: $sp-4 $sp-6;
+    overflow: auto;
+    font-family: monospace;
+    font-size: 12px;
+    line-height: 1.6;
+    color: $black-80;
+    background-color: #f9fafb;
+    white-space: pre-wrap;
+    word-break: break-all;
+    flex: 1;
+}

@@ -15,6 +15,7 @@ import { reviewRoutes } from '~/apps/review'
 import { calendarRoutes } from '~/apps/calendar'
 import { engagementsRoutes } from '~/apps/engagements'
 import { customerPortalRoutes } from '~/apps/customer-portal'
+import { arenaManagerRoutes } from '~/apps/arena-manager'
 
 const Home: LazyLoadedComponent = lazyLoad(
     () => import('./routes/home'),
@@ -49,4 +50,5 @@ export const platformRoutes: Array<PlatformRoute> = [
     ...adminRoutes,
     ...reportsRoutes,
     ...customerPortalRoutes,
+    ...arenaManagerRoutes,
 ]

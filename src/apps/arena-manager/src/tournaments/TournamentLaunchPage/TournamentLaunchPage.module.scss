@@ -1,0 +1,276 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+    margin: 0 auto;
+    max-width: 1440px;
+    padding: 0 $sp-8;
+    width: 100%;
+
+    @include ltelg {
+        padding: 0 $sp-4;
+    }
+}
+
+.pageHeader {
+    align-items: center;
+    border-bottom: 1px solid $black-20;
+    display: flex;
+    justify-content: space-between;
+    gap: $sp-4;
+    padding: $sp-6 0 $sp-4;
+
+    h3 {
+        font-family: $font-roboto;
+        font-size: 24px;
+        font-weight: $font-weight-bold;
+        line-height: 32px;
+        margin: 0;
+        text-transform: none;
+    }
+
+    @include ltesm {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+
+.subtitle {
+    color: $black-60;
+    font-size: 14px;
+    line-height: 22px;
+    margin: $sp-1 0 0;
+}
+
+.headerActions {
+    display: flex;
+    gap: $sp-3;
+    flex-wrap: wrap;
+}
+
+.pageContent {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-6;
+    padding: $sp-6 0;
+}
+
+.alert {
+    border: 1px solid;
+    border-radius: 8px;
+    font-weight: 500;
+    padding: $sp-4;
+}
+
+.alertSuccess {
+    background-color: #dcfce7;
+    border-color: #4ade80;
+    color: #15803d;
+}
+
+.alertError {
+    background-color: #f8d7da;
+    border-color: #dc3545;
+    color: #721c24;
+}
+
+.alertPending {
+    background-color: #fff3cd;
+    border-color: #ffc107;
+    color: #856404;
+}
+
+.card {
+    background: $tc-white;
+    border-radius: 12px;
+    box-shadow: 0 1px 4px rgb(0 0 0 / 0.1);
+    padding: $sp-6;
+}
+
+.cardTitle {
+    color: $black-100;
+    font-family: $font-barlow;
+    font-size: 20px;
+    font-weight: $font-weight-bold;
+    line-height: 22px;
+    margin: 0 0 $sp-4;
+    text-transform: none;
+}
+
+.summaryGrid {
+    display: grid;
+    gap: $sp-4;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    @include ltesm {
+        grid-template-columns: 1fr;
+    }
+}
+
+.summaryItem {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.summaryLabel {
+    color: $black-60;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 18px;
+}
+
+.summaryValue {
+    color: $black-100;
+    font-size: 16px;
+    font-weight: $font-weight-bold;
+    line-height: 24px;
+    word-break: break-word;
+}
+
+.meta {
+    color: $black-60;
+    font-size: 14px;
+    line-height: 22px;
+    margin: $sp-4 0 0;
+}
+
+.lockNotice {
+    background: #eef5ff;
+    border: 1px solid #93c5fd;
+    border-radius: 8px;
+    color: #1d4ed8;
+    margin-top: $sp-4;
+    padding: $sp-3;
+}
+
+.formGrid {
+    display: grid;
+    gap: $sp-4;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+
+    @include ltelg {
+        grid-template-columns: 1fr;
+    }
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-1;
+}
+
+.fieldHint {
+    color: $black-60;
+    font-size: 12px;
+    line-height: 18px;
+}
+
+.label {
+    color: $black-80;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 22px;
+}
+
+.input {
+    border: 1px solid $black-20;
+    border-radius: 6px;
+    font-family: $font-roboto;
+    font-size: 16px;
+    line-height: 24px;
+    outline: none;
+    padding: $sp-2 $sp-3;
+
+    &:focus {
+        border-color: $turq-160;
+    }
+}
+
+.actions {
+    display: flex;
+    gap: $sp-3;
+    margin-top: $sp-5;
+}
+
+.roundsGrid {
+    align-items: flex-start;
+    display: flex;
+    gap: $sp-4;
+    overflow-x: auto;
+    padding-bottom: $sp-2;
+}
+
+.roundColumn {
+    background: #f3f4f6;
+    border: 1px solid #d4d8de;
+    border-radius: 12px;
+    flex: 0 0 320px;
+    padding: $sp-4;
+}
+
+.roundTitle {
+    border-bottom: 1px solid #d1d5db;
+    color: $black-80;
+    font-size: 18px;
+    font-weight: $font-weight-bold;
+    margin: 0 0 $sp-3;
+    padding-bottom: $sp-2;
+}
+
+.roomList {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-2;
+}
+
+.roomCard {
+    background: $tc-white;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: $sp-3;
+}
+
+.roomTitle {
+    color: $black-100;
+    font-size: 14px;
+    font-weight: $font-weight-bold;
+    line-height: 22px;
+}
+
+.roomMeta {
+    color: $black-60;
+    font-size: 13px;
+    line-height: 20px;
+}
+
+.roomLink {
+    color: #2563eb;
+    display: inline-flex;
+    font-size: 14px;
+    font-weight: $font-weight-bold;
+    margin-top: $sp-2;
+    text-decoration: none;
+}
+
+.errorText {
+    color: #b91c1c;
+    font-size: 13px;
+    line-height: 20px;
+    margin-top: $sp-2;
+}
+
+.spinnerWrap {
+    display: flex;
+    justify-content: center;
+    padding: $sp-8 0;
+}
+
+.emptyText {
+    color: $black-60;
+    font-family: $font-roboto;
+    font-size: 16px;
+    line-height: 24px;
+    margin: 0;
+}
