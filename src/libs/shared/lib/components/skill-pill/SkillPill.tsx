@@ -171,14 +171,14 @@ const SkillPill: FC<SkillPillProps> = props => {
                         <li>
                             <div className={styles.tooltipRow}>
                                 Marathon Matches (
-                                {skillDetails.activity['marathon match'].sources?.length ?? 0}
+                                {skillDetails.activity['marathon match'].lastSources?.length ?? 0}
                                 ):
                             </div>
-                            {skillDetails.activity['marathon match'].sources?.map(s => (
+                            {skillDetails.activity['marathon match'].lastSources?.map(s => (
                                 <a
-                                    key={s.sourceId}
+                                    key={s.id}
                                     className={classNames(styles.tooltipRow, styles.padLeft)}
-                                    href={`${EnvironmentConfig.URLS.CHALLENGES_PAGE}/${s.sourceId}`}
+                                    href={`${EnvironmentConfig.URLS.CHALLENGES_PAGE}/${s.id}`}
                                     target='_blank'
                                     rel='noopener noreferrer'
                                 >
