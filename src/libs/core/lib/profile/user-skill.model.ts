@@ -51,15 +51,16 @@ export type UserSkillActivity = {
 }
 
 export type MarathonMatchSkillActivity = {
-    sources: Array<{
-        createdAt: string
+    sources?: Array<{
+        createdAt?: string
         sourceId: string
-        skillEventType: {
+        skillEventType?: {
             name: string
         }
-        sourceType: {
+        sourceType?: {
             name: string
         }
+        name?: string
     }>
 }
 
