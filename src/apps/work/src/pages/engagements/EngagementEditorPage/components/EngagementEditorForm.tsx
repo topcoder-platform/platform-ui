@@ -14,6 +14,10 @@ import { yupResolver } from '@hookform/resolvers/yup'
 import { Button } from '~/libs/ui'
 
 import {
+    renderRichTextToHtml,
+    renderRichTextToPlainText,
+} from '../../../../../../../libs/shared/lib/utils/rich-text'
+import {
     ANTICIPATED_START_OPTIONS,
     ENGAGEMENT_ROLES,
     ENGAGEMENT_WORKLOADS,
@@ -159,7 +163,7 @@ function getDefaultValues(
         assignmentDetails: assignmentDefaults.assignmentDetails,
         compensationRange: defaultEngagement?.compensationRange || '',
         countries: defaultEngagement?.countries || [],
-        description: defaultEngagement?.description || '',
+        description: renderRichTextToHtml(defaultEngagement?.description || ''),
         durationWeeks: defaultEngagement?.durationWeeks
             ? String(defaultEngagement.durationWeeks)
             : '',
@@ -383,7 +387,7 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
             return
         }
 
-        const currentDescription = String(getValues('description') || '')
+        const currentDescription = renderRichTextToPlainText(String(getValues('description') || ''))
             .trim()
 
         if (!currentDescription) {
@@ -396,7 +400,7 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
         try {
             const generatedDescription = await autowriteDescription(currentDescription)
 
-            setValue('description', generatedDescription, {
+            setValue('description', renderRichTextToHtml(generatedDescription), {
                 shouldDirty: true,
                 shouldTouch: true,
                 shouldValidate: true,

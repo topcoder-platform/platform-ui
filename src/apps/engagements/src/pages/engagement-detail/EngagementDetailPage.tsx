@@ -1,6 +1,7 @@
 import { FC, useCallback, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import ReactMarkdown, { type Options as ReactMarkdownOptions } from 'react-markdown'
+import rehypeRaw from 'rehype-raw'
 import remarkBreaks from 'remark-breaks'
 import remarkFrontmatter from 'remark-frontmatter'
 import remarkGfm from 'remark-gfm'
@@ -9,6 +10,7 @@ import { EnvironmentConfig } from '~/config'
 import { authUrlLogin, useProfileCompleteness, useProfileContext } from '~/libs/core'
 import { Button, ContentLayout, IconOutline, IconSolid, LoadingSpinner } from '~/libs/ui'
 
+import { sanitizeRichTextSource } from '../../../../../libs/shared/lib/utils/rich-text'
 import type { Application, Engagement } from '../../lib/models'
 import { useTermsAgreementGate } from '../../lib'
 import { ApplicationStatus, EngagementStatus } from '../../lib/models'
@@ -577,13 +579,14 @@ const EngagementDetailPage: FC = () => {
                     <h2>Overview</h2>
                     <div className={styles.description}>
                         <Markdown
+                            rehypePlugins={[rehypeRaw as any]}
                             remarkPlugins={[
                                 remarkFrontmatter,
                                 [remarkGfm, { singleTilde: false }],
                                 remarkBreaks,
                             ]}
                         >
-                            {engagement.description}
+                            {sanitizeRichTextSource(engagement.description)}
                         </Markdown>
                     </div>
                 </div>

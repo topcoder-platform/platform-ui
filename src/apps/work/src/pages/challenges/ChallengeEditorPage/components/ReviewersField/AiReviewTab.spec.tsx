@@ -57,6 +57,12 @@ const mockedUseFetchChallengeTypes = useFetchChallengeTypes as jest.Mock
 const mockedFetchAiReviewConfigByChallenge = fetchAiReviewConfigByChallenge as jest.Mock
 const mockedFetchWorkflows = fetchWorkflows as jest.Mock
 
+const persistedAiReviewers = [
+    {
+        aiWorkflowId: 'workflow-1',
+        isMemberReview: false,
+    },
+]
 const baseConfiguration = {
     autoFinalize: false,
     challengeId: 'challenge-1',
@@ -80,11 +86,24 @@ describe('AiReviewTab review mode options', () => {
         mockedFetchWorkflows.mockResolvedValue([])
     })
 
-    it('shows only AI_GATING as a visible review mode option for standard configs', async () => {
+    it('does not fetch a persisted AI review config before any AI reviewers are synced', async () => {
         render(
             <AiReviewTab
                 challengeId='challenge-1'
                 reviewers={[]}
+            />,
+        )
+
+        expect(await screen.findByRole('button', { name: 'Choose template' })).not.toBeNull()
+        expect(mockedFetchAiReviewConfigByChallenge)
+            .not.toHaveBeenCalled()
+    })
+
+    it('shows only AI_GATING as a visible review mode option for standard configs', async () => {
+        render(
+            <AiReviewTab
+                challengeId='challenge-1'
+                reviewers={persistedAiReviewers}
             />,
         )
 
@@ -114,7 +133,7 @@ describe('AiReviewTab review mode options', () => {
         render(
             <AiReviewTab
                 challengeId='challenge-1'
-                reviewers={[]}
+                reviewers={persistedAiReviewers}
             />,
         )
 

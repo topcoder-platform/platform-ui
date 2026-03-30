@@ -185,7 +185,7 @@ describe('EngagementEditorForm', () => {
     it('replaces the description with AI generated content', async () => {
         const user = userEvent.setup()
 
-        mockedAutowriteDescription.mockResolvedValue('<p>Generated description</p>')
+        mockedAutowriteDescription.mockResolvedValue('## Generated description')
 
         render(
             <MemoryRouter>
@@ -218,7 +218,7 @@ describe('EngagementEditorForm', () => {
         const descriptionField = screen.getByLabelText('Description') as HTMLTextAreaElement
 
         expect(descriptionField.value)
-            .toBe('Original engagement description')
+            .toContain('Original engagement description')
 
         await user.click(screen.getByRole('button', { name: 'AI Autowrite' }))
 
@@ -229,7 +229,7 @@ describe('EngagementEditorForm', () => {
 
         await waitFor(() => {
             expect(descriptionField.value)
-                .toBe('<p>Generated description</p>')
+                .toContain('<h2>Generated description</h2>')
         })
 
         expect(mockedShowSuccessToast)

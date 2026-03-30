@@ -167,6 +167,23 @@
     padding: 10px 12px;
 }
 
+.fieldGroup select {
+    background: #fff;
+    color: #1f1f1f;
+    cursor: pointer;
+
+    &:focus {
+        border-color: #5091ff;
+        outline: none;
+    }
+
+    &:disabled {
+        background: #f2f4f5;
+        color: #70757a;
+        cursor: not-allowed;
+    }
+}
+
 .fieldGroup input[type='range'] {
     min-height: auto;
     padding: 0;

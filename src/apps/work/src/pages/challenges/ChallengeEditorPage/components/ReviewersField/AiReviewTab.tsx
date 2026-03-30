@@ -496,6 +496,7 @@ export const AiReviewTab: FC<AiReviewTabProps> = (
         () => (reviewers || []).filter(isAiReviewer),
         [reviewers],
     )
+    const hasAssignedAiReviewers = aiReviewers.length > 0
     const assignedWorkflowIds = useMemo(
         () => new Set(
             aiReviewers
@@ -789,6 +790,19 @@ export const AiReviewTab: FC<AiReviewTabProps> = (
             setConfigurationMode(undefined)
             setConfigId(undefined)
             setIsConfigLoading(false)
+            setLoadError(undefined)
+            lastSavedConfigurationRef.current = DEFAULT_CONFIGURATION
+            return undefined
+        }
+
+        // Saved AI configs sync their workflows back into the challenge reviewers array.
+        // If there are no AI reviewers yet, there is no persisted config to load.
+        if (!hasAssignedAiReviewers) {
+            setConfiguration(DEFAULT_CONFIGURATION)
+            setConfigurationMode(undefined)
+            setConfigId(undefined)
+            setIsConfigLoading(false)
+            setLoadError(undefined)
             lastSavedConfigurationRef.current = DEFAULT_CONFIGURATION
             return undefined
         }
@@ -835,7 +849,7 @@ export const AiReviewTab: FC<AiReviewTabProps> = (
         return () => {
             mounted = false
         }
-    }, [normalizedChallengeId, onConfigPersisted])
+    }, [hasAssignedAiReviewers, normalizedChallengeId, onConfigPersisted])
 
     useEffect(() => {
         let mounted = true
