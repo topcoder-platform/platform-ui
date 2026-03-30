@@ -235,6 +235,7 @@ export const ManageSubmissionPage: FC<Props> = (props: Props) => {
 
             <BaseModal
                 title='Upload Submission'
+                size='lg'
                 open={isUploadModalOpen}
                 onClose={closeUploadModal}
             >

@@ -1,4 +1,4 @@
-import { UserRole } from '~/libs/core'
+import { UserRole } from '~/libs/core/lib/profile/profile-functions/profile-factory/user-role.enum'
 
 export const administratorOnlyRoles: UserRole[] = [
     UserRole.administrator,

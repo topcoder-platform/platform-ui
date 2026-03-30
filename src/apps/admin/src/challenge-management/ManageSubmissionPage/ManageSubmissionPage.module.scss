@@ -20,7 +20,8 @@
     display: flex;
     flex-direction: column;
     gap: $sp-6;
-    min-width: 420px;
+    width: 100%;
+    max-width: 620px;
 }
 
 .uploadFormFields {
