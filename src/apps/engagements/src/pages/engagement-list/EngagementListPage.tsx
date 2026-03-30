@@ -28,6 +28,7 @@ const DEFAULT_FILTERS: FilterState = {
 
 const PER_PAGE = 12
 const ANY_LOCATION = 'Any'
+const PRIVATE_ENGAGEMENT_ROLE_KEYWORDS = ['project manager', 'task manager', 'talent manager', 'admin']
 
 type CountryMatch = {
     name?: string
@@ -113,12 +114,22 @@ const buildLocationFilters = (
     }
 }
 
+const canIncludePrivateEngagements = (roles?: string[]): boolean => (
+    (roles ?? [])
+        .filter((role): role is string => typeof role === 'string')
+        .map(role => role
+            .trim()
+            .toLowerCase())
+        .some(role => PRIVATE_ENGAGEMENT_ROLE_KEYWORDS.some(keyword => role.includes(keyword)))
+)
+
 const EngagementListPage: FC = () => {
     const navigate = useNavigate()
     const location = useLocation()
     const profileContext = useProfileContext()
     const countryLookup = useCountryLookup()
     const isLoggedIn = profileContext.isLoggedIn
+    const canViewPrivateEngagements = canIncludePrivateEngagements(profileContext.profile?.roles)
 
     const [engagements, setEngagements] = useState<Engagement[]>([])
     const [loading, setLoading] = useState<boolean>(false)
@@ -150,6 +161,7 @@ const EngagementListPage: FC = () => {
         try {
             const response = await getEngagements({
                 countries: locationFilters.countries,
+                includePrivate: canViewPrivateEngagements,
                 page,
                 perPage: PER_PAGE,
                 search: filters.search || undefined,
@@ -174,7 +186,7 @@ const EngagementListPage: FC = () => {
                 setLoading(false)
             }
         }
-    }, [filters, locationFilters.countries, locationFilters.timeZones, page])
+    }, [canViewPrivateEngagements, filters, locationFilters.countries, locationFilters.timeZones, page])
 
     useEffect(() => {
         fetchEngagements()
