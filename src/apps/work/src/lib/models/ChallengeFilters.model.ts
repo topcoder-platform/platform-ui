@@ -1,4 +1,5 @@
 export interface ChallengeFilters {
+    memberId?: number | string
     name?: string
     type?: string
     status?: string | string[]

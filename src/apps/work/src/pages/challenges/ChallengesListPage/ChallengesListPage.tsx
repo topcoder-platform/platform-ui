@@ -284,12 +284,17 @@ export const ChallengesListPage: FC = () => {
     const [sortBy, setSortBy] = useState<string>(DEFAULT_SORT_BY)
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(DEFAULT_SORT_ORDER)
     const isPrivilegedUser = isAdmin || isManager
+    const selectedProjectId = projectIdFromRoute || filters.projectId
+    const scopedMemberId = !isPrivilegedUser && !selectedProjectId
+        ? loginUserInfo?.userId
+        : undefined
 
     const fetchParams: UseFetchChallengesParams = {
         ...filters,
+        memberId: scopedMemberId,
         page,
         perPage,
-        projectId: projectIdFromRoute || filters.projectId,
+        projectId: selectedProjectId,
         sortBy,
         sortOrder,
     }

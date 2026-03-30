@@ -273,6 +273,9 @@ function buildChallengeQuery(
     const values: Record<string, string | undefined> = {
         endDateEnd: asIsoDateString(filters.endDateEnd),
         endDateStart: asIsoDateString(filters.endDateStart),
+        memberId: filters.memberId !== undefined
+            ? String(filters.memberId)
+            : undefined,
         name: filters.name?.trim() || undefined,
         page: params.page ? String(params.page) : undefined,
         perPage: params.perPage ? String(params.perPage) : undefined,
