@@ -42,6 +42,11 @@
     gap: 12px;
 }
 
+.descriptionActions {
+    display: flex;
+    justify-content: flex-start;
+}
+
 .footer {
     align-items: flex-start;
     display: flex;

@@ -35,6 +35,7 @@ import {
     engagementEditorSchema,
 } from '../../../../lib/schemas/engagement-editor.schema'
 import {
+    autowriteDescription,
     createEngagement,
     updateEngagement,
 } from '../../../../lib/services'
@@ -283,6 +284,7 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
             ? String(props.engagement.id)
             : undefined,
     )
+    const [isGeneratingDescription, setIsGeneratingDescription] = useState<boolean>(false)
     const [isSaving, setIsSaving] = useState<boolean>(false)
     const [saveError, setSaveError] = useState<string | undefined>()
 
@@ -296,8 +298,10 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
     })
 
     const formState = formMethods.formState
+    const getValues = formMethods.getValues
     const handleSubmit = formMethods.handleSubmit
     const reset = formMethods.reset
+    const setValue = formMethods.setValue
     const values = formMethods.watch()
 
     const saveEngagement = useCallback(
@@ -374,6 +378,38 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
         reset(getDefaultValues(props.engagement, props.projectId))
     }, [props.engagement, props.projectId, reset])
 
+    const handleAIAutowrite = useCallback(async (): Promise<void> => {
+        if (isGeneratingDescription) {
+            return
+        }
+
+        const currentDescription = String(getValues('description') || '')
+            .trim()
+
+        if (!currentDescription) {
+            showErrorToast('Enter a description before using AI Autowrite.')
+            return
+        }
+
+        setIsGeneratingDescription(true)
+
+        try {
+            const generatedDescription = await autowriteDescription(currentDescription)
+
+            setValue('description', generatedDescription, {
+                shouldDirty: true,
+                shouldTouch: true,
+                shouldValidate: true,
+            })
+
+            showSuccessToast('AI generated description has been added.')
+        } catch {
+            showErrorToast('Failed to generate description. Please try again.')
+        } finally {
+            setIsGeneratingDescription(false)
+        }
+    }, [getValues, isGeneratingDescription, setValue])
+
     const onSubmit = useCallback(async (nextValues: EngagementEditorFormData): Promise<void> => {
         await saveEngagement(nextValues)
     }, [saveEngagement])
@@ -429,6 +465,16 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
                             placeholder='Describe the engagement'
                             required
                         />
+
+                        <div className={styles.descriptionActions}>
+                            <Button
+                                disabled={isSaving || isGeneratingDescription}
+                                label={isGeneratingDescription ? 'Generating...' : 'AI Autowrite'}
+                                onClick={handleAIAutowrite}
+                                secondary
+                                size='sm'
+                            />
+                        </div>
                     </div>
                 </section>
 

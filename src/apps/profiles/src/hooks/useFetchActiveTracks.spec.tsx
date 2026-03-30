@@ -1,6 +1,12 @@
-import { UserStats } from '~/libs/core'
+import type { UserStats } from '~/libs/core'
 
 import { getActiveTracks, MemberStatsTrack } from './useFetchActiveTracks'
+
+jest.mock('~/libs/core', () => ({
+    useMemberStats: jest.fn(),
+}), {
+    virtual: true,
+})
 
 describe('getActiveTracks', () => {
     it('keeps unified design and development subtracks visible', () => {
