@@ -97,6 +97,7 @@ const DEFAULT_CONFIGURATION: AiReviewConfigurationDraft = {
     templateId: undefined,
     workflows: [],
 }
+const LEGACY_AI_ONLY_OPTION_VALUE = 'LEGACY_AI_ONLY'
 
 let workflowDraftIdCounter = 0
 
@@ -356,7 +357,9 @@ const ReviewSettings: FC<ReviewSettingsProps> = (
 ) => {
     const minPassingThreshold = Number(props.configuration.minPassingThreshold || 0)
     const mode = props.configuration.mode || 'AI_GATING'
-    const showLegacyAiOnlyOption = mode === 'AI_ONLY'
+    const selectedMode = mode === 'AI_ONLY'
+        ? LEGACY_AI_ONLY_OPTION_VALUE
+        : mode
     const handleModeChange = useCallback(
         (event: ChangeEvent<HTMLSelectElement>): void => {
             props.onUpdate('mode', event.target.value as AiReviewConfigurationDraft['mode'])
@@ -389,12 +392,12 @@ const ReviewSettings: FC<ReviewSettingsProps> = (
                     <select
                         disabled={props.readOnly}
                         onChange={handleModeChange}
-                        value={mode}
+                        value={selectedMode}
                     >
-                        <option value='AI_GATING'>AI_GATING</option>
-                        {showLegacyAiOnlyOption
-                            ? <option disabled value='AI_ONLY'>AI_ONLY (legacy)</option>
+                        {mode === 'AI_ONLY'
+                            ? <option hidden value={LEGACY_AI_ONLY_OPTION_VALUE}>AI_ONLY (legacy)</option>
                             : undefined}
+                        <option value='AI_GATING'>AI_GATING</option>
                     </select>
                     <small>
                         {mode === 'AI_GATING'
