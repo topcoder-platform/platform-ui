@@ -10,19 +10,23 @@ export type EngagementStatus = 'Active' | 'Cancelled' | 'Closed' | 'Open' | 'Pen
 
 export type ApplicationStatus = 'REJECTED' | 'SELECTED' | 'SUBMITTED' | 'UNDER_REVIEW'
 
-export type AssignmentStatus = 'ACTIVE' | 'ASSIGNED' | 'TERMINATED'
+export type AssignmentStatus = 'ACTIVE' | 'ASSIGNED' | 'COMPLETED' | 'TERMINATED'
 
 export interface Assignment {
+    agreementRate: string
+    durationMonths?: number | string
     endDate: string
     engagementId: number | string
     id: number | string
     memberHandle: string
     memberId: number | string
     otherRemarks: string
+    ratePerHour?: string
     startDate: string
+    standardHoursPerWeek?: number | string
     status: AssignmentStatus | string
+    terminationReason?: string
     termsAccepted: boolean
-    agreementRate: string
 }
 
 export interface Application {
@@ -88,6 +92,8 @@ export interface EngagementFilters {
 export interface AssignmentPayment {
     amount?: number
     attributes?: {
+        agreementRate?: number | string
+        hoursWorked?: number | string
         remarks?: string
     }
     createdAt?: string
@@ -95,8 +101,10 @@ export interface AssignmentPayment {
     details?: Array<{
         amount?: number
         grossAmount?: number
+        hoursWorked?: number | string
         totalAmount?: number
     }>
+    hoursWorked?: number | string
     id?: number | string
     paymentId?: number | string
     status?: string

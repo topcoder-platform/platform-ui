@@ -10,6 +10,8 @@ import {
 } from '../../hooks'
 import {
     getPaymentAmount,
+    getPaymentHoursWorked,
+    getPaymentRemarks,
     getPaymentStatus,
 } from '../../utils'
 import {
@@ -85,6 +87,8 @@ const PaymentHistoryModal: FC<PaymentHistoryModalProps> = (
                         <ul className={styles.list}>
                             {paymentsResult.payments.map((payment, index) => {
                                 const paymentStatus = getPaymentStatus(payment)
+                                const paymentHoursWorked = getPaymentHoursWorked(payment)
+                                const paymentRemarks = getPaymentRemarks(payment)
                                 const normalizedPaymentStatus = paymentStatus
                                     .trim()
                                     .toLowerCase()
@@ -104,9 +108,18 @@ const PaymentHistoryModal: FC<PaymentHistoryModalProps> = (
                                         </div>
                                         <div className={styles.itemBody}>
                                             <div>{payment.title || payment.description || 'Payment'}</div>
-                                            <div className={styles.remarks}>
-                                                {payment.attributes?.remarks || 'No remarks'}
-                                            </div>
+                                            {paymentRemarks
+                                                ? <div className={styles.remarks}>{paymentRemarks}</div>
+                                                : <div className={styles.remarks}>No remarks</div>}
+                                            {paymentHoursWorked
+                                                ? (
+                                                    <div className={styles.hoursWorked}>
+                                                        Hours Worked:
+                                                        {' '}
+                                                        {paymentHoursWorked}
+                                                    </div>
+                                                )
+                                                : undefined}
                                             <div className={styles.date}>
                                                 {formatDate(payment.createdAt || payment.updatedAt)}
                                             </div>

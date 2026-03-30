@@ -21,13 +21,17 @@ import {
     Assignment,
 } from '../../models'
 import {
-    formatCurrency,
-} from '../../utils/payment.utils'
+    calculatePaymentAmount,
+    getAssignmentRatePerHour,
+    getAssignmentStandardHoursPerWeek,
+} from '../../utils'
+import { formatCurrency } from '../../utils/payment.utils'
 
 import styles from './PaymentFormModal.module.scss'
 
 export interface PaymentFormData {
     amount: number
+    hoursWorked: number
     remarks?: string
     title: string
 }
@@ -44,7 +48,7 @@ interface PaymentFormModalProps {
 }
 
 interface ValidationErrors {
-    amount?: string
+    hoursWorked?: string
     weekEnding?: string
 }
 
@@ -99,6 +103,21 @@ function isSaturday(value?: Date | null): boolean {
     return Boolean(value) && value?.getDay() === SATURDAY_DAY_INDEX
 }
 
+function normalizePositiveValue(value: unknown): string {
+    if (value === null || value === undefined || value === '') {
+        return ''
+    }
+
+    const parsedValue = Number(value)
+
+    if (!Number.isFinite(parsedValue) || parsedValue <= 0) {
+        return ''
+    }
+
+    return Number(parsedValue.toFixed(2))
+        .toString()
+}
+
 const WeekEndingInput = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(
     (props, ref): JSX.Element => (
         <input
@@ -119,11 +138,19 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
 ) => {
     const isSubmitting = props.isSubmitting === true
 
-    const [amount, setAmount] = useState<string>('')
     const [errors, setErrors] = useState<ValidationErrors>({})
+    const [hoursWorked, setHoursWorked] = useState<string>('')
     const [remarks, setRemarks] = useState<string>('')
     const [weekEndingDate, setWeekEndingDate] = useState<Date | null>(() => getDefaultWeekEndingDate())
 
+    const ratePerHour = useMemo(
+        () => getAssignmentRatePerHour(props.member || {}),
+        [props.member],
+    )
+    const amount = useMemo(
+        () => calculatePaymentAmount(hoursWorked, ratePerHour),
+        [hoursWorked, ratePerHour],
+    )
     const paymentTitle = useMemo(
         () => {
             if (!isSaturday(weekEndingDate)) {
@@ -140,11 +167,11 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
     )
 
     const resetState = useCallback((): void => {
-        setAmount('')
         setErrors({})
+        setHoursWorked(normalizePositiveValue(getAssignmentStandardHoursPerWeek(props.member || {})))
         setRemarks('')
         setWeekEndingDate(getDefaultWeekEndingDate())
-    }, [])
+    }, [props.member])
 
     useEffect(() => {
         if (!props.open) {
@@ -159,9 +186,10 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
         props.onCancel()
     }, [props, resetState])
 
+    // eslint-disable-next-line complexity
     const handleConfirm = useCallback(async (): Promise<void> => {
         const nextErrors: ValidationErrors = {}
-        const parsedAmount = Number(amount)
+        const parsedHoursWorked = Number(hoursWorked)
 
         if (!weekEndingDate) {
             nextErrors.weekEnding = 'Week ending date is required.'
@@ -171,12 +199,34 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
             nextErrors.weekEnding = 'Payment title cannot be generated from week ending.'
         }
 
-        if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
-            nextErrors.amount = 'Payment amount must be greater than 0.'
+        if (!Number.isFinite(parsedHoursWorked) || parsedHoursWorked <= 0) {
+            nextErrors.hoursWorked = 'Hours worked must be greater than 0.'
+        }
+
+        if (ratePerHour === undefined || ratePerHour <= 0) {
+            nextErrors.hoursWorked = 'Hourly pay rate is required to calculate payment amount.'
+        }
+
+        if (amount === undefined || amount <= 0) {
+            nextErrors.hoursWorked = nextErrors.hoursWorked || 'Payment amount must be greater than 0.'
         }
 
         if (Object.keys(nextErrors).length > 0) {
             setErrors(nextErrors)
+            return
+        }
+
+        if (
+            !weekEndingDate
+            || !isSaturday(weekEndingDate)
+            || !paymentTitle.trim()
+            || !Number.isFinite(parsedHoursWorked)
+            || parsedHoursWorked <= 0
+            || ratePerHour === undefined
+            || ratePerHour <= 0
+            || amount === undefined
+            || amount <= 0
+        ) {
             return
         }
 
@@ -186,13 +236,14 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
         }
 
         await props.onConfirm({
-            amount: parsedAmount,
+            amount,
+            hoursWorked: parsedHoursWorked,
             remarks: remarks.trim() || undefined,
             title: paymentTitle.trim(),
         })
 
         resetState()
-    }, [amount, paymentTitle, props, remarks, resetState, weekEndingDate])
+    }, [amount, hoursWorked, paymentTitle, props, ratePerHour, remarks, resetState, weekEndingDate])
 
     return (
         <BaseModal
@@ -223,7 +274,11 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
                         <span className={styles.infoValue}>{props.member?.memberHandle || '-'}</span>
                     </div>
                     <div className={styles.infoItem}>
-                        <span className={styles.infoLabel}>Agreed Rate</span>
+                        <span className={styles.infoLabel}>Rate Per Hour</span>
+                        <span className={styles.infoValue}>{formatCurrency(ratePerHour)}</span>
+                    </div>
+                    <div className={styles.infoItem}>
+                        <span className={styles.infoLabel}>Rate Per Week</span>
                         <span className={styles.infoValue}>{formatCurrency(props.member?.agreementRate)}</span>
                     </div>
                     <div className={styles.infoItem}>
@@ -266,27 +321,42 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
                 </div>
 
                 <div className={styles.fieldRow}>
+                    <label className={styles.label} htmlFor='payment-hours-worked'>
+                        Hours worked *
+                    </label>
+                    <input
+                        id='payment-hours-worked'
+                        className={styles.input}
+                        inputMode='decimal'
+                        onChange={event => {
+                            setHoursWorked(event.target.value)
+                            setErrors(previous => ({
+                                ...previous,
+                                hoursWorked: undefined,
+                            }))
+                        }}
+                        pattern='[0-9.]*'
+                        type='number'
+                        value={hoursWorked}
+                    />
+                    {errors.hoursWorked
+                        ? <p className={styles.error}>{errors.hoursWorked}</p>
+                        : undefined}
+                </div>
+
+                <div className={styles.fieldRow}>
                     <label className={styles.label} htmlFor='payment-amount'>
-                        Payment amount *
+                        Amount
                     </label>
                     <input
                         id='payment-amount'
-                        className={styles.input}
-                        min='0'
-                        onChange={event => {
-                            setAmount(event.target.value)
-                            setErrors(previous => ({
-                                ...previous,
-                                amount: undefined,
-                            }))
-                        }}
-                        step='0.01'
-                        type='number'
-                        value={amount}
+                        className={`${styles.input} ${styles.readOnlyInput}`}
+                        readOnly
+                        type='text'
+                        value={amount === undefined
+                            ? ''
+                            : amount.toFixed(2)}
                     />
-                    {errors.amount
-                        ? <p className={styles.error}>{errors.amount}</p>
-                        : undefined}
                 </div>
 
                 <div className={styles.fieldRow}>
@@ -296,8 +366,9 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
                     <textarea
                         id='payment-remarks'
                         className={styles.textarea}
+                        disabled={isSubmitting}
                         onChange={event => setRemarks(event.target.value)}
-                        rows={3}
+                        rows={4}
                         value={remarks}
                     />
                 </div>

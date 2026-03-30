@@ -7,7 +7,7 @@
   (`Review`, `Forum` when present, `Project`, and `Community`).
 - `components/ChallengeEditorForm.tsx`: React Hook Form container with autosave and manual save.
 - `components/*Field.tsx`: field-level components for each challenge section.
-- `components/ReviewersField/*`: tabbed human/AI reviewer configuration. Human reviewers stay on the challenge form, while AI reviewer configs load/save through the review API and sync saved AI workflows back into the challenge `reviewers` array. This section is hidden for `Task` and `Marathon Match` challenges because those flows use dedicated reviewer assignment UIs.
+- `components/ReviewersField/*`: tabbed human/AI reviewer configuration. Human reviewers stay on the challenge form, while AI reviewer configs load/save through the review API and sync saved AI workflows back into the challenge `reviewers` array. When AI reviewers exist without a persisted AI screening phase, the schedule editor injects a virtual `AI Screening` row after submission phases. This section is hidden for `Task` and `Marathon Match` challenges because those flows use dedicated reviewer assignment UIs.
 - `ChallengeEditorPage.module.scss` and `components/ChallengeEditorForm.module.scss`: page and form layout styling.
 
 ## Validation Rules

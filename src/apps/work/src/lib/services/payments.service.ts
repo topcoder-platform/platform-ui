@@ -32,6 +32,7 @@ interface MemberPaymentPayload {
     description: string
     details: PaymentDetailsPayload[]
     externalId: string
+    hoursWorked?: number
     origin: string
     status: string
     title: string
@@ -99,9 +100,11 @@ export async function createMemberPayment(
     remarks: string,
     rate: number | string,
     amount: number | string,
+    hoursWorked: number | string,
     billingAccountId: number | string,
 ): Promise<AssignmentPayment> {
     const numericAmount = Number(amount)
+    const numericHoursWorked = Number(hoursWorked)
 
     const payload: MemberPaymentPayload = {
         attributes: {
@@ -123,6 +126,9 @@ export async function createMemberPayment(
             },
         ],
         externalId: String(assignmentId),
+        hoursWorked: Number.isFinite(numericHoursWorked) && numericHoursWorked > 0
+            ? numericHoursWorked
+            : undefined,
         origin: 'Topcoder',
         status: DEFAULT_ENGAGEMENT_PAYMENT_STATUS,
         title: title.trim(),

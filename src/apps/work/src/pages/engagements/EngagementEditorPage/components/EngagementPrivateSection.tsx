@@ -15,6 +15,11 @@ import {
     FormCheckboxField,
     FormUserAutocomplete,
 } from '../../../../lib/components/form'
+import {
+    formatAssignmentCurrency,
+    getAssignmentStandardHoursPerWeek,
+} from '../../../../lib/utils'
+import { formatCurrency } from '../../../../lib/utils/payment.utils'
 
 import {
     AssignmentDetailsFormValue,
@@ -55,6 +60,20 @@ function formatDate(value?: string): string {
         month: 'short',
         year: 'numeric',
     })
+}
+
+function formatDurationMonths(value?: string): string {
+    if (!value) {
+        return '-'
+    }
+
+    const parsedValue = Number(value)
+
+    if (!Number.isFinite(parsedValue) || parsedValue <= 0) {
+        return value
+    }
+
+    return `${parsedValue} month${parsedValue === 1 ? '' : 's'}`
 }
 
 function getAssignmentLabel(index: number, count: number): string {
@@ -162,15 +181,27 @@ export const EngagementPrivateSection: FC = () => {
                                                                         ,
                                                                     </span>
                                                                     <span>
-                                                                        <span className={styles.detailLabel}>End:</span>
+                                                                        <span className={styles.detailLabel}>Duration:</span>
                                                                         {' '}
-                                                                        {formatDate(assignmentDetail.endDate)}
+                                                                        {formatDurationMonths(assignmentDetail.durationMonths)}
                                                                         ,
                                                                     </span>
                                                                     <span>
-                                                                        <span className={styles.detailLabel}>Rate:</span>
+                                                                        <span className={styles.detailLabel}>Rate/Hr:</span>
                                                                         {' '}
-                                                                        {assignmentDetail.agreementRate || '-'}
+                                                                        {formatAssignmentCurrency(assignmentDetail.ratePerHour) || '-'}
+                                                                        ,
+                                                                    </span>
+                                                                    <span>
+                                                                        <span className={styles.detailLabel}>Hours/Wk:</span>
+                                                                        {' '}
+                                                                        {getAssignmentStandardHoursPerWeek(assignmentDetail) || '-'}
+                                                                        ,
+                                                                    </span>
+                                                                    <span>
+                                                                        <span className={styles.detailLabel}>Rate/Wk:</span>
+                                                                        {' '}
+                                                                        {formatCurrency(assignmentDetail.agreementRate)}
                                                                     </span>
                                                                     <button
                                                                         className={styles.editLink}

@@ -50,11 +50,14 @@ interface BackendPaginatedResponse<T> {
 
 interface AssignmentDetails {
     agreementRate?: string
+    durationMonths?: number | string
     endDate?: string
     memberHandle?: string
     memberId?: number | string
     otherRemarks?: string
+    ratePerHour?: string
     startDate?: string
+    standardHoursPerWeek?: number | string
 }
 
 interface EngagementUpsertData extends Partial<Engagement> {
@@ -275,6 +278,14 @@ function serializeEngagementPayload(data: EngagementUpsertData): Record<string, 
                         .trim()
                 }
 
+                if (assignment.durationMonths !== undefined && assignment.durationMonths !== '') {
+                    const durationMonths = Number(assignment.durationMonths)
+
+                    if (Number.isFinite(durationMonths)) {
+                        entry.durationMonths = String(durationMonths)
+                    }
+                }
+
                 if (assignment.endDate) {
                     entry.endDate = assignment.endDate
                 }
@@ -288,8 +299,24 @@ function serializeEngagementPayload(data: EngagementUpsertData): Record<string, 
                         .trim()
                 }
 
+                if (assignment.ratePerHour) {
+                    entry.ratePerHour = String(assignment.ratePerHour)
+                        .trim()
+                }
+
                 if (assignment.startDate) {
                     entry.startDate = assignment.startDate
+                }
+
+                if (
+                    assignment.standardHoursPerWeek !== undefined
+                    && assignment.standardHoursPerWeek !== ''
+                ) {
+                    const standardHoursPerWeek = Number(assignment.standardHoursPerWeek)
+
+                    if (Number.isFinite(standardHoursPerWeek)) {
+                        entry.standardHoursPerWeek = String(standardHoursPerWeek)
+                    }
                 }
 
                 return entry
@@ -619,6 +646,23 @@ export async function updateEngagement(
     } catch (error) {
         throw normalizeError(error, 'Failed to update engagement')
     }
+}
+
+/**
+ * Partially updates engagement details.
+ *
+ * The engagements API currently accepts partial engagement payloads through the
+ * `PUT :id` update route rather than a dedicated `PATCH :id` handler.
+ *
+ * @param engagementId engagement identifier.
+ * @param data partial engagement payload.
+ * @returns normalized engagement response after the partial update.
+ */
+export async function partiallyUpdateEngagement(
+    engagementId: number | string,
+    data: EngagementUpsertData,
+): Promise<Engagement> {
+    return updateEngagement(engagementId, data)
 }
 
 export async function deleteEngagement(engagementId: number | string): Promise<void> {

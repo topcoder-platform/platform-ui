@@ -44,6 +44,9 @@ import {
 } from '../../../../lib/utils'
 
 import {
+    AssignmentDetailsFormValue,
+} from './AssignmentDetailsModal'
+import {
     EngagementLocationFields,
 } from './EngagementLocationFields'
 import {
@@ -59,14 +62,6 @@ import {
     EngagementStatusField,
 } from './EngagementStatusField'
 import styles from './EngagementEditorForm.module.scss'
-
-interface AssignmentDetailsFormValue {
-    agreementRate: string
-    endDate: string
-    memberHandle: string
-    otherRemarks?: string
-    startDate: string
-}
 
 export interface EngagementEditorFormData {
     anticipatedStart: string
@@ -98,15 +93,33 @@ interface SaveEngagementOptions {
 }
 
 type EngagementAssignment = Engagement['assignments'][number]
+type SerializedAssignmentDetailsPayload = {
+    agreementRate: string
+    durationMonths?: number
+    memberHandle: string
+    otherRemarks?: string
+    ratePerHour: string
+    standardHoursPerWeek?: number
+    startDate: string
+}
 
 function toAssignmentDetailsValue(assignment: EngagementAssignment): AssignmentDetailsFormValue {
     return {
         agreementRate: String(assignment.agreementRate || ''),
-        endDate: assignment.endDate || '',
+        durationMonths: assignment.durationMonths !== undefined && assignment.durationMonths !== null
+            ? String(assignment.durationMonths)
+            : '',
         memberHandle: String(assignment.memberHandle || ''),
         otherRemarks: assignment.otherRemarks
             ? String(assignment.otherRemarks)
             : undefined,
+        ratePerHour: assignment.ratePerHour
+            ? String(assignment.ratePerHour)
+            : '',
+        standardHoursPerWeek:
+            assignment.standardHoursPerWeek !== undefined && assignment.standardHoursPerWeek !== null
+                ? String(assignment.standardHoursPerWeek)
+                : '',
         startDate: assignment.startDate || '',
     }
 }
@@ -190,11 +203,11 @@ function createWorkloadOptions(): FormSelectOption[] {
 }
 
 function toPayload(values: EngagementEditorFormData): Partial<Engagement> & {
-    assignmentDetails?: AssignmentDetailsFormValue[]
+    assignmentDetails?: SerializedAssignmentDetailsPayload[]
 } {
     const rawRequiredMemberCount = values.requiredMemberCount
     const payload: Partial<Engagement> & {
-        assignmentDetails?: AssignmentDetailsFormValue[]
+        assignmentDetails?: SerializedAssignmentDetailsPayload[]
     } = {
         anticipatedStart: values.anticipatedStart,
         compensationRange: values.compensationRange,
@@ -234,12 +247,19 @@ function toPayload(values: EngagementEditorFormData): Partial<Engagement> & {
             .map(detail => ({
                 agreementRate: String(detail.agreementRate || '')
                     .trim(),
-                endDate: detail.endDate || '',
+                durationMonths: detail.durationMonths
+                    ? Number(detail.durationMonths)
+                    : undefined,
                 memberHandle: String(detail.memberHandle || '')
                     .trim(),
                 otherRemarks: detail.otherRemarks
                     ? String(detail.otherRemarks)
                         .trim()
+                    : undefined,
+                ratePerHour: String(detail.ratePerHour || '')
+                    .trim(),
+                standardHoursPerWeek: detail.standardHoursPerWeek
+                    ? Number(detail.standardHoursPerWeek)
                     : undefined,
                 startDate: detail.startDate || '',
             }))

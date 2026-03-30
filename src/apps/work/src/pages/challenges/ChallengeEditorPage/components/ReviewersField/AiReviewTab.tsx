@@ -50,6 +50,7 @@ import styles from './AiReviewTab.module.scss'
 interface AiReviewTabProps {
     challengeId?: string
     hasSubmissions?: boolean
+    onConfigRemoved?: () => void
     reviewers?: Reviewer[]
     trackId?: string
     typeId?: string
@@ -355,6 +356,7 @@ const ReviewSettings: FC<ReviewSettingsProps> = (
 ) => {
     const minPassingThreshold = Number(props.configuration.minPassingThreshold || 0)
     const mode = props.configuration.mode || 'AI_GATING'
+    const showLegacyAiOnlyOption = mode === 'AI_ONLY'
     const handleModeChange = useCallback(
         (event: ChangeEvent<HTMLSelectElement>): void => {
             props.onUpdate('mode', event.target.value as AiReviewConfigurationDraft['mode'])
@@ -390,12 +392,14 @@ const ReviewSettings: FC<ReviewSettingsProps> = (
                         value={mode}
                     >
                         <option value='AI_GATING'>AI_GATING</option>
-                        <option value='AI_ONLY'>AI_ONLY</option>
+                        {showLegacyAiOnlyOption
+                            ? <option disabled value='AI_ONLY'>AI_ONLY (legacy)</option>
+                            : undefined}
                     </select>
                     <small>
                         {mode === 'AI_GATING'
                             ? 'AI blocks low-quality submissions and lets the rest continue to human review.'
-                            : 'AI makes the final decision for all submissions.'}
+                            : 'AI_ONLY is a legacy configuration and is no longer available for new setups.'}
                     </small>
                 </label>
 
@@ -435,6 +439,7 @@ export const AiReviewTab: FC<AiReviewTabProps> = (
     props: AiReviewTabProps,
 ) => {
     const normalizedChallengeId = normalizeReviewerText(props.challengeId)
+    const onConfigRemoved = props.onConfigRemoved
     const readOnly = props.hasSubmissions === true
     const onConfigPersisted = props.onConfigPersisted
     const reviewers = props.reviewers
@@ -691,7 +696,8 @@ export const AiReviewTab: FC<AiReviewTabProps> = (
 
         resetConfiguration()
         setConfigurationMode(undefined)
-    }, [configId, resetConfiguration])
+        onConfigRemoved?.()
+    }, [configId, onConfigRemoved, resetConfiguration])
     const handleChooseTemplateClick = useCallback((): void => {
         setConfigurationMode('template')
     }, [])

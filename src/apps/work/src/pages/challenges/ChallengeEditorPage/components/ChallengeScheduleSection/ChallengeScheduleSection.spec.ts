@@ -1,6 +1,8 @@
 import { ChallengePhase } from '../../../../../lib/models'
 
 import {
+    AI_SCREENING_PHASE_NAME,
+    buildSchedulePhaseRows,
     canEditPhaseStartDate,
     recalculatePhases,
 } from './ChallengeScheduleSection.utils'
@@ -96,6 +98,47 @@ describe('ChallengeScheduleSection helpers', () => {
                 .toBe(updatedStartDate)
             expect(result.phases[2]?.scheduledStartDate)
                 .toBe(updatedStartDate)
+        })
+    })
+
+    describe('buildSchedulePhaseRows', () => {
+        it('injects virtual AI screening rows after submission phases when AI reviewers are present', () => {
+            const rows = buildSchedulePhaseRows([
+                buildPhase({
+                    name: 'Checkpoint Submission',
+                    phaseId: 'checkpoint-submission',
+                }),
+                buildPhase({
+                    name: 'Submission',
+                    phaseId: 'submission',
+                }),
+            ], true)
+
+            expect(rows.map(row => row.phase.name))
+                .toEqual([
+                    'Checkpoint Submission',
+                    AI_SCREENING_PHASE_NAME,
+                    'Submission',
+                    AI_SCREENING_PHASE_NAME,
+                ])
+            expect(rows.filter(row => row.isVirtual))
+                .toHaveLength(2)
+        })
+
+        it('does not inject a virtual AI screening row when a real one already exists', () => {
+            const rows = buildSchedulePhaseRows([
+                buildPhase({
+                    name: 'Submission',
+                    phaseId: 'submission',
+                }),
+                buildPhase({
+                    name: AI_SCREENING_PHASE_NAME,
+                    phaseId: 'ai-screening',
+                }),
+            ], true)
+
+            expect(rows.filter(row => row.isVirtual))
+                .toHaveLength(0)
         })
     })
 })

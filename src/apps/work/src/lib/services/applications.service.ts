@@ -199,9 +199,11 @@ export async function updateApplicationStatus(
 
 export interface AssignmentApprovalDetails {
     agreementRate: string
-    endDate: string
+    durationMonths: number
     otherRemarks?: string
+    ratePerHour: string
     startDate: string
+    standardHoursPerWeek: number
 }
 
 export async function approveApplication(

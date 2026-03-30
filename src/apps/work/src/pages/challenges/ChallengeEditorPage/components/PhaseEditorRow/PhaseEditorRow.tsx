@@ -17,6 +17,7 @@ export interface PhaseEditorRowProps {
     onStartDateChange: (index: number, date: Date | null) => void
     onEndDateChange: (index: number, date: Date | null) => void
     isStartDateEditable?: boolean
+    isVirtual?: boolean
     disabled?: boolean
     startDate?: Date | string
     endDate?: Date | string
@@ -37,6 +38,20 @@ export const PhaseEditorRow: FC<PhaseEditorRowProps> = (props: PhaseEditorRowPro
     const minEndDate = props.minEndDate
     const formContext = useFormContext()
     const durationError = get(formContext.formState.errors, `phases.${index}.duration.message`) as string | undefined
+
+    if (props.isVirtual) {
+        return (
+            <div className={styles.row}>
+                <div className={styles.phaseName}>
+                    {phase.name || 'Virtual Phase'}
+                </div>
+
+                <div className={styles.virtualPhaseValue}>
+                    Automated (AI)
+                </div>
+            </div>
+        )
+    }
 
     function handleDurationChange(durationMinutes: number): void {
         props.onDurationChange(index, durationMinutes)

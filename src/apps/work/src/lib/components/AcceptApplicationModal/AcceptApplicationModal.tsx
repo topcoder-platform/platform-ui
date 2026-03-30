@@ -16,7 +16,12 @@ import {
     Application,
 } from '../../models'
 import {
+    calculateAssignmentRatePerWeek,
+    sanitizePositiveNumericInput,
     serializeTentativeAssignmentDate,
+    toPositiveInteger,
+    toPositiveNumber,
+    toPositiveNumberWithMaxDecimalPlaces,
 } from '../../utils'
 import {
     StartDateTimeInput,
@@ -26,9 +31,11 @@ import styles from './AcceptApplicationModal.module.scss'
 
 export interface AcceptApplicationFormData {
     agreementRate: string
-    endDate: string
+    durationMonths: number
     otherRemarks?: string
+    ratePerHour: string
     startDate: string
+    standardHoursPerWeek: number
 }
 
 interface AcceptApplicationModalProps {
@@ -40,53 +47,43 @@ interface AcceptApplicationModalProps {
 }
 
 interface ValidationErrors {
-    agreementRate?: string
-    endDate?: string
+    durationMonths?: string
+    ratePerHour?: string
     startDate?: string
-}
-
-function parseDate(value: Date | undefined): number {
-    if (!value) {
-        return 0
-    }
-
-    return value.getTime()
+    standardHoursPerWeek?: string
 }
 
 const AcceptApplicationModal: FC<AcceptApplicationModalProps> = (
     props: AcceptApplicationModalProps,
 ) => {
-    const [agreementRate, setAgreementRate] = useState<string>('')
-    const [endDate, setEndDate] = useState<Date | undefined>()
+    const [durationMonths, setDurationMonths] = useState<string>('')
     const [errors, setErrors] = useState<ValidationErrors>({})
     const [otherRemarks, setOtherRemarks] = useState<string>('')
+    const [ratePerHour, setRatePerHour] = useState<string>('')
     const [startDate, setStartDate] = useState<Date | undefined>()
+    const [standardHoursPerWeek, setStandardHoursPerWeek] = useState<string>('')
 
     const isSubmitting = props.isSubmitting === true
 
     const minStartDate = useMemo(() => new Date(), [])
-
-    const minEndDate = useMemo(() => {
-        if (!startDate) {
-            return minStartDate
-        }
-
-        return startDate
-    }, [minStartDate, startDate])
-
     const timezone = useMemo(
         () => Intl.DateTimeFormat()
             .resolvedOptions()
             .timeZone,
         [],
     )
+    const agreementRate = useMemo(
+        () => calculateAssignmentRatePerWeek(ratePerHour, standardHoursPerWeek),
+        [ratePerHour, standardHoursPerWeek],
+    )
 
     const resetState = useCallback((): void => {
-        setAgreementRate('')
-        setEndDate(undefined)
+        setDurationMonths('')
         setErrors({})
         setOtherRemarks('')
+        setRatePerHour('')
         setStartDate(undefined)
+        setStandardHoursPerWeek('')
     }, [])
 
     const handleCancel = useCallback((): void => {
@@ -96,21 +93,28 @@ const AcceptApplicationModal: FC<AcceptApplicationModalProps> = (
 
     const handleConfirm = useCallback(async (): Promise<void> => {
         const nextErrors: ValidationErrors = {}
+        const parsedDurationMonths = toPositiveInteger(durationMonths)
+        const parsedRatePerHour = toPositiveNumber(ratePerHour)
+        const parsedStandardHoursPerWeek = toPositiveNumberWithMaxDecimalPlaces(
+            standardHoursPerWeek,
+            2,
+        )
 
         if (!startDate) {
-            nextErrors.startDate = 'Tentative start date is required.'
+            nextErrors.startDate = 'Billing start date is required.'
         }
 
-        if (!endDate) {
-            nextErrors.endDate = 'Tentative end date is required.'
+        if (parsedDurationMonths === undefined) {
+            nextErrors.durationMonths = 'Duration must be a positive whole number.'
         }
 
-        if (startDate && endDate && parseDate(endDate) < parseDate(startDate)) {
-            nextErrors.endDate = 'Tentative end date must be after start date.'
+        if (parsedRatePerHour === undefined) {
+            nextErrors.ratePerHour = 'Rate per hour must be a positive number.'
         }
 
-        if (!agreementRate.trim()) {
-            nextErrors.agreementRate = 'Assignment rate is required.'
+        if (parsedStandardHoursPerWeek === undefined) {
+            nextErrors.standardHoursPerWeek = 'Standard hours per week must be a '
+                + 'positive number with up to 2 decimal places.'
         }
 
         if (Object.keys(nextErrors).length > 0) {
@@ -118,15 +122,35 @@ const AcceptApplicationModal: FC<AcceptApplicationModalProps> = (
             return
         }
 
+        if (
+            !startDate
+            || parsedDurationMonths === undefined
+            || parsedRatePerHour === undefined
+            || parsedStandardHoursPerWeek === undefined
+        ) {
+            return
+        }
+
         await props.onConfirm({
-            agreementRate: agreementRate.trim(),
-            endDate: serializeTentativeAssignmentDate(endDate),
+            agreementRate,
+            durationMonths: parsedDurationMonths,
             otherRemarks: otherRemarks.trim() || undefined,
+            ratePerHour: parsedRatePerHour.toString(),
+            standardHoursPerWeek: parsedStandardHoursPerWeek,
             startDate: serializeTentativeAssignmentDate(startDate),
         })
 
         resetState()
-    }, [agreementRate, endDate, otherRemarks, props, resetState, startDate])
+    }, [
+        agreementRate,
+        durationMonths,
+        otherRemarks,
+        props,
+        ratePerHour,
+        resetState,
+        standardHoursPerWeek,
+        startDate,
+    ])
 
     return (
         <BaseModal
@@ -166,7 +190,7 @@ const AcceptApplicationModal: FC<AcceptApplicationModalProps> = (
                     </p>
 
                     <StartDateTimeInput
-                        label='Tentative start date'
+                        label='Billing start date'
                         minDate={minStartDate}
                         showTimeSelect={false}
                         showTimezone={false}
@@ -185,46 +209,92 @@ const AcceptApplicationModal: FC<AcceptApplicationModalProps> = (
                 </div>
 
                 <div className={styles.fieldRow}>
-                    <StartDateTimeInput
-                        label='Tentative end date'
-                        minDate={minEndDate}
-                        showTimeSelect={false}
-                        showTimezone={false}
-                        value={endDate}
-                        onChange={nextValue => {
-                            setEndDate(nextValue || undefined)
+                    <label className={styles.label} htmlFor='accept-application-duration-months'>
+                        Duration (in months) *
+                    </label>
+                    <input
+                        id='accept-application-duration-months'
+                        className={styles.input}
+                        inputMode='decimal'
+                        onChange={event => {
+                            setDurationMonths(sanitizePositiveNumericInput(event.target.value))
                             setErrors(previous => ({
                                 ...previous,
-                                endDate: undefined,
+                                durationMonths: undefined,
                             }))
                         }}
+                        pattern='[0-9.]*'
+                        type='text'
+                        value={durationMonths}
                     />
-                    {errors.endDate
-                        ? <p className={styles.error}>{errors.endDate}</p>
+                    {errors.durationMonths
+                        ? <p className={styles.error}>{errors.durationMonths}</p>
+                        : undefined}
+                </div>
+
+                <div className={styles.fieldRow}>
+                    <label className={styles.label} htmlFor='accept-application-rate-per-hour'>
+                        Rate per hour *
+                    </label>
+                    <input
+                        id='accept-application-rate-per-hour'
+                        className={styles.input}
+                        onChange={event => {
+                            setRatePerHour(sanitizePositiveNumericInput(event.target.value))
+                            setErrors(previous => ({
+                                ...previous,
+                                ratePerHour: undefined,
+                            }))
+                        }}
+                        inputMode='decimal'
+                        pattern='[0-9.]*'
+                        type='text'
+                        value={ratePerHour}
+                    />
+                    {errors.ratePerHour
+                        ? <p className={styles.error}>{errors.ratePerHour}</p>
+                        : undefined}
+                </div>
+
+                <div className={styles.fieldRow}>
+                    <label className={styles.label} htmlFor='accept-application-standard-hours'>
+                        Standard hours per week *
+                    </label>
+                    <input
+                        id='accept-application-standard-hours'
+                        className={styles.input}
+                        inputMode='decimal'
+                        onChange={event => {
+                            setStandardHoursPerWeek(
+                                sanitizePositiveNumericInput(event.target.value, 2),
+                            )
+                            setErrors(previous => ({
+                                ...previous,
+                                standardHoursPerWeek: undefined,
+                            }))
+                        }}
+                        pattern='[0-9.]*'
+                        type='text'
+                        value={standardHoursPerWeek}
+                    />
+                    {errors.standardHoursPerWeek
+                        ? <p className={styles.error}>{errors.standardHoursPerWeek}</p>
                         : undefined}
                 </div>
 
                 <div className={styles.fieldRow}>
                     <label className={styles.label} htmlFor='accept-application-rate'>
-                        Assignment rate (per week) *
+                        Assignment rate per week *
                     </label>
                     <input
                         id='accept-application-rate'
                         className={styles.input}
-                        min='0'
-                        onChange={event => {
-                            setAgreementRate(event.target.value)
-                            setErrors(previous => ({
-                                ...previous,
-                                agreementRate: undefined,
-                            }))
-                        }}
-                        step='0.01'
-                        type='number'
+                        readOnly
+                        type='text'
                         value={agreementRate}
                     />
-                    {errors.agreementRate
-                        ? <p className={styles.error}>{errors.agreementRate}</p>
+                    {!agreementRate
+                        ? <p className={styles.error}>Assignment rate is calculated after entering hourly details.</p>
                         : undefined}
                 </div>
 

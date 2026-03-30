@@ -15,6 +15,16 @@ function toNumber(value: unknown): number | undefined {
     return parsed
 }
 
+function toOptionalString(value: unknown): string | undefined {
+    if (typeof value !== 'string') {
+        return undefined
+    }
+
+    const normalized = value.trim()
+
+    return normalized || undefined
+}
+
 export function formatCurrency(value: unknown): string {
     const parsed = toNumber(value)
 
@@ -49,12 +59,112 @@ export function getPaymentStatus(payment: AssignmentPayment): string {
     return String(payment.status)
 }
 
+/**
+ * Resolves the optional hours-worked value returned for a payment.
+ *
+ * @param payment payment record returned by the finance API.
+ * @returns formatted hours-worked value, or an empty string when the field is unavailable.
+ */
+export function getPaymentHoursWorked(payment: AssignmentPayment): string {
+    const paymentDetails = Array.isArray(payment.details) && payment.details.length > 0
+        ? payment.details[0]
+        : undefined
+    const value = payment.hoursWorked
+        ?? payment.attributes?.hoursWorked
+        ?? paymentDetails?.hoursWorked
+
+    if (value === null || value === undefined || value === '') {
+        return ''
+    }
+
+    const parsedValue = Number(value)
+
+    if (!Number.isFinite(parsedValue) || parsedValue <= 0) {
+        return ''
+    }
+
+    return Number(parsedValue.toFixed(2))
+        .toString()
+}
+
 export function getAssignmentStatus(member: Partial<Assignment>): string {
     if (!member.status) {
         return ''
     }
 
     return String(member.status)
+}
+
+/**
+ * Reads the assignment standard hours value from a member object.
+ *
+ * @param member selected assignment/member record.
+ * @returns standard hours per week, when available.
+ */
+export function getAssignmentStandardHoursPerWeek(
+    member: Partial<Assignment>,
+): number | string | undefined {
+    return member.standardHoursPerWeek
+}
+
+/**
+ * Resolves the hourly assignment rate for payment calculation.
+ *
+ * @param member selected assignment/member record.
+ * @returns hourly pay rate, or `undefined` when it cannot be derived.
+ */
+export function getAssignmentRatePerHour(
+    member: Partial<Assignment>,
+): number | undefined {
+    const directRate = toNumber(member.ratePerHour)
+
+    if (directRate !== undefined && directRate > 0) {
+        return directRate
+    }
+
+    const standardHoursPerWeek = toNumber(getAssignmentStandardHoursPerWeek(member))
+    const agreementRate = toNumber(member.agreementRate)
+
+    if (
+        standardHoursPerWeek === undefined
+        || standardHoursPerWeek <= 0
+        || agreementRate === undefined
+        || agreementRate <= 0
+    ) {
+        return undefined
+    }
+
+    return agreementRate / standardHoursPerWeek
+}
+
+/**
+ * Calculates the payment amount from hours worked and hourly pay rate.
+ *
+ * @param hoursWorked worked hours for the payment week.
+ * @param ratePerHour assignment hourly pay rate.
+ * @returns calculated amount with two decimal places, or `undefined` when the inputs are incomplete or invalid.
+ */
+export function calculatePaymentAmount(
+    hoursWorked: unknown,
+    ratePerHour: unknown,
+): number | undefined {
+    const parsedHoursWorked = toNumber(hoursWorked)
+    const parsedRatePerHour = toNumber(ratePerHour)
+
+    if (
+        parsedHoursWorked === undefined
+        || parsedHoursWorked <= 0
+        || parsedRatePerHour === undefined
+        || parsedRatePerHour <= 0
+    ) {
+        return undefined
+    }
+
+    return Number((parsedHoursWorked * parsedRatePerHour).toFixed(2))
+}
+
+export function getPaymentRemarks(payment: AssignmentPayment): string {
+    return toOptionalString(payment.attributes?.remarks) || ''
 }
 
 export function normalizeAssignmentStatus(status: string): string {

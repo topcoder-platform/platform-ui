@@ -17,17 +17,25 @@ import {
     StartDateTimeInput,
 } from '../../../../lib/components/form'
 import {
+    calculateAssignmentRatePerWeek,
+    deserializeTentativeAssignmentDate,
+    sanitizePositiveNumericInput,
     serializeTentativeAssignmentDate,
+    toPositiveInteger,
+    toPositiveNumber,
+    toPositiveNumberWithMaxDecimalPlaces,
 } from '../../../../lib/utils'
 
 import styles from './AssignmentDetailsModal.module.scss'
 
 export interface AssignmentDetailsFormValue {
     agreementRate: string
-    endDate: string
+    durationMonths: string
     memberHandle: string
     otherRemarks?: string
+    ratePerHour: string
     startDate: string
+    standardHoursPerWeek: string
 }
 
 interface AssignmentDetailsModalProps {
@@ -39,32 +47,25 @@ interface AssignmentDetailsModalProps {
 }
 
 interface ValidationErrors {
-    agreementRate?: string
-    endDate?: string
+    durationMonths?: string
+    ratePerHour?: string
     startDate?: string
-}
-
-function toDate(value: string | undefined): Date | undefined {
-    if (!value) {
-        return undefined
-    }
-
-    const date = new Date(value)
-    if (Number.isNaN(date.getTime())) {
-        return undefined
-    }
-
-    return date
+    standardHoursPerWeek?: string
 }
 
 export const AssignmentDetailsModal: FC<AssignmentDetailsModalProps> = (
     props: AssignmentDetailsModalProps,
 ) => {
-    const [agreementRate, setAgreementRate] = useState<string>(props.initialValue?.agreementRate || '')
-    const [endDate, setEndDate] = useState<Date | undefined>(toDate(props.initialValue?.endDate))
+    const [durationMonths, setDurationMonths] = useState<string>(props.initialValue?.durationMonths || '')
     const [errors, setErrors] = useState<ValidationErrors>({})
     const [otherRemarks, setOtherRemarks] = useState<string>(props.initialValue?.otherRemarks || '')
-    const [startDate, setStartDate] = useState<Date | undefined>(toDate(props.initialValue?.startDate))
+    const [ratePerHour, setRatePerHour] = useState<string>(props.initialValue?.ratePerHour || '')
+    const [startDate, setStartDate] = useState<Date | undefined>(
+        deserializeTentativeAssignmentDate(props.initialValue?.startDate),
+    )
+    const [standardHoursPerWeek, setStandardHoursPerWeek] = useState<string>(
+        props.initialValue?.standardHoursPerWeek || '',
+    )
 
     const minStartDate = useMemo(() => new Date(), [])
     const timezone = useMemo(
@@ -73,10 +74,9 @@ export const AssignmentDetailsModal: FC<AssignmentDetailsModalProps> = (
             .timeZone,
         [],
     )
-
-    const minEndDate = useMemo(
-        () => (startDate || minStartDate),
-        [minStartDate, startDate],
+    const agreementRate = useMemo(
+        () => calculateAssignmentRatePerWeek(ratePerHour, standardHoursPerWeek),
+        [ratePerHour, standardHoursPerWeek],
     )
 
     useEffect(() => {
@@ -84,30 +84,38 @@ export const AssignmentDetailsModal: FC<AssignmentDetailsModalProps> = (
             return
         }
 
-        setAgreementRate(props.initialValue?.agreementRate || '')
-        setStartDate(toDate(props.initialValue?.startDate))
-        setEndDate(toDate(props.initialValue?.endDate))
+        setDurationMonths(props.initialValue?.durationMonths || '')
+        setRatePerHour(props.initialValue?.ratePerHour || '')
+        setStartDate(deserializeTentativeAssignmentDate(props.initialValue?.startDate))
+        setStandardHoursPerWeek(props.initialValue?.standardHoursPerWeek || '')
         setOtherRemarks(props.initialValue?.otherRemarks || '')
         setErrors({})
     }, [props.initialValue, props.open])
 
     const handleSave = useCallback((): void => {
         const nextErrors: ValidationErrors = {}
+        const parsedDurationMonths = toPositiveInteger(durationMonths)
+        const parsedRatePerHour = toPositiveNumber(ratePerHour)
+        const parsedStandardHoursPerWeek = toPositiveNumberWithMaxDecimalPlaces(
+            standardHoursPerWeek,
+            2,
+        )
 
         if (!startDate) {
-            nextErrors.startDate = 'Start date is required.'
+            nextErrors.startDate = 'Engagement start date is required.'
         }
 
-        if (!endDate) {
-            nextErrors.endDate = 'End date is required.'
+        if (parsedDurationMonths === undefined) {
+            nextErrors.durationMonths = 'Duration must be a positive whole number.'
         }
 
-        if (startDate && endDate && endDate.getTime() < startDate.getTime()) {
-            nextErrors.endDate = 'End date must be after start date.'
+        if (parsedRatePerHour === undefined) {
+            nextErrors.ratePerHour = 'Rate per hour must be a positive number.'
         }
 
-        if (!agreementRate.trim()) {
-            nextErrors.agreementRate = 'Agreement rate is required.'
+        if (parsedStandardHoursPerWeek === undefined) {
+            nextErrors.standardHoursPerWeek = 'Standard hours per week must be a '
+                + 'positive number with up to 2 decimal places.'
         }
 
         if (Object.keys(nextErrors).length > 0) {
@@ -115,14 +123,33 @@ export const AssignmentDetailsModal: FC<AssignmentDetailsModalProps> = (
             return
         }
 
+        if (
+            !startDate
+            || parsedDurationMonths === undefined
+            || parsedRatePerHour === undefined
+            || parsedStandardHoursPerWeek === undefined
+        ) {
+            return
+        }
+
         props.onSave({
-            agreementRate: agreementRate.trim(),
-            endDate: serializeTentativeAssignmentDate(endDate),
+            agreementRate,
+            durationMonths: String(parsedDurationMonths),
             memberHandle: props.memberHandle || '',
             otherRemarks: otherRemarks.trim() || undefined,
+            ratePerHour: parsedRatePerHour.toString(),
+            standardHoursPerWeek: String(parsedStandardHoursPerWeek),
             startDate: serializeTentativeAssignmentDate(startDate),
         })
-    }, [agreementRate, endDate, otherRemarks, props, startDate])
+    }, [
+        agreementRate,
+        durationMonths,
+        otherRemarks,
+        props,
+        ratePerHour,
+        standardHoursPerWeek,
+        startDate,
+    ])
 
     return (
         <BaseModal
@@ -158,7 +185,7 @@ export const AssignmentDetailsModal: FC<AssignmentDetailsModalProps> = (
                         {timezone}
                     </p>
                     <StartDateTimeInput
-                        label='Start date *'
+                        label='Engagement start date *'
                         minDate={minStartDate}
                         onChange={value => {
                             setStartDate(value || undefined)
@@ -177,46 +204,92 @@ export const AssignmentDetailsModal: FC<AssignmentDetailsModalProps> = (
                 </div>
 
                 <div className={styles.fieldRow}>
-                    <StartDateTimeInput
-                        label='End date *'
-                        minDate={minEndDate}
-                        onChange={value => {
-                            setEndDate(value || undefined)
+                    <label className={styles.label} htmlFor='assignment-duration-months'>
+                        Duration (in months) *
+                    </label>
+                    <input
+                        id='assignment-duration-months'
+                        className={styles.input}
+                        inputMode='decimal'
+                        onChange={event => {
+                            setDurationMonths(sanitizePositiveNumericInput(event.target.value))
                             setErrors(previous => ({
                                 ...previous,
-                                endDate: undefined,
+                                durationMonths: undefined,
                             }))
                         }}
-                        showTimeSelect={false}
-                        showTimezone={false}
-                        value={endDate}
+                        pattern='[0-9.]*'
+                        type='text'
+                        value={durationMonths}
                     />
-                    {errors.endDate
-                        ? <p className={styles.error}>{errors.endDate}</p>
+                    {errors.durationMonths
+                        ? <p className={styles.error}>{errors.durationMonths}</p>
+                        : undefined}
+                </div>
+
+                <div className={styles.fieldRow}>
+                    <label className={styles.label} htmlFor='assignment-rate-per-hour'>
+                        Rate per hour *
+                    </label>
+                    <input
+                        id='assignment-rate-per-hour'
+                        className={styles.input}
+                        inputMode='decimal'
+                        onChange={event => {
+                            setRatePerHour(sanitizePositiveNumericInput(event.target.value))
+                            setErrors(previous => ({
+                                ...previous,
+                                ratePerHour: undefined,
+                            }))
+                        }}
+                        pattern='[0-9.]*'
+                        type='text'
+                        value={ratePerHour}
+                    />
+                    {errors.ratePerHour
+                        ? <p className={styles.error}>{errors.ratePerHour}</p>
+                        : undefined}
+                </div>
+
+                <div className={styles.fieldRow}>
+                    <label className={styles.label} htmlFor='assignment-standard-hours'>
+                        Standard hours per week *
+                    </label>
+                    <input
+                        id='assignment-standard-hours'
+                        className={styles.input}
+                        inputMode='decimal'
+                        onChange={event => {
+                            setStandardHoursPerWeek(
+                                sanitizePositiveNumericInput(event.target.value, 2),
+                            )
+                            setErrors(previous => ({
+                                ...previous,
+                                standardHoursPerWeek: undefined,
+                            }))
+                        }}
+                        pattern='[0-9.]*'
+                        type='text'
+                        value={standardHoursPerWeek}
+                    />
+                    {errors.standardHoursPerWeek
+                        ? <p className={styles.error}>{errors.standardHoursPerWeek}</p>
                         : undefined}
                 </div>
 
                 <div className={styles.fieldRow}>
                     <label className={styles.label} htmlFor='assignment-rate'>
-                        Agreement rate (per week) *
+                        Assignment rate per week *
                     </label>
                     <input
                         id='assignment-rate'
                         className={styles.input}
-                        min='0'
-                        onChange={event => {
-                            setAgreementRate(event.target.value)
-                            setErrors(previous => ({
-                                ...previous,
-                                agreementRate: undefined,
-                            }))
-                        }}
-                        step='0.01'
-                        type='number'
+                        readOnly
+                        type='text'
                         value={agreementRate}
                     />
-                    {errors.agreementRate
-                        ? <p className={styles.error}>{errors.agreementRate}</p>
+                    {!agreementRate
+                        ? <p className={styles.error}>Assignment rate is calculated after entering hourly details.</p>
                         : undefined}
                 </div>
 

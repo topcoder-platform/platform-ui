@@ -107,6 +107,19 @@ export const ReviewersField: FC = () => {
         },
         [formContext, phases],
     )
+    const handleAiConfigRemoved = useCallback((): void => {
+        const currentReviewers = formContext.getValues('reviewers') as Reviewer[] | undefined
+        const nextReviewers = (currentReviewers || []).filter(reviewer => !isAiReviewer(reviewer))
+
+        if (!hasReviewerChanges(currentReviewers, nextReviewers)) {
+            return
+        }
+
+        formContext.setValue('reviewers', nextReviewers, {
+            shouldDirty: true,
+            shouldValidate: true,
+        })
+    }, [formContext])
 
     return (
         <div className={styles.tabsContainer}>
@@ -162,6 +175,7 @@ export const ReviewersField: FC = () => {
                     challengeId={challengeId}
                     hasSubmissions={hasSubmissions}
                     onConfigPersisted={handleAiConfigPersisted}
+                    onConfigRemoved={handleAiConfigRemoved}
                     reviewers={reviewerRows}
                     trackId={trackId}
                     typeId={typeId}

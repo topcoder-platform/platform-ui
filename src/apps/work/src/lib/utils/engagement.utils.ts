@@ -6,6 +6,8 @@ import {
     EngagementWorkload,
 } from '../models'
 
+import { calculateAssignmentRatePerWeek } from './assignment-rates.utils'
+
 const STATUS_TO_API: Record<string, string> = {
     Active: 'ACTIVE',
     Cancelled: 'CANCELLED',
@@ -98,6 +100,54 @@ function toNumber(value: unknown, fallback: number = 0): number {
     return parsed
 }
 
+function toOptionalString(value: unknown): string | undefined {
+    if (typeof value === 'string') {
+        const normalized = value.trim()
+
+        return normalized || undefined
+    }
+
+    if (typeof value === 'number' && Number.isFinite(value)) {
+        return String(value)
+    }
+
+    return undefined
+}
+
+function toOptionalNumberishValue(value: unknown): number | string | undefined {
+    if (typeof value === 'number') {
+        return Number.isFinite(value)
+            ? value
+            : undefined
+    }
+
+    if (typeof value === 'string') {
+        const normalized = value.trim()
+
+        return normalized || undefined
+    }
+
+    return undefined
+}
+
+function toIdentifierValue(...values: unknown[]): number | string {
+    for (const value of values) {
+        if (typeof value === 'number' && Number.isFinite(value)) {
+            return value
+        }
+
+        if (typeof value === 'string') {
+            const normalized = value.trim()
+
+            if (normalized) {
+                return normalized
+            }
+        }
+    }
+
+    return ''
+}
+
 function normalizeSkillValue(value: unknown): string {
     if (typeof value === 'string') {
         return value.trim()
@@ -150,6 +200,8 @@ function normalizeSkill(skill: unknown): Engagement['skills'][number] | undefine
         name: normalizedName,
     }
 }
+
+type AssignmentInput = Record<string, unknown>
 
 function normalizeEngagementSkills(data: Partial<Engagement>): Engagement['skills'] {
     const normalizedData = data as Partial<Engagement> & {
@@ -249,10 +301,94 @@ export function getCountableEngagementAssignments(
 }
 
 // eslint-disable-next-line complexity
+function normalizeAssignment(
+    assignment: AssignmentInput,
+    engagementId: Engagement['id'] | undefined,
+): Engagement['assignments'][number] {
+    const ratePerHour = toOptionalString(
+        assignment.ratePerHour ?? assignment.rate_per_hour,
+    )
+    const standardHoursPerWeek = toOptionalNumberishValue(
+        assignment.standardHoursPerWeek ?? assignment.standard_hours_per_week,
+    )
+    const agreementRate = toOptionalString(
+        assignment.agreementRate
+        ?? assignment.agreement_rate
+        ?? assignment.rate
+        ?? calculateAssignmentRatePerWeek(ratePerHour, standardHoursPerWeek),
+    )
+
+    return {
+        agreementRate: agreementRate || '',
+        durationMonths: toOptionalNumberishValue(
+            assignment.durationMonths ?? assignment.duration_months,
+        ),
+        endDate: toIsoString(
+            assignment.endDate
+            ?? assignment.end_date
+            ?? assignment.end,
+        ),
+        engagementId: toIdentifierValue(
+            assignment.engagementId,
+            assignment.engagement_id,
+            engagementId,
+        ),
+        id: toIdentifierValue(
+            assignment.id,
+            assignment.assignmentId,
+            assignment.assignment_id,
+        ),
+        memberHandle: normalizeString(
+            assignment.memberHandle
+            ?? assignment.member_handle
+            ?? assignment.handle,
+        ),
+        memberId: toIdentifierValue(
+            assignment.memberId,
+            assignment.member_id,
+            assignment.userId,
+            assignment.user_id,
+        ),
+        otherRemarks: normalizeString(
+            assignment.otherRemarks
+            ?? assignment.other_remarks
+            ?? assignment.remarks,
+        ),
+        ratePerHour,
+        standardHoursPerWeek,
+        startDate: toIsoString(
+            assignment.startDate
+            ?? assignment.start_date
+            ?? assignment.start,
+        ),
+        status: normalizeString(
+            assignment.assignmentStatus
+            ?? assignment.assignment_status
+            ?? assignment.assignmentState
+            ?? assignment.status,
+        ),
+        terminationReason: normalizeString(
+            assignment.terminationReason
+            ?? assignment.termination_reason,
+        ) || undefined,
+        termsAccepted: assignment.termsAccepted === true
+            || assignment.terms_accepted === true,
+    }
+}
+
+function normalizeAssignments(data: Partial<Engagement>): Engagement['assignments'] {
+    if (!Array.isArray(data.assignments)) {
+        return []
+    }
+
+    return data.assignments
+        .filter((assignment): assignment is NonNullable<typeof assignment> => !!assignment)
+        .map(assignment => normalizeAssignment(assignment as unknown as AssignmentInput, data.id))
+}
+
+// eslint-disable-next-line complexity
 export function normalizeEngagement(data: Partial<Engagement> = {}): Engagement {
-    const assignments = Array.isArray(data.assignments)
-        ? data.assignments
-        : []
+    const assignments = normalizeAssignments(data)
 
     const skills = normalizeEngagementSkills(data)
 

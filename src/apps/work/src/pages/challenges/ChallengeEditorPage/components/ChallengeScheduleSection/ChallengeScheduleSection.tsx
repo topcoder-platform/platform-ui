@@ -27,9 +27,13 @@ import {
     getPhaseDuration,
 } from '../../../../../lib/utils'
 import { PhaseEditorRow } from '../PhaseEditorRow'
+import {
+    isAiReviewer,
+} from '../ReviewersField/reviewers-field.utils'
 import { TimelineVisualization } from '../TimelineVisualization'
 
 import {
+    buildSchedulePhaseRows,
     canEditPhaseStartDate,
     getPhaseKey,
     normalizeDuration,
@@ -49,6 +53,10 @@ interface ApplyPhasesOptions {
     startDateOverride?: Date | string
 }
 
+function noopVirtualPhaseChange(): void {
+    // Display-only schedule rows do not mutate persisted phase state.
+}
+
 // eslint-disable-next-line complexity
 export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
     props: ChallengeScheduleSectionProps,
@@ -63,9 +71,21 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
     const useSchedulingApi = formContext.watch('legacy.useSchedulingAPI') as boolean | undefined
     const startDate = formContext.watch('startDate') as Date | string | undefined
     const watchedPhases = formContext.watch('phases') as ChallengePhase[] | undefined
+    const watchedReviewers = formContext.watch('reviewers') as {
+        aiWorkflowId?: string
+        isMemberReview?: boolean
+    }[] | undefined
     const phases = useMemo<ChallengePhase[]>(
         () => watchedPhases || [],
         [watchedPhases],
+    )
+    const hasAiReviewers = useMemo(
+        () => Array.isArray(watchedReviewers) && watchedReviewers.some(reviewer => isAiReviewer(reviewer)),
+        [watchedReviewers],
+    )
+    const scheduleRows = useMemo(
+        () => buildSchedulePhaseRows(phases, hasAiReviewers),
+        [hasAiReviewers, phases],
     )
     const isSectionDisabled = !!props.disabled
 
@@ -432,8 +452,25 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
                 )
                 : (
                     <div className={styles.phaseList}>
-                        {phases.length
-                            ? phases.map((phase, index) => {
+                        {scheduleRows.length
+                            ? scheduleRows.map(row => {
+                                if (row.isVirtual) {
+                                    return (
+                                        <PhaseEditorRow
+                                            disabled
+                                            index={row.actualIndex}
+                                            isVirtual
+                                            key={row.key}
+                                            onDurationChange={noopVirtualPhaseChange}
+                                            onEndDateChange={noopVirtualPhaseChange}
+                                            onStartDateChange={noopVirtualPhaseChange}
+                                            phase={row.phase}
+                                        />
+                                    )
+                                }
+
+                                const phase = row.phase
+                                const index = row.actualIndex
                                 const phaseStartDate = toDate(phase.scheduledStartDate)
 
                                 return (
