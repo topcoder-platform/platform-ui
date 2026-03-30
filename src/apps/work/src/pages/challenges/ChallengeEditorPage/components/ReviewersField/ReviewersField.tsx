@@ -11,6 +11,11 @@ import {
 import classNames from 'classnames'
 
 import {
+    TabsNavbar,
+    TabsNavItem,
+} from '~/libs/ui'
+
+import {
     AiReviewConfig,
     ChallengeEditorFormData,
     Reviewer,
@@ -76,15 +81,22 @@ export const ReviewersField: FC = () => {
         () => reviewerRows.filter(isAiReviewer).length,
         [reviewerRows],
     )
+    const tabs = useMemo<TabsNavItem<ReviewTab>[]>(() => [
+        {
+            id: 'human',
+            title: `Human Review (${humanReviewersCount})`,
+        },
+        {
+            id: 'ai',
+            title: `AI Review (${aiReviewersCount})`,
+        },
+    ], [aiReviewersCount, humanReviewersCount])
     const hasSubmissions = useMemo(
         () => Number(numOfSubmissions || 0) > 0,
         [numOfSubmissions],
     )
-    const handleHumanTabClick = useCallback((): void => {
-        setActiveTab('human')
-    }, [])
-    const handleAiTabClick = useCallback((): void => {
-        setActiveTab('ai')
+    const handleTabChange = useCallback((tab: ReviewTab): void => {
+        setActiveTab(tab)
     }, [])
 
     const handleAiConfigPersisted = useCallback(
@@ -123,36 +135,11 @@ export const ReviewersField: FC = () => {
 
     return (
         <div className={styles.tabsContainer}>
-            <div className={styles.tabsHeader}>
-                <button
-                    className={classNames(
-                        styles.tabButton,
-                        activeTab === 'human'
-                            ? styles.tabButtonActive
-                            : undefined,
-                    )}
-                    onClick={handleHumanTabClick}
-                    type='button'
-                >
-                    Human Review (
-                    {humanReviewersCount}
-                    )
-                </button>
-                <button
-                    className={classNames(
-                        styles.tabButton,
-                        activeTab === 'ai'
-                            ? styles.tabButtonActive
-                            : undefined,
-                    )}
-                    onClick={handleAiTabClick}
-                    type='button'
-                >
-                    AI Review (
-                    {aiReviewersCount}
-                    )
-                </button>
-            </div>
+            <TabsNavbar
+                defaultActive={activeTab}
+                onChange={handleTabChange}
+                tabs={tabs}
+            />
 
             <div className={classNames(
                 styles.tabPanel,

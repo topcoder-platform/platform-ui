@@ -1881,7 +1881,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                             {usesManualReviewers
                                 ? (
                                     <section className={styles.section}>
-                                        <h3 className={styles.sectionTitle}>Reviewers</h3>
+                                        <h3 className={styles.sectionTitle}>Review</h3>
                                         <div className={styles.block}>
                                             <ReviewersField />
                                         </div>
