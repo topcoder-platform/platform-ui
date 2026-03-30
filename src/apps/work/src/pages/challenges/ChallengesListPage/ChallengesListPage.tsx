@@ -351,6 +351,7 @@ export const ChallengesListPage: FC = () => {
             projectId: projectIdFromRoute,
         })
         setPage(1)
+        setPerPage(PAGE_SIZE)
         setSortBy(DEFAULT_SORT_BY)
         setSortOrder(DEFAULT_SORT_ORDER)
     }, [projectIdFromRoute])

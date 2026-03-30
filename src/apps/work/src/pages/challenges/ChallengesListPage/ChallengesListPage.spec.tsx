@@ -1,7 +1,12 @@
 /* eslint-disable no-var, global-require, @typescript-eslint/no-var-requires */
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
 import type { Context, PropsWithChildren } from 'react'
-import { render } from '@testing-library/react'
+import {
+    fireEvent,
+    render,
+    screen,
+    waitFor,
+} from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 
 import { WorkAppContextModel } from '../../../lib/models/WorkAppContextModel.model'
@@ -52,9 +57,23 @@ jest.mock('../../../lib', () => ({
     },
 }))
 jest.mock('../../../lib/components', () => ({
-    ChallengesFilter: () => <div>Challenges Filter</div>,
+    ChallengesFilter: (props: { onResetFilters?: () => void }) => (
+        <button onClick={props.onResetFilters} type='button'>
+            Reset Filters
+        </button>
+    ),
     ChallengesTable: () => <div>Challenges Table</div>,
-    Pagination: () => <div>Pagination</div>,
+    Pagination: (props: { onPerPageChange: (perPage: number) => void }) => {
+        function handlePerPageChange(): void {
+            props.onPerPageChange(25)
+        }
+
+        return (
+            <button onClick={handlePerPageChange} type='button'>
+                Rows 25
+            </button>
+        )
+    },
     ProjectBillingAccountExpiredNotice: () => <div>Billing Notice</div>,
     ProjectListTabs: () => <div>Project Tabs</div>,
     ProjectStatus: () => <div>Project Status</div>,
@@ -128,6 +147,10 @@ function renderPage(
     )
 }
 
+function getLastFetchChallengesParams(): Record<string, unknown> {
+    return mockedUseFetchChallenges.mock.calls[mockedUseFetchChallenges.mock.calls.length - 1][0]
+}
+
 describe('ChallengesListPage', () => {
     beforeEach(() => {
         jest.clearAllMocks()
@@ -181,5 +204,43 @@ describe('ChallengesListPage', () => {
             .toBe('200')
         expect(fetchParams.memberId)
             .toBeUndefined()
+    })
+
+    it('resets rows per page to the default value when filters are reset', async () => {
+        mockedUseFetchChallenges.mockReturnValue({
+            challenges: [],
+            error: undefined,
+            isLoading: false,
+            isValidating: false,
+            metadata: {
+                page: 1,
+                perPage: 10,
+                total: 30,
+                totalPages: 3,
+            },
+            mutate: jest.fn(),
+        })
+
+        renderPage('/challenges', '/challenges')
+
+        fireEvent.click(screen.getByRole('button', { name: 'Rows 25' }))
+
+        await waitFor(() => {
+            expect(getLastFetchChallengesParams())
+                .toEqual(expect.objectContaining({
+                    page: 1,
+                    perPage: 25,
+                }))
+        })
+
+        fireEvent.click(screen.getByRole('button', { name: 'Reset Filters' }))
+
+        await waitFor(() => {
+            expect(getLastFetchChallengesParams())
+                .toEqual(expect.objectContaining({
+                    page: 1,
+                    perPage: 10,
+                }))
+        })
     })
 })
