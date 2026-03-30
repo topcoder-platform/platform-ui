@@ -240,10 +240,14 @@ export const SubmissionsTable: FC<SubmissionsTableProps> = (
                         const submissionDate = formatDateTime(getCreatedAt(submission))
                         const initialScore = formatScore(getSubmissionInitialScore(submission))
                         const finalScore = formatScore(getSubmissionFinalScore(submission))
+                        const reviewTab = submission.type === 'CHECKPOINT_SUBMISSION'
+                            ? 'checkpoint-submission'
+                            : 'submission'
                         const memberProfileUrl = submission.memberHandle
                             ? `${COMMUNITY_APP_URL}/members/${encodeURIComponent(submission.memberHandle)}`
                             : ''
-                        const reviewLink = `${REVIEW_APP_URL}/${props.challengeId}/submissions/${submission.id}`
+                        const reviewLink = `${REVIEW_APP_URL}/active-challenges/${props.challengeId}`
+                            + `/challenge-details?tab=${reviewTab}`
 
                         return (
                             <tr key={submission.id}>
