@@ -16,7 +16,8 @@ import {
 } from '../../../config/index.config'
 import { ChallengeDetailContext } from '../../contexts'
 import { hasSubmitterPassedThreshold } from '../../utils/reviewScoring'
-import { shouldIncludeInReviewPhase } from '../../utils/reviewPhaseGuards'
+
+import { filterIterativeReviewRows } from './iterativeReviewFiltering'
 
 interface Props {
     reviews: SubmissionInfo[]
@@ -55,19 +56,11 @@ const getSubmissionPriority = (submission: SubmissionInfo): number => {
     return 1
 }
 
-const normalizePhaseId = (value: unknown): string | undefined => {
-    if (value === undefined || value === null) {
-        return undefined
-    }
-
-    const normalized = `${value}`.trim()
-    return normalized.length ? normalized : undefined
-}
-
 export const TabContentIterativeReview: FC<Props> = (props: Props) => {
     const {
         challengeInfo,
         myResources = [],
+        resources,
     }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
     const {
         actionChallengeRole,
@@ -118,55 +111,17 @@ export const TabContentIterativeReview: FC<Props> = (props: Props) => {
         [sourceRows, myMemberIds, props.postMortemMinimumPassingScore],
     )
 
-    const phaseIdFilterSet = useMemo(() => {
-        const normalizedFilter = normalizePhaseId(props.phaseIdFilter)
-        if (!normalizedFilter) {
-            return undefined
-        }
-
-        const ids = new Set<string>([normalizedFilter])
-        const phases = challengeInfo?.phases ?? []
-        const matchingPhase = phases.find(phase => {
-            const phaseId = normalizePhaseId(phase.id)
-            const phaseTypeId = normalizePhaseId(phase.phaseId)
-            return phaseId === normalizedFilter || phaseTypeId === normalizedFilter
+    const filteredRows = useMemo(() => {
+        const rows = filterIterativeReviewRows({
+            challengePhases: challengeInfo?.phases,
+            isPostMortemPhase,
+            phaseIdFilter: props.phaseIdFilter,
+            reviewerResources: resources,
+            sourceRows,
         })
 
-        if (matchingPhase) {
-            const phaseId = normalizePhaseId(matchingPhase.id)
-            if (phaseId) {
-                ids.add(phaseId)
-            }
-
-            const phaseTypeId = normalizePhaseId(matchingPhase.phaseId)
-            if (phaseTypeId) {
-                ids.add(phaseTypeId)
-            }
-        }
-
-        return ids
-    }, [challengeInfo?.phases, props.phaseIdFilter])
-
-    const filteredRows = useMemo(() => {
-        if (phaseIdFilterSet?.size) {
-            return sourceRows.filter(submission => {
-                const reviewPhaseId = normalizePhaseId(submission.review?.phaseId)
-                return reviewPhaseId ? phaseIdFilterSet.has(reviewPhaseId) : false
-            })
-        }
-
-        if (!isPostMortemPhase) {
-            const iterativeOnly = sourceRows.filter(submission => !shouldIncludeInReviewPhase(
-                submission,
-                challengeInfo?.phases,
-            ))
-            if (iterativeOnly.length) {
-                return iterativeOnly
-            }
-        }
-
-        return sourceRows
-    }, [sourceRows, phaseIdFilterSet, isPostMortemPhase, challengeInfo?.phases])
+        return rows
+    }, [sourceRows, isPostMortemPhase, challengeInfo?.phases, props.phaseIdFilter, resources])
 
     const reviewRows = useMemo(() => {
         const map = new Map<string, SubmissionInfo>()
