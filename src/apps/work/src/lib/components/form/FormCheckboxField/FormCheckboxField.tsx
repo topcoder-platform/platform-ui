@@ -48,15 +48,7 @@ export const FormCheckboxField: FC<FormCheckboxFieldProps> = (props: FormCheckbo
             label={props.label}
             name={props.name}
         >
-            <label
-                className={classNames(
-                    styles.checkboxLabel,
-                    props.disabled
-                        ? styles.disabled
-                        : undefined,
-                )}
-                htmlFor={props.name}
-            >
+            <div className={styles.checkboxLabel}>
                 <input
                     checked={checked}
                     className={styles.checkbox}
@@ -67,8 +59,18 @@ export const FormCheckboxField: FC<FormCheckboxFieldProps> = (props: FormCheckbo
                     onChange={handleChange}
                     type='checkbox'
                 />
-                <span>{props.label}</span>
-            </label>
+                <label
+                    className={classNames(
+                        styles.checkboxText,
+                        props.disabled
+                            ? styles.disabled
+                            : undefined,
+                    )}
+                    htmlFor={props.name}
+                >
+                    {props.label}
+                </label>
+            </div>
         </FormFieldWrapper>
     )
 }

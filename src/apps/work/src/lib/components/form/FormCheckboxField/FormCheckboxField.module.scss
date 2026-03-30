@@ -2,10 +2,7 @@
 
 .checkboxLabel {
     align-items: center;
-    color: $black-80;
-    cursor: pointer;
-    display: flex;
-    font-size: 14px;
+    display: inline-flex;
     gap: 10px;
 }
 
@@ -15,6 +12,12 @@
     height: 16px;
     margin: 0;
     width: 16px;
+}
+
+.checkboxText {
+    color: $black-80;
+    cursor: pointer;
+    font-size: 14px;
 }
 
 .disabled {
