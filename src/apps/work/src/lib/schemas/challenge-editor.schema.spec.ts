@@ -1,5 +1,6 @@
 import {
     PRIZE_SET_TYPES,
+    PRIZE_TYPES,
     REVIEW_TYPES,
     ROUND_TYPES,
 } from '../constants/challenge-editor.constants'
@@ -73,6 +74,56 @@ describe('challenge-editor schema task reviewer validation', () => {
                     reviewType: REVIEW_TYPES.COMMUNITY,
                 },
                 reviewer: '',
+            }),
+        )
+            .resolves
+            .toBeTruthy()
+    })
+})
+
+describe('challenge-editor schema copilot validation', () => {
+    const baseFormData = {
+        roundType: ROUND_TYPES.SINGLE_ROUND,
+    }
+
+    it('requires a copilot when a copilot fee is set', async () => {
+        await expect(
+            challengeAdvancedOptionsSchema.validate({
+                ...baseFormData,
+                copilot: '',
+                prizeSets: [
+                    {
+                        prizes: [
+                            {
+                                type: PRIZE_TYPES.USD,
+                                value: 5,
+                            },
+                        ],
+                        type: PRIZE_SET_TYPES.COPILOT,
+                    },
+                ],
+            }),
+        )
+            .rejects
+            .toThrow('Copilot is required when copilot fee is greater than 0')
+    })
+
+    it('does not require a copilot when no copilot fee is set', async () => {
+        await expect(
+            challengeAdvancedOptionsSchema.validate({
+                ...baseFormData,
+                copilot: '',
+                prizeSets: [
+                    {
+                        prizes: [
+                            {
+                                type: PRIZE_TYPES.USD,
+                                value: 12,
+                            },
+                        ],
+                        type: PRIZE_SET_TYPES.PLACEMENT,
+                    },
+                ],
             }),
         )
             .resolves

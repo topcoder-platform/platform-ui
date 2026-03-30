@@ -25,6 +25,8 @@ function emptyStringToUndefined(value: unknown, originalValue: unknown): unknown
     return value
 }
 
+const COPILOT_REQUIRED_MESSAGE = 'Copilot is required when copilot fee is greater than 0'
+
 const skillSchema = yup.object({
     id: yup.string()
         .required('Skill id is required'),
@@ -175,6 +177,24 @@ function getRequiredReviewerSlots(value: unknown): number {
     }
 
     return Math.max(1, Math.trunc(parsedValue))
+}
+
+function getCopilotFee(prizeSets: unknown): number {
+    if (!Array.isArray(prizeSets)) {
+        return 0
+    }
+
+    const copilotPrizeSet = prizeSets.find(prizeSet => (
+        typeof prizeSet === 'object'
+        && prizeSet
+        && (prizeSet as { type?: string }).type === PRIZE_SET_TYPES.COPILOT
+    )) as {
+        prizes?: Array<{
+            value?: number | string
+        }>
+    } | undefined
+
+    return Number(copilotPrizeSet?.prizes?.[0]?.value) || 0
 }
 
 const reviewerSchema = yup.object({
@@ -423,7 +443,11 @@ export const challengeAdvancedOptionsSchema = yup.object({
         .optional(),
     copilot: yup.string()
         .transform(emptyStringToUndefined)
-        .optional(),
+        .when('prizeSets', {
+            is: (prizeSets: unknown): boolean => getCopilotFee(prizeSets) > 0,
+            otherwise: schema => schema.optional(),
+            then: schema => schema.required(COPILOT_REQUIRED_MESSAGE),
+        }),
     discussionForum: yup.boolean()
         .optional(),
     groups: yup.array()
