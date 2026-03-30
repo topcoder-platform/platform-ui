@@ -272,6 +272,84 @@ export const TableAppealsResponse: FC<TableAppealsResponseProps> = (props: Table
             return reviews.some(review => review.resourceId && myReviewerResourceIds.has(review.resourceId))
         }
 
+        // For submitters, also include submissions that don't have aggregated reviews (e.g., failed submissions)
+        // but exist in the submissions data. This allows failed submissions to appear in Appeals Response tab.
+        if (canViewAsSubmitter) {
+            // For reviewer-only rows, use existing filter
+            const reviewerOnlyRows = aggregatedRows.filter(row => matchesReviewer(row) && !matchesSubmitter(row))
+
+            // For submitter rows, include both aggregated and non-aggregated submissions
+            const submitterRows = (filteredChallengeSubmissions ?? [])
+                .filter(submission => {
+                    const memberId = submission.memberId
+                    if (!memberId || !ownedMemberIds.has(memberId)) {
+                        return false
+                    }
+
+                    const submissionType = submission.type?.toUpperCase()
+                    return !submissionType || submissionType === 'CONTEST_SUBMISSION'
+                })
+                .map(submission => {
+                    // Use aggregated data if available, otherwise create minimal aggregated structure
+                    const aggregatedRow = aggregatedRows.find(row => row.id === submission.id)
+                    if (aggregatedRow) {
+                        return aggregatedRow
+                    }
+
+                    // Create minimal aggregated structure for non-reviewed submissions
+                    // This ensures buildSubmissionReviewerRows creates at least one row
+                    const submitterHandle = submission.userInfo?.memberHandle
+                        ?? submission.review?.submitterHandle
+                        ?? undefined
+                    const submitterColor = submission.userInfo?.handleColor
+                        ?? submission.review?.submitterHandleColor
+                        ?? undefined
+
+                    // Build review details array from all reviewInfos or single review
+                    const allReviewInfos = submission.reviewInfos && submission.reviewInfos.length > 0
+                        ? submission.reviewInfos
+                        : submission.review
+                            ? [submission.review]
+                            : []
+
+                    const reviewDetails = allReviewInfos
+                        .map(reviewInfo => {
+                            const reviewId = reviewInfo.id
+                            const appealInfo = reviewId ? mappingReviewAppeal[reviewId] : undefined
+                            const totalAppeals = appealInfo?.totalAppeals ?? 0
+                            const finishedAppeals = appealInfo?.finishAppeals ?? 0
+
+                            return {
+                                // Review detail with reviewer information from reviewInfo
+                                finalScore: reviewInfo.finalScore,
+                                finishedAppeals,
+                                resourceId: reviewInfo.resourceId,
+                                reviewDateString: reviewInfo.reviewDateString ?? reviewInfo.updatedAtString,
+                                reviewerHandle: reviewInfo.reviewerHandle ?? undefined,
+                                reviewerHandleColor: reviewInfo.reviewerHandleColor,
+                                reviewInfo,
+                                totalAppeals,
+                                unresolvedAppeals: totalAppeals - finishedAppeals,
+                            }
+                        })
+                        .reverse()
+
+                    return {
+                        ...submission,
+                        aggregated: {
+                            id: submission.id,
+                            reviews: reviewDetails,
+                            submission,
+                            submitterHandle,
+                            submitterHandleColor: submitterColor,
+                        },
+                    }
+                })
+
+            // Combine submitter rows and reviewer-only rows
+            return [...reviewerOnlyRows, ...submitterRows]
+        }
+
         return aggregatedRows.filter(row => matchesSubmitter(row) || matchesReviewer(row))
     }, [
         aggregatedRows,
@@ -279,6 +357,8 @@ export const TableAppealsResponse: FC<TableAppealsResponseProps> = (props: Table
         canViewAllAppeals,
         canViewAsReviewer,
         canViewAsSubmitter,
+        filteredChallengeSubmissions,
+        mappingReviewAppeal,
         myReviewerResourceIds,
         ownedMemberIds,
         submitterCanViewAllRows,
@@ -505,6 +585,7 @@ export const TableAppealsResponse: FC<TableAppealsResponseProps> = (props: Table
         canRespondToAppeals,
         isAppealsResponsePhaseOpen,
         scoreVisibilityConfig,
+        props.aiReviewers,
     ])
 
     const columnsMobile = useMemo<MobileTableColumn<SubmissionReviewerRow>[][]>(
