@@ -140,6 +140,50 @@ describe('challenge-editor utils wiproAllowed mapping', () => {
     })
 })
 
+describe('challenge-editor utils billing markup mapping', () => {
+    it('keeps billing markup when converting challenge to form data', () => {
+        const result = transformChallengeToFormData({
+            billing: {
+                billingAccountId: 12345,
+                markup: 0.58,
+            },
+            description: 'Public specification',
+            name: 'Billing markup challenge',
+            trackId: 'track-id',
+            typeId: 'type-id',
+        })
+
+        expect(result.billing)
+            .toEqual({
+                billingAccountId: 12345,
+                markup: 0.58,
+            })
+    })
+
+    it('serializes billing markup to API payload', () => {
+        const formData: Record<string, unknown> = {
+            billing: {
+                billingAccountId: 12345,
+                markup: 0.58,
+            },
+            description: 'Public specification',
+            name: 'Billing markup challenge',
+            skills: [],
+            tags: [],
+            trackId: 'track-id',
+            typeId: 'type-id',
+        }
+
+        const result = transformFormDataToChallenge(formData as any)
+
+        expect(result.billing)
+            .toEqual({
+                billingAccountId: 12345,
+                markup: 0.58,
+            })
+    })
+})
+
 describe('challenge-editor utils task reviewer mapping', () => {
     it('maps task reviewer and task flag into form data', () => {
         const result = transformChallengeToFormData({

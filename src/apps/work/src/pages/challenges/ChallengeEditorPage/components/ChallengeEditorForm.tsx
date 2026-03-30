@@ -1810,7 +1810,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                             </div>
                                             <div className={styles.billingSummary}>
                                                 <ReviewCostField name='prizeSets' />
-                                                <ChallengeFeeField challengeFee={values.challengeFee} />
+                                                <ChallengeFeeField />
                                                 <ChallengeTotalField />
                                             </div>
                                         </div>

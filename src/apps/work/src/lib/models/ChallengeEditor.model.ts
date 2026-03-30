@@ -30,6 +30,7 @@ export interface ChallengeEditorFormData extends Omit<Partial<Challenge>, 'id' |
     attachments?: Attachment[]
     billing?: {
         billingAccountId?: number | string
+        markup?: number
     }
     challengeFee?: number
     copilot?: string

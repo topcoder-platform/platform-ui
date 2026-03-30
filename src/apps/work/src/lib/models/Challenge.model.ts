@@ -66,6 +66,7 @@ export interface Challenge {
     attachments?: Attachment[]
     billing?: {
         billingAccountId?: string | number
+        markup?: number
     }
     challengeFee?: number
     checkpoints?: Submission[]

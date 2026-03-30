@@ -28,6 +28,7 @@ import {
 
 interface BillingInfo {
     billingAccountId?: number | string
+    markup?: number
 }
 
 interface ChallengeMetadataEntry extends Record<string, unknown> {
@@ -225,6 +226,28 @@ function normalizeOptionalId(value: unknown): number | string | undefined {
     }
 
     return undefined
+}
+
+/**
+ * Normalizes optional billing data used by the challenge editor form.
+ *
+ * Preserves both the billing-account id and billing markup when either value
+ * is present so challenge edits do not drop the persisted markup record.
+ */
+function normalizeBillingInfo(
+    billing: BillingInfo | undefined,
+): BillingInfo | undefined {
+    const billingAccountId = normalizeOptionalId(billing?.billingAccountId)
+    const billingMarkup = normalizeOptionalNumber(billing?.markup)
+
+    if (billingAccountId === undefined && billingMarkup === undefined) {
+        return undefined
+    }
+
+    return {
+        billingAccountId,
+        markup: billingMarkup,
+    }
 }
 
 /**
@@ -972,7 +995,7 @@ export function transformChallengeToFormData(
     const isTask = normalizeOptionalBoolean(challenge?.task?.isTask) || false
     const status = normalizeOptionalString(challenge?.status)
         ?.toUpperCase()
-    const billingAccountId = normalizeOptionalId(challenge?.billing?.billingAccountId)
+    const billing = normalizeBillingInfo(challenge?.billing)
     const normalizedPrizeSets = normalizePrizeSets(challenge?.prizeSets)
     const prizeSetsForForm = challenge?.id && status !== CHALLENGE_STATUS.NEW
         ? normalizedPrizeSets
@@ -981,11 +1004,7 @@ export function transformChallengeToFormData(
     return {
         assignedMemberId: getChallengeAssignedMemberSelectorValue(challenge),
         attachments: normalizeAttachments(challenge?.attachments),
-        billing: billingAccountId !== undefined
-            ? {
-                billingAccountId,
-            }
-            : undefined,
+        billing,
         challengeFee: normalizeOptionalNumber(challenge?.challengeFee),
         copilot: getChallengeCopilotSelectorValue(challenge),
         description,
@@ -1046,7 +1065,7 @@ export function transformFormDataToChallenge(
     const reviewType = normalizeReviewType(formData.legacy?.reviewType) || REVIEW_TYPES.INTERNAL
     const status = normalizeOptionalString(formData.status)
         ?.toUpperCase()
-    const billingAccountId = normalizeOptionalId(formData.billing?.billingAccountId)
+    const billing = normalizeBillingInfo(formData.billing)
     const prizeSets = formData.funChallenge === true
         ? []
         : filterEmptyPrizeSets(normalizePrizeSets(formData.prizeSets))
@@ -1057,11 +1076,7 @@ export function transformFormDataToChallenge(
 
     const challenge: Partial<Challenge> = {
         assignedMemberId: normalizeMemberSelectorValue(formData.assignedMemberId),
-        billing: billingAccountId !== undefined
-            ? {
-                billingAccountId,
-            }
-            : undefined,
+        billing,
         challengeFee: normalizeOptionalNumber(formData.challengeFee),
         copilot: normalizeMemberSelectorValue(formData.copilot),
         description: formData.description,
