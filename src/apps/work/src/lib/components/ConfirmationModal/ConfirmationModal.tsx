@@ -16,6 +16,7 @@ export interface ConfirmationModalProps {
     message: string
     onCancel: () => void
     onConfirm: () => void
+    showCancelButton?: boolean
     title: string
 }
 
@@ -50,12 +51,16 @@ export const ConfirmationModal: FC<ConfirmationModalProps> = (
                 </div>
 
                 <footer className={styles.footer}>
-                    <Button
-                        label={props.cancelText || 'Cancel'}
-                        onClick={props.onCancel}
-                        secondary
-                        size='lg'
-                    />
+                    {props.showCancelButton === false
+                        ? undefined
+                        : (
+                            <Button
+                                label={props.cancelText || 'Cancel'}
+                                onClick={props.onCancel}
+                                secondary
+                                size='lg'
+                            />
+                        )}
                     <Button
                         disabled={props.confirmDisabled}
                         label={props.confirmText || 'Confirm'}

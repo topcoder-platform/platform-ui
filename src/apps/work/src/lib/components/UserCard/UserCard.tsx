@@ -279,11 +279,11 @@ export const UserCard: FC<UserCardProps> = (props: UserCardProps) => {
             {showRoleUpdatedConfirmation
                 ? (
                     <ConfirmationModal
-                        cancelText='OK'
                         confirmText='OK'
                         message='The member role has been updated successfully.'
                         onCancel={closeStatusModal}
                         onConfirm={closeStatusModal}
+                        showCancelButton={false}
                         title='Success'
                     />
                 )
