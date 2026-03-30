@@ -1,0 +1,27 @@
+@import '@libs/ui/styles/includes';
+
+.row {
+    align-items: flex-start;
+    border: 1px solid $black-10;
+    border-radius: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 12px;
+}
+
+.phaseName {
+    color: $black-80;
+    flex: 1 1 200px;
+    font-size: 14px;
+    font-weight: 700;
+    margin-top: 8px;
+}
+
+.durationCell {
+    flex: 1 1 260px;
+}
+
+.dateCell {
+    flex: 1 1 260px;
+}

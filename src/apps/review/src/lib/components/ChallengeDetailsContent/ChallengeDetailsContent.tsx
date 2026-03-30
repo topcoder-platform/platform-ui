@@ -456,12 +456,13 @@ export const ChallengeDetailsContent: FC<Props> = (props: Props) => {
             )
         }
 
-        if (selectedTabLower === 'approval') {
+        if (selectedTabNormalized === 'approval') {
             return (
                 <TabContentApproval
                     reviews={props.approvalReviews}
                     submitterReviews={props.submitterReviews}
                     approvalMinimumPassingScore={props.approvalMinimumPassingScore}
+                    phaseIdFilter={props.selectedPhaseId}
                     isLoadingReview={props.isLoadingSubmission}
                     isDownloading={isDownloadingSubmission}
                     downloadSubmission={handleSubmissionDownload}

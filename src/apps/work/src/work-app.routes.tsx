@@ -1,0 +1,379 @@
+import {
+    FC,
+    PropsWithChildren,
+    useContext,
+} from 'react'
+
+import { AppSubdomain, ToolTitle } from '~/config'
+import {
+    lazyLoad,
+    LazyLoadedComponent,
+    PlatformRoute,
+    Rewrite,
+} from '~/libs/core'
+
+import {
+    challengeCreateRouteId,
+    challengeEditRouteId,
+    challengesRouteId,
+    engagementApplicationsRouteId,
+    engagementAssignmentsRouteId,
+    engagementCreateRouteId,
+    engagementEditRouteId,
+    engagementExperienceRouteId,
+    engagementFeedbackRouteId,
+    engagementsRouteId,
+    groupsEditRouteId,
+    groupsRouteId,
+    projectAssetsRouteId,
+    projectCreateRouteId,
+    projectEditRouteId,
+    projectInvitationsRouteId,
+    projectsRouteId,
+    roleErrorRoute,
+    roleErrorRouteId,
+    rootRoute,
+    taasCreateRouteId,
+    taasEditRouteId,
+    taasRouteId,
+    usersRouteId,
+} from './config/routes.config'
+import { WORK_MANAGER_ALLOWED_ROLES } from './config/access.config'
+import { ErrorMessage } from './lib/components'
+import { WorkAppContext } from './lib/contexts'
+import { WorkAppContextModel } from './lib/models'
+
+const WorkApp: LazyLoadedComponent = lazyLoad(() => import('./WorkApp'))
+
+const ChallengesListPage: LazyLoadedComponent = lazyLoad(
+    () => import('./pages/challenges/ChallengesListPage'),
+)
+
+const ChallengeEditorPage: LazyLoadedComponent = lazyLoad(
+    () => import('./pages/challenges/ChallengeEditorPage'),
+)
+
+const ChallengeRouteRedirectPage: LazyLoadedComponent = lazyLoad(
+    () => import('./pages/challenges/ChallengeRouteRedirectPage/ChallengeRouteRedirectPage'),
+)
+
+const ProjectsListPage: LazyLoadedComponent = lazyLoad(
+    () => import('./pages/projects/ProjectsListPage'),
+)
+
+const ProjectEditorPage: LazyLoadedComponent = lazyLoad(
+    () => import('./pages/projects/ProjectEditorPage'),
+)
+
+const ProjectAssetsPage: LazyLoadedComponent = lazyLoad(
+    () => import('./pages/assets/ProjectAssetsPage'),
+)
+
+const EngagementsListPage: LazyLoadedComponent = lazyLoad(
+    () => import('./pages/engagements/EngagementsListPage'),
+)
+
+const EngagementEditorPage: LazyLoadedComponent = lazyLoad(
+    () => import('./pages/engagements/EngagementEditorPage'),
+)
+
+const ApplicationsListPage: LazyLoadedComponent = lazyLoad(
+    () => import('./pages/engagements/ApplicationsListPage'),
+)
+
+const EngagementPaymentPage: LazyLoadedComponent = lazyLoad(
+    () => import('./pages/engagements/EngagementPaymentPage'),
+)
+
+const EngagementFeedbackPage: LazyLoadedComponent = lazyLoad(
+    () => import('./pages/engagements/EngagementFeedbackPage'),
+)
+
+const EngagementExperiencePage: LazyLoadedComponent = lazyLoad(
+    () => import('./pages/engagements/EngagementExperiencePage'),
+)
+
+const TaasListPage: LazyLoadedComponent = lazyLoad(
+    () => import('./pages/taas/TaasListPage'),
+)
+
+const TaasProjectFormPage: LazyLoadedComponent = lazyLoad(
+    () => import('./pages/taas/TaasProjectFormPage'),
+)
+
+const UsersManagementPage: LazyLoadedComponent = lazyLoad(
+    () => import('./pages/users/UsersManagementPage'),
+)
+
+const ProjectInvitationsPage: LazyLoadedComponent = lazyLoad(
+    () => import('./pages/invitations/ProjectInvitationsPage'),
+)
+
+const GroupsPage: LazyLoadedComponent = lazyLoad(
+    () => import('./pages/groups/GroupsPage'),
+)
+
+const GroupEditPage: LazyLoadedComponent = lazyLoad(
+    () => import('./pages/groups/GroupEditPage'),
+)
+
+const RoleErrorPage: LazyLoadedComponent = lazyLoad(
+    () => import('./pages/role-error/RoleErrorPage'),
+)
+
+function canManageGroups(contextValue: WorkAppContextModel): boolean {
+    return contextValue.isAdmin || contextValue.isCopilot || contextValue.isManager
+}
+
+function canViewAllEngagements(contextValue: WorkAppContextModel): boolean {
+    return contextValue.isAdmin
+}
+
+const GroupsRouteGuard: FC<PropsWithChildren> = (props: PropsWithChildren) => {
+    const contextValue: WorkAppContextModel = useContext(WorkAppContext)
+
+    if (!canManageGroups(contextValue)) {
+        return <ErrorMessage message='You do not have permission to manage groups.' />
+    }
+
+    return <>{props.children}</>
+}
+
+const EngagementsRouteGuard: FC<PropsWithChildren> = (props: PropsWithChildren) => {
+    const contextValue: WorkAppContextModel = useContext(WorkAppContext)
+
+    if (!canViewAllEngagements(contextValue)) {
+        return <ErrorMessage message='You need Admin role to view all engagements.' />
+    }
+
+    return <>{props.children}</>
+}
+
+export const toolTitle: string = ToolTitle.work
+
+export const workRoutes: ReadonlyArray<PlatformRoute> = [
+    {
+        authRequired: true,
+        children: [
+            {
+                authRequired: true,
+                element: <RoleErrorPage />,
+                route: roleErrorRouteId,
+                title: 'Role Error',
+            },
+            {
+                authRequired: true,
+                element: <Rewrite to={challengesRouteId} />,
+                route: '',
+            },
+            {
+                authRequired: true,
+                element: <ChallengesListPage />,
+                id: challengesRouteId,
+                route: challengesRouteId,
+                title: 'Challenges',
+            },
+            {
+                authRequired: true,
+                element: <ChallengesListPage />,
+                route: '/projects/:projectId/challenges',
+                title: 'Challenges',
+            },
+            {
+                authRequired: true,
+                element: <ChallengeEditorPage />,
+                id: challengeCreateRouteId,
+                route: '/projects/:projectId/challenges/new',
+                title: 'Create Challenge',
+            },
+            {
+                authRequired: true,
+                element: <ChallengeEditorPage />,
+                id: challengeEditRouteId,
+                route: `${challengesRouteId}/:challengeId/edit`,
+                title: 'Edit Challenge',
+            },
+            {
+                authRequired: true,
+                element: <ChallengeEditorPage />,
+                route: '/projects/:projectId/challenges/:challengeId/edit',
+                title: 'Edit Challenge',
+            },
+            {
+                authRequired: true,
+                element: <ChallengeEditorPage />,
+                route: '/projects/:projectId/challenges/:challengeId/view',
+                title: 'View Challenge',
+            },
+            {
+                authRequired: true,
+                element: <ChallengeRouteRedirectPage />,
+                route: '/challenges/:challengeId',
+                title: 'Edit Challenge',
+            },
+            {
+                authRequired: true,
+                element: <ProjectAssetsPage />,
+                id: projectAssetsRouteId,
+                route: '/projects/:projectId/assets',
+                title: 'Project Assets',
+            },
+            {
+                authRequired: true,
+                element: <ProjectsListPage />,
+                id: projectsRouteId,
+                route: projectsRouteId,
+                title: 'Projects',
+            },
+            {
+                authRequired: true,
+                element: <ProjectEditorPage />,
+                id: projectCreateRouteId,
+                route: `${projectsRouteId}/new`,
+                title: 'Create Project',
+            },
+            {
+                authRequired: true,
+                element: <ProjectEditorPage />,
+                id: projectEditRouteId,
+                route: `${projectsRouteId}/:projectId/edit`,
+                title: 'Edit Project',
+            },
+            {
+                authRequired: true,
+                element: (
+                    <EngagementsRouteGuard>
+                        <EngagementsListPage />
+                    </EngagementsRouteGuard>
+                ),
+                id: engagementsRouteId,
+                route: engagementsRouteId,
+                title: 'Engagements',
+            },
+            {
+                authRequired: true,
+                element: <EngagementsListPage />,
+                route: '/projects/:projectId/engagements',
+                title: 'Engagements',
+            },
+            {
+                authRequired: true,
+                element: <EngagementEditorPage />,
+                id: engagementCreateRouteId,
+                route: '/projects/:projectId/engagements/new',
+                title: 'Create Engagement',
+            },
+            {
+                authRequired: true,
+                element: <EngagementEditorPage />,
+                id: engagementEditRouteId,
+                route: '/projects/:projectId/engagements/:engagementId',
+                title: 'Edit Engagement',
+            },
+            {
+                authRequired: true,
+                element: <ApplicationsListPage />,
+                id: engagementApplicationsRouteId,
+                route: '/projects/:projectId/engagements/:engagementId/applications',
+                title: 'Applications',
+            },
+            {
+                authRequired: true,
+                element: <EngagementPaymentPage />,
+                id: engagementAssignmentsRouteId,
+                route: '/projects/:projectId/engagements/:engagementId/assignments',
+                title: 'Assignments',
+            },
+            {
+                authRequired: true,
+                element: <EngagementFeedbackPage />,
+                id: engagementFeedbackRouteId,
+                route: '/projects/:projectId/engagements/:engagementId/assignments/:assignmentId/feedback',
+                title: 'Feedback',
+            },
+            {
+                authRequired: true,
+                element: <EngagementExperiencePage />,
+                id: engagementExperienceRouteId,
+                route: '/projects/:projectId/engagements/:engagementId/assignments/:assignmentId/experience',
+                title: 'Experience',
+            },
+            {
+                authRequired: true,
+                element: <TaasListPage />,
+                id: taasRouteId,
+                route: taasRouteId,
+                title: 'TaaS Projects',
+            },
+            {
+                authRequired: true,
+                element: <TaasProjectFormPage />,
+                id: taasCreateRouteId,
+                route: `${taasRouteId}/new`,
+                title: 'Create TaaS Project',
+            },
+            {
+                authRequired: true,
+                element: <TaasProjectFormPage />,
+                id: taasEditRouteId,
+                route: `${taasRouteId}/:projectId/edit`,
+                title: 'Edit TaaS Project',
+            },
+            {
+                authRequired: true,
+                element: <ProjectInvitationsPage />,
+                route: '/projects/:projectId/accept/:inviteId',
+                title: 'Project Invitations',
+            },
+            {
+                authRequired: true,
+                element: <ProjectInvitationsPage />,
+                route: '/projects/:projectId/decline/:inviteId',
+                title: 'Project Invitations',
+            },
+            {
+                authRequired: true,
+                element: <ProjectInvitationsPage />,
+                id: projectInvitationsRouteId,
+                route: '/projects/:projectId/invitations/:action?',
+                title: 'Project Invitations',
+            },
+            {
+                authRequired: true,
+                element: <UsersManagementPage />,
+                id: usersRouteId,
+                route: '/projects/:projectId/users',
+                title: 'Users',
+            },
+            {
+                authRequired: true,
+                element: (
+                    <GroupsRouteGuard>
+                        <GroupsPage />
+                    </GroupsRouteGuard>
+                ),
+                id: groupsRouteId,
+                route: groupsRouteId,
+                title: 'Groups',
+            },
+            {
+                authRequired: true,
+                element: (
+                    <GroupsRouteGuard>
+                        <GroupEditPage />
+                    </GroupsRouteGuard>
+                ),
+                id: groupsEditRouteId,
+                route: `${groupsRouteId}/:groupId/edit`,
+                title: 'Edit Group',
+            },
+        ],
+        domain: AppSubdomain.work,
+        element: <WorkApp />,
+        id: toolTitle,
+        roleErrorRoute,
+        rolesRequired: WORK_MANAGER_ALLOWED_ROLES,
+        route: rootRoute,
+        title: toolTitle,
+    },
+]

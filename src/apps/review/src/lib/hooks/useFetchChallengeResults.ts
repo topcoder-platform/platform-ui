@@ -24,7 +24,7 @@ import { fetchAllChallengeReviews } from '../services'
 import { ChallengeDetailContext } from '../contexts'
 import { PAST_CHALLENGE_STATUSES } from '../utils/challengeStatus'
 import {
-    SUBMISSION_TYPE_CONTEST,
+    isContestSubmissionType,
 } from '../constants'
 
 type ResourceMemberMapping = ChallengeDetailContextModel['resourceMemberIdMapping']
@@ -139,7 +139,10 @@ const buildProjectResult = ({
     // Find all submissions for this member
     const memberSubmissions = submissions.filter(s => s.memberId === memberId)
     const contestSubmissions = memberSubmissions.filter(
-        submission => (submission.type ?? SUBMISSION_TYPE_CONTEST) === SUBMISSION_TYPE_CONTEST,
+        submission => isContestSubmissionType(
+            submission.type,
+            { defaultToContest: true },
+        ),
     )
 
     // Prefer contest submissions; fall back to everything so we still display something if data is inconsistent

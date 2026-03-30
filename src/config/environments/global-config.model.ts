@@ -15,6 +15,11 @@ export interface GlobalConfig {
     PLATFORMUI_URL: string
     ENGAGEMENTS_URL: string
     USER_PROFILE_URL: string
+    CHALLENGE_API_URL?: string
+    CHALLENGE_API_VERSION?: string
+    COMMUNITY_APP_URL?: string
+    REVIEW_APP_URL?: string
+    DIRECT_PROJECT_URL?: string
     API: {
         V1: string
         V3: string
@@ -26,6 +31,7 @@ export interface GlobalConfig {
     STANDARDIZED_SKILLS_API: string,
     TC_FINANCE_API: string,
     TC_AI_API: string,
+    MARATHON_MATCH_API?: string,
     REPORTS_API: string,
     AUTH: {
         ACCOUNTS_APP_CONNECTOR: string

@@ -27,6 +27,7 @@ import {
     ChallengeDetailContextModel,
     ReviewAppContextModel,
     Screening,
+    ScreeningReviewDetail,
     SubmissionInfo,
 } from '../../models'
 import { TableWrapper } from '../TableWrapper'
@@ -42,6 +43,11 @@ import {
     REOPEN_MESSAGE_SELF,
     SubmissionHistoryPartition,
 } from '../../utils'
+import {
+    isViewerAssignedToScreening,
+    resolveViewerReviewId,
+    resolveViewerReviewStatus,
+} from '../../utils/screeningAssignments'
 import { ChallengeDetailContext, ReviewAppContext } from '../../contexts'
 import { updateReview } from '../../services'
 import { ConfirmModal } from '../ConfirmModal'
@@ -81,8 +87,10 @@ interface BaseColumnsConfig {
 }
 
 interface ScreeningColumnConfig {
-    canViewScorecard: (entry: Screening) => boolean
-    shouldMaskScore: (entry: Screening) => boolean
+    canViewScorecard: (entry: Screening, detail?: ScreeningReviewDetail) => boolean
+    shouldMaskScore: (entry: Screening, detail?: ScreeningReviewDetail) => boolean
+    hasMultipleScreeners: boolean
+    maxScreenerCount: number
 }
 
 interface ActionRenderer {
@@ -265,13 +273,14 @@ const createVirusScanColumn = (): TableColumn<Screening> => ({
 
 const createMyReviewActions = (
     data: Screening,
-    options: { allowCompleteScreeningAction: boolean },
+    options: { allowCompleteScreeningAction: boolean; myResourceIds: Set<string> },
 ): ActionRenderer[] => {
-    if (!data.myReviewResourceId) {
+    const isOwnAssignment = isViewerAssignedToScreening(data, options.myResourceIds)
+    if (!isOwnAssignment) {
         return []
     }
 
-    const status = (data.myReviewStatus ?? '').toUpperCase()
+    const status = resolveViewerReviewStatus(data)
     if (['COMPLETED', 'SUBMITTED'].includes(status)) {
         return [
             {
@@ -296,16 +305,17 @@ const createMyReviewActions = (
         return []
     }
 
-    if (!data.myReviewId) {
+    const reviewId = resolveViewerReviewId(data)
+    if (!reviewId) {
         return []
     }
 
     return [
         {
-            key: `complete-${data.myReviewId}`,
+            key: `complete-${reviewId}`,
             render: isLast => (
                 <Link
-                    to={`./../reviews/${data.submissionId}?reviewId=${data.myReviewId}`}
+                    to={`./../reviews/${data.submissionId}?reviewId=${reviewId}`}
                     className={classNames(
                         styles.submit,
                         { 'last-element': isLast },
@@ -436,6 +446,43 @@ const isScreeningReviewInProgress = (entry: Screening): boolean => (
     || isInProgressStatus(entry.myReviewStatus)
 )
 
+const COMPLETED_REVIEW_STATUSES = new Set(['COMPLETED', 'SUBMITTED'])
+
+const isCompletedReviewStatus = (value: string | undefined): boolean => (
+    COMPLETED_REVIEW_STATUSES.has((value ?? '').toUpperCase())
+)
+
+const resolveScreeningReviewDetails = (entry: Screening): ScreeningReviewDetail[] => {
+    if (entry.screeningReviews?.length) {
+        return entry.screeningReviews
+    }
+
+    if (!entry.reviewId && !entry.screenerId && !entry.screener?.memberHandle) {
+        return []
+    }
+
+    return [
+        {
+            result: entry.result,
+            reviewId: entry.reviewId,
+            reviewPhaseId: entry.reviewPhaseId,
+            reviewStatus: entry.reviewStatus,
+            score: entry.score,
+            screener: entry.screener,
+            screenerId: entry.screenerId,
+        },
+    ]
+}
+
+const hasIncompleteScreeningReviews = (entry: Screening): boolean => {
+    const screeningReviews = resolveScreeningReviewDetails(entry)
+    if (screeningReviews.length <= 1) {
+        return false
+    }
+
+    return screeningReviews.some(reviewDetail => !isCompletedReviewStatus(reviewDetail.reviewStatus))
+}
+
 /**
  * Creates columns for displaying screening review data.
  *
@@ -449,119 +496,149 @@ const isScreeningReviewInProgress = (entry: Screening): boolean => (
 const createScreeningColumns = ({
     canViewScorecard,
     shouldMaskScore,
-}: ScreeningColumnConfig): TableColumn<Screening>[] => [
-    {
-        label: 'Screener',
-        propertyName: 'screener',
-        renderer: (data: Screening) => {
-            const normalizedPhaseName = data.phaseName
-                ?.toLowerCase()
-                .trim()
+    hasMultipleScreeners,
+    maxScreenerCount,
+}: ScreeningColumnConfig): TableColumn<Screening>[] => {
+    const screenerColumnCount = Math.max(1, maxScreenerCount)
 
-            if (normalizedPhaseName && normalizedPhaseName !== 'screening') {
-                return <span />
-            }
+    const renderScreener = (
+        screener?: ScreeningReviewDetail['screener'],
+    ): JSX.Element => {
+        if (!screener?.memberHandle) {
+            return <span>--</span>
+        }
 
-            // Display the screener handle from the Screening phase review
-            // (Review phase data is filtered out in TabContentScreening)
-            return data.screener?.memberHandle ? (
-                <a
-                    href={getHandleUrl(data.screener)}
-                    target='_blank'
-                    rel='noreferrer'
-                    style={{
-                        color: data.screener?.handleColor,
-                    }}
-                    onClick={function onClick() {
-                        window.open(
-                            getHandleUrl(data.screener),
-                            '_blank',
-                        )
-                    }}
-                >
-                    {data.screener?.memberHandle ?? ''}
-                </a>
-            ) : (
-                <span
-                    style={{
-                        color: data.screener?.handleColor,
-                    }}
-                >
-                    {data.screener?.memberHandle ?? ''}
-                </span>
-            )
-        },
-        type: 'element',
-    },
-    {
-        label: 'Screening Score',
-        propertyName: 'score',
-        renderer: (data: Screening) => {
-            const normalizedPhaseName = data.phaseName
-                ?.toLowerCase()
-                .trim()
-            // Link to the Screening phase scorecard
-            // (Review phase scorecards are filtered out upstream)
-            const maskScore = shouldMaskScore(data)
-            const scoreValue = maskScore ? '--' : (data.score ?? '-')
+        return (
+            <a
+                href={getHandleUrl(screener)}
+                target='_blank'
+                rel='noreferrer'
+                style={{
+                    color: screener.handleColor,
+                }}
+                onClick={function onClick() {
+                    window.open(
+                        getHandleUrl(screener),
+                        '_blank',
+                    )
+                }}
+            >
+                {screener.memberHandle}
+            </a>
+        )
+    }
 
-            if (normalizedPhaseName && normalizedPhaseName !== 'screening') {
-                return <span>{scoreValue}</span>
-            }
-
-            if (!data.reviewId || maskScore) {
-                return <span>{scoreValue}</span>
-            }
-
-            const canAccessScorecard = canViewScorecard(data)
-
-            if (!canAccessScorecard) {
-                return (
-                    <Tooltip content={VIEW_OWN_SCORECARD_TOOLTIP} triggerOn='click-hover'>
-                        <span className={styles.tooltipTrigger}>
-                            <span className={styles.textBlue}>{scoreValue}</span>
-                        </span>
-                    </Tooltip>
-                )
-            }
-
+    const renderResult = (result: Screening['result']): JSX.Element => {
+        const normalizedValue = (result || '').toUpperCase()
+        if (normalizedValue === 'PASS') {
             return (
-                <Link
-                    to={`./../reviews/${data.submissionId}?reviewId=${data.reviewId}`}
-                    className={styles.textBlue}
-                >
-                    {scoreValue}
-                </Link>
+                <span className={styles.resultPass}>Pass</span>
             )
-        },
-        type: 'element',
-    },
-    {
+        }
+
+        if (normalizedValue === 'NO PASS' || normalizedValue === 'FAIL') {
+            return (
+                <span className={styles.resultFail}>Fail</span>
+            )
+        }
+
+        return <span>-</span>
+    }
+
+    const columns: TableColumn<Screening>[] = []
+
+    for (let index = 0; index < screenerColumnCount; index += 1) {
+        const isSingleScreenerLayout = !hasMultipleScreeners && screenerColumnCount === 1
+        const screenerLabel = isSingleScreenerLayout
+            ? 'Screener'
+            : `Screener ${index + 1}`
+        const scoreLabel = isSingleScreenerLayout
+            ? 'Screening Score'
+            : `Screening Score ${index + 1}`
+
+        columns.push(
+            {
+                label: screenerLabel,
+                propertyName: `screener-${index}`,
+                renderer: (data: Screening) => {
+                    const detail = resolveScreeningReviewDetails(data)[index]
+                    return renderScreener(detail?.screener)
+                },
+                type: 'element',
+            },
+            {
+                label: scoreLabel,
+                propertyName: `screening-score-${index}`,
+                renderer: (data: Screening) => {
+                    const detail = resolveScreeningReviewDetails(data)[index]
+                    if (!detail) {
+                        return <span>--</span>
+                    }
+
+                    const maskScore = shouldMaskScore(data, detail)
+                    const scoreValue = maskScore ? '--' : (detail.score ?? '-')
+
+                    if (!detail.reviewId || maskScore) {
+                        return <span>{scoreValue}</span>
+                    }
+
+                    const canAccessScorecard = canViewScorecard(data, detail)
+
+                    if (!canAccessScorecard) {
+                        return (
+                            <Tooltip content={VIEW_OWN_SCORECARD_TOOLTIP} triggerOn='click-hover'>
+                                <span className={styles.tooltipTrigger}>
+                                    <span className={styles.textBlue}>{scoreValue}</span>
+                                </span>
+                            </Tooltip>
+                        )
+                    }
+
+                    return (
+                        <Link
+                            to={`./../reviews/${data.submissionId}?reviewId=${detail.reviewId}`}
+                            className={styles.textBlue}
+                        >
+                            {scoreValue}
+                        </Link>
+                    )
+                },
+                type: 'element',
+            },
+        )
+    }
+
+    if (hasMultipleScreeners) {
+        columns.push({
+            label: 'Screening Score',
+            propertyName: 'screening-aggregate-score',
+            renderer: (data: Screening) => {
+                if (hasIncompleteScreeningReviews(data)) {
+                    return <span>--</span>
+                }
+
+                const maskScore = shouldMaskScore(data)
+                return <span>{maskScore ? '--' : (data.score ?? '-')}</span>
+            },
+            type: 'element',
+        })
+    }
+
+    columns.push({
         label: 'Screening Result',
         propertyName: 'result',
         renderer: (data: Screening) => {
-            if (isScreeningReviewInProgress(data)) {
+            if (hasIncompleteScreeningReviews(data) || isScreeningReviewInProgress(data)) {
                 return <span>-</span>
             }
 
-            const val = (data.result || '').toUpperCase()
-            if (val === 'PASS') {
-                return (
-                    <span className={styles.resultPass}>Pass</span>
-                )
-            }
-
-            if (val === 'NO PASS' || val === 'FAIL') {
-                return (
-                    <span className={styles.resultFail}>Fail</span>
-                )
-            }
-
-            return <span>-</span>
+            return renderResult(data.result)
         },
         type: 'element',
-    },
-]
+    })
+
+    return columns
+}
 
 const createActionColumn = ({
     allowCompleteScreeningAction,
@@ -590,7 +667,10 @@ const createActionColumn = ({
 
             actionRenderers.push(...createMyReviewActions(
                 data,
-                { allowCompleteScreeningAction },
+                {
+                    allowCompleteScreeningAction,
+                    myResourceIds,
+                },
             ))
 
             const reopenAction = createReopenAction({
@@ -833,10 +913,14 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
                     return <></>
                 }
 
+                if (!props.aiReviewers?.length) {
+                    return <></>
+                }
+
                 return (
                     <CollapsibleAiReviewsRow
                         className={styles.aiReviews}
-                        aiReviewers={props.aiReviewers!}
+                        aiReviewers={props.aiReviewers}
                         submission={submissionPayload as Pick<BackendSubmission, 'id'|'virusScan'>}
                         defaultOpen={allRows ? !allRows.indexOf(data) : false}
                     />
@@ -876,9 +960,28 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
             .filter(screening => latestSubmissionIds.has(screening.submissionId))
     ), [props.screenings, latestSubmissionIds])
 
+    const maxScreenerCount = useMemo(
+        () => filteredScreenings.reduce(
+            (maxCount, screening) => Math.max(
+                maxCount,
+                resolveScreeningReviewDetails(screening).length,
+                1,
+            ),
+            1,
+        ),
+        [filteredScreenings],
+    )
+
+    const hasMultipleScreeners = useMemo(
+        () => maxScreenerCount > 1,
+        [maxScreenerCount],
+    )
+
     const hasAnyScreeningAssignment = useMemo(
-        () => props.screenings.some(screening => Boolean(screening.myReviewResourceId)),
-        [props.screenings],
+        () => props.screenings.some(
+            screening => isViewerAssignedToScreening(screening, myResourceIds),
+        ),
+        [props.screenings, myResourceIds],
     )
 
     const canShowReopenActions = useMemo(
@@ -1028,8 +1131,11 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
         [submissionMetaById],
     )
 
-    const isSubmissionNotViewable = (submission: Screening): boolean => (
-        !canViewSubmissions && String(submission.memberId) !== String(loginUserInfo?.userId)
+    const isSubmissionNotViewable = useCallback(
+        (submission: Screening): boolean => (
+            !canViewSubmissions && String(submission.memberId) !== String(loginUserInfo?.userId)
+        ),
+        [canViewSubmissions, loginUserInfo?.userId],
     )
     const submissionColumn = useMemo(
         () => createSubmissionColumn({
@@ -1080,8 +1186,9 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
     )
 
     const canViewScorecardForRow = useCallback(
-        (entry: Screening): boolean => {
-            if (!entry.reviewId) {
+        (entry: Screening, detail?: ScreeningReviewDetail): boolean => {
+            const detailReviewId = detail?.reviewId ?? entry.reviewId
+            if (!detailReviewId) {
                 return false
             }
 
@@ -1097,13 +1204,13 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
                 return true
             }
 
-            if (entry.myReviewId && entry.reviewId === entry.myReviewId) {
+            if (entry.myReviewId && detailReviewId === entry.myReviewId) {
                 return true
             }
 
             const reviewerResourceIds = [
                 entry.myReviewResourceId,
-                entry.screenerId,
+                detail?.screenerId ?? entry.screenerId,
             ].filter((id): id is string => Boolean(id))
 
             return reviewerResourceIds.some(id => myResourceIds.has(id))
@@ -1117,7 +1224,7 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
     )
 
     const shouldMaskScoreForRow = useCallback(
-        (entry: Screening): boolean => {
+        (entry: Screening, detail?: ScreeningReviewDetail): boolean => {
             if (!hasSubmitterRole) {
                 return false
             }
@@ -1134,7 +1241,7 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
                 return false
             }
 
-            if (canViewScorecardForRow(entry)) {
+            if (canViewScorecardForRow(entry, detail)) {
                 return false
             }
 
@@ -1156,10 +1263,14 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
     const screeningColumns = useMemo<TableColumn<Screening>[]>(
         () => createScreeningColumns({
             canViewScorecard: canViewScorecardForRow,
+            hasMultipleScreeners,
+            maxScreenerCount,
             shouldMaskScore: shouldMaskScoreForRow,
         }),
         [
             canViewScorecardForRow,
+            hasMultipleScreeners,
+            maxScreenerCount,
             shouldMaskScoreForRow,
         ],
     )
@@ -1190,6 +1301,7 @@ export const TableSubmissionScreening: FC<Props> = (props: Props) => {
             openReopenDialog,
             pendingReopen?.reviewId,
             isReopening,
+            showScreeningColumns,
             shouldShowHistoryActions,
         ],
     )

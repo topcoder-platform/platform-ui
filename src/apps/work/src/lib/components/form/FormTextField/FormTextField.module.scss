@@ -1,0 +1,54 @@
+@import '@libs/ui/styles/includes';
+
+.inputContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.inputContainerInlineCounter {
+    gap: 0;
+    position: relative;
+}
+
+.input {
+    border: 1px solid $black-20;
+    border-radius: 8px;
+    color: $black-80;
+    font-size: 14px;
+    min-height: 44px;
+    padding: 10px 12px;
+
+    &:focus {
+        border-color: $link-blue-dark;
+        outline: none;
+    }
+
+    &:disabled {
+        background: $black-5;
+        color: $black-40;
+        cursor: not-allowed;
+    }
+}
+
+.inputWithInlineCounter {
+    padding-right: 60px;
+}
+
+.error {
+    border-color: $red-100;
+}
+
+.counter {
+    color: $black-60;
+    font-size: 12px;
+    text-align: right;
+}
+
+.counterInline {
+    pointer-events: none;
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+}

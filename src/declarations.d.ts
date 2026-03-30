@@ -1,4 +1,5 @@
 declare module 'tc-auth-lib'
+declare module 'city-timezones'
 
 declare module '*.svg' {
     import * as React from 'react'

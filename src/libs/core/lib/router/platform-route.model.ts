@@ -8,6 +8,7 @@ export interface PlatformRoute {
     disabled?: boolean
     element: JSX.Element
     id?: string
+    roleErrorRoute?: string
     rolesRequired?: Array<string>
     route: string
     title?: string

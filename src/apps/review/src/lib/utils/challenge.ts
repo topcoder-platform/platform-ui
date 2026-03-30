@@ -374,6 +374,7 @@ const orderPhasesForTabs = (
 
 /**
  * Build tabs for challenge phases using a consistent ordering.
+ * For completed challenges, add the Winners tab only when no phase is still open.
  */
 export function buildPhaseTabs(
     phases: PhaseLike[],
@@ -404,7 +405,8 @@ export function buildPhaseTabs(
     })
 
     const normalizedStatus = (status || '').toUpperCase()
-    if (normalizedStatus.startsWith('COMPLETED')) {
+    const hasOpenPhase = orderedPhases.some(phase => phase?.isOpen === true)
+    if (normalizedStatus.startsWith('COMPLETED') && !hasOpenPhase) {
         TAB_INSERTION_HELPERS.insertIfMissing(tabs, 'Winners', 'Winners', tabs.length)
     }
 
@@ -453,6 +455,69 @@ const normalizePhaseIdentifier = (
 
     const normalized = `${value}`.trim()
     return normalized.length ? normalized : undefined
+}
+
+/**
+ * Collect phase identifiers that are eligible for timeline reopen actions.
+ * A phase is reopen-eligible only when it is the direct predecessor of an open phase.
+ *
+ * @param phases - Challenge phases from the backend.
+ * @returns Set of eligible phase identifiers including both `id` and `phaseId` values.
+ */
+export function collectReopenEligiblePhaseIds(
+    phases?: BackendPhase[],
+): Set<string> {
+    const identifiers = new Set<string>()
+    if (!Array.isArray(phases) || !phases.length) {
+        return identifiers
+    }
+
+    const phaseLookup = new Map<string, BackendPhase>()
+    phases.forEach(phase => {
+        const id = normalizePhaseIdentifier(phase?.id)
+        const phaseId = normalizePhaseIdentifier(phase?.phaseId)
+
+        if (id) {
+            phaseLookup.set(id, phase)
+        }
+
+        if (phaseId) {
+            phaseLookup.set(phaseId, phase)
+        }
+    })
+
+    const addPhaseIdentifiers = (phase?: BackendPhase): void => {
+        if (!phase) {
+            return
+        }
+
+        const id = normalizePhaseIdentifier(phase.id)
+        const phaseId = normalizePhaseIdentifier(phase.phaseId)
+
+        if (id) {
+            identifiers.add(id)
+        }
+
+        if (phaseId) {
+            identifiers.add(phaseId)
+        }
+    }
+
+    phases.forEach(phase => {
+        if (!phase?.isOpen) {
+            return
+        }
+
+        const predecessorId = normalizePhaseIdentifier(phase.predecessor)
+        if (!predecessorId) {
+            return
+        }
+
+        identifiers.add(predecessorId)
+        addPhaseIdentifiers(phaseLookup.get(predecessorId))
+    })
+
+    return identifiers
 }
 
 const collectOpenPhaseIdentifiers = (
