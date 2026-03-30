@@ -1,3 +1,5 @@
+@import '@libs/ui/styles/includes';
+
 .container {
     display: flex;
     flex-direction: column;
@@ -5,4 +7,63 @@
 
 .blockTableContainer {
     position: relative;
+}
+
+.headerButtons {
+    display: flex;
+    align-items: center;
+    gap: $sp-4;
+}
+
+.uploadForm {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: $sp-6;
+    min-width: 420px;
+}
+
+.uploadFormFields {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-4;
+}
+
+.fileInputContainer {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-1;
+}
+
+.inputLabel {
+    font-family: $font-barlow;
+    font-weight: $font-weight-semibold;
+    font-size: 15px;
+    color: $black-100;
+}
+
+.fileInput {
+    width: 100%;
+}
+
+.selectedFile {
+    font-family: $font-roboto;
+    font-size: 14px;
+    color: $black-80;
+}
+
+.actionButtons {
+    display: flex;
+    justify-content: flex-end;
+    gap: $sp-4;
+}
+
+.dialogLoadingSpinnerContainer {
+    position: absolute;
+    left: $sp-4;
+    bottom: $sp-2;
+
+    .spinner {
+        background: none;
+    }
 }

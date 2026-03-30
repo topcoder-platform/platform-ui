@@ -1,11 +1,23 @@
 /**
  * Manage Submission Page.
  */
-import { FC, useMemo } from 'react'
+import {
+    ChangeEvent,
+    FC,
+    useCallback,
+    useMemo,
+    useState,
+} from 'react'
 import { useParams } from 'react-router-dom'
+import { toast } from 'react-toastify'
 import classNames from 'classnames'
 
-import { LinkButton } from '~/libs/ui'
+import {
+    BaseModal,
+    Button,
+    LinkButton,
+    LoadingSpinner,
+} from '~/libs/ui'
 
 import {
     useDownloadSubmission,
@@ -23,12 +35,19 @@ import {
 } from '../../lib/hooks'
 import {
     ActionLoading,
+    FieldHandleSelect,
     PageWrapper,
     SubmissionTable,
     TableLoading,
     TableNoRecord,
 } from '../../lib'
-import { checkIsMM, getSubmissionReprocessTopic } from '../../lib/utils'
+import { SelectOption } from '../../lib/models'
+import { uploadManualSubmission } from '../../lib/services'
+import {
+    checkIsMM,
+    getSubmissionReprocessTopic,
+    handleError,
+} from '../../lib/utils'
 
 import styles from './ManageSubmissionPage.module.scss'
 
@@ -64,6 +83,7 @@ export const ManageSubmissionPage: FC<Props> = (props: Props) => {
         doRemoveReviewSummations,
         showSubmissionHistory,
         setShowSubmissionHistory,
+        refresh,
     }: useManageChallengeSubmissionsProps
         = useManageChallengeSubmissions(challengeId)
 
@@ -85,15 +105,83 @@ export const ManageSubmissionPage: FC<Props> = (props: Props) => {
         = useManageSubmissionReprocess(submissionReprocessTopic)
 
     const isLoading = isLoadingSubmission || isLoadingChallenge
+    const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
+    const [selectedHandle, setSelectedHandle]
+        = useState<SelectOption>()
+    const [selectedFile, setSelectedFile] = useState<File>()
+    const [isUploading, setIsUploading] = useState(false)
+
+    const resetUploadForm = useCallback(() => {
+        setSelectedHandle(undefined)
+        setSelectedFile(undefined)
+    }, [])
+
+    const openUploadModal = useCallback(() => {
+        setIsUploadModalOpen(true)
+    }, [])
+
+    const closeUploadModal = useCallback(() => {
+        if (isUploading) {
+            return
+        }
+
+        setIsUploadModalOpen(false)
+        resetUploadForm()
+    }, [isUploading, resetUploadForm])
+
+    const handleFileChange = useCallback(
+        (event: ChangeEvent<HTMLInputElement>) => {
+            const nextFile = event.target.files?.[0]
+            setSelectedFile(nextFile ?? undefined)
+        },
+        [],
+    )
+
+    const handleUploadSubmission = useCallback(async () => {
+        if (!challengeId || !selectedFile || !selectedHandle?.value) {
+            return
+        }
+
+        try {
+            setIsUploading(true)
+            await uploadManualSubmission({
+                challengeId,
+                file: selectedFile,
+                fileName: selectedFile.name,
+                memberId: selectedHandle.value,
+            })
+
+            toast.success('Submission uploaded successfully', {
+                toastId: 'Manual submission upload',
+            })
+            setIsUploadModalOpen(false)
+            resetUploadForm()
+            refresh()
+        } catch (error) {
+            handleError(error)
+        } finally {
+            setIsUploading(false)
+        }
+    }, [challengeId, selectedFile, selectedHandle, resetUploadForm, refresh])
 
     return (
         <PageWrapper
             pageTitle='Submission Management'
             className={classNames(styles.container, props.className)}
             headerActions={(
-                <LinkButton primary light to='./../..' size='lg'>
-                    Back
-                </LinkButton>
+                <div className={styles.headerButtons}>
+                    <Button
+                        primary
+                        size='lg'
+                        disabled={isUploading}
+                        onClick={openUploadModal}
+                    >
+                        Upload submission
+                    </Button>
+                    <LinkButton primary light to='./../..' size='lg'>
+                        Back
+                    </LinkButton>
+                </div>
             )}
         >
             {isLoading ? (
@@ -144,6 +232,73 @@ export const ManageSubmissionPage: FC<Props> = (props: Props) => {
                     )}
                 </>
             )}
+
+            <BaseModal
+                title='Upload Submission'
+                open={isUploadModalOpen}
+                onClose={closeUploadModal}
+            >
+                <div className={styles.uploadForm}>
+                    <div className={styles.uploadFormFields}>
+                        <FieldHandleSelect
+                            label='Member Handle'
+                            placeholder='Start typing a handle'
+                            value={selectedHandle}
+                            onChange={setSelectedHandle}
+                            disabled={isUploading}
+                            isLoading={isUploading}
+                        />
+                        <div className={styles.fileInputContainer}>
+                            <label
+                                htmlFor='manual-submission-file'
+                                className={styles.inputLabel}
+                            >
+                                Submission file
+                            </label>
+                            <input
+                                id='manual-submission-file'
+                                className={styles.fileInput}
+                                type='file'
+                                onChange={handleFileChange}
+                                disabled={isUploading}
+                            />
+                            {selectedFile && (
+                                <span className={styles.selectedFile}>
+                                    {selectedFile.name}
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                    <div className={styles.actionButtons}>
+                        <Button
+                            secondary
+                            size='lg'
+                            onClick={closeUploadModal}
+                            disabled={isUploading}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            primary
+                            size='lg'
+                            onClick={handleUploadSubmission}
+                            disabled={
+                                isUploading
+                                || !selectedHandle?.value
+                                || !selectedFile
+                            }
+                        >
+                            Upload
+                        </Button>
+                    </div>
+
+                    {isUploading && (
+                        <div className={styles.dialogLoadingSpinnerContainer}>
+                            <LoadingSpinner className={styles.spinner} />
+                        </div>
+                    )}
+                </div>
+            </BaseModal>
         </PageWrapper>
     )
 }
