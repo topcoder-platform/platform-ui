@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 /**
  * Fetch reviews of submission
  */
@@ -629,16 +630,26 @@ export function useFetchSubmissionReviews(reviewId: string = ''): useFetchSubmis
                         ? buildReviewItemsPayload(updatedReview)
                         : undefined
 
-                const payload = {
-                    committed,
-                    reviewDate,
-                    status,
-                    ...(scorecardId ? { scorecardId } : {}),
-                    ...(challengeInfo?.typeId ? { typeId: challengeInfo.typeId } : {}),
-                    ...(currentPhase?.id ? { phaseId: currentPhase.id } : {}),
-                    ...(reviewItemsPayload
-                        ? { reviewItems: reviewItemsPayload }
-                        : {}),
+                let payload
+
+                if (!committed && !updatedReview && !fullReview) {
+                    // REOPEN CASE → send only status payload
+                    payload = {
+                        committed: false,
+                        status: 'IN_PROGRESS',
+                    }
+                } else {
+                    payload = {
+                        committed,
+                        reviewDate,
+                        status,
+                        ...(scorecardId ? { scorecardId } : {}),
+                        ...(challengeInfo?.typeId ? { typeId: challengeInfo.typeId } : {}),
+                        ...(currentPhase?.id ? { phaseId: currentPhase.id } : {}),
+                        ...(reviewItemsPayload
+                            ? { reviewItems: reviewItemsPayload }
+                            : {}),
+                    }
                 }
 
                 setIsSavingReview(true)
