@@ -44,7 +44,10 @@ const MILESTONE_METADATA_NAMES = {
 } as const
 
 const MILESTONE_METADATA_KEYS: readonly string[] = Object.values(MILESTONE_METADATA_NAMES)
-const ALLOW_EMPTY_ARRAY_PAYLOAD_KEYS = new Set<string>(['terms'])
+const ALLOW_EMPTY_ARRAY_PAYLOAD_KEYS = new Set<string>([
+    'groups',
+    'terms',
+])
 
 function isNonEmptyString(value: unknown): value is string {
     return typeof value === 'string' && value.trim().length > 0

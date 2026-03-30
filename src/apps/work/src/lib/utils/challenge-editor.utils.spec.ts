@@ -329,6 +329,23 @@ describe('challenge-editor utils design work type mapping', () => {
 })
 
 describe('challenge-editor utils terms mapping', () => {
+    it('keeps an empty groups array in API payloads to clear groups on update', () => {
+        const formData: Record<string, unknown> = {
+            description: 'Public specification',
+            groups: [],
+            name: 'Design challenge',
+            skills: [],
+            tags: [],
+            trackId: 'track-id',
+            typeId: 'type-id',
+        }
+
+        const result = transformFormDataToChallenge(formData as any)
+
+        expect(result.groups)
+            .toEqual([])
+    })
+
     it('keeps an empty terms array in API payloads to clear terms on update', () => {
         const formData: Record<string, unknown> = {
             description: 'Public specification',
