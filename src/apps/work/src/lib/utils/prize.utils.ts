@@ -138,6 +138,7 @@ export function calculateChallengeTotal(
     const prizesTotal = (prizeSets || [])
         .reduce((sum, prizeSet) => sum + (prizeSet.prizes || [])
             .reduce((acc, prize) => acc + toNumber(prize.value), 0), 0)
+    const firstPlacePrizeValue = getFirstPlacePrizeValue(prizeSets)
 
     const reviewerTotal = (reviewers || [])
         .reduce((sum, reviewer) => {
@@ -147,13 +148,10 @@ export function calculateChallengeTotal(
 
             const baseCoefficient = toNumber(reviewer?.baseCoefficient)
             const incrementalCoefficient = toNumber(reviewer?.incrementalCoefficient)
-            const reviewerCount = Math.max(Math.trunc(toNumber(reviewer?.memberReviewerCount)), 0)
+            const reviewerCount = getReviewerCount(reviewer)
+            const reviewerCost = (baseCoefficient + incrementalCoefficient) * firstPlacePrizeValue
 
-            if (reviewerCount <= 0) {
-                return sum + baseCoefficient
-            }
-
-            return sum + baseCoefficient + incrementalCoefficient * Math.max(reviewerCount - 1, 0)
+            return sum + reviewerCost * reviewerCount
         }, 0)
 
     return prizesTotal + reviewerTotal
