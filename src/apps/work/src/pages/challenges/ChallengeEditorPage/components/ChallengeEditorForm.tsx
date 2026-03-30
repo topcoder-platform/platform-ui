@@ -1851,7 +1851,6 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                         ? (
                                             <ReviewTypeField
                                                 isTaskChallenge={isTaskChallengeSelected}
-                                                projectId={fallbackProjectId}
                                             />
                                         )
                                         : undefined}

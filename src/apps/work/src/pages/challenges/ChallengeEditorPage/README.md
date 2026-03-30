@@ -52,7 +52,7 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 - `CopilotField`: clearable dropdown populated with copilot handles from the current project; persisted through the challenge `Copilot` resource assignment and restored from resources when draft payloads omit the legacy field. A copilot is required whenever the copilot fee is greater than 0, and that rule is enforced by form validation before save or launch actions run.
 - `CopilotFeeField`: optional copilot payment input that updates only the underlying copilot prize set, preserving placement prize edits and removing the copilot prize set when cleared so empty fees do not leave hidden validation errors.
 - `ChallengeFeeField`: derived summary value that uses the challenge billing markup together with the current prize and reviewer estimates so draft saves do not fall back to a stale `challengeFee` snapshot.
-- `ReviewTypeField`: task-only reviewer controls; enforces internal review type, requires selecting a reviewer from project members, and persists the selection through the challenge `Iterative Reviewer` resource assignment.
+- `ReviewTypeField`: task-only reviewer controls; enforces internal review type, allows searching any community reviewer handle, and persists the selection through the challenge `Iterative Reviewer` resource assignment.
 - `Wipro Allowed` checkbox: advanced-option toggle that maps to the challenge `wiproAllowed` API flag.
 - Saved selector values may come from legacy challenge fields or challenge resources. The editor restores task `assignedMemberId`, `copilot`, and task `reviewer` from matching resource assignments first, then falls back to legacy challenge payload shapes.
 
