@@ -20,6 +20,10 @@ import {
     ChallengeEditorFormData,
     Reviewer,
 } from '../../../../../lib/models'
+import {
+    fetchChallenge,
+    patchChallenge,
+} from '../../../../../lib/services'
 
 import {
     isAiReviewer,
@@ -119,7 +123,7 @@ export const ReviewersField: FC = () => {
         },
         [formContext, phases],
     )
-    const handleAiConfigRemoved = useCallback((): void => {
+    const handleAiConfigRemoved = useCallback(async (): Promise<void> => {
         const currentReviewers = formContext.getValues('reviewers') as Reviewer[] | undefined
         const nextReviewers = (currentReviewers || []).filter(reviewer => !isAiReviewer(reviewer))
 
@@ -131,7 +135,33 @@ export const ReviewersField: FC = () => {
             shouldDirty: true,
             shouldValidate: true,
         })
-    }, [formContext])
+
+        if (!challengeId) {
+            return
+        }
+
+        try {
+            await patchChallenge(challengeId, {
+                reviewers: nextReviewers,
+            })
+        } catch (error) {
+            try {
+                const persistedChallenge = await fetchChallenge(challengeId)
+                const persistedHumanReviewers = (persistedChallenge.reviewers || [])
+                    .filter(reviewer => !isAiReviewer(reviewer))
+
+                await patchChallenge(challengeId, {
+                    reviewers: persistedHumanReviewers,
+                })
+            } catch (fallbackError) {
+                throw new Error(fallbackError instanceof Error
+                    ? fallbackError.message
+                    : error instanceof Error
+                        ? error.message
+                        : 'AI review configuration was removed, but assigned AI workflows could not be cleared')
+            }
+        }
+    }, [challengeId, formContext])
 
     return (
         <div className={styles.tabsContainer}>

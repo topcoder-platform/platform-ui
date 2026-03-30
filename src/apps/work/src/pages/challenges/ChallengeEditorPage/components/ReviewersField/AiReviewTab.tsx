@@ -50,7 +50,7 @@ import styles from './AiReviewTab.module.scss'
 interface AiReviewTabProps {
     challengeId?: string
     hasSubmissions?: boolean
-    onConfigRemoved?: () => void
+    onConfigRemoved?: () => Promise<void> | void
     reviewers?: Reviewer[]
     trackId?: string
     typeId?: string
@@ -688,7 +688,6 @@ export const AiReviewTab: FC<AiReviewTabProps> = (
         if (configId) {
             try {
                 await deleteAiReviewConfig(configId)
-                showSuccessToast('AI review configuration removed')
             } catch (error) {
                 showErrorToast(error instanceof Error
                     ? error.message
@@ -699,7 +698,15 @@ export const AiReviewTab: FC<AiReviewTabProps> = (
 
         resetConfiguration()
         setConfigurationMode(undefined)
-        onConfigRemoved?.()
+
+        try {
+            await onConfigRemoved?.()
+            showSuccessToast('AI review configuration removed')
+        } catch (error) {
+            showErrorToast(error instanceof Error
+                ? error.message
+                : 'AI review configuration was removed, but assigned AI workflows could not be cleared')
+        }
     }, [configId, onConfigRemoved, resetConfiguration])
     const handleChooseTemplateClick = useCallback((): void => {
         setConfigurationMode('template')
