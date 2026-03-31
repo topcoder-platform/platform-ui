@@ -1,5 +1,30 @@
 @import '@libs/ui/styles/includes';
 
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.fieldHeader {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 20px;
+    justify-content: space-between;
+}
+
+.fieldLabel {
+    color: $black-80;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.required {
+    color: $red-100;
+    margin-left: 4px;
+}
+
 .container {
     display: flex;
     flex-direction: column;
@@ -7,31 +32,34 @@
 }
 
 .typeToggle {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.toggleOption {
+    align-items: center;
+    color: $black-80;
+    cursor: pointer;
     display: inline-flex;
+    font-size: 14px;
+    font-weight: 600;
     gap: 8px;
 }
 
-.toggleButton {
-    background: $tc-white;
-    border: 1px solid $black-20;
-    border-radius: 999px;
-    color: $black-60;
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 600;
-    padding: 8px 16px;
-
-    &:disabled {
-        background: $black-5;
-        color: $black-40;
-        cursor: not-allowed;
-    }
+.toggleOptionDisabled {
+    color: $black-40;
+    cursor: not-allowed;
 }
 
-.active {
-    background: $link-blue-dark;
-    border-color: $link-blue-dark;
-    color: $tc-white;
+.toggleRadio {
+    accent-color: $teal-160;
+    cursor: pointer;
+    margin: 0;
+}
+
+.toggleOptionDisabled .toggleRadio {
+    cursor: not-allowed;
 }
 
 .prizeRows {
@@ -45,6 +73,10 @@
     display: grid;
     gap: 10px;
     grid-template-columns: 86px minmax(0, 1fr) 28px;
+}
+
+.singlePrizeRow {
+    grid-template-columns: minmax(0, 1fr);
 }
 
 .prizeRowWithError {
@@ -100,7 +132,18 @@
     align-self: flex-start;
 }
 
+.fieldError {
+    color: $red-100;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
 @media (max-width: 640px) {
+    .fieldHeader {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
     .prizeRow {
         grid-template-columns: 1fr;
     }

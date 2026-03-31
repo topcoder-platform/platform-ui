@@ -542,12 +542,13 @@ export const ChallengesListPage: FC = () => {
             {projectIdFromRoute
                 ? <ProjectListTabs projectId={projectIdFromRoute} />
                 : undefined}
-            {contextualActions}
-
-            <div className={styles.totalChallenges}>
-                {totalChallenges}
-                {' '}
-                challenges
+            <div className={styles.summaryRow}>
+                <div className={styles.totalChallenges}>
+                    {totalChallenges}
+                    {' '}
+                    challenges
+                </div>
+                {contextualActions}
             </div>
 
             <ChallengesFilter

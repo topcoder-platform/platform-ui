@@ -50,17 +50,19 @@
 
 .billingSummary {
     display: flex;
-    flex-direction: column;
-    gap: 8px;
+    flex-wrap: wrap;
+    gap: 12px 28px;
 }
 
 .prizesBillingGrid {
-    display: grid;
+    display: flex;
+    flex-direction: column;
     gap: 24px;
 }
 
 .prizeInputs {
     display: grid;
+    align-items: start;
     gap: 20px;
     grid-template-columns: minmax(0, 1fr);
 }
@@ -78,17 +80,13 @@
 }
 
 @media (min-width: 1024px) {
-    .prizesBillingGrid {
-        grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr);
-    }
-
     .prizeInputs {
-        grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.95fr);
+        gap: 24px 48px;
+        grid-template-columns: minmax(0, 1.35fr) minmax(280px, 1fr);
     }
 
     .copilotFeeColumn {
-        justify-self: end;
-        padding-left: 16px;
+        padding-left: 0;
     }
 }
 

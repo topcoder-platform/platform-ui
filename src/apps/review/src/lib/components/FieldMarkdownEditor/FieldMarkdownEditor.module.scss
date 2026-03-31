@@ -4,8 +4,12 @@
 $error-line-height: 14px;
 
 .container {
+    --field-markdown-editor-default-border-color: var(--EditorBorder, rgba(168, 168, 168, 0.5));
+    --field-markdown-editor-error-color: var(--RedError, #D34E3B);
+    --field-markdown-editor-muted-color: var(--GrayFontColor, #767676);
+    --field-markdown-editor-link-color: var(--Link, #0d61bf);
     --field-markdown-editor-border-color: white;
-    --field-markdown-editor-top-border-color: var(--EditorBorder);
+    --field-markdown-editor-top-border-color: var(--field-markdown-editor-default-border-color);
 
     display: flex;
     flex-direction: column;
@@ -17,12 +21,12 @@ $error-line-height: 14px;
     }
 
     &.showBorder {
-        --field-markdown-editor-border-color: var(--EditorBorder);
+        --field-markdown-editor-border-color: var(--field-markdown-editor-default-border-color);
     }
 
     &.isError {
-        --field-markdown-editor-border-color: var(--RedError);
-        --field-markdown-editor-top-border-color: var(--RedError);
+        --field-markdown-editor-border-color: var(--field-markdown-editor-error-color);
+        --field-markdown-editor-top-border-color: var(--field-markdown-editor-error-color);
     }
 
     &.disabled {
@@ -104,7 +108,7 @@ $error-line-height: 14px;
             }
 
             i.separator {
-                border-left: 1px solid var(--EditorBorder);
+                border-left: 1px solid var(--field-markdown-editor-default-border-color);
                 @include ltemd {
                     margin: 0 $sp-1;
                 }
@@ -112,7 +116,7 @@ $error-line-height: 14px;
         }
 
         .editor-statusbar {
-            color: var(--GrayFontColor);
+            color: var(--field-markdown-editor-muted-color);
             font-family: "Nunito Sans", sans-serif;
             font-size: 14px;
             line-height: 19px;
@@ -129,7 +133,7 @@ $error-line-height: 14px;
                 margin-right: auto;
                 display: flex;
                 font-family: "Nunito Sans", sans-serif;
-                color: var(--GrayFontColor);
+                color: var(--field-markdown-editor-muted-color);
                 font-size: 14px;
                 line-height: 20px;
             }
@@ -148,7 +152,7 @@ $error-line-height: 14px;
         .cm-s-easymde {
             .cm-link,
             .cm-url {
-                color: var(--Link);
+                color: var(--field-markdown-editor-link-color);
             }
         }
     }
@@ -156,7 +160,7 @@ $error-line-height: 14px;
 
 .remainingCharacters {
     font-family: "Nunito Sans", sans-serif;
-    color: var(--GrayFontColor);
+    color: var(--field-markdown-editor-muted-color);
     font-size: 14px;
     line-height: 20px;
     @include ltemd {

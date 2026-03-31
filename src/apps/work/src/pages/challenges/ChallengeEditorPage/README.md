@@ -11,7 +11,7 @@
   footer actions.
 - `components/*Field.tsx`: field-level components for each challenge section.
 - `components/ReviewersField/*`: tabbed human/AI review configuration. Human reviewers stay on the challenge form, while AI reviewer configs load/save through the review API and sync saved AI workflows back into the challenge `reviewers` array. Existing AI configs are reloaded only when the challenge already has synced AI reviewer entries, which avoids empty-config lookups on new challenges. Removing an AI config also detaches the synced AI workflow reviewers from the challenge. When AI reviewers exist without a persisted AI screening phase, the schedule editor injects a virtual `AI Screening` row after submission phases. This `Review` section is hidden for `Task` and `Marathon Match` challenges because those flows use dedicated reviewer assignment UIs.
-- `ChallengeEditorPage.module.scss` and `components/ChallengeEditorForm.module.scss`: page and form layout styling.
+- `ChallengeEditorPage.module.scss` and `components/ChallengeEditorForm.module.scss`: page and form layout styling, including the grouped `Prizes & Billing` layout that keeps the editable inputs together and moves the billing summary underneath them.
 
 ## Validation Rules
 
@@ -52,6 +52,7 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 - `ChallengePrivateDescriptionField`: optional private markdown spec editor.
 - `ChallengeTagsField`: multi creatable tag picker excluding special challenge tags.
 - `ChallengeSkillsField`: async multi skills picker with billing-account-based required behavior.
+- `ChallengePrizesField`: placement-prize editor with an inline USD/POINTS selector, descending-value validation for multi-prize setups, and create-on-demand placement prize-set hydration when older payloads omit the placement set.
 - `AssignedMemberField`: task-only assignee selector backed by member ids; persisted through the challenge `Submitter` resource assignment and restored from resources when task payloads omit the legacy field.
 - `CopilotField`: clearable dropdown populated with copilot handles from the current project; persisted through the challenge `Copilot` resource assignment and restored from resources when draft payloads omit the legacy field. A copilot is required whenever the copilot fee is greater than 0, and that rule is enforced by form validation before save or launch actions run.
 - `CopilotFeeField`: optional copilot payment input that updates only the underlying copilot prize set, preserving placement prize edits and removing the copilot prize set when cleared so empty fees do not leave hidden validation errors.

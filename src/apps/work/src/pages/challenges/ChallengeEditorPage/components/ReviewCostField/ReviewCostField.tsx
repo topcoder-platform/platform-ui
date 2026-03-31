@@ -69,7 +69,7 @@ export const ReviewCostField: FC<ReviewCostFieldProps> = (
 
     return (
         <div className={styles.lineItem}>
-            <span className={styles.label}>Review Cost:</span>
+            <span className={styles.label}>Review cost:</span>
             <span className={styles.value}>{formattedValue}</span>
         </div>
     )

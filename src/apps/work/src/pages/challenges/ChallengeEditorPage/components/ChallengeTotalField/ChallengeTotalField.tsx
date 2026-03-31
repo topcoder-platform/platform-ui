@@ -47,7 +47,7 @@ export const ChallengeTotalField: FC = () => {
 
     return (
         <div className={styles.lineItem}>
-            <span className={styles.label}>Estimated Challenge Total:</span>
+            <span className={styles.label}>Estimated challenge total:</span>
             <span className={styles.value}>{formattedValue}</span>
         </div>
     )

@@ -22,7 +22,6 @@ import { Button } from '~/libs/ui'
 
 import { ConfirmationModal } from '../../../../../lib/components'
 import {
-    FormFieldWrapper,
     PrizeInput,
 } from '../../../../../lib/components/form'
 import {
@@ -330,41 +329,64 @@ export const ChallengePrizesField: FC<ChallengePrizesFieldProps> = (
     const fieldError = typeof fieldState.error?.message === 'string'
         ? fieldState.error.message
         : undefined
+    const showPrizeRowLabels = fields.length > 1
+    const visibleError = fieldError || descendingError
 
     return (
         <>
-            <FormFieldWrapper
-                error={fieldError || descendingError}
-                label='Challenge Prizes'
-                name={props.name}
-                required
-            >
-                <div className={styles.container}>
-                    <div className={styles.typeToggle}>
-                        <button
-                            className={classNames(
-                                styles.toggleButton,
-                                currentPrizeType === PRIZE_TYPES.USD ? styles.active : undefined,
-                            )}
-                            disabled={props.disabled}
-                            onClick={handleSelectUsd}
-                            type='button'
-                        >
-                            USD
-                        </button>
-                        <button
-                            className={classNames(
-                                styles.toggleButton,
-                                currentPrizeType === PRIZE_TYPES.POINT ? styles.active : undefined,
-                            )}
-                            disabled={props.disabled}
-                            onClick={handleSelectPoints}
-                            type='button'
-                        >
-                            Points
-                        </button>
+            <div className={styles.field}>
+                <div className={styles.fieldHeader}>
+                    <div className={styles.fieldLabel}>
+                        Challenge Prizes
+                        <span className={styles.required}>*</span>
                     </div>
 
+                    <div
+                        aria-label='Challenge prize currency'
+                        className={styles.typeToggle}
+                        role='radiogroup'
+                    >
+                        <label
+                            className={classNames(
+                                styles.toggleOption,
+                                props.disabled ? styles.toggleOptionDisabled : undefined,
+                            )}
+                            htmlFor={`${props.name}-type-usd`}
+                        >
+                            <input
+                                checked={currentPrizeType === PRIZE_TYPES.USD}
+                                className={styles.toggleRadio}
+                                disabled={props.disabled}
+                                id={`${props.name}-type-usd`}
+                                name={`${props.name}-type`}
+                                onChange={handleSelectUsd}
+                                type='radio'
+                            />
+                            <span>USD</span>
+                        </label>
+
+                        <label
+                            className={classNames(
+                                styles.toggleOption,
+                                props.disabled ? styles.toggleOptionDisabled : undefined,
+                            )}
+                            htmlFor={`${props.name}-type-points`}
+                        >
+                            <input
+                                checked={currentPrizeType === PRIZE_TYPES.POINT}
+                                className={styles.toggleRadio}
+                                disabled={props.disabled}
+                                id={`${props.name}-type-points`}
+                                name={`${props.name}-type`}
+                                onChange={handleSelectPoints}
+                                type='radio'
+                            />
+                            <span>Points</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div className={styles.container}>
                     <div className={styles.prizeRows}>
                         {fields.map((prizeField, index) => {
                             const prizeValue = Number(placementPrizes?.[index]?.value) || 0
@@ -382,14 +404,17 @@ export const ChallengePrizesField: FC<ChallengePrizesFieldProps> = (
                                     className={classNames(
                                         styles.prizeRow,
                                         prizeValueErrorMessage ? styles.prizeRowWithError : undefined,
+                                        !showPrizeRowLabels ? styles.singlePrizeRow : undefined,
                                     )}
                                     key={prizeField.id}
                                 >
-                                    <span className={styles.prizeLabel}>
-                                        {supportsMultiplePrizes
-                                            ? `Prize ${index + 1}`
-                                            : 'Prize'}
-                                    </span>
+                                    {showPrizeRowLabels
+                                        ? (
+                                            <span className={styles.prizeLabel}>
+                                                {`Prize ${index + 1}`}
+                                            </span>
+                                        )
+                                        : undefined}
 
                                     <div className={styles.prizeInputField}>
                                         <PrizeInput
@@ -408,18 +433,20 @@ export const ChallengePrizesField: FC<ChallengePrizesFieldProps> = (
                                             : undefined}
                                     </div>
 
-                                    {index > 0
-                                        ? (
-                                            <button
-                                                className={styles.trashButton}
-                                                disabled={props.disabled}
-                                                onClick={removeHandlers[index]}
-                                                type='button'
-                                            >
-                                                <TrashIcon className={styles.trashIcon} />
-                                            </button>
-                                        )
-                                        : <div className={styles.trashPlaceholder} />}
+                                    {showPrizeRowLabels
+                                        ? (index > 0
+                                            ? (
+                                                <button
+                                                    className={styles.trashButton}
+                                                    disabled={props.disabled}
+                                                    onClick={removeHandlers[index]}
+                                                    type='button'
+                                                >
+                                                    <TrashIcon className={styles.trashIcon} />
+                                                </button>
+                                            )
+                                            : <div className={styles.trashPlaceholder} />)
+                                        : undefined}
                                 </div>
                             )
                         })}
@@ -438,7 +465,11 @@ export const ChallengePrizesField: FC<ChallengePrizesFieldProps> = (
                         )
                         : undefined}
                 </div>
-            </FormFieldWrapper>
+
+                {visibleError
+                    ? <div className={styles.fieldError}>{visibleError}</div>
+                    : undefined}
+            </div>
 
             {showPointsConfirmation
                 ? (

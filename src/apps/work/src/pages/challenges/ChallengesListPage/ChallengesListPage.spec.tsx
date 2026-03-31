@@ -266,8 +266,21 @@ describe('ChallengesListPage', () => {
         })
     })
 
-    it('renders challenge actions below the project tabs and keeps create engagement in the header', () => {
+    it('renders the challenge count before project actions and keeps create engagement in the header', () => {
         mockedCanCreateEngagement.mockReturnValue(true)
+        mockedUseFetchChallenges.mockReturnValue({
+            challenges: [],
+            error: undefined,
+            isLoading: false,
+            isValidating: false,
+            metadata: {
+                page: 1,
+                perPage: 10,
+                total: 1,
+                totalPages: 1,
+            },
+            mutate: jest.fn(),
+        })
         mockedUseFetchProject.mockReturnValue({
             error: undefined,
             isLoading: false,
@@ -299,6 +312,8 @@ describe('ChallengesListPage', () => {
         const pageContent = screen.getByTestId('page-content')
         const projectTabs = within(pageContent)
             .getByText('Project Tabs')
+        const totalChallenges = within(pageContent)
+            .getByText('1 challenges')
         const requestCopilotLink = within(pageContent)
             .getByRole('link', { name: 'Request Copilot' })
         const createChallengeButton = within(pageContent)
@@ -319,7 +334,11 @@ describe('ChallengesListPage', () => {
             .toBe('true')
         expect(projectTabs.compareDocumentPosition(requestCopilotLink))
             .toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+        expect(totalChallenges.compareDocumentPosition(requestCopilotLink))
+            .toBe(Node.DOCUMENT_POSITION_FOLLOWING)
         expect(projectTabs.compareDocumentPosition(createChallengeButton))
+            .toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+        expect(totalChallenges.compareDocumentPosition(createChallengeButton))
             .toBe(Node.DOCUMENT_POSITION_FOLLOWING)
         expect(requestCopilotLink.compareDocumentPosition(createChallengeButton))
             .toBe(Node.DOCUMENT_POSITION_FOLLOWING)

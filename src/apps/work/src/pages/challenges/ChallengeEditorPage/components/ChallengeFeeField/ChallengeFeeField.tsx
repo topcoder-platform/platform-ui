@@ -87,7 +87,7 @@ export const ChallengeFeeField: FC = () => {
 
     return (
         <div className={styles.lineItem}>
-            <span className={styles.label}>Challenge Fee:</span>
+            <span className={styles.label}>Challenge fee:</span>
             <span className={styles.value}>{formattedValue}</span>
         </div>
     )

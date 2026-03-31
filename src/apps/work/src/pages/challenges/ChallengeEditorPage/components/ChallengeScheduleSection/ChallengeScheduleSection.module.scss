@@ -21,13 +21,17 @@
 }
 
 .startDateControls {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+    align-items: start;
+    column-gap: 16px;
+    display: grid;
+    grid-template-columns: minmax(260px, 420px) auto;
+    row-gap: 12px;
 }
 
 .startDateInput {
-    max-width: 420px;
+    grid-column: 1;
+    grid-row: 1;
+    width: 100%;
 }
 
 .startDateModeGroup {
@@ -35,6 +39,8 @@
     display: flex;
     flex-wrap: wrap;
     gap: 16px;
+    grid-column: 2;
+    grid-row: 1;
 }
 
 .startDateModeOption {
@@ -60,8 +66,19 @@
 }
 
 @media (max-width: 767px) {
+    .startDateControls {
+        grid-template-columns: 1fr;
+    }
+
     .startDateInput {
         max-width: none;
+        grid-row: 2;
+        width: 100%;
+    }
+
+    .startDateModeGroup {
+        grid-column: 1;
+        grid-row: 1;
     }
 }
 
