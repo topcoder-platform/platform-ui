@@ -21,13 +21,35 @@
 }
 
 .startDateControls {
-    align-items: center;
     display: flex;
+    flex-direction: column;
     gap: 12px;
 }
 
 .startDateInput {
-    flex: 1 1 auto;
+    max-width: 420px;
+}
+
+.startDateModeGroup {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.startDateModeOption {
+    align-items: center;
+    color: $black-80;
+    cursor: pointer;
+    display: inline-flex;
+    font-size: 14px;
+    gap: 8px;
+}
+
+.startDateModeRadio {
+    accent-color: $link-blue-dark;
+    cursor: pointer;
+    margin: 0;
 }
 
 .startDateTimezone {
@@ -38,9 +60,8 @@
 }
 
 @media (max-width: 767px) {
-    .startDateControls {
-        align-items: stretch;
-        flex-direction: column;
+    .startDateInput {
+        max-width: none;
     }
 }
 

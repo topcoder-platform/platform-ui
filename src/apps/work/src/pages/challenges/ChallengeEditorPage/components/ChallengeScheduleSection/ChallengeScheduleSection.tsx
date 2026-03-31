@@ -53,6 +53,13 @@ interface ApplyPhasesOptions {
     startDateOverride?: Date | string
 }
 
+type StartDateMode = 'immediately' | 'scheduled'
+
+const START_DATE_MODE: Record<'IMMEDIATELY' | 'SCHEDULED', StartDateMode> = {
+    IMMEDIATELY: 'immediately',
+    SCHEDULED: 'scheduled',
+}
+
 function noopVirtualPhaseChange(): void {
     // Display-only schedule rows do not mutate persisted phase state.
 }
@@ -90,6 +97,11 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
     const isSectionDisabled = !!props.disabled
 
     const [isGanttView, setIsGanttView] = useState<boolean>(false)
+    const [startDateMode, setStartDateMode] = useState<StartDateMode>(() => (
+        startDate
+            ? START_DATE_MODE.SCHEDULED
+            : START_DATE_MODE.IMMEDIATELY
+    ))
     const [calculationError, setCalculationError] = useState<string | undefined>()
     const [phaseEndDateErrors, setPhaseEndDateErrors] = useState<Record<string, string>>({})
     const minScheduleDate = useMemo(() => new Date(), [])
@@ -145,6 +157,7 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
     )
 
     const initializedRef = useRef<boolean>(false)
+    const lastInternalStartDateValueRef = useRef<number | 'empty' | undefined>()
     const phaseStartOverridesRef = useRef<Map<string, string>>(new Map<string, string>())
 
     const prunePhaseStartOverrides = useCallback((nextPhases: ChallengePhase[]): void => {
@@ -271,9 +284,16 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
     }, [phases, setValue, startDate])
 
     const handleStartDateChange = useCallback(
-        (date: Date | null): void => {
+        (
+            date: Date | null,
+            nextMode: StartDateMode = START_DATE_MODE.SCHEDULED,
+        ): void => {
             const nextStartDate = date || undefined
 
+            lastInternalStartDateValueRef.current = nextStartDate
+                ? nextStartDate.getTime()
+                : 'empty'
+            setStartDateMode(nextMode)
             setValue('startDate', nextStartDate, {
                 shouldDirty: true,
                 shouldValidate: true,
@@ -285,8 +305,32 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
                 startDateOverride: nextStartDate,
             })
         },
-        [applyPhases, phases, setValue],
+        [
+            applyPhases,
+            phases,
+            setStartDateMode,
+            setValue,
+        ],
     )
+
+    useEffect(() => {
+        const parsedStartDate = toDate(startDate)
+        const currentStartDateValue = parsedStartDate
+            ? parsedStartDate.getTime()
+            : 'empty'
+
+        if (lastInternalStartDateValueRef.current === currentStartDateValue) {
+            lastInternalStartDateValueRef.current = undefined
+            return
+        }
+
+        lastInternalStartDateValueRef.current = undefined
+        setStartDateMode(
+            parsedStartDate
+                ? START_DATE_MODE.SCHEDULED
+                : START_DATE_MODE.IMMEDIATELY,
+        )
+    }, [startDate])
 
     const handleDurationChange = useCallback(
         (index: number, durationMinutes: number): void => {
@@ -391,11 +435,32 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
     const handleToggleView = useCallback((): void => {
         setIsGanttView(previousValue => !previousValue)
     }, [])
-    const handleSetStartDateImmediately = useCallback(
-        (): void => {
-            handleStartDateChange(new Date())
+
+    const handleStartDateModeChange = useCallback(
+        (nextMode: StartDateMode): void => {
+            if (nextMode === START_DATE_MODE.IMMEDIATELY) {
+                handleStartDateChange(
+                    new Date(),
+                    START_DATE_MODE.IMMEDIATELY,
+                )
+                return
+            }
+
+            setStartDateMode(START_DATE_MODE.SCHEDULED)
         },
         [handleStartDateChange],
+    )
+    const handleSetScheduledStartDateMode = useCallback(
+        (): void => {
+            handleStartDateModeChange(START_DATE_MODE.SCHEDULED)
+        },
+        [handleStartDateModeChange],
+    )
+    const handleSetImmediateStartDateMode = useCallback(
+        (): void => {
+            handleStartDateModeChange(START_DATE_MODE.IMMEDIATELY)
+        },
+        [handleStartDateModeChange],
     )
 
     return (
@@ -409,23 +474,55 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
                     </p>
 
                     <div className={styles.startDateControls}>
+                        <div
+                            aria-label='Challenge start mode'
+                            className={styles.startDateModeGroup}
+                            role='radiogroup'
+                        >
+                            <label
+                                className={styles.startDateModeOption}
+                                htmlFor='challenge-start-mode-scheduled'
+                            >
+                                <input
+                                    checked={startDateMode === START_DATE_MODE.SCHEDULED}
+                                    className={styles.startDateModeRadio}
+                                    disabled={isSectionDisabled}
+                                    id='challenge-start-mode-scheduled'
+                                    name='challenge-start-mode'
+                                    onChange={handleSetScheduledStartDateMode}
+                                    type='radio'
+                                />
+                                <span>Scheduled</span>
+                            </label>
+
+                            <label
+                                className={styles.startDateModeOption}
+                                htmlFor='challenge-start-mode-immediately'
+                            >
+                                <input
+                                    checked={startDateMode === START_DATE_MODE.IMMEDIATELY}
+                                    className={styles.startDateModeRadio}
+                                    disabled={isSectionDisabled}
+                                    id='challenge-start-mode-immediately'
+                                    name='challenge-start-mode'
+                                    onChange={handleSetImmediateStartDateMode}
+                                    type='radio'
+                                />
+                                <span>Immediately</span>
+                            </label>
+                        </div>
+
                         <div className={styles.startDateInput}>
                             <StartDateTimeInput
-                                disabled={isSectionDisabled}
-                                label='Challenge Start Date/Time'
+                                disabled={isSectionDisabled || startDateMode === START_DATE_MODE.IMMEDIATELY}
+                                label='Start Date'
+                                labelOutside
                                 minDate={minScheduleDate}
                                 onChange={handleStartDateChange}
                                 showTimezone={false}
                                 value={startDate}
                             />
                         </div>
-                        <Button
-                            disabled={isSectionDisabled}
-                            label='Immediately'
-                            onClick={handleSetStartDateImmediately}
-                            secondary
-                            size='lg'
-                        />
                     </div>
                 </div>
             </div>

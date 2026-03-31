@@ -41,6 +41,7 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 - `ChallengeNameField`: text input.
 - `ChallengeTrackField`: track selector from `useFetchChallengeTracks`.
 - `ChallengeTypeField`: active type selector from `useFetchChallengeTypes`, excluding `Topgear Task` because that flow is not launchable from the work app editor.
+- `ChallengeScheduleSection`: schedule editor for challenge start and phase dates. It keeps the detected timezone above the controls, lets managers choose between `Scheduled` and `Immediately` for the challenge start, and recalculates root phase dates when the challenge start changes.
 - `DesignWorkTypeField`: shown for Design + Challenge, with the legacy work-type options (`Application Front-End Design`, `Print/Presentation`, `Web Design`, `Widget or Mobile Screen Design`, `Wireframes`). The selected value is stored in challenge tags.
 - `FunChallengeField`: shown for `Marathon Match` type and remains editable after creation so the form can switch between fun-challenge and standard marathon-match fields.
 - `ReviewersField`: hidden for `Task` and `Marathon Match` challenges because manual reviewer assignment is handled elsewhere.
