@@ -55,9 +55,11 @@
     font-size: 12px;
     font-weight: 700;
     justify-content: center;
-    min-width: 90px;
-    padding: 4px 10px;
+    height: 24px;
+    line-height: 1;
+    padding: 0 12px;
     text-transform: capitalize;
+    white-space: nowrap;
 }
 
 .statusGreen {

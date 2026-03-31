@@ -4,11 +4,12 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 96px;
+    height: 24px;
     border-radius: 999px;
-    padding: 4px 10px;
+    padding: 0 12px;
     font-size: 12px;
     font-weight: 700;
+    line-height: 1;
     white-space: nowrap;
 }
 
