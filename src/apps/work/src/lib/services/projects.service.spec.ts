@@ -1,0 +1,124 @@
+/* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
+import { xhrGetAsync } from '~/libs/core'
+
+import { fetchProjectBillingAccount } from './projects.service'
+
+jest.mock('~/config', () => ({
+    EnvironmentConfig: {
+        API: {
+            V6: 'https://example.com/v6',
+        },
+    },
+}), {
+    virtual: true,
+})
+jest.mock('~/libs/core', () => ({
+    xhrCreateInstance: jest.fn(() => ({
+        defaults: {
+            headers: {
+                common: {},
+            },
+        },
+    })),
+    xhrDeleteAsync: jest.fn(),
+    xhrGetAsync: jest.fn(),
+    xhrGetPaginatedAsync: jest.fn(),
+    xhrPatchAsync: jest.fn(),
+    xhrPostAsync: jest.fn(),
+    xhrPutAsync: jest.fn(),
+}), {
+    virtual: true,
+})
+jest.mock('../constants', () => ({
+    ATTACHMENT_TYPE_FILE: 'FILE',
+    FILE_PICKER_SUBMISSION_CONTAINER_NAME: 'submissions',
+    GENERIC_PROJECT_MILESTONE_PRODUCT_NAME: 'milestone',
+    GENERIC_PROJECT_MILESTONE_PRODUCT_TYPE: 'milestone-type',
+    PHASE_PRODUCT_CHALLENGE_ID_FIELD: 'challengeId',
+    PHASE_PRODUCT_TEMPLATE_ID: 1,
+    PROJECT_STATUS: {
+        ACTIVE: 'active',
+    },
+    PROJECTS_API_URL: 'https://example.com/projects',
+    PROJECTS_PAGE_SIZE: 20,
+}))
+jest.mock('./project-member-invites.service', () => ({
+    createProjectMemberInvite: jest.fn(),
+}))
+
+describe('fetchProjectBillingAccount', () => {
+    beforeEach(() => {
+        jest.clearAllMocks()
+    })
+
+    it('loads markup from the billing-accounts API when the project billing account omits it', async () => {
+        const mockedGetAsync = xhrGetAsync as jest.Mock
+
+        mockedGetAsync
+            .mockResolvedValueOnce({
+                active: true,
+                endDate: '2026-10-16T23:59:00.000Z',
+                name: 'BA For Marios',
+                startDate: '2023-10-31T00:00:00.000Z',
+                tcBillingAccountId: 80001063,
+            })
+            .mockResolvedValueOnce({
+                id: 80001063,
+                markup: '0.33',
+                name: 'BA For Marios',
+            })
+
+        const result = await fetchProjectBillingAccount('100578')
+
+        expect(result)
+            .toEqual({
+                billingAccount: {
+                    active: true,
+                    endDate: '2026-10-16T23:59:00.000Z',
+                    id: '80001063',
+                    markup: 0.33,
+                    name: 'BA For Marios',
+                    startDate: '2023-10-31T00:00:00.000Z',
+                },
+            })
+        expect(mockedGetAsync)
+            .toHaveBeenNthCalledWith(
+                1,
+                'https://example.com/projects/100578/billingAccount',
+            )
+        expect(mockedGetAsync)
+            .toHaveBeenNthCalledWith(
+                2,
+                'https://example.com/v6/billing-accounts/80001063',
+            )
+    })
+
+    it('uses markup returned by the project billing account endpoint without an extra lookup', async () => {
+        const mockedGetAsync = xhrGetAsync as jest.Mock
+
+        mockedGetAsync.mockResolvedValue({
+            active: true,
+            endDate: '2026-10-16T23:59:00.000Z',
+            markup: '0.33',
+            name: 'BA For Marios',
+            startDate: '2023-10-31T00:00:00.000Z',
+            tcBillingAccountId: 80001063,
+        })
+
+        const result = await fetchProjectBillingAccount('100578')
+
+        expect(result)
+            .toEqual({
+                billingAccount: {
+                    active: true,
+                    endDate: '2026-10-16T23:59:00.000Z',
+                    id: '80001063',
+                    markup: 0.33,
+                    name: 'BA For Marios',
+                    startDate: '2023-10-31T00:00:00.000Z',
+                },
+            })
+        expect(mockedGetAsync)
+            .toHaveBeenCalledTimes(1)
+    })
+})

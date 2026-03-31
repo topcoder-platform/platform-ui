@@ -16,6 +16,7 @@ interface FormFieldWrapperProps {
     className?: string
     error?: string
     hint?: string
+    hideLabel?: boolean
     label: string
     name: string
     required?: boolean
@@ -37,12 +38,16 @@ export const FormFieldWrapper: FC<PropsWithChildren<FormFieldWrapperProps>>
 
         return (
             <div className={classNames(styles.container, props.className)}>
-                <label className={styles.label} htmlFor={props.name}>
-                    {props.label}
-                    {props.required
-                        ? <span className={styles.required}>*</span>
-                        : undefined}
-                </label>
+                {!props.hideLabel
+                    ? (
+                        <label className={styles.label} htmlFor={props.name}>
+                            {props.label}
+                            {props.required
+                                ? <span className={styles.required}>*</span>
+                                : undefined}
+                        </label>
+                    )
+                    : undefined}
 
                 {props.children}
 

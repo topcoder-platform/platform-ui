@@ -5,6 +5,7 @@ import {
     collectReopenEligiblePhaseIds,
     findPhaseByTabLabel,
     type PhaseLike,
+    shouldForceWinnersTabForPastChallenge,
 } from './challenge'
 
 const createPhase = (
@@ -210,6 +211,13 @@ describe('challenge phase tab helpers', () => {
                 'Approval',
                 'Approval 2',
             ])
+    })
+
+    it('allows past challenges with winner data to force-show the winners tab', () => {
+        expect(shouldForceWinnersTabForPastChallenge('COMPLETED', [{ userId: 1 }]))
+            .toBe(true)
+        expect(shouldForceWinnersTabForPastChallenge('COMPLETED', []))
+            .toBe(false)
     })
 })
 

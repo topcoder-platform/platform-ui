@@ -11,6 +11,7 @@ import {
     useAutosave,
     useFetchChallengeTracks,
     useFetchChallengeTypes,
+    useFetchProjectBillingAccount,
     useFetchResourceRoles,
     useFetchResources,
     useFetchTimelineTemplates,
@@ -26,6 +27,7 @@ jest.mock('../../../../lib/hooks', () => ({
     useAutosave: jest.fn(),
     useFetchChallengeTracks: jest.fn(),
     useFetchChallengeTypes: jest.fn(),
+    useFetchProjectBillingAccount: jest.fn(),
     useFetchResourceRoles: jest.fn(),
     useFetchResources: jest.fn(),
     useFetchTimelineTemplates: jest.fn(),
@@ -255,6 +257,7 @@ jest.mock('./TermsField', () => ({
 const mockedUseAutosave = useAutosave as jest.Mock
 const mockedUseFetchChallengeTracks = useFetchChallengeTracks as jest.Mock
 const mockedUseFetchChallengeTypes = useFetchChallengeTypes as jest.Mock
+const mockedUseFetchProjectBillingAccount = useFetchProjectBillingAccount as jest.Mock
 const mockedUseFetchResourceRoles = useFetchResourceRoles as jest.Mock
 const mockedUseFetchResources = useFetchResources as jest.Mock
 const mockedUseFetchTimelineTemplates = useFetchTimelineTemplates as jest.Mock
@@ -277,6 +280,10 @@ describe('ChallengeEditorForm', () => {
         })
         mockedUseFetchChallengeTypes.mockReturnValue({
             challengeTypes: [],
+            isLoading: false,
+        })
+        mockedUseFetchProjectBillingAccount.mockReturnValue({
+            billingAccount: undefined,
             isLoading: false,
         })
         mockedUseFetchResourceRoles.mockImplementation(() => ({

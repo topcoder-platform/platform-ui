@@ -11,6 +11,14 @@ export interface UseFetchChallengeResult {
     mutate: SWRResponse<Challenge, Error>['mutate']
 }
 
+/**
+ * Fetch a single challenge and always allow an immediate remount revalidation.
+ *
+ * Challenge view/edit routes can be reopened right after a save. Setting
+ * `dedupingInterval` to `0` avoids SWR reusing a recent in-flight/detail fetch
+ * window and ensures the page asks challenge-api-v6 for the latest challenge
+ * snapshot on remount.
+ */
 export function useFetchChallenge(challengeId?: string): UseFetchChallengeResult {
     const swrKey = challengeId
         ? ['work/challenge', challengeId]
@@ -25,6 +33,7 @@ export function useFetchChallenge(challengeId?: string): UseFetchChallengeResult
             swrKey,
             () => fetchChallenge(challengeId as string),
             {
+                dedupingInterval: 0,
                 errorRetryCount: 2,
                 shouldRetryOnError: true,
             },

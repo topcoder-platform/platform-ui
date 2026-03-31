@@ -6,8 +6,11 @@ import {
 } from '../../../../lib/models'
 
 import {
+    applyProjectBillingToChallengeFormData,
     COPILOT_RESOURCE_ROLE_NAMES,
     findMatchingResourceRole,
+    hasSameChallengeBillingInfo,
+    mergeChallengeBillingWithProjectBilling,
     resolveCreateRoundType,
     resolveCreateTimelineTemplateId,
     resolveResourceAssignmentHandle,
@@ -375,5 +378,112 @@ describe('resource assignment helpers', () => {
 
         expect(result)
             .toBe('67890')
+    })
+})
+
+describe('project billing helpers', () => {
+    it('fills missing challenge billing from the project billing account', () => {
+        const result = mergeChallengeBillingWithProjectBilling(
+            undefined,
+            {
+                id: 80001063,
+                markup: 0.33,
+            },
+        )
+
+        expect(result)
+            .toEqual({
+                billingAccountId: '80001063',
+                markup: 0.33,
+            })
+    })
+
+    it('preserves saved challenge billing while filling missing markup from the project', () => {
+        const result = mergeChallengeBillingWithProjectBilling(
+            {
+                billingAccountId: 80001063,
+            },
+            {
+                id: 90000000,
+                markup: 0.33,
+            },
+        )
+
+        expect(result)
+            .toEqual({
+                billingAccountId: '80001063',
+                markup: 0.33,
+            })
+    })
+
+    it('replaces stale zero markup when the challenge uses the project billing account', () => {
+        const result = mergeChallengeBillingWithProjectBilling(
+            {
+                billingAccountId: 80001063,
+                markup: 0,
+            },
+            {
+                id: 80001063,
+                markup: 0.33,
+            },
+        )
+
+        expect(result)
+            .toEqual({
+                billingAccountId: '80001063',
+                markup: 0.33,
+            })
+    })
+
+    it('preserves zero markup when the challenge uses a different billing account', () => {
+        const result = mergeChallengeBillingWithProjectBilling(
+            {
+                billingAccountId: 80001064,
+                markup: 0,
+            },
+            {
+                id: 80001063,
+                markup: 0.33,
+            },
+        )
+
+        expect(result)
+            .toEqual({
+                billingAccountId: '80001064',
+                markup: 0,
+            })
+    })
+
+    it('applies merged project billing to challenge form data only when billing changes', () => {
+        const formData = {
+            description: '',
+            name: 'Billing challenge',
+            skills: [],
+            tags: [],
+            trackId: 'track-id',
+            typeId: 'type-id',
+        }
+
+        const result = applyProjectBillingToChallengeFormData(
+            formData,
+            {
+                id: 80001063,
+                markup: 0.33,
+            },
+        )
+
+        expect(result)
+            .toEqual({
+                ...formData,
+                billing: {
+                    billingAccountId: '80001063',
+                    markup: 0.33,
+                },
+            })
+        expect(hasSameChallengeBillingInfo(result.billing, {
+            billingAccountId: '80001063',
+            markup: 0.33,
+        }))
+            .toBe(true)
     })
 })

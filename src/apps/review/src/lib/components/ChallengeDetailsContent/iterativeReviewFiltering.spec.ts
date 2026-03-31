@@ -115,4 +115,30 @@ describe('filterIterativeReviewRows', () => {
         expect(results[0].review?.phaseId)
             .toBe('iterative-phase-1')
     })
+
+    it('limits completed F2F rows to the supplied winning submission ids', () => {
+        const iterativeReviewer = createResource('iterative-resource-1', 'Iterative Reviewer')
+        const losingReviewer = createResource('iterative-resource-2', 'Iterative Reviewer')
+        const results = filterIterativeReviewRows({
+            challengePhases,
+            isPostMortemPhase: false,
+            limitToSubmissionIds: [`submission-${iterativeReviewer.id}`],
+            reviewerResources: [iterativeReviewer, losingReviewer],
+            sourceRows: [
+                {
+                    ...createSubmission(iterativeReviewer.id),
+                    memberId: 'winner-member',
+                },
+                {
+                    ...createSubmission(losingReviewer.id),
+                    memberId: 'losing-member',
+                },
+            ],
+        })
+
+        expect(results)
+            .toHaveLength(1)
+        expect(results[0].id)
+            .toBe(`submission-${iterativeReviewer.id}`)
+    })
 })

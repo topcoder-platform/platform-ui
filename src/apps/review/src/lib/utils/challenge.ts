@@ -2,12 +2,16 @@
  * Util for challenge
  */
 
-import type {
+import {
     BackendMetadata,
     BackendPhase,
+    BackendSubmission,
     ChallengeInfo,
+    ChallengeWinner,
     SelectOption,
 } from '../models'
+
+import { PAST_CHALLENGE_STATUSES } from './challengeStatus'
 
 /**
  * Check if challenge is in the review phase
@@ -120,7 +124,6 @@ function normalizeLimitMetadataValue(rawValue: unknown): unknown {
 }
 
 function evaluateStringLimit(value: string): boolean {
-    console.log('evaluateStringLimit', value)
     const trimmed = value.trim()
     if (!trimmed) {
         return true
@@ -214,6 +217,108 @@ export type PhaseOrderingOptions = {
     isF2F?: boolean
     isTask?: boolean
     isTopgearTask?: boolean
+}
+
+/**
+ * Determine whether the UI should force-show the Winners tab for a past challenge.
+ *
+ * @param status - Challenge status returned by the backend.
+ * @param winners - Winner list from the challenge payload.
+ * @returns True when the challenge is past/completed and winners are already available.
+ */
+export function shouldForceWinnersTabForPastChallenge(
+    status?: string,
+    winners?: unknown[] | null,
+): boolean {
+    const normalizedStatus = (status ?? '')
+        .trim()
+        .toUpperCase()
+
+    if (!normalizedStatus || !(winners?.length)) {
+        return false
+    }
+
+    return PAST_CHALLENGE_STATUSES.some(pastStatus => normalizedStatus.startsWith(pastStatus))
+}
+
+function normalizeEntityId(value: unknown): string | undefined {
+    if (value === undefined || value === null) {
+        return undefined
+    }
+
+    const normalized = `${value}`.trim()
+    return normalized.length ? normalized : undefined
+}
+
+function normalizeSubmissionId(submission: Pick<BackendSubmission, 'id'>): string | undefined {
+    return normalizeEntityId(submission.id)
+}
+
+/**
+ * Resolve the submission ids that should remain visible on a completed First2Finish
+ * iterative tab. Winner-linked submissions take precedence, followed by placement,
+ * then earliest submission date as a legacy fallback.
+ *
+ * @param submissions - Contest submissions associated with the challenge.
+ * @param winners - Winner entries returned on the challenge payload.
+ * @returns Ordered submission ids to keep visible on the completed iterative tab.
+ */
+export function resolveCompletedF2FSubmissionIds(
+    submissions?: Array<Pick<BackendSubmission, 'id' | 'memberId' | 'placement' | 'submittedDate'>> | null,
+    winners?: ChallengeWinner[] | null,
+): string[] {
+    const contestSubmissions = submissions ?? []
+    if (!contestSubmissions.length) {
+        return []
+    }
+
+    const winnerMemberIds = new Set(
+        (winners ?? [])
+            .map(winner => normalizeEntityId(winner.userId))
+            .filter((memberId): memberId is string => Boolean(memberId)),
+    )
+
+    if (winnerMemberIds.size) {
+        const winnerSubmissionIds = contestSubmissions
+            .filter(submission => {
+                const memberId = normalizeEntityId(submission.memberId)
+                return memberId ? winnerMemberIds.has(memberId) : false
+            })
+            .map(submission => normalizeSubmissionId(submission))
+            .filter((submissionId): submissionId is string => Boolean(submissionId))
+
+        if (winnerSubmissionIds.length) {
+            return winnerSubmissionIds
+        }
+    }
+
+    const placements = contestSubmissions
+        .map(submission => Number(submission.placement))
+        .filter(placement => Number.isFinite(placement) && placement > 0)
+
+    if (placements.length) {
+        const topPlacement = Math.min(...placements)
+        return contestSubmissions
+            .filter(submission => Number(submission.placement) === topPlacement)
+            .map(submission => normalizeSubmissionId(submission))
+            .filter((submissionId): submissionId is string => Boolean(submissionId))
+    }
+
+    const withParsedDates = contestSubmissions
+        .map(submission => ({
+            parsedDate: Date.parse(submission.submittedDate ?? ''),
+            submission,
+        }))
+        .filter(item => Number.isFinite(item.parsedDate))
+        .sort((left, right) => left.parsedDate - right.parsedDate)
+
+    if (withParsedDates.length) {
+        const earliestSubmissionId = normalizeSubmissionId(withParsedDates[0].submission)
+        return earliestSubmissionId ? [earliestSubmissionId] : []
+    }
+
+    const fallbackSubmissionId = normalizeSubmissionId(contestSubmissions[0])
+    return fallbackSubmissionId ? [fallbackSubmissionId] : []
 }
 
 const TAB_INSERTION_HELPERS = {
