@@ -1,6 +1,42 @@
+@import '@libs/ui/styles/includes';
+
 .tabsContainer {
     display: flex;
     flex-direction: column;
+}
+
+.tabList {
+    align-items: flex-end;
+    border-bottom: 1px solid #d5d5d5;
+    display: flex;
+    gap: 24px;
+    margin-bottom: 6px;
+    overflow-x: auto;
+}
+
+.tabButton {
+    background: transparent;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    color: $black-60;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 10px 0;
+    white-space: nowrap;
+
+    &:hover {
+        color: $black-60;
+    }
+}
+
+.activeTab {
+    border-bottom-color: #2a62d5;
+    color: #2a62d5;
+
+    &:hover {
+        color: #2a62d5;
+    }
 }
 
 .tabPanel {

@@ -11,11 +11,6 @@ import {
 import classNames from 'classnames'
 
 import {
-    TabsNavbar,
-    TabsNavItem,
-} from '~/libs/ui'
-
-import {
     AiReviewConfig,
     ChallengeEditorFormData,
     Reviewer,
@@ -85,16 +80,8 @@ export const ReviewersField: FC = () => {
         () => reviewerRows.filter(isAiReviewer).length,
         [reviewerRows],
     )
-    const tabs = useMemo<TabsNavItem<ReviewTab>[]>(() => [
-        {
-            id: 'human',
-            title: `Human Review (${humanReviewersCount})`,
-        },
-        {
-            id: 'ai',
-            title: `AI Review (${aiReviewersCount})`,
-        },
-    ], [aiReviewersCount, humanReviewersCount])
+    const humanReviewLabel = `Human Review (${humanReviewersCount})`
+    const aiReviewLabel = `AI Review (${aiReviewersCount})`
     const hasSubmissions = useMemo(
         () => Number(numOfSubmissions || 0) > 0,
         [numOfSubmissions],
@@ -165,28 +152,71 @@ export const ReviewersField: FC = () => {
 
     return (
         <div className={styles.tabsContainer}>
-            <TabsNavbar
-                defaultActive={activeTab}
-                onChange={handleTabChange}
-                tabs={tabs}
-            />
+            <div className={styles.tabList} role='tablist'>
+                <button
+                    aria-controls='reviewers-human-panel'
+                    aria-selected={activeTab === 'human'}
+                    className={classNames(
+                        styles.tabButton,
+                        activeTab === 'human'
+                            ? styles.activeTab
+                            : undefined,
+                    )}
+                    id='reviewers-human-tab'
+                    onClick={function onClick() {
+                        handleTabChange('human')
+                    }}
+                    role='tab'
+                    type='button'
+                >
+                    {humanReviewLabel}
+                </button>
+                <button
+                    aria-controls='reviewers-ai-panel'
+                    aria-selected={activeTab === 'ai'}
+                    className={classNames(
+                        styles.tabButton,
+                        activeTab === 'ai'
+                            ? styles.activeTab
+                            : undefined,
+                    )}
+                    id='reviewers-ai-tab'
+                    onClick={function onClick() {
+                        handleTabChange('ai')
+                    }}
+                    role='tab'
+                    type='button'
+                >
+                    {aiReviewLabel}
+                </button>
+            </div>
 
-            <div className={classNames(
-                styles.tabPanel,
-                activeTab !== 'human'
-                    ? styles.tabPanelHidden
-                    : undefined,
-            )}
+            <div
+                aria-labelledby='reviewers-human-tab'
+                className={classNames(
+                    styles.tabPanel,
+                    activeTab !== 'human'
+                        ? styles.tabPanelHidden
+                        : undefined,
+                )}
+                hidden={activeTab !== 'human'}
+                id='reviewers-human-panel'
+                role='tabpanel'
             >
                 <HumanReviewTab />
             </div>
 
-            <div className={classNames(
-                styles.tabPanel,
-                activeTab !== 'ai'
-                    ? styles.tabPanelHidden
-                    : undefined,
-            )}
+            <div
+                aria-labelledby='reviewers-ai-tab'
+                className={classNames(
+                    styles.tabPanel,
+                    activeTab !== 'ai'
+                        ? styles.tabPanelHidden
+                        : undefined,
+                )}
+                hidden={activeTab !== 'ai'}
+                id='reviewers-ai-panel'
+                role='tabpanel'
             >
                 <AiReviewTab
                     challengeId={challengeId}
