@@ -230,4 +230,15 @@ describe('ChallengeScheduleSection component', () => {
         expect(screen.getByRole('radio', { name: 'Scheduled' }))
             .toBeChecked()
     })
+
+    it('does not render the gantt view toggle in the editor', () => {
+        render(<TestHarness />)
+
+        expect(screen.queryByRole('button', { name: 'Switch to Gantt View' }))
+            .not
+            .toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: 'Switch to Editor View' }))
+            .not
+            .toBeInTheDocument()
+    })
 })
