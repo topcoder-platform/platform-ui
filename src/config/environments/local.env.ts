@@ -4,7 +4,6 @@ export * from './default.env'
 
 export const TC_FINANCE_API = 'http://localhost:3009/v6/finance'
 export const REPORTS_API = 'http://localhost:3013/v6/reports'
-export const QA_API = 'http://localhost:3014/v6/qa'
 export const DEBUG_CHECKPOINT_PHASES = true
 export const LOCAL_SERVICE_OVERRIDES: LocalServiceOverride[] = [
     { prefix: '/v5/billing-accounts', target: 'http://localhost:3010' },
@@ -31,7 +30,6 @@ export const LOCAL_SERVICE_OVERRIDES: LocalServiceOverride[] = [
     { prefix: '/v6/permissions', target: 'http://localhost:3002' },
     { prefix: '/v6/user-roles', target: 'http://localhost:3002' },
     { prefix: '/v6/identityproviders', target: 'http://localhost:3002' },
-    { prefix: '/v6/qa', target: 'http://localhost:3014' },
 
     { prefix: '/v6/members', target: 'http://localhost:3003' },
 

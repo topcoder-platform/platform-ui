@@ -33,7 +33,6 @@ export interface GlobalConfig {
     TC_AI_API: string,
     MARATHON_MATCH_API?: string,
     REPORTS_API: string,
-    QA_API: string,
     AUTH: {
         ACCOUNTS_APP_CONNECTOR: string
     }

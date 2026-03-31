@@ -15,8 +15,7 @@ export enum AppSubdomain {
     calendar = 'calendar',
     engagements = 'engagements',
     customer = 'customer',
-    reports = 'reports',
-    qa = 'qa'
+    reports = 'reports'
 }
 
 export enum ToolTitle {
@@ -37,8 +36,7 @@ export enum ToolTitle {
     calendar = 'Calendar',
     engagements = 'Engagements',
     customer = 'Customer',
-    reports = 'Reports',
-    qa = 'QA Tester'
+    reports = 'Reports'
 }
 
 export const PageSubheaderPortalId: string = 'page-subheader-portal-el'
