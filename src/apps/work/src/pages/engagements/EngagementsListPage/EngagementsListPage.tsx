@@ -611,31 +611,33 @@ export const EngagementsListPage: FC = () => {
                             />
                         </Link>
                     )}
-
-                {canCreateProjectEngagement && (
-                    isCreateActionDisabled
-                        ? (
-                            <Button
-                                label='Create Engagement'
-                                secondary
-                                size='md'
-                                disabled
-                            />
-                        )
-                        : (
-                            <Link
-                                className={styles.headerActionLink}
-                                to={`/projects/${projectId}/engagements/new`}
-                            >
-                                <Button
-                                    label='Create Engagement'
-                                    secondary
-                                    size='md'
-                                />
-                            </Link>
-                        )
-                )}
             </div>
+        )
+        : undefined
+
+    const createEngagementAction = projectId && canCreateProjectEngagement
+        ? (
+            isCreateActionDisabled
+                ? (
+                    <Button
+                        label='Create Engagement'
+                        primary
+                        size='md'
+                        disabled
+                    />
+                )
+                : (
+                    <Link
+                        className={styles.headerActionLink}
+                        to={`/projects/${projectId}/engagements/new`}
+                    >
+                        <Button
+                            label='Create Engagement'
+                            primary
+                            size='md'
+                        />
+                    </Link>
+                )
         )
         : undefined
 
@@ -705,6 +707,9 @@ export const EngagementsListPage: FC = () => {
             >
                 {billingAccountExpiredNotice}
                 {projectTabs}
+                {createEngagementAction
+                    ? <div className={styles.contextualActionRow}>{createEngagementAction}</div>
+                    : undefined}
                 <LoadingSpinner />
             </PageWrapper>
         )
@@ -720,6 +725,9 @@ export const EngagementsListPage: FC = () => {
             >
                 {billingAccountExpiredNotice}
                 {projectTabs}
+                {createEngagementAction
+                    ? <div className={styles.contextualActionRow}>{createEngagementAction}</div>
+                    : undefined}
                 <ErrorMessage
                     message={engagementsResult.error.message}
                     onRetry={() => {
@@ -740,6 +748,9 @@ export const EngagementsListPage: FC = () => {
         >
             {billingAccountExpiredNotice}
             {projectTabs}
+            {createEngagementAction
+                ? <div className={styles.contextualActionRow}>{createEngagementAction}</div>
+                : undefined}
             <div className={styles.container}>
                 <EngagementsFilter
                     filters={filters}

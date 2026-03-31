@@ -4,6 +4,7 @@ import type { Context, PropsWithChildren, ReactNode } from 'react'
 import {
     render,
     screen,
+    within,
 } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 
@@ -12,25 +13,39 @@ import {
     useFetchEngagements,
     useFetchProject,
 } from '../../../lib/hooks'
+import { canCreateEngagement } from '../../../lib/utils'
 
 import { EngagementsListPage } from './EngagementsListPage'
 
 var mockWorkAppContext: Context<WorkAppContextModel>
 
 jest.mock('~/apps/review/src/lib', () => ({
-    PageWrapper: (props: PropsWithChildren<{ pageTitle?: string; titleAction?: ReactNode }>) => (
+    PageWrapper: (
+        props: PropsWithChildren<{ pageTitle?: string; rightHeader?: ReactNode; titleAction?: ReactNode }>,
+    ) => (
         <div>
+            <div data-testid='page-right-header'>{props.rightHeader}</div>
             <h1>{props.pageTitle}</h1>
             {props.titleAction}
-            {props.children}
+            <div data-testid='page-content'>{props.children}</div>
         </div>
     ),
 }), {
     virtual: true,
 })
 jest.mock('~/libs/ui', () => ({
-    Button: (props: { label: string; onClick?: () => void }) => (
-        <button onClick={props.onClick} type='button'>
+    Button: (props: {
+        label: string
+        onClick?: () => void
+        primary?: boolean
+        secondary?: boolean
+    }) => (
+        <button
+            data-primary={props.primary ? 'true' : 'false'}
+            data-secondary={props.secondary ? 'true' : 'false'}
+            onClick={props.onClick}
+            type='button'
+        >
             {props.label}
         </button>
     ),
@@ -89,6 +104,7 @@ jest.mock('../../../lib/utils', () => ({
 
 const mockedUseFetchEngagements = useFetchEngagements as jest.Mock
 const mockedUseFetchProject = useFetchProject as jest.Mock
+const mockedCanCreateEngagement = canCreateEngagement as jest.Mock
 
 const defaultContextValue: WorkAppContextModel = {
     isAdmin: true,
@@ -176,5 +192,45 @@ describe('EngagementsListPage', () => {
 
         expect(screen.getByText('Project Status: active'))
             .toBeTruthy()
+    })
+
+    it('renders create engagement below the project tabs and keeps only create challenge in the header', () => {
+        mockedCanCreateEngagement.mockReturnValue(true)
+        mockedUseFetchProject.mockReturnValue({
+            error: undefined,
+            isLoading: false,
+            project: {
+                id: 200,
+                name: 'Payment Testing',
+                status: 'active',
+            },
+        })
+
+        renderPage('/projects/200/engagements', '/projects/:projectId/engagements')
+
+        const pageRightHeader = screen.getByTestId('page-right-header')
+        const pageContent = screen.getByTestId('page-content')
+        const createChallengeButton = within(pageRightHeader)
+            .getByRole('button', { name: 'Create Challenge' })
+        const createEngagementButton = within(pageContent)
+            .getByRole('button', { name: 'Create Engagement' })
+        const projectTabs = within(pageContent)
+            .getByText('Project Tabs')
+        const engagementsFilter = within(pageContent)
+            .getByText('Engagements Filter')
+
+        expect(within(pageRightHeader)
+            .queryByRole('button', { name: 'Create Engagement' }))
+            .toBeNull()
+        expect(createChallengeButton)
+            .toBeTruthy()
+        expect(createEngagementButton.getAttribute('data-primary'))
+            .toBe('true')
+        expect(createEngagementButton.getAttribute('data-secondary'))
+            .toBe('false')
+        expect(projectTabs.compareDocumentPosition(createEngagementButton))
+            .toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+        expect(createEngagementButton.compareDocumentPosition(engagementsFilter))
+            .toBe(Node.DOCUMENT_POSITION_FOLLOWING)
     })
 })

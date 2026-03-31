@@ -16,6 +16,12 @@
     text-decoration: none;
 }
 
+.contextualActionRow {
+    display: flex;
+    justify-content: flex-end;
+    margin: 16px 0;
+}
+
 .projectTitleActions {
     display: inline-flex;
     align-items: center;
