@@ -43,6 +43,7 @@ import {
     Pagination,
     ProjectBillingAccountExpiredNotice,
     ProjectListTabs,
+    ProjectStatus,
 } from '../../../lib/components'
 import {
     canCreateEngagement,
@@ -569,7 +570,7 @@ export const EngagementsListPage: FC = () => {
         ? 'All Engagements'
         : (
             projectResult.project?.name
-                ? `${projectResult.project.name} Engagements`
+                ? projectResult.project.name
                 : 'Engagements'
         )
     const canManageProject = !!projectResult.project
@@ -641,6 +642,9 @@ export const EngagementsListPage: FC = () => {
     const titleAction = projectId
         ? (
             <div className={styles.projectTitleActions}>
+                {projectResult.project?.status
+                    ? <ProjectStatus status={projectResult.project.status} />
+                    : undefined}
                 {canManageProject
                     ? (
                         <Link
