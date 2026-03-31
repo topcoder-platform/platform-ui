@@ -1327,21 +1327,23 @@ export const HumanReviewTab: FC = () => {
                             key={reviewerKey}
                         >
                             <div className={styles.grid}>
-                                <FormSelectField
-                                    label='Phase'
-                                    name={`${reviewerPrefix}.phaseId`}
-                                    options={phaseOptions}
-                                    placeholder='Select phase'
-                                    toFieldValue={getPhaseFieldValueHandler(index)}
-                                />
-                                <FormSelectField
-                                    className={styles.memberScorecardField}
-                                    label='Scorecard'
-                                    name={`${reviewerPrefix}.scorecardId`}
-                                    options={scorecardOptions}
-                                    placeholder='Select scorecard'
-                                    required
-                                />
+                                <div className={styles.primaryFields}>
+                                    <FormSelectField
+                                        label='Phase'
+                                        name={`${reviewerPrefix}.phaseId`}
+                                        options={phaseOptions}
+                                        placeholder='Select phase'
+                                        toFieldValue={getPhaseFieldValueHandler(index)}
+                                    />
+                                    <FormSelectField
+                                        className={styles.memberScorecardField}
+                                        label='Scorecard'
+                                        name={`${reviewerPrefix}.scorecardId`}
+                                        options={scorecardOptions}
+                                        placeholder='Select scorecard'
+                                        required
+                                    />
+                                </div>
                                 <div className={styles.memberReviewSettings}>
                                     <FormTextField
                                         label='Reviewer Count'
