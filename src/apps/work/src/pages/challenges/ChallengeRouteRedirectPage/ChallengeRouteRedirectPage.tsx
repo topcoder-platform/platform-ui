@@ -27,12 +27,25 @@ function normalizeProjectId(projectId: number | string | undefined): string | un
     return normalizedProjectId || undefined
 }
 
-function buildChallengeEditPath(challengeId: string): string {
-    return `/challenges/${encodeURIComponent(challengeId)}/edit`
+/**
+ * Builds the canonical read-only challenge route for challenge pages without a project segment.
+ *
+ * @param challengeId Challenge identifier from the route.
+ * @returns View-mode route for the resolved challenge id.
+ */
+function buildChallengeViewPath(challengeId: string): string {
+    return `/challenges/${encodeURIComponent(challengeId)}/view`
 }
 
-function buildProjectChallengeEditPath(projectId: string, challengeId: string): string {
-    return `/projects/${encodeURIComponent(projectId)}/challenges/${encodeURIComponent(challengeId)}/edit`
+/**
+ * Builds the canonical project-scoped read-only challenge route.
+ *
+ * @param projectId Project identifier resolved from the challenge payload.
+ * @param challengeId Challenge identifier from the route.
+ * @returns View-mode route for the resolved project and challenge ids.
+ */
+function buildProjectChallengeViewPath(projectId: string, challengeId: string): string {
+    return `/projects/${encodeURIComponent(projectId)}/challenges/${encodeURIComponent(challengeId)}/view`
 }
 
 export const ChallengeRouteRedirectPage: FC = () => {
@@ -52,8 +65,8 @@ export const ChallengeRouteRedirectPage: FC = () => {
 
     const projectId = normalizeProjectId(challengeResult.challenge?.projectId)
     const redirectPath = projectId
-        ? buildProjectChallengeEditPath(projectId, challengeId)
-        : buildChallengeEditPath(challengeId)
+        ? buildProjectChallengeViewPath(projectId, challengeId)
+        : buildChallengeViewPath(challengeId)
 
     return <Navigate replace to={redirectPath} />
 }

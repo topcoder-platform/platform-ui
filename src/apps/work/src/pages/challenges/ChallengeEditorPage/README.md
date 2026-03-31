@@ -2,10 +2,13 @@
 
 ## Structure
 
-- `ChallengeEditorPage.tsx`: route-level page for create/edit challenge modes.
+- `ChallengeEditorPage.tsx`: route-level page for create, edit, and read-only view challenge modes.
 - `ChallengeEditorPage.tsx` also renders challenge quick links in the right header action group for
-  existing challenges (`Challenge`, `Review`, and `Forum` when present).
+  existing challenges (`Challenge`, `Review`, and `Forum` when present). In view mode it also adds
+  an `Edit` action and suppresses edit-only controls.
 - `components/ChallengeEditorForm.tsx`: React Hook Form container with autosave and manual save.
+  In view mode it renders the existing challenge data in a disabled fieldset and omits save/launch
+  footer actions.
 - `components/*Field.tsx`: field-level components for each challenge section.
 - `components/ReviewersField/*`: tabbed human/AI review configuration. Human reviewers stay on the challenge form, while AI reviewer configs load/save through the review API and sync saved AI workflows back into the challenge `reviewers` array. Existing AI configs are reloaded only when the challenge already has synced AI reviewer entries, which avoids empty-config lookups on new challenges. Removing an AI config also detaches the synced AI workflow reviewers from the challenge. When AI reviewers exist without a persisted AI screening phase, the schedule editor injects a virtual `AI Screening` row after submission phases. This `Review` section is hidden for `Task` and `Marathon Match` challenges because those flows use dedicated reviewer assignment UIs.
 - `ChallengeEditorPage.module.scss` and `components/ChallengeEditorForm.module.scss`: page and form layout styling.
@@ -32,7 +35,7 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 
 - Autosave is implemented via `useAutosave`.
 - Delay defaults to `AUTOSAVE_DELAY_MS` (10s).
-- Autosave runs when form is dirty and valid.
+- Autosave runs when form is dirty and valid, except in read-only view mode.
 - Status values: `idle`, `saving`, `saved`, `error`.
 - Last save time is shown in the footer.
 

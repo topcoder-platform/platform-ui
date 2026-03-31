@@ -360,4 +360,26 @@ describe('ChallengeEditorForm', () => {
         )
             .toBe('lg')
     })
+
+    it('renders existing challenges as read-only in view mode', () => {
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={draftChallenge}
+                    isReadOnly
+                />
+            </MemoryRouter>,
+        )
+
+        expect((document.querySelector('fieldset') as HTMLFieldSetElement).disabled)
+            .toBe(true)
+        expect(screen.queryByRole('button', { name: 'Cancel' }))
+            .toBeNull()
+        expect(screen.queryByRole('button', { name: 'Save Challenge' }))
+            .toBeNull()
+        expect(mockedUseAutosave)
+            .toHaveBeenCalledWith(expect.objectContaining({
+                enabled: false,
+            }))
+    })
 })

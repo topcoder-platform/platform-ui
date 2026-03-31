@@ -8,6 +8,7 @@ import {
     useState,
 } from 'react'
 import {
+    useLocation,
     useNavigate,
     useParams,
 } from 'react-router-dom'
@@ -95,8 +96,9 @@ interface ChallengeEditorContentProps {
     canLaunchChallenge: boolean
     challenge: UseFetchChallengeResult['challenge']
     challengeId?: string
+    isExistingChallenge: boolean
     isLaunchDisabled: boolean
-    isEditMode: boolean
+    isReadOnly: boolean
     launchButtonLabel: string
     onChallengeStatusChange: (status?: string) => void
     onLaunchOpen: () => void
@@ -110,8 +112,10 @@ interface ChallengeEditorBodyProps {
     canLaunchChallenge: boolean
     challengeId?: string
     challengeResult: UseFetchChallengeResult
+    isExistingChallenge: boolean
     isLaunchDisabled: boolean
     isEditMode: boolean
+    isReadOnly: boolean
     launchButtonLabel: string
     onChallengeStatusChange: (status?: string) => void
     onLaunchOpen: () => void
@@ -249,12 +253,17 @@ function getCancelConfirmationMessage(
 }
 
 function getChallengeEditorPageTitle(
-    isEditMode: boolean,
+    challengeId: string | undefined,
+    isViewMode: boolean,
     challengeName: string | undefined,
 ): string {
-    return isEditMode
-        ? `Edit ${challengeName || 'Challenge'}`
-        : 'Create Challenge'
+    if (!challengeId) {
+        return 'Create Challenge'
+    }
+
+    return isViewMode
+        ? `View ${challengeName || 'Challenge'}`
+        : `Edit ${challengeName || 'Challenge'}`
 }
 
 function getChallengesListPath(projectId?: string): string {
@@ -555,6 +564,7 @@ const CompleteTaskAction = (
 
 interface RenderHeaderActionParams {
     canCancelChallenge: boolean
+    canEditChallenge: boolean
     canCompleteTask: boolean
     canDeleteChallenge: boolean
     canLaunchChallenge: boolean
@@ -567,11 +577,25 @@ interface RenderHeaderActionParams {
     isSaving: boolean
     onChallengeUpdated: () => void
     onDeleteOpen: () => void
+    onEditOpen: () => void
     onLaunchOpen: () => void
 }
 
 function renderHeaderAction(params: RenderHeaderActionParams): JSX.Element | undefined {
     const actions: JSX.Element[] = []
+
+    if (params.canEditChallenge) {
+        actions.push(
+            <Button
+                key='edit'
+                label='Edit'
+                onClick={params.onEditOpen}
+                secondary
+                size='md'
+                type='button'
+            />,
+        )
+    }
 
     if (params.canLaunchChallenge) {
         actions.push(
@@ -698,10 +722,10 @@ function renderDeleteModal(params: RenderDeleteModalParams): JSX.Element | undef
 }
 
 function renderTitleAction(
-    isEditMode: boolean,
+    isExistingChallenge: boolean,
     challengeStatus: string | undefined,
 ): JSX.Element | undefined {
-    const statusPill = isEditMode && challengeStatus
+    const statusPill = isExistingChallenge && challengeStatus
         ? (
             <ChallengeStatus
                 status={challengeStatus}
@@ -750,13 +774,14 @@ const EditorTabs: FC<EditorTabsProps> = (props: EditorTabsProps) => (
 const ChallengeEditorContent: FC<ChallengeEditorContentProps> = (
     props: ChallengeEditorContentProps,
 ) => {
-    if (!props.isEditMode || props.activeTab === 'details') {
+    if (!props.isExistingChallenge || props.activeTab === 'details') {
         return (
             <ChallengeEditorForm
                 canLaunchChallenge={props.canLaunchChallenge}
                 challenge={props.challenge}
                 isLaunchDisabled={props.isLaunchDisabled}
-                isEditMode={props.isEditMode}
+                isEditMode={props.isExistingChallenge}
+                isReadOnly={props.isReadOnly}
                 launchButtonLabel={props.launchButtonLabel}
                 onChallengeStatusChange={props.onChallengeStatusChange}
                 onLaunchOpen={props.onLaunchOpen}
@@ -790,7 +815,8 @@ const ChallengeEditorContent: FC<ChallengeEditorContentProps> = (
             canLaunchChallenge={props.canLaunchChallenge}
             challenge={props.challenge}
             isLaunchDisabled={props.isLaunchDisabled}
-            isEditMode={props.isEditMode}
+            isEditMode={props.isExistingChallenge}
+            isReadOnly={props.isReadOnly}
             launchButtonLabel={props.launchButtonLabel}
             onChallengeStatusChange={props.onChallengeStatusChange}
             onLaunchOpen={props.onLaunchOpen}
@@ -834,8 +860,9 @@ const ChallengeEditorBody: FC<ChallengeEditorBodyProps> = (
                 canLaunchChallenge={props.canLaunchChallenge}
                 challenge={props.challengeResult.challenge}
                 challengeId={props.challengeId}
+                isExistingChallenge={props.isExistingChallenge}
                 isLaunchDisabled={props.isLaunchDisabled}
-                isEditMode={props.isEditMode}
+                isReadOnly={props.isReadOnly}
                 launchButtonLabel={props.launchButtonLabel}
                 onChallengeStatusChange={props.onChallengeStatusChange}
                 onLaunchOpen={props.onLaunchOpen}
@@ -898,13 +925,16 @@ function renderChallengeQuickLinks(
 }
 
 export const ChallengeEditorPage: FC = () => {
+    const location = useLocation()
     const navigate = useNavigate()
     const params: Readonly<{ challengeId?: string; projectId?: string }>
         = useParams<'challengeId' | 'projectId'>()
     const challengeId = params.challengeId
     const routeProjectId = params.projectId
 
-    const isEditMode = !!challengeId
+    const isExistingChallenge = !!challengeId
+    const isViewMode = location.pathname.endsWith('/view')
+    const isEditMode = isExistingChallenge && !isViewMode
     const [activeTab, setActiveTab] = useState<EditorTab>('details')
     const [isDeleting, setIsDeleting] = useState<boolean>(false)
     const [isLaunching, setIsLaunching] = useState<boolean>(false)
@@ -945,6 +975,13 @@ export const ChallengeEditorPage: FC = () => {
         : undefined
     const projectId = routeProjectId || challengeProjectId
     const challengesListPath = getChallengesListPath(projectId)
+    const editChallengePath = challengeId
+        ? (
+            projectId
+                ? `/projects/${encodeURIComponent(projectId)}/challenges/${encodeURIComponent(challengeId)}/edit`
+                : `/challenges/${encodeURIComponent(challengeId)}/edit`
+        )
+        : undefined
 
     useEffect(() => {
         if (isEditMode) {
@@ -958,7 +995,8 @@ export const ChallengeEditorPage: FC = () => {
     }, [challengeId])
 
     const pageTitle = getChallengeEditorPageTitle(
-        isEditMode,
+        challengeId,
+        isViewMode,
         challengeResult.challenge?.name,
     )
     const headerChallenge = challengeResult.challenge
@@ -1080,6 +1118,13 @@ export const ChallengeEditorPage: FC = () => {
         handleDeleteConfirm()
             .catch(() => undefined)
     }, [handleDeleteConfirm])
+    const handleEditOpen = useCallback((): void => {
+        if (!editChallengePath) {
+            return
+        }
+
+        navigate(editChallengePath)
+    }, [editChallengePath, navigate])
     const challengeQuickLinks = renderChallengeQuickLinks({
         challenge: challengeResult.challenge,
         challengeId,
@@ -1088,6 +1133,7 @@ export const ChallengeEditorPage: FC = () => {
         canCancelChallenge,
         canCompleteTask,
         canDeleteChallenge,
+        canEditChallenge: isViewMode && !!editChallengePath,
         canLaunchChallenge,
         challenge: headerChallenge,
         challengeId,
@@ -1098,6 +1144,7 @@ export const ChallengeEditorPage: FC = () => {
         isSaving: isSavingChallenge,
         onChallengeUpdated: handleChallengeUpdated,
         onDeleteOpen: handleDeleteOpen,
+        onEditOpen: handleEditOpen,
         onLaunchOpen: handleLaunchOpen,
     })
     const deleteModal = renderDeleteModal({
@@ -1116,7 +1163,7 @@ export const ChallengeEditorPage: FC = () => {
         onLaunchConfirmClick: handleLaunchConfirmClick,
         showLaunchModal,
     })
-    const titleAction = renderTitleAction(isEditMode, challengeStatus)
+    const titleAction = renderTitleAction(isExistingChallenge, challengeStatus)
     const launchButtonLabel = isLaunching
         ? 'Launching...'
         : 'Launch'
@@ -1137,8 +1184,10 @@ export const ChallengeEditorPage: FC = () => {
                         canLaunchChallenge={canLaunchChallenge}
                         challengeId={challengeId}
                         challengeResult={challengeResult}
+                        isExistingChallenge={isExistingChallenge}
                         isLaunchDisabled={isLaunchDisabled}
                         isEditMode={isEditMode}
+                        isReadOnly={isViewMode}
                         launchButtonLabel={launchButtonLabel}
                         onChallengeStatusChange={handleChallengeStatusChange}
                         onLaunchOpen={handleLaunchOpen}

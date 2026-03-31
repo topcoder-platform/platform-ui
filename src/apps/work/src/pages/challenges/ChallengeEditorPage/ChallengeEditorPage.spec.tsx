@@ -143,13 +143,22 @@ jest.mock('./components', () => {
 
     return {
         ChallengeEditorForm: (props: {
+            isReadOnly?: boolean
             onRegisterLaunchAction?: (action: (() => Promise<void>) | undefined) => void
         }) => {
             React.useEffect(() => {
-                props.onRegisterLaunchAction?.(async () => undefined)
-            }, [props.onRegisterLaunchAction])
+                if (!props.isReadOnly) {
+                    props.onRegisterLaunchAction?.(async () => undefined)
+                }
+            }, [props.isReadOnly, props.onRegisterLaunchAction])
 
-            return <div>Challenge Editor Form</div>
+            return (
+                <div>
+                    {props.isReadOnly
+                        ? 'Challenge View Form'
+                        : 'Challenge Editor Form'}
+                </div>
+            )
         },
         ResourcesSection: () => <div>Resources Section</div>,
         SubmissionsSection: () => <div>Submissions Section</div>,
@@ -209,17 +218,11 @@ describe('ChallengeEditorPage', () => {
         })
     })
 
-    it.each([
-        [
+    it('renders the updated quick links in the right header for edit mode', async () => {
+        renderPage(
             '/projects/123/challenges/456/edit',
             '/projects/:projectId/challenges/:challengeId/edit',
-        ],
-        [
-            '/projects/123/challenges/456/view',
-            '/projects/:projectId/challenges/:challengeId/view',
-        ],
-    ])('renders the updated quick links in the right header for %s', async (route, path) => {
-        renderPage(route, path)
+        )
 
         await waitFor(() => {
             expect(screen.getByRole('button', { name: 'Launch' }))
@@ -255,5 +258,24 @@ describe('ChallengeEditorPage', () => {
             .getByRole('link', { name: 'Forum' })
             .getAttribute('href'))
             .toBe('https://example.com/forum/challenges/456')
+    })
+
+    it('renders a read-only challenge view with a header edit action', async () => {
+        renderPage(
+            '/projects/123/challenges/456/view',
+            '/projects/:projectId/challenges/:challengeId/view',
+        )
+
+        await waitFor(() => {
+            expect(screen.getByText('Challenge View Form'))
+                .toBeTruthy()
+        })
+
+        expect(screen.getByRole('heading', { name: 'View Edit test' }))
+            .toBeTruthy()
+        expect(screen.queryByRole('button', { name: 'Launch' }))
+            .toBeNull()
+        expect(screen.getByRole('button', { name: 'Edit' }))
+            .toBeTruthy()
     })
 })

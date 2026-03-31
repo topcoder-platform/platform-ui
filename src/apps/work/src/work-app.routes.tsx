@@ -196,6 +196,12 @@ export const workRoutes: ReadonlyArray<PlatformRoute> = [
             {
                 authRequired: true,
                 element: <ChallengeEditorPage />,
+                route: `${challengesRouteId}/:challengeId/view`,
+                title: 'View Challenge',
+            },
+            {
+                authRequired: true,
+                element: <ChallengeEditorPage />,
                 route: '/projects/:projectId/challenges/:challengeId/edit',
                 title: 'Edit Challenge',
             },
@@ -209,7 +215,7 @@ export const workRoutes: ReadonlyArray<PlatformRoute> = [
                 authRequired: true,
                 element: <ChallengeRouteRedirectPage />,
                 route: '/challenges/:challengeId',
-                title: 'Edit Challenge',
+                title: 'View Challenge',
             },
             {
                 authRequired: true,

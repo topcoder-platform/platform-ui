@@ -6,6 +6,20 @@
     gap: 28px;
 }
 
+.formContent {
+    border: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    margin: 0;
+    min-inline-size: 0;
+    padding: 0;
+
+    &[disabled] {
+        pointer-events: none;
+    }
+}
+
 .section {
     background-color: $tc-white;
     border: 2px solid $black-20;
