@@ -19,6 +19,7 @@ import {
 } from '~/libs/ui'
 
 import {
+    COPILOTS_APP_URL,
     PAGE_SIZE,
     PROJECT_STATUS,
 } from '../../../lib'
@@ -119,7 +120,6 @@ function renderCreateActionButton(params: RenderCreateActionButtonParams): JSX.E
 }
 
 interface RenderHeaderActionsParams {
-    canCreateEngagement: boolean
     disabled: boolean
     projectId: string
 }
@@ -128,20 +128,50 @@ function renderHeaderActions(params: RenderHeaderActionsParams): JSX.Element {
     return (
         <div className={styles.headerActions}>
             {renderCreateActionButton({
+                actionPath: `/projects/${params.projectId}/engagements/new`,
+                disabled: params.disabled,
+                label: 'Create Engagement',
+                secondary: true,
+            })}
+        </div>
+    )
+}
+
+function renderRequestCopilotAction(projectId: string): JSX.Element {
+    const requestCopilotUrl = `${COPILOTS_APP_URL.replace(/\/$/, '')}/requests/new?projectId=${
+        encodeURIComponent(projectId)
+    }`
+
+    return (
+        <a
+            className={styles.requestCopilotLink}
+            href={requestCopilotUrl}
+            rel='noreferrer noopener'
+            target='_blank'
+        >
+            Request Copilot
+        </a>
+    )
+}
+
+interface RenderContextualActionsParams {
+    canRequestCopilot: boolean
+    disabled: boolean
+    projectId: string
+}
+
+function renderContextualActions(params: RenderContextualActionsParams): JSX.Element {
+    return (
+        <div className={styles.contextualActionRow}>
+            {params.canRequestCopilot
+                ? renderRequestCopilotAction(params.projectId)
+                : undefined}
+            {renderCreateActionButton({
                 actionPath: `/projects/${params.projectId}/challenges/new`,
                 disabled: params.disabled,
                 label: 'Create Challenge',
                 primary: true,
             })}
-
-            {params.canCreateEngagement
-                ? renderCreateActionButton({
-                    actionPath: `/projects/${params.projectId}/engagements/new`,
-                    disabled: params.disabled,
-                    label: 'Create Engagement',
-                    secondary: true,
-                })
-                : undefined}
         </div>
     )
 }
@@ -200,7 +230,6 @@ interface RenderBillingAccountNoticeParams {
     billingAccountName?: string
     canManageProject: boolean
     projectId: string | undefined
-    projectStatus?: ProjectStatusValue
 }
 
 function renderBillingAccountNotice(params: RenderBillingAccountNoticeParams): JSX.Element | undefined {
@@ -214,9 +243,30 @@ function renderBillingAccountNotice(params: RenderBillingAccountNoticeParams): J
             billingAccountName={params.billingAccountName}
             canManageProject={params.canManageProject}
             projectId={params.projectId}
-            projectStatus={params.projectStatus}
         />
     )
+}
+
+function hasBillingAccountId(value: unknown): boolean {
+    return value !== undefined
+        && value !== null
+        && String(value)
+            .trim()
+            .length > 0
+}
+
+interface CanRequestCopilotParams {
+    billingAccountId?: number | string
+    isAdmin: boolean
+    isManager: boolean
+    projectStatus?: ProjectStatusValue
+}
+
+function canRequestCopilot(params: CanRequestCopilotParams): boolean {
+    return hasBillingAccountId(params.billingAccountId)
+        && (params.isAdmin || params.isManager)
+        && params.projectStatus !== PROJECT_STATUS.CANCELLED
+        && params.projectStatus !== PROJECT_STATUS.COMPLETED
 }
 
 interface RenderChallengesContentParams {
@@ -262,6 +312,41 @@ function renderChallengesContent(params: RenderChallengesContentParams): JSX.Ele
                 : undefined}
         </>
     )
+}
+
+interface GetRightHeaderParams {
+    canCreateEngagement: boolean
+    disabled: boolean
+    projectId?: string
+}
+
+function getRightHeader(params: GetRightHeaderParams): JSX.Element | undefined {
+    if (!params.projectId || !params.canCreateEngagement) {
+        return undefined
+    }
+
+    return renderHeaderActions({
+        disabled: params.disabled,
+        projectId: params.projectId,
+    })
+}
+
+interface GetContextualActionsParams {
+    canRequestCopilot: boolean
+    disabled: boolean
+    projectId?: string
+}
+
+function getContextualActions(params: GetContextualActionsParams): JSX.Element | undefined {
+    if (!params.projectId) {
+        return undefined
+    }
+
+    return renderContextualActions({
+        canRequestCopilot: params.canRequestCopilot,
+        disabled: params.disabled,
+        projectId: params.projectId,
+    })
 }
 
 export const ChallengesListPage: FC = () => {
@@ -436,14 +521,23 @@ export const ChallengesListPage: FC = () => {
         .toLowerCase() === PROJECT_STATUS.ACTIVE
     const isCreateActionDisabled = !!projectIdFromRoute && !isProjectActive
     const canCreateProjectEngagement = canCreateEngagement(userRoles)
+    const shouldShowRequestCopilot = canRequestCopilot({
+        billingAccountId: projectResult.project?.billingAccountId,
+        isAdmin,
+        isManager,
+        projectStatus: projectResult.project?.status,
+    })
 
-    const rightHeader = projectIdFromRoute
-        ? renderHeaderActions({
-            canCreateEngagement: canCreateProjectEngagement,
-            disabled: isCreateActionDisabled,
-            projectId: projectIdFromRoute,
-        })
-        : undefined
+    const rightHeader = getRightHeader({
+        canCreateEngagement: canCreateProjectEngagement,
+        disabled: isCreateActionDisabled,
+        projectId: projectIdFromRoute,
+    })
+    const contextualActions = getContextualActions({
+        canRequestCopilot: shouldShowRequestCopilot,
+        disabled: isCreateActionDisabled,
+        projectId: projectIdFromRoute,
+    })
 
     const titleAction = renderProjectTitleAction({
         backTo: `${location.pathname}${location.search}${location.hash}`,
@@ -464,11 +558,11 @@ export const ChallengesListPage: FC = () => {
                 billingAccountName: projectResult.project?.billingAccountName,
                 canManageProject,
                 projectId: projectIdFromRoute,
-                projectStatus: projectResult.project?.status,
             })}
             {projectIdFromRoute
                 ? <ProjectListTabs projectId={projectIdFromRoute} />
                 : undefined}
+            {contextualActions}
 
             <div className={styles.totalChallenges}>
                 {totalChallenges}

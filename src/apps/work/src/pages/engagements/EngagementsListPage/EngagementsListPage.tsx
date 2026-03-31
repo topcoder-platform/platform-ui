@@ -587,34 +587,6 @@ export const EngagementsListPage: FC = () => {
         .toLowerCase() === PROJECT_STATUS.ACTIVE
     const isCreateActionDisabled = !!projectId && !isProjectActive
 
-    const rightHeader = projectId
-        ? (
-            <div className={styles.headerActions}>
-                {isCreateActionDisabled
-                    ? (
-                        <Button
-                            label='Create Challenge'
-                            primary
-                            size='md'
-                            disabled
-                        />
-                    )
-                    : (
-                        <Link
-                            className={styles.headerActionLink}
-                            to={`/projects/${projectId}/challenges/new`}
-                        >
-                            <Button
-                                label='Create Challenge'
-                                primary
-                                size='md'
-                            />
-                        </Link>
-                    )}
-            </div>
-        )
-        : undefined
-
     const createEngagementAction = projectId && canCreateProjectEngagement
         ? (
             isCreateActionDisabled
@@ -689,7 +661,6 @@ export const EngagementsListPage: FC = () => {
                 billingAccountName={projectResult.project?.billingAccountName}
                 canManageProject={canManageProject}
                 projectId={projectId}
-                projectStatus={projectResult.project?.status}
             />
         )
         : undefined
@@ -702,7 +673,6 @@ export const EngagementsListPage: FC = () => {
             <PageWrapper
                 pageTitle={pageTitle}
                 breadCrumb={[]}
-                rightHeader={rightHeader}
                 titleAction={titleAction}
             >
                 {billingAccountExpiredNotice}
@@ -720,7 +690,6 @@ export const EngagementsListPage: FC = () => {
             <PageWrapper
                 pageTitle={pageTitle}
                 breadCrumb={[]}
-                rightHeader={rightHeader}
                 titleAction={titleAction}
             >
                 {billingAccountExpiredNotice}
@@ -743,7 +712,6 @@ export const EngagementsListPage: FC = () => {
         <PageWrapper
             pageTitle={pageTitle}
             breadCrumb={[]}
-            rightHeader={rightHeader}
             titleAction={titleAction}
         >
             {billingAccountExpiredNotice}

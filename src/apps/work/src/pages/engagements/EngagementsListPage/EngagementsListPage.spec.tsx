@@ -194,7 +194,7 @@ describe('EngagementsListPage', () => {
             .toBeTruthy()
     })
 
-    it('renders create engagement below the project tabs and keeps only create challenge in the header', () => {
+    it('renders create engagement below the project tabs and removes create challenge from the page', () => {
         mockedCanCreateEngagement.mockReturnValue(true)
         mockedUseFetchProject.mockReturnValue({
             error: undefined,
@@ -210,8 +210,6 @@ describe('EngagementsListPage', () => {
 
         const pageRightHeader = screen.getByTestId('page-right-header')
         const pageContent = screen.getByTestId('page-content')
-        const createChallengeButton = within(pageRightHeader)
-            .getByRole('button', { name: 'Create Challenge' })
         const createEngagementButton = within(pageContent)
             .getByRole('button', { name: 'Create Engagement' })
         const projectTabs = within(pageContent)
@@ -220,10 +218,13 @@ describe('EngagementsListPage', () => {
             .getByText('Engagements Filter')
 
         expect(within(pageRightHeader)
+            .queryByRole('button', { name: 'Create Challenge' }))
+            .toBeNull()
+        expect(within(pageRightHeader)
             .queryByRole('button', { name: 'Create Engagement' }))
             .toBeNull()
-        expect(createChallengeButton)
-            .toBeTruthy()
+        expect(screen.queryByRole('button', { name: 'Create Challenge' }))
+            .toBeNull()
         expect(createEngagementButton.getAttribute('data-primary'))
             .toBe('true')
         expect(createEngagementButton.getAttribute('data-secondary'))

@@ -1,15 +1,9 @@
 import {
     FC,
-    useContext,
     useMemo,
 } from 'react'
 import { Link } from 'react-router-dom'
 
-import {
-    COPILOTS_APP_URL,
-    PROJECT_STATUS,
-} from '../../constants'
-import { WorkAppContext } from '../../contexts'
 import {
     useFetchBillingAccounts,
     useFetchProjectBillingAccount,
@@ -18,10 +12,6 @@ import type {
     UseFetchBillingAccountsResult,
     UseFetchProjectBillingAccountResult,
 } from '../../hooks'
-import type {
-    ProjectStatusValue,
-    WorkAppContextModel,
-} from '../../models'
 
 import styles from './ProjectBillingAccountExpiredNotice.module.scss'
 
@@ -30,7 +20,6 @@ interface ProjectBillingAccountExpiredNoticeProps {
     billingAccountName?: string
     canManageProject: boolean
     projectId: string
-    projectStatus?: ProjectStatusValue
 }
 
 function normalizeOptionalString(value: unknown): string | undefined {
@@ -67,7 +56,6 @@ function isBillingAccountExpired(
 export const ProjectBillingAccountExpiredNotice: FC<ProjectBillingAccountExpiredNoticeProps> = (
     props: ProjectBillingAccountExpiredNoticeProps,
 ) => {
-    const workAppContext: WorkAppContextModel = useContext(WorkAppContext)
     const projectBillingAccountResult: UseFetchProjectBillingAccountResult = useFetchProjectBillingAccount(
         props.projectId,
     )
@@ -98,12 +86,6 @@ export const ProjectBillingAccountExpiredNotice: FC<ProjectBillingAccountExpired
         billingAccount?.active,
         billingAccount?.endDate,
     )
-    const canRequestCopilot = (workAppContext.isAdmin || workAppContext.isManager)
-        && props.projectStatus !== PROJECT_STATUS.CANCELLED
-        && props.projectStatus !== PROJECT_STATUS.COMPLETED
-    const requestCopilotUrl = `${COPILOTS_APP_URL.replace(/\/$/, '')}/requests/new?projectId=${
-        encodeURIComponent(props.projectId)
-    }`
 
     if (shouldShowExpiredBillingAccountNotice) {
         return (
@@ -142,18 +124,6 @@ export const ProjectBillingAccountExpiredNotice: FC<ProjectBillingAccountExpired
                 {' '}
                 {normalizedBillingAccountId}
             </span>
-            {canRequestCopilot
-                ? (
-                    <a
-                        className={styles.requestCopilotLink}
-                        href={requestCopilotUrl}
-                        rel='noreferrer noopener'
-                        target='_blank'
-                    >
-                        Request Copilot
-                    </a>
-                )
-                : undefined}
         </div>
     )
 }

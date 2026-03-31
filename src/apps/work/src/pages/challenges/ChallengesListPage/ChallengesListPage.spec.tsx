@@ -1,11 +1,12 @@
 /* eslint-disable no-var, global-require, @typescript-eslint/no-var-requires */
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
-import type { Context, PropsWithChildren } from 'react'
+import type { Context, PropsWithChildren, ReactNode } from 'react'
 import {
     fireEvent,
     render,
     screen,
     waitFor,
+    within,
 } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 
@@ -16,6 +17,7 @@ import {
     useFetchProject,
     useFetchProjects,
 } from '../../../lib/hooks'
+import { canCreateEngagement } from '../../../lib/utils'
 
 import { ChallengesListPage } from './ChallengesListPage'
 
@@ -27,18 +29,34 @@ jest.mock('~/apps/admin/src/lib', () => ({
     virtual: true,
 })
 jest.mock('~/apps/review/src/lib', () => ({
-    PageWrapper: (props: PropsWithChildren<{ pageTitle?: string }>) => (
+    PageWrapper: (
+        props: PropsWithChildren<{ pageTitle?: string; rightHeader?: ReactNode; titleAction?: ReactNode }>,
+    ) => (
         <div>
+            <div data-testid='page-right-header'>{props.rightHeader}</div>
             <h1>{props.pageTitle}</h1>
-            {props.children}
+            <div data-testid='page-title-action'>{props.titleAction}</div>
+            <div data-testid='page-content'>{props.children}</div>
         </div>
     ),
 }), {
     virtual: true,
 })
 jest.mock('~/libs/ui', () => ({
-    Button: (props: { label: string; onClick?: () => void }) => (
-        <button onClick={props.onClick} type='button'>
+    Button: (props: {
+        disabled?: boolean
+        label: string
+        onClick?: () => void
+        primary?: boolean
+        secondary?: boolean
+    }) => (
+        <button
+            data-primary={props.primary ? 'true' : 'false'}
+            data-secondary={props.secondary ? 'true' : 'false'}
+            disabled={props.disabled}
+            onClick={props.onClick}
+            type='button'
+        >
             {props.label}
         </button>
     ),
@@ -51,9 +69,12 @@ jest.mock('~/libs/ui', () => ({
     virtual: true,
 })
 jest.mock('../../../lib', () => ({
+    COPILOTS_APP_URL: 'https://copilots.example.com',
     PAGE_SIZE: 10,
     PROJECT_STATUS: {
         ACTIVE: 'active',
+        CANCELLED: 'cancelled',
+        COMPLETED: 'completed',
     },
 }))
 jest.mock('../../../lib/components', () => ({
@@ -111,6 +132,7 @@ const mockedUseFetchChallenges = useFetchChallenges as jest.Mock
 const mockedUseFetchChallengeTypes = useFetchChallengeTypes as jest.Mock
 const mockedUseFetchProject = useFetchProject as jest.Mock
 const mockedUseFetchProjects = useFetchProjects as jest.Mock
+const mockedCanCreateEngagement = canCreateEngagement as jest.Mock
 
 const defaultContextValue: WorkAppContextModel = {
     isAdmin: false,
@@ -242,5 +264,64 @@ describe('ChallengesListPage', () => {
                     perPage: 10,
                 }))
         })
+    })
+
+    it('renders challenge actions below the project tabs and keeps create engagement in the header', () => {
+        mockedCanCreateEngagement.mockReturnValue(true)
+        mockedUseFetchProject.mockReturnValue({
+            error: undefined,
+            isLoading: false,
+            project: {
+                billingAccountId: 80001059,
+                billingAccountName: 'Platform Dev - Two',
+                id: 200,
+                name: 'Payment Testing',
+                status: 'active',
+            },
+        })
+
+        renderPage(
+            '/projects/200/challenges',
+            '/projects/:projectId/challenges',
+            {
+                ...defaultContextValue,
+                isCopilot: false,
+                isManager: true,
+                loginUserInfo: {
+                    ...defaultContextValue.loginUserInfo,
+                    roles: ['manager'],
+                } as WorkAppContextModel['loginUserInfo'],
+                userRoles: ['manager'],
+            },
+        )
+
+        const pageRightHeader = screen.getByTestId('page-right-header')
+        const pageContent = screen.getByTestId('page-content')
+        const projectTabs = within(pageContent)
+            .getByText('Project Tabs')
+        const requestCopilotLink = within(pageContent)
+            .getByRole('link', { name: 'Request Copilot' })
+        const createChallengeButton = within(pageContent)
+            .getByRole('button', { name: 'Create Challenge' })
+        const createEngagementButton = within(pageRightHeader)
+            .getByRole('button', { name: 'Create Engagement' })
+
+        expect(within(pageRightHeader)
+            .queryByRole('button', { name: 'Create Challenge' }))
+            .toBeNull()
+        expect(createChallengeButton.getAttribute('data-primary'))
+            .toBe('true')
+        expect(createChallengeButton.getAttribute('data-secondary'))
+            .toBe('false')
+        expect(createEngagementButton.getAttribute('data-primary'))
+            .toBe('false')
+        expect(createEngagementButton.getAttribute('data-secondary'))
+            .toBe('true')
+        expect(projectTabs.compareDocumentPosition(requestCopilotLink))
+            .toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+        expect(projectTabs.compareDocumentPosition(createChallengeButton))
+            .toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+        expect(requestCopilotLink.compareDocumentPosition(createChallengeButton))
+            .toBe(Node.DOCUMENT_POSITION_FOLLOWING)
     })
 })

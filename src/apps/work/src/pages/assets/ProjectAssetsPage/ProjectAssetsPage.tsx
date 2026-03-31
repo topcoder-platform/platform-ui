@@ -741,7 +741,6 @@ export const ProjectAssetsPage: FC = () => {
                 billingAccountName={projectResult.project?.billingAccountName}
                 canManageProject={canManageProject}
                 projectId={projectId}
-                projectStatus={projectResult.project?.status}
             />
         )
         : undefined
