@@ -279,7 +279,12 @@ export const TableAppealsResponse: FC<TableAppealsResponseProps> = (props: Table
             const reviewerOnlyRows = aggregatedRows.filter(row => matchesReviewer(row) && !matchesSubmitter(row))
 
             // For submitter rows, include both aggregated and non-aggregated submissions
-            const submitterRows = (filteredChallengeSubmissions ?? [])
+            // Apply restrictToLatest filtering to respect submission limits
+            const submissionsForSubmitterRows = restrictToLatest && hasLatestFlag
+                ? (filteredChallengeSubmissions ?? []).filter(submission => submission.isLatest)
+                : (filteredChallengeSubmissions ?? [])
+
+            const submitterRows = submissionsForSubmitterRows
                 .filter(submission => {
                     const memberId = submission.memberId
                     if (!memberId || !ownedMemberIds.has(memberId)) {
@@ -313,31 +318,46 @@ export const TableAppealsResponse: FC<TableAppealsResponseProps> = (props: Table
                             : []
 
                     const reviewDetails = allReviewInfos
-                        .map(reviewInfo => {
+                        .map((reviewInfo: any) => {
                             const reviewId = reviewInfo.id
                             const appealInfo = reviewId ? mappingReviewAppeal[reviewId] : undefined
                             const totalAppeals = appealInfo?.totalAppeals ?? 0
                             const finishedAppeals = appealInfo?.finishAppeals ?? 0
+
+                            // Resolve review date from multiple sources
+                            const reviewDateString = reviewInfo.reviewDateString
+                                ?? reviewInfo.updatedAtString
+                                ?? (reviewInfo as any).createdAtString
+                                ?? (reviewInfo as any).reviewedAt
 
                             return {
                                 // Review detail with reviewer information from reviewInfo
                                 finalScore: reviewInfo.finalScore,
                                 finishedAppeals,
                                 resourceId: reviewInfo.resourceId,
-                                reviewDateString: reviewInfo.reviewDateString ?? reviewInfo.updatedAtString,
+                                reviewDateString,
                                 reviewerHandle: reviewInfo.reviewerHandle ?? undefined,
                                 reviewerHandleColor: reviewInfo.reviewerHandleColor,
-                                reviewInfo,
+                                reviewInfo: {
+                                    ...reviewInfo,
+                                    reviewDateString,
+                                },
                                 totalAppeals,
                                 unresolvedAppeals: totalAppeals - finishedAppeals,
                             }
                         })
                         .reverse()
 
+                    // Get latest review date from reviewDetails
+                    const latestReviewDate = reviewDetails.length > 0
+                        ? reviewDetails[0]?.reviewDateString
+                        : undefined
+
                     return {
                         ...submission,
                         aggregated: {
                             id: submission.id,
+                            latestReviewDateString: latestReviewDate,
                             reviews: reviewDetails,
                             submission,
                             submitterHandle,
@@ -358,9 +378,11 @@ export const TableAppealsResponse: FC<TableAppealsResponseProps> = (props: Table
         canViewAsReviewer,
         canViewAsSubmitter,
         filteredChallengeSubmissions,
+        hasLatestFlag,
         mappingReviewAppeal,
         myReviewerResourceIds,
         ownedMemberIds,
+        restrictToLatest,
         submitterCanViewAllRows,
     ])
 
