@@ -747,6 +747,9 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         () => getChallengesListPath(fallbackProjectId),
         [fallbackProjectId],
     )
+    const handleCancelClick = useCallback((): void => {
+        navigate(challengesListPath)
+    }, [challengesListPath, navigate])
 
     const [currentChallengeId, setCurrentChallengeId] = useState<string | undefined>(props.challenge?.id)
     const [isSaving, setIsSaving] = useState<boolean>(false)
@@ -1919,23 +1922,26 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                 </div>
 
                                 <div className={styles.actions}>
-                                    <Link className={styles.cancelLink} to={challengesListPath}>
-                                        Cancel
-                                    </Link>
+                                    <Button
+                                        label='Cancel'
+                                        onClick={handleCancelClick}
+                                        secondary
+                                        size='lg'
+                                        type='button'
+                                    />
                                     <Button
                                         disabled={
                                             (!formState.isDirty || isSaving)
                                             || isScorerBlockingChallengeActions
                                         }
                                         label={submitButtonLabel}
-                                        primary
+                                        secondary
                                         size='lg'
                                         type='submit'
                                     />
                                     {props.canLaunchChallenge && onLaunchOpen
                                         ? (
                                             <Button
-                                                className={styles.launchButton}
                                                 disabled={props.isLaunchDisabled}
                                                 label={props.launchButtonLabel || 'Launch'}
                                                 onClick={onLaunchOpen}

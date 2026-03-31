@@ -50,6 +50,14 @@
     align-items: flex-end;
 }
 
+.resetButton {
+    @include font-roboto;
+    @include font-weight-bold;
+
+    font-size: 13px;
+    min-height: 32px;
+}
+
 .datePicker {
     margin-bottom: 0;
 }

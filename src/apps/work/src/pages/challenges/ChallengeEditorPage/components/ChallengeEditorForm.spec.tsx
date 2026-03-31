@@ -14,6 +14,7 @@ import {
     useFetchResources,
     useFetchTimelineTemplates,
 } from '../../../../lib/hooks'
+import type { Challenge } from '../../../../lib/models'
 
 import { ChallengeEditorForm } from './ChallengeEditorForm'
 
@@ -87,12 +88,24 @@ jest.mock('../../../../lib/utils', () => ({
 }))
 jest.mock('~/libs/ui', () => ({
     Button: (props: {
+        className?: string
         disabled?: boolean
         label: string
         onClick?: () => void
+        primary?: boolean
+        secondary?: boolean
+        size?: string
         type?: 'button' | 'submit'
     }) => (
         <button
+            className={props.className}
+            data-primary={props.primary
+                ? 'true'
+                : 'false'}
+            data-secondary={props.secondary
+                ? 'true'
+                : 'false'}
+            data-size={props.size}
             disabled={props.disabled}
             onClick={props.onClick}
             type={props.type === 'submit'
@@ -246,6 +259,12 @@ const mockedUseFetchResources = useFetchResources as jest.Mock
 const mockedUseFetchTimelineTemplates = useFetchTimelineTemplates as jest.Mock
 
 describe('ChallengeEditorForm', () => {
+    const draftChallenge = {
+        id: '12345',
+        name: 'Draft challenge',
+        status: 'DRAFT',
+    } as Challenge
+
     beforeEach(() => {
         mockedUseAutosave.mockReturnValue({
             lastSaved: undefined,
@@ -296,5 +315,49 @@ describe('ChallengeEditorForm', () => {
 
         expect(challengeNameInput.value)
             .toBe('Create challenge regression')
+    })
+
+    it('renders secondary footer actions and a primary launch action for draft challenges', () => {
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    canLaunchChallenge
+                    challenge={draftChallenge}
+                    launchButtonLabel='Launch'
+                    onLaunchOpen={jest.fn()}
+                />
+            </MemoryRouter>,
+        )
+
+        expect(
+            screen.getByRole('button', { name: 'Cancel' })
+                .getAttribute('data-secondary'),
+        )
+            .toBe('true')
+        expect(
+            screen.getByRole('button', { name: 'Cancel' })
+                .getAttribute('data-size'),
+        )
+            .toBe('lg')
+        expect(
+            screen.getByRole('button', { name: 'Save Challenge' })
+                .getAttribute('data-secondary'),
+        )
+            .toBe('true')
+        expect(
+            screen.getByRole('button', { name: 'Save Challenge' })
+                .getAttribute('data-size'),
+        )
+            .toBe('lg')
+        expect(
+            screen.getByRole('button', { name: 'Launch' })
+                .getAttribute('data-primary'),
+        )
+            .toBe('true')
+        expect(
+            screen.getByRole('button', { name: 'Launch' })
+                .getAttribute('data-size'),
+        )
+            .toBe('lg')
     })
 })

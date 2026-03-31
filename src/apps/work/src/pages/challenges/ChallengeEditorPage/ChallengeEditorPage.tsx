@@ -578,14 +578,13 @@ function renderHeaderAction(params: RenderHeaderActionParams): JSX.Element | und
         actions.push(
             <Button
                 key='launch'
-                className={styles.launchButton}
                 disabled={params.isLaunching || params.isSaving}
                 label={params.isLaunching
                     ? 'Launching...'
                     : 'Launch'}
                 onClick={params.onLaunchOpen}
                 primary
-                size='md'
+                size='lg'
                 type='button'
             />,
         )
