@@ -14,7 +14,7 @@ import {
     useMemo,
     useState,
 } from 'react'
-import { Link, useLocation, useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import classNames from 'classnames'
 
@@ -306,7 +306,6 @@ export const ProjectAssetsPage: FC = () => {
     }: Readonly<{
         projectId?: string
     }> = useParams<'projectId'>()
-    const location = useLocation()
     const projectId = routeProjectId || ''
 
     const workAppContext: WorkAppContextModel = useContext(WorkAppContext)
@@ -758,23 +757,6 @@ export const ProjectAssetsPage: FC = () => {
                         </Link>
                     )
                     : undefined}
-                <Link
-                    aria-label='Manage project users'
-                    className={styles.projectUsersLink}
-                    state={{
-                        backTo: `${location.pathname}${location.search}${location.hash}`,
-                    }}
-                    to={`/projects/${projectId}/users`}
-                >
-                    <IconOutline.UserIcon className={styles.projectUsersIcon} />
-                </Link>
-                <Link
-                    aria-label='Open project assets'
-                    className={styles.projectAssetsLink}
-                    to={`/projects/${projectId}/assets`}
-                >
-                    <IconOutline.DocumentTextIcon className={styles.projectAssetsIcon} />
-                </Link>
             </div>
         )
         : undefined

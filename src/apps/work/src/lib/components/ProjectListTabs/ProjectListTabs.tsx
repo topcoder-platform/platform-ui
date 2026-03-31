@@ -20,12 +20,29 @@ function isTabActive(pathname: string, tabPath: string): boolean {
 }
 
 export const ProjectListTabs: FC<ProjectListTabsProps> = (props: ProjectListTabsProps) => {
-    const { pathname }: { pathname: string } = useLocation()
+    const {
+        hash,
+        pathname,
+        search,
+    }: {
+        hash: string
+        pathname: string
+        search: string
+    } = useLocation()
     const challengesPath = `/projects/${props.projectId}/challenges`
     const engagementsPath = `/projects/${props.projectId}/engagements`
+    const usersPath = `/projects/${props.projectId}/users`
+    const assetsPath = `/projects/${props.projectId}/assets`
 
     const isChallengesActive = isTabActive(pathname, challengesPath)
     const isEngagementsActive = isTabActive(pathname, engagementsPath)
+    const isUsersActive = isTabActive(pathname, usersPath)
+    const isAssetsActive = isTabActive(pathname, assetsPath)
+    const usersLinkState = isUsersActive
+        ? undefined
+        : {
+            backTo: `${pathname}${search}${hash}`,
+        }
 
     return (
         <div className={styles.container}>
@@ -40,6 +57,19 @@ export const ProjectListTabs: FC<ProjectListTabsProps> = (props: ProjectListTabs
                 to={engagementsPath}
             >
                 Engagements
+            </Link>
+            <Link
+                className={classNames(styles.tabLink, isUsersActive ? styles.active : undefined)}
+                state={usersLinkState}
+                to={usersPath}
+            >
+                Users
+            </Link>
+            <Link
+                className={classNames(styles.tabLink, isAssetsActive ? styles.active : undefined)}
+                to={assetsPath}
+            >
+                Assets Library
             </Link>
         </div>
     )

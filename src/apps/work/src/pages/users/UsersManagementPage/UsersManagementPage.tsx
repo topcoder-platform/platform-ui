@@ -20,6 +20,7 @@ import {
     InviteUserModal,
     LoadingSpinner,
     NullLayout,
+    ProjectListTabs,
     UserCard,
 } from '../../../lib/components'
 import { WorkAppContext } from '../../../lib/contexts'
@@ -252,6 +253,9 @@ export const UsersManagementPage: FC = () => {
                     )
                     : undefined}
             </div>
+            {projectId
+                ? <ProjectListTabs projectId={projectId} />
+                : undefined}
 
             {projectResult.error
                 ? (

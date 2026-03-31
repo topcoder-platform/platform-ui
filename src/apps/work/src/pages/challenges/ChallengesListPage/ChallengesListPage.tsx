@@ -8,7 +8,7 @@ import {
     useRef,
     useState,
 } from 'react'
-import { Link, useLocation, useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
 
 import { TableLoading } from '~/apps/admin/src/lib'
@@ -177,7 +177,6 @@ function renderContextualActions(params: RenderContextualActionsParams): JSX.Ele
 }
 
 interface RenderProjectTitleActionParams {
-    backTo: string
     canManageProject: boolean
     projectId: string | undefined
     projectStatus: ProjectStatusValue | undefined
@@ -204,23 +203,6 @@ function renderProjectTitleAction(params: RenderProjectTitleActionParams): JSX.E
                     </Link>
                 )
                 : undefined}
-            <Link
-                aria-label='Manage project users'
-                className={styles.projectUsersLink}
-                state={{
-                    backTo: params.backTo,
-                }}
-                to={`/projects/${params.projectId}/users`}
-            >
-                <IconOutline.UserIcon className={styles.projectUsersIcon} />
-            </Link>
-            <Link
-                aria-label='Open project assets'
-                className={styles.projectAssetsLink}
-                to={`/projects/${params.projectId}/assets`}
-            >
-                <IconOutline.DocumentTextIcon className={styles.projectAssetsIcon} />
-            </Link>
         </div>
     )
 }
@@ -351,7 +333,6 @@ function getContextualActions(params: GetContextualActionsParams): JSX.Element |
 
 export const ChallengesListPage: FC = () => {
     const { projectId: projectIdFromRoute }: Readonly<{ projectId?: string }> = useParams<'projectId'>()
-    const location = useLocation()
 
     const {
         isAdmin,
@@ -540,7 +521,6 @@ export const ChallengesListPage: FC = () => {
     })
 
     const titleAction = renderProjectTitleAction({
-        backTo: `${location.pathname}${location.search}${location.hash}`,
         canManageProject,
         projectId: projectIdFromRoute,
         projectStatus: projectResult.project?.status,
