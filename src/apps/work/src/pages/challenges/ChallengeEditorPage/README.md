@@ -24,6 +24,7 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 - `privateDescription`: optional.
 - `funChallenge`: optional boolean, defaults to `false` (unchecked).
 - `prizeSets`: placement prizes are required unless `funChallenge` is `true`.
+- `assignedMemberId`: optional while drafting, but required before launching a `Task` challenge so the active task is scoped to its assignee instead of becoming publicly registrable.
 - `wiproAllowed`: optional boolean, defaults to `false` (unchecked).
 - `tags`: optional string array.
 - `skills`: required unless billing account is listed in `SKILLS_OPTIONAL_BILLING_ACCOUNT_IDS`.
@@ -83,6 +84,7 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 ## Header Actions
 
 - `Launch` is shown on the details tab for `DRAFT` challenges in the header and again in the footer beside `Save Challenge`.
+- Task challenges cannot be launched until `Assigned Member` is set, which ensures the task is assigned before it becomes publicly visible.
 - After the first successful save from `NEW` to `DRAFT`, the editor updates the launch affordance immediately so the user can launch without reloading.
 - `Cancel` is shown on the details tab for `ACTIVE` challenges.
 - `Mark Complete` is shown beside `Cancel` for `ACTIVE` task challenges when exactly one assignee can be resolved from the challenge submitter resources. It mirrors the legacy work-manager flow by confirming the task prize and assignee, patching the challenge to `COMPLETED`, and saving that assignee as the sole winner. The button remains hidden for copilots assigned to their own task.

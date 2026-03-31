@@ -205,6 +205,8 @@ interface SyncSingleAssignmentResourceParams extends Omit<SingleAssignmentConfig
 }
 
 const SAVE_VALIDATION_ERROR_MESSAGE = 'Please fix validation errors before saving.'
+const TASK_ASSIGNED_MEMBER_REQUIRED_FOR_LAUNCH_MESSAGE
+    = 'Assign a member before launching a task challenge.'
 const CHALLENGE_TYPE_CHALLENGE_ABBREVIATION = 'CH'
 const CHALLENGE_TYPE_CHALLENGE_NAME = 'CHALLENGE'
 const CHALLENGE_TYPE_MARATHON_MATCH_NAME = 'MARATHONMATCH'
@@ -727,6 +729,35 @@ function getSaveSuccessMessage(
     return isSaveAsDraft
         ? 'Challenge saved as draft successfully'
         : 'Challenge saved successfully'
+}
+
+interface TaskLaunchValidationParams {
+    assignedMemberId?: unknown
+    currentStatus?: unknown
+    isTaskChallenge: boolean
+    nextStatus?: unknown
+}
+
+export function getTaskLaunchValidationError(
+    params: TaskLaunchValidationParams,
+): string | undefined {
+    if (!params.isTaskChallenge) {
+        return undefined
+    }
+
+    if (normalizeStatus(params.currentStatus) === CHALLENGE_STATUS.ACTIVE) {
+        return undefined
+    }
+
+    if (normalizeStatus(params.nextStatus) !== CHALLENGE_STATUS.ACTIVE) {
+        return undefined
+    }
+
+    if (normalizeTextValue(params.assignedMemberId)) {
+        return undefined
+    }
+
+    return TASK_ASSIGNED_MEMBER_REQUIRED_FOR_LAUNCH_MESSAGE
 }
 
 // eslint-disable-next-line complexity
@@ -1563,13 +1594,41 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 throw new Error('Challenge id is required to save challenge')
             }
 
+            const {
+                isSaveAsDraft,
+                payloadStatus,
+            }: SaveStatusMetadata = getSaveStatusMetadata(formData.status, options)
+            const isTaskChallenge = isTaskSingleAssignmentChallenge(formData)
+            const taskLaunchValidationError = getTaskLaunchValidationError({
+                assignedMemberId: formData.assignedMemberId,
+                currentStatus: formData.status,
+                isTaskChallenge,
+                nextStatus: payloadStatus,
+            })
+
+            setSaveError(undefined)
+            setSaveValidationError(undefined)
+            clearErrors('assignedMemberId')
+
+            if (taskLaunchValidationError) {
+                setSaveStatus('idle')
+                setError('assignedMemberId', {
+                    message: taskLaunchValidationError,
+                    type: 'manual',
+                })
+                setSaveValidationError(taskLaunchValidationError)
+
+                if (!options.isAutosave) {
+                    showErrorToast(taskLaunchValidationError)
+                }
+
+                return
+            }
+
             if (!options.isAutosave) {
                 setIsSaving(true)
                 setSaveStatus('saving')
             }
-
-            setSaveError(undefined)
-            setSaveValidationError(undefined)
 
             try {
                 const resolvedProjectBillingAccount = await resolveProjectBillingAccount()
@@ -1577,11 +1636,6 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                     formData,
                     resolvedProjectBillingAccount,
                 )
-                const {
-                    isSaveAsDraft,
-                    payloadStatus,
-                }: SaveStatusMetadata = getSaveStatusMetadata(formDataWithProjectBilling.status, options)
-                const isTaskChallenge = isTaskSingleAssignmentChallenge(formDataWithProjectBilling)
                 const payload = transformFormDataToChallenge({
                     ...formDataWithProjectBilling,
                     reviewers: usesManualReviewers
@@ -1639,6 +1693,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         },
         [
             applyPersistedSingleAssignments,
+            clearErrors,
             currentChallengeId,
             isEditMode,
             isTaskSingleAssignmentChallenge,
@@ -1646,6 +1701,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             onChallengeStatusChange,
             reset,
             resolveProjectBillingAccount,
+            setError,
             syncDraftSingleAssignments,
             usesManualReviewers,
         ],

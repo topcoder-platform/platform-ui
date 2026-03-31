@@ -18,7 +18,10 @@ import {
 } from '../../../../lib/hooks'
 import type { Challenge } from '../../../../lib/models'
 
-import { ChallengeEditorForm } from './ChallengeEditorForm'
+import {
+    ChallengeEditorForm,
+    getTaskLaunchValidationError,
+} from './ChallengeEditorForm'
 
 jest.mock('../../../../lib/components/form', () => ({
     FormCheckboxField: () => <></>,
@@ -430,5 +433,24 @@ describe('ChallengeEditorForm', () => {
             .toHaveBeenCalledWith(expect.objectContaining({
                 enabled: false,
             }))
+    })
+
+    it('requires an assigned member before launching a task challenge', () => {
+        expect(getTaskLaunchValidationError({
+            currentStatus: 'DRAFT',
+            isTaskChallenge: true,
+            nextStatus: 'ACTIVE',
+        }))
+            .toBe('Assign a member before launching a task challenge.')
+    })
+
+    it('allows task launches when an assignee exists', () => {
+        expect(getTaskLaunchValidationError({
+            assignedMemberId: '12345',
+            currentStatus: 'DRAFT',
+            isTaskChallenge: true,
+            nextStatus: 'ACTIVE',
+        }))
+            .toBeUndefined()
     })
 })
