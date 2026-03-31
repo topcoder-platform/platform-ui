@@ -32,13 +32,20 @@
     font-weight: 700;
     letter-spacing: 0.2px;
     padding: 10px 14px;
-    text-transform: uppercase;
     white-space: nowrap;
+
+    &:hover {
+        color: $black-60;
+    }
 }
 
 .activeTab {
     border-bottom-color: #0d61bf;
     color: #0d61bf;
+
+    &:hover {
+        color: #0d61bf;
+    }
 }
 
 .loadingState {
