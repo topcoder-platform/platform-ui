@@ -4,6 +4,9 @@
 $error-line-height: 14px;
 
 .container {
+    --field-markdown-editor-border-color: white;
+    --field-markdown-editor-top-border-color: var(--EditorBorder);
+
     display: flex;
     flex-direction: column;
     height: 280px;
@@ -13,19 +16,13 @@ $error-line-height: 14px;
         gap: 0;
     }
 
+    &.showBorder {
+        --field-markdown-editor-border-color: var(--EditorBorder);
+    }
+
     &.isError {
-        :global {
-            .CodeMirror.CodeMirror-wrap {
-                border-right: 1px solid var(--RedError);
-                border-left: 1px solid var(--RedError);
-                border-bottom: 1px solid var(--RedError);
-            }
-            .editor-toolbar {
-                border-top: 1px solid var(--RedError);
-                border-left: 1px solid var(--RedError);
-                border-right: 1px solid var(--RedError);
-            }
-        }
+        --field-markdown-editor-border-color: var(--RedError);
+        --field-markdown-editor-top-border-color: var(--RedError);
     }
 
     &.disabled {
@@ -46,10 +43,10 @@ $error-line-height: 14px;
             flex: 1;
             box-sizing: border-box;
             height: auto;
-            border-right: 1px solid white;
-            border-left: 1px solid white;
-            border-bottom: 1px solid white;
-            border-top: 1px solid var(--EditorBorder);
+            border-right: 1px solid var(--field-markdown-editor-border-color);
+            border-left: 1px solid var(--field-markdown-editor-border-color);
+            border-bottom: 1px solid var(--field-markdown-editor-border-color);
+            border-top: 1px solid var(--field-markdown-editor-top-border-color);
             border-bottom-left-radius: 8px;
             border-bottom-right-radius: 8px;
             font-family: "Nunito Sans", sans-serif;
@@ -66,9 +63,9 @@ $error-line-height: 14px;
             opacity: 1;
             border-top-left-radius: 8px;
             border-top-right-radius: 8px;
-            border-top: 1px solid white;
-            border-left: 1px solid white;
-            border-right: 1px solid white;
+            border-top: 1px solid var(--field-markdown-editor-border-color);
+            border-left: 1px solid var(--field-markdown-editor-border-color);
+            border-right: 1px solid var(--field-markdown-editor-border-color);
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
