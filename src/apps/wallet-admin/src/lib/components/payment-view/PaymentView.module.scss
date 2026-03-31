@@ -27,6 +27,27 @@
     gap: 20px;
 }
 
+.section {
+    border-top: 1px solid #e6e6e6;
+    padding-top: 20px;
+}
+
+.sectionTitle {
+    font-size: 18px;
+    margin: 0 0 16px;
+}
+
+.sectionGrid {
+    display: grid;
+    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.helperText {
+    color: #5b5b5b;
+    margin: 0;
+}
+
 
 .container {
     margin: 8px 0;

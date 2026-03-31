@@ -19,6 +19,29 @@ export interface PayoutStatus {
     taxFormSetupComplete: boolean;
 }
 
+export interface PaymentEngagementDetails {
+    assignmentId?: string
+    engagementId?: string
+    projectId?: string
+    projectName?: string
+    engagementTitle?: string
+    billingStartDate?: string
+    durationMonths?: number
+    ratePerHour?: string
+    standardHoursPerWeek?: number
+    otherRemarks?: string
+}
+
+export interface PaymentWorkLog {
+    hoursWorked?: number
+    remarks?: string
+}
+
+export interface WinningPaymentDetails {
+    engagementDetails?: PaymentEngagementDetails
+    workLog?: PaymentWorkLog
+}
+
 export interface Winning {
     id: string
     description: string

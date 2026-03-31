@@ -16,4 +16,5 @@ export enum UserRole {
     copilot = 'copilot',
     topcoderStaff = 'Topcoder Staff',
     talentManager = 'Talent Manager',
+    tester = 'Tester',
 }

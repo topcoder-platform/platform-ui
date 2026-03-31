@@ -4,7 +4,11 @@ import { xhrDeleteAsync, xhrGetAsync, xhrPatchAsync, xhrPostAsync } from '~/libs
 import { postAsyncWithBlobHandling } from '~/libs/core/lib/xhr/xhr-functions/xhr.functions'
 
 import { WalletDetails } from '../models/WalletDetails'
-import { WinningDetail, WinningsType } from '../models/WinningDetail'
+import {
+    WinningDetail,
+    WinningPaymentDetails,
+    WinningsType,
+} from '../models/WinningDetail'
 import { TransactionResponse } from '../models/TransactionId'
 import { PaginationInfo } from '../models/PaginationInfo'
 import { WinningsAudit } from '../models/WinningsAudit'
@@ -49,6 +53,20 @@ export async function fetchPayoutAuditLogs(paymentId: string): Promise<PayoutAud
 
     return response.data
 
+}
+
+export async function fetchWinningPaymentDetails(
+    winningId: string,
+): Promise<WinningPaymentDetails> {
+    const response = await xhrGetAsync<ApiResponse<WinningPaymentDetails>>(
+        `${baseUrl}/admin/winnings/${winningId}/payment-details`,
+    )
+
+    if (response.status === 'error') {
+        throw new Error('Error fetching payment details')
+    }
+
+    return response.data
 }
 
 export async function editPayment(updates: {

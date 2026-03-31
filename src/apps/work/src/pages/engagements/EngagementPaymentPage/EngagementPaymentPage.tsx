@@ -4,10 +4,17 @@
 import {
     FC,
     useCallback,
+    useEffect,
     useMemo,
+    useRef,
     useState,
 } from 'react'
-import { Link, useLocation, useParams } from 'react-router-dom'
+import {
+    Link,
+    useLocation,
+    useParams,
+    useSearchParams,
+} from 'react-router-dom'
 import classNames from 'classnames'
 
 import { PageWrapper } from '~/apps/review/src/lib'
@@ -547,9 +554,12 @@ const EditAssignmentModal: FC<EditAssignmentModalProps> = (
 export const EngagementPaymentPage: FC = () => {
     const params: Readonly<{ engagementId?: string; projectId?: string }> = useParams<'engagementId' | 'projectId'>()
     const location = useLocation()
+    const [searchParams] = useSearchParams()
 
     const projectId = params.projectId || ''
     const engagementId = params.engagementId || ''
+    const highlightedAssignmentId = String(searchParams.get('assignmentId') || '')
+        .trim()
 
     const [editingAssignment, setEditingAssignment] = useState<Assignment | undefined>()
     const [historyMember, setHistoryMember] = useState<Assignment | undefined>()
@@ -560,6 +570,8 @@ export const EngagementPaymentPage: FC = () => {
     const [isUpdatingAssignment, setIsUpdatingAssignment] = useState<boolean>(false)
     const [paymentMember, setPaymentMember] = useState<Assignment | undefined>()
     const [terminateMember, setTerminateMember] = useState<Assignment | undefined>()
+    const assignmentCardRefs = useRef<Record<string, HTMLElement | null>>({})
+    const hasScrolledToHighlightedAssignment = useRef<boolean>(false)
 
     const engagementResult = useFetchEngagement(engagementId)
     const projectResult = useFetchProject(projectId)
@@ -714,6 +726,31 @@ export const EngagementPaymentPage: FC = () => {
         }
     }, [assignments, editingAssignment, engagementId, engagementResult])
 
+    useEffect(() => {
+        hasScrolledToHighlightedAssignment.current = false
+    }, [highlightedAssignmentId])
+
+    useEffect(() => {
+        if (!highlightedAssignmentId || hasScrolledToHighlightedAssignment.current) {
+            return
+        }
+
+        const highlightedCard = assignmentCardRefs.current[highlightedAssignmentId]
+
+        if (!highlightedCard) {
+            return
+        }
+
+        hasScrolledToHighlightedAssignment.current = true
+        highlightedCard.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+        })
+        highlightedCard.focus({
+            preventScroll: true,
+        })
+    }, [assignments, highlightedAssignmentId])
+
     if (engagementResult.isLoading || projectResult.isLoading) {
         return (
             <PageWrapper
@@ -758,9 +795,20 @@ export const EngagementPaymentPage: FC = () => {
                             {assignments.map(assignment => {
                                 const normalizedStatus = normalizeAssignmentStatus(String(assignment.status || ''))
                                 const assignedStatus = isAssignedStatus(String(assignment.status || ''))
+                                const isHighlightedAssignment = String(assignment.id) === highlightedAssignmentId
 
                                 return (
-                                    <article key={String(assignment.id)} className={styles.card}>
+                                    <article
+                                        key={String(assignment.id)}
+                                        ref={node => {
+                                            assignmentCardRefs.current[String(assignment.id)] = node
+                                        }}
+                                        className={classNames(
+                                            styles.card,
+                                            isHighlightedAssignment && styles.cardHighlighted,
+                                        )}
+                                        tabIndex={-1}
+                                    >
                                         <div className={styles.cardHeader}>
                                             <div className={styles.memberHeader}>
                                                 <div className={styles.memberHandle}>{assignment.memberHandle || '-'}</div>

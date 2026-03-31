@@ -25,6 +25,11 @@
     padding: 12px;
 }
 
+.cardHighlighted {
+    border-color: #4d91ff;
+    box-shadow: 0 0 0 3px rgba(77, 145, 255, 0.16);
+}
+
 .cardHeader {
     align-items: center;
     display: flex;

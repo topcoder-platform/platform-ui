@@ -1,35 +1,22 @@
 import useSWR, { SWRResponse } from 'swr'
 
-import { EnvironmentConfig } from '~/config'
-import { xhrGetAsync } from '~/libs/core'
+import {
+    fetchScorecards,
+    FetchScorecardsParams,
+    ScorecardsResponse as FetchScorecardsResponse,
+} from '../services'
 
-import { Scorecard } from '../models'
+type UseFetchScorecardsParams = FetchScorecardsParams
 
-interface UseFetchScorecardsParams {
-  page: number
-  perPage: number
-  name?: string
-  challengeTrack?: string
-  scorecardType?: string
-  challengeType?: string
-  status?: string
+export interface ScorecardsResponse extends FetchScorecardsResponse {
+    error?: any
+    isValidating: boolean
 }
-
-export interface ScorecardsResponse {
-  scoreCards: Scorecard[]
-  metadata: any
-  error?: any
-  isValidating: boolean
-}
-
-const baseUrl = `${EnvironmentConfig.API.V6}`
-
-const PAGE_SIZE = 20
 
 export function useFetchScorecards(
     {
         page,
-        perPage = PAGE_SIZE,
+        perPage,
         name = '',
         challengeTrack = '',
         challengeType = '',
@@ -37,30 +24,25 @@ export function useFetchScorecards(
         status = '',
     }: UseFetchScorecardsParams,
 ): ScorecardsResponse {
-    const query = new URLSearchParams({
-        page: String(page),
-        perPage: String(perPage),
-        ...(name ? { name } : {}),
-        ...(scorecardType ? { scorecardType } : {}),
-        ...(challengeTrack ? { challengeTrack } : {}),
-        ...(challengeType ? { challengeType } : {}),
-        ...(status ? { status } : {}),
-    })
+    const params: FetchScorecardsParams = {
+        challengeTrack,
+        challengeType,
+        name,
+        page,
+        perPage,
+        scorecardType,
+        status,
+    }
 
-    const fetcher = (url: string): Promise<ScorecardsResponse> => xhrGetAsync<ScorecardsResponse>(url)
-
-    const { data, error, isValidating }: SWRResponse<ScorecardsResponse, any> = useSWR<ScorecardsResponse>(
-        `${baseUrl}/scorecards?${query.toString()}`,
-        fetcher,
+    const { data, error, isValidating }: SWRResponse<FetchScorecardsResponse, any> = useSWR<FetchScorecardsResponse>(
+        ['scorecards', params],
+        () => fetchScorecards(params),
     )
 
     return {
         error,
         isValidating,
         metadata: data?.metadata,
-        scoreCards: data?.scoreCards?.map(scorecard => ({
-            ...scorecard,
-            minimumPassingScore: scorecard.minimumPassingScore ?? 50,
-        })) || [],
+        scoreCards: data?.scoreCards || [],
     }
 }
