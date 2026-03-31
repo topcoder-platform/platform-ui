@@ -1732,6 +1732,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                             <ChallengeNameField />
                             <ChallengeTrackField disabled={isReadOnly || isChallengeCreated} />
                             <ChallengeTypeField disabled={isReadOnly || isChallengeCreated} />
+                            <CopilotField projectId={fallbackProjectId} />
                             {showFunChallengeField
                                 ? <FunChallengeField disabled={isReadOnly} />
                                 : undefined}
@@ -1862,7 +1863,6 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                         {isTaskChallengeSelected
                                             ? <AssignedMemberField />
                                             : undefined}
-                                        <CopilotField projectId={fallbackProjectId} />
                                         {isTaskChallengeSelected
                                             ? (
                                                 <ReviewTypeField

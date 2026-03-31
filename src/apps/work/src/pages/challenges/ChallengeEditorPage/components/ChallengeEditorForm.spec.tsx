@@ -2,6 +2,7 @@
 import {
     render,
     screen,
+    within,
 } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
@@ -206,7 +207,7 @@ jest.mock('./CheckpointPrizesField', () => ({
     CheckpointPrizesField: () => <></>,
 }))
 jest.mock('./CopilotField', () => ({
-    CopilotField: () => <></>,
+    CopilotField: () => <>Copilot Field</>,
 }))
 jest.mock('./CopilotFeeField', () => ({
     CopilotFeeField: () => <></>,
@@ -315,6 +316,47 @@ describe('ChallengeEditorForm', () => {
 
         expect(challengeNameInput.value)
             .toBe('Create challenge regression')
+    })
+
+    it('renders the copilot field inside basic information for new challenges', () => {
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm />
+            </MemoryRouter>,
+        )
+
+        const basicInformationSection = screen.getByRole('heading', { name: 'Basic Information' })
+            .closest('section')
+
+        expect(
+            within(basicInformationSection as HTMLElement)
+                .getByText('Copilot Field'),
+        )
+            .toBeTruthy()
+    })
+
+    it('renders the copilot field inside basic information for existing challenges', () => {
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm challenge={draftChallenge} />
+            </MemoryRouter>,
+        )
+
+        const basicInformationSection = screen.getByRole('heading', { name: 'Basic Information' })
+            .closest('section')
+        const advancedOptionsSection = screen.getByRole('heading', { name: 'Advanced Options' })
+            .closest('section')
+
+        expect(
+            within(basicInformationSection as HTMLElement)
+                .getByText('Copilot Field'),
+        )
+            .toBeTruthy()
+        expect(
+            within(advancedOptionsSection as HTMLElement)
+                .queryByText('Copilot Field'),
+        )
+            .toBeNull()
     })
 
     it('renders secondary footer actions and a primary launch action for draft challenges', () => {
