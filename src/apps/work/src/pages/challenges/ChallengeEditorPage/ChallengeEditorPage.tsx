@@ -127,8 +127,6 @@ interface ChallengeEditorBodyProps {
 interface ChallengeQuickLinksProps {
     challenge: UseFetchChallengeResult['challenge']
     challengeId?: string
-    isEditMode: boolean
-    projectId?: string
 }
 
 function getErrorMessage(error: Error | undefined): string {
@@ -562,6 +560,7 @@ interface RenderHeaderActionParams {
     canLaunchChallenge: boolean
     challenge?: UseFetchChallengeResult['challenge']
     challengeId?: string
+    challengeQuickLinks?: JSX.Element
     challengeName: string
     isDeleting: boolean
     isLaunching: boolean
@@ -629,9 +628,10 @@ function renderHeaderAction(params: RenderHeaderActionParams): JSX.Element | und
         )
     }
 
-    return actions.length > 0
+    return actions.length > 0 || params.challengeQuickLinks
         ? (
             <div className={styles.headerActions}>
+                {params.challengeQuickLinks}
                 {actions}
             </div>
         )
@@ -700,7 +700,6 @@ function renderDeleteModal(params: RenderDeleteModalParams): JSX.Element | undef
 function renderTitleAction(
     isEditMode: boolean,
     challengeStatus: string | undefined,
-    challengeQuickLinks?: JSX.Element,
 ): JSX.Element | undefined {
     const statusPill = isEditMode && challengeStatus
         ? (
@@ -711,14 +710,13 @@ function renderTitleAction(
         )
         : undefined
 
-    if (!statusPill && !challengeQuickLinks) {
+    if (!statusPill) {
         return undefined
     }
 
     return (
         <div className={styles.titleAction}>
             {statusPill}
-            {challengeQuickLinks}
         </div>
     )
 }
@@ -852,10 +850,6 @@ const ChallengeEditorBody: FC<ChallengeEditorBodyProps> = (
 function renderChallengeQuickLinks(
     props: ChallengeQuickLinksProps,
 ): JSX.Element | undefined {
-    if (!props.isEditMode) {
-        return undefined
-    }
-
     const resolvedChallengeId = props.challenge?.id || props.challengeId
 
     if (!resolvedChallengeId) {
@@ -865,12 +859,18 @@ function renderChallengeQuickLinks(
     const reviewLink = `${REVIEW_APP_URL}/active-challenges/${resolvedChallengeId}/challenge-details`
     const forumLink = props.challenge?.discussions?.find(discussion => !!discussion.url)?.url
     const communityChallengeLink = `${COMMUNITY_APP_URL}/challenges/${resolvedChallengeId}`
-    const projectChallengesLink = props.projectId
-        ? `/projects/${props.projectId}/challenges`
-        : undefined
 
     return (
         <div className={styles.quickLinks}>
+            <a
+                className={styles.quickLink}
+                href={communityChallengeLink}
+                rel='noopener noreferrer'
+                target='_blank'
+            >
+                Challenge
+                <IconOutline.ExternalLinkIcon className={styles.quickLinkIcon} />
+            </a>
             <a
                 className={styles.quickLink}
                 href={reviewLink}
@@ -893,28 +893,6 @@ function renderChallengeQuickLinks(
                     </a>
                 )
                 : undefined}
-            {projectChallengesLink
-                ? (
-                    <a
-                        className={styles.quickLink}
-                        href={projectChallengesLink}
-                        rel='noopener noreferrer'
-                        target='_blank'
-                    >
-                        Project
-                        <IconOutline.ExternalLinkIcon className={styles.quickLinkIcon} />
-                    </a>
-                )
-                : undefined}
-            <a
-                className={styles.quickLink}
-                href={communityChallengeLink}
-                rel='noopener noreferrer'
-                target='_blank'
-            >
-                Community
-                <IconOutline.ExternalLinkIcon className={styles.quickLinkIcon} />
-            </a>
         </div>
     )
 }
@@ -1102,6 +1080,10 @@ export const ChallengeEditorPage: FC = () => {
         handleDeleteConfirm()
             .catch(() => undefined)
     }, [handleDeleteConfirm])
+    const challengeQuickLinks = renderChallengeQuickLinks({
+        challenge: challengeResult.challenge,
+        challengeId,
+    })
     const rightHeader = renderHeaderAction({
         canCancelChallenge,
         canCompleteTask,
@@ -1110,6 +1092,7 @@ export const ChallengeEditorPage: FC = () => {
         challenge: headerChallenge,
         challengeId,
         challengeName: launchChallengeName,
+        challengeQuickLinks,
         isDeleting,
         isLaunching,
         isSaving: isSavingChallenge,
@@ -1133,17 +1116,7 @@ export const ChallengeEditorPage: FC = () => {
         onLaunchConfirmClick: handleLaunchConfirmClick,
         showLaunchModal,
     })
-    const challengeQuickLinks = renderChallengeQuickLinks({
-        challenge: challengeResult.challenge,
-        challengeId,
-        isEditMode,
-        projectId,
-    })
-    const titleAction = renderTitleAction(
-        isEditMode,
-        challengeStatus,
-        challengeQuickLinks,
-    )
+    const titleAction = renderTitleAction(isEditMode, challengeStatus)
     const launchButtonLabel = isLaunching
         ? 'Launching...'
         : 'Launch'

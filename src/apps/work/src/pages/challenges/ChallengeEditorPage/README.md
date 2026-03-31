@@ -3,8 +3,8 @@
 ## Structure
 
 - `ChallengeEditorPage.tsx`: route-level page for create/edit challenge modes.
-- `ChallengeEditorPage.tsx` also renders quick links inline with the header status in edit/view mode
-  (`Review`, `Forum` when present, `Project`, and `Community`).
+- `ChallengeEditorPage.tsx` also renders challenge quick links in the right header action group for
+  existing challenges (`Challenge`, `Review`, and `Forum` when present).
 - `components/ChallengeEditorForm.tsx`: React Hook Form container with autosave and manual save.
 - `components/*Field.tsx`: field-level components for each challenge section.
 - `components/ReviewersField/*`: tabbed human/AI review configuration. Human reviewers stay on the challenge form, while AI reviewer configs load/save through the review API and sync saved AI workflows back into the challenge `reviewers` array. Existing AI configs are reloaded only when the challenge already has synced AI reviewer entries, which avoids empty-config lookups on new challenges. Removing an AI config also detaches the synced AI workflow reviewers from the challenge. When AI reviewers exist without a persisted AI screening phase, the schedule editor injects a virtual `AI Screening` row after submission phases. This `Review` section is hidden for `Task` and `Marathon Match` challenges because those flows use dedicated reviewer assignment UIs.
