@@ -38,15 +38,17 @@
 }
 
 .requestCopilotLink {
-    color: #137d60;
+    color: $link-blue-dark;
     font-size: 12px;
     font-weight: 600;
-    text-decoration: underline;
+    text-decoration: none;
     white-space: nowrap;
 }
 
-.requestCopilotLink:hover {
-    color: #0f5e48;
+.requestCopilotLink:hover,
+.requestCopilotLink:focus {
+    color: $link-blue-dark;
+    text-decoration: none;
 }
 
 .projectTitleActions {
