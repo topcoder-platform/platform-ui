@@ -51,6 +51,7 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 - `Submission Settings`: shown for Design `Challenge` and Design `First2Finish` types, and contains the stock-art, submission-visibility, and submission-limit controls.
 - `ChallengeDescriptionField`: public markdown spec editor.
 - `ChallengePrivateDescriptionField`: optional private markdown spec editor.
+- `TermsField`: advanced-option multi-select for challenge terms. New challenges seed the standard Topcoder terms entry automatically once the terms list loads so the editor matches legacy work-manager defaults, while still allowing the NDA toggle to add or remove the NDA term separately.
 - `ChallengeTagsField`: multi creatable tag picker excluding special challenge tags.
 - `ChallengeSkillsField`: async multi skills picker with billing-account-based required behavior.
 - `ChallengePrizesField`: placement-prize editor with an inline USD/POINTS selector, descending-value validation for multi-prize setups, and create-on-demand placement prize-set hydration when older payloads omit the placement set.
