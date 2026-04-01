@@ -42,6 +42,7 @@ import { WORK_MANAGER_ALLOWED_ROLES } from './config/access.config'
 import { ErrorMessage } from './lib/components'
 import { WorkAppContext } from './lib/contexts'
 import { WorkAppContextModel } from './lib/models'
+import { canViewAllEngagements } from './lib/utils'
 
 const WorkApp: LazyLoadedComponent = lazyLoad(() => import('./WorkApp'))
 
@@ -125,10 +126,6 @@ function canManageGroups(contextValue: WorkAppContextModel): boolean {
     return contextValue.isAdmin || contextValue.isCopilot || contextValue.isManager
 }
 
-function canViewAllEngagements(contextValue: WorkAppContextModel): boolean {
-    return contextValue.isAdmin
-}
-
 const GroupsRouteGuard: FC<PropsWithChildren> = (props: PropsWithChildren) => {
     const contextValue: WorkAppContextModel = useContext(WorkAppContext)
 
@@ -142,8 +139,8 @@ const GroupsRouteGuard: FC<PropsWithChildren> = (props: PropsWithChildren) => {
 const EngagementsRouteGuard: FC<PropsWithChildren> = (props: PropsWithChildren) => {
     const contextValue: WorkAppContextModel = useContext(WorkAppContext)
 
-    if (!canViewAllEngagements(contextValue)) {
-        return <ErrorMessage message='You need Admin role to view all engagements.' />
+    if (!canViewAllEngagements(contextValue.userRoles)) {
+        return <ErrorMessage message='You need Admin or Talent Manager role to view all engagements.' />
     }
 
     return <>{props.children}</>
