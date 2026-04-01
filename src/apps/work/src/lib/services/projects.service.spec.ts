@@ -93,6 +93,49 @@ describe('fetchProjectBillingAccount', () => {
             )
     })
 
+    it('loads markup from the billing-accounts API when the project billing account returns blank markup', async () => {
+        const mockedGetAsync = xhrGetAsync as jest.Mock
+
+        mockedGetAsync
+            .mockResolvedValueOnce({
+                active: true,
+                endDate: '2026-10-16T23:59:00.000Z',
+                markup: '   ',
+                name: 'BA For Marios',
+                startDate: '2023-10-31T00:00:00.000Z',
+                tcBillingAccountId: 80001063,
+            })
+            .mockResolvedValueOnce({
+                id: 80001063,
+                markup: '0.33',
+                name: 'BA For Marios',
+            })
+
+        const result = await fetchProjectBillingAccount('100578')
+
+        expect(result)
+            .toEqual({
+                billingAccount: {
+                    active: true,
+                    endDate: '2026-10-16T23:59:00.000Z',
+                    id: '80001063',
+                    markup: 0.33,
+                    name: 'BA For Marios',
+                    startDate: '2023-10-31T00:00:00.000Z',
+                },
+            })
+        expect(mockedGetAsync)
+            .toHaveBeenNthCalledWith(
+                1,
+                'https://example.com/projects/100578/billingAccount',
+            )
+        expect(mockedGetAsync)
+            .toHaveBeenNthCalledWith(
+                2,
+                'https://example.com/v6/billing-accounts/80001063',
+            )
+    })
+
     it('uses markup returned by the project billing account endpoint without an extra lookup', async () => {
         const mockedGetAsync = xhrGetAsync as jest.Mock
 

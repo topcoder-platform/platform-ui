@@ -454,6 +454,25 @@ describe('project billing helpers', () => {
             })
     })
 
+    it('treats blank billing markup as missing and fills it from project billing', () => {
+        const result = mergeChallengeBillingWithProjectBilling(
+            {
+                billingAccountId: 80001064,
+                markup: '   ' as unknown as number,
+            },
+            {
+                id: 80001063,
+                markup: 0.33,
+            },
+        )
+
+        expect(result)
+            .toEqual({
+                billingAccountId: '80001064',
+                markup: 0.33,
+            })
+    })
+
     it('applies merged project billing to challenge form data only when billing changes', () => {
         const formData = {
             description: '',

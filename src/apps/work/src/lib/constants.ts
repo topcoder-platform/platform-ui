@@ -2,6 +2,14 @@ import { EnvironmentConfig } from '~/config'
 
 export const WORK_APP_BODY_CLASS = 'work-app'
 
+const DEFAULT_CREATE_FORUM_TYPE_IDS = [
+    '927abff4-7af9-4145-8ba1-577c16e64e2e',
+    'dc876fa4-ef2d-4eee-b701-b555fcc6544c',
+    'ecd58c69-238f-43a4-a4bb-d172719b9f31',
+    '78b37a69-92d5-4ad7-bf85-c79b65420c79',
+    '929bc408-9cf2-4b3e-ba71-adfbf693046c',
+]
+
 export const CHALLENGE_STATUS = {
     ACTIVE: 'ACTIVE',
     APPROVED: 'APPROVED',
@@ -40,6 +48,27 @@ export const CHALLENGE_API_URL = process.env.REACT_APP_CHALLENGE_API_URL
     || process.env.CHALLENGE_API_URL
     || EnvironmentConfig.CHALLENGE_API_URL
     || `${EnvironmentConfig.API.V6}/challenges`
+
+const configuredCreateForumTypeIds = (
+    EnvironmentConfig as unknown as Record<string, unknown>
+).CREATE_FORUM_TYPE_IDS
+
+export const CREATE_FORUM_TYPE_IDS = Array.isArray(configuredCreateForumTypeIds)
+    ? configuredCreateForumTypeIds
+        .filter((typeId): typeId is string => typeof typeId === 'string' && typeId.trim().length > 0)
+    : (
+        process.env.REACT_APP_CREATE_FORUM_TYPE_IDS
+        || process.env.CREATE_FORUM_TYPE_IDS
+        || (
+            typeof configuredCreateForumTypeIds === 'string'
+                ? configuredCreateForumTypeIds
+                : undefined
+        )
+    )
+        ?.split(',')
+        .map(typeId => typeId.trim())
+        .filter(Boolean)
+        || DEFAULT_CREATE_FORUM_TYPE_IDS
 
 export const ENGAGEMENTS_API_URL = process.env.REACT_APP_ENGAGEMENTS_API_URL
     || process.env.ENGAGEMENTS_API_URL

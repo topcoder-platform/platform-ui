@@ -49,6 +49,7 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 - `DesignWorkTypeField`: shown for Design + Challenge, with the legacy work-type options (`Application Front-End Design`, `Print/Presentation`, `Web Design`, `Widget or Mobile Screen Design`, `Wireframes`). The selected value is stored in challenge tags.
 - `FunChallengeField`: shown for `Marathon Match` type and remains editable after creation so the form can switch between fun-challenge and standard marathon-match fields.
 - `ReviewersField`: hidden for `Task` and `Marathon Match` challenges because manual reviewer assignment is handled elsewhere.
+- `Submission Settings`: shown for Design `Challenge` and Design `First2Finish` types, and contains the stock-art, submission-visibility, and submission-limit controls.
 - `ChallengeDescriptionField`: public markdown spec editor.
 - `ChallengePrivateDescriptionField`: optional private markdown spec editor.
 - `ChallengeTagsField`: multi creatable tag picker excluding special challenge tags.
@@ -74,7 +75,7 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
   challenge details so reopening a challenge view right after a save still triggers a fresh
   challenge-api-v6 fetch instead of reusing stale cached detail data.
 - Save create/update/delete: `createChallenge`, `patchChallenge`, `deleteChallenge`.
-- Initial create refresh: after `createChallenge`, the form fetches full challenge details with `fetchChallenge` to avoid round-type regressions from sparse create responses.
+- Initial create refresh: after `createChallenge`, the form fetches full challenge details with `fetchChallenge` to avoid round-type regressions from sparse create responses and to surface the generated forum link for challenge types that provision a discussion on create.
 - Skills search: `searchSkills`.
 - Tracks fetch: `fetchChallengeTracks`.
 - Markdown file uploads: `uploadChallengeAttachment`.

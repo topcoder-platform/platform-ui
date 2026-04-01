@@ -141,6 +141,10 @@ function normalizeOptionalNumber(value: unknown): number | undefined {
 
     if (typeof value === 'string') {
         const normalizedValue = value.trim()
+        if (!normalizedValue) {
+            return undefined
+        }
+
         const parsedValue = Number(normalizedValue)
 
         return Number.isFinite(parsedValue)
