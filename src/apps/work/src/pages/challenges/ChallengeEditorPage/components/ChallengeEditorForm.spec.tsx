@@ -67,6 +67,10 @@ jest.mock('../../../../lib/utils', () => ({
     showErrorToast: jest.fn(),
     showSuccessToast: jest.fn(),
     transformChallengeToFormData: (challenge?: {
+        billing?: {
+            billingAccountId?: number | string
+            markup?: number
+        }
         name?: string
         status?: string
         trackId?: string
@@ -74,6 +78,7 @@ jest.mock('../../../../lib/utils', () => ({
     }) => ({
         assignedMemberId: undefined,
         attachments: [],
+        billing: challenge?.billing,
         copilot: undefined,
         description: '',
         discussionForum: undefined,
@@ -179,7 +184,17 @@ jest.mock('./ChallengeScheduleSection', () => ({
     ChallengeScheduleSection: () => <></>,
 }))
 jest.mock('./ChallengeFeeField', () => ({
-    ChallengeFeeField: () => <></>,
+    ChallengeFeeField: function ChallengeFeeField() {
+        const reactHookForm: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
+        const billing = reactHookForm.useWatch({
+            control: reactHookForm.useFormContext().control,
+            name: 'billing',
+        }) as {
+            markup?: number
+        } | undefined
+
+        return <div data-testid='billing-markup'>{String(billing?.markup ?? '')}</div>
+    },
 }))
 jest.mock('./ChallengeNameField', () => {
     const reactHookForm: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
@@ -584,6 +599,53 @@ describe('ChallengeEditorForm', () => {
             .toHaveBeenCalledWith(expect.objectContaining({
                 enabled: false,
             }))
+    })
+
+    it('preserves project billing markup when fetched draft data resets the form', async () => {
+        mockedUseFetchProjectBillingAccount.mockReturnValue({
+            billingAccount: {
+                id: '80001063',
+                markup: 0.33,
+            },
+            isLoading: false,
+        })
+
+        const renderResult: ReturnType<typeof render> = render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...draftChallenge,
+                        id: 'initial-draft-id',
+                        projectId: '100578',
+                    }}
+                    projectId='100578'
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByTestId('billing-markup'))
+            .toHaveTextContent('0.33')
+
+        renderResult.rerender(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...draftChallenge,
+                        billing: {
+                            billingAccountId: '80001063',
+                            markup: 0,
+                        },
+                        projectId: '100578',
+                    }}
+                    projectId='100578'
+                />
+            </MemoryRouter>,
+        )
+
+        await waitFor(() => {
+            expect(screen.getByTestId('billing-markup'))
+                .toHaveTextContent('0.33')
+        })
     })
 
     it('requires an assigned member before launching a task challenge', () => {
