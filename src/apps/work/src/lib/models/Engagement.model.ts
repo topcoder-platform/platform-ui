@@ -30,6 +30,7 @@ export interface Assignment {
 }
 
 export interface Application {
+    address?: string
     availability: string
     coverLetter?: string
     createdAt: string
