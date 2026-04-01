@@ -139,6 +139,7 @@ jest.mock('../../../lib/utils', () => ({
     formatEngagementStatus: jest.fn((status?: string) => status || ''),
     getApplicationsCount: jest.fn(() => 0),
     getAssignedMembersCount: jest.fn(() => 0),
+    getEngagementStatusPillVariant: jest.fn(() => 'gray'),
     showErrorToast: jest.fn(),
     showSuccessToast: jest.fn(),
 }))

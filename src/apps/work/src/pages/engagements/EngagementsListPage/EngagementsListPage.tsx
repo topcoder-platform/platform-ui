@@ -56,6 +56,7 @@ import {
     formatEngagementStatus,
     getApplicationsCount,
     getAssignedMembersCount,
+    getEngagementStatusPillVariant,
     showErrorToast,
     showSuccessToast,
 } from '../../../lib/utils'
@@ -193,23 +194,21 @@ function getExternalEngagementViewUrl(engagement: Engagement): string {
 }
 
 function getStatusPillClass(status: string): string {
-    const normalizedStatus = String(status || '')
-        .trim()
-        .toLowerCase()
+    const pillVariant = getEngagementStatusPillVariant(status)
 
-    if (normalizedStatus === 'active') {
+    if (pillVariant === 'green') {
         return styles.statusGreen
     }
 
-    if (normalizedStatus === 'open' || normalizedStatus === 'pending assignment') {
+    if (pillVariant === 'yellow') {
         return styles.statusYellow
     }
 
-    if (normalizedStatus === 'closed') {
+    if (pillVariant === 'blue') {
         return styles.statusBlue
     }
 
-    if (normalizedStatus === 'cancelled') {
+    if (pillVariant === 'red') {
         return styles.statusRed
     }
 

@@ -497,6 +497,40 @@ export function formatEngagementStatus(value: string | EngagementStatus): string
     return STATUS_FROM_API[normalized] || value
 }
 
+/**
+ * Maps an engagement status to the semantic status pill variant used by work app views.
+ *
+ * This keeps status coloring consistent anywhere the UI renders formatted or raw
+ * engagement statuses, including legacy `PENDING_ASSIGNMENT` values that now
+ * display as `On Hold`.
+ *
+ * @param value The raw API value or formatted engagement status label.
+ * @returns The semantic pill variant name for the status.
+ */
+export function getEngagementStatusPillVariant(
+    value: string | EngagementStatus,
+): 'blue' | 'gray' | 'green' | 'red' | 'yellow' {
+    const normalized = toUpperSnake(String(value || ''))
+
+    if (normalized === 'ACTIVE') {
+        return 'green'
+    }
+
+    if (normalized === 'OPEN' || normalized === 'ON_HOLD' || normalized === 'PENDING_ASSIGNMENT') {
+        return 'yellow'
+    }
+
+    if (normalized === 'CLOSED') {
+        return 'blue'
+    }
+
+    if (normalized === 'CANCELLED') {
+        return 'red'
+    }
+
+    return 'gray'
+}
+
 export function formatDuration(engagement: Partial<Engagement>): string {
     if (engagement.durationWeeks && engagement.durationWeeks > 0) {
         return `${engagement.durationWeeks} weeks`
