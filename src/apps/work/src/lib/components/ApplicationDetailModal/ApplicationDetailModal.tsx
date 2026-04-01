@@ -173,6 +173,10 @@ const ApplicationDetailModal: FC<ApplicationDetailModalProps> = (
                                 <span className={styles.value}>{application.availability || '-'}</span>
                             </div>
                             <div>
+                                <span className={styles.label}>Address</span>
+                                <span className={styles.value}>{application.address || '-'}</span>
+                            </div>
+                            <div>
                                 <span className={styles.label}>Status</span>
                                 <span
                                     className={classNames(

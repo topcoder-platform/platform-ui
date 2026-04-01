@@ -75,6 +75,7 @@ function toOptionalString(value: unknown): string | undefined {
 
 function normalizeApplication(application: Partial<Application>): Application {
     return {
+        address: toOptionalString(application.address),
         availability: typeof application.availability === 'string'
             ? application.availability
             : '',
