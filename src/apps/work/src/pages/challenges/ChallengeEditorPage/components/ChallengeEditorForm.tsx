@@ -1908,6 +1908,24 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         () => getSubmitButtonLabel(normalizedChallengeStatus),
         [normalizedChallengeStatus],
     )
+    const displayedBillingAccountId = useMemo(
+        (): string => {
+            const billingAccountId = values.billing?.billingAccountId ?? projectBillingAccount?.id
+
+            if (billingAccountId === undefined || billingAccountId === null) {
+                return '-'
+            }
+
+            const normalizedBillingAccountId = String(billingAccountId)
+                .trim()
+
+            return normalizedBillingAccountId || '-'
+        },
+        [
+            projectBillingAccount?.id,
+            values.billing?.billingAccountId,
+        ],
+    )
 
     return (
         <FormProvider {...formMethods}>
@@ -2068,6 +2086,12 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                             label='Wipro Allowed'
                                             name='wiproAllowed'
                                         />
+                                        <div className={styles.readOnlyField}>
+                                            <span className={styles.readOnlyFieldLabel}>Billing Account Id</span>
+                                            <span className={styles.readOnlyFieldValue}>
+                                                {displayedBillingAccountId}
+                                            </span>
+                                        </div>
                                     </div>
                                 </section>
 

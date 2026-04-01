@@ -419,6 +419,29 @@ describe('ChallengeEditorForm', () => {
             .toBeNull()
     })
 
+    it('renders the billing account id inside advanced options when project billing is available', () => {
+        mockedUseFetchProjectBillingAccount.mockReturnValue({
+            billingAccount: {
+                id: '80001063',
+            },
+            isLoading: false,
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm challenge={draftChallenge} />
+            </MemoryRouter>,
+        )
+
+        const advancedOptionsSection = screen.getByRole('heading', { name: 'Advanced Options' })
+            .closest('section')
+
+        expect(advancedOptionsSection)
+            .toHaveTextContent('Billing Account Id')
+        expect(advancedOptionsSection)
+            .toHaveTextContent('80001063')
+    })
+
     it('renders secondary footer actions and a primary launch action for draft challenges', () => {
         render(
             <MemoryRouter>
