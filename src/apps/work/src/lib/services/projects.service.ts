@@ -36,6 +36,7 @@ import {
     createProjectMemberInvite,
 } from './project-member-invites.service'
 import {
+    BillingAccount,
     fetchBillingAccountById,
 } from './billing-accounts.service'
 
@@ -85,6 +86,14 @@ export interface ProjectBillingAccount {
 
 export interface FetchProjectBillingAccountResponse {
     billingAccount?: ProjectBillingAccount
+}
+
+interface ProjectBillingAccountsResponseItem {
+    active?: unknown
+    endDate?: unknown
+    name?: unknown
+    startDate?: unknown
+    tcBillingAccountId?: unknown
 }
 
 const PROJECT_TYPES_API_URL = `${PROJECTS_API_URL}/metadata/projectTypes`
@@ -697,6 +706,48 @@ export async function fetchProjectById(projectId: string): Promise<Project> {
         return normalizeProject(project)
     } catch (error) {
         throw normalizeError(error, 'Failed to fetch project')
+    }
+}
+
+/**
+ * Fetch billing accounts available to the caller for a project.
+ *
+ * Returns only accounts with both `tcBillingAccountId` and `name`, normalized
+ * into the shared work-app billing-account shape and sorted by name.
+ */
+export async function fetchProjectBillingAccounts(
+    projectId: string,
+): Promise<BillingAccount[]> {
+    try {
+        const response = await xhrGetAsync<ProjectBillingAccountsResponseItem[]>(
+            `${PROJECTS_API_URL}/${encodeURIComponent(projectId)}/billingAccounts`,
+        )
+
+        return response
+            .map((billingAccount): BillingAccount | undefined => {
+                const id = normalizeOptionalId(billingAccount?.tcBillingAccountId)
+                const name = normalizeOptionalString(billingAccount?.name)
+
+                if (!id || !name) {
+                    return undefined
+                }
+
+                return {
+                    active: typeof billingAccount?.active === 'boolean'
+                        ? billingAccount.active
+                        : true,
+                    endDate: normalizeOptionalString(billingAccount?.endDate),
+                    id,
+                    name,
+                    startDate: normalizeOptionalString(billingAccount?.startDate),
+                }
+            })
+            .filter((billingAccount): billingAccount is BillingAccount => !!billingAccount)
+            .sort((billingAccountA, billingAccountB) => billingAccountA.name.localeCompare(
+                billingAccountB.name,
+            ))
+    } catch (error) {
+        throw normalizeError(error, 'Failed to fetch project billing accounts')
     }
 }
 
