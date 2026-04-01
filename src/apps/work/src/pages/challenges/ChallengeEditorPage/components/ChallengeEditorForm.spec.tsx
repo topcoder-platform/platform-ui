@@ -2,6 +2,7 @@
 import {
     render,
     screen,
+    waitFor,
     within,
 } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -16,6 +17,10 @@ import {
     useFetchTimelineTemplates,
 } from '../../../../lib/hooks'
 import type { Challenge } from '../../../../lib/models'
+import {
+    createChallenge,
+    fetchChallenge,
+} from '../../../../lib/services'
 
 import { ChallengeEditorForm } from './ChallengeEditorForm'
 
@@ -198,10 +203,46 @@ jest.mock('./ChallengeTotalField', () => ({
     ChallengeTotalField: () => <></>,
 }))
 jest.mock('./ChallengeTrackField', () => ({
-    ChallengeTrackField: () => <></>,
+    ChallengeTrackField: function ChallengeTrackField() {
+        const reactHookForm: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
+        const controller = reactHookForm.useController({
+            control: reactHookForm.useFormContext().control,
+            name: 'trackId',
+        })
+
+        return (
+            <label htmlFor='trackId'>
+                Challenge Track
+                <input
+                    id='trackId'
+                    onBlur={controller.field.onBlur}
+                    onChange={controller.field.onChange}
+                    value={controller.field.value || ''}
+                />
+            </label>
+        )
+    },
 }))
 jest.mock('./ChallengeTypeField', () => ({
-    ChallengeTypeField: () => <></>,
+    ChallengeTypeField: function ChallengeTypeField() {
+        const reactHookForm: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
+        const controller = reactHookForm.useController({
+            control: reactHookForm.useFormContext().control,
+            name: 'typeId',
+        })
+
+        return (
+            <label htmlFor='typeId'>
+                Challenge Type
+                <input
+                    id='typeId'
+                    onBlur={controller.field.onBlur}
+                    onChange={controller.field.onChange}
+                    value={controller.field.value || ''}
+                />
+            </label>
+        )
+    },
 }))
 jest.mock('./CheckpointPrizesField', () => ({
     CheckpointPrizesField: () => <></>,
@@ -258,6 +299,8 @@ const mockedUseFetchChallengeTypes = useFetchChallengeTypes as jest.Mock
 const mockedUseFetchResourceRoles = useFetchResourceRoles as jest.Mock
 const mockedUseFetchResources = useFetchResources as jest.Mock
 const mockedUseFetchTimelineTemplates = useFetchTimelineTemplates as jest.Mock
+const mockedCreateChallenge = createChallenge as jest.Mock
+const mockedFetchChallenge = fetchChallenge as jest.Mock
 
 describe('ChallengeEditorForm', () => {
     const draftChallenge = {
@@ -423,5 +466,56 @@ describe('ChallengeEditorForm', () => {
             .toHaveBeenCalledWith(expect.objectContaining({
                 enabled: false,
             }))
+    })
+
+    it('creates a forum discussion for forum-enabled challenge types', async () => {
+        const user = userEvent.setup()
+
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'CH',
+                id: '927abff4-7af9-4145-8ba1-577c16e64e2e',
+                isTask: false,
+                name: 'Challenge',
+            }],
+            isLoading: false,
+        })
+        mockedCreateChallenge.mockResolvedValue({
+            id: 'created-challenge-id',
+            name: 'Forum Enabled Challenge',
+            status: 'NEW',
+        })
+        mockedFetchChallenge.mockResolvedValue({
+            id: 'created-challenge-id',
+            name: 'Forum Enabled Challenge',
+            status: 'NEW',
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm projectId='12345' />
+            </MemoryRouter>,
+        )
+
+        await user.type(screen.getByLabelText('Challenge Name'), 'Forum Enabled Challenge')
+        await user.type(screen.getByLabelText('Challenge Track'), 'track-id')
+        await user.type(screen.getByLabelText('Challenge Type'), '927abff4-7af9-4145-8ba1-577c16e64e2e')
+        await user.click(screen.getByRole('button', { name: 'New' }))
+
+        await waitFor(() => {
+            expect(mockedCreateChallenge)
+                .toHaveBeenCalledWith(expect.objectContaining({
+                    discussions: [{
+                        name: 'Forum Enabled Challenge Discussion',
+                        provider: 'vanilla',
+                        type: 'CHALLENGE',
+                    }],
+                    name: 'Forum Enabled Challenge',
+                    projectId: '12345',
+                    status: 'NEW',
+                    trackId: 'track-id',
+                    typeId: '927abff4-7af9-4145-8ba1-577c16e64e2e',
+                }))
+        })
     })
 })

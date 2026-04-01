@@ -19,6 +19,7 @@ import { FormCheckboxField } from '../../../../lib/components/form'
 import {
     CHALLENGE_STATUS,
     CHALLENGE_TRACKS,
+    CREATE_FORUM_TYPE_IDS,
 } from '../../../../lib/constants'
 import {
     AUTOSAVE_DELAY_MS,
@@ -304,6 +305,45 @@ function isTaskChallengeTypeByNameAndAbbreviation({
     return normalizedChallengeTypeName === CHALLENGE_TYPE_TASK_NAME
         || normalizedChallengeTypeAbbreviation === CHALLENGE_TYPE_TASK_NAME
         || normalizedChallengeTypeAbbreviation === CHALLENGE_TYPE_TASK_SHORT_ABBREVIATION
+}
+
+/**
+ * Builds the initial forum discussion payload for newly created challenges.
+ *
+ * This keeps the new work app aligned with the legacy work-manager flow by sending the
+ * `discussions` payload on the first create request whenever the selected challenge type is
+ * forum-enabled. The helper is used only by the draft challenge creation path.
+ *
+ * @param params.challengeName challenge name used to generate the discussion title.
+ * @param params.challengeTypeId challenge type id selected in the create form.
+ * @param params.discussionForum optional form-level forum toggle state.
+ * @param params.selectedChallengeType resolved challenge type metadata for task detection.
+ * @returns the challenge discussion payload for forum-enabled challenge types, or `undefined`
+ * when no discussion should be created.
+ * @throws Does not throw.
+ */
+function buildCreateChallengeDiscussions(params: {
+    challengeName: string
+    challengeTypeId: string
+    discussionForum?: boolean
+    selectedChallengeType?: ChallengeType
+}): Challenge['discussions'] | undefined {
+    const shouldCreateForumDiscussion = CREATE_FORUM_TYPE_IDS.includes(params.challengeTypeId)
+        && (
+            typeof params.discussionForum === 'boolean'
+                ? params.discussionForum
+                : !isTaskChallengeType(params.selectedChallengeType)
+        )
+
+    if (!shouldCreateForumDiscussion) {
+        return undefined
+    }
+
+    return [{
+        name: `${params.challengeName} Discussion`,
+        provider: 'vanilla',
+        type: 'CHALLENGE',
+    }]
 }
 
 function normalizeTextValue(value: unknown): string {
@@ -1440,7 +1480,14 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 }
 
                 const tags = mergeTagsWithDesignWorkType(formData.tags, formData.workType)
+                const discussions = buildCreateChallengeDiscussions({
+                    challengeName: formData.name,
+                    challengeTypeId: formData.typeId,
+                    discussionForum: formData.discussionForum,
+                    selectedChallengeType,
+                })
                 const createdChallenge = await createChallenge({
+                    discussions,
                     funChallenge: formData.funChallenge === true,
                     name: formData.name,
                     projectId: createProjectId,
@@ -1494,6 +1541,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             fallbackProjectId,
             getValues,
             reset,
+            selectedChallengeType,
             timelineTemplates,
             trigger,
         ],
