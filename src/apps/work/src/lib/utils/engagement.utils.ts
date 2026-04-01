@@ -12,16 +12,18 @@ const STATUS_TO_API: Record<string, string> = {
     Active: 'ACTIVE',
     Cancelled: 'CANCELLED',
     Closed: 'CLOSED',
+    'On Hold': 'ON_HOLD',
     Open: 'OPEN',
-    'Pending Assignment': 'PENDING_ASSIGNMENT',
+    'Pending Assignment': 'ON_HOLD',
 }
 
 const STATUS_FROM_API: Record<string, EngagementStatus> = {
     ACTIVE: 'Active',
     CANCELLED: 'Cancelled',
     CLOSED: 'Closed',
+    ON_HOLD: 'On Hold',
     OPEN: 'Open',
-    PENDING_ASSIGNMENT: 'Pending Assignment',
+    PENDING_ASSIGNMENT: 'On Hold',
 }
 
 const ROLE_TO_API: Record<string, string> = {
