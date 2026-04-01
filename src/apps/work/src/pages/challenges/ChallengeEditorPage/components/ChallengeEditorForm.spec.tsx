@@ -4,6 +4,7 @@ import {
     screen,
     within,
 } from '@testing-library/react'
+import '@testing-library/jest-dom'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 
@@ -222,7 +223,7 @@ jest.mock('./GroupsField', () => ({
     GroupsField: () => <></>,
 }))
 jest.mock('./MaximumSubmissionsField', () => ({
-    MaximumSubmissionsField: () => <></>,
+    MaximumSubmissionsField: () => <>Maximum Submissions Field</>,
 }))
 jest.mock('./MarathonMatchScorerSection', () => ({
     MarathonMatchScorerSection: () => <></>,
@@ -243,10 +244,10 @@ jest.mock('./RoundTypeField', () => ({
     RoundTypeField: () => <></>,
 }))
 jest.mock('./StockArtsField', () => ({
-    StockArtsField: () => <></>,
+    StockArtsField: () => <>Stock Arts Field</>,
 }))
 jest.mock('./SubmissionVisibilityField', () => ({
-    SubmissionVisibilityField: () => <></>,
+    SubmissionVisibilityField: () => <>Submission Visibility Field</>,
 }))
 jest.mock('./TermsField', () => ({
     TermsField: () => <></>,
@@ -423,5 +424,50 @@ describe('ChallengeEditorForm', () => {
             .toHaveBeenCalledWith(expect.objectContaining({
                 enabled: false,
             }))
+    })
+
+    it('renders submission settings for design first2finish challenges', () => {
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            isLoading: false,
+            tracks: [{
+                id: 'design-track',
+                name: 'Design',
+                track: 'DESIGN',
+            }],
+        })
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'F2F',
+                id: 'design-first2finish',
+                name: 'First2Finish',
+            }],
+            isLoading: false,
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...draftChallenge,
+                        trackId: 'design-track',
+                        type: {
+                            abbreviation: 'F2F',
+                            name: 'First2Finish',
+                        },
+                        typeId: 'design-first2finish',
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        const submissionSettingsSection = screen.getByRole('heading', { name: 'Submission Settings' })
+            .closest('section')
+
+        expect(submissionSettingsSection)
+            .toHaveTextContent('Submission Visibility Field')
+        expect(submissionSettingsSection)
+            .toHaveTextContent('Stock Arts Field')
+        expect(submissionSettingsSection)
+            .toHaveTextContent('Maximum Submissions Field')
     })
 })
