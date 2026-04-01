@@ -131,8 +131,6 @@ export const TabContentIterativeReview: FC<Props> = (props: Props) => {
     }, [
         challengeSubmissions,
         isFirst2FinishChallenge,
-        challengeInfo?.track?.name,
-        challengeInfo?.type?.name,
         isPostMortemPhase,
     ])
 

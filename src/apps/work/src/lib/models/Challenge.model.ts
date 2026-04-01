@@ -33,6 +33,9 @@ export interface ChallengePhase {
 
 export interface ChallengeDiscussion {
     id?: string
+    name?: string
+    options?: Array<Record<string, string>>
+    provider?: string
     type?: string
     url?: string
 }

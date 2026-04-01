@@ -90,7 +90,12 @@ function normalizeBillingMarkup(value: unknown): number | undefined {
     }
 
     if (typeof value === 'string') {
-        const parsedValue = Number(value.trim())
+        const trimmedValue = value.trim()
+        if (!trimmedValue) {
+            return undefined
+        }
+
+        const parsedValue = Number(trimmedValue)
 
         return Number.isFinite(parsedValue)
             ? parsedValue

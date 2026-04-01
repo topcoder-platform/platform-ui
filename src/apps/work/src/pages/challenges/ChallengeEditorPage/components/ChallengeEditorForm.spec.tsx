@@ -2,8 +2,10 @@
 import {
     render,
     screen,
+    waitFor,
     within,
 } from '@testing-library/react'
+import '@testing-library/jest-dom'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 
@@ -17,8 +19,16 @@ import {
     useFetchTimelineTemplates,
 } from '../../../../lib/hooks'
 import type { Challenge } from '../../../../lib/models'
+import {
+    createChallenge,
+    fetchChallenge,
+    fetchProjectBillingAccount,
+} from '../../../../lib/services'
 
-import { ChallengeEditorForm } from './ChallengeEditorForm'
+import {
+    ChallengeEditorForm,
+    getTaskLaunchValidationError,
+} from './ChallengeEditorForm'
 
 jest.mock('../../../../lib/components/form', () => ({
     FormCheckboxField: () => <></>,
@@ -37,6 +47,7 @@ jest.mock('../../../../lib/services', () => ({
     createResource: jest.fn(),
     deleteResource: jest.fn(),
     fetchChallenge: jest.fn(),
+    fetchProjectBillingAccount: jest.fn(),
     fetchResourceRoles: jest.fn(),
     fetchResources: jest.fn(),
     patchChallenge: jest.fn(),
@@ -200,10 +211,46 @@ jest.mock('./ChallengeTotalField', () => ({
     ChallengeTotalField: () => <></>,
 }))
 jest.mock('./ChallengeTrackField', () => ({
-    ChallengeTrackField: () => <></>,
+    ChallengeTrackField: function ChallengeTrackField() {
+        const reactHookForm: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
+        const controller = reactHookForm.useController({
+            control: reactHookForm.useFormContext().control,
+            name: 'trackId',
+        })
+
+        return (
+            <label htmlFor='trackId'>
+                Challenge Track
+                <input
+                    id='trackId'
+                    onBlur={controller.field.onBlur}
+                    onChange={controller.field.onChange}
+                    value={controller.field.value || ''}
+                />
+            </label>
+        )
+    },
 }))
 jest.mock('./ChallengeTypeField', () => ({
-    ChallengeTypeField: () => <></>,
+    ChallengeTypeField: function ChallengeTypeField() {
+        const reactHookForm: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
+        const controller = reactHookForm.useController({
+            control: reactHookForm.useFormContext().control,
+            name: 'typeId',
+        })
+
+        return (
+            <label htmlFor='typeId'>
+                Challenge Type
+                <input
+                    id='typeId'
+                    onBlur={controller.field.onBlur}
+                    onChange={controller.field.onChange}
+                    value={controller.field.value || ''}
+                />
+            </label>
+        )
+    },
 }))
 jest.mock('./CheckpointPrizesField', () => ({
     CheckpointPrizesField: () => <></>,
@@ -224,7 +271,7 @@ jest.mock('./GroupsField', () => ({
     GroupsField: () => <></>,
 }))
 jest.mock('./MaximumSubmissionsField', () => ({
-    MaximumSubmissionsField: () => <></>,
+    MaximumSubmissionsField: () => <>Maximum Submissions Field</>,
 }))
 jest.mock('./MarathonMatchScorerSection', () => ({
     MarathonMatchScorerSection: () => <></>,
@@ -245,10 +292,10 @@ jest.mock('./RoundTypeField', () => ({
     RoundTypeField: () => <></>,
 }))
 jest.mock('./StockArtsField', () => ({
-    StockArtsField: () => <></>,
+    StockArtsField: () => <>Stock Arts Field</>,
 }))
 jest.mock('./SubmissionVisibilityField', () => ({
-    SubmissionVisibilityField: () => <></>,
+    SubmissionVisibilityField: () => <>Submission Visibility Field</>,
 }))
 jest.mock('./TermsField', () => ({
     TermsField: () => <></>,
@@ -261,6 +308,9 @@ const mockedUseFetchProjectBillingAccount = useFetchProjectBillingAccount as jes
 const mockedUseFetchResourceRoles = useFetchResourceRoles as jest.Mock
 const mockedUseFetchResources = useFetchResources as jest.Mock
 const mockedUseFetchTimelineTemplates = useFetchTimelineTemplates as jest.Mock
+const mockedCreateChallenge = createChallenge as jest.Mock
+const mockedFetchChallenge = fetchChallenge as jest.Mock
+const mockedFetchProjectBillingAccountService = fetchProjectBillingAccount as jest.Mock
 
 describe('ChallengeEditorForm', () => {
     const draftChallenge = {
@@ -301,6 +351,9 @@ describe('ChallengeEditorForm', () => {
         }))
         mockedUseFetchTimelineTemplates.mockReturnValue({
             timelineTemplates: [],
+        })
+        mockedFetchProjectBillingAccountService.mockResolvedValue({
+            billingAccount: undefined,
         })
     })
 
@@ -430,5 +483,120 @@ describe('ChallengeEditorForm', () => {
             .toHaveBeenCalledWith(expect.objectContaining({
                 enabled: false,
             }))
+    })
+
+    it('requires an assigned member before launching a task challenge', () => {
+        expect(getTaskLaunchValidationError({
+            currentStatus: 'DRAFT',
+            isTaskChallenge: true,
+            nextStatus: 'ACTIVE',
+        }))
+            .toBe('Assign a member before launching a task challenge.')
+    })
+
+    it('allows task launches when an assignee exists', () => {
+        expect(getTaskLaunchValidationError({
+            assignedMemberId: '12345',
+            currentStatus: 'DRAFT',
+            isTaskChallenge: true,
+            nextStatus: 'ACTIVE',
+        }))
+            .toBeUndefined()
+    })
+
+    it('renders submission settings for design first2finish challenges', () => {
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            isLoading: false,
+            tracks: [{
+                id: 'design-track',
+                name: 'Design',
+                track: 'DESIGN',
+            }],
+        })
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'F2F',
+                id: 'design-first2finish',
+                name: 'First2Finish',
+            }],
+            isLoading: false,
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...draftChallenge,
+                        trackId: 'design-track',
+                        type: {
+                            abbreviation: 'F2F',
+                            name: 'First2Finish',
+                        },
+                        typeId: 'design-first2finish',
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        const submissionSettingsSection = screen.getByRole('heading', { name: 'Submission Settings' })
+            .closest('section')
+
+        expect(submissionSettingsSection)
+            .toHaveTextContent('Submission Visibility Field')
+        expect(submissionSettingsSection)
+            .toHaveTextContent('Stock Arts Field')
+        expect(submissionSettingsSection)
+            .toHaveTextContent('Maximum Submissions Field')
+    })
+
+    it('creates a forum discussion for forum-enabled challenge types', async () => {
+        const user = userEvent.setup()
+
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'CH',
+                id: '927abff4-7af9-4145-8ba1-577c16e64e2e',
+                isTask: false,
+                name: 'Challenge',
+            }],
+            isLoading: false,
+        })
+        mockedCreateChallenge.mockResolvedValue({
+            id: 'created-challenge-id',
+            name: 'Forum Enabled Challenge',
+            status: 'NEW',
+        })
+        mockedFetchChallenge.mockResolvedValue({
+            id: 'created-challenge-id',
+            name: 'Forum Enabled Challenge',
+            status: 'NEW',
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm projectId='12345' />
+            </MemoryRouter>,
+        )
+
+        await user.type(screen.getByLabelText('Challenge Name'), 'Forum Enabled Challenge')
+        await user.type(screen.getByLabelText('Challenge Track'), 'track-id')
+        await user.type(screen.getByLabelText('Challenge Type'), '927abff4-7af9-4145-8ba1-577c16e64e2e')
+        await user.click(screen.getByRole('button', { name: 'New' }))
+
+        await waitFor(() => {
+            expect(mockedCreateChallenge)
+                .toHaveBeenCalledWith(expect.objectContaining({
+                    discussions: [{
+                        name: 'Forum Enabled Challenge Discussion',
+                        provider: 'vanilla',
+                        type: 'CHALLENGE',
+                    }],
+                    name: 'Forum Enabled Challenge',
+                    projectId: '12345',
+                    status: 'NEW',
+                    trackId: 'track-id',
+                    typeId: '927abff4-7af9-4145-8ba1-577c16e64e2e',
+                }))
+        })
     })
 })

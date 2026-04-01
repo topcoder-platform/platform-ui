@@ -1136,34 +1136,6 @@ export const HumanReviewTab: FC = () => {
         ],
     )
 
-    const applyDefaultReviewers = useCallback((): void => {
-        const defaultReviewerRows: Reviewer[] = defaultReviewers
-            .filter(defaultReviewer => isMemberReviewer(defaultReviewer))
-            .map(defaultReviewer => mapDefaultReviewerToReviewer(defaultReviewer, phases))
-            .map(defaultReviewer => ({
-                ...defaultReviewer,
-                roleId: defaultReviewer.roleId || resolveRoleIdForPhase(defaultReviewer.phaseId),
-            }))
-
-        if (!defaultReviewerRows.length) {
-            return
-        }
-
-        formContext.setValue('reviewers', [
-            ...allReviewerRows,
-            ...defaultReviewerRows,
-        ], {
-            shouldDirty: true,
-            shouldValidate: true,
-        })
-    }, [
-        defaultReviewers,
-        allReviewerRows,
-        formContext,
-        phases,
-        resolveRoleIdForPhase,
-    ])
-
     const addReviewer = useCallback((): void => {
         const defaultReviewer = defaultReviewers.find(reviewer => isMemberReviewer(reviewer))
         const reviewerFromDefaults = mapDefaultReviewerToReviewer(
@@ -1295,12 +1267,6 @@ export const HumanReviewTab: FC = () => {
                     disabled={isLoading}
                     label='Add reviewer'
                     onClick={addReviewer}
-                    secondary
-                />
-                <Button
-                    disabled={!defaultReviewers.some(reviewer => isMemberReviewer(reviewer))}
-                    label='Apply default reviewers'
-                    onClick={applyDefaultReviewers}
                     secondary
                 />
             </div>
