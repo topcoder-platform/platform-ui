@@ -192,6 +192,43 @@ describe('FormBillingAccountAutocomplete', () => {
             .toBe(false)
     })
 
+    it('clears the initial loading state when project preload is abandoned', async () => {
+        let resolveProjectBillingAccounts: ((value: unknown[]) => void) | undefined
+
+        fetchProjectBillingAccountsMock.mockImplementation(
+            () => new Promise<unknown[]>(resolve => {
+                resolveProjectBillingAccounts = resolve
+            }),
+        )
+
+        const renderResult: ReturnType<typeof render> = render(
+            <TestHarness projectId='100578' />,
+        )
+
+        await waitFor(() => {
+            expect(fetchProjectBillingAccountsMock)
+                .toHaveBeenCalledWith('100578')
+            expect(latestAsyncSelectProps?.isLoading)
+                .toBe(true)
+        })
+
+        renderResult.rerender(
+            <TestHarness />,
+        )
+
+        await waitFor(() => {
+            expect(latestAsyncSelectProps?.defaultOptions)
+                .toBe(false)
+            expect(latestAsyncSelectProps?.isLoading)
+                .toBe(false)
+        })
+
+        await act(async () => {
+            resolveProjectBillingAccounts?.([])
+            await Promise.resolve()
+        })
+    })
+
     it('does not fetch the selected billing account when the field is blank', () => {
         render(
             <TestHarness projectId='100578' />,

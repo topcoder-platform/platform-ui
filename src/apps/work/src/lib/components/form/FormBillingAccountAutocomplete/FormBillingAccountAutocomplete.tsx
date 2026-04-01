@@ -262,6 +262,7 @@ export const FormBillingAccountAutocomplete: FC<FormBillingAccountAutocompletePr
     useEffect(() => {
         if (!props.projectId) {
             setProjectBillingAccountOptions([])
+            setIsLoadingInitialOptions(false)
             return undefined
         }
 
