@@ -206,6 +206,7 @@ interface SyncSingleAssignmentResourceParams extends Omit<SingleAssignmentConfig
 }
 
 const SAVE_VALIDATION_ERROR_MESSAGE = 'Please fix validation errors before saving.'
+const DESIGN_WORK_TYPE_REQUIRED_MESSAGE = 'Select a work type'
 const TASK_ASSIGNED_MEMBER_REQUIRED_FOR_LAUNCH_MESSAGE
     = 'Assign a member before launching a task challenge.'
 const CHALLENGE_TYPE_CHALLENGE_ABBREVIATION = 'CH'
@@ -466,6 +467,49 @@ function mergeTagsWithDesignWorkType(
         ...tagsWithoutWorkType,
         normalizedWorkType,
     ]
+}
+
+/**
+ * Returns the validation error for the design challenge work type on create.
+ *
+ * @param isRequired Whether the current track/type selection requires a work type.
+ * @param workType The current form value for the design work type field.
+ * @returns The validation message when the field is required but unset, otherwise `undefined`.
+ * @remarks Used only by the new challenge flow because work type is locked after creation.
+ */
+function getCreateChallengeWorkTypeValidationError({
+    isRequired,
+    workType,
+}: {
+    isRequired: boolean
+    workType: unknown
+}): string | undefined {
+    if (!isRequired) {
+        return undefined
+    }
+
+    return normalizeDesignWorkType(workType)
+        ? undefined
+        : DESIGN_WORK_TYPE_REQUIRED_MESSAGE
+}
+
+/**
+ * Resolves the project id that should be used for challenge creation.
+ *
+ * @param projectId The project id currently present in form state.
+ * @param fallbackProjectId The project id derived from page context when the form does not hold one yet.
+ * @returns The project id to send in the create request.
+ * @throws Error When neither the form nor the page context provides a project id.
+ * @remarks The create flow requires a project id before the initial challenge record can be created.
+ */
+function resolveCreateProjectId(projectId: unknown, fallbackProjectId?: string): string {
+    const createProjectId = normalizeProjectId(projectId) || fallbackProjectId
+
+    if (!createProjectId) {
+        throw new Error('Project id is required to create challenge')
+    }
+
+    return createProjectId
 }
 
 function normalizeReviewerPhaseName(value: unknown): string {
@@ -1557,6 +1601,23 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 return
             }
 
+            clearErrors('workType')
+
+            const workTypeValidationError = getCreateChallengeWorkTypeValidationError({
+                isRequired: showDesignWorkTypeField,
+                workType: getValues('workType'),
+            })
+
+            if (workTypeValidationError) {
+                setSaveStatus('idle')
+                setError('workType', {
+                    message: workTypeValidationError,
+                    type: 'manual',
+                })
+                setSaveValidationError(workTypeValidationError)
+                return
+            }
+
             setIsSaving(true)
             setSaveStatus('saving')
             setSaveError(undefined)
@@ -1566,10 +1627,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 const formData = getValues()
                 const resolvedProjectBillingAccount = await resolveProjectBillingAccount()
                 const selectedRoundType = getCreateRoundType(formData.roundType, formElementRef.current)
-                const createProjectId = normalizeProjectId(formData.projectId) || fallbackProjectId
-                if (!createProjectId) {
-                    throw new Error('Project id is required to create challenge')
-                }
+                const createProjectId = resolveCreateProjectId(formData.projectId, fallbackProjectId)
 
                 const timelineTemplateId = resolveCreateTimelineTemplateId({
                     roundType: selectedRoundType,
@@ -1645,11 +1703,14 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             }
         },
         [
+            clearErrors,
             fallbackProjectId,
             getValues,
             reset,
             resolveProjectBillingAccount,
             selectedChallengeType,
+            setError,
+            showDesignWorkTypeField,
             timelineTemplates,
             trigger,
         ],

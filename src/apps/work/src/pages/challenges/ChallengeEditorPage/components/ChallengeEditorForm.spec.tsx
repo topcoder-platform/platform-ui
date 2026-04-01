@@ -262,7 +262,25 @@ jest.mock('./CopilotFeeField', () => ({
     CopilotFeeField: () => <></>,
 }))
 jest.mock('./DesignWorkTypeField', () => ({
-    DesignWorkTypeField: () => <></>,
+    DesignWorkTypeField: function DesignWorkTypeField() {
+        const reactHookForm: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
+        const controller = reactHookForm.useController({
+            control: reactHookForm.useFormContext().control,
+            name: 'workType',
+        })
+
+        return (
+            <label htmlFor='workType'>
+                Work Type
+                <input
+                    id='workType'
+                    onBlur={controller.field.onBlur}
+                    onChange={controller.field.onChange}
+                    value={controller.field.value || ''}
+                />
+            </label>
+        )
+    },
 }))
 jest.mock('./FunChallengeField', () => ({
     FunChallengeField: () => <></>,
@@ -547,6 +565,52 @@ describe('ChallengeEditorForm', () => {
             .toHaveTextContent('Stock Arts Field')
         expect(submissionSettingsSection)
             .toHaveTextContent('Maximum Submissions Field')
+    })
+
+    it('prevents creating a design challenge without a work type', async () => {
+        const user = userEvent.setup()
+
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            isLoading: false,
+            tracks: [{
+                id: 'design-track',
+                name: 'Design',
+                track: 'DESIGN',
+            }],
+        })
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'CH',
+                id: 'design-challenge',
+                isTask: false,
+                name: 'Challenge',
+            }],
+            isLoading: false,
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm projectId='12345' />
+            </MemoryRouter>,
+        )
+
+        await user.type(screen.getByLabelText('Challenge Name'), 'Design challenge')
+        await user.type(screen.getByLabelText('Challenge Track'), 'design-track')
+        await user.type(screen.getByLabelText('Challenge Type'), 'design-challenge')
+
+        await waitFor(() => {
+            expect(screen.getByLabelText('Work Type'))
+                .toBeTruthy()
+        })
+
+        await user.click(screen.getByRole('button', { name: 'New' }))
+
+        await waitFor(() => {
+            expect(mockedCreateChallenge)
+                .not.toHaveBeenCalled()
+            expect(screen.getByText('Select a work type'))
+                .toBeTruthy()
+        })
     })
 
     it('creates a forum discussion for forum-enabled challenge types', async () => {
