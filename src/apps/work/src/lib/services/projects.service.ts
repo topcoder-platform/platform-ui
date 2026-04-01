@@ -138,10 +138,6 @@ function normalizeOptionalNumber(value: unknown): number | undefined {
     if (typeof value === 'number' && Number.isFinite(value)) {
         return value
     }
-function normalizeOptionalNumber(value: unknown): number | undefined {
-    if (typeof value === 'number' && Number.isFinite(value)) {
-        return value
-    }
 
     if (typeof value === 'string') {
         const normalizedValue = value.trim()
