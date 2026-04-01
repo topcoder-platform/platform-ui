@@ -1,5 +1,8 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
-import { FC } from 'react'
+import {
+    FC,
+    FormEvent,
+} from 'react'
 import {
     render,
     screen,
@@ -20,6 +23,7 @@ jest.mock('~/libs/ui', () => ({
     Button: (props: {
         disabled?: boolean
         label: string
+        onClick?: () => void
         secondary?: boolean
         size?: string
         type?: 'button' | 'submit'
@@ -30,6 +34,7 @@ jest.mock('~/libs/ui', () => ({
                 : 'false'}
             data-size={props.size}
             disabled={props.disabled}
+            onClick={props.onClick}
             type={props.type === 'submit'
                 ? 'submit'
                 : 'button'}
@@ -96,6 +101,34 @@ describe('FinalDeliverablesField', () => {
             .toBe(JSON.stringify([{
                 name: 'fileTypes',
                 value: JSON.stringify(['PNG']),
+            }]))
+    })
+
+    it('adds a file type on Enter without submitting the outer challenge form', async () => {
+        const user = userEvent.setup()
+        const handleSubmit = jest.fn()
+
+        function handleOuterFormSubmit(event: FormEvent<HTMLFormElement>): void {
+            event.preventDefault()
+            handleSubmit()
+        }
+
+        render(
+            <form onSubmit={handleOuterFormSubmit}>
+                <TestHarness />
+            </form>,
+        )
+
+        await user.type(screen.getByRole('textbox'), 'ZIP{enter}')
+
+        expect(screen.getByText('ZIP'))
+            .toBeTruthy()
+        expect(handleSubmit)
+            .not.toHaveBeenCalled()
+        expect(screen.getByTestId('metadata-value').textContent)
+            .toBe(JSON.stringify([{
+                name: 'fileTypes',
+                value: JSON.stringify(['ZIP']),
             }]))
     })
 

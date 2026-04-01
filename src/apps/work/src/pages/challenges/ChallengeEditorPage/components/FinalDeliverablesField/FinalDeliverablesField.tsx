@@ -1,7 +1,7 @@
 import {
     ChangeEvent,
     FC,
-    FormEvent,
+    KeyboardEvent,
     MouseEvent,
     useCallback,
     useMemo,
@@ -132,9 +132,7 @@ export const FinalDeliverablesField: FC = () => {
         setNewFileType(event.target.value)
     }, [])
 
-    const handleAddFileType = useCallback((event: FormEvent<HTMLFormElement>): void => {
-        event.preventDefault()
-
+    const handleAddFileType = useCallback((): void => {
         if (!normalizedNewFileType || isDuplicateValue) {
             return
         }
@@ -150,6 +148,16 @@ export const FinalDeliverablesField: FC = () => {
         normalizedNewFileType,
         updateFileTypes,
     ])
+
+    const handleInputKeyDown = useCallback((event: KeyboardEvent<HTMLInputElement>): void => {
+        if (event.key !== 'Enter') {
+            return
+        }
+
+        // Prevent the parent challenge editor form from submitting when this nested control handles Enter.
+        event.preventDefault()
+        handleAddFileType()
+    }, [handleAddFileType])
 
     const handleRemoveFileType = useCallback((fileTypeToRemove: string): void => {
         updateFileTypes(fileTypes.filter(fileType => fileType !== fileTypeToRemove))
@@ -195,14 +203,14 @@ export const FinalDeliverablesField: FC = () => {
                 )
                 : undefined}
 
-            <form
+            <div
                 className={styles.form}
-                onSubmit={handleAddFileType}
             >
                 <input
                     className={styles.input}
                     id='finalDeliverables'
                     onChange={handleInputChange}
+                    onKeyDown={handleInputKeyDown}
                     placeholder='Add final deliverable file type'
                     type='text'
                     value={newFileType}
@@ -210,11 +218,12 @@ export const FinalDeliverablesField: FC = () => {
                 <Button
                     disabled={!normalizedNewFileType || isDuplicateValue}
                     label='Add File Type'
+                    onClick={handleAddFileType}
                     secondary
                     size='sm'
-                    type='submit'
+                    type='button'
                 />
-            </form>
+            </div>
         </FormFieldWrapper>
     )
 }
