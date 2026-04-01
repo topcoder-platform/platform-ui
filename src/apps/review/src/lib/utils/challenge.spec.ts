@@ -4,7 +4,9 @@ import {
     buildPhaseTabs,
     collectReopenEligiblePhaseIds,
     findPhaseByTabLabel,
+    isFirst2FinishChallenge,
     type PhaseLike,
+    resolveFirst2FinishIterativeSubmissionIds,
     shouldForceWinnersTabForPastChallenge,
 } from './challenge'
 
@@ -218,6 +220,50 @@ describe('challenge phase tab helpers', () => {
             .toBe(true)
         expect(shouldForceWinnersTabForPastChallenge('COMPLETED', []))
             .toBe(false)
+    })
+
+    it('recognizes First2Finish challenges when the type name contains digits', () => {
+        expect(isFirst2FinishChallenge({
+            track: {
+                name: 'Development',
+            } as never,
+            type: {
+                name: 'First2Finish',
+            } as never,
+        }))
+            .toBe(true)
+    })
+
+    it('keeps only the first dated contest submission for F2F iterative review', () => {
+        expect(resolveFirst2FinishIterativeSubmissionIds([
+            {
+                id: 'submission-2',
+                placement: undefined as unknown as number,
+                submittedDate: '2026-04-01T04:57:36.849Z',
+            },
+            {
+                id: 'submission-1',
+                placement: undefined as unknown as number,
+                submittedDate: '2026-04-01T04:56:13.405Z',
+            },
+        ]))
+            .toEqual(['submission-1'])
+    })
+
+    it('falls back to placement when F2F submission dates are unavailable', () => {
+        expect(resolveFirst2FinishIterativeSubmissionIds([
+            {
+                id: 'submission-2',
+                placement: 2,
+                submittedDate: '',
+            },
+            {
+                id: 'submission-1',
+                placement: 1,
+                submittedDate: '',
+            },
+        ]))
+            .toEqual(['submission-1'])
     })
 })
 

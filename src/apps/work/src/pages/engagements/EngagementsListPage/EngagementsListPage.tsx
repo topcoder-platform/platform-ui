@@ -655,13 +655,11 @@ export const EngagementsListPage: FC = () => {
             <PageWrapper
                 pageTitle={pageTitle}
                 breadCrumb={[]}
+                rightHeader={createEngagementAction}
                 titleAction={titleAction}
             >
                 {billingAccountExpiredNotice}
                 {projectTabs}
-                {createEngagementAction
-                    ? <div className={styles.contextualActionRow}>{createEngagementAction}</div>
-                    : undefined}
                 <LoadingSpinner />
             </PageWrapper>
         )
@@ -672,13 +670,11 @@ export const EngagementsListPage: FC = () => {
             <PageWrapper
                 pageTitle={pageTitle}
                 breadCrumb={[]}
+                rightHeader={createEngagementAction}
                 titleAction={titleAction}
             >
                 {billingAccountExpiredNotice}
                 {projectTabs}
-                {createEngagementAction
-                    ? <div className={styles.contextualActionRow}>{createEngagementAction}</div>
-                    : undefined}
                 <ErrorMessage
                     message={engagementsResult.error.message}
                     onRetry={() => {
@@ -694,13 +690,11 @@ export const EngagementsListPage: FC = () => {
         <PageWrapper
             pageTitle={pageTitle}
             breadCrumb={[]}
+            rightHeader={createEngagementAction}
             titleAction={titleAction}
         >
             {billingAccountExpiredNotice}
             {projectTabs}
-            {createEngagementAction
-                ? <div className={styles.contextualActionRow}>{createEngagementAction}</div>
-                : undefined}
             <div className={styles.container}>
                 <EngagementsFilter
                     filters={filters}

@@ -51,13 +51,13 @@ export function findDefaultStandardTermId(terms: Term[]): string | undefined {
     ))?.id
 }
 
-export const TermsField: FC = () => {
+interface TermsFieldProps {
+    shouldDefaultStandardTerm?: boolean
+}
+
+export const TermsField: FC<TermsFieldProps> = (props: TermsFieldProps) => {
     const formContext = useFormContext<ChallengeEditorFormData>()
     const dynamicFormControl = formContext.control as any
-    const challengeId = useWatch({
-        control: dynamicFormControl,
-        name: 'id',
-    }) as string | undefined
     const selectedTerms = useWatch({
         control: dynamicFormControl,
         name: 'terms',
@@ -102,7 +102,11 @@ export const TermsField: FC = () => {
     )
 
     useEffect(() => {
-        if (challengeId || !defaultStandardTermId || normalizedSelectedTerms.includes(defaultStandardTermId)) {
+        if (
+            props.shouldDefaultStandardTerm === false
+            || !defaultStandardTermId
+            || normalizedSelectedTerms.includes(defaultStandardTermId)
+        ) {
             return
         }
 
@@ -118,10 +122,10 @@ export const TermsField: FC = () => {
             },
         )
     }, [
-        challengeId,
         defaultStandardTermId,
         formContext,
         normalizedSelectedTerms,
+        props.shouldDefaultStandardTerm,
     ])
 
     return (

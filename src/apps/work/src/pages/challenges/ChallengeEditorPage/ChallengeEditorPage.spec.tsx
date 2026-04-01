@@ -6,6 +6,7 @@ import type {
     ReactNode,
 } from 'react'
 import {
+    fireEvent,
     render,
     screen,
     waitFor,
@@ -13,7 +14,15 @@ import {
 } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 
-import { useFetchChallenge } from '../../../lib/hooks'
+import {
+    useFetchChallenge,
+    useFetchResourceRoles,
+    useFetchResources,
+} from '../../../lib/hooks'
+import {
+    getAssignedTaskMember,
+    shouldShowCompleteTaskAction,
+} from './ChallengeEditorPage.utils'
 
 import { ChallengeEditorPage } from './ChallengeEditorPage'
 
@@ -50,8 +59,20 @@ jest.mock('~/libs/ui', () => ({
         disabled?: boolean
         label: string
         onClick?: () => void
+        primary?: boolean
+        secondary?: boolean
+        size?: string
+        variant?: string
     }) => (
         <button
+            data-primary={props.primary
+                ? 'true'
+                : 'false'}
+            data-secondary={props.secondary
+                ? 'true'
+                : 'false'}
+            data-size={props.size}
+            data-variant={props.variant}
             disabled={props.disabled}
             onClick={props.onClick}
             type='button'
@@ -174,6 +195,10 @@ jest.mock('./ChallengeEditorPage.utils', () => ({
 }))
 
 const mockedUseFetchChallenge = useFetchChallenge as jest.Mock
+const mockedUseFetchResourceRoles = useFetchResourceRoles as jest.Mock
+const mockedUseFetchResources = useFetchResources as jest.Mock
+const mockedGetAssignedTaskMember = getAssignedTaskMember as jest.Mock
+const mockedShouldShowCompleteTaskAction = shouldShowCompleteTaskAction as jest.Mock
 
 function renderPage(route: string, path: string): void {
     const MockWorkAppContext = mockWorkAppContext
@@ -215,6 +240,13 @@ describe('ChallengeEditorPage', () => {
             error: undefined,
             isLoading: false,
             mutate: jest.fn(),
+        })
+        mockedUseFetchResourceRoles.mockReturnValue({
+            resourceRoles: [],
+        })
+        mockedUseFetchResources.mockReturnValue({
+            isLoading: false,
+            resources: [],
         })
     })
 
@@ -276,6 +308,90 @@ describe('ChallengeEditorPage', () => {
         expect(screen.queryByRole('button', { name: 'Launch' }))
             .toBeNull()
         expect(screen.getByRole('button', { name: 'Edit' }))
+            .toBeTruthy()
+    })
+
+    it('renders active header actions with the shared large secondary styling', async () => {
+        mockedUseFetchChallenge.mockReturnValue({
+            challenge: {
+                discussions: [{
+                    url: 'https://example.com/forum/challenges/456',
+                }],
+                id: '456',
+                name: 'Active task test',
+                prizeSets: [],
+                status: 'ACTIVE',
+            },
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+        })
+        mockedShouldShowCompleteTaskAction.mockReturnValue(true)
+        mockedGetAssignedTaskMember.mockReturnValue({
+            handle: 'taskmember',
+            userId: 12345,
+        })
+
+        renderPage(
+            '/projects/123/challenges/456/edit',
+            '/projects/:projectId/challenges/:challengeId/edit',
+        )
+
+        await waitFor(() => {
+            expect(screen.getByRole('button', { name: 'Cancel' }))
+                .toBeTruthy()
+        })
+
+        expect(
+            screen.getByRole('button', { name: 'Cancel' })
+                .getAttribute('data-secondary'),
+        )
+            .toBe('true')
+        expect(
+            screen.getByRole('button', { name: 'Cancel' })
+                .getAttribute('data-size'),
+        )
+            .toBe('lg')
+        expect(
+            screen.getByRole('button', { name: 'Mark Complete' })
+                .getAttribute('data-secondary'),
+        )
+            .toBe('true')
+        expect(
+            screen.getByRole('button', { name: 'Mark Complete' })
+                .getAttribute('data-size'),
+        )
+            .toBe('lg')
+    })
+
+    it('shows details, resources, and submissions tabs in read-only view mode', async () => {
+        renderPage(
+            '/projects/123/challenges/456/view',
+            '/projects/:projectId/challenges/:challengeId/view',
+        )
+
+        await waitFor(() => {
+            expect(screen.getByText('Challenge View Form'))
+                .toBeTruthy()
+        })
+
+        expect(screen.getByRole('button', { name: 'Details' }))
+            .toBeTruthy()
+        expect(screen.getByRole('button', { name: 'Resources' }))
+            .toBeTruthy()
+        expect(screen.getByRole('button', { name: 'Submissions' }))
+            .toBeTruthy()
+
+        fireEvent.click(screen.getByRole('button', { name: 'Resources' }))
+        expect(screen.getByText('Resources Section'))
+            .toBeTruthy()
+
+        fireEvent.click(screen.getByRole('button', { name: 'Submissions' }))
+        expect(screen.getByText('Submissions Section'))
+            .toBeTruthy()
+
+        fireEvent.click(screen.getByRole('button', { name: 'Details' }))
+        expect(screen.getByText('Challenge View Form'))
             .toBeTruthy()
     })
 })

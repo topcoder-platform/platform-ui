@@ -10,23 +10,29 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 
 import { WorkAppContextModel } from '../../../lib/models/WorkAppContextModel.model'
 import {
-    useFetchEngagements,
     useFetchProject,
+    useFetchProjectMembers,
 } from '../../../lib/hooks'
-import { canCreateEngagement } from '../../../lib/utils'
+import { checkCanManageProject } from '../../../lib/utils'
 
-import { EngagementsListPage } from './EngagementsListPage'
+import { UsersManagementPage } from './UsersManagementPage'
 
 var mockWorkAppContext: Context<WorkAppContextModel>
 
 jest.mock('~/apps/review/src/lib', () => ({
     PageWrapper: (
-        props: PropsWithChildren<{ pageTitle?: string; rightHeader?: ReactNode; titleAction?: ReactNode }>,
+        props: PropsWithChildren<{
+            backUrl?: string
+            pageTitle?: string
+            rightHeader?: ReactNode
+            titleAction?: ReactNode
+        }>,
     ) => (
         <div>
+            {props.backUrl ? <div data-testid='page-back-link'>{props.backUrl}</div> : undefined}
             <div data-testid='page-right-header'>{props.rightHeader}</div>
             <h1>{props.pageTitle}</h1>
-            {props.titleAction}
+            <div data-testid='page-title-action'>{props.titleAction}</div>
             <div data-testid='page-content'>{props.children}</div>
         </div>
     ),
@@ -50,28 +56,18 @@ jest.mock('~/libs/ui', () => ({
         </button>
     ),
     IconOutline: {
-        DocumentTextIcon: () => <span>document-icon</span>,
         PencilIcon: () => <span>pencil-icon</span>,
-        UserIcon: () => <span>user-icon</span>,
     },
 }), {
     virtual: true,
 })
-jest.mock('../../../lib/constants', () => ({
-    ENGAGEMENTS_APP_URL: 'https://engagements.example.com',
-    PAGE_SIZE: 10,
-    PROJECT_STATUS: {
-        ACTIVE: 'active',
-    },
-}))
 jest.mock('../../../lib/components', () => ({
-    EngagementsFilter: () => <div>Engagements Filter</div>,
-    ErrorMessage: (props: { message: string }) => <div>{props.message}</div>,
+    AddUserModal: () => <div>Add User Modal</div>,
+    InviteUserModal: () => <div>Invite User Modal</div>,
     LoadingSpinner: () => <div>Loading</div>,
-    Pagination: () => <div>Pagination</div>,
-    ProjectBillingAccountExpiredNotice: () => <div>Billing Notice</div>,
     ProjectListTabs: () => <div>Project Tabs</div>,
     ProjectStatus: (props: { status: string }) => <div>{`Project Status: ${props.status}`}</div>,
+    UserCard: () => <div>User Card</div>,
 }))
 jest.mock('../../../lib/contexts', () => {
     const React = require('react') as typeof import('react')
@@ -91,20 +87,23 @@ jest.mock('../../../lib/contexts', () => {
     }
 })
 jest.mock('../../../lib/hooks', () => ({
-    useFetchEngagements: jest.fn(),
     useFetchProject: jest.fn(),
+    useFetchProjectMembers: jest.fn(),
+}))
+jest.mock('../../../lib/services', () => ({
+    deleteProjectMemberInvite: jest.fn(),
+    removeMemberFromProject: jest.fn(),
 }))
 jest.mock('../../../lib/utils', () => ({
-    canCreateEngagement: jest.fn(() => false),
-    checkCanManageProject: jest.fn(() => false),
-    formatEngagementStatus: jest.fn((status?: string) => status || ''),
-    getApplicationsCount: jest.fn(() => 0),
-    getAssignedMembersCount: jest.fn(() => 0),
+    checkCanManageProject: jest.fn(() => true),
+    checkIsCopilotOrManager: jest.fn(() => false),
+    showErrorToast: jest.fn(),
+    showSuccessToast: jest.fn(),
 }))
 
-const mockedUseFetchEngagements = useFetchEngagements as jest.Mock
 const mockedUseFetchProject = useFetchProject as jest.Mock
-const mockedCanCreateEngagement = canCreateEngagement as jest.Mock
+const mockedUseFetchProjectMembers = useFetchProjectMembers as jest.Mock
+const mockedCheckCanManageProject = checkCanManageProject as jest.Mock
 
 const defaultContextValue: WorkAppContextModel = {
     isAdmin: true,
@@ -125,7 +124,6 @@ const defaultContextValue: WorkAppContextModel = {
 
 function renderPage(
     route: string,
-    path: string,
     contextValue: WorkAppContextModel = defaultContextValue,
 ): void {
     const MockWorkAppContext = mockWorkAppContext
@@ -134,53 +132,58 @@ function renderPage(
         <MockWorkAppContext.Provider value={contextValue}>
             <MemoryRouter initialEntries={[route]}>
                 <Routes>
-                    <Route path={path} element={<EngagementsListPage />} />
+                    <Route path='/projects/:projectId/users' element={<UsersManagementPage />} />
                 </Routes>
             </MemoryRouter>
         </MockWorkAppContext.Provider>,
     )
 }
 
-describe('EngagementsListPage', () => {
+describe('UsersManagementPage', () => {
     beforeEach(() => {
         jest.clearAllMocks()
+        mockedCheckCanManageProject.mockReturnValue(true)
 
-        mockedUseFetchEngagements.mockReturnValue({
-            engagements: [],
+        mockedUseFetchProject.mockReturnValue({
             error: undefined,
             isLoading: false,
             mutate: jest.fn(),
-        })
-        mockedUseFetchProject.mockReturnValue({
-            error: undefined,
-            isLoading: false,
             project: undefined,
+        })
+        mockedUseFetchProjectMembers.mockReturnValue({
+            declinedInvites: [],
+            error: undefined,
+            invites: [],
+            isLoading: false,
+            members: [],
+            mutate: jest.fn(),
         })
     })
 
-    it('keeps the project name unchanged for project-scoped engagement tabs', () => {
+    it('keeps the project name unchanged for the project users tab', () => {
         mockedUseFetchProject.mockReturnValue({
             error: undefined,
             isLoading: false,
+            mutate: jest.fn(),
             project: {
                 id: 200,
                 name: 'Payment Testing',
-                status: 'active',
             },
         })
 
-        renderPage('/projects/200/engagements', '/projects/:projectId/engagements')
+        renderPage('/projects/200/users')
 
         expect(screen.getByRole('heading', { level: 1, name: 'Payment Testing' }))
             .toBeTruthy()
-        expect(screen.queryByText('Payment Testing Engagements'))
+        expect(screen.queryByText('Payment Testing users'))
             .toBeNull()
     })
 
-    it('renders the project status badge in the project-scoped header actions', () => {
+    it('renders member actions in the shared page header and project edit in the title action', () => {
         mockedUseFetchProject.mockReturnValue({
             error: undefined,
             isLoading: false,
+            mutate: jest.fn(),
             project: {
                 id: 200,
                 name: 'Payment Testing',
@@ -188,42 +191,24 @@ describe('EngagementsListPage', () => {
             },
         })
 
-        renderPage('/projects/200/engagements', '/projects/:projectId/engagements')
-
-        expect(screen.getByText('Project Status: active'))
-            .toBeTruthy()
-    })
-
-    it('renders create engagement in the page header and removes create challenge from the page', () => {
-        mockedCanCreateEngagement.mockReturnValue(true)
-        mockedUseFetchProject.mockReturnValue({
-            error: undefined,
-            isLoading: false,
-            project: {
-                id: 200,
-                name: 'Payment Testing',
-                status: 'active',
-            },
-        })
-
-        renderPage('/projects/200/engagements', '/projects/:projectId/engagements')
+        renderPage('/projects/200/users')
 
         const pageRightHeader = screen.getByTestId('page-right-header')
-        const pageContent = screen.getByTestId('page-content')
-        const createEngagementButton = within(pageRightHeader)
-            .getByRole('button', { name: 'Create Engagement' })
+        const pageTitleAction = screen.getByTestId('page-title-action')
 
         expect(within(pageRightHeader)
-            .queryByRole('button', { name: 'Create Challenge' }))
+            .getByRole('button', { name: 'Add User' }))
+            .toBeTruthy()
+        expect(within(pageRightHeader)
+            .getByRole('button', { name: 'Invite User' }))
+            .toBeTruthy()
+        expect(within(pageTitleAction)
+            .getByRole('link', { name: 'Edit project' }))
+            .toBeTruthy()
+        expect(within(pageTitleAction)
+            .getByText('Project Status: active'))
+            .toBeTruthy()
+        expect(screen.queryByTestId('page-back-link'))
             .toBeNull()
-        expect(screen.queryByRole('button', { name: 'Create Challenge' }))
-            .toBeNull()
-        expect(within(pageContent)
-            .queryByRole('button', { name: 'Create Engagement' }))
-            .toBeNull()
-        expect(createEngagementButton.getAttribute('data-primary'))
-            .toBe('true')
-        expect(createEngagementButton.getAttribute('data-secondary'))
-            .toBe('false')
     })
 })

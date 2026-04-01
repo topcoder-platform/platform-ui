@@ -170,7 +170,12 @@ describe('ChallengeScheduleSection component', () => {
             <TestHarness startDate='2026-03-28T13:15:00.000Z' />,
         )
 
-        expect(screen.getByText('Start Date'))
+        const startModeGroup = screen.getByRole('radiogroup', {
+            name: 'Challenge start mode',
+        })
+        const startDateLabel = screen.getByText('Start Date')
+
+        expect(startDateLabel)
             .toBeInTheDocument()
         expect(screen.getByText(/Timezone:/))
             .toBeInTheDocument()
@@ -179,6 +184,12 @@ describe('ChallengeScheduleSection component', () => {
         expect(screen.getByRole('radio', { name: 'Immediately' }))
             .not
             .toBeChecked()
+        expect(startDateLabel.compareDocumentPosition(startModeGroup))
+            .toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+        expect(
+            startModeGroup.compareDocumentPosition(screen.getByTestId('start-date-input')),
+        )
+            .toBe(Node.DOCUMENT_POSITION_FOLLOWING)
         expect(screen.getByTestId('start-date-input'))
             .not
             .toBeDisabled()

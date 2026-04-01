@@ -51,6 +51,7 @@ const TermsWatcher: FC = () => {
 
 interface TestFormProps {
     defaultValues?: Partial<ChallengeEditorFormData>
+    shouldDefaultStandardTerm?: boolean
 }
 
 const TestForm: FC<TestFormProps> = (props: TestFormProps) => {
@@ -63,7 +64,7 @@ const TestForm: FC<TestFormProps> = (props: TestFormProps) => {
 
     return (
         <FormProvider {...formMethods}>
-            <TermsField />
+            <TermsField shouldDefaultStandardTerm={props.shouldDefaultStandardTerm} />
             <TermsWatcher />
         </FormProvider>
     )
@@ -103,7 +104,9 @@ describe('TermsField', () => {
     })
 
     it('defaults the standard term for new challenges', async () => {
-        render(<TestForm />)
+        render(
+            <TestForm shouldDefaultStandardTerm />,
+        )
 
         await waitFor(() => {
             expect(screen.getByTestId('terms-value').textContent)
@@ -117,6 +120,7 @@ describe('TermsField', () => {
                 defaultValues={{
                     terms: [DEFAULT_NDA_UUID],
                 }}
+                shouldDefaultStandardTerm
             />,
         )
 
@@ -129,12 +133,26 @@ describe('TermsField', () => {
         })
     })
 
-    it('does not add the standard term when editing an existing challenge', async () => {
+    it('defaults the standard term on the create route even after the draft receives an id', async () => {
         render(
             <TestForm
                 defaultValues={{
                     id: 'challenge-1',
                 }}
+                shouldDefaultStandardTerm
+            />,
+        )
+
+        await waitFor(() => {
+            expect(screen.getByTestId('terms-value').textContent)
+                .toBe(JSON.stringify([STANDARD_TERM_ID]))
+        })
+    })
+
+    it('does not add the standard term when editing an existing challenge', async () => {
+        render(
+            <TestForm
+                shouldDefaultStandardTerm={false}
             />,
         )
 

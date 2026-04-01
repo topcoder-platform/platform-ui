@@ -4,7 +4,10 @@ import {
     SubmissionInfo,
 } from '../../models'
 
-import { filterIterativeReviewRows } from './iterativeReviewFiltering'
+import {
+    filterIterativeReviewRows,
+    limitFirst2FinishIterativeRows,
+} from './iterativeReviewFiltering'
 
 const createPhase = (
     id: string,
@@ -140,5 +143,86 @@ describe('filterIterativeReviewRows', () => {
             .toHaveLength(1)
         expect(results[0].id)
             .toBe(`submission-${iterativeReviewer.id}`)
+    })
+
+    it('falls back to the earliest row when F2F limiter ids do not match rendered row ids', () => {
+        const iterativeReviewer = createResource('iterative-resource-1', 'Iterative Reviewer')
+        const losingReviewer = createResource('iterative-resource-2', 'Iterative Reviewer')
+        const laterRow = createSubmission(iterativeReviewer.id)
+        const earlierRow = createSubmission(losingReviewer.id)
+        const results = filterIterativeReviewRows({
+            challengePhases,
+            isPostMortemPhase: false,
+            limitToSubmissionIds: ['actual-submission-id'],
+            reviewerResources: [iterativeReviewer, losingReviewer],
+            sourceRows: [
+                {
+                    ...laterRow,
+                    id: 'synthetic-row-2',
+                    review: {
+                        ...laterRow.review!,
+                        createdAt: '2026-04-01T04:57:38.244Z',
+                        submissionId: 'later-submission-id',
+                        updatedAt: '',
+                    },
+                    submittedDate: '2026-04-01T04:57:36.849Z',
+                },
+                {
+                    ...earlierRow,
+                    id: 'synthetic-row-1',
+                    review: {
+                        ...earlierRow.review!,
+                        createdAt: '2026-04-01T04:56:15.294Z',
+                        submissionId: 'earlier-submission-id',
+                        updatedAt: '',
+                    },
+                    submittedDate: '2026-04-01T04:56:13.405Z',
+                },
+            ],
+        })
+
+        expect(results)
+            .toHaveLength(1)
+        expect(results[0].id)
+            .toBe('synthetic-row-1')
+    })
+})
+
+describe('limitFirst2FinishIterativeRows', () => {
+    it('keeps the earliest row when no preferred submission ids are available', () => {
+        const laterRow = createSubmission('iterative-resource-1')
+        const earlierRow = createSubmission('iterative-resource-2')
+
+        const results = limitFirst2FinishIterativeRows([
+            {
+                ...laterRow,
+                id: 'submission-later',
+                review: {
+                    ...laterRow.review!,
+                    createdAt: '2026-04-01T04:57:38.244Z',
+                    submissionId: 'submission-later',
+                    updatedAt: '',
+                },
+                submittedDate: '2026-04-01T04:57:36.849Z',
+            },
+            {
+                ...earlierRow,
+                id: 'submission-earlier',
+                review: {
+                    ...earlierRow.review!,
+                    createdAt: '2026-04-01T04:56:15.294Z',
+                    submissionId: 'submission-earlier',
+                    updatedAt: '',
+                },
+                submittedDate: '2026-04-01T04:56:13.405Z',
+            },
+        ], undefined, {
+            forceSingleRow: true,
+        })
+
+        expect(results)
+            .toHaveLength(1)
+        expect(results[0].id)
+            .toBe('submission-earlier')
     })
 })
