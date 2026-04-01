@@ -203,6 +203,8 @@ interface SyncSingleAssignmentResourceParams extends Omit<SingleAssignmentConfig
 const SAVE_VALIDATION_ERROR_MESSAGE = 'Please fix validation errors before saving.'
 const CHALLENGE_TYPE_CHALLENGE_ABBREVIATION = 'CH'
 const CHALLENGE_TYPE_CHALLENGE_NAME = 'CHALLENGE'
+const CHALLENGE_TYPE_FIRST_2_FINISH_ABBREVIATION = 'F2F'
+const CHALLENGE_TYPE_FIRST_2_FINISH_NAME = 'FIRST2FINISH'
 const CHALLENGE_TYPE_MARATHON_MATCH_NAME = 'MARATHONMATCH'
 const CHALLENGE_TYPE_MARATHON_MATCH_SHORT_ABBREVIATION = 'MM'
 const CHALLENGE_TYPE_TASK_NAME = 'TASK'
@@ -930,7 +932,27 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     )
     const showRoundTypeField = isDesignTrackSelected && isChallengeTypeSelected
     const showDesignWorkTypeField = isDesignTrackSelected && isChallengeTypeSelected
-    const showSubmissionSettingsSection = isDesignTrackSelected && isChallengeTypeSelected
+    const showSubmissionSettingsSection = useMemo(
+        (): boolean => {
+            if (!isDesignTrackSelected) {
+                return false
+            }
+
+            const normalizedChallengeTypeName = normalizeChallengeTypeToken(resolvedChallengeTypeName)
+            const normalizedChallengeTypeAbbreviation
+                = normalizeChallengeTypeToken(resolvedChallengeTypeAbbreviation)
+
+            return normalizedChallengeTypeName === CHALLENGE_TYPE_CHALLENGE_NAME
+                || normalizedChallengeTypeAbbreviation === CHALLENGE_TYPE_CHALLENGE_ABBREVIATION
+                || normalizedChallengeTypeName === CHALLENGE_TYPE_FIRST_2_FINISH_NAME
+                || normalizedChallengeTypeAbbreviation === CHALLENGE_TYPE_FIRST_2_FINISH_ABBREVIATION
+        },
+        [
+            isDesignTrackSelected,
+            resolvedChallengeTypeAbbreviation,
+            resolvedChallengeTypeName,
+        ],
+    )
     const showCheckpointPrizes = useMemo(
         () => hasCheckpointPhases(values.phases),
         [values.phases],
