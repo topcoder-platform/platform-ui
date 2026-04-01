@@ -116,6 +116,9 @@ import {
     DesignWorkTypeField,
 } from './DesignWorkTypeField'
 import {
+    FinalDeliverablesField,
+} from './FinalDeliverablesField'
+import {
     FunChallengeField,
 } from './FunChallengeField'
 import {
@@ -203,6 +206,17 @@ interface SingleAssignmentConfig {
 interface SyncSingleAssignmentResourceParams extends Omit<SingleAssignmentConfig, 'fieldName'> {
     challengeId: string
     nextValue?: string
+}
+
+interface PersistCreatedChallengeCopilotParams {
+    challengeId: string
+    formData: ChallengeEditorFormData
+    syncSingleAssignmentResource: (params: SyncSingleAssignmentResourceParams) => Promise<void>
+}
+
+interface PersistCreatedChallengeCopilotResult {
+    resetSourceFormData: ChallengeEditorFormData
+    warningMessage?: string
 }
 
 const SAVE_VALIDATION_ERROR_MESSAGE = 'Please fix validation errors before saving.'
@@ -410,6 +424,70 @@ function applySingleAssignmentFieldValues(
     return nextFormData
 }
 
+/**
+ * Persists the basic-information copilot selection right after the initial draft is created.
+ *
+ * The first create request only sends the minimal challenge payload, so the selected copilot must
+ * be synchronized separately through the `Copilot` resource assignment before the form resets from
+ * fetched challenge data.
+ *
+ * @param params.challengeId newly created challenge id.
+ * @param params.formData create-form values that may already contain a selected copilot.
+ * @param params.syncSingleAssignmentResource helper that writes the resource assignment.
+ * @returns A promise that resolves when the copilot resource has been synchronized, or immediately
+ * when no copilot is selected.
+ */
+async function persistCreatedChallengeCopilot(
+    params: PersistCreatedChallengeCopilotParams,
+): Promise<void> {
+    const selectedCopilot = getSingleAssignmentFieldValue(
+        params.formData,
+        COPILOT_ASSIGNMENT_CONFIG.fieldName,
+    )
+
+    if (!selectedCopilot) {
+        return
+    }
+
+    await params.syncSingleAssignmentResource({
+        challengeId: params.challengeId,
+        nextValue: selectedCopilot,
+        roleNames: COPILOT_ASSIGNMENT_CONFIG.roleNames,
+        valueField: COPILOT_ASSIGNMENT_CONFIG.valueField,
+    })
+}
+
+/**
+ * Computes which create-form values should be restored after the draft challenge is created.
+ *
+ * The copilot assignment is persisted as a follow-up resource write after the draft exists. When
+ * that write fails, the draft should still open in edit mode but the optimistic copilot value
+ * should be cleared so the form does not imply that the assignment was saved.
+ *
+ * @param params challenge id and create-form values for the newly created draft.
+ * @returns the reset source form data plus an optional warning for a failed copilot sync.
+ */
+async function resolveCreatedChallengeResetSourceFormData(
+    params: PersistCreatedChallengeCopilotParams,
+): Promise<PersistCreatedChallengeCopilotResult> {
+    try {
+        await persistCreatedChallengeCopilot(params)
+
+        return {
+            resetSourceFormData: params.formData,
+        }
+    } catch {
+        return {
+            resetSourceFormData: {
+                ...params.formData,
+                copilot: undefined,
+            },
+            warningMessage:
+                'Challenge created, but the selected copilot could not be saved. Please add it again.',
+        }
+    }
+}
+
 function buildSingleAssignmentPayload(
     challengeId: string,
     roleId: string,
@@ -491,25 +569,6 @@ function getCreateChallengeWorkTypeValidationError({
     return normalizeDesignWorkType(workType)
         ? undefined
         : DESIGN_WORK_TYPE_REQUIRED_MESSAGE
-}
-
-/**
- * Resolves the project id that should be used for challenge creation.
- *
- * @param projectId The project id currently present in form state.
- * @param fallbackProjectId The project id derived from page context when the form does not hold one yet.
- * @returns The project id to send in the create request.
- * @throws Error When neither the form nor the page context provides a project id.
- * @remarks The create flow requires a project id before the initial challenge record can be created.
- */
-function resolveCreateProjectId(projectId: unknown, fallbackProjectId?: string): string {
-    const createProjectId = normalizeProjectId(projectId) || fallbackProjectId
-
-    if (!createProjectId) {
-        throw new Error('Project id is required to create challenge')
-    }
-
-    return createProjectId
 }
 
 function normalizeReviewerPhaseName(value: unknown): string {
@@ -738,6 +797,31 @@ function normalizeProjectId(value: unknown): string | undefined {
     }
 
     return undefined
+}
+
+/**
+ * Resolves the project id used for the initial create request.
+ *
+ * The create form may carry the project id either in the form state or in the page-level fallback
+ * prop. A project id is mandatory for draft creation, so this helper normalizes the available
+ * value and throws when neither source is present.
+ *
+ * @param value project id captured in the form state.
+ * @param fallbackProjectId project id provided by the page route.
+ * @returns the normalized project id for the create request.
+ * @throws Error when no project id is available.
+ */
+function resolveRequiredCreateProjectId(
+    value: unknown,
+    fallbackProjectId?: string,
+): string {
+    const createProjectId = normalizeProjectId(value) || fallbackProjectId
+
+    if (!createProjectId) {
+        throw new Error('Project id is required to create challenge')
+    }
+
+    return createProjectId
 }
 
 function getCreateRoundType(
@@ -1629,7 +1713,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 const formData = getValues()
                 const resolvedProjectBillingAccount = await resolveProjectBillingAccount()
                 const selectedRoundType = getCreateRoundType(formData.roundType, formElementRef.current)
-                const createProjectId = resolveCreateProjectId(formData.projectId, fallbackProjectId)
+                const createProjectId = resolveRequiredCreateProjectId(formData.projectId, fallbackProjectId)
 
                 const timelineTemplateId = resolveCreateTimelineTemplateId({
                     roundType: selectedRoundType,
@@ -1665,9 +1749,22 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 })
                 const savedChallenge = await fetchChallenge(createdChallenge.id)
                     .catch(() => createdChallenge)
-                const nextValues = applyProjectBillingToChallengeFormData(
-                    transformChallengeToFormData(savedChallenge),
-                    resolvedProjectBillingAccount,
+                const createdCopilotResetResult: PersistCreatedChallengeCopilotResult
+                    = await resolveCreatedChallengeResetSourceFormData({
+                        challengeId: savedChallenge.id,
+                        formData,
+                        syncSingleAssignmentResource,
+                    })
+                const resetSourceFormData = createdCopilotResetResult.resetSourceFormData
+                const createdCopilotWarningMessage = createdCopilotResetResult.warningMessage
+
+                const nextValues = applySingleAssignmentFieldValues(
+                    applyProjectBillingToChallengeFormData(
+                        transformChallengeToFormData(savedChallenge),
+                        resolvedProjectBillingAccount,
+                    ),
+                    resetSourceFormData,
+                    isTaskSingleAssignmentChallenge(formData),
                 )
                 const normalizedWorkType = normalizeDesignWorkType(formData.workType)
 
@@ -1692,6 +1789,10 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
 
                 reset(nextValues)
                 showSuccessToast('Challenge created successfully')
+
+                if (createdCopilotWarningMessage) {
+                    showErrorToast(createdCopilotWarningMessage)
+                }
             } catch (error) {
                 const errorMessage = error instanceof Error
                     ? error.message
@@ -1708,11 +1809,13 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             clearErrors,
             fallbackProjectId,
             getValues,
+            isTaskSingleAssignmentChallenge,
             reset,
             resolveProjectBillingAccount,
             selectedChallengeType,
             setError,
             showDesignWorkTypeField,
+            syncSingleAssignmentResource,
             timelineTemplates,
             trigger,
         ],
@@ -1971,6 +2074,24 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         () => getSubmitButtonLabel(normalizedChallengeStatus),
         [normalizedChallengeStatus],
     )
+    const displayedBillingAccountId = useMemo(
+        (): string => {
+            const billingAccountId = values.billing?.billingAccountId ?? projectBillingAccount?.id
+
+            if (billingAccountId === undefined || billingAccountId === null) {
+                return '-'
+            }
+
+            const normalizedBillingAccountId = String(billingAccountId)
+                .trim()
+
+            return normalizedBillingAccountId || '-'
+        },
+        [
+            projectBillingAccount?.id,
+            values.billing?.billingAccountId,
+        ],
+    )
 
     return (
         <FormProvider {...formMethods}>
@@ -2131,6 +2252,12 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                             label='Wipro Allowed'
                                             name='wiproAllowed'
                                         />
+                                        <div className={styles.readOnlyField}>
+                                            <span className={styles.readOnlyFieldLabel}>Billing Account Id</span>
+                                            <span className={styles.readOnlyFieldValue}>
+                                                {displayedBillingAccountId}
+                                            </span>
+                                        </div>
                                     </div>
                                 </section>
 
@@ -2139,8 +2266,9 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                         <section className={styles.section}>
                                             <h3 className={styles.sectionTitle}>Submission Settings</h3>
                                             <div className={styles.grid}>
-                                                <SubmissionVisibilityField />
+                                                <FinalDeliverablesField />
                                                 <StockArtsField />
+                                                <SubmissionVisibilityField />
                                                 <MaximumSubmissionsField />
                                             </div>
                                         </section>

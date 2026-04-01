@@ -18,12 +18,22 @@ import {
     useFetchResources,
     useFetchTimelineTemplates,
 } from '../../../../lib/hooks'
-import type { Challenge } from '../../../../lib/models'
+import type {
+    Challenge,
+    ChallengeEditorFormData,
+} from '../../../../lib/models'
 import {
+    createResource,
     createChallenge,
     fetchChallenge,
     fetchProjectBillingAccount,
+    fetchResourceRoles,
+    fetchResources,
 } from '../../../../lib/services'
+import {
+    showErrorToast,
+    showSuccessToast,
+} from '../../../../lib/utils'
 
 import {
     ChallengeEditorForm,
@@ -256,7 +266,46 @@ jest.mock('./CheckpointPrizesField', () => ({
     CheckpointPrizesField: () => <></>,
 }))
 jest.mock('./CopilotField', () => ({
-    CopilotField: () => <>Copilot Field</>,
+    CopilotField: function CopilotField() {
+        const reactHookForm: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
+        const {
+            control,
+            setValue,
+        }: Pick<
+            import('react-hook-form').UseFormReturn<ChallengeEditorFormData>,
+            'control' | 'setValue'
+        > = reactHookForm.useFormContext<ChallengeEditorFormData>()
+        const controller = reactHookForm.useController({
+            control,
+            name: 'copilot',
+        })
+        function handleAssignYourself(): void {
+            setValue('copilot', 'self-copilot', {
+                shouldDirty: true,
+                shouldValidate: true,
+            })
+        }
+
+        return (
+            <div>
+                <label htmlFor='copilot'>
+                    Copilot Field
+                    <input
+                        id='copilot'
+                        onBlur={controller.field.onBlur}
+                        onChange={controller.field.onChange}
+                        value={controller.field.value || ''}
+                    />
+                </label>
+                <button
+                    onClick={handleAssignYourself}
+                    type='button'
+                >
+                    Assign yourself
+                </button>
+            </div>
+        )
+    },
 }))
 jest.mock('./CopilotFeeField', () => ({
     CopilotFeeField: () => <></>,
@@ -281,6 +330,9 @@ jest.mock('./DesignWorkTypeField', () => ({
             </label>
         )
     },
+}))
+jest.mock('./FinalDeliverablesField', () => ({
+    FinalDeliverablesField: () => <>Final Deliverables Field</>,
 }))
 jest.mock('./FunChallengeField', () => ({
     FunChallengeField: () => <></>,
@@ -326,9 +378,14 @@ const mockedUseFetchProjectBillingAccount = useFetchProjectBillingAccount as jes
 const mockedUseFetchResourceRoles = useFetchResourceRoles as jest.Mock
 const mockedUseFetchResources = useFetchResources as jest.Mock
 const mockedUseFetchTimelineTemplates = useFetchTimelineTemplates as jest.Mock
+const mockedCreateResource = createResource as jest.Mock
 const mockedCreateChallenge = createChallenge as jest.Mock
 const mockedFetchChallenge = fetchChallenge as jest.Mock
 const mockedFetchProjectBillingAccountService = fetchProjectBillingAccount as jest.Mock
+const mockedFetchResourceRolesService = fetchResourceRoles as jest.Mock
+const mockedFetchResourcesService = fetchResources as jest.Mock
+const mockedShowErrorToast = showErrorToast as jest.Mock
+const mockedShowSuccessToast = showSuccessToast as jest.Mock
 
 describe('ChallengeEditorForm', () => {
     const draftChallenge = {
@@ -373,6 +430,9 @@ describe('ChallengeEditorForm', () => {
         mockedFetchProjectBillingAccountService.mockResolvedValue({
             billingAccount: undefined,
         })
+        mockedFetchResourceRolesService.mockResolvedValue([])
+        mockedFetchResourcesService.mockResolvedValue([])
+        mockedCreateResource.mockResolvedValue(undefined)
     })
 
     afterEach(() => {
@@ -435,6 +495,29 @@ describe('ChallengeEditorForm', () => {
                 .queryByText('Copilot Field'),
         )
             .toBeNull()
+    })
+
+    it('renders the billing account id inside advanced options when project billing is available', () => {
+        mockedUseFetchProjectBillingAccount.mockReturnValue({
+            billingAccount: {
+                id: '80001063',
+            },
+            isLoading: false,
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm challenge={draftChallenge} />
+            </MemoryRouter>,
+        )
+
+        const advancedOptionsSection = screen.getByRole('heading', { name: 'Advanced Options' })
+            .closest('section')
+
+        expect(advancedOptionsSection)
+            .toHaveTextContent('Billing Account Id')
+        expect(advancedOptionsSection)
+            .toHaveTextContent('80001063')
     })
 
     it('renders secondary footer actions and a primary launch action for draft challenges', () => {
@@ -559,6 +642,8 @@ describe('ChallengeEditorForm', () => {
         const submissionSettingsSection = screen.getByRole('heading', { name: 'Submission Settings' })
             .closest('section')
 
+        expect(submissionSettingsSection)
+            .toHaveTextContent('Final Deliverables Field')
         expect(submissionSettingsSection)
             .toHaveTextContent('Submission Visibility Field')
         expect(submissionSettingsSection)
@@ -712,5 +797,107 @@ describe('ChallengeEditorForm', () => {
                     typeId: '927abff4-7af9-4145-8ba1-577c16e64e2e',
                 }))
         })
+    })
+
+    it('persists an assigned-yourself copilot during initial draft creation', async () => {
+        const user = userEvent.setup()
+
+        mockedCreateChallenge.mockResolvedValue({
+            id: 'created-challenge-id',
+            name: 'Copilot Draft Challenge',
+            status: 'NEW',
+        })
+        mockedFetchChallenge.mockResolvedValue({
+            id: 'created-challenge-id',
+            name: 'Copilot Draft Challenge',
+            status: 'NEW',
+        })
+        mockedFetchResourceRolesService.mockResolvedValue([{
+            id: 'copilot-role-id',
+            name: 'Copilot',
+        }])
+        mockedFetchResourcesService.mockResolvedValue([])
+        mockedCreateResource.mockResolvedValue({
+            challengeId: 'created-challenge-id',
+            memberHandle: 'self-copilot',
+            roleId: 'copilot-role-id',
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm projectId='12345' />
+            </MemoryRouter>,
+        )
+
+        await user.type(screen.getByLabelText('Challenge Name'), 'Copilot Draft Challenge')
+        await user.type(screen.getByLabelText('Challenge Track'), 'track-id')
+        await user.type(screen.getByLabelText('Challenge Type'), 'type-id')
+        await user.click(screen.getByRole('button', { name: 'Assign yourself' }))
+
+        expect(screen.getByLabelText('Copilot Field'))
+            .toHaveValue('self-copilot')
+
+        await user.click(screen.getByRole('button', { name: 'New' }))
+
+        await waitFor(() => {
+            expect(mockedCreateResource)
+                .toHaveBeenCalledWith({
+                    challengeId: 'created-challenge-id',
+                    memberHandle: 'self-copilot',
+                    roleId: 'copilot-role-id',
+                })
+        })
+        await waitFor(() => {
+            expect(screen.getByLabelText('Copilot Field'))
+                .toHaveValue('self-copilot')
+        })
+    })
+
+    it('keeps the created draft when the initial copilot sync fails', async () => {
+        const user = userEvent.setup()
+
+        mockedCreateChallenge.mockResolvedValue({
+            id: 'created-challenge-id',
+            name: 'Copilot Draft Challenge',
+            status: 'NEW',
+        })
+        mockedFetchChallenge.mockResolvedValue({
+            id: 'created-challenge-id',
+            name: 'Copilot Draft Challenge',
+            status: 'NEW',
+        })
+        mockedFetchResourceRolesService.mockResolvedValue([{
+            id: 'copilot-role-id',
+            name: 'Copilot',
+        }])
+        mockedFetchResourcesService.mockResolvedValue([])
+        mockedCreateResource.mockRejectedValue(new Error('resource sync failed'))
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm projectId='12345' />
+            </MemoryRouter>,
+        )
+
+        await user.type(screen.getByLabelText('Challenge Name'), 'Copilot Draft Challenge')
+        await user.type(screen.getByLabelText('Challenge Track'), 'track-id')
+        await user.type(screen.getByLabelText('Challenge Type'), 'type-id')
+        await user.click(screen.getByRole('button', { name: 'Assign yourself' }))
+        await user.click(screen.getByRole('button', { name: 'New' }))
+
+        await waitFor(() => {
+            expect(screen.getByRole('button', { name: 'Save as Draft' }))
+                .toBeInTheDocument()
+        })
+        expect(screen.queryByRole('button', { name: 'New' }))
+            .toBeNull()
+        expect(screen.getByLabelText('Copilot Field'))
+            .toHaveValue('')
+        expect(mockedShowSuccessToast)
+            .toHaveBeenCalledWith('Challenge created successfully')
+        expect(mockedShowErrorToast)
+            .toHaveBeenCalledWith(
+                'Challenge created, but the selected copilot could not be saved. Please add it again.',
+            )
     })
 })

@@ -36,6 +36,7 @@ interface InputDatePickerProps {
     readonly timeCaption?: string
     readonly timeFormat?: string
     readonly isClearable?: boolean
+    readonly preventOpenOnFocus?: boolean
     readonly tabIndex?: number
     readonly classNameWrapper?: string
 }
@@ -203,6 +204,7 @@ const InputDatePicker: FC<InputDatePickerProps> = (props: InputDatePickerProps) 
                     props.onBlur?.()
                 }}
                 isClearable={props.isClearable}
+                preventOpenOnFocus={props.preventOpenOnFocus}
             />
         </InputWrapper>
     )
