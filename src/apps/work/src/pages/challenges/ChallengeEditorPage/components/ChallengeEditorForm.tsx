@@ -1602,6 +1602,8 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             }
 
             clearErrors('workType')
+            setSaveError(undefined)
+            setSaveValidationError(undefined)
 
             const workTypeValidationError = getCreateChallengeWorkTypeValidationError({
                 isRequired: showDesignWorkTypeField,

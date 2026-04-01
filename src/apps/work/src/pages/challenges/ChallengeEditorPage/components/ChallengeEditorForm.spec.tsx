@@ -613,6 +613,56 @@ describe('ChallengeEditorForm', () => {
         })
     })
 
+    it('clears a stale create error when work type validation blocks a retry', async () => {
+        const user = userEvent.setup()
+
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            isLoading: false,
+            tracks: [{
+                id: 'design-track',
+                name: 'Design',
+                track: 'DESIGN',
+            }],
+        })
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'CH',
+                id: 'design-challenge',
+                isTask: false,
+                name: 'Challenge',
+            }],
+            isLoading: false,
+        })
+        mockedCreateChallenge.mockRejectedValueOnce(new Error('Original create failure'))
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm projectId='12345' />
+            </MemoryRouter>,
+        )
+
+        await user.type(screen.getByLabelText('Challenge Name'), 'Design challenge')
+        await user.type(screen.getByLabelText('Challenge Track'), 'design-track')
+        await user.type(screen.getByLabelText('Challenge Type'), 'design-challenge')
+        await user.type(screen.getByLabelText('Work Type'), 'Web Design')
+        await user.click(screen.getByRole('button', { name: 'New' }))
+
+        await waitFor(() => {
+            expect(screen.getByText('Original create failure'))
+                .toBeTruthy()
+        })
+
+        await user.clear(screen.getByLabelText('Work Type'))
+        await user.click(screen.getByRole('button', { name: 'New' }))
+
+        await waitFor(() => {
+            expect(screen.getByText('Select a work type'))
+                .toBeTruthy()
+            expect(screen.queryByText('Original create failure'))
+                .toBeNull()
+        })
+    })
+
     it('creates a forum discussion for forum-enabled challenge types', async () => {
         const user = userEvent.setup()
 
