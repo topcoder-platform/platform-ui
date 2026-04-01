@@ -36,6 +36,10 @@ import {
     WorkAppContextModel,
 } from '../../../lib/models'
 import {
+    deleteEngagement,
+} from '../../../lib/services'
+import {
+    ConfirmationModal,
     EngagementsFilter,
     EngagementsListFilters,
     ErrorMessage,
@@ -48,9 +52,12 @@ import {
 import {
     canCreateEngagement,
     checkCanManageProject,
+    extractErrorMessage,
     formatEngagementStatus,
     getApplicationsCount,
     getAssignedMembersCount,
+    showErrorToast,
+    showSuccessToast,
 } from '../../../lib/utils'
 
 import styles from './EngagementsListPage.module.scss'
@@ -186,7 +193,8 @@ function getExternalEngagementViewUrl(engagement: Engagement): string {
 }
 
 function getStatusPillClass(status: string): string {
-    const normalizedStatus = status.trim()
+    const normalizedStatus = String(status || '')
+        .trim()
         .toLowerCase()
 
     if (normalizedStatus === 'active') {
@@ -284,6 +292,8 @@ function getEngagementProjectName(
 function renderEngagementRows(
     engagements: Engagement[],
     canManage: boolean,
+    canDelete: boolean,
+    onDeleteOpen: (engagement: Engagement) => void,
     assignmentsBackUrl: string,
     projectNameLookup: Record<string, string>,
     fallbackProjectId?: string,
@@ -351,6 +361,21 @@ function renderEngagementRows(
                                 </Link>
                             )
                             : undefined}
+                        {canDelete && engagement.id
+                            ? (
+                                <button
+                                    className={classNames(
+                                        styles.actionLink,
+                                        styles.actionButton,
+                                        styles.actionDelete,
+                                    )}
+                                    onClick={() => onDeleteOpen(engagement)}
+                                    type='button'
+                                >
+                                    Delete
+                                </button>
+                            )
+                            : undefined}
                     </div>
                 </td>
             </tr>
@@ -366,7 +391,8 @@ export const EngagementsListPage: FC = () => {
     const workAppContext = useContext(WorkAppContext)
     const contextValue = workAppContext as WorkAppContextModel
 
-    const canManage = contextValue.isAdmin || contextValue.isManager
+    const canDelete = contextValue.isAdmin
+    const canManage = canDelete || contextValue.isManager
     const canCreateProjectEngagement = canCreateEngagement(contextValue.userRoles)
 
     const [filters, setFilters] = useState<EngagementsListFilters>(() => ({
@@ -383,6 +409,8 @@ export const EngagementsListPage: FC = () => {
     }))
     const [page, setPage] = useState<number>(1)
     const [perPage, setPerPage] = useState<number>(PAGE_SIZE)
+    const [engagementToDelete, setEngagementToDelete] = useState<Engagement | undefined>(undefined)
+    const [isDeletingEngagement, setIsDeletingEngagement] = useState<boolean>(false)
 
     const requestFilters = useMemo<EngagementFilters>(() => ({
         includePrivate: canManage,
@@ -543,6 +571,45 @@ export const EngagementsListPage: FC = () => {
             setPage(1)
         }
     }, [isAllEngagementsPage])
+
+    const handleDeleteCancel = useCallback((): void => {
+        if (isDeletingEngagement) {
+            return
+        }
+
+        setEngagementToDelete(undefined)
+    }, [isDeletingEngagement])
+
+    const handleDeleteConfirm = useCallback(async (): Promise<void> => {
+        if (!engagementToDelete?.id || isDeletingEngagement) {
+            return
+        }
+
+        setIsDeletingEngagement(true)
+
+        try {
+            await deleteEngagement(engagementToDelete.id)
+            setEngagementToDelete(undefined)
+            showSuccessToast('Engagement deleted successfully.')
+
+            await engagementsResult.mutate()
+                .catch(() => undefined)
+        } catch (error) {
+            const errorMessage = extractErrorMessage(
+                error,
+                'Unable to delete engagement. Please try again.',
+            )
+            const normalizedErrorMessage = errorMessage.toLowerCase()
+
+            showErrorToast(
+                normalizedErrorMessage.includes('member') && normalizedErrorMessage.includes('assign')
+                    ? 'This engagement has members assigned. Please cancel the engagement instead of deleting it.'
+                    : errorMessage,
+            )
+        } finally {
+            setIsDeletingEngagement(false)
+        }
+    }, [engagementToDelete, engagementsResult, isDeletingEngagement])
 
     const paginatedEngagements = useMemo(() => {
         if (!isAllEngagementsPage) {
@@ -735,6 +802,8 @@ export const EngagementsListPage: FC = () => {
                                 ? renderEngagementRows(
                                     paginatedEngagements,
                                     canManage,
+                                    canDelete,
+                                    setEngagementToDelete,
                                     assignmentsBackUrl,
                                     projectNameLookup,
                                     projectId,
@@ -764,6 +833,30 @@ export const EngagementsListPage: FC = () => {
                         }}
                     />
                 )}
+
+                {engagementToDelete
+                    ? (
+                        <ConfirmationModal
+                            confirmButtonDanger
+                            confirmDisabled={isDeletingEngagement}
+                            confirmText={
+                                isDeletingEngagement
+                                    ? 'Deleting...'
+                                    : 'Delete'
+                            }
+                            message={
+                                `Are you sure you want to delete "${engagementToDelete.title || 'this engagement'}"? `
+                                + 'This action cannot be undone.'
+                            }
+                            onCancel={handleDeleteCancel}
+                            onConfirm={() => {
+                                handleDeleteConfirm()
+                                    .catch(() => undefined)
+                            }}
+                            title='Confirm Delete'
+                        />
+                    )
+                    : undefined}
             </div>
         </PageWrapper>
     )
