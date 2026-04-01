@@ -1,6 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
 import { FC } from 'react'
 import {
+    act,
     render,
     waitFor,
 } from '@testing-library/react'
@@ -118,6 +119,65 @@ describe('FormBillingAccountAutocomplete', () => {
                     }),
                 ]))
         })
+    })
+
+    it('keeps project default options isolated from later search results', async () => {
+        fetchProjectBillingAccountsMock.mockResolvedValue([
+            {
+                active: true,
+                endDate: '2028-10-31T00:00:00.000Z',
+                id: '80001012',
+                name: 'Platform Dev - One',
+                startDate: '2023-10-31T00:00:00.000Z',
+            },
+        ])
+        searchBillingAccountsMock.mockResolvedValue([
+            {
+                active: true,
+                endDate: '2029-01-01T00:00:00.000Z',
+                id: '90000001',
+                name: 'Acme Search Result',
+                startDate: '2024-01-01T00:00:00.000Z',
+            },
+        ])
+
+        render(
+            <TestHarness projectId='100578' />,
+        )
+
+        await waitFor(() => {
+            expect(fetchProjectBillingAccountsMock)
+                .toHaveBeenCalledWith('100578')
+        })
+
+        const loadOptions = latestAsyncSelectProps?.loadOptions as ((value: string) => Promise<unknown>)
+
+        await act(async () => {
+            await loadOptions('Acme')
+        })
+
+        await waitFor(() => {
+            expect(searchBillingAccountsMock)
+                .toHaveBeenCalledWith({
+                    name: 'Acme',
+                    page: 1,
+                    perPage: 20,
+                })
+        })
+
+        expect(latestAsyncSelectProps?.defaultOptions)
+            .toEqual([
+                expect.objectContaining({
+                    label: expect.stringContaining('Platform Dev - One'),
+                    value: '80001012',
+                }),
+            ])
+        expect(latestAsyncSelectProps?.defaultOptions)
+            .toEqual(expect.not.arrayContaining([
+                expect.objectContaining({
+                    value: '90000001',
+                }),
+            ]))
     })
 
     it('keeps search-only behavior when no project is provided', () => {

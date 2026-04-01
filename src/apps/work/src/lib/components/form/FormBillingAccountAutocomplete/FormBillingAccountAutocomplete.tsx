@@ -201,6 +201,7 @@ export const FormBillingAccountAutocomplete: FC<FormBillingAccountAutocompletePr
 
     const [optionCache, setOptionCache] = useState<BillingAccountOption[]>([])
     const [isLoadingInitialOptions, setIsLoadingInitialOptions] = useState<boolean>(false)
+    const [projectBillingAccountOptions, setProjectBillingAccountOptions] = useState<BillingAccountOption[]>([])
     const [searchErrorMessage, setSearchErrorMessage] = useState<string | undefined>(undefined)
 
     const menuPortalTarget = useMemo(
@@ -260,12 +261,14 @@ export const FormBillingAccountAutocomplete: FC<FormBillingAccountAutocompletePr
 
     useEffect(() => {
         if (!props.projectId) {
+            setProjectBillingAccountOptions([])
             return undefined
         }
 
         let isMounted = true
 
         setIsLoadingInitialOptions(true)
+        setProjectBillingAccountOptions([])
         setSearchErrorMessage(undefined)
 
         fetchProjectBillingAccounts(props.projectId)
@@ -276,6 +279,7 @@ export const FormBillingAccountAutocomplete: FC<FormBillingAccountAutocompletePr
 
                 const options = billingAccounts.map(account => toOption(account))
 
+                setProjectBillingAccountOptions(options)
                 setOptionCache(previousOptions => mergeOptions(previousOptions, options))
             })
             .catch(error => {
@@ -382,7 +386,7 @@ export const FormBillingAccountAutocomplete: FC<FormBillingAccountAutocompletePr
                 className={styles.select}
                 classNamePrefix='challenge-select'
                 defaultOptions={props.projectId
-                    ? optionCache
+                    ? projectBillingAccountOptions
                     : false}
                 id={props.name}
                 isClearable
