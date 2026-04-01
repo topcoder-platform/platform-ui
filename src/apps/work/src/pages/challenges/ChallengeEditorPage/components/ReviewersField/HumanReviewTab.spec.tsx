@@ -6,6 +6,7 @@ import {
 } from '@testing-library/react'
 import {
     FormProvider,
+    UseControllerReturn,
     useForm,
 } from 'react-hook-form'
 
@@ -50,11 +51,23 @@ jest.mock('../../../../../lib/components/form', () => ({
     FormUserAutocomplete: (props: {
         label: string
         name: string
-    }) => (
-        <div data-testid={props.name}>
-            <span>{props.label}</span>
-        </div>
-    ),
+    }) => {
+        const {
+            useController,
+            useFormContext,
+        }: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
+        const formContext = useFormContext()
+        const controller: UseControllerReturn = useController({
+            control: formContext.control,
+            name: props.name,
+        })
+
+        return (
+            <div data-testid={props.name} data-value={controller.field.value || ''}>
+                <span>{props.label}</span>
+            </div>
+        )
+    },
 }))
 jest.mock('../../../../../lib/hooks', () => ({
     useFetchChallengeTracks: jest.fn(),
@@ -104,36 +117,57 @@ function createPendingPromise(): Promise<never> {
     })
 }
 
-const TestHarness = (): JSX.Element => {
+interface TestHarnessProps {
+    defaultValues?: ChallengeEditorFormData
+    showMemberValue?: boolean
+}
+
+function buildDefaultValues(): ChallengeEditorFormData {
+    return {
+        description: 'Reviewer assignment regression test description.',
+        id: 'challenge-1',
+        name: 'Reviewer assignment regression test',
+        phases: [
+            {
+                id: 'phase-1',
+                name: 'Iterative Review',
+                phaseId: 'phase-1',
+            },
+        ],
+        prizeSets: [],
+        reviewers: [
+            {
+                additionalMemberIds: [],
+                isMemberReview: true,
+                memberId: 'member-1',
+                memberReviewerCount: 1,
+                phaseId: 'phase-1',
+                roleId: 'role-1',
+                scorecardId: 'scorecard-1',
+            },
+        ],
+        skills: [],
+        tags: [],
+        trackId: 'track-1',
+        typeId: 'type-1',
+    }
+}
+
+const TestHarness = (props: TestHarnessProps): JSX.Element => {
     const formMethods = useForm<ChallengeEditorFormData>({
-        defaultValues: {
-            phases: [
-                {
-                    id: 'phase-1',
-                    name: 'Iterative Review',
-                    phaseId: 'phase-1',
-                },
-            ],
-            prizeSets: [],
-            reviewers: [
-                {
-                    additionalMemberIds: [],
-                    isMemberReview: true,
-                    memberId: 'member-1',
-                    memberReviewerCount: 1,
-                    phaseId: 'phase-1',
-                    roleId: 'role-1',
-                    scorecardId: 'scorecard-1',
-                },
-            ],
-            trackId: 'track-1',
-            typeId: 'type-1',
-        },
+        defaultValues: props.defaultValues || buildDefaultValues(),
     })
 
     return (
         <FormProvider {...formMethods}>
             <HumanReviewTab />
+            {props.showMemberValue
+                ? (
+                    <div data-testid='member-id-value'>
+                        {formMethods.watch('reviewers.0.memberId') || ''}
+                    </div>
+                )
+                : undefined}
         </FormProvider>
     )
 }
@@ -199,5 +233,50 @@ describe('HumanReviewTab', () => {
             .not.toBeNull()
         expect(screen.queryByRole('button', { name: 'Apply default reviewers' }))
             .toBeNull()
+    })
+
+    it('restores iterative reviewer member ids from the iterative review role alias', async () => {
+        mockedUseFetchResourceRoles.mockReturnValue({
+            resourceRoles: [
+                {
+                    id: 'role-iterative-review',
+                    name: 'Iterative Review',
+                },
+            ],
+        })
+        mockedUseFetchResources.mockReturnValue({
+            isLoading: false,
+            mutate: jest.fn()
+                .mockResolvedValue(undefined),
+            resources: [
+                {
+                    memberId: 'member-2',
+                    roleId: 'role-iterative-review',
+                },
+            ],
+        })
+
+        render(
+            <TestHarness
+                defaultValues={{
+                    ...buildDefaultValues(),
+                    reviewers: [
+                        {
+                            additionalMemberIds: [],
+                            isMemberReview: true,
+                            memberReviewerCount: 1,
+                            phaseId: 'phase-1',
+                            scorecardId: 'scorecard-1',
+                        },
+                    ],
+                }}
+                showMemberValue
+            />,
+        )
+
+        await waitFor(() => {
+            expect(screen.getByTestId('member-id-value').textContent)
+                .toBe('member-2')
+        })
     })
 })
