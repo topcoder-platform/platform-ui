@@ -211,6 +211,11 @@ interface PersistCreatedChallengeCopilotParams {
     syncSingleAssignmentResource: (params: SyncSingleAssignmentResourceParams) => Promise<void>
 }
 
+interface PersistCreatedChallengeCopilotResult {
+    resetSourceFormData: ChallengeEditorFormData
+    warningMessage?: string
+}
+
 const SAVE_VALIDATION_ERROR_MESSAGE = 'Please fix validation errors before saving.'
 const TASK_ASSIGNED_MEMBER_REQUIRED_FOR_LAUNCH_MESSAGE
     = 'Assign a member before launching a task challenge.'
@@ -446,6 +451,37 @@ async function persistCreatedChallengeCopilot(
         roleNames: COPILOT_ASSIGNMENT_CONFIG.roleNames,
         valueField: COPILOT_ASSIGNMENT_CONFIG.valueField,
     })
+}
+
+/**
+ * Computes which create-form values should be restored after the draft challenge is created.
+ *
+ * The copilot assignment is persisted as a follow-up resource write after the draft exists. When
+ * that write fails, the draft should still open in edit mode but the optimistic copilot value
+ * should be cleared so the form does not imply that the assignment was saved.
+ *
+ * @param params challenge id and create-form values for the newly created draft.
+ * @returns the reset source form data plus an optional warning for a failed copilot sync.
+ */
+async function resolveCreatedChallengeResetSourceFormData(
+    params: PersistCreatedChallengeCopilotParams,
+): Promise<PersistCreatedChallengeCopilotResult> {
+    try {
+        await persistCreatedChallengeCopilot(params)
+
+        return {
+            resetSourceFormData: params.formData,
+        }
+    } catch {
+        return {
+            resetSourceFormData: {
+                ...params.formData,
+                copilot: undefined,
+            },
+            warningMessage:
+                'Challenge created, but the selected copilot could not be saved. Please add it again.',
+        }
+    }
 }
 
 function buildSingleAssignmentPayload(
@@ -733,6 +769,31 @@ function normalizeProjectId(value: unknown): string | undefined {
     }
 
     return undefined
+}
+
+/**
+ * Resolves the project id used for the initial create request.
+ *
+ * The create form may carry the project id either in the form state or in the page-level fallback
+ * prop. A project id is mandatory for draft creation, so this helper normalizes the available
+ * value and throws when neither source is present.
+ *
+ * @param value project id captured in the form state.
+ * @param fallbackProjectId project id provided by the page route.
+ * @returns the normalized project id for the create request.
+ * @throws Error when no project id is available.
+ */
+function resolveRequiredCreateProjectId(
+    value: unknown,
+    fallbackProjectId?: string,
+): string {
+    const createProjectId = normalizeProjectId(value) || fallbackProjectId
+
+    if (!createProjectId) {
+        throw new Error('Project id is required to create challenge')
+    }
+
+    return createProjectId
 }
 
 function getCreateRoundType(
@@ -1605,10 +1666,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 const formData = getValues()
                 const resolvedProjectBillingAccount = await resolveProjectBillingAccount()
                 const selectedRoundType = getCreateRoundType(formData.roundType, formElementRef.current)
-                const createProjectId = normalizeProjectId(formData.projectId) || fallbackProjectId
-                if (!createProjectId) {
-                    throw new Error('Project id is required to create challenge')
-                }
+                const createProjectId = resolveRequiredCreateProjectId(formData.projectId, fallbackProjectId)
 
                 const timelineTemplateId = resolveCreateTimelineTemplateId({
                     roundType: selectedRoundType,
@@ -1644,18 +1702,21 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 })
                 const savedChallenge = await fetchChallenge(createdChallenge.id)
                     .catch(() => createdChallenge)
-                await persistCreatedChallengeCopilot({
-                    challengeId: savedChallenge.id,
-                    formData,
-                    syncSingleAssignmentResource,
-                })
+                const createdCopilotResetResult: PersistCreatedChallengeCopilotResult
+                    = await resolveCreatedChallengeResetSourceFormData({
+                        challengeId: savedChallenge.id,
+                        formData,
+                        syncSingleAssignmentResource,
+                    })
+                const resetSourceFormData = createdCopilotResetResult.resetSourceFormData
+                const createdCopilotWarningMessage = createdCopilotResetResult.warningMessage
 
                 const nextValues = applySingleAssignmentFieldValues(
                     applyProjectBillingToChallengeFormData(
                         transformChallengeToFormData(savedChallenge),
                         resolvedProjectBillingAccount,
                     ),
-                    formData,
+                    resetSourceFormData,
                     isTaskSingleAssignmentChallenge(formData),
                 )
                 const normalizedWorkType = normalizeDesignWorkType(formData.workType)
@@ -1681,6 +1742,10 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
 
                 reset(nextValues)
                 showSuccessToast('Challenge created successfully')
+
+                if (createdCopilotWarningMessage) {
+                    showErrorToast(createdCopilotWarningMessage)
+                }
             } catch (error) {
                 const errorMessage = error instanceof Error
                     ? error.message

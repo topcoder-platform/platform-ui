@@ -30,6 +30,10 @@ import {
     fetchResourceRoles,
     fetchResources,
 } from '../../../../lib/services'
+import {
+    showErrorToast,
+    showSuccessToast,
+} from '../../../../lib/utils'
 
 import {
     ChallengeEditorForm,
@@ -359,6 +363,8 @@ const mockedFetchChallenge = fetchChallenge as jest.Mock
 const mockedFetchProjectBillingAccountService = fetchProjectBillingAccount as jest.Mock
 const mockedFetchResourceRolesService = fetchResourceRoles as jest.Mock
 const mockedFetchResourcesService = fetchResources as jest.Mock
+const mockedShowErrorToast = showErrorToast as jest.Mock
+const mockedShowSuccessToast = showSuccessToast as jest.Mock
 
 describe('ChallengeEditorForm', () => {
     const draftChallenge = {
@@ -703,5 +709,53 @@ describe('ChallengeEditorForm', () => {
             expect(screen.getByLabelText('Copilot Field'))
                 .toHaveValue('self-copilot')
         })
+    })
+
+    it('keeps the created draft when the initial copilot sync fails', async () => {
+        const user = userEvent.setup()
+
+        mockedCreateChallenge.mockResolvedValue({
+            id: 'created-challenge-id',
+            name: 'Copilot Draft Challenge',
+            status: 'NEW',
+        })
+        mockedFetchChallenge.mockResolvedValue({
+            id: 'created-challenge-id',
+            name: 'Copilot Draft Challenge',
+            status: 'NEW',
+        })
+        mockedFetchResourceRolesService.mockResolvedValue([{
+            id: 'copilot-role-id',
+            name: 'Copilot',
+        }])
+        mockedFetchResourcesService.mockResolvedValue([])
+        mockedCreateResource.mockRejectedValue(new Error('resource sync failed'))
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm projectId='12345' />
+            </MemoryRouter>,
+        )
+
+        await user.type(screen.getByLabelText('Challenge Name'), 'Copilot Draft Challenge')
+        await user.type(screen.getByLabelText('Challenge Track'), 'track-id')
+        await user.type(screen.getByLabelText('Challenge Type'), 'type-id')
+        await user.click(screen.getByRole('button', { name: 'Assign yourself' }))
+        await user.click(screen.getByRole('button', { name: 'New' }))
+
+        await waitFor(() => {
+            expect(screen.getByRole('button', { name: 'Save as Draft' }))
+                .toBeInTheDocument()
+        })
+        expect(screen.queryByRole('button', { name: 'New' }))
+            .toBeNull()
+        expect(screen.getByLabelText('Copilot Field'))
+            .toHaveValue('')
+        expect(mockedShowSuccessToast)
+            .toHaveBeenCalledWith('Challenge created successfully')
+        expect(mockedShowErrorToast)
+            .toHaveBeenCalledWith(
+                'Challenge created, but the selected copilot could not be saved. Please add it again.',
+            )
     })
 })
