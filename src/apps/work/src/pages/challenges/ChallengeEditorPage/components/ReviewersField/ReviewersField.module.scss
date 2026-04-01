@@ -102,6 +102,7 @@
 
 .primaryFields {
     display: grid;
+    gap: 16px;
     grid-template-columns: minmax(220px, 260px) minmax(280px, 1fr);
 }
 

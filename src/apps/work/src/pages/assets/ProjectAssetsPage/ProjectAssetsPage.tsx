@@ -403,7 +403,7 @@ export const ProjectAssetsPage: FC = () => {
         : linkAttachments
 
     const pageTitle = projectResult.project?.name
-        ? `${projectResult.project.name} Assets`
+        ? projectResult.project.name
         : 'Project Assets'
 
     const handleCloseUploadOptionsModal = useCallback(() => {

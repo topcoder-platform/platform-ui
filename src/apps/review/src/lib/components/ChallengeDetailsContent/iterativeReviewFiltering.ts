@@ -22,6 +22,10 @@ interface IterativePlaceholderRowArgs {
     submission: SubmissionInfo
 }
 
+interface LimitFirst2FinishIterativeRowsOptions {
+    forceSingleRow?: boolean
+}
+
 /**
  * Normalize a phase or resource identifier for set-based comparisons.
  *
@@ -35,6 +39,20 @@ function normalizeIdentifier(value: unknown): string | undefined {
 
     const normalized = `${value}`.trim()
     return normalized.length ? normalized : undefined
+}
+
+/**
+ * Parse sortable date inputs from submission and review payloads.
+ *
+ * @param value - Raw date-like value supplied by the UI model.
+ * @returns Parsed timestamp, or NaN when no valid date is available.
+ */
+function parseSortableDate(value: string | Date | undefined): number {
+    if (value instanceof Date) {
+        return value.getTime()
+    }
+
+    return Date.parse(value ?? '')
 }
 
 /**
@@ -137,24 +155,25 @@ function isIterativePlaceholderRow(args: IterativePlaceholderRowArgs): boolean {
 }
 
 /**
- * Restrict iterative-review rows to a known submission id set when a completed F2F
- * challenge should only surface the winning submission.
+ * Restrict First2Finish iterative rows to the single submission that should stay
+ * visible on the tab.
  *
  * @param rows - Candidate rows for the iterative-review tab.
- * @param limitToSubmissionIds - Optional submission ids supplied by the caller.
- * @returns Submission-limited rows when matches exist; otherwise the original rows.
+ * @param preferredSubmissionIds - Optional submission ids supplied by the caller.
+ * @returns A single surviving iterative-review row whenever a First2Finish limit applies.
  */
-function filterRowsBySubmissionIds(
+export function limitFirst2FinishIterativeRows(
     rows: SubmissionInfo[],
-    limitToSubmissionIds?: string[],
+    preferredSubmissionIds?: string[],
+    options?: LimitFirst2FinishIterativeRowsOptions,
 ): SubmissionInfo[] {
     const submissionIds = new Set(
-        (limitToSubmissionIds ?? [])
+        (preferredSubmissionIds ?? [])
             .map(submissionId => normalizeIdentifier(submissionId))
             .filter((submissionId): submissionId is string => Boolean(submissionId)),
     )
 
-    if (!submissionIds.size) {
+    if (!submissionIds.size && !options?.forceSingleRow) {
         return rows
     }
 
@@ -166,7 +185,48 @@ function filterRowsBySubmissionIds(
             || (reviewSubmissionId ? submissionIds.has(reviewSubmissionId) : false)
     })
 
-    return matchingRows.length ? matchingRows : rows
+    if (matchingRows.length) {
+        return matchingRows
+    }
+
+    if (rows.length <= 1) {
+        return rows
+    }
+
+    const withOrdering = rows
+        .map((submission, index) => ({
+            index,
+            reviewCreatedAt: parseSortableDate(submission.review?.createdAt),
+            submission,
+            submittedAt: parseSortableDate(submission.submittedDate),
+        }))
+        .sort((left, right) => {
+            const leftSubmittedAt = Number.isFinite(left.submittedAt)
+                ? left.submittedAt
+                : Number.POSITIVE_INFINITY
+            const rightSubmittedAt = Number.isFinite(right.submittedAt)
+                ? right.submittedAt
+                : Number.POSITIVE_INFINITY
+
+            if (leftSubmittedAt !== rightSubmittedAt) {
+                return leftSubmittedAt - rightSubmittedAt
+            }
+
+            const leftReviewCreatedAt = Number.isFinite(left.reviewCreatedAt)
+                ? left.reviewCreatedAt
+                : Number.POSITIVE_INFINITY
+            const rightReviewCreatedAt = Number.isFinite(right.reviewCreatedAt)
+                ? right.reviewCreatedAt
+                : Number.POSITIVE_INFINITY
+
+            if (leftReviewCreatedAt !== rightReviewCreatedAt) {
+                return leftReviewCreatedAt - rightReviewCreatedAt
+            }
+
+            return left.index - right.index
+        })
+
+    return withOrdering[0] ? [withOrdering[0].submission] : rows
 }
 
 /**
@@ -205,7 +265,7 @@ export function filterIterativeReviewRows(args: FilterIterativeReviewRowsArgs): 
             })
         })
 
-        return filterRowsBySubmissionIds(filteredRows, limitToSubmissionIds)
+        return limitFirst2FinishIterativeRows(filteredRows, limitToSubmissionIds)
     }
 
     if (!isPostMortemPhase) {
@@ -214,9 +274,9 @@ export function filterIterativeReviewRows(args: FilterIterativeReviewRowsArgs): 
             challengePhases,
         ))
         if (iterativeOnly.length) {
-            return filterRowsBySubmissionIds(iterativeOnly, limitToSubmissionIds)
+            return limitFirst2FinishIterativeRows(iterativeOnly, limitToSubmissionIds)
         }
     }
 
-    return filterRowsBySubmissionIds(sourceRows, limitToSubmissionIds)
+    return limitFirst2FinishIterativeRows(sourceRows, limitToSubmissionIds)
 }

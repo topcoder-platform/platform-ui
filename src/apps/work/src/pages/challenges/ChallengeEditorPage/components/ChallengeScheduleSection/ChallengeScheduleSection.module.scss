@@ -21,16 +21,21 @@
 }
 
 .startDateControls {
-    align-items: start;
-    column-gap: 16px;
-    display: grid;
-    grid-template-columns: minmax(260px, 420px) auto;
-    row-gap: 12px;
+    align-items: flex-start;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.startDateHeader {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
 }
 
 .startDateInput {
-    grid-column: 1;
-    grid-row: 1;
+    max-width: 420px;
     width: 100%;
 }
 
@@ -39,8 +44,6 @@
     display: flex;
     flex-wrap: wrap;
     gap: 16px;
-    grid-column: 2;
-    grid-row: 1;
 }
 
 .startDateModeOption {
@@ -50,12 +53,34 @@
     display: inline-flex;
     font-size: 14px;
     gap: 8px;
+    font-weight: 500;
+}
+
+.startDateModeOptionSelected {
+    color: $turq-160;
+    font-weight: 600;
+}
+
+.startDateModeOptionDisabled {
+    color: $black-40;
+    cursor: not-allowed;
+}
+
+.startDateModeOptionDisabled .startDateModeRadio {
+    cursor: not-allowed;
 }
 
 .startDateModeRadio {
-    accent-color: $link-blue-dark;
+    accent-color: $turq-160;
     cursor: pointer;
     margin: 0;
+}
+
+.startDateLabel {
+    color: $black-80;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 20px;
 }
 
 .startDateTimezone {
@@ -66,19 +91,8 @@
 }
 
 @media (max-width: 767px) {
-    .startDateControls {
-        grid-template-columns: 1fr;
-    }
-
     .startDateInput {
         max-width: none;
-        grid-row: 2;
-        width: 100%;
-    }
-
-    .startDateModeGroup {
-        grid-column: 1;
-        grid-row: 1;
     }
 }
 

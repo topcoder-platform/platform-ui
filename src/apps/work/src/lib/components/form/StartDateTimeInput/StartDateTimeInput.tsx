@@ -39,6 +39,7 @@ export const StartDateTimeInput: FC<StartDateTimeInputProps> = (
 ) => {
     const shouldShowTimeSelect = props.showTimeSelect !== false
     const shouldRenderLabelOutside = props.labelOutside === true
+    const shouldRenderOutsideLabel = shouldRenderLabelOutside && props.label.length > 0
 
     const timezone = useMemo(
         () => Intl.DateTimeFormat()
@@ -49,7 +50,7 @@ export const StartDateTimeInput: FC<StartDateTimeInputProps> = (
 
     return (
         <div className={styles.container}>
-            {shouldRenderLabelOutside
+            {shouldRenderOutsideLabel
                 ? (
                     <span className={styles.outsideLabel}>
                         {props.label}

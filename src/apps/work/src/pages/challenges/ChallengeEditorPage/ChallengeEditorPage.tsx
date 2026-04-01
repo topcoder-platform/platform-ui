@@ -114,7 +114,6 @@ interface ChallengeEditorBodyProps {
     challengeResult: UseFetchChallengeResult
     isExistingChallenge: boolean
     isLaunchDisabled: boolean
-    isEditMode: boolean
     isReadOnly: boolean
     launchButtonLabel: string
     onChallengeStatusChange: (status?: string) => void
@@ -381,10 +380,9 @@ const CancelChallengeAction: FC<CancelChallengeActionProps> = (
                         ? 'Cancelling...'
                         : 'Cancel'}
                     onClick={handleCancelMenuToggle}
-                    primary
-                    size='md'
+                    secondary
+                    size='lg'
                     type='button'
-                    variant='danger'
                 />
                 {showCancelMenu
                     ? (
@@ -506,14 +504,13 @@ const CompleteTaskAction = (
     const completeButton = (
         <div>
             <Button
-                className={styles.launchButton}
                 disabled={isCompleting || !assignedTaskMember || isLoadingAssignee}
                 label={isCompleting
                     ? 'Completing...'
                     : 'Mark Complete'}
                 onClick={handleCompleteOpen}
-                primary
-                size='md'
+                secondary
+                size='lg'
                 type='button'
             />
         </div>
@@ -845,7 +842,7 @@ const ChallengeEditorBody: FC<ChallengeEditorBodyProps> = (
 
     return (
         <>
-            {props.isEditMode
+            {props.isExistingChallenge
                 ? (
                     <EditorTabs
                         activeTab={props.activeTab}
@@ -984,12 +981,16 @@ export const ChallengeEditorPage: FC = () => {
         : undefined
 
     useEffect(() => {
-        if (isEditMode) {
+        if (isExistingChallenge && !isViewMode) {
             return
         }
 
         setActiveTab('details')
-    }, [isEditMode])
+    }, [
+        challengeId,
+        isExistingChallenge,
+        isViewMode,
+    ])
     useEffect(() => {
         setIsSavingChallenge(false)
     }, [challengeId])
@@ -1186,7 +1187,6 @@ export const ChallengeEditorPage: FC = () => {
                         challengeResult={challengeResult}
                         isExistingChallenge={isExistingChallenge}
                         isLaunchDisabled={isLaunchDisabled}
-                        isEditMode={isEditMode}
                         isReadOnly={isViewMode}
                         launchButtonLabel={launchButtonLabel}
                         onChallengeStatusChange={handleChallengeStatusChange}

@@ -7,6 +7,7 @@ import {
     useState,
 } from 'react'
 import { useFormContext } from 'react-hook-form'
+import classNames from 'classnames'
 
 import {
     StartDateTimeInput,
@@ -464,48 +465,66 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
                     </p>
 
                     <div className={styles.startDateControls}>
-                        <div
-                            aria-label='Challenge start mode'
-                            className={styles.startDateModeGroup}
-                            role='radiogroup'
-                        >
-                            <label
-                                className={styles.startDateModeOption}
-                                htmlFor='challenge-start-mode-scheduled'
-                            >
-                                <input
-                                    checked={startDateMode === START_DATE_MODE.SCHEDULED}
-                                    className={styles.startDateModeRadio}
-                                    disabled={isSectionDisabled}
-                                    id='challenge-start-mode-scheduled'
-                                    name='challenge-start-mode'
-                                    onChange={handleSetScheduledStartDateMode}
-                                    type='radio'
-                                />
-                                <span>Scheduled</span>
-                            </label>
+                        <div className={styles.startDateHeader}>
+                            <span className={styles.startDateLabel}>Start Date</span>
 
-                            <label
-                                className={styles.startDateModeOption}
-                                htmlFor='challenge-start-mode-immediately'
+                            <div
+                                aria-label='Challenge start mode'
+                                className={styles.startDateModeGroup}
+                                role='radiogroup'
                             >
-                                <input
-                                    checked={startDateMode === START_DATE_MODE.IMMEDIATELY}
-                                    className={styles.startDateModeRadio}
-                                    disabled={isSectionDisabled}
-                                    id='challenge-start-mode-immediately'
-                                    name='challenge-start-mode'
-                                    onChange={handleSetImmediateStartDateMode}
-                                    type='radio'
-                                />
-                                <span>Immediately</span>
-                            </label>
+                                <label
+                                    className={classNames(
+                                        styles.startDateModeOption,
+                                        {
+                                            [styles.startDateModeOptionDisabled]: isSectionDisabled,
+                                            [styles.startDateModeOptionSelected]:
+                                                startDateMode === START_DATE_MODE.SCHEDULED,
+                                        },
+                                    )}
+                                    htmlFor='challenge-start-mode-scheduled'
+                                >
+                                    <input
+                                        checked={startDateMode === START_DATE_MODE.SCHEDULED}
+                                        className={styles.startDateModeRadio}
+                                        disabled={isSectionDisabled}
+                                        id='challenge-start-mode-scheduled'
+                                        name='challenge-start-mode'
+                                        onChange={handleSetScheduledStartDateMode}
+                                        type='radio'
+                                    />
+                                    <span>Scheduled</span>
+                                </label>
+
+                                <label
+                                    className={classNames(
+                                        styles.startDateModeOption,
+                                        {
+                                            [styles.startDateModeOptionDisabled]: isSectionDisabled,
+                                            [styles.startDateModeOptionSelected]:
+                                                startDateMode === START_DATE_MODE.IMMEDIATELY,
+                                        },
+                                    )}
+                                    htmlFor='challenge-start-mode-immediately'
+                                >
+                                    <input
+                                        checked={startDateMode === START_DATE_MODE.IMMEDIATELY}
+                                        className={styles.startDateModeRadio}
+                                        disabled={isSectionDisabled}
+                                        id='challenge-start-mode-immediately'
+                                        name='challenge-start-mode'
+                                        onChange={handleSetImmediateStartDateMode}
+                                        type='radio'
+                                    />
+                                    <span>Immediately</span>
+                                </label>
+                            </div>
                         </div>
 
                         <div className={styles.startDateInput}>
                             <StartDateTimeInput
                                 disabled={isSectionDisabled || startDateMode === START_DATE_MODE.IMMEDIATELY}
-                                label='Start Date'
+                                label=''
                                 labelOutside
                                 minDate={minScheduleDate}
                                 onChange={handleStartDateChange}
