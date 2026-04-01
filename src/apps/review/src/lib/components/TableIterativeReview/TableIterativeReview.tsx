@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 /**
  * Table Iterative Review.
  */
@@ -599,9 +600,8 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
 
     const handleByMemberId = useMemo(
         (): Map<string, { handle?: string; color?: string }> => {
-            const map = new Map<string, { handle?: string; color?: string }>()
-
-            ;[
+            const map = new Map<string, { handle?: string; color?: string }>();
+            [
                 ...(resources ?? []),
                 ...(reviewers ?? []),
             ].forEach(resource => {
@@ -649,7 +649,7 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
         }
 
         if (submission.review?.id) {
-            return false;
+            return false
         }
 
         return true
