@@ -117,7 +117,8 @@ function getApplicationStatusPillClass(status: string): string {
 }
 
 function getEngagementStatusPillClass(status: string): string {
-    const normalizedStatus = status.trim()
+    const normalizedStatus = String(status || '')
+        .trim()
         .toLowerCase()
 
     if (normalizedStatus === 'active') {
@@ -227,6 +228,13 @@ export const ApplicationsListPage: FC = () => {
     const selectedFilterOption = useMemo(
         () => statusOptions.find(option => option.value === filterStatus),
         [filterStatus, statusOptions],
+    )
+    const filteredApplications = useMemo(
+        () => applicationsResult.applications.filter(application => (
+            filterStatus === 'all'
+            || normalizeStatus(application.status) === normalizeStatus(filterStatus)
+        )),
+        [applicationsResult.applications, filterStatus],
     )
 
     const assignmentListCandidate = engagementResult.engagement?.assignments
@@ -394,7 +402,7 @@ export const ApplicationsListPage: FC = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {applicationsResult.applications.length === 0
+                            {filteredApplications.length === 0
                                 ? (
                                     <tr>
                                         <td className={styles.emptyRow} colSpan={9}>
@@ -402,7 +410,7 @@ export const ApplicationsListPage: FC = () => {
                                         </td>
                                     </tr>
                                 )
-                                : applicationsResult.applications.map(application => {
+                                : filteredApplications.map(application => {
                                     const profileUrl = `${PROFILE_URL}/${application.handle}`
                                     const active = hasActiveAssignment(application, assignmentList)
                                     const normalizedStatus = normalizeStatus(application.status)

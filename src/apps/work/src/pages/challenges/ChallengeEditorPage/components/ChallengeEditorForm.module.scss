@@ -48,6 +48,24 @@
     gap: 24px;
 }
 
+.readOnlyField {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.readOnlyFieldLabel {
+    color: $black-80;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.readOnlyFieldValue {
+    color: $black-100;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
 .billingSummary {
     display: flex;
     flex-wrap: wrap;

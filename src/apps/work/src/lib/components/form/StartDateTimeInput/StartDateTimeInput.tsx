@@ -16,6 +16,7 @@ export interface StartDateTimeInputProps {
     minDate?: Date | null
     showTimezone?: boolean
     showTimeSelect?: boolean
+    preventOpenOnFocus?: boolean
 }
 
 function toDate(value?: Date | string | null): Date | undefined {
@@ -71,6 +72,7 @@ export const StartDateTimeInput: FC<StartDateTimeInputProps> = (
                     : props.label}
                 minDate={props.minDate}
                 onChange={props.onChange}
+                preventOpenOnFocus={props.preventOpenOnFocus}
                 showTimeSelect={shouldShowTimeSelect}
                 timeIntervals={shouldShowTimeSelect ? DEFAULT_TIME_INTERVAL_MINUTES : undefined}
                 timeFormat={shouldShowTimeSelect ? 'HH:mm' : undefined}
