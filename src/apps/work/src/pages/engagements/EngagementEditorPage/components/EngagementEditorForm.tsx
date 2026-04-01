@@ -186,7 +186,7 @@ function createRoleOptions(): FormSelectOption[] {
         DATA_ENGINEER: 'Data Engineer',
         DATA_SCIENTIST: 'Data Scientist',
         DESIGNER: 'Designer',
-        SOFTWARE_DEVELOPER: 'Software Engineer',
+        SOFTWARE_DEVELOPER: 'Software Developer',
     }
 
     return ENGAGEMENT_ROLES.map(role => ({
