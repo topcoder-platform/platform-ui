@@ -13,7 +13,7 @@
   footer actions.
 - `components/*Field.tsx`: field-level components for each challenge section.
 - `components/ReviewersField/*`: tabbed human/AI review configuration. Human reviewers stay on the challenge form, while AI reviewer configs load/save through the review API and sync saved AI workflows back into the challenge `reviewers` array. Existing AI configs are reloaded only when the challenge already has synced AI reviewer entries, which avoids empty-config lookups on new challenges. Removing an AI config also detaches the synced AI workflow reviewers from the challenge. When AI reviewers exist without a persisted AI screening phase, the schedule editor injects a virtual `AI Screening` row after submission phases. This `Review` section is hidden for `Task` and `Marathon Match` challenges because those flows use dedicated reviewer assignment UIs.
-- `ChallengeEditorPage.module.scss` and `components/ChallengeEditorForm.module.scss`: page and form layout styling, including the grouped `Prizes & Billing` layout that keeps the editable inputs together and moves the billing summary underneath them.
+- `ChallengeEditorPage.module.scss` and `components/ChallengeEditorForm.module.scss`: page and form layout styling, including the grouped `Prizes & Billing` layout that keeps the editable inputs together at fixed widths on larger screens and moves the billing summary underneath them.
 
 ## Validation Rules
 
