@@ -23,6 +23,16 @@ interface ResolveManualReviewersParams {
     isTaskChallenge: boolean
 }
 
+interface ChallengeBillingInfo {
+    billingAccountId?: number | string
+    markup?: number
+}
+
+interface ProjectChallengeBillingInfo {
+    id?: number | string
+    markup?: number
+}
+
 const CHECKPOINT_PHASE_NAMES = [
     'checkpoint submission',
     'checkpoint screening',
@@ -62,6 +72,65 @@ function normalizeText(value: unknown): string {
     }
 
     return value.trim()
+}
+
+function normalizeBillingAccountId(value: unknown): string | undefined {
+    if (typeof value === 'number' && Number.isFinite(value)) {
+        return String(value)
+    }
+
+    const normalizedValue = normalizeText(value)
+
+    return normalizedValue || undefined
+}
+
+function normalizeBillingMarkup(value: unknown): number | undefined {
+    if (typeof value === 'number' && Number.isFinite(value)) {
+        return value
+    }
+
+    if (typeof value === 'string') {
+        const trimmedValue = value.trim()
+        if (!trimmedValue) {
+            return undefined
+        }
+
+        const parsedValue = Number(trimmedValue)
+
+        return Number.isFinite(parsedValue)
+            ? parsedValue
+            : undefined
+    }
+
+    return undefined
+}
+
+function shouldPreferProjectBillingMarkup(
+    billing: ChallengeBillingInfo | undefined,
+    projectBillingAccount: ProjectChallengeBillingInfo | undefined,
+): boolean {
+    const projectMarkup = normalizeBillingMarkup(projectBillingAccount?.markup)
+
+    if (projectMarkup === undefined) {
+        return false
+    }
+
+    const billingMarkup = normalizeBillingMarkup(billing?.markup)
+
+    if (billingMarkup === undefined) {
+        return true
+    }
+
+    if (billingMarkup !== 0) {
+        return false
+    }
+
+    const billingAccountId = normalizeBillingAccountId(billing?.billingAccountId)
+    const projectBillingAccountId = normalizeBillingAccountId(projectBillingAccount?.id)
+
+    return !billingAccountId
+        || !projectBillingAccountId
+        || billingAccountId === projectBillingAccountId
 }
 
 function normalizeRoleName(value: unknown): string {
@@ -230,6 +299,89 @@ export function resolveResourceAssignmentHandle(
         roleNames: params.roleNames,
         valueField: 'memberHandle',
     })
+}
+
+/**
+ * Merges challenge billing with project billing-account data without overriding
+ * persisted challenge values.
+ *
+ * The project billing account is the fallback source for draft challenges whose
+ * payload omits billing. It also replaces stale persisted `markup: 0` values
+ * when the challenge is linked to the same billing account as the parent
+ * project, because challenge-api currently returns that zero for drafts even
+ * when the billing account has a real markup configured.
+ *
+ * @param billing current challenge billing stored in the form.
+ * @param projectBillingAccount billing details resolved from the parent project.
+ * @returns merged billing information for the challenge form.
+ */
+export function mergeChallengeBillingWithProjectBilling(
+    billing: ChallengeBillingInfo | undefined,
+    projectBillingAccount: ProjectChallengeBillingInfo | undefined,
+): ChallengeBillingInfo | undefined {
+    const billingAccountId = normalizeBillingAccountId(billing?.billingAccountId)
+        || normalizeBillingAccountId(projectBillingAccount?.id)
+    const projectMarkup = normalizeBillingMarkup(projectBillingAccount?.markup)
+    const billingMarkup = normalizeBillingMarkup(billing?.markup)
+    const markup = shouldPreferProjectBillingMarkup(billing, projectBillingAccount)
+        ? projectMarkup
+        : billingMarkup ?? projectMarkup
+
+    if (!billingAccountId && markup === undefined) {
+        return undefined
+    }
+
+    return {
+        billingAccountId,
+        markup,
+    }
+}
+
+/**
+ * Compares challenge billing values after normalizing ids and markup numbers.
+ *
+ * @param billingA first billing value to compare.
+ * @param billingB second billing value to compare.
+ * @returns `true` when both billing values represent the same data.
+ */
+export function hasSameChallengeBillingInfo(
+    billingA: ChallengeBillingInfo | undefined,
+    billingB: ChallengeBillingInfo | undefined,
+): boolean {
+    const normalizedBillingA = mergeChallengeBillingWithProjectBilling(billingA, undefined)
+    const normalizedBillingB = mergeChallengeBillingWithProjectBilling(billingB, undefined)
+
+    return normalizeBillingAccountId(normalizedBillingA?.billingAccountId)
+        === normalizeBillingAccountId(normalizedBillingB?.billingAccountId)
+        && normalizeBillingMarkup(normalizedBillingA?.markup)
+        === normalizeBillingMarkup(normalizedBillingB?.markup)
+}
+
+/**
+ * Applies project billing-account defaults to challenge form data.
+ *
+ * The returned form data keeps any saved challenge billing and fills only the
+ * missing pieces needed by billing-dependent UI, such as fee calculations.
+ *
+ * @param formData challenge form state to normalize.
+ * @param projectBillingAccount billing details resolved from the parent project.
+ * @returns form data with merged billing values.
+ */
+export function applyProjectBillingToChallengeFormData(
+    formData: ChallengeEditorFormData,
+    projectBillingAccount: ProjectChallengeBillingInfo | undefined,
+): ChallengeEditorFormData {
+    const billing = mergeChallengeBillingWithProjectBilling(
+        formData.billing,
+        projectBillingAccount,
+    )
+
+    return hasSameChallengeBillingInfo(formData.billing, billing)
+        ? formData
+        : {
+            ...formData,
+            billing,
+        }
 }
 
 /**

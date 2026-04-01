@@ -31,6 +31,7 @@ import {
     useAutosave,
     useFetchChallengeTracks,
     useFetchChallengeTypes,
+    useFetchProjectBillingAccount,
     useFetchResourceRoles,
     useFetchResources,
     useFetchTimelineTemplates,
@@ -50,6 +51,7 @@ import {
     createResource,
     deleteResource,
     fetchChallenge,
+    fetchProjectBillingAccount,
     fetchResourceRoles,
     fetchResources,
     patchChallenge,
@@ -150,8 +152,11 @@ import {
     TermsField,
 } from './TermsField'
 import {
+    applyProjectBillingToChallengeFormData,
     COPILOT_RESOURCE_ROLE_NAMES,
     findMatchingResourceRole,
+    hasSameChallengeBillingInfo,
+    mergeChallengeBillingWithProjectBilling,
     resolveCreateRoundType,
     resolveCreateTimelineTemplateId,
     resolveResourceAssignmentValue,
@@ -201,6 +206,8 @@ interface SyncSingleAssignmentResourceParams extends Omit<SingleAssignmentConfig
 }
 
 const SAVE_VALIDATION_ERROR_MESSAGE = 'Please fix validation errors before saving.'
+const TASK_ASSIGNED_MEMBER_REQUIRED_FOR_LAUNCH_MESSAGE
+    = 'Assign a member before launching a task challenge.'
 const CHALLENGE_TYPE_CHALLENGE_ABBREVIATION = 'CH'
 const CHALLENGE_TYPE_CHALLENGE_NAME = 'CHALLENGE'
 const CHALLENGE_TYPE_FIRST_2_FINISH_ABBREVIATION = 'F2F'
@@ -766,6 +773,35 @@ function getSaveSuccessMessage(
         : 'Challenge saved successfully'
 }
 
+interface TaskLaunchValidationParams {
+    assignedMemberId?: unknown
+    currentStatus?: unknown
+    isTaskChallenge: boolean
+    nextStatus?: unknown
+}
+
+export function getTaskLaunchValidationError(
+    params: TaskLaunchValidationParams,
+): string | undefined {
+    if (!params.isTaskChallenge) {
+        return undefined
+    }
+
+    if (normalizeStatus(params.currentStatus) === CHALLENGE_STATUS.ACTIVE) {
+        return undefined
+    }
+
+    if (normalizeStatus(params.nextStatus) !== CHALLENGE_STATUS.ACTIVE) {
+        return undefined
+    }
+
+    if (normalizeTextValue(params.assignedMemberId)) {
+        return undefined
+    }
+
+    return TASK_ASSIGNED_MEMBER_REQUIRED_FOR_LAUNCH_MESSAGE
+}
+
 // eslint-disable-next-line complexity
 export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     props: ChallengeEditorFormProps,
@@ -787,6 +823,8 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             props.projectId,
         ],
     )
+    const projectBillingAccountResult = useFetchProjectBillingAccount(fallbackProjectId)
+    const projectBillingAccount = projectBillingAccountResult.billingAccount
     const challengesListPath = useMemo(
         () => getChallengesListPath(fallbackProjectId),
         [fallbackProjectId],
@@ -805,7 +843,10 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const [scorerHasError, setScorerHasError] = useState<boolean>(false)
 
     const formMethods = useForm<ChallengeEditorFormData>({
-        defaultValues: transformChallengeToFormData(props.challenge),
+        defaultValues: applyProjectBillingToChallengeFormData(
+            transformChallengeToFormData(props.challenge),
+            projectBillingAccount,
+        ),
         mode: 'onChange',
         resolver: yupResolver(challengeEditorSchema) as any,
     })
@@ -1088,6 +1129,25 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             currentChallengeId,
         ],
     )
+    const resolveProjectBillingAccount = useCallback(
+        async (): Promise<typeof projectBillingAccount> => {
+            if (projectBillingAccount) {
+                return projectBillingAccount
+            }
+
+            if (!fallbackProjectId) {
+                return undefined
+            }
+
+            return fetchProjectBillingAccount(fallbackProjectId)
+                .then(response => response.billingAccount)
+                .catch(() => undefined)
+        },
+        [
+            fallbackProjectId,
+            projectBillingAccount,
+        ],
+    )
     const syncSingleAssignmentResource = useCallback(async (
         params: SyncSingleAssignmentResourceParams,
     ): Promise<void> => {
@@ -1323,6 +1383,27 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     ])
 
     useEffect(() => {
+        const currentBilling = getValues('billing')
+        const nextBilling = mergeChallengeBillingWithProjectBilling(
+            currentBilling,
+            projectBillingAccount,
+        )
+
+        if (hasSameChallengeBillingInfo(currentBilling, nextBilling)) {
+            return
+        }
+
+        setValue('billing', nextBilling, {
+            shouldDirty: false,
+            shouldValidate: true,
+        })
+    }, [
+        getValues,
+        projectBillingAccount,
+        setValue,
+    ])
+
+    useEffect(() => {
         const normalizedTypeId = values.typeId?.trim()
 
         if (!normalizedTypeId) {
@@ -1483,6 +1564,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
 
             try {
                 const formData = getValues()
+                const resolvedProjectBillingAccount = await resolveProjectBillingAccount()
                 const selectedRoundType = getCreateRoundType(formData.roundType, formElementRef.current)
                 const createProjectId = normalizeProjectId(formData.projectId) || fallbackProjectId
                 if (!createProjectId) {
@@ -1523,7 +1605,10 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 })
                 const savedChallenge = await fetchChallenge(createdChallenge.id)
                     .catch(() => createdChallenge)
-                const nextValues = transformChallengeToFormData(savedChallenge)
+                const nextValues = applyProjectBillingToChallengeFormData(
+                    transformChallengeToFormData(savedChallenge),
+                    resolvedProjectBillingAccount,
+                )
                 const normalizedWorkType = normalizeDesignWorkType(formData.workType)
 
                 if (selectedRoundType === ROUND_TYPES.TWO_ROUNDS && nextValues.roundType !== ROUND_TYPES.TWO_ROUNDS) {
@@ -1563,6 +1648,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             fallbackProjectId,
             getValues,
             reset,
+            resolveProjectBillingAccount,
             selectedChallengeType,
             timelineTemplates,
             trigger,
@@ -1578,35 +1664,66 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 throw new Error('Challenge id is required to save challenge')
             }
 
+            const {
+                isSaveAsDraft,
+                payloadStatus,
+            }: SaveStatusMetadata = getSaveStatusMetadata(formData.status, options)
+            const isTaskChallenge = isTaskSingleAssignmentChallenge(formData)
+            const taskLaunchValidationError = getTaskLaunchValidationError({
+                assignedMemberId: formData.assignedMemberId,
+                currentStatus: formData.status,
+                isTaskChallenge,
+                nextStatus: payloadStatus,
+            })
+
+            setSaveError(undefined)
+            setSaveValidationError(undefined)
+            clearErrors('assignedMemberId')
+
+            if (taskLaunchValidationError) {
+                setSaveStatus('idle')
+                setError('assignedMemberId', {
+                    message: taskLaunchValidationError,
+                    type: 'manual',
+                })
+                setSaveValidationError(taskLaunchValidationError)
+
+                if (!options.isAutosave) {
+                    showErrorToast(taskLaunchValidationError)
+                }
+
+                return
+            }
+
             if (!options.isAutosave) {
                 setIsSaving(true)
                 setSaveStatus('saving')
             }
 
-            setSaveError(undefined)
-            setSaveValidationError(undefined)
-
             try {
-                const {
-                    isSaveAsDraft,
-                    payloadStatus,
-                }: SaveStatusMetadata = getSaveStatusMetadata(formData.status, options)
-                const isTaskChallenge = isTaskSingleAssignmentChallenge(formData)
+                const resolvedProjectBillingAccount = await resolveProjectBillingAccount()
+                const formDataWithProjectBilling = applyProjectBillingToChallengeFormData(
+                    formData,
+                    resolvedProjectBillingAccount,
+                )
                 const payload = transformFormDataToChallenge({
-                    ...formData,
+                    ...formDataWithProjectBilling,
                     reviewers: usesManualReviewers
-                        ? formData.reviewers
+                        ? formDataWithProjectBilling.reviewers
                         : [],
                     status: payloadStatus,
                 })
                 const savedChallenge = await patchChallenge(currentChallengeId, payload)
-                await syncDraftSingleAssignments(currentChallengeId, formData)
+                await syncDraftSingleAssignments(currentChallengeId, formDataWithProjectBilling)
 
                 const nextValues = applySingleAssignmentFieldValues(
                     applyPersistedSingleAssignments(
-                        transformChallengeToFormData(savedChallenge),
+                        applyProjectBillingToChallengeFormData(
+                            transformChallengeToFormData(savedChallenge),
+                            resolvedProjectBillingAccount,
+                        ),
                     ),
-                    formData,
+                    formDataWithProjectBilling,
                     isTaskChallenge,
                 )
                 const savedAt = new Date()
@@ -1646,12 +1763,15 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         },
         [
             applyPersistedSingleAssignments,
+            clearErrors,
             currentChallengeId,
             isEditMode,
             isTaskSingleAssignmentChallenge,
             navigate,
             onChallengeStatusChange,
             reset,
+            resolveProjectBillingAccount,
+            setError,
             syncDraftSingleAssignments,
             usesManualReviewers,
         ],
@@ -1944,6 +2064,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                         <TermsField />
                                         <NDAField />
                                         <FormCheckboxField
+                                            checkboxOnlyHitArea
                                             label='Wipro Allowed'
                                             name='wiproAllowed'
                                         />

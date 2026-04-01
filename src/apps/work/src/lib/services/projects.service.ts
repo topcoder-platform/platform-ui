@@ -35,6 +35,9 @@ import {
 import {
     createProjectMemberInvite,
 } from './project-member-invites.service'
+import {
+    fetchBillingAccountById,
+} from './billing-accounts.service'
 
 export type ProjectSummary = Pick<Project,
     | 'billingAccountId'
@@ -74,6 +77,7 @@ export interface FetchProjectsListResponse {
 export interface ProjectBillingAccount {
     active?: boolean
     id?: string
+    markup?: number
     name?: string
     startDate?: string
     endDate?: string
@@ -125,6 +129,31 @@ function normalizeOptionalBoolean(value: unknown): boolean | undefined {
         if (normalizedValue === 'false') {
             return false
         }
+    }
+
+    return undefined
+}
+
+function normalizeOptionalNumber(value: unknown): number | undefined {
+    if (typeof value === 'number' && Number.isFinite(value)) {
+        return value
+    }
+function normalizeOptionalNumber(value: unknown): number | undefined {
+    if (typeof value === 'number' && Number.isFinite(value)) {
+        return value
+    }
+
+    if (typeof value === 'string') {
+        const normalizedValue = value.trim()
+        if (!normalizedValue) {
+            return undefined
+        }
+
+        const parsedValue = Number(normalizedValue)
+
+        return Number.isFinite(parsedValue)
+            ? parsedValue
+            : undefined
     }
 
     return undefined
@@ -686,25 +715,36 @@ export async function fetchProjectBillingAccount(
             active?: unknown
             endDate?: unknown
             id?: unknown
+            markup?: unknown
             name?: unknown
             startDate?: unknown
             tcBillingAccountId?: unknown
         }>(
             `${PROJECTS_API_URL}/${encodeURIComponent(projectId)}/billingAccount`,
         )
+        const billingAccountId = normalizeOptionalId(billingAccount?.tcBillingAccountId)
+            || normalizeOptionalId(billingAccount?.id)
+        const billingMarkup = normalizeOptionalNumber(billingAccount?.markup)
+        const billingAccountDetails = billingAccountId && billingMarkup === undefined
+            ? await fetchBillingAccountById(billingAccountId)
+                .catch(() => undefined)
+            : undefined
 
         const normalizedBillingAccount: ProjectBillingAccount = {
             active: normalizeOptionalBoolean(billingAccount?.active),
             endDate: normalizeOptionalString(billingAccount?.endDate),
-            id: normalizeOptionalId(billingAccount?.tcBillingAccountId)
-                || normalizeOptionalId(billingAccount?.id),
-            name: normalizeOptionalString(billingAccount?.name),
-            startDate: normalizeOptionalString(billingAccount?.startDate),
+            id: billingAccountId,
+            markup: billingMarkup ?? normalizeOptionalNumber(billingAccountDetails?.markup),
+            name: normalizeOptionalString(billingAccount?.name)
+                || normalizeOptionalString(billingAccountDetails?.name),
+            startDate: normalizeOptionalString(billingAccount?.startDate)
+                || normalizeOptionalString(billingAccountDetails?.startDate),
         }
 
         if (
             normalizedBillingAccount.active === undefined
             && !normalizedBillingAccount.id
+            && normalizedBillingAccount.markup === undefined
             && !normalizedBillingAccount.name
             && !normalizedBillingAccount.endDate
             && !normalizedBillingAccount.startDate

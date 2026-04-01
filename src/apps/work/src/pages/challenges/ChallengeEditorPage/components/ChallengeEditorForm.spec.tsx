@@ -13,6 +13,7 @@ import {
     useAutosave,
     useFetchChallengeTracks,
     useFetchChallengeTypes,
+    useFetchProjectBillingAccount,
     useFetchResourceRoles,
     useFetchResources,
     useFetchTimelineTemplates,
@@ -21,9 +22,13 @@ import type { Challenge } from '../../../../lib/models'
 import {
     createChallenge,
     fetchChallenge,
+    fetchProjectBillingAccount,
 } from '../../../../lib/services'
 
-import { ChallengeEditorForm } from './ChallengeEditorForm'
+import {
+    ChallengeEditorForm,
+    getTaskLaunchValidationError,
+} from './ChallengeEditorForm'
 
 jest.mock('../../../../lib/components/form', () => ({
     FormCheckboxField: () => <></>,
@@ -32,6 +37,7 @@ jest.mock('../../../../lib/hooks', () => ({
     useAutosave: jest.fn(),
     useFetchChallengeTracks: jest.fn(),
     useFetchChallengeTypes: jest.fn(),
+    useFetchProjectBillingAccount: jest.fn(),
     useFetchResourceRoles: jest.fn(),
     useFetchResources: jest.fn(),
     useFetchTimelineTemplates: jest.fn(),
@@ -41,6 +47,7 @@ jest.mock('../../../../lib/services', () => ({
     createResource: jest.fn(),
     deleteResource: jest.fn(),
     fetchChallenge: jest.fn(),
+    fetchProjectBillingAccount: jest.fn(),
     fetchResourceRoles: jest.fn(),
     fetchResources: jest.fn(),
     patchChallenge: jest.fn(),
@@ -297,11 +304,13 @@ jest.mock('./TermsField', () => ({
 const mockedUseAutosave = useAutosave as jest.Mock
 const mockedUseFetchChallengeTracks = useFetchChallengeTracks as jest.Mock
 const mockedUseFetchChallengeTypes = useFetchChallengeTypes as jest.Mock
+const mockedUseFetchProjectBillingAccount = useFetchProjectBillingAccount as jest.Mock
 const mockedUseFetchResourceRoles = useFetchResourceRoles as jest.Mock
 const mockedUseFetchResources = useFetchResources as jest.Mock
 const mockedUseFetchTimelineTemplates = useFetchTimelineTemplates as jest.Mock
 const mockedCreateChallenge = createChallenge as jest.Mock
 const mockedFetchChallenge = fetchChallenge as jest.Mock
+const mockedFetchProjectBillingAccountService = fetchProjectBillingAccount as jest.Mock
 
 describe('ChallengeEditorForm', () => {
     const draftChallenge = {
@@ -323,6 +332,10 @@ describe('ChallengeEditorForm', () => {
             challengeTypes: [],
             isLoading: false,
         })
+        mockedUseFetchProjectBillingAccount.mockReturnValue({
+            billingAccount: undefined,
+            isLoading: false,
+        })
         mockedUseFetchResourceRoles.mockImplementation(() => ({
             error: undefined,
             isError: false,
@@ -338,6 +351,9 @@ describe('ChallengeEditorForm', () => {
         }))
         mockedUseFetchTimelineTemplates.mockReturnValue({
             timelineTemplates: [],
+        })
+        mockedFetchProjectBillingAccountService.mockResolvedValue({
+            billingAccount: undefined,
         })
     })
 
@@ -469,6 +485,25 @@ describe('ChallengeEditorForm', () => {
             }))
     })
 
+    it('requires an assigned member before launching a task challenge', () => {
+        expect(getTaskLaunchValidationError({
+            currentStatus: 'DRAFT',
+            isTaskChallenge: true,
+            nextStatus: 'ACTIVE',
+        }))
+            .toBe('Assign a member before launching a task challenge.')
+    })
+
+    it('allows task launches when an assignee exists', () => {
+        expect(getTaskLaunchValidationError({
+            assignedMemberId: '12345',
+            currentStatus: 'DRAFT',
+            isTaskChallenge: true,
+            nextStatus: 'ACTIVE',
+        }))
+            .toBeUndefined()
+    })
+
     it('renders submission settings for design first2finish challenges', () => {
         mockedUseFetchChallengeTracks.mockReturnValue({
             isLoading: false,
@@ -512,6 +547,8 @@ describe('ChallengeEditorForm', () => {
             .toHaveTextContent('Stock Arts Field')
         expect(submissionSettingsSection)
             .toHaveTextContent('Maximum Submissions Field')
+    })
+
     it('creates a forum discussion for forum-enabled challenge types', async () => {
         const user = userEvent.setup()
 

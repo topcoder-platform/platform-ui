@@ -15,7 +15,11 @@ interface TestFormValues {
     wiproAllowed: boolean
 }
 
-const TestForm = (): JSX.Element => {
+interface TestFormProps {
+    checkboxOnlyHitArea?: boolean
+}
+
+const TestForm = (props: TestFormProps): JSX.Element => {
     const form = useForm<TestFormValues>({
         defaultValues: {
             wiproAllowed: false,
@@ -25,6 +29,7 @@ const TestForm = (): JSX.Element => {
     return (
         <FormProvider {...form}>
             <FormCheckboxField
+                checkboxOnlyHitArea={props.checkboxOnlyHitArea}
                 label='Wipro Allowed'
                 name='wiproAllowed'
             />
@@ -63,5 +68,23 @@ describe('FormCheckboxField', () => {
 
         expect(checkbox.checked)
             .toBe(true)
+    })
+
+    it('does not toggle when checkboxOnlyHitArea is enabled and text is clicked', async () => {
+        const user = userEvent.setup()
+
+        render(<TestForm checkboxOnlyHitArea />)
+
+        const checkbox = screen.getByRole('checkbox', {
+            name: 'Wipro Allowed',
+        }) as HTMLInputElement
+        const checkboxText = screen.getByText('Wipro Allowed', {
+            selector: 'span',
+        })
+
+        await user.click(checkboxText)
+
+        expect(checkbox.checked)
+            .toBe(false)
     })
 })

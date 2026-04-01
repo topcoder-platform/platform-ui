@@ -24,6 +24,7 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 - `privateDescription`: optional.
 - `funChallenge`: optional boolean, defaults to `false` (unchecked).
 - `prizeSets`: placement prizes are required unless `funChallenge` is `true`.
+- `assignedMemberId`: optional while drafting, but required before launching a `Task` challenge so the active task is scoped to its assignee instead of becoming publicly registrable.
 - `wiproAllowed`: optional boolean, defaults to `false` (unchecked).
 - `tags`: optional string array.
 - `skills`: required unless billing account is listed in `SKILLS_OPTIONAL_BILLING_ACCOUNT_IDS`.
@@ -58,9 +59,9 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 - `AssignedMemberField`: task-only assignee selector backed by member ids; persisted through the challenge `Submitter` resource assignment and restored from resources when task payloads omit the legacy field.
 - `CopilotField`: clearable dropdown populated with copilot handles from the current project; persisted through the challenge `Copilot` resource assignment and restored from resources when draft payloads omit the legacy field. A copilot is required whenever the copilot fee is greater than 0, and that rule is enforced by form validation before save or launch actions run.
 - `CopilotFeeField`: optional copilot payment input that updates only the underlying copilot prize set, preserving placement prize edits and removing the copilot prize set when cleared so empty fees do not leave hidden validation errors.
-- `ChallengeFeeField`: derived summary value that uses the challenge billing markup together with the current prize and reviewer estimates so draft saves do not fall back to a stale `challengeFee` snapshot.
+- `ChallengeFeeField`: derived summary value that uses the challenge billing markup together with the current prize and reviewer estimates so draft saves do not fall back to a stale `challengeFee` snapshot. When the challenge payload does not yet include billing, or challenge-api returns the draft's billing markup as `0` for the same project billing account, the editor hydrates billing-account id and markup from the parent project billing account so draft pages still show the correct fee.
 - `ReviewTypeField`: task-only reviewer controls; enforces internal review type, allows searching any community reviewer handle, and persists the selection through the challenge `Iterative Reviewer` resource assignment.
-- `Wipro Allowed` checkbox: advanced-option toggle that maps to the challenge `wiproAllowed` API flag.
+- `Wipro Allowed` checkbox: advanced-option toggle that maps to the challenge `wiproAllowed` API flag. Only the checkbox control toggles the value so nearby text clicks do not change it accidentally.
 - Saved selector values may come from legacy challenge fields or challenge resources. The editor restores task `assignedMemberId`, `copilot`, and task `reviewer` from matching resource assignments first, then falls back to legacy challenge payload shapes.
 
 ## Conditional Sections
@@ -71,6 +72,9 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 ## API Integration
 
 - Challenge fetch: `useFetchChallenge`.
+- Challenge detail remount refresh: `useFetchChallenge` disables SWR request deduping for
+  challenge details so reopening a challenge view right after a save still triggers a fresh
+  challenge-api-v6 fetch instead of reusing stale cached detail data.
 - Save create/update/delete: `createChallenge`, `patchChallenge`, `deleteChallenge`.
 - Initial create refresh: after `createChallenge`, the form fetches full challenge details with `fetchChallenge` to avoid round-type regressions from sparse create responses and to surface the generated forum link for challenge types that provision a discussion on create.
 - Skills search: `searchSkills`.
@@ -82,6 +86,7 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 ## Header Actions
 
 - `Launch` is shown on the details tab for `DRAFT` challenges in the header and again in the footer beside `Save Challenge`.
+- Task challenges cannot be launched until `Assigned Member` is set, which ensures the task is assigned before it becomes publicly visible.
 - After the first successful save from `NEW` to `DRAFT`, the editor updates the launch affordance immediately so the user can launch without reloading.
 - `Cancel` is shown on the details tab for `ACTIVE` challenges.
 - `Mark Complete` is shown beside `Cancel` for `ACTIVE` task challenges when exactly one assignee can be resolved from the challenge submitter resources. It mirrors the legacy work-manager flow by confirming the task prize and assignee, patching the challenge to `COMPLETED`, and saving that assignee as the sole winner. The button remains hidden for copilots assigned to their own task.

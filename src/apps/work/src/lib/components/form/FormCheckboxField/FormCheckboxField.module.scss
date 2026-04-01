@@ -20,6 +20,10 @@
     font-size: 14px;
 }
 
+.staticCheckboxText {
+    cursor: default;
+}
+
 .disabled {
     color: $black-40;
     cursor: not-allowed;

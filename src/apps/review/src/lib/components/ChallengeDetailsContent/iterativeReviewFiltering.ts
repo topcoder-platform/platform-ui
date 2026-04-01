@@ -8,6 +8,7 @@ import { shouldIncludeInReviewPhase } from '../../utils/reviewPhaseGuards'
 interface FilterIterativeReviewRowsArgs {
     challengePhases?: BackendPhase[]
     isPostMortemPhase: boolean
+    limitToSubmissionIds?: string[]
     phaseIdFilter?: string
     reviewerResources?: BackendResource[]
     sourceRows: SubmissionInfo[]
@@ -136,6 +137,39 @@ function isIterativePlaceholderRow(args: IterativePlaceholderRowArgs): boolean {
 }
 
 /**
+ * Restrict iterative-review rows to a known submission id set when a completed F2F
+ * challenge should only surface the winning submission.
+ *
+ * @param rows - Candidate rows for the iterative-review tab.
+ * @param limitToSubmissionIds - Optional submission ids supplied by the caller.
+ * @returns Submission-limited rows when matches exist; otherwise the original rows.
+ */
+function filterRowsBySubmissionIds(
+    rows: SubmissionInfo[],
+    limitToSubmissionIds?: string[],
+): SubmissionInfo[] {
+    const submissionIds = new Set(
+        (limitToSubmissionIds ?? [])
+            .map(submissionId => normalizeIdentifier(submissionId))
+            .filter((submissionId): submissionId is string => Boolean(submissionId)),
+    )
+
+    if (!submissionIds.size) {
+        return rows
+    }
+
+    const matchingRows = rows.filter(submission => {
+        const submissionId = normalizeIdentifier(submission.id)
+        const reviewSubmissionId = normalizeIdentifier(submission.review?.submissionId)
+
+        return (submissionId ? submissionIds.has(submissionId) : false)
+            || (reviewSubmissionId ? submissionIds.has(reviewSubmissionId) : false)
+    })
+
+    return matchingRows.length ? matchingRows : rows
+}
+
+/**
  * Filter iterative-review rows for the selected tab while preserving reviewer placeholders.
  *
  * @param args - Iterative-review rows, selected phase context, and challenge resources.
@@ -145,6 +179,7 @@ export function filterIterativeReviewRows(args: FilterIterativeReviewRowsArgs): 
     const {
         challengePhases,
         isPostMortemPhase,
+        limitToSubmissionIds,
         phaseIdFilter,
         reviewerResources,
         sourceRows,
@@ -154,7 +189,7 @@ export function filterIterativeReviewRows(args: FilterIterativeReviewRowsArgs): 
     const iterativeReviewerResourceIds = collectIterativeReviewerResourceIds(reviewerResources)
 
     if (phaseIdFilterSet?.size) {
-        return sourceRows.filter(submission => {
+        const filteredRows = sourceRows.filter(submission => {
             const reviewPhaseId = normalizeIdentifier(submission.review?.phaseId)
             if (reviewPhaseId) {
                 return phaseIdFilterSet.has(reviewPhaseId)
@@ -169,6 +204,8 @@ export function filterIterativeReviewRows(args: FilterIterativeReviewRowsArgs): 
                 submission,
             })
         })
+
+        return filterRowsBySubmissionIds(filteredRows, limitToSubmissionIds)
     }
 
     if (!isPostMortemPhase) {
@@ -177,9 +214,9 @@ export function filterIterativeReviewRows(args: FilterIterativeReviewRowsArgs): 
             challengePhases,
         ))
         if (iterativeOnly.length) {
-            return iterativeOnly
+            return filterRowsBySubmissionIds(iterativeOnly, limitToSubmissionIds)
         }
     }
 
-    return sourceRows
+    return filterRowsBySubmissionIds(sourceRows, limitToSubmissionIds)
 }

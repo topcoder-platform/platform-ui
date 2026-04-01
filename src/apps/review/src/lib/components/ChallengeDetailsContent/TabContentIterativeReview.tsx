@@ -7,6 +7,8 @@ import { TableLoading } from '~/apps/admin/src/lib'
 import { IsRemovingType } from '~/apps/admin/src/lib/models'
 
 import { ChallengeDetailContextModel, SubmissionInfo } from '../../models'
+import { isContestSubmissionType } from '../../constants'
+import { resolveCompletedF2FSubmissionIds } from '../../utils/challenge'
 import { TableNoRecord } from '../TableNoRecord'
 import { TableIterativeReview } from '../TableIterativeReview'
 import { useRole, useRoleProps } from '../../hooks'
@@ -59,6 +61,7 @@ const getSubmissionPriority = (submission: SubmissionInfo): number => {
 export const TabContentIterativeReview: FC<Props> = (props: Props) => {
     const {
         challengeInfo,
+        challengeSubmissions,
         myResources = [],
         resources,
     }: ChallengeDetailContextModel = useContext(ChallengeDetailContext)
@@ -95,6 +98,50 @@ export const TabContentIterativeReview: FC<Props> = (props: Props) => {
         () => normalizedColumnLabel === 'postmortem',
         [normalizedColumnLabel],
     )
+    const winningSubmissionIds = useMemo<string[]>(() => {
+        if (isPostMortemPhase) {
+            return []
+        }
+
+        const normalizedStatus = (challengeInfo?.status ?? '')
+            .trim()
+            .toUpperCase()
+        if (!normalizedStatus.startsWith('COMPLETED')) {
+            return []
+        }
+
+        const normalizeChallengeKey = (value?: string): string => (
+            (value ?? '')
+                .toLowerCase()
+                .replace(/[^a-z0-9]/g, '')
+        )
+
+        const isFirst2FinishChallenge = normalizeChallengeKey(challengeInfo?.type?.name) === 'first2finish'
+            || normalizeChallengeKey(challengeInfo?.track?.name) === 'first2finish'
+        if (!isFirst2FinishChallenge) {
+            return []
+        }
+
+        const contestSubmissions = (challengeSubmissions ?? []).filter(submission => isContestSubmissionType(
+            submission.type,
+            { defaultToContest: true },
+        ))
+        if (!contestSubmissions.length) {
+            return []
+        }
+
+        return resolveCompletedF2FSubmissionIds(
+            contestSubmissions,
+            challengeInfo?.winners,
+        )
+    }, [
+        challengeSubmissions,
+        challengeInfo?.status,
+        challengeInfo?.track?.name,
+        challengeInfo?.type?.name,
+        challengeInfo?.winners,
+        isPostMortemPhase,
+    ])
 
     const isSubmitterOnly = actionChallengeRole === SUBMITTER
         && postMortemReviewerResourceIds.size === 0
@@ -115,13 +162,21 @@ export const TabContentIterativeReview: FC<Props> = (props: Props) => {
         const rows = filterIterativeReviewRows({
             challengePhases: challengeInfo?.phases,
             isPostMortemPhase,
+            limitToSubmissionIds: winningSubmissionIds,
             phaseIdFilter: props.phaseIdFilter,
             reviewerResources: resources,
             sourceRows,
         })
 
         return rows
-    }, [sourceRows, isPostMortemPhase, challengeInfo?.phases, props.phaseIdFilter, resources])
+    }, [
+        sourceRows,
+        isPostMortemPhase,
+        challengeInfo?.phases,
+        props.phaseIdFilter,
+        resources,
+        winningSubmissionIds,
+    ])
 
     const reviewRows = useMemo(() => {
         const map = new Map<string, SubmissionInfo>()

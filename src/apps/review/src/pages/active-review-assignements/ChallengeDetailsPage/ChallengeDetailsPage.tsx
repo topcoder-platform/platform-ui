@@ -54,6 +54,7 @@ import {
     findPhaseByTabLabel,
     isAppealsPhase,
     isAppealsResponsePhase,
+    shouldForceWinnersTabForPastChallenge,
 } from '../../../lib/utils'
 import type { PhaseLike, PhaseOrderingOptions } from '../../../lib/utils'
 import {
@@ -769,16 +770,29 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
             challengeInfo.status,
             phaseOrderingOptions,
         )
+        const itemsWithWinnerFallback = shouldForceWinnersTabForPastChallenge(
+            challengeInfo.status,
+            challengeInfo.winners,
+        )
+            && !items.some(item => item.value === 'Winners')
+            ? [
+                ...items,
+                {
+                    label: 'Winners',
+                    value: 'Winners',
+                },
+            ]
+            : items
 
         // Only add indicators on active-challenges view
         if (isPastReviewDetail) {
-            setTabItems(items)
+            setTabItems(itemsWithWinnerFallback)
             return
         }
 
         // Map tab labels to the corresponding phase so we can check whether it is currently open
         const tabPhaseMap = new Map<string, PhaseLike | undefined>()
-        items.forEach(tab => {
+        itemsWithWinnerFallback.forEach(tab => {
             tabPhaseMap.set(
                 tab.value,
                 findPhaseByTabLabel(challengePhases, tab.value, phaseOrderingOptions),
@@ -851,7 +865,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         })()
 
         // Start with base items; add warnings per label if the viewer has obligations pending
-        const flagged = items.map(it => {
+        const flagged = itemsWithWinnerFallback.map(it => {
             const label = it.value.trim()
                 .toLowerCase()
             const phaseForTab = tabPhaseMap.get(it.value)
