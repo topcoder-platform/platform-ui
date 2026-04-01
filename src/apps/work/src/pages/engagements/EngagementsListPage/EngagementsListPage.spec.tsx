@@ -13,7 +13,10 @@ import {
     useFetchEngagements,
     useFetchProject,
 } from '../../../lib/hooks'
-import { canCreateEngagement } from '../../../lib/utils'
+import {
+    canCreateEngagement,
+    formatEngagementStatus,
+} from '../../../lib/utils'
 
 import { EngagementsListPage } from './EngagementsListPage'
 
@@ -105,6 +108,7 @@ jest.mock('../../../lib/utils', () => ({
 const mockedUseFetchEngagements = useFetchEngagements as jest.Mock
 const mockedUseFetchProject = useFetchProject as jest.Mock
 const mockedCanCreateEngagement = canCreateEngagement as jest.Mock
+const mockedFormatEngagementStatus = formatEngagementStatus as jest.Mock
 
 const defaultContextValue: WorkAppContextModel = {
     isAdmin: true,
@@ -156,6 +160,7 @@ describe('EngagementsListPage', () => {
             isLoading: false,
             project: undefined,
         })
+        mockedFormatEngagementStatus.mockImplementation((status?: string) => status || '')
     })
 
     it('keeps the project name unchanged for project-scoped engagement tabs', () => {
@@ -225,5 +230,29 @@ describe('EngagementsListPage', () => {
             .toBe('true')
         expect(createEngagementButton.getAttribute('data-secondary'))
             .toBe('false')
+    })
+
+    it('renders the engagement view link without the legacy opportunities path segment', () => {
+        mockedUseFetchEngagements.mockReturnValue({
+            engagements: [
+                {
+                    id: 'plJi6KV_jDjdtowUlQbFx',
+                    isPrivate: false,
+                    projectId: 200,
+                    projectName: 'Payment Testing',
+                    status: 'open',
+                    title: 'Test engagement',
+                },
+            ],
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+        })
+
+        renderPage('/engagements', '/engagements')
+
+        expect(screen.getByRole('link', { name: 'View' })
+            .getAttribute('href'))
+            .toBe('https://engagements.example.com/plJi6KV_jDjdtowUlQbFx')
     })
 })
