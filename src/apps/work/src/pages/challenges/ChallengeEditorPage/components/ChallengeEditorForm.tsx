@@ -205,6 +205,12 @@ interface SyncSingleAssignmentResourceParams extends Omit<SingleAssignmentConfig
     nextValue?: string
 }
 
+interface PersistCreatedChallengeCopilotParams {
+    challengeId: string
+    formData: ChallengeEditorFormData
+    syncSingleAssignmentResource: (params: SyncSingleAssignmentResourceParams) => Promise<void>
+}
+
 const SAVE_VALIDATION_ERROR_MESSAGE = 'Please fix validation errors before saving.'
 const TASK_ASSIGNED_MEMBER_REQUIRED_FOR_LAUNCH_MESSAGE
     = 'Assign a member before launching a task challenge.'
@@ -407,6 +413,39 @@ function applySingleAssignmentFieldValues(
     nextFormData.reviewer = getSingleAssignmentFieldValue(sourceFormData, 'reviewer')
 
     return nextFormData
+}
+
+/**
+ * Persists the basic-information copilot selection right after the initial draft is created.
+ *
+ * The first create request only sends the minimal challenge payload, so the selected copilot must
+ * be synchronized separately through the `Copilot` resource assignment before the form resets from
+ * fetched challenge data.
+ *
+ * @param params.challengeId newly created challenge id.
+ * @param params.formData create-form values that may already contain a selected copilot.
+ * @param params.syncSingleAssignmentResource helper that writes the resource assignment.
+ * @returns A promise that resolves when the copilot resource has been synchronized, or immediately
+ * when no copilot is selected.
+ */
+async function persistCreatedChallengeCopilot(
+    params: PersistCreatedChallengeCopilotParams,
+): Promise<void> {
+    const selectedCopilot = getSingleAssignmentFieldValue(
+        params.formData,
+        COPILOT_ASSIGNMENT_CONFIG.fieldName,
+    )
+
+    if (!selectedCopilot) {
+        return
+    }
+
+    await params.syncSingleAssignmentResource({
+        challengeId: params.challengeId,
+        nextValue: selectedCopilot,
+        roleNames: COPILOT_ASSIGNMENT_CONFIG.roleNames,
+        valueField: COPILOT_ASSIGNMENT_CONFIG.valueField,
+    })
 }
 
 function buildSingleAssignmentPayload(
@@ -1605,9 +1644,19 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 })
                 const savedChallenge = await fetchChallenge(createdChallenge.id)
                     .catch(() => createdChallenge)
-                const nextValues = applyProjectBillingToChallengeFormData(
-                    transformChallengeToFormData(savedChallenge),
-                    resolvedProjectBillingAccount,
+                await persistCreatedChallengeCopilot({
+                    challengeId: savedChallenge.id,
+                    formData,
+                    syncSingleAssignmentResource,
+                })
+
+                const nextValues = applySingleAssignmentFieldValues(
+                    applyProjectBillingToChallengeFormData(
+                        transformChallengeToFormData(savedChallenge),
+                        resolvedProjectBillingAccount,
+                    ),
+                    formData,
+                    isTaskSingleAssignmentChallenge(formData),
                 )
                 const normalizedWorkType = normalizeDesignWorkType(formData.workType)
 
@@ -1647,9 +1696,11 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         [
             fallbackProjectId,
             getValues,
+            isTaskSingleAssignmentChallenge,
             reset,
             resolveProjectBillingAccount,
             selectedChallengeType,
+            syncSingleAssignmentResource,
             timelineTemplates,
             trigger,
         ],
