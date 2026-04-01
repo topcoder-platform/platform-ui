@@ -3,12 +3,15 @@ import {
     DIRECT_PROJECT_URL,
     REVIEW_APP_URL,
 } from '../constants'
+import type { Project } from '../models'
 import {
     challengeEditRouteId,
     projectEditRouteId,
     rootRoute,
     taasEditRouteId,
 } from '../../config/routes.config'
+
+import { checkIsUserInvitedToProject } from './permissions.utils'
 
 interface QueryValueMap {
     [key: string]: boolean | null | number | string | string[] | undefined
@@ -81,4 +84,22 @@ export function buildCommunityMemberUrl(handle: string): string {
 
 export function buildDirectProjectUrl(projectId: string | number): string {
     return `${DIRECT_PROJECT_URL}/projects/${encodeURIComponent(String(projectId))}`
+}
+
+/**
+ * Resolves the default in-app landing route for a project.
+ *
+ * Invited users must land on the invitation route so they can accept or decline
+ * the project before the app opens a project workspace tab.
+ *
+ * @param project The project summary or detail being opened.
+ * @param accessToken The current user's access token used to match invite ownership.
+ * @returns The relative route for the project landing page.
+ */
+export function buildProjectLandingPath(project: Project, accessToken: string = ''): string {
+    const projectId = encodeURIComponent(String(project.id))
+
+    return checkIsUserInvitedToProject(accessToken, project)
+        ? `/projects/${projectId}/invitations`
+        : `/projects/${projectId}/challenges`
 }
