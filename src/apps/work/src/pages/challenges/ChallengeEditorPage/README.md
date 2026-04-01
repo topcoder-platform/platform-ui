@@ -71,7 +71,7 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 
 - Challenge fetch: `useFetchChallenge`.
 - Save create/update/delete: `createChallenge`, `patchChallenge`, `deleteChallenge`.
-- Initial create refresh: after `createChallenge`, the form fetches full challenge details with `fetchChallenge` to avoid round-type regressions from sparse create responses.
+- Initial create refresh: after `createChallenge`, the form fetches full challenge details with `fetchChallenge` to avoid round-type regressions from sparse create responses and to surface the generated forum link for challenge types that provision a discussion on create.
 - Skills search: `searchSkills`.
 - Tracks fetch: `fetchChallengeTracks`.
 - Markdown file uploads: `uploadChallengeAttachment`.

@@ -86,4 +86,31 @@ describe('UserCard', () => {
         expect(screen.queryAllByRole('button', { name: 'OK' }))
             .toHaveLength(1)
     })
+
+    it('shows a single Close button in the role update error dialog', async () => {
+        const user = userEvent.setup()
+
+        mockUpdateMemberRole.mockRejectedValue(new Error('You do not have permission to update this project member.'))
+
+        render(
+            <UserCard
+                isEditable
+                onRemove={jest.fn()}
+                onRoleUpdate={jest.fn()}
+                user={baseMember}
+            />,
+        )
+
+        await user.click(screen.getByRole('radio', { name: 'Write' }))
+
+        await waitFor(() => {
+            expect(mockUpdateMemberRole)
+                .toHaveBeenCalledWith('project-1', 'member-1', PROJECT_ROLES.WRITE, undefined)
+        })
+
+        expect(await screen.findByRole('dialog')).not.toBeNull()
+        expect(screen.getByText('You do not have permission to update this project member.')).not.toBeNull()
+        expect(screen.queryAllByRole('button', { name: 'Close' }))
+            .toHaveLength(1)
+    })
 })

@@ -292,11 +292,11 @@ export const UserCard: FC<UserCardProps> = (props: UserCardProps) => {
             {statusError
                 ? (
                     <ConfirmationModal
-                        cancelText='Close'
                         confirmText='Close'
                         message={statusError}
                         onCancel={closeStatusModal}
                         onConfirm={closeStatusModal}
+                        showCancelButton={false}
                         title='Error'
                     />
                 )
