@@ -30,7 +30,7 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 - `wiproAllowed`: optional boolean, defaults to `false` (unchecked).
 - `tags`: optional string array.
 - `skills`: required unless billing account is listed in `SKILLS_OPTIONAL_BILLING_ACCOUNT_IDS`.
-- `reviewer`: required for task challenges when `legacy.reviewType` is `INTERNAL`.
+- `reviewer`: optional for task challenges.
 - `reviewers`: when using `Save as Draft` from `NEW` status, non-task/non-marathon challenges must include reviewer coverage for configured review phases. If required phases are configured, each phase must have at least one member reviewer with a scorecard.
 - `AI review configuration`: templates and manual configs autosave separately once valid, and the AI tab becomes read-only after the challenge has submissions.
 
