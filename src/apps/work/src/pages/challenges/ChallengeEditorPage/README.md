@@ -51,7 +51,8 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 - `DesignWorkTypeField`: shown for Design + Challenge, with the legacy work-type options (`Application Front-End Design`, `Print/Presentation`, `Web Design`, `Widget or Mobile Screen Design`, `Wireframes`). The selected value is stored in challenge tags.
 - `FunChallengeField`: shown for `Marathon Match` type and remains editable after creation so the form can switch between fun-challenge and standard marathon-match fields.
 - `ReviewersField`: hidden for `Task` and `Marathon Match` challenges because manual reviewer assignment is handled elsewhere.
-- `Submission Settings`: shown for Design `Challenge` and Design `First2Finish` types, and contains the stock-art, submission-visibility, and submission-limit controls.
+- `Submission Settings`: shown for Design `Challenge` and Design `First2Finish` types, and contains the final-deliverables, stock-art, submission-visibility, and submission-limit controls.
+- `FinalDeliverablesField`: design-challenge file-type editor that persists the legacy `fileTypes` metadata payload used on challenge draft pages.
 - `ChallengeDescriptionField`: public markdown spec editor.
 - `ChallengePrivateDescriptionField`: optional private markdown spec editor.
 - `TermsField`: advanced-option multi-select for challenge terms. The create route seeds the standard Topcoder terms entry automatically once the terms list loads, including immediately after the first draft-creation step assigns a challenge id, so the editor matches legacy work-manager defaults while still allowing the NDA toggle to add or remove the NDA term separately.

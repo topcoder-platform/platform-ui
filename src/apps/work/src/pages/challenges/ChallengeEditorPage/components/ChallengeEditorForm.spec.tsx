@@ -264,6 +264,9 @@ jest.mock('./CopilotFeeField', () => ({
 jest.mock('./DesignWorkTypeField', () => ({
     DesignWorkTypeField: () => <></>,
 }))
+jest.mock('./FinalDeliverablesField', () => ({
+    FinalDeliverablesField: () => <>Final Deliverables Field</>,
+}))
 jest.mock('./FunChallengeField', () => ({
     FunChallengeField: () => <></>,
 }))
@@ -564,6 +567,8 @@ describe('ChallengeEditorForm', () => {
         const submissionSettingsSection = screen.getByRole('heading', { name: 'Submission Settings' })
             .closest('section')
 
+        expect(submissionSettingsSection)
+            .toHaveTextContent('Final Deliverables Field')
         expect(submissionSettingsSection)
             .toHaveTextContent('Submission Visibility Field')
         expect(submissionSettingsSection)

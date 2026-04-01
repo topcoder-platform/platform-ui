@@ -116,6 +116,9 @@ import {
     DesignWorkTypeField,
 } from './DesignWorkTypeField'
 import {
+    FinalDeliverablesField,
+} from './FinalDeliverablesField'
+import {
     FunChallengeField,
 } from './FunChallengeField'
 import {
@@ -2100,8 +2103,9 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                         <section className={styles.section}>
                                             <h3 className={styles.sectionTitle}>Submission Settings</h3>
                                             <div className={styles.grid}>
-                                                <SubmissionVisibilityField />
+                                                <FinalDeliverablesField />
                                                 <StockArtsField />
+                                                <SubmissionVisibilityField />
                                                 <MaximumSubmissionsField />
                                             </div>
                                         </section>
