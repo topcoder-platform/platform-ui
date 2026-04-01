@@ -4,6 +4,7 @@ import {
     REVIEW_APP_URL,
 } from '../constants'
 import type { Project } from '../models'
+import { PROJECT_MEMBER_INVITE_STATUS } from '../constants/project-roles.constants'
 import {
     challengeEditRouteId,
     projectEditRouteId,
@@ -89,8 +90,8 @@ export function buildDirectProjectUrl(projectId: string | number): string {
 /**
  * Resolves the default in-app landing route for a project.
  *
- * Invited users must land on the invitation route so they can accept or decline
- * the project before the app opens a project workspace tab.
+ * Users with a pending invite must land on the invitation route so they can
+ * accept or decline the project before the app opens a project workspace tab.
  *
  * @param project The project summary or detail being opened.
  * @param accessToken The current user's access token used to match invite ownership.
@@ -98,8 +99,12 @@ export function buildDirectProjectUrl(projectId: string | number): string {
  */
 export function buildProjectLandingPath(project: Project, accessToken: string = ''): string {
     const projectId = encodeURIComponent(String(project.id))
+    const invite = checkIsUserInvitedToProject(accessToken, project)
+    const normalizedInviteStatus = invite?.status
+        ?.trim()
+        .toLowerCase()
 
-    return checkIsUserInvitedToProject(accessToken, project)
+    return normalizedInviteStatus === PROJECT_MEMBER_INVITE_STATUS.PENDING
         ? `/projects/${projectId}/invitations`
         : `/projects/${projectId}/challenges`
 }

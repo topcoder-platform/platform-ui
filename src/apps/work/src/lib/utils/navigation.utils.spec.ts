@@ -52,11 +52,31 @@ describe('buildProjectLandingPath', () => {
             invites: [
                 {
                     email: 'INVITEE@EXAMPLE.COM',
+                    status: 'pending',
                     userId: 123,
                 },
             ],
         }, 'token'))
             .toBe('/projects/200/invitations')
+    })
+
+    it('keeps the challenges path when the matched invite is already accepted', () => {
+        mockedDecodeToken.mockReturnValue({
+            email: 'invitee@example.com',
+            userId: '123',
+        } as ReturnType<typeof decodeToken>)
+
+        expect(buildProjectLandingPath({
+            ...project,
+            invites: [
+                {
+                    email: 'invitee@example.com',
+                    status: 'accepted',
+                    userId: 123,
+                },
+            ],
+        }, 'token'))
+            .toBe('/projects/200/challenges')
     })
 
     it('keeps the challenges path when the invites belong to another user', () => {
