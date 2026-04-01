@@ -1,4 +1,5 @@
 import {
+    AiReviewDecision,
     BackendPhase,
     BackendResource,
     SubmissionInfo,
@@ -6,6 +7,7 @@ import {
 import { shouldIncludeInReviewPhase } from '../../utils/reviewPhaseGuards'
 
 interface FilterIterativeReviewRowsArgs {
+    aiReviewDecisionsBySubmissionId?: Record<string, AiReviewDecision>
     challengePhases?: BackendPhase[]
     isPostMortemPhase: boolean
     limitToSubmissionIds?: string[]
@@ -24,6 +26,41 @@ interface IterativePlaceholderRowArgs {
 
 interface LimitFirst2FinishIterativeRowsOptions {
     forceSingleRow?: boolean
+}
+
+function isAiFailedReviewSubmission(submission: SubmissionInfo): boolean {
+    return (submission.status ?? '').toUpperCase() === 'AI_FAILED_REVIEW'
+}
+
+function isAiLockedByDecision(
+    submission: SubmissionInfo,
+    aiReviewDecisionsBySubmissionId?: Record<string, AiReviewDecision>,
+): boolean {
+    const submissionId = normalizeIdentifier(submission.id)
+    if (!submissionId || !aiReviewDecisionsBySubmissionId) {
+        return false
+    }
+
+    const decision = aiReviewDecisionsBySubmissionId[submissionId]
+    if (!decision) {
+        return false
+    }
+
+    const decisionStatus = (decision.status ?? '').toUpperCase()
+    const isDecisionFailed = decisionStatus === 'FAILED' || decisionStatus === 'ERROR'
+
+    return Boolean(decision.submissionLocked && isDecisionFailed)
+}
+
+function shouldTreatAsAiFailedSubmission(
+    submission: SubmissionInfo,
+    aiReviewDecisionsBySubmissionId?: Record<string, AiReviewDecision>,
+): boolean {
+    if (isAiLockedByDecision(submission, aiReviewDecisionsBySubmissionId)) {
+        return true
+    }
+
+    return isAiFailedReviewSubmission(submission)
 }
 
 /**
@@ -237,6 +274,7 @@ export function limitFirst2FinishIterativeRows(
  */
 export function filterIterativeReviewRows(args: FilterIterativeReviewRowsArgs): SubmissionInfo[] {
     const {
+        aiReviewDecisionsBySubmissionId,
         challengePhases,
         isPostMortemPhase,
         limitToSubmissionIds,
@@ -244,6 +282,7 @@ export function filterIterativeReviewRows(args: FilterIterativeReviewRowsArgs): 
         reviewerResources,
         sourceRows,
     }: FilterIterativeReviewRowsArgs = args
+
     const phaseIdFilterSet = buildPhaseIdFilterSet(challengePhases, phaseIdFilter)
     const iterativeReviewPhaseCount = countIterativeReviewPhases(challengePhases)
     const iterativeReviewerResourceIds = collectIterativeReviewerResourceIds(reviewerResources)
@@ -253,6 +292,10 @@ export function filterIterativeReviewRows(args: FilterIterativeReviewRowsArgs): 
             const reviewPhaseId = normalizeIdentifier(submission.review?.phaseId)
             if (reviewPhaseId) {
                 return phaseIdFilterSet.has(reviewPhaseId)
+            }
+
+            if (shouldTreatAsAiFailedSubmission(submission, aiReviewDecisionsBySubmissionId)) {
+                return true
             }
 
             // New WM F2F flows can surface assigned submissions before the review row has a phase id.
@@ -269,9 +312,12 @@ export function filterIterativeReviewRows(args: FilterIterativeReviewRowsArgs): 
     }
 
     if (!isPostMortemPhase) {
-        const iterativeOnly = sourceRows.filter(submission => !shouldIncludeInReviewPhase(
-            submission,
-            challengePhases,
+        const iterativeOnly = sourceRows.filter(submission => (
+            shouldTreatAsAiFailedSubmission(submission, aiReviewDecisionsBySubmissionId)
+            || !shouldIncludeInReviewPhase(
+                submission,
+                challengePhases,
+            )
         ))
         if (iterativeOnly.length) {
             return limitFirst2FinishIterativeRows(iterativeOnly, limitToSubmissionIds)

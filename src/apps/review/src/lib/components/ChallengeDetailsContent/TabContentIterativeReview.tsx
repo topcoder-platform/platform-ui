@@ -70,6 +70,7 @@ const getSubmissionPriority = (submission: SubmissionInfo): number => {
 
 export const TabContentIterativeReview: FC<Props> = (props: Props) => {
     const {
+        aiReviewDecisionsBySubmissionId,
         challengeInfo,
         challengeSubmissions,
         myResources = [],
@@ -151,6 +152,7 @@ export const TabContentIterativeReview: FC<Props> = (props: Props) => {
 
     const filteredRows = useMemo(() => {
         const rows = filterIterativeReviewRows({
+            aiReviewDecisionsBySubmissionId,
             challengePhases: challengeInfo?.phases,
             isPostMortemPhase,
             limitToSubmissionIds: first2FinishSubmissionIds,
@@ -161,6 +163,7 @@ export const TabContentIterativeReview: FC<Props> = (props: Props) => {
 
         return rows
     }, [
+        aiReviewDecisionsBySubmissionId,
         sourceRows,
         isPostMortemPhase,
         challengeInfo?.phases,
