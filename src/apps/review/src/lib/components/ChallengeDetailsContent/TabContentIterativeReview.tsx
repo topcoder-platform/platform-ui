@@ -113,7 +113,7 @@ export const TabContentIterativeReview: FC<Props> = (props: Props) => {
         const normalizeChallengeKey = (value?: string): string => (
             (value ?? '')
                 .toLowerCase()
-                .replace(/[^a-z]/g, '')
+                .replace(/[^a-z0-9]/g, '')
         )
 
         const isFirst2FinishChallenge = normalizeChallengeKey(challengeInfo?.type?.name) === 'first2finish'
