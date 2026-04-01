@@ -825,6 +825,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     )
     const projectBillingAccountResult = useFetchProjectBillingAccount(fallbackProjectId)
     const projectBillingAccount = projectBillingAccountResult.billingAccount
+    const projectBillingAccountRef = useRef(projectBillingAccount)
     const challengesListPath = useMemo(
         () => getChallengesListPath(fallbackProjectId),
         [fallbackProjectId],
@@ -1282,6 +1283,10 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     }, [props.challenge])
 
     useEffect(() => {
+        projectBillingAccountRef.current = projectBillingAccount
+    }, [projectBillingAccount])
+
+    useEffect(() => {
         resourceRolesRef.current = resourceRoles
     }, [resourceRoles])
 
@@ -1297,7 +1302,10 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         let isActive = true
         const challenge = challengeRef.current
         const challengeId = challenge?.id
-        const baseFormData = transformChallengeToFormData(challenge)
+        const baseFormData = applyProjectBillingToChallengeFormData(
+            transformChallengeToFormData(challenge),
+            projectBillingAccountRef.current,
+        )
 
         setCurrentChallengeId(challengeId)
         defaultedDiscussionForumTypeIdRef.current = undefined
