@@ -436,6 +436,7 @@ const EditAssignmentModal: FC<EditAssignmentModalProps> = (
                                 startDate: undefined,
                             }))
                         }}
+                        preventOpenOnFocus
                         showTimeSelect={false}
                         showTimezone={false}
                         value={startDate}
