@@ -31,9 +31,14 @@ jest.mock('../../../../../lib/components/form', () => ({
         className?: string
         label: string
         name: string
+        options?: Array<{
+            label: string
+            value: string
+        }>
     }) => (
         <div
             className={props.className}
+            data-options={JSON.stringify(props.options || [])}
             data-testid={props.name}
         >
             <span>{props.label}</span>
@@ -104,30 +109,56 @@ function createPendingPromise(): Promise<never> {
     })
 }
 
-const TestHarness = (): JSX.Element => {
+const baseDefaultValues: ChallengeEditorFormData = {
+    description: '',
+    name: '',
+    phases: [
+        {
+            id: 'phase-1',
+            name: 'Iterative Review',
+            phaseId: 'phase-1',
+        },
+    ],
+    prizeSets: [],
+    reviewers: [
+        {
+            additionalMemberIds: [],
+            isMemberReview: true,
+            memberId: 'member-1',
+            memberReviewerCount: 1,
+            phaseId: 'phase-1',
+            roleId: 'role-1',
+            scorecardId: 'scorecard-1',
+        },
+    ],
+    skills: [],
+    tags: [],
+    trackId: 'track-1',
+    typeId: 'type-1',
+}
+
+function getPhaseOptionLabels(fieldName: string): string[] {
+    const serializedOptions = screen.getByTestId(fieldName)
+        .getAttribute('data-options')
+
+    if (!serializedOptions) {
+        return []
+    }
+
+    return (JSON.parse(serializedOptions) as Array<{
+        label: string
+        value: string
+    }>)
+        .map(option => option.label)
+}
+
+const TestHarness = (props: {
+    defaultValues?: Partial<ChallengeEditorFormData>
+}): JSX.Element => {
     const formMethods = useForm<ChallengeEditorFormData>({
         defaultValues: {
-            phases: [
-                {
-                    id: 'phase-1',
-                    name: 'Iterative Review',
-                    phaseId: 'phase-1',
-                },
-            ],
-            prizeSets: [],
-            reviewers: [
-                {
-                    additionalMemberIds: [],
-                    isMemberReview: true,
-                    memberId: 'member-1',
-                    memberReviewerCount: 1,
-                    phaseId: 'phase-1',
-                    roleId: 'role-1',
-                    scorecardId: 'scorecard-1',
-                },
-            ],
-            trackId: 'track-1',
-            typeId: 'type-1',
+            ...baseDefaultValues,
+            ...props.defaultValues,
         },
     })
 
@@ -199,5 +230,82 @@ describe('HumanReviewTab', () => {
             .not.toBeNull()
         expect(screen.queryByRole('button', { name: 'Apply default reviewers' }))
             .toBeNull()
+    })
+
+    it('shows only unassigned non-submission phases on each reviewer card', () => {
+        render(
+            <TestHarness
+                defaultValues={{
+                    phases: [
+                        {
+                            id: 'registration',
+                            name: 'Registration',
+                            phaseId: 'registration',
+                        },
+                        {
+                            id: 'submission',
+                            name: 'Submission',
+                            phaseId: 'submission',
+                        },
+                        {
+                            id: 'screening',
+                            name: 'Screening',
+                            phaseId: 'screening',
+                        },
+                        {
+                            id: 'review',
+                            name: 'Review',
+                            phaseId: 'review',
+                        },
+                        {
+                            id: 'approval',
+                            name: 'Approval',
+                            phaseId: 'approval',
+                        },
+                    ],
+                    reviewers: [
+                        {
+                            additionalMemberIds: [],
+                            isMemberReview: true,
+                            memberId: 'member-1',
+                            memberReviewerCount: 1,
+                            phaseId: 'review',
+                            roleId: 'role-1',
+                            scorecardId: 'scorecard-1',
+                        },
+                        {
+                            additionalMemberIds: [],
+                            isMemberReview: true,
+                            memberId: 'member-2',
+                            memberReviewerCount: 1,
+                            phaseId: 'approval',
+                            roleId: 'role-2',
+                            scorecardId: 'scorecard-2',
+                        },
+                        {
+                            additionalMemberIds: [],
+                            isMemberReview: true,
+                            memberId: 'member-3',
+                            memberReviewerCount: 1,
+                            roleId: 'role-3',
+                            scorecardId: 'scorecard-3',
+                        },
+                    ],
+                }}
+            />,
+        )
+
+        expect(getPhaseOptionLabels('reviewers.0.phaseId'))
+            .toEqual([
+                'Screening',
+                'Review',
+            ])
+        expect(getPhaseOptionLabels('reviewers.1.phaseId'))
+            .toEqual([
+                'Screening',
+                'Approval',
+            ])
+        expect(getPhaseOptionLabels('reviewers.2.phaseId'))
+            .toEqual(['Screening'])
     })
 })
