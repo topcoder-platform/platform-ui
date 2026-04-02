@@ -73,9 +73,14 @@ jest.mock('~/apps/review/src/lib', () => ({
     virtual: true,
 })
 jest.mock('~/libs/ui', () => ({
-    BaseModal: (props: PropsWithChildren<{ open: boolean }>): JSX.Element => (
+    BaseModal: (props: PropsWithChildren<{ open: boolean; title?: string }>): JSX.Element => (
         props.open
-            ? <div>{props.children}</div>
+            ? (
+                <div>
+                    {props.title ? <div>{props.title}</div> : undefined}
+                    {props.children}
+                </div>
+            )
             : <></>
     ),
     Button: (props: {
@@ -97,7 +102,11 @@ jest.mock('../../../lib/constants', () => ({
     PROFILE_URL: 'https://profiles.example.com',
 }))
 jest.mock('../../../lib/components', () => ({
-    AcceptApplicationModal: (): JSX.Element => <></>,
+    AcceptApplicationModal: (props: { open: boolean }): JSX.Element => (
+        props.open
+            ? <div>Accept Application</div>
+            : <></>
+    ),
     ApplicationDetailModal: (): JSX.Element => <></>,
     ErrorMessage: (props: { message: string }): JSX.Element => <div>{props.message}</div>,
     LoadingSpinner: (): JSX.Element => <div>Loading</div>,
@@ -167,7 +176,7 @@ const applications: Application[] = [
     },
 ]
 
-function renderPage(): void {
+function renderPage(contextOverrides: Partial<WorkAppContextModel> = {}): void {
     const MockWorkAppContext = mockWorkAppContext
 
     render(
@@ -180,6 +189,7 @@ function renderPage(): void {
                 isReadOnly: false,
                 loginUserInfo: undefined,
                 userRoles: [],
+                ...contextOverrides,
             }}
         >
             <MemoryRouter initialEntries={['/projects/project-1/engagements/engagement-1/applications']}>
@@ -233,5 +243,44 @@ describe('ApplicationsListPage', () => {
             .toBeNull()
         expect(screen.getByText('Review User'))
             .toBeTruthy()
+    })
+
+    it('shows a capacity modal instead of the accept form when the engagement is full', () => {
+        mockedUseFetchEngagement.mockReturnValue({
+            engagement: {
+                anticipatedStart: 'FEW_WEEKS',
+                assignments: [
+                    {
+                        id: 'assignment-1',
+                        memberHandle: 'submitted-user',
+                        memberId: '101',
+                        status: 'ACTIVE',
+                    },
+                ],
+                requiredMemberCount: 1,
+                status: 'OPEN',
+                title: 'Engagement Alpha',
+            },
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+        })
+
+        renderPage({ isManager: true })
+
+        fireEvent.change(screen.getAllByRole('combobox')[2], {
+            target: { value: 'SELECTED' },
+        })
+
+        expect(screen.getByText('Cannot Select Applicant'))
+            .toBeTruthy()
+        expect(screen.getByText(
+            'The required number of members are already assigned to this engagement. '
+                + 'If you\'d like to add another member, change the required number of members on the engagement '
+                + 'first.',
+        ))
+            .toBeTruthy()
+        expect(screen.queryByText('Accept Application'))
+            .toBeNull()
     })
 })

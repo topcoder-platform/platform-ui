@@ -40,6 +40,7 @@ import {
 } from '../../../lib/hooks'
 import {
     GroupBulkCreateMemberResult,
+    GroupBulkCreateResponse,
     MemberValidationResult,
     WorkAppContextModel,
 } from '../../../lib/models'
@@ -145,7 +146,13 @@ function getSuccessMemberCount(
     return memberResults.filter(memberResult => memberResult.success).length
 }
 
-export const GroupsPage: FC = () => {
+export interface GroupsPageProps {
+    embedded?: boolean
+    onClose?: () => void
+    onCreateSuccess?: (createdGroup: GroupBulkCreateResponse) => void
+}
+
+export const GroupsPage: FC<GroupsPageProps> = (props: GroupsPageProps) => {
     const {
         isAdmin,
         isCopilot,
@@ -176,6 +183,7 @@ export const GroupsPage: FC = () => {
     const bulkCreateGroupResult: UseBulkCreateGroupResult = useBulkCreateGroup()
     const createGroup = bulkCreateGroupResult.createGroup
     const bulkCreateGroupError = bulkCreateGroupResult.error
+    const lastCreatedGroup = bulkCreateGroupResult.createdGroup
     const isCreating = bulkCreateGroupResult.isCreating
 
     const bulkSearchMembersResult: UseBulkSearchMembersResult = useBulkSearchMembers(parsedIdentifiers)
@@ -317,7 +325,19 @@ export const GroupsPage: FC = () => {
         if (fileInputRef.current) {
             fileInputRef.current.value = ''
         }
-    }, [formMethods])
+
+        if (props.embedded) {
+            if (lastCreatedGroup) {
+                props.onCreateSuccess?.(lastCreatedGroup)
+            }
+
+            props.onClose?.()
+        }
+    }, [
+        formMethods,
+        lastCreatedGroup,
+        props,
+    ])
 
     const handleCreateGroup: SubmitHandler<GroupsFormSchemaData> = useCallback(
         async (formData: GroupsFormSchemaData): Promise<void> => {
@@ -387,17 +407,29 @@ export const GroupsPage: FC = () => {
     const isWorking = isCreating || isParsingFile || isSearching
 
     if (!canManageGroups) {
-        return (
-            <NullLayout>
-                <PageTitle>Groups</PageTitle>
+        const errorContent = (
+            <>
+                {props.embedded
+                    ? undefined
+                    : <PageTitle>Groups</PageTitle>}
                 <ErrorMessage message='You do not have permission to manage groups.' />
-            </NullLayout>
+            </>
         )
+
+        return props.embedded
+            ? errorContent
+            : (
+                <NullLayout>
+                    {errorContent}
+                </NullLayout>
+            )
     }
 
-    return (
-        <NullLayout>
-            <PageTitle>Groups</PageTitle>
+    const pageContent = (
+        <>
+            {props.embedded
+                ? undefined
+                : <PageTitle>Groups</PageTitle>}
 
             <div className={styles.pageContainer}>
                 <section className={styles.section}>
@@ -593,8 +625,16 @@ export const GroupsPage: FC = () => {
                     />
                 )
                 : undefined}
-        </NullLayout>
+        </>
     )
+
+    return props.embedded
+        ? pageContent
+        : (
+            <NullLayout>
+                {pageContent}
+            </NullLayout>
+        )
 }
 
 export default GroupsPage

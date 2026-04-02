@@ -202,6 +202,16 @@ const defaultContextValue: WorkAppContextModel = {
     userRoles: ['administrator'],
 }
 
+const projectManagerContextValue: WorkAppContextModel = {
+    ...defaultContextValue,
+    isAdmin: false,
+    isManager: true,
+    loginUserInfo: {
+        ...defaultContextValue.loginUserInfo,
+        roles: ['project manager'],
+    } as WorkAppContextModel['loginUserInfo'],
+    userRoles: ['project manager'],
+}
 const talentManagerContextValue: WorkAppContextModel = {
     ...defaultContextValue,
     isAdmin: false,
@@ -553,6 +563,50 @@ describe('EngagementsListPage', () => {
         expect(within(row)
             .queryByRole('button', { name: 'Delete' }))
             .toBeNull()
+    })
+
+    it('blocks project managers from opening project engagement routes directly', () => {
+        mockedUseFetchProject.mockReturnValue({
+            error: undefined,
+            isLoading: false,
+            project: {
+                id: 200,
+                name: 'Payment Testing',
+                status: 'active',
+            },
+        })
+        mockedUseFetchEngagements.mockReturnValue({
+            engagements: [sampleEngagement],
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+        })
+
+        renderPage('/projects/200/engagements', '/projects/:projectId/engagements', projectManagerContextValue)
+
+        expect(screen.getByRole('heading', { level: 1, name: 'Payment Testing' }))
+            .toBeTruthy()
+        expect(screen.getByText('Project Tabs'))
+            .toBeTruthy()
+        expect(screen.getByText('You need Admin or Talent Manager role to view engagements.'))
+            .toBeTruthy()
+        expect(screen.queryByText(sampleEngagement.title))
+            .toBeNull()
+        expect(mockedUseFetchEngagements)
+            .toHaveBeenLastCalledWith(
+                '200',
+                {
+                    includePrivate: true,
+                    projectId: '200',
+                    projectIds: undefined,
+                    sortBy: undefined,
+                    sortOrder: undefined,
+                    status: undefined,
+                },
+                {
+                    enabled: false,
+                },
+            )
     })
 
     it('deletes the selected engagement and refreshes the list', async () => {
