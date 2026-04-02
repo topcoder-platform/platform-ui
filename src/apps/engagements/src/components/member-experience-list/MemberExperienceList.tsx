@@ -38,7 +38,7 @@ const MemberExperienceList: FC<MemberExperienceListProps> = (props: MemberExperi
         }
 
         return [...experiences].sort(
-            (a, b) => parseDate(a.createdAt) - parseDate(b.createdAt),
+            (a, b) => parseDate(b.createdAt) - parseDate(a.createdAt),
         )
     }, [experiences])
 

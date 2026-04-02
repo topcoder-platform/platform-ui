@@ -76,10 +76,6 @@ const APPEAL_PHASE_KEYS = new Set([
     'appeals',
     'appealsresponse',
 ])
-const WITHOUT_APPEAL_CHALLENGE_KEYS = new Set([
-    'design',
-    'first2finish',
-])
 
 function toNumber(value: unknown): number {
     const parsed = Number(value)
@@ -118,6 +114,8 @@ function normalizeTrackForScorecards(value: unknown): string {
 
 /**
  * Returns whether a phase should appear in the manual reviewer phase selector.
+ * Appeal phases stay hidden because the review-phase reviewers cover those
+ * responsibilities for every challenge type.
  */
 function isSelectableReviewerPhaseName(
     phaseName: string | undefined,
@@ -128,21 +126,6 @@ function isSelectableReviewerPhaseName(
     return !!normalizedPhaseName
         && !NON_REVIEWER_PHASE_KEYS.has(normalizedPhaseName)
         && (allowAppealPhases || !APPEAL_PHASE_KEYS.has(normalizedPhaseName))
-}
-
-/**
- * Returns whether the selected challenge track/type allows separate appeal reviewer phases.
- */
-function challengeAllowsAppealPhases(
-    challengeTypeName: string | undefined,
-    challengeTrackName: string | undefined,
-): boolean {
-    return ![
-        challengeTypeName,
-        challengeTrackName,
-    ]
-        .map(value => normalizeKey(value))
-        .some(value => WITHOUT_APPEAL_CHALLENGE_KEYS.has(value))
 }
 
 function normalizePhaseToken(value: unknown): string {
@@ -556,28 +539,7 @@ export const HumanReviewTab: FC = () => {
         },
         [phases],
     )
-    const selectedChallengeTrackName = useMemo(
-        (): string => normalizeText(
-            challengeTracks.find(track => normalizeText(track.id) === normalizedTrackId)?.name,
-        ),
-        [challengeTracks, normalizedTrackId],
-    )
-    const selectedChallengeTypeName = useMemo(
-        (): string => normalizeText(
-            challengeTypes.find(type => normalizeText(type.id) === normalizedTypeId)?.name,
-        ),
-        [challengeTypes, normalizedTypeId],
-    )
-    const allowAppealPhases = useMemo(
-        (): boolean => challengeAllowsAppealPhases(
-            selectedChallengeTypeName,
-            selectedChallengeTrackName,
-        ),
-        [
-            selectedChallengeTrackName,
-            selectedChallengeTypeName,
-        ],
-    )
+    const allowAppealPhases = false
 
     const roleIdByName = useMemo<Map<string, string>>(
         () => {

@@ -347,7 +347,16 @@ describe('HumanReviewTab', () => {
         })
     })
 
-    it('hides appeal phases for first2finish manual reviewer cards', () => {
+    it('hides appeal phases for manual reviewer cards across challenge types', () => {
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [
+                {
+                    id: 'type-1',
+                    name: 'Code',
+                },
+            ],
+        })
+
         render(
             <TestHarness
                 defaultValues={{
