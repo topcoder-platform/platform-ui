@@ -762,6 +762,43 @@ describe('ChallengeEditorForm', () => {
             .toBeUndefined()
     })
 
+    it('registers the launch action for read-only draft challenges', async () => {
+        let launchAction: (() => Promise<void>) | undefined
+
+        mockedPatchChallenge.mockResolvedValue({
+            ...validDraftChallenge,
+            status: 'ACTIVE',
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={validDraftChallenge}
+                    isReadOnly
+                    onRegisterLaunchAction={action => {
+                        launchAction = action
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        await waitFor(() => {
+            expect(launchAction)
+                .toEqual(expect.any(Function))
+        })
+
+        await act(async () => {
+            await launchAction?.()
+        })
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .toHaveBeenCalledWith('12345', expect.objectContaining({
+                    status: 'ACTIVE',
+                }))
+        })
+    })
+
     it('renders submission settings for design first2finish challenges', () => {
         mockedUseFetchChallengeTracks.mockReturnValue({
             isLoading: false,

@@ -1977,7 +1977,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     ])
 
     useEffect(() => {
-        if (!onRegisterLaunchAction || isReadOnly) {
+        if (!onRegisterLaunchAction) {
             return undefined
         }
 
@@ -1990,7 +1990,6 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         }
     }, [
         currentChallengeId,
-        isReadOnly,
         isScorerBlockingChallengeActions,
         launchChallenge,
         onRegisterLaunchAction,

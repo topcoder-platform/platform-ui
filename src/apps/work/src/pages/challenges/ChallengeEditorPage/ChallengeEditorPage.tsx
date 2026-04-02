@@ -153,12 +153,12 @@ function getTabClassName(activeTab: EditorTab, tab: EditorTab): string {
 }
 
 function shouldShowLaunchAction(
-    isEditMode: boolean,
+    isExistingChallenge: boolean,
     activeTab: EditorTab,
     challengeStatus: string | undefined,
     hasLaunchAction: boolean,
 ): boolean {
-    return isEditMode
+    return isExistingChallenge
         && activeTab === 'details'
         && challengeStatus === CHALLENGE_STATUS.DRAFT
         && hasLaunchAction
@@ -1007,7 +1007,7 @@ export const ChallengeEditorPage: FC = () => {
         }
         : undefined
     const canLaunchChallenge = shouldShowLaunchAction(
-        isEditMode,
+        isExistingChallenge,
         activeTab,
         challengeStatus,
         !!launchAction,
