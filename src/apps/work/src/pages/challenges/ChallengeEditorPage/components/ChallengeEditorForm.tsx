@@ -220,6 +220,7 @@ interface PersistCreatedChallengeCopilotResult {
 }
 
 const SAVE_VALIDATION_ERROR_MESSAGE = 'Please fix validation errors before saving.'
+const DESIGN_WORK_TYPE_REQUIRED_MESSAGE = 'Select a work type'
 const TASK_ASSIGNED_MEMBER_REQUIRED_FOR_LAUNCH_MESSAGE
     = 'Assign a member before launching a task challenge.'
 const CHALLENGE_TYPE_CHALLENGE_ABBREVIATION = 'CH'
@@ -544,6 +545,30 @@ function mergeTagsWithDesignWorkType(
         ...tagsWithoutWorkType,
         normalizedWorkType,
     ]
+}
+
+/**
+ * Returns the validation error for the design challenge work type on create.
+ *
+ * @param isRequired Whether the current track/type selection requires a work type.
+ * @param workType The current form value for the design work type field.
+ * @returns The validation message when the field is required but unset, otherwise `undefined`.
+ * @remarks Used only by the new challenge flow because work type is locked after creation.
+ */
+function getCreateChallengeWorkTypeValidationError({
+    isRequired,
+    workType,
+}: {
+    isRequired: boolean
+    workType: unknown
+}): string | undefined {
+    if (!isRequired) {
+        return undefined
+    }
+
+    return normalizeDesignWorkType(workType)
+        ? undefined
+        : DESIGN_WORK_TYPE_REQUIRED_MESSAGE
 }
 
 function normalizeReviewerPhaseName(value: unknown): string {
@@ -928,6 +953,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     )
     const projectBillingAccountResult = useFetchProjectBillingAccount(fallbackProjectId)
     const projectBillingAccount = projectBillingAccountResult.billingAccount
+    const projectBillingAccountRef = useRef(projectBillingAccount)
     const challengesListPath = useMemo(
         () => getChallengesListPath(fallbackProjectId),
         [fallbackProjectId],
@@ -1385,6 +1411,10 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     }, [props.challenge])
 
     useEffect(() => {
+        projectBillingAccountRef.current = projectBillingAccount
+    }, [projectBillingAccount])
+
+    useEffect(() => {
         resourceRolesRef.current = resourceRoles
     }, [resourceRoles])
 
@@ -1400,7 +1430,10 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         let isActive = true
         const challenge = challengeRef.current
         const challengeId = challenge?.id
-        const baseFormData = transformChallengeToFormData(challenge)
+        const baseFormData = applyProjectBillingToChallengeFormData(
+            transformChallengeToFormData(challenge),
+            projectBillingAccountRef.current,
+        )
 
         setCurrentChallengeId(challengeId)
         defaultedDiscussionForumTypeIdRef.current = undefined
@@ -1660,6 +1693,25 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 return
             }
 
+            clearErrors('workType')
+            setSaveError(undefined)
+            setSaveValidationError(undefined)
+
+            const workTypeValidationError = getCreateChallengeWorkTypeValidationError({
+                isRequired: showDesignWorkTypeField,
+                workType: getValues('workType'),
+            })
+
+            if (workTypeValidationError) {
+                setSaveStatus('idle')
+                setError('workType', {
+                    message: workTypeValidationError,
+                    type: 'manual',
+                })
+                setSaveValidationError(workTypeValidationError)
+                return
+            }
+
             setIsSaving(true)
             setSaveStatus('saving')
             setSaveError(undefined)
@@ -1762,12 +1814,15 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             }
         },
         [
+            clearErrors,
             fallbackProjectId,
             getValues,
             isTaskSingleAssignmentChallenge,
             reset,
             resolveProjectBillingAccount,
             selectedChallengeType,
+            setError,
+            showDesignWorkTypeField,
             syncSingleAssignmentResource,
             timelineTemplates,
             trigger,
@@ -1834,13 +1889,19 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 })
                 const savedChallenge = await patchChallenge(currentChallengeId, payload)
                 await syncDraftSingleAssignments(currentChallengeId, formDataWithProjectBilling)
+                const persistedFormData = applyProjectBillingToChallengeFormData(
+                    transformChallengeToFormData(savedChallenge),
+                    resolvedProjectBillingAccount,
+                )
 
                 const nextValues = applySingleAssignmentFieldValues(
                     applyPersistedSingleAssignments(
-                        applyProjectBillingToChallengeFormData(
-                            transformChallengeToFormData(savedChallenge),
-                            resolvedProjectBillingAccount,
-                        ),
+                        {
+                            ...persistedFormData,
+                            attachments: Array.isArray(persistedFormData.attachments)
+                                ? persistedFormData.attachments
+                                : formDataWithProjectBilling.attachments,
+                        },
                     ),
                     formDataWithProjectBilling,
                     isTaskChallenge,

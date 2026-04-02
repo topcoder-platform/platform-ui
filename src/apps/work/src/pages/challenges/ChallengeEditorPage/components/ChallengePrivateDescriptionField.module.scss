@@ -18,6 +18,17 @@
     }
 }
 
+.templateLink {
+    a {
+        color: $link-blue-dark;
+
+        &:hover,
+        &:focus {
+            color: $link-blue-dark;
+        }
+    }
+}
+
 .addButtonWrapper {
     margin-top: 4px;
 }

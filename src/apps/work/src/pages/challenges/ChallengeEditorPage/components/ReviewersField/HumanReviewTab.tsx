@@ -61,6 +61,17 @@ const SCORECARD_TRACK_ALIASES: Record<string, string> = {
     QUALITY_ASSURANCE: 'QUALITY_ASSURANCE',
     QUALITYASSURANCE: 'QUALITY_ASSURANCE',
 }
+const ITERATIVE_REVIEW_ROLE_NAMES = [
+    'Iterative Reviewer',
+    'Iterative Review',
+]
+const NON_REVIEWER_PHASE_KEYS = new Set([
+    'checkpointsubmission',
+    'registration',
+    'submission',
+    'topcodersubmission',
+    'topgearsubmission',
+])
 
 function toNumber(value: unknown): number {
     const parsed = Number(value)
@@ -95,6 +106,15 @@ function normalizeTrackForScorecards(value: unknown): string {
     }
 
     return SCORECARD_TRACK_ALIASES[normalizedValue] || normalizedValue
+}
+
+/**
+ * Returns whether a phase should appear in the manual reviewer phase selector.
+ */
+function isSelectableReviewerPhaseName(phaseName: string | undefined): boolean {
+    const normalizedPhaseName = normalizeKey(phaseName)
+
+    return !!normalizedPhaseName && !NON_REVIEWER_PHASE_KEYS.has(normalizedPhaseName)
 }
 
 function normalizePhaseToken(value: unknown): string {
@@ -135,6 +155,46 @@ function getPhaseMatchedScorecards(
         }
 
         return !scorecardPhaseId && !normalizedScorecardType
+    })
+}
+
+/**
+ * Returns row-specific phase options, excluding phases already assigned on other
+ * manual reviewer cards while preserving the current row's selection.
+ */
+function getReviewerPhaseOptions(params: {
+    options: FormSelectOption[]
+    phaseNameById: Map<string, string>
+    reviewerIndex: number
+    reviewers: Reviewer[]
+}): FormSelectOption[] {
+    const currentPhaseId = normalizeText(params.reviewers[params.reviewerIndex]?.phaseId)
+    const assignedPhaseIds = new Set(
+        params.reviewers
+            .map((reviewer, index) => (
+                index === params.reviewerIndex
+                    ? ''
+                    : normalizeText(reviewer.phaseId)
+            ))
+            .filter(Boolean),
+    )
+
+    return params.options.filter(option => {
+        const phaseId = normalizeText(option.value)
+
+        if (!phaseId) {
+            return false
+        }
+
+        if (phaseId === currentPhaseId) {
+            return true
+        }
+
+        if (assignedPhaseIds.has(phaseId)) {
+            return false
+        }
+
+        return isSelectableReviewerPhaseName(params.phaseNameById.get(phaseId))
     })
 }
 
@@ -288,7 +348,7 @@ function mapDefaultReviewerToReviewer(
         roleId: defaultReviewer?.roleId,
         scorecardId: defaultReviewer?.scorecardId,
         shouldOpenOpportunity: memberReview
-            ? false
+            ? (defaultReviewer?.shouldOpenOpportunity ?? false)
             : undefined,
     }
 }
@@ -493,9 +553,13 @@ export const HumanReviewTab: FC = () => {
                 return undefined
             }
 
-            const roleName = getRoleNameForPhaseName(phaseName)
+            const roleNames = normalizeKey(phaseName) === 'iterativereview'
+                ? ITERATIVE_REVIEW_ROLE_NAMES
+                : [getRoleNameForPhaseName(phaseName)]
 
-            return roleIdByName.get(normalizeKey(roleName))
+            return roleNames
+                .map(roleName => roleIdByName.get(normalizeKey(roleName)))
+                .find((roleId): roleId is string => !!roleId)
         },
         [phaseNameById, roleIdByName],
     )
@@ -530,6 +594,19 @@ export const HumanReviewTab: FC = () => {
                 .filter((phaseOption): phaseOption is FormSelectOption => !!phaseOption)
             : []),
         [phases],
+    )
+    const getPhaseOptionsForReviewer = useCallback(
+        (reviewerIndex: number): FormSelectOption[] => getReviewerPhaseOptions({
+            options: phaseOptions,
+            phaseNameById,
+            reviewerIndex,
+            reviewers: reviewerRows,
+        }),
+        [
+            phaseNameById,
+            phaseOptions,
+            reviewerRows,
+        ],
     )
 
     const normalizedTrackId = normalizeText(trackId)
@@ -1297,7 +1374,7 @@ export const HumanReviewTab: FC = () => {
                                     <FormSelectField
                                         label='Phase'
                                         name={`${reviewerPrefix}.phaseId`}
-                                        options={phaseOptions}
+                                        options={getPhaseOptionsForReviewer(index)}
                                         placeholder='Select phase'
                                         toFieldValue={getPhaseFieldValueHandler(index)}
                                     />

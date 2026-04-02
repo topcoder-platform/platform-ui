@@ -482,6 +482,7 @@ export const ProjectEditorForm: FC<ProjectEditorFormProps> = (props: ProjectEdit
                                 : 'Billing Account'}
                             name='billingAccountId'
                             placeholder='Search billing account by name'
+                            projectId={projectId}
                             required
                         />
                     </div>

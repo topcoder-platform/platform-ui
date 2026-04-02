@@ -1,5 +1,9 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
-import { render } from '@testing-library/react'
+import '@testing-library/jest-dom'
+import {
+    render,
+    screen,
+} from '@testing-library/react'
 
 import { StartDateTimeInput } from './StartDateTimeInput'
 
@@ -35,6 +39,26 @@ describe('StartDateTimeInput', () => {
         expect(mockInputDatePicker)
             .toHaveBeenCalledWith(expect.objectContaining({
                 preventOpenOnFocus: true,
+            }))
+    })
+
+    it('renders an outside label and wrapper hook when labelOutside is enabled', () => {
+        render(
+            <StartDateTimeInput
+                label='Start Date'
+                labelOutside
+                onChange={jest.fn()}
+                showTimeSelect={false}
+                value={undefined}
+            />,
+        )
+
+        expect(screen.getByText('Start Date'))
+            .toBeInTheDocument()
+        expect(mockInputDatePicker)
+            .toHaveBeenCalledWith(expect.objectContaining({
+                classNameWrapper: expect.any(String),
+                label: '',
             }))
     })
 })

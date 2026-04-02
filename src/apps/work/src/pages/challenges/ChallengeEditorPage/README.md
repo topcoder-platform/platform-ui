@@ -13,7 +13,7 @@
   footer actions.
 - `components/*Field.tsx`: field-level components for each challenge section.
 - `components/ReviewersField/*`: tabbed human/AI review configuration. Human reviewers stay on the challenge form, while AI reviewer configs load/save through the review API and sync saved AI workflows back into the challenge `reviewers` array. Existing AI configs are reloaded only when the challenge already has synced AI reviewer entries, which avoids empty-config lookups on new challenges. Removing an AI config also detaches the synced AI workflow reviewers from the challenge. When AI reviewers exist without a persisted AI screening phase, the schedule editor injects a virtual `AI Screening` row after submission phases. This `Review` section is hidden for `Task` and `Marathon Match` challenges because those flows use dedicated reviewer assignment UIs.
-- `ChallengeEditorPage.module.scss` and `components/ChallengeEditorForm.module.scss`: page and form layout styling, including the grouped `Prizes & Billing` layout that keeps the editable inputs together and moves the billing summary underneath them.
+- `ChallengeEditorPage.module.scss` and `components/ChallengeEditorForm.module.scss`: page and form layout styling, including the grouped `Prizes & Billing` layout that keeps the editable inputs together at fixed widths on larger screens and moves the billing summary underneath them.
 
 ## Validation Rules
 
@@ -30,7 +30,7 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 - `wiproAllowed`: optional boolean, defaults to `false` (unchecked).
 - `tags`: optional string array.
 - `skills`: required unless billing account is listed in `SKILLS_OPTIONAL_BILLING_ACCOUNT_IDS`.
-- `reviewer`: required for task challenges when `legacy.reviewType` is `INTERNAL`.
+- `reviewer`: optional for task challenges.
 - `reviewers`: when using `Save as Draft` from `NEW` status, non-task/non-marathon challenges must include reviewer coverage for configured review phases. If required phases are configured, each phase must have at least one member reviewer with a scorecard.
 - `AI review configuration`: templates and manual configs autosave separately once valid, and the AI tab becomes read-only after the challenge has submissions.
 
@@ -50,7 +50,7 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 - `ChallengeScheduleSection`: schedule editor for challenge start and phase dates. It keeps the detected timezone above the controls, renders the `Start Date` label and the `Scheduled` and `Immediately` start-mode radios on the same header row above the input with a green selected state, and recalculates root phase dates when the challenge start changes.
 - `DesignWorkTypeField`: shown for Design + Challenge, with the legacy work-type options (`Application Front-End Design`, `Print/Presentation`, `Web Design`, `Widget or Mobile Screen Design`, `Wireframes`). The selected value is stored in challenge tags.
 - `FunChallengeField`: shown for `Marathon Match` type and remains editable after creation so the form can switch between fun-challenge and standard marathon-match fields.
-- `ReviewersField`: hidden for `Task` and `Marathon Match` challenges because manual reviewer assignment is handled elsewhere.
+- `ReviewersField`: hidden for `Task` and `Marathon Match` challenges because manual reviewer assignment is handled elsewhere. On the human-review tab, each manual reviewer phase selector hides registration/submission phases and any phase already assigned on another manual reviewer card, while preserving the card's current selection.
 - `Submission Settings`: shown for Design `Challenge` and Design `First2Finish` types, and contains the final-deliverables, stock-art, submission-visibility, and submission-limit controls.
 - `FinalDeliverablesField`: design-challenge file-type editor that persists the legacy `fileTypes` metadata payload used on challenge draft pages.
 - `ChallengeDescriptionField`: public markdown spec editor.

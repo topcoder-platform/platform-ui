@@ -22,6 +22,7 @@ import styles from './Payments.module.scss'
 type PaymentRoleView = 'admin' | 'engagementApprover'
 
 const engagementPaymentCategory = 'ENGAGEMENT_PAYMENT'
+const engagementApproverDefaultStatus = 'ON_HOLD_ADMIN'
 const defaultPageSize = 10
 
 interface PaymentsListViewProps {
@@ -88,6 +89,7 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
         !isPaymentAdmin || paymentRoleView === 'engagementApprover'
     )
     const [filters, setFilters] = React.useState<Record<string, string[]>>({})
+    const hasSelectedStatusFilter = (filters.status?.length ?? 0) > 0
     const appliedFilters = React.useMemo<Record<string, string[]>>(() => {
         if (!isEngagementApproverView) {
             return filters
@@ -96,8 +98,24 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
         return {
             ...filters,
             category: [engagementPaymentCategory],
+            status: hasSelectedStatusFilter ? filters.status : [engagementApproverDefaultStatus],
         }
-    }, [filters, isEngagementApproverView])
+    }, [filters, hasSelectedStatusFilter, isEngagementApproverView])
+    const hasActiveFilters = React.useMemo(
+        () => Object.entries(appliedFilters)
+            .some(([key, value]) => key !== 'category' && value.length > 0),
+        [appliedFilters],
+    )
+    const selectedValueOverrides = React.useMemo<Record<string, string>>(() => {
+        if (!isEngagementApproverView) {
+            return {} as Record<string, string>
+        }
+
+        return {
+            category: engagementPaymentCategory,
+            status: filters.status?.[0] ?? engagementApproverDefaultStatus,
+        }
+    }, [filters.status, isEngagementApproverView])
     const [pagination, setPagination] = React.useState<PaginationInfo>({
         currentPage: 1,
         pageSize: defaultPageSize,
@@ -424,8 +442,7 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                     showExportButton
                     selectedCount={selectedPaymentsCount}
                     onBulkClick={() => setBulkOpen(true)}
-                    hasActiveFilters={Object.values(filters)
-                        .some(value => value.length > 0)}
+                    hasActiveFilters={hasActiveFilters}
                     onExport={async () => {
                         toast.success('Downloading payments report. This may take a few moments.', { position: toast.POSITION.BOTTOM_RIGHT })
                         downloadBlob(
@@ -435,9 +452,7 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                         )
                         toast.success('Download complete', { position: toast.POSITION.BOTTOM_RIGHT })
                     }}
-                    selectedValueOverrides={{
-                        category: isEngagementApproverView ? engagementPaymentCategory : filters.category?.[0] ?? '',
-                    }}
+                    selectedValueOverrides={selectedValueOverrides}
                     filters={[
                         {
                             key: 'winnerIds',
@@ -637,7 +652,7 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                 {!isLoading && winnings.length === 0 && (
                     <div className={styles.centered}>
                         <p className='body-main'>
-                            {Object.keys(filters).length === 0
+                            {!hasActiveFilters
                                 ? apiErrorMsg
                                 : 'No payments match your filters.'}
                         </p>

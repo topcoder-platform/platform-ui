@@ -325,8 +325,8 @@ export const ALLOWED_DOWNLOAD_SUBMISSIONS_ROLES = [
 
 export const ENGAGEMENT_STATUSES = [
     'Open',
-    'Pending Assignment',
     'Active',
+    'On Hold',
     'Cancelled',
     'Closed',
 ] as const
