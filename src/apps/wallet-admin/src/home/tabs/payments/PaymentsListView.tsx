@@ -101,9 +101,7 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
     const isEngagementApproverView = isEngagementPaymentApprover && (
         !isPaymentAdmin || paymentRoleView === 'engagementApprover'
     )
-    // const isWiproTaasAdminView = isWiproTaasAdmin && (
-    //     !isPaymentAdmin || paymentRoleView === 'wiproTaasAdmin'
-    // )
+
     const restrictedCategory = isEngagementApproverView
         ? engagementPaymentCategory
         : (isWiproTaasAdmin ? taasPaymentCategory : undefined)
