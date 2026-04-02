@@ -162,13 +162,13 @@ export function canEditTaasProject(userRoles: string[]): boolean {
 }
 
 /**
- * Returns whether the supplied user roles can access the common all-engagements view.
+ * Returns whether the supplied user roles can access work-app engagement management pages.
  *
- * This root work-app page is intended for admins and Talent Managers only.
- * Project managers still use project-scoped engagement pages.
+ * Both the all-engagements page and project-scoped engagement pages are limited
+ * to admins and Talent Managers.
  *
  * @param userRoles caller roles from the decoded auth token or app context.
- * @returns `true` when the caller can open the all-engagements page; otherwise `false`.
+ * @returns `true` when the caller can open engagement management pages; otherwise `false`.
  */
 export function canViewAllEngagements(userRoles: string[]): boolean {
     return hasAdminRole(userRoles) || checkTalentManager(userRoles)
