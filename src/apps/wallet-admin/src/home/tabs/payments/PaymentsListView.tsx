@@ -75,11 +75,13 @@ const formatCurrency = (amountStr: string, currency: string): string => {
 // eslint-disable-next-line complexity
 const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProps) => {
     const normalizedRoles = React.useMemo(
-        () => new Set((props.profile.roles || []).map(role => role.trim().toLowerCase())),
+        () => new Set((props.profile.roles || []).map(role => role.trim()
+            .toLowerCase())),
         [props.profile.roles],
     )
     const hasRole = useCallback(
-        (...roles: string[]) => roles.some(role => normalizedRoles.has(role.trim().toLowerCase())),
+        (...roles: string[]) => roles.some(role => normalizedRoles.has(role.trim()
+            .toLowerCase())),
         [normalizedRoles],
     )
     const isPaymentAdmin = hasRole('Payment Admin')
