@@ -176,6 +176,10 @@ export const ProfileCompletionPage: FC = () => {
             ]
 
             const displayedSkills = principalSkills.slice(0, DISPLAY_SKILLS_COUNT)
+            const remainingSkillsText = principalSkills.slice(DISPLAY_SKILLS_COUNT)
+                .map(skill => skill.name)
+                .filter(Boolean)
+                .join(', ')
             const additionalSkillsCount = Math.max(0, principalSkills.length - DISPLAY_SKILLS_COUNT)
 
             const isOpenToWork = profile.isOpenToWork === true
@@ -204,6 +208,7 @@ export const ProfileCompletionPage: FC = () => {
                     .join(', '),
                 openToWorkLabel,
                 openToWorkRolesText,
+                remainingSkillsText,
             }
         })
         .sort((a, b) => a.handle.localeCompare(b.handle)), [profiles, countryMap, memberSkills])
@@ -354,12 +359,14 @@ export const ProfileCompletionPage: FC = () => {
                                                         </span>
                                                     ))}
                                                     {profile.additionalSkillsCount > 0 && (
-                                                        <span className={styles.moreIndicator}>
-                                                            +
-                                                            {profile.additionalSkillsCount}
-                                                            {' '}
-                                                            skills
-                                                        </span>
+                                                        <Tooltip content={profile.remainingSkillsText}>
+                                                            <span className={styles.moreIndicator}>
+                                                                +
+                                                                {profile.additionalSkillsCount}
+                                                                {' '}
+                                                                skills
+                                                            </span>
+                                                        </Tooltip>
                                                     )}
                                                 </div>
                                             ) : (

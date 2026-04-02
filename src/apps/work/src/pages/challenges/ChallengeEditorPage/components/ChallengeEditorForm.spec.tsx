@@ -1,5 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports, complexity, react/jsx-no-bind */
 import {
+    act,
     render,
     screen,
     waitFor,
@@ -25,6 +26,7 @@ import type {
 import {
     createResource,
     createChallenge,
+    deleteResource,
     fetchChallenge,
     fetchProjectBillingAccount,
     patchChallenge,
@@ -448,6 +450,7 @@ const mockedUseFetchResources = useFetchResources as jest.Mock
 const mockedUseFetchTimelineTemplates = useFetchTimelineTemplates as jest.Mock
 const mockedCreateResource = createResource as jest.Mock
 const mockedCreateChallenge = createChallenge as jest.Mock
+const mockedDeleteResource = deleteResource as jest.Mock
 const mockedFetchChallenge = fetchChallenge as jest.Mock
 const mockedFetchProjectBillingAccountService = fetchProjectBillingAccount as jest.Mock
 const mockedPatchChallenge = patchChallenge as jest.Mock
@@ -486,6 +489,27 @@ describe('ChallengeEditorForm', () => {
             name: 'Task',
         },
         typeId: 'task-type-id',
+    } as Challenge
+    const first2FinishDraftChallenge = {
+        ...validDraftChallenge,
+        phases: [{
+            duration: 60,
+            name: 'Iterative Review',
+            phaseId: 'iterative-review-phase-id',
+        }],
+        reviewers: [{
+            isMemberReview: true,
+            memberId: 'manual-reviewer-member-id',
+            phaseId: 'iterative-review-phase-id',
+            scorecardId: 'iterative-review-scorecard-id',
+            shouldOpenOpportunity: false,
+        }],
+        trackId: 'design-track',
+        type: {
+            abbreviation: 'F2F',
+            name: 'First2Finish',
+        },
+        typeId: 'design-first2finish',
     } as Challenge
 
     beforeEach(() => {
@@ -791,6 +815,43 @@ describe('ChallengeEditorForm', () => {
             .toBeUndefined()
     })
 
+    it('registers the launch action for read-only draft challenges', async () => {
+        let launchAction: (() => Promise<void>) | undefined
+
+        mockedPatchChallenge.mockResolvedValue({
+            ...validDraftChallenge,
+            status: 'ACTIVE',
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={validDraftChallenge}
+                    isReadOnly
+                    onRegisterLaunchAction={action => {
+                        launchAction = action
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        await waitFor(() => {
+            expect(launchAction)
+                .toEqual(expect.any(Function))
+        })
+
+        await act(async () => {
+            await launchAction?.()
+        })
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .toHaveBeenCalledWith('12345', expect.objectContaining({
+                    status: 'ACTIVE',
+                }))
+        })
+    })
+
     it('renders submission settings for design first2finish challenges', () => {
         mockedUseFetchChallengeTracks.mockReturnValue({
             isLoading: false,
@@ -836,6 +897,145 @@ describe('ChallengeEditorForm', () => {
             .toHaveTextContent('Stock Arts Field')
         expect(submissionSettingsSection)
             .toHaveTextContent('Maximum Submissions Field')
+    })
+
+    it('does not delete manual iterative reviewer resources when saving a first2finish draft', async () => {
+        const user = userEvent.setup()
+
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            isLoading: false,
+            tracks: [{
+                id: 'design-track',
+                name: 'Design',
+                track: 'DESIGN',
+            }],
+        })
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'F2F',
+                id: 'design-first2finish',
+                isTask: false,
+                name: 'First2Finish',
+            }],
+            isLoading: false,
+        })
+        mockedUseFetchResourceRoles.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            resourceRoles: [{
+                id: 'iterative-reviewer-role-id',
+                name: 'Iterative Reviewer',
+            }],
+        })
+        mockedUseFetchResources.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            mutate: jest.fn(),
+            resources: [{
+                challengeId: '12345',
+                memberHandle: 'taasiintake300',
+                memberId: 'manual-reviewer-member-id',
+                role: 'Iterative Reviewer',
+                roleId: 'iterative-reviewer-role-id',
+            }],
+        })
+        mockedPatchChallenge.mockResolvedValue(first2FinishDraftChallenge)
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm challenge={first2FinishDraftChallenge} />
+            </MemoryRouter>,
+        )
+
+        await user.type(screen.getByLabelText('Challenge Name'), ' updated')
+        await user.click(screen.getByRole('button', { name: 'Save Challenge' }))
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .toHaveBeenCalledTimes(1)
+        })
+
+        expect(mockedDeleteResource)
+            .not.toHaveBeenCalled()
+    })
+
+    it('launches a first2finish draft with iterative reviewer resources without task-only validation', async () => {
+        let launchAction: (() => Promise<void>) | undefined
+
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            isLoading: false,
+            tracks: [{
+                id: 'design-track',
+                name: 'Design',
+                track: 'DESIGN',
+            }],
+        })
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'F2F',
+                id: 'design-first2finish',
+                isTask: false,
+                name: 'First2Finish',
+            }],
+            isLoading: false,
+        })
+        mockedUseFetchResourceRoles.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            resourceRoles: [{
+                id: 'iterative-reviewer-role-id',
+                name: 'Iterative Reviewer',
+            }],
+        })
+        mockedUseFetchResources.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            mutate: jest.fn(),
+            resources: [{
+                challengeId: '12345',
+                memberHandle: 'taasiintake300',
+                memberId: 'manual-reviewer-member-id',
+                role: 'Iterative Reviewer',
+                roleId: 'iterative-reviewer-role-id',
+            }],
+        })
+        mockedPatchChallenge.mockResolvedValue({
+            ...first2FinishDraftChallenge,
+            status: 'ACTIVE',
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={first2FinishDraftChallenge}
+                    onRegisterLaunchAction={action => {
+                        launchAction = action
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        await waitFor(() => {
+            expect(launchAction)
+                .toEqual(expect.any(Function))
+        })
+
+        await act(async () => {
+            await launchAction?.()
+        })
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .toHaveBeenCalledWith('12345', expect.objectContaining({
+                    status: 'ACTIVE',
+                }))
+        })
+        expect(mockedShowErrorToast)
+            .not.toHaveBeenCalledWith('Assign a member before launching a task challenge.')
     })
 
     it('preserves uploaded attachments after saving when the update response omits them', async () => {

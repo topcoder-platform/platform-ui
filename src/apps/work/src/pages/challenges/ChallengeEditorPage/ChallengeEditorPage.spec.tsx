@@ -168,9 +168,7 @@ jest.mock('./components', () => {
             onRegisterLaunchAction?: (action: (() => Promise<void>) | undefined) => void
         }) => {
             React.useEffect(() => {
-                if (!props.isReadOnly) {
-                    props.onRegisterLaunchAction?.(async () => undefined)
-                }
+                props.onRegisterLaunchAction?.(async () => undefined)
             }, [props.isReadOnly, props.onRegisterLaunchAction])
 
             return (
@@ -292,7 +290,7 @@ describe('ChallengeEditorPage', () => {
             .toBe('https://example.com/forum/challenges/456')
     })
 
-    it('renders a read-only challenge view with a header edit action', async () => {
+    it('renders a read-only draft challenge view with launch and edit header actions', async () => {
         renderPage(
             '/projects/123/challenges/456/view',
             '/projects/:projectId/challenges/:challengeId/view',
@@ -305,6 +303,38 @@ describe('ChallengeEditorPage', () => {
 
         expect(screen.getByRole('heading', { name: 'View Edit test' }))
             .toBeTruthy()
+        expect(screen.getByRole('button', { name: 'Launch' }))
+            .toBeTruthy()
+        expect(screen.getByRole('button', { name: 'Edit' }))
+            .toBeTruthy()
+    })
+
+    it('does not render a launch action for non-draft challenges in read-only view mode', async () => {
+        mockedUseFetchChallenge.mockReturnValue({
+            challenge: {
+                discussions: [{
+                    url: 'https://example.com/forum/challenges/456',
+                }],
+                id: '456',
+                name: 'Active challenge',
+                prizeSets: [],
+                status: 'ACTIVE',
+            },
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+        })
+
+        renderPage(
+            '/projects/123/challenges/456/view',
+            '/projects/:projectId/challenges/:challengeId/view',
+        )
+
+        await waitFor(() => {
+            expect(screen.getByText('Challenge View Form'))
+                .toBeTruthy()
+        })
+
         expect(screen.queryByRole('button', { name: 'Launch' }))
             .toBeNull()
         expect(screen.getByRole('button', { name: 'Edit' }))

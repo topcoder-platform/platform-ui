@@ -16,6 +16,7 @@ import {
     resolveResourceAssignmentHandle,
     resolveResourceAssignmentValue,
     REVIEWER_RESOURCE_ROLE_NAMES,
+    shouldInferTaskChallengeFromAssignments,
     shouldUseManualReviewers,
     SUBMITTER_RESOURCE_ROLE_NAMES,
     TASK_REVIEWER_RESOURCE_ROLE_NAMES,
@@ -378,6 +379,57 @@ describe('resource assignment helpers', () => {
 
         expect(result)
             .toBe('67890')
+    })
+
+    it('does not infer task mode from iterative reviewer resources alone', () => {
+        const result = shouldInferTaskChallengeFromAssignments({
+            resourceRoles: [
+                buildResourceRole({
+                    id: 'iterative-reviewer-role-id',
+                    name: 'Iterative Reviewer',
+                }),
+            ],
+            resources: [
+                buildResource({
+                    memberHandle: 'manualReviewer',
+                    roleId: 'iterative-reviewer-role-id',
+                }),
+            ],
+        })
+
+        expect(result)
+            .toBe(false)
+    })
+
+    it('infers task mode from saved reviewer root fields', () => {
+        const result = shouldInferTaskChallengeFromAssignments({
+            resourceRoles: [],
+            resources: [],
+            reviewer: 'taskReviewer',
+        })
+
+        expect(result)
+            .toBe(true)
+    })
+
+    it('infers task mode from submitter resources', () => {
+        const result = shouldInferTaskChallengeFromAssignments({
+            resourceRoles: [
+                buildResourceRole({
+                    id: 'submitter-role-id',
+                    name: 'Submitter',
+                }),
+            ],
+            resources: [
+                buildResource({
+                    memberId: '98765',
+                    roleId: 'submitter-role-id',
+                }),
+            ],
+        })
+
+        expect(result)
+            .toBe(true)
     })
 })
 
