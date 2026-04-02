@@ -130,6 +130,7 @@ jest.mock('../../../lib/services', () => ({
 jest.mock('../../../lib/utils', () => ({
     formatAnticipatedStart: jest.fn(() => 'In a few weeks'),
     formatEngagementStatus: jest.fn(() => 'Open'),
+    getEngagementStatusPillVariant: jest.fn(() => 'yellow'),
     showErrorToast: jest.fn(),
     showSuccessToast: jest.fn(),
 }))

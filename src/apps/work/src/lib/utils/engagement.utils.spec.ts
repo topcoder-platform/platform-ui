@@ -5,6 +5,7 @@ import {
 import {
     formatEngagementStatus,
     fromEngagementStatusApi,
+    getEngagementStatusPillVariant,
     toEngagementStatusApi,
 } from './engagement.utils'
 
@@ -39,5 +40,14 @@ describe('engagement.utils status mappings', () => {
             .toBe('On Hold')
         expect(formatEngagementStatus('ON_HOLD'))
             .toBe('On Hold')
+    })
+
+    it('maps On Hold and legacy pending assignment statuses to the yellow pill variant', () => {
+        expect(getEngagementStatusPillVariant('On Hold'))
+            .toBe('yellow')
+        expect(getEngagementStatusPillVariant('ON_HOLD'))
+            .toBe('yellow')
+        expect(getEngagementStatusPillVariant('Pending Assignment'))
+            .toBe('yellow')
     })
 })
