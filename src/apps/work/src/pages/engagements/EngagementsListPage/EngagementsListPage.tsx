@@ -789,21 +789,6 @@ export const EngagementsListPage: FC = () => {
         )
     }
 
-    if (!canViewEngagements) {
-        return (
-            <PageWrapper
-                pageTitle={pageTitle}
-                breadCrumb={[]}
-                rightHeader={createEngagementAction}
-                titleAction={titleAction}
-            >
-                {billingAccountExpiredNotice}
-                {projectTabs}
-                <ErrorMessage message={accessDeniedMessage} />
-            </PageWrapper>
-        )
-    }
-
     if (engagementsResult.error) {
         return (
             <PageWrapper
