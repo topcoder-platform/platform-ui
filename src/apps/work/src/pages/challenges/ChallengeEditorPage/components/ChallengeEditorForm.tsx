@@ -178,6 +178,9 @@ interface ChallengeEditorFormProps {
     isEditMode?: boolean
     isReadOnly?: boolean
     launchButtonLabel?: string
+    onChallengeCreated?: (
+        challenge: Pick<Challenge, 'id' | 'name' | 'projectId' | 'status'>,
+    ) => void
     onChallengeStatusChange?: (status?: string) => void
     onLaunchOpen?: () => void
     onRegisterLaunchAction?: (action: (() => Promise<void>) | undefined) => void
@@ -938,6 +941,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const navigate = useNavigate()
     const isEditMode = props.isEditMode
     const isReadOnly = props.isReadOnly === true
+    const onChallengeCreated = props.onChallengeCreated
     const onChallengeStatusChange = props.onChallengeStatusChange
     const onLaunchOpen = props.onLaunchOpen
     const onRegisterLaunchAction = props.onRegisterLaunchAction
@@ -1676,6 +1680,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     ])
 
     const createNewChallenge = useCallback(
+        // eslint-disable-next-line complexity
         async (): Promise<void> => {
             const isBasicInfoValid = await trigger([
                 'name',
@@ -1784,6 +1789,9 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                     nextValues.tags = mergeTagsWithDesignWorkType(nextValues.tags, normalizedWorkType)
                 }
 
+                const createdChallengeStatus = normalizeStatus(nextValues.status)
+                    || normalizeStatus(savedChallenge.status)
+                    || CHALLENGE_STATUS.NEW
                 const savedAt = new Date()
 
                 setCurrentChallengeId(savedChallenge.id)
@@ -1791,6 +1799,13 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 setSaveStatus('saved')
 
                 reset(nextValues)
+                onChallengeCreated?.({
+                    id: savedChallenge.id,
+                    name: savedChallenge.name,
+                    projectId: savedChallenge.projectId ?? createProjectId,
+                    status: createdChallengeStatus,
+                })
+                onChallengeStatusChange?.(createdChallengeStatus)
                 showSuccessToast('Challenge created successfully')
 
                 if (createdCopilotWarningMessage) {
@@ -1814,6 +1829,8 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             getValues,
             isTaskSingleAssignmentChallenge,
             reset,
+            onChallengeCreated,
+            onChallengeStatusChange,
             resolveProjectBillingAccount,
             selectedChallengeType,
             setError,
