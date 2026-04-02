@@ -19,6 +19,7 @@ import {
     useFetchResourceRoles,
     useFetchResources,
 } from '../../../lib/hooks'
+import { deleteChallenge } from '../../../lib/services'
 import {
     getAssignedTaskMember,
     shouldShowCompleteTaskAction,
@@ -90,10 +91,22 @@ jest.mock('~/libs/ui', () => ({
     virtual: true,
 })
 jest.mock('../../../lib/components', () => ({
-    ChallengeStatus: (props: { statusText: string }) => (
-        <div>{props.statusText}</div>
+    ChallengeStatus: (props: { status?: string; statusText?: string }) => (
+        <div>{props.statusText || props.status}</div>
     ),
-    ConfirmationModal: () => <div>Confirmation Modal</div>,
+    ConfirmationModal: (props: {
+        message?: string
+        onCancel?: () => void
+        onConfirm?: () => void
+        title?: string
+    }) => (
+        <div>
+            <div>{props.title}</div>
+            <div>{props.message}</div>
+            <button onClick={props.onCancel} type='button'>Cancel</button>
+            <button onClick={props.onConfirm} type='button'>Confirm</button>
+        </div>
+    ),
     ErrorMessage: (props: { message: string }) => <div>{props.message}</div>,
     LoadingSpinner: () => <div>Loading</div>,
 }))
@@ -164,18 +177,43 @@ jest.mock('./components', () => {
 
     return {
         ChallengeEditorForm: (props: {
+            onChallengeCreated?: (challenge: {
+                id: string
+                name: string
+                projectId: string
+                status: string
+            }) => void
             isReadOnly?: boolean
             onRegisterLaunchAction?: (action: (() => Promise<void>) | undefined) => void
         }) => {
             React.useEffect(() => {
                 props.onRegisterLaunchAction?.(async () => undefined)
             }, [props.isReadOnly, props.onRegisterLaunchAction])
+            const handleMockCreateChallenge = (): void => {
+                props.onChallengeCreated?.({
+                    id: '789',
+                    name: 'Created challenge',
+                    projectId: '123',
+                    status: 'NEW',
+                })
+            }
 
             return (
                 <div>
                     {props.isReadOnly
                         ? 'Challenge View Form'
                         : 'Challenge Editor Form'}
+                    {!props.isReadOnly
+                        ? (
+                            <button
+                                // eslint-disable-next-line react/jsx-no-bind
+                                onClick={handleMockCreateChallenge}
+                                type='button'
+                            >
+                                Mock create challenge
+                            </button>
+                        )
+                        : undefined}
                 </div>
             )
         },
@@ -195,6 +233,7 @@ jest.mock('./ChallengeEditorPage.utils', () => ({
 const mockedUseFetchChallenge = useFetchChallenge as jest.Mock
 const mockedUseFetchResourceRoles = useFetchResourceRoles as jest.Mock
 const mockedUseFetchResources = useFetchResources as jest.Mock
+const mockedDeleteChallenge = deleteChallenge as jest.Mock
 const mockedGetAssignedTaskMember = getAssignedTaskMember as jest.Mock
 const mockedShouldShowCompleteTaskAction = shouldShowCompleteTaskAction as jest.Mock
 
@@ -436,5 +475,39 @@ describe('ChallengeEditorPage', () => {
         fireEvent.click(screen.getByRole('button', { name: 'Details' }))
         expect(screen.getByText('Challenge View Form'))
             .toBeTruthy()
+    })
+
+    it('shows NEW status and delete action after a challenge is created on the create route', async () => {
+        mockedUseFetchChallenge.mockReturnValue({
+            challenge: undefined,
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+        })
+
+        renderPage(
+            '/projects/123/challenges/new',
+            '/projects/:projectId/challenges/new',
+        )
+
+        fireEvent.click(screen.getByRole('button', { name: 'Mock create challenge' }))
+
+        await waitFor(() => {
+            expect(within(screen.getByTestId('title-action'))
+                .getByText('NEW'))
+                .toBeTruthy()
+        })
+        await waitFor(() => {
+            expect(screen.getByRole('button', { name: 'Delete' }))
+                .toBeTruthy()
+        })
+
+        fireEvent.click(screen.getByRole('button', { name: 'Delete' }))
+        fireEvent.click(screen.getByRole('button', { name: 'Confirm' }))
+
+        await waitFor(() => {
+            expect(mockedDeleteChallenge)
+                .toHaveBeenCalledWith('789')
+        })
     })
 })
