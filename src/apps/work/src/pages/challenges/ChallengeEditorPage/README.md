@@ -4,7 +4,7 @@
 
 - `ChallengeEditorPage.tsx`: route-level page for create, edit, and read-only view challenge modes.
   Existing challenges keep the same `Details`, `Resources`, and `Submissions` tabs in both edit and
-  view routes; view mode only makes the details tab read-only and suppresses edit-only controls.
+  view routes; view mode only makes the details tab read-only and suppresses edit-only form controls.
 - `ChallengeEditorPage.tsx` also renders challenge quick links in the right header action group for
   existing challenges (`Challenge`, `Review`, and `Forum` when present). In view mode it also adds
   an `Edit` action.
@@ -46,7 +46,7 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 
 - `ChallengeNameField`: text input.
 - `ChallengeTrackField`: track selector from `useFetchChallengeTracks`.
-- `ChallengeTypeField`: active type selector from `useFetchChallengeTypes`, excluding `Topgear Task` because that flow is not launchable from the work app editor.
+- `ChallengeTypeField`: active type selector from `useFetchChallengeTypes`, excluding `Topgear Task` because that flow is not launchable from the work app editor. When the selected track is Design or QA, it also hides `Marathon Match` to match the legacy work-manager create flow and clears any now-invalid preselection.
 - `ChallengeScheduleSection`: schedule editor for challenge start and phase dates. It keeps the detected timezone above the controls, renders the `Start Date` label and the `Scheduled` and `Immediately` start-mode radios on the same header row above the input with a green selected state, and recalculates root phase dates when the challenge start changes.
 - `DesignWorkTypeField`: shown for Design + Challenge, with the legacy work-type options (`Application Front-End Design`, `Print/Presentation`, `Web Design`, `Widget or Mobile Screen Design`, `Wireframes`). The selected value is stored in challenge tags.
 - `FunChallengeField`: shown for `Marathon Match` type and remains editable after creation so the form can switch between fun-challenge and standard marathon-match fields.
@@ -89,9 +89,12 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 
 ## Header Actions
 
-- `Launch` is shown on the details tab for `DRAFT` challenges in the header and again in the footer beside `Save Challenge`.
+- `Launch` is shown on the details tab for `DRAFT` challenges in the header for both view and edit routes, and again in the footer beside `Save Challenge` while editing.
 - Task challenges cannot be launched until `Assigned Member` is set, which ensures the task is assigned before it becomes publicly visible.
 - After the first successful save from `NEW` to `DRAFT`, the editor updates the launch affordance immediately so the user can launch without reloading.
-- `Cancel` is shown on the details tab for `ACTIVE` challenges and uses the shared large secondary button treatment so it matches the footer action styling.
+- After the initial create request succeeds on the `/projects/:projectId/challenges/new` route, the
+  page header immediately treats that record as an existing `NEW` challenge so the status pill and
+  `Delete` action are available before the route transitions to the regular edit page.
+- `Cancel` is shown on the details tab for `DRAFT` and `ACTIVE` challenges and uses the shared large secondary button treatment so it matches the footer action styling.
 - `Mark Complete` is shown beside `Cancel` for `ACTIVE` task challenges when exactly one assignee can be resolved from the challenge submitter resources. It mirrors the legacy work-manager flow by confirming the task prize and assignee, patching the challenge to `COMPLETED`, and saving that assignee as the sole winner. The button remains hidden for copilots assigned to their own task, and it reuses the same shared large secondary styling as `Cancel`.
 - `Delete` is shown for existing challenges in `NEW` status and requires confirmation.

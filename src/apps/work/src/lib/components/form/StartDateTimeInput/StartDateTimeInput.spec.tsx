@@ -6,6 +6,7 @@ import {
 } from '@testing-library/react'
 
 import { StartDateTimeInput } from './StartDateTimeInput'
+import styles from './StartDateTimeInput.module.scss'
 
 const mockInputDatePicker = jest.fn((props: unknown) => (
     <div
@@ -57,7 +58,7 @@ describe('StartDateTimeInput', () => {
             .toBeInTheDocument()
         expect(mockInputDatePicker)
             .toHaveBeenCalledWith(expect.objectContaining({
-                classNameWrapper: expect.any(String),
+                classNameWrapper: styles.externalLabelDatePicker,
                 label: '',
             }))
     })

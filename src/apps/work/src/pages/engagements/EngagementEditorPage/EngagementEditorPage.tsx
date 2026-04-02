@@ -23,7 +23,7 @@ import {
     WorkAppContextModel,
 } from '../../../lib/models'
 import {
-    checkTalentManager,
+    canCreateEngagement,
 } from '../../../lib/utils'
 
 import {
@@ -64,11 +64,11 @@ export const EngagementEditorPage: FC = () => {
 
     const workAppContext = useContext(WorkAppContext)
     const contextValue = workAppContext as WorkAppContextModel
-    const canManage = contextValue.isAdmin || contextValue.isManager
-    const canEditParentProject = contextValue.isAdmin || checkTalentManager(contextValue.userRoles)
+    const canManage = canCreateEngagement(contextValue.userRoles)
+    const canEditParentProject = canManage
 
-    const engagementResult = useFetchEngagement(engagementId)
-    const projectResult = useFetchProject(projectId || undefined)
+    const engagementResult = useFetchEngagement(canManage ? engagementId : undefined)
+    const projectResult = useFetchProject(canManage ? projectId || undefined : undefined)
 
     const pageTitle = getPageTitle(isEditMode, projectResult.project?.name)
 
@@ -80,7 +80,7 @@ export const EngagementEditorPage: FC = () => {
         >
             <div className={styles.container}>
                 {!canManage
-                    ? <ErrorMessage message='You do not have permission to manage engagements.' />
+                    ? <ErrorMessage message='You need Admin or Talent Manager role to view engagements.' />
                     : undefined}
 
                 {canManage && engagementResult.isLoading

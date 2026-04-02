@@ -12,10 +12,14 @@
 }
 
 .createGroupLink {
+    background: none;
+    border: 0;
     color: $link-blue-dark;
+    cursor: pointer;
     font-size: 14px;
     font-weight: 700;
     line-height: 20px;
+    padding: 0;
     text-decoration: none;
     white-space: nowrap;
 
