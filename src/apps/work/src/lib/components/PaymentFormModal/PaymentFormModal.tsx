@@ -304,6 +304,7 @@ const PaymentFormModal: FC<PaymentFormModalProps> = (
                             }))
                         }}
                         placeholderText='Week ending: ...'
+                        preventOpenOnFocus
                         portalId='react-date-portal'
                         popperPlacement='bottom-start'
                         selected={weekEndingDate}

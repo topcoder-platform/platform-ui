@@ -1,0 +1,35 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    align-items: flex-end;
+    display: flex;
+    gap: 12px;
+}
+
+.selectField {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.createGroupLink {
+    color: $link-blue-dark;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 20px;
+    text-decoration: none;
+    white-space: nowrap;
+
+    &:hover,
+    &:focus {
+        color: #2a62d5;
+        outline: none;
+        text-decoration: underline;
+    }
+}
+
+@media (max-width: 767px) {
+    .container {
+        align-items: stretch;
+        flex-direction: column;
+    }
+}

@@ -15,6 +15,7 @@ import {
     projectsRouteId,
     taasRouteId,
 } from '../../../../config/routes.config'
+import { canViewAllEngagements } from '../../../utils/permissions.utils'
 
 function hasAnyRole(userRoles: string[], roles: string[]): boolean {
     return userRoles.some(role => roles.includes(role.toLowerCase()))
@@ -26,6 +27,7 @@ export function getTabsConfig(userRoles: string[], isAnonymous: boolean): TabsNa
     }
 
     const isAdmin = hasAnyRole(userRoles, ADMIN_ROLES)
+    const canViewEngagements = canViewAllEngagements(userRoles)
 
     const tabs: TabsNavItem[] = [
         {
@@ -34,7 +36,7 @@ export function getTabsConfig(userRoles: string[], isAnonymous: boolean): TabsNa
         },
     ]
 
-    if (isAdmin) {
+    if (canViewEngagements) {
         tabs.push({
             id: engagementsRouteId,
             title: 'Engagements',

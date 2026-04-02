@@ -23,6 +23,9 @@ import {
     ENGAGEMENT_WORKLOADS,
 } from '../../../../lib/constants'
 import {
+    rootRoute,
+} from '../../../../config/routes.config'
+import {
     FormSelectField,
     FormSelectOption,
     FormTextField,
@@ -186,7 +189,7 @@ function createRoleOptions(): FormSelectOption[] {
         DATA_ENGINEER: 'Data Engineer',
         DATA_SCIENTIST: 'Data Scientist',
         DESIGNER: 'Designer',
-        SOFTWARE_DEVELOPER: 'Software Engineer',
+        SOFTWARE_DEVELOPER: 'Software Developer',
     }
 
     return ENGAGEMENT_ROLES.map(role => ({
@@ -294,6 +297,7 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
 
     const roleOptions = useMemo<FormSelectOption[]>(() => createRoleOptions(), [])
     const workloadOptions = useMemo<FormSelectOption[]>(() => createWorkloadOptions(), [])
+    const engagementsPath = `${rootRoute}/projects/${props.projectId}/engagements`
 
     const formMethods = useForm<EngagementEditorFormData>({
         defaultValues: getDefaultValues(props.engagement, props.projectId),
@@ -341,7 +345,7 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
                     )
 
                     if (!props.isEditMode) {
-                        navigate(`/projects/${props.projectId}/engagements/${savedEngagement.id}`)
+                        navigate(`${engagementsPath}/${savedEngagement.id}`)
                     }
                 }
             } catch (error) {
@@ -362,7 +366,7 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
                 }
             }
         },
-        [currentEngagementId, navigate, props.isEditMode, props.projectId, reset],
+        [currentEngagementId, engagementsPath, navigate, props.isEditMode, props.projectId, reset],
     )
 
     useAutosave<EngagementEditorFormData>({
@@ -517,7 +521,7 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
                         : undefined}
 
                     <div className={styles.actions}>
-                        <Link className={styles.cancelLink} to={`/projects/${props.projectId}/engagements`}>
+                        <Link className={styles.cancelLink} to={engagementsPath}>
                             Cancel
                         </Link>
 

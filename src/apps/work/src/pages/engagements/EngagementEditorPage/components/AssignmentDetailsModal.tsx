@@ -194,6 +194,7 @@ export const AssignmentDetailsModal: FC<AssignmentDetailsModalProps> = (
                                 startDate: undefined,
                             }))
                         }}
+                        preventOpenOnFocus
                         showTimeSelect={false}
                         showTimezone={false}
                         value={startDate}

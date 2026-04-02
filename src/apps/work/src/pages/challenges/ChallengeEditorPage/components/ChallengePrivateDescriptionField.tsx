@@ -44,13 +44,18 @@ export const ChallengePrivateDescriptionField: FC = () => {
     return (
         <div className={styles.container}>
             <div className={styles.infoRow}>
-                <a
-                    href={specificationTemplateLink}
-                    rel='noreferrer'
-                    target='_blank'
-                >
+                <p className={styles.templateLink}>
                     Access specification templates
-                </a>
+                    {' '}
+                    <a
+                        href={specificationTemplateLink}
+                        rel='noreferrer'
+                        target='_blank'
+                    >
+                        here
+                    </a>
+                    .
+                </p>
                 <p>
                     This text will only be visible to Topcoder members that have
                     registered for this challenge.
