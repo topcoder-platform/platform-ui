@@ -1154,6 +1154,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const showFunChallengeField = isMarathonMatchChallengeSelected
     const showMarathonMatchScorerSection = isMarathonMatchChallengeSelected && isChallengeCreated
     const showPrizesAndBillingSection = !isFunChallengeSelected
+    const showEditableTimelineSection = !isEditMode || !isTaskChallengeSelected
     const usesManualReviewers = useMemo(
         (): boolean => shouldUseManualReviewers({
             isMarathonMatchChallenge: isMarathonMatchChallengeSelected,
@@ -2279,12 +2280,16 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                     )
                                     : undefined}
 
-                                <section className={styles.section}>
-                                    <h3 className={styles.sectionTitle}>Timeline &amp; Schedule</h3>
-                                    <div className={styles.block}>
-                                        <ChallengeScheduleSection disabled={isReadOnly} />
-                                    </div>
-                                </section>
+                                {showEditableTimelineSection
+                                    ? (
+                                        <section className={styles.section}>
+                                            <h3 className={styles.sectionTitle}>Timeline &amp; Schedule</h3>
+                                            <div className={styles.block}>
+                                                <ChallengeScheduleSection disabled={isReadOnly} />
+                                            </div>
+                                        </section>
+                                    )
+                                    : undefined}
 
                                 {showMarathonMatchScorerSection
                                     ? (

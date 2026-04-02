@@ -482,6 +482,14 @@ describe('ChallengeEditorForm', () => {
         trackId: 'track-id',
         typeId: 'type-id',
     } as Challenge
+    const taskDraftChallenge = {
+        ...draftChallenge,
+        type: {
+            abbreviation: 'TSK',
+            name: 'Task',
+        },
+        typeId: 'task-type-id',
+    } as Challenge
     const first2FinishDraftChallenge = {
         ...validDraftChallenge,
         phases: [{
@@ -628,6 +636,51 @@ describe('ChallengeEditorForm', () => {
             .toHaveTextContent('Billing Account Id')
         expect(advancedOptionsSection)
             .toHaveTextContent('80001063')
+    })
+
+    it('hides the editable timeline section for task challenges in edit mode', () => {
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'TSK',
+                id: 'task-type-id',
+                isTask: true,
+                name: 'Task',
+            }],
+            isLoading: false,
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={taskDraftChallenge}
+                    isEditMode
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.queryByRole('heading', { name: 'Timeline & Schedule' }))
+            .toBeNull()
+    })
+
+    it('keeps the timeline section visible for task challenges outside edit mode', () => {
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'TSK',
+                id: 'task-type-id',
+                isTask: true,
+                name: 'Task',
+            }],
+            isLoading: false,
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm challenge={taskDraftChallenge} />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByRole('heading', { name: 'Timeline & Schedule' }))
+            .toBeInTheDocument()
     })
 
     it('renders secondary footer actions and a primary launch action for draft challenges', () => {
