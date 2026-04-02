@@ -21,9 +21,7 @@ import { TrashIcon } from '@heroicons/react/outline'
 import { Button } from '~/libs/ui'
 
 import { ConfirmationModal } from '../../../../../lib/components'
-import {
-    PrizeInput,
-} from '../../../../../lib/components/form'
+import { PrizeInput } from '../../../../../lib/components/form'
 import {
     CHALLENGE_TYPES_WITH_MULTIPLE_PRIZES,
     PRIZE_SET_TYPES,
@@ -329,55 +327,57 @@ export const ChallengePrizesField: FC<ChallengePrizesFieldProps> = (
     const fieldError = typeof fieldState.error?.message === 'string'
         ? fieldState.error.message
         : undefined
-    const showPrizeRowLabels = fields.length > 1
-    const visibleError = fieldError || descendingError
+    const errorMessage = fieldError || descendingError
+    const prizeTypeFieldName = `${props.name}-type`
+    const fieldLabelId = `${props.name}-label`
+    const usdOptionId = `${prizeTypeFieldName}-usd`
+    const pointsOptionId = `${prizeTypeFieldName}-points`
 
     return (
         <>
             <div className={styles.field}>
                 <div className={styles.fieldHeader}>
-                    <div className={styles.fieldLabel}>
+                    <div className={styles.fieldLabel} id={fieldLabelId}>
                         Challenge Prizes
                         <span className={styles.required}>*</span>
                     </div>
 
                     <div
-                        aria-label='Challenge prize currency'
+                        aria-labelledby={fieldLabelId}
                         className={styles.typeToggle}
                         role='radiogroup'
                     >
                         <label
                             className={classNames(
-                                styles.toggleOption,
-                                props.disabled ? styles.toggleOptionDisabled : undefined,
+                                styles.typeOption,
+                                props.disabled ? styles.typeOptionDisabled : undefined,
                             )}
-                            htmlFor={`${props.name}-type-usd`}
+                            htmlFor={usdOptionId}
                         >
                             <input
                                 checked={currentPrizeType === PRIZE_TYPES.USD}
-                                className={styles.toggleRadio}
+                                className={styles.typeToggleInput}
                                 disabled={props.disabled}
-                                id={`${props.name}-type-usd`}
-                                name={`${props.name}-type`}
+                                id={usdOptionId}
+                                name={prizeTypeFieldName}
                                 onChange={handleSelectUsd}
                                 type='radio'
                             />
                             <span>USD</span>
                         </label>
-
                         <label
                             className={classNames(
-                                styles.toggleOption,
-                                props.disabled ? styles.toggleOptionDisabled : undefined,
+                                styles.typeOption,
+                                props.disabled ? styles.typeOptionDisabled : undefined,
                             )}
-                            htmlFor={`${props.name}-type-points`}
+                            htmlFor={pointsOptionId}
                         >
                             <input
                                 checked={currentPrizeType === PRIZE_TYPES.POINT}
-                                className={styles.toggleRadio}
+                                className={styles.typeToggleInput}
                                 disabled={props.disabled}
-                                id={`${props.name}-type-points`}
-                                name={`${props.name}-type`}
+                                id={pointsOptionId}
+                                name={prizeTypeFieldName}
                                 onChange={handleSelectPoints}
                                 type='radio'
                             />
@@ -386,55 +386,59 @@ export const ChallengePrizesField: FC<ChallengePrizesFieldProps> = (
                     </div>
                 </div>
 
-                <div className={styles.container}>
-                    <div className={styles.prizeRows}>
-                        {fields.map((prizeField, index) => {
-                            const prizeValue = Number(placementPrizes?.[index]?.value) || 0
-                            const prizeValueError = get(
-                                formState.errors,
-                                `${placementPrizesName}.${index}.value`,
-                            ) as { message?: string } | undefined
-                            const prizeValueErrorMessage = typeof prizeValueError?.message === 'string'
-                                ? prizeValueError.message
-                                : undefined
-                            const hasValueError = !!prizeValueError
+                <div className={styles.prizeRows}>
+                    {fields.map((prizeField, index) => {
+                        const prizeValue = Number(placementPrizes?.[index]?.value) || 0
+                        const prizeValueError = get(
+                            formState.errors,
+                            `${placementPrizesName}.${index}.value`,
+                        ) as { message?: string } | undefined
+                        const prizeValueErrorMessage = typeof prizeValueError?.message === 'string'
+                            ? prizeValueError.message
+                            : undefined
+                        const hasValueError = !!prizeValueError
+                        const isRemovablePrize = supportsMultiplePrizes && index > 0
 
-                            return (
-                                <div
-                                    className={classNames(
-                                        styles.prizeRow,
-                                        prizeValueErrorMessage ? styles.prizeRowWithError : undefined,
-                                        !showPrizeRowLabels ? styles.singlePrizeRow : undefined,
-                                    )}
-                                    key={prizeField.id}
-                                >
-                                    {showPrizeRowLabels
+                        return (
+                            <div
+                                className={classNames(
+                                    styles.prizeRow,
+                                    supportsMultiplePrizes
+                                        ? styles.multiPrizeRow
+                                        : styles.singlePrizeRow,
+                                    isRemovablePrize ? styles.prizeRowWithRemove : undefined,
+                                    prizeValueErrorMessage ? styles.prizeRowWithError : undefined,
+                                )}
+                                key={prizeField.id}
+                            >
+                                {supportsMultiplePrizes
+                                    ? (
+                                        <span className={styles.prizeLabel}>
+                                            {`Prize ${index + 1}`}
+                                        </span>
+                                    )
+                                    : undefined}
+
+                                <div className={styles.prizeInputField}>
+                                    <PrizeInput
+                                        disabled={props.disabled}
+                                        error={hasValueError || !!descendingError}
+                                        onChange={prizeValueChangeHandlers[index]}
+                                        prizeType={currentPrizeType}
+                                        value={prizeValue}
+                                    />
+                                    {prizeValueErrorMessage
                                         ? (
-                                            <span className={styles.prizeLabel}>
-                                                {`Prize ${index + 1}`}
-                                            </span>
+                                            <div className={styles.prizeValueError}>
+                                                {prizeValueErrorMessage}
+                                            </div>
                                         )
                                         : undefined}
+                                </div>
 
-                                    <div className={styles.prizeInputField}>
-                                        <PrizeInput
-                                            disabled={props.disabled}
-                                            error={hasValueError || !!descendingError}
-                                            onChange={prizeValueChangeHandlers[index]}
-                                            prizeType={currentPrizeType}
-                                            value={prizeValue}
-                                        />
-                                        {prizeValueErrorMessage
-                                            ? (
-                                                <div className={styles.prizeValueError}>
-                                                    {prizeValueErrorMessage}
-                                                </div>
-                                            )
-                                            : undefined}
-                                    </div>
-
-                                    {showPrizeRowLabels
-                                        ? (index > 0
+                                {supportsMultiplePrizes
+                                    ? (
+                                        isRemovablePrize
                                             ? (
                                                 <button
                                                     className={styles.trashButton}
@@ -445,29 +449,29 @@ export const ChallengePrizesField: FC<ChallengePrizesFieldProps> = (
                                                     <TrashIcon className={styles.trashIcon} />
                                                 </button>
                                             )
-                                            : <div className={styles.trashPlaceholder} />)
-                                        : undefined}
-                                </div>
-                            )
-                        })}
-                    </div>
-
-                    {supportsMultiplePrizes
-                        ? (
-                            <Button
-                                className={styles.addButton}
-                                disabled={props.disabled}
-                                label='+ Add New Prize'
-                                onClick={handleAddPrize}
-                                secondary
-                                size='lg'
-                            />
+                                            : undefined
+                                    )
+                                    : undefined}
+                            </div>
                         )
-                        : undefined}
+                    })}
                 </div>
 
-                {visibleError
-                    ? <div className={styles.fieldError}>{visibleError}</div>
+                {supportsMultiplePrizes
+                    ? (
+                        <Button
+                            className={styles.addButton}
+                            disabled={props.disabled}
+                            label='+ Add New Prize'
+                            onClick={handleAddPrize}
+                            secondary
+                            size='lg'
+                        />
+                    )
+                    : undefined}
+
+                {errorMessage
+                    ? <div className={styles.fieldError}>{errorMessage}</div>
                     : undefined}
             </div>
 

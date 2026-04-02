@@ -48,24 +48,6 @@
     gap: 24px;
 }
 
-.readOnlyField {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.readOnlyFieldLabel {
-    color: $black-80;
-    font-size: 14px;
-    font-weight: 700;
-}
-
-.readOnlyFieldValue {
-    color: $black-100;
-    font-size: 14px;
-    line-height: 1.5;
-}
-
 .billingSummary {
     display: flex;
     flex-wrap: wrap;
@@ -82,7 +64,6 @@
     display: grid;
     align-items: start;
     gap: 20px;
-    justify-content: start;
     grid-template-columns: minmax(0, 1fr);
 }
 
@@ -91,22 +72,20 @@
     flex-direction: column;
     gap: 20px;
     min-width: 0;
-    width: min(100%, 336px);
 }
 
 .copilotFeeColumn {
     min-width: 0;
-    width: min(100%, 336px);
+    width: 100%;
 }
 
 @media (min-width: 1024px) {
     .prizeInputs {
-        gap: 24px 48px;
-        grid-template-columns: repeat(2, minmax(0, 336px));
+        grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.95fr);
     }
 
     .copilotFeeColumn {
-        padding-left: 0;
+        padding-left: 12px;
     }
 }
 
