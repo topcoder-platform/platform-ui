@@ -72,6 +72,14 @@ const NON_REVIEWER_PHASE_KEYS = new Set([
     'topcodersubmission',
     'topgearsubmission',
 ])
+const APPEAL_PHASE_KEYS = new Set([
+    'appeals',
+    'appealsresponse',
+])
+const WITHOUT_APPEAL_CHALLENGE_KEYS = new Set([
+    'design',
+    'first2finish',
+])
 
 function toNumber(value: unknown): number {
     const parsed = Number(value)
@@ -111,10 +119,30 @@ function normalizeTrackForScorecards(value: unknown): string {
 /**
  * Returns whether a phase should appear in the manual reviewer phase selector.
  */
-function isSelectableReviewerPhaseName(phaseName: string | undefined): boolean {
+function isSelectableReviewerPhaseName(
+    phaseName: string | undefined,
+    allowAppealPhases: boolean = true,
+): boolean {
     const normalizedPhaseName = normalizeKey(phaseName)
 
-    return !!normalizedPhaseName && !NON_REVIEWER_PHASE_KEYS.has(normalizedPhaseName)
+    return !!normalizedPhaseName
+        && !NON_REVIEWER_PHASE_KEYS.has(normalizedPhaseName)
+        && (allowAppealPhases || !APPEAL_PHASE_KEYS.has(normalizedPhaseName))
+}
+
+/**
+ * Returns whether the selected challenge track/type allows separate appeal reviewer phases.
+ */
+function challengeAllowsAppealPhases(
+    challengeTypeName: string | undefined,
+    challengeTrackName: string | undefined,
+): boolean {
+    return ![
+        challengeTypeName,
+        challengeTrackName,
+    ]
+        .map(value => normalizeKey(value))
+        .some(value => WITHOUT_APPEAL_CHALLENGE_KEYS.has(value))
 }
 
 function normalizePhaseToken(value: unknown): string {
@@ -163,6 +191,7 @@ function getPhaseMatchedScorecards(
  * manual reviewer cards while preserving the current row's selection.
  */
 function getReviewerPhaseOptions(params: {
+    allowAppealPhases: boolean
     options: FormSelectOption[]
     phaseNameById: Map<string, string>
     reviewerIndex: number
@@ -194,7 +223,10 @@ function getReviewerPhaseOptions(params: {
             return false
         }
 
-        return isSelectableReviewerPhaseName(params.phaseNameById.get(phaseId))
+        return isSelectableReviewerPhaseName(
+            params.phaseNameById.get(phaseId),
+            params.allowAppealPhases,
+        )
     })
 }
 
@@ -500,6 +532,8 @@ export const HumanReviewTab: FC = () => {
         (reviewerIndex: number): number | undefined => reviewerFieldIndices[reviewerIndex],
         [reviewerFieldIndices],
     )
+    const normalizedTrackId = normalizeText(trackId)
+    const normalizedTypeId = normalizeText(typeId)
 
     const phaseNameById = useMemo<Map<string, string>>(
         () => {
@@ -521,6 +555,28 @@ export const HumanReviewTab: FC = () => {
             return nextPhaseNameById
         },
         [phases],
+    )
+    const selectedChallengeTrackName = useMemo(
+        (): string => normalizeText(
+            challengeTracks.find(track => normalizeText(track.id) === normalizedTrackId)?.name,
+        ),
+        [challengeTracks, normalizedTrackId],
+    )
+    const selectedChallengeTypeName = useMemo(
+        (): string => normalizeText(
+            challengeTypes.find(type => normalizeText(type.id) === normalizedTypeId)?.name,
+        ),
+        [challengeTypes, normalizedTypeId],
+    )
+    const allowAppealPhases = useMemo(
+        (): boolean => challengeAllowsAppealPhases(
+            selectedChallengeTypeName,
+            selectedChallengeTrackName,
+        ),
+        [
+            selectedChallengeTrackName,
+            selectedChallengeTypeName,
+        ],
     )
 
     const roleIdByName = useMemo<Map<string, string>>(
@@ -597,20 +653,19 @@ export const HumanReviewTab: FC = () => {
     )
     const getPhaseOptionsForReviewer = useCallback(
         (reviewerIndex: number): FormSelectOption[] => getReviewerPhaseOptions({
+            allowAppealPhases,
             options: phaseOptions,
             phaseNameById,
             reviewerIndex,
             reviewers: reviewerRows,
         }),
         [
+            allowAppealPhases,
             phaseNameById,
             phaseOptions,
             reviewerRows,
         ],
     )
-
-    const normalizedTrackId = normalizeText(trackId)
-    const normalizedTypeId = normalizeText(typeId)
     const selectedScorecardTrack = useMemo(
         (): string => {
             if (!normalizedTrackId) {

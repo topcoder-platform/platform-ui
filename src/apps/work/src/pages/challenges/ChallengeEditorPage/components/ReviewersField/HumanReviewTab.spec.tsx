@@ -347,6 +347,35 @@ describe('HumanReviewTab', () => {
         })
     })
 
+    it('hides appeal phases for first2finish manual reviewer cards', () => {
+        render(
+            <TestHarness
+                defaultValues={{
+                    phases: [
+                        {
+                            id: 'review',
+                            name: 'Review',
+                            phaseId: 'review',
+                        },
+                        {
+                            id: 'appeals',
+                            name: 'Appeals',
+                            phaseId: 'appeals',
+                        },
+                        {
+                            id: 'appeals-response',
+                            name: 'Appeals Response',
+                            phaseId: 'appeals-response',
+                        },
+                    ],
+                }}
+            />,
+        )
+
+        expect(getPhaseOptionLabels('reviewers.0.phaseId'))
+            .toEqual(['Review'])
+    })
+
     it('shows only unassigned non-submission phases on each reviewer card', () => {
         render(
             <TestHarness
