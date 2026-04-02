@@ -64,6 +64,7 @@ const SCORECARD_TRACK_ALIASES: Record<string, string> = {
 const ITERATIVE_REVIEW_ROLE_NAMES = [
     'Iterative Reviewer',
     'Iterative Review',
+    'Reviewer',
 ]
 const NON_REVIEWER_PHASE_KEYS = new Set([
     'checkpointsubmission',
