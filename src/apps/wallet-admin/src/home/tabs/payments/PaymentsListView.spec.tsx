@@ -114,6 +114,27 @@ describe('PaymentsListView', () => {
             })
     })
 
+    it('defaults the wipro taas admin view to TAAS scoped filters', async () => {
+        render(
+            <PaymentsListView
+                profile={{ roles: ['Wipro TaaS Admin'] } as any}
+            />,
+        )
+
+        await screen.findByText('No payments match your filters.')
+
+        expect(mockedGetPayments)
+            .toHaveBeenLastCalledWith(10, 0, {
+                category: ['TAAS_PAYMENT'],
+                status: ['ON_HOLD_ADMIN'],
+            })
+        expect(mockFilterBar.mock.calls.at(-1)?.[0].selectedValueOverrides)
+            .toEqual({
+                category: 'TAAS_PAYMENT',
+                status: 'ON_HOLD_ADMIN',
+            })
+    })
+
     it('applies the default approver status after switching from admin view', async () => {
         render(
             <PaymentsListView
@@ -143,6 +164,39 @@ describe('PaymentsListView', () => {
             })
     })
 
+    it('lets payment admins toggle into and out of the wipro taas admin view', async () => {
+        render(
+            <PaymentsListView
+                profile={{ roles: ['Payment Admin', 'Wipro TaaS Admin'] } as any}
+            />,
+        )
+
+        await screen.findByText('Member earnings will appear here.')
+
+        expect(mockedGetPayments)
+            .toHaveBeenLastCalledWith(10, 0, {})
+
+        fireEvent.click(screen.getByRole('button', { name: 'Wipro TaaS Admin View' }))
+
+        await screen.findByText('No payments match your filters.')
+
+        expect(mockedGetPayments)
+            .toHaveBeenLastCalledWith(10, 0, {
+                category: ['TAAS_PAYMENT'],
+                status: ['ON_HOLD_ADMIN'],
+            })
+
+        fireEvent.click(screen.getByRole('button', { name: 'Admin View' }))
+
+        await waitFor(() => {
+            expect(mockedGetPayments)
+                .toHaveBeenLastCalledWith(10, 0, {})
+        })
+
+        expect(mockFilterBar.mock.calls.at(-1)?.[0].selectedValueOverrides)
+            .toEqual({})
+    })
+
     it('lets an explicit status filter override the default approver status', async () => {
         render(
             <PaymentsListView
@@ -167,6 +221,34 @@ describe('PaymentsListView', () => {
         expect(mockFilterBar.mock.calls.at(-1)?.[0].selectedValueOverrides)
             .toEqual({
                 category: 'ENGAGEMENT_PAYMENT',
+                status: 'PAID',
+            })
+    })
+
+    it('lets an explicit status filter override the default status in the wipro taas admin view', async () => {
+        render(
+            <PaymentsListView
+                profile={{ roles: ['Wipro TaaS Admin'] } as any}
+            />,
+        )
+
+        await screen.findByText('No payments match your filters.')
+
+        await act(async () => {
+            mockFilterBar.mock.calls.at(-1)?.[0].onFilterChange('status', ['PAID'])
+        })
+
+        await waitFor(() => {
+            expect(mockedGetPayments)
+                .toHaveBeenLastCalledWith(10, 0, {
+                    category: ['TAAS_PAYMENT'],
+                    status: ['PAID'],
+                })
+        })
+
+        expect(mockFilterBar.mock.calls.at(-1)?.[0].selectedValueOverrides)
+            .toEqual({
+                category: 'TAAS_PAYMENT',
                 status: 'PAID',
             })
     })

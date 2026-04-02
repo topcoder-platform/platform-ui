@@ -19,10 +19,11 @@ import PaymentsTable from '../../../lib/components/payments-table/PaymentTable'
 
 import styles from './Payments.module.scss'
 
-type PaymentRoleView = 'admin' | 'engagementApprover'
+type PaymentRoleView = 'admin' | 'engagementApprover' | 'wiproTaasAdmin'
 
 const engagementPaymentCategory = 'ENGAGEMENT_PAYMENT'
-const engagementApproverDefaultStatus = 'ON_HOLD_ADMIN'
+const restrictedRoleDefaultStatus = 'ON_HOLD_ADMIN'
+const taasPaymentCategory = 'TAAS_PAYMENT'
 const defaultPageSize = 10
 
 interface PaymentsListViewProps {
@@ -73,9 +74,20 @@ const formatCurrency = (amountStr: string, currency: string): string => {
 
 // eslint-disable-next-line complexity
 const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProps) => {
-    const isPaymentAdmin = props.profile.roles.includes('Payment Admin')
-    const isEngagementPaymentApprover = props.profile.roles.includes('Engagement Payment Approver')
-    const canToggleRoleView = isPaymentAdmin && isEngagementPaymentApprover
+    const normalizedRoles = React.useMemo(
+        () => new Set((props.profile.roles || []).map(role => role.trim()
+            .toLowerCase())),
+        [props.profile.roles],
+    )
+    const hasRole = useCallback(
+        (...roles: string[]) => roles.some(role => normalizedRoles.has(role.trim()
+            .toLowerCase())),
+        [normalizedRoles],
+    )
+    const isPaymentAdmin = hasRole('Payment Admin')
+    const isEngagementPaymentApprover = hasRole('Engagement Payment Approver')
+    const isWiproTaasAdmin = hasRole('wipro-taas-admin', 'Wipro TaaS Admin')
+    const canToggleRoleView = isPaymentAdmin && (isEngagementPaymentApprover || isWiproTaasAdmin)
     const [confirmFlow, setConfirmFlow] = React.useState<ConfirmFlowData | undefined>(undefined)
     const [isConfirmFormValid, setIsConfirmFormValid] = React.useState<boolean>(false)
     const [winnings, setWinnings] = React.useState<ReadonlyArray<Winning>>([])
@@ -83,39 +95,46 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
     const selectedPaymentsCount = Object.keys(selectedPayments).length
     const [isLoading, setIsLoading] = React.useState<boolean>(false)
     const [paymentRoleView, setPaymentRoleView] = React.useState<PaymentRoleView>(
-        isPaymentAdmin ? 'admin' : 'engagementApprover',
+        isPaymentAdmin ? 'admin' : (isWiproTaasAdmin ? 'wiproTaasAdmin' : 'engagementApprover'),
     )
     const isEngagementApproverView = isEngagementPaymentApprover && (
         !isPaymentAdmin || paymentRoleView === 'engagementApprover'
     )
+    const isWiproTaasAdminView = isWiproTaasAdmin && (
+        !isPaymentAdmin || paymentRoleView === 'wiproTaasAdmin'
+    )
+    const restrictedCategory = isEngagementApproverView
+        ? engagementPaymentCategory
+        : (isWiproTaasAdminView ? taasPaymentCategory : undefined)
+    const isRestrictedApproverView = isEngagementApproverView || isWiproTaasAdminView
     const [filters, setFilters] = React.useState<Record<string, string[]>>({})
     const hasSelectedStatusFilter = (filters.status?.length ?? 0) > 0
     const appliedFilters = React.useMemo<Record<string, string[]>>(() => {
-        if (!isEngagementApproverView) {
+        if (!restrictedCategory) {
             return filters
         }
 
         return {
             ...filters,
-            category: [engagementPaymentCategory],
-            status: hasSelectedStatusFilter ? filters.status : [engagementApproverDefaultStatus],
+            category: [restrictedCategory],
+            status: hasSelectedStatusFilter ? filters.status : [restrictedRoleDefaultStatus],
         }
-    }, [filters, hasSelectedStatusFilter, isEngagementApproverView])
+    }, [filters, hasSelectedStatusFilter, restrictedCategory])
     const hasActiveFilters = React.useMemo(
         () => Object.entries(appliedFilters)
             .some(([key, value]) => key !== 'category' && value.length > 0),
         [appliedFilters],
     )
     const selectedValueOverrides = React.useMemo<Record<string, string>>(() => {
-        if (!isEngagementApproverView) {
+        if (!restrictedCategory) {
             return {} as Record<string, string>
         }
 
         return {
-            category: engagementPaymentCategory,
-            status: filters.status?.[0] ?? engagementApproverDefaultStatus,
+            category: restrictedCategory,
+            status: filters.status?.[0] ?? restrictedRoleDefaultStatus,
         }
-    }, [filters.status, isEngagementApproverView])
+    }, [filters.status, restrictedCategory])
     const [pagination, setPagination] = React.useState<PaginationInfo>({
         currentPage: 1,
         pageSize: defaultPageSize,
@@ -343,8 +362,8 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
     const [bulkAuditNote, setBulkAuditNote] = React.useState('')
 
     /**
-     * Switches the payments page between the full admin view and the engagement-only approver view.
-     * The engagement category is derived from the selected role view, so shared filters stay reusable
+    * Switches the payments page between the full admin view and scoped approver views.
+    * The role-scoped category is derived from the selected role view, so shared filters stay reusable
      * and hidden type restrictions do not leak across view changes.
      */
     const onRoleViewChange = useCallback((nextView: PaymentRoleView) => {
@@ -421,20 +440,32 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                         <div className={styles.roleViewButtons}>
                             <button
                                 type='button'
-                                aria-pressed={!isEngagementApproverView}
-                                className={`${styles.roleViewButton} ${!isEngagementApproverView ? styles.roleViewButtonActive : ''}`}
+                                aria-pressed={!isRestrictedApproverView}
+                                className={`${styles.roleViewButton} ${!isRestrictedApproverView ? styles.roleViewButtonActive : ''}`}
                                 onClick={() => onRoleViewChange('admin')}
                             >
                                 Admin View
                             </button>
-                            <button
-                                type='button'
-                                aria-pressed={isEngagementApproverView}
-                                className={`${styles.roleViewButton} ${isEngagementApproverView ? styles.roleViewButtonActive : ''}`}
-                                onClick={() => onRoleViewChange('engagementApprover')}
-                            >
-                                Engagement Approver View
-                            </button>
+                            {isEngagementPaymentApprover && (
+                                <button
+                                    type='button'
+                                    aria-pressed={isEngagementApproverView}
+                                    className={`${styles.roleViewButton} ${isEngagementApproverView ? styles.roleViewButtonActive : ''}`}
+                                    onClick={() => onRoleViewChange('engagementApprover')}
+                                >
+                                    Engagement Approver View
+                                </button>
+                            )}
+                            {isWiproTaasAdmin && (
+                                <button
+                                    type='button'
+                                    aria-pressed={isWiproTaasAdminView}
+                                    className={`${styles.roleViewButton} ${isWiproTaasAdminView ? styles.roleViewButtonActive : ''}`}
+                                    onClick={() => onRoleViewChange('wiproTaasAdmin')}
+                                >
+                                    Wipro TaaS Admin View
+                                </button>
+                            )}
                         </div>
                     </div>
                 )}
@@ -498,7 +529,7 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                             ],
                             type: 'dropdown',
                         },
-                        ...(isEngagementApproverView ? [] : [
+                        ...(isRestrictedApproverView ? [] : [
                             {
                                 key: 'category',
                                 label: 'Type',
@@ -522,6 +553,10 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                                     {
                                         label: 'Engagement Payment',
                                         value: 'ENGAGEMENT_PAYMENT',
+                                    },
+                                    {
+                                        label: 'TaaS Payment',
+                                        value: 'TAAS_PAYMENT',
                                     },
                                 ],
                                 type: 'dropdown',
@@ -595,8 +630,8 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                 {isLoading && <LoadingCircles className={styles.centered} />}
                 {!isLoading && winnings.length > 0 && (
                     <PaymentsTable
-                        enableBulkEdit={isEngagementApproverView}
-                        canEdit={isEditingAllowed() && !isEngagementApproverView}
+                        enableBulkEdit={isRestrictedApproverView}
+                        canEdit={isEditingAllowed() && !isRestrictedApproverView}
                         currentPage={pagination.currentPage}
                         numPages={pagination.totalPages}
                         payments={winnings}
