@@ -47,6 +47,7 @@ import {
     updateEngagement,
 } from '../../../../lib/services'
 import {
+    formatEngagementStatus,
     showErrorToast,
     showSuccessToast,
 } from '../../../../lib/utils'
@@ -250,7 +251,9 @@ function getDefaultValues(
             : '',
         role: defaultEngagement?.role || ENGAGEMENT_ROLES[0],
         skills: defaultEngagement?.skills || [],
-        status: defaultEngagement?.status || 'Open',
+        status: defaultEngagement?.status
+            ? formatEngagementStatus(defaultEngagement.status)
+            : 'Open',
         timezones: defaultEngagement?.timezones || [],
         title: defaultEngagement?.title || '',
         workload: defaultEngagement?.workload || ENGAGEMENT_WORKLOADS[0],
