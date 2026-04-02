@@ -89,6 +89,7 @@ export interface EngagementFilters {
     page?: number
     perPage?: number
     projectId?: number | string
+    projectIds?: Array<number | string>
     sortBy?: string
     sortOrder?: 'asc' | 'desc'
     status?: string

@@ -221,6 +221,16 @@ function createQuery(
         query.set('includePrivate', 'true')
     }
 
+    if (Array.isArray(filters.projectIds)) {
+        filters.projectIds
+            .map(projectId => String(projectId)
+                .trim())
+            .filter(Boolean)
+            .forEach(projectId => {
+                query.append('projectIds', projectId)
+            })
+    }
+
     if (Array.isArray(filters.countries)) {
         filters.countries
             .map(country => country.trim())
@@ -556,7 +566,29 @@ export async function fetchEngagements(
     filters: EngagementFilters = {},
     params: FetchEngagementsParams = {},
 ): Promise<FetchEngagementsResponse> {
-    const query = createQuery(filters, params)
+    const normalizedProjectIds = Array.isArray(filters.projectIds)
+        ? filters.projectIds
+            .map(projectId => String(projectId)
+                .trim())
+            .filter(Boolean)
+        : undefined
+
+    if (Array.isArray(filters.projectIds) && !normalizedProjectIds?.length) {
+        return {
+            data: [],
+            metadata: {
+                page: params.page || 1,
+                perPage: params.perPage || 0,
+                total: 0,
+                totalPages: 0,
+            },
+        }
+    }
+
+    const query = createQuery({
+        ...filters,
+        projectIds: normalizedProjectIds,
+    }, params)
     const url = query
         ? `${ENGAGEMENTS_API_URL}?${query}`
         : ENGAGEMENTS_API_URL
