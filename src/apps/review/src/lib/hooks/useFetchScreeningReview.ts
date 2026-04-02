@@ -37,6 +37,7 @@ import { isCheckpointSubmissionType, isContestSubmissionType } from '../constant
 import { debugLog, DEBUG_CHECKPOINT_PHASES, isPhaseAllowedForReview, truncateForLog, warnLog } from '../utils'
 import { registerChallengeReviewKey } from '../utils/reviewCacheRegistry'
 import { normalizeReviewMetadata } from '../utils/metadataMatching'
+import { buildApprovalReviewRows } from '../utils/approvalReviewRows'
 import { resolvePhaseMeta } from '../utils/phaseResolution'
 import { buildReviewForResource } from '../utils/reviewBuilding'
 import { collectMatchingReviews, selectBestReview } from '../utils/reviewSelection'
@@ -1908,52 +1909,19 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
     ])
 
     // Build approval reviews list (one entry per approval review instance)
-    const approvalReviews = useMemo<SubmissionInfo[]>(() => {
-        if (!challengeReviews?.length || approvalPhaseIds.size === 0) {
-            return []
-        }
-
-        const result: SubmissionInfo[] = []
-
-        forEach(challengeReviews, reviewEntry => {
-            if (!reviewEntry) {
-                return
-            }
-
-            if (!reviewMatchesPhase(reviewEntry, approvalScorecardId, approvalPhaseIds, 'Approval')) {
-                return
-            }
-
-            const matchingSubmission = resolveSubmissionForReview({
-                review: reviewEntry,
-                submissionsById: visibleSubmissionsById,
-                submissionsByLegacyId: visibleSubmissionsByLegacyId,
-            } satisfies SubmissionLookupArgs)
-
-            if (!matchingSubmission) {
-                return
-            }
-
-            const submissionWithReview: BackendSubmission = {
-                ...matchingSubmission,
-                review: [reviewEntry],
-            }
-
-            const submissionInfo = convertBackendSubmissionToSubmissionInfo(submissionWithReview)
-
-            result.push({
-                ...submissionInfo,
-                review: submissionInfo.review ?? convertBackendReviewToReviewInfo(reviewEntry),
-                reviews: [convertBackendReviewToReviewResult(reviewEntry)],
-                userInfo: resourceMemberIdMapping[submissionInfo.memberId],
-            })
-        })
-
-        return result
-    }, [
+    const approvalReviews = useMemo<SubmissionInfo[]>(() => buildApprovalReviewRows({
         approvalPhaseIds,
         approvalScorecardId,
         challengeReviews,
+        contestSubmissions,
+        resourceMemberIdMapping,
+        submissionsById: visibleSubmissionsById,
+        submissionsByLegacyId: visibleSubmissionsByLegacyId,
+    }), [
+        approvalPhaseIds,
+        approvalScorecardId,
+        challengeReviews,
+        contestSubmissions,
         resourceMemberIdMapping,
         visibleSubmissionsById,
         visibleSubmissionsByLegacyId,
