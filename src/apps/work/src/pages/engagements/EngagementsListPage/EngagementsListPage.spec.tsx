@@ -208,6 +208,17 @@ const managerContextValue: WorkAppContextModel = {
     userRoles: ['manager'],
 }
 
+const projectManagerContextValue: WorkAppContextModel = {
+    ...defaultContextValue,
+    isAdmin: false,
+    isManager: true,
+    loginUserInfo: {
+        ...defaultContextValue.loginUserInfo,
+        roles: ['project manager'],
+    } as WorkAppContextModel['loginUserInfo'],
+    userRoles: ['project manager'],
+}
+
 const talentManagerContextValue: WorkAppContextModel = {
     ...defaultContextValue,
     isAdmin: false,
@@ -507,6 +518,24 @@ describe('EngagementsListPage', () => {
 
         expect(within(row)
             .queryByRole('button', { name: 'Delete' }))
+            .toBeNull()
+    })
+
+    it('does not render edit actions for project managers without engagement access', () => {
+        mockedUseFetchEngagements.mockReturnValue({
+            engagements: [sampleEngagement],
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+        })
+
+        renderPage('/projects/200/engagements', '/projects/:projectId/engagements', projectManagerContextValue)
+
+        const row = screen.getByText(sampleEngagement.title)
+            .closest('tr') as HTMLTableRowElement
+
+        expect(within(row)
+            .queryByRole('link', { name: 'Edit' }))
             .toBeNull()
     })
 
