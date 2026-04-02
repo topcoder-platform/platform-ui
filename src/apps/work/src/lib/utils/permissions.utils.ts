@@ -162,6 +162,19 @@ export function canEditTaasProject(userRoles: string[]): boolean {
 }
 
 /**
+ * Returns whether the supplied user roles can access the common all-engagements view.
+ *
+ * This root work-app page is intended for admins and Talent Managers only.
+ * Project managers still use project-scoped engagement pages.
+ *
+ * @param userRoles caller roles from the decoded auth token or app context.
+ * @returns `true` when the caller can open the all-engagements page; otherwise `false`.
+ */
+export function canViewAllEngagements(userRoles: string[]): boolean {
+    return hasAdminRole(userRoles) || checkTalentManager(userRoles)
+}
+
+/**
  * Returns whether the supplied user roles can create engagements.
  *
  * Engagement creation is restricted to admins and Talent Managers. Copilot-only

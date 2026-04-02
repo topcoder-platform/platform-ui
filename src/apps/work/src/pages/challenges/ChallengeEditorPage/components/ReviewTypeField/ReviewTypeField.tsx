@@ -88,7 +88,6 @@ export const ReviewTypeField: FC<ReviewTypeFieldProps> = (
                 label='Reviewer'
                 name='reviewer'
                 placeholder='Search reviewer'
-                required
             />
         </div>
     )

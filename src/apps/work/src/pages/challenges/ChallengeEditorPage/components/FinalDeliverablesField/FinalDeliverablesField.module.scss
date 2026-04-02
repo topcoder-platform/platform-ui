@@ -1,0 +1,75 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    grid-column: 1 / -1;
+}
+
+.fileTypeList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.fileTypeItem {
+    align-items: center;
+    background: #2c95d7;
+    border: 1px solid #c9e6f2;
+    border-radius: 16px;
+    color: $tc-white;
+    display: inline-flex;
+    font-size: 14px;
+    gap: 8px;
+    line-height: 1.4;
+    padding: 6px 8px 6px 12px;
+}
+
+.removeButton {
+    align-items: center;
+    background: rgba(255, 255, 255, 0.25);
+    border: 0;
+    border-radius: 50%;
+    color: $tc-white;
+    cursor: pointer;
+    display: inline-flex;
+    font-size: 14px;
+    height: 18px;
+    justify-content: center;
+    line-height: 1;
+    padding: 0;
+    width: 18px;
+
+    &:hover,
+    &:focus {
+        background: rgba(255, 255, 255, 0.4);
+        outline: none;
+    }
+}
+
+.form {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.input {
+    border: 1px solid $black-20;
+    border-radius: 8px;
+    color: $black-80;
+    flex: 1 1 320px;
+    font-size: 14px;
+    min-height: 44px;
+    min-width: 0;
+    padding: 10px 12px;
+
+    &:focus {
+        border-color: $link-blue-dark;
+        outline: none;
+    }
+}

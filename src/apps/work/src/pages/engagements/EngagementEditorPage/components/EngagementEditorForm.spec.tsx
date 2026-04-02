@@ -287,6 +287,24 @@ describe('EngagementEditorForm', () => {
             .toHaveBeenCalled()
     })
 
+    it('shows Software Developer for the software developer role option', () => {
+        render(
+            <MemoryRouter>
+                <EngagementEditorForm
+                    isEditMode={false}
+                    projectId='123'
+                />
+            </MemoryRouter>,
+        )
+
+        const roleField = screen.getByLabelText('Role') as HTMLSelectElement
+        const softwareDeveloperOption = Array.from(roleField.options)
+            .find(option => option.value === 'SOFTWARE_DEVELOPER')
+
+        expect(softwareDeveloperOption?.text)
+            .toBe('Software Developer')
+    })
+
     it('redirects to the created engagement details page', async () => {
         const user = userEvent.setup()
 
