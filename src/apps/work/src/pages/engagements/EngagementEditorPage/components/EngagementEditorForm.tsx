@@ -81,7 +81,7 @@ export interface EngagementEditorFormData {
     description: string
     durationWeeks: number | string
     isPrivate: boolean
-    projectId: number | string
+    projectId: string
     requiredMemberCount: number | string
     role: string
     skills: Skill[]
@@ -112,6 +112,21 @@ type SerializedAssignmentDetailsPayload = {
     ratePerHour: string
     standardHoursPerWeek?: number
     startDate: string
+}
+
+/**
+ * Normalizes project identifiers so select-backed form state stays string-based.
+ *
+ * @param projectId project id from route params, engagement payload, or form values.
+ * @returns a trimmed string id, or an empty string when the source is missing.
+ */
+function normalizeProjectId(projectId: number | string | undefined): string {
+    if (projectId === undefined || projectId === null) {
+        return ''
+    }
+
+    return String(projectId)
+        .trim()
 }
 
 function toAssignmentDetailsValue(assignment: EngagementAssignment): AssignmentDetailsFormValue {
@@ -167,10 +182,12 @@ function getAssignmentDefaults(engagement: Engagement | undefined): {
 function getDefaultProjectId(
     engagement: Engagement | undefined,
     projectId: number | string,
-): number | string {
-    return engagement?.projectId
-        || engagement?.project?.id
-        || projectId
+): string {
+    return normalizeProjectId(
+        engagement?.projectId
+        ?? engagement?.project?.id
+        ?? projectId,
+    )
 }
 
 function getDefaultValues(
@@ -243,12 +260,7 @@ function createProjectOption(
     projectId: number | string | undefined,
     projectName: string | undefined,
 ): FormSelectOption | undefined {
-    if (projectId === undefined || projectId === null) {
-        return undefined
-    }
-
-    const normalizedProjectId = String(projectId)
-        .trim()
+    const normalizedProjectId = normalizeProjectId(projectId)
 
     if (!normalizedProjectId) {
         return undefined
@@ -283,6 +295,16 @@ function mergeProjectOptions(
     })
 
     return Array.from(optionMap.values())
+}
+
+/**
+ * Builds the engagement list route for a specific parent project id.
+ *
+ * @param projectId current route, form, or saved engagement project id.
+ * @returns the project-scoped engagements route.
+ */
+function getEngagementsPath(projectId: number | string | undefined): string {
+    return `${rootRoute}/projects/${normalizeProjectId(projectId)}/engagements`
 }
 
 function toPayload(values: EngagementEditorFormData): Partial<Engagement> & {
@@ -372,7 +394,6 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
 
     const roleOptions = useMemo<FormSelectOption[]>(() => createRoleOptions(), [])
     const workloadOptions = useMemo<FormSelectOption[]>(() => createWorkloadOptions(), [])
-    const engagementsPath = `${rootRoute}/projects/${props.projectId}/engagements`
     const currentProjectOption = useMemo<FormSelectOption | undefined>(
         () => createProjectOption(
             props.engagement?.projectId
@@ -409,6 +430,7 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
     const reset = formMethods.reset
     const setValue = formMethods.setValue
     const values = formMethods.watch()
+    const selectedEngagementsPath = getEngagementsPath(values.projectId || props.projectId)
 
     useEffect(() => {
         if (!currentProjectOption) {
@@ -453,7 +475,13 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
                     )
 
                     if (!props.isEditMode) {
-                        navigate(`${engagementsPath}/${savedEngagement.id}`)
+                        const savedEngagementsPath = getEngagementsPath(
+                            savedEngagement.projectId || nextValues.projectId,
+                        )
+
+                        navigate(
+                            `${savedEngagementsPath}/${savedEngagement.id}`,
+                        )
                     }
                 }
             } catch (error) {
@@ -474,7 +502,7 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
                 }
             }
         },
-        [currentEngagementId, engagementsPath, navigate, props.isEditMode, props.projectId, reset],
+        [currentEngagementId, navigate, props.isEditMode, props.projectId, reset],
     )
 
     const loadParentProjectOptions = useCallback(
@@ -676,7 +704,7 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
                         : undefined}
 
                     <div className={styles.actions}>
-                        <Link className={styles.cancelLink} to={engagementsPath}>
+                        <Link className={styles.cancelLink} to={selectedEngagementsPath}>
                             Cancel
                         </Link>
 

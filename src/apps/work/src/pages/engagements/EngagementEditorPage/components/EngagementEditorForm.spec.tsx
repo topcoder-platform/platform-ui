@@ -324,7 +324,50 @@ describe('EngagementEditorForm', () => {
             .toBeTruthy()
     })
 
-    it('redirects to the created engagement details page', async () => {
+    it('renders the engagement parent project when the saved project id is numeric', () => {
+        render(
+            <MemoryRouter>
+                <EngagementEditorForm
+                    engagement={{
+                        anticipatedStart: 'Immediate',
+                        assignedMemberHandles: [],
+                        assignments: [],
+                        compensationRange: '',
+                        countries: ['US'],
+                        createdAt: '',
+                        description: 'Existing engagement description',
+                        durationWeeks: 4,
+                        id: 'engagement-1',
+                        isPrivate: false,
+                        project: {
+                            id: 456,
+                            name: 'Existing Parent Project',
+                        },
+                        projectId: 456,
+                        requiredMemberCount: 1,
+                        role: 'SOFTWARE_DEVELOPER',
+                        skills: [],
+                        status: 'Open',
+                        timezones: ['America/New_York'],
+                        title: 'Existing engagement',
+                        updatedAt: '',
+                        workload: 'FULL_TIME',
+                    } as any}
+                    isEditMode
+                    projectId='123'
+                />
+            </MemoryRouter>,
+        )
+
+        const parentProjectField = screen.getByLabelText('Parent Project') as HTMLSelectElement
+
+        expect(parentProjectField.value)
+            .toBe('456')
+        expect(screen.getByRole('option', { name: 'Existing Parent Project' }))
+            .toBeTruthy()
+    })
+
+    it('redirects to the created engagement details page for the saved parent project', async () => {
         const user = userEvent.setup()
 
         mockedCreateEngagement.mockResolvedValue({
@@ -338,7 +381,7 @@ describe('EngagementEditorForm', () => {
             durationWeeks: 4,
             id: 'engagement-2',
             isPrivate: false,
-            projectId: '123',
+            projectId: '456',
             requiredMemberCount: 1,
             role: 'SOFTWARE_DEVELOPER',
             skills: [
@@ -377,6 +420,6 @@ describe('EngagementEditorForm', () => {
             .toHaveBeenCalledWith('Engagement created successfully')
 
         expect(mockNavigate)
-            .toHaveBeenCalledWith('/work/projects/123/engagements/engagement-2')
+            .toHaveBeenCalledWith('/work/projects/456/engagements/engagement-2')
     })
 })
