@@ -161,7 +161,8 @@
     gap: 10px;
 }
 
-.actionLink {
+.actionLink,
+.actionButton {
     color: $link-blue-dark;
     font-size: 12px;
     font-weight: 700;
@@ -172,6 +173,17 @@
         text-decoration: underline;
         outline: none;
     }
+}
+
+.actionButton {
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    padding: 0;
+}
+
+.actionDelete {
+    color: #9f1f1f;
 }
 
 .emptyRow {

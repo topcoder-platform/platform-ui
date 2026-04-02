@@ -1,9 +1,20 @@
-import { FC } from 'react'
+import {
+    FC,
+    useContext,
+} from 'react'
 import { Link } from 'react-router-dom'
 import classNames from 'classnames'
 
-import { Project } from '../../models'
-import { formatDateTime } from '../../utils'
+import { WorkAppContext } from '../../contexts'
+import {
+    Project,
+    WorkAppContextModel,
+} from '../../models'
+import {
+    buildProjectLandingPath,
+    formatDateTime,
+    getAuthAccessToken,
+} from '../../utils'
 import { ProjectStatus } from '../ProjectStatus'
 
 import styles from './ProjectCard.module.scss'
@@ -16,8 +27,11 @@ interface ProjectCardProps {
 
 export const ProjectCard: FC<ProjectCardProps> = (props: ProjectCardProps) => {
     const project: Project = props.project
+    const {
+        loginUserInfo,
+    }: WorkAppContextModel = useContext(WorkAppContext)
     const projectId: string = String(project.id)
-    const path: string = `/projects/${projectId}/challenges`
+    const path: string = buildProjectLandingPath(project, getAuthAccessToken(loginUserInfo))
     const editPath = `/projects/${projectId}/edit`
 
     const lastActivity = formatDateTime(

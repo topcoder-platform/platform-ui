@@ -2,8 +2,10 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
 import type { Context, PropsWithChildren, ReactNode } from 'react'
 import {
+    fireEvent,
     render,
     screen,
+    waitFor,
     within,
 } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
@@ -13,7 +15,13 @@ import {
     useFetchEngagements,
     useFetchProject,
 } from '../../../lib/hooks'
-import { canCreateEngagement } from '../../../lib/utils'
+import { deleteEngagement } from '../../../lib/services'
+import {
+    canCreateEngagement,
+    formatEngagementStatus,
+    showErrorToast,
+    showSuccessToast,
+} from '../../../lib/utils'
 
 import { EngagementsListPage } from './EngagementsListPage'
 
@@ -35,6 +43,7 @@ jest.mock('~/apps/review/src/lib', () => ({
 })
 jest.mock('~/libs/ui', () => ({
     Button: (props: {
+        disabled?: boolean
         label: string
         onClick?: () => void
         primary?: boolean
@@ -43,6 +52,7 @@ jest.mock('~/libs/ui', () => ({
         <button
             data-primary={props.primary ? 'true' : 'false'}
             data-secondary={props.secondary ? 'true' : 'false'}
+            disabled={props.disabled}
             onClick={props.onClick}
             type='button'
         >
@@ -65,7 +75,52 @@ jest.mock('../../../lib/constants', () => ({
     },
 }))
 jest.mock('../../../lib/components', () => ({
-    EngagementsFilter: () => <div>Engagements Filter</div>,
+    ConfirmationModal: (props: {
+        cancelText?: string
+        confirmDisabled?: boolean
+        confirmText?: string
+        message: string
+        onCancel: () => void
+        onConfirm: () => void
+        title: string
+    }) => (
+        <div role='dialog'>
+            <h2>{props.title}</h2>
+            <p>{props.message}</p>
+            <button onClick={props.onCancel} type='button'>
+                {props.cancelText || 'Cancel'}
+            </button>
+            <button
+                disabled={props.confirmDisabled}
+                onClick={props.onConfirm}
+                type='button'
+            >
+                {props.confirmText || 'Confirm'}
+            </button>
+        </div>
+    ),
+    EngagementsFilter: function MockEngagementsFilter(props: {
+        filters: { title?: string }
+        onFiltersChange: (nextFilters: { title?: string }) => void
+    }) {
+        function handleApplyTitleFilter(): void {
+            props.onFiltersChange({
+                ...props.filters,
+                title: 'test pro',
+            })
+        }
+
+        return (
+            <div>
+                <button
+                    type='button'
+                    onClick={handleApplyTitleFilter}
+                >
+                    Apply title filter
+                </button>
+            </div>
+        )
+    },
     ErrorMessage: (props: { message: string }) => <div>{props.message}</div>,
     LoadingSpinner: () => <div>Loading</div>,
     Pagination: () => <div>Pagination</div>,
@@ -94,17 +149,30 @@ jest.mock('../../../lib/hooks', () => ({
     useFetchEngagements: jest.fn(),
     useFetchProject: jest.fn(),
 }))
+jest.mock('../../../lib/services', () => ({
+    deleteEngagement: jest.fn(),
+}))
 jest.mock('../../../lib/utils', () => ({
     canCreateEngagement: jest.fn(() => false),
     checkCanManageProject: jest.fn(() => false),
+    extractErrorMessage: jest.fn(
+        (error: { message?: string } | undefined, fallback: string) => error?.message || fallback,
+    ),
     formatEngagementStatus: jest.fn((status?: string) => status || ''),
     getApplicationsCount: jest.fn(() => 0),
     getAssignedMembersCount: jest.fn(() => 0),
+    getEngagementStatusPillVariant: jest.fn(() => 'gray'),
+    showErrorToast: jest.fn(),
+    showSuccessToast: jest.fn(),
 }))
 
+const mockedDeleteEngagement = deleteEngagement as jest.Mock
 const mockedUseFetchEngagements = useFetchEngagements as jest.Mock
 const mockedUseFetchProject = useFetchProject as jest.Mock
 const mockedCanCreateEngagement = canCreateEngagement as jest.Mock
+const mockedFormatEngagementStatus = formatEngagementStatus as jest.Mock
+const mockedShowErrorToast = showErrorToast as jest.Mock
+const mockedShowSuccessToast = showSuccessToast as jest.Mock
 
 const defaultContextValue: WorkAppContextModel = {
     isAdmin: true,
@@ -121,6 +189,40 @@ const defaultContextValue: WorkAppContextModel = {
         userId: 12345,
     } as WorkAppContextModel['loginUserInfo'],
     userRoles: ['administrator'],
+}
+
+const managerContextValue: WorkAppContextModel = {
+    ...defaultContextValue,
+    isAdmin: false,
+    isManager: true,
+    loginUserInfo: {
+        ...defaultContextValue.loginUserInfo,
+        roles: ['manager'],
+    } as WorkAppContextModel['loginUserInfo'],
+    userRoles: ['manager'],
+}
+
+const sampleEngagement = {
+    anticipatedStart: 'IMMEDIATE',
+    applications: [],
+    assignedMemberHandles: [],
+    assignments: [],
+    compensationRange: '$1000-$2000',
+    countries: [],
+    createdAt: '2026-03-25T00:00:00.000Z',
+    description: 'Engagement description',
+    durationWeeks: 4,
+    id: 111,
+    isPrivate: true,
+    projectId: 200,
+    requiredMemberCount: 1,
+    role: 'SOFTWARE_DEVELOPER',
+    skills: [],
+    status: 'Open',
+    timezones: [],
+    title: 'Test private mar 25',
+    updatedAt: '2026-03-25T00:00:00.000Z',
+    workload: 'FULL_TIME',
 }
 
 function renderPage(
@@ -156,6 +258,8 @@ describe('EngagementsListPage', () => {
             isLoading: false,
             project: undefined,
         })
+        mockedDeleteEngagement.mockResolvedValue(undefined)
+        mockedFormatEngagementStatus.mockImplementation((status?: string) => status || '')
     })
 
     it('keeps the project name unchanged for project-scoped engagement tabs', () => {
@@ -225,5 +329,119 @@ describe('EngagementsListPage', () => {
             .toBe('true')
         expect(createEngagementButton.getAttribute('data-secondary'))
             .toBe('false')
+    })
+
+    it('keeps the name filter out of engagement fetch requests', async () => {
+        renderPage('/engagements', '/engagements')
+
+        fireEvent.click(screen.getByRole('button', { name: 'Apply title filter' }))
+
+        await waitFor(() => {
+            expect(mockedUseFetchEngagements)
+                .toHaveBeenLastCalledWith(
+                    undefined,
+                    {
+                        includePrivate: true,
+                        projectId: undefined,
+                        sortBy: 'anticipatedStart',
+                        sortOrder: 'asc',
+                        status: undefined,
+                    },
+                    {
+                        enabled: true,
+                    },
+                )
+        })
+    })
+
+    it('renders the engagement view link without the legacy opportunities path segment', () => {
+        mockedUseFetchEngagements.mockReturnValue({
+            engagements: [
+                {
+                    id: 'plJi6KV_jDjdtowUlQbFx',
+                    isPrivate: false,
+                    projectId: 200,
+                    projectName: 'Payment Testing',
+                    status: 'open',
+                    title: 'Test engagement',
+                },
+            ],
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+        })
+
+        renderPage('/engagements', '/engagements')
+
+        expect(screen.getByRole('link', { name: 'View' })
+            .getAttribute('href'))
+            .toBe('https://engagements.example.com/plJi6KV_jDjdtowUlQbFx')
+    })
+
+    it('renders delete actions for admins on the all engagements page', () => {
+        mockedUseFetchEngagements.mockReturnValue({
+            engagements: [sampleEngagement],
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+        })
+
+        renderPage('/engagements', '/engagements')
+
+        const row = screen.getByText(sampleEngagement.title)
+            .closest('tr') as HTMLTableRowElement
+
+        expect(within(row)
+            .getByRole('button', { name: 'Delete' }))
+            .toBeTruthy()
+    })
+
+    it('does not render delete actions for non-admin managers', () => {
+        mockedUseFetchEngagements.mockReturnValue({
+            engagements: [sampleEngagement],
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+        })
+
+        renderPage('/engagements', '/engagements', managerContextValue)
+
+        const row = screen.getByText(sampleEngagement.title)
+            .closest('tr') as HTMLTableRowElement
+
+        expect(within(row)
+            .queryByRole('button', { name: 'Delete' }))
+            .toBeNull()
+    })
+
+    it('deletes the selected engagement and refreshes the list', async () => {
+        const mutate = jest.fn()
+            .mockResolvedValue(undefined)
+
+        mockedUseFetchEngagements.mockReturnValue({
+            engagements: [sampleEngagement],
+            error: undefined,
+            isLoading: false,
+            mutate,
+        })
+
+        renderPage('/engagements', '/engagements')
+
+        fireEvent.click(screen.getByRole('button', { name: 'Delete' }))
+
+        const confirmationDialog = screen.getByRole('dialog')
+        fireEvent.click(within(confirmationDialog)
+            .getByRole('button', { name: 'Delete' }))
+
+        await waitFor(() => {
+            expect(mockedDeleteEngagement)
+                .toHaveBeenCalledWith(sampleEngagement.id)
+            expect(mutate)
+                .toHaveBeenCalled()
+        })
+        expect(mockedShowSuccessToast)
+            .toHaveBeenCalledWith('Engagement deleted successfully.')
+        expect(mockedShowErrorToast)
+            .not.toHaveBeenCalled()
     })
 })
