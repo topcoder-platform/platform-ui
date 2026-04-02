@@ -17,7 +17,11 @@ import {
     useFetchProject,
     useFetchProjects,
 } from '../../../lib/hooks'
-import { canCreateEngagement } from '../../../lib/utils'
+import {
+    buildProjectLandingPath,
+    canCreateEngagement,
+    getAuthAccessToken,
+} from '../../../lib/utils'
 
 import { ChallengesListPage } from './ChallengesListPage'
 
@@ -123,16 +127,20 @@ jest.mock('../../../lib/hooks', () => ({
     useFetchProjects: jest.fn(),
 }))
 jest.mock('../../../lib/utils', () => ({
+    buildProjectLandingPath: jest.fn((project: { id?: string | number }) => `/projects/${project.id}/challenges`),
     canCreateEngagement: jest.fn(() => false),
     checkCanManageProject: jest.fn(() => false),
+    getAuthAccessToken: jest.fn(() => 'token'),
     getStatusText: jest.fn((status?: string) => status || ''),
 }))
 
+const mockedBuildProjectLandingPath = buildProjectLandingPath as jest.Mock
 const mockedUseFetchChallenges = useFetchChallenges as jest.Mock
 const mockedUseFetchChallengeTypes = useFetchChallengeTypes as jest.Mock
 const mockedUseFetchProject = useFetchProject as jest.Mock
 const mockedUseFetchProjects = useFetchProjects as jest.Mock
 const mockedCanCreateEngagement = canCreateEngagement as jest.Mock
+const mockedGetAuthAccessToken = getAuthAccessToken as jest.Mock
 
 const defaultContextValue: WorkAppContextModel = {
     isAdmin: false,
@@ -205,6 +213,10 @@ describe('ChallengesListPage', () => {
             isLoading: false,
             projects: [],
         })
+        mockedBuildProjectLandingPath.mockImplementation(
+            (project: { id?: string | number }) => `/projects/${project.id}/challenges`,
+        )
+        mockedGetAuthAccessToken.mockReturnValue('token')
     })
 
     it('scopes dashboard challenge queries to the logged-in member for non-privileged users', () => {
@@ -226,6 +238,38 @@ describe('ChallengesListPage', () => {
             .toBe('200')
         expect(fetchParams.memberId)
             .toBeUndefined()
+    })
+
+    it('redirects invited users from the challenges route to the invitation modal route', async () => {
+        const MockWorkAppContext = mockWorkAppContext
+
+        mockedUseFetchProject.mockReturnValue({
+            error: undefined,
+            isLoading: false,
+            project: {
+                id: 200,
+                name: 'Invited Project',
+                status: 'active',
+            },
+        })
+        mockedBuildProjectLandingPath.mockReturnValue('/projects/200/invitations')
+
+        render(
+            <MockWorkAppContext.Provider value={defaultContextValue}>
+                <MemoryRouter initialEntries={['/projects/200/challenges']}>
+                    <Routes>
+                        <Route path='/projects/:projectId/challenges' element={<ChallengesListPage />} />
+                        <Route path='/projects/:projectId/invitations' element={<div>Invitation Page</div>} />
+                    </Routes>
+                </MemoryRouter>
+            </MockWorkAppContext.Provider>,
+        )
+
+        await waitFor(() => {
+            expect(screen.getByText('Invitation Page'))
+                .not
+                .toBeNull()
+        })
     })
 
     it('resets rows per page to the default value when filters are reset', async () => {

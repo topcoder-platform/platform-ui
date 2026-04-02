@@ -52,6 +52,7 @@ import {
 } from '../../../lib/components'
 import {
     canCreateEngagement,
+    canViewAllEngagements,
     checkCanManageProject,
     checkTalentManager,
     extractErrorMessage,
@@ -292,7 +293,7 @@ function getEngagementProjectName(
 
 function renderEngagementRows(
     engagements: Engagement[],
-    canManage: boolean,
+    canEditEngagement: boolean,
     canDelete: boolean,
     onDeleteOpen: (engagement: Engagement) => void,
     assignmentsBackUrl: string,
@@ -352,7 +353,7 @@ function renderEngagementRows(
                         >
                             View
                         </a>
-                        {canManage && engagementProjectId
+                        {canEditEngagement && engagementProjectId
                             ? (
                                 <Link
                                     className={styles.actionLink}
@@ -394,12 +395,11 @@ export const EngagementsListPage: FC = () => {
 
     const isTalentManagerOnly = !contextValue.isAdmin
         && checkTalentManager(contextValue.userRoles)
-    const canViewProjectScopedEngagements = isAllEngagementsPage
-        || contextValue.isAdmin
-        || checkTalentManager(contextValue.userRoles)
+    const canViewEngagements = canViewAllEngagements(contextValue.userRoles)
     const canDelete = contextValue.isAdmin
     const canManage = canDelete || contextValue.isManager
     const canCreateProjectEngagement = canCreateEngagement(contextValue.userRoles)
+    const canEditEngagement = canCreateProjectEngagement
     const memberProjectsResult = useFetchProjects({
         enabled: isAllEngagementsPage && isTalentManagerOnly,
         memberOnly: true,
@@ -434,7 +434,7 @@ export const EngagementsListPage: FC = () => {
     )
 
     const requestFilters = useMemo<EngagementFilters>(() => ({
-        includePrivate: canManage && canViewProjectScopedEngagements,
+        includePrivate: canManage && canViewEngagements,
         projectId: isAllEngagementsPage ? undefined : projectId,
         projectIds: isAllEngagementsPage && isTalentManagerOnly
             ? scopedProjectIds
@@ -447,7 +447,7 @@ export const EngagementsListPage: FC = () => {
             : undefined,
         status: filters.status,
     }), [
-        canViewProjectScopedEngagements,
+        canViewEngagements,
         canManage,
         filters.status,
         isAllEngagementsPage,
@@ -460,17 +460,15 @@ export const EngagementsListPage: FC = () => {
         && memberProjectsResult.isLoading
 
     const engagementsResult = useFetchEngagements(
-        canViewProjectScopedEngagements ? projectId : undefined,
+        projectId,
         requestFilters,
         {
-            enabled: canViewProjectScopedEngagements
+            enabled: canViewEngagements
                 && (isAllEngagementsPage || !!projectId)
                 && !isScopedProjectsLoading,
         },
     )
-    const projectResult = useFetchProject(
-        canViewProjectScopedEngagements ? projectId : undefined,
-    )
+    const projectResult = useFetchProject(projectId)
 
     const projectNameLookup = useMemo<Record<string, string>>(() => {
         const lookup: Record<string, string> = {}
@@ -751,17 +749,21 @@ export const EngagementsListPage: FC = () => {
             />
         )
         : undefined
+    const accessDeniedMessage = isAllEngagementsPage
+        ? 'You need Admin or Talent Manager role to view all engagements.'
+        : 'You need Admin or Talent Manager role to view engagements.'
 
-    if (!canViewProjectScopedEngagements) {
+    if (!canViewEngagements) {
         return (
             <PageWrapper
-                pageTitle='Engagements'
+                pageTitle={pageTitle}
                 breadCrumb={[]}
+                rightHeader={createEngagementAction}
+                titleAction={titleAction}
             >
+                {billingAccountExpiredNotice}
                 {projectTabs}
-                <div className={styles.container}>
-                    <ErrorMessage message='You need Admin or Talent Manager role to view engagements.' />
-                </div>
+                <ErrorMessage message={accessDeniedMessage} />
             </PageWrapper>
         )
     }
@@ -783,6 +785,21 @@ export const EngagementsListPage: FC = () => {
                 {billingAccountExpiredNotice}
                 {projectTabs}
                 <LoadingSpinner />
+            </PageWrapper>
+        )
+    }
+
+    if (!canViewEngagements) {
+        return (
+            <PageWrapper
+                pageTitle={pageTitle}
+                breadCrumb={[]}
+                rightHeader={createEngagementAction}
+                titleAction={titleAction}
+            >
+                {billingAccountExpiredNotice}
+                {projectTabs}
+                <ErrorMessage message={accessDeniedMessage} />
             </PageWrapper>
         )
     }
@@ -856,7 +873,7 @@ export const EngagementsListPage: FC = () => {
                             {paginatedEngagements.length
                                 ? renderEngagementRows(
                                     paginatedEngagements,
-                                    canManage,
+                                    canEditEngagement,
                                     canDelete,
                                     setEngagementToDelete,
                                     assignmentsBackUrl,

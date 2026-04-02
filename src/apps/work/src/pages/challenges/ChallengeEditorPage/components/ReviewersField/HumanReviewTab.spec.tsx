@@ -4,7 +4,11 @@ import {
     render,
     screen,
     waitFor,
+    within,
 } from '@testing-library/react'
+import type {
+    ChangeEvent,
+} from 'react'
 import {
     FormProvider,
     UseControllerReturn,
@@ -37,15 +41,59 @@ jest.mock('../../../../../lib/components/form', () => ({
             label: string
             value: string
         }>
-    }) => (
-        <div
-            className={props.className}
-            data-options={JSON.stringify(props.options || [])}
-            data-testid={props.name}
-        >
-            <span>{props.label}</span>
-        </div>
-    ),
+        placeholder?: string
+        toFieldValue?: (selected: {
+            label: string
+            value: string
+        } | undefined) => unknown
+    }) => {
+        const {
+            useController,
+            useFormContext,
+        }: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
+        const formContext = useFormContext()
+        const controller: UseControllerReturn = useController({
+            control: formContext.control,
+            name: props.name,
+        })
+        const selectedValue = typeof controller.field.value === 'string'
+            ? controller.field.value
+            : ''
+        function handleChange(event: ChangeEvent<HTMLSelectElement>): void {
+            const nextSelected = (props.options || [])
+                .find(option => option.value === event.target.value)
+            const nextValue = props.toFieldValue
+                ? props.toFieldValue(nextSelected)
+                : event.target.value
+
+            controller.field.onChange(nextValue)
+        }
+
+        return (
+            <div
+                className={props.className}
+                data-options={JSON.stringify(props.options || [])}
+                data-testid={props.name}
+                data-value={selectedValue}
+            >
+                <label htmlFor={props.name}>{props.label}</label>
+                <select
+                    aria-label={props.label}
+                    id={props.name}
+                    onChange={handleChange}
+                    value={selectedValue}
+                >
+                    <option value=''>{props.placeholder || ''}</option>
+                    {(props.options || [])
+                        .map(option => (
+                            <option key={option.value} value={option.value}>
+                                {option.label}
+                            </option>
+                        ))}
+                </select>
+            </div>
+        )
+    },
     FormTextField: (props: {
         label: string
         name: string
@@ -126,6 +174,7 @@ function createPendingPromise(): Promise<never> {
 interface TestHarnessProps {
     defaultValues?: Partial<ChallengeEditorFormData>
     showMemberValue?: boolean
+    showScorecardValue?: boolean
 }
 
 const baseDefaultValues: ChallengeEditorFormData = {
@@ -187,6 +236,13 @@ const TestHarness = (props: TestHarnessProps): JSX.Element => {
                 ? (
                     <div data-testid='member-id-value'>
                         {formMethods.watch('reviewers.0.memberId') || ''}
+                    </div>
+                )
+                : undefined}
+            {props.showScorecardValue
+                ? (
+                    <div data-testid='scorecard-id-value'>
+                        {formMethods.watch('reviewers.0.scorecardId') || ''}
                     </div>
                 )
                 : undefined}
@@ -298,6 +354,50 @@ describe('HumanReviewTab', () => {
         await waitFor(() => {
             expect(screen.getByTestId('member-id-value').textContent)
                 .toBe('member-2')
+        })
+    })
+
+    it('restores iterative reviewer member ids from the generic reviewer role fallback', async () => {
+        mockedUseFetchResourceRoles.mockReturnValue({
+            resourceRoles: [
+                {
+                    id: 'role-reviewer',
+                    name: 'Reviewer',
+                },
+            ],
+        })
+        mockedUseFetchResources.mockReturnValue({
+            isLoading: false,
+            mutate: jest.fn()
+                .mockResolvedValue(undefined),
+            resources: [
+                {
+                    memberId: 'member-3',
+                    roleId: 'role-reviewer',
+                },
+            ],
+        })
+
+        render(
+            <TestHarness
+                defaultValues={{
+                    reviewers: [
+                        {
+                            additionalMemberIds: [],
+                            isMemberReview: true,
+                            memberReviewerCount: 1,
+                            phaseId: 'phase-1',
+                            scorecardId: 'scorecard-1',
+                        },
+                    ],
+                }}
+                showMemberValue
+            />,
+        )
+
+        await waitFor(() => {
+            expect(screen.getByTestId('member-id-value').textContent)
+                .toBe('member-3')
         })
     })
 
@@ -460,5 +560,118 @@ describe('HumanReviewTab', () => {
             ])
         expect(getPhaseOptionLabels('reviewers.2.phaseId'))
             .toEqual(['Screening'])
+    })
+
+    it('clears unmatched scorecard ids instead of surfacing them as fallback options', async () => {
+        mockedFetchScorecards.mockResolvedValue([
+            {
+                id: 'scorecard-review',
+                name: 'Review scorecard',
+                type: 'Review',
+            },
+        ])
+
+        render(
+            <TestHarness
+                defaultValues={{
+                    phases: [
+                        {
+                            id: 'review',
+                            name: 'Review',
+                            phaseId: 'review',
+                        },
+                    ],
+                    reviewers: [
+                        {
+                            additionalMemberIds: [],
+                            isMemberReview: true,
+                            memberReviewerCount: 1,
+                            phaseId: 'review',
+                            roleId: 'role-1',
+                            scorecardId: '315HuPeby34i2b',
+                        },
+                    ],
+                }}
+                showScorecardValue
+            />,
+        )
+
+        await waitFor(() => {
+            expect(mockedFetchScorecards)
+                .toHaveBeenCalled()
+        })
+        await waitFor(() => {
+            expect(screen.getByTestId('scorecard-id-value').textContent)
+                .toBe('')
+        })
+
+        expect(screen.getByTestId('reviewers.0.scorecardId')
+            .getAttribute('data-options'))
+            .not.toContain('315HuPeby34i2b')
+    })
+
+    it('clears the selected scorecard when the reviewer phase changes', async () => {
+        mockedFetchScorecards.mockResolvedValue([
+            {
+                id: 'scorecard-review',
+                name: 'Review scorecard',
+                type: 'Review',
+            },
+            {
+                id: 'scorecard-approval',
+                name: 'Approval scorecard',
+                type: 'Approval',
+            },
+        ])
+
+        render(
+            <TestHarness
+                defaultValues={{
+                    phases: [
+                        {
+                            id: 'review',
+                            name: 'Review',
+                            phaseId: 'review',
+                        },
+                        {
+                            id: 'approval',
+                            name: 'Approval',
+                            phaseId: 'approval',
+                        },
+                    ],
+                    reviewers: [
+                        {
+                            additionalMemberIds: [],
+                            isMemberReview: true,
+                            memberReviewerCount: 1,
+                            phaseId: 'review',
+                            roleId: 'role-1',
+                            scorecardId: 'scorecard-review',
+                        },
+                    ],
+                }}
+                showScorecardValue
+            />,
+        )
+
+        await waitFor(() => {
+            expect(mockedFetchScorecards)
+                .toHaveBeenCalled()
+        })
+
+        fireEvent.change(
+            within(screen.getByTestId('reviewers.0.phaseId'))
+                .getByRole('combobox', { name: 'Phase' }),
+            {
+                target: {
+                    value: 'approval',
+                },
+            },
+        )
+
+        await waitFor(() => {
+            expect(screen.getByTestId('scorecard-id-value').textContent)
+                .toBe('')
+        })
     })
 })
