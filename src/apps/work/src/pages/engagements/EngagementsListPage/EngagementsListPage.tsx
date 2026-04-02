@@ -292,7 +292,7 @@ function getEngagementProjectName(
 
 function renderEngagementRows(
     engagements: Engagement[],
-    canManage: boolean,
+    canEditEngagement: boolean,
     canDelete: boolean,
     onDeleteOpen: (engagement: Engagement) => void,
     assignmentsBackUrl: string,
@@ -352,7 +352,7 @@ function renderEngagementRows(
                         >
                             View
                         </a>
-                        {canManage && engagementProjectId
+                        {canEditEngagement && engagementProjectId
                             ? (
                                 <Link
                                     className={styles.actionLink}
@@ -397,6 +397,7 @@ export const EngagementsListPage: FC = () => {
     const canDelete = contextValue.isAdmin
     const canManage = canDelete || contextValue.isManager
     const canCreateProjectEngagement = canCreateEngagement(contextValue.userRoles)
+    const canEditEngagement = canCreateProjectEngagement
     const memberProjectsResult = useFetchProjects({
         enabled: isAllEngagementsPage && isTalentManagerOnly,
         memberOnly: true,
@@ -834,7 +835,7 @@ export const EngagementsListPage: FC = () => {
                             {paginatedEngagements.length
                                 ? renderEngagementRows(
                                     paginatedEngagements,
-                                    canManage,
+                                    canEditEngagement,
                                     canDelete,
                                     setEngagementToDelete,
                                     assignmentsBackUrl,
