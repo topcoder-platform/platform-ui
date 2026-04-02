@@ -164,6 +164,7 @@ import {
     resolveCreateTimelineTemplateId,
     resolveResourceAssignmentValue,
     ResourceAssignmentValueField,
+    shouldInferTaskChallengeFromAssignments,
     shouldUseManualReviewers,
     SUBMITTER_RESOURCE_ROLE_NAMES,
     TASK_REVIEWER_RESOURCE_ROLE_NAMES,
@@ -1176,22 +1177,16 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             return true
         }
 
-        return !!getPersistedAssignmentValue(
-            getSingleAssignmentFieldValue(formData, 'reviewer'),
-            TASK_REVIEWER_RESOURCE_ROLE_NAMES,
-            'memberHandle',
-            resourcesOverride,
-            resourceRolesOverride,
-        ) || !!getPersistedAssignmentValue(
-            getSingleAssignmentFieldValue(formData, 'assignedMemberId'),
-            SUBMITTER_RESOURCE_ROLE_NAMES,
-            'memberId',
-            resourcesOverride,
-            resourceRolesOverride,
-        )
+        return shouldInferTaskChallengeFromAssignments({
+            assignedMemberId: getSingleAssignmentFieldValue(formData, 'assignedMemberId'),
+            resourceRoles: resourceRolesOverride || resourceRoles,
+            resources: resourcesOverride || challengeResources,
+            reviewer: getSingleAssignmentFieldValue(formData, 'reviewer'),
+        })
     }, [
-        getPersistedAssignmentValue,
+        challengeResources,
         isTaskChallengeSelected,
+        resourceRoles,
     ])
     const applyPersistedSingleAssignments = useCallback((
         formData: ChallengeEditorFormData,

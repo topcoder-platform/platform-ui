@@ -237,6 +237,13 @@ interface ResolveResourceAssignmentValueParams {
     valueField: ResourceAssignmentValueField
 }
 
+interface InferTaskChallengeFromAssignmentsParams {
+    assignedMemberId?: string
+    reviewer?: string
+    resourceRoles: ResourceRole[]
+    resources: Resource[]
+}
+
 /**
  * Resolves a saved single-member assignment from challenge resources.
  *
@@ -277,6 +284,32 @@ export function resolveResourceAssignmentValue(
     const fallbackValue = normalizeText(params.fallbackValue)
 
     return fallbackValue || undefined
+}
+
+/**
+ * Infers task-mode fallback state from dedicated task assignments only.
+ *
+ * Manual iterative-reviewer resources are also used by non-task F2F flows, so
+ * they cannot be treated as a task signal on their own. A saved task draft can
+ * still be recognized from its dedicated root fields or from a persisted
+ * submitter resource assignment.
+ *
+ * @param params current root-field values plus challenge resources.
+ * @returns `true` when the saved data clearly represents a task challenge.
+ */
+export function shouldInferTaskChallengeFromAssignments(
+    params: InferTaskChallengeFromAssignmentsParams,
+): boolean {
+    if (normalizeText(params.assignedMemberId) || normalizeText(params.reviewer)) {
+        return true
+    }
+
+    return !!resolveResourceAssignmentValue({
+        resourceRoles: params.resourceRoles,
+        resources: params.resources,
+        roleNames: SUBMITTER_RESOURCE_ROLE_NAMES,
+        valueField: 'memberId',
+    })
 }
 
 /**
