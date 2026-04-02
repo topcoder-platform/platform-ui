@@ -259,6 +259,9 @@ describe('ChallengeEditorPage', () => {
                 .toBeTruthy()
         })
 
+        expect(screen.getByRole('button', { name: 'Cancel' }))
+            .toBeTruthy()
+
         const titleAction = screen.getByTestId('title-action')
         const rightHeader = screen.getByTestId('right-header')
         const quickLinks = within(rightHeader)
@@ -288,6 +291,16 @@ describe('ChallengeEditorPage', () => {
             .getByRole('link', { name: 'Forum' })
             .getAttribute('href'))
             .toBe('https://example.com/forum/challenges/456')
+        expect(
+            screen.getByRole('button', { name: 'Cancel' })
+                .getAttribute('data-secondary'),
+        )
+            .toBe('true')
+        expect(
+            screen.getByRole('button', { name: 'Cancel' })
+                .getAttribute('data-size'),
+        )
+            .toBe('lg')
     })
 
     it('renders a read-only draft challenge view with launch and edit header actions', async () => {
