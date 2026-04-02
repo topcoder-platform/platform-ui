@@ -29,6 +29,7 @@ import {
 import {
     useFetchEngagements,
     useFetchProject,
+    useFetchProjects,
 } from '../../../lib/hooks'
 import {
     Engagement,
@@ -52,6 +53,7 @@ import {
 import {
     canCreateEngagement,
     checkCanManageProject,
+    checkTalentManager,
     extractErrorMessage,
     formatEngagementStatus,
     getApplicationsCount,
@@ -390,9 +392,15 @@ export const EngagementsListPage: FC = () => {
     const workAppContext = useContext(WorkAppContext)
     const contextValue = workAppContext as WorkAppContextModel
 
+    const isTalentManagerOnly = !contextValue.isAdmin
+        && checkTalentManager(contextValue.userRoles)
     const canDelete = contextValue.isAdmin
     const canManage = canDelete || contextValue.isManager
     const canCreateProjectEngagement = canCreateEngagement(contextValue.userRoles)
+    const memberProjectsResult = useFetchProjects({
+        enabled: isAllEngagementsPage && isTalentManagerOnly,
+        memberOnly: true,
+    })
 
     const [filters, setFilters] = useState<EngagementsListFilters>(() => ({
         projectName: undefined,
@@ -410,10 +418,24 @@ export const EngagementsListPage: FC = () => {
     const [perPage, setPerPage] = useState<number>(PAGE_SIZE)
     const [engagementToDelete, setEngagementToDelete] = useState<Engagement | undefined>(undefined)
     const [isDeletingEngagement, setIsDeletingEngagement] = useState<boolean>(false)
+    const scopedProjectIds = useMemo(
+        () => (
+            isAllEngagementsPage && isTalentManagerOnly
+                ? memberProjectsResult.projects
+                    .map(project => String(project.id || '')
+                        .trim())
+                    .filter(Boolean)
+                : undefined
+        ),
+        [isAllEngagementsPage, isTalentManagerOnly, memberProjectsResult.projects],
+    )
 
     const requestFilters = useMemo<EngagementFilters>(() => ({
         includePrivate: canManage,
         projectId: isAllEngagementsPage ? undefined : projectId,
+        projectIds: isAllEngagementsPage && isTalentManagerOnly
+            ? scopedProjectIds
+            : undefined,
         sortBy: isAllEngagementsPage
             ? 'anticipatedStart'
             : undefined,
@@ -421,13 +443,23 @@ export const EngagementsListPage: FC = () => {
             ? 'asc'
             : undefined,
         status: filters.status,
-    }), [canManage, filters.status, isAllEngagementsPage, projectId])
+    }), [
+        canManage,
+        filters.status,
+        isAllEngagementsPage,
+        isTalentManagerOnly,
+        projectId,
+        scopedProjectIds,
+    ])
+    const isScopedProjectsLoading = isAllEngagementsPage
+        && isTalentManagerOnly
+        && memberProjectsResult.isLoading
 
     const engagementsResult = useFetchEngagements(
         projectId,
         requestFilters,
         {
-            enabled: isAllEngagementsPage || !!projectId,
+            enabled: (isAllEngagementsPage || !!projectId) && !isScopedProjectsLoading,
         },
     )
     const projectResult = useFetchProject(projectId)
@@ -713,8 +745,11 @@ export const EngagementsListPage: FC = () => {
         : undefined
 
     if (
-        engagementsResult.isLoading
-        || (!isAllEngagementsPage && projectResult.isLoading)
+        isScopedProjectsLoading
+        || (
+            engagementsResult.isLoading
+            || (!isAllEngagementsPage && projectResult.isLoading)
+        )
     ) {
         return (
             <PageWrapper
