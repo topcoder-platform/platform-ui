@@ -13,6 +13,7 @@ import {
 import {
     autowriteDescription,
     createEngagement,
+    updateEngagement,
 } from '../../../../lib/services'
 import {
     showErrorToast,
@@ -126,6 +127,11 @@ jest.mock('../../../../lib/services', () => ({
     updateEngagement: jest.fn(),
 }))
 jest.mock('../../../../lib/utils', () => ({
+    formatEngagementStatus: (status: string) => (
+        status === 'Pending Assignment'
+            ? 'On Hold'
+            : status
+    ),
     showErrorToast: jest.fn(),
     showSuccessToast: jest.fn(),
 }))
@@ -216,6 +222,7 @@ const mockedAutowriteDescription = autowriteDescription as jest.MockedFunction<t
 const mockedCreateEngagement = createEngagement as jest.MockedFunction<typeof createEngagement>
 const mockedShowErrorToast = showErrorToast as jest.MockedFunction<typeof showErrorToast>
 const mockedShowSuccessToast = showSuccessToast as jest.MockedFunction<typeof showSuccessToast>
+const mockedUpdateEngagement = updateEngagement as jest.MockedFunction<typeof updateEngagement>
 const mockedUseAutosave = useAutosave as jest.MockedFunction<typeof useAutosave>
 
 describe('EngagementEditorForm', () => {
@@ -303,6 +310,77 @@ describe('EngagementEditorForm', () => {
 
         expect(softwareDeveloperOption?.text)
             .toBe('Software Developer')
+    })
+
+    it('normalizes legacy Pending Assignment status values to On Hold before saving', async () => {
+        const user = userEvent.setup()
+
+        mockedUpdateEngagement.mockResolvedValue({
+            anticipatedStart: 'Immediate',
+            assignedMemberHandles: [],
+            assignments: [],
+            compensationRange: '',
+            countries: ['US'],
+            createdAt: '',
+            description: 'Legacy engagement description',
+            durationWeeks: 4,
+            id: 'engagement-legacy',
+            isPrivate: false,
+            projectId: '123',
+            requiredMemberCount: 1,
+            role: 'SOFTWARE_DEVELOPER',
+            skills: [
+                {
+                    id: 'skill-1',
+                    name: 'React',
+                },
+            ],
+            status: 'On Hold',
+            timezones: ['America/New_York'],
+            title: 'Legacy engagement',
+            updatedAt: '',
+            workload: 'FULL_TIME',
+        } as any)
+
+        render(
+            <MemoryRouter>
+                <EngagementEditorForm
+                    engagement={{
+                        anticipatedStart: 'Immediate',
+                        countries: ['US'],
+                        description: 'Legacy engagement description',
+                        durationWeeks: 4,
+                        id: 'engagement-legacy',
+                        isPrivate: false,
+                        role: 'SOFTWARE_DEVELOPER',
+                        skills: [
+                            {
+                                id: 'skill-1',
+                                name: 'React',
+                            },
+                        ],
+                        status: 'Pending Assignment',
+                        timezones: ['America/New_York'],
+                        title: 'Legacy engagement',
+                        workload: 'FULL_TIME',
+                    } as any}
+                    isEditMode
+                    projectId='123'
+                />
+            </MemoryRouter>,
+        )
+
+        await user.click(screen.getByRole('button', { name: 'Save Engagement' }))
+
+        await waitFor(() => {
+            expect(mockedUpdateEngagement)
+                .toHaveBeenCalledWith(
+                    'engagement-legacy',
+                    expect.objectContaining({
+                        status: 'On Hold',
+                    }),
+                )
+        })
     })
 
     it('redirects to the created engagement details page', async () => {
