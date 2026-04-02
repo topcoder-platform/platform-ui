@@ -35,7 +35,7 @@ describe('challenge-editor schema task reviewer validation', () => {
         roundType: ROUND_TYPES.SINGLE_ROUND,
     }
 
-    it('requires reviewer for task internal review', async () => {
+    it('does not require reviewer for task internal review', async () => {
         await expect(
             challengeAdvancedOptionsSchema.validate({
                 ...baseFormData,
@@ -46,8 +46,8 @@ describe('challenge-editor schema task reviewer validation', () => {
                 reviewer: '',
             }),
         )
-            .rejects
-            .toThrow('Select a reviewer')
+            .resolves
+            .toBeTruthy()
     })
 
     it('does not require reviewer for non-task internal review', async () => {

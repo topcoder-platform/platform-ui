@@ -190,7 +190,7 @@ function getAssignedMemberHandles(engagement: Engagement): string[] {
 }
 
 function getExternalEngagementViewUrl(engagement: Engagement): string {
-    return `${ENGAGEMENTS_APP_URL}/opportunities/${engagement.id}`
+    return `${ENGAGEMENTS_APP_URL}/${engagement.id}`
 }
 
 function getStatusPillClass(status: string): string {

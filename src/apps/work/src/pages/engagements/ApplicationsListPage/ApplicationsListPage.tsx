@@ -228,6 +228,13 @@ export const ApplicationsListPage: FC = () => {
         () => statusOptions.find(option => option.value === filterStatus),
         [filterStatus, statusOptions],
     )
+    const filteredApplications = useMemo(
+        () => applicationsResult.applications.filter(application => (
+            filterStatus === 'all'
+            || normalizeStatus(application.status) === normalizeStatus(filterStatus)
+        )),
+        [applicationsResult.applications, filterStatus],
+    )
 
     const assignmentListCandidate = engagementResult.engagement?.assignments
     const assignmentList: unknown[] = Array.isArray(assignmentListCandidate)
@@ -394,7 +401,7 @@ export const ApplicationsListPage: FC = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {applicationsResult.applications.length === 0
+                            {filteredApplications.length === 0
                                 ? (
                                     <tr>
                                         <td className={styles.emptyRow} colSpan={9}>
@@ -402,7 +409,7 @@ export const ApplicationsListPage: FC = () => {
                                         </td>
                                     </tr>
                                 )
-                                : applicationsResult.applications.map(application => {
+                                : filteredApplications.map(application => {
                                     const profileUrl = `${PROFILE_URL}/${application.handle}`
                                     const active = hasActiveAssignment(application, assignmentList)
                                     const normalizedStatus = normalizeStatus(application.status)

@@ -1,6 +1,7 @@
 import {
     FC,
     useCallback,
+    useContext,
     useMemo,
 } from 'react'
 import { Link } from 'react-router-dom'
@@ -13,12 +14,18 @@ import {
 } from '~/libs/ui'
 
 import { PROJECT_STATUS } from '../../constants'
+import { WorkAppContext } from '../../contexts'
 import {
     Project,
     ProjectStatusValue,
+    WorkAppContextModel,
 } from '../../models'
 import { useFetchBillingAccounts } from '../../hooks'
 import type { UseFetchBillingAccountsResult } from '../../hooks'
+import {
+    buildProjectLandingPath,
+    getAuthAccessToken,
+} from '../../utils'
 import { ProjectCard } from '../ProjectCard'
 import { ProjectStatus } from '../ProjectStatus'
 
@@ -82,10 +89,8 @@ interface ProjectsTableProps {
     onSort: (fieldName: string) => void
 }
 
-function getProjectPath(project: Project): string {
-    const projectId = String(project.id)
-
-    return `/projects/${projectId}/challenges`
+function getProjectPath(project: Project, accessToken: string): string {
+    return buildProjectLandingPath(project, accessToken)
 }
 
 function getBillingAccountDisplay(
@@ -117,8 +122,15 @@ export const ProjectsTable: FC<ProjectsTableProps> = (props: ProjectsTableProps)
     const sortBy: string = props.sortBy
     const sortOrder: SortOrder = props.sortOrder
     const {
+        loginUserInfo,
+    }: WorkAppContextModel = useContext(WorkAppContext)
+    const {
         billingAccounts,
     }: UseFetchBillingAccountsResult = useFetchBillingAccounts()
+    const accessToken = useMemo(
+        () => getAuthAccessToken(loginUserInfo),
+        [loginUserInfo],
+    )
     const billingAccountNames = useMemo(
         () => new Map(
             billingAccounts.map(account => ([
@@ -135,7 +147,7 @@ export const ProjectsTable: FC<ProjectsTableProps> = (props: ProjectsTableProps)
                 label: 'Project Name',
                 propertyName: 'name',
                 renderer: (project: Project) => {
-                    const path = getProjectPath(project)
+                    const path = getProjectPath(project, accessToken)
 
                     return (
                         <Link className={styles.projectLink} to={path}>
@@ -171,7 +183,7 @@ export const ProjectsTable: FC<ProjectsTableProps> = (props: ProjectsTableProps)
                 isSortable: false,
                 label: 'Actions',
                 renderer: (project: Project) => {
-                    const projectPath = getProjectPath(project)
+                    const projectPath = getProjectPath(project, accessToken)
                     const editPath = `/projects/${project.id}/edit`
                     const canEdit = canEditProject(project)
 
@@ -193,7 +205,7 @@ export const ProjectsTable: FC<ProjectsTableProps> = (props: ProjectsTableProps)
                 type: 'action',
             },
         ],
-        [billingAccountNames, canEditProject],
+        [accessToken, billingAccountNames, canEditProject],
     )
 
     const forceSort = useMemo<Sort>(

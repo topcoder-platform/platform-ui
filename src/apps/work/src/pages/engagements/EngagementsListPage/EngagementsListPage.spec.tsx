@@ -18,6 +18,7 @@ import {
 import { deleteEngagement } from '../../../lib/services'
 import {
     canCreateEngagement,
+    formatEngagementStatus,
     showErrorToast,
     showSuccessToast,
 } from '../../../lib/utils'
@@ -148,6 +149,7 @@ const mockedDeleteEngagement = deleteEngagement as jest.Mock
 const mockedUseFetchEngagements = useFetchEngagements as jest.Mock
 const mockedUseFetchProject = useFetchProject as jest.Mock
 const mockedCanCreateEngagement = canCreateEngagement as jest.Mock
+const mockedFormatEngagementStatus = formatEngagementStatus as jest.Mock
 const mockedShowErrorToast = showErrorToast as jest.Mock
 const mockedShowSuccessToast = showSuccessToast as jest.Mock
 
@@ -236,6 +238,7 @@ describe('EngagementsListPage', () => {
             project: undefined,
         })
         mockedDeleteEngagement.mockResolvedValue(undefined)
+        mockedFormatEngagementStatus.mockImplementation((status?: string) => status || '')
     })
 
     it('keeps the project name unchanged for project-scoped engagement tabs', () => {
@@ -305,6 +308,30 @@ describe('EngagementsListPage', () => {
             .toBe('true')
         expect(createEngagementButton.getAttribute('data-secondary'))
             .toBe('false')
+    })
+
+    it('renders the engagement view link without the legacy opportunities path segment', () => {
+        mockedUseFetchEngagements.mockReturnValue({
+            engagements: [
+                {
+                    id: 'plJi6KV_jDjdtowUlQbFx',
+                    isPrivate: false,
+                    projectId: 200,
+                    projectName: 'Payment Testing',
+                    status: 'open',
+                    title: 'Test engagement',
+                },
+            ],
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+        })
+
+        renderPage('/engagements', '/engagements')
+
+        expect(screen.getByRole('link', { name: 'View' })
+            .getAttribute('href'))
+            .toBe('https://engagements.example.com/plJi6KV_jDjdtowUlQbFx')
     })
 
     it('renders delete actions for admins on the all engagements page', () => {

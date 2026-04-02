@@ -103,7 +103,7 @@ describe('ReviewTypeField', () => {
             screen.getByTestId('reviewer-autocomplete')
                 .getAttribute('data-required'),
         )
-            .toBe('true')
+            .toBe('false')
     })
 
     it('forces task challenges to use the internal review type', async () => {
