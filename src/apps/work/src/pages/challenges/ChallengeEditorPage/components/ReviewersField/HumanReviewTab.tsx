@@ -677,38 +677,17 @@ export const HumanReviewTab: FC = () => {
             scorecards,
         ],
     )
+    const getAvailableScorecardsForReviewer = useCallback(
+        (reviewer: Reviewer | undefined): Scorecard[] => getPhaseMatchedScorecardsForPhase(reviewer?.phaseId),
+        [getPhaseMatchedScorecardsForPhase],
+    )
 
     const getScorecardOptionsForReviewer = useCallback(
         (reviewer: Reviewer | undefined): FormSelectOption[] => {
-            const matchingScorecards = getPhaseMatchedScorecardsForPhase(reviewer?.phaseId)
-
-            const filteredScorecards = matchingScorecards.length
-                ? matchingScorecards
-                : scorecards
-            const selectedScorecardId = normalizeText(reviewer?.scorecardId)
-            const selectedScorecard = selectedScorecardId
-                ? scorecards.find(scorecard => scorecard.id === selectedScorecardId)
-                : undefined
-            const scorecardsWithSelected = selectedScorecard
-                && !filteredScorecards.some(scorecard => scorecard.id === selectedScorecard.id)
-                ? [
-                    ...filteredScorecards,
-                    selectedScorecard,
-                ]
-                : filteredScorecards
-            const scorecardsWithFallback = selectedScorecardId
-                && !scorecardsWithSelected.some(scorecard => scorecard.id === selectedScorecardId)
-                ? [
-                    ...scorecardsWithSelected,
-                    {
-                        id: selectedScorecardId,
-                        name: selectedScorecardId,
-                    },
-                ]
-                : scorecardsWithSelected
             const optionsById = new Map<string, FormSelectOption>()
+            const availableScorecards = getAvailableScorecardsForReviewer(reviewer)
 
-            scorecardsWithFallback.forEach(scorecard => {
+            availableScorecards.forEach(scorecard => {
                 const scorecardId = normalizeText(scorecard.id)
                 if (!scorecardId || optionsById.has(scorecardId)) {
                     return
@@ -723,8 +702,7 @@ export const HumanReviewTab: FC = () => {
             return Array.from(optionsById.values())
         },
         [
-            getPhaseMatchedScorecardsForPhase,
-            scorecards,
+            getAvailableScorecardsForReviewer,
         ],
     )
 
@@ -805,6 +783,50 @@ export const HumanReviewTab: FC = () => {
             mounted = false
         }
     }, [trackId, typeId])
+
+    useEffect(() => {
+        if (isScorecardsLoading || loadError) {
+            return
+        }
+
+        reviewerRows.forEach((reviewer, reviewerIndex) => {
+            const fieldIndex = getReviewerFieldIndex(reviewerIndex)
+            if (
+                fieldIndex === undefined
+                || !reviewer
+                || reviewer.isMemberReview === false
+            ) {
+                return
+            }
+
+            const selectedScorecardId = normalizeText(reviewer.scorecardId)
+            if (!selectedScorecardId) {
+                return
+            }
+
+            const hasSelectedScorecard = getAvailableScorecardsForReviewer(reviewer)
+                .some(scorecard => normalizeText(scorecard.id) === selectedScorecardId)
+            if (hasSelectedScorecard) {
+                return
+            }
+
+            formContext.setValue(
+                `reviewers.${fieldIndex}.scorecardId` as any,
+                undefined,
+                {
+                    shouldDirty: false,
+                    shouldValidate: true,
+                },
+            )
+        })
+    }, [
+        formContext,
+        getAvailableScorecardsForReviewer,
+        getReviewerFieldIndex,
+        isScorecardsLoading,
+        loadError,
+        reviewerRows,
+    ])
 
     useEffect(() => {
         if (
@@ -1120,21 +1142,9 @@ export const HumanReviewTab: FC = () => {
                 return
             }
 
-            const defaultScorecardId = normalizeText(
-                defaultReviewers
-                    .find(defaultReviewer => normalizeText(defaultReviewer.phaseId) === normalizedNextPhaseId)
-                    ?.scorecardId,
-            )
-            const hasDefaultScorecard = defaultScorecardId
-                ? matchingScorecards.some(scorecard => normalizeText(scorecard.id) === defaultScorecardId)
-                : false
-            const fallbackScorecardId = hasDefaultScorecard
-                ? defaultScorecardId
-                : normalizeText(matchingScorecards[0]?.id)
-
             formContext.setValue(
                 `reviewers.${fieldIndex}.scorecardId` as any,
-                fallbackScorecardId || undefined,
+                undefined,
                 {
                     shouldDirty: true,
                     shouldValidate: true,
@@ -1142,7 +1152,6 @@ export const HumanReviewTab: FC = () => {
             )
         },
         [
-            defaultReviewers,
             formContext,
             getPhaseMatchedScorecardsForPhase,
             getReviewerFieldIndex,
