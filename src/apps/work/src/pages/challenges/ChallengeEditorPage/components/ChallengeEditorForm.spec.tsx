@@ -980,6 +980,59 @@ describe('ChallengeEditorForm', () => {
         })
     })
 
+    it('clears Marathon Match when a new challenge switches to the Design track', async () => {
+        const user = userEvent.setup()
+
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            isLoading: false,
+            tracks: [
+                {
+                    id: 'development-track',
+                    name: 'Development',
+                    track: 'DEVELOPMENT',
+                },
+                {
+                    id: 'design-track',
+                    name: 'Design',
+                    track: 'DESIGN',
+                },
+            ],
+        })
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'MM',
+                id: 'marathon-match-id',
+                isActive: true,
+                isTask: false,
+                name: 'Marathon Match',
+            }],
+            isLoading: false,
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm />
+            </MemoryRouter>,
+        )
+
+        const challengeTrackInput = screen.getByLabelText('Challenge Track') as HTMLInputElement
+        const challengeTypeInput = screen.getByLabelText('Challenge Type') as HTMLInputElement
+
+        await user.type(challengeTrackInput, 'development-track')
+        await user.type(challengeTypeInput, 'marathon-match-id')
+
+        expect(challengeTypeInput.value)
+            .toBe('marathon-match-id')
+
+        await user.clear(challengeTrackInput)
+        await user.type(challengeTrackInput, 'design-track')
+
+        await waitFor(() => {
+            expect(challengeTypeInput.value)
+                .toBe('')
+        })
+    })
+
     it('prevents creating a design challenge without a work type', async () => {
         const user = userEvent.setup()
 
@@ -995,6 +1048,7 @@ describe('ChallengeEditorForm', () => {
             challengeTypes: [{
                 abbreviation: 'CH',
                 id: 'design-challenge',
+                isActive: true,
                 isTask: false,
                 name: 'Challenge',
             }],
@@ -1041,6 +1095,7 @@ describe('ChallengeEditorForm', () => {
             challengeTypes: [{
                 abbreviation: 'CH',
                 id: 'design-challenge',
+                isActive: true,
                 isTask: false,
                 name: 'Challenge',
             }],
@@ -1083,6 +1138,7 @@ describe('ChallengeEditorForm', () => {
             challengeTypes: [{
                 abbreviation: 'CH',
                 id: '927abff4-7af9-4145-8ba1-577c16e64e2e',
+                isActive: true,
                 isTask: false,
                 name: 'Challenge',
             }],
