@@ -347,6 +347,44 @@ describe('HumanReviewTab', () => {
         })
     })
 
+    it('hides appeal phases for manual reviewer cards across challenge types', () => {
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [
+                {
+                    id: 'type-1',
+                    name: 'Code',
+                },
+            ],
+        })
+
+        render(
+            <TestHarness
+                defaultValues={{
+                    phases: [
+                        {
+                            id: 'review',
+                            name: 'Review',
+                            phaseId: 'review',
+                        },
+                        {
+                            id: 'appeals',
+                            name: 'Appeals',
+                            phaseId: 'appeals',
+                        },
+                        {
+                            id: 'appeals-response',
+                            name: 'Appeals Response',
+                            phaseId: 'appeals-response',
+                        },
+                    ],
+                }}
+            />,
+        )
+
+        expect(getPhaseOptionLabels('reviewers.0.phaseId'))
+            .toEqual(['Review'])
+    })
+
     it('shows only unassigned non-submission phases on each reviewer card', () => {
         render(
             <TestHarness
