@@ -92,6 +92,6 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 - `Launch` is shown on the details tab for `DRAFT` challenges in the header and again in the footer beside `Save Challenge`.
 - Task challenges cannot be launched until `Assigned Member` is set, which ensures the task is assigned before it becomes publicly visible.
 - After the first successful save from `NEW` to `DRAFT`, the editor updates the launch affordance immediately so the user can launch without reloading.
-- `Cancel` is shown on the details tab for `ACTIVE` challenges and uses the shared large secondary button treatment so it matches the footer action styling.
+- `Cancel` is shown on the details tab for `DRAFT` and `ACTIVE` challenges and uses the shared large secondary button treatment so it matches the footer action styling.
 - `Mark Complete` is shown beside `Cancel` for `ACTIVE` task challenges when exactly one assignee can be resolved from the challenge submitter resources. It mirrors the legacy work-manager flow by confirming the task prize and assignee, patching the challenge to `COMPLETED`, and saving that assignee as the sole winner. The button remains hidden for copilots assigned to their own task, and it reuses the same shared large secondary styling as `Cancel`.
 - `Delete` is shown for existing challenges in `NEW` status and requires confirmation.

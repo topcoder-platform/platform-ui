@@ -169,9 +169,16 @@ function shouldShowCancelAction(
     activeTab: EditorTab,
     challengeStatus: string | undefined,
 ): boolean {
+    const normalizedStatus = (challengeStatus || '')
+        .trim()
+        .toUpperCase()
+
     return isEditMode
         && activeTab === 'details'
-        && challengeStatus === CHALLENGE_STATUS.ACTIVE
+        && (
+            normalizedStatus === CHALLENGE_STATUS.ACTIVE
+            || normalizedStatus === CHALLENGE_STATUS.DRAFT
+        )
 }
 
 function shouldShowDeleteAction(
