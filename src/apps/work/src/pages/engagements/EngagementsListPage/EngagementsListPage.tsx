@@ -421,8 +421,7 @@ export const EngagementsListPage: FC = () => {
             ? 'asc'
             : undefined,
         status: filters.status,
-        title: filters.title,
-    }), [canManage, filters.status, filters.title, isAllEngagementsPage, projectId])
+    }), [canManage, filters.status, isAllEngagementsPage, projectId])
 
     const engagementsResult = useFetchEngagements(
         projectId,

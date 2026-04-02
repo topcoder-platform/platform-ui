@@ -99,7 +99,28 @@ jest.mock('../../../lib/components', () => ({
             </button>
         </div>
     ),
-    EngagementsFilter: () => <div>Engagements Filter</div>,
+    EngagementsFilter: function MockEngagementsFilter(props: {
+        filters: { title?: string }
+        onFiltersChange: (nextFilters: { title?: string }) => void
+    }) {
+        function handleApplyTitleFilter(): void {
+            props.onFiltersChange({
+                ...props.filters,
+                title: 'test pro',
+            })
+        }
+
+        return (
+            <div>
+                <button
+                    type='button'
+                    onClick={handleApplyTitleFilter}
+                >
+                    Apply title filter
+                </button>
+            </div>
+        )
+    },
     ErrorMessage: (props: { message: string }) => <div>{props.message}</div>,
     LoadingSpinner: () => <div>Loading</div>,
     Pagination: () => <div>Pagination</div>,
@@ -308,6 +329,29 @@ describe('EngagementsListPage', () => {
             .toBe('true')
         expect(createEngagementButton.getAttribute('data-secondary'))
             .toBe('false')
+    })
+
+    it('keeps the name filter out of engagement fetch requests', async () => {
+        renderPage('/engagements', '/engagements')
+
+        fireEvent.click(screen.getByRole('button', { name: 'Apply title filter' }))
+
+        await waitFor(() => {
+            expect(mockedUseFetchEngagements)
+                .toHaveBeenLastCalledWith(
+                    undefined,
+                    {
+                        includePrivate: true,
+                        projectId: undefined,
+                        sortBy: 'anticipatedStart',
+                        sortOrder: 'asc',
+                        status: undefined,
+                    },
+                    {
+                        enabled: true,
+                    },
+                )
+        })
     })
 
     it('renders the engagement view link without the legacy opportunities path segment', () => {
