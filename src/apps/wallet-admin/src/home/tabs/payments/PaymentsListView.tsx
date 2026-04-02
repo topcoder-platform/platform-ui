@@ -84,10 +84,11 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
             .toLowerCase())),
         [normalizedRoles],
     )
-    const isPaymentAdmin = hasRole('Payment Admin')
+    const isWiproTaasAdmin = hasRole('Wipro TaaS Admin')
+    const hasPaymentAdminRole = hasRole('Payment Admin')
+    const isPaymentAdmin = hasPaymentAdminRole || isWiproTaasAdmin
     const isEngagementPaymentApprover = hasRole('Engagement Payment Approver')
-    const isWiproTaasAdmin = hasRole('wipro-taas-admin', 'Wipro TaaS Admin')
-    const canToggleRoleView = isPaymentAdmin && (isEngagementPaymentApprover || isWiproTaasAdmin)
+    const canToggleRoleView = isPaymentAdmin && (isEngagementPaymentApprover)
     const [confirmFlow, setConfirmFlow] = React.useState<ConfirmFlowData | undefined>(undefined)
     const [isConfirmFormValid, setIsConfirmFormValid] = React.useState<boolean>(false)
     const [winnings, setWinnings] = React.useState<ReadonlyArray<Winning>>([])
@@ -95,19 +96,19 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
     const selectedPaymentsCount = Object.keys(selectedPayments).length
     const [isLoading, setIsLoading] = React.useState<boolean>(false)
     const [paymentRoleView, setPaymentRoleView] = React.useState<PaymentRoleView>(
-        isPaymentAdmin ? 'admin' : (isWiproTaasAdmin ? 'wiproTaasAdmin' : 'engagementApprover'),
+        isPaymentAdmin ? 'admin' : 'engagementApprover',
     )
     const isEngagementApproverView = isEngagementPaymentApprover && (
         !isPaymentAdmin || paymentRoleView === 'engagementApprover'
     )
-    const isWiproTaasAdminView = isWiproTaasAdmin && (
-        !isPaymentAdmin || paymentRoleView === 'wiproTaasAdmin'
-    )
+    // const isWiproTaasAdminView = isWiproTaasAdmin && (
+    //     !isPaymentAdmin || paymentRoleView === 'wiproTaasAdmin'
+    // )
     const restrictedCategory = isEngagementApproverView
         ? engagementPaymentCategory
-        : (isWiproTaasAdminView ? taasPaymentCategory : undefined)
+        : (isWiproTaasAdmin ? taasPaymentCategory : undefined)
     const restrictedDefaultStatus = isEngagementApproverView ? restrictedRoleDefaultStatus : undefined
-    const isRestrictedApproverView = isEngagementApproverView || isWiproTaasAdminView
+    const isRestrictedApproverView = isEngagementApproverView
     const [filters, setFilters] = React.useState<Record<string, string[]>>({})
     const hasSelectedStatusFilter = (filters.status?.length ?? 0) > 0
     const appliedFilters = React.useMemo<Record<string, string[]>>(() => {
@@ -361,6 +362,7 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
         props.profile.roles.includes('Payment Admin')
         || props.profile.roles.includes('Payment BA Admin')
         || props.profile.roles.includes('Payment Editor')
+        || props.profile.roles.includes('Wipro TaaS Admin')
     )
 
     const [bulkOpen, setBulkOpen] = React.useState(false)
@@ -461,16 +463,6 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                                     Engagement Approver View
                                 </button>
                             )}
-                            {isWiproTaasAdmin && (
-                                <button
-                                    type='button'
-                                    aria-pressed={isWiproTaasAdminView}
-                                    className={`${styles.roleViewButton} ${isWiproTaasAdminView ? styles.roleViewButtonActive : ''}`}
-                                    onClick={() => onRoleViewChange('wiproTaasAdmin')}
-                                >
-                                    Wipro TaaS Admin View
-                                </button>
-                            )}
                         </div>
                     </div>
                 )}
@@ -534,7 +526,7 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                             ],
                             type: 'dropdown',
                         },
-                        ...(isRestrictedApproverView ? [] : [
+                        ...(isRestrictedApproverView || (isWiproTaasAdmin && !hasPaymentAdminRole) ? [] : [
                             {
                                 key: 'category',
                                 label: 'Type',
