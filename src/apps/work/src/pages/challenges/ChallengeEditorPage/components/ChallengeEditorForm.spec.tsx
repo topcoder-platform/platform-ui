@@ -961,6 +961,74 @@ describe('ChallengeEditorForm', () => {
             .not.toHaveBeenCalled()
     })
 
+    it('does not delete submitter resources when saving a non-task draft', async () => {
+        const user = userEvent.setup()
+
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'CH',
+                id: 'type-id',
+                isTask: false,
+                name: 'Challenge',
+            }],
+            isLoading: false,
+        })
+        mockedUseFetchResourceRoles.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            resourceRoles: [{
+                id: 'submitter-role-id',
+                name: 'Submitter',
+            }],
+        })
+        mockedUseFetchResources.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            mutate: jest.fn(),
+            resources: [{
+                challengeId: '12345',
+                memberHandle: 'task-user',
+                memberId: '12345',
+                role: 'Submitter',
+                roleId: 'submitter-role-id',
+            }],
+        })
+        mockedPatchChallenge.mockResolvedValue({
+            ...validDraftChallenge,
+            type: {
+                abbreviation: 'CH',
+                name: 'Challenge',
+            },
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...validDraftChallenge,
+                        type: {
+                            abbreviation: 'CH',
+                            name: 'Challenge',
+                        },
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        await user.type(screen.getByLabelText('Challenge Name'), ' updated')
+        await user.click(screen.getByRole('button', { name: 'Save Challenge' }))
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .toHaveBeenCalledTimes(1)
+        })
+
+        expect(mockedDeleteResource)
+            .not.toHaveBeenCalled()
+    })
+
     it('launches a first2finish draft with iterative reviewer resources without task-only validation', async () => {
         let launchAction: (() => Promise<void>) | undefined
 

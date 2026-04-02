@@ -67,6 +67,7 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 - `ReviewTypeField`: task-only reviewer controls; enforces internal review type, allows searching any community reviewer handle, and persists the selection through the challenge `Iterative Reviewer` resource assignment.
 - `Wipro Allowed` checkbox: advanced-option toggle that maps to the challenge `wiproAllowed` API flag. Only the checkbox control toggles the value so nearby text clicks do not change it accidentally.
 - Saved selector values may come from legacy challenge fields or challenge resources. The editor restores task `assignedMemberId`, `copilot`, and task `reviewer` from matching resource assignments first, then falls back to legacy challenge payload shapes.
+- Task-only assignee and reviewer handling follows the resolved challenge type whenever type metadata is present. Persisted task flags are only a fallback for incomplete legacy payloads that omit the type identity entirely.
 
 ## Conditional Sections
 

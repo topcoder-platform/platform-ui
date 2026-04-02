@@ -16,7 +16,7 @@ import {
     resolveResourceAssignmentHandle,
     resolveResourceAssignmentValue,
     REVIEWER_RESOURCE_ROLE_NAMES,
-    shouldInferTaskChallengeFromAssignments,
+    shouldTreatChallengeAsTask,
     shouldUseManualReviewers,
     SUBMITTER_RESOURCE_ROLE_NAMES,
     TASK_REVIEWER_RESOURCE_ROLE_NAMES,
@@ -380,72 +380,49 @@ describe('resource assignment helpers', () => {
         expect(result)
             .toBe('67890')
     })
+})
 
-    it('does not infer task mode from iterative reviewer resources alone', () => {
-        const result = shouldInferTaskChallengeFromAssignments({
-            resourceRoles: [
-                buildResourceRole({
-                    id: 'iterative-reviewer-role-id',
-                    name: 'Iterative Reviewer',
-                }),
-            ],
-            resources: [
-                buildResource({
-                    memberHandle: 'manualReviewer',
-                    roleId: 'iterative-reviewer-role-id',
-                }),
-            ],
-        })
-
-        expect(result)
-            .toBe(false)
-    })
-
-    it('infers task mode from saved reviewer root fields', () => {
-        const result = shouldInferTaskChallengeFromAssignments({
-            resourceRoles: [],
-            resources: [],
-            reviewer: 'taskReviewer',
+describe('shouldTreatChallengeAsTask', () => {
+    it('returns true when the resolved type is Task', () => {
+        const result = shouldTreatChallengeAsTask({
+            hasResolvedChallengeType: true,
+            isTaskTypeSelected: true,
         })
 
         expect(result)
             .toBe(true)
     })
 
-    it('does not infer task mode from reviewer root fields when manual reviewers exist', () => {
-        const result = shouldInferTaskChallengeFromAssignments({
-            resourceRoles: [],
-            resources: [],
-            reviewer: 'taskReviewer',
-            reviewers: [{
-                isMemberReview: true,
-                phaseId: 'iterative-review-phase-id',
-                scorecardId: 'iterative-review-scorecard-id',
-            }],
+    it('returns false when the resolved type is explicitly non-task', () => {
+        const result = shouldTreatChallengeAsTask({
+            hasResolvedChallengeType: true,
+            isTaskTypeSelected: false,
+            persistedTaskFlag: true,
         })
 
         expect(result)
             .toBe(false)
     })
 
-    it('infers task mode from submitter resources', () => {
-        const result = shouldInferTaskChallengeFromAssignments({
-            resourceRoles: [
-                buildResourceRole({
-                    id: 'submitter-role-id',
-                    name: 'Submitter',
-                }),
-            ],
-            resources: [
-                buildResource({
-                    memberId: '98765',
-                    roleId: 'submitter-role-id',
-                }),
-            ],
+    it('falls back to the persisted task flag when type metadata is missing', () => {
+        const result = shouldTreatChallengeAsTask({
+            hasResolvedChallengeType: false,
+            isTaskTypeSelected: false,
+            persistedTaskFlag: true,
         })
 
         expect(result)
             .toBe(true)
+    })
+
+    it('returns false when neither type metadata nor a persisted task flag exists', () => {
+        const result = shouldTreatChallengeAsTask({
+            hasResolvedChallengeType: false,
+            isTaskTypeSelected: false,
+        })
+
+        expect(result)
+            .toBe(false)
     })
 })
 

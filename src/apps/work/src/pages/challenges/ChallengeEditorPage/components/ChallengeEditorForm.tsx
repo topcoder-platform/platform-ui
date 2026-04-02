@@ -167,7 +167,7 @@ import {
     resolveCreateTimelineTemplateId,
     resolveResourceAssignmentValue,
     ResourceAssignmentValueField,
-    shouldInferTaskChallengeFromAssignments,
+    shouldTreatChallengeAsTask,
     shouldUseManualReviewers,
     SUBMITTER_RESOURCE_ROLE_NAMES,
     TASK_REVIEWER_RESOURCE_ROLE_NAMES,
@@ -1098,6 +1098,14 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             selectedChallengeType,
         ],
     )
+    const hasResolvedChallengeType = useMemo(
+        (): boolean => !!normalizeTextValue(resolvedChallengeTypeName)
+            || !!normalizeTextValue(resolvedChallengeTypeAbbreviation),
+        [
+            resolvedChallengeTypeAbbreviation,
+            resolvedChallengeTypeName,
+        ],
+    )
     const isMarathonMatchChallengeSelected = useMemo(
         (): boolean => isMarathonMatchChallengeTypeByNameAndAbbreviation({
             abbreviation: resolvedChallengeTypeAbbreviation,
@@ -1185,24 +1193,13 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     ])
     const isTaskSingleAssignmentChallenge = useCallback((
         formData: ChallengeEditorFormData,
-        resourcesOverride?: typeof challengeResources,
-        resourceRolesOverride?: typeof resourceRoles,
-    ): boolean => {
-        if (formData.legacy?.isTask === true || isTaskChallengeSelected) {
-            return true
-        }
-
-        return shouldInferTaskChallengeFromAssignments({
-            assignedMemberId: getSingleAssignmentFieldValue(formData, 'assignedMemberId'),
-            resourceRoles: resourceRolesOverride || resourceRoles,
-            resources: resourcesOverride || challengeResources,
-            reviewer: getSingleAssignmentFieldValue(formData, 'reviewer'),
-            reviewers: formData.reviewers,
-        })
-    }, [
-        challengeResources,
+    ): boolean => shouldTreatChallengeAsTask({
+        hasResolvedChallengeType,
+        isTaskTypeSelected: isTaskChallengeSelected,
+        persistedTaskFlag: formData.legacy?.isTask === true,
+    }), [
+        hasResolvedChallengeType,
         isTaskChallengeSelected,
-        resourceRoles,
     ])
     const applyPersistedSingleAssignments = useCallback((
         formData: ChallengeEditorFormData,
@@ -1220,7 +1217,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             ),
         }
 
-        if (!isTaskSingleAssignmentChallenge(formData, resourcesOverride, resourceRolesOverride)) {
+        if (!isTaskSingleAssignmentChallenge(formData)) {
             nextFormData.assignedMemberId = undefined
             nextFormData.reviewer = undefined
 
