@@ -22,6 +22,9 @@ import {
 import {
     WorkAppContextModel,
 } from '../../../lib/models'
+import {
+    checkTalentManager,
+} from '../../../lib/utils'
 
 import {
     EngagementEditorForm,
@@ -62,6 +65,7 @@ export const EngagementEditorPage: FC = () => {
     const workAppContext = useContext(WorkAppContext)
     const contextValue = workAppContext as WorkAppContextModel
     const canManage = contextValue.isAdmin || contextValue.isManager
+    const canEditParentProject = contextValue.isAdmin || checkTalentManager(contextValue.userRoles)
 
     const engagementResult = useFetchEngagement(engagementId)
     const projectResult = useFetchProject(projectId || undefined)
@@ -98,9 +102,11 @@ export const EngagementEditorPage: FC = () => {
                 {canManage && !engagementResult.isLoading && !engagementResult.isError
                     ? (
                         <EngagementEditorForm
+                            canEditParentProject={canEditParentProject}
                             engagement={engagementResult.engagement}
                             isEditMode={isEditMode}
                             projectId={projectId}
+                            projectName={projectResult.project?.name}
                         />
                     )
                     : undefined}

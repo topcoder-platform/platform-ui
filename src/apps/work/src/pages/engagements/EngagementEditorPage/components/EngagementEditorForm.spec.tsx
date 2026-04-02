@@ -305,6 +305,25 @@ describe('EngagementEditorForm', () => {
             .toBe('Software Developer')
     })
 
+    it('renders the selected parent project on the create page', () => {
+        render(
+            <MemoryRouter>
+                <EngagementEditorForm
+                    isEditMode={false}
+                    projectId='123'
+                    projectName='SK Engagement Project1'
+                />
+            </MemoryRouter>,
+        )
+
+        const parentProjectField = screen.getByLabelText('Parent Project') as HTMLSelectElement
+
+        expect(parentProjectField.value)
+            .toBe('123')
+        expect(screen.getByRole('option', { name: 'SK Engagement Project1' }))
+            .toBeTruthy()
+    })
+
     it('redirects to the created engagement details page', async () => {
         const user = userEvent.setup()
 

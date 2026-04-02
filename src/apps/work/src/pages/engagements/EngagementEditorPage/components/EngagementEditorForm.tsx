@@ -44,6 +44,7 @@ import {
 import {
     autowriteDescription,
     createEngagement,
+    fetchProjectsList,
     updateEngagement,
 } from '../../../../lib/services'
 import {
@@ -91,9 +92,11 @@ export interface EngagementEditorFormData {
 }
 
 interface EngagementEditorFormProps {
+    canEditParentProject?: boolean
     engagement?: Engagement
     isEditMode: boolean
     projectId: number | string
+    projectName?: string
 }
 
 interface SaveEngagementOptions {
@@ -153,6 +156,23 @@ function getAssignmentDefaults(engagement: Engagement | undefined): {
     }
 }
 
+/**
+ * Resolves the form's parent project id from the engagement payload first,
+ * falling back to the route-scoped project id for new engagements.
+ *
+ * @param engagement engagement being edited, if one exists.
+ * @param projectId project id from the current route.
+ * @returns the project id that should seed the form state.
+ */
+function getDefaultProjectId(
+    engagement: Engagement | undefined,
+    projectId: number | string,
+): number | string {
+    return engagement?.projectId
+        || engagement?.project?.id
+        || projectId
+}
+
 function getDefaultValues(
     engagement: Engagement | undefined,
     projectId: number | string,
@@ -171,7 +191,7 @@ function getDefaultValues(
             ? String(defaultEngagement.durationWeeks)
             : '',
         isPrivate: defaultEngagement?.isPrivate === true,
-        projectId,
+        projectId: getDefaultProjectId(defaultEngagement, projectId),
         requiredMemberCount: defaultEngagement?.requiredMemberCount
             ? String(defaultEngagement.requiredMemberCount)
             : '',
@@ -208,6 +228,61 @@ function createWorkloadOptions(): FormSelectOption[] {
         label: labelsByWorkload[workload] || workload,
         value: workload,
     }))
+}
+
+const MIN_PARENT_PROJECT_SEARCH_LENGTH = 2
+
+/**
+ * Creates a select option for the current parent project.
+ *
+ * @param projectId project identifier from the route or engagement payload.
+ * @param projectName display name for the selected project.
+ * @returns a normalized option when the id is available; otherwise `undefined`.
+ */
+function createProjectOption(
+    projectId: number | string | undefined,
+    projectName: string | undefined,
+): FormSelectOption | undefined {
+    if (projectId === undefined || projectId === null) {
+        return undefined
+    }
+
+    const normalizedProjectId = String(projectId)
+        .trim()
+
+    if (!normalizedProjectId) {
+        return undefined
+    }
+
+    return {
+        label: projectName?.trim() || `Project ${normalizedProjectId}`,
+        value: normalizedProjectId,
+    }
+}
+
+/**
+ * Merges async project options so the current parent project remains selectable
+ * after search results are loaded.
+ *
+ * @param currentOptions options already cached in component state.
+ * @param incomingOptions fresh options returned from the projects API.
+ * @returns a deduplicated list keyed by project id.
+ */
+function mergeProjectOptions(
+    currentOptions: FormSelectOption[],
+    incomingOptions: FormSelectOption[],
+): FormSelectOption[] {
+    const optionMap = new Map<string, FormSelectOption>()
+
+    currentOptions.forEach(option => {
+        optionMap.set(option.value, option)
+    })
+
+    incomingOptions.forEach(option => {
+        optionMap.set(option.value, option)
+    })
+
+    return Array.from(optionMap.values())
 }
 
 function toPayload(values: EngagementEditorFormData): Partial<Engagement> & {
@@ -298,6 +373,29 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
     const roleOptions = useMemo<FormSelectOption[]>(() => createRoleOptions(), [])
     const workloadOptions = useMemo<FormSelectOption[]>(() => createWorkloadOptions(), [])
     const engagementsPath = `${rootRoute}/projects/${props.projectId}/engagements`
+    const currentProjectOption = useMemo<FormSelectOption | undefined>(
+        () => createProjectOption(
+            props.engagement?.projectId
+                || props.engagement?.project?.id
+                || props.projectId,
+            props.engagement?.projectName
+                || props.engagement?.project?.name
+                || props.projectName,
+        ),
+        [
+            props.engagement?.project?.id,
+            props.engagement?.project?.name,
+            props.engagement?.projectId,
+            props.engagement?.projectName,
+            props.projectId,
+            props.projectName,
+        ],
+    )
+    const [parentProjectOptions, setParentProjectOptions] = useState<FormSelectOption[]>(
+        currentProjectOption
+            ? [currentProjectOption]
+            : [],
+    )
 
     const formMethods = useForm<EngagementEditorFormData>({
         defaultValues: getDefaultValues(props.engagement, props.projectId),
@@ -311,6 +409,16 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
     const reset = formMethods.reset
     const setValue = formMethods.setValue
     const values = formMethods.watch()
+
+    useEffect(() => {
+        if (!currentProjectOption) {
+            return
+        }
+
+        setParentProjectOptions(currentOptions => mergeProjectOptions(currentOptions, [
+            currentProjectOption,
+        ]))
+    }, [currentProjectOption])
 
     const saveEngagement = useCallback(
         async (
@@ -367,6 +475,39 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
             }
         },
         [currentEngagementId, engagementsPath, navigate, props.isEditMode, props.projectId, reset],
+    )
+
+    const loadParentProjectOptions = useCallback(
+        async (inputValue: string): Promise<FormSelectOption[]> => {
+            const keyword = inputValue.trim()
+
+            if (keyword.length < MIN_PARENT_PROJECT_SEARCH_LENGTH) {
+                return []
+            }
+
+            try {
+                const response = await fetchProjectsList({
+                    keyword,
+                    page: 1,
+                    perPage: 20,
+                    sortBy: 'name',
+                    sortOrder: 'asc',
+                })
+                const nextOptions = response.projects
+                    .filter(project => project?.id !== undefined && project?.id !== null)
+                    .map(project => ({
+                        label: project.name || `Project ${project.id}`,
+                        value: String(project.id),
+                    }))
+
+                setParentProjectOptions(currentOptions => mergeProjectOptions(currentOptions, nextOptions))
+
+                return nextOptions
+            } catch {
+                return []
+            }
+        },
+        [],
     )
 
     useAutosave<EngagementEditorFormData>({
@@ -497,6 +638,20 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
                         <div className={styles.startStatusBlock}>
                             <EngagementStartDateField />
                             <EngagementStatusField />
+                            <FormSelectField
+                                disabled={!props.canEditParentProject}
+                                isAsync={props.canEditParentProject}
+                                label='Parent Project'
+                                loadOptions={props.canEditParentProject
+                                    ? loadParentProjectOptions
+                                    : undefined}
+                                name='projectId'
+                                options={parentProjectOptions}
+                                placeholder={props.canEditParentProject
+                                    ? 'Type at least 2 characters to search projects...'
+                                    : undefined}
+                                required
+                            />
                             <FormTextField
                                 label='Required Members'
                                 name='requiredMemberCount'
