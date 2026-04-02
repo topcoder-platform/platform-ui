@@ -104,7 +104,7 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
 
     const restrictedCategory = isEngagementApproverView
         ? engagementPaymentCategory
-        : (isWiproTaasAdmin ? taasPaymentCategory : undefined)
+        : (isWiproTaasAdmin && !hasPaymentAdminRole ? taasPaymentCategory : undefined)
     const restrictedDefaultStatus = isEngagementApproverView ? restrictedRoleDefaultStatus : undefined
     const isRestrictedApproverView = isEngagementApproverView
     const [filters, setFilters] = React.useState<Record<string, string[]>>({})
