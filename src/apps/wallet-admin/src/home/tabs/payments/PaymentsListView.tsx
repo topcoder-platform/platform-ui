@@ -106,6 +106,7 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
     const restrictedCategory = isEngagementApproverView
         ? engagementPaymentCategory
         : (isWiproTaasAdminView ? taasPaymentCategory : undefined)
+    const restrictedDefaultStatus = isEngagementApproverView ? restrictedRoleDefaultStatus : undefined
     const isRestrictedApproverView = isEngagementApproverView || isWiproTaasAdminView
     const [filters, setFilters] = React.useState<Record<string, string[]>>({})
     const hasSelectedStatusFilter = (filters.status?.length ?? 0) > 0
@@ -117,9 +118,11 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
         return {
             ...filters,
             category: [restrictedCategory],
-            status: hasSelectedStatusFilter ? filters.status : [restrictedRoleDefaultStatus],
+            ...(hasSelectedStatusFilter
+                ? { status: filters.status }
+                : (restrictedDefaultStatus ? { status: [restrictedDefaultStatus] } : {})),
         }
-    }, [filters, hasSelectedStatusFilter, restrictedCategory])
+    }, [filters, hasSelectedStatusFilter, restrictedCategory, restrictedDefaultStatus])
     const hasActiveFilters = React.useMemo(
         () => Object.entries(appliedFilters)
             .some(([key, value]) => key !== 'category' && value.length > 0),
@@ -130,11 +133,13 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
             return {} as Record<string, string>
         }
 
+        const statusOverride = filters.status?.[0] ?? restrictedDefaultStatus
+
         return {
             category: restrictedCategory,
-            status: filters.status?.[0] ?? restrictedRoleDefaultStatus,
+            ...(statusOverride ? { status: statusOverride } : {}),
         }
-    }, [filters.status, restrictedCategory])
+    }, [filters.status, restrictedCategory, restrictedDefaultStatus])
     const [pagination, setPagination] = React.useState<PaginationInfo>({
         currentPage: 1,
         pageSize: defaultPageSize,
