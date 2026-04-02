@@ -43,6 +43,7 @@ export interface DefaultReviewer {
     phaseId?: string
     roleId?: string
     scorecardId?: string
+    shouldOpenOpportunity?: boolean
 }
 
 export interface ScorecardFilters {

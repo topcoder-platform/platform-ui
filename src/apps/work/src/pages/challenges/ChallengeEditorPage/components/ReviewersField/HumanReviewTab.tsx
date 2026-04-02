@@ -344,7 +344,7 @@ function mapDefaultReviewerToReviewer(
         roleId: defaultReviewer?.roleId,
         scorecardId: defaultReviewer?.scorecardId,
         shouldOpenOpportunity: memberReview
-            ? false
+            ? (defaultReviewer?.shouldOpenOpportunity ?? false)
             : undefined,
     }
 }

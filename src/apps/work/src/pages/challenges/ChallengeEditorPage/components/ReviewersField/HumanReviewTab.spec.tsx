@@ -1,5 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
 import {
+    fireEvent,
     render,
     screen,
     waitFor,
@@ -230,6 +231,52 @@ describe('HumanReviewTab', () => {
             .not.toBeNull()
         expect(screen.queryByRole('button', { name: 'Apply default reviewers' }))
             .toBeNull()
+    })
+
+    it('checks public review opportunity by default when the default reviewer opens it', async () => {
+        mockedFetchDefaultReviewers.mockResolvedValue([
+            {
+                isMemberReview: true,
+                memberReviewerCount: 1,
+                phaseId: 'phase-1',
+                roleId: 'role-1',
+                scorecardId: 'scorecard-1',
+                shouldOpenOpportunity: true,
+            },
+        ])
+        mockedFetchScorecards.mockResolvedValue([
+            {
+                id: 'scorecard-1',
+                name: 'Scorecard 1',
+                phaseId: 'phase-1',
+            },
+        ])
+
+        render(
+            <TestHarness
+                defaultValues={{
+                    reviewers: [],
+                }}
+            />,
+        )
+
+        await waitFor(() => {
+            expect(mockedFetchDefaultReviewers)
+                .toHaveBeenCalledWith('type-1', 'track-1')
+        })
+        await waitFor(() => {
+            expect((screen.getByRole('button', { name: 'Add reviewer' }) as HTMLButtonElement).disabled)
+                .toBe(false)
+        })
+
+        fireEvent.click(screen.getByRole('button', { name: 'Add reviewer' }))
+
+        await waitFor(() => {
+            expect((
+                screen.getByRole('checkbox', { name: 'Open public review opportunity' }) as HTMLInputElement
+            ).checked)
+                .toBe(true)
+        })
     })
 
     it('shows only unassigned non-submission phases on each reviewer card', () => {
