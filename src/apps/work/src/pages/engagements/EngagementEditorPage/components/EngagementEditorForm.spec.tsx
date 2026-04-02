@@ -367,6 +367,53 @@ describe('EngagementEditorForm', () => {
             .toBeTruthy()
     })
 
+    it('keeps a falsy saved parent project id aligned with the rendered option', () => {
+        render(
+            <MemoryRouter>
+                <EngagementEditorForm
+                    engagement={{
+                        anticipatedStart: 'Immediate',
+                        assignedMemberHandles: [],
+                        assignments: [],
+                        compensationRange: '',
+                        countries: ['US'],
+                        createdAt: '',
+                        description: 'Existing engagement description',
+                        durationWeeks: 4,
+                        id: 'engagement-1',
+                        isPrivate: false,
+                        project: {
+                            id: 789,
+                            name: 'Zero Id Project',
+                        },
+                        projectId: 0,
+                        projectName: 'Zero Id Project',
+                        requiredMemberCount: 1,
+                        role: 'SOFTWARE_DEVELOPER',
+                        skills: [],
+                        status: 'Open',
+                        timezones: ['America/New_York'],
+                        title: 'Existing engagement',
+                        updatedAt: '',
+                        workload: 'FULL_TIME',
+                    } as any}
+                    isEditMode
+                    projectId='123'
+                />
+            </MemoryRouter>,
+        )
+
+        const parentProjectField = screen.getByLabelText('Parent Project') as HTMLSelectElement
+        const zeroProjectOption = screen.getByRole('option', {
+            name: 'Zero Id Project',
+        }) as HTMLOptionElement
+
+        expect(parentProjectField.value)
+            .toBe('0')
+        expect(zeroProjectOption.value)
+            .toBe('0')
+    })
+
     it('redirects to the created engagement details page for the saved parent project', async () => {
         const user = userEvent.setup()
 

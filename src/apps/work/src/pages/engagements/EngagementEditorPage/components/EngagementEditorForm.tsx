@@ -397,8 +397,8 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
     const currentProjectOption = useMemo<FormSelectOption | undefined>(
         () => createProjectOption(
             props.engagement?.projectId
-                || props.engagement?.project?.id
-                || props.projectId,
+                ?? props.engagement?.project?.id
+                ?? props.projectId,
             props.engagement?.projectName
                 || props.engagement?.project?.name
                 || props.projectName,
