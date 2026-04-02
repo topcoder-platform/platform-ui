@@ -61,6 +61,10 @@ const SCORECARD_TRACK_ALIASES: Record<string, string> = {
     QUALITY_ASSURANCE: 'QUALITY_ASSURANCE',
     QUALITYASSURANCE: 'QUALITY_ASSURANCE',
 }
+const ITERATIVE_REVIEW_ROLE_NAMES = [
+    'Iterative Reviewer',
+    'Iterative Review',
+]
 const NON_REVIEWER_PHASE_KEYS = new Set([
     'checkpointsubmission',
     'registration',
@@ -549,9 +553,13 @@ export const HumanReviewTab: FC = () => {
                 return undefined
             }
 
-            const roleName = getRoleNameForPhaseName(phaseName)
+            const roleNames = normalizeKey(phaseName) === 'iterativereview'
+                ? ITERATIVE_REVIEW_ROLE_NAMES
+                : [getRoleNameForPhaseName(phaseName)]
 
-            return roleIdByName.get(normalizeKey(roleName))
+            return roleNames
+                .map(roleName => roleIdByName.get(normalizeKey(roleName)))
+                .find((roleId): roleId is string => !!roleId)
         },
         [phaseNameById, roleIdByName],
     )
