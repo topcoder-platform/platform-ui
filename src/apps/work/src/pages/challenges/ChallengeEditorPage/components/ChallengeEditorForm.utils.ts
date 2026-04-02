@@ -239,6 +239,7 @@ interface ResolveResourceAssignmentValueParams {
 
 interface InferTaskChallengeFromAssignmentsParams {
     assignedMemberId?: string
+    reviewers?: ChallengeEditorFormData['reviewers']
     reviewer?: string
     resourceRoles: ResourceRole[]
     resources: Resource[]
@@ -292,7 +293,8 @@ export function resolveResourceAssignmentValue(
  * Manual iterative-reviewer resources are also used by non-task F2F flows, so
  * they cannot be treated as a task signal on their own. A saved task draft can
  * still be recognized from its dedicated root fields or from a persisted
- * submitter resource assignment.
+ * submitter resource assignment, but saved manual reviewer rows should take
+ * precedence over a stale legacy task-reviewer root field.
  *
  * @param params current root-field values plus challenge resources.
  * @returns `true` when the saved data clearly represents a task challenge.
@@ -300,6 +302,10 @@ export function resolveResourceAssignmentValue(
 export function shouldInferTaskChallengeFromAssignments(
     params: InferTaskChallengeFromAssignmentsParams,
 ): boolean {
+    if (Array.isArray(params.reviewers) && params.reviewers.length > 0) {
+        return false
+    }
+
     if (normalizeText(params.assignedMemberId) || normalizeText(params.reviewer)) {
         return true
     }

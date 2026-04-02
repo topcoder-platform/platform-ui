@@ -1182,6 +1182,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             resourceRoles: resourceRolesOverride || resourceRoles,
             resources: resourcesOverride || challengeResources,
             reviewer: getSingleAssignmentFieldValue(formData, 'reviewer'),
+            reviewers: formData.reviewers,
         })
     }, [
         challengeResources,

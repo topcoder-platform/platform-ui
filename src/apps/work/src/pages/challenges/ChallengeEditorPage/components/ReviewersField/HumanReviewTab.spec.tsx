@@ -301,6 +301,50 @@ describe('HumanReviewTab', () => {
         })
     })
 
+    it('restores iterative reviewer member ids from the generic reviewer role fallback', async () => {
+        mockedUseFetchResourceRoles.mockReturnValue({
+            resourceRoles: [
+                {
+                    id: 'role-reviewer',
+                    name: 'Reviewer',
+                },
+            ],
+        })
+        mockedUseFetchResources.mockReturnValue({
+            isLoading: false,
+            mutate: jest.fn()
+                .mockResolvedValue(undefined),
+            resources: [
+                {
+                    memberId: 'member-3',
+                    roleId: 'role-reviewer',
+                },
+            ],
+        })
+
+        render(
+            <TestHarness
+                defaultValues={{
+                    reviewers: [
+                        {
+                            additionalMemberIds: [],
+                            isMemberReview: true,
+                            memberReviewerCount: 1,
+                            phaseId: 'phase-1',
+                            scorecardId: 'scorecard-1',
+                        },
+                    ],
+                }}
+                showMemberValue
+            />,
+        )
+
+        await waitFor(() => {
+            expect(screen.getByTestId('member-id-value').textContent)
+                .toBe('member-3')
+        })
+    })
+
     it('checks public review opportunity by default when the default reviewer opens it', async () => {
         mockedFetchDefaultReviewers.mockResolvedValue([
             {
