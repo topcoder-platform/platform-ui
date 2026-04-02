@@ -22,7 +22,7 @@ import styles from './Payments.module.scss'
 type PaymentRoleView = 'admin' | 'engagementApprover' | 'wiproTaasAdmin'
 
 const engagementPaymentCategory = 'ENGAGEMENT_PAYMENT'
-const engagementApproverDefaultStatus = 'ON_HOLD_ADMIN'
+const restrictedRoleDefaultStatus = 'ON_HOLD_ADMIN'
 const taasPaymentCategory = 'TAAS_PAYMENT'
 const defaultPageSize = 10
 
@@ -117,7 +117,7 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
         return {
             ...filters,
             category: [restrictedCategory],
-            status: hasSelectedStatusFilter ? filters.status : [engagementApproverDefaultStatus],
+            status: hasSelectedStatusFilter ? filters.status : [restrictedRoleDefaultStatus],
         }
     }, [filters, hasSelectedStatusFilter, restrictedCategory])
     const hasActiveFilters = React.useMemo(
@@ -132,7 +132,7 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
 
         return {
             category: restrictedCategory,
-            status: filters.status?.[0] ?? engagementApproverDefaultStatus,
+            status: filters.status?.[0] ?? restrictedRoleDefaultStatus,
         }
     }, [filters.status, restrictedCategory])
     const [pagination, setPagination] = React.useState<PaginationInfo>({
@@ -553,6 +553,10 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                                     {
                                         label: 'Engagement Payment',
                                         value: 'ENGAGEMENT_PAYMENT',
+                                    },
+                                    {
+                                        label: 'TaaS Payment',
+                                        value: 'TAAS_PAYMENT',
                                     },
                                 ],
                                 type: 'dropdown',
