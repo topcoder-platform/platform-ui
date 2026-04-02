@@ -1889,13 +1889,19 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 })
                 const savedChallenge = await patchChallenge(currentChallengeId, payload)
                 await syncDraftSingleAssignments(currentChallengeId, formDataWithProjectBilling)
+                const persistedFormData = applyProjectBillingToChallengeFormData(
+                    transformChallengeToFormData(savedChallenge),
+                    resolvedProjectBillingAccount,
+                )
 
                 const nextValues = applySingleAssignmentFieldValues(
                     applyPersistedSingleAssignments(
-                        applyProjectBillingToChallengeFormData(
-                            transformChallengeToFormData(savedChallenge),
-                            resolvedProjectBillingAccount,
-                        ),
+                        {
+                            ...persistedFormData,
+                            attachments: Array.isArray(persistedFormData.attachments)
+                                ? persistedFormData.attachments
+                                : formDataWithProjectBilling.attachments,
+                        },
                     ),
                     formDataWithProjectBilling,
                     isTaskChallenge,

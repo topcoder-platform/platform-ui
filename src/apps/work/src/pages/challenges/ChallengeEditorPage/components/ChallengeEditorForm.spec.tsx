@@ -1,4 +1,4 @@
-/* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
+/* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports, complexity, react/jsx-no-bind */
 import {
     render,
     screen,
@@ -27,6 +27,7 @@ import {
     createChallenge,
     fetchChallenge,
     fetchProjectBillingAccount,
+    patchChallenge,
     fetchResourceRoles,
     fetchResources,
 } from '../../../../lib/services'
@@ -66,52 +67,68 @@ jest.mock('../../../../lib/utils', () => ({
     formatLastSaved: () => '',
     showErrorToast: jest.fn(),
     showSuccessToast: jest.fn(),
-    transformChallengeToFormData: (challenge?: {
-        billing?: {
-            billingAccountId?: number | string
-            markup?: number
-        }
-        name?: string
-        status?: string
-        trackId?: string
-        typeId?: string
-    }) => ({
-        assignedMemberId: undefined,
-        attachments: [],
+    transformChallengeToFormData: (challenge?: Partial<Challenge>) => ({
+        assignedMemberId: challenge?.assignedMemberId,
+        attachments: Array.isArray(challenge?.attachments)
+            ? challenge?.attachments
+            : undefined,
         billing: challenge?.billing,
-        copilot: undefined,
-        description: '',
-        discussionForum: undefined,
-        funChallenge: false,
-        groups: [],
-        id: challenge?.status,
-        legacy: {
+        challengeFee: challenge?.challengeFee,
+        copilot: typeof challenge?.copilot === 'string'
+            ? challenge.copilot
+            : undefined,
+        description: challenge?.description || '',
+        discussionForum: challenge?.discussionForum,
+        funChallenge: challenge?.funChallenge === true,
+        groups: Array.isArray(challenge?.groups)
+            ? challenge?.groups
+            : [],
+        id: challenge?.id,
+        legacy: challenge?.legacy || {
             isTask: false,
             reviewType: 'INTERNAL',
             useSchedulingAPI: false,
         },
-        metadata: [],
+        metadata: Array.isArray(challenge?.metadata)
+            ? challenge?.metadata
+            : [],
         milestoneConfiguration: {
             enabled: false,
             milestoneCount: undefined,
             milestoneDurationDays: undefined,
         },
         name: challenge?.name || '',
-        phases: [],
-        privateDescription: '',
-        prizeSets: [],
-        reviewer: undefined,
-        reviewers: [],
-        roundType: 'Single round',
-        skills: [],
-        startDate: undefined,
+        phases: Array.isArray(challenge?.phases)
+            ? challenge?.phases
+            : [],
+        privateDescription: challenge?.privateDescription || '',
+        prizeSets: Array.isArray(challenge?.prizeSets)
+            ? challenge?.prizeSets
+            : [],
+        reviewer: typeof challenge?.reviewer === 'string'
+            ? challenge.reviewer
+            : undefined,
+        reviewers: Array.isArray(challenge?.reviewers)
+            ? challenge?.reviewers
+            : [],
+        roundType: challenge?.roundType || 'Single round',
+        skills: Array.isArray(challenge?.skills)
+            ? challenge?.skills
+            : [],
+        startDate: challenge?.startDate,
         status: challenge?.status,
-        tags: [],
-        terms: [],
+        tags: Array.isArray(challenge?.tags)
+            ? challenge?.tags
+            : [],
+        terms: Array.isArray(challenge?.terms)
+            ? challenge?.terms as string[]
+            : [],
         trackId: challenge?.trackId || '',
         typeId: challenge?.typeId || '',
-        wiproAllowed: false,
-        workType: undefined,
+        wiproAllowed: challenge?.wiproAllowed === true,
+        workType: typeof challenge?.workType === 'string'
+            ? challenge.workType
+            : undefined,
     }),
     transformFormDataToChallenge: (formData: unknown) => formData,
 }))
@@ -174,9 +191,45 @@ jest.mock('~/config', () => ({
 jest.mock('./AssignedMemberField', () => ({
     AssignedMemberField: () => <></>,
 }))
-jest.mock('./AttachmentsField', () => ({
-    AttachmentsField: () => <></>,
-}))
+jest.mock('./AttachmentsField', () => {
+    const reactHookForm: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
+
+    return {
+        AttachmentsField: function AttachmentsField() {
+            const formContext = reactHookForm.useFormContext()
+            const attachments = reactHookForm.useWatch({
+                control: formContext.control,
+                name: 'attachments',
+            })
+            const attachmentCount = Array.isArray(attachments)
+                ? attachments.length
+                : 0
+            const handleAddAttachment = (): void => {
+                formContext.setValue('attachments', [{
+                    fileSize: 1024,
+                    id: 'attachment-1',
+                    name: 'spec.pdf',
+                    url: 'https://example.com/spec.pdf',
+                }], {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                })
+            }
+
+            return (
+                <>
+                    <div>{`Attachment Count: ${attachmentCount}`}</div>
+                    <button
+                        onClick={handleAddAttachment}
+                        type='button'
+                    >
+                        Mock Add Attachment
+                    </button>
+                </>
+            )
+        },
+    }
+})
 jest.mock('./ChallengeDescriptionField', () => ({
     ChallengeDescriptionField: () => <></>,
 }))
@@ -397,6 +450,7 @@ const mockedCreateResource = createResource as jest.Mock
 const mockedCreateChallenge = createChallenge as jest.Mock
 const mockedFetchChallenge = fetchChallenge as jest.Mock
 const mockedFetchProjectBillingAccountService = fetchProjectBillingAccount as jest.Mock
+const mockedPatchChallenge = patchChallenge as jest.Mock
 const mockedFetchResourceRolesService = fetchResourceRoles as jest.Mock
 const mockedFetchResourcesService = fetchResources as jest.Mock
 const mockedShowErrorToast = showErrorToast as jest.Mock
@@ -407,6 +461,23 @@ describe('ChallengeEditorForm', () => {
         id: '12345',
         name: 'Draft challenge',
         status: 'DRAFT',
+    } as Challenge
+    const validDraftChallenge = {
+        ...draftChallenge,
+        description: 'Valid public specification for the attachment save regression test.',
+        prizeSets: [{
+            prizes: [{
+                type: 'USD',
+                value: 500,
+            }],
+            type: 'PLACEMENT',
+        }],
+        skills: [{
+            id: 'skill-1',
+            name: 'React',
+        }],
+        trackId: 'track-id',
+        typeId: 'type-id',
     } as Challenge
 
     beforeEach(() => {
@@ -712,6 +783,38 @@ describe('ChallengeEditorForm', () => {
             .toHaveTextContent('Stock Arts Field')
         expect(submissionSettingsSection)
             .toHaveTextContent('Maximum Submissions Field')
+    })
+
+    it('preserves uploaded attachments after saving when the update response omits them', async () => {
+        const user = userEvent.setup()
+
+        mockedPatchChallenge.mockResolvedValue({
+            ...validDraftChallenge,
+            attachments: undefined,
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm challenge={validDraftChallenge} />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText('Attachment Count: 0'))
+            .toBeInTheDocument()
+
+        await user.click(screen.getByRole('button', { name: 'Mock Add Attachment' }))
+
+        expect(screen.getByText('Attachment Count: 1'))
+            .toBeInTheDocument()
+
+        await user.click(screen.getByRole('button', { name: 'Save Challenge' }))
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .toHaveBeenCalledTimes(1)
+            expect(screen.getByText('Attachment Count: 1'))
+                .toBeInTheDocument()
+        })
     })
 
     it('prevents creating a design challenge without a work type', async () => {
