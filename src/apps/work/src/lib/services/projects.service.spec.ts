@@ -1,7 +1,10 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
 import { xhrGetAsync } from '~/libs/core'
 
-import { fetchProjectBillingAccount } from './projects.service'
+import {
+    fetchProjectBillingAccount,
+    fetchProjectBillingAccounts,
+} from './projects.service'
 
 jest.mock('~/config', () => ({
     EnvironmentConfig: {
@@ -163,5 +166,60 @@ describe('fetchProjectBillingAccount', () => {
             })
         expect(mockedGetAsync)
             .toHaveBeenCalledTimes(1)
+    })
+})
+
+describe('fetchProjectBillingAccounts', () => {
+    beforeEach(() => {
+        jest.clearAllMocks()
+    })
+
+    it('maps project billing accounts into shared billing-account options sorted by name', async () => {
+        const mockedGetAsync = xhrGetAsync as jest.Mock
+
+        mockedGetAsync.mockResolvedValue([
+            {
+                endDate: '2028-10-31T00:00:00.000Z',
+                name: 'Platform Dev - Two',
+                startDate: '2023-10-31T00:00:00.000Z',
+                tcBillingAccountId: 80001059,
+            },
+            {
+                endDate: '2028-10-31T00:00:00.000Z',
+                name: 'Platform Dev - One',
+                startDate: '2023-10-31T00:00:00.000Z',
+                tcBillingAccountId: 80001012,
+            },
+            {
+                endDate: '2028-10-31T00:00:00.000Z',
+                name: '',
+                startDate: '2023-10-31T00:00:00.000Z',
+                tcBillingAccountId: 80001000,
+            },
+        ])
+
+        const result = await fetchProjectBillingAccounts('100578')
+
+        expect(result)
+            .toEqual([
+                {
+                    active: true,
+                    endDate: '2028-10-31T00:00:00.000Z',
+                    id: '80001012',
+                    name: 'Platform Dev - One',
+                    startDate: '2023-10-31T00:00:00.000Z',
+                },
+                {
+                    active: true,
+                    endDate: '2028-10-31T00:00:00.000Z',
+                    id: '80001059',
+                    name: 'Platform Dev - Two',
+                    startDate: '2023-10-31T00:00:00.000Z',
+                },
+            ])
+        expect(mockedGetAsync)
+            .toHaveBeenCalledWith(
+                'https://example.com/projects/100578/billingAccounts',
+            )
     })
 })

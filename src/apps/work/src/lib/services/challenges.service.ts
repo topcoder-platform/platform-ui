@@ -378,6 +378,7 @@ function normalizeDefaultReviewer(
         phaseId: toOptionalString(reviewer.phaseId),
         roleId: toOptionalString(reviewer.roleId),
         scorecardId: toOptionalString((reviewer as Record<string, unknown>).scorecardId),
+        shouldOpenOpportunity: toOptionalBoolean((reviewer as Record<string, unknown>).shouldOpenOpportunity),
     }
 }
 

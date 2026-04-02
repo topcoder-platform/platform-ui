@@ -19,6 +19,7 @@ import {
 import {
     BillingAccount,
     fetchBillingAccountById,
+    fetchProjectBillingAccounts,
     searchBillingAccounts,
 } from '../../../services'
 import { formatDate } from '../../../utils'
@@ -32,6 +33,7 @@ interface FormBillingAccountAutocompleteProps {
     label: string
     name: string
     placeholder?: string
+    projectId?: string
     required?: boolean
 }
 
@@ -181,6 +183,8 @@ function createDebouncedLoader(
 /**
  * Async billing-account selector backed by server-side name search.
  *
+ * When `projectId` is provided, the selector also preloads the caller's
+ * available project billing accounts so edit flows match legacy behavior.
  * The field stores only the selected billing-account id in form state.
  */
 export const FormBillingAccountAutocomplete: FC<FormBillingAccountAutocompleteProps> = (
@@ -196,6 +200,8 @@ export const FormBillingAccountAutocomplete: FC<FormBillingAccountAutocompletePr
     })
 
     const [optionCache, setOptionCache] = useState<BillingAccountOption[]>([])
+    const [isLoadingInitialOptions, setIsLoadingInitialOptions] = useState<boolean>(false)
+    const [projectBillingAccountOptions, setProjectBillingAccountOptions] = useState<BillingAccountOption[]>([])
     const [searchErrorMessage, setSearchErrorMessage] = useState<string | undefined>(undefined)
 
     const menuPortalTarget = useMemo(
@@ -252,6 +258,54 @@ export const FormBillingAccountAutocomplete: FC<FormBillingAccountAutocompletePr
             && optionCache.some(option => option.value === selectedBillingAccountId),
         [optionCache, selectedBillingAccountId],
     )
+
+    useEffect(() => {
+        if (!props.projectId) {
+            setProjectBillingAccountOptions([])
+            setIsLoadingInitialOptions(false)
+            return undefined
+        }
+
+        let isMounted = true
+
+        setIsLoadingInitialOptions(true)
+        setProjectBillingAccountOptions([])
+        setSearchErrorMessage(undefined)
+
+        fetchProjectBillingAccounts(props.projectId)
+            .then(billingAccounts => {
+                if (!isMounted) {
+                    return
+                }
+
+                const options = billingAccounts.map(account => toOption(account))
+
+                setProjectBillingAccountOptions(options)
+                setOptionCache(previousOptions => mergeOptions(previousOptions, options))
+            })
+            .catch(error => {
+                if (!isMounted) {
+                    return
+                }
+
+                const errorMessage = error instanceof Error
+                    ? error.message
+                    : 'Failed to load billing accounts.'
+
+                setSearchErrorMessage(errorMessage)
+            })
+            .finally(() => {
+                if (!isMounted) {
+                    return
+                }
+
+                setIsLoadingInitialOptions(false)
+            })
+
+        return () => {
+            isMounted = false
+        }
+    }, [props.projectId])
 
     useEffect(() => {
         if (!selectedBillingAccountId || hasSelectedOption) {
@@ -332,10 +386,13 @@ export const FormBillingAccountAutocomplete: FC<FormBillingAccountAutocompletePr
                 cacheOptions
                 className={styles.select}
                 classNamePrefix='challenge-select'
-                defaultOptions={false}
+                defaultOptions={props.projectId
+                    ? projectBillingAccountOptions
+                    : false}
                 id={props.name}
                 isClearable
                 isDisabled={props.disabled}
+                isLoading={isLoadingInitialOptions}
                 loadOptions={debouncedLoadBillingAccountOptions}
                 menuPortalTarget={menuPortalTarget}
                 noOptionsMessage={noOptionsMessage}

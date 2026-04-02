@@ -52,6 +52,7 @@ import {
 import {
     formatAnticipatedStart,
     formatEngagementStatus,
+    getEngagementStatusPillVariant,
     showErrorToast,
     showSuccessToast,
 } from '../../../lib/utils'
@@ -117,22 +118,21 @@ function getApplicationStatusPillClass(status: string): string {
 }
 
 function getEngagementStatusPillClass(status: string): string {
-    const normalizedStatus = status.trim()
-        .toLowerCase()
+    const pillVariant = getEngagementStatusPillVariant(status)
 
-    if (normalizedStatus === 'active') {
+    if (pillVariant === 'green') {
         return styles.statusGreen
     }
 
-    if (normalizedStatus === 'open' || normalizedStatus === 'pending assignment') {
+    if (pillVariant === 'yellow') {
         return styles.statusYellow
     }
 
-    if (normalizedStatus === 'closed') {
+    if (pillVariant === 'blue') {
         return styles.statusBlue
     }
 
-    if (normalizedStatus === 'cancelled') {
+    if (pillVariant === 'red') {
         return styles.statusRed
     }
 
@@ -227,6 +227,13 @@ export const ApplicationsListPage: FC = () => {
     const selectedFilterOption = useMemo(
         () => statusOptions.find(option => option.value === filterStatus),
         [filterStatus, statusOptions],
+    )
+    const filteredApplications = useMemo(
+        () => applicationsResult.applications.filter(application => (
+            filterStatus === 'all'
+            || normalizeStatus(application.status) === normalizeStatus(filterStatus)
+        )),
+        [applicationsResult.applications, filterStatus],
     )
 
     const assignmentListCandidate = engagementResult.engagement?.assignments
@@ -394,7 +401,7 @@ export const ApplicationsListPage: FC = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {applicationsResult.applications.length === 0
+                            {filteredApplications.length === 0
                                 ? (
                                     <tr>
                                         <td className={styles.emptyRow} colSpan={9}>
@@ -402,7 +409,7 @@ export const ApplicationsListPage: FC = () => {
                                         </td>
                                     </tr>
                                 )
-                                : applicationsResult.applications.map(application => {
+                                : filteredApplications.map(application => {
                                     const profileUrl = `${PROFILE_URL}/${application.handle}`
                                     const active = hasActiveAssignment(application, assignmentList)
                                     const normalizedStatus = normalizeStatus(application.status)

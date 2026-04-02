@@ -12,6 +12,7 @@ import {
 } from '../../../../lib/hooks'
 import {
     autowriteDescription,
+    createEngagement,
 } from '../../../../lib/services'
 import {
     showErrorToast,
@@ -19,6 +20,24 @@ import {
 } from '../../../../lib/utils'
 
 import { EngagementEditorForm } from './EngagementEditorForm'
+
+const mockNavigate = jest.fn()
+
+jest.mock('@hookform/resolvers/yup', () => ({
+    yupResolver: () => async (values: unknown) => ({
+        errors: {},
+        values,
+    }),
+}))
+
+jest.mock('react-router-dom', () => {
+    const reactRouterDom: typeof import('react-router-dom') = jest.requireActual('react-router-dom')
+
+    return {
+        ...reactRouterDom,
+        useNavigate: () => mockNavigate,
+    }
+})
 
 jest.mock('../../../../lib/components/form', () => {
     const reactHookForm: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
@@ -131,6 +150,9 @@ jest.mock('~/libs/ui', () => ({
     virtual: true,
 })
 jest.mock('~/config', () => ({
+    AppSubdomain: {
+        work: 'work',
+    },
     EnvironmentConfig: {
         API: {
             V5: 'https://example.com/v5',
@@ -142,6 +164,7 @@ jest.mock('~/config', () => ({
         DIRECT_PROJECT_URL: 'https://example.com/direct-project',
         ENGAGEMENTS_URL: 'https://example.com/engagements',
         REVIEW_APP_URL: 'https://example.com/review',
+        SUBDOMAIN: 'platform',
         TC_DOMAIN: 'example.com',
         TC_FINANCE_API: 'https://example.com/finance',
         TOPCODER_URL: 'https://example.com/topcoder',
@@ -150,13 +173,37 @@ jest.mock('~/config', () => ({
     virtual: true,
 })
 jest.mock('./EngagementLocationFields', () => ({
-    EngagementLocationFields: () => <></>,
+    EngagementLocationFields: function EngagementLocationFields() {
+        const React: typeof import('react') = jest.requireActual('react')
+        const reactHookForm: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
+        const setValue = reactHookForm.useFormContext().setValue
+
+        React.useEffect(() => {
+            setValue('countries', ['US'])
+            setValue('timezones', ['America/New_York'])
+        }, [setValue])
+
+        return <></>
+    },
 }))
 jest.mock('./EngagementPrivateSection', () => ({
     EngagementPrivateSection: () => <></>,
 }))
 jest.mock('./EngagementSkillsField', () => ({
-    EngagementSkillsField: () => <></>,
+    EngagementSkillsField: function EngagementSkillsField() {
+        const React: typeof import('react') = jest.requireActual('react')
+        const reactHookForm: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
+        const setValue = reactHookForm.useFormContext().setValue
+
+        React.useEffect(() => {
+            setValue('skills', [{
+                id: 'skill-1',
+                name: 'React',
+            }])
+        }, [setValue])
+
+        return <></>
+    },
 }))
 jest.mock('./EngagementStartDateField', () => ({
     EngagementStartDateField: () => <></>,
@@ -166,6 +213,7 @@ jest.mock('./EngagementStatusField', () => ({
 }))
 
 const mockedAutowriteDescription = autowriteDescription as jest.MockedFunction<typeof autowriteDescription>
+const mockedCreateEngagement = createEngagement as jest.MockedFunction<typeof createEngagement>
 const mockedShowErrorToast = showErrorToast as jest.MockedFunction<typeof showErrorToast>
 const mockedShowSuccessToast = showSuccessToast as jest.MockedFunction<typeof showSuccessToast>
 const mockedUseAutosave = useAutosave as jest.MockedFunction<typeof useAutosave>
@@ -237,5 +285,79 @@ describe('EngagementEditorForm', () => {
         expect(mockedShowErrorToast)
             .not
             .toHaveBeenCalled()
+    })
+
+    it('shows Software Developer for the software developer role option', () => {
+        render(
+            <MemoryRouter>
+                <EngagementEditorForm
+                    isEditMode={false}
+                    projectId='123'
+                />
+            </MemoryRouter>,
+        )
+
+        const roleField = screen.getByLabelText('Role') as HTMLSelectElement
+        const softwareDeveloperOption = Array.from(roleField.options)
+            .find(option => option.value === 'SOFTWARE_DEVELOPER')
+
+        expect(softwareDeveloperOption?.text)
+            .toBe('Software Developer')
+    })
+
+    it('redirects to the created engagement details page', async () => {
+        const user = userEvent.setup()
+
+        mockedCreateEngagement.mockResolvedValue({
+            anticipatedStart: 'Immediate',
+            assignedMemberHandles: [],
+            assignments: [],
+            compensationRange: '',
+            countries: ['US'],
+            createdAt: '',
+            description: 'Created engagement description',
+            durationWeeks: 4,
+            id: 'engagement-2',
+            isPrivate: false,
+            projectId: '123',
+            requiredMemberCount: 1,
+            role: 'SOFTWARE_DEVELOPER',
+            skills: [
+                {
+                    id: 'skill-1',
+                    name: 'React',
+                },
+            ],
+            status: 'Open',
+            timezones: ['America/New_York'],
+            title: 'Created engagement',
+            updatedAt: '',
+            workload: 'FULL_TIME',
+        } as any)
+
+        render(
+            <MemoryRouter>
+                <EngagementEditorForm
+                    isEditMode={false}
+                    projectId='123'
+                />
+            </MemoryRouter>,
+        )
+
+        await user.type(screen.getByLabelText('Title'), 'Created engagement')
+        await user.type(screen.getByLabelText('Duration in weeks'), '4')
+        await user.type(screen.getByLabelText('Description'), 'Created engagement description')
+        await user.click(screen.getByRole('button', { name: 'Save Engagement' }))
+
+        await waitFor(() => {
+            expect(mockedCreateEngagement)
+                .toHaveBeenCalled()
+        })
+
+        expect(mockedShowSuccessToast)
+            .toHaveBeenCalledWith('Engagement created successfully')
+
+        expect(mockNavigate)
+            .toHaveBeenCalledWith('/work/projects/123/engagements/engagement-2')
     })
 })

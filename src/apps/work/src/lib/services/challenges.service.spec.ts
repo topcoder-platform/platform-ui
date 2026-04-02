@@ -1,7 +1,13 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
-import { xhrGetPaginatedAsync } from '~/libs/core'
+import {
+    xhrGetAsync,
+    xhrGetPaginatedAsync,
+} from '~/libs/core'
 
-import { fetchChallenges } from './challenges.service'
+import {
+    fetchChallenges,
+    fetchDefaultReviewers,
+} from './challenges.service'
 
 jest.mock('~/apps/review/src/lib/services/file-upload.service', () => ({
     uploadReviewAttachment: jest.fn(),
@@ -84,5 +90,38 @@ describe('fetchChallenges', () => {
                 expect.stringContaining('name=Copilot+Challenge'),
                 expect.any(Object),
             )
+    })
+})
+
+describe('fetchDefaultReviewers', () => {
+    beforeEach(() => {
+        jest.clearAllMocks()
+    })
+
+    it('preserves shouldOpenOpportunity from the API response', async () => {
+        const mockedGet = xhrGetAsync as jest.Mock
+
+        mockedGet.mockResolvedValue([
+            {
+                isMemberReview: true,
+                memberReviewerCount: 1,
+                phaseId: 'phase-1',
+                roleId: 'role-1',
+                scorecardId: 'scorecard-1',
+                shouldOpenOpportunity: true,
+            },
+        ])
+
+        await expect(fetchDefaultReviewers('type-1', 'track-1'))
+            .resolves.toEqual([
+                {
+                    isMemberReview: true,
+                    memberReviewerCount: 1,
+                    phaseId: 'phase-1',
+                    roleId: 'role-1',
+                    scorecardId: 'scorecard-1',
+                    shouldOpenOpportunity: true,
+                },
+            ])
     })
 })
