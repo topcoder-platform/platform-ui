@@ -65,6 +65,7 @@ export const EngagementEditorPage: FC = () => {
     const workAppContext = useContext(WorkAppContext)
     const contextValue = workAppContext as WorkAppContextModel
     const canManage = canCreateEngagement(contextValue.userRoles)
+    const canEditParentProject = canManage
 
     const engagementResult = useFetchEngagement(canManage ? engagementId : undefined)
     const projectResult = useFetchProject(canManage ? projectId || undefined : undefined)
@@ -101,9 +102,11 @@ export const EngagementEditorPage: FC = () => {
                 {canManage && !engagementResult.isLoading && !engagementResult.isError
                     ? (
                         <EngagementEditorForm
+                            canEditParentProject={canEditParentProject}
                             engagement={engagementResult.engagement}
                             isEditMode={isEditMode}
                             projectId={projectId}
+                            projectName={projectResult.project?.name}
                         />
                     )
                     : undefined}
