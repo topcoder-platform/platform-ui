@@ -344,9 +344,7 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
                             : 'Engagement created successfully',
                     )
 
-                    if (!props.isEditMode) {
-                        navigate(`${engagementsPath}/${savedEngagement.id}`)
-                    }
+                    navigate(engagementsPath)
                 }
             } catch (error) {
                 const message = error instanceof Error
