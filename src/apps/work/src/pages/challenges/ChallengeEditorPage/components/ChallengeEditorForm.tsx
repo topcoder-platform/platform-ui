@@ -104,6 +104,9 @@ import {
     ChallengeTypeField,
 } from './ChallengeTypeField'
 import {
+    buildChallengeTypeOptions,
+} from './ChallengeTypeField.utils'
+import {
     CheckpointPrizesField,
 } from './CheckpointPrizesField'
 import {
@@ -1107,6 +1110,13 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     )
     const showRoundTypeField = isDesignTrackSelected && isChallengeTypeSelected
     const showDesignWorkTypeField = isDesignTrackSelected && isChallengeTypeSelected
+    const challengeTypeOptions = useMemo(
+        () => buildChallengeTypeOptions(challengeTypes, selectedChallengeTrack),
+        [
+            challengeTypes,
+            selectedChallengeTrack,
+        ],
+    )
     const showSubmissionSettingsSection = useMemo(
         (): boolean => {
             if (!isDesignTrackSelected) {
@@ -1568,6 +1578,38 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         currentChallengeId,
         selectedChallengeType,
         setValue,
+        values.typeId,
+    ])
+
+    useEffect(() => {
+        const normalizedTrackId = values.trackId?.trim()
+        const normalizedTypeId = values.typeId?.trim()
+
+        if (currentChallengeId || !normalizedTrackId || !normalizedTypeId) {
+            return
+        }
+
+        if (!selectedChallengeType || selectedChallengeType.id !== normalizedTypeId) {
+            return
+        }
+
+        const isAllowedForTrack = challengeTypeOptions
+            .some(option => option.value === normalizedTypeId)
+
+        if (isAllowedForTrack) {
+            return
+        }
+
+        setValue('typeId', '', {
+            shouldDirty: true,
+            shouldValidate: true,
+        })
+    }, [
+        challengeTypeOptions,
+        currentChallengeId,
+        selectedChallengeType,
+        setValue,
+        values.trackId,
         values.typeId,
     ])
 
@@ -2130,7 +2172,10 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                         <div className={styles.grid}>
                             <ChallengeNameField />
                             <ChallengeTrackField disabled={isReadOnly || isChallengeCreated} />
-                            <ChallengeTypeField disabled={isReadOnly || isChallengeCreated} />
+                            <ChallengeTypeField
+                                disabled={isReadOnly || isChallengeCreated}
+                                track={selectedChallengeTrack}
+                            />
                             <CopilotField projectId={fallbackProjectId} />
                             {showFunChallengeField
                                 ? <FunChallengeField disabled={isReadOnly} />
