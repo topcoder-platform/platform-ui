@@ -4,7 +4,7 @@
 
 - `ChallengeEditorPage.tsx`: route-level page for create, edit, and read-only view challenge modes.
   Existing challenges keep the same `Details`, `Resources`, and `Submissions` tabs in both edit and
-  view routes; view mode only makes the details tab read-only and suppresses edit-only controls.
+  view routes; view mode only makes the details tab read-only and suppresses edit-only form controls.
 - `ChallengeEditorPage.tsx` also renders challenge quick links in the right header action group for
   existing challenges (`Challenge`, `Review`, and `Forum` when present). In view mode it also adds
   an `Edit` action.
@@ -89,7 +89,7 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 
 ## Header Actions
 
-- `Launch` is shown on the details tab for `DRAFT` challenges in the header and again in the footer beside `Save Challenge`.
+- `Launch` is shown on the details tab for `DRAFT` challenges in the header for both view and edit routes, and again in the footer beside `Save Challenge` while editing.
 - Task challenges cannot be launched until `Assigned Member` is set, which ensures the task is assigned before it becomes publicly visible.
 - After the first successful save from `NEW` to `DRAFT`, the editor updates the launch affordance immediately so the user can launch without reloading.
 - `Cancel` is shown on the details tab for `ACTIVE` challenges and uses the shared large secondary button treatment so it matches the footer action styling.
