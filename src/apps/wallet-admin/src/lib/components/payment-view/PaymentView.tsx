@@ -41,6 +41,7 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
     const [paymentDetailsError, setPaymentDetailsError] = React.useState<string>()
 
     const isEngagementPayment = props.payment.type.toLowerCase() === 'engagement payment'
+    const hasEngagementDetails = Boolean(paymentDetails?.engagementDetails)
 
     const handleToggleView = (newView: 'audit' | 'details' | 'external_transaction'): void => {
         setView(newView)
@@ -203,7 +204,14 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
                                 {!isPaymentDetailsLoading && paymentDetailsError
                                     ? <p className={styles.helperText}>{paymentDetailsError}</p>
                                     : undefined}
-                                {!isPaymentDetailsLoading && !paymentDetailsError && (
+                                {!isPaymentDetailsLoading && !paymentDetailsError && !hasEngagementDetails
+                                    ? (
+                                        <p className={styles.helperText}>
+                                            Engagement details are unavailable for this payment.
+                                        </p>
+                                    )
+                                    : undefined}
+                                {!isPaymentDetailsLoading && !paymentDetailsError && hasEngagementDetails && (
                                     <div className={styles.sectionGrid}>
                                         <div className={styles.infoItem}>
                                             <span className={styles.label}>Engagement / Project Name</span>
