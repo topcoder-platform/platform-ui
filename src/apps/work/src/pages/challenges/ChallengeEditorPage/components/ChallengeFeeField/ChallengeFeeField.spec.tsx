@@ -152,4 +152,35 @@ describe('ChallengeFeeField', () => {
         expect(screen.getByText('$17.25'))
             .toBeTruthy()
     })
+
+    it('uses only the billable usd total when placement prizes are points', () => {
+        render(
+            <TestHarness
+                defaultPrizeSets={[
+                    {
+                        prizes: [
+                            {
+                                type: 'POINT',
+                                value: 1000,
+                            },
+                        ],
+                        type: 'PLACEMENT',
+                    },
+                    {
+                        prizes: [
+                            {
+                                type: 'USD',
+                                value: 100,
+                            },
+                        ],
+                        type: 'COPILOT',
+                    },
+                ]}
+                markup={0.15}
+            />,
+        )
+
+        expect(screen.getByText('$15'))
+            .toBeTruthy()
+    })
 })

@@ -135,10 +135,16 @@ export function calculateChallengeTotal(
     prizeSets?: PrizeSet[],
     reviewers?: ReviewerInput[],
 ): number {
-    const prizesTotal = (prizeSets || [])
+    const prizeType = getPrizeType(prizeSets)
+    const prizeSetsForTotal = prizeType === PRIZE_TYPES.POINT
+        ? (prizeSets || []).filter(prizeSet => prizeSet.type === PRIZE_SET_TYPES.COPILOT)
+        : (prizeSets || [])
+    const prizesTotal = prizeSetsForTotal
         .reduce((sum, prizeSet) => sum + (prizeSet.prizes || [])
             .reduce((acc, prize) => acc + toNumber(prize.value), 0), 0)
-    const firstPlacePrizeValue = getFirstPlacePrizeValue(prizeSets)
+    const firstPlacePrizeValue = prizeType === PRIZE_TYPES.POINT
+        ? 0
+        : getFirstPlacePrizeValue(prizeSets)
 
     const reviewerTotal = (reviewers || [])
         .reduce((sum, reviewer) => {
