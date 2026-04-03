@@ -2,6 +2,7 @@
 import {
     render,
     screen,
+    waitFor,
 } from '@testing-library/react'
 
 import {
@@ -121,6 +122,40 @@ describe('AiReviewTab review mode options', () => {
             screen.queryByRole('option', { name: 'AI_ONLY (legacy)' }),
         )
             .toBeNull()
+    })
+
+    it('does not refetch the persisted AI review config when the parent callback changes', async () => {
+        const firstOnConfigPersisted = jest.fn()
+        const secondOnConfigPersisted = jest.fn()
+        const renderResult = render(
+            <AiReviewTab
+                challengeId='challenge-1'
+                onConfigPersisted={firstOnConfigPersisted}
+                reviewers={persistedAiReviewers}
+            />,
+        )
+
+        expect(await screen.findByRole('combobox')).not.toBeNull()
+        await waitFor(() => {
+            expect(mockedFetchAiReviewConfigByChallenge)
+                .toHaveBeenCalledTimes(1)
+        })
+
+        renderResult.rerender(
+            <AiReviewTab
+                challengeId='challenge-1'
+                onConfigPersisted={secondOnConfigPersisted}
+                reviewers={persistedAiReviewers}
+            />,
+        )
+
+        await waitFor(() => {
+            expect(mockedFetchAiReviewConfigByChallenge)
+                .toHaveBeenCalledTimes(1)
+        })
+        expect(firstOnConfigPersisted)
+            .toHaveBeenCalledWith(baseConfiguration)
+        expect(secondOnConfigPersisted).not.toHaveBeenCalled()
     })
 
     it('keeps legacy AI_ONLY configs visible without exposing AI_ONLY in the dropdown list', async () => {
