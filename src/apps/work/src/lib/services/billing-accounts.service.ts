@@ -3,11 +3,13 @@ import { xhrGetAsync } from '~/libs/core'
 
 export interface BillingAccount {
     active?: boolean
+    markup?: number
     endDate?: string
     id: number | string
     name: string
     startDate?: string
     status?: string
+    totalBudgetRemaining?: number
     [key: string]: unknown
 }
 

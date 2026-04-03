@@ -63,6 +63,10 @@ import {
     transformChallengeToFormData,
     transformFormDataToChallenge,
 } from '../../../../lib/utils'
+import {
+    getProjectBillingAccountChallengeErrorMessage,
+    getProjectBillingAccountChallengeIssue,
+} from '../../../../lib/utils/project-billing-account.utils'
 
 import {
     AssignedMemberField,
@@ -1883,6 +1887,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     )
 
     const saveChallenge = useCallback(
+        // eslint-disable-next-line complexity
         async (
             formData: ChallengeEditorFormData,
             options: SaveChallengeOptions = {},
@@ -1895,6 +1900,9 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 isSaveAsDraft,
                 payloadStatus,
             }: SaveStatusMetadata = getSaveStatusMetadata(formData.status, options)
+            const currentStatus = normalizeStatus(formData.status)
+            const isChallengeBeingActivated = payloadStatus === CHALLENGE_STATUS.ACTIVE
+                && currentStatus !== CHALLENGE_STATUS.ACTIVE
             const isTaskChallenge = isTaskSingleAssignmentChallenge(formData)
             const taskLaunchValidationError = getTaskLaunchValidationError({
                 assignedMemberId: formData.assignedMemberId,
@@ -1929,6 +1937,24 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
 
             try {
                 const resolvedProjectBillingAccount = await resolveProjectBillingAccount()
+                const projectBillingAccountIssue = isChallengeBeingActivated
+                    ? getProjectBillingAccountChallengeIssue(resolvedProjectBillingAccount)
+                    : undefined
+                const projectBillingAccountErrorMessage = projectBillingAccountIssue
+                    ? getProjectBillingAccountChallengeErrorMessage(projectBillingAccountIssue)
+                    : undefined
+
+                if (projectBillingAccountErrorMessage) {
+                    setSaveStatus('idle')
+                    setSaveError(projectBillingAccountErrorMessage)
+
+                    if (!options.isAutosave) {
+                        showErrorToast(projectBillingAccountErrorMessage)
+                    }
+
+                    throw new Error(projectBillingAccountErrorMessage)
+                }
+
                 const formDataWithProjectBilling = applyProjectBillingToChallengeFormData(
                     formData,
                     resolvedProjectBillingAccount,

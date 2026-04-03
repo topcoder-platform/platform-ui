@@ -77,11 +77,13 @@ export interface FetchProjectsListResponse {
 
 export interface ProjectBillingAccount {
     active?: boolean
+    endDate?: string
     id?: string
     markup?: number
     name?: string
     startDate?: string
-    endDate?: string
+    status?: string
+    totalBudgetRemaining?: number
 }
 
 export interface FetchProjectBillingAccountResponse {
@@ -753,7 +755,12 @@ export async function fetchProjectBillingAccounts(
 
 /**
  * Fetch billing account details for a project.
+ *
+ * Enriches the project-scoped billing account payload with billing-accounts API
+ * detail fields so the work app can gate challenge launch on lifecycle status
+ * and remaining funds without losing the project billing markup.
  */
+// eslint-disable-next-line complexity
 export async function fetchProjectBillingAccount(
     projectId: string,
 ): Promise<FetchProjectBillingAccountResponse> {
@@ -765,27 +772,35 @@ export async function fetchProjectBillingAccount(
             markup?: unknown
             name?: unknown
             startDate?: unknown
+            status?: unknown
             tcBillingAccountId?: unknown
+            totalBudgetRemaining?: unknown
         }>(
             `${PROJECTS_API_URL}/${encodeURIComponent(projectId)}/billingAccount`,
         )
         const billingAccountId = normalizeOptionalId(billingAccount?.tcBillingAccountId)
             || normalizeOptionalId(billingAccount?.id)
-        const billingMarkup = normalizeOptionalNumber(billingAccount?.markup)
-        const billingAccountDetails = billingAccountId && billingMarkup === undefined
+        const billingAccountDetails = billingAccountId
             ? await fetchBillingAccountById(billingAccountId)
                 .catch(() => undefined)
             : undefined
 
         const normalizedBillingAccount: ProjectBillingAccount = {
-            active: normalizeOptionalBoolean(billingAccount?.active),
-            endDate: normalizeOptionalString(billingAccount?.endDate),
+            active: normalizeOptionalBoolean(billingAccount?.active)
+                ?? normalizeOptionalBoolean(billingAccountDetails?.active),
+            endDate: normalizeOptionalString(billingAccount?.endDate)
+                || normalizeOptionalString(billingAccountDetails?.endDate),
             id: billingAccountId,
-            markup: billingMarkup ?? normalizeOptionalNumber(billingAccountDetails?.markup),
+            markup: normalizeOptionalNumber(billingAccount?.markup)
+                ?? normalizeOptionalNumber(billingAccountDetails?.markup),
             name: normalizeOptionalString(billingAccount?.name)
                 || normalizeOptionalString(billingAccountDetails?.name),
             startDate: normalizeOptionalString(billingAccount?.startDate)
                 || normalizeOptionalString(billingAccountDetails?.startDate),
+            status: normalizeOptionalString(billingAccount?.status)
+                || normalizeOptionalString(billingAccountDetails?.status),
+            totalBudgetRemaining: normalizeOptionalNumber(billingAccount?.totalBudgetRemaining)
+                ?? normalizeOptionalNumber(billingAccountDetails?.totalBudgetRemaining),
         }
 
         if (
@@ -795,6 +810,8 @@ export async function fetchProjectBillingAccount(
             && !normalizedBillingAccount.name
             && !normalizedBillingAccount.endDate
             && !normalizedBillingAccount.startDate
+            && !normalizedBillingAccount.status
+            && normalizedBillingAccount.totalBudgetRemaining === undefined
         ) {
             return {
                 billingAccount: undefined,
