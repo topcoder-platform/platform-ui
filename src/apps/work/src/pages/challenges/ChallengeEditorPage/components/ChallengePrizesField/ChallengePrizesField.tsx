@@ -327,6 +327,7 @@ export const ChallengePrizesField: FC<ChallengePrizesFieldProps> = (
     const fieldError = typeof fieldState.error?.message === 'string'
         ? fieldState.error.message
         : undefined
+    const showPrizeRowLabels = fields.length > 1
     const errorMessage = fieldError || descendingError
     const prizeTypeFieldName = `${props.name}-type`
     const fieldLabelId = `${props.name}-label`
@@ -397,13 +398,13 @@ export const ChallengePrizesField: FC<ChallengePrizesFieldProps> = (
                             ? prizeValueError.message
                             : undefined
                         const hasValueError = !!prizeValueError
-                        const isRemovablePrize = supportsMultiplePrizes && index > 0
+                        const isRemovablePrize = showPrizeRowLabels && index > 0
 
                         return (
                             <div
                                 className={classNames(
                                     styles.prizeRow,
-                                    supportsMultiplePrizes
+                                    showPrizeRowLabels
                                         ? styles.multiPrizeRow
                                         : styles.singlePrizeRow,
                                     isRemovablePrize ? styles.prizeRowWithRemove : undefined,
@@ -411,7 +412,7 @@ export const ChallengePrizesField: FC<ChallengePrizesFieldProps> = (
                                 )}
                                 key={prizeField.id}
                             >
-                                {supportsMultiplePrizes
+                                {showPrizeRowLabels
                                     ? (
                                         <span className={styles.prizeLabel}>
                                             {`Prize ${index + 1}`}
@@ -436,7 +437,7 @@ export const ChallengePrizesField: FC<ChallengePrizesFieldProps> = (
                                         : undefined}
                                 </div>
 
-                                {supportsMultiplePrizes
+                                {showPrizeRowLabels
                                     ? (
                                         isRemovablePrize
                                             ? (

@@ -129,6 +129,20 @@ describe('ChallengePrizesField', () => {
             .toBeNull()
     })
 
+    it('keeps a single-row layout for multi-prize challenge types until a second prize is added', () => {
+        render(<TestHarness challengeTypeName='Challenge' />)
+
+        const onlyPrizeRow = screen.getByLabelText('Prize amount')
+            .parentElement?.parentElement as HTMLDivElement
+
+        expect(screen.queryByText('Prize 1'))
+            .toBeNull()
+        expect(onlyPrizeRow.childElementCount)
+            .toBe(1)
+        expect(screen.getByRole('button', { name: '+ Add New Prize' }))
+            .toBeTruthy()
+    })
+
     it('does not reserve a blank delete column on the first row in multi-prize mode', () => {
         render(
             <TestHarness
