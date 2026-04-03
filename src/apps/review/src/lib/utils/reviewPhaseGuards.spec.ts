@@ -14,6 +14,13 @@ const reviewPhase: BackendPhase = {
     scheduledStartDate: '2026-01-01T00:00:00.000Z',
 }
 
+const specificationReviewPhase: BackendPhase = {
+    ...reviewPhase,
+    id: 'phase-spec-review',
+    name: 'Specification Review',
+    phaseId: 'phase-spec-review',
+}
+
 const buildSubmission = (type: string): SubmissionInfo => ({
     id: 'submission-1',
     memberId: '1001',
@@ -46,6 +53,42 @@ describe('isContestReviewPhaseSubmission', () => {
         expect(isContestReviewPhaseSubmission(
             buildSubmission('Checkpoint Submission'),
             [reviewPhase],
+        ))
+            .toBe(false)
+    })
+
+    it('matches legacy specification review tabs when the phase name is requested explicitly', () => {
+        const baseSubmission = buildSubmission('Contest Submission')
+
+        expect(isContestReviewPhaseSubmission(
+            {
+                ...baseSubmission,
+                review: {
+                    ...(baseSubmission.review as NonNullable<SubmissionInfo['review']>),
+                    phaseId: 'phase-spec-review',
+                    phaseName: 'Specification Review',
+                },
+            },
+            [reviewPhase, specificationReviewPhase],
+            'Specification Review',
+        ))
+            .toBe(true)
+    })
+
+    it('does not mix specification review rows into the standard review tab', () => {
+        const baseSubmission = buildSubmission('Contest Submission')
+
+        expect(isContestReviewPhaseSubmission(
+            {
+                ...baseSubmission,
+                review: {
+                    ...(baseSubmission.review as NonNullable<SubmissionInfo['review']>),
+                    phaseId: 'phase-spec-review',
+                    phaseName: 'Specification Review',
+                },
+            },
+            [reviewPhase, specificationReviewPhase],
+            'Review',
         ))
             .toBe(false)
     })
