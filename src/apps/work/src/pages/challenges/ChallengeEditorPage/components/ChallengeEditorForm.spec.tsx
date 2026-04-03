@@ -236,7 +236,14 @@ jest.mock('./ChallengeDescriptionField', () => ({
     ChallengeDescriptionField: () => <></>,
 }))
 jest.mock('./ChallengeScheduleSection', () => ({
-    ChallengeScheduleSection: () => <></>,
+    ChallengeScheduleSection: (props: {
+        disabled?: boolean
+    }) => (
+        <div
+            data-disabled={props.disabled === true ? 'true' : 'false'}
+            data-testid='challenge-schedule-section'
+        />
+    ),
 }))
 jest.mock('./ChallengeFeeField', () => ({
     ChallengeFeeField: function ChallengeFeeField() {
@@ -739,6 +746,11 @@ describe('ChallengeEditorForm', () => {
 
         expect((document.querySelector('fieldset') as HTMLFieldSetElement).disabled)
             .toBe(true)
+        expect(screen.getByTestId('challenge-schedule-section'))
+            .toHaveAttribute('data-disabled', 'true')
+        expect(screen.getByTestId('challenge-schedule-section')
+            .closest('fieldset[disabled]'))
+            .toBeNull()
         expect(screen.queryByRole('button', { name: 'Cancel' }))
             .toBeNull()
         expect(screen.queryByRole('button', { name: 'Save Challenge' }))
