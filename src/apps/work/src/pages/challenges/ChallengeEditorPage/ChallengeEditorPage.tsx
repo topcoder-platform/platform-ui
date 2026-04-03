@@ -787,13 +787,15 @@ const EditorTabs: FC<EditorTabsProps> = (props: EditorTabsProps) => (
 const ChallengeEditorContent: FC<ChallengeEditorContentProps> = (
     props: ChallengeEditorContentProps,
 ) => {
+    const isEditMode = props.isExistingChallenge && !props.isReadOnly
+
     if (!props.isExistingChallenge || props.activeTab === 'details') {
         return (
             <ChallengeEditorForm
                 canLaunchChallenge={props.canLaunchChallenge}
                 challenge={props.challenge}
                 isLaunchDisabled={props.isLaunchDisabled}
-                isEditMode={props.isExistingChallenge}
+                isEditMode={isEditMode}
                 isReadOnly={props.isReadOnly}
                 launchButtonLabel={props.launchButtonLabel}
                 onChallengeCreated={props.onChallengeCreated}
@@ -829,7 +831,7 @@ const ChallengeEditorContent: FC<ChallengeEditorContentProps> = (
             canLaunchChallenge={props.canLaunchChallenge}
             challenge={props.challenge}
             isLaunchDisabled={props.isLaunchDisabled}
-            isEditMode={props.isExistingChallenge}
+            isEditMode={isEditMode}
             isReadOnly={props.isReadOnly}
             launchButtonLabel={props.launchButtonLabel}
             onChallengeCreated={props.onChallengeCreated}

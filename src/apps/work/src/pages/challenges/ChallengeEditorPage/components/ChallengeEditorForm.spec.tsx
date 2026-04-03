@@ -484,6 +484,9 @@ describe('ChallengeEditorForm', () => {
     } as Challenge
     const taskDraftChallenge = {
         ...draftChallenge,
+        task: {
+            isTask: true,
+        },
         type: {
             abbreviation: 'TSK',
             name: 'Task',
@@ -681,6 +684,31 @@ describe('ChallengeEditorForm', () => {
 
         expect(screen.getByRole('heading', { name: 'Timeline & Schedule' }))
             .toBeInTheDocument()
+    })
+
+    it('keeps the task timeline hidden in edit mode when only the persisted task flag is available', () => {
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [],
+            isLoading: false,
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...draftChallenge,
+                        task: {
+                            isTask: true,
+                        },
+                        typeId: 'task-type-id',
+                    }}
+                    isEditMode
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.queryByRole('heading', { name: 'Timeline & Schedule' }))
+            .toBeNull()
     })
 
     it('renders secondary footer actions and a primary launch action for draft challenges', () => {

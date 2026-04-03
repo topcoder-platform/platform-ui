@@ -1098,12 +1098,31 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             selectedChallengeType,
         ],
     )
+    const persistedTaskFlag = useMemo(
+        (): boolean => props.challenge?.task?.isTask === true || values.legacy?.isTask === true,
+        [
+            props.challenge?.task?.isTask,
+            values.legacy?.isTask,
+        ],
+    )
     const hasResolvedChallengeType = useMemo(
         (): boolean => !!normalizeTextValue(resolvedChallengeTypeName)
             || !!normalizeTextValue(resolvedChallengeTypeAbbreviation),
         [
             resolvedChallengeTypeAbbreviation,
             resolvedChallengeTypeName,
+        ],
+    )
+    const isTaskChallenge = useMemo(
+        (): boolean => shouldTreatChallengeAsTask({
+            hasResolvedChallengeType,
+            isTaskTypeSelected: isTaskChallengeSelected,
+            persistedTaskFlag,
+        }),
+        [
+            hasResolvedChallengeType,
+            isTaskChallengeSelected,
+            persistedTaskFlag,
         ],
     )
     const isMarathonMatchChallengeSelected = useMemo(
@@ -1162,15 +1181,15 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const showFunChallengeField = isMarathonMatchChallengeSelected
     const showMarathonMatchScorerSection = isMarathonMatchChallengeSelected && isChallengeCreated
     const showPrizesAndBillingSection = !isFunChallengeSelected
-    const showEditableTimelineSection = !isEditMode || !isTaskChallengeSelected
+    const showEditableTimelineSection = !isEditMode || !isTaskChallenge
     const usesManualReviewers = useMemo(
         (): boolean => shouldUseManualReviewers({
             isMarathonMatchChallenge: isMarathonMatchChallengeSelected,
-            isTaskChallenge: isTaskChallengeSelected,
+            isTaskChallenge,
         }),
         [
             isMarathonMatchChallengeSelected,
-            isTaskChallengeSelected,
+            isTaskChallenge,
         ],
     )
     const isScorerBlockingChallengeActions = showMarathonMatchScorerSection
@@ -1196,10 +1215,11 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     ): boolean => shouldTreatChallengeAsTask({
         hasResolvedChallengeType,
         isTaskTypeSelected: isTaskChallengeSelected,
-        persistedTaskFlag: formData.legacy?.isTask === true,
+        persistedTaskFlag: props.challenge?.task?.isTask === true || formData.legacy?.isTask === true,
     }), [
         hasResolvedChallengeType,
         isTaskChallengeSelected,
+        props.challenge?.task?.isTask,
     ])
     const applyPersistedSingleAssignments = useCallback((
         formData: ChallengeEditorFormData,
@@ -1613,12 +1633,12 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     ])
 
     useEffect(() => {
-        setValue('legacy.isTask', isTaskChallengeSelected, {
+        setValue('legacy.isTask', isTaskChallenge, {
             shouldDirty: false,
             shouldValidate: true,
         })
     }, [
-        isTaskChallengeSelected,
+        isTaskChallenge,
         setValue,
     ])
 
@@ -1895,11 +1915,11 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 isSaveAsDraft,
                 payloadStatus,
             }: SaveStatusMetadata = getSaveStatusMetadata(formData.status, options)
-            const isTaskChallenge = isTaskSingleAssignmentChallenge(formData)
+            const shouldTreatSaveAsTaskChallenge = isTaskSingleAssignmentChallenge(formData)
             const taskLaunchValidationError = getTaskLaunchValidationError({
                 assignedMemberId: formData.assignedMemberId,
                 currentStatus: formData.status,
-                isTaskChallenge,
+                isTaskChallenge: shouldTreatSaveAsTaskChallenge,
                 nextStatus: payloadStatus,
             })
 
@@ -1957,7 +1977,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                         },
                     ),
                     formDataWithProjectBilling,
-                    isTaskChallenge,
+                    shouldTreatSaveAsTaskChallenge,
                 )
                 const savedAt = new Date()
 
@@ -2096,7 +2116,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 const reviewerValidationError = getReviewerValidationError(formData, {
                     challengeTypeAbbreviation: resolvedChallengeTypeAbbreviation,
                     challengeTypeName: resolvedChallengeTypeName,
-                    isTaskChallenge: isTaskChallengeSelected,
+                    isTaskChallenge,
                     requiredReviewersErrorMessage:
                         'Reviewers are required for configured review phases before saving as draft.',
                 })
@@ -2119,7 +2139,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         [
             clearErrors,
             isScorerBlockingChallengeActions,
-            isTaskChallengeSelected,
+            isTaskChallenge,
             resolvedChallengeTypeAbbreviation,
             resolvedChallengeTypeName,
             saveChallenge,
@@ -2307,13 +2327,13 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                 <section className={styles.section}>
                                     <h3 className={styles.sectionTitle}>Advanced Options</h3>
                                     <div className={styles.grid}>
-                                        {isTaskChallengeSelected
+                                        {isTaskChallenge
                                             ? <AssignedMemberField />
                                             : undefined}
-                                        {isTaskChallengeSelected
+                                        {isTaskChallenge
                                             ? (
                                                 <ReviewTypeField
-                                                    isTaskChallenge={isTaskChallengeSelected}
+                                                    isTaskChallenge={isTaskChallenge}
                                                 />
                                             )
                                             : undefined}
