@@ -733,9 +733,12 @@ export const TabContentReview: FC<Props> = (props: Props) => {
     }
 
     if (selectedTab === 'Appeals Response') {
+        const appealsResponseDatas = isSubmitterView
+            ? filteredSubmitterReviews
+            : resolvedReviewsWithSubmitter
         return (
             <TableAppealsResponse
-                datas={resolvedReviewsWithSubmitter}
+                datas={appealsResponseDatas}
                 aiReviewers={props.aiReviewers}
                 isDownloading={props.isDownloading}
                 downloadSubmission={props.downloadSubmission}
