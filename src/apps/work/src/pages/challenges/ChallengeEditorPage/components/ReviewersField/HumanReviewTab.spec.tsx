@@ -59,6 +59,7 @@ jest.mock('../../../../../lib/components/form', () => ({
         const selectedValue = typeof controller.field.value === 'string'
             ? controller.field.value
             : ''
+
         function handleChange(event: ChangeEvent<HTMLSelectElement>): void {
             const nextSelected = (props.options || [])
                 .find(option => option.value === event.target.value)

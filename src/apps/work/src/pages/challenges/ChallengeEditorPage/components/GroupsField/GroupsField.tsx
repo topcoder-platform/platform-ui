@@ -6,7 +6,10 @@ import {
 } from 'react'
 import { useFormContext } from 'react-hook-form'
 
-import { BaseModal } from '~/libs/ui'
+import {
+    BaseModal,
+    IconOutline,
+} from '~/libs/ui'
 
 import { WorkAppContext } from '../../../../../lib/contexts/WorkAppContext'
 import {
@@ -80,23 +83,31 @@ export const GroupsField: FC = () => {
     return (
         <div className={styles.container}>
             <div className={styles.selectField}>
+                <div className={styles.fieldHeader}>
+                    <label className={styles.fieldLabel} htmlFor='groups'>
+                        Groups
+                    </label>
+                    {canManageGroups
+                        ? (
+                            <button
+                                aria-label='Create Group'
+                                className={styles.createGroupButton}
+                                onClick={handleCreateGroupModalOpen}
+                                title='Create Group'
+                                type='button'
+                            >
+                                <IconOutline.PlusIcon aria-hidden='true' />
+                            </button>
+                        )
+                        : undefined}
+                </div>
                 <FormGroupsSelect
                     additionalGroups={createdGroups}
+                    hideLabel
                     label='Groups'
                     name='groups'
                 />
             </div>
-            {canManageGroups
-                ? (
-                    <button
-                        className={styles.createGroupLink}
-                        onClick={handleCreateGroupModalOpen}
-                        type='button'
-                    >
-                        Create Group
-                    </button>
-                )
-                : undefined}
             {showCreateGroupModal
                 ? (
                     <BaseModal

@@ -72,6 +72,89 @@ const formatCurrency = (amountStr: string, currency: string): string => {
         .format(amount)
 }
 
+/**
+ * Extracts the assignment identifier captured on a finance winning row.
+ *
+ * @param payment raw finance winning row from the wallet-admin listing API.
+ * @returns the normalized assignment identifier when present.
+ * @remarks Wallet-admin reuses this identifier to recover engagement details
+ * directly from the engagements API when finance omits them.
+ */
+function getWinningAssignmentId(payment: WinningDetail): string | undefined {
+    const assignmentId = payment.attributes?.assignmentId
+
+    return assignmentId !== undefined && assignmentId !== null
+        ? String(assignmentId)
+        : undefined
+}
+
+/**
+ * Converts a raw finance winning row into the wallet-admin view model.
+ *
+ * @param payment raw finance winning row returned by the payouts API.
+ * @param handleMap member-handle lookup keyed by winner identifier.
+ * @returns the normalized winning record rendered by the payments table.
+ * @remarks The release date and hold status are derived here to keep the
+ * component-level mapping callback trivial.
+ */
+// eslint-disable-next-line complexity
+function convertPaymentToWinning(payment: WinningDetail, handleMap: Map<number, string>): Winning {
+    const now = new Date()
+    const releaseDate = new Date(payment.releaseDate)
+    const diffMs = releaseDate.getTime() - now.getTime()
+    const diffHours = diffMs / (1000 * 60 * 60)
+
+    let formattedReleaseDate
+    if (diffHours > 0 && diffHours <= 24) {
+        const diffMinutes = diffMs / (1000 * 60)
+        const hours = Math.floor(diffHours)
+        const minutes = Math.round(diffMinutes - hours * 60)
+        formattedReleaseDate = `${minutes} minute${minutes !== 1 ? 's' : ''}`
+        if (hours > 0) {
+            formattedReleaseDate = `In ${hours} hour${hours !== 1 ? 's' : ''} ${formattedReleaseDate}`
+        } else if (minutes > 0) {
+            formattedReleaseDate = `In ${minutes} minute${minutes !== 1 ? 's' : ''}`
+        }
+    } else {
+        formattedReleaseDate = formatIOSDateString(payment.releaseDate)
+    }
+
+    let status = formatStatus(payment.details[0].status)
+    if (status === 'Cancel') {
+        status = 'Cancelled'
+    }
+
+    if (status === 'ON_HOLD') {
+        if (!payment.paymentStatus?.payoutSetupComplete) {
+            status = 'On Hold (Payment Provider)'
+        } else if (!payment.paymentStatus?.taxFormSetupComplete) {
+            status = 'On Hold (Tax Form)'
+        } else {
+            status = 'On Hold (Member)'
+        }
+    }
+
+    return {
+        assignmentId: getWinningAssignmentId(payment),
+        createDate: formatIOSDateString(payment.createdAt),
+        currency: payment.details[0].currency,
+        datePaid: payment.details[0].datePaid ? formatIOSDateString(payment.details[0].datePaid) : '-',
+        description: payment.description,
+        details: payment.details,
+        externalId: payment.externalId,
+        grossAmount: formatCurrency(payment.details[0].grossAmount, payment.details[0].currency),
+        grossAmountNumber: parseFloat(payment.details[0].grossAmount),
+        handle: handleMap.get(parseInt(payment.winnerId, 10)) ?? payment.winnerId,
+        id: payment.id,
+        releaseDate: formattedReleaseDate,
+        releaseDateObj: releaseDate,
+        status,
+        type: payment.category.replaceAll('_', ' ')
+            .toLowerCase(),
+        winnerId: payment.winnerId,
+    }
+}
+
 // eslint-disable-next-line complexity
 const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProps) => {
     const normalizedRoles = React.useMemo(
@@ -174,60 +257,8 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
     }, [])
 
     const convertToWinnings = useCallback(
-        (payments: WinningDetail[], handleMap: Map<number, string>): ReadonlyArray<Winning> => payments.map(payment => {
-            const now = new Date()
-            const releaseDate = new Date(payment.releaseDate)
-            const diffMs = releaseDate.getTime() - now.getTime()
-            const diffHours = diffMs / (1000 * 60 * 60)
-
-            let formattedReleaseDate
-            if (diffHours > 0 && diffHours <= 24) {
-                const diffMinutes = diffMs / (1000 * 60)
-                const hours = Math.floor(diffHours)
-                const minutes = Math.round(diffMinutes - hours * 60)
-                formattedReleaseDate = `${minutes} minute${minutes !== 1 ? 's' : ''}`
-                if (hours > 0) {
-                    formattedReleaseDate = `In ${hours} hour${hours !== 1 ? 's' : ''} ${formattedReleaseDate}`
-                } else if (minutes > 0) {
-                    formattedReleaseDate = `In ${minutes} minute${minutes !== 1 ? 's' : ''}`
-                }
-            } else {
-                formattedReleaseDate = formatIOSDateString(payment.releaseDate)
-            }
-
-            let status = formatStatus(payment.details[0].status)
-            if (status === 'Cancel') {
-                status = 'Cancelled'
-            }
-
-            if (status === 'ON_HOLD') {
-                if (!payment.paymentStatus?.payoutSetupComplete) {
-                    status = 'On Hold (Payment Provider)'
-                } else if (!payment.paymentStatus?.taxFormSetupComplete) {
-                    status = 'On Hold (Tax Form)'
-                } else {
-                    status = 'On Hold (Member)'
-                }
-            }
-
-            return {
-                createDate: formatIOSDateString(payment.createdAt),
-                currency: payment.details[0].currency,
-                datePaid: payment.details[0].datePaid ? formatIOSDateString(payment.details[0].datePaid) : '-',
-                description: payment.description,
-                details: payment.details,
-                externalId: payment.externalId,
-                grossAmount: formatCurrency(payment.details[0].grossAmount, payment.details[0].currency),
-                grossAmountNumber: parseFloat(payment.details[0].grossAmount),
-                handle: handleMap.get(parseInt(payment.winnerId, 10)) ?? payment.winnerId,
-                id: payment.id,
-                releaseDate: formattedReleaseDate,
-                releaseDateObj: releaseDate,
-                status,
-                type: payment.category.replaceAll('_', ' ')
-                    .toLowerCase(),
-            }
-        }),
+        (payments: WinningDetail[], handleMap: Map<number, string>): ReadonlyArray<Winning> => payments
+            .map(payment => convertPaymentToWinning(payment, handleMap)),
         [],
     )
 

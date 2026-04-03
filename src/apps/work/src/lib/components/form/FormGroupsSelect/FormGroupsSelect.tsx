@@ -32,6 +32,7 @@ import styles from './FormGroupsSelect.module.scss'
 interface FormGroupsSelectProps {
     additionalGroups?: Group[]
     disabled?: boolean
+    hideLabel?: boolean
     label: string
     name: string
     required?: boolean
@@ -252,6 +253,7 @@ export const FormGroupsSelect: FC<FormGroupsSelectProps> = (props: FormGroupsSel
     return (
         <FormFieldWrapper
             error={fieldState.error?.message}
+            hideLabel={props.hideLabel}
             label={props.label}
             name={props.name}
             required={props.required}

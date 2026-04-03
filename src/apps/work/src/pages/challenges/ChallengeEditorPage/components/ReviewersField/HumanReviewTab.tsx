@@ -4,6 +4,7 @@ import {
     useCallback,
     useEffect,
     useMemo,
+    useRef,
     useState,
 } from 'react'
 import {
@@ -457,6 +458,7 @@ export const HumanReviewTab: FC = () => {
     const [scorecards, setScorecards] = useState<Scorecard[]>([])
     const [isScorecardsLoading, setIsScorecardsLoading] = useState<boolean>(false)
     const [loadError, setLoadError] = useState<string | undefined>()
+    const validatedScorecardSelectionsRef = useRef<Record<string, string>>({})
 
     const challengeId = useWatch({
         control: formContext.control,
@@ -799,19 +801,38 @@ export const HumanReviewTab: FC = () => {
                 return
             }
 
+            const scorecardFieldName = `reviewers.${fieldIndex}.scorecardId`
             const selectedScorecardId = normalizeText(reviewer.scorecardId)
             if (!selectedScorecardId) {
+                delete validatedScorecardSelectionsRef.current[scorecardFieldName]
                 return
             }
 
             const hasSelectedScorecard = getAvailableScorecardsForReviewer(reviewer)
                 .some(scorecard => normalizeText(scorecard.id) === selectedScorecardId)
             if (hasSelectedScorecard) {
+                if (validatedScorecardSelectionsRef.current[scorecardFieldName] === selectedScorecardId) {
+                    return
+                }
+
+                validatedScorecardSelectionsRef.current[scorecardFieldName] = selectedScorecardId
+
+                // Mirror the manual re-selection path so stale scorecard validation clears.
+                formContext.setValue(
+                    scorecardFieldName as any,
+                    selectedScorecardId,
+                    {
+                        shouldDirty: false,
+                        shouldValidate: true,
+                    },
+                )
+
                 return
             }
 
+            delete validatedScorecardSelectionsRef.current[scorecardFieldName]
             formContext.setValue(
-                `reviewers.${fieldIndex}.scorecardId` as any,
+                scorecardFieldName as any,
                 undefined,
                 {
                     shouldDirty: false,

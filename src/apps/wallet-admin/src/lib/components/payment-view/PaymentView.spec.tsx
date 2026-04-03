@@ -111,7 +111,7 @@ describe('PaymentView', () => {
 
         await waitFor(() => {
             expect(mockedFetchWinningPaymentDetails)
-                .toHaveBeenCalledWith('winning-1')
+                .toHaveBeenCalledWith(payment)
         })
 
         expect(await screen.findByRole('heading', { name: 'Engagement Details' }))
