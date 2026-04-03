@@ -264,9 +264,9 @@ export function checkProjectMembership(
 /**
  * Returns whether the caller can manage project ownership and billing flows.
  *
- * Admins always qualify. Copilots and Talent Managers can create projects and
- * can manage an existing project when they hold a manager or copilot
- * membership on that project.
+ * Admins always qualify. Copilots, Project Managers, and Talent Managers can
+ * create projects. Managing an existing project still requires a manager or
+ * copilot membership on that project.
  *
  * @param userRoles caller roles from the decoded auth token or app context.
  * @param userId logged-in user identifier used for project membership checks.
@@ -282,12 +282,12 @@ export function checkCanManageProject(
         return true
     }
 
-    if (!hasCopilotRole(userRoles) && !checkTalentManager(userRoles)) {
-        return false
+    if (!project) {
+        return hasCopilotRole(userRoles) || hasManagerRole(userRoles)
     }
 
-    if (!project) {
-        return true
+    if (!hasCopilotRole(userRoles) && !hasManagerRole(userRoles)) {
+        return false
     }
 
     const normalizedRole = normalizeValue(getProjectMemberByUserId(project, userId)?.role)

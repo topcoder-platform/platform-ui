@@ -54,6 +54,11 @@ describe('permissions.utils project management helpers', () => {
             .toBe(true)
     })
 
+    it('allows project managers to create projects without a project context', () => {
+        expect(checkCanManageProject(['Project Manager'], '123'))
+            .toBe(true)
+    })
+
     it('requires project manager or copilot membership for talent manager edit access', () => {
         expect(checkCanManageProject(['Talent Manager'], '123', managedProject))
             .toBe(true)
@@ -61,8 +66,10 @@ describe('permissions.utils project management helpers', () => {
             .toBe(false)
     })
 
-    it('does not expand project-manager creation access beyond the work-manager change', () => {
-        expect(checkCanManageProject(['Project Manager'], '123'))
+    it('still requires project membership for project manager edit access', () => {
+        expect(checkCanManageProject(['Project Manager'], '123', managedProject))
+            .toBe(true)
+        expect(checkCanManageProject(['Project Manager'], '456', managedProject))
             .toBe(false)
     })
 
