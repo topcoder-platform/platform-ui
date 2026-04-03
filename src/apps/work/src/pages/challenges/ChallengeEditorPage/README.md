@@ -5,6 +5,8 @@
 - `ChallengeEditorPage.tsx`: route-level page for create, edit, and read-only view challenge modes.
   Existing challenges keep the same `Details`, `Resources`, and `Submissions` tabs in both edit and
   view routes; view mode only makes the details tab read-only and suppresses edit-only form controls.
+  The read-only `Review` section also renders a configuration summary before the human/AI tabs so AI
+  gating details remain visible even though the surrounding form fieldset is disabled.
 - `ChallengeEditorPage.tsx` also renders challenge quick links in the right header action group for
   existing challenges (`Challenge`, `Review`, and `Forum` when present). In view mode it also adds
   an `Edit` action.
@@ -12,7 +14,7 @@
   In view mode it renders the existing challenge data in a disabled fieldset and omits save/launch
   footer actions.
 - `components/*Field.tsx`: field-level components for each challenge section.
-- `components/ReviewersField/*`: tabbed human/AI review configuration. Human reviewers stay on the challenge form, while AI reviewer configs load/save through the review API and sync saved AI workflows back into the challenge `reviewers` array. Existing AI configs are reloaded only when the challenge already has synced AI reviewer entries, which avoids empty-config lookups on new challenges. Removing an AI config also detaches the synced AI workflow reviewers from the challenge. When AI reviewers exist without a persisted AI screening phase, the schedule editor injects a virtual `AI Screening` row after submission phases. This `Review` section is hidden for `Task` and `Marathon Match` challenges because those flows use dedicated reviewer assignment UIs.
+- `components/ReviewersField/*`: tabbed human/AI review configuration. Human reviewers stay on the challenge form, while AI reviewer configs load/save through the review API and sync saved AI workflows back into the challenge `reviewers` array. Existing AI configs are reloaded only when the challenge already has synced AI reviewer entries, which avoids empty-config lookups on new challenges. Removing an AI config also detaches the synced AI workflow reviewers from the challenge. In read-only view mode the tab switcher remains clickable so users can inspect AI config details inside the disabled challenge form, and the review summary surfaces the human-review table, AI workflow details, review flow, and estimated reviewer cost without requiring edits. When AI reviewers exist without a persisted AI screening phase, the schedule editor injects a virtual `AI Screening` row after submission phases. This `Review` section is hidden for `Task` and `Marathon Match` challenges because those flows use dedicated reviewer assignment UIs.
 - `ChallengeEditorPage.module.scss` and `components/ChallengeEditorForm.module.scss`: page and form layout styling, including the grouped `Prizes & Billing` layout that keeps the editable inputs together at fixed widths on larger screens and moves the billing summary underneath them.
 
 ## Validation Rules

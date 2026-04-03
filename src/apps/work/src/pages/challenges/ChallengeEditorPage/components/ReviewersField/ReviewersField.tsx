@@ -1,5 +1,6 @@
 import {
     FC,
+    KeyboardEvent,
     useCallback,
     useMemo,
     useState,
@@ -26,9 +27,14 @@ import {
 } from './reviewers-field.utils'
 import AiReviewTab from './AiReviewTab'
 import HumanReviewTab from './HumanReviewTab'
+import ReviewConfigurationSummary from './ReviewConfigurationSummary'
 import styles from './ReviewersField.module.scss'
 
 type ReviewTab = 'ai' | 'human'
+
+interface ReviewersFieldProps {
+    isReadOnly?: boolean
+}
 
 function hasReviewerChanges(
     currentReviewers: Reviewer[] | undefined,
@@ -37,7 +43,11 @@ function hasReviewerChanges(
     return JSON.stringify(currentReviewers || []) !== JSON.stringify(nextReviewers)
 }
 
-export const ReviewersField: FC = () => {
+/**
+ * Renders the challenge review section, including read-only summary, tab navigation,
+ * and the human and AI review editors.
+ */
+export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldProps) => {
     const formContext = useFormContext<ChallengeEditorFormData>()
     const [activeTab, setActiveTab] = useState<ReviewTab>('human')
 
@@ -65,6 +75,10 @@ export const ReviewersField: FC = () => {
         control: formContext.control,
         name: 'numOfSubmissions',
     }) as number | string | undefined
+    const prizeSets = useWatch({
+        control: formContext.control,
+        name: 'prizeSets',
+    }) as ChallengeEditorFormData['prizeSets']
 
     const reviewerRows = useMemo(
         () => (Array.isArray(reviewers)
@@ -89,6 +103,17 @@ export const ReviewersField: FC = () => {
     const handleTabChange = useCallback((tab: ReviewTab): void => {
         setActiveTab(tab)
     }, [])
+    const getTabKeyDownHandler = useCallback(
+        (tab: ReviewTab) => (event: KeyboardEvent<HTMLDivElement>): void => {
+            if (event.key !== 'Enter' && event.key !== ' ') {
+                return
+            }
+
+            event.preventDefault()
+            handleTabChange(tab)
+        },
+        [handleTabChange],
+    )
 
     const handleAiConfigPersisted = useCallback(
         (config: AiReviewConfig): void => {
@@ -152,8 +177,20 @@ export const ReviewersField: FC = () => {
 
     return (
         <div className={styles.tabsContainer}>
+            {props.isReadOnly
+                ? (
+                    <ReviewConfigurationSummary
+                        challengeId={challengeId}
+                        phases={phases}
+                        prizeSets={prizeSets}
+                        reviewers={reviewerRows}
+                        typeId={typeId}
+                    />
+                )
+                : undefined}
+
             <div className={styles.tabList} role='tablist'>
-                <button
+                <div
                     aria-controls='reviewers-human-panel'
                     aria-selected={activeTab === 'human'}
                     className={classNames(
@@ -166,12 +203,13 @@ export const ReviewersField: FC = () => {
                     onClick={function onClick() {
                         handleTabChange('human')
                     }}
+                    onKeyDown={getTabKeyDownHandler('human')}
                     role='tab'
-                    type='button'
+                    tabIndex={activeTab === 'human' ? 0 : -1}
                 >
                     {humanReviewLabel}
-                </button>
-                <button
+                </div>
+                <div
                     aria-controls='reviewers-ai-panel'
                     aria-selected={activeTab === 'ai'}
                     className={classNames(
@@ -184,50 +222,53 @@ export const ReviewersField: FC = () => {
                     onClick={function onClick() {
                         handleTabChange('ai')
                     }}
+                    onKeyDown={getTabKeyDownHandler('ai')}
                     role='tab'
-                    type='button'
+                    tabIndex={activeTab === 'ai' ? 0 : -1}
                 >
                     {aiReviewLabel}
-                </button>
+                </div>
             </div>
 
-            <div
-                aria-labelledby='reviewers-human-tab'
-                className={classNames(
-                    styles.tabPanel,
-                    activeTab !== 'human'
-                        ? styles.tabPanelHidden
-                        : undefined,
-                )}
-                hidden={activeTab !== 'human'}
-                id='reviewers-human-panel'
-                role='tabpanel'
-            >
-                <HumanReviewTab />
-            </div>
+            <fieldset className={styles.tabPanels} disabled={props.isReadOnly}>
+                <div
+                    aria-labelledby='reviewers-human-tab'
+                    className={classNames(
+                        styles.tabPanel,
+                        activeTab !== 'human'
+                            ? styles.tabPanelHidden
+                            : undefined,
+                    )}
+                    hidden={activeTab !== 'human'}
+                    id='reviewers-human-panel'
+                    role='tabpanel'
+                >
+                    <HumanReviewTab />
+                </div>
 
-            <div
-                aria-labelledby='reviewers-ai-tab'
-                className={classNames(
-                    styles.tabPanel,
-                    activeTab !== 'ai'
-                        ? styles.tabPanelHidden
-                        : undefined,
-                )}
-                hidden={activeTab !== 'ai'}
-                id='reviewers-ai-panel'
-                role='tabpanel'
-            >
-                <AiReviewTab
-                    challengeId={challengeId}
-                    hasSubmissions={hasSubmissions}
-                    onConfigPersisted={handleAiConfigPersisted}
-                    onConfigRemoved={handleAiConfigRemoved}
-                    reviewers={reviewerRows}
-                    trackId={trackId}
-                    typeId={typeId}
-                />
-            </div>
+                <div
+                    aria-labelledby='reviewers-ai-tab'
+                    className={classNames(
+                        styles.tabPanel,
+                        activeTab !== 'ai'
+                            ? styles.tabPanelHidden
+                            : undefined,
+                    )}
+                    hidden={activeTab !== 'ai'}
+                    id='reviewers-ai-panel'
+                    role='tabpanel'
+                >
+                    <AiReviewTab
+                        challengeId={challengeId}
+                        hasSubmissions={hasSubmissions}
+                        onConfigPersisted={handleAiConfigPersisted}
+                        onConfigRemoved={handleAiConfigRemoved}
+                        reviewers={reviewerRows}
+                        trackId={trackId}
+                        typeId={typeId}
+                    />
+                </div>
+            </fieldset>
         </div>
     )
 }

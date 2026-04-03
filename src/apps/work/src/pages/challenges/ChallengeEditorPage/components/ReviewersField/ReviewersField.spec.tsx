@@ -43,6 +43,10 @@ jest.mock('./AiReviewTab', () => ({
         )
     },
 }))
+jest.mock('./ReviewConfigurationSummary', () => ({
+    __esModule: true,
+    default: () => <div data-testid='review-summary'>Review summary</div>,
+}))
 jest.mock('../../../../../lib/services', () => ({
     patchChallenge: jest.fn(),
 }))
@@ -50,6 +54,7 @@ jest.mock('../../../../../lib/services', () => ({
 const mockedPatchChallenge = patchChallenge as jest.Mock
 
 interface TestHarnessProps {
+    isReadOnly?: boolean
     reviewers: Reviewer[]
 }
 
@@ -63,10 +68,11 @@ const TestHarness = (props: TestHarnessProps): JSX.Element => {
             typeId: 'type-id',
         },
     })
+    const reviewersField = <ReviewersField isReadOnly={props.isReadOnly} />
 
     return (
         <FormProvider {...formMethods}>
-            <ReviewersField />
+            {reviewersField}
         </FormProvider>
     )
 }
@@ -170,5 +176,35 @@ describe('ReviewersField', () => {
                     },
                 ],
             })
+    })
+
+    it('keeps the AI tab accessible in read-only mode', async () => {
+        const user = userEvent.setup()
+
+        render(
+            <TestHarness
+                isReadOnly
+                reviewers={[
+                    {
+                        handle: 'human-1',
+                        isMemberReview: true,
+                        memberId: 'member-1',
+                    },
+                    {
+                        aiWorkflowId: 'workflow-1',
+                        isMemberReview: false,
+                    },
+                ]}
+            />,
+        )
+
+        expect(screen.getByTestId('review-summary')).not.toBeNull()
+        await user.click(screen.getByRole('tab', { name: 'AI Review (1)' }))
+
+        expect(screen.getByRole('tab', { name: 'AI Review (1)' })
+            .getAttribute('aria-selected'))
+            .toBe('true')
+        expect(screen.getByTestId('ai-review-tab').parentElement?.hasAttribute('hidden'))
+            .toBe(false)
     })
 })
