@@ -8,7 +8,10 @@ import {
 } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter } from 'react-router-dom'
+import {
+    MemoryRouter,
+    useLocation,
+} from 'react-router-dom'
 
 import {
     useAutosave,
@@ -458,6 +461,12 @@ const mockedFetchResourceRolesService = fetchResourceRoles as jest.Mock
 const mockedFetchResourcesService = fetchResources as jest.Mock
 const mockedShowErrorToast = showErrorToast as jest.Mock
 const mockedShowSuccessToast = showSuccessToast as jest.Mock
+
+const LocationDisplay = (): JSX.Element => {
+    const location = useLocation()
+
+    return <div data-testid='location-display'>{location.pathname}</div>
+}
 
 describe('ChallengeEditorForm', () => {
     const draftChallenge = {
@@ -1216,6 +1225,32 @@ describe('ChallengeEditorForm', () => {
                 .toHaveBeenCalledTimes(1)
             expect(screen.getByText('Attachment Count: 1'))
                 .toBeInTheDocument()
+        })
+    })
+
+    it('returns to view mode after saving from an edit route', async () => {
+        const user = userEvent.setup()
+
+        mockedPatchChallenge.mockResolvedValue(validDraftChallenge)
+
+        render(
+            <MemoryRouter initialEntries={['/projects/100578/challenges/12345/edit']}>
+                <LocationDisplay />
+                <ChallengeEditorForm
+                    challenge={validDraftChallenge}
+                    projectId='100578'
+                />
+            </MemoryRouter>,
+        )
+
+        await user.type(screen.getByLabelText('Challenge Name'), ' updated')
+        await user.click(screen.getByRole('button', { name: 'Save Challenge' }))
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .toHaveBeenCalledTimes(1)
+            expect(screen.getByTestId('location-display'))
+                .toHaveTextContent('/projects/100578/challenges/12345/view')
         })
     })
 
