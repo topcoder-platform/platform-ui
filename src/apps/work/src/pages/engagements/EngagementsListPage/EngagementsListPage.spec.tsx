@@ -596,7 +596,7 @@ describe('EngagementsListPage', () => {
             .toHaveBeenLastCalledWith(
                 '200',
                 {
-                    includePrivate: true,
+                    includePrivate: false,
                     projectId: '200',
                     projectIds: undefined,
                     sortBy: undefined,
@@ -607,6 +607,8 @@ describe('EngagementsListPage', () => {
                     enabled: false,
                 },
             )
+        expect(mockedUseFetchProject)
+            .toHaveBeenCalledWith('200')
     })
 
     it('deletes the selected engagement and refreshes the list', async () => {

@@ -434,7 +434,7 @@ export const EngagementsListPage: FC = () => {
     )
 
     const requestFilters = useMemo<EngagementFilters>(() => ({
-        includePrivate: canManage,
+        includePrivate: canManage && canViewEngagements,
         projectId: isAllEngagementsPage ? undefined : projectId,
         projectIds: isAllEngagementsPage && isTalentManagerOnly
             ? scopedProjectIds
@@ -447,6 +447,7 @@ export const EngagementsListPage: FC = () => {
             : undefined,
         status: filters.status,
     }), [
+        canViewEngagements,
         canManage,
         filters.status,
         isAllEngagementsPage,
@@ -752,6 +753,21 @@ export const EngagementsListPage: FC = () => {
         ? 'You need Admin or Talent Manager role to view all engagements.'
         : 'You need Admin or Talent Manager role to view engagements.'
 
+    if (!canViewEngagements) {
+        return (
+            <PageWrapper
+                pageTitle={pageTitle}
+                breadCrumb={[]}
+                rightHeader={createEngagementAction}
+                titleAction={titleAction}
+            >
+                {billingAccountExpiredNotice}
+                {projectTabs}
+                <ErrorMessage message={accessDeniedMessage} />
+            </PageWrapper>
+        )
+    }
+
     if (
         isScopedProjectsLoading
         || (
@@ -769,21 +785,6 @@ export const EngagementsListPage: FC = () => {
                 {billingAccountExpiredNotice}
                 {projectTabs}
                 <LoadingSpinner />
-            </PageWrapper>
-        )
-    }
-
-    if (!canViewEngagements) {
-        return (
-            <PageWrapper
-                pageTitle={pageTitle}
-                breadCrumb={[]}
-                rightHeader={createEngagementAction}
-                titleAction={titleAction}
-            >
-                {billingAccountExpiredNotice}
-                {projectTabs}
-                <ErrorMessage message={accessDeniedMessage} />
             </PageWrapper>
         )
     }
