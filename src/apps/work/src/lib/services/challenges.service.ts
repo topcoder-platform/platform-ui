@@ -375,6 +375,8 @@ function normalizeDefaultReviewer(
         incrementalCoefficient: toOptionalNumber((reviewer as Record<string, unknown>).incrementalCoefficient),
         isMemberReview: toOptionalBoolean((reviewer as Record<string, unknown>).isMemberReview),
         memberReviewerCount: toOptionalNumber((reviewer as Record<string, unknown>).memberReviewerCount),
+        opportunityType: toOptionalString((reviewer as Record<string, unknown>).opportunityType)
+            || toOptionalString((reviewer as Record<string, unknown>).type),
         phaseId: toOptionalString(reviewer.phaseId),
         roleId: toOptionalString(reviewer.roleId),
         scorecardId: toOptionalString((reviewer as Record<string, unknown>).scorecardId),
