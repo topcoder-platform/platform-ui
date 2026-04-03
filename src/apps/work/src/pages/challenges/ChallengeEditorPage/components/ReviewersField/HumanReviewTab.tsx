@@ -456,7 +456,8 @@ export const HumanReviewTab: FC = () => {
 
     const [defaultReviewers, setDefaultReviewers] = useState<DefaultReviewer[]>([])
     const [scorecards, setScorecards] = useState<Scorecard[]>([])
-    const [isScorecardsLoading, setIsScorecardsLoading] = useState<boolean>(false)
+    // Keep existing selections intact until the first scorecard fetch resolves.
+    const [isScorecardsLoading, setIsScorecardsLoading] = useState<boolean>(true)
     const [loadError, setLoadError] = useState<string | undefined>()
     const validatedScorecardSelectionsRef = useRef<Record<string, string>>({})
 
@@ -811,6 +812,8 @@ export const HumanReviewTab: FC = () => {
             const hasSelectedScorecard = getAvailableScorecardsForReviewer(reviewer)
                 .some(scorecard => normalizeText(scorecard.id) === selectedScorecardId)
             if (hasSelectedScorecard) {
+                formContext.clearErrors(scorecardFieldName as any)
+
                 if (validatedScorecardSelectionsRef.current[scorecardFieldName] === selectedScorecardId) {
                     return
                 }
