@@ -280,11 +280,6 @@ export const ProjectInvitationsPage: FC = () => {
             return
         }
 
-        if (!invitationId) {
-            redirectToDefault()
-            return
-        }
-
         if (canProcessByInviteLink && automaticAction && !hasProcessedAutomaticAction) {
             setHasProcessedAutomaticAction(true)
             updateInvitationStatus(automaticAction)
@@ -298,6 +293,11 @@ export const ProjectInvitationsPage: FC = () => {
         }
 
         if (isProjectLoading || !project) {
+            return
+        }
+
+        if (!invitationId) {
+            redirectToDefault()
             return
         }
 

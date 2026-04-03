@@ -1,9 +1,13 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
-import { xhrGetAsync } from '~/libs/core'
+import {
+    xhrGetAsync,
+    xhrGetPaginatedAsync,
+} from '~/libs/core'
 
 import {
     fetchProjectBillingAccount,
     fetchProjectBillingAccounts,
+    fetchProjectsList,
 } from './projects.service'
 
 jest.mock('~/config', () => ({
@@ -221,5 +225,46 @@ describe('fetchProjectBillingAccounts', () => {
             .toHaveBeenCalledWith(
                 'https://example.com/projects/100578/billingAccounts',
             )
+    })
+})
+
+describe('fetchProjectsList', () => {
+    beforeEach(() => {
+        jest.clearAllMocks()
+    })
+
+    it('preserves the API isInvited flag when invite details are omitted', async () => {
+        const mockedGetPaginatedAsync = xhrGetPaginatedAsync as jest.Mock
+
+        mockedGetPaginatedAsync.mockResolvedValue({
+            data: [
+                {
+                    id: 200,
+                    isInvited: true,
+                    name: 'Invited project',
+                    status: 'active',
+                },
+            ],
+            page: 1,
+            perPage: 20,
+            total: 1,
+            totalPages: 1,
+        })
+
+        const result = await fetchProjectsList()
+
+        expect(result.projects)
+            .toEqual([
+                expect.objectContaining({
+                    id: 200,
+                    invites: [],
+                    isInvited: true,
+                    members: [],
+                    name: 'Invited project',
+                    status: 'active',
+                }),
+            ])
+        expect(mockedGetPaginatedAsync)
+            .toHaveBeenCalledWith(expect.stringContaining('fields=members%2Cinvites'))
     })
 })
