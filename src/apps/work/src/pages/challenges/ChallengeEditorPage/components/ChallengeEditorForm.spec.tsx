@@ -482,6 +482,14 @@ describe('ChallengeEditorForm', () => {
         trackId: 'track-id',
         typeId: 'type-id',
     } as Challenge
+    const taskDraftChallenge = {
+        ...draftChallenge,
+        type: {
+            abbreviation: 'TSK',
+            name: 'Task',
+        },
+        typeId: 'task-type-id',
+    } as Challenge
     const first2FinishDraftChallenge = {
         ...validDraftChallenge,
         phases: [{
@@ -630,6 +638,51 @@ describe('ChallengeEditorForm', () => {
             .toHaveTextContent('80001063')
     })
 
+    it('hides the editable timeline section for task challenges in edit mode', () => {
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'TSK',
+                id: 'task-type-id',
+                isTask: true,
+                name: 'Task',
+            }],
+            isLoading: false,
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={taskDraftChallenge}
+                    isEditMode
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.queryByRole('heading', { name: 'Timeline & Schedule' }))
+            .toBeNull()
+    })
+
+    it('keeps the timeline section visible for task challenges outside edit mode', () => {
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'TSK',
+                id: 'task-type-id',
+                isTask: true,
+                name: 'Task',
+            }],
+            isLoading: false,
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm challenge={taskDraftChallenge} />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByRole('heading', { name: 'Timeline & Schedule' }))
+            .toBeInTheDocument()
+    })
+
     it('renders secondary footer actions and a primary launch action for draft challenges', () => {
         render(
             <MemoryRouter>
@@ -762,6 +815,43 @@ describe('ChallengeEditorForm', () => {
             .toBeUndefined()
     })
 
+    it('registers the launch action for read-only draft challenges', async () => {
+        let launchAction: (() => Promise<void>) | undefined
+
+        mockedPatchChallenge.mockResolvedValue({
+            ...validDraftChallenge,
+            status: 'ACTIVE',
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={validDraftChallenge}
+                    isReadOnly
+                    onRegisterLaunchAction={action => {
+                        launchAction = action
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        await waitFor(() => {
+            expect(launchAction)
+                .toEqual(expect.any(Function))
+        })
+
+        await act(async () => {
+            await launchAction?.()
+        })
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .toHaveBeenCalledWith('12345', expect.objectContaining({
+                    status: 'ACTIVE',
+                }))
+        })
+    })
+
     it('renders submission settings for design first2finish challenges', () => {
         mockedUseFetchChallengeTracks.mockReturnValue({
             isLoading: false,
@@ -871,6 +961,74 @@ describe('ChallengeEditorForm', () => {
             .not.toHaveBeenCalled()
     })
 
+    it('does not delete submitter resources when saving a non-task draft', async () => {
+        const user = userEvent.setup()
+
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'CH',
+                id: 'type-id',
+                isTask: false,
+                name: 'Challenge',
+            }],
+            isLoading: false,
+        })
+        mockedUseFetchResourceRoles.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            resourceRoles: [{
+                id: 'submitter-role-id',
+                name: 'Submitter',
+            }],
+        })
+        mockedUseFetchResources.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            mutate: jest.fn(),
+            resources: [{
+                challengeId: '12345',
+                memberHandle: 'task-user',
+                memberId: '12345',
+                role: 'Submitter',
+                roleId: 'submitter-role-id',
+            }],
+        })
+        mockedPatchChallenge.mockResolvedValue({
+            ...validDraftChallenge,
+            type: {
+                abbreviation: 'CH',
+                name: 'Challenge',
+            },
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...validDraftChallenge,
+                        type: {
+                            abbreviation: 'CH',
+                            name: 'Challenge',
+                        },
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        await user.type(screen.getByLabelText('Challenge Name'), ' updated')
+        await user.click(screen.getByRole('button', { name: 'Save Challenge' }))
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .toHaveBeenCalledTimes(1)
+        })
+
+        expect(mockedDeleteResource)
+            .not.toHaveBeenCalled()
+    })
+
     it('launches a first2finish draft with iterative reviewer resources without task-only validation', async () => {
         let launchAction: (() => Promise<void>) | undefined
 
@@ -948,6 +1106,87 @@ describe('ChallengeEditorForm', () => {
             .not.toHaveBeenCalledWith('Assign a member before launching a task challenge.')
     })
 
+    it('launches a first2finish draft with legacy reviewer root fields without task-only validation', async () => {
+        let launchAction: (() => Promise<void>) | undefined
+
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            isLoading: false,
+            tracks: [{
+                id: 'design-track',
+                name: 'Design',
+                track: 'DESIGN',
+            }],
+        })
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'F2F',
+                id: 'design-first2finish',
+                isTask: false,
+                name: 'First2Finish',
+            }],
+            isLoading: false,
+        })
+        mockedUseFetchResourceRoles.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            resourceRoles: [{
+                id: 'iterative-reviewer-role-id',
+                name: 'Iterative Reviewer',
+            }],
+        })
+        mockedUseFetchResources.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            mutate: jest.fn(),
+            resources: [{
+                challengeId: '12345',
+                memberHandle: 'taasiintake300',
+                memberId: 'manual-reviewer-member-id',
+                role: 'Iterative Reviewer',
+                roleId: 'iterative-reviewer-role-id',
+            }],
+        })
+        mockedPatchChallenge.mockResolvedValue({
+            ...first2FinishDraftChallenge,
+            reviewer: 'legacyTaskReviewer',
+            status: 'ACTIVE',
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...first2FinishDraftChallenge,
+                        reviewer: 'legacyTaskReviewer',
+                    }}
+                    onRegisterLaunchAction={action => {
+                        launchAction = action
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        await waitFor(() => {
+            expect(launchAction)
+                .toEqual(expect.any(Function))
+        })
+
+        await act(async () => {
+            await launchAction?.()
+        })
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .toHaveBeenCalledWith('12345', expect.objectContaining({
+                    status: 'ACTIVE',
+                }))
+        })
+        expect(mockedShowErrorToast)
+            .not.toHaveBeenCalledWith('Assign a member before launching a task challenge.')
+    })
+
     it('preserves uploaded attachments after saving when the update response omits them', async () => {
         const user = userEvent.setup()
 
@@ -980,6 +1219,59 @@ describe('ChallengeEditorForm', () => {
         })
     })
 
+    it('clears Marathon Match when a new challenge switches to the Design track', async () => {
+        const user = userEvent.setup()
+
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            isLoading: false,
+            tracks: [
+                {
+                    id: 'development-track',
+                    name: 'Development',
+                    track: 'DEVELOPMENT',
+                },
+                {
+                    id: 'design-track',
+                    name: 'Design',
+                    track: 'DESIGN',
+                },
+            ],
+        })
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'MM',
+                id: 'marathon-match-id',
+                isActive: true,
+                isTask: false,
+                name: 'Marathon Match',
+            }],
+            isLoading: false,
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm />
+            </MemoryRouter>,
+        )
+
+        const challengeTrackInput = screen.getByLabelText('Challenge Track') as HTMLInputElement
+        const challengeTypeInput = screen.getByLabelText('Challenge Type') as HTMLInputElement
+
+        await user.type(challengeTrackInput, 'development-track')
+        await user.type(challengeTypeInput, 'marathon-match-id')
+
+        expect(challengeTypeInput.value)
+            .toBe('marathon-match-id')
+
+        await user.clear(challengeTrackInput)
+        await user.type(challengeTrackInput, 'design-track')
+
+        await waitFor(() => {
+            expect(challengeTypeInput.value)
+                .toBe('')
+        })
+    })
+
     it('prevents creating a design challenge without a work type', async () => {
         const user = userEvent.setup()
 
@@ -995,6 +1287,7 @@ describe('ChallengeEditorForm', () => {
             challengeTypes: [{
                 abbreviation: 'CH',
                 id: 'design-challenge',
+                isActive: true,
                 isTask: false,
                 name: 'Challenge',
             }],
@@ -1041,6 +1334,7 @@ describe('ChallengeEditorForm', () => {
             challengeTypes: [{
                 abbreviation: 'CH',
                 id: 'design-challenge',
+                isActive: true,
                 isTask: false,
                 name: 'Challenge',
             }],
@@ -1083,6 +1377,7 @@ describe('ChallengeEditorForm', () => {
             challengeTypes: [{
                 abbreviation: 'CH',
                 id: '927abff4-7af9-4145-8ba1-577c16e64e2e',
+                isActive: true,
                 isTask: false,
                 name: 'Challenge',
             }],

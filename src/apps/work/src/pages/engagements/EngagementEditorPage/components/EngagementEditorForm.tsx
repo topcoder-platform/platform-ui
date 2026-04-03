@@ -44,9 +44,11 @@ import {
 import {
     autowriteDescription,
     createEngagement,
+    fetchProjectsList,
     updateEngagement,
 } from '../../../../lib/services'
 import {
+    formatEngagementStatus,
     showErrorToast,
     showSuccessToast,
 } from '../../../../lib/utils'
@@ -80,7 +82,7 @@ export interface EngagementEditorFormData {
     description: string
     durationWeeks: number | string
     isPrivate: boolean
-    projectId: number | string
+    projectId: string
     requiredMemberCount: number | string
     role: string
     skills: Skill[]
@@ -91,9 +93,11 @@ export interface EngagementEditorFormData {
 }
 
 interface EngagementEditorFormProps {
+    canEditParentProject?: boolean
     engagement?: Engagement
     isEditMode: boolean
     projectId: number | string
+    projectName?: string
 }
 
 interface SaveEngagementOptions {
@@ -109,6 +113,94 @@ type SerializedAssignmentDetailsPayload = {
     ratePerHour: string
     standardHoursPerWeek?: number
     startDate: string
+}
+
+/**
+ * Normalizes project identifiers so select-backed form state stays string-based.
+ *
+ * @param projectId project id from route params, engagement payload, or form values.
+ * @returns a trimmed string id, or an empty string when the source is missing.
+ */
+function normalizeProjectId(projectId: number | string | undefined): string {
+    if (projectId === undefined || projectId === null) {
+        return ''
+    }
+
+    return String(projectId)
+        .trim()
+}
+
+/**
+ * Limits private-assignment serialization to the visible member slots so stale
+ * hidden handles are not submitted after the required member count changes.
+ *
+ * @param requiredMemberCount raw form value for the private member count.
+ * @param assignedMemberHandles form values for the selected member handles.
+ * @returns trimmed handles for the currently active private-assignment slots.
+ */
+function getVisibleAssignedMemberHandles(
+    requiredMemberCount: number | string | undefined,
+    assignedMemberHandles: string[],
+): string[] {
+    const parsedRequiredMemberCount = Number(requiredMemberCount)
+    const assignmentLimit = Number.isInteger(parsedRequiredMemberCount) && parsedRequiredMemberCount > 0
+        ? parsedRequiredMemberCount
+        : assignedMemberHandles.length
+
+    return assignedMemberHandles
+        .slice(0, assignmentLimit)
+        .map(memberHandle => String(memberHandle || '')
+            .trim())
+}
+
+/**
+ * Serializes private-assignment details only when they still match the current
+ * member handle selected for each visible slot.
+ *
+ * @param values engagement editor form values.
+ * @returns serialized assignment details aligned to the active member handles.
+ */
+function serializeAssignmentDetails(
+    values: EngagementEditorFormData,
+): SerializedAssignmentDetailsPayload[] {
+    const visibleAssignedMemberHandles = getVisibleAssignedMemberHandles(
+        values.requiredMemberCount,
+        values.assignedMemberHandles,
+    )
+    const serializedAssignmentDetails: Array<SerializedAssignmentDetailsPayload | undefined>
+        = visibleAssignedMemberHandles
+            .map((memberHandle, index) => {
+                const detail = values.assignmentDetails[index]
+                const detailMemberHandle = String(detail?.memberHandle || '')
+                    .trim()
+
+                if (!memberHandle || !detail || detailMemberHandle !== memberHandle) {
+                    return undefined
+                }
+
+                return {
+                    agreementRate: String(detail.agreementRate || '')
+                        .trim(),
+                    durationMonths: detail.durationMonths
+                        ? Number(detail.durationMonths)
+                        : undefined,
+                    memberHandle,
+                    otherRemarks: detail.otherRemarks
+                        ? String(detail.otherRemarks)
+                            .trim()
+                        : undefined,
+                    ratePerHour: String(detail.ratePerHour || '')
+                        .trim(),
+                    standardHoursPerWeek: detail.standardHoursPerWeek
+                        ? Number(detail.standardHoursPerWeek)
+                        : undefined,
+                    startDate: detail.startDate || '',
+                }
+            })
+
+    return serializedAssignmentDetails.filter(
+        (detail): detail is SerializedAssignmentDetailsPayload => Boolean(detail),
+    )
 }
 
 function toAssignmentDetailsValue(assignment: EngagementAssignment): AssignmentDetailsFormValue {
@@ -153,6 +245,25 @@ function getAssignmentDefaults(engagement: Engagement | undefined): {
     }
 }
 
+/**
+ * Resolves the form's parent project id from the engagement payload first,
+ * falling back to the route-scoped project id for new engagements.
+ *
+ * @param engagement engagement being edited, if one exists.
+ * @param projectId project id from the current route.
+ * @returns the project id that should seed the form state.
+ */
+function getDefaultProjectId(
+    engagement: Engagement | undefined,
+    projectId: number | string,
+): string {
+    return normalizeProjectId(
+        engagement?.projectId
+        ?? engagement?.project?.id
+        ?? projectId,
+    )
+}
+
 function getDefaultValues(
     engagement: Engagement | undefined,
     projectId: number | string,
@@ -171,13 +282,15 @@ function getDefaultValues(
             ? String(defaultEngagement.durationWeeks)
             : '',
         isPrivate: defaultEngagement?.isPrivate === true,
-        projectId,
+        projectId: getDefaultProjectId(defaultEngagement, projectId),
         requiredMemberCount: defaultEngagement?.requiredMemberCount
             ? String(defaultEngagement.requiredMemberCount)
             : '',
         role: defaultEngagement?.role || ENGAGEMENT_ROLES[0],
         skills: defaultEngagement?.skills || [],
-        status: defaultEngagement?.status || 'Open',
+        status: defaultEngagement?.status
+            ? formatEngagementStatus(defaultEngagement.status)
+            : 'Open',
         timezones: defaultEngagement?.timezones || [],
         title: defaultEngagement?.title || '',
         workload: defaultEngagement?.workload || ENGAGEMENT_WORKLOADS[0],
@@ -208,6 +321,66 @@ function createWorkloadOptions(): FormSelectOption[] {
         label: labelsByWorkload[workload] || workload,
         value: workload,
     }))
+}
+
+const MIN_PARENT_PROJECT_SEARCH_LENGTH = 2
+
+/**
+ * Creates a select option for the current parent project.
+ *
+ * @param projectId project identifier from the route or engagement payload.
+ * @param projectName display name for the selected project.
+ * @returns a normalized option when the id is available; otherwise `undefined`.
+ */
+function createProjectOption(
+    projectId: number | string | undefined,
+    projectName: string | undefined,
+): FormSelectOption | undefined {
+    const normalizedProjectId = normalizeProjectId(projectId)
+
+    if (!normalizedProjectId) {
+        return undefined
+    }
+
+    return {
+        label: projectName?.trim() || `Project ${normalizedProjectId}`,
+        value: normalizedProjectId,
+    }
+}
+
+/**
+ * Merges async project options so the current parent project remains selectable
+ * after search results are loaded.
+ *
+ * @param currentOptions options already cached in component state.
+ * @param incomingOptions fresh options returned from the projects API.
+ * @returns a deduplicated list keyed by project id.
+ */
+function mergeProjectOptions(
+    currentOptions: FormSelectOption[],
+    incomingOptions: FormSelectOption[],
+): FormSelectOption[] {
+    const optionMap = new Map<string, FormSelectOption>()
+
+    currentOptions.forEach(option => {
+        optionMap.set(option.value, option)
+    })
+
+    incomingOptions.forEach(option => {
+        optionMap.set(option.value, option)
+    })
+
+    return Array.from(optionMap.values())
+}
+
+/**
+ * Builds the engagement list route for a specific parent project id.
+ *
+ * @param projectId current route, form, or saved engagement project id.
+ * @returns the project-scoped engagements route.
+ */
+function getEngagementsPath(projectId: number | string | undefined): string {
+    return `${rootRoute}/projects/${normalizeProjectId(projectId)}/engagements`
 }
 
 function toPayload(values: EngagementEditorFormData): Partial<Engagement> & {
@@ -241,37 +414,17 @@ function toPayload(values: EngagementEditorFormData): Partial<Engagement> & {
     }
 
     if (values.isPrivate) {
-        const assignedMemberHandles = values.assignedMemberHandles
-            .map(memberHandle => String(memberHandle || '')
-                .trim())
+        const assignedMemberHandles = getVisibleAssignedMemberHandles(
+            values.requiredMemberCount,
+            values.assignedMemberHandles,
+        )
             .filter(Boolean)
 
         if (assignedMemberHandles.length > 0) {
             payload.assignedMemberHandles = assignedMemberHandles
         }
 
-        const assignmentDetails = values.assignmentDetails
-            .filter(Boolean)
-            .map(detail => ({
-                agreementRate: String(detail.agreementRate || '')
-                    .trim(),
-                durationMonths: detail.durationMonths
-                    ? Number(detail.durationMonths)
-                    : undefined,
-                memberHandle: String(detail.memberHandle || '')
-                    .trim(),
-                otherRemarks: detail.otherRemarks
-                    ? String(detail.otherRemarks)
-                        .trim()
-                    : undefined,
-                ratePerHour: String(detail.ratePerHour || '')
-                    .trim(),
-                standardHoursPerWeek: detail.standardHoursPerWeek
-                    ? Number(detail.standardHoursPerWeek)
-                    : undefined,
-                startDate: detail.startDate || '',
-            }))
-            .filter(detail => detail.memberHandle)
+        const assignmentDetails = serializeAssignmentDetails(values)
 
         if (assignmentDetails.length > 0) {
             payload.assignmentDetails = assignmentDetails
@@ -297,7 +450,29 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
 
     const roleOptions = useMemo<FormSelectOption[]>(() => createRoleOptions(), [])
     const workloadOptions = useMemo<FormSelectOption[]>(() => createWorkloadOptions(), [])
-    const engagementsPath = `${rootRoute}/projects/${props.projectId}/engagements`
+    const currentProjectOption = useMemo<FormSelectOption | undefined>(
+        () => createProjectOption(
+            props.engagement?.projectId
+                ?? props.engagement?.project?.id
+                ?? props.projectId,
+            props.engagement?.projectName
+                || props.engagement?.project?.name
+                || props.projectName,
+        ),
+        [
+            props.engagement?.project?.id,
+            props.engagement?.project?.name,
+            props.engagement?.projectId,
+            props.engagement?.projectName,
+            props.projectId,
+            props.projectName,
+        ],
+    )
+    const [parentProjectOptions, setParentProjectOptions] = useState<FormSelectOption[]>(
+        currentProjectOption
+            ? [currentProjectOption]
+            : [],
+    )
 
     const formMethods = useForm<EngagementEditorFormData>({
         defaultValues: getDefaultValues(props.engagement, props.projectId),
@@ -311,6 +486,17 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
     const reset = formMethods.reset
     const setValue = formMethods.setValue
     const values = formMethods.watch()
+    const selectedEngagementsPath = getEngagementsPath(values.projectId || props.projectId)
+
+    useEffect(() => {
+        if (!currentProjectOption) {
+            return
+        }
+
+        setParentProjectOptions(currentOptions => mergeProjectOptions(currentOptions, [
+            currentProjectOption,
+        ]))
+    }, [currentProjectOption])
 
     const saveEngagement = useCallback(
         async (
@@ -343,8 +529,11 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
                             ? 'Engagement saved successfully'
                             : 'Engagement created successfully',
                     )
+                    const savedEngagementsPath = getEngagementsPath(
+                        savedEngagement.projectId || nextValues.projectId || props.projectId,
+                    )
 
-                    navigate(engagementsPath)
+                    navigate(savedEngagementsPath)
                 }
             } catch (error) {
                 const message = error instanceof Error
@@ -364,7 +553,40 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
                 }
             }
         },
-        [currentEngagementId, engagementsPath, navigate, props.isEditMode, props.projectId, reset],
+        [currentEngagementId, navigate, props.isEditMode, props.projectId, reset],
+    )
+
+    const loadParentProjectOptions = useCallback(
+        async (inputValue: string): Promise<FormSelectOption[]> => {
+            const keyword = inputValue.trim()
+
+            if (keyword.length < MIN_PARENT_PROJECT_SEARCH_LENGTH) {
+                return []
+            }
+
+            try {
+                const response = await fetchProjectsList({
+                    keyword,
+                    page: 1,
+                    perPage: 20,
+                    sortBy: 'name',
+                    sortOrder: 'asc',
+                })
+                const nextOptions = response.projects
+                    .filter(project => project?.id !== undefined && project?.id !== null)
+                    .map(project => ({
+                        label: project.name || `Project ${project.id}`,
+                        value: String(project.id),
+                    }))
+
+                setParentProjectOptions(currentOptions => mergeProjectOptions(currentOptions, nextOptions))
+
+                return nextOptions
+            } catch {
+                return []
+            }
+        },
+        [],
     )
 
     useAutosave<EngagementEditorFormData>({
@@ -495,6 +717,20 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
                         <div className={styles.startStatusBlock}>
                             <EngagementStartDateField />
                             <EngagementStatusField />
+                            <FormSelectField
+                                disabled={!props.canEditParentProject}
+                                isAsync={props.canEditParentProject}
+                                label='Parent Project'
+                                loadOptions={props.canEditParentProject
+                                    ? loadParentProjectOptions
+                                    : undefined}
+                                name='projectId'
+                                options={parentProjectOptions}
+                                placeholder={props.canEditParentProject
+                                    ? 'Type at least 2 characters to search projects...'
+                                    : undefined}
+                                required
+                            />
                             <FormTextField
                                 label='Required Members'
                                 name='requiredMemberCount'
@@ -519,7 +755,7 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
                         : undefined}
 
                     <div className={styles.actions}>
-                        <Link className={styles.cancelLink} to={engagementsPath}>
+                        <Link className={styles.cancelLink} to={selectedEngagementsPath}>
                             Cancel
                         </Link>
 

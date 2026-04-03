@@ -23,6 +23,12 @@ interface ResolveManualReviewersParams {
     isTaskChallenge: boolean
 }
 
+interface ResolveTaskChallengeStateParams {
+    hasResolvedChallengeType: boolean
+    isTaskTypeSelected: boolean
+    persistedTaskFlag?: boolean
+}
+
 interface ChallengeBillingInfo {
     billingAccountId?: number | string
     markup?: number
@@ -237,13 +243,6 @@ interface ResolveResourceAssignmentValueParams {
     valueField: ResourceAssignmentValueField
 }
 
-interface InferTaskChallengeFromAssignmentsParams {
-    assignedMemberId?: string
-    reviewer?: string
-    resourceRoles: ResourceRole[]
-    resources: Resource[]
-}
-
 /**
  * Resolves a saved single-member assignment from challenge resources.
  *
@@ -287,29 +286,27 @@ export function resolveResourceAssignmentValue(
 }
 
 /**
- * Infers task-mode fallback state from dedicated task assignments only.
+ * Resolves whether the editor should treat the current challenge as a task.
  *
- * Manual iterative-reviewer resources are also used by non-task F2F flows, so
- * they cannot be treated as a task signal on their own. A saved task draft can
- * still be recognized from its dedicated root fields or from a persisted
- * submitter resource assignment.
+ * The work app should follow the canonical challenge type whenever that type is
+ * available. Persisted task flags are only a compatibility fallback for older
+ * payloads that omit type metadata entirely.
  *
- * @param params current root-field values plus challenge resources.
- * @returns `true` when the saved data clearly represents a task challenge.
+ * @param params resolved type state plus an optional persisted task flag.
+ * @returns `true` when the challenge should use task-only editor behavior.
  */
-export function shouldInferTaskChallengeFromAssignments(
-    params: InferTaskChallengeFromAssignmentsParams,
+export function shouldTreatChallengeAsTask(
+    params: ResolveTaskChallengeStateParams,
 ): boolean {
-    if (normalizeText(params.assignedMemberId) || normalizeText(params.reviewer)) {
+    if (params.isTaskTypeSelected) {
         return true
     }
 
-    return !!resolveResourceAssignmentValue({
-        resourceRoles: params.resourceRoles,
-        resources: params.resources,
-        roleNames: SUBMITTER_RESOURCE_ROLE_NAMES,
-        valueField: 'memberId',
-    })
+    if (params.hasResolvedChallengeType) {
+        return false
+    }
+
+    return params.persistedTaskFlag === true
 }
 
 /**

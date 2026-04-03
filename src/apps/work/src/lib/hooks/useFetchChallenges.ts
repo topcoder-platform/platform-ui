@@ -39,6 +39,7 @@ export function useFetchChallenges(
         appendResults = false,
         endDateEnd,
         endDateStart,
+        memberId,
         name,
         page = 1,
         perPage = PAGE_SIZE,
@@ -68,6 +69,7 @@ export function useFetchChallenges(
             filters: {
                 endDateEnd,
                 endDateStart,
+                memberId,
                 name,
                 projectId,
                 sortBy,
@@ -85,6 +87,7 @@ export function useFetchChallenges(
         [
             endDateEnd,
             endDateStart,
+            memberId,
             name,
             page,
             perPage,
@@ -102,6 +105,7 @@ export function useFetchChallenges(
         () => [
             endDateEnd || '',
             endDateStart || '',
+            String(memberId ?? ''),
             name || '',
             String(projectId ?? ''),
             sortBy || '',
@@ -118,6 +122,7 @@ export function useFetchChallenges(
         [
             endDateEnd,
             endDateStart,
+            memberId,
             name,
             perPage,
             projectId,

@@ -127,6 +127,11 @@ jest.mock('../../../../lib/services', () => ({
     updateEngagement: jest.fn(),
 }))
 jest.mock('../../../../lib/utils', () => ({
+    formatEngagementStatus: (status: string) => (
+        status === 'Pending Assignment'
+            ? 'On Hold'
+            : status
+    ),
     showErrorToast: jest.fn(),
     showSuccessToast: jest.fn(),
 }))
@@ -307,7 +312,187 @@ describe('EngagementEditorForm', () => {
             .toBe('Software Developer')
     })
 
-    it('redirects to the project engagements list after creating an engagement', async () => {
+    it('renders the selected parent project on the create page', () => {
+        render(
+            <MemoryRouter>
+                <EngagementEditorForm
+                    isEditMode={false}
+                    projectId='123'
+                    projectName='SK Engagement Project1'
+                />
+            </MemoryRouter>,
+        )
+
+        const parentProjectField = screen.getByLabelText('Parent Project') as HTMLSelectElement
+
+        expect(parentProjectField.value)
+            .toBe('123')
+        expect(screen.getByRole('option', { name: 'SK Engagement Project1' }))
+            .toBeTruthy()
+    })
+
+    it('renders the engagement parent project when the saved project id is numeric', () => {
+        render(
+            <MemoryRouter>
+                <EngagementEditorForm
+                    engagement={{
+                        anticipatedStart: 'Immediate',
+                        assignedMemberHandles: [],
+                        assignments: [],
+                        compensationRange: '',
+                        countries: ['US'],
+                        createdAt: '',
+                        description: 'Existing engagement description',
+                        durationWeeks: 4,
+                        id: 'engagement-1',
+                        isPrivate: false,
+                        project: {
+                            id: 456,
+                            name: 'Existing Parent Project',
+                        },
+                        projectId: 456,
+                        requiredMemberCount: 1,
+                        role: 'SOFTWARE_DEVELOPER',
+                        skills: [],
+                        status: 'Open',
+                        timezones: ['America/New_York'],
+                        title: 'Existing engagement',
+                        updatedAt: '',
+                        workload: 'FULL_TIME',
+                    } as any}
+                    isEditMode
+                    projectId='123'
+                />
+            </MemoryRouter>,
+        )
+
+        const parentProjectField = screen.getByLabelText('Parent Project') as HTMLSelectElement
+
+        expect(parentProjectField.value)
+            .toBe('456')
+        expect(screen.getByRole('option', { name: 'Existing Parent Project' }))
+            .toBeTruthy()
+    })
+
+    it('keeps a falsy saved parent project id aligned with the rendered option', () => {
+        render(
+            <MemoryRouter>
+                <EngagementEditorForm
+                    engagement={{
+                        anticipatedStart: 'Immediate',
+                        assignedMemberHandles: [],
+                        assignments: [],
+                        compensationRange: '',
+                        countries: ['US'],
+                        createdAt: '',
+                        description: 'Existing engagement description',
+                        durationWeeks: 4,
+                        id: 'engagement-1',
+                        isPrivate: false,
+                        project: {
+                            id: 789,
+                            name: 'Zero Id Project',
+                        },
+                        projectId: 0,
+                        projectName: 'Zero Id Project',
+                        requiredMemberCount: 1,
+                        role: 'SOFTWARE_DEVELOPER',
+                        skills: [],
+                        status: 'Open',
+                        timezones: ['America/New_York'],
+                        title: 'Existing engagement',
+                        updatedAt: '',
+                        workload: 'FULL_TIME',
+                    } as any}
+                    isEditMode
+                    projectId='123'
+                />
+            </MemoryRouter>,
+        )
+
+        const parentProjectField = screen.getByLabelText('Parent Project') as HTMLSelectElement
+        const zeroProjectOption = screen.getByRole('option', {
+            name: 'Zero Id Project',
+        }) as HTMLOptionElement
+
+        expect(parentProjectField.value)
+            .toBe('0')
+        expect(zeroProjectOption.value)
+            .toBe('0')
+    })
+
+    it('normalizes legacy Pending Assignment status values to On Hold before saving', async () => {
+        const user = userEvent.setup()
+
+        mockedUpdateEngagement.mockResolvedValue({
+            anticipatedStart: 'Immediate',
+            assignedMemberHandles: [],
+            assignments: [],
+            compensationRange: '',
+            countries: ['US'],
+            createdAt: '',
+            description: 'Legacy engagement description',
+            durationWeeks: 4,
+            id: 'engagement-legacy',
+            isPrivate: false,
+            projectId: '123',
+            requiredMemberCount: 1,
+            role: 'SOFTWARE_DEVELOPER',
+            skills: [
+                {
+                    id: 'skill-1',
+                    name: 'React',
+                },
+            ],
+            status: 'On Hold',
+            timezones: ['America/New_York'],
+            title: 'Legacy engagement',
+            updatedAt: '',
+            workload: 'FULL_TIME',
+        } as any)
+
+        render(
+            <MemoryRouter>
+                <EngagementEditorForm
+                    engagement={{
+                        anticipatedStart: 'Immediate',
+                        countries: ['US'],
+                        description: 'Legacy engagement description',
+                        durationWeeks: 4,
+                        id: 'engagement-legacy',
+                        isPrivate: false,
+                        role: 'SOFTWARE_DEVELOPER',
+                        skills: [
+                            {
+                                id: 'skill-1',
+                                name: 'React',
+                            },
+                        ],
+                        status: 'Pending Assignment',
+                        timezones: ['America/New_York'],
+                        title: 'Legacy engagement',
+                        workload: 'FULL_TIME',
+                    } as any}
+                    isEditMode
+                    projectId='123'
+                />
+            </MemoryRouter>,
+        )
+
+        await user.click(screen.getByRole('button', { name: 'Save Engagement' }))
+
+        await waitFor(() => {
+            expect(mockedUpdateEngagement)
+                .toHaveBeenCalledWith(
+                    'engagement-legacy',
+                    expect.objectContaining({
+                        status: 'On Hold',
+                    }),
+                )
+        })
+    })
+
+    it('redirects to the saved parent project engagements list after creating an engagement', async () => {
         const user = userEvent.setup()
 
         mockedCreateEngagement.mockResolvedValue({
@@ -321,7 +506,7 @@ describe('EngagementEditorForm', () => {
             durationWeeks: 4,
             id: 'engagement-2',
             isPrivate: false,
-            projectId: '123',
+            projectId: '456',
             requiredMemberCount: 1,
             role: 'SOFTWARE_DEVELOPER',
             skills: [
@@ -360,7 +545,7 @@ describe('EngagementEditorForm', () => {
             .toHaveBeenCalledWith('Engagement created successfully')
 
         expect(mockNavigate)
-            .toHaveBeenCalledWith('/work/projects/123/engagements')
+            .toHaveBeenCalledWith('/work/projects/456/engagements')
     })
 
     it('redirects to the project engagements list after editing an engagement', async () => {

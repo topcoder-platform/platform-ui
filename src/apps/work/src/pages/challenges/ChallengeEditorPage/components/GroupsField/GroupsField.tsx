@@ -1,43 +1,115 @@
 import {
     FC,
+    useCallback,
     useContext,
+    useState,
 } from 'react'
-import { Link } from 'react-router-dom'
+import { useFormContext } from 'react-hook-form'
 
-import {
-    groupsRouteId,
-    rootRoute,
-} from '../../../../../config/routes.config'
+import { BaseModal } from '~/libs/ui'
+
 import { WorkAppContext } from '../../../../../lib/contexts/WorkAppContext'
+import {
+    Group,
+    GroupBulkCreateResponse,
+} from '../../../../../lib/models'
 import { FormGroupsSelect } from '../../../../../lib/components/form'
+import { GroupsPage } from '../../../../groups'
 
 import styles from './GroupsField.module.scss'
 
 export const GroupsField: FC = () => {
+    const formContext = useFormContext()
     const workAppContext = useContext(WorkAppContext)
+    const [createdGroups, setCreatedGroups] = useState<Group[]>([])
+    const [showCreateGroupModal, setShowCreateGroupModal] = useState<boolean>(false)
     const canManageGroups = workAppContext.isAdmin || workAppContext.isCopilot || workAppContext.isManager
-    const createGroupPath = rootRoute
-        ? `${rootRoute}/${groupsRouteId}`
-        : `/${groupsRouteId}`
+
+    const handleCreateGroupModalClose = useCallback((): void => {
+        setShowCreateGroupModal(false)
+    }, [])
+
+    const handleCreateGroupModalOpen = useCallback((): void => {
+        setShowCreateGroupModal(true)
+    }, [])
+
+    const handleCreateGroupSuccess = useCallback(
+        (createdGroup: GroupBulkCreateResponse): void => {
+            const createdGroupId = createdGroup.id.trim()
+            const createdGroupName = createdGroup.name.trim()
+
+            if (!createdGroupId || !createdGroupName) {
+                return
+            }
+
+            setCreatedGroups(previousGroups => (
+                previousGroups.some(group => group.id === createdGroupId)
+                    ? previousGroups
+                    : [
+                        ...previousGroups,
+                        {
+                            id: createdGroupId,
+                            name: createdGroupName,
+                        },
+                    ]
+            ))
+
+            const currentGroups = Array.isArray(formContext.getValues('groups'))
+                ? formContext.getValues('groups')
+                    .map((groupId: unknown) => (typeof groupId === 'string'
+                        ? groupId.trim()
+                        : ''))
+                    .filter(Boolean)
+                : []
+
+            formContext.setValue(
+                'groups',
+                Array.from(new Set([
+                    ...currentGroups,
+                    createdGroupId,
+                ])),
+                {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                },
+            )
+        },
+        [formContext],
+    )
 
     return (
         <div className={styles.container}>
             <div className={styles.selectField}>
                 <FormGroupsSelect
+                    additionalGroups={createdGroups}
                     label='Groups'
                     name='groups'
                 />
             </div>
             {canManageGroups
                 ? (
-                    <Link
+                    <button
                         className={styles.createGroupLink}
-                        rel='noreferrer'
-                        target='_blank'
-                        to={createGroupPath}
+                        onClick={handleCreateGroupModalOpen}
+                        type='button'
                     >
                         Create Group
-                    </Link>
+                    </button>
+                )
+                : undefined}
+            {showCreateGroupModal
+                ? (
+                    <BaseModal
+                        open
+                        onClose={handleCreateGroupModalClose}
+                        size='lg'
+                    >
+                        <GroupsPage
+                            embedded
+                            onClose={handleCreateGroupModalClose}
+                            onCreateSuccess={handleCreateGroupSuccess}
+                        />
+                    </BaseModal>
                 )
                 : undefined}
         </div>
