@@ -6,8 +6,8 @@
   Existing challenges keep the same `Details`, `Resources`, and `Submissions` tabs in both edit and
   view routes; view mode only makes the details tab read-only and suppresses edit-only form controls.
 - `ChallengeEditorPage.tsx` also renders challenge quick links in the right header action group for
-  existing challenges (`Challenge`, `Review`, and `Forum` when present). In view mode it also adds
-  an `Edit` action.
+  existing challenges (`Challenge`, `Review`, and `Forum` when present). In view mode it adds
+  an `Edit` action only when the challenge is not completed.
 - `components/ChallengeEditorForm.tsx`: React Hook Form container with autosave and manual save.
   In view mode it renders the existing challenge data in a disabled fieldset and omits save/launch
   footer actions.
@@ -99,3 +99,4 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 - `Cancel` is shown on the details tab for `DRAFT` and `ACTIVE` challenges and uses the shared large secondary button treatment so it matches the footer action styling.
 - `Mark Complete` is shown beside `Cancel` for `ACTIVE` task challenges when exactly one assignee can be resolved from the challenge submitter resources. It mirrors the legacy work-manager flow by confirming the task prize and assignee, patching the challenge to `COMPLETED`, and saving that assignee as the sole winner. The button remains hidden for copilots assigned to their own task, and it reuses the same shared large secondary styling as `Cancel`.
 - `Delete` is shown for existing challenges in `NEW` status and requires confirmation.
+- `Edit` is shown in read-only view mode for existing challenges unless the challenge status is `COMPLETED`.

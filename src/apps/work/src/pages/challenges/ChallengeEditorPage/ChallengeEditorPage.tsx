@@ -45,6 +45,7 @@ import {
 import {
     extractErrorMessage,
     getStatusText,
+    isChallengeCompleted,
     showErrorToast,
     showSuccessToast,
 } from '../../../lib/utils'
@@ -1170,11 +1171,14 @@ export const ChallengeEditorPage: FC = () => {
         challenge: challengeResult.challenge,
         challengeId,
     })
+    const canEditChallenge = isViewMode
+        && !!editChallengePath
+        && !isChallengeCompleted(effectiveChallengeStatus)
     const rightHeader = renderHeaderAction({
         canCancelChallenge,
         canCompleteTask,
         canDeleteChallenge,
-        canEditChallenge: isViewMode && !!editChallengePath,
+        canEditChallenge,
         canLaunchChallenge,
         challenge: headerChallenge,
         challengeId: persistedChallengeId,
