@@ -274,10 +274,7 @@ const ManualWorkflowEditor: FC<ManualWorkflowEditorProps> = (
         <div className={styles.workflowEditorCard}>
             <div className={styles.workflowEditorHeader}>
                 <div>
-                    <h4>
-                        Workflow
-                        {props.workflowNumber}
-                    </h4>
+                    <h4>{`Workflow ${props.workflowNumber}`}</h4>
                     <p>Choose the AI workflow, its scoring weight, and whether it acts as a gate.</p>
                 </div>
                 {!props.readOnly
