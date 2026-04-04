@@ -60,6 +60,33 @@ describe('buildProjectLandingPath', () => {
             .toBe('/projects/200/invitations')
     })
 
+    it('routes the invited user to the invitation modal path for requested invites', () => {
+        mockedDecodeToken.mockReturnValue({
+            email: 'invitee@example.com',
+            userId: '123',
+        } as ReturnType<typeof decodeToken>)
+
+        expect(buildProjectLandingPath({
+            ...project,
+            invites: [
+                {
+                    email: 'invitee@example.com',
+                    status: 'requested',
+                    userId: 123,
+                },
+            ],
+        }, 'token'))
+            .toBe('/projects/200/invitations')
+    })
+
+    it('routes the invited user to the invitation modal path when only isInvited is available', () => {
+        expect(buildProjectLandingPath({
+            ...project,
+            isInvited: true,
+        }))
+            .toBe('/projects/200/invitations')
+    })
+
     it('keeps the challenges path when the matched invite is already accepted', () => {
         mockedDecodeToken.mockReturnValue({
             email: 'invitee@example.com',

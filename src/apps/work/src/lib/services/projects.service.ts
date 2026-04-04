@@ -530,7 +530,7 @@ function normalizeProjectSummary(project: ProjectSummary): ProjectSummary {
     return {
         ...project,
         invites,
-        isInvited: invites.length > 0,
+        isInvited: project.isInvited ?? invites.length > 0,
         members,
     }
 }
