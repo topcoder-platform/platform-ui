@@ -20,6 +20,7 @@ import {
     useFetchResources,
 } from '../../../lib/hooks'
 import { deleteChallenge } from '../../../lib/services'
+import { isChallengeCompleted } from '../../../lib/utils'
 import {
     getAssignedTaskMember,
     shouldShowCompleteTaskAction,
@@ -169,6 +170,7 @@ jest.mock('../../../lib/services', () => ({
 jest.mock('../../../lib/utils', () => ({
     extractErrorMessage: jest.fn(() => 'Error'),
     getStatusText: jest.fn((status?: string) => status || ''),
+    isChallengeCompleted: jest.fn(),
     showErrorToast: jest.fn(),
     showSuccessToast: jest.fn(),
 }))
@@ -240,6 +242,7 @@ const mockedUseFetchChallenge = useFetchChallenge as jest.Mock
 const mockedUseFetchResourceRoles = useFetchResourceRoles as jest.Mock
 const mockedUseFetchResources = useFetchResources as jest.Mock
 const mockedDeleteChallenge = deleteChallenge as jest.Mock
+const mockedIsChallengeCompleted = isChallengeCompleted as jest.Mock
 const mockedGetAssignedTaskMember = getAssignedTaskMember as jest.Mock
 const mockedShouldShowCompleteTaskAction = shouldShowCompleteTaskAction as jest.Mock
 
@@ -291,6 +294,7 @@ describe('ChallengeEditorPage', () => {
             isLoading: false,
             resources: [],
         })
+        mockedIsChallengeCompleted.mockImplementation((status?: string) => status === 'COMPLETED')
     })
 
     it('renders the updated quick links in the right header for edit mode', async () => {
@@ -353,7 +357,7 @@ describe('ChallengeEditorPage', () => {
             .toBe('lg')
     })
 
-    it('renders a read-only draft challenge view with launch and edit header actions', async () => {
+    it('renders a read-only draft challenge view with cancel, launch, and edit header actions', async () => {
         renderPage(
             '/projects/123/challenges/456/view',
             '/projects/:projectId/challenges/:challengeId/view',
@@ -370,6 +374,8 @@ describe('ChallengeEditorPage', () => {
         )
             .toBe('false')
         expect(screen.getByRole('heading', { name: 'View Edit test' }))
+            .toBeTruthy()
+        expect(screen.getByRole('button', { name: 'Cancel' }))
             .toBeTruthy()
         expect(screen.getByRole('button', { name: 'Launch' }))
             .toBeTruthy()
@@ -407,6 +413,38 @@ describe('ChallengeEditorPage', () => {
             .toBeNull()
         expect(screen.getByRole('button', { name: 'Edit' }))
             .toBeTruthy()
+    })
+
+    it('hides the read-only edit action for completed challenges', async () => {
+        mockedUseFetchChallenge.mockReturnValue({
+            challenge: {
+                discussions: [{
+                    url: 'https://example.com/forum/challenges/456',
+                }],
+                id: '456',
+                name: 'Completed challenge',
+                prizeSets: [],
+                status: 'COMPLETED',
+            },
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+        })
+
+        renderPage(
+            '/projects/123/challenges/456/view',
+            '/projects/:projectId/challenges/:challengeId/view',
+        )
+
+        await waitFor(() => {
+            expect(screen.getByText('Challenge View Form'))
+                .toBeTruthy()
+        })
+
+        await waitFor(() => {
+            expect(screen.queryByRole('button', { name: 'Edit' }))
+                .toBeNull()
+        })
     })
 
     it('renders active header actions with the shared large secondary styling', async () => {

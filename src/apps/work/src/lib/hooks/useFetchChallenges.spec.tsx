@@ -9,10 +9,7 @@ import { SWRConfig } from 'swr'
 
 import { fetchChallenges } from '../services'
 
-import {
-    useFetchChallenges,
-    UseFetchChallengesResult,
-} from './useFetchChallenges'
+import { useFetchChallenges, UseFetchChallengesResult } from './useFetchChallenges'
 
 jest.mock('../constants', () => ({
     PAGE_SIZE: 10,
@@ -38,8 +35,13 @@ function createWrapper(cache: Map<string, unknown>) {
     }
 }
 
-const TestComponent = (): JSX.Element => {
+interface TestComponentProps {
+    enabled?: boolean
+}
+
+const TestComponent = (props: TestComponentProps): JSX.Element => {
     const { metadata }: UseFetchChallengesResult = useFetchChallenges({
+        enabled: props.enabled,
         memberId: 12345,
         page: 2,
         perPage: 25,
@@ -87,5 +89,22 @@ describe('useFetchChallenges', () => {
             expect(screen.getByText('2'))
                 .toBeTruthy()
         })
+    })
+
+    it('does not fetch challenges when disabled', async () => {
+        const cache = new Map<string, unknown>()
+        const wrapper = createWrapper(cache)
+
+        render(<TestComponent enabled={false} />, {
+            wrapper,
+        })
+
+        await waitFor(() => {
+            expect(screen.getByText('2'))
+                .toBeTruthy()
+        })
+
+        expect(mockedFetchChallenges)
+            .not.toHaveBeenCalled()
     })
 })

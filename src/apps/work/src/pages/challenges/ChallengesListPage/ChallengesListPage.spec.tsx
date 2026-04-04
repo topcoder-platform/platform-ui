@@ -224,9 +224,30 @@ describe('ChallengesListPage', () => {
 
         expect(mockedUseFetchChallenges)
             .toHaveBeenCalledWith(expect.objectContaining({
+                enabled: true,
                 memberId: 12345,
                 projectId: undefined,
             }))
+    })
+
+    it('waits for member scope before fetching dashboard challenges for non-privileged users', () => {
+        renderPage(
+            '/challenges',
+            '/challenges',
+            {
+                ...defaultContextValue,
+                loginUserInfo: undefined,
+            },
+        )
+
+        expect(mockedUseFetchChallenges)
+            .toHaveBeenCalledWith(expect.objectContaining({
+                enabled: false,
+                memberId: undefined,
+                projectId: undefined,
+            }))
+        expect(screen.getByText('Loading'))
+            .toBeTruthy()
     })
 
     it('does not scope project challenge queries by member id', () => {

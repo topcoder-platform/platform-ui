@@ -243,6 +243,8 @@ const reviewerSchema = yup.object({
         }),
     shouldOpenOpportunity: yup.boolean()
         .optional(),
+    type: yup.string()
+        .optional(),
 })
     .test(
         'all-member-slots-required-when-opportunity-closed',

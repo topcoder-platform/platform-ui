@@ -1,6 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
 import { FC } from 'react'
 import {
+    fireEvent,
     render,
     screen,
 } from '@testing-library/react'
@@ -176,5 +177,21 @@ describe('ChallengePrizesField', () => {
             .toBe(3)
         expect(screen.getAllByRole('button').length)
             .toBe(2)
+    })
+
+    it('keeps the first row free of a blank delete column after adding another prize', () => {
+        render(<TestHarness challengeTypeName='Challenge' />)
+
+        fireEvent.click(screen.getByRole('button', { name: '+ Add New Prize' }))
+
+        const firstPrizeRow = screen.getByText('Prize 1')
+            .parentElement as HTMLDivElement
+        const secondPrizeRow = screen.getByText('Prize 2')
+            .parentElement as HTMLDivElement
+
+        expect(firstPrizeRow.childElementCount)
+            .toBe(2)
+        expect(secondPrizeRow.childElementCount)
+            .toBe(3)
     })
 })

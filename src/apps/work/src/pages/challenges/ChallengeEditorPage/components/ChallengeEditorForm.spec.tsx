@@ -191,7 +191,7 @@ jest.mock('~/config', () => ({
     virtual: true,
 })
 jest.mock('./AssignedMemberField', () => ({
-    AssignedMemberField: () => <></>,
+    AssignedMemberField: () => <span>Assigned Member Field</span>,
 }))
 jest.mock('./AttachmentsField', () => {
     const reactHookForm: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
@@ -236,7 +236,14 @@ jest.mock('./ChallengeDescriptionField', () => ({
     ChallengeDescriptionField: () => <></>,
 }))
 jest.mock('./ChallengeScheduleSection', () => ({
-    ChallengeScheduleSection: () => <></>,
+    ChallengeScheduleSection: (props: {
+        disabled?: boolean
+    }) => (
+        <div
+            data-disabled={props.disabled === true ? 'true' : 'false'}
+            data-testid='challenge-schedule-section'
+        />
+    ),
 }))
 jest.mock('./ChallengeFeeField', () => ({
     ChallengeFeeField: function ChallengeFeeField() {
@@ -426,7 +433,7 @@ jest.mock('./ReviewersField', () => ({
     ReviewersField: () => <></>,
 }))
 jest.mock('./ReviewTypeField', () => ({
-    ReviewTypeField: () => <></>,
+    ReviewTypeField: () => <span>Review Type Field</span>,
 }))
 jest.mock('./RoundTypeField', () => ({
     RoundTypeField: () => <></>,
@@ -711,6 +718,33 @@ describe('ChallengeEditorForm', () => {
             .toBeNull()
     })
 
+    it('keeps task-only controls visible in edit mode when only the persisted task flag is available', () => {
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [],
+            isLoading: false,
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...draftChallenge,
+                        task: {
+                            isTask: true,
+                        },
+                        typeId: 'task-type-id',
+                    }}
+                    isEditMode
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText('Assigned Member Field'))
+            .toBeInTheDocument()
+        expect(screen.getByText('Review Type Field'))
+            .toBeInTheDocument()
+    })
+
     it('renders secondary footer actions and a primary launch action for draft challenges', () => {
         render(
             <MemoryRouter>
@@ -767,6 +801,11 @@ describe('ChallengeEditorForm', () => {
 
         expect((document.querySelector('fieldset') as HTMLFieldSetElement).disabled)
             .toBe(true)
+        expect(screen.getByTestId('challenge-schedule-section'))
+            .toHaveAttribute('data-disabled', 'true')
+        expect(screen.getByTestId('challenge-schedule-section')
+            .closest('fieldset[disabled]'))
+            .toBeNull()
         expect(screen.queryByRole('button', { name: 'Cancel' }))
             .toBeNull()
         expect(screen.queryByRole('button', { name: 'Save Challenge' }))
@@ -843,6 +882,63 @@ describe('ChallengeEditorForm', () => {
             .toBeUndefined()
     })
 
+    it('rejects launch when task validation blocks activation', async () => {
+        let launchAction: (() => Promise<void>) | undefined
+        let launchError: Error | undefined
+
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'TSK',
+                id: 'task-type-id',
+                isTask: true,
+                name: 'Task',
+            }],
+            isLoading: false,
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...validDraftChallenge,
+                        type: {
+                            abbreviation: 'TSK',
+                            name: 'Task',
+                        },
+                        typeId: 'task-type-id',
+                    }}
+                    onRegisterLaunchAction={action => {
+                        launchAction = action
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        await waitFor(() => {
+            expect(launchAction)
+                .toEqual(expect.any(Function))
+        })
+
+        await act(async () => {
+            try {
+                await (launchAction as () => Promise<void>)()
+            } catch (error) {
+                launchError = error as Error
+            }
+        })
+
+        expect(launchError)
+            .toEqual(expect.objectContaining({
+                message: 'Assign a member before launching a task challenge.',
+            }))
+        expect(mockedPatchChallenge)
+            .not.toHaveBeenCalled()
+        expect(mockedShowErrorToast)
+            .toHaveBeenCalledWith('Assign a member before launching a task challenge.')
+        expect(mockedShowErrorToast)
+            .not.toHaveBeenCalledWith('Failed to save challenge')
+    })
+
     it('registers the launch action for read-only draft challenges', async () => {
         let launchAction: (() => Promise<void>) | undefined
 
@@ -870,6 +966,7 @@ describe('ChallengeEditorForm', () => {
 
         await act(async () => {
             await launchAction?.()
+                .catch(() => undefined)
         })
 
         await waitFor(() => {
@@ -1122,6 +1219,7 @@ describe('ChallengeEditorForm', () => {
 
         await act(async () => {
             await launchAction?.()
+                .catch(() => undefined)
         })
 
         await waitFor(() => {
@@ -1203,6 +1301,7 @@ describe('ChallengeEditorForm', () => {
 
         await act(async () => {
             await launchAction?.()
+                .catch(() => undefined)
         })
 
         await waitFor(() => {
@@ -1213,6 +1312,95 @@ describe('ChallengeEditorForm', () => {
         })
         expect(mockedShowErrorToast)
             .not.toHaveBeenCalledWith('Assign a member before launching a task challenge.')
+    })
+
+    it('blocks launch when the project billing account is inactive', async () => {
+        let launchAction: (() => Promise<void>) | undefined
+        let launchError: Error | undefined
+
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            isLoading: false,
+            tracks: [{
+                id: 'design-track',
+                name: 'Design',
+                track: 'DESIGN',
+            }],
+        })
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'F2F',
+                id: 'design-first2finish',
+                isTask: false,
+                name: 'First2Finish',
+            }],
+            isLoading: false,
+        })
+        mockedUseFetchProjectBillingAccount.mockReturnValue({
+            billingAccount: {
+                active: false,
+                id: '80001061',
+            },
+            isLoading: false,
+        })
+        mockedUseFetchResourceRoles.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            resourceRoles: [{
+                id: 'iterative-reviewer-role-id',
+                name: 'Iterative Reviewer',
+            }],
+        })
+        mockedUseFetchResources.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            mutate: jest.fn(),
+            resources: [{
+                challengeId: '12345',
+                memberHandle: 'taasiintake300',
+                memberId: 'manual-reviewer-member-id',
+                role: 'Iterative Reviewer',
+                roleId: 'iterative-reviewer-role-id',
+            }],
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={first2FinishDraftChallenge}
+                    onRegisterLaunchAction={action => {
+                        launchAction = action
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        await waitFor(() => {
+            expect(launchAction)
+                .toEqual(expect.any(Function))
+        })
+
+        await act(async () => {
+            try {
+                await (launchAction as () => Promise<void>)()
+            } catch (error) {
+                launchError = error as Error
+            }
+        })
+
+        expect(launchError)
+            .toEqual(expect.objectContaining({
+                message: 'Cannot launch challenges because the project billing account is inactive.',
+            }))
+        expect(mockedPatchChallenge)
+            .not.toHaveBeenCalled()
+        expect(mockedShowErrorToast)
+            .toHaveBeenCalledWith(
+                'Cannot launch challenges because the project billing account is inactive.',
+            )
+        expect(mockedShowErrorToast)
+            .not.toHaveBeenCalledWith('Failed to save challenge')
     })
 
     it('preserves uploaded attachments after saving when the update response omits them', async () => {

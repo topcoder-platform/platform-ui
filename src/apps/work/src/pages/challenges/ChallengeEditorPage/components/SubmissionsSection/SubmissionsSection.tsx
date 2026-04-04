@@ -15,7 +15,6 @@ import { Button } from '~/libs/ui'
 import {
     ArtifactsModal,
     Pagination,
-    SubmissionHistoryModal,
     type SubmissionSortBy,
     SubmissionsTable,
 } from '../../../../../lib/components'
@@ -343,10 +342,8 @@ export const SubmissionsSection: FC<SubmissionsSectionProps> = (
     const [memberCache, setMemberCache] = useState<MemberCache>({})
     const [page, setPage] = useState<number>(1)
     const [perPage, setPerPage] = useState<number>(PAGE_SIZE)
-    const [selectedHistorySubmission, setSelectedHistorySubmission] = useState<Submission | undefined>(undefined)
     const [selectedSubmissionId, setSelectedSubmissionId] = useState<string>('')
     const [showArtifactsModal, setShowArtifactsModal] = useState<boolean>(false)
-    const [showHistoryModal, setShowHistoryModal] = useState<boolean>(false)
     const [sortBy, setSortBy] = useState<SubmissionSortBy>('createdAt')
     const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
 
@@ -524,16 +521,6 @@ export const SubmissionsSection: FC<SubmissionsSectionProps> = (
         setShowArtifactsModal(false)
     }, [])
 
-    const handleOpenHistory = useCallback((submission: Submission): void => {
-        setSelectedHistorySubmission(submission)
-        setShowHistoryModal(true)
-    }, [])
-
-    const handleCloseHistory = useCallback((): void => {
-        setSelectedHistorySubmission(undefined)
-        setShowHistoryModal(false)
-    }, [])
-
     const handleSort = useCallback((fieldName: SubmissionSortBy): void => {
         setSortOrder(currentSortOrder => {
             if (sortBy === fieldName) {
@@ -657,7 +644,6 @@ export const SubmissionsSection: FC<SubmissionsSectionProps> = (
                     isLoading={submissionsResult.isLoading}
                     isLoadingMembers={isMembersLoading}
                     onDownloadSubmission={handleDownloadSubmission}
-                    onOpenHistory={handleOpenHistory}
                     onOpenArtifacts={handleOpenArtifacts}
                     onSort={handleSort}
                     sortBy={sortBy}
@@ -677,7 +663,6 @@ export const SubmissionsSection: FC<SubmissionsSectionProps> = (
                             isLoading={false}
                             isLoadingMembers={isMembersLoading}
                             onDownloadSubmission={handleDownloadSubmission}
-                            onOpenHistory={handleOpenHistory}
                             onOpenArtifacts={handleOpenArtifacts}
                             onSort={handleSort}
                             sortBy={sortBy}
@@ -699,19 +684,6 @@ export const SubmissionsSection: FC<SubmissionsSectionProps> = (
                     total={paginationTotal}
                 />
             </div>
-
-            {showHistoryModal && selectedHistorySubmission
-                ? (
-                    <SubmissionHistoryModal
-                        challengeId={props.challengeId}
-                        memberHandle={selectedHistorySubmission.memberHandle}
-                        memberId={selectedHistorySubmission.memberId}
-                        onClose={handleCloseHistory}
-                        submissionId={selectedHistorySubmission.id}
-                        submissionType={selectedHistorySubmission.type}
-                    />
-                )
-                : undefined}
 
             {showArtifactsModal && selectedSubmissionId
                 ? (

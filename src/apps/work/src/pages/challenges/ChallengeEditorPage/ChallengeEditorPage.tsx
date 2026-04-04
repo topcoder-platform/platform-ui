@@ -45,6 +45,7 @@ import {
 import {
     extractErrorMessage,
     getStatusText,
+    isChallengeCompleted,
     showErrorToast,
     showSuccessToast,
 } from '../../../lib/utils'
@@ -175,6 +176,7 @@ function shouldShowLaunchAction(
 
 function shouldShowCancelAction(
     isEditMode: boolean,
+    isExistingChallenge: boolean,
     activeTab: EditorTab,
     challengeStatus: string | undefined,
 ): boolean {
@@ -182,11 +184,13 @@ function shouldShowCancelAction(
         .trim()
         .toUpperCase()
 
-    return isEditMode
-        && activeTab === 'details'
+    const isDraftChallenge = normalizedStatus === CHALLENGE_STATUS.DRAFT
+    const isActiveChallenge = normalizedStatus === CHALLENGE_STATUS.ACTIVE
+
+    return activeTab === 'details'
         && (
-            normalizedStatus === CHALLENGE_STATUS.ACTIVE
-            || normalizedStatus === CHALLENGE_STATUS.DRAFT
+            (isExistingChallenge && isDraftChallenge)
+            || (isEditMode && isActiveChallenge)
         )
 }
 
@@ -1054,6 +1058,7 @@ export const ChallengeEditorPage: FC = () => {
     )
     const canCancelChallenge = shouldShowCancelAction(
         isEditMode,
+        isExistingChallenge,
         activeTab,
         effectiveChallengeStatus,
     )
@@ -1172,11 +1177,14 @@ export const ChallengeEditorPage: FC = () => {
         challenge: challengeResult.challenge,
         challengeId,
     })
+    const canEditChallenge = isViewMode
+        && !!editChallengePath
+        && !isChallengeCompleted(effectiveChallengeStatus)
     const rightHeader = renderHeaderAction({
         canCancelChallenge,
         canCompleteTask,
         canDeleteChallenge,
-        canEditChallenge: isViewMode && !!editChallengePath,
+        canEditChallenge,
         canLaunchChallenge,
         challenge: headerChallenge,
         challengeId: persistedChallengeId,
