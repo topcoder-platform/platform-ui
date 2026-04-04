@@ -2059,6 +2059,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             setError,
             syncDraftSingleAssignments,
             usesManualReviewers,
+            viewModePath,
         ],
     )
 
