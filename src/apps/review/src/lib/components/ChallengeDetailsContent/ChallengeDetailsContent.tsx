@@ -150,9 +150,11 @@ const renderSubmissionTab = ({
     aiReviewers,
 }: SubmissionTabParams): JSX.Element => {
     const isSubmissionTab = selectedTabNormalized === 'submission'
+    const isSpecificationSubmissionTab = selectedTabNormalized === 'specificationsubmission'
     const isTopgearSubmissionTab = selectedTabNormalized === 'topgearsubmission'
     const shouldRestrictToContestSubmissions = selectedTabNormalized
         .startsWith('submission')
+        || isSpecificationSubmissionTab
         || selectedTabNormalized === AI_SCREENING_KEY
         || isTopgearSubmissionTab
     const visibleSubmissions = shouldRestrictToContestSubmissions
