@@ -699,6 +699,24 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
     const reviewScorecardId = reviewPhaseMeta.scorecardId
     const reviewPhaseIds = reviewPhaseMeta.phaseIds
 
+    const specificationReviewPhaseMeta = useMemo(
+        () => resolvePhaseMeta(
+            'Specification Review',
+            challengeInfo?.phases,
+            challengeInfo?.reviewers,
+            challengeReviews,
+            challengeLegacy?.reviewScorecardId,
+        ),
+        [
+            challengeInfo?.phases,
+            challengeInfo?.reviewers,
+            challengeReviews,
+            challengeLegacy?.reviewScorecardId,
+        ],
+    )
+    const specificationReviewScorecardId = specificationReviewPhaseMeta.scorecardId
+    const specificationReviewPhaseIds = specificationReviewPhaseMeta.phaseIds
+
     const iterativeReviewPhaseMeta = useMemo(
         () => resolvePhaseMeta(
             'Iterative Review',
@@ -1847,6 +1865,12 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
                 )
                 || reviewMatchesPhase(
                     candidate,
+                    specificationReviewScorecardId,
+                    specificationReviewPhaseIds,
+                    'Specification Review',
+                )
+                || reviewMatchesPhase(
+                    candidate,
                     iterativeReviewScorecardId,
                     iterativeReviewPhaseIds,
                     'Iterative Review',
@@ -1906,6 +1930,8 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
         reviewAssignmentsBySubmission,
         reviewPhaseIds,
         reviewScorecardId,
+        specificationReviewPhaseIds,
+        specificationReviewScorecardId,
     ])
 
     // Build approval reviews list (one entry per approval review instance)

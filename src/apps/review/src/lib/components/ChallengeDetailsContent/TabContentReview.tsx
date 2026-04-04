@@ -197,6 +197,20 @@ export const TabContentReview: FC<Props> = (props: Props) => {
         () => normalizeTabLabel(selectedTab),
         [selectedTab],
     )
+    const selectedReviewPhaseName = useMemo<string | undefined>(
+        () => {
+            if (normalizedSelectedTab === 'specificationreview') {
+                return 'Specification Review'
+            }
+
+            if (normalizedSelectedTab === 'review') {
+                return 'Review'
+            }
+
+            return undefined
+        },
+        [normalizedSelectedTab],
+    )
     const shouldSortReviewTabByScore = useMemo(
         () => !props.isActiveChallenge && normalizedSelectedTab === 'review',
         [normalizedSelectedTab, props.isActiveChallenge],
@@ -499,16 +513,28 @@ export const TabContentReview: FC<Props> = (props: Props) => {
             isContestReviewPhaseSubmission(
                 submission,
                 challengeInfo?.phases,
+                selectedReviewPhaseName ?? 'Review',
             )
         ),
-        [challengeInfo?.phases],
+        [challengeInfo?.phases, selectedReviewPhaseName],
     )
     const shouldIncludeReviewRow = useCallback(
-        (submission: SubmissionInfo): boolean => (
-            shouldIncludeInReviewPhase(submission, challengeInfo?.phases)
-            || isAiFailedReviewSubmission(submission)
-        ),
-        [challengeInfo?.phases],
+        (submission: SubmissionInfo): boolean => {
+            if (selectedReviewPhaseName) {
+                return isContestReviewPhaseSubmission(
+                    submission,
+                    challengeInfo?.phases,
+                    selectedReviewPhaseName,
+                ) || (
+                    selectedReviewPhaseName === 'Review'
+                    && isAiFailedReviewSubmission(submission)
+                )
+            }
+
+            return shouldIncludeInReviewPhase(submission, challengeInfo?.phases)
+                || isAiFailedReviewSubmission(submission)
+        },
+        [challengeInfo?.phases, selectedReviewPhaseName],
     )
     const resolvedReviews = useMemo(
         () => {
