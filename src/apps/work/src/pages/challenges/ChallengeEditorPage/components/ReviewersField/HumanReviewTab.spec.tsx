@@ -355,6 +355,21 @@ describe('HumanReviewTab', () => {
             .toBeNull()
     })
 
+    it('renders the legacy review type dropdown on manual reviewer cards', () => {
+        render(<TestHarness />)
+
+        expect(screen.getByTestId('reviewers.0.type'))
+            .not.toBeNull()
+        expect(getPhaseOptionLabels('reviewers.0.type'))
+            .toEqual([
+                'Regular Review',
+                'Component Dev Review',
+                'Spec Review',
+                'Iterative Review',
+                'Scenarios Review',
+            ])
+    })
+
     it('restores iterative reviewer member ids from the iterative review role alias', async () => {
         mockedUseFetchResourceRoles.mockReturnValue({
             resourceRoles: [
@@ -486,6 +501,31 @@ describe('HumanReviewTab', () => {
                 screen.getByRole('checkbox', { name: 'Open public review opportunity' }) as HTMLInputElement
             ).checked)
                 .toBe(true)
+        })
+    })
+
+    it('defaults new manual reviewer cards to regular review type', async () => {
+        mockedFetchScorecards.mockResolvedValue([])
+
+        render(
+            <TestHarness
+                defaultValues={{
+                    reviewers: [],
+                }}
+            />,
+        )
+
+        await waitFor(() => {
+            expect((screen.getByRole('button', { name: 'Add reviewer' }) as HTMLButtonElement).disabled)
+                .toBe(false)
+        })
+
+        fireEvent.click(screen.getByRole('button', { name: 'Add reviewer' }))
+
+        await waitFor(() => {
+            expect(screen.getByTestId('reviewers.0.type')
+                .getAttribute('data-value'))
+                .toBe('REGULAR_REVIEW')
         })
     })
 
