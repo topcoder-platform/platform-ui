@@ -2278,157 +2278,164 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                     )
                                     : undefined}
 
-                                {showEditableTimelineSection
-                                    ? (
-                                        <section className={styles.section}>
-                                            <h3 className={styles.sectionTitle}>Timeline &amp; Schedule</h3>
-                                            <div className={styles.block}>
-                                                <ChallengeScheduleSection disabled={isReadOnly} />
-                                            </div>
-                                        </section>
-                                    )
-                                    : undefined}
-
-                                {showMarathonMatchScorerSection
-                                    ? (
-                                        <section className={styles.section}>
-                                            <h3 className={styles.sectionTitle}>Scorer</h3>
-                                            <div className={styles.block}>
-                                                <MarathonMatchScorerSection
-                                                    challengeId={currentChallengeId || ''}
-                                                    onScorerConfigChange={handleScorerConfigChange}
-                                                    phases={values.phases ?? []}
-                                                />
-                                            </div>
-                                        </section>
-                                    )
-                                    : undefined}
-
-                                <section className={styles.section}>
-                                    <h3 className={styles.sectionTitle}>Advanced Options</h3>
-                                    <div className={styles.grid}>
-                                        {isTaskChallengeSelected
-                                            ? <AssignedMemberField />
-                                            : undefined}
-                                        {isTaskChallengeSelected
-                                            ? (
-                                                <ReviewTypeField
-                                                    isTaskChallenge={isTaskChallengeSelected}
-                                                />
-                                            )
-                                            : undefined}
-                                        <GroupsField />
-                                        <TermsField shouldDefaultStandardTerm={!isEditMode} />
-                                        <NDAField />
-                                        <FormCheckboxField
-                                            checkboxOnlyHitArea
-                                            label='Wipro Allowed'
-                                            name='wiproAllowed'
-                                        />
-                                        <div className={styles.readOnlyField}>
-                                            <span className={styles.readOnlyFieldLabel}>Billing Account Id</span>
-                                            <span className={styles.readOnlyFieldValue}>
-                                                {displayedBillingAccountId}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </section>
-
-                                {showSubmissionSettingsSection
-                                    ? (
-                                        <section className={styles.section}>
-                                            <h3 className={styles.sectionTitle}>Submission Settings</h3>
-                                            <div className={styles.grid}>
-                                                <FinalDeliverablesField />
-                                                <StockArtsField />
-                                                <SubmissionVisibilityField />
-                                                <MaximumSubmissionsField />
-                                            </div>
-                                        </section>
-                                    )
-                                    : undefined}
-
-                                {usesManualReviewers
-                                    ? (
-                                        <section className={styles.section}>
-                                            <h3 className={styles.sectionTitle}>Review</h3>
-                                            <div className={styles.block}>
-                                                <ReviewersField />
-                                            </div>
-                                        </section>
-                                    )
-                                    : undefined}
-
-                                <section className={styles.section}>
-                                    <h3 className={styles.sectionTitle}>Attachments</h3>
-                                    <div className={styles.block}>
-                                        <AttachmentsField />
-                                    </div>
-                                </section>
-
-                                {!isReadOnly
-                                    ? (
-                                        <div className={styles.footer}>
-                                            <div className={styles.statusArea}>
-                                                {statusText
-                                                    ? <span className={styles.statusText}>{statusText}</span>
-                                                    : undefined}
-                                                <span className={styles.lastSaved}>{formatLastSaved(lastSaved)}</span>
-                                                {saveValidationError
-                                                    ? <span className={styles.errorText}>{saveValidationError}</span>
-                                                    : undefined}
-                                                {saveError
-                                                    ? <span className={styles.errorText}>{saveError}</span>
-                                                    : undefined}
-                                                {isScorerBlockingChallengeActions
-                                                    ? (
-                                                        <span className={styles.warningText}>
-                                                            The scorer configuration must be saved and valid before the
-                                                            {' '}
-                                                            challenge can be saved or launched.
-                                                        </span>
-                                                    )
-                                                    : undefined}
-                                            </div>
-
-                                            <div className={styles.actions}>
-                                                <Button
-                                                    label='Cancel'
-                                                    onClick={handleCancelClick}
-                                                    secondary
-                                                    size='lg'
-                                                    type='button'
-                                                />
-                                                <Button
-                                                    disabled={
-                                                        (!formState.isDirty || isSaving)
-                                                        || isScorerBlockingChallengeActions
-                                                    }
-                                                    label={submitButtonLabel}
-                                                    secondary
-                                                    size='lg'
-                                                    type='submit'
-                                                />
-                                                {props.canLaunchChallenge && onLaunchOpen
-                                                    ? (
-                                                        <Button
-                                                            disabled={props.isLaunchDisabled}
-                                                            label={props.launchButtonLabel || 'Launch'}
-                                                            onClick={onLaunchOpen}
-                                                            primary
-                                                            size='lg'
-                                                            type='button'
-                                                        />
-                                                    )
-                                                    : undefined}
-                                            </div>
-                                        </div>
-                                    )
-                                    : undefined}
                             </>
                         )
                         : undefined}
                 </fieldset>
+
+                {isChallengeCreated && showEditableTimelineSection
+                    ? (
+                        <section className={styles.section}>
+                            <h3 className={styles.sectionTitle}>Timeline &amp; Schedule</h3>
+                            <div className={styles.block}>
+                                <ChallengeScheduleSection disabled={isReadOnly} />
+                            </div>
+                        </section>
+                    )
+                    : undefined}
+
+                {isChallengeCreated
+                    ? (
+                        <fieldset className={styles.formContent} disabled={isReadOnly}>
+                            {showMarathonMatchScorerSection
+                                ? (
+                                    <section className={styles.section}>
+                                        <h3 className={styles.sectionTitle}>Scorer</h3>
+                                        <div className={styles.block}>
+                                            <MarathonMatchScorerSection
+                                                challengeId={currentChallengeId || ''}
+                                                onScorerConfigChange={handleScorerConfigChange}
+                                                phases={values.phases ?? []}
+                                            />
+                                        </div>
+                                    </section>
+                                )
+                                : undefined}
+
+                            <section className={styles.section}>
+                                <h3 className={styles.sectionTitle}>Advanced Options</h3>
+                                <div className={styles.grid}>
+                                    {isTaskChallengeSelected
+                                        ? <AssignedMemberField />
+                                        : undefined}
+                                    {isTaskChallengeSelected
+                                        ? (
+                                            <ReviewTypeField
+                                                isTaskChallenge={isTaskChallengeSelected}
+                                            />
+                                        )
+                                        : undefined}
+                                    <GroupsField />
+                                    <TermsField shouldDefaultStandardTerm={!isEditMode} />
+                                    <NDAField />
+                                    <FormCheckboxField
+                                        checkboxOnlyHitArea
+                                        label='Wipro Allowed'
+                                        name='wiproAllowed'
+                                    />
+                                    <div className={styles.readOnlyField}>
+                                        <span className={styles.readOnlyFieldLabel}>Billing Account Id</span>
+                                        <span className={styles.readOnlyFieldValue}>
+                                            {displayedBillingAccountId}
+                                        </span>
+                                    </div>
+                                </div>
+                            </section>
+
+                            {showSubmissionSettingsSection
+                                ? (
+                                    <section className={styles.section}>
+                                        <h3 className={styles.sectionTitle}>Submission Settings</h3>
+                                        <div className={styles.grid}>
+                                            <FinalDeliverablesField />
+                                            <StockArtsField />
+                                            <SubmissionVisibilityField />
+                                            <MaximumSubmissionsField />
+                                        </div>
+                                    </section>
+                                )
+                                : undefined}
+
+                            {usesManualReviewers
+                                ? (
+                                    <section className={styles.section}>
+                                        <h3 className={styles.sectionTitle}>Review</h3>
+                                        <div className={styles.block}>
+                                            <ReviewersField />
+                                        </div>
+                                    </section>
+                                )
+                                : undefined}
+
+                            <section className={styles.section}>
+                                <h3 className={styles.sectionTitle}>Attachments</h3>
+                                <div className={styles.block}>
+                                    <AttachmentsField />
+                                </div>
+                            </section>
+
+                            {!isReadOnly
+                                ? (
+                                    <div className={styles.footer}>
+                                        <div className={styles.statusArea}>
+                                            {statusText
+                                                ? <span className={styles.statusText}>{statusText}</span>
+                                                : undefined}
+                                            <span className={styles.lastSaved}>{formatLastSaved(lastSaved)}</span>
+                                            {saveValidationError
+                                                ? <span className={styles.errorText}>{saveValidationError}</span>
+                                                : undefined}
+                                            {saveError
+                                                ? <span className={styles.errorText}>{saveError}</span>
+                                                : undefined}
+                                            {isScorerBlockingChallengeActions
+                                                ? (
+                                                    <span className={styles.warningText}>
+                                                        The scorer configuration must be saved and valid before the
+                                                        {' '}
+                                                        challenge can be saved or launched.
+                                                    </span>
+                                                )
+                                                : undefined}
+                                        </div>
+
+                                        <div className={styles.actions}>
+                                            <Button
+                                                label='Cancel'
+                                                onClick={handleCancelClick}
+                                                secondary
+                                                size='lg'
+                                                type='button'
+                                            />
+                                            <Button
+                                                disabled={
+                                                    (!formState.isDirty || isSaving)
+                                                    || isScorerBlockingChallengeActions
+                                                }
+                                                label={submitButtonLabel}
+                                                secondary
+                                                size='lg'
+                                                type='submit'
+                                            />
+                                            {props.canLaunchChallenge && onLaunchOpen
+                                                ? (
+                                                    <Button
+                                                        disabled={props.isLaunchDisabled}
+                                                        label={props.launchButtonLabel || 'Launch'}
+                                                        onClick={onLaunchOpen}
+                                                        primary
+                                                        size='lg'
+                                                        type='button'
+                                                    />
+                                                )
+                                                : undefined}
+                                        </div>
+                                    </div>
+                                )
+                                : undefined}
+                        </fieldset>
+                    )
+                    : undefined}
             </form>
         </FormProvider>
     )
