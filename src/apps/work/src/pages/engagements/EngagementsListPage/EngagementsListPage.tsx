@@ -69,6 +69,7 @@ import styles from './EngagementsListPage.module.scss'
 type SortOrder = 'asc' | 'desc'
 
 type EngagementSortField =
+    | 'createdAt'
     | 'anticipatedStart'
     | 'applications'
     | 'membersAssigned'
@@ -117,6 +118,10 @@ const columns: ColumnDefinition[] = [
 ]
 
 function getSortValue(engagement: Engagement, fieldName: EngagementSortField): number | string {
+    if (fieldName === 'createdAt') {
+        return engagement.createdAt || ''
+    }
+
     if (fieldName === 'anticipatedStart') {
         const orderMap: Record<string, number> = {
             FEW_DAYS: 2,
@@ -408,10 +413,10 @@ export const EngagementsListPage: FC = () => {
     const [filters, setFilters] = useState<EngagementsListFilters>(() => ({
         projectName: undefined,
         sortBy: isAllEngagementsPage
-            ? 'anticipatedStart'
+            ? 'createdAt'
             : undefined,
         sortOrder: isAllEngagementsPage
-            ? 'asc'
+            ? 'desc'
             : undefined,
         status: undefined,
         title: undefined,
@@ -440,10 +445,10 @@ export const EngagementsListPage: FC = () => {
             ? scopedProjectIds
             : undefined,
         sortBy: isAllEngagementsPage
-            ? 'anticipatedStart'
+            ? 'createdAt'
             : undefined,
         sortOrder: isAllEngagementsPage
-            ? 'asc'
+            ? 'desc'
             : undefined,
         status: filters.status,
     }), [
