@@ -681,7 +681,7 @@ export const ReviewConfigurationSummary: FC<ReviewConfigurationSummaryProps> = (
                                         <span>
                                             score &gt;=
                                             {' '}
-                                            {aiConfiguration?.minPassingThreshold || 75}
+                                            {aiConfiguration?.minPassingThreshold ?? 75}
                                             %
                                         </span>
                                         {isAiGatingMode
@@ -729,7 +729,7 @@ export const ReviewConfigurationSummary: FC<ReviewConfigurationSummaryProps> = (
                                         <span>
                                             &lt;
                                             {' '}
-                                            {aiConfiguration?.minPassingThreshold || 75}
+                                            {aiConfiguration?.minPassingThreshold ?? 75}
                                             %
                                         </span>
                                         <span>v</span>
