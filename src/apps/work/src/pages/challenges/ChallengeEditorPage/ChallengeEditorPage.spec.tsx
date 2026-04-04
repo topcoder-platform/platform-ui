@@ -346,7 +346,7 @@ describe('ChallengeEditorPage', () => {
             .toBe('lg')
     })
 
-    it('renders a read-only draft challenge view with launch and edit header actions', async () => {
+    it('renders a read-only draft challenge view with cancel, launch, and edit header actions', async () => {
         renderPage(
             '/projects/123/challenges/456/view',
             '/projects/:projectId/challenges/:challengeId/view',
@@ -358,6 +358,8 @@ describe('ChallengeEditorPage', () => {
         })
 
         expect(screen.getByRole('heading', { name: 'View Edit test' }))
+            .toBeTruthy()
+        expect(screen.getByRole('button', { name: 'Cancel' }))
             .toBeTruthy()
         expect(screen.getByRole('button', { name: 'Launch' }))
             .toBeTruthy()

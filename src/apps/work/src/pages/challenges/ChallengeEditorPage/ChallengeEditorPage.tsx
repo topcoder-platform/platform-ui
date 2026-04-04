@@ -176,6 +176,7 @@ function shouldShowLaunchAction(
 
 function shouldShowCancelAction(
     isEditMode: boolean,
+    isExistingChallenge: boolean,
     activeTab: EditorTab,
     challengeStatus: string | undefined,
 ): boolean {
@@ -183,11 +184,13 @@ function shouldShowCancelAction(
         .trim()
         .toUpperCase()
 
-    return isEditMode
-        && activeTab === 'details'
+    const isDraftChallenge = normalizedStatus === CHALLENGE_STATUS.DRAFT
+    const isActiveChallenge = normalizedStatus === CHALLENGE_STATUS.ACTIVE
+
+    return activeTab === 'details'
         && (
-            normalizedStatus === CHALLENGE_STATUS.ACTIVE
-            || normalizedStatus === CHALLENGE_STATUS.DRAFT
+            (isExistingChallenge && isDraftChallenge)
+            || (isEditMode && isActiveChallenge)
         )
 }
 
@@ -1053,6 +1056,7 @@ export const ChallengeEditorPage: FC = () => {
     )
     const canCancelChallenge = shouldShowCancelAction(
         isEditMode,
+        isExistingChallenge,
         activeTab,
         effectiveChallengeStatus,
     )
