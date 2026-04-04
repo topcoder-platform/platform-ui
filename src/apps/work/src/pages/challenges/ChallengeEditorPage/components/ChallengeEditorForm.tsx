@@ -919,6 +919,10 @@ interface TaskLaunchValidationParams {
     nextStatus?: unknown
 }
 
+interface HandledLaunchBlockError extends Error {
+    isHandledLaunchBlockError: true
+}
+
 export function getTaskLaunchValidationError(
     params: TaskLaunchValidationParams,
 ): string | undefined {
@@ -939,6 +943,40 @@ export function getTaskLaunchValidationError(
     }
 
     return TASK_ASSIGNED_MEMBER_REQUIRED_FOR_LAUNCH_MESSAGE
+}
+
+/**
+ * Creates an error for launch-blocking validation paths that already surfaced a
+ * specific message to the user.
+ *
+ * @param message The validation message that was already shown in the UI.
+ * @returns An error instance that preserves launch rejection without triggering
+ * generic save-failure handling.
+ * @remarks Used by launch-only blockers so callers can keep the launch modal
+ * open while the form avoids duplicate generic toasts.
+ */
+function createHandledLaunchBlockError(
+    message: string,
+): HandledLaunchBlockError {
+    return Object.assign(new Error(message), {
+        isHandledLaunchBlockError: true as const,
+    })
+}
+
+/**
+ * Detects launch-blocking errors that should skip generic save-failure UI.
+ *
+ * @param error Unknown error caught while saving or launching a challenge.
+ * @returns `true` when the error already surfaced a specific validation message.
+ * @remarks Used in the save flow catch block to preserve the handled launch
+ * rejection without overwriting the existing form state or toast.
+ */
+function isHandledLaunchBlockError(
+    error: unknown,
+): error is HandledLaunchBlockError {
+    return error instanceof Error
+        && 'isHandledLaunchBlockError' in error
+        && error.isHandledLaunchBlockError === true
 }
 
 // eslint-disable-next-line complexity
@@ -1927,7 +1965,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                     showErrorToast(taskLaunchValidationError)
                 }
 
-                return
+                throw createHandledLaunchBlockError(taskLaunchValidationError)
             }
 
             if (!options.isAutosave) {
@@ -1952,7 +1990,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                         showErrorToast(projectBillingAccountErrorMessage)
                     }
 
-                    throw new Error(projectBillingAccountErrorMessage)
+                    throw createHandledLaunchBlockError(projectBillingAccountErrorMessage)
                 }
 
                 const formDataWithProjectBilling = applyProjectBillingToChallengeFormData(
@@ -2002,6 +2040,10 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                     navigate(`/challenges/${encodeURIComponent(savedChallenge.id)}/edit`)
                 }
             } catch (error) {
+                if (isHandledLaunchBlockError(error)) {
+                    throw error
+                }
+
                 const errorMessage = error instanceof Error
                     ? error.message
                     : 'Failed to save challenge'

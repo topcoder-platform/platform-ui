@@ -815,6 +815,63 @@ describe('ChallengeEditorForm', () => {
             .toBeUndefined()
     })
 
+    it('rejects launch when task validation blocks activation', async () => {
+        let launchAction: (() => Promise<void>) | undefined
+        let launchError: Error | undefined
+
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'TSK',
+                id: 'task-type-id',
+                isTask: true,
+                name: 'Task',
+            }],
+            isLoading: false,
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...validDraftChallenge,
+                        type: {
+                            abbreviation: 'TSK',
+                            name: 'Task',
+                        },
+                        typeId: 'task-type-id',
+                    }}
+                    onRegisterLaunchAction={action => {
+                        launchAction = action
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        await waitFor(() => {
+            expect(launchAction)
+                .toEqual(expect.any(Function))
+        })
+
+        await act(async () => {
+            try {
+                await (launchAction as () => Promise<void>)()
+            } catch (error) {
+                launchError = error as Error
+            }
+        })
+
+        expect(launchError)
+            .toEqual(expect.objectContaining({
+                message: 'Assign a member before launching a task challenge.',
+            }))
+        expect(mockedPatchChallenge)
+            .not.toHaveBeenCalled()
+        expect(mockedShowErrorToast)
+            .toHaveBeenCalledWith('Assign a member before launching a task challenge.')
+        expect(mockedShowErrorToast)
+            .not.toHaveBeenCalledWith('Failed to save challenge')
+    })
+
     it('registers the launch action for read-only draft challenges', async () => {
         let launchAction: (() => Promise<void>) | undefined
 
@@ -1192,6 +1249,7 @@ describe('ChallengeEditorForm', () => {
 
     it('blocks launch when the project billing account is inactive', async () => {
         let launchAction: (() => Promise<void>) | undefined
+        let launchError: Error | undefined
 
         mockedUseFetchChallengeTracks.mockReturnValue({
             isLoading: false,
@@ -1257,16 +1315,25 @@ describe('ChallengeEditorForm', () => {
         })
 
         await act(async () => {
-            await launchAction?.()
-                .catch(() => undefined)
+            try {
+                await (launchAction as () => Promise<void>)()
+            } catch (error) {
+                launchError = error as Error
+            }
         })
 
+        expect(launchError)
+            .toEqual(expect.objectContaining({
+                message: 'Cannot launch challenges because the project billing account is inactive.',
+            }))
         expect(mockedPatchChallenge)
             .not.toHaveBeenCalled()
         expect(mockedShowErrorToast)
             .toHaveBeenCalledWith(
                 'Cannot launch challenges because the project billing account is inactive.',
             )
+        expect(mockedShowErrorToast)
+            .not.toHaveBeenCalledWith('Failed to save challenge')
     })
 
     it('preserves uploaded attachments after saving when the update response omits them', async () => {
