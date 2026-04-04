@@ -186,6 +186,8 @@ describe('ChallengeScheduleSection component', () => {
         expect(screen.getByRole('radio', { name: 'Immediately' }))
             .not
             .toBeChecked()
+        expect(startModeGroup.parentElement)
+            .toBe(startDateLabel.parentElement)
         expect(startDateLabel.compareDocumentPosition(startModeGroup))
             .toBe(Node.DOCUMENT_POSITION_FOLLOWING)
         expect(
