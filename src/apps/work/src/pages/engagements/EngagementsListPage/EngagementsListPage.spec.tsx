@@ -208,6 +208,17 @@ const managerContextValue: WorkAppContextModel = {
     userRoles: ['manager'],
 }
 
+const projectManagerContextValue: WorkAppContextModel = {
+    ...defaultContextValue,
+    isAdmin: false,
+    isManager: true,
+    loginUserInfo: {
+        ...defaultContextValue.loginUserInfo,
+        roles: ['project manager'],
+    } as WorkAppContextModel['loginUserInfo'],
+    userRoles: ['project manager'],
+}
+
 const talentManagerContextValue: WorkAppContextModel = {
     ...defaultContextValue,
     isAdmin: false,
@@ -508,6 +519,39 @@ describe('EngagementsListPage', () => {
         expect(within(row)
             .queryByRole('button', { name: 'Delete' }))
             .toBeNull()
+    })
+
+    it('blocks project managers from project-scoped engagement pages', () => {
+        mockedUseFetchEngagements.mockReturnValue({
+            engagements: [sampleEngagement],
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+        })
+
+        renderPage('/projects/200/engagements', '/projects/:projectId/engagements', projectManagerContextValue)
+
+        expect(screen.getByText('You need Admin or Talent Manager role to view engagements.'))
+            .toBeTruthy()
+        expect(screen.queryByText(sampleEngagement.title))
+            .toBeNull()
+        expect(mockedUseFetchEngagements)
+            .toHaveBeenLastCalledWith(
+                undefined,
+                {
+                    includePrivate: false,
+                    projectId: '200',
+                    projectIds: undefined,
+                    sortBy: undefined,
+                    sortOrder: undefined,
+                    status: undefined,
+                },
+                {
+                    enabled: false,
+                },
+            )
+        expect(mockedUseFetchProject)
+            .toHaveBeenCalledWith(undefined)
     })
 
     it('deletes the selected engagement and refreshes the list', async () => {

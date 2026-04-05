@@ -784,8 +784,11 @@ function normalizeAttachments(attachments: unknown): Attachment[] | undefined {
                 return undefined
             }
 
-            const typedAttachment = attachment as Partial<Attachment>
+            const typedAttachment = attachment as Partial<Attachment> & {
+                fileName?: unknown
+            }
             const name = normalizeOptionalString(typedAttachment.name)
+                || normalizeOptionalString(typedAttachment.fileName)
             const url = normalizeOptionalString(typedAttachment.url)
 
             if (!name || !url) {

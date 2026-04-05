@@ -292,7 +292,7 @@ function getEngagementProjectName(
 
 function renderEngagementRows(
     engagements: Engagement[],
-    canManage: boolean,
+    canEditEngagement: boolean,
     canDelete: boolean,
     onDeleteOpen: (engagement: Engagement) => void,
     assignmentsBackUrl: string,
@@ -352,7 +352,7 @@ function renderEngagementRows(
                         >
                             View
                         </a>
-                        {canManage && engagementProjectId
+                        {canEditEngagement && engagementProjectId
                             ? (
                                 <Link
                                     className={styles.actionLink}
@@ -394,9 +394,13 @@ export const EngagementsListPage: FC = () => {
 
     const isTalentManagerOnly = !contextValue.isAdmin
         && checkTalentManager(contextValue.userRoles)
+    const canViewProjectScopedEngagements = isAllEngagementsPage
+        || contextValue.isAdmin
+        || checkTalentManager(contextValue.userRoles)
     const canDelete = contextValue.isAdmin
     const canManage = canDelete || contextValue.isManager
     const canCreateProjectEngagement = canCreateEngagement(contextValue.userRoles)
+    const canEditEngagement = canCreateProjectEngagement
     const memberProjectsResult = useFetchProjects({
         enabled: isAllEngagementsPage && isTalentManagerOnly,
         memberOnly: true,
@@ -431,7 +435,7 @@ export const EngagementsListPage: FC = () => {
     )
 
     const requestFilters = useMemo<EngagementFilters>(() => ({
-        includePrivate: canManage,
+        includePrivate: canManage && canViewProjectScopedEngagements,
         projectId: isAllEngagementsPage ? undefined : projectId,
         projectIds: isAllEngagementsPage && isTalentManagerOnly
             ? scopedProjectIds
@@ -444,6 +448,7 @@ export const EngagementsListPage: FC = () => {
             : undefined,
         status: filters.status,
     }), [
+        canViewProjectScopedEngagements,
         canManage,
         filters.status,
         isAllEngagementsPage,
@@ -456,13 +461,17 @@ export const EngagementsListPage: FC = () => {
         && memberProjectsResult.isLoading
 
     const engagementsResult = useFetchEngagements(
-        projectId,
+        canViewProjectScopedEngagements ? projectId : undefined,
         requestFilters,
         {
-            enabled: (isAllEngagementsPage || !!projectId) && !isScopedProjectsLoading,
+            enabled: canViewProjectScopedEngagements
+                && (isAllEngagementsPage || !!projectId)
+                && !isScopedProjectsLoading,
         },
     )
-    const projectResult = useFetchProject(projectId)
+    const projectResult = useFetchProject(
+        canViewProjectScopedEngagements ? projectId : undefined,
+    )
 
     const projectNameLookup = useMemo<Record<string, string>>(() => {
         const lookup: Record<string, string> = {}
@@ -744,6 +753,20 @@ export const EngagementsListPage: FC = () => {
         )
         : undefined
 
+    if (!canViewProjectScopedEngagements) {
+        return (
+            <PageWrapper
+                pageTitle='Engagements'
+                breadCrumb={[]}
+            >
+                {projectTabs}
+                <div className={styles.container}>
+                    <ErrorMessage message='You need Admin or Talent Manager role to view engagements.' />
+                </div>
+            </PageWrapper>
+        )
+    }
+
     if (
         isScopedProjectsLoading
         || (
@@ -834,7 +857,7 @@ export const EngagementsListPage: FC = () => {
                             {paginatedEngagements.length
                                 ? renderEngagementRows(
                                     paginatedEngagements,
-                                    canManage,
+                                    canEditEngagement,
                                     canDelete,
                                     setEngagementToDelete,
                                     assignmentsBackUrl,
