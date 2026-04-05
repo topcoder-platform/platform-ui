@@ -42,6 +42,7 @@ import {
     ChallengeEditorForm,
     getTaskLaunchValidationError,
 } from './ChallengeEditorForm'
+import { TermsField } from './TermsField'
 
 jest.mock('../../../../lib/components/form', () => ({
     FormCheckboxField: () => <></>,
@@ -445,7 +446,7 @@ jest.mock('./SubmissionVisibilityField', () => ({
     SubmissionVisibilityField: () => <>Submission Visibility Field</>,
 }))
 jest.mock('./TermsField', () => ({
-    TermsField: () => <></>,
+    TermsField: jest.fn(() => <></>),
 }))
 
 const mockedUseAutosave = useAutosave as jest.Mock
@@ -465,6 +466,7 @@ const mockedFetchResourceRolesService = fetchResourceRoles as jest.Mock
 const mockedFetchResourcesService = fetchResources as jest.Mock
 const mockedShowErrorToast = showErrorToast as jest.Mock
 const mockedShowSuccessToast = showSuccessToast as jest.Mock
+const mockedTermsField = TermsField as jest.MockedFunction<typeof TermsField>
 
 describe('ChallengeEditorForm', () => {
     const draftChallenge = {
@@ -813,6 +815,24 @@ describe('ChallengeEditorForm', () => {
         expect(mockedUseAutosave)
             .toHaveBeenCalledWith(expect.objectContaining({
                 enabled: false,
+            }))
+    })
+
+    it('does not default the standard term when viewing an existing challenge', () => {
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={draftChallenge}
+                    isReadOnly
+                />
+            </MemoryRouter>,
+        )
+
+        expect(mockedTermsField)
+            .toHaveBeenCalled()
+        expect(mockedTermsField.mock.calls[mockedTermsField.mock.calls.length - 1][0])
+            .toEqual(expect.objectContaining({
+                shouldDefaultStandardTerm: false,
             }))
     })
 
