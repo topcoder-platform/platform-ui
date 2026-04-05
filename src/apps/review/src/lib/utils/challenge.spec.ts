@@ -4,9 +4,11 @@ import {
     buildPhaseTabs,
     collectReopenEligiblePhaseIds,
     findPhaseByTabLabel,
+    hasPendingApprovalReview,
     isFirst2FinishChallenge,
     type PhaseLike,
     resolveFirst2FinishIterativeSubmissionIds,
+    shouldAllowWinnersTabForPastChallenge,
     shouldForceWinnersTabForPastChallenge,
 } from './challenge'
 
@@ -216,9 +218,40 @@ describe('challenge phase tab helpers', () => {
     })
 
     it('allows past challenges with winner data to force-show the winners tab', () => {
-        expect(shouldForceWinnersTabForPastChallenge('COMPLETED', [{ userId: 1 }]))
+        expect(shouldForceWinnersTabForPastChallenge({
+            status: 'COMPLETED',
+            winners: [{ handle: 'winner-one', placement: 1, userId: 1 }],
+        }))
             .toBe(true)
-        expect(shouldForceWinnersTabForPastChallenge('COMPLETED', []))
+        expect(shouldForceWinnersTabForPastChallenge({
+            status: 'COMPLETED',
+            winners: [],
+        }))
+            .toBe(false)
+    })
+
+    it('keeps winners hidden when a follow-up approval review is still pending', () => {
+        const challengeInfo = {
+            phases: [
+                createBackendPhase('approval-1', 'Approval', '2025-01-02T00:00:00Z'),
+                createBackendPhase('approval-2', 'Approval', '2025-01-03T00:00:00Z'),
+            ],
+            status: 'COMPLETED',
+            winners: [{ handle: 'winner-one', placement: 1, userId: 1 }],
+        }
+        const approvalReviews = [
+            {
+                review: {
+                    status: 'PENDING',
+                },
+            },
+        ]
+
+        expect(hasPendingApprovalReview(approvalReviews))
+            .toBe(true)
+        expect(shouldAllowWinnersTabForPastChallenge(challengeInfo, approvalReviews))
+            .toBe(false)
+        expect(shouldForceWinnersTabForPastChallenge(challengeInfo, approvalReviews))
             .toBe(false)
     })
 

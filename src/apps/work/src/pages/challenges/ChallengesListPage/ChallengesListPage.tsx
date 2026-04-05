@@ -262,6 +262,7 @@ interface RenderChallengesContentParams {
     challenges: Challenge[]
     challengeTypes: UseFetchChallengeTypesResult['challengeTypes']
     challengesResult: UseFetchChallengesResult
+    isWaitingForMemberScope: boolean
     onPageChange: (newPage: number) => void
     onPerPageChange: (newPerPage: number) => void
     onSort: (fieldName: string) => void
@@ -274,7 +275,7 @@ interface RenderChallengesContentParams {
 }
 
 function renderChallengesContent(params: RenderChallengesContentParams): JSX.Element {
-    if (params.challengesResult.isLoading) {
+    if (params.isWaitingForMemberScope || params.challengesResult.isLoading) {
         return <TableLoading />
     }
 
@@ -336,6 +337,44 @@ function getContextualActions(params: GetContextualActionsParams): JSX.Element |
         disabled: params.disabled,
         projectId: params.projectId,
     })
+}
+
+interface DashboardMemberScopeState {
+    isWaitingForMemberScope: boolean
+    scopedMemberId?: number
+}
+
+interface ResolveDashboardMemberScopeParams {
+    isPrivilegedUser: boolean
+    selectedProjectId?: number | string
+    userId?: number
+}
+
+/**
+ * Resolves whether dashboard challenge fetches must wait for the caller's
+ * member id before issuing a member-scoped request.
+ *
+ * @param params current privilege, project, and caller identity state.
+ * @returns loading state plus the member id to send to the challenges hook.
+ * @remarks Used only for the dashboard challenges list, where copilot users
+ * need member-scoped results that match legacy Work Manager behavior.
+ */
+function resolveDashboardMemberScope(
+    params: ResolveDashboardMemberScopeParams,
+): DashboardMemberScopeState {
+    const shouldScopeByMember = !params.isPrivilegedUser && !params.selectedProjectId
+
+    if (!shouldScopeByMember) {
+        return {
+            isWaitingForMemberScope: false,
+            scopedMemberId: undefined,
+        }
+    }
+
+    return {
+        isWaitingForMemberScope: params.userId === undefined,
+        scopedMemberId: params.userId,
+    }
 }
 
 /**
@@ -410,12 +449,18 @@ export const ChallengesListPage: FC = () => {
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(DEFAULT_SORT_ORDER)
     const isPrivilegedUser = isAdmin || isManager
     const selectedProjectId = projectIdFromRoute || filters.projectId
-    const scopedMemberId = !isPrivilegedUser && !selectedProjectId
-        ? loginUserInfo?.userId
-        : undefined
+    const {
+        isWaitingForMemberScope,
+        scopedMemberId,
+    }: DashboardMemberScopeState = resolveDashboardMemberScope({
+        isPrivilegedUser,
+        selectedProjectId,
+        userId: loginUserInfo?.userId,
+    })
 
     const fetchParams: UseFetchChallengesParams = {
         ...filters,
+        enabled: !isWaitingForMemberScope,
         memberId: scopedMemberId,
         page,
         perPage,
@@ -666,6 +711,7 @@ export const ChallengesListPage: FC = () => {
                 challenges: sortedChallenges,
                 challengesResult,
                 challengeTypes: challengeTypesResult.challengeTypes,
+                isWaitingForMemberScope,
                 onPageChange: handlePageChange,
                 onPerPageChange: handlePerPageChange,
                 onSort: handleSort,

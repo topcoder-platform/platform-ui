@@ -13,6 +13,7 @@ import {
     formatDate,
     getCurrentPhase,
     getStatusText,
+    isChallengeCompleted,
 } from '../../utils'
 import { ChallengeStatus } from '../ChallengeStatus'
 import { ChallengeTag } from '../ChallengeTag'
@@ -47,6 +48,7 @@ export const ChallengeCard: FC<ChallengeCardProps> = (props: ChallengeCardProps)
     const challengeEditPath = `/challenges/${challenge.id}/edit`
 
     const forumLink = useMemo(() => getForumLink(challenge), [challenge])
+    const canEditChallenge = !isChallengeCompleted(challenge.status)
 
     const reviewLink = `${REVIEW_APP_URL}/active-challenges/${challenge.id}/challenge-details`
     const communityLink = `${COMMUNITY_APP_URL}/challenges/${challenge.id}`
@@ -92,13 +94,17 @@ export const ChallengeCard: FC<ChallengeCardProps> = (props: ChallengeCardProps)
             <td>{getCurrentPhase(challenge)}</td>
             <td>
                 <div className={styles.actions}>
-                    <button
-                        type='button'
-                        onClick={handleEditClick}
-                        className={styles.actionButton}
-                    >
-                        Edit
-                    </button>
+                    {canEditChallenge
+                        ? (
+                            <button
+                                type='button'
+                                onClick={handleEditClick}
+                                className={styles.actionButton}
+                            >
+                                Edit
+                            </button>
+                        )
+                        : undefined}
                     <a
                         href={reviewLink}
                         target='_blank'
