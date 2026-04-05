@@ -3,6 +3,7 @@ import {
     KeyboardEvent,
     useCallback,
     useMemo,
+    useRef,
     useState,
 } from 'react'
 import {
@@ -50,6 +51,8 @@ function hasReviewerChanges(
 export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldProps) => {
     const formContext = useFormContext<ChallengeEditorFormData>()
     const [activeTab, setActiveTab] = useState<ReviewTab>('human')
+    const humanTabRef = useRef<HTMLDivElement>(null)
+    const aiTabRef = useRef<HTMLDivElement>(null)
 
     const reviewers = useWatch({
         control: formContext.control,
@@ -103,8 +106,38 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
     const handleTabChange = useCallback((tab: ReviewTab): void => {
         setActiveTab(tab)
     }, [])
+    const focusTab = useCallback((tab: ReviewTab): void => {
+        handleTabChange(tab)
+
+        if (tab === 'human') {
+            humanTabRef.current?.focus()
+
+            return
+        }
+
+        aiTabRef.current?.focus()
+    }, [handleTabChange])
     const getTabKeyDownHandler = useCallback(
         (tab: ReviewTab) => (event: KeyboardEvent<HTMLDivElement>): void => {
+            const tabToFocusByKey: Partial<Record<string, ReviewTab>> = {
+                ArrowLeft: tab === 'ai'
+                    ? 'human'
+                    : 'ai',
+                ArrowRight: tab === 'human'
+                    ? 'ai'
+                    : 'human',
+                End: 'ai',
+                Home: 'human',
+            }
+            const nextTab = tabToFocusByKey[event.key]
+
+            if (nextTab) {
+                event.preventDefault()
+                focusTab(nextTab)
+
+                return
+            }
+
             if (event.key !== 'Enter' && event.key !== ' ') {
                 return
             }
@@ -112,7 +145,7 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
             event.preventDefault()
             handleTabChange(tab)
         },
-        [handleTabChange],
+        [focusTab, handleTabChange],
     )
 
     const handleAiConfigPersisted = useCallback(
@@ -189,7 +222,11 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
                 )
                 : undefined}
 
-            <div className={styles.tabList} role='tablist'>
+            <div
+                aria-orientation='horizontal'
+                className={styles.tabList}
+                role='tablist'
+            >
                 <div
                     aria-controls='reviewers-human-panel'
                     aria-selected={activeTab === 'human'}
@@ -204,6 +241,7 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
                         handleTabChange('human')
                     }}
                     onKeyDown={getTabKeyDownHandler('human')}
+                    ref={humanTabRef}
                     role='tab'
                     tabIndex={activeTab === 'human' ? 0 : -1}
                 >
@@ -223,6 +261,7 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
                         handleTabChange('ai')
                     }}
                     onKeyDown={getTabKeyDownHandler('ai')}
+                    ref={aiTabRef}
                     role='tab'
                     tabIndex={activeTab === 'ai' ? 0 : -1}
                 >

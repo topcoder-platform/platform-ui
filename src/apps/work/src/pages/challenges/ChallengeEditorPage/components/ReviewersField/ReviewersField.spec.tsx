@@ -207,4 +207,49 @@ describe('ReviewersField', () => {
         expect(screen.getByTestId('ai-review-tab').parentElement?.hasAttribute('hidden'))
             .toBe(false)
     })
+
+    it('supports keyboard navigation between review tabs', async () => {
+        const user = userEvent.setup()
+
+        render(
+            <TestHarness
+                reviewers={[
+                    {
+                        handle: 'human-1',
+                        isMemberReview: true,
+                        memberId: 'member-1',
+                    },
+                    {
+                        aiWorkflowId: 'workflow-1',
+                        isMemberReview: false,
+                    },
+                ]}
+            />,
+        )
+
+        const humanTab = screen.getByRole('tab', { name: 'Human Review (1)' })
+        const aiTab = screen.getByRole('tab', { name: 'AI Review (1)' })
+
+        humanTab.focus()
+        expect(document.activeElement)
+            .toBe(humanTab)
+
+        await user.keyboard('{ArrowRight}')
+
+        expect(document.activeElement)
+            .toBe(aiTab)
+        expect(aiTab.getAttribute('aria-selected'))
+            .toBe('true')
+        expect(screen.getByTestId('ai-review-tab').parentElement?.hasAttribute('hidden'))
+            .toBe(false)
+
+        await user.keyboard('{ArrowLeft}')
+
+        expect(document.activeElement)
+            .toBe(humanTab)
+        expect(humanTab.getAttribute('aria-selected'))
+            .toBe('true')
+        expect(screen.getByTestId('human-review-tab').parentElement?.hasAttribute('hidden'))
+            .toBe(false)
+    })
 })
