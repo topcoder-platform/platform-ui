@@ -475,6 +475,50 @@ describe('EngagementsListPage', () => {
             .toBe('https://engagements.example.com/plJi6KV_jDjdtowUlQbFx')
     })
 
+    it('links engagement titles to the assignees page on the all engagements route', () => {
+        mockedUseFetchEngagements.mockReturnValue({
+            engagements: [sampleEngagement],
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+        })
+
+        renderPage('/engagements', '/engagements')
+
+        expect(screen.getByRole('link', { name: sampleEngagement.title })
+            .getAttribute('href'))
+            .toBe('/projects/200/engagements/111/assignments')
+    })
+
+    it('links engagement titles to the assignees page on project engagement routes', () => {
+        mockedUseFetchProject.mockReturnValue({
+            error: undefined,
+            isLoading: false,
+            project: {
+                id: 200,
+                name: 'Payment Testing',
+                status: 'active',
+            },
+        })
+        mockedUseFetchEngagements.mockReturnValue({
+            engagements: [
+                {
+                    ...sampleEngagement,
+                    projectId: undefined,
+                },
+            ],
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+        })
+
+        renderPage('/projects/200/engagements', '/projects/:projectId/engagements')
+
+        expect(screen.getByRole('link', { name: sampleEngagement.title })
+            .getAttribute('href'))
+            .toBe('/projects/200/engagements/111/assignments')
+    })
+
     it('scopes all-engagements fetches to member projects for talent managers', async () => {
         mockedUseFetchProjects.mockReturnValue({
             error: undefined,
