@@ -258,6 +258,24 @@ const sampleEngagement = {
     workload: 'FULL_TIME',
 }
 
+const olderEngagement = {
+    ...sampleEngagement,
+    anticipatedStart: 'IMMEDIATE',
+    createdAt: '2026-03-24T00:00:00.000Z',
+    id: 112,
+    title: 'Older engagement',
+    updatedAt: '2026-03-24T00:00:00.000Z',
+}
+
+const newerEngagement = {
+    ...sampleEngagement,
+    anticipatedStart: 'FEW_WEEKS',
+    createdAt: '2026-03-26T00:00:00.000Z',
+    id: 113,
+    title: 'Newer engagement',
+    updatedAt: '2026-03-26T00:00:00.000Z',
+}
+
 function renderPage(
     route: string,
     path: string,
@@ -422,8 +440,8 @@ describe('EngagementsListPage', () => {
                     {
                         includePrivate: true,
                         projectId: undefined,
-                        sortBy: 'anticipatedStart',
-                        sortOrder: 'asc',
+                        sortBy: 'createdAt',
+                        sortOrder: 'desc',
                         status: undefined,
                     },
                     {
@@ -489,8 +507,8 @@ describe('EngagementsListPage', () => {
                         includePrivate: true,
                         projectId: undefined,
                         projectIds: ['200', '300'],
-                        sortBy: 'anticipatedStart',
-                        sortOrder: 'asc',
+                        sortBy: 'createdAt',
+                        sortOrder: 'desc',
                         status: undefined,
                     },
                     {
@@ -519,8 +537,8 @@ describe('EngagementsListPage', () => {
                     includePrivate: true,
                     projectId: undefined,
                     projectIds: [],
-                    sortBy: 'anticipatedStart',
-                    sortOrder: 'asc',
+                    sortBy: 'createdAt',
+                    sortOrder: 'desc',
                     status: undefined,
                 },
                 {
@@ -544,6 +562,27 @@ describe('EngagementsListPage', () => {
 
         expect(within(row)
             .getByRole('button', { name: 'Delete' }))
+            .toBeTruthy()
+    })
+
+    it('orders all engagements by newest created date first', () => {
+        mockedUseFetchEngagements.mockReturnValue({
+            engagements: [olderEngagement, newerEngagement],
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+        })
+
+        renderPage('/engagements', '/engagements')
+
+        const rows = screen.getAllByRole('row')
+            .slice(1)
+
+        expect(within(rows[0])
+            .getByText('Newer engagement'))
+            .toBeTruthy()
+        expect(within(rows[1])
+            .getByText('Older engagement'))
             .toBeTruthy()
     })
 

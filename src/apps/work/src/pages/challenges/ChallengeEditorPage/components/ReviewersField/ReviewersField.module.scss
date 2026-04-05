@@ -128,13 +128,17 @@
 .memberReviewSettings {
     display: grid;
     gap: 16px;
-    grid-template-columns: minmax(130px, 160px) minmax(220px, 1fr);
+    grid-template-columns: minmax(130px, 160px) minmax(220px, 280px) minmax(220px, 1fr);
 }
 
 @media (max-width: 767px) {
     .memberReviewSettings {
         grid-template-columns: 1fr;
     }
+}
+
+.memberReviewTypeField {
+    min-width: 0;
 }
 
 .publicOpportunityField {

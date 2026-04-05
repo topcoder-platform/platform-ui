@@ -289,7 +289,7 @@ interface EditAssignmentErrors {
     standardHoursPerWeek?: string
 }
 
-const EditAssignmentModal: FC<EditAssignmentModalProps> = (
+export const EditAssignmentModal: FC<EditAssignmentModalProps> = (
     props: EditAssignmentModalProps,
 ) => {
     const [durationMonths, setDurationMonths] = useState<string>(
@@ -336,6 +336,14 @@ const EditAssignmentModal: FC<EditAssignmentModalProps> = (
         resetState()
         props.onCancel()
     }, [props, resetState])
+
+    useEffect(() => {
+        if (!props.open) {
+            return
+        }
+
+        resetState()
+    }, [props.open, resetState])
 
     const handleConfirm = useCallback(async (): Promise<void> => {
         const nextErrors: EditAssignmentErrors = {}

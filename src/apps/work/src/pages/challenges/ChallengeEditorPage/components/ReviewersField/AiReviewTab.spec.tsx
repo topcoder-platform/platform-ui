@@ -2,6 +2,7 @@
 import {
     render,
     screen,
+    waitFor,
 } from '@testing-library/react'
 
 import {
@@ -123,6 +124,40 @@ describe('AiReviewTab review mode options', () => {
             .toBeNull()
     })
 
+    it('does not refetch the persisted AI review config when the parent callback changes', async () => {
+        const firstOnConfigPersisted = jest.fn()
+        const secondOnConfigPersisted = jest.fn()
+        const renderResult = render(
+            <AiReviewTab
+                challengeId='challenge-1'
+                onConfigPersisted={firstOnConfigPersisted}
+                reviewers={persistedAiReviewers}
+            />,
+        )
+
+        expect(await screen.findByRole('combobox')).not.toBeNull()
+        await waitFor(() => {
+            expect(mockedFetchAiReviewConfigByChallenge)
+                .toHaveBeenCalledTimes(1)
+        })
+
+        renderResult.rerender(
+            <AiReviewTab
+                challengeId='challenge-1'
+                onConfigPersisted={secondOnConfigPersisted}
+                reviewers={persistedAiReviewers}
+            />,
+        )
+
+        await waitFor(() => {
+            expect(mockedFetchAiReviewConfigByChallenge)
+                .toHaveBeenCalledTimes(1)
+        })
+        expect(firstOnConfigPersisted)
+            .toHaveBeenCalledWith(baseConfiguration)
+        expect(secondOnConfigPersisted).not.toHaveBeenCalled()
+    })
+
     it('keeps legacy AI_ONLY configs visible without exposing AI_ONLY in the dropdown list', async () => {
         mockedFetchAiReviewConfigByChallenge.mockResolvedValueOnce({
             ...baseConfiguration,
@@ -152,5 +187,36 @@ describe('AiReviewTab review mode options', () => {
         expect(screen.getByText(
             'AI_ONLY is a legacy configuration and is no longer available for new setups.',
         )).not.toBeNull()
+    })
+
+    it('renders manual workflow headings with a space before the workflow number', async () => {
+        mockedFetchAiReviewConfigByChallenge.mockResolvedValueOnce({
+            ...baseConfiguration,
+            workflows: [
+                {
+                    id: 'config-workflow-1',
+                    isGating: false,
+                    weightPercent: 100,
+                    workflowId: 'workflow-1',
+                },
+            ],
+        })
+        mockedFetchWorkflows.mockResolvedValueOnce([
+            {
+                id: 'workflow-1',
+                name: 'Workflow name',
+            },
+        ])
+
+        render(
+            <AiReviewTab
+                challengeId='challenge-1'
+                reviewers={persistedAiReviewers}
+            />,
+        )
+
+        expect(await screen.findByRole('heading', { name: 'Workflow 1' })).not.toBeNull()
+        expect(screen.queryByRole('heading', { name: 'Workflow1' }))
+            .toBeNull()
     })
 })
