@@ -10,6 +10,7 @@ import {
 } from './useAutosave'
 
 interface TestComponentProps {
+    enabled?: boolean
     formValues: Record<string, unknown>
     onSave: (values: Record<string, unknown>) => Promise<void>
 }
@@ -17,7 +18,7 @@ interface TestComponentProps {
 const TestComponent = (props: TestComponentProps): JSX.Element => {
     useAutosave<Record<string, unknown>>({
         delay: 100,
-        enabled: true,
+        enabled: props.enabled,
         formValues: props.formValues,
         onSave: props.onSave,
     })
@@ -42,6 +43,50 @@ describe('useAutosave', () => {
         jest.useRealTimers()
     })
 
+    it('keeps a pending autosave queued across rerenders with equivalent values', async () => {
+        const onSave = jest.fn<Promise<void>, [Record<string, unknown>]>()
+            .mockResolvedValue(undefined)
+
+        const rendered: ReturnType<typeof render> = render(
+            <TestComponent
+                formValues={{
+                    projectId: '100',
+                }}
+                onSave={onSave}
+            />,
+        )
+        const rerender: ReturnType<typeof render>['rerender'] = rendered.rerender
+
+        rerender(
+            <TestComponent
+                formValues={{
+                    projectId: '200',
+                }}
+                onSave={onSave}
+            />,
+        )
+
+        await act(async () => {
+            jest.advanceTimersByTime(50)
+        })
+
+        rerender(
+            <TestComponent
+                formValues={{
+                    projectId: '200',
+                }}
+                onSave={onSave}
+            />,
+        )
+
+        await advanceAutosaveDelay()
+
+        await waitFor(() => {
+            expect(onSave)
+                .toHaveBeenCalledTimes(1)
+        })
+    })
+
     it('does not retry equivalent values after a failed save until the form changes again', async () => {
         const onSave = jest.fn<Promise<void>, [Record<string, unknown>]>()
             .mockRejectedValue(new Error('Failed to save engagement'))
@@ -54,8 +99,9 @@ describe('useAutosave', () => {
                 onSave={onSave}
             />,
         )
+        const rerender: ReturnType<typeof render>['rerender'] = rendered.rerender
 
-        rendered.rerender(
+        rerender(
             <TestComponent
                 formValues={{
                     projectId: '200',
@@ -71,7 +117,7 @@ describe('useAutosave', () => {
                 .toHaveBeenCalledTimes(1)
         })
 
-        rendered.rerender(
+        rerender(
             <TestComponent
                 formValues={{
                     projectId: '200',
@@ -85,7 +131,7 @@ describe('useAutosave', () => {
         expect(onSave)
             .toHaveBeenCalledTimes(1)
 
-        rendered.rerender(
+        rerender(
             <TestComponent
                 formValues={{
                     projectId: '300',

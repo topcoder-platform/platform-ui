@@ -54,6 +54,7 @@ export function useAutosave<T>(
 
     useEffect(() => {
         if (!enabled) {
+            debouncedSave.cancel()
             lastQueuedValuesRef.current = undefined
             return undefined
         }
@@ -73,10 +74,12 @@ export function useAutosave<T>(
         lastQueuedValuesRef.current = cloneDeep(formValues)
         debouncedSave(formValues)
 
-        return () => {
-            debouncedSave.cancel()
-        }
+        return undefined
     }, [debouncedSave, enabled, formValues])
+
+    useEffect(() => () => {
+        debouncedSave.cancel()
+    }, [debouncedSave])
 
     return {
         lastSaved,
