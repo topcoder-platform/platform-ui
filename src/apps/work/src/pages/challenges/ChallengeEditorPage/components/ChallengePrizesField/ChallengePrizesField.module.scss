@@ -1,5 +1,7 @@
 @import '@libs/ui/styles/includes';
 
+$prize-input-width: 336px;
+
 .field {
     display: flex;
     flex-direction: column;
@@ -8,9 +10,8 @@
 }
 
 .fieldHeader {
-    align-items: center;
-    display: flex;
-    flex-wrap: wrap;
+    align-items: start;
+    display: grid;
     gap: 12px 20px;
 }
 
@@ -29,6 +30,7 @@
     display: flex;
     flex-wrap: wrap;
     gap: 16px;
+    justify-content: flex-end;
 }
 
 .typeOption {
@@ -41,7 +43,7 @@
 }
 
 .typeToggleInput {
-    accent-color: $link-blue-dark;
+    accent-color: $turq-160;
     cursor: pointer;
     margin: 0;
 }
@@ -66,15 +68,15 @@
 }
 
 .multiPrizeRow {
-    grid-template-columns: 86px minmax(0, 1fr);
+    grid-template-columns: 86px minmax(0, $prize-input-width);
 }
 
 .prizeRowWithRemove {
-    grid-template-columns: 86px minmax(0, 1fr) 28px;
+    grid-template-columns: 86px minmax(0, $prize-input-width) 28px;
 }
 
 .singlePrizeRow {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: minmax(0, $prize-input-width);
 }
 
 .prizeRowWithError {
@@ -92,6 +94,8 @@
     flex-direction: column;
     gap: 4px;
     min-width: 0;
+    max-width: $prize-input-width;
+    width: 100%;
 }
 
 .prizeValueError {
@@ -131,10 +135,29 @@
     line-height: 1.4;
 }
 
+@media (min-width: 768px) {
+    .fieldHeader {
+        align-items: center;
+        grid-template-columns: minmax(0, 1fr) $prize-input-width;
+    }
+
+    .typeToggle {
+        justify-self: end;
+    }
+}
+
 @media (max-width: 640px) {
     .multiPrizeRow,
     .prizeRowWithRemove {
         grid-template-columns: 1fr;
+    }
+
+    .singlePrizeRow {
+        grid-template-columns: 1fr;
+    }
+
+    .prizeInputField {
+        max-width: none;
     }
 
     .trashButton {
