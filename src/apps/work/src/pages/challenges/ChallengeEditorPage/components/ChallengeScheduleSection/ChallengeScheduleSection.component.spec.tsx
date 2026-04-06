@@ -289,4 +289,48 @@ describe('ChallengeScheduleSection component', () => {
         expect(screen.getByTestId('timeline-visualization'))
             .toBeInTheDocument()
     })
+
+    it('returns to the editor rows when the schedule switches from view mode to edit mode', async () => {
+        const user = userEvent.setup({
+            advanceTimers: jest.advanceTimersByTime,
+        })
+        const testHarnessProps: TestHarnessProps = {
+            disabled: true,
+            phases: [{
+                duration: 1440,
+                id: 'phase-1',
+                name: 'Registration',
+                scheduledEndDate: '2026-04-02T10:30:00.000Z',
+                scheduledStartDate: '2026-04-01T10:30:00.000Z',
+            }],
+            startDate: '2026-04-01T10:30:00.000Z',
+        }
+        const renderResult: ReturnType<typeof render> = render(
+            <TestHarness {...testHarnessProps} />,
+        )
+
+        await user.click(screen.getByRole('button', { name: 'Switch to Gantt View' }))
+
+        expect(screen.getByTestId('timeline-visualization'))
+            .toBeInTheDocument()
+
+        renderResult.rerender(
+            <TestHarness
+                {...testHarnessProps}
+                disabled={false}
+            />,
+        )
+
+        expect(screen.queryByRole('button', { name: 'Switch to Gantt View' }))
+            .not
+            .toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: 'Switch to Editor View' }))
+            .not
+            .toBeInTheDocument()
+        expect(screen.queryByTestId('timeline-visualization'))
+            .not
+            .toBeInTheDocument()
+        expect(screen.getByTestId('phase-editor-row'))
+            .toBeInTheDocument()
+    })
 })
