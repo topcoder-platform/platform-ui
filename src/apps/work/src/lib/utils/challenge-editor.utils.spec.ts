@@ -407,3 +407,28 @@ describe('challenge-editor utils terms mapping', () => {
             .toEqual([])
     })
 })
+
+describe('challenge-editor utils attachment mapping', () => {
+    it('maps legacy attachment fileName values into form data attachments', () => {
+        const result = transformChallengeToFormData({
+            attachments: [{
+                fileName: 'specification.pdf',
+                fileSize: 1024,
+                id: 'attachment-1',
+                url: 'https://example.com/specification.pdf',
+            }],
+            description: 'Public specification',
+            name: 'Design challenge',
+            trackId: 'track-id',
+            typeId: 'type-id',
+        } as any)
+
+        expect(result.attachments)
+            .toEqual([{
+                fileSize: 1024,
+                id: 'attachment-1',
+                name: 'specification.pdf',
+                url: 'https://example.com/specification.pdf',
+            }])
+    })
+})

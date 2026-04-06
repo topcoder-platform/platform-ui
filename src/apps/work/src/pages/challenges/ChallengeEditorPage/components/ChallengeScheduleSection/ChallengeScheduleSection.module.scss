@@ -32,6 +32,8 @@
     display: flex;
     flex-wrap: wrap;
     gap: 16px;
+    max-width: 420px;
+    width: 100%;
 }
 
 .startDateInput {
@@ -44,6 +46,7 @@
     display: flex;
     flex-wrap: wrap;
     gap: 16px;
+    margin-left: auto;
 }
 
 .startDateModeOption {
@@ -91,6 +94,10 @@
 }
 
 @media (max-width: 767px) {
+    .startDateHeader {
+        max-width: none;
+    }
+
     .startDateInput {
         max-width: none;
     }

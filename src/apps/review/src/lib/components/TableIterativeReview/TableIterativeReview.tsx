@@ -718,13 +718,16 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
     }, [challengeInfo?.status])
 
     const isCurrentPhaseApproval = useMemo(
-        () => (
-            (challengeInfo?.currentPhaseObject?.name
+        () => normaliseAlphaKey(
+            (
+                challengeInfo?.currentPhaseObject?.name
                 ?? challengeInfo?.currentPhase
-                ?? '')
+                ?? ''
+            )
+                .toString()
+                .toLowerCase(),
         )
-            .toString()
-            .toLowerCase() === 'approval',
+            .startsWith('approval'),
         [challengeInfo?.currentPhase, challengeInfo?.currentPhaseObject?.name],
     )
 

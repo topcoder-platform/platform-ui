@@ -23,6 +23,7 @@ export interface UseFetchChallengesParams extends ChallengeFilters {
     page?: number
     perPage?: number
     appendResults?: boolean
+    enabled?: boolean
 }
 
 export interface UseFetchChallengesResult {
@@ -38,6 +39,7 @@ export function useFetchChallenges(
     {
         appendResults = false,
         endDateEnd,
+        enabled = true,
         endDateStart,
         memberId,
         name,
@@ -52,6 +54,7 @@ export function useFetchChallenges(
         type,
     }: UseFetchChallengesParams,
 ): UseFetchChallengesResult {
+    const shouldFetch = enabled
     const [aggregatedChallenges, setAggregatedChallenges] = useState<Challenge[]>([])
     const [aggregatedMetadata, setAggregatedMetadata] = useState<PaginationModel>({
         page,
@@ -136,8 +139,10 @@ export function useFetchChallenges(
     )
 
     const swrKey = useMemo(
-        () => ['work/challenges', requestParams],
-        [requestParams],
+        () => (shouldFetch
+            ? ['work/challenges', requestParams]
+            : undefined),
+        [requestParams, shouldFetch],
     )
 
     const {
@@ -226,7 +231,7 @@ export function useFetchChallenges(
     return {
         challenges,
         error,
-        isLoading: !data && !error,
+        isLoading: shouldFetch && !data && !error,
         isValidating,
         metadata,
         mutate,

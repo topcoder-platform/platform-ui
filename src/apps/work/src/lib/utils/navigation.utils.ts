@@ -18,6 +18,11 @@ interface QueryValueMap {
     [key: string]: boolean | null | number | string | string[] | undefined
 }
 
+const OPEN_PROJECT_INVITE_STATUSES = new Set([
+    PROJECT_MEMBER_INVITE_STATUS.PENDING,
+    'requested',
+])
+
 function withLeadingSlash(path: string): string {
     return path.startsWith('/')
         ? path
@@ -90,8 +95,9 @@ export function buildDirectProjectUrl(projectId: string | number): string {
 /**
  * Resolves the default in-app landing route for a project.
  *
- * Users with a pending invite must land on the invitation route so they can
- * accept or decline the project before the app opens a project workspace tab.
+ * Users with an open invite, or a project payload flagged as `isInvited`,
+ * must land on the invitation route so they can accept or decline the project
+ * before the app opens a project workspace tab.
  *
  * @param project The project summary or detail being opened.
  * @param accessToken The current user's access token used to match invite ownership.
@@ -103,8 +109,12 @@ export function buildProjectLandingPath(project: Project, accessToken: string = 
     const normalizedInviteStatus = invite?.status
         ?.trim()
         .toLowerCase()
+    const hasMatchedOpenInvite = !!invite
+        && (!normalizedInviteStatus || OPEN_PROJECT_INVITE_STATUSES.has(normalizedInviteStatus))
+    const shouldRouteToInvitation = hasMatchedOpenInvite
+        || (!invite && project.isInvited === true)
 
-    return normalizedInviteStatus === PROJECT_MEMBER_INVITE_STATUS.PENDING
+    return shouldRouteToInvitation
         ? `/projects/${projectId}/invitations`
         : `/projects/${projectId}/challenges`
 }

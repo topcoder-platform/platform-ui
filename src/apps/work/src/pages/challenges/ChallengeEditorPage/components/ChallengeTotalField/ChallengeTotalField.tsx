@@ -13,35 +13,75 @@ import {
     ChallengeReviewer,
     PrizeSet,
 } from '../../../../../lib/models'
-import { calculateChallengeTotal } from '../../../../../lib/utils'
+import {
+    calculateChallengeFee,
+    calculateChallengeTotal,
+    formatUsdCurrency,
+} from '../../../../../lib/utils/prize.utils'
 
 import styles from './ChallengeTotalField.module.scss'
 
 export const ChallengeTotalField: FC = () => {
     const formContext: UseFormReturn<ChallengeEditorFormData> = useFormContext<ChallengeEditorFormData>()
     const control = formContext.control
-    const prizeSets = useWatch({
+    const watchedBilling = useWatch({
         control,
-        name: 'prizeSets',
-    }) as PrizeSet[] | undefined
-    const reviewers = useWatch({
+        name: 'billing' as never,
+    }) as unknown
+    const watchedChallengeFee = useWatch({
         control,
-        name: 'reviewers',
-    }) as ChallengeReviewer[] | undefined
+        name: 'challengeFee' as never,
+    }) as unknown
+    const watchedPrizeSets = useWatch({
+        control,
+        name: 'prizeSets' as never,
+    }) as unknown
+    const watchedReviewers = useWatch({
+        control,
+        name: 'reviewers' as never,
+    }) as unknown
 
-    const total = useMemo(
+    const prizeSets = useMemo<PrizeSet[]>(
+        () => (Array.isArray(watchedPrizeSets) ? watchedPrizeSets : []),
+        [watchedPrizeSets],
+    )
+    const reviewers = useMemo<ChallengeReviewer[]>(
+        () => (Array.isArray(watchedReviewers) ? watchedReviewers : []),
+        [watchedReviewers],
+    )
+    const challengeTotal = useMemo(
         () => calculateChallengeTotal(prizeSets, reviewers),
         [
             prizeSets,
             reviewers,
         ],
     )
+    const calculatedChallengeFee = useMemo(
+        (): number | undefined => calculateChallengeFee(
+            challengeTotal,
+            (watchedBilling as ChallengeEditorFormData['billing'] | undefined)?.markup,
+        ),
+        [
+            challengeTotal,
+            watchedBilling,
+        ],
+    )
+    const total = useMemo(() => {
+        const fallbackChallengeFee = Number(watchedChallengeFee)
+        const challengeFee = calculatedChallengeFee ?? (
+            Number.isFinite(fallbackChallengeFee)
+                ? fallbackChallengeFee
+                : 0
+        )
 
+        return challengeTotal + challengeFee
+    }, [
+        calculatedChallengeFee,
+        challengeTotal,
+        watchedChallengeFee,
+    ])
     const formattedValue = useMemo(
-        () => `$${total.toLocaleString(undefined, {
-            maximumFractionDigits: 2,
-            minimumFractionDigits: 2,
-        })}`,
+        () => formatUsdCurrency(total),
         [total],
     )
 
