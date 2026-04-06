@@ -2439,10 +2439,6 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                     )
                     : undefined}
 
-                {isReadOnly && isChallengeCreated && usesManualReviewers
-                    ? reviewSection
-                    : undefined}
-
                 {isChallengeCreated
                     ? (
                         <fieldset className={styles.formContent} disabled={isReadOnly}>
@@ -2505,7 +2501,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                 )
                                 : undefined}
 
-                            {!isReadOnly ? reviewSection : undefined}
+                            {reviewSection}
                             {attachmentsSection}
                             {footerSection}
                         </fieldset>

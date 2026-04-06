@@ -969,6 +969,50 @@ describe('ChallengeEditorForm', () => {
             .toHaveTextContent('Maximum Submissions Field')
     })
 
+    it('keeps the review section after submission settings in read-only mode', () => {
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            isLoading: false,
+            tracks: [{
+                id: 'design-track',
+                name: 'Design',
+                track: 'DESIGN',
+            }],
+        })
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'F2F',
+                id: 'design-first2finish',
+                name: 'First2Finish',
+            }],
+            isLoading: false,
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={first2FinishDraftChallenge}
+                    isReadOnly
+                />
+            </MemoryRouter>,
+        )
+
+        const sectionHeadings = screen.getAllByRole('heading', { level: 3 })
+            .map(heading => heading.textContent)
+        const timelineIndex = sectionHeadings.indexOf('Timeline & Schedule')
+        const submissionSettingsIndex = sectionHeadings.indexOf('Submission Settings')
+        const reviewIndex = sectionHeadings.indexOf('Review')
+        const attachmentsIndex = sectionHeadings.indexOf('Attachments')
+
+        expect(timelineIndex)
+            .toBeGreaterThanOrEqual(0)
+        expect(submissionSettingsIndex)
+            .toBeGreaterThan(timelineIndex)
+        expect(reviewIndex)
+            .toBeGreaterThan(submissionSettingsIndex)
+        expect(attachmentsIndex)
+            .toBeGreaterThan(reviewIndex)
+    })
+
     it('does not delete manual iterative reviewer resources when saving a first2finish draft', async () => {
         const user = userEvent.setup()
 
