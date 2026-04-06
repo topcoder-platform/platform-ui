@@ -1,6 +1,13 @@
-import { FC } from 'react'
+import {
+    FC,
+    useContext,
+} from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import classNames from 'classnames'
+
+import { WorkAppContext } from '../../contexts/WorkAppContext'
+import { WorkAppContextModel } from '../../models/WorkAppContextModel.model'
+import { canViewAllEngagements } from '../../utils/permissions.utils'
 
 import styles from './ProjectListTabs.module.scss'
 
@@ -21,6 +28,9 @@ function isTabActive(pathname: string, tabPath: string): boolean {
 
 export const ProjectListTabs: FC<ProjectListTabsProps> = (props: ProjectListTabsProps) => {
     const {
+        userRoles,
+    }: WorkAppContextModel = useContext(WorkAppContext)
+    const {
         hash,
         pathname,
         search,
@@ -38,6 +48,7 @@ export const ProjectListTabs: FC<ProjectListTabsProps> = (props: ProjectListTabs
     const isEngagementsActive = isTabActive(pathname, engagementsPath)
     const isUsersActive = isTabActive(pathname, usersPath)
     const isAssetsActive = isTabActive(pathname, assetsPath)
+    const canViewEngagements = canViewAllEngagements(userRoles)
     const usersLinkState = isUsersActive
         ? undefined
         : {
@@ -52,12 +63,14 @@ export const ProjectListTabs: FC<ProjectListTabsProps> = (props: ProjectListTabs
             >
                 Challenges
             </Link>
-            <Link
-                className={classNames(styles.tabLink, isEngagementsActive ? styles.active : undefined)}
-                to={engagementsPath}
-            >
-                Engagements
-            </Link>
+            {canViewEngagements ? (
+                <Link
+                    className={classNames(styles.tabLink, isEngagementsActive ? styles.active : undefined)}
+                    to={engagementsPath}
+                >
+                    Engagements
+                </Link>
+            ) : undefined}
             <Link
                 className={classNames(styles.tabLink, isUsersActive ? styles.active : undefined)}
                 state={usersLinkState}
