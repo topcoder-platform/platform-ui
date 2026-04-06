@@ -20,7 +20,7 @@ import {
     useFetchResources,
 } from '../../../lib/hooks'
 import { deleteChallenge } from '../../../lib/services'
-import { isChallengeCompleted } from '../../../lib/utils'
+import { isChallengeCompletedOrCancelled } from '../../../lib/utils'
 import {
     getAssignedTaskMember,
     shouldShowCompleteTaskAction,
@@ -170,7 +170,7 @@ jest.mock('../../../lib/services', () => ({
 jest.mock('../../../lib/utils', () => ({
     extractErrorMessage: jest.fn(() => 'Error'),
     getStatusText: jest.fn((status?: string) => status || ''),
-    isChallengeCompleted: jest.fn(),
+    isChallengeCompletedOrCancelled: jest.fn(),
     showErrorToast: jest.fn(),
     showSuccessToast: jest.fn(),
 }))
@@ -243,7 +243,7 @@ const mockedUseFetchChallenge = useFetchChallenge as jest.Mock
 const mockedUseFetchResourceRoles = useFetchResourceRoles as jest.Mock
 const mockedUseFetchResources = useFetchResources as jest.Mock
 const mockedDeleteChallenge = deleteChallenge as jest.Mock
-const mockedIsChallengeCompleted = isChallengeCompleted as jest.Mock
+const mockedIsChallengeCompletedOrCancelled = isChallengeCompletedOrCancelled as jest.Mock
 const mockedGetAssignedTaskMember = getAssignedTaskMember as jest.Mock
 const mockedShouldShowCompleteTaskAction = shouldShowCompleteTaskAction as jest.Mock
 
@@ -295,7 +295,9 @@ describe('ChallengeEditorPage', () => {
             isLoading: false,
             resources: [],
         })
-        mockedIsChallengeCompleted.mockImplementation((status?: string) => status === 'COMPLETED')
+        mockedIsChallengeCompletedOrCancelled.mockImplementation((status?: string) => (
+            status === 'COMPLETED' || status?.startsWith('CANCELLED')
+        ))
     })
 
     it('renders the updated quick links in the right header for edit mode', async () => {
@@ -446,6 +448,38 @@ describe('ChallengeEditorPage', () => {
                 name: 'Completed challenge',
                 prizeSets: [],
                 status: 'COMPLETED',
+            },
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+        })
+
+        renderPage(
+            '/projects/123/challenges/456/view',
+            '/projects/:projectId/challenges/:challengeId/view',
+        )
+
+        await waitFor(() => {
+            expect(screen.getByText('Challenge View Form'))
+                .toBeTruthy()
+        })
+
+        await waitFor(() => {
+            expect(screen.queryByRole('button', { name: 'Edit' }))
+                .toBeNull()
+        })
+    })
+
+    it('hides the read-only edit action for cancelled challenges', async () => {
+        mockedUseFetchChallenge.mockReturnValue({
+            challenge: {
+                discussions: [{
+                    url: 'https://example.com/forum/challenges/456',
+                }],
+                id: '456',
+                name: 'Cancelled challenge',
+                prizeSets: [],
+                status: 'CANCELLED_CLIENT_REQUEST',
             },
             error: undefined,
             isLoading: false,

@@ -45,7 +45,7 @@ import {
 import {
     extractErrorMessage,
     getStatusText,
-    isChallengeCompleted,
+    isChallengeCompletedOrCancelled,
     showErrorToast,
     showSuccessToast,
 } from '../../../lib/utils'
@@ -1180,7 +1180,7 @@ export const ChallengeEditorPage: FC = () => {
     })
     const canEditChallenge = isViewMode
         && !!editChallengePath
-        && !isChallengeCompleted(effectiveChallengeStatus)
+        && !isChallengeCompletedOrCancelled(effectiveChallengeStatus)
     const rightHeader = renderHeaderAction({
         canCancelChallenge,
         canCompleteTask,

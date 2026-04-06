@@ -13,7 +13,7 @@ import {
     formatDate,
     getCurrentPhase,
     getStatusText,
-    isChallengeCompleted,
+    isChallengeCompletedOrCancelled,
 } from '../../utils'
 import { ChallengeStatus } from '../ChallengeStatus'
 import { ChallengeTag } from '../ChallengeTag'
@@ -48,7 +48,7 @@ export const ChallengeCard: FC<ChallengeCardProps> = (props: ChallengeCardProps)
     const challengeEditPath = `/challenges/${challenge.id}/edit`
 
     const forumLink = useMemo(() => getForumLink(challenge), [challenge])
-    const canEditChallenge = !isChallengeCompleted(challenge.status)
+    const canEditChallenge = !isChallengeCompletedOrCancelled(challenge.status)
 
     const reviewLink = `${REVIEW_APP_URL}/active-challenges/${challenge.id}/challenge-details`
     const communityLink = `${COMMUNITY_APP_URL}/challenges/${challenge.id}`

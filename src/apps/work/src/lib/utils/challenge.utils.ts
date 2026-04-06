@@ -255,6 +255,16 @@ export function isChallengeCompleted(status?: string): boolean {
     return normalizeStatus(status) === CHALLENGE_STATUS.COMPLETED
 }
 
+/**
+ * Returns whether a challenge is in an end-state that should be treated as read-only in work-manager.
+ *
+ * @param status challenge status to evaluate
+ * @returns `true` when the challenge is completed or any cancelled variant, otherwise `false`
+ */
+export function isChallengeCompletedOrCancelled(status?: string): boolean {
+    return isChallengeCompleted(status) || isChallengeCancelled(status)
+}
+
 export function isChallengeActive(status?: string): boolean {
     return normalizeStatus(status) === CHALLENGE_STATUS.ACTIVE
 }

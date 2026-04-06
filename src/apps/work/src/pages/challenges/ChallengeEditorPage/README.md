@@ -104,4 +104,4 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 - `Cancel` is shown on the details tab for existing `DRAFT` challenges on both view and edit routes, and for `ACTIVE` challenges while editing. It uses the shared large secondary button treatment so it matches the footer action styling.
 - `Mark Complete` is shown beside `Cancel` for `ACTIVE` task challenges when exactly one assignee can be resolved from the challenge submitter resources. It mirrors the legacy work-manager flow by confirming the task prize and assignee, patching the challenge to `COMPLETED`, and saving that assignee as the sole winner. The button remains hidden for copilots assigned to their own task, and it reuses the same shared large secondary styling as `Cancel`.
 - `Delete` is shown for existing challenges in `NEW` status and requires confirmation.
-- `Edit` is shown in read-only view mode for existing challenges unless the challenge status is `COMPLETED`.
+- `Edit` is shown in read-only view mode for existing challenges unless the challenge status is `COMPLETED` or any `CANCELLED*` endpoint status.
