@@ -118,7 +118,7 @@ const TestHarness: FC<TestHarnessProps> = props => {
 }
 
 describe('ChallengePrizesField', () => {
-    it('renders single-prize challenges with radio options and no redundant row label', () => {
+    it('renders single-prize challenges with radio options and a numbered prize row label', () => {
         render(<TestHarness />)
 
         expect(screen.getByRole('radiogroup', { name: /Challenge Prizes/i }))
@@ -127,20 +127,24 @@ describe('ChallengePrizesField', () => {
             .toBe(true)
         expect((screen.getByRole('radio', { name: 'Points' }) as HTMLInputElement).checked)
             .toBe(false)
-        expect(screen.queryByText(/^Prize$/))
-            .toBeNull()
+        expect(screen.getByText('Prize 1'))
+            .toBeTruthy()
     })
 
-    it('keeps a single-row layout for multi-prize challenge types until a second prize is added', () => {
+    it('keeps a labeled first prize row before a second prize is added', () => {
         render(<TestHarness challengeTypeName='Challenge' />)
 
         const onlyPrizeRow = screen.getByLabelText('Prize amount')
             .parentElement?.parentElement as HTMLDivElement
+        const header = screen.getByRole('radiogroup', { name: /Challenge Prizes/i })
+            .parentElement as HTMLDivElement
 
-        expect(screen.queryByText('Prize 1'))
-            .toBeNull()
+        expect(screen.getByText('Prize 1'))
+            .toBeTruthy()
         expect(onlyPrizeRow.childElementCount)
-            .toBe(1)
+            .toBe(2)
+        expect(header.className)
+            .toContain(styles.fieldHeaderWithPrizeLabels)
         expect(screen.getByRole('button', { name: '+ Add New Prize' }))
             .toBeTruthy()
     })
@@ -176,10 +180,6 @@ describe('ChallengePrizesField', () => {
             .toBe(2)
         expect(secondPrizeRow.childElementCount)
             .toBe(3)
-        expect(firstPrizeRow.className)
-            .toContain(styles.firstMultiPrizeRow)
-        expect(firstPrizeRow.className)
-            .not.toContain(styles.prizeRowWithRemove)
         expect(secondPrizeRow.className)
             .toContain(styles.prizeRowWithRemove)
         expect(screen.getAllByRole('button').length)
@@ -200,8 +200,6 @@ describe('ChallengePrizesField', () => {
             .toBe(2)
         expect(secondPrizeRow.childElementCount)
             .toBe(3)
-        expect(firstPrizeRow.className)
-            .toContain(styles.firstMultiPrizeRow)
         expect(secondPrizeRow.className)
             .toContain(styles.prizeRowWithRemove)
     })

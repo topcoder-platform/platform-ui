@@ -1,7 +1,8 @@
 @import '@libs/ui/styles/includes';
 
+$prize-label-width: 86px;
+$prize-row-gap: 10px;
 $prize-input-width: 336px;
-$prize-row-action-space: 38px;
 
 .field {
     display: flex;
@@ -12,7 +13,8 @@ $prize-row-action-space: 38px;
 
 .fieldHeader {
     align-items: start;
-    display: grid;
+    display: flex;
+    flex-wrap: wrap;
     gap: 12px 20px;
 }
 
@@ -20,6 +22,7 @@ $prize-row-action-space: 38px;
     color: $black-80;
     font-size: 14px;
     font-weight: 700;
+    white-space: nowrap;
 }
 
 .required {
@@ -32,6 +35,7 @@ $prize-row-action-space: 38px;
     flex-wrap: wrap;
     gap: 16px;
     justify-content: flex-end;
+    margin-left: auto;
 }
 
 .typeOption {
@@ -72,16 +76,8 @@ $prize-row-action-space: 38px;
     grid-template-columns: 86px minmax(0, $prize-input-width);
 }
 
-.firstMultiPrizeRow {
-    grid-template-columns: 86px minmax(0, calc(#{$prize-input-width} + #{$prize-row-action-space}));
-}
-
 .prizeRowWithRemove {
     grid-template-columns: 86px minmax(0, $prize-input-width) 28px;
-}
-
-.singlePrizeRow {
-    grid-template-columns: minmax(0, $prize-input-width);
 }
 
 .prizeRowWithError {
@@ -101,10 +97,6 @@ $prize-row-action-space: 38px;
     min-width: 0;
     max-width: $prize-input-width;
     width: 100%;
-}
-
-.firstMultiPrizeRow .prizeInputField {
-    max-width: calc(#{$prize-input-width} + #{$prize-row-action-space});
 }
 
 .prizeValueError {
@@ -147,22 +139,17 @@ $prize-row-action-space: 38px;
 @media (min-width: 768px) {
     .fieldHeader {
         align-items: center;
-        grid-template-columns: minmax(0, 1fr) $prize-input-width;
+        width: $prize-input-width;
     }
 
-    .typeToggle {
-        justify-self: end;
+    .fieldHeaderWithPrizeLabels {
+        width: calc(#{$prize-label-width} + #{$prize-row-gap} + #{$prize-input-width});
     }
 }
 
 @media (max-width: 640px) {
     .multiPrizeRow,
-    .firstMultiPrizeRow,
     .prizeRowWithRemove {
-        grid-template-columns: 1fr;
-    }
-
-    .singlePrizeRow {
         grid-template-columns: 1fr;
     }
 
