@@ -25,6 +25,7 @@ import {
 } from '../../../../../lib/models'
 
 import { updateOptionalSinglePrizeSet } from './CopilotFeeField.utils'
+import styles from './CopilotFeeField.module.scss'
 
 interface CopilotFeeFieldProps {
     disabled?: boolean
@@ -77,6 +78,7 @@ export const CopilotFeeField: FC<CopilotFeeFieldProps> = (
 
     return (
         <FormFieldWrapper
+            className={styles.field}
             label='Copilot Fee'
             name={props.name}
         >
