@@ -23,7 +23,9 @@ jest.mock('../../utils', () => ({
     formatDate: () => 'Apr 2, 2026',
     getCurrentPhase: () => '-',
     getStatusText: (status?: string) => status || '',
-    isChallengeCompleted: (status?: string) => status === 'COMPLETED',
+    isChallengeCompletedOrCancelled: (status?: string) => (
+        status === 'COMPLETED' || status?.startsWith('CANCELLED')
+    ),
 }))
 
 jest.mock('../ChallengeStatus', () => ({
@@ -75,6 +77,22 @@ describe('ChallengeCard', () => {
         renderCard({
             ...baseChallenge,
             status: 'COMPLETED',
+        })
+
+        expect(screen.queryByRole('button', { name: 'Edit' }))
+            .toBeNull()
+        expect(screen.getByRole('link', { name: 'Review' }))
+            .toBeTruthy()
+        expect(screen.getByRole('link', { name: 'CA' }))
+            .toBeTruthy()
+        expect(screen.getByRole('link', { name: 'Forum' }))
+            .toBeTruthy()
+    })
+
+    it('hides edit for cancelled challenges while keeping the quick links', () => {
+        renderCard({
+            ...baseChallenge,
+            status: 'CANCELLED_CLIENT_REQUEST',
         })
 
         expect(screen.queryByRole('button', { name: 'Edit' }))
