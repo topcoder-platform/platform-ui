@@ -100,11 +100,13 @@
 
 @media (min-width: 1024px) {
     .prizeInputs {
-        grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.95fr);
+        column-gap: 48px;
+        grid-template-columns: 472px 336px;
+        justify-content: start;
     }
 
     .copilotFeeColumn {
-        padding-left: 12px;
+        padding-left: 0;
     }
 }
 

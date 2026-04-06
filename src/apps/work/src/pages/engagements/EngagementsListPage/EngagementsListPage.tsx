@@ -309,6 +309,9 @@ function renderEngagementRows(
     return engagements.map(engagement => {
         const applicationsCount = getApplicationsCount(engagement)
         const engagementProjectId = getEngagementProjectId(engagement, fallbackProjectId)
+        const engagementAssignmentsRoute = engagementProjectId && engagement.id
+            ? `/projects/${engagementProjectId}/engagements/${engagement.id}/assignments`
+            : undefined
         const projectName = getEngagementProjectName(
             engagement,
             projectNameLookup,
@@ -332,7 +335,23 @@ function renderEngagementRows(
                         )
                         : projectName}
                 </td>
-                <td className={styles.engagementTitle}>{engagement.title || '-'}</td>
+                <td className={styles.engagementTitle}>
+                    {engagementAssignmentsRoute
+                        ? (
+                            <Link
+                                className={styles.link}
+                                to={engagementAssignmentsRoute}
+                                state={assignmentsBackUrl
+                                    ? {
+                                        backUrl: assignmentsBackUrl,
+                                    }
+                                    : undefined}
+                            >
+                                {engagement.title || '-'}
+                            </Link>
+                        )
+                        : engagement.title || '-'}
+                </td>
                 <td>{engagement.isPrivate ? 'Private' : 'Public'}</td>
                 <td>{renderEngagementStatus(engagement.status)}</td>
                 <td>

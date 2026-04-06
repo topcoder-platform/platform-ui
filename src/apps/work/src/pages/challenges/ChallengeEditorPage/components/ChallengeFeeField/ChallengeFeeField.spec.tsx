@@ -19,6 +19,7 @@ import {
 import { ChallengeFeeField } from './ChallengeFeeField'
 
 interface TestHarnessProps {
+    challengeFee?: number
     defaultPrizeSets: PrizeSet[]
     markup?: number
 }
@@ -71,6 +72,7 @@ const TestHarness: FC<TestHarnessProps> = props => {
                     billingAccountId: 12345,
                     markup: props.markup,
                 },
+            challengeFee: props.challengeFee,
             description: 'Public specification',
             name: 'Challenge fee test',
             prizeSets: props.defaultPrizeSets,
@@ -127,7 +129,7 @@ describe('ChallengeFeeField', () => {
             name: 'Update prize sets',
         }))
 
-        expect(screen.getByText('$42'))
+        expect(screen.getByText('$42.00'))
             .toBeTruthy()
     })
 
@@ -180,7 +182,19 @@ describe('ChallengeFeeField', () => {
             />,
         )
 
-        expect(screen.getByText('$15'))
+        expect(screen.getByText('$15.00'))
+            .toBeTruthy()
+    })
+
+    it('pads persisted challenge fee values to two decimal places', () => {
+        render(
+            <TestHarness
+                challengeFee={481.8}
+                defaultPrizeSets={[]}
+            />,
+        )
+
+        expect(screen.getByText('$481.80'))
             .toBeTruthy()
     })
 })
