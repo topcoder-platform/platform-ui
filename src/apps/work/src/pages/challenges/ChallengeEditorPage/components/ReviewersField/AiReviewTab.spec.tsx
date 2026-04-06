@@ -49,6 +49,16 @@ jest.mock('~/libs/ui', () => ({
             {props.label}
         </button>
     ),
+    IconOutline: {
+        LightningBoltIcon: (props: {
+            className?: string
+        }) => (
+            <svg
+                className={props.className}
+                data-testid='lightning-bolt-icon'
+            />
+        ),
+    },
 }), {
     virtual: true,
 })
@@ -220,7 +230,7 @@ describe('AiReviewTab review mode options', () => {
             .toBeNull()
     })
 
-    it('shows gating workflow helper text for checked and unchecked workflows', async () => {
+    it('shows gating workflow helper text and icon only for checked workflows', async () => {
         mockedFetchAiReviewConfigByChallenge.mockResolvedValueOnce({
             ...baseConfiguration,
             workflows: [
@@ -259,5 +269,7 @@ describe('AiReviewTab review mode options', () => {
         expect(await screen.findAllByText(/Submissions below threshold are locked\./))
             .toHaveLength(2)
         expect(screen.getByText(/Pass\/fail gate\./)).not.toBeNull()
+        expect(screen.getAllByTestId('lightning-bolt-icon'))
+            .toHaveLength(1)
     })
 })

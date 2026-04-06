@@ -9,7 +9,7 @@ import {
 } from 'react'
 import classNames from 'classnames'
 
-import { Button } from '~/libs/ui'
+import { Button, IconOutline } from '~/libs/ui'
 
 import { ConfirmationModal } from '../../../../../lib/components'
 import {
@@ -331,12 +331,20 @@ const ManualWorkflowEditor: FC<ManualWorkflowEditorProps> = (
                         />
                         <span>Use as gating workflow</span>
                     </label>
-                    <span className={styles.checkboxDescription} id={gatingDescriptionId}>
+                    <div className={styles.checkboxDescription} id={gatingDescriptionId}>
                         {props.workflow.isGating
-                            ? 'Pass/fail gate. '
+                            ? (
+                                <span className={styles.checkboxDescriptionPrefix}>
+                                    <IconOutline.LightningBoltIcon
+                                        aria-hidden
+                                        className={styles.checkboxDescriptionIcon}
+                                    />
+                                    <span>Pass/fail gate.</span>
+                                </span>
+                            )
                             : undefined}
-                        Submissions below threshold are locked.
-                    </span>
+                        <span>Submissions below threshold are locked.</span>
+                    </div>
                 </div>
             </div>
 
