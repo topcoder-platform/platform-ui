@@ -4,6 +4,7 @@ import type { BackendReview, BackendSubmission } from '../models'
 
 import { reviewMatchesPhase } from './reviewMatching'
 import { getNumericScore } from './reviewScoring'
+import { reviewMatchesSubmission } from './submissionResolution'
 
 /**
  * Compares two phase labels after normalizing case and whitespace.
@@ -103,7 +104,10 @@ export const collectMatchingReviews = (
 
     if (Array.isArray(globalReviews) && globalReviews.length) {
         globalReviews.forEach(review => {
-            if (review?.submissionId === submission.id) {
+            if (reviewMatchesSubmission({
+                review,
+                submission,
+            })) {
                 pushReview(review)
             }
         })
