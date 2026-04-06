@@ -45,7 +45,7 @@ import {
 import {
     extractErrorMessage,
     getStatusText,
-    isChallengeCompleted,
+    isChallengeCompletedOrCancelled,
     showErrorToast,
     showSuccessToast,
 } from '../../../lib/utils'
@@ -60,6 +60,7 @@ import {
     getAssignedTaskMember,
     getCompleteTaskConfirmationMessage,
     getTaskPrizeAmount,
+    isChallengeEditorViewPath,
     isSelfAssignedCopilot,
     shouldShowCompleteTaskAction,
 } from './ChallengeEditorPage.utils'
@@ -791,13 +792,15 @@ const EditorTabs: FC<EditorTabsProps> = (props: EditorTabsProps) => (
 const ChallengeEditorContent: FC<ChallengeEditorContentProps> = (
     props: ChallengeEditorContentProps,
 ) => {
+    const isEditMode = props.isExistingChallenge && !props.isReadOnly
+
     if (!props.isExistingChallenge || props.activeTab === 'details') {
         return (
             <ChallengeEditorForm
                 canLaunchChallenge={props.canLaunchChallenge}
                 challenge={props.challenge}
                 isLaunchDisabled={props.isLaunchDisabled}
-                isEditMode={props.isExistingChallenge}
+                isEditMode={isEditMode}
                 isReadOnly={props.isReadOnly}
                 launchButtonLabel={props.launchButtonLabel}
                 onChallengeCreated={props.onChallengeCreated}
@@ -833,7 +836,7 @@ const ChallengeEditorContent: FC<ChallengeEditorContentProps> = (
             canLaunchChallenge={props.canLaunchChallenge}
             challenge={props.challenge}
             isLaunchDisabled={props.isLaunchDisabled}
-            isEditMode={props.isExistingChallenge}
+            isEditMode={isEditMode}
             isReadOnly={props.isReadOnly}
             launchButtonLabel={props.launchButtonLabel}
             onChallengeCreated={props.onChallengeCreated}
@@ -954,7 +957,7 @@ export const ChallengeEditorPage: FC = () => {
     const routeProjectId = params.projectId
 
     const isExistingChallenge = !!challengeId
-    const isViewMode = location.pathname.endsWith('/view')
+    const isViewMode = isChallengeEditorViewPath(location.pathname)
     const isEditMode = isExistingChallenge && !isViewMode
     const [activeTab, setActiveTab] = useState<EditorTab>('details')
     const [isDeleting, setIsDeleting] = useState<boolean>(false)
@@ -1177,7 +1180,7 @@ export const ChallengeEditorPage: FC = () => {
     })
     const canEditChallenge = isViewMode
         && !!editChallengePath
-        && !isChallengeCompleted(effectiveChallengeStatus)
+        && !isChallengeCompletedOrCancelled(effectiveChallengeStatus)
     const rightHeader = renderHeaderAction({
         canCancelChallenge,
         canCompleteTask,

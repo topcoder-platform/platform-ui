@@ -10,7 +10,10 @@ import {
     getAssignedTaskMember,
     getCompleteTaskConfirmationMessage,
     getTaskPrizeAmount,
+    isChallengeEditorViewPath,
     isSelfAssignedCopilot,
+    normalizeChallengeEditorPathname,
+    resolveMatchingChallengeViewPath,
     shouldShowCompleteTaskAction,
 } from './ChallengeEditorPage.utils'
 
@@ -88,6 +91,26 @@ describe('shouldShowCompleteTaskAction', () => {
             }),
         ))
             .toBe(false)
+    })
+})
+
+describe('challenge editor route helpers', () => {
+    it('normalizes trailing slashes before checking read-only view routes', () => {
+        expect(normalizeChallengeEditorPathname('/projects/123/challenges/456/view/'))
+            .toBe('/projects/123/challenges/456/view')
+        expect(isChallengeEditorViewPath('/projects/123/challenges/456/view/'))
+            .toBe(true)
+        expect(isChallengeEditorViewPath('/projects/123/challenges/456/edit/'))
+            .toBe(false)
+    })
+
+    it('resolves matching view routes for edit paths with or without trailing slashes', () => {
+        expect(resolveMatchingChallengeViewPath('/projects/123/challenges/456/edit'))
+            .toBe('/projects/123/challenges/456/view')
+        expect(resolveMatchingChallengeViewPath('/projects/123/challenges/456/edit/'))
+            .toBe('/projects/123/challenges/456/view')
+        expect(resolveMatchingChallengeViewPath('/projects/123/challenges/456/view/'))
+            .toBeUndefined()
     })
 })
 

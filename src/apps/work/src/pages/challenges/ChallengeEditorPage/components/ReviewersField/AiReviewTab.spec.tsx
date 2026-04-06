@@ -219,4 +219,45 @@ describe('AiReviewTab review mode options', () => {
         expect(screen.queryByRole('heading', { name: 'Workflow1' }))
             .toBeNull()
     })
+
+    it('shows gating workflow helper text for checked and unchecked workflows', async () => {
+        mockedFetchAiReviewConfigByChallenge.mockResolvedValueOnce({
+            ...baseConfiguration,
+            workflows: [
+                {
+                    id: 'draft-1',
+                    isGating: true,
+                    weightPercent: 20,
+                    workflowId: 'workflow-1',
+                },
+                {
+                    id: 'draft-2',
+                    isGating: false,
+                    weightPercent: 80,
+                    workflowId: 'workflow-2',
+                },
+            ],
+        })
+        mockedFetchWorkflows.mockResolvedValueOnce([
+            {
+                id: 'workflow-1',
+                name: 'Workflow 1',
+            },
+            {
+                id: 'workflow-2',
+                name: 'Workflow 2',
+            },
+        ])
+
+        render(
+            <AiReviewTab
+                challengeId='challenge-1'
+                reviewers={persistedAiReviewers}
+            />,
+        )
+
+        expect(await screen.findAllByText(/Submissions below threshold are locked\./))
+            .toHaveLength(2)
+        expect(screen.getByText(/Pass\/fail gate\./)).not.toBeNull()
+    })
 })

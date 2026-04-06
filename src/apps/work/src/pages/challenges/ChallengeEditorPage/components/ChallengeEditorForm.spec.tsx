@@ -45,6 +45,7 @@ import {
     ChallengeEditorForm,
     getTaskLaunchValidationError,
 } from './ChallengeEditorForm'
+import { TermsField } from './TermsField'
 
 jest.mock('../../../../lib/components/form', () => ({
     FormCheckboxField: () => <></>,
@@ -194,7 +195,7 @@ jest.mock('~/config', () => ({
     virtual: true,
 })
 jest.mock('./AssignedMemberField', () => ({
-    AssignedMemberField: () => <></>,
+    AssignedMemberField: () => <span>Assigned Member Field</span>,
 }))
 jest.mock('./AttachmentsField', () => {
     const reactHookForm: typeof import('react-hook-form') = jest.requireActual('react-hook-form')
@@ -443,7 +444,7 @@ jest.mock('./ReviewersField', () => ({
     ),
 }))
 jest.mock('./ReviewTypeField', () => ({
-    ReviewTypeField: () => <></>,
+    ReviewTypeField: () => <span>Review Type Field</span>,
 }))
 jest.mock('./RoundTypeField', () => ({
     RoundTypeField: () => <></>,
@@ -455,7 +456,7 @@ jest.mock('./SubmissionVisibilityField', () => ({
     SubmissionVisibilityField: () => <>Submission Visibility Field</>,
 }))
 jest.mock('./TermsField', () => ({
-    TermsField: () => <></>,
+    TermsField: jest.fn(() => <></>),
 }))
 
 const mockedUseAutosave = useAutosave as jest.Mock
@@ -475,6 +476,7 @@ const mockedFetchResourceRolesService = fetchResourceRoles as jest.Mock
 const mockedFetchResourcesService = fetchResources as jest.Mock
 const mockedShowErrorToast = showErrorToast as jest.Mock
 const mockedShowSuccessToast = showSuccessToast as jest.Mock
+const mockedTermsField = TermsField as jest.MockedFunction<typeof TermsField>
 
 const LocationDisplay = (): JSX.Element => {
     const location = useLocation()
@@ -507,6 +509,9 @@ describe('ChallengeEditorForm', () => {
     } as Challenge
     const taskDraftChallenge = {
         ...draftChallenge,
+        task: {
+            isTask: true,
+        },
         type: {
             abbreviation: 'TSK',
             name: 'Task',
@@ -685,7 +690,7 @@ describe('ChallengeEditorForm', () => {
             .toBeNull()
     })
 
-    it('keeps the timeline section visible for task challenges outside edit mode', () => {
+    it('hides the editable timeline section for task challenges in create mode', () => {
         mockedUseFetchChallengeTypes.mockReturnValue({
             challengeTypes: [{
                 abbreviation: 'TSK',
@@ -702,7 +707,84 @@ describe('ChallengeEditorForm', () => {
             </MemoryRouter>,
         )
 
-        expect(screen.getByRole('heading', { name: 'Timeline & Schedule' }))
+        expect(screen.queryByRole('heading', { name: 'Timeline & Schedule' }))
+            .toBeNull()
+    })
+
+    it('hides the editable timeline section for task challenges in read-only view mode', () => {
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'TSK',
+                id: 'task-type-id',
+                isTask: true,
+                name: 'Task',
+            }],
+            isLoading: false,
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={taskDraftChallenge}
+                    isEditMode
+                    isReadOnly
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.queryByRole('heading', { name: 'Timeline & Schedule' }))
+            .toBeNull()
+    })
+
+    it('keeps the task timeline hidden in edit mode when only the persisted task flag is available', () => {
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [],
+            isLoading: false,
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...draftChallenge,
+                        task: {
+                            isTask: true,
+                        },
+                        typeId: 'task-type-id',
+                    }}
+                    isEditMode
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.queryByRole('heading', { name: 'Timeline & Schedule' }))
+            .toBeNull()
+    })
+
+    it('keeps task-only controls visible in edit mode when only the persisted task flag is available', () => {
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [],
+            isLoading: false,
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...draftChallenge,
+                        task: {
+                            isTask: true,
+                        },
+                        typeId: 'task-type-id',
+                    }}
+                    isEditMode
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByText('Assigned Member Field'))
+            .toBeInTheDocument()
+        expect(screen.getByText('Review Type Field'))
             .toBeInTheDocument()
     })
 
@@ -774,6 +856,39 @@ describe('ChallengeEditorForm', () => {
         expect(mockedUseAutosave)
             .toHaveBeenCalledWith(expect.objectContaining({
                 enabled: false,
+            }))
+    })
+
+    it('does not default the standard term when viewing an existing challenge', () => {
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={draftChallenge}
+                    isReadOnly
+                />
+            </MemoryRouter>,
+        )
+
+        expect(mockedTermsField)
+            .toHaveBeenCalled()
+        expect(mockedTermsField.mock.calls[mockedTermsField.mock.calls.length - 1][0])
+            .toEqual(expect.objectContaining({
+                shouldDefaultStandardTerm: false,
+            }))
+    })
+
+    it('defaults the standard term for created challenges outside edit and view mode', () => {
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm challenge={draftChallenge} />
+            </MemoryRouter>,
+        )
+
+        expect(mockedTermsField)
+            .toHaveBeenCalled()
+        expect(mockedTermsField.mock.calls[mockedTermsField.mock.calls.length - 1][0])
+            .toEqual(expect.objectContaining({
+                shouldDefaultStandardTerm: true,
             }))
     })
 
@@ -1452,6 +1567,32 @@ describe('ChallengeEditorForm', () => {
 
         render(
             <MemoryRouter initialEntries={['/projects/100578/challenges/12345/edit']}>
+                <LocationDisplay />
+                <ChallengeEditorForm
+                    challenge={validDraftChallenge}
+                    projectId='100578'
+                />
+            </MemoryRouter>,
+        )
+
+        await user.type(screen.getByLabelText('Challenge Name'), ' updated')
+        await user.click(screen.getByRole('button', { name: 'Save Challenge' }))
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .toHaveBeenCalledTimes(1)
+            expect(screen.getByTestId('location-display'))
+                .toHaveTextContent('/projects/100578/challenges/12345/view')
+        })
+    })
+
+    it('returns to view mode after saving from an edit route with a trailing slash', async () => {
+        const user = userEvent.setup()
+
+        mockedPatchChallenge.mockResolvedValue(validDraftChallenge)
+
+        render(
+            <MemoryRouter initialEntries={['/projects/100578/challenges/12345/edit/']}>
                 <LocationDisplay />
                 <ChallengeEditorForm
                     challenge={validDraftChallenge}
