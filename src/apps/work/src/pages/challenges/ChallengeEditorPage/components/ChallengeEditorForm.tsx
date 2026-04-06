@@ -2564,7 +2564,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                     ? (
                                         <section className={styles.section}>
                                             <h3 className={styles.sectionTitle}>Submission Settings</h3>
-                                            <div className={styles.grid}>
+                                            <div className={styles.submissionSettingsGrid}>
                                                 <FinalDeliverablesField />
                                                 <StockArtsField />
                                                 <SubmissionVisibilityField />
