@@ -1,6 +1,7 @@
 @import '@libs/ui/styles/includes';
 
 $prize-input-width: 336px;
+$prize-row-action-space: 38px;
 
 .field {
     display: flex;
@@ -71,6 +72,10 @@ $prize-input-width: 336px;
     grid-template-columns: 86px minmax(0, $prize-input-width);
 }
 
+.firstMultiPrizeRow {
+    grid-template-columns: 86px minmax(0, calc(#{$prize-input-width} + #{$prize-row-action-space}));
+}
+
 .prizeRowWithRemove {
     grid-template-columns: 86px minmax(0, $prize-input-width) 28px;
 }
@@ -96,6 +101,10 @@ $prize-input-width: 336px;
     min-width: 0;
     max-width: $prize-input-width;
     width: 100%;
+}
+
+.firstMultiPrizeRow .prizeInputField {
+    max-width: calc(#{$prize-input-width} + #{$prize-row-action-space});
 }
 
 .prizeValueError {
@@ -148,6 +157,7 @@ $prize-input-width: 336px;
 
 @media (max-width: 640px) {
     .multiPrizeRow,
+    .firstMultiPrizeRow,
     .prizeRowWithRemove {
         grid-template-columns: 1fr;
     }
