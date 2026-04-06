@@ -10,7 +10,11 @@ import {
     ChallengeReviewer,
     PrizeSet,
 } from '../../../../../lib/models'
-import { calculateChallengeTotal } from '../../../../../lib/utils/prize.utils'
+import {
+    calculateChallengeFee,
+    calculateChallengeTotal,
+    formatUsdCurrency,
+} from '../../../../../lib/utils/prize.utils'
 
 import styles from './ChallengeFeeField.module.scss'
 
@@ -42,48 +46,30 @@ export const ChallengeFeeField: FC = () => {
         () => (Array.isArray(watchedReviewers) ? watchedReviewers : []),
         [watchedReviewers],
     )
-    const billingMarkup = useMemo(
-        (): number | undefined => {
-            const markup = Number((watchedBilling as ChallengeEditorFormData['billing'] | undefined)?.markup)
-            if (!Number.isFinite(markup)) {
-                return undefined
-            }
-
-            return markup > 1
-                ? markup / 100
-                : markup
-        },
-        [watchedBilling],
-    )
-    const calculatedChallengeFee = useMemo(
-        (): number | undefined => {
-            if (billingMarkup === undefined) {
-                return undefined
-            }
-
-            return calculateChallengeTotal(normalizedPrizeSets, normalizedReviewers) * billingMarkup
-        },
+    const challengeTotal = useMemo(
+        () => calculateChallengeTotal(normalizedPrizeSets, normalizedReviewers),
         [
-            billingMarkup,
             normalizedPrizeSets,
             normalizedReviewers,
         ],
     )
-    const formattedValue = useMemo(() => {
-        const challengeFee = calculatedChallengeFee ?? Number(watchedChallengeFee)
-
-        if (!Number.isFinite(challengeFee)) {
-            return '$0'
-        }
-
-        return `$${challengeFee.toLocaleString(undefined, {
-            maximumFractionDigits: 2,
-            minimumFractionDigits: 0,
-        })}`
-    }, [
-        calculatedChallengeFee,
-        watchedChallengeFee,
-    ])
+    const calculatedChallengeFee = useMemo(
+        (): number | undefined => calculateChallengeFee(
+            challengeTotal,
+            (watchedBilling as ChallengeEditorFormData['billing'] | undefined)?.markup,
+        ),
+        [
+            challengeTotal,
+            watchedBilling,
+        ],
+    )
+    const formattedValue = useMemo(
+        () => formatUsdCurrency(calculatedChallengeFee ?? watchedChallengeFee),
+        [
+            calculatedChallengeFee,
+            watchedChallengeFee,
+        ],
+    )
 
     return (
         <div className={styles.lineItem}>
