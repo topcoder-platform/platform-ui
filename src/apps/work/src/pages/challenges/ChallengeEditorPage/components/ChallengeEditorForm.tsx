@@ -1264,7 +1264,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const showFunChallengeField = isMarathonMatchChallengeSelected
     const showMarathonMatchScorerSection = isMarathonMatchChallengeSelected && isChallengeCreated
     const showPrizesAndBillingSection = !isFunChallengeSelected
-    const showEditableTimelineSection = !isEditMode || !isTaskChallenge
+    const showEditableTimelineSection = !isTaskChallenge
     const usesManualReviewers = useMemo(
         (): boolean => shouldUseManualReviewers({
             isMarathonMatchChallenge: isMarathonMatchChallengeSelected,

@@ -683,7 +683,7 @@ describe('ChallengeEditorForm', () => {
             .toBeNull()
     })
 
-    it('keeps the timeline section visible for task challenges outside edit mode', () => {
+    it('hides the editable timeline section for task challenges in create mode', () => {
         mockedUseFetchChallengeTypes.mockReturnValue({
             challengeTypes: [{
                 abbreviation: 'TSK',
@@ -700,8 +700,33 @@ describe('ChallengeEditorForm', () => {
             </MemoryRouter>,
         )
 
-        expect(screen.getByRole('heading', { name: 'Timeline & Schedule' }))
-            .toBeInTheDocument()
+        expect(screen.queryByRole('heading', { name: 'Timeline & Schedule' }))
+            .toBeNull()
+    })
+
+    it('hides the editable timeline section for task challenges in read-only view mode', () => {
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'TSK',
+                id: 'task-type-id',
+                isTask: true,
+                name: 'Task',
+            }],
+            isLoading: false,
+        })
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={taskDraftChallenge}
+                    isEditMode
+                    isReadOnly
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.queryByRole('heading', { name: 'Timeline & Schedule' }))
+            .toBeNull()
     })
 
     it('keeps the task timeline hidden in edit mode when only the persisted task flag is available', () => {
