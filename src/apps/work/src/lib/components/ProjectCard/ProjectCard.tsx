@@ -1,19 +1,15 @@
 import {
     FC,
-    useContext,
 } from 'react'
 import { Link } from 'react-router-dom'
 import classNames from 'classnames'
 
-import { WorkAppContext } from '../../contexts'
 import {
     Project,
-    WorkAppContextModel,
 } from '../../models'
 import {
-    buildProjectLandingPath,
+    buildProjectChallengesPath,
     formatDateTime,
-    getAuthAccessToken,
 } from '../../utils'
 import { ProjectStatus } from '../ProjectStatus'
 
@@ -27,11 +23,8 @@ interface ProjectCardProps {
 
 export const ProjectCard: FC<ProjectCardProps> = (props: ProjectCardProps) => {
     const project: Project = props.project
-    const {
-        loginUserInfo,
-    }: WorkAppContextModel = useContext(WorkAppContext)
     const projectId: string = String(project.id)
-    const path: string = buildProjectLandingPath(project, getAuthAccessToken(loginUserInfo))
+    const path: string = buildProjectChallengesPath(projectId)
     const editPath = `/projects/${projectId}/edit`
 
     const lastActivity = formatDateTime(
