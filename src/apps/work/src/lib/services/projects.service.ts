@@ -312,7 +312,7 @@ function normalizeProject(project: Partial<Project>): Project {
         groups: normalizeProjectTermsOrGroups(project.groups),
         id,
         invites,
-        isInvited: project.isInvited ?? invites.length > 0,
+        isInvited: normalizeOptionalBoolean(project.isInvited),
         lastActivityAt: normalizeOptionalString(project.lastActivityAt),
         members,
         name,
@@ -532,7 +532,7 @@ function normalizeProjectSummary(project: ProjectSummary): ProjectSummary {
     return {
         ...project,
         invites,
-        isInvited: project.isInvited ?? invites.length > 0,
+        isInvited: normalizeOptionalBoolean(project.isInvited),
         members,
     }
 }

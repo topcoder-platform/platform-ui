@@ -5,6 +5,7 @@ import {
 } from '~/libs/core'
 
 import {
+    fetchProjectById,
     fetchProjectBillingAccount,
     fetchProjectBillingAccounts,
     fetchProjectsList,
@@ -251,6 +252,53 @@ describe('fetchProjectsList', () => {
         jest.clearAllMocks()
     })
 
+    it('does not infer isInvited from invites when the API omits the flag', async () => {
+        const mockedGetPaginatedAsync = xhrGetPaginatedAsync as jest.Mock
+
+        mockedGetPaginatedAsync.mockResolvedValue({
+            data: [
+                {
+                    id: 200,
+                    invites: [
+                        {
+                            email: 'invitee@example.com',
+                            id: '77',
+                            status: 'pending',
+                            userId: 123,
+                        },
+                    ],
+                    name: 'Project with invites',
+                    status: 'active',
+                },
+            ],
+            page: 1,
+            perPage: 20,
+            total: 1,
+            totalPages: 1,
+        })
+
+        const result = await fetchProjectsList()
+
+        expect(result.projects)
+            .toEqual([
+                expect.objectContaining({
+                    id: 200,
+                    invites: [
+                        expect.objectContaining({
+                            email: 'invitee@example.com',
+                            id: '77',
+                            status: 'pending',
+                            userId: 123,
+                        }),
+                    ],
+                    isInvited: undefined,
+                    members: [],
+                    name: 'Project with invites',
+                    status: 'active',
+                }),
+            ])
+    })
+
     it('preserves the API isInvited flag when invite details are omitted', async () => {
         const mockedGetPaginatedAsync = xhrGetPaginatedAsync as jest.Mock
 
@@ -284,5 +332,50 @@ describe('fetchProjectsList', () => {
             ])
         expect(mockedGetPaginatedAsync)
             .toHaveBeenCalledWith(expect.stringContaining('fields=members%2Cinvites'))
+    })
+})
+
+describe('fetchProjectById', () => {
+    beforeEach(() => {
+        jest.clearAllMocks()
+    })
+
+    it('does not infer isInvited from invites when the API omits the flag', async () => {
+        const mockedGetAsync = xhrGetAsync as jest.Mock
+
+        mockedGetAsync.mockResolvedValue({
+            id: 200,
+            invites: [
+                {
+                    email: 'invitee@example.com',
+                    id: '77',
+                    status: 'pending',
+                    userId: 123,
+                },
+            ],
+            name: 'Project with invites',
+            status: 'active',
+        })
+
+        const result = await fetchProjectById('200')
+
+        expect(result)
+            .toEqual(expect.objectContaining({
+                id: '200',
+                invites: [
+                    expect.objectContaining({
+                        email: 'invitee@example.com',
+                        id: '77',
+                        status: 'pending',
+                        userId: 123,
+                    }),
+                ],
+                isInvited: undefined,
+                members: [],
+                name: 'Project with invites',
+                status: 'active',
+            }))
+        expect(mockedGetAsync)
+            .toHaveBeenCalledWith('https://example.com/projects/200')
     })
 })
