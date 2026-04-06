@@ -68,6 +68,9 @@ import {
     getProjectBillingAccountChallengeErrorMessage,
     getProjectBillingAccountChallengeIssue,
 } from '../../../../lib/utils/project-billing-account.utils'
+import {
+    resolveMatchingChallengeViewPath,
+} from '../ChallengeEditorPage.utils'
 
 import {
     AssignedMemberField,
@@ -1036,13 +1039,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         ],
     )
     const viewModePath = useMemo(
-        (): string | undefined => {
-            if (!location.pathname.endsWith('/edit')) {
-                return undefined
-            }
-
-            return `${location.pathname.slice(0, -'/edit'.length)}/view`
-        },
+        (): string | undefined => resolveMatchingChallengeViewPath(location.pathname),
         [location.pathname],
     )
     const projectBillingAccountResult = useFetchProjectBillingAccount(fallbackProjectId)

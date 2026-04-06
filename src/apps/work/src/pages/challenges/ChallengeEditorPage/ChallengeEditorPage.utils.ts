@@ -18,6 +18,54 @@ export interface TaskWinnerPayload {
 }
 
 /**
+ * Normalizes challenge editor routes so edit/view mode checks ignore trailing slashes.
+ *
+ * @param pathname raw location pathname from the router
+ * @returns the pathname without trailing slashes, or `/` for the root path
+ * @remarks Used by the challenge editor page and form so `/view/` and `/edit/`
+ * behave the same as their canonical route variants.
+ */
+export function normalizeChallengeEditorPathname(pathname: string): string {
+    const normalizedPathname = pathname.replace(/\/+$/, '')
+
+    return normalizedPathname || '/'
+}
+
+/**
+ * Detects whether the current challenge editor pathname is a read-only view route.
+ *
+ * @param pathname raw location pathname from the router
+ * @returns `true` when the normalized pathname ends with `/view`
+ * @remarks Used by `ChallengeEditorPage` to keep read-only mode stable even when
+ * incoming routes include a trailing slash.
+ */
+export function isChallengeEditorViewPath(pathname: string): boolean {
+    return normalizeChallengeEditorPathname(pathname)
+        .endsWith('/view')
+}
+
+/**
+ * Resolves the matching view route for an edit-mode challenge editor pathname.
+ *
+ * @param pathname raw location pathname from the router
+ * @returns the paired `/view` route, or `undefined` when the pathname is not an
+ * edit route after normalization
+ * @remarks Used after successful manual saves so both canonical `/edit` routes
+ * and trailing-slash variants return to read-only challenge view mode.
+ */
+export function resolveMatchingChallengeViewPath(
+    pathname: string,
+): string | undefined {
+    const normalizedPathname = normalizeChallengeEditorPathname(pathname)
+
+    if (!normalizedPathname.endsWith('/edit')) {
+        return undefined
+    }
+
+    return `${normalizedPathname.slice(0, -'/edit'.length)}/view`
+}
+
+/**
  * Converts optional values to trimmed strings for identity and status comparisons.
  *
  * @param value raw value to normalize
