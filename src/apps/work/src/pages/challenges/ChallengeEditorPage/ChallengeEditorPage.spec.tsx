@@ -179,6 +179,7 @@ jest.mock('./components', () => {
 
     return {
         ChallengeEditorForm: (props: {
+            isEditMode?: boolean
             onChallengeCreated?: (challenge: {
                 id: string
                 name: string
@@ -201,7 +202,12 @@ jest.mock('./components', () => {
             }
 
             return (
-                <div>
+                <div
+                    data-edit-mode={props.isEditMode
+                        ? 'true'
+                        : 'false'}
+                    data-testid='challenge-editor-form'
+                >
                     {props.isReadOnly
                         ? 'Challenge View Form'
                         : 'Challenge Editor Form'}
@@ -302,6 +308,11 @@ describe('ChallengeEditorPage', () => {
                 .toBeTruthy()
         })
 
+        expect(
+            screen.getByTestId('challenge-editor-form')
+                .getAttribute('data-edit-mode'),
+        )
+            .toBe('true')
         expect(screen.getByRole('button', { name: 'Cancel' }))
             .toBeTruthy()
 
@@ -357,6 +368,11 @@ describe('ChallengeEditorPage', () => {
                 .toBeTruthy()
         })
 
+        expect(
+            screen.getByTestId('challenge-editor-form')
+                .getAttribute('data-edit-mode'),
+        )
+            .toBe('false')
         expect(screen.getByRole('heading', { name: 'View Edit test' }))
             .toBeTruthy()
         expect(screen.getByRole('button', { name: 'Cancel' }))
