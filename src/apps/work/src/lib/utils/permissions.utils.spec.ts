@@ -4,6 +4,7 @@ import type { Project } from '../models'
 
 import {
     canCreateEngagement,
+    canViewAllEngagements,
     checkCanManageProject,
     checkIsUserInvitedToProject,
     checkProjectMembership,
@@ -60,6 +61,16 @@ describe('permissions.utils project management helpers', () => {
             .toBe(false)
     })
 
+    it('allows project managers to edit projects when they have manager membership', () => {
+        expect(checkCanManageProject(['Project Manager'], '123', managedProject))
+            .toBe(true)
+    })
+
+    it('blocks project managers from editing projects without manager access', () => {
+        expect(checkCanManageProject(['Project Manager'], '456', managedProject))
+            .toBe(false)
+    })
+
     it('does not expand project-manager creation access beyond the work-manager change', () => {
         expect(checkCanManageProject(['Project Manager'], '123'))
             .toBe(false)
@@ -75,6 +86,17 @@ describe('permissions.utils project management helpers', () => {
         expect(canCreateEngagement(['topcoder talent manager']))
             .toBe(true)
         expect(canCreateEngagement(['copilot', 'talent manager']))
+            .toBe(true)
+    })
+
+    it('limits all-engagement access to admins and talent managers', () => {
+        expect(canViewAllEngagements(['copilot']))
+            .toBe(false)
+        expect(canViewAllEngagements(['project manager']))
+            .toBe(false)
+        expect(canViewAllEngagements(['administrator']))
+            .toBe(true)
+        expect(canViewAllEngagements(['topcoder talent manager']))
             .toBe(true)
     })
 

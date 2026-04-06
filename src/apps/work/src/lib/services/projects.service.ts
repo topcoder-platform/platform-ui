@@ -36,6 +36,7 @@ import {
     createProjectMemberInvite,
 } from './project-member-invites.service'
 import {
+    BillingAccount,
     fetchBillingAccountById,
 } from './billing-accounts.service'
 
@@ -76,15 +77,25 @@ export interface FetchProjectsListResponse {
 
 export interface ProjectBillingAccount {
     active?: boolean
+    endDate?: string
     id?: string
     markup?: number
     name?: string
     startDate?: string
-    endDate?: string
+    status?: string
+    totalBudgetRemaining?: number
 }
 
 export interface FetchProjectBillingAccountResponse {
     billingAccount?: ProjectBillingAccount
+}
+
+interface ProjectBillingAccountsResponseItem {
+    active?: unknown
+    endDate?: unknown
+    name?: unknown
+    startDate?: unknown
+    tcBillingAccountId?: unknown
 }
 
 const PROJECT_TYPES_API_URL = `${PROJECTS_API_URL}/metadata/projectTypes`
@@ -521,7 +532,7 @@ function normalizeProjectSummary(project: ProjectSummary): ProjectSummary {
     return {
         ...project,
         invites,
-        isInvited: invites.length > 0,
+        isInvited: project.isInvited ?? invites.length > 0,
         members,
     }
 }
@@ -701,8 +712,55 @@ export async function fetchProjectById(projectId: string): Promise<Project> {
 }
 
 /**
- * Fetch billing account details for a project.
+ * Fetch billing accounts available to the caller for a project.
+ *
+ * Returns only accounts with both `tcBillingAccountId` and `name`, normalized
+ * into the shared work-app billing-account shape and sorted by name.
  */
+export async function fetchProjectBillingAccounts(
+    projectId: string,
+): Promise<BillingAccount[]> {
+    try {
+        const response = await xhrGetAsync<ProjectBillingAccountsResponseItem[]>(
+            `${PROJECTS_API_URL}/${encodeURIComponent(projectId)}/billingAccounts`,
+        )
+
+        return response
+            .map((billingAccount): BillingAccount | undefined => {
+                const id = normalizeOptionalId(billingAccount?.tcBillingAccountId)
+                const name = normalizeOptionalString(billingAccount?.name)
+
+                if (!id || !name) {
+                    return undefined
+                }
+
+                return {
+                    active: typeof billingAccount?.active === 'boolean'
+                        ? billingAccount.active
+                        : true,
+                    endDate: normalizeOptionalString(billingAccount?.endDate),
+                    id,
+                    name,
+                    startDate: normalizeOptionalString(billingAccount?.startDate),
+                }
+            })
+            .filter((billingAccount): billingAccount is BillingAccount => !!billingAccount)
+            .sort((billingAccountA, billingAccountB) => billingAccountA.name.localeCompare(
+                billingAccountB.name,
+            ))
+    } catch (error) {
+        throw normalizeError(error, 'Failed to fetch project billing accounts')
+    }
+}
+
+/**
+ * Fetch billing account details for a project.
+ *
+ * Enriches the project-scoped billing account payload with billing-accounts API
+ * detail fields so the work app can gate challenge launch on lifecycle status
+ * and remaining funds without losing the project billing markup.
+ */
+// eslint-disable-next-line complexity
 export async function fetchProjectBillingAccount(
     projectId: string,
 ): Promise<FetchProjectBillingAccountResponse> {
@@ -714,27 +772,35 @@ export async function fetchProjectBillingAccount(
             markup?: unknown
             name?: unknown
             startDate?: unknown
+            status?: unknown
             tcBillingAccountId?: unknown
+            totalBudgetRemaining?: unknown
         }>(
             `${PROJECTS_API_URL}/${encodeURIComponent(projectId)}/billingAccount`,
         )
         const billingAccountId = normalizeOptionalId(billingAccount?.tcBillingAccountId)
             || normalizeOptionalId(billingAccount?.id)
-        const billingMarkup = normalizeOptionalNumber(billingAccount?.markup)
-        const billingAccountDetails = billingAccountId && billingMarkup === undefined
+        const billingAccountDetails = billingAccountId
             ? await fetchBillingAccountById(billingAccountId)
                 .catch(() => undefined)
             : undefined
 
         const normalizedBillingAccount: ProjectBillingAccount = {
-            active: normalizeOptionalBoolean(billingAccount?.active),
-            endDate: normalizeOptionalString(billingAccount?.endDate),
+            active: normalizeOptionalBoolean(billingAccount?.active)
+                ?? normalizeOptionalBoolean(billingAccountDetails?.active),
+            endDate: normalizeOptionalString(billingAccount?.endDate)
+                || normalizeOptionalString(billingAccountDetails?.endDate),
             id: billingAccountId,
-            markup: billingMarkup ?? normalizeOptionalNumber(billingAccountDetails?.markup),
+            markup: normalizeOptionalNumber(billingAccount?.markup)
+                ?? normalizeOptionalNumber(billingAccountDetails?.markup),
             name: normalizeOptionalString(billingAccount?.name)
                 || normalizeOptionalString(billingAccountDetails?.name),
             startDate: normalizeOptionalString(billingAccount?.startDate)
                 || normalizeOptionalString(billingAccountDetails?.startDate),
+            status: normalizeOptionalString(billingAccount?.status)
+                || normalizeOptionalString(billingAccountDetails?.status),
+            totalBudgetRemaining: normalizeOptionalNumber(billingAccount?.totalBudgetRemaining)
+                ?? normalizeOptionalNumber(billingAccountDetails?.totalBudgetRemaining),
         }
 
         if (
@@ -744,6 +810,8 @@ export async function fetchProjectBillingAccount(
             && !normalizedBillingAccount.name
             && !normalizedBillingAccount.endDate
             && !normalizedBillingAccount.startDate
+            && !normalizedBillingAccount.status
+            && normalizedBillingAccount.totalBudgetRemaining === undefined
         ) {
             return {
                 billingAccount: undefined,

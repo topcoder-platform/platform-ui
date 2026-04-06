@@ -28,7 +28,7 @@ export const CHALLENGE_STATUS = {
 
 export const PAGE_SIZE = 10
 
-export const PAGINATION_PER_PAGE_OPTIONS: ReadonlyArray<number> = [5, 10, 25, 50]
+export const PAGINATION_PER_PAGE_OPTIONS: ReadonlyArray<number> = [5, 10, 20, 25, 50]
 
 export const CHALLENGE_TRACKS = {
     COMPETITIVE_PROGRAMMING: 'COMPETITIVE_PROGRAMMING',
@@ -325,8 +325,8 @@ export const ALLOWED_DOWNLOAD_SUBMISSIONS_ROLES = [
 
 export const ENGAGEMENT_STATUSES = [
     'Open',
-    'Pending Assignment',
     'Active',
+    'On Hold',
     'Cancelled',
     'Closed',
 ] as const

@@ -19,9 +19,11 @@ import PaymentsTable from '../../../lib/components/payments-table/PaymentTable'
 
 import styles from './Payments.module.scss'
 
-type PaymentRoleView = 'admin' | 'engagementApprover'
+type PaymentRoleView = 'admin' | 'engagementApprover' | 'wiproTaasAdmin'
 
 const engagementPaymentCategory = 'ENGAGEMENT_PAYMENT'
+const restrictedRoleDefaultStatus = 'ON_HOLD_ADMIN'
+const taasPaymentCategory = 'TAAS_PAYMENT'
 const defaultPageSize = 10
 
 interface PaymentsListViewProps {
@@ -70,11 +72,106 @@ const formatCurrency = (amountStr: string, currency: string): string => {
         .format(amount)
 }
 
+/**
+ * Extracts the assignment identifier captured on a finance winning row.
+ *
+ * @param payment raw finance winning row from the wallet-admin listing API.
+ * @returns the normalized assignment identifier when present.
+ * @remarks Wallet-admin reuses this identifier to recover engagement details
+ * directly from the engagements API when finance omits them.
+ */
+function getWinningAssignmentId(payment: WinningDetail): string | undefined {
+    const assignmentId = payment.attributes?.assignmentId
+
+    return assignmentId !== undefined && assignmentId !== null
+        ? String(assignmentId)
+        : undefined
+}
+
+/**
+ * Converts a raw finance winning row into the wallet-admin view model.
+ *
+ * @param payment raw finance winning row returned by the payouts API.
+ * @param handleMap member-handle lookup keyed by winner identifier.
+ * @returns the normalized winning record rendered by the payments table.
+ * @remarks The release date and hold status are derived here to keep the
+ * component-level mapping callback trivial.
+ */
+// eslint-disable-next-line complexity
+function convertPaymentToWinning(payment: WinningDetail, handleMap: Map<number, string>): Winning {
+    const now = new Date()
+    const releaseDate = new Date(payment.releaseDate)
+    const diffMs = releaseDate.getTime() - now.getTime()
+    const diffHours = diffMs / (1000 * 60 * 60)
+
+    let formattedReleaseDate
+    if (diffHours > 0 && diffHours <= 24) {
+        const diffMinutes = diffMs / (1000 * 60)
+        const hours = Math.floor(diffHours)
+        const minutes = Math.round(diffMinutes - hours * 60)
+        formattedReleaseDate = `${minutes} minute${minutes !== 1 ? 's' : ''}`
+        if (hours > 0) {
+            formattedReleaseDate = `In ${hours} hour${hours !== 1 ? 's' : ''} ${formattedReleaseDate}`
+        } else if (minutes > 0) {
+            formattedReleaseDate = `In ${minutes} minute${minutes !== 1 ? 's' : ''}`
+        }
+    } else {
+        formattedReleaseDate = formatIOSDateString(payment.releaseDate)
+    }
+
+    let status = formatStatus(payment.details[0].status)
+    if (status === 'Cancel') {
+        status = 'Cancelled'
+    }
+
+    if (status === 'ON_HOLD') {
+        if (!payment.paymentStatus?.payoutSetupComplete) {
+            status = 'On Hold (Payment Provider)'
+        } else if (!payment.paymentStatus?.taxFormSetupComplete) {
+            status = 'On Hold (Tax Form)'
+        } else {
+            status = 'On Hold (Member)'
+        }
+    }
+
+    return {
+        assignmentId: getWinningAssignmentId(payment),
+        createDate: formatIOSDateString(payment.createdAt),
+        currency: payment.details[0].currency,
+        datePaid: payment.details[0].datePaid ? formatIOSDateString(payment.details[0].datePaid) : '-',
+        description: payment.description,
+        details: payment.details,
+        externalId: payment.externalId,
+        grossAmount: formatCurrency(payment.details[0].grossAmount, payment.details[0].currency),
+        grossAmountNumber: parseFloat(payment.details[0].grossAmount),
+        handle: handleMap.get(parseInt(payment.winnerId, 10)) ?? payment.winnerId,
+        id: payment.id,
+        releaseDate: formattedReleaseDate,
+        releaseDateObj: releaseDate,
+        status,
+        type: payment.category.replaceAll('_', ' ')
+            .toLowerCase(),
+        winnerId: payment.winnerId,
+    }
+}
+
 // eslint-disable-next-line complexity
 const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProps) => {
-    const isPaymentAdmin = props.profile.roles.includes('Payment Admin')
-    const isEngagementPaymentApprover = props.profile.roles.includes('Engagement Payment Approver')
-    const canToggleRoleView = isPaymentAdmin && isEngagementPaymentApprover
+    const normalizedRoles = React.useMemo(
+        () => new Set((props.profile.roles || []).map(role => role.trim()
+            .toLowerCase())),
+        [props.profile.roles],
+    )
+    const hasRole = useCallback(
+        (...roles: string[]) => roles.some(role => normalizedRoles.has(role.trim()
+            .toLowerCase())),
+        [normalizedRoles],
+    )
+    const isWiproTaasAdmin = hasRole('Wipro TaaS Admin')
+    const hasPaymentAdminRole = hasRole('Payment Admin')
+    const isPaymentAdmin = hasPaymentAdminRole || isWiproTaasAdmin
+    const isEngagementPaymentApprover = hasRole('Engagement Payment Approver')
+    const canToggleRoleView = isPaymentAdmin && (isEngagementPaymentApprover)
     const [confirmFlow, setConfirmFlow] = React.useState<ConfirmFlowData | undefined>(undefined)
     const [isConfirmFormValid, setIsConfirmFormValid] = React.useState<boolean>(false)
     const [winnings, setWinnings] = React.useState<ReadonlyArray<Winning>>([])
@@ -87,17 +184,44 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
     const isEngagementApproverView = isEngagementPaymentApprover && (
         !isPaymentAdmin || paymentRoleView === 'engagementApprover'
     )
+
+    const restrictedCategory = isEngagementApproverView
+        ? engagementPaymentCategory
+        : (isWiproTaasAdmin && !hasPaymentAdminRole ? taasPaymentCategory : undefined)
+    const restrictedDefaultStatus = isEngagementApproverView ? restrictedRoleDefaultStatus : undefined
+    const isRestrictedApproverView = isEngagementApproverView
     const [filters, setFilters] = React.useState<Record<string, string[]>>({})
+    const hasSelectedStatusFilter = (filters.status?.length ?? 0) > 0
     const appliedFilters = React.useMemo<Record<string, string[]>>(() => {
-        if (!isEngagementApproverView) {
+        if (!restrictedCategory) {
             return filters
         }
 
         return {
             ...filters,
-            category: [engagementPaymentCategory],
+            category: [restrictedCategory],
+            ...(hasSelectedStatusFilter
+                ? { status: filters.status }
+                : (restrictedDefaultStatus ? { status: [restrictedDefaultStatus] } : {})),
         }
-    }, [filters, isEngagementApproverView])
+    }, [filters, hasSelectedStatusFilter, restrictedCategory, restrictedDefaultStatus])
+    const hasActiveFilters = React.useMemo(
+        () => Object.entries(appliedFilters)
+            .some(([key, value]) => key !== 'category' && value.length > 0),
+        [appliedFilters],
+    )
+    const selectedValueOverrides = React.useMemo<Record<string, string>>(() => {
+        if (!restrictedCategory) {
+            return {} as Record<string, string>
+        }
+
+        const statusOverride = filters.status?.[0] ?? restrictedDefaultStatus
+
+        return {
+            category: restrictedCategory,
+            ...(statusOverride ? { status: statusOverride } : {}),
+        }
+    }, [filters.status, restrictedCategory, restrictedDefaultStatus])
     const [pagination, setPagination] = React.useState<PaginationInfo>({
         currentPage: 1,
         pageSize: defaultPageSize,
@@ -133,60 +257,8 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
     }, [])
 
     const convertToWinnings = useCallback(
-        (payments: WinningDetail[], handleMap: Map<number, string>): ReadonlyArray<Winning> => payments.map(payment => {
-            const now = new Date()
-            const releaseDate = new Date(payment.releaseDate)
-            const diffMs = releaseDate.getTime() - now.getTime()
-            const diffHours = diffMs / (1000 * 60 * 60)
-
-            let formattedReleaseDate
-            if (diffHours > 0 && diffHours <= 24) {
-                const diffMinutes = diffMs / (1000 * 60)
-                const hours = Math.floor(diffHours)
-                const minutes = Math.round(diffMinutes - hours * 60)
-                formattedReleaseDate = `${minutes} minute${minutes !== 1 ? 's' : ''}`
-                if (hours > 0) {
-                    formattedReleaseDate = `In ${hours} hour${hours !== 1 ? 's' : ''} ${formattedReleaseDate}`
-                } else if (minutes > 0) {
-                    formattedReleaseDate = `In ${minutes} minute${minutes !== 1 ? 's' : ''}`
-                }
-            } else {
-                formattedReleaseDate = formatIOSDateString(payment.releaseDate)
-            }
-
-            let status = formatStatus(payment.details[0].status)
-            if (status === 'Cancel') {
-                status = 'Cancelled'
-            }
-
-            if (status === 'ON_HOLD') {
-                if (!payment.paymentStatus?.payoutSetupComplete) {
-                    status = 'On Hold (Payment Provider)'
-                } else if (!payment.paymentStatus?.taxFormSetupComplete) {
-                    status = 'On Hold (Tax Form)'
-                } else {
-                    status = 'On Hold (Member)'
-                }
-            }
-
-            return {
-                createDate: formatIOSDateString(payment.createdAt),
-                currency: payment.details[0].currency,
-                datePaid: payment.details[0].datePaid ? formatIOSDateString(payment.details[0].datePaid) : '-',
-                description: payment.description,
-                details: payment.details,
-                externalId: payment.externalId,
-                grossAmount: formatCurrency(payment.details[0].grossAmount, payment.details[0].currency),
-                grossAmountNumber: parseFloat(payment.details[0].grossAmount),
-                handle: handleMap.get(parseInt(payment.winnerId, 10)) ?? payment.winnerId,
-                id: payment.id,
-                releaseDate: formattedReleaseDate,
-                releaseDateObj: releaseDate,
-                status,
-                type: payment.category.replaceAll('_', ' ')
-                    .toLowerCase(),
-            }
-        }),
+        (payments: WinningDetail[], handleMap: Map<number, string>): ReadonlyArray<Winning> => payments
+            .map(payment => convertPaymentToWinning(payment, handleMap)),
         [],
     )
 
@@ -319,14 +391,15 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
         props.profile.roles.includes('Payment Admin')
         || props.profile.roles.includes('Payment BA Admin')
         || props.profile.roles.includes('Payment Editor')
+        || props.profile.roles.includes('Wipro TaaS Admin')
     )
 
     const [bulkOpen, setBulkOpen] = React.useState(false)
     const [bulkAuditNote, setBulkAuditNote] = React.useState('')
 
     /**
-     * Switches the payments page between the full admin view and the engagement-only approver view.
-     * The engagement category is derived from the selected role view, so shared filters stay reusable
+    * Switches the payments page between the full admin view and scoped approver views.
+    * The role-scoped category is derived from the selected role view, so shared filters stay reusable
      * and hidden type restrictions do not leak across view changes.
      */
     const onRoleViewChange = useCallback((nextView: PaymentRoleView) => {
@@ -403,20 +476,22 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                         <div className={styles.roleViewButtons}>
                             <button
                                 type='button'
-                                aria-pressed={!isEngagementApproverView}
-                                className={`${styles.roleViewButton} ${!isEngagementApproverView ? styles.roleViewButtonActive : ''}`}
+                                aria-pressed={!isRestrictedApproverView}
+                                className={`${styles.roleViewButton} ${!isRestrictedApproverView ? styles.roleViewButtonActive : ''}`}
                                 onClick={() => onRoleViewChange('admin')}
                             >
                                 Admin View
                             </button>
-                            <button
-                                type='button'
-                                aria-pressed={isEngagementApproverView}
-                                className={`${styles.roleViewButton} ${isEngagementApproverView ? styles.roleViewButtonActive : ''}`}
-                                onClick={() => onRoleViewChange('engagementApprover')}
-                            >
-                                Engagement Approver View
-                            </button>
+                            {isEngagementPaymentApprover && (
+                                <button
+                                    type='button'
+                                    aria-pressed={isEngagementApproverView}
+                                    className={`${styles.roleViewButton} ${isEngagementApproverView ? styles.roleViewButtonActive : ''}`}
+                                    onClick={() => onRoleViewChange('engagementApprover')}
+                                >
+                                    Engagement Approver View
+                                </button>
+                            )}
                         </div>
                     </div>
                 )}
@@ -424,8 +499,7 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                     showExportButton
                     selectedCount={selectedPaymentsCount}
                     onBulkClick={() => setBulkOpen(true)}
-                    hasActiveFilters={Object.values(filters)
-                        .some(value => value.length > 0)}
+                    hasActiveFilters={hasActiveFilters}
                     onExport={async () => {
                         toast.success('Downloading payments report. This may take a few moments.', { position: toast.POSITION.BOTTOM_RIGHT })
                         downloadBlob(
@@ -435,9 +509,7 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                         )
                         toast.success('Download complete', { position: toast.POSITION.BOTTOM_RIGHT })
                     }}
-                    selectedValueOverrides={{
-                        category: isEngagementApproverView ? engagementPaymentCategory : filters.category?.[0] ?? '',
-                    }}
+                    selectedValueOverrides={selectedValueOverrides}
                     filters={[
                         {
                             key: 'winnerIds',
@@ -483,7 +555,7 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                             ],
                             type: 'dropdown',
                         },
-                        ...(isEngagementApproverView ? [] : [
+                        ...(isRestrictedApproverView || (isWiproTaasAdmin && !hasPaymentAdminRole) ? [] : [
                             {
                                 key: 'category',
                                 label: 'Type',
@@ -507,6 +579,10 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                                     {
                                         label: 'Engagement Payment',
                                         value: 'ENGAGEMENT_PAYMENT',
+                                    },
+                                    {
+                                        label: 'TaaS Payment',
+                                        value: 'TAAS_PAYMENT',
                                     },
                                 ],
                                 type: 'dropdown',
@@ -580,8 +656,8 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                 {isLoading && <LoadingCircles className={styles.centered} />}
                 {!isLoading && winnings.length > 0 && (
                     <PaymentsTable
-                        enableBulkEdit={isEngagementApproverView}
-                        canEdit={isEditingAllowed() && !isEngagementApproverView}
+                        enableBulkEdit={isRestrictedApproverView}
+                        canEdit={isEditingAllowed() && !isRestrictedApproverView}
                         currentPage={pagination.currentPage}
                         numPages={pagination.totalPages}
                         payments={winnings}
@@ -637,7 +713,7 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                 {!isLoading && winnings.length === 0 && (
                     <div className={styles.centered}>
                         <p className='body-main'>
-                            {Object.keys(filters).length === 0
+                            {!hasActiveFilters
                                 ? apiErrorMsg
                                 : 'No payments match your filters.'}
                         </p>

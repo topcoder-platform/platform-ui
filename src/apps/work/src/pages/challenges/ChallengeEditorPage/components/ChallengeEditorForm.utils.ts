@@ -23,6 +23,12 @@ interface ResolveManualReviewersParams {
     isTaskChallenge: boolean
 }
 
+interface ResolveTaskChallengeStateParams {
+    hasResolvedChallengeType: boolean
+    isTaskTypeSelected: boolean
+    persistedTaskFlag?: boolean
+}
+
 interface ChallengeBillingInfo {
     billingAccountId?: number | string
     markup?: number
@@ -277,6 +283,30 @@ export function resolveResourceAssignmentValue(
     const fallbackValue = normalizeText(params.fallbackValue)
 
     return fallbackValue || undefined
+}
+
+/**
+ * Resolves whether the editor should treat the current challenge as a task.
+ *
+ * The work app should follow the canonical challenge type whenever that type is
+ * available. Persisted task flags are only a compatibility fallback for older
+ * payloads that omit type metadata entirely.
+ *
+ * @param params resolved type state plus an optional persisted task flag.
+ * @returns `true` when the challenge should use task-only editor behavior.
+ */
+export function shouldTreatChallengeAsTask(
+    params: ResolveTaskChallengeStateParams,
+): boolean {
+    if (params.isTaskTypeSelected) {
+        return true
+    }
+
+    if (params.hasResolvedChallengeType) {
+        return false
+    }
+
+    return params.persistedTaskFlag === true
 }
 
 /**

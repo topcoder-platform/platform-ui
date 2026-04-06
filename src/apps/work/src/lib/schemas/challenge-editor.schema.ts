@@ -243,6 +243,8 @@ const reviewerSchema = yup.object({
         }),
     shouldOpenOpportunity: yup.boolean()
         .optional(),
+    type: yup.string()
+        .optional(),
 })
     .test(
         'all-member-slots-required-when-opportunity-closed',
@@ -459,22 +461,7 @@ export const challengeAdvancedOptionsSchema = yup.object({
         .optional(),
     reviewer: yup.string()
         .transform(emptyStringToUndefined)
-        .when([
-            'legacy.isTask',
-            'legacy.reviewType',
-        ], {
-            is: (
-                isTask: boolean | undefined,
-                reviewType: string | undefined,
-            ): boolean => (
-                isTask === true
-                && String(reviewType || '')
-                    .trim()
-                    .toUpperCase() === REVIEW_TYPES.INTERNAL
-            ),
-            otherwise: schema => schema.optional(),
-            then: schema => schema.required('Select a reviewer'),
-        }),
+        .optional(),
     reviewers: yup.array()
         .of(reviewerSchema)
         .optional(),

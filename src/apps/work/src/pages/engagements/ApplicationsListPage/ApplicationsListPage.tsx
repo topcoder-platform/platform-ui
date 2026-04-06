@@ -52,11 +52,15 @@ import {
 import {
     formatAnticipatedStart,
     formatEngagementStatus,
+    getEngagementStatusPillVariant,
     showErrorToast,
     showSuccessToast,
 } from '../../../lib/utils'
 
 import styles from './ApplicationsListPage.module.scss'
+
+const CAPACITY_ERROR_MODAL_MESSAGE = 'The required number of members are already assigned to this engagement. '
+    + 'If you\'d like to add another member, change the required number of members on the engagement first.'
 
 interface SelectOption {
     label: string
@@ -117,22 +121,21 @@ function getApplicationStatusPillClass(status: string): string {
 }
 
 function getEngagementStatusPillClass(status: string): string {
-    const normalizedStatus = status.trim()
-        .toLowerCase()
+    const pillVariant = getEngagementStatusPillVariant(status)
 
-    if (normalizedStatus === 'active') {
+    if (pillVariant === 'green') {
         return styles.statusGreen
     }
 
-    if (normalizedStatus === 'open' || normalizedStatus === 'pending assignment') {
+    if (pillVariant === 'yellow') {
         return styles.statusYellow
     }
 
-    if (normalizedStatus === 'closed') {
+    if (pillVariant === 'blue') {
         return styles.statusBlue
     }
 
-    if (normalizedStatus === 'cancelled') {
+    if (pillVariant === 'red') {
         return styles.statusRed
     }
 
@@ -197,6 +200,7 @@ export const ApplicationsListPage: FC = () => {
     const [acceptingApplication, setAcceptingApplication] = useState<Application | undefined>()
     const [filterStatus, setFilterStatus] = useState<string>('all')
     const [isStatusUpdating, setIsStatusUpdating] = useState<boolean>(false)
+    const [showCapacityErrorModal, setShowCapacityErrorModal] = useState<boolean>(false)
     const [showSuccessModal, setShowSuccessModal] = useState<boolean>(false)
 
     const engagementResult = useFetchEngagement(engagementId)
@@ -228,11 +232,78 @@ export const ApplicationsListPage: FC = () => {
         () => statusOptions.find(option => option.value === filterStatus),
         [filterStatus, statusOptions],
     )
+    const filteredApplications = useMemo(
+        () => applicationsResult.applications.filter(application => (
+            filterStatus === 'all'
+            || normalizeStatus(application.status) === normalizeStatus(filterStatus)
+        )),
+        [applicationsResult.applications, filterStatus],
+    )
 
     const assignmentListCandidate = engagementResult.engagement?.assignments
-    const assignmentList: unknown[] = Array.isArray(assignmentListCandidate)
-        ? assignmentListCandidate
-        : []
+    const assignmentList = useMemo<unknown[]>(
+        () => (Array.isArray(assignmentListCandidate)
+            ? assignmentListCandidate
+            : []),
+        [assignmentListCandidate],
+    )
+    const countableAssignments = useMemo<Array<{
+        memberId?: number | string
+        status?: string
+    }>>(
+        () => assignmentList.reduce<Array<{
+            memberId?: number | string
+            status?: string
+        }>>((result, assignment) => {
+            if (!assignment || typeof assignment !== 'object') {
+                return result
+            }
+
+            const typedAssignment = assignment as {
+                memberId?: number | string
+                status?: string
+            }
+            const normalizedStatus = normalizeStatus(String(typedAssignment.status || ''))
+
+            if (
+                normalizedStatus === 'COMPLETED'
+                || normalizedStatus === 'OFFER_REJECTED'
+                || normalizedStatus === 'TERMINATED'
+            ) {
+                return result
+            }
+
+            result.push(typedAssignment)
+
+            return result
+        }, []),
+        [assignmentList],
+    )
+    const countableAssignmentMemberIds = useMemo(
+        () => new Set(
+            countableAssignments
+                .map(assignment => assignment.memberId)
+                .filter(memberId => memberId !== undefined && memberId !== '')
+                .map(memberId => String(memberId)),
+        ),
+        [countableAssignments],
+    )
+    const assignedMemberCount = useMemo(
+        () => {
+            if (countableAssignments.length > 0) {
+                return countableAssignments.length
+            }
+
+            const assignedMemberHandles = Array.isArray(engagementResult.engagement?.assignedMemberHandles)
+                ? (engagementResult.engagement?.assignedMemberHandles?.filter(Boolean) || [])
+                : []
+
+            return assignedMemberHandles.length
+        },
+        [countableAssignments, engagementResult.engagement?.assignedMemberHandles],
+    )
+    const requiredMemberCount = Number(engagementResult.engagement?.requiredMemberCount)
+    const hasRequiredMemberCount = Number.isInteger(requiredMemberCount) && requiredMemberCount > 0
 
     const pageTitle = engagementResult.engagement?.title
         ? `${engagementResult.engagement.title} Applications`
@@ -266,6 +337,16 @@ export const ApplicationsListPage: FC = () => {
         nextStatus: string,
     ): Promise<void> => {
         if (nextStatus === 'SELECTED') {
+            const isExistingAssignedMember = application.userId !== undefined
+                && application.userId !== ''
+                && countableAssignmentMemberIds.has(String(application.userId))
+            const isAtCapacity = hasRequiredMemberCount && assignedMemberCount >= requiredMemberCount
+
+            if (isAtCapacity && !isExistingAssignedMember) {
+                setShowCapacityErrorModal(true)
+                return
+            }
+
             setAcceptingApplication(application)
             return
         }
@@ -287,7 +368,14 @@ export const ApplicationsListPage: FC = () => {
         } finally {
             setIsStatusUpdating(false)
         }
-    }, [applicationsResult, engagementResult])
+    }, [
+        applicationsResult,
+        assignedMemberCount,
+        countableAssignmentMemberIds,
+        engagementResult,
+        hasRequiredMemberCount,
+        requiredMemberCount,
+    ])
 
     const handleAcceptConfirm = useCallback(async (
         formData: AcceptApplicationFormData,
@@ -394,7 +482,7 @@ export const ApplicationsListPage: FC = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {applicationsResult.applications.length === 0
+                            {filteredApplications.length === 0
                                 ? (
                                     <tr>
                                         <td className={styles.emptyRow} colSpan={9}>
@@ -402,7 +490,7 @@ export const ApplicationsListPage: FC = () => {
                                         </td>
                                     </tr>
                                 )
-                                : applicationsResult.applications.map(application => {
+                                : filteredApplications.map(application => {
                                     const profileUrl = `${PROFILE_URL}/${application.handle}`
                                     const active = hasActiveAssignment(application, assignmentList)
                                     const normalizedStatus = normalizeStatus(application.status)
@@ -499,6 +587,24 @@ export const ApplicationsListPage: FC = () => {
                 onConfirm={handleAcceptConfirm}
                 open={!!acceptingApplication}
             />
+
+            <BaseModal
+                open={showCapacityErrorModal}
+                onClose={() => setShowCapacityErrorModal(false)}
+                title='Cannot Select Applicant'
+                size='md'
+                buttons={(
+                    <Button
+                        label='Close'
+                        onClick={() => setShowCapacityErrorModal(false)}
+                        primary
+                    />
+                )}
+            >
+                <p className={styles.successMessage}>
+                    {CAPACITY_ERROR_MODAL_MESSAGE}
+                </p>
+            </BaseModal>
 
             <BaseModal
                 open={showSuccessModal}

@@ -6,7 +6,13 @@ export type EngagementWorkload = 'FULL_TIME' | 'FRACTIONAL'
 
 export type EngagementAnticipatedStart = 'FEW_DAYS' | 'FEW_WEEKS' | 'IMMEDIATE'
 
-export type EngagementStatus = 'Active' | 'Cancelled' | 'Closed' | 'Open' | 'Pending Assignment'
+export type EngagementStatus =
+    'Active'
+    | 'Cancelled'
+    | 'Closed'
+    | 'On Hold'
+    | 'Open'
+    | 'Pending Assignment'
 
 export type ApplicationStatus = 'REJECTED' | 'SELECTED' | 'SUBMITTED' | 'UNDER_REVIEW'
 
@@ -83,6 +89,7 @@ export interface EngagementFilters {
     page?: number
     perPage?: number
     projectId?: number | string
+    projectIds?: Array<number | string>
     sortBy?: string
     sortOrder?: 'asc' | 'desc'
     status?: string

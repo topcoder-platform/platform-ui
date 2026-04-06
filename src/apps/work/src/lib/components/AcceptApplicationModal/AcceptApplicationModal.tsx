@@ -192,6 +192,7 @@ const AcceptApplicationModal: FC<AcceptApplicationModalProps> = (
                     <StartDateTimeInput
                         label='Billing start date'
                         minDate={minStartDate}
+                        preventOpenOnFocus
                         showTimeSelect={false}
                         showTimezone={false}
                         value={startDate}

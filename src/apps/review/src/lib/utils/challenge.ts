@@ -219,25 +219,54 @@ export type PhaseOrderingOptions = {
 }
 
 /**
- * Determine whether the UI should force-show the Winners tab for a past challenge.
+ * Approval review shape needed for winners-tab gating decisions.
+ */
+export interface ApprovalReviewStatusLike {
+    review?: {
+        status?: string | null
+    }
+}
+
+type WinnersTabVisibilityChallengeInfo = Pick<ChallengeInfo, 'status'>
+    & Partial<Pick<ChallengeInfo, 'phases' | 'currentPhaseObject'>>
+
+type WinnersTabFallbackChallengeInfo = WinnersTabVisibilityChallengeInfo
+    & Partial<Pick<ChallengeInfo, 'winners'>>
+
+/**
+ * Determine whether the challenge is in a past/completed-style status.
  *
  * @param status - Challenge status returned by the backend.
- * @param winners - Winner list from the challenge payload.
- * @returns True when the challenge is past/completed and winners are already available.
+ * @returns True when the challenge is completed or cancelled.
  */
-export function shouldForceWinnersTabForPastChallenge(
-    status?: string,
-    winners?: unknown[] | null,
-): boolean {
+function isPastChallengeStatus(status?: string): boolean {
     const normalizedStatus = (status ?? '')
         .trim()
         .toUpperCase()
 
-    if (!normalizedStatus || !(winners?.length)) {
+    if (!normalizedStatus) {
         return false
     }
 
     return PAST_CHALLENGE_STATUSES.some(pastStatus => normalizedStatus.startsWith(pastStatus))
+}
+
+/**
+ * Determine whether any approval round is still pending.
+ *
+ * @param approvalReviews - Approval reviews currently associated with the challenge.
+ * @returns True when an approval review has not been completed or submitted yet.
+ */
+export function hasPendingApprovalReview(
+    approvalReviews?: ApprovalReviewStatusLike[] | null,
+): boolean {
+    return (approvalReviews ?? []).some(entry => {
+        const normalizedStatus = (entry.review?.status ?? '')
+            .trim()
+            .toUpperCase()
+
+        return normalizedStatus !== 'COMPLETED' && normalizedStatus !== 'SUBMITTED'
+    })
 }
 
 function normalizeChallengeKey(value?: string): string {
@@ -647,7 +676,7 @@ export function collectReopenEligiblePhaseIds(
 }
 
 const collectOpenPhaseIdentifiers = (
-    challengeInfo?: ChallengeInfo,
+    challengeInfo?: Partial<Pick<ChallengeInfo, 'phases' | 'currentPhaseObject'>>,
 ): Set<string> => {
     const identifiers = new Set<string>()
 
@@ -679,6 +708,46 @@ const collectOpenPhaseIdentifiers = (
     }
 
     return identifiers
+}
+
+/**
+ * Determine whether a past challenge is allowed to show the Winners tab.
+ *
+ * @param challengeInfo - Challenge status and phase metadata returned by the backend.
+ * @param approvalReviews - Approval reviews currently associated with the challenge.
+ * @returns True when the challenge is past and no follow-up approval round remains active.
+ */
+export function shouldAllowWinnersTabForPastChallenge(
+    challengeInfo?: WinnersTabVisibilityChallengeInfo,
+    approvalReviews?: ApprovalReviewStatusLike[] | null,
+): boolean {
+    if (!isPastChallengeStatus(challengeInfo?.status)) {
+        return false
+    }
+
+    if (hasPendingApprovalReview(approvalReviews)) {
+        return false
+    }
+
+    return collectOpenPhaseIdentifiers(challengeInfo).size === 0
+}
+
+/**
+ * Determine whether the UI should force-show the Winners tab for a past challenge.
+ *
+ * @param challengeInfo - Challenge status, winners, and phase metadata returned by the backend.
+ * @param approvalReviews - Approval reviews currently associated with the challenge.
+ * @returns True when the challenge is past/completed and winners are already available.
+ */
+export function shouldForceWinnersTabForPastChallenge(
+    challengeInfo?: WinnersTabFallbackChallengeInfo,
+    approvalReviews?: ApprovalReviewStatusLike[] | null,
+): boolean {
+    if (!(challengeInfo?.winners?.length)) {
+        return false
+    }
+
+    return shouldAllowWinnersTabForPastChallenge(challengeInfo, approvalReviews)
 }
 
 export function isReviewPhaseCurrentlyOpen(

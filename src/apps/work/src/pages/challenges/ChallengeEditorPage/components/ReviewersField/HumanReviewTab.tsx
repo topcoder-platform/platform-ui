@@ -4,6 +4,7 @@ import {
     useCallback,
     useEffect,
     useMemo,
+    useRef,
     useState,
 } from 'react'
 import {
@@ -61,6 +62,51 @@ const SCORECARD_TRACK_ALIASES: Record<string, string> = {
     QUALITY_ASSURANCE: 'QUALITY_ASSURANCE',
     QUALITYASSURANCE: 'QUALITY_ASSURANCE',
 }
+const ITERATIVE_REVIEW_ROLE_NAMES = [
+    'Iterative Reviewer',
+    'Iterative Review',
+    'Reviewer',
+]
+const NON_REVIEWER_PHASE_KEYS = new Set([
+    'checkpointsubmission',
+    'registration',
+    'submission',
+    'topcodersubmission',
+    'topgearsubmission',
+])
+const APPEAL_PHASE_KEYS = new Set([
+    'appeals',
+    'appealsresponse',
+])
+const REVIEW_OPPORTUNITY_TYPES = {
+    COMPONENT_DEV_REVIEW: 'COMPONENT_DEV_REVIEW',
+    ITERATIVE_REVIEW: 'ITERATIVE_REVIEW',
+    REGULAR_REVIEW: 'REGULAR_REVIEW',
+    SCENARIOS_REVIEW: 'SCENARIOS_REVIEW',
+    SPEC_REVIEW: 'SPEC_REVIEW',
+} as const
+const REVIEW_OPPORTUNITY_OPTIONS: FormSelectOption[] = [
+    {
+        label: 'Regular Review',
+        value: REVIEW_OPPORTUNITY_TYPES.REGULAR_REVIEW,
+    },
+    {
+        label: 'Component Dev Review',
+        value: REVIEW_OPPORTUNITY_TYPES.COMPONENT_DEV_REVIEW,
+    },
+    {
+        label: 'Spec Review',
+        value: REVIEW_OPPORTUNITY_TYPES.SPEC_REVIEW,
+    },
+    {
+        label: 'Iterative Review',
+        value: REVIEW_OPPORTUNITY_TYPES.ITERATIVE_REVIEW,
+    },
+    {
+        label: 'Scenarios Review',
+        value: REVIEW_OPPORTUNITY_TYPES.SCENARIOS_REVIEW,
+    },
+]
 
 function toNumber(value: unknown): number {
     const parsed = Number(value)
@@ -95,6 +141,22 @@ function normalizeTrackForScorecards(value: unknown): string {
     }
 
     return SCORECARD_TRACK_ALIASES[normalizedValue] || normalizedValue
+}
+
+/**
+ * Returns whether a phase should appear in the manual reviewer phase selector.
+ * Appeal phases stay hidden because the review-phase reviewers cover those
+ * responsibilities for every challenge type.
+ */
+function isSelectableReviewerPhaseName(
+    phaseName: string | undefined,
+    allowAppealPhases: boolean = true,
+): boolean {
+    const normalizedPhaseName = normalizeKey(phaseName)
+
+    return !!normalizedPhaseName
+        && !NON_REVIEWER_PHASE_KEYS.has(normalizedPhaseName)
+        && (allowAppealPhases || !APPEAL_PHASE_KEYS.has(normalizedPhaseName))
 }
 
 function normalizePhaseToken(value: unknown): string {
@@ -135,6 +197,50 @@ function getPhaseMatchedScorecards(
         }
 
         return !scorecardPhaseId && !normalizedScorecardType
+    })
+}
+
+/**
+ * Returns row-specific phase options, excluding phases already assigned on other
+ * manual reviewer cards while preserving the current row's selection.
+ */
+function getReviewerPhaseOptions(params: {
+    allowAppealPhases: boolean
+    options: FormSelectOption[]
+    phaseNameById: Map<string, string>
+    reviewerIndex: number
+    reviewers: Reviewer[]
+}): FormSelectOption[] {
+    const currentPhaseId = normalizeText(params.reviewers[params.reviewerIndex]?.phaseId)
+    const assignedPhaseIds = new Set(
+        params.reviewers
+            .map((reviewer, index) => (
+                index === params.reviewerIndex
+                    ? ''
+                    : normalizeText(reviewer.phaseId)
+            ))
+            .filter(Boolean),
+    )
+
+    return params.options.filter(option => {
+        const phaseId = normalizeText(option.value)
+
+        if (!phaseId) {
+            return false
+        }
+
+        if (phaseId === currentPhaseId) {
+            return true
+        }
+
+        if (assignedPhaseIds.has(phaseId)) {
+            return false
+        }
+
+        return isSelectableReviewerPhaseName(
+            params.phaseNameById.get(phaseId),
+            params.allowAppealPhases,
+        )
     })
 }
 
@@ -288,7 +394,13 @@ function mapDefaultReviewerToReviewer(
         roleId: defaultReviewer?.roleId,
         scorecardId: defaultReviewer?.scorecardId,
         shouldOpenOpportunity: memberReview
-            ? false
+            ? (defaultReviewer?.shouldOpenOpportunity ?? false)
+            : undefined,
+        type: memberReview
+            ? (
+                normalizeText(defaultReviewer?.opportunityType)
+                || REVIEW_OPPORTUNITY_TYPES.REGULAR_REVIEW
+            )
             : undefined,
     }
 }
@@ -303,6 +415,26 @@ function getSelectValue(selected: unknown): string {
     return typeof optionValue === 'string'
         ? optionValue
         : ''
+}
+
+/**
+ * Maps the stored reviewer type value to the matching select option while
+ * defaulting legacy reviewer rows to `Regular Review` when the field is absent.
+ *
+ * @param value current form value for the reviewer type field.
+ * @param options available reviewer type select options.
+ * @returns the matching select option, or `undefined` when no option matches.
+ * @remarks Used by `HumanReviewTab` to keep manual reviewer cards aligned with
+ * the legacy work manager UI.
+ */
+function getReviewTypeFieldValue(
+    value: unknown,
+    options: FormSelectOption[],
+): FormSelectOption | undefined {
+    const selectedValue = normalizeText(value)
+        || REVIEW_OPPORTUNITY_TYPES.REGULAR_REVIEW
+
+    return options.find(option => option.value === selectedValue)
 }
 
 function getErrorMessage(error: unknown, fallbackMessage: string): string {
@@ -379,8 +511,10 @@ export const HumanReviewTab: FC = () => {
 
     const [defaultReviewers, setDefaultReviewers] = useState<DefaultReviewer[]>([])
     const [scorecards, setScorecards] = useState<Scorecard[]>([])
-    const [isScorecardsLoading, setIsScorecardsLoading] = useState<boolean>(false)
+    // Keep existing selections intact until the first scorecard fetch resolves.
+    const [isScorecardsLoading, setIsScorecardsLoading] = useState<boolean>(true)
     const [loadError, setLoadError] = useState<string | undefined>()
+    const validatedScorecardSelectionsRef = useRef<Record<string, string>>({})
 
     const challengeId = useWatch({
         control: formContext.control,
@@ -440,6 +574,8 @@ export const HumanReviewTab: FC = () => {
         (reviewerIndex: number): number | undefined => reviewerFieldIndices[reviewerIndex],
         [reviewerFieldIndices],
     )
+    const normalizedTrackId = normalizeText(trackId)
+    const normalizedTypeId = normalizeText(typeId)
 
     const phaseNameById = useMemo<Map<string, string>>(
         () => {
@@ -462,6 +598,7 @@ export const HumanReviewTab: FC = () => {
         },
         [phases],
     )
+    const allowAppealPhases = false
 
     const roleIdByName = useMemo<Map<string, string>>(
         () => {
@@ -493,9 +630,13 @@ export const HumanReviewTab: FC = () => {
                 return undefined
             }
 
-            const roleName = getRoleNameForPhaseName(phaseName)
+            const roleNames = normalizeKey(phaseName) === 'iterativereview'
+                ? ITERATIVE_REVIEW_ROLE_NAMES
+                : [getRoleNameForPhaseName(phaseName)]
 
-            return roleIdByName.get(normalizeKey(roleName))
+            return roleNames
+                .map(roleName => roleIdByName.get(normalizeKey(roleName)))
+                .find((roleId): roleId is string => !!roleId)
         },
         [phaseNameById, roleIdByName],
     )
@@ -531,9 +672,21 @@ export const HumanReviewTab: FC = () => {
             : []),
         [phases],
     )
-
-    const normalizedTrackId = normalizeText(trackId)
-    const normalizedTypeId = normalizeText(typeId)
+    const getPhaseOptionsForReviewer = useCallback(
+        (reviewerIndex: number): FormSelectOption[] => getReviewerPhaseOptions({
+            allowAppealPhases,
+            options: phaseOptions,
+            phaseNameById,
+            reviewerIndex,
+            reviewers: reviewerRows,
+        }),
+        [
+            allowAppealPhases,
+            phaseNameById,
+            phaseOptions,
+            reviewerRows,
+        ],
+    )
     const selectedScorecardTrack = useMemo(
         (): string => {
             if (!normalizedTrackId) {
@@ -582,38 +735,17 @@ export const HumanReviewTab: FC = () => {
             scorecards,
         ],
     )
+    const getAvailableScorecardsForReviewer = useCallback(
+        (reviewer: Reviewer | undefined): Scorecard[] => getPhaseMatchedScorecardsForPhase(reviewer?.phaseId),
+        [getPhaseMatchedScorecardsForPhase],
+    )
 
     const getScorecardOptionsForReviewer = useCallback(
         (reviewer: Reviewer | undefined): FormSelectOption[] => {
-            const matchingScorecards = getPhaseMatchedScorecardsForPhase(reviewer?.phaseId)
-
-            const filteredScorecards = matchingScorecards.length
-                ? matchingScorecards
-                : scorecards
-            const selectedScorecardId = normalizeText(reviewer?.scorecardId)
-            const selectedScorecard = selectedScorecardId
-                ? scorecards.find(scorecard => scorecard.id === selectedScorecardId)
-                : undefined
-            const scorecardsWithSelected = selectedScorecard
-                && !filteredScorecards.some(scorecard => scorecard.id === selectedScorecard.id)
-                ? [
-                    ...filteredScorecards,
-                    selectedScorecard,
-                ]
-                : filteredScorecards
-            const scorecardsWithFallback = selectedScorecardId
-                && !scorecardsWithSelected.some(scorecard => scorecard.id === selectedScorecardId)
-                ? [
-                    ...scorecardsWithSelected,
-                    {
-                        id: selectedScorecardId,
-                        name: selectedScorecardId,
-                    },
-                ]
-                : scorecardsWithSelected
             const optionsById = new Map<string, FormSelectOption>()
+            const availableScorecards = getAvailableScorecardsForReviewer(reviewer)
 
-            scorecardsWithFallback.forEach(scorecard => {
+            availableScorecards.forEach(scorecard => {
                 const scorecardId = normalizeText(scorecard.id)
                 if (!scorecardId || optionsById.has(scorecardId)) {
                     return
@@ -628,8 +760,7 @@ export const HumanReviewTab: FC = () => {
             return Array.from(optionsById.values())
         },
         [
-            getPhaseMatchedScorecardsForPhase,
-            scorecards,
+            getAvailableScorecardsForReviewer,
         ],
     )
 
@@ -710,6 +841,71 @@ export const HumanReviewTab: FC = () => {
             mounted = false
         }
     }, [trackId, typeId])
+
+    useEffect(() => {
+        if (isScorecardsLoading || loadError) {
+            return
+        }
+
+        reviewerRows.forEach((reviewer, reviewerIndex) => {
+            const fieldIndex = getReviewerFieldIndex(reviewerIndex)
+            if (
+                fieldIndex === undefined
+                || !reviewer
+                || reviewer.isMemberReview === false
+            ) {
+                return
+            }
+
+            const scorecardFieldName = `reviewers.${fieldIndex}.scorecardId`
+            const selectedScorecardId = normalizeText(reviewer.scorecardId)
+            if (!selectedScorecardId) {
+                delete validatedScorecardSelectionsRef.current[scorecardFieldName]
+                return
+            }
+
+            const hasSelectedScorecard = getAvailableScorecardsForReviewer(reviewer)
+                .some(scorecard => normalizeText(scorecard.id) === selectedScorecardId)
+            if (hasSelectedScorecard) {
+                formContext.clearErrors(scorecardFieldName as any)
+
+                if (validatedScorecardSelectionsRef.current[scorecardFieldName] === selectedScorecardId) {
+                    return
+                }
+
+                validatedScorecardSelectionsRef.current[scorecardFieldName] = selectedScorecardId
+
+                // Mirror the manual re-selection path so stale scorecard validation clears.
+                formContext.setValue(
+                    scorecardFieldName as any,
+                    selectedScorecardId,
+                    {
+                        shouldDirty: false,
+                        shouldValidate: true,
+                    },
+                )
+
+                return
+            }
+
+            delete validatedScorecardSelectionsRef.current[scorecardFieldName]
+            formContext.setValue(
+                scorecardFieldName as any,
+                undefined,
+                {
+                    shouldDirty: false,
+                    shouldValidate: true,
+                },
+            )
+        })
+    }, [
+        formContext,
+        getAvailableScorecardsForReviewer,
+        getReviewerFieldIndex,
+        isScorecardsLoading,
+        loadError,
+        reviewerRows,
+    ])
 
     useEffect(() => {
         if (
@@ -1025,21 +1221,9 @@ export const HumanReviewTab: FC = () => {
                 return
             }
 
-            const defaultScorecardId = normalizeText(
-                defaultReviewers
-                    .find(defaultReviewer => normalizeText(defaultReviewer.phaseId) === normalizedNextPhaseId)
-                    ?.scorecardId,
-            )
-            const hasDefaultScorecard = defaultScorecardId
-                ? matchingScorecards.some(scorecard => normalizeText(scorecard.id) === defaultScorecardId)
-                : false
-            const fallbackScorecardId = hasDefaultScorecard
-                ? defaultScorecardId
-                : normalizeText(matchingScorecards[0]?.id)
-
             formContext.setValue(
                 `reviewers.${fieldIndex}.scorecardId` as any,
-                fallbackScorecardId || undefined,
+                undefined,
                 {
                     shouldDirty: true,
                     shouldValidate: true,
@@ -1047,7 +1231,6 @@ export const HumanReviewTab: FC = () => {
             )
         },
         [
-            defaultReviewers,
             formContext,
             getPhaseMatchedScorecardsForPhase,
             getReviewerFieldIndex,
@@ -1297,7 +1480,7 @@ export const HumanReviewTab: FC = () => {
                                     <FormSelectField
                                         label='Phase'
                                         name={`${reviewerPrefix}.phaseId`}
-                                        options={phaseOptions}
+                                        options={getPhaseOptionsForReviewer(index)}
                                         placeholder='Select phase'
                                         toFieldValue={getPhaseFieldValueHandler(index)}
                                     />
@@ -1316,6 +1499,13 @@ export const HumanReviewTab: FC = () => {
                                         name={`${reviewerPrefix}.memberReviewerCount`}
                                         sanitize={sanitizeIntegerValue}
                                         type='number'
+                                    />
+                                    <FormSelectField
+                                        className={styles.memberReviewTypeField}
+                                        fromFieldValue={getReviewTypeFieldValue}
+                                        label='Review Type'
+                                        name={`${reviewerPrefix}.type`}
+                                        options={REVIEW_OPPORTUNITY_OPTIONS}
                                     />
                                     <PublicOpportunityCheckboxField
                                         name={`${reviewerPrefix}.shouldOpenOpportunity`}

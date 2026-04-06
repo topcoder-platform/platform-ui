@@ -30,7 +30,9 @@ import { FormFieldWrapper } from '../FormFieldWrapper'
 import styles from './FormGroupsSelect.module.scss'
 
 interface FormGroupsSelectProps {
+    additionalGroups?: Group[]
     disabled?: boolean
+    hideLabel?: boolean
     label: string
     name: string
     required?: boolean
@@ -150,6 +152,19 @@ export const FormGroupsSelect: FC<FormGroupsSelectProps> = (props: FormGroupsSel
     )
 
     useEffect(() => {
+        const additionalGroups = props.additionalGroups
+
+        if (!additionalGroups?.length) {
+            return
+        }
+
+        setOptionCache(previousOptions => mergeOptions(
+            previousOptions,
+            additionalGroups.map(group => toOption(group)),
+        ))
+    }, [props.additionalGroups])
+
+    useEffect(() => {
         if (!missingGroupIds.length) {
             return undefined
         }
@@ -238,6 +253,7 @@ export const FormGroupsSelect: FC<FormGroupsSelectProps> = (props: FormGroupsSel
     return (
         <FormFieldWrapper
             error={fieldState.error?.message}
+            hideLabel={props.hideLabel}
             label={props.label}
             name={props.name}
             required={props.required}

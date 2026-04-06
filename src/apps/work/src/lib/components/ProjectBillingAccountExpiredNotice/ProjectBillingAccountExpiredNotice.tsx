@@ -8,6 +8,10 @@ import {
     useFetchBillingAccounts,
     useFetchProjectBillingAccount,
 } from '../../hooks'
+import {
+    getProjectBillingAccountChallengeIssue,
+    getProjectBillingAccountNoticeMessage,
+} from '../../utils/project-billing-account.utils'
 import type {
     UseFetchBillingAccountsResult,
     UseFetchProjectBillingAccountResult,
@@ -31,26 +35,6 @@ function normalizeOptionalString(value: unknown): string | undefined {
         .trim()
 
     return normalizedValue || undefined
-}
-
-function isBillingAccountExpired(
-    active: boolean | undefined,
-    endDate: string | undefined,
-): boolean {
-    if (active === false) {
-        return true
-    }
-
-    if (!endDate) {
-        return false
-    }
-
-    const endDateTimestamp = Date.parse(endDate)
-    if (Number.isNaN(endDateTimestamp)) {
-        return false
-    }
-
-    return Date.now() >= endDateTimestamp
 }
 
 export const ProjectBillingAccountExpiredNotice: FC<ProjectBillingAccountExpiredNoticeProps> = (
@@ -81,29 +65,25 @@ export const ProjectBillingAccountExpiredNotice: FC<ProjectBillingAccountExpired
         ],
     )
     const billingAccountName = normalizedBillingAccountName || billingAccountNameFromLookup
+    const billingAccountIssue = getProjectBillingAccountChallengeIssue(billingAccount)
 
-    const shouldShowExpiredBillingAccountNotice: boolean = isBillingAccountExpired(
-        billingAccount?.active,
-        billingAccount?.endDate,
-    )
+    if (billingAccountIssue) {
+        const noticeMessage = getProjectBillingAccountNoticeMessage(billingAccountIssue)
+        const managedNoticeMessage = `${noticeMessage.slice(0, -1)}, `
 
-    if (shouldShowExpiredBillingAccountNotice) {
         return (
             <div className={styles.container}>
                 {props.canManageProject
                     ? (
                         <>
-                            <span>
-                                The billing account for this project has expired,
-                                {' '}
-                            </span>
+                            <span>{managedNoticeMessage}</span>
                             <Link className={styles.link} to={`/projects/${props.projectId}/edit`}>
                                 click here to update
                             </Link>
                         </>
                     )
                     : (
-                        <span>The billing account for this project has expired.</span>
+                        <span>{noticeMessage}</span>
                     )}
             </div>
         )

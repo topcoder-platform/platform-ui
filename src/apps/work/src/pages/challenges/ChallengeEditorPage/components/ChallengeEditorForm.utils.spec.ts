@@ -16,6 +16,7 @@ import {
     resolveResourceAssignmentHandle,
     resolveResourceAssignmentValue,
     REVIEWER_RESOURCE_ROLE_NAMES,
+    shouldTreatChallengeAsTask,
     shouldUseManualReviewers,
     SUBMITTER_RESOURCE_ROLE_NAMES,
     TASK_REVIEWER_RESOURCE_ROLE_NAMES,
@@ -378,6 +379,50 @@ describe('resource assignment helpers', () => {
 
         expect(result)
             .toBe('67890')
+    })
+})
+
+describe('shouldTreatChallengeAsTask', () => {
+    it('returns true when the resolved type is Task', () => {
+        const result = shouldTreatChallengeAsTask({
+            hasResolvedChallengeType: true,
+            isTaskTypeSelected: true,
+        })
+
+        expect(result)
+            .toBe(true)
+    })
+
+    it('returns false when the resolved type is explicitly non-task', () => {
+        const result = shouldTreatChallengeAsTask({
+            hasResolvedChallengeType: true,
+            isTaskTypeSelected: false,
+            persistedTaskFlag: true,
+        })
+
+        expect(result)
+            .toBe(false)
+    })
+
+    it('falls back to the persisted task flag when type metadata is missing', () => {
+        const result = shouldTreatChallengeAsTask({
+            hasResolvedChallengeType: false,
+            isTaskTypeSelected: false,
+            persistedTaskFlag: true,
+        })
+
+        expect(result)
+            .toBe(true)
+    })
+
+    it('returns false when neither type metadata nor a persisted task flag exists', () => {
+        const result = shouldTreatChallengeAsTask({
+            hasResolvedChallengeType: false,
+            isTaskTypeSelected: false,
+        })
+
+        expect(result)
+            .toBe(false)
     })
 })
 

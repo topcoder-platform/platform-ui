@@ -19,6 +19,8 @@ import {
     useFetchResourceRoles,
     useFetchResources,
 } from '../../../lib/hooks'
+import { deleteChallenge } from '../../../lib/services'
+import { isChallengeCompleted } from '../../../lib/utils'
 import {
     getAssignedTaskMember,
     shouldShowCompleteTaskAction,
@@ -90,10 +92,22 @@ jest.mock('~/libs/ui', () => ({
     virtual: true,
 })
 jest.mock('../../../lib/components', () => ({
-    ChallengeStatus: (props: { statusText: string }) => (
-        <div>{props.statusText}</div>
+    ChallengeStatus: (props: { status?: string; statusText?: string }) => (
+        <div>{props.statusText || props.status}</div>
     ),
-    ConfirmationModal: () => <div>Confirmation Modal</div>,
+    ConfirmationModal: (props: {
+        message?: string
+        onCancel?: () => void
+        onConfirm?: () => void
+        title?: string
+    }) => (
+        <div>
+            <div>{props.title}</div>
+            <div>{props.message}</div>
+            <button onClick={props.onCancel} type='button'>Cancel</button>
+            <button onClick={props.onConfirm} type='button'>Confirm</button>
+        </div>
+    ),
     ErrorMessage: (props: { message: string }) => <div>{props.message}</div>,
     LoadingSpinner: () => <div>Loading</div>,
 }))
@@ -156,6 +170,7 @@ jest.mock('../../../lib/services', () => ({
 jest.mock('../../../lib/utils', () => ({
     extractErrorMessage: jest.fn(() => 'Error'),
     getStatusText: jest.fn((status?: string) => status || ''),
+    isChallengeCompleted: jest.fn(),
     showErrorToast: jest.fn(),
     showSuccessToast: jest.fn(),
 }))
@@ -164,20 +179,43 @@ jest.mock('./components', () => {
 
     return {
         ChallengeEditorForm: (props: {
+            onChallengeCreated?: (challenge: {
+                id: string
+                name: string
+                projectId: string
+                status: string
+            }) => void
             isReadOnly?: boolean
             onRegisterLaunchAction?: (action: (() => Promise<void>) | undefined) => void
         }) => {
             React.useEffect(() => {
-                if (!props.isReadOnly) {
-                    props.onRegisterLaunchAction?.(async () => undefined)
-                }
+                props.onRegisterLaunchAction?.(async () => undefined)
             }, [props.isReadOnly, props.onRegisterLaunchAction])
+            const handleMockCreateChallenge = (): void => {
+                props.onChallengeCreated?.({
+                    id: '789',
+                    name: 'Created challenge',
+                    projectId: '123',
+                    status: 'NEW',
+                })
+            }
 
             return (
                 <div>
                     {props.isReadOnly
                         ? 'Challenge View Form'
                         : 'Challenge Editor Form'}
+                    {!props.isReadOnly
+                        ? (
+                            <button
+                                // eslint-disable-next-line react/jsx-no-bind
+                                onClick={handleMockCreateChallenge}
+                                type='button'
+                            >
+                                Mock create challenge
+                            </button>
+                        )
+                        : undefined}
                 </div>
             )
         },
@@ -197,6 +235,8 @@ jest.mock('./ChallengeEditorPage.utils', () => ({
 const mockedUseFetchChallenge = useFetchChallenge as jest.Mock
 const mockedUseFetchResourceRoles = useFetchResourceRoles as jest.Mock
 const mockedUseFetchResources = useFetchResources as jest.Mock
+const mockedDeleteChallenge = deleteChallenge as jest.Mock
+const mockedIsChallengeCompleted = isChallengeCompleted as jest.Mock
 const mockedGetAssignedTaskMember = getAssignedTaskMember as jest.Mock
 const mockedShouldShowCompleteTaskAction = shouldShowCompleteTaskAction as jest.Mock
 
@@ -248,6 +288,7 @@ describe('ChallengeEditorPage', () => {
             isLoading: false,
             resources: [],
         })
+        mockedIsChallengeCompleted.mockImplementation((status?: string) => status === 'COMPLETED')
     })
 
     it('renders the updated quick links in the right header for edit mode', async () => {
@@ -260,6 +301,9 @@ describe('ChallengeEditorPage', () => {
             expect(screen.getByRole('button', { name: 'Launch' }))
                 .toBeTruthy()
         })
+
+        expect(screen.getByRole('button', { name: 'Cancel' }))
+            .toBeTruthy()
 
         const titleAction = screen.getByTestId('title-action')
         const rightHeader = screen.getByTestId('right-header')
@@ -290,9 +334,19 @@ describe('ChallengeEditorPage', () => {
             .getByRole('link', { name: 'Forum' })
             .getAttribute('href'))
             .toBe('https://example.com/forum/challenges/456')
+        expect(
+            screen.getByRole('button', { name: 'Cancel' })
+                .getAttribute('data-secondary'),
+        )
+            .toBe('true')
+        expect(
+            screen.getByRole('button', { name: 'Cancel' })
+                .getAttribute('data-size'),
+        )
+            .toBe('lg')
     })
 
-    it('renders a read-only challenge view with a header edit action', async () => {
+    it('renders a read-only draft challenge view with cancel, launch, and edit header actions', async () => {
         renderPage(
             '/projects/123/challenges/456/view',
             '/projects/:projectId/challenges/:challengeId/view',
@@ -305,10 +359,76 @@ describe('ChallengeEditorPage', () => {
 
         expect(screen.getByRole('heading', { name: 'View Edit test' }))
             .toBeTruthy()
+        expect(screen.getByRole('button', { name: 'Cancel' }))
+            .toBeTruthy()
+        expect(screen.getByRole('button', { name: 'Launch' }))
+            .toBeTruthy()
+        expect(screen.getByRole('button', { name: 'Edit' }))
+            .toBeTruthy()
+    })
+
+    it('does not render a launch action for non-draft challenges in read-only view mode', async () => {
+        mockedUseFetchChallenge.mockReturnValue({
+            challenge: {
+                discussions: [{
+                    url: 'https://example.com/forum/challenges/456',
+                }],
+                id: '456',
+                name: 'Active challenge',
+                prizeSets: [],
+                status: 'ACTIVE',
+            },
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+        })
+
+        renderPage(
+            '/projects/123/challenges/456/view',
+            '/projects/:projectId/challenges/:challengeId/view',
+        )
+
+        await waitFor(() => {
+            expect(screen.getByText('Challenge View Form'))
+                .toBeTruthy()
+        })
+
         expect(screen.queryByRole('button', { name: 'Launch' }))
             .toBeNull()
         expect(screen.getByRole('button', { name: 'Edit' }))
             .toBeTruthy()
+    })
+
+    it('hides the read-only edit action for completed challenges', async () => {
+        mockedUseFetchChallenge.mockReturnValue({
+            challenge: {
+                discussions: [{
+                    url: 'https://example.com/forum/challenges/456',
+                }],
+                id: '456',
+                name: 'Completed challenge',
+                prizeSets: [],
+                status: 'COMPLETED',
+            },
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+        })
+
+        renderPage(
+            '/projects/123/challenges/456/view',
+            '/projects/:projectId/challenges/:challengeId/view',
+        )
+
+        await waitFor(() => {
+            expect(screen.getByText('Challenge View Form'))
+                .toBeTruthy()
+        })
+
+        await waitFor(() => {
+            expect(screen.queryByRole('button', { name: 'Edit' }))
+                .toBeNull()
+        })
     })
 
     it('renders active header actions with the shared large secondary styling', async () => {
@@ -393,5 +513,39 @@ describe('ChallengeEditorPage', () => {
         fireEvent.click(screen.getByRole('button', { name: 'Details' }))
         expect(screen.getByText('Challenge View Form'))
             .toBeTruthy()
+    })
+
+    it('shows NEW status and delete action after a challenge is created on the create route', async () => {
+        mockedUseFetchChallenge.mockReturnValue({
+            challenge: undefined,
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+        })
+
+        renderPage(
+            '/projects/123/challenges/new',
+            '/projects/:projectId/challenges/new',
+        )
+
+        fireEvent.click(screen.getByRole('button', { name: 'Mock create challenge' }))
+
+        await waitFor(() => {
+            expect(within(screen.getByTestId('title-action'))
+                .getByText('NEW'))
+                .toBeTruthy()
+        })
+        await waitFor(() => {
+            expect(screen.getByRole('button', { name: 'Delete' }))
+                .toBeTruthy()
+        })
+
+        fireEvent.click(screen.getByRole('button', { name: 'Delete' }))
+        fireEvent.click(screen.getByRole('button', { name: 'Confirm' }))
+
+        await waitFor(() => {
+            expect(mockedDeleteChallenge)
+                .toHaveBeenCalledWith('789')
+        })
     })
 })

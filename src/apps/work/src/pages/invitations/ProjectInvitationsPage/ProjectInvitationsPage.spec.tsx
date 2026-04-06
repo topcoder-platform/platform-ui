@@ -1,7 +1,10 @@
 /* eslint-disable no-var, global-require, @typescript-eslint/no-var-requires */
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
 import { act } from 'react'
-import type { Context, PropsWithChildren } from 'react'
+import type {
+    Context,
+    ReactNode,
+} from 'react'
 import {
     fireEvent,
     render,
@@ -28,25 +31,29 @@ import { ProjectInvitationsPage } from './ProjectInvitationsPage'
 var mockWorkAppContext: Context<WorkAppContextModel>
 
 jest.mock('~/libs/ui', () => ({
-    BaseModal: (props: PropsWithChildren<{
-        buttons?: JSX.Element
-        children?: JSX.Element
+    BaseModal: (props: {
+        buttons?: ReactNode
+        children?: ReactNode
         onClose?: () => void
         open?: boolean
         title?: string
-    }>) => (
-        props.open
-            ? (
+    }) => (
+        props.open === false
+            ? undefined
+            : (
                 <div>
                     <h2>{props.title}</h2>
                     {props.children}
                     {props.buttons}
-                    <button onClick={props.onClose} type='button'>
-                        Close
-                    </button>
+                    {props.onClose
+                        ? (
+                            <button onClick={props.onClose} type='button'>
+                                Close
+                            </button>
+                        )
+                        : undefined}
                 </div>
             )
-            : undefined
     ),
     Button: (props: {
         label: string
@@ -66,7 +73,7 @@ jest.mock('~/libs/ui', () => ({
 })
 
 jest.mock('../../../lib/components', () => ({
-    LoadingSpinner: () => <div>Loading</div>,
+    LoadingSpinner: () => <div>Loading Spinner</div>,
 }))
 
 jest.mock('../../../lib/components/ConfirmationModal', () => ({
@@ -74,8 +81,8 @@ jest.mock('../../../lib/components/ConfirmationModal', () => ({
         cancelText: string
         confirmText: string
         message: string
-        onCancel: () => void
-        onConfirm: () => void
+        onCancel?: () => void
+        onConfirm?: () => void
         title: string
     }) => (
         <div>
@@ -131,21 +138,21 @@ const mockedCheckIsUserInvitedToProject
 const mockedGetAuthAccessToken = getAuthAccessToken as jest.MockedFunction<typeof getAuthAccessToken>
 const mockedShowErrorToast = showErrorToast as jest.MockedFunction<typeof showErrorToast>
 
-const contextValue: WorkAppContextModel = {
+const defaultContextValue: WorkAppContextModel = {
     isAdmin: false,
     isAnonymous: false,
-    isCopilot: false,
+    isCopilot: true,
     isManager: false,
     isReadOnly: false,
     loginUserInfo: {
         email: 'invitee@example.com',
         exp: 0,
-        handle: 'invitee-user',
+        handle: 'invitee',
         iat: 0,
-        roles: [],
+        roles: ['copilot'],
         userId: 123,
     } as WorkAppContextModel['loginUserInfo'],
-    userRoles: [],
+    userRoles: ['copilot'],
 }
 
 const pendingInvitation: ProjectInvite = {
@@ -155,42 +162,55 @@ const pendingInvitation: ProjectInvite = {
     userId: 123,
 }
 
-const project: Project = {
+const invitedProject: Project = {
     id: '200',
     invites: [pendingInvitation],
     name: 'Invited Project',
     status: 'active',
 }
 
+interface RenderPageOptions {
+    contextValue?: WorkAppContextModel
+    error?: Error
+    isLoading?: boolean
+    project?: Project
+    route?: string
+}
+
 /**
- * Renders the invitation route with the shared mocked app context and a
- * project challenges route so the spec can observe post-dismiss navigation.
+ * Renders the invitation page with a configurable fetch result so specs can
+ * verify loading, invitation prompts, and post-accept navigation flows.
  *
- * @returns the mocked SWR mutate function associated with the fetched project.
+ * @param options optional route, context, and mocked project-fetch state.
+ * @returns the mocked SWR mutate function used by the page.
  */
-function renderPage(): jest.Mock {
+function renderPage(options: RenderPageOptions = {}): jest.Mock {
+    const {
+        contextValue = defaultContextValue,
+        error = undefined,
+        isLoading = false,
+        project = invitedProject,
+        route = '/projects/200/invitations',
+    }: RenderPageOptions = options
     const mutate = jest.fn()
         .mockResolvedValue(undefined)
     const MockWorkAppContext = mockWorkAppContext
 
     mockedUseFetchProject.mockReturnValue({
-        error: undefined,
-        isLoading: false,
+        error,
+        isLoading,
         mutate,
         project,
     })
 
     render(
         <MockWorkAppContext.Provider value={contextValue}>
-            <MemoryRouter initialEntries={['/projects/200/invitations']}>
+            <MemoryRouter initialEntries={[route]}>
                 <Routes>
+                    <Route element={<div>Projects Page</div>} path='/projects' />
                     <Route
                         element={<ProjectInvitationsPage />}
                         path='/projects/:projectId/invitations/:action?'
-                    />
-                    <Route
-                        element={<div>Projects Page</div>}
-                        path='/projects'
                     />
                     <Route
                         element={<div>Challenges Page</div>}
@@ -209,7 +229,7 @@ describe('ProjectInvitationsPage', () => {
         jest.clearAllMocks()
         jest.useFakeTimers()
 
-        mockedCheckIsUserInvitedToProject.mockReturnValue(pendingInvitation)
+        mockedCheckIsUserInvitedToProject.mockReturnValue(undefined)
         mockedGetAuthAccessToken.mockReturnValue('token')
         mockedUpdateProjectMemberInvite.mockResolvedValue({
             ...pendingInvitation,
@@ -221,7 +241,48 @@ describe('ProjectInvitationsPage', () => {
         jest.useRealTimers()
     })
 
+    it('does not redirect away while the invitation project is still loading', () => {
+        renderPage({
+            isLoading: true,
+            project: undefined,
+        })
+
+        expect(screen.getByText('Loading Spinner'))
+            .not.toBeNull()
+        expect(screen.queryByText('Projects Page'))
+            .toBeNull()
+    })
+
+    it('renders the invitation prompt when the current user invite is available', () => {
+        const invitation: ProjectInvite = {
+            email: 'invitee@example.com',
+            id: 'invite-1',
+            status: 'pending',
+            userId: 123,
+        }
+
+        mockedCheckIsUserInvitedToProject.mockReturnValue(invitation)
+
+        renderPage({
+            project: {
+                id: '200',
+                invites: [invitation],
+                name: 'Invited project',
+                status: 'active',
+            },
+        })
+
+        expect(screen.getByText('You are invited to join this project'))
+            .not.toBeNull()
+        expect(screen.getByText(/Invited project/))
+            .not.toBeNull()
+        expect(screen.queryByText('Projects Page'))
+            .toBeNull()
+    })
+
     it('keeps the accepted modal open until dismissed and updates the cached invite status', async () => {
+        mockedCheckIsUserInvitedToProject.mockReturnValue(pendingInvitation)
+
         const mutate = renderPage()
 
         await act(async () => {
@@ -241,11 +302,13 @@ describe('ProjectInvitationsPage', () => {
         })
 
         await waitFor(() => {
-            expect(screen.queryByText('Invitation Accepted')).not.toBeNull()
+            expect(screen.queryByText('Invitation Accepted'))
+                .not.toBeNull()
         })
 
         const mutateCallback = mutate.mock.calls[0][0] as (currentProject?: Project) => Project | undefined
-        expect(mutateCallback(project))
+
+        expect(mutateCallback(invitedProject))
             .toMatchObject({
                 invites: [
                     {
@@ -271,11 +334,14 @@ describe('ProjectInvitationsPage', () => {
         }))
 
         await waitFor(() => {
-            expect(screen.queryByText('Challenges Page')).not.toBeNull()
+            expect(screen.queryByText('Challenges Page'))
+                .not.toBeNull()
         })
     })
 
     it('redirects to the challenges page when the accepted modal is closed', async () => {
+        mockedCheckIsUserInvitedToProject.mockReturnValue(pendingInvitation)
+
         renderPage()
 
         await act(async () => {
@@ -285,7 +351,8 @@ describe('ProjectInvitationsPage', () => {
         })
 
         await waitFor(() => {
-            expect(screen.queryByText('Invitation Accepted')).not.toBeNull()
+            expect(screen.queryByText('Invitation Accepted'))
+                .not.toBeNull()
         })
 
         fireEvent.click(screen.getByRole('button', {
@@ -293,12 +360,15 @@ describe('ProjectInvitationsPage', () => {
         }))
 
         await waitFor(() => {
-            expect(screen.queryByText('Challenges Page')).not.toBeNull()
+            expect(screen.queryByText('Challenges Page'))
+                .not.toBeNull()
         })
     })
 
     it('shows an error and redirects to projects when the invite update fails', async () => {
+        mockedCheckIsUserInvitedToProject.mockReturnValue(pendingInvitation)
         mockedUpdateProjectMemberInvite.mockRejectedValue(new Error('Update failed'))
+
         renderPage()
 
         await act(async () => {

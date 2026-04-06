@@ -63,6 +63,10 @@ import {
     transformChallengeToFormData,
     transformFormDataToChallenge,
 } from '../../../../lib/utils'
+import {
+    getProjectBillingAccountChallengeErrorMessage,
+    getProjectBillingAccountChallengeIssue,
+} from '../../../../lib/utils/project-billing-account.utils'
 
 import {
     AssignedMemberField,
@@ -104,6 +108,9 @@ import {
     ChallengeTypeField,
 } from './ChallengeTypeField'
 import {
+    buildChallengeTypeOptions,
+} from './ChallengeTypeField.utils'
+import {
     CheckpointPrizesField,
 } from './CheckpointPrizesField'
 import {
@@ -115,6 +122,9 @@ import {
 import {
     DesignWorkTypeField,
 } from './DesignWorkTypeField'
+import {
+    FinalDeliverablesField,
+} from './FinalDeliverablesField'
 import {
     FunChallengeField,
 } from './FunChallengeField'
@@ -161,6 +171,7 @@ import {
     resolveCreateTimelineTemplateId,
     resolveResourceAssignmentValue,
     ResourceAssignmentValueField,
+    shouldTreatChallengeAsTask,
     shouldUseManualReviewers,
     SUBMITTER_RESOURCE_ROLE_NAMES,
     TASK_REVIEWER_RESOURCE_ROLE_NAMES,
@@ -174,6 +185,9 @@ interface ChallengeEditorFormProps {
     isEditMode?: boolean
     isReadOnly?: boolean
     launchButtonLabel?: string
+    onChallengeCreated?: (
+        challenge: Pick<Challenge, 'id' | 'name' | 'projectId' | 'status'>,
+    ) => void
     onChallengeStatusChange?: (status?: string) => void
     onLaunchOpen?: () => void
     onRegisterLaunchAction?: (action: (() => Promise<void>) | undefined) => void
@@ -205,7 +219,19 @@ interface SyncSingleAssignmentResourceParams extends Omit<SingleAssignmentConfig
     nextValue?: string
 }
 
+interface PersistCreatedChallengeCopilotParams {
+    challengeId: string
+    formData: ChallengeEditorFormData
+    syncSingleAssignmentResource: (params: SyncSingleAssignmentResourceParams) => Promise<void>
+}
+
+interface PersistCreatedChallengeCopilotResult {
+    resetSourceFormData: ChallengeEditorFormData
+    warningMessage?: string
+}
+
 const SAVE_VALIDATION_ERROR_MESSAGE = 'Please fix validation errors before saving.'
+const DESIGN_WORK_TYPE_REQUIRED_MESSAGE = 'Select a work type'
 const TASK_ASSIGNED_MEMBER_REQUIRED_FOR_LAUNCH_MESSAGE
     = 'Assign a member before launching a task challenge.'
 const CHALLENGE_TYPE_CHALLENGE_ABBREVIATION = 'CH'
@@ -409,6 +435,70 @@ function applySingleAssignmentFieldValues(
     return nextFormData
 }
 
+/**
+ * Persists the basic-information copilot selection right after the initial draft is created.
+ *
+ * The first create request only sends the minimal challenge payload, so the selected copilot must
+ * be synchronized separately through the `Copilot` resource assignment before the form resets from
+ * fetched challenge data.
+ *
+ * @param params.challengeId newly created challenge id.
+ * @param params.formData create-form values that may already contain a selected copilot.
+ * @param params.syncSingleAssignmentResource helper that writes the resource assignment.
+ * @returns A promise that resolves when the copilot resource has been synchronized, or immediately
+ * when no copilot is selected.
+ */
+async function persistCreatedChallengeCopilot(
+    params: PersistCreatedChallengeCopilotParams,
+): Promise<void> {
+    const selectedCopilot = getSingleAssignmentFieldValue(
+        params.formData,
+        COPILOT_ASSIGNMENT_CONFIG.fieldName,
+    )
+
+    if (!selectedCopilot) {
+        return
+    }
+
+    await params.syncSingleAssignmentResource({
+        challengeId: params.challengeId,
+        nextValue: selectedCopilot,
+        roleNames: COPILOT_ASSIGNMENT_CONFIG.roleNames,
+        valueField: COPILOT_ASSIGNMENT_CONFIG.valueField,
+    })
+}
+
+/**
+ * Computes which create-form values should be restored after the draft challenge is created.
+ *
+ * The copilot assignment is persisted as a follow-up resource write after the draft exists. When
+ * that write fails, the draft should still open in edit mode but the optimistic copilot value
+ * should be cleared so the form does not imply that the assignment was saved.
+ *
+ * @param params challenge id and create-form values for the newly created draft.
+ * @returns the reset source form data plus an optional warning for a failed copilot sync.
+ */
+async function resolveCreatedChallengeResetSourceFormData(
+    params: PersistCreatedChallengeCopilotParams,
+): Promise<PersistCreatedChallengeCopilotResult> {
+    try {
+        await persistCreatedChallengeCopilot(params)
+
+        return {
+            resetSourceFormData: params.formData,
+        }
+    } catch {
+        return {
+            resetSourceFormData: {
+                ...params.formData,
+                copilot: undefined,
+            },
+            warningMessage:
+                'Challenge created, but the selected copilot could not be saved. Please add it again.',
+        }
+    }
+}
+
 function buildSingleAssignmentPayload(
     challengeId: string,
     roleId: string,
@@ -466,6 +556,30 @@ function mergeTagsWithDesignWorkType(
         ...tagsWithoutWorkType,
         normalizedWorkType,
     ]
+}
+
+/**
+ * Returns the validation error for the design challenge work type on create.
+ *
+ * @param isRequired Whether the current track/type selection requires a work type.
+ * @param workType The current form value for the design work type field.
+ * @returns The validation message when the field is required but unset, otherwise `undefined`.
+ * @remarks Used only by the new challenge flow because work type is locked after creation.
+ */
+function getCreateChallengeWorkTypeValidationError({
+    isRequired,
+    workType,
+}: {
+    isRequired: boolean
+    workType: unknown
+}): string | undefined {
+    if (!isRequired) {
+        return undefined
+    }
+
+    return normalizeDesignWorkType(workType)
+        ? undefined
+        : DESIGN_WORK_TYPE_REQUIRED_MESSAGE
 }
 
 function normalizeReviewerPhaseName(value: unknown): string {
@@ -696,6 +810,31 @@ function normalizeProjectId(value: unknown): string | undefined {
     return undefined
 }
 
+/**
+ * Resolves the project id used for the initial create request.
+ *
+ * The create form may carry the project id either in the form state or in the page-level fallback
+ * prop. A project id is mandatory for draft creation, so this helper normalizes the available
+ * value and throws when neither source is present.
+ *
+ * @param value project id captured in the form state.
+ * @param fallbackProjectId project id provided by the page route.
+ * @returns the normalized project id for the create request.
+ * @throws Error when no project id is available.
+ */
+function resolveRequiredCreateProjectId(
+    value: unknown,
+    fallbackProjectId?: string,
+): string {
+    const createProjectId = normalizeProjectId(value) || fallbackProjectId
+
+    if (!createProjectId) {
+        throw new Error('Project id is required to create challenge')
+    }
+
+    return createProjectId
+}
+
 function getCreateRoundType(
     fallbackRoundType: ChallengeEditorFormData['roundType'],
     formElement: HTMLFormElement | null,
@@ -780,6 +919,10 @@ interface TaskLaunchValidationParams {
     nextStatus?: unknown
 }
 
+interface HandledLaunchBlockError extends Error {
+    isHandledLaunchBlockError: true
+}
+
 export function getTaskLaunchValidationError(
     params: TaskLaunchValidationParams,
 ): string | undefined {
@@ -802,6 +945,40 @@ export function getTaskLaunchValidationError(
     return TASK_ASSIGNED_MEMBER_REQUIRED_FOR_LAUNCH_MESSAGE
 }
 
+/**
+ * Creates an error for launch-blocking validation paths that already surfaced a
+ * specific message to the user.
+ *
+ * @param message The validation message that was already shown in the UI.
+ * @returns An error instance that preserves launch rejection without triggering
+ * generic save-failure handling.
+ * @remarks Used by launch-only blockers so callers can keep the launch modal
+ * open while the form avoids duplicate generic toasts.
+ */
+function createHandledLaunchBlockError(
+    message: string,
+): HandledLaunchBlockError {
+    return Object.assign(new Error(message), {
+        isHandledLaunchBlockError: true as const,
+    })
+}
+
+/**
+ * Detects launch-blocking errors that should skip generic save-failure UI.
+ *
+ * @param error Unknown error caught while saving or launching a challenge.
+ * @returns `true` when the error already surfaced a specific validation message.
+ * @remarks Used in the save flow catch block to preserve the handled launch
+ * rejection without overwriting the existing form state or toast.
+ */
+function isHandledLaunchBlockError(
+    error: unknown,
+): error is HandledLaunchBlockError {
+    return error instanceof Error
+        && 'isHandledLaunchBlockError' in error
+        && error.isHandledLaunchBlockError === true
+}
+
 // eslint-disable-next-line complexity
 export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     props: ChallengeEditorFormProps,
@@ -809,6 +986,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const navigate = useNavigate()
     const isEditMode = props.isEditMode
     const isReadOnly = props.isReadOnly === true
+    const onChallengeCreated = props.onChallengeCreated
     const onChallengeStatusChange = props.onChallengeStatusChange
     const onLaunchOpen = props.onLaunchOpen
     const onRegisterLaunchAction = props.onRegisterLaunchAction
@@ -825,6 +1003,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     )
     const projectBillingAccountResult = useFetchProjectBillingAccount(fallbackProjectId)
     const projectBillingAccount = projectBillingAccountResult.billingAccount
+    const projectBillingAccountRef = useRef(projectBillingAccount)
     const challengesListPath = useMemo(
         () => getChallengesListPath(fallbackProjectId),
         [fallbackProjectId],
@@ -961,6 +1140,14 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             selectedChallengeType,
         ],
     )
+    const hasResolvedChallengeType = useMemo(
+        (): boolean => !!normalizeTextValue(resolvedChallengeTypeName)
+            || !!normalizeTextValue(resolvedChallengeTypeAbbreviation),
+        [
+            resolvedChallengeTypeAbbreviation,
+            resolvedChallengeTypeName,
+        ],
+    )
     const isMarathonMatchChallengeSelected = useMemo(
         (): boolean => isMarathonMatchChallengeTypeByNameAndAbbreviation({
             abbreviation: resolvedChallengeTypeAbbreviation,
@@ -973,6 +1160,13 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     )
     const showRoundTypeField = isDesignTrackSelected && isChallengeTypeSelected
     const showDesignWorkTypeField = isDesignTrackSelected && isChallengeTypeSelected
+    const challengeTypeOptions = useMemo(
+        () => buildChallengeTypeOptions(challengeTypes, selectedChallengeTrack),
+        [
+            challengeTypes,
+            selectedChallengeTrack,
+        ],
+    )
     const showSubmissionSettingsSection = useMemo(
         (): boolean => {
             if (!isDesignTrackSelected) {
@@ -1010,6 +1204,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const showFunChallengeField = isMarathonMatchChallengeSelected
     const showMarathonMatchScorerSection = isMarathonMatchChallengeSelected && isChallengeCreated
     const showPrizesAndBillingSection = !isFunChallengeSelected
+    const showEditableTimelineSection = !isEditMode || !isTaskChallengeSelected
     const usesManualReviewers = useMemo(
         (): boolean => shouldUseManualReviewers({
             isMarathonMatchChallenge: isMarathonMatchChallengeSelected,
@@ -1040,28 +1235,12 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     ])
     const isTaskSingleAssignmentChallenge = useCallback((
         formData: ChallengeEditorFormData,
-        resourcesOverride?: typeof challengeResources,
-        resourceRolesOverride?: typeof resourceRoles,
-    ): boolean => {
-        if (formData.legacy?.isTask === true || isTaskChallengeSelected) {
-            return true
-        }
-
-        return !!getPersistedAssignmentValue(
-            getSingleAssignmentFieldValue(formData, 'reviewer'),
-            TASK_REVIEWER_RESOURCE_ROLE_NAMES,
-            'memberHandle',
-            resourcesOverride,
-            resourceRolesOverride,
-        ) || !!getPersistedAssignmentValue(
-            getSingleAssignmentFieldValue(formData, 'assignedMemberId'),
-            SUBMITTER_RESOURCE_ROLE_NAMES,
-            'memberId',
-            resourcesOverride,
-            resourceRolesOverride,
-        )
-    }, [
-        getPersistedAssignmentValue,
+    ): boolean => shouldTreatChallengeAsTask({
+        hasResolvedChallengeType,
+        isTaskTypeSelected: isTaskChallengeSelected,
+        persistedTaskFlag: formData.legacy?.isTask === true,
+    }), [
+        hasResolvedChallengeType,
         isTaskChallengeSelected,
     ])
     const applyPersistedSingleAssignments = useCallback((
@@ -1080,7 +1259,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             ),
         }
 
-        if (!isTaskSingleAssignmentChallenge(formData, resourcesOverride, resourceRolesOverride)) {
+        if (!isTaskSingleAssignmentChallenge(formData)) {
             nextFormData.assignedMemberId = undefined
             nextFormData.reviewer = undefined
 
@@ -1282,6 +1461,10 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     }, [props.challenge])
 
     useEffect(() => {
+        projectBillingAccountRef.current = projectBillingAccount
+    }, [projectBillingAccount])
+
+    useEffect(() => {
         resourceRolesRef.current = resourceRoles
     }, [resourceRoles])
 
@@ -1297,7 +1480,10 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         let isActive = true
         const challenge = challengeRef.current
         const challengeId = challenge?.id
-        const baseFormData = transformChallengeToFormData(challenge)
+        const baseFormData = applyProjectBillingToChallengeFormData(
+            transformChallengeToFormData(challenge),
+            projectBillingAccountRef.current,
+        )
 
         setCurrentChallengeId(challengeId)
         defaultedDiscussionForumTypeIdRef.current = undefined
@@ -1437,6 +1623,38 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     ])
 
     useEffect(() => {
+        const normalizedTrackId = values.trackId?.trim()
+        const normalizedTypeId = values.typeId?.trim()
+
+        if (currentChallengeId || !normalizedTrackId || !normalizedTypeId) {
+            return
+        }
+
+        if (!selectedChallengeType || selectedChallengeType.id !== normalizedTypeId) {
+            return
+        }
+
+        const isAllowedForTrack = challengeTypeOptions
+            .some(option => option.value === normalizedTypeId)
+
+        if (isAllowedForTrack) {
+            return
+        }
+
+        setValue('typeId', '', {
+            shouldDirty: true,
+            shouldValidate: true,
+        })
+    }, [
+        challengeTypeOptions,
+        currentChallengeId,
+        selectedChallengeType,
+        setValue,
+        values.trackId,
+        values.typeId,
+    ])
+
+    useEffect(() => {
         setValue('legacy.isTask', isTaskChallengeSelected, {
             shouldDirty: false,
             shouldValidate: true,
@@ -1545,6 +1763,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     ])
 
     const createNewChallenge = useCallback(
+        // eslint-disable-next-line complexity
         async (): Promise<void> => {
             const isBasicInfoValid = await trigger([
                 'name',
@@ -1557,6 +1776,25 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 return
             }
 
+            clearErrors('workType')
+            setSaveError(undefined)
+            setSaveValidationError(undefined)
+
+            const workTypeValidationError = getCreateChallengeWorkTypeValidationError({
+                isRequired: showDesignWorkTypeField,
+                workType: getValues('workType'),
+            })
+
+            if (workTypeValidationError) {
+                setSaveStatus('idle')
+                setError('workType', {
+                    message: workTypeValidationError,
+                    type: 'manual',
+                })
+                setSaveValidationError(workTypeValidationError)
+                return
+            }
+
             setIsSaving(true)
             setSaveStatus('saving')
             setSaveError(undefined)
@@ -1566,10 +1804,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 const formData = getValues()
                 const resolvedProjectBillingAccount = await resolveProjectBillingAccount()
                 const selectedRoundType = getCreateRoundType(formData.roundType, formElementRef.current)
-                const createProjectId = normalizeProjectId(formData.projectId) || fallbackProjectId
-                if (!createProjectId) {
-                    throw new Error('Project id is required to create challenge')
-                }
+                const createProjectId = resolveRequiredCreateProjectId(formData.projectId, fallbackProjectId)
 
                 const timelineTemplateId = resolveCreateTimelineTemplateId({
                     roundType: selectedRoundType,
@@ -1605,9 +1840,22 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 })
                 const savedChallenge = await fetchChallenge(createdChallenge.id)
                     .catch(() => createdChallenge)
-                const nextValues = applyProjectBillingToChallengeFormData(
-                    transformChallengeToFormData(savedChallenge),
-                    resolvedProjectBillingAccount,
+                const createdCopilotResetResult: PersistCreatedChallengeCopilotResult
+                    = await resolveCreatedChallengeResetSourceFormData({
+                        challengeId: savedChallenge.id,
+                        formData,
+                        syncSingleAssignmentResource,
+                    })
+                const resetSourceFormData = createdCopilotResetResult.resetSourceFormData
+                const createdCopilotWarningMessage = createdCopilotResetResult.warningMessage
+
+                const nextValues = applySingleAssignmentFieldValues(
+                    applyProjectBillingToChallengeFormData(
+                        transformChallengeToFormData(savedChallenge),
+                        resolvedProjectBillingAccount,
+                    ),
+                    resetSourceFormData,
+                    isTaskSingleAssignmentChallenge(formData),
                 )
                 const normalizedWorkType = normalizeDesignWorkType(formData.workType)
 
@@ -1624,6 +1872,9 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                     nextValues.tags = mergeTagsWithDesignWorkType(nextValues.tags, normalizedWorkType)
                 }
 
+                const createdChallengeStatus = normalizeStatus(nextValues.status)
+                    || normalizeStatus(savedChallenge.status)
+                    || CHALLENGE_STATUS.NEW
                 const savedAt = new Date()
 
                 setCurrentChallengeId(savedChallenge.id)
@@ -1631,7 +1882,18 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 setSaveStatus('saved')
 
                 reset(nextValues)
+                onChallengeCreated?.({
+                    id: savedChallenge.id,
+                    name: savedChallenge.name,
+                    projectId: savedChallenge.projectId ?? createProjectId,
+                    status: createdChallengeStatus,
+                })
+                onChallengeStatusChange?.(createdChallengeStatus)
                 showSuccessToast('Challenge created successfully')
+
+                if (createdCopilotWarningMessage) {
+                    showErrorToast(createdCopilotWarningMessage)
+                }
             } catch (error) {
                 const errorMessage = error instanceof Error
                     ? error.message
@@ -1645,17 +1907,25 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             }
         },
         [
+            clearErrors,
             fallbackProjectId,
             getValues,
+            isTaskSingleAssignmentChallenge,
             reset,
+            onChallengeCreated,
+            onChallengeStatusChange,
             resolveProjectBillingAccount,
             selectedChallengeType,
+            setError,
+            showDesignWorkTypeField,
+            syncSingleAssignmentResource,
             timelineTemplates,
             trigger,
         ],
     )
 
     const saveChallenge = useCallback(
+        // eslint-disable-next-line complexity
         async (
             formData: ChallengeEditorFormData,
             options: SaveChallengeOptions = {},
@@ -1668,6 +1938,9 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 isSaveAsDraft,
                 payloadStatus,
             }: SaveStatusMetadata = getSaveStatusMetadata(formData.status, options)
+            const currentStatus = normalizeStatus(formData.status)
+            const isChallengeBeingActivated = payloadStatus === CHALLENGE_STATUS.ACTIVE
+                && currentStatus !== CHALLENGE_STATUS.ACTIVE
             const isTaskChallenge = isTaskSingleAssignmentChallenge(formData)
             const taskLaunchValidationError = getTaskLaunchValidationError({
                 assignedMemberId: formData.assignedMemberId,
@@ -1692,7 +1965,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                     showErrorToast(taskLaunchValidationError)
                 }
 
-                return
+                throw createHandledLaunchBlockError(taskLaunchValidationError)
             }
 
             if (!options.isAutosave) {
@@ -1702,6 +1975,24 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
 
             try {
                 const resolvedProjectBillingAccount = await resolveProjectBillingAccount()
+                const projectBillingAccountIssue = isChallengeBeingActivated
+                    ? getProjectBillingAccountChallengeIssue(resolvedProjectBillingAccount)
+                    : undefined
+                const projectBillingAccountErrorMessage = projectBillingAccountIssue
+                    ? getProjectBillingAccountChallengeErrorMessage(projectBillingAccountIssue)
+                    : undefined
+
+                if (projectBillingAccountErrorMessage) {
+                    setSaveStatus('idle')
+                    setSaveError(projectBillingAccountErrorMessage)
+
+                    if (!options.isAutosave) {
+                        showErrorToast(projectBillingAccountErrorMessage)
+                    }
+
+                    throw createHandledLaunchBlockError(projectBillingAccountErrorMessage)
+                }
+
                 const formDataWithProjectBilling = applyProjectBillingToChallengeFormData(
                     formData,
                     resolvedProjectBillingAccount,
@@ -1715,13 +2006,19 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 })
                 const savedChallenge = await patchChallenge(currentChallengeId, payload)
                 await syncDraftSingleAssignments(currentChallengeId, formDataWithProjectBilling)
+                const persistedFormData = applyProjectBillingToChallengeFormData(
+                    transformChallengeToFormData(savedChallenge),
+                    resolvedProjectBillingAccount,
+                )
 
                 const nextValues = applySingleAssignmentFieldValues(
                     applyPersistedSingleAssignments(
-                        applyProjectBillingToChallengeFormData(
-                            transformChallengeToFormData(savedChallenge),
-                            resolvedProjectBillingAccount,
-                        ),
+                        {
+                            ...persistedFormData,
+                            attachments: Array.isArray(persistedFormData.attachments)
+                                ? persistedFormData.attachments
+                                : formDataWithProjectBilling.attachments,
+                        },
                     ),
                     formDataWithProjectBilling,
                     isTaskChallenge,
@@ -1743,6 +2040,10 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                     navigate(`/challenges/${encodeURIComponent(savedChallenge.id)}/edit`)
                 }
             } catch (error) {
+                if (isHandledLaunchBlockError(error)) {
+                    throw error
+                }
+
                 const errorMessage = error instanceof Error
                     ? error.message
                     : 'Failed to save challenge'
@@ -1802,7 +2103,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     ])
 
     useEffect(() => {
-        if (!onRegisterLaunchAction || isReadOnly) {
+        if (!onRegisterLaunchAction) {
             return undefined
         }
 
@@ -1815,7 +2116,6 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         }
     }, [
         currentChallengeId,
-        isReadOnly,
         isScorerBlockingChallengeActions,
         launchChallenge,
         onRegisterLaunchAction,
@@ -1908,6 +2208,24 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         () => getSubmitButtonLabel(normalizedChallengeStatus),
         [normalizedChallengeStatus],
     )
+    const displayedBillingAccountId = useMemo(
+        (): string => {
+            const billingAccountId = values.billing?.billingAccountId ?? projectBillingAccount?.id
+
+            if (billingAccountId === undefined || billingAccountId === null) {
+                return '-'
+            }
+
+            const normalizedBillingAccountId = String(billingAccountId)
+                .trim()
+
+            return normalizedBillingAccountId || '-'
+        },
+        [
+            projectBillingAccount?.id,
+            values.billing?.billingAccountId,
+        ],
+    )
 
     return (
         <FormProvider {...formMethods}>
@@ -1921,7 +2239,10 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                         <div className={styles.grid}>
                             <ChallengeNameField />
                             <ChallengeTrackField disabled={isReadOnly || isChallengeCreated} />
-                            <ChallengeTypeField disabled={isReadOnly || isChallengeCreated} />
+                            <ChallengeTypeField
+                                disabled={isReadOnly || isChallengeCreated}
+                                track={selectedChallengeTrack}
+                            />
                             <CopilotField projectId={fallbackProjectId} />
                             {showFunChallengeField
                                 ? <FunChallengeField disabled={isReadOnly} />
@@ -2025,146 +2346,164 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                     )
                                     : undefined}
 
-                                <section className={styles.section}>
-                                    <h3 className={styles.sectionTitle}>Timeline &amp; Schedule</h3>
-                                    <div className={styles.block}>
-                                        <ChallengeScheduleSection disabled={isReadOnly} />
-                                    </div>
-                                </section>
-
-                                {showMarathonMatchScorerSection
-                                    ? (
-                                        <section className={styles.section}>
-                                            <h3 className={styles.sectionTitle}>Scorer</h3>
-                                            <div className={styles.block}>
-                                                <MarathonMatchScorerSection
-                                                    challengeId={currentChallengeId || ''}
-                                                    onScorerConfigChange={handleScorerConfigChange}
-                                                    phases={values.phases ?? []}
-                                                />
-                                            </div>
-                                        </section>
-                                    )
-                                    : undefined}
-
-                                <section className={styles.section}>
-                                    <h3 className={styles.sectionTitle}>Advanced Options</h3>
-                                    <div className={styles.grid}>
-                                        {isTaskChallengeSelected
-                                            ? <AssignedMemberField />
-                                            : undefined}
-                                        {isTaskChallengeSelected
-                                            ? (
-                                                <ReviewTypeField
-                                                    isTaskChallenge={isTaskChallengeSelected}
-                                                />
-                                            )
-                                            : undefined}
-                                        <GroupsField />
-                                        <TermsField shouldDefaultStandardTerm={!isEditMode} />
-                                        <NDAField />
-                                        <FormCheckboxField
-                                            checkboxOnlyHitArea
-                                            label='Wipro Allowed'
-                                            name='wiproAllowed'
-                                        />
-                                    </div>
-                                </section>
-
-                                {showSubmissionSettingsSection
-                                    ? (
-                                        <section className={styles.section}>
-                                            <h3 className={styles.sectionTitle}>Submission Settings</h3>
-                                            <div className={styles.grid}>
-                                                <SubmissionVisibilityField />
-                                                <StockArtsField />
-                                                <MaximumSubmissionsField />
-                                            </div>
-                                        </section>
-                                    )
-                                    : undefined}
-
-                                {usesManualReviewers
-                                    ? (
-                                        <section className={styles.section}>
-                                            <h3 className={styles.sectionTitle}>Review</h3>
-                                            <div className={styles.block}>
-                                                <ReviewersField />
-                                            </div>
-                                        </section>
-                                    )
-                                    : undefined}
-
-                                <section className={styles.section}>
-                                    <h3 className={styles.sectionTitle}>Attachments</h3>
-                                    <div className={styles.block}>
-                                        <AttachmentsField />
-                                    </div>
-                                </section>
-
-                                {!isReadOnly
-                                    ? (
-                                        <div className={styles.footer}>
-                                            <div className={styles.statusArea}>
-                                                {statusText
-                                                    ? <span className={styles.statusText}>{statusText}</span>
-                                                    : undefined}
-                                                <span className={styles.lastSaved}>{formatLastSaved(lastSaved)}</span>
-                                                {saveValidationError
-                                                    ? <span className={styles.errorText}>{saveValidationError}</span>
-                                                    : undefined}
-                                                {saveError
-                                                    ? <span className={styles.errorText}>{saveError}</span>
-                                                    : undefined}
-                                                {isScorerBlockingChallengeActions
-                                                    ? (
-                                                        <span className={styles.warningText}>
-                                                            The scorer configuration must be saved and valid before the
-                                                            {' '}
-                                                            challenge can be saved or launched.
-                                                        </span>
-                                                    )
-                                                    : undefined}
-                                            </div>
-
-                                            <div className={styles.actions}>
-                                                <Button
-                                                    label='Cancel'
-                                                    onClick={handleCancelClick}
-                                                    secondary
-                                                    size='lg'
-                                                    type='button'
-                                                />
-                                                <Button
-                                                    disabled={
-                                                        (!formState.isDirty || isSaving)
-                                                        || isScorerBlockingChallengeActions
-                                                    }
-                                                    label={submitButtonLabel}
-                                                    secondary
-                                                    size='lg'
-                                                    type='submit'
-                                                />
-                                                {props.canLaunchChallenge && onLaunchOpen
-                                                    ? (
-                                                        <Button
-                                                            disabled={props.isLaunchDisabled}
-                                                            label={props.launchButtonLabel || 'Launch'}
-                                                            onClick={onLaunchOpen}
-                                                            primary
-                                                            size='lg'
-                                                            type='button'
-                                                        />
-                                                    )
-                                                    : undefined}
-                                            </div>
-                                        </div>
-                                    )
-                                    : undefined}
                             </>
                         )
                         : undefined}
                 </fieldset>
+
+                {isChallengeCreated && showEditableTimelineSection
+                    ? (
+                        <section className={styles.section}>
+                            <h3 className={styles.sectionTitle}>Timeline &amp; Schedule</h3>
+                            <div className={styles.block}>
+                                <ChallengeScheduleSection disabled={isReadOnly} />
+                            </div>
+                        </section>
+                    )
+                    : undefined}
+
+                {isChallengeCreated
+                    ? (
+                        <fieldset className={styles.formContent} disabled={isReadOnly}>
+                            {showMarathonMatchScorerSection
+                                ? (
+                                    <section className={styles.section}>
+                                        <h3 className={styles.sectionTitle}>Scorer</h3>
+                                        <div className={styles.block}>
+                                            <MarathonMatchScorerSection
+                                                challengeId={currentChallengeId || ''}
+                                                onScorerConfigChange={handleScorerConfigChange}
+                                                phases={values.phases ?? []}
+                                            />
+                                        </div>
+                                    </section>
+                                )
+                                : undefined}
+
+                            <section className={styles.section}>
+                                <h3 className={styles.sectionTitle}>Advanced Options</h3>
+                                <div className={styles.grid}>
+                                    {isTaskChallengeSelected
+                                        ? <AssignedMemberField />
+                                        : undefined}
+                                    {isTaskChallengeSelected
+                                        ? (
+                                            <ReviewTypeField
+                                                isTaskChallenge={isTaskChallengeSelected}
+                                            />
+                                        )
+                                        : undefined}
+                                    <GroupsField />
+                                    <TermsField shouldDefaultStandardTerm={!isEditMode} />
+                                    <NDAField />
+                                    <FormCheckboxField
+                                        checkboxOnlyHitArea
+                                        label='Wipro Allowed'
+                                        name='wiproAllowed'
+                                    />
+                                    <div className={styles.readOnlyField}>
+                                        <span className={styles.readOnlyFieldLabel}>Billing Account Id</span>
+                                        <span className={styles.readOnlyFieldValue}>
+                                            {displayedBillingAccountId}
+                                        </span>
+                                    </div>
+                                </div>
+                            </section>
+
+                            {showSubmissionSettingsSection
+                                ? (
+                                    <section className={styles.section}>
+                                        <h3 className={styles.sectionTitle}>Submission Settings</h3>
+                                        <div className={styles.grid}>
+                                            <FinalDeliverablesField />
+                                            <StockArtsField />
+                                            <SubmissionVisibilityField />
+                                            <MaximumSubmissionsField />
+                                        </div>
+                                    </section>
+                                )
+                                : undefined}
+
+                            {usesManualReviewers
+                                ? (
+                                    <section className={styles.section}>
+                                        <h3 className={styles.sectionTitle}>Review</h3>
+                                        <div className={styles.block}>
+                                            <ReviewersField />
+                                        </div>
+                                    </section>
+                                )
+                                : undefined}
+
+                            <section className={styles.section}>
+                                <h3 className={styles.sectionTitle}>Attachments</h3>
+                                <div className={styles.block}>
+                                    <AttachmentsField />
+                                </div>
+                            </section>
+
+                            {!isReadOnly
+                                ? (
+                                    <div className={styles.footer}>
+                                        <div className={styles.statusArea}>
+                                            {statusText
+                                                ? <span className={styles.statusText}>{statusText}</span>
+                                                : undefined}
+                                            <span className={styles.lastSaved}>{formatLastSaved(lastSaved)}</span>
+                                            {saveValidationError
+                                                ? <span className={styles.errorText}>{saveValidationError}</span>
+                                                : undefined}
+                                            {saveError
+                                                ? <span className={styles.errorText}>{saveError}</span>
+                                                : undefined}
+                                            {isScorerBlockingChallengeActions
+                                                ? (
+                                                    <span className={styles.warningText}>
+                                                        The scorer configuration must be saved and valid before the
+                                                        {' '}
+                                                        challenge can be saved or launched.
+                                                    </span>
+                                                )
+                                                : undefined}
+                                        </div>
+
+                                        <div className={styles.actions}>
+                                            <Button
+                                                label='Cancel'
+                                                onClick={handleCancelClick}
+                                                secondary
+                                                size='lg'
+                                                type='button'
+                                            />
+                                            <Button
+                                                disabled={
+                                                    (!formState.isDirty || isSaving)
+                                                    || isScorerBlockingChallengeActions
+                                                }
+                                                label={submitButtonLabel}
+                                                secondary
+                                                size='lg'
+                                                type='submit'
+                                            />
+                                            {props.canLaunchChallenge && onLaunchOpen
+                                                ? (
+                                                    <Button
+                                                        disabled={props.isLaunchDisabled}
+                                                        label={props.launchButtonLabel || 'Launch'}
+                                                        onClick={onLaunchOpen}
+                                                        primary
+                                                        size='lg'
+                                                        type='button'
+                                                    />
+                                                )
+                                                : undefined}
+                                        </div>
+                                    </div>
+                                )
+                                : undefined}
+                        </fieldset>
+                    )
+                    : undefined}
             </form>
         </FormProvider>
     )

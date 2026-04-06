@@ -106,6 +106,8 @@ jest.mock('../TimelineVisualization', () => ({
 }))
 
 interface TestHarnessProps {
+    disabled?: boolean
+    phases?: ChallengeEditorFormData['phases']
     startDate?: ChallengeEditorFormData['startDate']
 }
 
@@ -131,7 +133,7 @@ const TestHarness = (props: TestHarnessProps): JSX.Element => {
             legacy: {
                 useSchedulingAPI: true,
             },
-            phases: [],
+            phases: props.phases || [],
             reviewers: [],
             startDate: props.startDate,
             trackId: '',
@@ -140,7 +142,7 @@ const TestHarness = (props: TestHarnessProps): JSX.Element => {
 
     return (
         <FormProvider {...formMethods}>
-            <ChallengeScheduleSection />
+            <ChallengeScheduleSection disabled={props.disabled} />
             <StartDateValue />
         </FormProvider>
     )
@@ -184,6 +186,8 @@ describe('ChallengeScheduleSection component', () => {
         expect(screen.getByRole('radio', { name: 'Immediately' }))
             .not
             .toBeChecked()
+        expect(startModeGroup.parentElement)
+            .toBe(startDateLabel.parentElement)
         expect(startDateLabel.compareDocumentPosition(startModeGroup))
             .toBe(Node.DOCUMENT_POSITION_FOLLOWING)
         expect(
@@ -250,6 +254,39 @@ describe('ChallengeScheduleSection component', () => {
             .toBeInTheDocument()
         expect(screen.queryByRole('button', { name: 'Switch to Editor View' }))
             .not
+            .toBeInTheDocument()
+    })
+
+    it('renders a working gantt view toggle for read-only challenge view mode', async () => {
+        const user = userEvent.setup({
+            advanceTimers: jest.advanceTimersByTime,
+        })
+
+        render(
+            <TestHarness
+                disabled
+                phases={[{
+                    duration: 1440,
+                    id: 'phase-1',
+                    name: 'Registration',
+                    scheduledEndDate: '2026-04-02T10:30:00.000Z',
+                    scheduledStartDate: '2026-04-01T10:30:00.000Z',
+                }]}
+                startDate='2026-04-01T10:30:00.000Z'
+            />,
+        )
+
+        expect(screen.getByRole('button', { name: 'Switch to Gantt View' }))
+            .toBeInTheDocument()
+        expect(screen.queryByTestId('timeline-visualization'))
+            .not
+            .toBeInTheDocument()
+
+        await user.click(screen.getByRole('button', { name: 'Switch to Gantt View' }))
+
+        expect(screen.getByRole('button', { name: 'Switch to Editor View' }))
+            .toBeInTheDocument()
+        expect(screen.getByTestId('timeline-visualization'))
             .toBeInTheDocument()
     })
 })
