@@ -337,7 +337,12 @@ export const ChallengePrizesField: FC<ChallengePrizesFieldProps> = (
     return (
         <>
             <div className={styles.field}>
-                <div className={styles.fieldHeader}>
+                <div
+                    className={classNames(
+                        styles.fieldHeader,
+                        showPrizeRowLabels ? styles.fieldHeaderWithPrizeLabels : undefined,
+                    )}
+                >
                     <div className={styles.fieldLabel} id={fieldLabelId}>
                         Challenge Prizes
                         <span className={styles.required}>*</span>
