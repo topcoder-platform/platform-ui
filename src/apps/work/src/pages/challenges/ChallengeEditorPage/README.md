@@ -56,6 +56,7 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 - `ReviewersField`: hidden for `Task` and `Marathon Match` challenges because manual reviewer assignment is handled elsewhere. On the human-review tab, each manual reviewer card keeps the legacy review-type dropdown and each manual reviewer phase selector hides registration/submission phases and any phase already assigned on another manual reviewer card, while preserving the card's current selection.
 - `Submission Settings`: shown for Design `Challenge` and Design `First2Finish` types, and contains the final-deliverables, stock-art, submission-visibility, and submission-limit controls.
 - `FinalDeliverablesField`: design-challenge file-type editor that persists the legacy `fileTypes` metadata payload used on challenge draft pages.
+- `MaximumSubmissionsField`: design-challenge submission-cap editor. Edit mode exposes only the legacy `Limit` toggle and count input; existing `submissionLimit.unlimited` metadata is preserved until the user enables a submission cap.
 - `ChallengeDescriptionField`: public markdown spec editor.
 - `ChallengePrivateDescriptionField`: optional private markdown spec editor.
 - `TermsField`: advanced-option multi-select for challenge terms. The create route seeds the standard Topcoder terms entry automatically once the terms list loads, including immediately after the first draft-creation step assigns a challenge id, so the editor matches legacy work-manager defaults while still allowing the NDA toggle to add or remove the NDA term separately.
