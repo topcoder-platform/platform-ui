@@ -20,6 +20,9 @@ jest.mock('../../../../../lib/hooks', () => ({
     useFetchResourceRoles: jest.fn(),
     useFetchResources: jest.fn(),
 }))
+jest.mock('../../../../../lib/constants', () => ({
+    REVIEW_APP_URL: 'https://example.com/review',
+}))
 jest.mock('../../../../../lib/services', () => ({
     fetchAiReviewConfigByChallenge: jest.fn(),
     fetchScorecards: jest.fn(),
@@ -128,6 +131,10 @@ describe('ReviewConfigurationSummary', () => {
         expect(await screen.findByText('AI_GATING')).not.toBeNull()
         expect(await screen.findByText('Development Review Scorecard')).not.toBeNull()
         expect(await screen.findByText('AI Submission Scanner')).not.toBeNull()
+        expect(await screen.findByText('❌ No')).not.toBeNull()
+        expect(await screen.findByText('❌ Off')).not.toBeNull()
+        expect(await screen.findByText('⚡ GATE')).not.toBeNull()
+        expect(screen.getByText('Received')).not.toBeNull()
         expect(screen.getByText('reviewer-one')).not.toBeNull()
         expect(screen.getByText('Regular Review')).not.toBeNull()
         expect(screen.getByText('Review Flow')).not.toBeNull()

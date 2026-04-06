@@ -26,6 +26,7 @@ import {
     fetchScorecards,
     fetchWorkflows,
 } from '../../../../../lib/services'
+import { REVIEW_APP_URL } from '../../../../../lib/constants'
 import {
     calculateEstimatedReviewerCost,
     getFirstPlacePrizeValue,
@@ -41,6 +42,13 @@ const ITERATIVE_REVIEW_ROLE_NAMES = [
     'Iterative Reviewer',
     'Iterative Review',
 ]
+const REVIEW_TYPE_LABELS: Record<string, string> = {
+    COMPONENT_DEV_REVIEW: 'Component Dev Review',
+    ITERATIVE_REVIEW: 'Iterative Review',
+    REGULAR_REVIEW: 'Regular Review',
+    SCENARIOS_REVIEW: 'Scenarios Review',
+    SPEC_REVIEW: 'Spec Review',
+}
 
 interface ReviewConfigurationSummaryProps {
     challengeId?: string
@@ -70,6 +78,18 @@ function normalizeSummaryKey(value: unknown): string {
  */
 function getReviewerCount(reviewer?: Reviewer): number {
     return Math.max(1, Math.trunc(Number(reviewer?.memberReviewerCount || 1) || 1))
+}
+
+/**
+ * Resolves the display label for a reviewer's configured review type.
+ *
+ * @param reviewer reviewer row from the challenge payload.
+ * @returns a human-readable review type label.
+ */
+function getReviewTypeLabel(reviewer: Reviewer): string {
+    const normalizedType = normalizeReviewerText(reviewer.type)
+
+    return REVIEW_TYPE_LABELS[normalizedType] || 'Regular Review'
 }
 
 /**
@@ -233,6 +253,29 @@ function getWorkflowScorecardLabel(
 }
 
 /**
+ * Resolves the review-app scorecard URL for an AI workflow row when available.
+ *
+ * @param workflow AI workflow row from the saved config or reviewer fallback.
+ * @param availableWorkflowMap lookup of workflow metadata from the review API.
+ * @returns a review-app scorecard URL or `undefined` when no scorecard is linked.
+ */
+function getWorkflowScorecardUrl(
+    workflow: AiReviewConfigWorkflow,
+    availableWorkflowMap: Map<string, Workflow>,
+): string | undefined {
+    const workflowId = normalizeReviewerText(workflow.workflowId)
+    const workflowDetails = workflow.workflow || availableWorkflowMap.get(workflowId)
+    const scorecardId = normalizeReviewerText(workflow.workflow?.scorecard?.id)
+        || normalizeReviewerText(workflowDetails?.scorecardId)
+
+    if (!scorecardId || !REVIEW_APP_URL) {
+        return undefined
+    }
+
+    return `${REVIEW_APP_URL}/scorecard/${encodeURIComponent(scorecardId)}`
+}
+
+/**
  * Derives legacy AI workflow rows when a challenge still only stores AI reviewers on the challenge.
  *
  * @param aiReviewers AI reviewer rows assigned to the challenge.
@@ -381,6 +424,10 @@ export const ReviewConfigurationSummary: FC<ReviewConfigurationSummaryProps> = (
     const hasAiConfiguration = hasConfiguredAiWorkflows || aiReviewers.length > 0
     const isAiOnlyMode = aiConfiguration?.mode === 'AI_ONLY'
     const isAiGatingMode = aiConfiguration?.mode === 'AI_GATING'
+    const hasAiGateWorkflow = useMemo(
+        () => (aiConfiguration?.workflows || []).some(workflow => workflow.isGating),
+        [aiConfiguration?.workflows],
+    )
     const workflowsToDisplay = hasConfiguredAiWorkflows
         ? aiConfiguration?.workflows || []
         : mapLegacyAiReviewersToWorkflows(aiReviewers, workflowMap)
@@ -497,7 +544,8 @@ export const ReviewConfigurationSummary: FC<ReviewConfigurationSummaryProps> = (
             <div className={styles.overviewGrid}>
                 <section className={styles.card}>
                     <div className={styles.cardHeader}>
-                        <h5>Human Review</h5>
+                        <span aria-hidden='true' className={styles.headerIcon}>👥</span>
+                        <h5 className={styles.cardTitle}>Human Review</h5>
                     </div>
                     <div className={styles.cardBody}>
                         {humanReviewers.length
@@ -538,7 +586,7 @@ export const ReviewConfigurationSummary: FC<ReviewConfigurationSummaryProps> = (
                                                                 scorecardNameById,
                                                             )}
                                                         </td>
-                                                        <td>Regular Review</td>
+                                                        <td>{getReviewTypeLabel(reviewer)}</td>
                                                         <td>{getReviewerCount(reviewer)}</td>
                                                         <td>
                                                             <span className={classNames(
@@ -548,7 +596,9 @@ export const ReviewConfigurationSummary: FC<ReviewConfigurationSummaryProps> = (
                                                                     : styles.badgeNo,
                                                             )}
                                                             >
-                                                                {reviewer.shouldOpenOpportunity ? 'Yes' : 'No'}
+                                                                {reviewer.shouldOpenOpportunity
+                                                                    ? '✅ Yes'
+                                                                    : '❌ No'}
                                                             </span>
                                                         </td>
                                                         <td>
@@ -572,7 +622,8 @@ export const ReviewConfigurationSummary: FC<ReviewConfigurationSummaryProps> = (
 
                 <section className={styles.card}>
                     <div className={styles.cardHeader}>
-                        <h5>AI Review</h5>
+                        <span aria-hidden='true' className={styles.headerIcon}>🤖</span>
+                        <h5 className={styles.cardTitle}>AI Review</h5>
                     </div>
                     <div className={styles.cardBody}>
                         {hasAiConfiguration
@@ -595,7 +646,7 @@ export const ReviewConfigurationSummary: FC<ReviewConfigurationSummaryProps> = (
                                                 <div className={styles.detailRow}>
                                                     <span className={styles.detailLabel}>Auto-Finalize:</span>
                                                     <span className={styles.detailValue}>
-                                                        {aiConfiguration.autoFinalize ? 'On' : 'Off'}
+                                                        {aiConfiguration.autoFinalize ? '✅ On' : '❌ Off'}
                                                     </span>
                                                 </div>
                                             </>
@@ -614,41 +665,55 @@ export const ReviewConfigurationSummary: FC<ReviewConfigurationSummaryProps> = (
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {workflowsToDisplay.map(workflow => (
-                                                    <tr
-                                                        key={getAiWorkflowRowKey(workflow)}
-                                                    >
-                                                        <td>{getWorkflowDisplayName(workflow, workflowMap)}</td>
-                                                        <td>
-                                                            {hasConfiguredAiWorkflows
-                                                                ? (
-                                                                    <>
-                                                                        {Number(workflow.weightPercent || 0)}
-                                                                        %
-                                                                    </>
-                                                                )
-                                                                : '-'}
-                                                        </td>
-                                                        <td>
-                                                            {getWorkflowScorecardLabel(
-                                                                workflow,
-                                                                workflowMap,
-                                                                scorecardNameById,
-                                                            )}
-                                                        </td>
-                                                        <td>
-                                                            <span className={classNames(
-                                                                styles.badge,
-                                                                workflow.isGating
-                                                                    ? styles.badgeWarning
-                                                                    : styles.badgeNeutral,
-                                                            )}
-                                                            >
-                                                                {workflow.isGating ? 'GATE' : 'Review'}
-                                                            </span>
-                                                        </td>
-                                                    </tr>
-                                                ))}
+                                                {workflowsToDisplay.map(workflow => {
+                                                    const scorecardLabel = getWorkflowScorecardLabel(
+                                                        workflow,
+                                                        workflowMap,
+                                                        scorecardNameById,
+                                                    )
+                                                    const scorecardUrl = getWorkflowScorecardUrl(
+                                                        workflow,
+                                                        workflowMap,
+                                                    )
+
+                                                    return (
+                                                        <tr key={getAiWorkflowRowKey(workflow)}>
+                                                            <td>{getWorkflowDisplayName(workflow, workflowMap)}</td>
+                                                            <td>
+                                                                {hasConfiguredAiWorkflows
+                                                                    ? (
+                                                                        <>
+                                                                            {Number(workflow.weightPercent || 0)}
+                                                                            %
+                                                                        </>
+                                                                    )
+                                                                    : '-'}
+                                                            </td>
+                                                            <td>
+                                                                {scorecardUrl
+                                                                    ? (
+                                                                        <a
+                                                                            className={styles.scorecardLink}
+                                                                            href={scorecardUrl}
+                                                                            rel='noreferrer'
+                                                                            target='_blank'
+                                                                        >
+                                                                            {scorecardLabel}
+                                                                        </a>
+                                                                    )
+                                                                    : scorecardLabel}
+                                                            </td>
+                                                            <td className={styles.typeCell}>
+                                                                <span className={workflow.isGating
+                                                                    ? styles.typeBadge
+                                                                    : styles.reviewIcon}
+                                                                >
+                                                                    {workflow.isGating ? '⚡ GATE' : '📝'}
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                    )
+                                                })}
                                             </tbody>
                                         </table>
                                     </div>
@@ -661,45 +726,64 @@ export const ReviewConfigurationSummary: FC<ReviewConfigurationSummaryProps> = (
 
             {(humanReviewers.length || hasConfiguredAiWorkflows)
                 ? (
-                    <section className={styles.flowCard}>
+                    <section className={styles.flowSection}>
                         <h5 className={styles.flowTitle}>Review Flow</h5>
 
-                        <div className={styles.flowRow}>
+                        <div className={classNames(
+                            styles.flowDiagram,
+                            {
+                                [styles.withAIGating]: isAiGatingMode && hasAiGateWorkflow,
+                                [styles.withAIOnly]: isAiOnlyMode,
+                                [styles.withAI]: hasConfiguredAiWorkflows && isAiGatingMode && !hasAiGateWorkflow,
+                                [styles.humanOnly]: !hasAiConfiguration,
+                            },
+                        )}
+                        >
                             <div className={styles.flowStep}>
-                                <strong>Submission</strong>
-                                <span>Received</span>
+                                <span aria-hidden='true' className={styles.flowBoxIcon}>📥</span>
+                                <strong className={styles.flowBoxTitle}>Submission</strong>
+                                <span className={styles.flowDescription}>Received</span>
                             </div>
 
                             {(hasConfiguredAiWorkflows || humanReviewers.length)
-                                ? <div className={styles.flowArrow}>-&gt;</div>
+                                ? <div className={styles.flowArrow}>→</div>
                                 : undefined}
 
                             {hasConfiguredAiWorkflows
                                 ? (
                                     <div className={styles.flowStep}>
-                                        <strong>{isAiOnlyMode ? 'AI Review' : 'AI Gate'}</strong>
-                                        <span>
+                                        <span
+                                            aria-hidden='true'
+                                            className={styles.flowBoxIcon}
+                                        >
+                                            🤖
+                                        </span>
+                                        <strong className={styles.flowBoxTitle}>
+                                            {isAiOnlyMode ? 'AI Review' : 'AI Gate'}
+                                        </strong>
+                                        <span className={styles.flowDescription}>
                                             score &gt;=
                                             {' '}
                                             {aiConfiguration?.minPassingThreshold ?? 75}
                                             %
                                         </span>
                                         {isAiGatingMode
-                                            ? <span>pass / lock</span>
+                                            ? <span className={styles.flowDescription}>pass / lock</span>
                                             : undefined}
                                     </div>
                                 )
                                 : undefined}
 
                             {hasConfiguredAiWorkflows && isAiGatingMode && humanReviewers.length
-                                ? <div className={styles.flowArrow}>-&gt;</div>
+                                ? <div className={styles.flowArrow}>→</div>
                                 : undefined}
 
                             {!hasConfiguredAiWorkflows && humanReviewers.length
                                 ? (
                                     <div className={styles.flowStep}>
-                                        <strong>Human Review</strong>
-                                        <span>
+                                        <span aria-hidden='true' className={styles.flowBoxIcon}>👥</span>
+                                        <strong className={styles.flowBoxTitle}>Human Review</strong>
+                                        <span className={styles.flowDescription}>
                                             {totalHumanReviewerCount}
                                             {' '}
                                             reviewers
@@ -711,8 +795,9 @@ export const ReviewConfigurationSummary: FC<ReviewConfigurationSummaryProps> = (
                             {hasConfiguredAiWorkflows && isAiGatingMode && humanReviewers.length
                                 ? (
                                     <div className={styles.flowStep}>
-                                        <strong>Human Review</strong>
-                                        <span>
+                                        <span aria-hidden='true' className={styles.flowBoxIcon}>👥</span>
+                                        <strong className={styles.flowBoxTitle}>Human Review</strong>
+                                        <span className={styles.flowDescription}>
                                             {totalHumanReviewerCount}
                                             {' '}
                                             reviewers
@@ -722,21 +807,24 @@ export const ReviewConfigurationSummary: FC<ReviewConfigurationSummaryProps> = (
                                 : undefined}
                         </div>
 
-                        {hasConfiguredAiWorkflows && isAiGatingMode
+                        {hasConfiguredAiWorkflows && isAiGatingMode && hasAiGateWorkflow
                             ? (
                                 <div className={styles.failureRow}>
                                     <div className={styles.failureArrow}>
-                                        <span>
+                                        <span>↓</span>
+                                        <span className={styles.failLabel}>
                                             &lt;
                                             {' '}
                                             {aiConfiguration?.minPassingThreshold ?? 75}
                                             %
                                         </span>
-                                        <span>v</span>
+                                        <span>↓</span>
                                     </div>
                                     <div className={styles.flowStep}>
-                                        <strong>Locked</strong>
-                                        <span>No human review needed</span>
+                                        <span aria-hidden='true' className={styles.flowBoxIcon}>🔒</span>
+                                        <strong className={styles.flowBoxTitle}>Locked</strong>
+                                        <span className={styles.flowDescription}>No human</span>
+                                        <span className={styles.flowDescription}>review needed</span>
                                     </div>
                                 </div>
                             )
@@ -747,15 +835,17 @@ export const ReviewConfigurationSummary: FC<ReviewConfigurationSummaryProps> = (
 
             {humanReviewers.length
                 ? (
-                    <div className={styles.costBar}>
-                        <span>Estimated Review Cost:</span>
-                        <strong>
-                            $
-                            {estimatedReviewCost.toLocaleString(undefined, {
-                                maximumFractionDigits: 2,
-                                minimumFractionDigits: 2,
-                            })}
-                        </strong>
+                    <div className={styles.costSection}>
+                        <div className={styles.costBar}>
+                            <span>Estimated Review Cost:</span>
+                            <strong>
+                                $
+                                {estimatedReviewCost.toLocaleString(undefined, {
+                                    maximumFractionDigits: 2,
+                                    minimumFractionDigits: 2,
+                                })}
+                            </strong>
+                        </div>
                     </div>
                 )
                 : undefined}

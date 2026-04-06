@@ -1,23 +1,23 @@
 @import '@libs/ui/styles/includes';
 
 .container {
-    background: #fafafa;
-    border: 1px solid #d8d8d8;
+    background: #f9f9f9;
+    border: 1px solid #e0e0e0;
     border-radius: 8px;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 24px;
     margin-bottom: 20px;
-    padding: 20px;
+    padding: 24px;
 }
 
 .title {
-    border-bottom: 1px solid #d8d8d8;
-    color: #2a2a2a;
+    border-bottom: 2px solid #ddd;
+    color: #333;
     font-size: 20px;
     font-weight: 600;
     margin: 0;
-    padding-bottom: 12px;
+    padding-bottom: 8px;
 }
 
 .errorList {
@@ -33,7 +33,7 @@
 
 .overviewGrid {
     display: grid;
-    gap: 20px;
+    gap: 24px;
     grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
@@ -44,28 +44,42 @@
 }
 
 .card,
-.flowCard,
-.costBar {
+.flowSection,
+.costSection {
     background: #fff;
-    border: 1px solid #dfdfdf;
-    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgb(0 0 0 / 10%);
+    overflow: hidden;
+}
+
+.card {
+    display: flex;
+    flex-direction: column;
 }
 
 .cardHeader,
-.cardBody,
-.flowCard,
-.costBar {
+.cardBody {
     padding: 16px;
 }
 
 .cardHeader {
-    border-bottom: 1px solid #ececec;
+    align-items: center;
+    background: #f5f5f5;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    gap: 12px;
 }
 
-.cardHeader h5,
+.headerIcon {
+    font-size: 24px;
+    line-height: 1;
+}
+
+.cardTitle,
 .flowTitle {
-    color: #2a2a2a;
-    font-size: 18px;
+    color: #333;
+    font-size: 16px;
     font-weight: 600;
     margin: 0;
 }
@@ -74,12 +88,18 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
+    height: 100%;
 }
 
 .detailRow {
     align-items: center;
     display: flex;
     gap: 12px;
+    padding: 12px 0;
+
+    &:not(:last-child) {
+        border-bottom: 1px solid #f0f0f0;
+    }
 }
 
 .detailLabel {
@@ -90,7 +110,7 @@
 }
 
 .detailValue {
-    color: #222;
+    color: #333;
     font-size: 14px;
 }
 
@@ -113,8 +133,8 @@
 
 .table th,
 .table td {
-    border-bottom: 1px solid #ececec;
-    color: #2a2a2a;
+    border-bottom: 1px solid #f0f0f0;
+    color: #333;
     font-size: 13px;
     padding: 10px 8px;
     text-align: left;
@@ -122,8 +142,11 @@
 }
 
 .table th {
+    background: #f9f9f9;
     color: #555;
+    font-size: 12px;
     font-weight: 600;
+    line-height: 18px;
 }
 
 .badge {
@@ -131,106 +154,159 @@
     display: inline-flex;
     font-size: 12px;
     font-weight: 600;
-    padding: 4px 10px;
+    line-height: 1;
+    padding: 6px 10px;
 }
 
 .badgeYes {
-    background: #e7f6ec;
-    color: #167a45;
+    background: #e8f5e9;
+    color: #2e7d32;
 }
 
 .badgeNo {
-    background: #fdebec;
-    color: #b43d45;
+    background: #ffebee;
+    color: #c62828;
 }
 
-.badgeNeutral {
-    background: #eef3ff;
+.typeCell {
+    text-align: center;
+}
+
+.typeBadge {
+    background: #fff3cd;
+    border-radius: 4px;
+    color: #856404;
+    display: inline-flex;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 4px 8px;
+}
+
+.reviewIcon {
+    display: inline-block;
+    font-size: 16px;
+    line-height: 1;
+}
+
+.scorecardLink {
     color: #2a62d5;
-}
+    text-decoration: none;
 
-.badgeWarning {
-    background: #fff1d8;
-    color: #a45b00;
+    &:hover {
+        text-decoration: underline;
+    }
 }
 
 .emptyState {
-    color: #666;
+    color: #999;
     font-size: 14px;
+    font-style: italic;
+    padding: 16px 0;
+    text-align: center;
 }
 
-.flowCard {
+.flowSection {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 24px;
+    padding: 24px;
 }
 
-.flowRow {
+.flowDiagram {
     align-items: center;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
+    display: grid;
+    gap: 24px;
+    padding: 8px 0;
+    width: 100%;
+
+    &.withAIGating,
+    &.withAI {
+        grid-template-columns: minmax(180px, 1fr) 40px minmax(180px, 1fr) 40px minmax(180px, 1fr);
+    }
+
+    &.withAIOnly,
+    &.humanOnly {
+        grid-template-columns: minmax(180px, 1fr) 40px minmax(180px, 1fr);
+    }
 }
 
 .flowStep {
     align-items: center;
-    background: #f7f7f7;
+    align-self: stretch;
+    background: #f5f5f5;
     border: 1px solid #ddd;
-    border-radius: 8px;
+    border-radius: 6px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    min-width: 150px;
+    gap: 8px;
+    justify-content: center;
+    min-height: 112px;
     padding: 16px;
     text-align: center;
 }
 
-.flowStep strong {
-    color: #222;
-    font-size: 15px;
-}
-
-.flowStep span {
-    color: #666;
-    font-size: 12px;
-}
-
 .flowArrow {
     color: #666;
-    font-size: 22px;
+    display: flex;
+    font-size: 24px;
     font-weight: 600;
+    justify-content: center;
+    line-height: 1;
 }
 
 .failureRow {
-    align-items: center;
-    display: flex;
-    gap: 12px;
-    padding-left: 162px;
+    display: grid;
+    gap: 16px;
+    grid-template-columns: minmax(180px, 1fr) 40px minmax(180px, 1fr) 40px minmax(180px, 1fr);
+    margin-top: -8px;
 }
 
 .failureArrow {
     align-items: center;
-    color: #bf2b2b;
+    color: #666;
     display: flex;
     flex-direction: column;
-    font-size: 13px;
+    font-size: 24px;
     font-weight: 600;
     gap: 4px;
-    min-width: 40px;
+    grid-column: 3;
+    justify-content: center;
+    line-height: 1;
 }
 
-@media (max-width: 767px) {
-    .failureRow {
-        padding-left: 0;
-    }
+.failLabel {
+    color: #d32f2f;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.flowBoxIcon {
+    font-size: 24px;
+    line-height: 1;
+}
+
+.flowBoxTitle {
+    color: #333;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.flowDescription {
+    color: #666;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.costSection {
+    display: flex;
+    justify-content: flex-end;
+    padding: 16px 24px;
 }
 
 .costBar {
     align-items: center;
-    color: #2a2a2a;
     display: flex;
-    gap: 12px;
-    justify-content: flex-end;
+    gap: 16px;
 }
 
 .costBar span {
@@ -240,6 +316,48 @@
 }
 
 .costBar strong {
-    color: #167a45;
-    font-size: 22px;
+    color: #2e7d32;
+    font-size: 20px;
+    font-weight: 700;
+    min-width: 88px;
+    text-align: right;
+}
+
+@media (max-width: 1023px) {
+    .flowDiagram,
+    .failureRow {
+        grid-template-columns: 1fr;
+    }
+
+    .failureArrow {
+        grid-column: auto;
+        justify-self: center;
+    }
+}
+
+@media (max-width: 767px) {
+    .container {
+        padding: 16px;
+    }
+
+    .flowSection {
+        padding: 16px;
+    }
+
+    .costSection {
+        justify-content: flex-start;
+        padding: 16px;
+    }
+
+    .costBar {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .detailRow {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 4px;
+    }
 }

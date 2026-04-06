@@ -2513,70 +2513,88 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
 
                 {isChallengeCreated
                     ? (
-                        <fieldset className={styles.formContent} disabled={isReadOnly}>
-                            {showMarathonMatchScorerSection
-                                ? (
-                                    <section className={styles.section}>
-                                        <h3 className={styles.sectionTitle}>Scorer</h3>
-                                        <div className={styles.block}>
-                                            <MarathonMatchScorerSection
-                                                challengeId={currentChallengeId || ''}
-                                                onScorerConfigChange={handleScorerConfigChange}
-                                                phases={values.phases ?? []}
-                                            />
-                                        </div>
-                                    </section>
-                                )
-                                : undefined}
+                        <>
+                            <fieldset className={styles.formContent} disabled={isReadOnly}>
+                                {showMarathonMatchScorerSection
+                                    ? (
+                                        <section className={styles.section}>
+                                            <h3 className={styles.sectionTitle}>Scorer</h3>
+                                            <div className={styles.block}>
+                                                <MarathonMatchScorerSection
+                                                    challengeId={currentChallengeId || ''}
+                                                    onScorerConfigChange={handleScorerConfigChange}
+                                                    phases={values.phases ?? []}
+                                                />
+                                            </div>
+                                        </section>
+                                    )
+                                    : undefined}
 
-                            <section className={styles.section}>
-                                <h3 className={styles.sectionTitle}>Advanced Options</h3>
-                                <div className={styles.grid}>
-                                    {isTaskChallenge
-                                        ? <AssignedMemberField />
-                                        : undefined}
-                                    {isTaskChallenge
-                                        ? (
-                                            <ReviewTypeField
-                                                isTaskChallenge={isTaskChallenge}
-                                            />
-                                        )
-                                        : undefined}
-                                    <GroupsField />
-                                    <TermsField shouldDefaultStandardTerm={!isEditMode && !isReadOnly} />
-                                    <NDAField />
-                                    <FormCheckboxField
-                                        checkboxOnlyHitArea
-                                        label='Wipro Allowed'
-                                        name='wiproAllowed'
-                                    />
-                                    <div className={styles.readOnlyField}>
-                                        <span className={styles.readOnlyFieldLabel}>Billing Account Id</span>
-                                        <span className={styles.readOnlyFieldValue}>
-                                            {displayedBillingAccountId}
-                                        </span>
+                                <section className={styles.section}>
+                                    <h3 className={styles.sectionTitle}>Advanced Options</h3>
+                                    <div className={styles.grid}>
+                                        {isTaskChallenge
+                                            ? <AssignedMemberField />
+                                            : undefined}
+                                        {isTaskChallenge
+                                            ? (
+                                                <ReviewTypeField
+                                                    isTaskChallenge={isTaskChallenge}
+                                                />
+                                            )
+                                            : undefined}
+                                        <GroupsField />
+                                        <TermsField shouldDefaultStandardTerm={!isEditMode && !isReadOnly} />
+                                        <NDAField />
+                                        <FormCheckboxField
+                                            checkboxOnlyHitArea
+                                            label='Wipro Allowed'
+                                            name='wiproAllowed'
+                                        />
+                                        <div className={styles.readOnlyField}>
+                                            <span className={styles.readOnlyFieldLabel}>Billing Account Id</span>
+                                            <span className={styles.readOnlyFieldValue}>
+                                                {displayedBillingAccountId}
+                                            </span>
+                                        </div>
                                     </div>
-                                </div>
-                            </section>
+                                </section>
 
-                            {showSubmissionSettingsSection
-                                ? (
-                                    <section className={styles.section}>
-                                        <h3 className={styles.sectionTitle}>Submission Settings</h3>
-                                        <div className={styles.grid}>
-                                            <FinalDeliverablesField />
-                                            <StockArtsField />
-                                            <SubmissionVisibilityField />
-                                            <MaximumSubmissionsField />
-                                        </div>
-                                    </section>
-                                )
+                                {showSubmissionSettingsSection
+                                    ? (
+                                        <section className={styles.section}>
+                                            <h3 className={styles.sectionTitle}>Submission Settings</h3>
+                                            <div className={styles.grid}>
+                                                <FinalDeliverablesField />
+                                                <StockArtsField />
+                                                <SubmissionVisibilityField />
+                                                <MaximumSubmissionsField />
+                                            </div>
+                                        </section>
+                                    )
+                                    : undefined}
+
+                                {!isReadOnly
+                                    ? reviewSection
+                                    : undefined}
+                                {!isReadOnly
+                                    ? attachmentsSection
+                                    : undefined}
+                                {footerSection}
+                            </fieldset>
+
+                            {isReadOnly
+                                ? reviewSection
                                 : undefined}
 
-                            {reviewSection}
-                            {attachmentsSection}
-                            {footerSection}
-                        </fieldset>
+                            {isReadOnly
+                                ? (
+                                    <fieldset className={styles.formContent} disabled>
+                                        {attachmentsSection}
+                                    </fieldset>
+                                )
+                                : undefined}
+                        </>
                     )
                     : undefined}
             </form>
