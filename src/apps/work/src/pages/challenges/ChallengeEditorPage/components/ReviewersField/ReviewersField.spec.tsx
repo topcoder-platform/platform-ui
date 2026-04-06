@@ -43,6 +43,10 @@ jest.mock('./AiReviewTab', () => ({
         )
     },
 }))
+jest.mock('./ReviewConfigurationSummary', () => ({
+    __esModule: true,
+    default: () => <div data-testid='review-summary'>Review summary</div>,
+}))
 jest.mock('../../../../../lib/services', () => ({
     patchChallenge: jest.fn(),
 }))
@@ -50,6 +54,7 @@ jest.mock('../../../../../lib/services', () => ({
 const mockedPatchChallenge = patchChallenge as jest.Mock
 
 interface TestHarnessProps {
+    isReadOnly?: boolean
     reviewers: Reviewer[]
 }
 
@@ -63,10 +68,11 @@ const TestHarness = (props: TestHarnessProps): JSX.Element => {
             typeId: 'type-id',
         },
     })
+    const reviewersField = <ReviewersField isReadOnly={props.isReadOnly} />
 
     return (
         <FormProvider {...formMethods}>
-            <ReviewersField />
+            {reviewersField}
         </FormProvider>
     )
 }
@@ -170,5 +176,80 @@ describe('ReviewersField', () => {
                     },
                 ],
             })
+    })
+
+    it('keeps the AI tab accessible in read-only mode', async () => {
+        const user = userEvent.setup()
+
+        render(
+            <TestHarness
+                isReadOnly
+                reviewers={[
+                    {
+                        handle: 'human-1',
+                        isMemberReview: true,
+                        memberId: 'member-1',
+                    },
+                    {
+                        aiWorkflowId: 'workflow-1',
+                        isMemberReview: false,
+                    },
+                ]}
+            />,
+        )
+
+        expect(screen.getByTestId('review-summary')).not.toBeNull()
+        await user.click(screen.getByRole('tab', { name: 'AI Review (1)' }))
+
+        expect(screen.getByRole('tab', { name: 'AI Review (1)' })
+            .getAttribute('aria-selected'))
+            .toBe('true')
+        expect(screen.getByTestId('ai-review-tab').parentElement?.hasAttribute('hidden'))
+            .toBe(false)
+    })
+
+    it('supports keyboard navigation between review tabs', async () => {
+        const user = userEvent.setup()
+
+        render(
+            <TestHarness
+                reviewers={[
+                    {
+                        handle: 'human-1',
+                        isMemberReview: true,
+                        memberId: 'member-1',
+                    },
+                    {
+                        aiWorkflowId: 'workflow-1',
+                        isMemberReview: false,
+                    },
+                ]}
+            />,
+        )
+
+        const humanTab = screen.getByRole('tab', { name: 'Human Review (1)' })
+        const aiTab = screen.getByRole('tab', { name: 'AI Review (1)' })
+
+        humanTab.focus()
+        expect(document.activeElement)
+            .toBe(humanTab)
+
+        await user.keyboard('{ArrowRight}')
+
+        expect(document.activeElement)
+            .toBe(aiTab)
+        expect(aiTab.getAttribute('aria-selected'))
+            .toBe('true')
+        expect(screen.getByTestId('ai-review-tab').parentElement?.hasAttribute('hidden'))
+            .toBe(false)
+
+        await user.keyboard('{ArrowLeft}')
+
+        expect(document.activeElement)
+            .toBe(humanTab)
+        expect(humanTab.getAttribute('aria-selected'))
+            .toBe('true')
+        expect(screen.getByTestId('human-review-tab').parentElement?.hasAttribute('hidden'))
+            .toBe(false)
     })
 })
