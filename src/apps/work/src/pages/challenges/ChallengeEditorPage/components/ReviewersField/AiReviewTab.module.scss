@@ -212,17 +212,33 @@
 }
 
 .checkboxRow span,
-.checkboxField span {
+.checkboxField > span {
     color: #3a3f45;
     font-size: 14px;
 }
 
 .checkboxDescription {
     color: #70757a;
-    display: block;
+    display: flex;
+    flex-direction: column;
     font-size: 12px;
+    gap: 2px;
     line-height: 1.5;
     margin-top: -2px;
+}
+
+.checkboxDescriptionPrefix {
+    align-items: center;
+    color: #70757a;
+    display: inline-flex;
+    gap: 4px;
+}
+
+.checkboxDescriptionIcon {
+    color: #d87a16;
+    flex: 0 0 auto;
+    height: 12px;
+    width: 12px;
 }
 
 .workflowEditors {
