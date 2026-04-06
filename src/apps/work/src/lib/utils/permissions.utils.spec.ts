@@ -130,4 +130,36 @@ describe('permissions.utils project management helpers', () => {
                 userId: 123,
             })
     })
+
+    it('prefers an open re-invite over older resolved invite records for the same user', () => {
+        mockedDecodeToken.mockReturnValue({
+            email: 'invitee@example.com',
+            handle: 'invitee',
+            userId: '123',
+        } as ReturnType<typeof decodeToken>)
+
+        expect(checkIsUserInvitedToProject('token', {
+            ...managedProject,
+            invites: [
+                {
+                    createdAt: '2026-03-30T00:00:00.000Z',
+                    email: 'invitee@example.com',
+                    id: 'invite-accepted',
+                    status: 'accepted',
+                    userId: 123,
+                },
+                {
+                    createdAt: '2026-04-06T00:00:00.000Z',
+                    email: 'invitee@example.com',
+                    id: 'invite-pending',
+                    status: 'pending',
+                    userId: 123,
+                },
+            ],
+        }))
+            .toEqual(expect.objectContaining({
+                id: 'invite-pending',
+                status: 'pending',
+            }))
+    })
 })
