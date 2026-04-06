@@ -50,6 +50,7 @@ interface TestFormValues {
 interface TestHarnessProps {
     defaultBillingAccountId?: string
     projectId?: string
+    userId?: string
 }
 
 const TestHarness: FC<TestHarnessProps> = (
@@ -67,6 +68,7 @@ const TestHarness: FC<TestHarnessProps> = (
                 label='Billing Account'
                 name='billingAccountId'
                 projectId={props.projectId}
+                userId={props.userId}
             />
         </FormProvider>
     )
@@ -190,6 +192,38 @@ describe('FormBillingAccountAutocomplete', () => {
             .toHaveBeenCalled()
         expect(latestAsyncSelectProps?.defaultOptions)
             .toBe(false)
+    })
+
+    it('passes the current user id when searching create-project billing accounts', async () => {
+        searchBillingAccountsMock.mockResolvedValue([
+            {
+                active: true,
+                endDate: '2029-01-01T00:00:00.000Z',
+                id: '90000001',
+                name: 'Acme Search Result',
+                startDate: '2024-01-01T00:00:00.000Z',
+            },
+        ])
+
+        render(
+            <TestHarness userId='12345' />,
+        )
+
+        const loadOptions = latestAsyncSelectProps?.loadOptions as ((value: string) => Promise<unknown>)
+
+        await act(async () => {
+            await loadOptions('Acme')
+        })
+
+        await waitFor(() => {
+            expect(searchBillingAccountsMock)
+                .toHaveBeenCalledWith({
+                    name: 'Acme',
+                    page: 1,
+                    perPage: 20,
+                    userId: '12345',
+                })
+        })
     })
 
     it('clears the initial loading state when project preload is abandoned', async () => {
