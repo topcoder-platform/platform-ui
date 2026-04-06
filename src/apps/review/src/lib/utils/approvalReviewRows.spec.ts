@@ -138,4 +138,30 @@ describe('buildApprovalReviewRows', () => {
         expect(results[0].review?.id)
             .toBe(review.id)
     })
+
+    it('keeps continuation approval rows when the review phase name includes the round suffix', () => {
+        const review = createReview({
+            phaseName: 'Approval 2',
+        })
+        const submission = createSubmission({
+            review: [review],
+        })
+
+        const results = buildApprovalReviewRows({
+            approvalPhaseIds,
+            approvalScorecardId: 'scorecard-approval',
+            challengeReviews: [],
+            contestSubmissions: [submission],
+            resourceMemberIdMapping,
+            submissionsById: new Map([[submission.id, submission]]),
+            submissionsByLegacyId: new Map([[submission.legacySubmissionId, submission]]),
+        })
+
+        expect(results)
+            .toHaveLength(1)
+        expect(results[0].review?.id)
+            .toBe(review.id)
+        expect(results[0].review?.phaseName)
+            .toBe('Approval 2')
+    })
 })
