@@ -467,6 +467,17 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
         setIsGanttView(previousValue => !previousValue)
     }, [isViewToggleDisabled])
 
+    useEffect(() => {
+        if (showViewToggle && !isViewToggleDisabled) {
+            return
+        }
+
+        setIsGanttView(false)
+    }, [
+        isViewToggleDisabled,
+        showViewToggle,
+    ])
+
     return (
         <section className={styles.container}>
             <div className={styles.grid}>
