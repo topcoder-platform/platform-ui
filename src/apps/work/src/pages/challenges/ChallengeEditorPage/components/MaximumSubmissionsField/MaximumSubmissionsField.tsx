@@ -178,32 +178,6 @@ export const MaximumSubmissionsField: FC = () => {
         metadata,
     ])
 
-    const handleUnlimitedChange = useCallback(
-        (checked: boolean): void => {
-            if (!checked) {
-                return
-            }
-
-            formContext.setValue(
-                SUBMISSION_LIMIT_FLAG_FIELD as never,
-                false as never,
-                {
-                    shouldDirty: true,
-                    shouldValidate: false,
-                },
-            )
-            formContext.setValue(
-                SUBMISSION_LIMIT_COUNT_FIELD as never,
-                '' as never,
-                {
-                    shouldDirty: true,
-                    shouldValidate: false,
-                },
-            )
-        },
-        [formContext],
-    )
-
     const handleLimitChange = useCallback(
         (checked: boolean): void => {
             if (!checked) {
@@ -229,11 +203,6 @@ export const MaximumSubmissionsField: FC = () => {
 
     return (
         <div className={styles.container}>
-            <FormCheckboxField
-                label='Unlimited'
-                name={SUBMISSION_UNLIMITED_FLAG_FIELD}
-                onChange={handleUnlimitedChange}
-            />
             <FormCheckboxField
                 label='Limit'
                 name={SUBMISSION_LIMIT_FLAG_FIELD}
