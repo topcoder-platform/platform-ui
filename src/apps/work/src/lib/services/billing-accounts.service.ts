@@ -25,6 +25,7 @@ export interface SearchBillingAccountsParams {
     name?: string
     page?: number
     perPage?: number
+    userId?: number | string
 }
 
 function normalizeError(error: unknown, fallbackMessage: string): Error {
@@ -75,6 +76,15 @@ function createSearchQuery(params: SearchBillingAccountsParams): string {
         query.set('perPage', String(params.perPage))
     }
 
+    if (params.userId !== undefined && params.userId !== null) {
+        const normalizedUserId = String(params.userId)
+            .trim()
+
+        if (normalizedUserId) {
+            query.set('userId', normalizedUserId)
+        }
+    }
+
     const queryString = query.toString()
 
     return queryString
@@ -100,9 +110,11 @@ export async function fetchBillingAccounts(): Promise<BillingAccount[]> {
 }
 
 /**
- * Searches billing accounts by name and optional pagination.
+ * Searches billing accounts by name with optional pagination and user scoping.
  *
- * Returns only accounts with both `id` and `name`, sorted by name.
+ * Returns only accounts with both `id` and `name`, sorted by name. When
+ * `userId` is provided, the API limits results to billing accounts that user
+ * can access.
  */
 export async function searchBillingAccounts(
     params: SearchBillingAccountsParams,

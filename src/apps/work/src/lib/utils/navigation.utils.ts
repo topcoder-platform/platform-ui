@@ -93,6 +93,16 @@ export function buildDirectProjectUrl(projectId: string | number): string {
 }
 
 /**
+ * Builds the canonical project challenges route.
+ *
+ * @param projectId project identifier for the destination route.
+ * @returns The encoded relative challenges route for the project.
+ */
+export function buildProjectChallengesPath(projectId: string | number): string {
+    return `/projects/${encodeURIComponent(String(projectId))}/challenges`
+}
+
+/**
  * Resolves the default in-app landing route for a project.
  *
  * Users with an open invite, or a project payload flagged as `isInvited`,
@@ -116,5 +126,5 @@ export function buildProjectLandingPath(project: Project, accessToken: string = 
 
     return shouldRouteToInvitation
         ? `/projects/${projectId}/invitations`
-        : `/projects/${projectId}/challenges`
+        : buildProjectChallengesPath(project.id)
 }

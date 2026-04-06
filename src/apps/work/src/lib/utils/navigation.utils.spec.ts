@@ -2,7 +2,10 @@ import { decodeToken } from 'tc-auth-lib'
 
 import type { Project } from '../models'
 
-import { buildProjectLandingPath } from './navigation.utils'
+import {
+    buildProjectChallengesPath,
+    buildProjectLandingPath,
+} from './navigation.utils'
 
 jest.mock('tc-auth-lib', () => ({
     decodeToken: jest.fn(),
@@ -29,6 +32,13 @@ jest.mock('../services/resources.service', () => ({
 }))
 
 const mockedDecodeToken = decodeToken as jest.MockedFunction<typeof decodeToken>
+
+describe('buildProjectChallengesPath', () => {
+    it('returns the canonical challenges route for a project', () => {
+        expect(buildProjectChallengesPath('project / 200'))
+            .toBe('/projects/project%20%2F%20200/challenges')
+    })
+})
 
 describe('buildProjectLandingPath', () => {
     const project: Project = {
