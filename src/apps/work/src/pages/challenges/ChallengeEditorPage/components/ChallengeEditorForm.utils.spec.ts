@@ -412,6 +412,22 @@ describe('resource assignment helpers', () => {
             .toBe(true)
     })
 
+    it('does not infer task mode from reviewer root fields when manual reviewers exist', () => {
+        const result = shouldInferTaskChallengeFromAssignments({
+            resourceRoles: [],
+            resources: [],
+            reviewer: 'taskReviewer',
+            reviewers: [{
+                isMemberReview: true,
+                phaseId: 'iterative-review-phase-id',
+                scorecardId: 'iterative-review-scorecard-id',
+            }],
+        })
+
+        expect(result)
+            .toBe(false)
+    })
+
     it('infers task mode from submitter resources', () => {
         const result = shouldInferTaskChallengeFromAssignments({
             resourceRoles: [

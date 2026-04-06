@@ -8,7 +8,11 @@ import {
     useRef,
     useState,
 } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import {
+    Link,
+    useNavigate,
+    useParams,
+} from 'react-router-dom'
 import { toast } from 'react-toastify'
 
 import { TableLoading } from '~/apps/admin/src/lib'
@@ -48,12 +52,15 @@ import {
 import {
     Challenge,
     ChallengeFilters,
+    Project,
     ProjectStatusValue,
     WorkAppContextModel,
 } from '../../../lib/models'
 import {
+    buildProjectLandingPath,
     canCreateEngagement,
     checkCanManageProject,
+    getAuthAccessToken,
     getStatusText,
 } from '../../../lib/utils'
 
@@ -331,7 +338,59 @@ function getContextualActions(params: GetContextualActionsParams): JSX.Element |
     })
 }
 
+/**
+ * Returns the canonical challenges route for a project-scoped challenges page.
+ *
+ * @param projectId route param for the current project.
+ * @returns encoded challenges route or `undefined` for dashboard mode.
+ */
+function getProjectChallengesPath(projectId: string | undefined): string | undefined {
+    if (!projectId) {
+        return undefined
+    }
+
+    return `/projects/${encodeURIComponent(projectId)}/challenges`
+}
+
+/**
+ * Resolves the expected landing path for the currently loaded project.
+ *
+ * @param projectId route param for the current project.
+ * @param project loaded project detail, when available.
+ * @param accessToken current caller token for invite matching.
+ * @returns invitation or challenges route when the project detail is loaded.
+ */
+function getProjectLandingPath(
+    projectId: string | undefined,
+    project: Project | undefined,
+    accessToken: string,
+): string | undefined {
+    if (!projectId || !project) {
+        return undefined
+    }
+
+    return buildProjectLandingPath(project, accessToken)
+}
+
+/**
+ * Returns whether the current challenges route should redirect to another
+ * project landing path, such as the invitation modal route for pending invites.
+ *
+ * @param currentProjectChallengesPath canonical challenges route for the project.
+ * @param projectLandingPath resolved default landing path for the project.
+ * @returns `true` when the caller should be redirected away from challenges.
+ */
+function shouldRedirectToProjectLandingPath(
+    currentProjectChallengesPath: string | undefined,
+    projectLandingPath: string | undefined,
+): boolean {
+    return !!currentProjectChallengesPath
+        && !!projectLandingPath
+        && currentProjectChallengesPath !== projectLandingPath
+}
+
 export const ChallengesListPage: FC = () => {
+    const navigate = useNavigate()
     const { projectId: projectIdFromRoute }: Readonly<{ projectId?: string }> = useParams<'projectId'>()
 
     const {
@@ -483,6 +542,22 @@ export const ChallengesListPage: FC = () => {
             .sort((projectA, projectB) => projectA.label.localeCompare(projectB.label)),
         [projectsResult.projects],
     )
+    const accessToken = useMemo(
+        () => getAuthAccessToken(loginUserInfo),
+        [loginUserInfo],
+    )
+    const currentProjectChallengesPath = useMemo(
+        () => getProjectChallengesPath(projectIdFromRoute),
+        [projectIdFromRoute],
+    )
+    const projectLandingPath = useMemo(
+        () => getProjectLandingPath(projectIdFromRoute, projectResult.project, accessToken),
+        [accessToken, projectIdFromRoute, projectResult.project],
+    )
+    const shouldRedirectToProjectLanding = useMemo(
+        () => shouldRedirectToProjectLandingPath(currentProjectChallengesPath, projectLandingPath),
+        [currentProjectChallengesPath, projectLandingPath],
+    )
 
     useEffect(() => {
         setFilters(currentFilters => ({
@@ -491,6 +566,16 @@ export const ChallengesListPage: FC = () => {
         }))
         setPage(1)
     }, [projectIdFromRoute])
+
+    useEffect(() => {
+        if (!shouldRedirectToProjectLanding || !projectLandingPath) {
+            return
+        }
+
+        navigate(projectLandingPath, {
+            replace: true,
+        })
+    }, [navigate, projectLandingPath, shouldRedirectToProjectLanding])
 
     const pageTitle = projectIdFromRoute && projectResult.project?.name
         ? projectResult.project.name
@@ -525,6 +610,10 @@ export const ChallengesListPage: FC = () => {
         projectId: projectIdFromRoute,
         projectStatus: projectResult.project?.status,
     })
+
+    if (shouldRedirectToProjectLanding) {
+        return <TableLoading />
+    }
 
     return (
         <PageWrapper

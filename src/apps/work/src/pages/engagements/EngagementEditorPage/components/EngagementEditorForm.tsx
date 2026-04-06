@@ -48,6 +48,7 @@ import {
     updateEngagement,
 } from '../../../../lib/services'
 import {
+    formatEngagementStatus,
     showErrorToast,
     showSuccessToast,
 } from '../../../../lib/utils'
@@ -127,6 +128,79 @@ function normalizeProjectId(projectId: number | string | undefined): string {
 
     return String(projectId)
         .trim()
+}
+
+/**
+ * Limits private-assignment serialization to the visible member slots so stale
+ * hidden handles are not submitted after the required member count changes.
+ *
+ * @param requiredMemberCount raw form value for the private member count.
+ * @param assignedMemberHandles form values for the selected member handles.
+ * @returns trimmed handles for the currently active private-assignment slots.
+ */
+function getVisibleAssignedMemberHandles(
+    requiredMemberCount: number | string | undefined,
+    assignedMemberHandles: string[],
+): string[] {
+    const parsedRequiredMemberCount = Number(requiredMemberCount)
+    const assignmentLimit = Number.isInteger(parsedRequiredMemberCount) && parsedRequiredMemberCount > 0
+        ? parsedRequiredMemberCount
+        : assignedMemberHandles.length
+
+    return assignedMemberHandles
+        .slice(0, assignmentLimit)
+        .map(memberHandle => String(memberHandle || '')
+            .trim())
+}
+
+/**
+ * Serializes private-assignment details only when they still match the current
+ * member handle selected for each visible slot.
+ *
+ * @param values engagement editor form values.
+ * @returns serialized assignment details aligned to the active member handles.
+ */
+function serializeAssignmentDetails(
+    values: EngagementEditorFormData,
+): SerializedAssignmentDetailsPayload[] {
+    const visibleAssignedMemberHandles = getVisibleAssignedMemberHandles(
+        values.requiredMemberCount,
+        values.assignedMemberHandles,
+    )
+    const serializedAssignmentDetails: Array<SerializedAssignmentDetailsPayload | undefined>
+        = visibleAssignedMemberHandles
+            .map((memberHandle, index) => {
+                const detail = values.assignmentDetails[index]
+                const detailMemberHandle = String(detail?.memberHandle || '')
+                    .trim()
+
+                if (!memberHandle || !detail || detailMemberHandle !== memberHandle) {
+                    return undefined
+                }
+
+                return {
+                    agreementRate: String(detail.agreementRate || '')
+                        .trim(),
+                    durationMonths: detail.durationMonths
+                        ? Number(detail.durationMonths)
+                        : undefined,
+                    memberHandle,
+                    otherRemarks: detail.otherRemarks
+                        ? String(detail.otherRemarks)
+                            .trim()
+                        : undefined,
+                    ratePerHour: String(detail.ratePerHour || '')
+                        .trim(),
+                    standardHoursPerWeek: detail.standardHoursPerWeek
+                        ? Number(detail.standardHoursPerWeek)
+                        : undefined,
+                    startDate: detail.startDate || '',
+                }
+            })
+
+    return serializedAssignmentDetails.filter(
+        (detail): detail is SerializedAssignmentDetailsPayload => Boolean(detail),
+    )
 }
 
 function toAssignmentDetailsValue(assignment: EngagementAssignment): AssignmentDetailsFormValue {
@@ -214,7 +288,9 @@ function getDefaultValues(
             : '',
         role: defaultEngagement?.role || ENGAGEMENT_ROLES[0],
         skills: defaultEngagement?.skills || [],
-        status: defaultEngagement?.status || 'Open',
+        status: defaultEngagement?.status
+            ? formatEngagementStatus(defaultEngagement.status)
+            : 'Open',
         timezones: defaultEngagement?.timezones || [],
         title: defaultEngagement?.title || '',
         workload: defaultEngagement?.workload || ENGAGEMENT_WORKLOADS[0],
@@ -338,37 +414,17 @@ function toPayload(values: EngagementEditorFormData): Partial<Engagement> & {
     }
 
     if (values.isPrivate) {
-        const assignedMemberHandles = values.assignedMemberHandles
-            .map(memberHandle => String(memberHandle || '')
-                .trim())
+        const assignedMemberHandles = getVisibleAssignedMemberHandles(
+            values.requiredMemberCount,
+            values.assignedMemberHandles,
+        )
             .filter(Boolean)
 
         if (assignedMemberHandles.length > 0) {
             payload.assignedMemberHandles = assignedMemberHandles
         }
 
-        const assignmentDetails = values.assignmentDetails
-            .filter(Boolean)
-            .map(detail => ({
-                agreementRate: String(detail.agreementRate || '')
-                    .trim(),
-                durationMonths: detail.durationMonths
-                    ? Number(detail.durationMonths)
-                    : undefined,
-                memberHandle: String(detail.memberHandle || '')
-                    .trim(),
-                otherRemarks: detail.otherRemarks
-                    ? String(detail.otherRemarks)
-                        .trim()
-                    : undefined,
-                ratePerHour: String(detail.ratePerHour || '')
-                    .trim(),
-                standardHoursPerWeek: detail.standardHoursPerWeek
-                    ? Number(detail.standardHoursPerWeek)
-                    : undefined,
-                startDate: detail.startDate || '',
-            }))
-            .filter(detail => detail.memberHandle)
+        const assignmentDetails = serializeAssignmentDetails(values)
 
         if (assignmentDetails.length > 0) {
             payload.assignmentDetails = assignmentDetails

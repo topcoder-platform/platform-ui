@@ -82,6 +82,24 @@ function getAssignmentLabel(index: number, count: number): string {
         : 'Assign to Member'
 }
 
+/**
+ * Creates an empty assignment-details value for form slots that no longer map
+ * to the currently selected member handle.
+ *
+ * @returns empty assignment-details form value.
+ */
+function createEmptyAssignmentDetails(): AssignmentDetailsFormValue {
+    return {
+        agreementRate: '',
+        durationMonths: '',
+        memberHandle: '',
+        otherRemarks: undefined,
+        ratePerHour: '',
+        standardHoursPerWeek: '',
+        startDate: '',
+    }
+}
+
 export const EngagementPrivateSection: FC = () => {
     const formContext = useFormContext<EngagementPrivateSectionForm>()
 
@@ -92,6 +110,12 @@ export const EngagementPrivateSection: FC = () => {
 
     const assignedMemberHandles = formContext.watch('assignedMemberHandles') || []
     const assignmentDetails = formContext.watch('assignmentDetails') || []
+    const assignedMemberHandlesError = (
+        formContext.formState.errors.assignedMemberHandles as { message?: string } | undefined
+    )?.message
+    const assignmentDetailsError = (
+        formContext.formState.errors.assignmentDetails as { message?: string } | undefined
+    )?.message
 
     const assignmentIndices = useMemo(
         () => Array.from({ length: requiredMemberCount }, (_, index) => index),
@@ -158,7 +182,19 @@ export const EngagementPrivateSection: FC = () => {
                                                             label={getAssignmentLabel(index, requiredMemberCount)}
                                                             name={`assignedMemberHandles.${index}`}
                                                             onValueChange={value => {
-                                                                if (!value || value === memberHandle) {
+                                                                if (value === memberHandle) {
+                                                                    return
+                                                                }
+
+                                                                const nextAssignmentDetails = [...assignmentDetails]
+                                                                nextAssignmentDetails[index] = createEmptyAssignmentDetails()
+
+                                                                formContext.setValue('assignmentDetails', nextAssignmentDetails, {
+                                                                    shouldDirty: true,
+                                                                    shouldValidate: true,
+                                                                })
+
+                                                                if (!value) {
                                                                     return
                                                                 }
 
@@ -247,6 +283,7 @@ export const EngagementPrivateSection: FC = () => {
 
                                             formContext.setValue('assignmentDetails', nextAssignmentDetails, {
                                                 shouldDirty: true,
+                                                shouldValidate: true,
                                             })
 
                                             const nextHandles = [...assignedMemberHandles]
@@ -254,12 +291,21 @@ export const EngagementPrivateSection: FC = () => {
 
                                             formContext.setValue('assignedMemberHandles', nextHandles, {
                                                 shouldDirty: true,
+                                                shouldValidate: true,
                                             })
 
                                             setActiveAssignmentIndex(undefined)
                                         }}
                                         open={activeAssignmentIndex !== undefined}
                                     />
+
+                                    {assignedMemberHandlesError || assignmentDetailsError
+                                        ? (
+                                            <div className={styles.errorText}>
+                                                {assignedMemberHandlesError || assignmentDetailsError}
+                                            </div>
+                                        )
+                                        : undefined}
                                 </>
                             )
                             : undefined}

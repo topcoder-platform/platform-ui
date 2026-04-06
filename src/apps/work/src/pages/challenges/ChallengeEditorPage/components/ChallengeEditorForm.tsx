@@ -104,6 +104,9 @@ import {
     ChallengeTypeField,
 } from './ChallengeTypeField'
 import {
+    buildChallengeTypeOptions,
+} from './ChallengeTypeField.utils'
+import {
     CheckpointPrizesField,
 } from './CheckpointPrizesField'
 import {
@@ -178,6 +181,9 @@ interface ChallengeEditorFormProps {
     isEditMode?: boolean
     isReadOnly?: boolean
     launchButtonLabel?: string
+    onChallengeCreated?: (
+        challenge: Pick<Challenge, 'id' | 'name' | 'projectId' | 'status'>,
+    ) => void
     onChallengeStatusChange?: (status?: string) => void
     onLaunchOpen?: () => void
     onRegisterLaunchAction?: (action: (() => Promise<void>) | undefined) => void
@@ -938,6 +944,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const navigate = useNavigate()
     const isEditMode = props.isEditMode
     const isReadOnly = props.isReadOnly === true
+    const onChallengeCreated = props.onChallengeCreated
     const onChallengeStatusChange = props.onChallengeStatusChange
     const onLaunchOpen = props.onLaunchOpen
     const onRegisterLaunchAction = props.onRegisterLaunchAction
@@ -1103,6 +1110,13 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     )
     const showRoundTypeField = isDesignTrackSelected && isChallengeTypeSelected
     const showDesignWorkTypeField = isDesignTrackSelected && isChallengeTypeSelected
+    const challengeTypeOptions = useMemo(
+        () => buildChallengeTypeOptions(challengeTypes, selectedChallengeTrack),
+        [
+            challengeTypes,
+            selectedChallengeTrack,
+        ],
+    )
     const showSubmissionSettingsSection = useMemo(
         (): boolean => {
             if (!isDesignTrackSelected) {
@@ -1140,6 +1154,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const showFunChallengeField = isMarathonMatchChallengeSelected
     const showMarathonMatchScorerSection = isMarathonMatchChallengeSelected && isChallengeCreated
     const showPrizesAndBillingSection = !isFunChallengeSelected
+    const showEditableTimelineSection = !isEditMode || !isTaskChallengeSelected
     const usesManualReviewers = useMemo(
         (): boolean => shouldUseManualReviewers({
             isMarathonMatchChallenge: isMarathonMatchChallengeSelected,
@@ -1182,6 +1197,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             resourceRoles: resourceRolesOverride || resourceRoles,
             resources: resourcesOverride || challengeResources,
             reviewer: getSingleAssignmentFieldValue(formData, 'reviewer'),
+            reviewers: formData.reviewers,
         })
     }, [
         challengeResources,
@@ -1568,6 +1584,38 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     ])
 
     useEffect(() => {
+        const normalizedTrackId = values.trackId?.trim()
+        const normalizedTypeId = values.typeId?.trim()
+
+        if (currentChallengeId || !normalizedTrackId || !normalizedTypeId) {
+            return
+        }
+
+        if (!selectedChallengeType || selectedChallengeType.id !== normalizedTypeId) {
+            return
+        }
+
+        const isAllowedForTrack = challengeTypeOptions
+            .some(option => option.value === normalizedTypeId)
+
+        if (isAllowedForTrack) {
+            return
+        }
+
+        setValue('typeId', '', {
+            shouldDirty: true,
+            shouldValidate: true,
+        })
+    }, [
+        challengeTypeOptions,
+        currentChallengeId,
+        selectedChallengeType,
+        setValue,
+        values.trackId,
+        values.typeId,
+    ])
+
+    useEffect(() => {
         setValue('legacy.isTask', isTaskChallengeSelected, {
             shouldDirty: false,
             shouldValidate: true,
@@ -1676,6 +1724,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     ])
 
     const createNewChallenge = useCallback(
+        // eslint-disable-next-line complexity
         async (): Promise<void> => {
             const isBasicInfoValid = await trigger([
                 'name',
@@ -1784,6 +1833,9 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                     nextValues.tags = mergeTagsWithDesignWorkType(nextValues.tags, normalizedWorkType)
                 }
 
+                const createdChallengeStatus = normalizeStatus(nextValues.status)
+                    || normalizeStatus(savedChallenge.status)
+                    || CHALLENGE_STATUS.NEW
                 const savedAt = new Date()
 
                 setCurrentChallengeId(savedChallenge.id)
@@ -1791,6 +1843,13 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 setSaveStatus('saved')
 
                 reset(nextValues)
+                onChallengeCreated?.({
+                    id: savedChallenge.id,
+                    name: savedChallenge.name,
+                    projectId: savedChallenge.projectId ?? createProjectId,
+                    status: createdChallengeStatus,
+                })
+                onChallengeStatusChange?.(createdChallengeStatus)
                 showSuccessToast('Challenge created successfully')
 
                 if (createdCopilotWarningMessage) {
@@ -1814,6 +1873,8 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             getValues,
             isTaskSingleAssignmentChallenge,
             reset,
+            onChallengeCreated,
+            onChallengeStatusChange,
             resolveProjectBillingAccount,
             selectedChallengeType,
             setError,
@@ -1977,7 +2038,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     ])
 
     useEffect(() => {
-        if (!onRegisterLaunchAction || isReadOnly) {
+        if (!onRegisterLaunchAction) {
             return undefined
         }
 
@@ -1990,7 +2051,6 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         }
     }, [
         currentChallengeId,
-        isReadOnly,
         isScorerBlockingChallengeActions,
         launchChallenge,
         onRegisterLaunchAction,
@@ -2114,7 +2174,10 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                         <div className={styles.grid}>
                             <ChallengeNameField />
                             <ChallengeTrackField disabled={isReadOnly || isChallengeCreated} />
-                            <ChallengeTypeField disabled={isReadOnly || isChallengeCreated} />
+                            <ChallengeTypeField
+                                disabled={isReadOnly || isChallengeCreated}
+                                track={selectedChallengeTrack}
+                            />
                             <CopilotField projectId={fallbackProjectId} />
                             {showFunChallengeField
                                 ? <FunChallengeField disabled={isReadOnly} />
@@ -2218,12 +2281,16 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                     )
                                     : undefined}
 
-                                <section className={styles.section}>
-                                    <h3 className={styles.sectionTitle}>Timeline &amp; Schedule</h3>
-                                    <div className={styles.block}>
-                                        <ChallengeScheduleSection disabled={isReadOnly} />
-                                    </div>
-                                </section>
+                                {showEditableTimelineSection
+                                    ? (
+                                        <section className={styles.section}>
+                                            <h3 className={styles.sectionTitle}>Timeline &amp; Schedule</h3>
+                                            <div className={styles.block}>
+                                                <ChallengeScheduleSection disabled={isReadOnly} />
+                                            </div>
+                                        </section>
+                                    )
+                                    : undefined}
 
                                 {showMarathonMatchScorerSection
                                     ? (
