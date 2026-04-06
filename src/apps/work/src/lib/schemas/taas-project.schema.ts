@@ -33,10 +33,10 @@ function emptyStringToUndefined(value: unknown, originalValue: unknown): unknown
 const selectOptionSchema = yup.object({
     label: yup.string()
         .trim()
-        .required('Please select an option'),
+        .defined(),
     value: yup.string()
         .trim()
-        .required('Please select an option'),
+        .defined(),
 })
 
 const skillSchema = yup.object({
@@ -63,6 +63,24 @@ const jobSchema = yup.object({
         .min(1, 'Please choose at least one person')
         .required('Please choose at least one person'),
     role: selectOptionSchema
+        .test('role-required', 'Please choose role', (value: unknown) => {
+            if (!value || typeof value !== 'object') {
+                return false
+            }
+
+            const selectValue: {
+                label?: unknown
+                value?: unknown
+            } = value as {
+                label?: unknown
+                value?: unknown
+            }
+
+            return typeof selectValue.label === 'string'
+                && selectValue.label.trim() !== ''
+                && typeof selectValue.value === 'string'
+                && selectValue.value.trim() !== ''
+        })
         .required('Please choose role'),
     skills: yup.array()
         .of(skillSchema)
@@ -72,6 +90,24 @@ const jobSchema = yup.object({
         .trim()
         .required('Please enter job title'),
     workLoad: selectOptionSchema
+        .test('workload-required', 'Please choose workload', (value: unknown) => {
+            if (!value || typeof value !== 'object') {
+                return false
+            }
+
+            const selectValue: {
+                label?: unknown
+                value?: unknown
+            } = value as {
+                label?: unknown
+                value?: unknown
+            }
+
+            return typeof selectValue.label === 'string'
+                && selectValue.label.trim() !== ''
+                && typeof selectValue.value === 'string'
+                && selectValue.value.trim() !== ''
+        })
         .required('Please choose workload'),
 })
 

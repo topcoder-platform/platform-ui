@@ -41,7 +41,6 @@ interface SubmissionsTableProps {
     isLoading?: boolean
     isLoadingMembers?: boolean
     onDownloadSubmission: (submissionId: string) => void
-    onOpenHistory: (submission: Submission) => void
     onOpenArtifacts: (submissionId: string) => void
     onSort: (fieldName: SubmissionSortBy) => void
     sortBy: SubmissionSortBy
@@ -172,20 +171,6 @@ export const SubmissionsTable: FC<SubmissionsTableProps> = (
         props.onOpenArtifacts(submissionId)
     }
 
-    function handleSubmissionHistoryClick(event: MouseEvent<HTMLButtonElement>): void {
-        const submissionId = event.currentTarget.dataset.submissionId
-        if (!submissionId) {
-            return
-        }
-
-        const submission = props.submissions.find(item => item.id === submissionId)
-        if (!submission) {
-            return
-        }
-
-        props.onOpenHistory(submission)
-    }
-
     return (
         <div className={styles.container}>
             <table className={styles.table}>
@@ -297,16 +282,6 @@ export const SubmissionsTable: FC<SubmissionsTableProps> = (
 
                                 <td>
                                     <div className={styles.actions}>
-                                        <button
-                                            aria-label='View submission history'
-                                            className={styles.historyButton}
-                                            data-submission-id={submission.id}
-                                            onClick={handleSubmissionHistoryClick}
-                                            type='button'
-                                        >
-                                            View history
-                                        </button>
-
                                         <button
                                             data-submission-id={submission.id}
                                             aria-label='Download submission'

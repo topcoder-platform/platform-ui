@@ -69,6 +69,7 @@ import styles from './EngagementsListPage.module.scss'
 type SortOrder = 'asc' | 'desc'
 
 type EngagementSortField =
+    | 'createdAt'
     | 'anticipatedStart'
     | 'applications'
     | 'membersAssigned'
@@ -117,6 +118,10 @@ const columns: ColumnDefinition[] = [
 ]
 
 function getSortValue(engagement: Engagement, fieldName: EngagementSortField): number | string {
+    if (fieldName === 'createdAt') {
+        return engagement.createdAt || ''
+    }
+
     if (fieldName === 'anticipatedStart') {
         const orderMap: Record<string, number> = {
             FEW_DAYS: 2,
@@ -304,6 +309,9 @@ function renderEngagementRows(
     return engagements.map(engagement => {
         const applicationsCount = getApplicationsCount(engagement)
         const engagementProjectId = getEngagementProjectId(engagement, fallbackProjectId)
+        const engagementAssignmentsRoute = engagementProjectId && engagement.id
+            ? `/projects/${engagementProjectId}/engagements/${engagement.id}/assignments`
+            : undefined
         const projectName = getEngagementProjectName(
             engagement,
             projectNameLookup,
@@ -327,7 +335,23 @@ function renderEngagementRows(
                         )
                         : projectName}
                 </td>
-                <td className={styles.engagementTitle}>{engagement.title || '-'}</td>
+                <td className={styles.engagementTitle}>
+                    {engagementAssignmentsRoute
+                        ? (
+                            <Link
+                                className={styles.link}
+                                to={engagementAssignmentsRoute}
+                                state={assignmentsBackUrl
+                                    ? {
+                                        backUrl: assignmentsBackUrl,
+                                    }
+                                    : undefined}
+                            >
+                                {engagement.title || '-'}
+                            </Link>
+                        )
+                        : engagement.title || '-'}
+                </td>
                 <td>{engagement.isPrivate ? 'Private' : 'Public'}</td>
                 <td>{renderEngagementStatus(engagement.status)}</td>
                 <td>
@@ -408,10 +432,10 @@ export const EngagementsListPage: FC = () => {
     const [filters, setFilters] = useState<EngagementsListFilters>(() => ({
         projectName: undefined,
         sortBy: isAllEngagementsPage
-            ? 'anticipatedStart'
+            ? 'createdAt'
             : undefined,
         sortOrder: isAllEngagementsPage
-            ? 'asc'
+            ? 'desc'
             : undefined,
         status: undefined,
         title: undefined,
@@ -440,10 +464,10 @@ export const EngagementsListPage: FC = () => {
             ? scopedProjectIds
             : undefined,
         sortBy: isAllEngagementsPage
-            ? 'anticipatedStart'
+            ? 'createdAt'
             : undefined,
         sortOrder: isAllEngagementsPage
-            ? 'asc'
+            ? 'desc'
             : undefined,
         status: filters.status,
     }), [

@@ -44,7 +44,6 @@ describe('SubmissionsTable', () => {
                 challengeId='challenge-123'
                 onDownloadSubmission={jest.fn()}
                 onOpenArtifacts={jest.fn()}
-                onOpenHistory={jest.fn()}
                 onSort={jest.fn()}
                 sortBy='createdAt'
                 sortOrder='desc'
@@ -79,7 +78,6 @@ describe('SubmissionsTable', () => {
                 challengeId='challenge-123'
                 onDownloadSubmission={jest.fn()}
                 onOpenArtifacts={jest.fn()}
-                onOpenHistory={jest.fn()}
                 onSort={jest.fn()}
                 sortBy='createdAt'
                 sortOrder='desc'
@@ -108,5 +106,40 @@ describe('SubmissionsTable', () => {
                 'https://example.com/review/active-challenges/challenge-123/'
                 + 'challenge-details?tab=checkpoint-submission',
             )
+    })
+
+    it('does not render a submission history action in the actions column', () => {
+        render(
+            <SubmissionsTable
+                canDownloadSubmissions
+                challengeId='challenge-123'
+                onDownloadSubmission={jest.fn()}
+                onOpenArtifacts={jest.fn()}
+                onSort={jest.fn()}
+                sortBy='createdAt'
+                sortOrder='desc'
+                submissions={[
+                    {
+                        challengeId: 'challenge-123',
+                        createdBy: 'member-1',
+                        id: 'submission-1',
+                        review: [
+                            {
+                                finalScore: 95,
+                                initialScore: 90,
+                            },
+                        ],
+                        type: 'SUBMISSION',
+                    },
+                ]}
+            />,
+        )
+
+        expect(screen.queryByRole('button', { name: 'View submission history' }))
+            .toBeNull()
+        expect(screen.getByRole('button', { name: 'Download submission' }))
+            .toBeTruthy()
+        expect(screen.getByRole('button', { name: 'Download submission artifacts' }))
+            .toBeTruthy()
     })
 })

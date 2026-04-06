@@ -275,10 +275,7 @@ const ManualWorkflowEditor: FC<ManualWorkflowEditorProps> = (
         <div className={styles.workflowEditorCard}>
             <div className={styles.workflowEditorHeader}>
                 <div>
-                    <h4>
-                        Workflow
-                        {props.workflowNumber}
-                    </h4>
+                    <h4>{`Workflow ${props.workflowNumber}`}</h4>
                     <p>Choose the AI workflow, its scoring weight, and whether it acts as a gate.</p>
                 </div>
                 {!props.readOnly
@@ -459,6 +456,7 @@ export const AiReviewTab: FC<AiReviewTabProps> = (
     const trackId = props.trackId
     const typeId = props.typeId
     const lastSavedConfigurationRef = useRef<AiReviewConfig | AiReviewConfigurationDraft | undefined>()
+    const onConfigPersistedRef = useRef<typeof onConfigPersisted>(onConfigPersisted)
     const saveTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>()
 
     const [availableWorkflows, setAvailableWorkflows] = useState<Workflow[]>([])
@@ -759,6 +757,10 @@ export const AiReviewTab: FC<AiReviewTabProps> = (
         + 'continue editing them.'
 
     useEffect(() => {
+        onConfigPersistedRef.current = onConfigPersisted
+    }, [onConfigPersisted])
+
+    useEffect(() => {
         let mounted = true
 
         setIsWorkflowsLoading(true)
@@ -839,7 +841,7 @@ export const AiReviewTab: FC<AiReviewTabProps> = (
                 setConfigurationMode(config.templateId ? 'template' : 'manual')
                 setConfigId(config.id)
                 lastSavedConfigurationRef.current = config
-                onConfigPersisted?.(config)
+                onConfigPersistedRef.current?.(config)
             })
             .catch(error => {
                 if (!mounted) {
@@ -859,7 +861,7 @@ export const AiReviewTab: FC<AiReviewTabProps> = (
         return () => {
             mounted = false
         }
-    }, [hasAssignedAiReviewers, normalizedChallengeId, onConfigPersisted])
+    }, [hasAssignedAiReviewers, normalizedChallengeId])
 
     useEffect(() => {
         let mounted = true
@@ -933,7 +935,7 @@ export const AiReviewTab: FC<AiReviewTabProps> = (
                     setConfigId(savedConfiguration.id)
                     setConfiguration(nextConfiguration)
                     lastSavedConfigurationRef.current = savedConfiguration
-                    onConfigPersisted?.(savedConfiguration)
+                    onConfigPersistedRef.current?.(savedConfiguration)
                 } catch (error) {
                     showErrorToast(error instanceof Error
                         ? error.message
@@ -957,7 +959,6 @@ export const AiReviewTab: FC<AiReviewTabProps> = (
         configurationMode,
         normalizedChallengeId,
         normalizedConfiguration,
-        onConfigPersisted,
         readOnly,
         validationErrors,
     ])

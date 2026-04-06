@@ -529,16 +529,11 @@ export const EngagementEditorForm: FC<EngagementEditorFormProps> = (
                             ? 'Engagement saved successfully'
                             : 'Engagement created successfully',
                     )
+                    const savedEngagementsPath = getEngagementsPath(
+                        savedEngagement.projectId || nextValues.projectId || props.projectId,
+                    )
 
-                    if (!props.isEditMode) {
-                        const savedEngagementsPath = getEngagementsPath(
-                            savedEngagement.projectId || nextValues.projectId,
-                        )
-
-                        navigate(
-                            `${savedEngagementsPath}/${savedEngagement.id}`,
-                        )
-                    }
+                    navigate(savedEngagementsPath)
                 }
             } catch (error) {
                 const message = error instanceof Error
