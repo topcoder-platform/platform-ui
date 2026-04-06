@@ -1,6 +1,7 @@
 import { decodeToken } from 'tc-auth-lib'
 
 import { PROJECT_ROLES } from '../constants'
+import { PROJECT_MEMBER_INVITE_STATUS } from '../constants/project-roles.constants'
 import {
     ADMIN_ROLES,
     ALLOWED_DOWNLOAD_SUBMISSIONS_ROLES,
@@ -109,6 +110,11 @@ function getProjectMemberByUserId(
 
     return project.members.find(member => normalizeUserId(member.userId) === normalizedUserId)
 }
+
+const OPEN_PROJECT_INVITE_STATUSES = new Set([
+    PROJECT_MEMBER_INVITE_STATUS.PENDING,
+    'requested',
+])
 
 function hasDownloadSubmissionsRole(userRoles: string[]): boolean {
     return hasRole(userRoles, ALLOWED_DOWNLOAD_SUBMISSIONS_ROLES)
@@ -328,27 +334,127 @@ export function checkIsCopilotOrManager(
     return normalizedRole === 'copilot' || normalizedRole === 'manager'
 }
 
+/**
+ * Resolves a sortable timestamp for an invite so re-invites can prefer the
+ * latest record when a user has multiple historical invite entries.
+ *
+ * @param invite project invite candidate from the API payload.
+ * @returns parsed timestamp or `Number.NEGATIVE_INFINITY` when unavailable.
+ */
+function getProjectInviteTimestamp(invite: ProjectInvite): number {
+    const timestamp = Date.parse(invite.updatedAt || invite.createdAt || '')
+
+    return Number.isFinite(timestamp)
+        ? timestamp
+        : Number.NEGATIVE_INFINITY
+}
+
+interface ProjectInviteMatchState {
+    invite?: ProjectInvite
+    index: number
+    isOpen: boolean
+    timestamp: number
+}
+
+/**
+ * Returns whether an invite belongs to the current caller.
+ *
+ * @param invite candidate invite entry from the project payload.
+ * @param tokenData decoded caller token fields used for matching.
+ * @returns `true` when the invite belongs to the caller.
+ */
+function isMatchingProjectInvite(
+    invite: ProjectInvite,
+    tokenData: DecodedTokenData,
+): boolean {
+    const normalizedUserId = normalizeUserId(tokenData.userId)
+    const inviteUserId = normalizeUserId(invite.userId)
+    const inviteEmail = normalizeValue(invite.email)
+    const inviteHandle = normalizeValue(invite.handle)
+
+    return (
+        (!!normalizedUserId && inviteUserId === normalizedUserId)
+        || (!!tokenData.email && inviteEmail === normalizeValue(tokenData.email))
+        || (!!tokenData.handle && inviteHandle === normalizeValue(tokenData.handle))
+    )
+}
+
+/**
+ * Returns whether a new invite candidate should replace the current match.
+ *
+ * @param currentMatch best invite selected so far.
+ * @param nextMatch next matching invite candidate and its metadata.
+ * @returns `true` when the new invite better represents the caller's state.
+ */
+function shouldReplaceProjectInviteMatch(
+    currentMatch: ProjectInviteMatchState,
+    nextMatch: ProjectInviteMatchState,
+): boolean {
+    if (!currentMatch.invite) {
+        return true
+    }
+
+    if (currentMatch.isOpen !== nextMatch.isOpen) {
+        return nextMatch.isOpen
+    }
+
+    if (nextMatch.timestamp !== currentMatch.timestamp) {
+        return nextMatch.timestamp > currentMatch.timestamp
+    }
+
+    return nextMatch.index > currentMatch.index
+}
+
+/**
+ * Returns the current caller's most relevant project invite.
+ *
+ * A user can accumulate multiple invite records after declining or accepting a
+ * previous invite and then being invited again. In that case, prefer the most
+ * recent open invite so the app still routes the user through the invite modal.
+ *
+ * @param token current caller token used to identify the matching invite owner.
+ * @param project project detail or summary containing invite records.
+ * @returns the matching invite record that best represents the caller's state.
+ */
 export function checkIsUserInvitedToProject(
     token: string,
     project: Project,
 ): ProjectInvite | undefined {
     const tokenData = getTokenData(token)
-    const normalizedUserId = normalizeUserId(tokenData.userId)
     const invites = Array.isArray(project.invites)
         ? project.invites
         : []
 
-    return invites.find(invite => {
-        const inviteUserId = normalizeUserId(invite.userId)
-        const inviteEmail = normalizeValue(invite.email)
-        const inviteHandle = normalizeValue(invite.handle)
+    const matchedInvite: ProjectInviteMatchState = {
+        index: -1,
+        isOpen: false,
+        timestamp: Number.NEGATIVE_INFINITY,
+    }
 
-        return (
-            (!!normalizedUserId && inviteUserId === normalizedUserId)
-            || (!!tokenData.email && inviteEmail === normalizeValue(tokenData.email))
-            || (!!tokenData.handle && inviteHandle === normalizeValue(tokenData.handle))
-        )
+    invites.forEach((invite, index) => {
+        if (!isMatchingProjectInvite(invite, tokenData)) {
+            return
+        }
+
+        const nextMatch: ProjectInviteMatchState = {
+            index,
+            invite,
+            isOpen: !normalizeValue(invite.status)
+                || OPEN_PROJECT_INVITE_STATUSES.has(normalizeValue(invite.status)),
+            timestamp: getProjectInviteTimestamp(invite),
+        }
+
+        if (!shouldReplaceProjectInviteMatch(matchedInvite, nextMatch)) {
+            return
+        }
+
+        matchedInvite.invite = invite
+        matchedInvite.index = index
+        matchedInvite.isOpen = nextMatch.isOpen
+        matchedInvite.timestamp = nextMatch.timestamp
     })
+
+    return matchedInvite.invite
 }
 
 export function getResourceRoleByName(resourceRoles: ResourceRole[], name: string): ResourceRole | undefined {
