@@ -433,7 +433,14 @@ jest.mock('./ReviewCostField', () => ({
     ReviewCostField: () => <></>,
 }))
 jest.mock('./ReviewersField', () => ({
-    ReviewersField: () => <></>,
+    ReviewersField: (props: { isReadOnly?: boolean }) => (
+        <div
+            data-read-only={props.isReadOnly === true ? 'true' : 'false'}
+            data-testid='reviewers-field'
+        >
+            Reviewers Field
+        </div>
+    ),
 }))
 jest.mock('./ReviewTypeField', () => ({
     ReviewTypeField: () => <></>,
@@ -1020,6 +1027,11 @@ describe('ChallengeEditorForm', () => {
             .toBeGreaterThan(submissionSettingsIndex)
         expect(attachmentsIndex)
             .toBeGreaterThan(reviewIndex)
+        expect(screen.getByTestId('reviewers-field'))
+            .toHaveAttribute('data-read-only', 'true')
+        expect(screen.getByTestId('reviewers-field')
+            .closest('fieldset[disabled]'))
+            .toBeNull()
     })
 
     it('does not delete manual iterative reviewer resources when saving a first2finish draft', async () => {
