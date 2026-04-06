@@ -492,7 +492,7 @@ describe('EngagementEditorForm', () => {
         })
     })
 
-    it('redirects to the created engagement details page for the saved parent project', async () => {
+    it('redirects to the saved parent project engagements list after creating an engagement', async () => {
         const user = userEvent.setup()
 
         mockedCreateEngagement.mockResolvedValue({
@@ -545,6 +545,83 @@ describe('EngagementEditorForm', () => {
             .toHaveBeenCalledWith('Engagement created successfully')
 
         expect(mockNavigate)
-            .toHaveBeenCalledWith('/work/projects/456/engagements/engagement-2')
+            .toHaveBeenCalledWith('/work/projects/456/engagements')
+    })
+
+    it('redirects to the project engagements list after editing an engagement', async () => {
+        const user = userEvent.setup()
+
+        mockedUpdateEngagement.mockResolvedValue({
+            anticipatedStart: 'Immediate',
+            assignedMemberHandles: [],
+            assignments: [],
+            compensationRange: '',
+            countries: ['US'],
+            createdAt: '',
+            description: 'Updated engagement description',
+            durationWeeks: 4,
+            id: 'engagement-1',
+            isPrivate: false,
+            projectId: '123',
+            requiredMemberCount: 1,
+            role: 'SOFTWARE_DEVELOPER',
+            skills: [
+                {
+                    id: 'skill-1',
+                    name: 'React',
+                },
+            ],
+            status: 'Open',
+            timezones: ['America/New_York'],
+            title: 'Updated engagement',
+            updatedAt: '',
+            workload: 'FULL_TIME',
+        } as any)
+
+        render(
+            <MemoryRouter>
+                <EngagementEditorForm
+                    engagement={{
+                        anticipatedStart: 'Immediate',
+                        countries: ['US'],
+                        description: 'Original engagement description',
+                        durationWeeks: 4,
+                        id: 'engagement-1',
+                        isPrivate: false,
+                        projectId: '123',
+                        role: 'SOFTWARE_DEVELOPER',
+                        skills: [
+                            {
+                                id: 'skill-1',
+                                name: 'React',
+                            },
+                        ],
+                        status: 'Open',
+                        timezones: ['America/New_York'],
+                        title: 'Original engagement',
+                        workload: 'FULL_TIME',
+                    } as any}
+                    isEditMode
+                    projectId='123'
+                />
+            </MemoryRouter>,
+        )
+
+        const titleField = screen.getByLabelText('Title')
+
+        await user.clear(titleField)
+        await user.type(titleField, 'Updated engagement')
+        await user.click(screen.getByRole('button', { name: 'Save Engagement' }))
+
+        await waitFor(() => {
+            expect(mockedUpdateEngagement)
+                .toHaveBeenCalled()
+        })
+
+        expect(mockedShowSuccessToast)
+            .toHaveBeenCalledWith('Engagement saved successfully')
+
+        expect(mockNavigate)
+            .toHaveBeenCalledWith('/work/projects/123/engagements')
     })
 })

@@ -4,6 +4,7 @@ import {
     useCallback,
     useEffect,
     useMemo,
+    useRef,
     useState,
 } from 'react'
 import {
@@ -77,6 +78,35 @@ const APPEAL_PHASE_KEYS = new Set([
     'appeals',
     'appealsresponse',
 ])
+const REVIEW_OPPORTUNITY_TYPES = {
+    COMPONENT_DEV_REVIEW: 'COMPONENT_DEV_REVIEW',
+    ITERATIVE_REVIEW: 'ITERATIVE_REVIEW',
+    REGULAR_REVIEW: 'REGULAR_REVIEW',
+    SCENARIOS_REVIEW: 'SCENARIOS_REVIEW',
+    SPEC_REVIEW: 'SPEC_REVIEW',
+} as const
+const REVIEW_OPPORTUNITY_OPTIONS: FormSelectOption[] = [
+    {
+        label: 'Regular Review',
+        value: REVIEW_OPPORTUNITY_TYPES.REGULAR_REVIEW,
+    },
+    {
+        label: 'Component Dev Review',
+        value: REVIEW_OPPORTUNITY_TYPES.COMPONENT_DEV_REVIEW,
+    },
+    {
+        label: 'Spec Review',
+        value: REVIEW_OPPORTUNITY_TYPES.SPEC_REVIEW,
+    },
+    {
+        label: 'Iterative Review',
+        value: REVIEW_OPPORTUNITY_TYPES.ITERATIVE_REVIEW,
+    },
+    {
+        label: 'Scenarios Review',
+        value: REVIEW_OPPORTUNITY_TYPES.SCENARIOS_REVIEW,
+    },
+]
 
 function toNumber(value: unknown): number {
     const parsed = Number(value)
@@ -366,6 +396,12 @@ function mapDefaultReviewerToReviewer(
         shouldOpenOpportunity: memberReview
             ? (defaultReviewer?.shouldOpenOpportunity ?? false)
             : undefined,
+        type: memberReview
+            ? (
+                normalizeText(defaultReviewer?.opportunityType)
+                || REVIEW_OPPORTUNITY_TYPES.REGULAR_REVIEW
+            )
+            : undefined,
     }
 }
 
@@ -379,6 +415,26 @@ function getSelectValue(selected: unknown): string {
     return typeof optionValue === 'string'
         ? optionValue
         : ''
+}
+
+/**
+ * Maps the stored reviewer type value to the matching select option while
+ * defaulting legacy reviewer rows to `Regular Review` when the field is absent.
+ *
+ * @param value current form value for the reviewer type field.
+ * @param options available reviewer type select options.
+ * @returns the matching select option, or `undefined` when no option matches.
+ * @remarks Used by `HumanReviewTab` to keep manual reviewer cards aligned with
+ * the legacy work manager UI.
+ */
+function getReviewTypeFieldValue(
+    value: unknown,
+    options: FormSelectOption[],
+): FormSelectOption | undefined {
+    const selectedValue = normalizeText(value)
+        || REVIEW_OPPORTUNITY_TYPES.REGULAR_REVIEW
+
+    return options.find(option => option.value === selectedValue)
 }
 
 function getErrorMessage(error: unknown, fallbackMessage: string): string {
@@ -455,8 +511,10 @@ export const HumanReviewTab: FC = () => {
 
     const [defaultReviewers, setDefaultReviewers] = useState<DefaultReviewer[]>([])
     const [scorecards, setScorecards] = useState<Scorecard[]>([])
-    const [isScorecardsLoading, setIsScorecardsLoading] = useState<boolean>(false)
+    // Keep existing selections intact until the first scorecard fetch resolves.
+    const [isScorecardsLoading, setIsScorecardsLoading] = useState<boolean>(true)
     const [loadError, setLoadError] = useState<string | undefined>()
+    const validatedScorecardSelectionsRef = useRef<Record<string, string>>({})
 
     const challengeId = useWatch({
         control: formContext.control,
@@ -799,19 +857,40 @@ export const HumanReviewTab: FC = () => {
                 return
             }
 
+            const scorecardFieldName = `reviewers.${fieldIndex}.scorecardId`
             const selectedScorecardId = normalizeText(reviewer.scorecardId)
             if (!selectedScorecardId) {
+                delete validatedScorecardSelectionsRef.current[scorecardFieldName]
                 return
             }
 
             const hasSelectedScorecard = getAvailableScorecardsForReviewer(reviewer)
                 .some(scorecard => normalizeText(scorecard.id) === selectedScorecardId)
             if (hasSelectedScorecard) {
+                formContext.clearErrors(scorecardFieldName as any)
+
+                if (validatedScorecardSelectionsRef.current[scorecardFieldName] === selectedScorecardId) {
+                    return
+                }
+
+                validatedScorecardSelectionsRef.current[scorecardFieldName] = selectedScorecardId
+
+                // Mirror the manual re-selection path so stale scorecard validation clears.
+                formContext.setValue(
+                    scorecardFieldName as any,
+                    selectedScorecardId,
+                    {
+                        shouldDirty: false,
+                        shouldValidate: true,
+                    },
+                )
+
                 return
             }
 
+            delete validatedScorecardSelectionsRef.current[scorecardFieldName]
             formContext.setValue(
-                `reviewers.${fieldIndex}.scorecardId` as any,
+                scorecardFieldName as any,
                 undefined,
                 {
                     shouldDirty: false,
@@ -1420,6 +1499,13 @@ export const HumanReviewTab: FC = () => {
                                         name={`${reviewerPrefix}.memberReviewerCount`}
                                         sanitize={sanitizeIntegerValue}
                                         type='number'
+                                    />
+                                    <FormSelectField
+                                        className={styles.memberReviewTypeField}
+                                        fromFieldValue={getReviewTypeFieldValue}
+                                        label='Review Type'
+                                        name={`${reviewerPrefix}.type`}
+                                        options={REVIEW_OPPORTUNITY_OPTIONS}
                                     />
                                     <PublicOpportunityCheckboxField
                                         name={`${reviewerPrefix}.shouldOpenOpportunity`}

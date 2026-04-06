@@ -662,6 +662,7 @@ function normalizeReviewers(reviewers: unknown): ChallengeReviewer[] | undefined
             shouldOpenOpportunity: typeof reviewer.shouldOpenOpportunity === 'boolean'
                 ? reviewer.shouldOpenOpportunity
                 : undefined,
+            type: normalizeOptionalString(reviewer.type),
         }))
 }
 

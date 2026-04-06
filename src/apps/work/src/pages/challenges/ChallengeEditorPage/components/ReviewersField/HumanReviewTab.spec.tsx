@@ -1,5 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
 import {
+    act,
     fireEvent,
     render,
     screen,
@@ -8,6 +9,9 @@ import {
 } from '@testing-library/react'
 import type {
     ChangeEvent,
+} from 'react'
+import {
+    useEffect,
 } from 'react'
 import {
     FormProvider,
@@ -59,6 +63,8 @@ jest.mock('../../../../../lib/components/form', () => ({
         const selectedValue = typeof controller.field.value === 'string'
             ? controller.field.value
             : ''
+        const errorMessage = controller.fieldState.error?.message
+
         function handleChange(event: ChangeEvent<HTMLSelectElement>): void {
             const nextSelected = (props.options || [])
                 .find(option => option.value === event.target.value)
@@ -91,6 +97,9 @@ jest.mock('../../../../../lib/components/form', () => ({
                             </option>
                         ))}
                 </select>
+                {errorMessage
+                    ? <div data-testid={`${props.name}-error`}>{errorMessage}</div>
+                    : undefined}
             </div>
         )
     },
@@ -165,14 +174,33 @@ const mockedUseFetchResources = useFetchResources as jest.Mock
 const mockedFetchDefaultReviewers = fetchDefaultReviewers as jest.Mock
 const mockedFetchScorecards = fetchScorecards as jest.Mock
 
+interface DeferredPromise<T> {
+    promise: Promise<T>
+    resolve: (value: T) => void
+}
+
 function createPendingPromise(): Promise<never> {
     return new Promise(() => {
         // Intentionally unresolved to avoid async state updates in this layout test.
     })
 }
 
+function createDeferredPromise<T>(): DeferredPromise<T> {
+    let resolve: (value: T) => void = () => undefined
+
+    const promise = new Promise<T>(nextResolve => {
+        resolve = nextResolve
+    })
+
+    return {
+        promise,
+        resolve,
+    }
+}
+
 interface TestHarnessProps {
     defaultValues?: Partial<ChallengeEditorFormData>
+    initialScorecardErrorMessage?: string
     showMemberValue?: boolean
     showScorecardValue?: boolean
 }
@@ -228,6 +256,20 @@ const TestHarness = (props: TestHarnessProps): JSX.Element => {
             ...props.defaultValues,
         },
     })
+
+    useEffect(() => {
+        if (!props.initialScorecardErrorMessage) {
+            return
+        }
+
+        formMethods.setError('reviewers.0.scorecardId', {
+            message: props.initialScorecardErrorMessage,
+            type: 'manual',
+        })
+    }, [
+        formMethods,
+        props.initialScorecardErrorMessage,
+    ])
 
     return (
         <FormProvider {...formMethods}>
@@ -311,6 +353,21 @@ describe('HumanReviewTab', () => {
             .not.toBeNull()
         expect(screen.queryByRole('button', { name: 'Apply default reviewers' }))
             .toBeNull()
+    })
+
+    it('renders the legacy review type dropdown on manual reviewer cards', () => {
+        render(<TestHarness />)
+
+        expect(screen.getByTestId('reviewers.0.type'))
+            .not.toBeNull()
+        expect(getPhaseOptionLabels('reviewers.0.type'))
+            .toEqual([
+                'Regular Review',
+                'Component Dev Review',
+                'Spec Review',
+                'Iterative Review',
+                'Scenarios Review',
+            ])
     })
 
     it('restores iterative reviewer member ids from the iterative review role alias', async () => {
@@ -444,6 +501,31 @@ describe('HumanReviewTab', () => {
                 screen.getByRole('checkbox', { name: 'Open public review opportunity' }) as HTMLInputElement
             ).checked)
                 .toBe(true)
+        })
+    })
+
+    it('defaults new manual reviewer cards to regular review type', async () => {
+        mockedFetchScorecards.mockResolvedValue([])
+
+        render(
+            <TestHarness
+                defaultValues={{
+                    reviewers: [],
+                }}
+            />,
+        )
+
+        await waitFor(() => {
+            expect((screen.getByRole('button', { name: 'Add reviewer' }) as HTMLButtonElement).disabled)
+                .toBe(false)
+        })
+
+        fireEvent.click(screen.getByRole('button', { name: 'Add reviewer' }))
+
+        await waitFor(() => {
+            expect(screen.getByTestId('reviewers.0.type')
+                .getAttribute('data-value'))
+                .toBe('REGULAR_REVIEW')
         })
     })
 
@@ -673,5 +755,59 @@ describe('HumanReviewTab', () => {
             expect(screen.getByTestId('scorecard-id-value').textContent)
                 .toBe('')
         })
+    })
+
+    it('clears a stale scorecard validation error when the selected scorecard is valid', async () => {
+        const scorecardsRequest = createDeferredPromise<Array<{
+            id: string
+            name: string
+            phaseId?: string
+        }>>()
+        mockedFetchScorecards.mockImplementation(() => scorecardsRequest.promise)
+
+        render(
+            <TestHarness
+                defaultValues={{
+                    reviewers: [
+                        {
+                            additionalMemberIds: [],
+                            isMemberReview: true,
+                            memberReviewerCount: 1,
+                            phaseId: 'phase-1',
+                            roleId: 'role-1',
+                            scorecardId: 'scorecard-1',
+                        },
+                    ],
+                }}
+                initialScorecardErrorMessage='Scorecard is required for member reviewer type'
+                showScorecardValue
+            />,
+        )
+
+        await waitFor(() => {
+            expect(mockedFetchScorecards)
+                .toHaveBeenCalled()
+        })
+        expect(screen.getByTestId('reviewers.0.scorecardId-error').textContent)
+            .toBe('Scorecard is required for member reviewer type')
+        expect(screen.getByTestId('scorecard-id-value').textContent)
+            .toBe('scorecard-1')
+
+        await act(async () => {
+            scorecardsRequest.resolve([
+                {
+                    id: 'scorecard-1',
+                    name: 'Scorecard 1',
+                    phaseId: 'phase-1',
+                },
+            ])
+        })
+
+        await waitFor(() => {
+            expect(screen.queryByTestId('reviewers.0.scorecardId-error'))
+                .toBeNull()
+        })
+        expect(screen.getByTestId('scorecard-id-value').textContent)
+            .toBe('scorecard-1')
     })
 })

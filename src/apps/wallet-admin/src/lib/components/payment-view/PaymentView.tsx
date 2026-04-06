@@ -60,7 +60,7 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
         setIsPaymentDetailsLoading(true)
         setPaymentDetailsError(undefined)
 
-        fetchWinningPaymentDetails(props.payment.id)
+        fetchWinningPaymentDetails(props.payment)
             .then(details => {
                 if (!ignore) {
                     setPaymentDetails(details)

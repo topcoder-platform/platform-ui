@@ -52,6 +52,7 @@ import {
 } from '../../../lib/components'
 import {
     canCreateEngagement,
+    canViewAllEngagements,
     checkCanManageProject,
     checkTalentManager,
     extractErrorMessage,
@@ -68,6 +69,7 @@ import styles from './EngagementsListPage.module.scss'
 type SortOrder = 'asc' | 'desc'
 
 type EngagementSortField =
+    | 'createdAt'
     | 'anticipatedStart'
     | 'applications'
     | 'membersAssigned'
@@ -116,6 +118,10 @@ const columns: ColumnDefinition[] = [
 ]
 
 function getSortValue(engagement: Engagement, fieldName: EngagementSortField): number | string {
+    if (fieldName === 'createdAt') {
+        return engagement.createdAt || ''
+    }
+
     if (fieldName === 'anticipatedStart') {
         const orderMap: Record<string, number> = {
             FEW_DAYS: 2,
@@ -303,6 +309,9 @@ function renderEngagementRows(
     return engagements.map(engagement => {
         const applicationsCount = getApplicationsCount(engagement)
         const engagementProjectId = getEngagementProjectId(engagement, fallbackProjectId)
+        const engagementAssignmentsRoute = engagementProjectId && engagement.id
+            ? `/projects/${engagementProjectId}/engagements/${engagement.id}/assignments`
+            : undefined
         const projectName = getEngagementProjectName(
             engagement,
             projectNameLookup,
@@ -326,7 +335,23 @@ function renderEngagementRows(
                         )
                         : projectName}
                 </td>
-                <td className={styles.engagementTitle}>{engagement.title || '-'}</td>
+                <td className={styles.engagementTitle}>
+                    {engagementAssignmentsRoute
+                        ? (
+                            <Link
+                                className={styles.link}
+                                to={engagementAssignmentsRoute}
+                                state={assignmentsBackUrl
+                                    ? {
+                                        backUrl: assignmentsBackUrl,
+                                    }
+                                    : undefined}
+                            >
+                                {engagement.title || '-'}
+                            </Link>
+                        )
+                        : engagement.title || '-'}
+                </td>
                 <td>{engagement.isPrivate ? 'Private' : 'Public'}</td>
                 <td>{renderEngagementStatus(engagement.status)}</td>
                 <td>
@@ -394,9 +419,7 @@ export const EngagementsListPage: FC = () => {
 
     const isTalentManagerOnly = !contextValue.isAdmin
         && checkTalentManager(contextValue.userRoles)
-    const canViewProjectScopedEngagements = isAllEngagementsPage
-        || contextValue.isAdmin
-        || checkTalentManager(contextValue.userRoles)
+    const canViewEngagements = canViewAllEngagements(contextValue.userRoles)
     const canDelete = contextValue.isAdmin
     const canManage = canDelete || contextValue.isManager
     const canCreateProjectEngagement = canCreateEngagement(contextValue.userRoles)
@@ -409,10 +432,10 @@ export const EngagementsListPage: FC = () => {
     const [filters, setFilters] = useState<EngagementsListFilters>(() => ({
         projectName: undefined,
         sortBy: isAllEngagementsPage
-            ? 'anticipatedStart'
+            ? 'createdAt'
             : undefined,
         sortOrder: isAllEngagementsPage
-            ? 'asc'
+            ? 'desc'
             : undefined,
         status: undefined,
         title: undefined,
@@ -435,20 +458,20 @@ export const EngagementsListPage: FC = () => {
     )
 
     const requestFilters = useMemo<EngagementFilters>(() => ({
-        includePrivate: canManage && canViewProjectScopedEngagements,
+        includePrivate: canManage && canViewEngagements,
         projectId: isAllEngagementsPage ? undefined : projectId,
         projectIds: isAllEngagementsPage && isTalentManagerOnly
             ? scopedProjectIds
             : undefined,
         sortBy: isAllEngagementsPage
-            ? 'anticipatedStart'
+            ? 'createdAt'
             : undefined,
         sortOrder: isAllEngagementsPage
-            ? 'asc'
+            ? 'desc'
             : undefined,
         status: filters.status,
     }), [
-        canViewProjectScopedEngagements,
+        canViewEngagements,
         canManage,
         filters.status,
         isAllEngagementsPage,
@@ -461,17 +484,15 @@ export const EngagementsListPage: FC = () => {
         && memberProjectsResult.isLoading
 
     const engagementsResult = useFetchEngagements(
-        canViewProjectScopedEngagements ? projectId : undefined,
+        projectId,
         requestFilters,
         {
-            enabled: canViewProjectScopedEngagements
+            enabled: canViewEngagements
                 && (isAllEngagementsPage || !!projectId)
                 && !isScopedProjectsLoading,
         },
     )
-    const projectResult = useFetchProject(
-        canViewProjectScopedEngagements ? projectId : undefined,
-    )
+    const projectResult = useFetchProject(projectId)
 
     const projectNameLookup = useMemo<Record<string, string>>(() => {
         const lookup: Record<string, string> = {}
@@ -752,17 +773,21 @@ export const EngagementsListPage: FC = () => {
             />
         )
         : undefined
+    const accessDeniedMessage = isAllEngagementsPage
+        ? 'You need Admin or Talent Manager role to view all engagements.'
+        : 'You need Admin or Talent Manager role to view engagements.'
 
-    if (!canViewProjectScopedEngagements) {
+    if (!canViewEngagements) {
         return (
             <PageWrapper
-                pageTitle='Engagements'
+                pageTitle={pageTitle}
                 breadCrumb={[]}
+                rightHeader={createEngagementAction}
+                titleAction={titleAction}
             >
+                {billingAccountExpiredNotice}
                 {projectTabs}
-                <div className={styles.container}>
-                    <ErrorMessage message='You need Admin or Talent Manager role to view engagements.' />
-                </div>
+                <ErrorMessage message={accessDeniedMessage} />
             </PageWrapper>
         )
     }

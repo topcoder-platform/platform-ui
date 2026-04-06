@@ -61,6 +61,16 @@ describe('permissions.utils project management helpers', () => {
             .toBe(false)
     })
 
+    it('allows project managers to edit projects when they have manager membership', () => {
+        expect(checkCanManageProject(['Project Manager'], '123', managedProject))
+            .toBe(true)
+    })
+
+    it('blocks project managers from editing projects without manager access', () => {
+        expect(checkCanManageProject(['Project Manager'], '456', managedProject))
+            .toBe(false)
+    })
+
     it('does not expand project-manager creation access beyond the work-manager change', () => {
         expect(checkCanManageProject(['Project Manager'], '123'))
             .toBe(false)

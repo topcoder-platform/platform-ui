@@ -26,6 +26,9 @@ const emptyValue = '—'
 type BulkMemberRow = {
     userId: number | null
     handle: string
+    firstName: string | null
+    lastName: string | null
+    contactNumber: string | null
     email: string | null
     country: string | null
 }
@@ -133,6 +136,24 @@ export const BulkMemberLookupPage: FC = () => {
             label: 'Handle',
             propertyName: 'handle',
             type: 'text',
+        },
+        {
+            label: 'First Name',
+            propertyName: 'firstName',
+            renderer: data => <>{data.firstName ?? emptyValue}</>,
+            type: 'element',
+        },
+        {
+            label: 'Last Name',
+            propertyName: 'lastName',
+            renderer: data => <>{data.lastName ?? emptyValue}</>,
+            type: 'element',
+        },
+        {
+            label: 'Contact Number',
+            propertyName: 'contactNumber',
+            renderer: data => <>{data.contactNumber ?? emptyValue}</>,
+            type: 'element',
         },
         {
             label: 'Email',

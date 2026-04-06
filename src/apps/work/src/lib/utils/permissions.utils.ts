@@ -162,13 +162,13 @@ export function canEditTaasProject(userRoles: string[]): boolean {
 }
 
 /**
- * Returns whether the supplied user roles can access the common all-engagements view.
+ * Returns whether the supplied user roles can access work-app engagement management pages.
  *
- * This root work-app page is intended for admins and Talent Managers only.
- * Project managers still use project-scoped engagement pages.
+ * Both the all-engagements page and project-scoped engagement pages are limited
+ * to admins and Talent Managers.
  *
  * @param userRoles caller roles from the decoded auth token or app context.
- * @returns `true` when the caller can open the all-engagements page; otherwise `false`.
+ * @returns `true` when the caller can open engagement management pages; otherwise `false`.
  */
 export function canViewAllEngagements(userRoles: string[]): boolean {
     return hasAdminRole(userRoles) || checkTalentManager(userRoles)
@@ -264,9 +264,9 @@ export function checkProjectMembership(
 /**
  * Returns whether the caller can manage project ownership and billing flows.
  *
- * Admins always qualify. Copilots and Talent Managers can create projects and
- * can manage an existing project when they hold a manager or copilot
- * membership on that project.
+ * Admins always qualify. Copilots and Talent Managers can create projects.
+ * When a project context is provided, Project Managers may also manage that
+ * existing project when they hold a manager or copilot membership on it.
  *
  * @param userRoles caller roles from the decoded auth token or app context.
  * @param userId logged-in user identifier used for project membership checks.
@@ -282,12 +282,12 @@ export function checkCanManageProject(
         return true
     }
 
-    if (!hasCopilotRole(userRoles) && !checkTalentManager(userRoles)) {
-        return false
+    if (!project) {
+        return hasCopilotRole(userRoles) || checkTalentManager(userRoles)
     }
 
-    if (!project) {
-        return true
+    if (!hasCopilotRole(userRoles) && !hasManagerRole(userRoles)) {
+        return false
     }
 
     const normalizedRole = normalizeValue(getProjectMemberByUserId(project, userId)?.role)

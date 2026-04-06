@@ -9,6 +9,8 @@ import {
 import { useFormContext } from 'react-hook-form'
 import classNames from 'classnames'
 
+import { Button } from '~/libs/ui'
+
 import {
     StartDateTimeInput,
 } from '../../../../../lib/components/form'
@@ -27,6 +29,7 @@ import { PhaseEditorRow } from '../PhaseEditorRow'
 import {
     isAiReviewer,
 } from '../ReviewersField/reviewers-field.utils'
+import { TimelineVisualization } from '../TimelineVisualization'
 
 import {
     buildSchedulePhaseRows,
@@ -91,7 +94,10 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
         [hasAiReviewers, phases],
     )
     const isSectionDisabled = !!props.disabled
+    const showViewToggle = isSectionDisabled
+    const isViewToggleDisabled = !phases.length
 
+    const [isGanttView, setIsGanttView] = useState<boolean>(false)
     const [startDateMode, setStartDateMode] = useState<StartDateMode>(() => (
         startDate
             ? START_DATE_MODE.SCHEDULED
@@ -453,6 +459,13 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
         },
         [handleStartDateModeChange],
     )
+    const handleToggleView = useCallback((): void => {
+        if (isViewToggleDisabled) {
+            return
+        }
+
+        setIsGanttView(previousValue => !previousValue)
+    }, [isViewToggleDisabled])
 
     return (
         <section className={styles.container}>
@@ -538,52 +551,73 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
 
             <div className={styles.header}>
                 <h4 className={styles.title}>Challenge Schedule</h4>
+                {showViewToggle
+                    ? (
+                        <Button
+                            disabled={isViewToggleDisabled}
+                            label={isGanttView ? 'Switch to Editor View' : 'Switch to Gantt View'}
+                            onClick={handleToggleView}
+                            secondary
+                            size='lg'
+                        />
+                    )
+                    : undefined}
             </div>
 
-            <div className={styles.phaseList}>
-                {scheduleRows.length
-                    ? scheduleRows.map(row => {
-                        if (row.isVirtual) {
-                            return (
-                                <PhaseEditorRow
-                                    disabled
-                                    index={row.actualIndex}
-                                    isVirtual
-                                    key={row.key}
-                                    onDurationChange={noopVirtualPhaseChange}
-                                    onEndDateChange={noopVirtualPhaseChange}
-                                    onStartDateChange={noopVirtualPhaseChange}
-                                    phase={row.phase}
-                                />
-                            )
-                        }
+            {isGanttView
+                ? (
+                    <TimelineVisualization
+                        challengePhases={challengePhaseResult.challengePhases}
+                        phases={phases}
+                        startDate={startDate}
+                    />
+                )
+                : (
+                    <div className={styles.phaseList}>
+                        {scheduleRows.length
+                            ? scheduleRows.map(row => {
+                                if (row.isVirtual) {
+                                    return (
+                                        <PhaseEditorRow
+                                            disabled
+                                            index={row.actualIndex}
+                                            isVirtual
+                                            key={row.key}
+                                            onDurationChange={noopVirtualPhaseChange}
+                                            onEndDateChange={noopVirtualPhaseChange}
+                                            onStartDateChange={noopVirtualPhaseChange}
+                                            phase={row.phase}
+                                        />
+                                    )
+                                }
 
-                        const phase = row.phase
-                        const index = row.actualIndex
-                        const phaseStartDate = toDate(phase.scheduledStartDate)
+                                const phase = row.phase
+                                const index = row.actualIndex
+                                const phaseStartDate = toDate(phase.scheduledStartDate)
 
-                        return (
-                            <PhaseEditorRow
-                                disabled={isSectionDisabled}
-                                endDate={phase.scheduledEndDate}
-                                endDateError={phaseEndDateErrors[getPhaseKey(phase, index)]}
-                                index={index}
-                                isStartDateEditable={editablePhaseStartDateKeys.has(
-                                    getPhaseKey(phase, index),
-                                )}
-                                key={phase.id || phase.phaseId || `${index}`}
-                                minEndDate={phaseStartDate || minScheduleDate}
-                                minStartDate={minScheduleDate}
-                                onDurationChange={handleDurationChange}
-                                onEndDateChange={handlePhaseEndDateChange}
-                                onStartDateChange={handlePhaseStartDateChange}
-                                phase={phase}
-                                startDate={phase.scheduledStartDate}
-                            />
-                        )
-                    })
-                    : <p className={styles.emptyText}>No schedule phases available.</p>}
-            </div>
+                                return (
+                                    <PhaseEditorRow
+                                        disabled={isSectionDisabled}
+                                        endDate={phase.scheduledEndDate}
+                                        endDateError={phaseEndDateErrors[getPhaseKey(phase, index)]}
+                                        index={index}
+                                        isStartDateEditable={editablePhaseStartDateKeys.has(
+                                            getPhaseKey(phase, index),
+                                        )}
+                                        key={phase.id || phase.phaseId || `${index}`}
+                                        minEndDate={phaseStartDate || minScheduleDate}
+                                        minStartDate={minScheduleDate}
+                                        onDurationChange={handleDurationChange}
+                                        onEndDateChange={handlePhaseEndDateChange}
+                                        onStartDateChange={handlePhaseStartDateChange}
+                                        phase={phase}
+                                        startDate={phase.scheduledStartDate}
+                                    />
+                                )
+                            })
+                            : <p className={styles.emptyText}>No schedule phases available.</p>}
+                    </div>
+                )}
 
             {calculationError
                 ? (

@@ -19,6 +19,7 @@ import {
 import { deleteEngagement } from '../../../lib/services'
 import {
     canCreateEngagement,
+    canViewAllEngagements,
     checkTalentManager,
     formatEngagementStatus,
     showErrorToast,
@@ -157,6 +158,9 @@ jest.mock('../../../lib/services', () => ({
 }))
 jest.mock('../../../lib/utils', () => ({
     canCreateEngagement: jest.fn(() => false),
+    canViewAllEngagements: jest.fn((roles: string[] = []) => (
+        roles.includes('administrator') || roles.includes('talent manager')
+    )),
     checkCanManageProject: jest.fn(() => false),
     checkTalentManager: jest.fn((roles: string[] = []) => roles.includes('talent manager')),
     extractErrorMessage: jest.fn(
@@ -175,6 +179,7 @@ const mockedUseFetchEngagements = useFetchEngagements as jest.Mock
 const mockedUseFetchProject = useFetchProject as jest.Mock
 const mockedUseFetchProjects = useFetchProjects as jest.Mock
 const mockedCanCreateEngagement = canCreateEngagement as jest.Mock
+const mockedCanViewAllEngagements = canViewAllEngagements as jest.Mock
 const mockedCheckTalentManager = checkTalentManager as jest.Mock
 const mockedFormatEngagementStatus = formatEngagementStatus as jest.Mock
 const mockedShowErrorToast = showErrorToast as jest.Mock
@@ -197,17 +202,6 @@ const defaultContextValue: WorkAppContextModel = {
     userRoles: ['administrator'],
 }
 
-const managerContextValue: WorkAppContextModel = {
-    ...defaultContextValue,
-    isAdmin: false,
-    isManager: true,
-    loginUserInfo: {
-        ...defaultContextValue.loginUserInfo,
-        roles: ['manager'],
-    } as WorkAppContextModel['loginUserInfo'],
-    userRoles: ['manager'],
-}
-
 const projectManagerContextValue: WorkAppContextModel = {
     ...defaultContextValue,
     isAdmin: false,
@@ -218,7 +212,6 @@ const projectManagerContextValue: WorkAppContextModel = {
     } as WorkAppContextModel['loginUserInfo'],
     userRoles: ['project manager'],
 }
-
 const talentManagerContextValue: WorkAppContextModel = {
     ...defaultContextValue,
     isAdmin: false,
@@ -228,6 +221,18 @@ const talentManagerContextValue: WorkAppContextModel = {
         roles: ['talent manager'],
     } as WorkAppContextModel['loginUserInfo'],
     userRoles: ['talent manager'],
+}
+
+const copilotContextValue: WorkAppContextModel = {
+    ...defaultContextValue,
+    isAdmin: false,
+    isCopilot: true,
+    isManager: false,
+    loginUserInfo: {
+        ...defaultContextValue.loginUserInfo,
+        roles: ['copilot'],
+    } as WorkAppContextModel['loginUserInfo'],
+    userRoles: ['copilot'],
 }
 
 const sampleEngagement = {
@@ -253,6 +258,24 @@ const sampleEngagement = {
     workload: 'FULL_TIME',
 }
 
+const olderEngagement = {
+    ...sampleEngagement,
+    anticipatedStart: 'IMMEDIATE',
+    createdAt: '2026-03-24T00:00:00.000Z',
+    id: 112,
+    title: 'Older engagement',
+    updatedAt: '2026-03-24T00:00:00.000Z',
+}
+
+const newerEngagement = {
+    ...sampleEngagement,
+    anticipatedStart: 'FEW_WEEKS',
+    createdAt: '2026-03-26T00:00:00.000Z',
+    id: 113,
+    title: 'Newer engagement',
+    updatedAt: '2026-03-26T00:00:00.000Z',
+}
+
 function renderPage(
     route: string,
     path: string,
@@ -275,6 +298,9 @@ describe('EngagementsListPage', () => {
     beforeEach(() => {
         jest.clearAllMocks()
 
+        mockedCanViewAllEngagements.mockImplementation((roles: string[] = []) => (
+            roles.includes('administrator') || roles.includes('talent manager')
+        ))
         mockedCheckTalentManager.mockImplementation((roles: string[] = []) => roles.includes('talent manager'))
         mockedUseFetchEngagements.mockReturnValue({
             engagements: [],
@@ -295,6 +321,42 @@ describe('EngagementsListPage', () => {
         })
         mockedDeleteEngagement.mockResolvedValue(undefined)
         mockedFormatEngagementStatus.mockImplementation((status?: string) => status || '')
+    })
+
+    it('blocks copilot users from opening project engagement routes directly', () => {
+        mockedUseFetchProject.mockReturnValue({
+            error: undefined,
+            isLoading: false,
+            project: {
+                id: 200,
+                name: 'Payment Testing',
+                status: 'active',
+            },
+        })
+
+        renderPage('/projects/200/engagements', '/projects/:projectId/engagements', copilotContextValue)
+
+        expect(screen.getByRole('heading', { level: 1, name: 'Payment Testing' }))
+            .toBeTruthy()
+        expect(screen.getByText('Project Tabs'))
+            .toBeTruthy()
+        expect(screen.getByText('You need Admin or Talent Manager role to view engagements.'))
+            .toBeTruthy()
+        expect(mockedUseFetchEngagements)
+            .toHaveBeenLastCalledWith(
+                '200',
+                {
+                    includePrivate: false,
+                    projectId: '200',
+                    projectIds: undefined,
+                    sortBy: undefined,
+                    sortOrder: undefined,
+                    status: undefined,
+                },
+                {
+                    enabled: false,
+                },
+            )
     })
 
     it('keeps the project name unchanged for project-scoped engagement tabs', () => {
@@ -378,8 +440,8 @@ describe('EngagementsListPage', () => {
                     {
                         includePrivate: true,
                         projectId: undefined,
-                        sortBy: 'anticipatedStart',
-                        sortOrder: 'asc',
+                        sortBy: 'createdAt',
+                        sortOrder: 'desc',
                         status: undefined,
                     },
                     {
@@ -411,6 +473,50 @@ describe('EngagementsListPage', () => {
         expect(screen.getByRole('link', { name: 'View' })
             .getAttribute('href'))
             .toBe('https://engagements.example.com/plJi6KV_jDjdtowUlQbFx')
+    })
+
+    it('links engagement titles to the assignees page on the all engagements route', () => {
+        mockedUseFetchEngagements.mockReturnValue({
+            engagements: [sampleEngagement],
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+        })
+
+        renderPage('/engagements', '/engagements')
+
+        expect(screen.getByRole('link', { name: sampleEngagement.title })
+            .getAttribute('href'))
+            .toBe('/projects/200/engagements/111/assignments')
+    })
+
+    it('links engagement titles to the assignees page on project engagement routes', () => {
+        mockedUseFetchProject.mockReturnValue({
+            error: undefined,
+            isLoading: false,
+            project: {
+                id: 200,
+                name: 'Payment Testing',
+                status: 'active',
+            },
+        })
+        mockedUseFetchEngagements.mockReturnValue({
+            engagements: [
+                {
+                    ...sampleEngagement,
+                    projectId: undefined,
+                },
+            ],
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+        })
+
+        renderPage('/projects/200/engagements', '/projects/:projectId/engagements')
+
+        expect(screen.getByRole('link', { name: sampleEngagement.title })
+            .getAttribute('href'))
+            .toBe('/projects/200/engagements/111/assignments')
     })
 
     it('scopes all-engagements fetches to member projects for talent managers', async () => {
@@ -445,8 +551,8 @@ describe('EngagementsListPage', () => {
                         includePrivate: true,
                         projectId: undefined,
                         projectIds: ['200', '300'],
-                        sortBy: 'anticipatedStart',
-                        sortOrder: 'asc',
+                        sortBy: 'createdAt',
+                        sortOrder: 'desc',
                         status: undefined,
                     },
                     {
@@ -475,8 +581,8 @@ describe('EngagementsListPage', () => {
                     includePrivate: true,
                     projectId: undefined,
                     projectIds: [],
-                    sortBy: 'anticipatedStart',
-                    sortOrder: 'asc',
+                    sortBy: 'createdAt',
+                    sortOrder: 'desc',
                     status: undefined,
                 },
                 {
@@ -503,7 +609,28 @@ describe('EngagementsListPage', () => {
             .toBeTruthy()
     })
 
-    it('does not render delete actions for non-admin managers', () => {
+    it('orders all engagements by newest created date first', () => {
+        mockedUseFetchEngagements.mockReturnValue({
+            engagements: [olderEngagement, newerEngagement],
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+        })
+
+        renderPage('/engagements', '/engagements')
+
+        const rows = screen.getAllByRole('row')
+            .slice(1)
+
+        expect(within(rows[0])
+            .getByText('Newer engagement'))
+            .toBeTruthy()
+        expect(within(rows[1])
+            .getByText('Older engagement'))
+            .toBeTruthy()
+    })
+
+    it('does not render delete actions for non-admin talent managers', () => {
         mockedUseFetchEngagements.mockReturnValue({
             engagements: [sampleEngagement],
             error: undefined,
@@ -511,7 +638,7 @@ describe('EngagementsListPage', () => {
             mutate: jest.fn(),
         })
 
-        renderPage('/engagements', '/engagements', managerContextValue)
+        renderPage('/engagements', '/engagements', talentManagerContextValue)
 
         const row = screen.getByText(sampleEngagement.title)
             .closest('tr') as HTMLTableRowElement
@@ -521,7 +648,16 @@ describe('EngagementsListPage', () => {
             .toBeNull()
     })
 
-    it('blocks project managers from project-scoped engagement pages', () => {
+    it('blocks project managers from opening project engagement routes directly', () => {
+        mockedUseFetchProject.mockReturnValue({
+            error: undefined,
+            isLoading: false,
+            project: {
+                id: 200,
+                name: 'Payment Testing',
+                status: 'active',
+            },
+        })
         mockedUseFetchEngagements.mockReturnValue({
             engagements: [sampleEngagement],
             error: undefined,
@@ -531,13 +667,17 @@ describe('EngagementsListPage', () => {
 
         renderPage('/projects/200/engagements', '/projects/:projectId/engagements', projectManagerContextValue)
 
+        expect(screen.getByRole('heading', { level: 1, name: 'Payment Testing' }))
+            .toBeTruthy()
+        expect(screen.getByText('Project Tabs'))
+            .toBeTruthy()
         expect(screen.getByText('You need Admin or Talent Manager role to view engagements.'))
             .toBeTruthy()
         expect(screen.queryByText(sampleEngagement.title))
             .toBeNull()
         expect(mockedUseFetchEngagements)
             .toHaveBeenLastCalledWith(
-                undefined,
+                '200',
                 {
                     includePrivate: false,
                     projectId: '200',
@@ -551,7 +691,7 @@ describe('EngagementsListPage', () => {
                 },
             )
         expect(mockedUseFetchProject)
-            .toHaveBeenCalledWith(undefined)
+            .toHaveBeenCalledWith('200')
     })
 
     it('deletes the selected engagement and refreshes the list', async () => {

@@ -25,6 +25,9 @@ jest.mock('~/libs/ui', () => ({
     }) => (props.open
         ? <div data-testid='create-group-modal'>{props.children}</div>
         : undefined),
+    IconOutline: {
+        PlusIcon: () => <svg data-testid='create-group-icon' />,
+    },
 }), { virtual: true })
 
 jest.mock('../../../../groups', () => ({

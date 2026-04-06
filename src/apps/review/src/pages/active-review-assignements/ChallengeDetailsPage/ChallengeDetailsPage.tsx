@@ -54,6 +54,7 @@ import {
     findPhaseByTabLabel,
     isAppealsPhase,
     isAppealsResponsePhase,
+    shouldAllowWinnersTabForPastChallenge,
     shouldForceWinnersTabForPastChallenge,
 } from '../../../lib/utils'
 import type { PhaseLike, PhaseOrderingOptions } from '../../../lib/utils'
@@ -770,19 +771,25 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
             challengeInfo.status,
             phaseOrderingOptions,
         )
-        const itemsWithWinnerFallback = shouldForceWinnersTabForPastChallenge(
-            challengeInfo.status,
-            challengeInfo.winners,
+        const itemsWithoutBlockedWinners = shouldAllowWinnersTabForPastChallenge(
+            challengeInfo,
+            approvalReviews,
         )
-            && !items.some(item => item.value === 'Winners')
+            ? items
+            : items.filter(item => item.value !== 'Winners')
+        const itemsWithWinnerFallback = shouldForceWinnersTabForPastChallenge(
+            challengeInfo,
+            approvalReviews,
+        )
+            && !itemsWithoutBlockedWinners.some(item => item.value === 'Winners')
             ? [
-                ...items,
+                ...itemsWithoutBlockedWinners,
                 {
                     label: 'Winners',
                     value: 'Winners',
                 },
             ]
-            : items
+            : itemsWithoutBlockedWinners
 
         // Only add indicators on active-challenges view
         if (isPastReviewDetail) {
@@ -962,6 +969,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         setTabItems(finalItems)
     }, [
         challengeInfo,
+        approvalReviews,
         actionChallengeRole,
         review,
         submitterReviews,
@@ -1175,6 +1183,12 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
             challengeInfo?.status,
             phaseOrderingOptions,
         )
+        const timelineItems = shouldAllowWinnersTabForPastChallenge(
+            challengeInfo,
+            approvalReviews,
+        )
+            ? baseItems
+            : baseItems.filter(item => item.value !== 'Winners')
         const seen = new Set<string>()
         const nowMs = Date.now()
 
@@ -1188,7 +1202,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         }
 
         const rows: ChallengeTimelineRow[] = []
-        baseItems.forEach(item => {
+        timelineItems.forEach(item => {
             const phase = findPhaseByTabLabel(
                 visibleChallengePhases,
                 item.value,
@@ -1233,7 +1247,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         })
 
         return rows
-    }, [challengeInfo, phaseOrderingOptions, visibleChallengePhases])
+    }, [approvalReviews, challengeInfo, phaseOrderingOptions, visibleChallengePhases])
 
     const setPhaseActionLoading = useCallback((phaseId: string, loading: boolean) => {
         setPhaseActionLoadingMap(prev => ({

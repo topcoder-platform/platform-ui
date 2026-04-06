@@ -1,39 +1,63 @@
 @import '@libs/ui/styles/includes';
 
 .container {
-    align-items: flex-end;
     display: flex;
+    flex-direction: column;
     gap: 12px;
 }
 
 .selectField {
+    display: flex;
     flex: 1 1 auto;
+    flex-direction: column;
+    gap: 8px;
     min-width: 0;
+    width: 100%;
 }
 
-.createGroupLink {
-    background: none;
-    border: 0;
-    color: $link-blue-dark;
-    cursor: pointer;
+.fieldHeader {
+    align-items: center;
+    display: flex;
+    gap: 12px;
+    justify-content: space-between;
+}
+
+.fieldLabel {
+    color: $black-80;
     font-size: 14px;
     font-weight: 700;
     line-height: 20px;
+}
+
+.createGroupButton {
+    align-items: center;
+    background: transparent;
+    border: 1px solid $link-blue-dark;
+    border-radius: 9999px;
+    color: $link-blue-dark;
+    cursor: pointer;
+    display: inline-flex;
+    flex: 0 0 auto;
+    height: 20px;
+    justify-content: center;
     padding: 0;
-    text-decoration: none;
-    white-space: nowrap;
+    width: 20px;
+
+    svg {
+        height: 12px;
+        width: 12px;
+    }
 
     &:hover,
     &:focus {
+        background-color: rgba(42, 98, 213, 0.08);
         color: #2a62d5;
         outline: none;
-        text-decoration: underline;
     }
 }
 
 @media (max-width: 767px) {
     .container {
-        align-items: stretch;
-        flex-direction: column;
+        gap: 8px;
     }
 }

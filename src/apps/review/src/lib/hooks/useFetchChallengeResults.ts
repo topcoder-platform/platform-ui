@@ -16,16 +16,18 @@ import {
     ChallengeDetailContextModel,
     ChallengeWinner,
     convertBackendReviewToReviewResult,
+    convertBackendSubmissionToSubmissionInfo,
     ProjectResult,
     ReviewResult,
     SubmissionInfo,
 } from '../models'
-import { fetchAllChallengeReviews } from '../services'
+import { fetchAllChallengeReviews, fetchAllSubmissions } from '../services'
 import { ChallengeDetailContext } from '../contexts'
 import { PAST_CHALLENGE_STATUSES } from '../utils/challengeStatus'
 import {
     isContestSubmissionType,
 } from '../constants'
+import { submissionMatchesWinner } from '../utils/winnerMatching'
 
 type ResourceMemberMapping = ChallengeDetailContextModel['resourceMemberIdMapping']
 
@@ -136,9 +138,12 @@ const buildProjectResult = ({
 }: BuildProjectResultParams): ProjectResult | undefined => {
     const memberId = `${winner.userId}`
 
-    // Find all submissions for this member
-    const memberSubmissions = submissions.filter(s => s.memberId === memberId)
-    const contestSubmissions = memberSubmissions.filter(
+    // Prefer exact member matches, then fall back to legacy winner identifiers.
+    const exactMemberSubmissions = submissions.filter(s => s.memberId === memberId)
+    const matchingSubmissions = exactMemberSubmissions.length
+        ? exactMemberSubmissions
+        : submissions.filter(submission => submissionMatchesWinner(submission, winner))
+    const contestSubmissions = matchingSubmissions.filter(
         submission => isContestSubmissionType(
             submission.type,
             { defaultToContest: true },
@@ -148,7 +153,7 @@ const buildProjectResult = ({
     // Prefer contest submissions; fall back to everything so we still display something if data is inconsistent
     const submissionsToEvaluate = contestSubmissions.length
         ? contestSubmissions
-        : memberSubmissions
+        : matchingSubmissions
 
     if (!submissionsToEvaluate.length) {
         return undefined
@@ -277,7 +282,28 @@ export function useFetchChallengeResults(
             : false),
         [normalizedStatus],
     )
+    const {
+        data: winnerSubmissions,
+        error: winnerSubmissionsError,
+        isValidating: isLoadingWinnerSubmissions,
+    }: SWRResponse<SubmissionInfo[], Error> = useSWR<
+        SubmissionInfo[],
+        Error
+    >(
+        shouldFetchReviews
+            ? `reviewBaseUrl/challengeWinnerSubmissions/${challengeUuid}`
+            : undefined,
+        async () => {
+            const allSubmissions = await fetchAllSubmissions(challengeUuid, 100)
+            return allSubmissions.map(item => convertBackendSubmissionToSubmissionInfo(item))
+        },
+    )
+
     const submissionSource = useMemo<SubmissionInfo[]>(() => {
+        if (winnerSubmissions?.length) {
+            return winnerSubmissions
+        }
+
         if (isPastChallengeStatus && (challengeInfo?.submissions?.length ?? 0) > 0) {
             return challengeInfo?.submissions ?? submissions
         }
@@ -287,6 +313,7 @@ export function useFetchChallengeResults(
         challengeInfo?.submissions,
         isPastChallengeStatus,
         submissions,
+        winnerSubmissions,
     ])
 
     // Use swr hooks for challenge reviews fetching when winners are available
@@ -309,6 +336,12 @@ export function useFetchChallengeResults(
             handleError(error)
         }
     }, [error])
+
+    useEffect(() => {
+        if (winnerSubmissionsError) {
+            handleError(winnerSubmissionsError)
+        }
+    }, [winnerSubmissionsError])
 
     const reviewsBySubmissionId = useMemo(() => {
         const result = new Map<string, ReviewResult[]>()
@@ -358,7 +391,7 @@ export function useFetchChallengeResults(
     ])
 
     return {
-        isLoading: shouldFetchReviews ? isLoadingReviews : false,
+        isLoading: shouldFetchReviews ? (isLoadingReviews || isLoadingWinnerSubmissions) : false,
         projectResults,
     }
 }
