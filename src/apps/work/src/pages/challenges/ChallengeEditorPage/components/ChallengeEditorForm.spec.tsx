@@ -836,6 +836,21 @@ describe('ChallengeEditorForm', () => {
             }))
     })
 
+    it('defaults the standard term for created challenges outside edit and view mode', () => {
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm challenge={draftChallenge} />
+            </MemoryRouter>,
+        )
+
+        expect(mockedTermsField)
+            .toHaveBeenCalled()
+        expect(mockedTermsField.mock.calls[mockedTermsField.mock.calls.length - 1][0])
+            .toEqual(expect.objectContaining({
+                shouldDefaultStandardTerm: true,
+            }))
+    })
+
     it('preserves project billing markup when fetched draft data resets the form', async () => {
         mockedUseFetchProjectBillingAccount.mockReturnValue({
             billingAccount: {

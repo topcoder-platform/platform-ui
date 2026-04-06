@@ -2414,7 +2414,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                         )
                                         : undefined}
                                     <GroupsField />
-                                    <TermsField shouldDefaultStandardTerm={!isChallengeCreated} />
+                                    <TermsField shouldDefaultStandardTerm={!isEditMode && !isReadOnly} />
                                     <NDAField />
                                     <FormCheckboxField
                                         checkboxOnlyHitArea
