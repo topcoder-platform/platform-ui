@@ -9,6 +9,7 @@ import {
 import { FormProvider, useForm } from 'react-hook-form'
 import {
     Link,
+    useLocation,
     useNavigate,
 } from 'react-router-dom'
 
@@ -197,6 +198,7 @@ interface ChallengeEditorFormProps {
 
 interface SaveChallengeOptions {
     isAutosave?: boolean
+    redirectToViewOnSuccess?: boolean
     statusOverride?: string
     successMessage?: string
 }
@@ -204,6 +206,14 @@ interface SaveChallengeOptions {
 interface SaveStatusMetadata {
     isSaveAsDraft: boolean
     payloadStatus?: string
+}
+
+interface ResolvePostSaveNavigationPathParams {
+    isEditMode?: boolean
+    isSaveAsDraft: boolean
+    redirectToViewOnSuccess?: boolean
+    savedChallengeId: string
+    viewModePath?: string
 }
 
 type SingleAssignmentFieldName = 'assignedMemberId' | 'copilot' | 'reviewer'
@@ -946,6 +956,29 @@ export function getTaskLaunchValidationError(
 }
 
 /**
+ * Resolves the next route after a manual challenge save succeeds.
+ *
+ * New draft saves still enter edit mode so the full form becomes available. Existing edit-route
+ * saves return to the matching read-only challenge route when requested by the caller.
+ *
+ * @param params Save-context values needed to choose the next route.
+ * @returns The post-save route, or `undefined` when the user should stay on the current page.
+ */
+function resolvePostSaveNavigationPath(
+    params: ResolvePostSaveNavigationPathParams,
+): string | undefined {
+    if (params.isSaveAsDraft && !params.isEditMode) {
+        return `/challenges/${encodeURIComponent(params.savedChallengeId)}/edit`
+    }
+
+    if (params.redirectToViewOnSuccess && params.viewModePath) {
+        return params.viewModePath
+    }
+
+    return undefined
+}
+
+/**
  * Creates an error for launch-blocking validation paths that already surfaced a
  * specific message to the user.
  *
@@ -983,6 +1016,7 @@ function isHandledLaunchBlockError(
 export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     props: ChallengeEditorFormProps,
 ) => {
+    const location = useLocation()
     const navigate = useNavigate()
     const isEditMode = props.isEditMode
     const isReadOnly = props.isReadOnly === true
@@ -1000,6 +1034,16 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             props.challenge?.projectId,
             props.projectId,
         ],
+    )
+    const viewModePath = useMemo(
+        (): string | undefined => {
+            if (!location.pathname.endsWith('/edit')) {
+                return undefined
+            }
+
+            return `${location.pathname.slice(0, -'/edit'.length)}/view`
+        },
+        [location.pathname],
     )
     const projectBillingAccountResult = useFetchProjectBillingAccount(fallbackProjectId)
     const projectBillingAccount = projectBillingAccountResult.billingAccount
@@ -2036,8 +2080,16 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                     showSuccessToast(getSaveSuccessMessage(isSaveAsDraft, options))
                 }
 
-                if (isSaveAsDraft && !isEditMode) {
-                    navigate(`/challenges/${encodeURIComponent(savedChallenge.id)}/edit`)
+                const postSaveNavigationPath = resolvePostSaveNavigationPath({
+                    isEditMode,
+                    isSaveAsDraft,
+                    redirectToViewOnSuccess: options.redirectToViewOnSuccess,
+                    savedChallengeId: savedChallenge.id,
+                    viewModePath,
+                })
+
+                if (postSaveNavigationPath) {
+                    navigate(postSaveNavigationPath)
                 }
             } catch (error) {
                 if (isHandledLaunchBlockError(error)) {
@@ -2075,6 +2127,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             setError,
             syncDraftSingleAssignments,
             usesManualReviewers,
+            viewModePath,
         ],
     )
 
@@ -2182,7 +2235,9 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             }
 
             clearErrors('reviewers')
-            await saveChallenge(formData)
+            await saveChallenge(formData, {
+                redirectToViewOnSuccess: true,
+            })
         },
         [
             clearErrors,
