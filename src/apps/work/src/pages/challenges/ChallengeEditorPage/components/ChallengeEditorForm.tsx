@@ -9,6 +9,7 @@ import {
 import { FormProvider, useForm } from 'react-hook-form'
 import {
     Link,
+    useLocation,
     useNavigate,
 } from 'react-router-dom'
 
@@ -67,6 +68,9 @@ import {
     getProjectBillingAccountChallengeErrorMessage,
     getProjectBillingAccountChallengeIssue,
 } from '../../../../lib/utils/project-billing-account.utils'
+import {
+    resolveMatchingChallengeViewPath,
+} from '../ChallengeEditorPage.utils'
 
 import {
     AssignedMemberField,
@@ -197,6 +201,7 @@ interface ChallengeEditorFormProps {
 
 interface SaveChallengeOptions {
     isAutosave?: boolean
+    redirectToViewOnSuccess?: boolean
     statusOverride?: string
     successMessage?: string
 }
@@ -204,6 +209,14 @@ interface SaveChallengeOptions {
 interface SaveStatusMetadata {
     isSaveAsDraft: boolean
     payloadStatus?: string
+}
+
+interface ResolvePostSaveNavigationPathParams {
+    isEditMode?: boolean
+    isSaveAsDraft: boolean
+    redirectToViewOnSuccess?: boolean
+    savedChallengeId: string
+    viewModePath?: string
 }
 
 type SingleAssignmentFieldName = 'assignedMemberId' | 'copilot' | 'reviewer'
@@ -946,6 +959,29 @@ export function getTaskLaunchValidationError(
 }
 
 /**
+ * Resolves the next route after a manual challenge save succeeds.
+ *
+ * New draft saves still enter edit mode so the full form becomes available. Existing edit-route
+ * saves return to the matching read-only challenge route when requested by the caller.
+ *
+ * @param params Save-context values needed to choose the next route.
+ * @returns The post-save route, or `undefined` when the user should stay on the current page.
+ */
+function resolvePostSaveNavigationPath(
+    params: ResolvePostSaveNavigationPathParams,
+): string | undefined {
+    if (params.isSaveAsDraft && !params.isEditMode) {
+        return `/challenges/${encodeURIComponent(params.savedChallengeId)}/edit`
+    }
+
+    if (params.redirectToViewOnSuccess && params.viewModePath) {
+        return params.viewModePath
+    }
+
+    return undefined
+}
+
+/**
  * Creates an error for launch-blocking validation paths that already surfaced a
  * specific message to the user.
  *
@@ -983,6 +1019,7 @@ function isHandledLaunchBlockError(
 export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     props: ChallengeEditorFormProps,
 ) => {
+    const location = useLocation()
     const navigate = useNavigate()
     const isEditMode = props.isEditMode
     const isReadOnly = props.isReadOnly === true
@@ -1000,6 +1037,10 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             props.challenge?.projectId,
             props.projectId,
         ],
+    )
+    const viewModePath = useMemo(
+        (): string | undefined => resolveMatchingChallengeViewPath(location.pathname),
+        [location.pathname],
     )
     const projectBillingAccountResult = useFetchProjectBillingAccount(fallbackProjectId)
     const projectBillingAccount = projectBillingAccountResult.billingAccount
@@ -1140,12 +1181,31 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             selectedChallengeType,
         ],
     )
+    const persistedTaskFlag = useMemo(
+        (): boolean => props.challenge?.task?.isTask === true || values.legacy?.isTask === true,
+        [
+            props.challenge?.task?.isTask,
+            values.legacy?.isTask,
+        ],
+    )
     const hasResolvedChallengeType = useMemo(
         (): boolean => !!normalizeTextValue(resolvedChallengeTypeName)
             || !!normalizeTextValue(resolvedChallengeTypeAbbreviation),
         [
             resolvedChallengeTypeAbbreviation,
             resolvedChallengeTypeName,
+        ],
+    )
+    const isTaskChallenge = useMemo(
+        (): boolean => shouldTreatChallengeAsTask({
+            hasResolvedChallengeType,
+            isTaskTypeSelected: isTaskChallengeSelected,
+            persistedTaskFlag,
+        }),
+        [
+            hasResolvedChallengeType,
+            isTaskChallengeSelected,
+            persistedTaskFlag,
         ],
     )
     const isMarathonMatchChallengeSelected = useMemo(
@@ -1204,15 +1264,15 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     const showFunChallengeField = isMarathonMatchChallengeSelected
     const showMarathonMatchScorerSection = isMarathonMatchChallengeSelected && isChallengeCreated
     const showPrizesAndBillingSection = !isFunChallengeSelected
-    const showEditableTimelineSection = !isEditMode || !isTaskChallengeSelected
+    const showEditableTimelineSection = !isTaskChallenge
     const usesManualReviewers = useMemo(
         (): boolean => shouldUseManualReviewers({
             isMarathonMatchChallenge: isMarathonMatchChallengeSelected,
-            isTaskChallenge: isTaskChallengeSelected,
+            isTaskChallenge,
         }),
         [
             isMarathonMatchChallengeSelected,
-            isTaskChallengeSelected,
+            isTaskChallenge,
         ],
     )
     const isScorerBlockingChallengeActions = showMarathonMatchScorerSection
@@ -1238,10 +1298,11 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     ): boolean => shouldTreatChallengeAsTask({
         hasResolvedChallengeType,
         isTaskTypeSelected: isTaskChallengeSelected,
-        persistedTaskFlag: formData.legacy?.isTask === true,
+        persistedTaskFlag: props.challenge?.task?.isTask === true || formData.legacy?.isTask === true,
     }), [
         hasResolvedChallengeType,
         isTaskChallengeSelected,
+        props.challenge?.task?.isTask,
     ])
     const applyPersistedSingleAssignments = useCallback((
         formData: ChallengeEditorFormData,
@@ -1655,12 +1716,12 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
     ])
 
     useEffect(() => {
-        setValue('legacy.isTask', isTaskChallengeSelected, {
+        setValue('legacy.isTask', isTaskChallenge, {
             shouldDirty: false,
             shouldValidate: true,
         })
     }, [
-        isTaskChallengeSelected,
+        isTaskChallenge,
         setValue,
     ])
 
@@ -1938,14 +1999,14 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 isSaveAsDraft,
                 payloadStatus,
             }: SaveStatusMetadata = getSaveStatusMetadata(formData.status, options)
+            const shouldTreatSaveAsTaskChallenge = isTaskSingleAssignmentChallenge(formData)
             const currentStatus = normalizeStatus(formData.status)
             const isChallengeBeingActivated = payloadStatus === CHALLENGE_STATUS.ACTIVE
                 && currentStatus !== CHALLENGE_STATUS.ACTIVE
-            const isTaskChallenge = isTaskSingleAssignmentChallenge(formData)
             const taskLaunchValidationError = getTaskLaunchValidationError({
                 assignedMemberId: formData.assignedMemberId,
                 currentStatus: formData.status,
-                isTaskChallenge,
+                isTaskChallenge: shouldTreatSaveAsTaskChallenge,
                 nextStatus: payloadStatus,
             })
 
@@ -2021,7 +2082,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                         },
                     ),
                     formDataWithProjectBilling,
-                    isTaskChallenge,
+                    shouldTreatSaveAsTaskChallenge,
                 )
                 const savedAt = new Date()
 
@@ -2036,8 +2097,16 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                     showSuccessToast(getSaveSuccessMessage(isSaveAsDraft, options))
                 }
 
-                if (isSaveAsDraft && !isEditMode) {
-                    navigate(`/challenges/${encodeURIComponent(savedChallenge.id)}/edit`)
+                const postSaveNavigationPath = resolvePostSaveNavigationPath({
+                    isEditMode,
+                    isSaveAsDraft,
+                    redirectToViewOnSuccess: options.redirectToViewOnSuccess,
+                    savedChallengeId: savedChallenge.id,
+                    viewModePath,
+                })
+
+                if (postSaveNavigationPath) {
+                    navigate(postSaveNavigationPath)
                 }
             } catch (error) {
                 if (isHandledLaunchBlockError(error)) {
@@ -2075,6 +2144,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             setError,
             syncDraftSingleAssignments,
             usesManualReviewers,
+            viewModePath,
         ],
     )
 
@@ -2164,7 +2234,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 const reviewerValidationError = getReviewerValidationError(formData, {
                     challengeTypeAbbreviation: resolvedChallengeTypeAbbreviation,
                     challengeTypeName: resolvedChallengeTypeName,
-                    isTaskChallenge: isTaskChallengeSelected,
+                    isTaskChallenge,
                     requiredReviewersErrorMessage:
                         'Reviewers are required for configured review phases before saving as draft.',
                 })
@@ -2182,12 +2252,14 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             }
 
             clearErrors('reviewers')
-            await saveChallenge(formData)
+            await saveChallenge(formData, {
+                redirectToViewOnSuccess: true,
+            })
         },
         [
             clearErrors,
             isScorerBlockingChallengeActions,
-            isTaskChallengeSelected,
+            isTaskChallenge,
             resolvedChallengeTypeAbbreviation,
             resolvedChallengeTypeName,
             saveChallenge,
@@ -2226,6 +2298,83 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             values.billing?.billingAccountId,
         ],
     )
+    const reviewSection = usesManualReviewers
+        ? (
+            <section className={styles.section}>
+                <h3 className={styles.sectionTitle}>Review</h3>
+                <div className={styles.block}>
+                    <ReviewersField isReadOnly={isReadOnly} />
+                </div>
+            </section>
+        )
+        : undefined
+    const attachmentsSection = (
+        <section className={styles.section}>
+            <h3 className={styles.sectionTitle}>Attachments</h3>
+            <div className={styles.block}>
+                <AttachmentsField />
+            </div>
+        </section>
+    )
+    const footerSection = !isReadOnly
+        ? (
+            <div className={styles.footer}>
+                <div className={styles.statusArea}>
+                    {statusText
+                        ? <span className={styles.statusText}>{statusText}</span>
+                        : undefined}
+                    <span className={styles.lastSaved}>{formatLastSaved(lastSaved)}</span>
+                    {saveValidationError
+                        ? <span className={styles.errorText}>{saveValidationError}</span>
+                        : undefined}
+                    {saveError
+                        ? <span className={styles.errorText}>{saveError}</span>
+                        : undefined}
+                    {isScorerBlockingChallengeActions
+                        ? (
+                            <span className={styles.warningText}>
+                                The scorer configuration must be saved and valid before the
+                                {' '}
+                                challenge can be saved or launched.
+                            </span>
+                        )
+                        : undefined}
+                </div>
+
+                <div className={styles.actions}>
+                    <Button
+                        label='Cancel'
+                        onClick={handleCancelClick}
+                        secondary
+                        size='lg'
+                        type='button'
+                    />
+                    <Button
+                        disabled={
+                            (!formState.isDirty || isSaving)
+                            || isScorerBlockingChallengeActions
+                        }
+                        label={submitButtonLabel}
+                        secondary
+                        size='lg'
+                        type='submit'
+                    />
+                    {props.canLaunchChallenge && onLaunchOpen
+                        ? (
+                            <Button
+                                disabled={props.isLaunchDisabled}
+                                label={props.launchButtonLabel || 'Launch'}
+                                onClick={onLaunchOpen}
+                                primary
+                                size='lg'
+                                type='button'
+                            />
+                        )
+                        : undefined}
+                </div>
+            </div>
+        )
+        : undefined
 
     return (
         <FormProvider {...formMethods}>
@@ -2364,144 +2513,88 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
 
                 {isChallengeCreated
                     ? (
-                        <fieldset className={styles.formContent} disabled={isReadOnly}>
-                            {showMarathonMatchScorerSection
-                                ? (
-                                    <section className={styles.section}>
-                                        <h3 className={styles.sectionTitle}>Scorer</h3>
-                                        <div className={styles.block}>
-                                            <MarathonMatchScorerSection
-                                                challengeId={currentChallengeId || ''}
-                                                onScorerConfigChange={handleScorerConfigChange}
-                                                phases={values.phases ?? []}
-                                            />
-                                        </div>
-                                    </section>
-                                )
-                                : undefined}
+                        <>
+                            <fieldset className={styles.formContent} disabled={isReadOnly}>
+                                {showMarathonMatchScorerSection
+                                    ? (
+                                        <section className={styles.section}>
+                                            <h3 className={styles.sectionTitle}>Scorer</h3>
+                                            <div className={styles.block}>
+                                                <MarathonMatchScorerSection
+                                                    challengeId={currentChallengeId || ''}
+                                                    onScorerConfigChange={handleScorerConfigChange}
+                                                    phases={values.phases ?? []}
+                                                />
+                                            </div>
+                                        </section>
+                                    )
+                                    : undefined}
 
-                            <section className={styles.section}>
-                                <h3 className={styles.sectionTitle}>Advanced Options</h3>
-                                <div className={styles.grid}>
-                                    {isTaskChallengeSelected
-                                        ? <AssignedMemberField />
-                                        : undefined}
-                                    {isTaskChallengeSelected
-                                        ? (
-                                            <ReviewTypeField
-                                                isTaskChallenge={isTaskChallengeSelected}
-                                            />
-                                        )
-                                        : undefined}
-                                    <GroupsField />
-                                    <TermsField shouldDefaultStandardTerm={!isEditMode} />
-                                    <NDAField />
-                                    <FormCheckboxField
-                                        checkboxOnlyHitArea
-                                        label='Wipro Allowed'
-                                        name='wiproAllowed'
-                                    />
-                                    <div className={styles.readOnlyField}>
-                                        <span className={styles.readOnlyFieldLabel}>Billing Account Id</span>
-                                        <span className={styles.readOnlyFieldValue}>
-                                            {displayedBillingAccountId}
-                                        </span>
-                                    </div>
-                                </div>
-                            </section>
-
-                            {showSubmissionSettingsSection
-                                ? (
-                                    <section className={styles.section}>
-                                        <h3 className={styles.sectionTitle}>Submission Settings</h3>
-                                        <div className={styles.grid}>
-                                            <FinalDeliverablesField />
-                                            <StockArtsField />
-                                            <SubmissionVisibilityField />
-                                            <MaximumSubmissionsField />
-                                        </div>
-                                    </section>
-                                )
-                                : undefined}
-
-                            {usesManualReviewers
-                                ? (
-                                    <section className={styles.section}>
-                                        <h3 className={styles.sectionTitle}>Review</h3>
-                                        <div className={styles.block}>
-                                            <ReviewersField />
-                                        </div>
-                                    </section>
-                                )
-                                : undefined}
-
-                            <section className={styles.section}>
-                                <h3 className={styles.sectionTitle}>Attachments</h3>
-                                <div className={styles.block}>
-                                    <AttachmentsField />
-                                </div>
-                            </section>
-
-                            {!isReadOnly
-                                ? (
-                                    <div className={styles.footer}>
-                                        <div className={styles.statusArea}>
-                                            {statusText
-                                                ? <span className={styles.statusText}>{statusText}</span>
-                                                : undefined}
-                                            <span className={styles.lastSaved}>{formatLastSaved(lastSaved)}</span>
-                                            {saveValidationError
-                                                ? <span className={styles.errorText}>{saveValidationError}</span>
-                                                : undefined}
-                                            {saveError
-                                                ? <span className={styles.errorText}>{saveError}</span>
-                                                : undefined}
-                                            {isScorerBlockingChallengeActions
-                                                ? (
-                                                    <span className={styles.warningText}>
-                                                        The scorer configuration must be saved and valid before the
-                                                        {' '}
-                                                        challenge can be saved or launched.
-                                                    </span>
-                                                )
-                                                : undefined}
-                                        </div>
-
-                                        <div className={styles.actions}>
-                                            <Button
-                                                label='Cancel'
-                                                onClick={handleCancelClick}
-                                                secondary
-                                                size='lg'
-                                                type='button'
-                                            />
-                                            <Button
-                                                disabled={
-                                                    (!formState.isDirty || isSaving)
-                                                    || isScorerBlockingChallengeActions
-                                                }
-                                                label={submitButtonLabel}
-                                                secondary
-                                                size='lg'
-                                                type='submit'
-                                            />
-                                            {props.canLaunchChallenge && onLaunchOpen
-                                                ? (
-                                                    <Button
-                                                        disabled={props.isLaunchDisabled}
-                                                        label={props.launchButtonLabel || 'Launch'}
-                                                        onClick={onLaunchOpen}
-                                                        primary
-                                                        size='lg'
-                                                        type='button'
-                                                    />
-                                                )
-                                                : undefined}
+                                <section className={styles.section}>
+                                    <h3 className={styles.sectionTitle}>Advanced Options</h3>
+                                    <div className={styles.grid}>
+                                        {isTaskChallenge
+                                            ? <AssignedMemberField />
+                                            : undefined}
+                                        {isTaskChallenge
+                                            ? (
+                                                <ReviewTypeField
+                                                    isTaskChallenge={isTaskChallenge}
+                                                />
+                                            )
+                                            : undefined}
+                                        <GroupsField />
+                                        <TermsField shouldDefaultStandardTerm={!isEditMode && !isReadOnly} />
+                                        <NDAField />
+                                        <FormCheckboxField
+                                            checkboxOnlyHitArea
+                                            label='Wipro Allowed'
+                                            name='wiproAllowed'
+                                        />
+                                        <div className={styles.readOnlyField}>
+                                            <span className={styles.readOnlyFieldLabel}>Billing Account Id</span>
+                                            <span className={styles.readOnlyFieldValue}>
+                                                {displayedBillingAccountId}
+                                            </span>
                                         </div>
                                     </div>
+                                </section>
+
+                                {showSubmissionSettingsSection
+                                    ? (
+                                        <section className={styles.section}>
+                                            <h3 className={styles.sectionTitle}>Submission Settings</h3>
+                                            <div className={styles.grid}>
+                                                <FinalDeliverablesField />
+                                                <StockArtsField />
+                                                <SubmissionVisibilityField />
+                                                <MaximumSubmissionsField />
+                                            </div>
+                                        </section>
+                                    )
+                                    : undefined}
+
+                                {!isReadOnly
+                                    ? reviewSection
+                                    : undefined}
+                                {!isReadOnly
+                                    ? attachmentsSection
+                                    : undefined}
+                                {footerSection}
+                            </fieldset>
+
+                            {isReadOnly
+                                ? reviewSection
+                                : undefined}
+
+                            {isReadOnly
+                                ? (
+                                    <fieldset className={styles.formContent} disabled>
+                                        {attachmentsSection}
+                                    </fieldset>
                                 )
                                 : undefined}
-                        </fieldset>
+                        </>
                     )
                     : undefined}
             </form>

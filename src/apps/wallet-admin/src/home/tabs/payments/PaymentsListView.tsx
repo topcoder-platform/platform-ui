@@ -20,6 +20,7 @@ import PaymentsTable from '../../../lib/components/payments-table/PaymentTable'
 import styles from './Payments.module.scss'
 
 type PaymentRoleView = 'admin' | 'engagementApprover' | 'wiproTaasAdmin'
+type SelectedPaymentAction = 'approve' | 'reject'
 
 const engagementPaymentCategory = 'ENGAGEMENT_PAYMENT'
 const restrictedRoleDefaultStatus = 'ON_HOLD_ADMIN'
@@ -394,7 +395,7 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
         || props.profile.roles.includes('Wipro TaaS Admin')
     )
 
-    const [bulkOpen, setBulkOpen] = React.useState(false)
+    const [selectedPaymentAction, setSelectedPaymentAction] = React.useState<SelectedPaymentAction | undefined>(undefined)
     const [bulkAuditNote, setBulkAuditNote] = React.useState('')
 
     /**
@@ -409,7 +410,7 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
 
         setPaymentRoleView(nextView)
         setBulkAuditNote('')
-        setBulkOpen(false)
+        setSelectedPaymentAction(undefined)
         setSelectedPayments({})
         setPagination(prev => ({
             ...prev,
@@ -423,17 +424,35 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
         })
     }, [paymentRoleView])
 
-    const onBulkApprove = useCallback(async (auditNote: string) => {
+    /**
+     * Applies the selected approver action to the current payment selection.
+     *
+     * @param action whether the selection should be approved or rejected.
+     * @param auditNote approver note captured in the confirmation modal.
+     * @returns a promise that resolves after the updates and list refresh finish.
+     * @remarks Engagement approvers can only update On Hold (Admin) rows from
+     * the scoped view, so this handler maps the UI action directly to finance
+     * status transitions without exposing extra edit fields.
+     */
+    const onSelectedPaymentsUpdate = useCallback(async (
+        action: SelectedPaymentAction,
+        auditNote: string,
+    ) => {
         const ids = Object.keys(selectedPayments)
         if (ids.length === 0) return
 
-        toast.success('Starting bulk approve', { position: toast.POSITION.BOTTOM_RIGHT })
+        const isRejectAction = action === 'reject'
+        const nextPaymentStatus = isRejectAction ? 'CANCELLED' : 'OWED'
+        const actionVerb = isRejectAction ? 'reject' : 'approve'
+        const actionResult = isRejectAction ? 'rejected' : 'approved'
+
+        toast.success(`Starting ${ids.length > 1 ? 'bulk ' : ''}${actionVerb}`, { position: toast.POSITION.BOTTOM_RIGHT })
 
         let successfullyUpdated = 0
         for (const id of ids) {
             const updates: any = {
                 auditNote,
-                paymentStatus: 'OWED',
+                paymentStatus: nextPaymentStatus,
                 winningsId: id,
             }
 
@@ -446,22 +465,43 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
             } catch (err:any) {
                 const paymentName = selectedPayments[id]?.handle || id
                 if (err?.message) {
-                    toast.error(`Failed to update payment ${paymentName} (${id}): ${err.message}`, { position: toast.POSITION.BOTTOM_RIGHT })
+                    toast.error(`Failed to ${actionVerb} payment ${paymentName} (${id}): ${err.message}`, { position: toast.POSITION.BOTTOM_RIGHT })
                 } else {
-                    toast.error(`Failed to update payment ${paymentName} (${id})`, { position: toast.POSITION.BOTTOM_RIGHT })
+                    toast.error(`Failed to ${actionVerb} payment ${paymentName} (${id})`, { position: toast.POSITION.BOTTOM_RIGHT })
                 }
             }
         }
 
-        if (successfullyUpdated === ids.length) {
-            toast.success(`Successfully updated ${successfullyUpdated} winnings`, { position: toast.POSITION.BOTTOM_RIGHT })
+        if (successfullyUpdated > 0) {
+            toast.success(
+                `Successfully ${actionResult} ${successfullyUpdated} winning${successfullyUpdated === 1 ? '' : 's'}`,
+                { position: toast.POSITION.BOTTOM_RIGHT },
+            )
         }
 
         setBulkAuditNote('')
-        setBulkOpen(false)
+        setSelectedPaymentAction(undefined)
         setSelectedPayments({})
         await fetchWinnings()
     }, [selectedPayments, fetchWinnings])
+
+    const selectedPaymentActions = selectedPaymentsCount > 0
+        ? [
+            {
+                appearance: 'primary' as const,
+                key: 'approve-selected-payments',
+                label: `${selectedPaymentsCount > 1 ? 'Bulk ' : ''}Approve (${selectedPaymentsCount})`,
+                onClick: () => setSelectedPaymentAction('approve'),
+            },
+            {
+                appearance: 'secondary' as const,
+                key: 'reject-selected-payments',
+                label: `${selectedPaymentsCount > 1 ? 'Bulk ' : ''}Reject (${selectedPaymentsCount})`,
+                onClick: () => setSelectedPaymentAction('reject'),
+                variant: 'danger' as const,
+            },
+        ]
+        : []
 
     return (
         <>
@@ -498,7 +538,7 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                 <FilterBar
                     showExportButton
                     selectedCount={selectedPaymentsCount}
-                    onBulkClick={() => setBulkOpen(true)}
+                    selectionActions={selectedPaymentActions}
                     hasActiveFilters={hasActiveFilters}
                     onExport={async () => {
                         toast.success('Downloading payments report. This may take a few moments.', { position: toast.POSITION.BOTTOM_RIGHT })
@@ -720,26 +760,28 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                     </div>
                 )}
             </Collapsible>
-            {bulkOpen && (
+            {selectedPaymentAction && (
                 <ConfirmModal
                     maxWidth='800px'
                     size='lg'
                     showButtons
-                    title={`${selectedPaymentsCount > 1 ? 'Bulk ' : ''}Approve Payment${selectedPaymentsCount > 1 ? 's' : ''}`}
-                    action='Approve'
+                    title={`${selectedPaymentsCount > 1 ? 'Bulk ' : ''}${selectedPaymentAction === 'reject' ? 'Reject' : 'Approve'} Payment${selectedPaymentsCount > 1 ? 's' : ''}`}
+                    action={selectedPaymentAction === 'reject' ? 'Reject' : 'Approve'}
                     onClose={function onClose() {
                         setBulkAuditNote('')
-                        setBulkOpen(false)
+                        setSelectedPaymentAction(undefined)
                     }}
                     onConfirm={function onConfirm() {
-                        onBulkApprove(bulkAuditNote)
+                        onSelectedPaymentsUpdate(selectedPaymentAction, bulkAuditNote)
                     }}
                     canSave={bulkAuditNote.trim().length > 0}
-                    open={bulkOpen}
+                    open={selectedPaymentAction !== undefined}
                 >
                     <div>
                         <p>
-                            You are about to approve
+                            You are about to
+                            {' '}
+                            {selectedPaymentAction}
                             {' '}
                             {selectedPaymentsCount}
                             {' '}

@@ -200,13 +200,45 @@
     min-height: 42px;
 }
 
+.checkboxRow {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+    min-height: 42px;
+}
+
 .checkboxField input {
     accent-color: #137d60;
 }
 
-.checkboxField span {
+.checkboxRow span,
+.checkboxField > span {
     color: #3a3f45;
     font-size: 14px;
+}
+
+.checkboxDescription {
+    color: #70757a;
+    display: flex;
+    flex-direction: column;
+    font-size: 12px;
+    gap: 2px;
+    line-height: 1.5;
+    margin-top: -2px;
+}
+
+.checkboxDescriptionPrefix {
+    align-items: center;
+    color: #70757a;
+    display: inline-flex;
+    gap: 4px;
+}
+
+.checkboxDescriptionIcon {
+    color: #d87a16;
+    flex: 0 0 auto;
+    height: 12px;
+    width: 12px;
 }
 
 .workflowEditors {

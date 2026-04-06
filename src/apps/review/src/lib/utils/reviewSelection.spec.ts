@@ -1,6 +1,6 @@
 import type { BackendReview, BackendSubmission } from '../models'
 
-import { selectBestReview } from './reviewSelection'
+import { collectMatchingReviews, selectBestReview } from './reviewSelection'
 
 jest.mock('~/config', () => ({
     EnvironmentConfig: {},
@@ -71,5 +71,30 @@ describe('selectBestReview', () => {
 
         expect(result?.id)
             .toBe('completed-scored')
+    })
+
+    it('collects challenge reviews when legacy submission ids do not match the modern submission id', () => {
+        const submission = {
+            id: 'submission-1',
+            legacySubmissionId: 'legacy-submission-1',
+            review: [],
+        } as unknown as BackendSubmission
+
+        const result = collectMatchingReviews(
+            submission,
+            'Screening',
+            'scorecard-screening',
+            new Set(['phase-screening']),
+            undefined,
+            [
+                createReview('legacy-match', {
+                    legacySubmissionId: '',
+                    submissionId: 'legacy-submission-1',
+                }),
+            ],
+        )
+
+        expect(result.map(review => review.id))
+            .toEqual(['legacy-match'])
     })
 })

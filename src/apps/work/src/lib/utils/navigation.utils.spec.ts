@@ -116,6 +116,34 @@ describe('buildProjectLandingPath', () => {
             .toBe('/projects/200/challenges')
     })
 
+    it('routes re-invited users to the invitation modal when an older invite was already accepted', () => {
+        mockedDecodeToken.mockReturnValue({
+            email: 'invitee@example.com',
+            userId: '123',
+        } as ReturnType<typeof decodeToken>)
+
+        expect(buildProjectLandingPath({
+            ...project,
+            invites: [
+                {
+                    createdAt: '2026-03-30T00:00:00.000Z',
+                    email: 'invitee@example.com',
+                    id: 'invite-accepted',
+                    status: 'accepted',
+                    userId: 123,
+                },
+                {
+                    createdAt: '2026-04-06T00:00:00.000Z',
+                    email: 'invitee@example.com',
+                    id: 'invite-pending',
+                    status: 'pending',
+                    userId: 123,
+                },
+            ],
+        }, 'token'))
+            .toBe('/projects/200/invitations')
+    })
+
     it('keeps the challenges path when the invites belong to another user', () => {
         mockedDecodeToken.mockReturnValue({
             email: 'manager@example.com',

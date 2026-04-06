@@ -1,5 +1,4 @@
-import { workRootRoute } from '~/apps/work'
-import { PLATFORMUI_URL } from '~/config/environments/default.env'
+import { EnvironmentConfig } from '~/config'
 
 import { PaymentEngagementDetails } from '../../models/WinningDetail'
 
@@ -14,10 +13,9 @@ export function buildWorkManagerAssignmentUrl(
         return undefined
     }
 
-    const baseUrl = PLATFORMUI_URL.replace(/\/$/, '')
-    const assignmentPath
-        = `${baseUrl}${workRootRoute}/projects/${engagementDetails.projectId}`
-            + `/engagements/${engagementDetails.engagementId}/assignments`
+    const baseUrl = EnvironmentConfig.ADMIN.WORK_MANAGER_URL.replace(/\/$/, '')
+    const assignmentPath = `${baseUrl}/projects/${engagementDetails.projectId}`
+        + `/engagements/${engagementDetails.engagementId}/assignments`
 
     return `${assignmentPath}?assignmentId=${engagementDetails.assignmentId}`
 }

@@ -40,19 +40,22 @@ jest.mock('~/libs/ui', () => ({
 }), { virtual: true })
 
 jest.mock('~/config/environments/default.env', () => ({
-    PLATFORMUI_URL: 'https://platform-ui.example.com',
     TOPCODER_URL: 'https://www.example.com',
 }), { virtual: true })
 
-jest.mock('~/apps/work', () => ({
-    workRootRoute: '/work',
+jest.mock('~/config', () => ({
+    EnvironmentConfig: {
+        ADMIN: {
+            WORK_MANAGER_URL: 'https://challenges.example.com',
+        },
+    },
 }), { virtual: true })
 
 const mockedFetchWinningPaymentDetails = (
     fetchWinningPaymentDetails as jest.MockedFunction<typeof fetchWinningPaymentDetails>
 )
 const expectedWorkManagerLink
-    = 'https://platform-ui.example.com/work/projects/project-789/engagements/engagement-456/assignments'
+    = 'https://challenges.example.com/projects/project-789/engagements/engagement-456/assignments'
         + '?assignmentId=assignment-123'
 
 describe('PaymentView', () => {

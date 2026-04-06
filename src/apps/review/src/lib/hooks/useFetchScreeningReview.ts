@@ -895,7 +895,14 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
                 }
 
                 const resourceId = reviewItem.resourceId
-                const submissionId = reviewItem.submissionId
+                const resolvedSubmission = resolveSubmissionForReview({
+                    review: reviewItem,
+                    submissionsById: visibleSubmissionsById,
+                    submissionsByLegacyId: visibleSubmissionsByLegacyId,
+                } satisfies SubmissionLookupArgs)
+                const submissionId = resolvedSubmission?.id
+                    ?? reviewItem.submissionId
+                    ?? reviewItem.legacySubmissionId
                 if (!resourceId || !submissionId) {
                     return
                 }
@@ -909,7 +916,7 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
 
             return mapping
         },
-        [challengeReviews, reviewerIds],
+        [challengeReviews, visibleSubmissionsById, visibleSubmissionsByLegacyId],
     )
 
     // get screening data from challenge submissions
@@ -1878,6 +1885,8 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
             )
 
             reviewerIds.forEach(appendReviewerId)
+            Object.keys(reviewAssignmentsBySubmission[challengeSubmission.id] ?? {})
+                .forEach(appendReviewerId)
             forEach(challengeSubmission.review, reviewEntry => {
                 if (matchesReviewPhase(reviewEntry)) {
                     appendReviewerId(reviewEntry?.resourceId)

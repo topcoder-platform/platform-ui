@@ -13,6 +13,7 @@ import {
 import { ChallengeEditorFormData } from '../../../../../lib/models'
 
 import { ChallengePrizesField } from './ChallengePrizesField'
+import styles from './ChallengePrizesField.module.scss'
 
 jest.mock('../../../../../lib/components', () => ({
     ConfirmationModal: () => undefined,
@@ -175,6 +176,12 @@ describe('ChallengePrizesField', () => {
             .toBe(2)
         expect(secondPrizeRow.childElementCount)
             .toBe(3)
+        expect(firstPrizeRow.className)
+            .toContain(styles.firstMultiPrizeRow)
+        expect(firstPrizeRow.className)
+            .not.toContain(styles.prizeRowWithRemove)
+        expect(secondPrizeRow.className)
+            .toContain(styles.prizeRowWithRemove)
         expect(screen.getAllByRole('button').length)
             .toBe(2)
     })
@@ -193,5 +200,9 @@ describe('ChallengePrizesField', () => {
             .toBe(2)
         expect(secondPrizeRow.childElementCount)
             .toBe(3)
+        expect(firstPrizeRow.className)
+            .toContain(styles.firstMultiPrizeRow)
+        expect(secondPrizeRow.className)
+            .toContain(styles.prizeRowWithRemove)
     })
 })

@@ -9,7 +9,7 @@ import {
 } from 'react'
 import classNames from 'classnames'
 
-import { Button } from '~/libs/ui'
+import { Button, IconOutline } from '~/libs/ui'
 
 import { ConfirmationModal } from '../../../../../lib/components'
 import {
@@ -247,6 +247,7 @@ const ManualWorkflowEditor: FC<ManualWorkflowEditorProps> = (
     props: ManualWorkflowEditorProps,
 ) => {
     const workflowId = normalizeReviewerText(props.workflow.workflowId)
+    const gatingDescriptionId = `${props.workflowKey}-gating-description`
     const isAssigned = props.assignedWorkflowIds.has(workflowId)
     const handleWorkflowChange = useCallback(
         (event: ChangeEvent<HTMLSelectElement>): void => {
@@ -319,15 +320,32 @@ const ManualWorkflowEditor: FC<ManualWorkflowEditorProps> = (
                     />
                 </label>
 
-                <label className={styles.checkboxField}>
-                    <input
-                        checked={props.workflow.isGating === true}
-                        disabled={props.readOnly}
-                        onChange={handleGatingChange}
-                        type='checkbox'
-                    />
-                    <span>Use as gating workflow</span>
-                </label>
+                <div className={styles.checkboxField}>
+                    <label className={styles.checkboxRow}>
+                        <input
+                            aria-describedby={gatingDescriptionId}
+                            checked={props.workflow.isGating === true}
+                            disabled={props.readOnly}
+                            onChange={handleGatingChange}
+                            type='checkbox'
+                        />
+                        <span>Use as gating workflow</span>
+                    </label>
+                    <div className={styles.checkboxDescription} id={gatingDescriptionId}>
+                        {props.workflow.isGating
+                            ? (
+                                <span className={styles.checkboxDescriptionPrefix}>
+                                    <IconOutline.LightningBoltIcon
+                                        aria-hidden
+                                        className={styles.checkboxDescriptionIcon}
+                                    />
+                                    <span>Pass/fail gate.</span>
+                                </span>
+                            )
+                            : undefined}
+                        <span>Submissions below threshold are locked.</span>
+                    </div>
+                </div>
             </div>
 
             {workflowId

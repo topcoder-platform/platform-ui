@@ -54,6 +54,11 @@ describe('permissions.utils project management helpers', () => {
             .toBe(true)
     })
 
+    it('allows project managers to create projects without a project context', () => {
+        expect(checkCanManageProject(['Project Manager'], '123'))
+            .toBe(true)
+    })
+
     it('requires project manager or copilot membership for talent manager edit access', () => {
         expect(checkCanManageProject(['Talent Manager'], '123', managedProject))
             .toBe(true)
@@ -68,11 +73,6 @@ describe('permissions.utils project management helpers', () => {
 
     it('blocks project managers from editing projects without manager access', () => {
         expect(checkCanManageProject(['Project Manager'], '456', managedProject))
-            .toBe(false)
-    })
-
-    it('does not expand project-manager creation access beyond the work-manager change', () => {
-        expect(checkCanManageProject(['Project Manager'], '123'))
             .toBe(false)
     })
 
@@ -129,5 +129,37 @@ describe('permissions.utils project management helpers', () => {
                 role: 'manager',
                 userId: 123,
             })
+    })
+
+    it('prefers an open re-invite over older resolved invite records for the same user', () => {
+        mockedDecodeToken.mockReturnValue({
+            email: 'invitee@example.com',
+            handle: 'invitee',
+            userId: '123',
+        } as ReturnType<typeof decodeToken>)
+
+        expect(checkIsUserInvitedToProject('token', {
+            ...managedProject,
+            invites: [
+                {
+                    createdAt: '2026-03-30T00:00:00.000Z',
+                    email: 'invitee@example.com',
+                    id: 'invite-accepted',
+                    status: 'accepted',
+                    userId: 123,
+                },
+                {
+                    createdAt: '2026-04-06T00:00:00.000Z',
+                    email: 'invitee@example.com',
+                    id: 'invite-pending',
+                    status: 'pending',
+                    userId: 123,
+                },
+            ],
+        }))
+            .toEqual(expect.objectContaining({
+                id: 'invite-pending',
+                status: 'pending',
+            }))
     })
 })
