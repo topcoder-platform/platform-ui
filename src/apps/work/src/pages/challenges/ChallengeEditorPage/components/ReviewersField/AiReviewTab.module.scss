@@ -200,13 +200,29 @@
     min-height: 42px;
 }
 
+.checkboxRow {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+    min-height: 42px;
+}
+
 .checkboxField input {
     accent-color: #137d60;
 }
 
+.checkboxRow span,
 .checkboxField span {
     color: #3a3f45;
     font-size: 14px;
+}
+
+.checkboxDescription {
+    color: #70757a;
+    display: block;
+    font-size: 12px;
+    line-height: 1.5;
+    margin-top: -2px;
 }
 
 .workflowEditors {
