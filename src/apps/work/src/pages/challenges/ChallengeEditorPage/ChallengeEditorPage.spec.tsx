@@ -230,6 +230,7 @@ jest.mock('./components', () => {
     }
 })
 jest.mock('./ChallengeEditorPage.utils', () => ({
+    ...jest.requireActual('./ChallengeEditorPage.utils'),
     buildTaskWinnerPayload: jest.fn(() => []),
     getAssignedTaskMember: jest.fn(() => undefined),
     getCompleteTaskConfirmationMessage: jest.fn(() => ''),
@@ -379,6 +380,26 @@ describe('ChallengeEditorPage', () => {
             .toBeTruthy()
         expect(screen.getByRole('button', { name: 'Launch' }))
             .toBeTruthy()
+        expect(screen.getByRole('button', { name: 'Edit' }))
+            .toBeTruthy()
+    })
+
+    it('treats trailing-slash view routes as read-only mode', async () => {
+        renderPage(
+            '/projects/123/challenges/456/view/',
+            '/projects/:projectId/challenges/:challengeId/view/*',
+        )
+
+        await waitFor(() => {
+            expect(screen.getByText('Challenge View Form'))
+                .toBeTruthy()
+        })
+
+        expect(
+            screen.getByTestId('challenge-editor-form')
+                .getAttribute('data-edit-mode'),
+        )
+            .toBe('false')
         expect(screen.getByRole('button', { name: 'Edit' }))
             .toBeTruthy()
     })

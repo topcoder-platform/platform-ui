@@ -1549,6 +1549,32 @@ describe('ChallengeEditorForm', () => {
         })
     })
 
+    it('returns to view mode after saving from an edit route with a trailing slash', async () => {
+        const user = userEvent.setup()
+
+        mockedPatchChallenge.mockResolvedValue(validDraftChallenge)
+
+        render(
+            <MemoryRouter initialEntries={['/projects/100578/challenges/12345/edit/']}>
+                <LocationDisplay />
+                <ChallengeEditorForm
+                    challenge={validDraftChallenge}
+                    projectId='100578'
+                />
+            </MemoryRouter>,
+        )
+
+        await user.type(screen.getByLabelText('Challenge Name'), ' updated')
+        await user.click(screen.getByRole('button', { name: 'Save Challenge' }))
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .toHaveBeenCalledTimes(1)
+            expect(screen.getByTestId('location-display'))
+                .toHaveTextContent('/projects/100578/challenges/12345/view')
+        })
+    })
+
     it('clears Marathon Match when a new challenge switches to the Design track', async () => {
         const user = userEvent.setup()
 

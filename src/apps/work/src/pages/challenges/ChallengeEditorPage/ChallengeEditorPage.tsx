@@ -60,6 +60,7 @@ import {
     getAssignedTaskMember,
     getCompleteTaskConfirmationMessage,
     getTaskPrizeAmount,
+    isChallengeEditorViewPath,
     isSelfAssignedCopilot,
     shouldShowCompleteTaskAction,
 } from './ChallengeEditorPage.utils'
@@ -956,7 +957,7 @@ export const ChallengeEditorPage: FC = () => {
     const routeProjectId = params.projectId
 
     const isExistingChallenge = !!challengeId
-    const isViewMode = location.pathname.endsWith('/view')
+    const isViewMode = isChallengeEditorViewPath(location.pathname)
     const isEditMode = isExistingChallenge && !isViewMode
     const [activeTab, setActiveTab] = useState<EditorTab>('details')
     const [isDeleting, setIsDeleting] = useState<boolean>(false)
