@@ -1,7 +1,11 @@
-import { calculateChallengeTotal } from './prize.utils'
+import {
+    calculateChallengeFee,
+    calculateChallengeTotal,
+    formatUsdCurrency,
+} from './prize.utils'
 
 describe('prize utils challenge total', () => {
-    it('adds reviewer total using first-place prize coefficients without fixed reviewer amounts', () => {
+    it('adds the displayed reviewer estimate to the billable challenge subtotal', () => {
         const total = calculateChallengeTotal(
             [
                 {
@@ -35,7 +39,7 @@ describe('prize utils challenge total', () => {
         )
 
         expect(total)
-            .toBeCloseTo(19.16, 2)
+            .toBeCloseTo(20.36, 2)
     })
 
     it('only includes copilot payment in the dollar total for point-based challenges', () => {
@@ -73,5 +77,17 @@ describe('prize utils challenge total', () => {
 
         expect(total)
             .toBe(100)
+    })
+
+    it('calculates challenge fee from decimal or whole-number markup values', () => {
+        expect(calculateChallengeFee(1560, 0.33))
+            .toBeCloseTo(514.8, 2)
+        expect(calculateChallengeFee(1560, 33))
+            .toBeCloseTo(514.8, 2)
+    })
+
+    it('formats usd currency values with two decimal places', () => {
+        expect(formatUsdCurrency(481.8))
+            .toBe('$481.80')
     })
 })

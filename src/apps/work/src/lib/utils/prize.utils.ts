@@ -131,6 +131,17 @@ export function calculateEstimatedReviewerCost(
         }, 0)
 }
 
+/**
+ * Calculates the billable challenge subtotal before billing markup is applied.
+ *
+ * The subtotal includes configured prize payouts plus the estimated reviewer
+ * cost shown in the billing summary. Point-based placement prizes are excluded
+ * from the USD subtotal so only billable dollar amounts remain.
+ *
+ * @param prizeSets prize sets currently configured on the challenge form.
+ * @param reviewers reviewer rows currently configured on the challenge form.
+ * @returns billable subtotal before the derived challenge fee.
+ */
 export function calculateChallengeTotal(
     prizeSets?: PrizeSet[],
     reviewers?: ReviewerInput[],
@@ -145,22 +156,84 @@ export function calculateChallengeTotal(
     const firstPlacePrizeValue = prizeType === PRIZE_TYPES.POINT
         ? 0
         : getFirstPlacePrizeValue(prizeSets)
-
-    const reviewerTotal = (reviewers || [])
-        .reduce((sum, reviewer) => {
-            if (reviewer?.isMemberReview === false) {
-                return sum
-            }
-
-            const baseCoefficient = toNumber(reviewer?.baseCoefficient)
-            const incrementalCoefficient = toNumber(reviewer?.incrementalCoefficient)
-            const reviewerCount = getReviewerCount(reviewer)
-            const reviewerCost = (baseCoefficient + incrementalCoefficient) * firstPlacePrizeValue
-
-            return sum + reviewerCost * reviewerCount
-        }, 0)
+    const reviewerTotal = prizeType === PRIZE_TYPES.POINT
+        ? 0
+        : calculateEstimatedReviewerCost(firstPlacePrizeValue, reviewers)
 
     return prizesTotal + reviewerTotal
+}
+
+/**
+ * Normalizes billing markup into a decimal multiplier.
+ *
+ * Stored markup can arrive as either a decimal fraction like `0.15` or a whole
+ * percentage like `15`. Missing or invalid inputs return `undefined`.
+ *
+ * @param billingMarkup raw billing markup from challenge billing data.
+ * @returns normalized decimal markup, or `undefined` when unavailable.
+ */
+function normalizeBillingMarkup(billingMarkup: unknown): number | undefined {
+    if (typeof billingMarkup === 'number') {
+        if (!Number.isFinite(billingMarkup)) {
+            return undefined
+        }
+
+        return billingMarkup > 1
+            ? billingMarkup / 100
+            : billingMarkup
+    }
+
+    if (typeof billingMarkup !== 'string') {
+        return undefined
+    }
+
+    const trimmedMarkup = billingMarkup.trim()
+    if (!trimmedMarkup) {
+        return undefined
+    }
+
+    const normalizedMarkup = Number(trimmedMarkup)
+    if (!Number.isFinite(normalizedMarkup)) {
+        return undefined
+    }
+
+    return normalizedMarkup > 1
+        ? normalizedMarkup / 100
+        : normalizedMarkup
+}
+
+/**
+ * Calculates the derived challenge fee for the current billable subtotal.
+ *
+ * @param challengeTotal billable subtotal before markup is applied.
+ * @param billingMarkup raw billing markup from challenge billing data.
+ * @returns calculated challenge fee, or `undefined` when markup is unavailable.
+ */
+export function calculateChallengeFee(
+    challengeTotal: number,
+    billingMarkup: unknown,
+): number | undefined {
+    const normalizedMarkup = normalizeBillingMarkup(billingMarkup)
+
+    if (normalizedMarkup === undefined) {
+        return undefined
+    }
+
+    return challengeTotal * normalizedMarkup
+}
+
+/**
+ * Formats a dollar amount with a fixed two-decimal display.
+ *
+ * @param value raw amount to format.
+ * @returns formatted USD string such as `$481.80`.
+ */
+export function formatUsdCurrency(value: unknown): string {
+    return `$${toNumber(value)
+        .toLocaleString(undefined, {
+            maximumFractionDigits: 2,
+            minimumFractionDigits: 2,
+        })}`
 }
 
 export function formatCurrency(
