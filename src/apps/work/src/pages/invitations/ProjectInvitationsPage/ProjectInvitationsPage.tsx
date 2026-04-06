@@ -123,6 +123,7 @@ export const ProjectInvitationsPage: FC = () => {
     const projectResult: UseFetchProjectResult = useFetchProject(projectId || undefined)
     const projectError: Error | undefined = projectResult.error
     const isProjectLoading: boolean = projectResult.isLoading
+    const mutateProject = projectResult.mutate
     const project: Project | undefined = projectResult.project
 
     const {
@@ -182,16 +183,7 @@ export const ProjectInvitationsPage: FC = () => {
         },
         [processedStatus, projectName],
     )
-    const resultButtonLabel = useMemo(
-        () => {
-            if (processedStatus === PROJECT_MEMBER_INVITE_STATUS.ACCEPTED) {
-                return 'Go to project'
-            }
-
-            return 'Go to work'
-        },
-        [processedStatus],
-    )
+    const resultButtonLabel = 'OK'
 
     const redirectToDefault = useCallback(() => {
         navigate('/projects')
@@ -203,7 +195,9 @@ export const ProjectInvitationsPage: FC = () => {
 
     const redirectAfterUpdate = useCallback((status: string): void => {
         if (status === PROJECT_MEMBER_INVITE_STATUS.ACCEPTED) {
-            navigate(`/projects/${projectId}/challenges`)
+            navigate(`/projects/${projectId}/challenges`, {
+                replace: true,
+            })
             return
         }
 
@@ -219,12 +213,32 @@ export const ProjectInvitationsPage: FC = () => {
             setIsUpdatingStatus(status)
 
             try {
-                await updateProjectMemberInvite(
+                const updatedInvitation = await updateProjectMemberInvite(
                     projectId,
                     invitationId,
                     status,
                     source,
                 )
+                await mutateProject(currentProject => {
+                    const resolvedProject = currentProject || project
+
+                    if (!resolvedProject || !Array.isArray(resolvedProject.invites)) {
+                        return resolvedProject
+                    }
+
+                    return {
+                        ...resolvedProject,
+                        invites: resolvedProject.invites.map(currentInvitation => (
+                            toOptionalString(currentInvitation.id) === invitationId
+                                ? {
+                                    ...currentInvitation,
+                                    ...updatedInvitation,
+                                    status,
+                                }
+                                : currentInvitation
+                        )),
+                    }
+                }, false)
                 setProcessedStatus(status)
             } catch (error) {
                 showErrorToast(error instanceof Error
@@ -238,6 +252,8 @@ export const ProjectInvitationsPage: FC = () => {
         [
             invitationId,
             isUpdatingStatus,
+            mutateProject,
+            project,
             projectId,
             redirectToDefault,
             source,
@@ -258,20 +274,6 @@ export const ProjectInvitationsPage: FC = () => {
         }
 
         redirectAfterUpdate(processedStatus)
-    }, [processedStatus, redirectAfterUpdate])
-
-    useEffect(() => {
-        if (!processedStatus) {
-            return undefined
-        }
-
-        const timeoutId = window.setTimeout(() => {
-            redirectAfterUpdate(processedStatus)
-        }, 2200)
-
-        return () => {
-            window.clearTimeout(timeoutId)
-        }
     }, [processedStatus, redirectAfterUpdate])
 
     useEffect(() => {
