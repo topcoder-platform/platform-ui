@@ -53,6 +53,7 @@ import {
 import styles from './ProjectEditorForm.module.scss'
 
 interface ProjectEditorFormProps {
+    billingAccountSearchUserId?: number | string
     canManage: boolean
     isEdit: boolean
     onSuccess?: (project: Project) => void
@@ -484,6 +485,7 @@ export const ProjectEditorForm: FC<ProjectEditorFormProps> = (props: ProjectEdit
                             placeholder='Search billing account by name'
                             projectId={projectId}
                             required
+                            userId={props.billingAccountSearchUserId}
                         />
                     </div>
 

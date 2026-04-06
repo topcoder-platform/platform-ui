@@ -35,6 +35,7 @@ interface FormBillingAccountAutocompleteProps {
     placeholder?: string
     projectId?: string
     required?: boolean
+    userId?: number | string
 }
 
 interface BillingAccountOption {
@@ -185,7 +186,9 @@ function createDebouncedLoader(
  *
  * When `projectId` is provided, the selector also preloads the caller's
  * available project billing accounts so edit flows match legacy behavior.
- * The field stores only the selected billing-account id in form state.
+ * When `userId` is provided, server-side search is scoped to billing accounts
+ * granted to that user. The field stores only the selected billing-account id
+ * in form state.
  */
 export const FormBillingAccountAutocomplete: FC<FormBillingAccountAutocompleteProps> = (
     props: FormBillingAccountAutocompleteProps,
@@ -224,6 +227,7 @@ export const FormBillingAccountAutocomplete: FC<FormBillingAccountAutocompletePr
                     name: normalizedInputValue,
                     page: 1,
                     perPage: 20,
+                    userId: normalizeOptionalStringValue(props.userId),
                 })
                 const options = billingAccounts.map(account => toOption(account))
 
@@ -240,7 +244,7 @@ export const FormBillingAccountAutocomplete: FC<FormBillingAccountAutocompletePr
                 return []
             }
         },
-        [],
+        [props.userId],
     )
 
     const debouncedLoadBillingAccountOptions = useMemo(

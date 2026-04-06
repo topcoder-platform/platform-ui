@@ -60,6 +60,7 @@ function shouldRedirectToProjects(
 }
 
 interface RenderEditorContentParams {
+    billingAccountSearchUserId: number | string | undefined
     canManageProject: boolean
     isEdit: boolean
     isLoading: boolean
@@ -92,6 +93,7 @@ function renderEditorContent(params: RenderEditorContentParams): JSX.Element {
 
     return (
         <ProjectEditorForm
+            billingAccountSearchUserId={params.billingAccountSearchUserId}
             canManage={params.canManageProject}
             isEdit={params.isEdit}
             onSuccess={params.onSuccess}
@@ -163,6 +165,7 @@ export const ProjectEditorPage: FC = () => {
         >
             <div className={styles.container}>
                 {renderEditorContent({
+                    billingAccountSearchUserId: loginUserInfo?.userId,
                     canManageProject,
                     isEdit,
                     isLoading,
