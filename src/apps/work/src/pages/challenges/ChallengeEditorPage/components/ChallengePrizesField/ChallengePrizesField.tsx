@@ -398,6 +398,7 @@ export const ChallengePrizesField: FC<ChallengePrizesFieldProps> = (
                             ? prizeValueError.message
                             : undefined
                         const hasValueError = !!prizeValueError
+                        const isFirstMultiPrizeRow = showPrizeRowLabels && index === 0
                         const isRemovablePrize = showPrizeRowLabels && index > 0
 
                         return (
@@ -407,6 +408,7 @@ export const ChallengePrizesField: FC<ChallengePrizesFieldProps> = (
                                     showPrizeRowLabels
                                         ? styles.multiPrizeRow
                                         : styles.singlePrizeRow,
+                                    isFirstMultiPrizeRow ? styles.firstMultiPrizeRow : undefined,
                                     isRemovablePrize ? styles.prizeRowWithRemove : undefined,
                                     prizeValueErrorMessage ? styles.prizeRowWithError : undefined,
                                 )}
