@@ -24,7 +24,10 @@ jest.mock('./HumanReviewTab', () => ({
 jest.mock('./AiReviewTab', () => ({
     __esModule: true,
     default: function AiReviewTabMock(
-        props: { onConfigRemoved?: () => Promise<void> | void },
+        props: {
+            hasSubmissions?: boolean
+            onConfigRemoved?: () => Promise<void> | void
+        },
     ) {
         function handleRemoveClick(): void {
             props.onConfigRemoved?.()
@@ -32,6 +35,9 @@ jest.mock('./AiReviewTab', () => ({
 
         return (
             <div data-testid='ai-review-tab'>
+                {props.hasSubmissions
+                    ? <div data-testid='ai-review-tab-read-only'>AI review locked</div>
+                    : undefined}
                 <button
                     onClick={handleRemoveClick}
                     type='button'
@@ -55,6 +61,7 @@ const mockedPatchChallenge = patchChallenge as jest.Mock
 
 interface TestHarnessProps {
     isReadOnly?: boolean
+    numOfSubmissions?: number
     reviewers: Reviewer[]
 }
 
@@ -62,6 +69,7 @@ const TestHarness = (props: TestHarnessProps): JSX.Element => {
     const formMethods = useForm<ChallengeEditorFormData>({
         defaultValues: {
             id: 'challenge-1',
+            numOfSubmissions: props.numOfSubmissions,
             phases: [],
             reviewers: props.reviewers,
             trackId: 'track-id',
@@ -206,6 +214,31 @@ describe('ReviewersField', () => {
             .toBe('true')
         expect(screen.getByTestId('ai-review-tab').parentElement?.hasAttribute('hidden'))
             .toBe(false)
+    })
+
+    it('passes the submission lock state to the AI tab once submissions exist', async () => {
+        const user = userEvent.setup()
+
+        render(
+            <TestHarness
+                numOfSubmissions={1}
+                reviewers={[
+                    {
+                        handle: 'human-1',
+                        isMemberReview: true,
+                        memberId: 'member-1',
+                    },
+                    {
+                        aiWorkflowId: 'workflow-1',
+                        isMemberReview: false,
+                    },
+                ]}
+            />,
+        )
+
+        await user.click(screen.getByRole('tab', { name: 'AI Review (1)' }))
+
+        expect(screen.getByTestId('ai-review-tab-read-only')).not.toBeNull()
     })
 
     it('supports keyboard navigation between review tabs', async () => {
