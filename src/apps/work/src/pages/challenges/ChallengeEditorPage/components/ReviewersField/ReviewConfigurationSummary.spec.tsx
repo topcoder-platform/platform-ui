@@ -14,6 +14,7 @@ import {
     fetchWorkflows,
 } from '../../../../../lib/services'
 
+import styles from './ReviewConfigurationSummary.module.scss'
 import { ReviewConfigurationSummary } from './ReviewConfigurationSummary'
 
 jest.mock('../../../../../lib/hooks', () => ({
@@ -143,8 +144,100 @@ describe('ReviewConfigurationSummary', () => {
             .toHaveBeenCalledWith('challenge-1')
         expect(mockedFetchScorecards)
             .toHaveBeenCalledWith({
+                page: 1,
                 perPage: 200,
                 typeId: 'type-1',
             })
+    })
+
+    it('loads referenced human-review scorecard names from later scorecard catalog pages', async () => {
+        mockedFetchAiReviewConfigByChallenge.mockResolvedValue(undefined)
+        mockedFetchScorecards.mockImplementation(({ page }: { page?: number }) => Promise.resolve(
+            page === 1
+                ? Array.from({ length: 200 }, (_, index) => ({
+                    id: `catalog-scorecard-${index + 1}`,
+                    name: `Catalog Scorecard ${index + 1}`,
+                }))
+                : [{
+                    id: 'scorecard-2',
+                    name: 'Approval Review Scorecard',
+                }],
+        ))
+
+        render(
+            <ReviewConfigurationSummary
+                challengeId='challenge-1'
+                phases={[{
+                    name: 'Approval',
+                    phaseId: 'phase-approval',
+                }]}
+                reviewers={[{
+                    handle: 'approver-one',
+                    isMemberReview: true,
+                    memberId: 'member-2',
+                    memberReviewerCount: 1,
+                    phaseId: 'phase-approval',
+                    scorecardId: 'scorecard-2',
+                }]}
+                typeId='type-1'
+            />,
+        )
+
+        expect(await screen.findByText('Approval Review Scorecard')).not.toBeNull()
+        expect(screen.queryByText('scorecard-2'))
+            .toBeNull()
+        expect(mockedFetchScorecards)
+            .toHaveBeenNthCalledWith(1, {
+                page: 1,
+                perPage: 200,
+                typeId: 'type-1',
+            })
+        expect(mockedFetchScorecards)
+            .toHaveBeenNthCalledWith(2, {
+                page: 2,
+                perPage: 200,
+                typeId: 'type-1',
+            })
+    })
+
+    it('groups the locked review-flow path into the centered failure branch', async () => {
+        const rendered: ReturnType<typeof render> = render(
+            <ReviewConfigurationSummary
+                challengeId='challenge-1'
+                phases={[{
+                    name: 'Review',
+                    phaseId: 'phase-1',
+                }]}
+                reviewers={[
+                    {
+                        handle: 'reviewer-one',
+                        isMemberReview: true,
+                        memberId: 'member-1',
+                        memberReviewerCount: 1,
+                        phaseId: 'phase-1',
+                        scorecardId: 'scorecard-1',
+                    },
+                    {
+                        aiWorkflowId: 'workflow-1',
+                        isMemberReview: false,
+                    },
+                ]}
+                typeId='type-1'
+            />,
+        )
+        const container: HTMLElement = rendered.container
+
+        expect(await screen.findByText('Locked')).not.toBeNull()
+
+        const failureBranch = container.querySelector(`.${styles.failureBranch}`)
+        expect(failureBranch).not.toBeNull()
+        expect(failureBranch?.querySelector(`.${styles.failureArrow}`)).not.toBeNull()
+        expect(failureBranch?.querySelector(`.${styles.flowStep}`)).not.toBeNull()
+        expect(failureBranch?.textContent)
+            .toContain('Locked')
+        expect(failureBranch?.textContent)
+            .toContain('No human')
+        expect(failureBranch?.textContent)
+            .toContain('review needed')
     })
 })
