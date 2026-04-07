@@ -214,6 +214,25 @@ function getScorecardLabel(
 }
 
 /**
+ * Resolves the scorecard identifier for an AI workflow row.
+ *
+ * @param workflow AI workflow row from the saved config or reviewer fallback.
+ * @param availableWorkflowMap lookup of workflow metadata from the review API.
+ * @returns the normalized scorecard identifier when one is linked.
+ */
+function getWorkflowScorecardId(
+    workflow: AiReviewConfigWorkflow,
+    availableWorkflowMap: Map<string, Workflow>,
+): string | undefined {
+    const workflowId = normalizeReviewerText(workflow.workflowId)
+    const workflowDetails = workflow.workflow || availableWorkflowMap.get(workflowId)
+
+    return normalizeReviewerText(workflow.workflow?.scorecard?.id)
+        || normalizeReviewerText(workflowDetails?.scorecardId)
+        || undefined
+}
+
+/**
  * Resolves the display name for an AI workflow row.
  *
  * @param workflow AI workflow row from the saved config or reviewer fallback.
@@ -243,13 +262,13 @@ function getWorkflowScorecardLabel(
     availableWorkflowMap: Map<string, Workflow>,
     scorecardNameById: Map<string, string>,
 ): string {
-    const workflowId = normalizeReviewerText(workflow.workflowId)
-    const workflowDetails = workflow.workflow || availableWorkflowMap.get(workflowId)
     const scorecardName = normalizeReviewerText(workflow.workflow?.scorecard?.name)
-    const scorecardId = normalizeReviewerText(workflow.workflow?.scorecard?.id)
-        || normalizeReviewerText(workflowDetails?.scorecardId)
+    const scorecardId = getWorkflowScorecardId(workflow, availableWorkflowMap)
+    const fetchedScorecardName = scorecardId
+        ? scorecardNameById.get(scorecardId)
+        : undefined
 
-    return scorecardName || scorecardNameById.get(scorecardId) || scorecardId || '-'
+    return scorecardName || fetchedScorecardName || scorecardId || '-'
 }
 
 /**
@@ -263,16 +282,85 @@ function getWorkflowScorecardUrl(
     workflow: AiReviewConfigWorkflow,
     availableWorkflowMap: Map<string, Workflow>,
 ): string | undefined {
-    const workflowId = normalizeReviewerText(workflow.workflowId)
-    const workflowDetails = workflow.workflow || availableWorkflowMap.get(workflowId)
-    const scorecardId = normalizeReviewerText(workflow.workflow?.scorecard?.id)
-        || normalizeReviewerText(workflowDetails?.scorecardId)
+    const scorecardId = getWorkflowScorecardId(workflow, availableWorkflowMap)
 
     if (!scorecardId || !REVIEW_APP_URL) {
         return undefined
     }
 
     return `${REVIEW_APP_URL}/scorecard/${encodeURIComponent(scorecardId)}`
+}
+
+/**
+ * Collects the scorecard ids whose names must be loaded for the read-only summary.
+ *
+ * @param reviewers configured human reviewers from the challenge.
+ * @param workflows AI workflows displayed in the summary.
+ * @param availableWorkflowMap lookup of workflow metadata from the review API.
+ * @returns unique scorecard ids that still need catalog lookup.
+ */
+function getReferencedScorecardIds(
+    reviewers: Reviewer[],
+    workflows: AiReviewConfigWorkflow[],
+    availableWorkflowMap: Map<string, Workflow>,
+): string[] {
+    const scorecardIds = new Set<string>()
+
+    reviewers.forEach(reviewer => {
+        const scorecardId = normalizeReviewerText(reviewer.scorecardId)
+
+        if (scorecardId) {
+            scorecardIds.add(scorecardId)
+        }
+    })
+
+    workflows.forEach(workflow => {
+        if (normalizeReviewerText(workflow.workflow?.scorecard?.name)) {
+            return
+        }
+
+        const scorecardId = getWorkflowScorecardId(workflow, availableWorkflowMap)
+
+        if (scorecardId) {
+            scorecardIds.add(scorecardId)
+        }
+    })
+
+    return Array.from(scorecardIds)
+}
+
+/**
+ * Builds the scorecard-name lookup used by the human and AI review summary tables.
+ *
+ * @param scorecards fetched scorecard catalog rows.
+ * @param workflows AI workflows displayed in the summary.
+ * @returns a normalized lookup of scorecard ids to display names.
+ */
+function buildScorecardNameMap(
+    scorecards: Scorecard[],
+    workflows: AiReviewConfigWorkflow[],
+): Map<string, string> {
+    const scorecardNameById = new Map<string, string>()
+
+    scorecards.forEach(scorecard => {
+        const scorecardId = normalizeReviewerText(scorecard.id)
+        const scorecardName = normalizeReviewerText(scorecard.name)
+
+        if (scorecardId && scorecardName) {
+            scorecardNameById.set(scorecardId, scorecardName)
+        }
+    })
+
+    workflows.forEach(workflow => {
+        const scorecardId = normalizeReviewerText(workflow.workflow?.scorecard?.id)
+        const scorecardName = normalizeReviewerText(workflow.workflow?.scorecard?.name)
+
+        if (scorecardId && scorecardName && !scorecardNameById.has(scorecardId)) {
+            scorecardNameById.set(scorecardId, scorecardName)
+        }
+    })
+
+    return scorecardNameById
 }
 
 /**
@@ -395,13 +483,6 @@ export const ReviewConfigurationSummary: FC<ReviewConfigurationSummaryProps> = (
             .filter((entry): entry is [string, string] => !!entry)),
         [props.phases],
     )
-    const scorecardNameById = useMemo(
-        () => new Map(scorecards.map(scorecard => [
-            scorecard.id,
-            scorecard.name,
-        ])),
-        [scorecards],
-    )
     const workflowMap = useMemo(
         () => new Map(workflows.map(workflow => [
             workflow.id,
@@ -428,9 +509,32 @@ export const ReviewConfigurationSummary: FC<ReviewConfigurationSummaryProps> = (
         () => (aiConfiguration?.workflows || []).some(workflow => workflow.isGating),
         [aiConfiguration?.workflows],
     )
-    const workflowsToDisplay = hasConfiguredAiWorkflows
-        ? aiConfiguration?.workflows || []
-        : mapLegacyAiReviewersToWorkflows(aiReviewers, workflowMap)
+    const workflowsToDisplay = useMemo(
+        () => (hasConfiguredAiWorkflows
+            ? aiConfiguration?.workflows || []
+            : mapLegacyAiReviewersToWorkflows(aiReviewers, workflowMap)),
+        [
+            aiConfiguration?.workflows,
+            aiReviewers,
+            hasConfiguredAiWorkflows,
+            workflowMap,
+        ],
+    )
+    const referencedScorecardIds = useMemo(
+        () => getReferencedScorecardIds(humanReviewers, workflowsToDisplay, workflowMap),
+        [
+            humanReviewers,
+            workflowMap,
+            workflowsToDisplay,
+        ],
+    )
+    const scorecardNameById = useMemo(
+        () => buildScorecardNameMap(scorecards, workflowsToDisplay),
+        [
+            scorecards,
+            workflowsToDisplay,
+        ],
+    )
     const errorMessages = useMemo(
         () => [
             resourceRolesError?.message,
@@ -452,16 +556,82 @@ export const ReviewConfigurationSummary: FC<ReviewConfigurationSummaryProps> = (
     useEffect(() => {
         let mounted = true
 
-        fetchScorecards({
-            perPage: 200,
-            typeId: props.typeId,
-        })
-            .then(fetchedScorecards => {
-                if (mounted) {
-                    setScorecards(fetchedScorecards)
-                    setScorecardError(undefined)
+        if (!referencedScorecardIds.length) {
+            setScorecards([])
+            setScorecardError(undefined)
+
+            return () => {
+                mounted = false
+            }
+        }
+
+        const loadReferencedScorecards = async (): Promise<void> => {
+            const loadedScorecards = new Map<string, Scorecard>()
+            const missingScorecardIds = new Set(referencedScorecardIds)
+            const normalizedTypeId = normalizeReviewerText(props.typeId) || undefined
+            const perPage = 200
+
+            const storeFetchedScorecards = (fetchedScorecards: Scorecard[]): void => {
+                fetchedScorecards.forEach(scorecard => {
+                    const scorecardId = normalizeReviewerText(scorecard.id)
+
+                    if (!scorecardId) {
+                        return
+                    }
+
+                    loadedScorecards.set(scorecardId, scorecard)
+                    missingScorecardIds.delete(scorecardId)
+                })
+            }
+
+            const fetchScorecardPage = async (
+                page: number,
+                typeId?: string,
+            ): Promise<boolean> => {
+                const fetchedScorecards = await fetchScorecards({
+                    page,
+                    perPage,
+                    ...(typeId
+                        ? {
+                            typeId,
+                        }
+                        : {}),
+                })
+
+                if (!mounted) {
+                    return true
                 }
-            })
+
+                storeFetchedScorecards(fetchedScorecards)
+
+                if (!missingScorecardIds.size) {
+                    return true
+                }
+
+                if (fetchedScorecards.length < perPage) {
+                    return false
+                }
+
+                return fetchScorecardPage(page + 1, typeId)
+            }
+
+            if (normalizedTypeId) {
+                await fetchScorecardPage(1, normalizedTypeId)
+            }
+
+            if (mounted && missingScorecardIds.size) {
+                await fetchScorecardPage(1)
+            }
+
+            if (!mounted) {
+                return
+            }
+
+            setScorecards(Array.from(loadedScorecards.values()))
+            setScorecardError(undefined)
+        }
+
+        loadReferencedScorecards()
             .catch(error => {
                 if (mounted) {
                     setScorecardError(error instanceof Error
@@ -473,7 +643,7 @@ export const ReviewConfigurationSummary: FC<ReviewConfigurationSummaryProps> = (
         return () => {
             mounted = false
         }
-    }, [props.typeId])
+    }, [props.typeId, referencedScorecardIds])
 
     useEffect(() => {
         let mounted = true
@@ -810,21 +980,23 @@ export const ReviewConfigurationSummary: FC<ReviewConfigurationSummaryProps> = (
                         {hasConfiguredAiWorkflows && isAiGatingMode && hasAiGateWorkflow
                             ? (
                                 <div className={styles.failureRow}>
-                                    <div className={styles.failureArrow}>
-                                        <span>↓</span>
-                                        <span className={styles.failLabel}>
-                                            &lt;
-                                            {' '}
-                                            {aiConfiguration?.minPassingThreshold ?? 75}
-                                            %
-                                        </span>
-                                        <span>↓</span>
-                                    </div>
-                                    <div className={styles.flowStep}>
-                                        <span aria-hidden='true' className={styles.flowBoxIcon}>🔒</span>
-                                        <strong className={styles.flowBoxTitle}>Locked</strong>
-                                        <span className={styles.flowDescription}>No human</span>
-                                        <span className={styles.flowDescription}>review needed</span>
+                                    <div className={styles.failureBranch}>
+                                        <div className={styles.failureArrow}>
+                                            <span>↓</span>
+                                            <span className={styles.failLabel}>
+                                                &lt;
+                                                {' '}
+                                                {aiConfiguration?.minPassingThreshold ?? 75}
+                                                %
+                                            </span>
+                                            <span>↓</span>
+                                        </div>
+                                        <div className={styles.flowStep}>
+                                            <span aria-hidden='true' className={styles.flowBoxIcon}>🔒</span>
+                                            <strong className={styles.flowBoxTitle}>Locked</strong>
+                                            <span className={styles.flowDescription}>No human</span>
+                                            <span className={styles.flowDescription}>review needed</span>
+                                        </div>
                                     </div>
                                 </div>
                             )

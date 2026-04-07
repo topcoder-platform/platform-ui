@@ -43,9 +43,10 @@ describe('ProjectCard', () => {
             </MemoryRouter>,
         )
 
-        expect(screen.getByText('Project created by admin')
+        const projectLink: HTMLAnchorElement | null = screen.getByText('Project created by admin')
             .closest('a')
-            ?.getAttribute('href'))
+
+        expect(projectLink?.getAttribute('href'))
             .toBe('/projects/100440/challenges')
     })
 })

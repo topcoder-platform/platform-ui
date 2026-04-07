@@ -261,6 +261,13 @@
     margin-top: -8px;
 }
 
+.failureBranch {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    grid-column: 3;
+}
+
 .failureArrow {
     align-items: center;
     color: #666;
@@ -269,7 +276,6 @@
     font-size: 24px;
     font-weight: 600;
     gap: 4px;
-    grid-column: 3;
     justify-content: center;
     line-height: 1;
 }
