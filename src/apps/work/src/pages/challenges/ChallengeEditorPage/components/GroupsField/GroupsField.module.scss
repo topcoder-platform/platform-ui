@@ -17,15 +17,20 @@
 
 .fieldHeader {
     align-items: center;
-    display: flex;
-    gap: 12px;
+    align-self: flex-start;
+    display: inline-flex;
+    position: relative;
+    width: fit-content;
+}
+
+.fieldHeaderWithAction {
+    padding-right: 32px;
 }
 
 .fieldLabel {
     color: $black-80;
     font-size: 14px;
     font-weight: 700;
-    line-height: 20px;
 }
 
 .createGroupButton {
@@ -40,6 +45,10 @@
     height: 20px;
     justify-content: center;
     padding: 0;
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
     width: 20px;
 
     svg {

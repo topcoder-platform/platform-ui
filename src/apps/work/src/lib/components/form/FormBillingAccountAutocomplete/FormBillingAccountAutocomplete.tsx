@@ -35,6 +35,7 @@ interface FormBillingAccountAutocompleteProps {
     placeholder?: string
     projectId?: string
     required?: boolean
+    selectedBillingAccount?: BillingAccount
     userId?: number | string
 }
 
@@ -187,8 +188,10 @@ function createDebouncedLoader(
  * When `projectId` is provided, the selector also preloads the caller's
  * available project billing accounts so edit flows match legacy behavior.
  * When `userId` is provided, server-side search is scoped to billing accounts
- * granted to that user. The field stores only the selected billing-account id
- * in form state.
+ * granted to that user. When `selectedBillingAccount` is provided, the field
+ * seeds the selected option label from project-scoped data before attempting a
+ * direct billing-account lookup. The field stores only the selected
+ * billing-account id in form state.
  */
 export const FormBillingAccountAutocomplete: FC<FormBillingAccountAutocompleteProps> = (
     props: FormBillingAccountAutocompleteProps,
@@ -257,11 +260,46 @@ export const FormBillingAccountAutocomplete: FC<FormBillingAccountAutocompletePr
         [field.value],
     )
 
+    const selectedBillingAccountOption = useMemo<BillingAccountOption | undefined>(
+        () => {
+            const normalizedSelectedBillingAccountId = normalizeBillingAccountId(
+                props.selectedBillingAccount?.id,
+            )
+            const normalizedSelectedBillingAccountName = normalizeOptionalStringValue(
+                props.selectedBillingAccount?.name,
+            )
+
+            if (!normalizedSelectedBillingAccountId || !normalizedSelectedBillingAccountName) {
+                return undefined
+            }
+
+            return toOption({
+                ...props.selectedBillingAccount,
+                id: normalizedSelectedBillingAccountId,
+                name: normalizedSelectedBillingAccountName,
+            })
+        },
+        [props.selectedBillingAccount],
+    )
+
     const hasSelectedOption = useMemo(
         () => !!selectedBillingAccountId
-            && optionCache.some(option => option.value === selectedBillingAccountId),
-        [optionCache, selectedBillingAccountId],
+            && (
+                optionCache.some(option => option.value === selectedBillingAccountId)
+                || selectedBillingAccountOption?.value === selectedBillingAccountId
+            ),
+        [optionCache, selectedBillingAccountId, selectedBillingAccountOption],
     )
+
+    useEffect(() => {
+        if (!selectedBillingAccountOption) {
+            return
+        }
+
+        setOptionCache(previousOptions => mergeOptions(previousOptions, [
+            selectedBillingAccountOption,
+        ]))
+    }, [selectedBillingAccountOption])
 
     useEffect(() => {
         if (!props.projectId) {
@@ -349,8 +387,11 @@ export const FormBillingAccountAutocomplete: FC<FormBillingAccountAutocompletePr
         }
 
         return optionCache.find(option => option.value === selectedBillingAccountId)
+            || (selectedBillingAccountOption?.value === selectedBillingAccountId
+                ? selectedBillingAccountOption
+                : undefined)
             || createFallbackOption(selectedBillingAccountId)
-    }, [optionCache, selectedBillingAccountId])
+    }, [optionCache, selectedBillingAccountId, selectedBillingAccountOption])
 
     const hint = searchErrorMessage || props.hint
 

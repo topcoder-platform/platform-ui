@@ -50,6 +50,14 @@ interface TestFormValues {
 interface TestHarnessProps {
     defaultBillingAccountId?: string
     projectId?: string
+    selectedBillingAccount?: {
+        active?: boolean
+        endDate?: string
+        id: string
+        name: string
+        startDate?: string
+        status?: string
+    }
     userId?: string
 }
 
@@ -68,6 +76,7 @@ const TestHarness: FC<TestHarnessProps> = (
                 label='Billing Account'
                 name='billingAccountId'
                 projectId={props.projectId}
+                selectedBillingAccount={props.selectedBillingAccount}
                 userId={props.userId}
             />
         </FormProvider>
@@ -272,6 +281,35 @@ describe('FormBillingAccountAutocomplete', () => {
             .not
             .toHaveBeenCalled()
         expect(searchBillingAccountsMock)
+            .not
+            .toHaveBeenCalled()
+    })
+
+    it('uses the provided selected billing-account details before fetching by id', async () => {
+        render(
+            <TestHarness
+                defaultBillingAccountId='80001063'
+                projectId='100578'
+                selectedBillingAccount={{
+                    active: true,
+                    endDate: '2026-10-16T23:59:00.000Z',
+                    id: '80001063',
+                    name: 'BA For Marios',
+                    startDate: '2023-10-31T00:00:00.000Z',
+                    status: 'ACTIVE',
+                }}
+            />,
+        )
+
+        await waitFor(() => {
+            expect(latestAsyncSelectProps?.value)
+                .toEqual(expect.objectContaining({
+                    label: expect.stringContaining('BA For Marios'),
+                    value: '80001063',
+                }))
+        })
+
+        expect(fetchBillingAccountByIdMock)
             .not
             .toHaveBeenCalled()
     })

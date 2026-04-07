@@ -83,7 +83,11 @@ export const GroupsField: FC = () => {
     return (
         <div className={styles.container}>
             <div className={styles.selectField}>
-                <div className={styles.fieldHeader}>
+                <div
+                    className={`${styles.fieldHeader} ${canManageGroups
+                        ? styles.fieldHeaderWithAction
+                        : ''}`}
+                >
                     <label className={styles.fieldLabel} htmlFor='groups'>
                         Groups
                     </label>

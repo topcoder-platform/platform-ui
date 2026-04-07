@@ -40,6 +40,7 @@ import {
     createProjectEditorSchema,
 } from '../../../../../lib/schemas/project-editor.schema'
 import {
+    BillingAccount,
     createProject,
     ProjectBillingAccount,
     updateProject,
@@ -314,6 +315,34 @@ export const ProjectEditorForm: FC<ProjectEditorFormProps> = (props: ProjectEdit
         ],
     )
 
+    const selectedBillingAccount = useMemo<BillingAccount | undefined>(
+        () => {
+            const selectedBillingAccountId = normalizeOptionalStringValue(
+                props.projectDetail?.billingAccountId,
+            ) || normalizeOptionalStringValue(projectBillingAccount?.id)
+            const selectedBillingAccountName = currentProjectBillingAccountName
+                || normalizeOptionalStringValue(projectBillingAccount?.name)
+
+            if (!selectedBillingAccountId || !selectedBillingAccountName) {
+                return undefined
+            }
+
+            return {
+                active: projectBillingAccount?.active,
+                endDate: projectBillingAccount?.endDate,
+                id: selectedBillingAccountId,
+                name: selectedBillingAccountName,
+                startDate: projectBillingAccount?.startDate,
+                status: projectBillingAccount?.status,
+            }
+        },
+        [
+            currentProjectBillingAccountName,
+            projectBillingAccount,
+            props.projectDetail?.billingAccountId,
+        ],
+    )
+
     useEffect(() => {
         reset(getDefaultFormValues(props.isEdit, props.projectDetail))
     }, [props.isEdit, props.projectDetail, reset])
@@ -485,6 +514,7 @@ export const ProjectEditorForm: FC<ProjectEditorFormProps> = (props: ProjectEdit
                             placeholder='Search billing account by name'
                             projectId={projectId}
                             required
+                            selectedBillingAccount={selectedBillingAccount}
                             userId={props.billingAccountSearchUserId}
                         />
                     </div>
