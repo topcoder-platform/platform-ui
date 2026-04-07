@@ -1,6 +1,7 @@
 import type { BackendReview, BackendSubmission } from '../models'
 
 import {
+    resolveFallbackSubmissionId,
     resolveSubmissionForReview,
     reviewMatchesSubmission,
 } from './submissionResolution'
@@ -32,5 +33,18 @@ describe('submissionResolution', () => {
             submission,
         }))
             .toBe(true)
+    })
+
+    it('ignores empty submission ids when resolving fallback submission identifiers', () => {
+        expect(resolveFallbackSubmissionId({
+            defaultId: 'default-submission-id',
+            matchingSubmission: submission,
+            review: {
+                id: 'review-1',
+                legacySubmissionId: 'legacy-submission-1',
+                submissionId: '',
+            } as unknown as BackendReview,
+        }))
+            .toBe('legacy-submission-1')
     })
 })
