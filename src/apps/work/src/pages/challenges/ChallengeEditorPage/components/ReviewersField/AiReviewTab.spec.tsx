@@ -1,5 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
 import {
+    act,
+    fireEvent,
     render,
     screen,
     waitFor,
@@ -10,14 +12,32 @@ import {
     useFetchChallengeTypes,
 } from '../../../../../lib/hooks'
 import {
+    fetchAiReviewTemplates,
     fetchAiReviewConfigByChallenge,
     fetchWorkflows,
+    updateAiReviewConfig,
 } from '../../../../../lib/services'
 
 import AiReviewTab from './AiReviewTab'
 
 jest.mock('../../../../../lib/components', () => ({
-    ConfirmationModal: () => <></>,
+    ConfirmationModal: (props: {
+        cancelText: string
+        confirmText: string
+        onCancel: () => void
+        onConfirm: () => void
+        title: string
+    }) => (
+        <div>
+            <div>{props.title}</div>
+            <button onClick={props.onCancel} type='button'>
+                {props.cancelText}
+            </button>
+            <button onClick={props.onConfirm} type='button'>
+                {props.confirmText}
+            </button>
+        </div>
+    ),
 }))
 jest.mock('../../../../../lib/hooks', () => ({
     useFetchChallengeTracks: jest.fn(),
@@ -65,8 +85,10 @@ jest.mock('~/libs/ui', () => ({
 
 const mockedUseFetchChallengeTracks = useFetchChallengeTracks as jest.Mock
 const mockedUseFetchChallengeTypes = useFetchChallengeTypes as jest.Mock
+const mockedFetchAiReviewTemplates = fetchAiReviewTemplates as jest.Mock
 const mockedFetchAiReviewConfigByChallenge = fetchAiReviewConfigByChallenge as jest.Mock
 const mockedFetchWorkflows = fetchWorkflows as jest.Mock
+const mockedUpdateAiReviewConfig = updateAiReviewConfig as jest.Mock
 
 const persistedAiReviewers = [
     {
@@ -95,6 +117,10 @@ describe('AiReviewTab review mode options', () => {
         })
         mockedFetchAiReviewConfigByChallenge.mockResolvedValue(baseConfiguration)
         mockedFetchWorkflows.mockResolvedValue([])
+    })
+
+    afterEach(() => {
+        jest.useRealTimers()
     })
 
     it('does not fetch a persisted AI review config before any AI reviewers are synced', async () => {
@@ -271,5 +297,78 @@ describe('AiReviewTab review mode options', () => {
         expect(screen.getByText(/Pass\/fail gate\./)).not.toBeNull()
         expect(screen.getAllByTestId('lightning-bolt-icon'))
             .toHaveLength(1)
+    })
+
+    it('clears templateId when switching a saved template config to manual mode', async () => {
+        jest.useFakeTimers()
+
+        mockedFetchAiReviewTemplates.mockResolvedValueOnce([
+            {
+                autoFinalize: false,
+                description: 'Template description',
+                id: 'template-1',
+                minPassingThreshold: 75,
+                mode: 'AI_GATING',
+                title: 'Template 1',
+                workflows: [
+                    {
+                        id: 'config-workflow-1',
+                        isGating: false,
+                        weightPercent: 100,
+                        workflowId: 'workflow-1',
+                    },
+                ],
+            },
+        ])
+        mockedFetchAiReviewConfigByChallenge.mockResolvedValueOnce({
+            ...baseConfiguration,
+            templateId: 'template-1',
+            workflows: [
+                {
+                    id: 'config-workflow-1',
+                    isGating: false,
+                    weightPercent: 100,
+                    workflowId: 'workflow-1',
+                },
+            ],
+        })
+        mockedFetchWorkflows.mockResolvedValueOnce([
+            {
+                id: 'workflow-1',
+                name: 'Workflow 1',
+            },
+        ])
+        mockedUpdateAiReviewConfig.mockImplementation(async (_configId, input) => ({
+            ...baseConfiguration,
+            ...input,
+            id: 'config-1',
+        }))
+
+        render(
+            <AiReviewTab
+                challengeId='challenge-1'
+                reviewers={persistedAiReviewers}
+            />,
+        )
+
+        fireEvent.click(await screen.findByRole('button', { name: 'Switch to manual' }))
+        fireEvent.click(screen.getAllByRole('button', { name: 'Switch to manual' })[1])
+
+        expect(await screen.findByText('Manual configuration')).not.toBeNull()
+
+        await act(async () => {
+            jest.advanceTimersByTime(1600)
+        })
+
+        await waitFor(() => {
+            expect(mockedUpdateAiReviewConfig)
+                .toHaveBeenCalledWith(
+                    'config-1',
+                    expect.objectContaining({
+                        challengeId: 'challenge-1',
+                        templateId: undefined,
+                    }),
+                )
+        })
     })
 })

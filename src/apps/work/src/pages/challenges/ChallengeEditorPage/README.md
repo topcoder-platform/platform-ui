@@ -35,7 +35,7 @@ The form uses `challengeBasicInfoSchema` from `src/apps/work/src/lib/schemas/cha
 - `skills`: required unless billing account is listed in `SKILLS_OPTIONAL_BILLING_ACCOUNT_IDS`.
 - `reviewer`: optional for task challenges.
 - `reviewers`: when using `Save as Draft` from `NEW` status, non-task/non-marathon challenges must include reviewer coverage for configured review phases. If required phases are configured, each phase must have at least one member reviewer with a scorecard.
-- `AI review configuration`: templates and manual configs autosave separately once valid, and the AI tab becomes read-only after the challenge has submissions.
+- `AI review configuration`: templates and manual configs autosave separately once valid, switching a template-backed config to manual mode keeps its copied settings but clears the template link on save, and the AI tab becomes read-only after the challenge has submissions.
 
 ## Autosave Behavior
 
