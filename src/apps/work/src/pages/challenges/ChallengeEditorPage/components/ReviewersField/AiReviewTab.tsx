@@ -152,6 +152,7 @@ function getWorkflowScorecardLabel(
 function normalizeConfiguration(
     configuration: AiReviewConfigurationDraft,
     challengeId: string,
+    configurationMode?: ConfigurationMode,
 ): SaveAiReviewConfigInput {
     return {
         autoFinalize: configuration.mode === 'AI_ONLY' && configuration.autoFinalize === true,
@@ -159,7 +160,9 @@ function normalizeConfiguration(
         formula: undefined,
         minPassingThreshold: Number(configuration.minPassingThreshold || 0),
         mode: configuration.mode || 'AI_GATING',
-        templateId: configuration.templateId || undefined,
+        templateId: configurationMode === 'template'
+            ? configuration.templateId || undefined
+            : undefined,
         workflows: (configuration.workflows || [])
             .map(workflow => ({
                 isGating: workflow.isGating === true,
@@ -535,10 +538,14 @@ export const AiReviewTab: FC<AiReviewTabProps> = (
     const normalizedConfiguration = useMemo(
         (): SaveAiReviewConfigInput | undefined => (
             normalizedChallengeId
-                ? normalizeConfiguration(configuration, normalizedChallengeId)
+                ? normalizeConfiguration(
+                    configuration,
+                    normalizedChallengeId,
+                    configurationMode,
+                )
                 : undefined
         ),
-        [configuration, normalizedChallengeId],
+        [configuration, configurationMode, normalizedChallengeId],
     )
     const validationErrors = useMemo(
         () => (normalizedConfiguration
@@ -675,6 +682,10 @@ export const AiReviewTab: FC<AiReviewTabProps> = (
             return
         }
 
+        setConfiguration(previousConfiguration => ({
+            ...previousConfiguration,
+            templateId: undefined,
+        }))
         setConfigurationMode('manual')
     }, [configId, resetConfiguration])
 
