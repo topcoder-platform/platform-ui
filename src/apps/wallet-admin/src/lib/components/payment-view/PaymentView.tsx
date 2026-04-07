@@ -23,6 +23,7 @@ import {
     formatEngagementProjectName,
     formatOptionalDate,
     formatOptionalText,
+    renderOptionalLinkedText,
 } from './payment-view.utils'
 
 import styles from './PaymentView.module.scss'
@@ -81,7 +82,7 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
         return () => {
             ignore = true
         }
-    }, [isEngagementPayment, props.payment.id])
+    }, [isEngagementPayment, props.payment])
 
     React.useEffect(() => {
         if (view === 'audit') {
@@ -253,8 +254,8 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
                                         </div>
                                         <div className={styles.infoItem}>
                                             <span className={styles.label}>Other Remarks</span>
-                                            <p className={styles.value}>
-                                                {formatOptionalText(paymentDetails?.engagementDetails?.otherRemarks)}
+                                            <p className={styles.remarksValue}>
+                                                {renderOptionalLinkedText(paymentDetails?.engagementDetails?.otherRemarks)}
                                             </p>
                                         </div>
                                     </div>

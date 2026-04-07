@@ -92,7 +92,7 @@ describe('PaymentView', () => {
                 durationMonths: 3,
                 engagementId: 'engagement-456',
                 engagementTitle: 'Snowflake Developer - Vikash',
-                otherRemarks: 'Complete onboarding within the first week.',
+                otherRemarks: 'Complete onboarding within the first week. Docs: https://google.com',
                 projectId: 'project-789',
                 projectName: 'Wipro - US Foods',
                 ratePerHour: '10.60',
@@ -134,5 +134,14 @@ describe('PaymentView', () => {
 
         expect(descriptionLink.getAttribute('href'))
             .toBe(expectedWorkManagerLink)
+
+        const remarksLink = await screen.findByRole('link', {
+            name: 'https://google.com',
+        })
+
+        expect(remarksLink.getAttribute('href'))
+            .toBe('https://google.com')
+        expect(remarksLink.getAttribute('target'))
+            .toBe('_blank')
     })
 })

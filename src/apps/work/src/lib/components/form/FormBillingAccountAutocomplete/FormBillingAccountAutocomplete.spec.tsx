@@ -203,6 +203,52 @@ describe('FormBillingAccountAutocomplete', () => {
             .toBe(false)
     })
 
+    it('preloads user billing accounts into the create-project dropdown', async () => {
+        searchBillingAccountsMock.mockResolvedValue([
+            {
+                active: true,
+                endDate: '2028-10-31T00:00:00.000Z',
+                id: '80001059',
+                name: 'Platform Dev - Two',
+                startDate: '2023-10-31T00:00:00.000Z',
+            },
+            {
+                active: true,
+                endDate: '2028-10-31T00:00:00.000Z',
+                id: '80001012',
+                name: 'Platform Dev - One',
+                startDate: '2023-10-31T00:00:00.000Z',
+            },
+        ])
+
+        render(
+            <TestHarness userId='12345' />,
+        )
+
+        await waitFor(() => {
+            expect(searchBillingAccountsMock)
+                .toHaveBeenCalledWith({
+                    page: 1,
+                    perPage: 20,
+                    userId: '12345',
+                })
+        })
+
+        await waitFor(() => {
+            expect(latestAsyncSelectProps?.defaultOptions)
+                .toEqual(expect.arrayContaining([
+                    expect.objectContaining({
+                        label: expect.stringContaining('[80001012] Platform Dev - One'),
+                        value: '80001012',
+                    }),
+                    expect.objectContaining({
+                        label: expect.stringContaining('[80001059] Platform Dev - Two'),
+                        value: '80001059',
+                    }),
+                ]))
+        })
+    })
+
     it('passes the current user id when searching create-project billing accounts', async () => {
         searchBillingAccountsMock.mockResolvedValue([
             {
