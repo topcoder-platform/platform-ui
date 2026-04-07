@@ -428,7 +428,9 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                         toast.success('Download complete', { position: toast.POSITION.BOTTOM_RIGHT })
                     }}
                     selectedValueOverrides={{
-                        category: isEngagementApproverView ? engagementPaymentCategory : filters.category?.[0] ?? '',
+                        category: isEngagementApproverView ? engagementPaymentCategory : filters.category?.[0] || 'all',
+                        status: 'all',
+                        date: 'all',
                     }}
                     filters={[
                         {
@@ -440,6 +442,10 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                             key: 'status',
                             label: 'Status',
                             options: [
+                                {
+                                    label: 'All',
+                                    value: 'all',
+                                },
                                 {
                                     label: 'Owed',
                                     value: 'OWED',
@@ -480,6 +486,10 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                                 key: 'category',
                                 label: 'Type',
                                 options: [
+                                    {
+                                        label: 'All',
+                                        value: 'all',
+                                    },
                                     {
                                         label: 'Task Payment',
                                         value: 'TASK_PAYMENT',
