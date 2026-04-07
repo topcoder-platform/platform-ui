@@ -1055,6 +1055,9 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
 
     const [currentChallengeId, setCurrentChallengeId] = useState<string | undefined>(props.challenge?.id)
     const [isSaving, setIsSaving] = useState<boolean>(false)
+    const [isInitialResourceHydrationPending, setIsInitialResourceHydrationPending] = useState<boolean>(
+        !!props.challenge?.id,
+    )
     const [lastSaved, setLastSaved] = useState<Date | undefined>()
     const [saveError, setSaveError] = useState<string | undefined>()
     const [saveValidationError, setSaveValidationError] = useState<string | undefined>()
@@ -1548,10 +1551,12 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
 
         setCurrentChallengeId(challengeId)
         defaultedDiscussionForumTypeIdRef.current = undefined
+        setIsInitialResourceHydrationPending(!!challengeId)
 
         reset(baseFormData)
 
         if (!challengeId) {
+            setIsInitialResourceHydrationPending(false)
             return () => {
                 isActive = false
             }
@@ -1581,6 +1586,11 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             })
             .catch(() => {
                 // The base form data has already been applied above.
+            })
+            .finally(() => {
+                if (isActive) {
+                    setIsInitialResourceHydrationPending(false)
+                }
             })
 
         return () => {
@@ -2568,7 +2578,9 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                                 <FinalDeliverablesField />
                                                 <StockArtsField />
                                                 <SubmissionVisibilityField />
-                                                <MaximumSubmissionsField />
+                                                <MaximumSubmissionsField
+                                                    deferDirty={isInitialResourceHydrationPending}
+                                                />
                                             </div>
                                         </section>
                                     )

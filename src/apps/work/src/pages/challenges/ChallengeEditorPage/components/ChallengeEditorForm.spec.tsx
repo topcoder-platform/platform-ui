@@ -422,7 +422,18 @@ jest.mock('./GroupsField', () => ({
     GroupsField: () => <></>,
 }))
 jest.mock('./MaximumSubmissionsField', () => ({
-    MaximumSubmissionsField: () => <>Maximum Submissions Field</>,
+    MaximumSubmissionsField: (props: {
+        deferDirty?: boolean
+    }) => (
+        <div
+            data-defer-dirty={props.deferDirty === true
+                ? 'true'
+                : 'false'}
+            data-testid='maximum-submissions-field'
+        >
+            Maximum Submissions Field
+        </div>
+    ),
 }))
 jest.mock('./MarathonMatchScorerSection', () => ({
     MarathonMatchScorerSection: () => <></>,
@@ -1098,6 +1109,67 @@ describe('ChallengeEditorForm', () => {
             .toHaveTextContent('Stock Arts Field')
         expect(submissionSettingsSection)
             .toHaveTextContent('Maximum Submissions Field')
+    })
+
+    it('keeps submission-limit normalization pristine until initial resource hydration finishes', async () => {
+        let resolveFetchedResources: ((value: unknown[]) => void) | undefined
+        let resolveFetchedResourceRoles: ((value: unknown[]) => void) | undefined
+
+        mockedUseFetchChallengeTracks.mockReturnValue({
+            isLoading: false,
+            tracks: [{
+                id: 'design-track',
+                name: 'Design',
+                track: 'DESIGN',
+            }],
+        })
+        mockedUseFetchChallengeTypes.mockReturnValue({
+            challengeTypes: [{
+                abbreviation: 'CH',
+                id: 'design-challenge',
+                name: 'Challenge',
+            }],
+            isLoading: false,
+        })
+        mockedFetchResourcesService.mockImplementation(
+            () => new Promise(resolve => {
+                resolveFetchedResources = resolve as (value: unknown[]) => void
+            }),
+        )
+        mockedFetchResourceRolesService.mockImplementation(
+            () => new Promise(resolve => {
+                resolveFetchedResourceRoles = resolve as (value: unknown[]) => void
+            }),
+        )
+
+        render(
+            <MemoryRouter>
+                <ChallengeEditorForm
+                    challenge={{
+                        ...draftChallenge,
+                        trackId: 'design-track',
+                        type: {
+                            abbreviation: 'CH',
+                            name: 'Challenge',
+                        },
+                        typeId: 'design-challenge',
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        expect(screen.getByTestId('maximum-submissions-field'))
+            .toHaveAttribute('data-defer-dirty', 'true')
+
+        await act(async () => {
+            resolveFetchedResources?.([])
+            resolveFetchedResourceRoles?.([])
+        })
+
+        await waitFor(() => {
+            expect(screen.getByTestId('maximum-submissions-field'))
+                .toHaveAttribute('data-defer-dirty', 'false')
+        })
     })
 
     it('keeps the review section after submission settings in read-only mode', () => {

@@ -61,6 +61,7 @@ interface TestHarnessProps {
         name: string
         value: string
     }>
+    deferDirty?: boolean
 }
 
 const MetadataWatcher: FC = () => {
@@ -86,7 +87,8 @@ const TestHarness: FC<TestHarnessProps> = (props: TestHarnessProps) => {
 
     return (
         <FormProvider {...formMethods}>
-            <MaximumSubmissionsField />
+            <MaximumSubmissionsField deferDirty={props.deferDirty} />
+            <output data-testid='dirty-value'>{String(formMethods.formState.isDirty)}</output>
             <MetadataWatcher />
         </FormProvider>
     )
@@ -153,6 +155,55 @@ describe('MaximumSubmissionsField', () => {
                         unlimited: 'true',
                     }),
                 }]))
+        })
+    })
+
+    it('defers dirtying until resource hydration finishes', async () => {
+        const rendered = render(
+            <TestHarness
+                defaultMetadata={[{
+                    name: 'submissionLimit',
+                    value: JSON.stringify({
+                        count: '3',
+                        limit: 'true',
+                        unlimited: 'false',
+                    }),
+                }]}
+                deferDirty
+            />,
+        )
+
+        await waitFor(() => {
+            expect(screen.getByTestId('metadata-value').textContent)
+                .toBe(JSON.stringify([{
+                    name: 'submissionLimit',
+                    value: JSON.stringify({
+                        count: '',
+                        limit: 'false',
+                        unlimited: 'true',
+                    }),
+                }]))
+        })
+        expect(screen.getByTestId('dirty-value').textContent)
+            .toBe('false')
+
+        rendered.rerender(
+            <TestHarness
+                defaultMetadata={[{
+                    name: 'submissionLimit',
+                    value: JSON.stringify({
+                        count: '3',
+                        limit: 'true',
+                        unlimited: 'false',
+                    }),
+                }]}
+                deferDirty={false}
+            />,
+        )
+
+        await waitFor(() => {
+            expect(screen.getByTestId('dirty-value').textContent)
+                .toBe('true')
         })
     })
 })
