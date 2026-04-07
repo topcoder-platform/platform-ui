@@ -42,6 +42,12 @@
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
 }
 
+.submissionSettingsGrid {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: minmax(0, 1fr);
+}
+
 .block {
     display: flex;
     flex-direction: column;
@@ -99,6 +105,10 @@
 }
 
 @media (min-width: 1024px) {
+    .submissionSettingsGrid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
     .prizeInputs {
         column-gap: 48px;
         grid-template-columns: 472px 336px;
