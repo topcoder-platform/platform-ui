@@ -105,6 +105,36 @@
     font-size: 14px;
 }
 
+.remarksButton {
+    align-items: center;
+    background: #f7f8fb;
+    border: 1px solid #d5d5d5;
+    border-radius: 999px;
+    cursor: pointer;
+    display: inline-flex;
+    height: 28px;
+    justify-content: center;
+    padding: 0;
+    transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    width: 28px;
+}
+
+.remarksButton:hover {
+    background: #edf4ff;
+    border-color: #b9c8da;
+}
+
+.remarksButton:focus-visible {
+    box-shadow: 0 0 0 3px rgba(77, 145, 255, 0.2);
+    outline: none;
+}
+
+.remarksIcon {
+    display: block;
+    height: 14px;
+    width: 14px;
+}
+
 .terminationReason {
     display: flex;
     flex-direction: column;
@@ -189,4 +219,13 @@
     color: #db3030;
     font-size: 12px;
     margin: 0;
+}
+
+.remarksContent {
+    color: #2a2a2a;
+    font-size: 14px;
+    line-height: 1.5;
+    margin: 0;
+    white-space: pre-line;
+    word-break: break-word;
 }

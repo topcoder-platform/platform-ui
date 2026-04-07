@@ -100,7 +100,7 @@ describe('PaymentView', () => {
             },
             workLog: {
                 hoursWorked: 43.75,
-                remarks: 'Completed sprint support and bug triage.',
+                remarks: 'Completed sprint support and bug triage. Reference: https://example.com/worklog',
             },
         })
     })
@@ -125,7 +125,7 @@ describe('PaymentView', () => {
             expect(screen.getAllByText('43.75'))
                 .toHaveLength(2)
         })
-        expect(await screen.findByText('Completed sprint support and bug triage.'))
+        expect(await screen.findByText(/Completed sprint support and bug triage\./))
             .toBeTruthy()
 
         const descriptionLink = await screen.findByRole('link', {
@@ -142,6 +142,15 @@ describe('PaymentView', () => {
         expect(remarksLink.getAttribute('href'))
             .toBe('https://google.com')
         expect(remarksLink.getAttribute('target'))
+            .toBe('_blank')
+
+        const workLogRemarksLink = await screen.findByRole('link', {
+            name: 'https://example.com/worklog',
+        })
+
+        expect(workLogRemarksLink.getAttribute('href'))
+            .toBe('https://example.com/worklog')
+        expect(workLogRemarksLink.getAttribute('target'))
             .toBe('_blank')
     })
 })

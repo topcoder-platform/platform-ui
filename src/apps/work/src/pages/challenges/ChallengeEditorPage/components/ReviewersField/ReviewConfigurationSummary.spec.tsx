@@ -240,4 +240,57 @@ describe('ReviewConfigurationSummary', () => {
         expect(failureBranch?.textContent)
             .toContain('review needed')
     })
+
+    it('shows the locked review-flow path for AI_GATING configs without gating workflow markers', async () => {
+        mockedFetchAiReviewConfigByChallenge.mockResolvedValue({
+            autoFinalize: false,
+            challengeId: 'challenge-1',
+            id: 'ai-config-1',
+            minPassingThreshold: 75,
+            mode: 'AI_GATING',
+            workflows: [{
+                isGating: false,
+                weightPercent: 100,
+                workflow: {
+                    id: 'workflow-1',
+                    name: 'AI Submission Scanner',
+                    scorecard: {
+                        id: 'scorecard-2',
+                        name: 'AI Scorecard',
+                    },
+                },
+                workflowId: 'workflow-1',
+            }],
+        })
+
+        const rendered: ReturnType<typeof render> = render(
+            <ReviewConfigurationSummary
+                challengeId='challenge-1'
+                phases={[{
+                    name: 'Review',
+                    phaseId: 'phase-1',
+                }]}
+                reviewers={[
+                    {
+                        handle: 'reviewer-one',
+                        isMemberReview: true,
+                        memberId: 'member-1',
+                        memberReviewerCount: 1,
+                        phaseId: 'phase-1',
+                        scorecardId: 'scorecard-1',
+                    },
+                    {
+                        aiWorkflowId: 'workflow-1',
+                        isMemberReview: false,
+                    },
+                ]}
+                typeId='type-1'
+            />,
+        )
+        const container: HTMLElement = rendered.container
+
+        expect(await screen.findByText('Locked')).not.toBeNull()
+        expect(container.querySelector(`.${styles.withAI}`)).not.toBeNull()
+        expect(container.querySelector(`.${styles.failureBranch}`)).not.toBeNull()
+    })
 })

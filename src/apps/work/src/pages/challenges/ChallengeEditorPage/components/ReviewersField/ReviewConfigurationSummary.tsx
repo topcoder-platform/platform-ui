@@ -509,6 +509,7 @@ export const ReviewConfigurationSummary: FC<ReviewConfigurationSummaryProps> = (
         () => (aiConfiguration?.workflows || []).some(workflow => workflow.isGating),
         [aiConfiguration?.workflows],
     )
+    const shouldShowLockedFailurePath = hasConfiguredAiWorkflows && isAiGatingMode
     const workflowsToDisplay = useMemo(
         () => (hasConfiguredAiWorkflows
             ? aiConfiguration?.workflows || []
@@ -977,7 +978,7 @@ export const ReviewConfigurationSummary: FC<ReviewConfigurationSummaryProps> = (
                                 : undefined}
                         </div>
 
-                        {hasConfiguredAiWorkflows && isAiGatingMode && hasAiGateWorkflow
+                        {shouldShowLockedFailurePath
                             ? (
                                 <div className={styles.failureRow}>
                                     <div className={styles.failureBranch}>

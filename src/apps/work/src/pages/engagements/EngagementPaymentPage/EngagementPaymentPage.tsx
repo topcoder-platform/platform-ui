@@ -60,6 +60,7 @@ import {
     toPositiveNumberWithMaxDecimalPlaces,
 } from '../../../lib/utils'
 import { formatCurrency } from '../../../lib/utils/payment.utils'
+import { ReactComponent as IconComment } from '../../../lib/assets/icons/icon-comment.svg'
 
 import styles from './EngagementPaymentPage.module.scss'
 
@@ -93,13 +94,6 @@ function formatDurationMonths(value?: number | string): string {
     }
 
     return `${parsedValue} month${parsedValue === 1 ? '' : 's'}`
-}
-
-function formatRemarks(value?: string): string {
-    const remarks = String(value || '')
-        .trim()
-
-    return remarks || '-'
 }
 
 function toTrimmedText(value: unknown): string {
@@ -138,7 +132,8 @@ function isAssignedStatus(status: string): boolean {
 }
 
 function getAssignmentStatusPillClass(status: string): string {
-    const normalizedStatus = status.trim()
+    const normalizedStatus = String(status || '')
+        .trim()
         .toLowerCase()
 
     if (normalizedStatus === 'active') {
@@ -578,6 +573,7 @@ export const EngagementPaymentPage: FC = () => {
     const [isTerminating, setIsTerminating] = useState<boolean>(false)
     const [isUpdatingAssignment, setIsUpdatingAssignment] = useState<boolean>(false)
     const [paymentMember, setPaymentMember] = useState<Assignment | undefined>()
+    const [remarksAssignment, setRemarksAssignment] = useState<Assignment | undefined>()
     const [terminateMember, setTerminateMember] = useState<Assignment | undefined>()
     const assignmentCardRefs = useRef<Record<string, HTMLElement | null>>({})
     const hasScrolledToHighlightedAssignment = useRef<boolean>(false)
@@ -805,6 +801,7 @@ export const EngagementPaymentPage: FC = () => {
                                 const normalizedStatus = normalizeAssignmentStatus(String(assignment.status || ''))
                                 const assignedStatus = isAssignedStatus(String(assignment.status || ''))
                                 const isHighlightedAssignment = String(assignment.id) === highlightedAssignmentId
+                                const remarksText = toTrimmedText(assignment.otherRemarks)
 
                                 return (
                                     <article
@@ -834,8 +831,26 @@ export const EngagementPaymentPage: FC = () => {
 
                                         <div className={styles.metaGrid}>
                                             <div>
-                                                <span className={styles.label}>Remarks</span>
-                                                <span className={styles.value}>{formatRemarks(assignment.otherRemarks)}</span>
+                                                <span className={styles.label}>Other Remarks</span>
+                                                <span className={styles.value}>
+                                                    {remarksText
+                                                        ? (
+                                                            <button
+                                                                aria-label={`View other remarks for ${assignment.memberHandle || 'member'}`}
+                                                                aria-haspopup='dialog'
+                                                                className={styles.remarksButton}
+                                                                onClick={() => setRemarksAssignment(assignment)}
+                                                                title='View other remarks'
+                                                                type='button'
+                                                            >
+                                                                <IconComment
+                                                                    aria-hidden='true'
+                                                                    className={styles.remarksIcon}
+                                                                />
+                                                            </button>
+                                                        )
+                                                        : '-'}
+                                                </span>
                                             </div>
                                             <div>
                                                 <span className={styles.label}>Billing Start</span>
@@ -961,6 +976,28 @@ export const EngagementPaymentPage: FC = () => {
                 open={!!paymentMember}
                 projectName={projectResult.project?.name}
             />
+
+            <BaseModal
+                buttons={(
+                    <div className={styles.modalActions}>
+                        <Button
+                            label='Close'
+                            onClick={() => setRemarksAssignment(undefined)}
+                            secondary
+                        />
+                    </div>
+                )}
+                onClose={() => setRemarksAssignment(undefined)}
+                open={!!remarksAssignment}
+                title='Other Remarks'
+            >
+                <div className={styles.modalContent}>
+                    <div className={styles.modalSubtitle}>{remarksAssignment?.memberHandle || '-'}</div>
+                    <p className={styles.remarksContent}>
+                        {toTrimmedText(remarksAssignment?.otherRemarks)}
+                    </p>
+                </div>
+            </BaseModal>
 
             <EditAssignmentModal
                 assignment={editingAssignment}

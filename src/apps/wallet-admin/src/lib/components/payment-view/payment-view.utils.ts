@@ -36,12 +36,13 @@ export function formatOptionalText(
  * Renders optional textarea content while converting plain-text URLs into
  * clickable external links for wallet-admin payment details.
  *
- * @param value Textarea content from engagement payment details.
+ * @param value Textarea content from engagement payment details or work-log
+ * remarks.
  * @returns `-` when no content exists, otherwise the original text with any
  * detected `http://` or `https://` URLs rendered as anchor nodes.
  *
- * @remarks Used by the payment-details popup for the engagement "Other
- * Remarks" field so admins can open referenced URLs directly.
+ * @remarks Used by the payment-details popup for engagement and work-log
+ * remarks fields so admins can open referenced URLs directly.
  *
  * @throws This helper does not raise exceptions.
  */

@@ -278,8 +278,8 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
                                             </div>
                                             <div className={styles.infoItem}>
                                                 <span className={styles.label}>Remarks</span>
-                                                <p className={styles.value}>
-                                                    {formatOptionalText(paymentDetails?.workLog?.remarks)}
+                                                <p className={styles.remarksValue}>
+                                                    {renderOptionalLinkedText(paymentDetails?.workLog?.remarks)}
                                                 </p>
                                             </div>
                                         </div>

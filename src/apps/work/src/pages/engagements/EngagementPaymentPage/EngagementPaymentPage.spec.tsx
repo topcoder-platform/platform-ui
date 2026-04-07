@@ -3,21 +3,33 @@ import type {
     PropsWithChildren,
 } from 'react'
 import {
+    fireEvent,
     render,
     screen,
     waitFor,
+    within,
 } from '@testing-library/react'
+import {
+    MemoryRouter,
+    Route,
+    Routes,
+} from 'react-router-dom'
 
 import type {
     Assignment,
 } from '../../../lib/models'
+import {
+    useFetchEngagement,
+    useFetchProject,
+} from '../../../lib/hooks'
 
 import {
     EditAssignmentModal,
+    EngagementPaymentPage,
 } from './EngagementPaymentPage'
 
 jest.mock('~/apps/review/src/lib', () => ({
-    PageWrapper: (): JSX.Element => <div />,
+    PageWrapper: (props: PropsWithChildren<unknown>): JSX.Element => <div>{props.children}</div>,
 }), {
     virtual: true,
 })
@@ -28,7 +40,7 @@ jest.mock('~/libs/ui', () => ({
     ): JSX.Element => (
         props.open
             ? (
-                <div>
+                <div role='dialog'>
                     {props.title ? <div>{props.title}</div> : undefined}
                     {props.children}
                     {props.buttons}
@@ -135,23 +147,94 @@ jest.mock('../../../lib/utils/payment.utils', () => ({
     formatCurrency: jest.fn((value: number | string) => String(value)),
 }))
 
-describe('EditAssignmentModal', () => {
-    const assignment: Assignment = {
-        agreementRate: '411.00',
-        durationMonths: 6,
-        endDate: '2026-10-05T00:00:00.000Z',
-        engagementId: 'engagement-1',
-        id: 'assignment-1',
-        memberHandle: 'testaws1',
-        memberId: '12345',
-        otherRemarks: 'testing 123',
-        ratePerHour: '13.70',
-        standardHoursPerWeek: 30,
-        startDate: '2026-04-05T00:00:00.000Z',
-        status: 'ASSIGNED',
-        termsAccepted: true,
-    }
+const assignment: Assignment = {
+    agreementRate: '411.00',
+    durationMonths: 6,
+    endDate: '2026-10-05T00:00:00.000Z',
+    engagementId: 'engagement-1',
+    id: 'assignment-1',
+    memberHandle: 'testaws1',
+    memberId: '12345',
+    otherRemarks: 'testing 123',
+    ratePerHour: '13.70',
+    standardHoursPerWeek: 30,
+    startDate: '2026-04-05T00:00:00.000Z',
+    status: 'ASSIGNED',
+    termsAccepted: true,
+}
 
+const mockedUseFetchEngagement = useFetchEngagement as jest.MockedFunction<typeof useFetchEngagement>
+const mockedUseFetchProject = useFetchProject as jest.MockedFunction<typeof useFetchProject>
+
+beforeEach(() => {
+    jest.clearAllMocks()
+})
+
+describe('EngagementPaymentPage', () => {
+    it('shows other remarks in a popup instead of inline text', async () => {
+        mockedUseFetchEngagement.mockReturnValue({
+            engagement: {
+                assignments: [assignment],
+                title: 'Test Engagement',
+            },
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            mutate: jest.fn(),
+        } as unknown as ReturnType<typeof useFetchEngagement>)
+
+        mockedUseFetchProject.mockReturnValue({
+            error: undefined,
+            isLoading: false,
+            mutate: jest.fn(),
+            project: {
+                billingAccountId: 'billing-account-1',
+                name: 'Test Project',
+            },
+        } as unknown as ReturnType<typeof useFetchProject>)
+
+        render(
+            <MemoryRouter initialEntries={['/projects/project-1/engagements/engagement-1/assignments']}>
+                <Routes>
+                    <Route
+                        element={<EngagementPaymentPage />}
+                        path='/projects/:projectId/engagements/:engagementId/assignments'
+                    />
+                </Routes>
+            </MemoryRouter>,
+        )
+
+        expect(screen.queryByText('testing 123'))
+            .toBeNull()
+
+        fireEvent.click(screen.getByRole('button', {
+            name: 'View other remarks for testaws1',
+        }))
+
+        const dialog = await screen.findByRole('dialog')
+
+        expect(dialog)
+            .not.toBeNull()
+        expect(within(dialog)
+            .getByText('Other Remarks'))
+            .not.toBeNull()
+        expect(within(dialog)
+            .getByText('testaws1'))
+            .not.toBeNull()
+        expect(within(dialog)
+            .getByText('testing 123'))
+            .not.toBeNull()
+
+        fireEvent.click(screen.getByRole('button', { name: 'Close' }))
+
+        await waitFor(() => {
+            expect(screen.queryByText('testing 123'))
+                .toBeNull()
+        })
+    })
+})
+
+describe('EditAssignmentModal', () => {
     it('populates the saved assignment values on the first open', async () => {
         const renderedModal: ReturnType<typeof render> = render(
             <EditAssignmentModal
