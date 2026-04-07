@@ -327,7 +327,7 @@ export const ChallengePrizesField: FC<ChallengePrizesFieldProps> = (
     const fieldError = typeof fieldState.error?.message === 'string'
         ? fieldState.error.message
         : undefined
-    const showPrizeRowLabels = fields.length > 1
+    const showPrizeRowLabels = fields.length > 0
     const errorMessage = fieldError || descendingError
     const prizeTypeFieldName = `${props.name}-type`
     const fieldLabelId = `${props.name}-label`
@@ -337,7 +337,12 @@ export const ChallengePrizesField: FC<ChallengePrizesFieldProps> = (
     return (
         <>
             <div className={styles.field}>
-                <div className={styles.fieldHeader}>
+                <div
+                    className={classNames(
+                        styles.fieldHeader,
+                        showPrizeRowLabels ? styles.fieldHeaderWithPrizeLabels : undefined,
+                    )}
+                >
                     <div className={styles.fieldLabel} id={fieldLabelId}>
                         Challenge Prizes
                         <span className={styles.required}>*</span>
@@ -398,29 +403,21 @@ export const ChallengePrizesField: FC<ChallengePrizesFieldProps> = (
                             ? prizeValueError.message
                             : undefined
                         const hasValueError = !!prizeValueError
-                        const isFirstMultiPrizeRow = showPrizeRowLabels && index === 0
                         const isRemovablePrize = showPrizeRowLabels && index > 0
 
                         return (
                             <div
                                 className={classNames(
                                     styles.prizeRow,
-                                    showPrizeRowLabels
-                                        ? styles.multiPrizeRow
-                                        : styles.singlePrizeRow,
-                                    isFirstMultiPrizeRow ? styles.firstMultiPrizeRow : undefined,
+                                    styles.multiPrizeRow,
                                     isRemovablePrize ? styles.prizeRowWithRemove : undefined,
                                     prizeValueErrorMessage ? styles.prizeRowWithError : undefined,
                                 )}
                                 key={prizeField.id}
                             >
-                                {showPrizeRowLabels
-                                    ? (
-                                        <span className={styles.prizeLabel}>
-                                            {`Prize ${index + 1}`}
-                                        </span>
-                                    )
-                                    : undefined}
+                                <span className={styles.prizeLabel}>
+                                    {`Prize ${index + 1}`}
+                                </span>
 
                                 <div className={styles.prizeInputField}>
                                     <PrizeInput
@@ -439,20 +436,16 @@ export const ChallengePrizesField: FC<ChallengePrizesFieldProps> = (
                                         : undefined}
                                 </div>
 
-                                {showPrizeRowLabels
+                                {isRemovablePrize
                                     ? (
-                                        isRemovablePrize
-                                            ? (
-                                                <button
-                                                    className={styles.trashButton}
-                                                    disabled={props.disabled}
-                                                    onClick={removeHandlers[index]}
-                                                    type='button'
-                                                >
-                                                    <TrashIcon className={styles.trashIcon} />
-                                                </button>
-                                            )
-                                            : undefined
+                                        <button
+                                            className={styles.trashButton}
+                                            disabled={props.disabled}
+                                            onClick={removeHandlers[index]}
+                                            type='button'
+                                        >
+                                            <TrashIcon className={styles.trashIcon} />
+                                        </button>
                                     )
                                     : undefined}
                             </div>
