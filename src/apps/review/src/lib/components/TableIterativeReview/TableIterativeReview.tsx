@@ -1387,6 +1387,30 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
             }
 
             if (canManageCompletedReviews) {
+                const pendingEscalations = decision.escalations.filter(escalation => (
+                    escalation.status === 'PENDING_APPROVAL'
+                ))
+
+                if (pendingEscalations.length) {
+                    actionEntries.push(
+                        <button
+                            key='verify-escalation'
+                            type='button'
+                            className={classNames(styles.submit, styles.textBlue)}
+                            onClick={function onClick() {
+                                setVerifyTarget({
+                                    decision,
+                                    escalations: pendingEscalations,
+                                    submission: data as SubmissionReviewerRow,
+                                })
+                            }}
+                        >
+                            <IconOutline.SearchIcon className='icon-lg' />
+                            Verify
+                        </button>,
+                    )
+                }
+
                 actionEntries.push(
                     <button
                         key='unlock-submission'
