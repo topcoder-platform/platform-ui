@@ -20,6 +20,10 @@ import {
  */
 export interface SubmissionInfo {
     id: string
+    /**
+     * Legacy submission identifier used by older review payloads and result lookups.
+     */
+    legacySubmissionId?: string
     memberId: string
     /**
      * Placement assigned to the submission when available from the backend.
@@ -165,6 +169,7 @@ export function convertBackendSubmissionToSubmissionInfo(
         isFileSubmission: data.isFileSubmission,
         isLatest: data.isLatest,
         isPassingReview,
+        legacySubmissionId: data.legacySubmissionId,
         memberId: data.memberId,
         placement: data.placement,
         review: primaryReviewInfo,

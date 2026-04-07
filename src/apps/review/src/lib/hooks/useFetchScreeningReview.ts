@@ -7,10 +7,7 @@ import { xhrGetAsync } from '~/libs/core'
 import { handleError } from '~/libs/shared'
 
 import {
-    ADMIN,
-    COPILOT,
     DESIGN,
-    MANAGER,
     REVIEWER,
     SUBMITTER,
 } from '../../config/index.config'
@@ -39,6 +36,7 @@ import { registerChallengeReviewKey } from '../utils/reviewCacheRegistry'
 import { normalizeReviewMetadata } from '../utils/metadataMatching'
 import { buildApprovalReviewRows } from '../utils/approvalReviewRows'
 import { resolvePhaseMeta } from '../utils/phaseResolution'
+import { shouldForceChallengeReviewFetch } from '../utils/reviewFetchPolicy'
 import { buildReviewForResource } from '../utils/reviewBuilding'
 import { collectMatchingReviews, selectBestReview } from '../utils/reviewSelection'
 import { resolveReviewPhaseId, reviewMatchesPhase } from '../utils/reviewMatching'
@@ -50,16 +48,9 @@ import {
     parseSubmissionScore,
     scoreToDisplay,
 } from '../utils/reviewScoring'
-import type {
-    SubmissionIdResolutionArgs,
-    SubmissionLookupArgs,
-    SubmitterMemberIdResolutionArgs,
-} from '../utils/submissionResolution'
-import {
-    resolveFallbackSubmissionId,
-    resolveSubmissionForReview,
-    resolveSubmitterMemberId,
-} from '../utils/submissionResolution'
+import type { SubmissionLookupArgs } from '../utils/submissionResolution'
+import { buildSubmitterReviewSubmission } from '../utils/submitterReviewResolution'
+import { resolveSubmissionForReview } from '../utils/submissionResolution'
 
 import type { useFetchAppealQueueProps } from './useFetchAppealQueue'
 import { useFetchAppealQueue } from './useFetchAppealQueue'
@@ -530,34 +521,12 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
     )
 
     const shouldForceReviewFetch = useMemo(
-        () => {
-            const normalizedActionRole = actionChallengeRole ?? ''
-
-            if (
-                normalizedActionRole === SUBMITTER
-                || normalizedActionRole === REVIEWER
-                || normalizedActionRole === COPILOT
-                || normalizedActionRole === ADMIN
-                || normalizedActionRole === MANAGER
-            ) {
-                return true
-            }
-
-            return (myResources ?? []).some(resource => {
-                const normalizedRoleName = (resource.roleName ?? '').toLowerCase()
-
-                if (!normalizedRoleName) {
-                    return false
-                }
-
-                return normalizedRoleName.includes('screener')
-                    || normalizedRoleName.includes('reviewer')
-                    || normalizedRoleName.includes('copilot')
-                    || normalizedRoleName.includes('admin')
-                    || normalizedRoleName.includes('manager')
-            })
-        },
-        [actionChallengeRole, myResources],
+        () => shouldForceChallengeReviewFetch(
+            actionChallengeRole,
+            challengeInfo?.status,
+            myResources,
+        ),
+        [actionChallengeRole, challengeInfo?.status, myResources],
     )
 
     const {
@@ -1779,57 +1748,12 @@ export function useFetchScreeningReview(): useFetchScreeningReviewProps {
                     submissionsByLegacyId: visibleSubmissionsByLegacyId,
                 } satisfies SubmissionLookupArgs)
 
-                if (!isContestSubmissionType(matchingSubmission?.type)) {
-                    return undefined
-                }
-
-                const submissionWithReview: BackendSubmission | undefined = matchingSubmission
-                    ? {
-                        ...matchingSubmission,
-                        review: [reviewItem],
-                    }
-                    : undefined
-
-                const baseSubmissionInfo = submissionWithReview
-                    ? convertBackendSubmissionToSubmissionInfo(submissionWithReview)
-                    : undefined
-
-                const fallbackId = resolveFallbackSubmissionId({
-                    baseSubmissionInfo,
+                return buildSubmitterReviewSubmission({
                     defaultId: `${memberId || 'submission'}-${index}`,
                     matchingSubmission,
+                    resourceMemberIdMapping,
                     review: reviewItem,
-                } satisfies SubmissionIdResolutionArgs)
-
-                if (!fallbackId) {
-                    return undefined
-                }
-
-                const resolvedMemberId = resolveSubmitterMemberId({
-                    baseSubmissionInfo,
-                    matchingSubmission,
-                } satisfies SubmitterMemberIdResolutionArgs)
-
-                const reviewInfo = convertBackendReviewToReviewInfo(reviewItem)
-                const reviewResult = convertBackendReviewToReviewResult(reviewItem)
-
-                return {
-                    ...baseSubmissionInfo,
-                    id: fallbackId,
-                    isLatest: baseSubmissionInfo?.isLatest
-                        ?? matchingSubmission?.isLatest
-                        ?? true,
-                    memberId: resolvedMemberId,
-                    review: reviewInfo,
-                    reviews: [reviewResult],
-                    reviewTypeId: reviewItem.typeId ?? baseSubmissionInfo?.reviewTypeId,
-                    submittedDate: baseSubmissionInfo?.submittedDate,
-                    submittedDateString: baseSubmissionInfo?.submittedDateString,
-                    userInfo: resolvedMemberId
-                        ? resourceMemberIdMapping[resolvedMemberId]
-                        : undefined,
-                    virusScan: baseSubmissionInfo?.virusScan,
-                } as SubmissionInfo
+                })
             })
             .filter((entry): entry is SubmissionInfo => Boolean(entry))
 

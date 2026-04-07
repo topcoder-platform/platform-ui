@@ -133,12 +133,12 @@ export function resolveFallbackSubmissionId({
     matchingSubmission,
     review,
 }: SubmissionIdResolutionArgs): string | undefined {
-    return review.submissionId
-        ?? baseSubmissionInfo?.id
-        ?? (review.legacySubmissionId ? `${review.legacySubmissionId}` : undefined)
-        ?? review.id
-        ?? matchingSubmission?.id
-        ?? defaultId
+    return normalizeIdentifier(review.submissionId)
+        ?? normalizeIdentifier(baseSubmissionInfo?.id)
+        ?? normalizeIdentifier(review.legacySubmissionId)
+        ?? normalizeIdentifier(review.id)
+        ?? normalizeIdentifier(matchingSubmission?.id)
+        ?? normalizeIdentifier(defaultId)
 }
 
 export interface SubmitterMemberIdResolutionArgs {
