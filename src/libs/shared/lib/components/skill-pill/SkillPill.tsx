@@ -167,6 +167,26 @@ const SkillPill: FC<SkillPillProps> = props => {
                             ))}
                         </li>
                     )}
+                    {skillDetails.activity['marathon match'] && (
+                        <li>
+                            <div className={styles.tooltipRow}>
+                                Marathon Matches (
+                                {skillDetails.activity['marathon match'].lastSources?.length ?? 0}
+                                ):
+                            </div>
+                            {skillDetails.activity['marathon match'].lastSources?.map(s => (
+                                <a
+                                    key={s.id}
+                                    className={classNames(styles.tooltipRow, styles.padLeft)}
+                                    href={`${EnvironmentConfig.URLS.CHALLENGES_PAGE}/${s.id}`}
+                                    target='_blank'
+                                    rel='noopener noreferrer'
+                                >
+                                    {s.name || 'Marathon Match'}
+                                </a>
+                            ))}
+                        </li>
+                    )}
                 </ul>
             </>
         )

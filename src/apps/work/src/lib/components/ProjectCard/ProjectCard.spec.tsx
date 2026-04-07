@@ -1,0 +1,52 @@
+/* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
+import {
+    render,
+    screen,
+} from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
+
+import type { Project } from '../../models'
+
+import { ProjectCard } from './ProjectCard'
+
+jest.mock('../../utils', () => ({
+    buildProjectChallengesPath: (projectId: string | number): string => (
+        `/projects/${encodeURIComponent(String(projectId))}/challenges`
+    ),
+    formatDateTime: () => 'Apr 6, 2026',
+}))
+
+jest.mock('../ProjectStatus', () => ({
+    ProjectStatus: (props: { status?: string }) => <span>{props.status}</span>,
+}))
+
+describe('ProjectCard', () => {
+    const invitedProject: Project = {
+        id: 100440,
+        invites: [
+            {
+                email: 'invitee@example.com',
+                status: 'pending',
+                userId: 123,
+            },
+        ],
+        isInvited: true,
+        lastActivityAt: '2026-04-06T00:00:00.000Z',
+        name: 'Project created by admin',
+        status: 'active',
+    }
+
+    it('uses the challenges route for the project card link', () => {
+        render(
+            <MemoryRouter>
+                <ProjectCard project={invitedProject} />
+            </MemoryRouter>,
+        )
+
+        const projectLink: HTMLAnchorElement | null = screen.getByText('Project created by admin')
+            .closest('a')
+
+        expect(projectLink?.getAttribute('href'))
+            .toBe('/projects/100440/challenges')
+    })
+})

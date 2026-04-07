@@ -4,6 +4,7 @@ import { fetchSkillsByIds } from '~/libs/shared'
 
 import { EngagementStatus } from '../models'
 import type { Engagement, EngagementAssignment, EngagementListResponse } from '../models'
+import { normalizePositiveNumericValue } from '../utils'
 
 const BASE_URL = `${EnvironmentConfig.API.V6}/engagements/engagements`
 
@@ -117,6 +118,7 @@ export interface GetEngagementsParams {
     countries?: string[]
     timeZones?: string[]
     search?: string
+    includePrivate?: boolean
 }
 
 const normalizePaginatedResponse = <T>(
@@ -209,12 +211,12 @@ const normalizeAssignments = (assignments?: BackendEngagementAssignment[]): Enga
 
     return assignments.map(assignment => {
         const ratePerHour = normalizeEnumValue(assignment.ratePerHour)
-        const standardHoursPerWeek = normalizeIntegerValue(assignment.standardHoursPerWeek)
+        const parsedRatePerHour = normalizePositiveNumericValue(assignment.ratePerHour)
+        const standardHoursPerWeek = normalizePositiveNumericValue(assignment.standardHoursPerWeek)
         const agreementRate = normalizeEnumValue(assignment.agreementRate)
             ?? (
-                ratePerHour && standardHoursPerWeek
-                    ? Number((Number(ratePerHour) * standardHoursPerWeek).toFixed(2))
-                        .toString()
+                parsedRatePerHour !== undefined && standardHoursPerWeek !== undefined
+                    ? (parsedRatePerHour * standardHoursPerWeek).toFixed(2)
                     : undefined
             )
 
@@ -346,6 +348,7 @@ export const getEngagements = async (
     }
 
     if (params.search) queryParams.append('search', params.search)
+    if (params.includePrivate) queryParams.append('includePrivate', 'true')
     if (params.skills?.length) {
         params.skills.forEach(skill => queryParams.append('requiredSkills', skill))
     }

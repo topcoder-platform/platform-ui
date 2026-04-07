@@ -1,0 +1,18 @@
+.container {
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    min-height: 160px;
+}
+
+.sm {
+    transform: scale(0.7);
+}
+
+.md {
+    transform: scale(1);
+}
+
+.lg {
+    transform: scale(1.2);
+}

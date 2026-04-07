@@ -1,0 +1,337 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.headerRow {
+    align-items: flex-start;
+    display: flex;
+    gap: 16px;
+    justify-content: space-between;
+}
+
+.headerRow h3,
+.sectionHeader h3,
+.sectionHeader h4 {
+    color: $black-80;
+    margin: 0;
+}
+
+.headerRow p,
+.sectionHeader p {
+    color: $black-60;
+    font-size: 14px;
+    line-height: 1.5;
+    margin: 4px 0 0;
+}
+
+.saveIndicator {
+    background: #eef7f3;
+    border: 1px solid #b5d8c7;
+    border-radius: 999px;
+    color: #137d60;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 8px 12px;
+    white-space: nowrap;
+}
+
+.infoBanner,
+.emptyState,
+.loading,
+.error {
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.5;
+    padding: 12px 14px;
+}
+
+.infoBanner {
+    background: #eef4ff;
+    border: 1px solid #bfd0f9;
+    color: #2f4b84;
+}
+
+.emptyState,
+.loading {
+    background: #f6f8fa;
+    color: $black-60;
+}
+
+.error {
+    background: #fff1f0;
+    border: 1px solid #efc0bb;
+    color: #b04337;
+}
+
+.sectionCard,
+.phaseCard,
+.summaryCard {
+    background: $tc-white;
+    border: 1px solid $black-20;
+    border-radius: 10px;
+}
+
+.sectionCard {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 18px;
+}
+
+.sectionHeader {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.testerToolbar,
+.fieldGrid,
+.summaryGrid,
+.phaseGrid,
+.modalGrid {
+    display: grid;
+    gap: 16px;
+}
+
+.testerToolbar,
+.fieldGrid,
+.summaryGrid {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.phaseGrid,
+.modalGrid {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.inlineActions,
+.footerActions,
+.modalActions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.inlineActions,
+.footerActions {
+    align-items: flex-end;
+    justify-content: flex-end;
+}
+
+.fieldGroup,
+.checkboxField {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.fieldGroup span {
+    color: $black-80;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.fieldGroup input {
+    border: 1px solid #c9ced3;
+    border-radius: 8px;
+    font-size: 14px;
+    min-height: 42px;
+    padding: 10px 12px;
+}
+
+.selectInput {
+    appearance: none;
+    -webkit-appearance: none;
+    background: $tc-white url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M5.99994 6.72682C5.87772 6.72682 5.76314 6.70773 5.65619 6.66953C5.54925 6.63134 5.44994 6.56641 5.35828 6.47474L1.14161 2.25807C0.973554 2.09002 0.889526 1.87613 0.889526 1.61641C0.889526 1.35668 0.973554 1.1428 1.14161 0.97474C1.30967 0.806684 1.52355 0.722656 1.78328 0.722656C2.043 0.722656 2.25689 0.806684 2.42494 0.97474L5.99994 4.54974L9.57494 0.97474C9.743 0.806684 9.95689 0.722656 10.2166 0.722656C10.4763 0.722656 10.6902 0.806684 10.8583 0.97474C11.0263 1.1428 11.1104 1.35668 11.1104 1.61641C11.1104 1.87613 11.0263 2.09002 10.8583 2.25807L6.64161 6.47474C6.54994 6.56641 6.45064 6.63134 6.34369 6.66953C6.23675 6.70773 6.12216 6.72682 5.99994 6.72682Z' fill='%23606B85'/%3E%3C/svg%3E") no-repeat right 14px center / 12px 8px;
+    border: 1px solid #c9ced3;
+    border-radius: 8px;
+    color: $black-80;
+    cursor: pointer;
+    font-size: 14px;
+    min-height: 42px;
+    padding: 10px 40px 10px 12px;
+
+    &:focus {
+        border-color: $link-blue-dark;
+        outline: none;
+    }
+
+    &:disabled {
+        background-color: $black-5;
+        color: $black-40;
+        cursor: not-allowed;
+    }
+
+    option {
+        color: $black-80;
+    }
+}
+
+.selectPlaceholder {
+    color: $black-60;
+}
+
+.checkboxField {
+    align-items: flex-start;
+    justify-content: center;
+    min-height: 42px;
+}
+
+.checkboxField input {
+    accent-color: #137d60;
+}
+
+.checkboxField span {
+    color: $black-80;
+    font-size: 14px;
+}
+
+.fieldError {
+    color: $red-100;
+    font-size: 12px;
+}
+
+.phaseCards {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.phaseCard {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 16px;
+}
+
+.summaryCard {
+    padding: 16px;
+}
+
+.summaryCard strong {
+    color: $black-80;
+    display: block;
+    font-size: 18px;
+    margin-top: 6px;
+}
+
+.summaryLabel {
+    color: $black-60;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.validationCard {
+    border-radius: 8px;
+    padding: 14px;
+}
+
+.validationCardValid {
+    background: #eef7f3;
+    border: 1px solid #b5d8c7;
+    color: #137d60;
+}
+
+.validationCardInvalid {
+    background: #fff1f0;
+    border: 1px solid #efc0bb;
+    color: #b04337;
+}
+
+.validationList {
+    margin: 10px 0 0;
+    padding-left: 18px;
+}
+
+.modalContent {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.codeEditor {
+    border: 1px solid #c9ced3;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.codeEditor:focus-within {
+    border-color: #137d60;
+    box-shadow: 0 0 0 3px rgba(19, 125, 96, 0.12);
+}
+
+.codeEditor :global(.cm-editor) {
+    background: #fdfdfd;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 13px;
+}
+
+.codeEditor :global(.cm-focused) {
+    outline: none;
+}
+
+.codeEditor :global(.cm-scroller) {
+    overflow: auto;
+}
+
+.codeEditor :global(.cm-content),
+.codeEditor :global(.cm-gutterElement) {
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.codeEditor :global(.cm-content) {
+    min-height: 320px;
+    padding: 12px 0;
+}
+
+.codeEditor :global(.cm-line) {
+    padding: 0 14px;
+}
+
+.codeEditor :global(.cm-gutters) {
+    background: #eef2f6;
+    border-right: 1px solid #d7dadc;
+    color: #70757a;
+    flex-shrink: 0;
+    min-height: 100%;
+}
+
+.codeEditor :global(.cm-gutterElement) {
+    padding: 0 12px 0 8px;
+}
+
+.codeEditor :global(.cm-activeLine) {
+    background: rgba(19, 125, 96, 0.04);
+}
+
+.codeEditor :global(.cm-activeLineGutter) {
+    background: rgba(19, 125, 96, 0.08);
+}
+
+.codeEditor :global(.cm-cursor) {
+    border-left-color: #137d60;
+}
+
+.codeEditor :global(.cm-selectionBackground) {
+    background: rgba(19, 125, 96, 0.16) !important;
+}
+
+@media (max-width: 767px) {
+    .headerRow {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .inlineActions,
+    .footerActions,
+    .modalActions {
+        justify-content: stretch;
+    }
+}

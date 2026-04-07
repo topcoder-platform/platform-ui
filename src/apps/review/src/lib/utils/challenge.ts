@@ -2,12 +2,15 @@
  * Util for challenge
  */
 
-import type {
+import {
     BackendMetadata,
     BackendPhase,
+    BackendSubmission,
     ChallengeInfo,
     SelectOption,
 } from '../models'
+
+import { PAST_CHALLENGE_STATUSES } from './challengeStatus'
 
 /**
  * Check if challenge is in the review phase
@@ -120,7 +123,6 @@ function normalizeLimitMetadataValue(rawValue: unknown): unknown {
 }
 
 function evaluateStringLimit(value: string): boolean {
-    console.log('evaluateStringLimit', value)
     const trimmed = value.trim()
     if (!trimmed) {
         return true
@@ -216,6 +218,159 @@ export type PhaseOrderingOptions = {
     isTopgearTask?: boolean
 }
 
+/**
+ * Approval review shape needed for winners-tab gating decisions.
+ */
+export interface ApprovalReviewStatusLike {
+    review?: {
+        status?: string | null
+    }
+}
+
+type WinnersTabVisibilityChallengeInfo = Pick<ChallengeInfo, 'status'>
+    & Partial<Pick<ChallengeInfo, 'phases' | 'currentPhaseObject'>>
+
+type WinnersTabFallbackChallengeInfo = WinnersTabVisibilityChallengeInfo
+    & Partial<Pick<ChallengeInfo, 'winners'>>
+
+/**
+ * Determine whether the challenge is in a past/completed-style status.
+ *
+ * @param status - Challenge status returned by the backend.
+ * @returns True when the challenge is completed or cancelled.
+ */
+function isPastChallengeStatus(status?: string): boolean {
+    const normalizedStatus = (status ?? '')
+        .trim()
+        .toUpperCase()
+
+    if (!normalizedStatus) {
+        return false
+    }
+
+    return PAST_CHALLENGE_STATUSES.some(pastStatus => normalizedStatus.startsWith(pastStatus))
+}
+
+/**
+ * Determine whether any approval round is still pending.
+ *
+ * @param approvalReviews - Approval reviews currently associated with the challenge.
+ * @returns True when an approval review has not been completed or submitted yet.
+ */
+export function hasPendingApprovalReview(
+    approvalReviews?: ApprovalReviewStatusLike[] | null,
+): boolean {
+    return (approvalReviews ?? []).some(entry => {
+        const normalizedStatus = (entry.review?.status ?? '')
+            .trim()
+            .toUpperCase()
+
+        return normalizedStatus !== 'COMPLETED' && normalizedStatus !== 'SUBMITTED'
+    })
+}
+
+function normalizeChallengeKey(value?: string): string {
+    return (value ?? '')
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '')
+}
+
+/**
+ * Check whether a challenge should follow First2Finish-specific UI rules.
+ *
+ * @param challengeInfo - Challenge metadata containing type and track names.
+ * @returns True when the type or track identifies the challenge as First2Finish.
+ */
+export function isFirst2FinishChallenge(
+    challengeInfo?: Pick<ChallengeInfo, 'track' | 'type'>,
+): boolean {
+    const typeName = normalizeChallengeKey(challengeInfo?.type?.name)
+    const trackName = normalizeChallengeKey(challengeInfo?.track?.name)
+
+    return typeName === 'first2finish' || trackName === 'first2finish'
+}
+
+function normalizeEntityId(value: unknown): string | undefined {
+    if (value === undefined || value === null) {
+        return undefined
+    }
+
+    const normalized = `${value}`.trim()
+    return normalized.length ? normalized : undefined
+}
+
+function normalizeSubmissionId(submission: Pick<BackendSubmission, 'id'>): string | undefined {
+    return normalizeEntityId(submission.id)
+}
+
+/**
+ * Parse a date-like value into a timestamp in milliseconds.
+ *
+ * @param value - Raw string or `Date` value from challenge-api models.
+ * @returns Milliseconds since epoch, or `undefined` when the value is empty or invalid.
+ */
+function parseTimestamp(value?: string | Date | null): number | undefined {
+    if (!value) {
+        return undefined
+    }
+
+    const parsed = value instanceof Date
+        ? value.getTime()
+        : Date.parse(value)
+
+    return Number.isNaN(parsed) ? undefined : parsed
+}
+
+/**
+ * Resolve the submission ids that should remain visible on a First2Finish iterative
+ * tab. Legacy F2F flows should surface only the first contest submission; when the
+ * submission timestamp is unavailable, placement and original list order are used as
+ * stable fallbacks.
+ *
+ * @param submissions - Contest submissions associated with the challenge.
+ * @returns Ordered submission ids to keep visible on the iterative tab.
+ */
+export function resolveFirst2FinishIterativeSubmissionIds(
+    submissions?: Array<Pick<BackendSubmission, 'id' | 'placement' | 'submittedDate'>> | null,
+): string[] {
+    const contestSubmissions = submissions ?? []
+    if (!contestSubmissions.length) {
+        return []
+    }
+
+    const withParsedDates = contestSubmissions
+        .map(submission => ({
+            parsedDate: parseTimestamp(submission.submittedDate),
+            submission,
+        }))
+        .filter((item): item is {
+            parsedDate: number
+            submission: Pick<BackendSubmission, 'id' | 'placement' | 'submittedDate'>
+        } => typeof item.parsedDate === 'number')
+        .sort((left, right) => left.parsedDate - right.parsedDate)
+
+    if (withParsedDates.length) {
+        const earliestSubmissionId = normalizeSubmissionId(withParsedDates[0].submission)
+        return earliestSubmissionId ? [earliestSubmissionId] : []
+    }
+
+    const placements = contestSubmissions
+        .map(submission => Number(submission.placement))
+        .filter(placement => Number.isFinite(placement) && placement > 0)
+
+    if (placements.length) {
+        const topPlacement = Math.min(...placements)
+        return contestSubmissions
+            .filter(submission => Number(submission.placement) === topPlacement)
+            .map(submission => normalizeSubmissionId(submission))
+            .filter((submissionId): submissionId is string => Boolean(submissionId))
+    }
+
+    const fallbackSubmissionId = normalizeSubmissionId(contestSubmissions[0])
+    return fallbackSubmissionId ? [fallbackSubmissionId] : []
+}
+
 const TAB_INSERTION_HELPERS = {
     insertIfMissing(
         tabs: SelectOption[],
@@ -245,8 +400,8 @@ const getPhaseStartTimestamp = (phase: PhaseLike | undefined): number | undefine
     if (!phase) return undefined
     const startSource = phase.actualStartDate || phase.scheduledStartDate
     if (!startSource) return undefined
-    const parsed = Date.parse(startSource)
-    if (Number.isNaN(parsed)) return undefined
+    const parsed = parseTimestamp(startSource)
+    if (parsed === undefined) return undefined
     const minutes = Math.floor(parsed / 60000)
     return Number.isNaN(minutes) ? undefined : minutes
 }
@@ -374,6 +529,7 @@ const orderPhasesForTabs = (
 
 /**
  * Build tabs for challenge phases using a consistent ordering.
+ * For completed challenges, add the Winners tab only when no phase is still open.
  */
 export function buildPhaseTabs(
     phases: PhaseLike[],
@@ -404,7 +560,8 @@ export function buildPhaseTabs(
     })
 
     const normalizedStatus = (status || '').toUpperCase()
-    if (normalizedStatus.startsWith('COMPLETED')) {
+    const hasOpenPhase = orderedPhases.some(phase => phase?.isOpen === true)
+    if (normalizedStatus.startsWith('COMPLETED') && !hasOpenPhase) {
         TAB_INSERTION_HELPERS.insertIfMissing(tabs, 'Winners', 'Winners', tabs.length)
     }
 
@@ -455,8 +612,71 @@ const normalizePhaseIdentifier = (
     return normalized.length ? normalized : undefined
 }
 
+/**
+ * Collect phase identifiers that are eligible for timeline reopen actions.
+ * A phase is reopen-eligible only when it is the direct predecessor of an open phase.
+ *
+ * @param phases - Challenge phases from the backend.
+ * @returns Set of eligible phase identifiers including both `id` and `phaseId` values.
+ */
+export function collectReopenEligiblePhaseIds(
+    phases?: BackendPhase[],
+): Set<string> {
+    const identifiers = new Set<string>()
+    if (!Array.isArray(phases) || !phases.length) {
+        return identifiers
+    }
+
+    const phaseLookup = new Map<string, BackendPhase>()
+    phases.forEach(phase => {
+        const id = normalizePhaseIdentifier(phase?.id)
+        const phaseId = normalizePhaseIdentifier(phase?.phaseId)
+
+        if (id) {
+            phaseLookup.set(id, phase)
+        }
+
+        if (phaseId) {
+            phaseLookup.set(phaseId, phase)
+        }
+    })
+
+    const addPhaseIdentifiers = (phase?: BackendPhase): void => {
+        if (!phase) {
+            return
+        }
+
+        const id = normalizePhaseIdentifier(phase.id)
+        const phaseId = normalizePhaseIdentifier(phase.phaseId)
+
+        if (id) {
+            identifiers.add(id)
+        }
+
+        if (phaseId) {
+            identifiers.add(phaseId)
+        }
+    }
+
+    phases.forEach(phase => {
+        if (!phase?.isOpen) {
+            return
+        }
+
+        const predecessorId = normalizePhaseIdentifier(phase.predecessor)
+        if (!predecessorId) {
+            return
+        }
+
+        identifiers.add(predecessorId)
+        addPhaseIdentifiers(phaseLookup.get(predecessorId))
+    })
+
+    return identifiers
+}
+
 const collectOpenPhaseIdentifiers = (
-    challengeInfo?: ChallengeInfo,
+    challengeInfo?: Partial<Pick<ChallengeInfo, 'phases' | 'currentPhaseObject'>>,
 ): Set<string> => {
     const identifiers = new Set<string>()
 
@@ -488,6 +708,46 @@ const collectOpenPhaseIdentifiers = (
     }
 
     return identifiers
+}
+
+/**
+ * Determine whether a past challenge is allowed to show the Winners tab.
+ *
+ * @param challengeInfo - Challenge status and phase metadata returned by the backend.
+ * @param approvalReviews - Approval reviews currently associated with the challenge.
+ * @returns True when the challenge is past and no follow-up approval round remains active.
+ */
+export function shouldAllowWinnersTabForPastChallenge(
+    challengeInfo?: WinnersTabVisibilityChallengeInfo,
+    approvalReviews?: ApprovalReviewStatusLike[] | null,
+): boolean {
+    if (!isPastChallengeStatus(challengeInfo?.status)) {
+        return false
+    }
+
+    if (hasPendingApprovalReview(approvalReviews)) {
+        return false
+    }
+
+    return collectOpenPhaseIdentifiers(challengeInfo).size === 0
+}
+
+/**
+ * Determine whether the UI should force-show the Winners tab for a past challenge.
+ *
+ * @param challengeInfo - Challenge status, winners, and phase metadata returned by the backend.
+ * @param approvalReviews - Approval reviews currently associated with the challenge.
+ * @returns True when the challenge is past/completed and winners are already available.
+ */
+export function shouldForceWinnersTabForPastChallenge(
+    challengeInfo?: WinnersTabFallbackChallengeInfo,
+    approvalReviews?: ApprovalReviewStatusLike[] | null,
+): boolean {
+    if (!(challengeInfo?.winners?.length)) {
+        return false
+    }
+
+    return shouldAllowWinnersTabForPastChallenge(challengeInfo, approvalReviews)
 }
 
 export function isReviewPhaseCurrentlyOpen(

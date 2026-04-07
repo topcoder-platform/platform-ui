@@ -1,0 +1,163 @@
+@import '@libs/ui/styles/includes';
+
+$prize-label-width: 86px;
+$prize-row-gap: 10px;
+$prize-input-width: 336px;
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+}
+
+.fieldHeader {
+    align-items: start;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 20px;
+}
+
+.fieldLabel {
+    color: $black-80;
+    font-size: 14px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.required {
+    color: $red-100;
+    margin-left: 4px;
+}
+
+.typeToggle {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    justify-content: flex-end;
+    margin-left: auto;
+}
+
+.typeOption {
+    align-items: center;
+    color: $black-80;
+    cursor: pointer;
+    display: inline-flex;
+    font-size: 14px;
+    gap: 8px;
+}
+
+.typeToggleInput {
+    accent-color: $turq-160;
+    cursor: pointer;
+    margin: 0;
+}
+
+.typeOptionDisabled {
+    color: $black-40;
+    cursor: not-allowed;
+}
+
+.prizeRows {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+}
+
+.prizeRow {
+    align-items: center;
+    display: grid;
+    gap: 10px;
+    width: 100%;
+}
+
+.multiPrizeRow {
+    grid-template-columns: 86px minmax(0, $prize-input-width);
+}
+
+.prizeRowWithRemove {
+    grid-template-columns: 86px minmax(0, $prize-input-width) 28px;
+}
+
+.prizeRowWithError {
+    align-items: flex-start;
+}
+
+.prizeLabel {
+    color: $black-60;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.prizeInputField {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    max-width: $prize-input-width;
+    width: 100%;
+}
+
+.prizeValueError {
+    color: $red-100;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.trashButton {
+    align-items: center;
+    background: transparent;
+    border: 0;
+    color: $black-40;
+    cursor: pointer;
+    display: inline-flex;
+    justify-content: center;
+    padding: 0;
+
+    &:disabled {
+        color: $black-20;
+        cursor: not-allowed;
+    }
+}
+
+.trashIcon {
+    height: 18px;
+    width: 18px;
+}
+
+.addButton {
+    align-self: flex-start;
+}
+
+.fieldError {
+    color: $red-100;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+@media (min-width: 768px) {
+    .fieldHeader {
+        align-items: center;
+        width: $prize-input-width;
+    }
+
+    .fieldHeaderWithPrizeLabels {
+        width: calc(#{$prize-label-width} + #{$prize-row-gap} + #{$prize-input-width});
+    }
+}
+
+@media (max-width: 640px) {
+    .multiPrizeRow,
+    .prizeRowWithRemove {
+        grid-template-columns: 1fr;
+    }
+
+    .prizeInputField {
+        max-width: none;
+    }
+
+    .trashButton {
+        justify-self: flex-end;
+    }
+}

@@ -1,0 +1,58 @@
+@import '@libs/ui/styles/includes';
+
+.row {
+    td {
+        padding: 12px 10px;
+        border-bottom: 1px solid $black-10;
+        vertical-align: middle;
+        font-size: 13px;
+        color: $black-80;
+    }
+}
+
+.challengeName {
+    border: 0;
+    background: transparent;
+    color: $link-blue-dark;
+    text-align: left;
+    cursor: pointer;
+    font-weight: 700;
+    padding: 0;
+
+    &:hover,
+    &:focus {
+        text-decoration: underline;
+        outline: none;
+    }
+}
+
+.actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.actionButton,
+.actionLink {
+    border: 0;
+    background: transparent;
+    color: $link-blue-dark;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 0;
+    text-decoration: none;
+
+    &:hover,
+    &:focus {
+        text-decoration: underline;
+        outline: none;
+    }
+}
+
+.disabledAction {
+    color: $black-40;
+    font-size: 12px;
+    font-weight: 700;
+}

@@ -67,7 +67,7 @@ const FieldHtmlEditor: FC<FieldHtmlEditorProps> = (
                         + '}',
                     height: 400,
                     menubar: false,
-                    plugins: ['table', 'link', 'textcolor', 'contextmenu'],
+                    plugins: ['table', 'link'],
                     source_view: true,
                     statusbar: false,
                     toolbar: props.toolbar || defaultToolbar,

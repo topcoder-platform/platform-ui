@@ -1,14 +1,25 @@
 import type { FC, ReactNode } from 'react'
 import { useCallback, useMemo } from 'react'
 import ReactMarkdown, { type Components, type Options as ReactMarkdownOptions } from 'react-markdown'
+import rehypeRaw from 'rehype-raw'
 import remarkFrontmatter from 'remark-frontmatter'
 import remarkGfm from 'remark-gfm'
 
 import { Button, IconSolid } from '~/libs/ui'
 import { EnvironmentConfig } from '~/config'
 
+import {
+    renderRichTextToPlainText,
+    sanitizeRichTextSource,
+} from '../../../../../libs/shared/lib/utils/rich-text'
 import type { Engagement, EngagementAssignment } from '../../lib/models'
-import { formatDate, formatLocation, truncateText } from '../../lib/utils'
+import {
+    formatCurrencyAmount,
+    formatDate,
+    formatLocation,
+    formatStandardHoursPerWeek,
+    truncateText,
+} from '../../lib/utils'
 import { StatusBadge } from '../status-badge'
 
 import styles from './AssignmentCard.module.scss'
@@ -105,15 +116,6 @@ const formatAssignmentDate = (value?: string): string => {
     return formatted === 'Date TBD' ? FALLBACK_VALUE_LABEL : formatted
 }
 
-const formatCurrencyAmount = (value?: string | number): string => {
-    if (value === null || value === undefined) {
-        return FALLBACK_VALUE_LABEL
-    }
-
-    const normalized = typeof value === 'string' ? value.trim() : value.toString()
-    return normalized ? `$${normalized}` : FALLBACK_VALUE_LABEL
-}
-
 const formatDurationMonths = (value?: number): string => {
     if (!value) {
         return FALLBACK_VALUE_LABEL
@@ -122,18 +124,11 @@ const formatDurationMonths = (value?: number): string => {
     return `${value} month${value === 1 ? '' : 's'}`
 }
 
-const formatStandardHoursPerWeek = (value?: number): string => {
-    if (!value) {
-        return FALLBACK_VALUE_LABEL
-    }
-
-    return `${value} hrs`
-}
-
 const AssignmentCard: FC<AssignmentCardProps> = (props: AssignmentCardProps) => {
     const engagement = props.engagement
     const assignment = props.assignment
     const canContactTalentManager = props.canContactTalentManager ?? true
+    const contactEmail = props.contactEmail
     const skills = engagement.requiredSkills ?? []
     const visibleSkills = skills.slice(0, 6)
     const extraSkillsCount = Math.max(0, skills.length - 6)
@@ -142,11 +137,11 @@ const AssignmentCard: FC<AssignmentCardProps> = (props: AssignmentCardProps) => 
         engagement.timeZones ?? [],
     )
     const handleContactTalentManagerClick = useCallback(() => {
-        props.onContactTalentManager(props.contactEmail)
-    }, [props.contactEmail, props.onContactTalentManager])
+        props.onContactTalentManager(contactEmail)
+    }, [contactEmail, props.onContactTalentManager])
 
     const descriptionSnippet = useMemo(() => (
-        truncateText(engagement.description, DESCRIPTION_MAX_LENGTH)
+        truncateText(renderRichTextToPlainText(engagement.description), DESCRIPTION_MAX_LENGTH)
     ), [engagement.description])
 
     const assignmentStatusLabel = useMemo(
@@ -158,11 +153,11 @@ const AssignmentCard: FC<AssignmentCardProps> = (props: AssignmentCardProps) => 
         [assignment?.status],
     )
     const paymentLabel = useMemo(
-        () => formatCurrencyAmount(assignment?.agreementRate),
+        () => formatCurrencyAmount(assignment?.agreementRate, FALLBACK_VALUE_LABEL),
         [assignment?.agreementRate],
     )
     const ratePerHourLabel = useMemo(
-        () => formatCurrencyAmount(assignment?.ratePerHour),
+        () => formatCurrencyAmount(assignment?.ratePerHour, FALLBACK_VALUE_LABEL),
         [assignment?.ratePerHour],
     )
     const startDateLabel = useMemo(
@@ -174,7 +169,7 @@ const AssignmentCard: FC<AssignmentCardProps> = (props: AssignmentCardProps) => 
         [assignment?.durationMonths],
     )
     const standardHoursPerWeekLabel = useMemo(
-        () => formatStandardHoursPerWeek(assignment?.standardHoursPerWeek),
+        () => formatStandardHoursPerWeek(assignment?.standardHoursPerWeek, FALLBACK_VALUE_LABEL),
         [assignment?.standardHoursPerWeek],
     )
     const assignmentStatus = assignment?.status?.toLowerCase()
@@ -225,13 +220,14 @@ const AssignmentCard: FC<AssignmentCardProps> = (props: AssignmentCardProps) => 
             </div>
             <div className={styles.description}>
                 <Markdown
+                    rehypePlugins={[rehypeRaw as any]}
                     remarkPlugins={[
                         remarkFrontmatter,
                         [remarkGfm, { singleTilde: false }],
                     ]}
                     components={compactMarkdownComponents}
                 >
-                    {descriptionSnippet || 'Description not available.'}
+                    {sanitizeRichTextSource(descriptionSnippet || 'Description not available.')}
                 </Markdown>
             </div>
             <div className={styles.meta}>

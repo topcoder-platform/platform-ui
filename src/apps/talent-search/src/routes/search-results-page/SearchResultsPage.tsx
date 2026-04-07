@@ -1,17 +1,20 @@
 import { FC, useCallback, useEffect, useState } from 'react'
 import classNames from 'classnames'
 
+import { EnvironmentConfig } from '~/config'
 import { Button, ContentLayout, LinkButton, LoadingCircles } from '~/libs/ui'
 import { HowSkillsWorkModal } from '~/libs/shared'
 
 import { TalentCard } from '../../components/talent-card'
 import { SearchInput } from '../../components/search-input'
-import { useUrlQuerySearchParms } from '../../lib/utils/search-query'
 import {
     InfiniteTalentMatchesResposne,
     useInfiniteTalentMatches,
 } from '../../lib/services'
+import { useUrlQuerySearchParms } from '../../lib/utils/search-query'
+import { SKILL_SEARCH_MINIMUM } from '../../config'
 
+import { getLetsTalkUrl } from './letsTalkUrl'
 import styles from './SearchResultsPage.module.scss'
 
 const SearchResultsPage: FC = () => {
@@ -91,6 +94,10 @@ const SearchResultsPage: FC = () => {
                         <span>
                             Search thousands of skills to match with our global experts.
                         </span>
+                    ) : skills.length < SKILL_SEARCH_MINIMUM ? (
+                        <span>
+                            {`Please select at least ${SKILL_SEARCH_MINIMUM} skills to search`}
+                        </span>
                     ) : !total ? (
                         <span>
                             <div className={styles.noResultsNormal}>
@@ -104,7 +111,7 @@ const SearchResultsPage: FC = () => {
                                     primary
                                     size='lg'
                                     label='TALK TO AN EXPERT'
-                                    to='https://go.topcoder.com/lets-talk/'
+                                    to={getLetsTalkUrl(EnvironmentConfig.TOPCODER_URL)}
                                 />
                             </div>
                         </span>

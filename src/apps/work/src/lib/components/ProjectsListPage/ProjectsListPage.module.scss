@@ -1,0 +1,24 @@
+@import '@libs/ui/styles/includes';
+
+.totalProjects {
+    margin-top: 10px;
+    font-size: 14px;
+    color: $black-60;
+}
+
+.errorBanner {
+    margin-top: 16px;
+    border: 1px solid #f2c9c9;
+    background: #fff4f4;
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    color: #8a1f1f;
+}
+
+.newProjectButton {
+    text-decoration: none;
+}

@@ -19,7 +19,31 @@ export interface PayoutStatus {
     taxFormSetupComplete: boolean;
 }
 
+export interface PaymentEngagementDetails {
+    assignmentId?: string
+    engagementId?: string
+    projectId?: string
+    projectName?: string
+    engagementTitle?: string
+    billingStartDate?: string
+    durationMonths?: number
+    ratePerHour?: string
+    standardHoursPerWeek?: number
+    otherRemarks?: string
+}
+
+export interface PaymentWorkLog {
+    hoursWorked?: number
+    remarks?: string
+}
+
+export interface WinningPaymentDetails {
+    engagementDetails?: PaymentEngagementDetails
+    workLog?: PaymentWorkLog
+}
+
 export interface Winning {
+    assignmentId?: string
     id: string
     description: string
     externalId: string
@@ -34,6 +58,7 @@ export interface Winning {
     datePaid: string
     currency: string
     details: PaymentDetail[]
+    winnerId?: string
 }
 
 export interface WinningDetail {
@@ -47,7 +72,10 @@ export interface WinningDetail {
     description: string
     externalId: string
     attributes: {
-        url: string
+        assignmentId?: number | string
+        hoursWorked?: number | string
+        remarks?: string
+        url?: string
     }
     details: PaymentDetail[]
     createdAt: string

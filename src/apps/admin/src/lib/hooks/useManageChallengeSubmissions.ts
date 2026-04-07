@@ -29,6 +29,7 @@ export interface useManageChallengeSubmissionsProps {
     doRemoveReviewSummations: (item: Submission) => void
     showSubmissionHistory: IsRemovingType
     setShowSubmissionHistory: Dispatch<SetStateAction<IsRemovingType>>
+    refresh: () => void
 }
 
 /**
@@ -75,6 +76,27 @@ export function useManageChallengeSubmissions(
     }, [memberSubmissions, showSubmissionHistory])
 
     const isLoadingRef = useRef(false)
+    const doFetchChallengeSubmissions = useCallback(() => {
+        if (!challengeId) {
+            return
+        }
+
+        isLoadingRef.current = true
+        setIsLoading(isLoadingRef.current)
+        fetchSubmissionsOfChallenge(challengeId)
+            .then(result => {
+                isLoadingRef.current = false
+                setIsLoading(isLoadingRef.current)
+                setMemberSubmissions(result)
+            })
+            .catch(e => {
+                isLoadingRef.current = false
+                setIsLoading(isLoadingRef.current)
+                handleError(e)
+                fail()
+            })
+    }, [challengeId])
+
     const [isRemovingSubmission, setIsRemovingSubmission]
         = useState<IsRemovingType>({})
     const isRemovingSubmissionBool = useMemo(
@@ -92,23 +114,8 @@ export function useManageChallengeSubmissions(
             return
         }
 
-        if (challengeId) {
-            isLoadingRef.current = true
-            setIsLoading(isLoadingRef.current)
-            fetchSubmissionsOfChallenge(challengeId)
-                .then(result => {
-                    isLoadingRef.current = false
-                    setIsLoading(isLoadingRef.current)
-                    setMemberSubmissions(result)
-                })
-                .catch(e => {
-                    isLoadingRef.current = false
-                    setIsLoading(isLoadingRef.current)
-                    handleError(e)
-                    fail()
-                })
-        }
-    }, [challengeId])
+        doFetchChallengeSubmissions()
+    }, [doFetchChallengeSubmissions])
 
     const doRemoveSubmission = useCallback(
         (item: Submission) => {
@@ -194,6 +201,11 @@ export function useManageChallengeSubmissions(
         isRemovingReviewSummationsBool,
         isRemovingSubmission,
         isRemovingSubmissionBool,
+        refresh: () => {
+            if (!isLoadingRef.current) {
+                doFetchChallengeSubmissions()
+            }
+        },
         setShowSubmissionHistory,
         showSubmissionHistory,
         submissions,
