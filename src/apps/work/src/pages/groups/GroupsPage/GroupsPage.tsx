@@ -4,6 +4,7 @@
 import {
     ChangeEvent,
     FC,
+    FormEvent,
     useCallback,
     useContext,
     useEffect,
@@ -404,6 +405,20 @@ export const GroupsPage: FC<GroupsPageProps> = (props: GroupsPageProps) => {
 
     const onSubmit = formMethods.handleSubmit(handleCreateGroup)
 
+    /**
+     * Prevent embedded group creation from bubbling a submit event into the parent
+     * challenge editor form while preserving normal standalone form submission.
+     *
+     * @param event - Submit event raised by the groups form.
+     */
+    const handleFormSubmit = useCallback((event: FormEvent<HTMLFormElement>): void => {
+        if (props.embedded) {
+            event.stopPropagation()
+        }
+
+        onSubmit(event)
+    }, [onSubmit, props.embedded])
+
     const isWorking = isCreating || isParsingFile || isSearching
 
     if (!canManageGroups) {
@@ -461,7 +476,7 @@ export const GroupsPage: FC<GroupsPageProps> = (props: GroupsPageProps) => {
                         )
                         : undefined}
 
-                    <form className={styles.form} onSubmit={onSubmit}>
+                    <form className={styles.form} onSubmit={handleFormSubmit}>
                         <div className={styles.formRow}>
                             <label className={styles.fieldLabel} htmlFor='groupName'>
                                 Group Name

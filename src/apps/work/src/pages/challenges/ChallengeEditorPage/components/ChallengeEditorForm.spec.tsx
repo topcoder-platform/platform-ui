@@ -1064,6 +1064,47 @@ describe('ChallengeEditorForm', () => {
         })
     })
 
+    it('returns to view mode after launching from an edit route', async () => {
+        let launchAction: (() => Promise<void>) | undefined
+
+        mockedPatchChallenge.mockResolvedValue({
+            ...validDraftChallenge,
+            status: 'ACTIVE',
+        })
+
+        render(
+            <MemoryRouter initialEntries={['/projects/100578/challenges/12345/edit']}>
+                <LocationDisplay />
+                <ChallengeEditorForm
+                    challenge={validDraftChallenge}
+                    projectId='100578'
+                    onRegisterLaunchAction={action => {
+                        launchAction = action
+                    }}
+                />
+            </MemoryRouter>,
+        )
+
+        await waitFor(() => {
+            expect(launchAction)
+                .toEqual(expect.any(Function))
+        })
+
+        await act(async () => {
+            await launchAction?.()
+                .catch(() => undefined)
+        })
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .toHaveBeenCalledWith('12345', expect.objectContaining({
+                    status: 'ACTIVE',
+                }))
+            expect(screen.getByTestId('location-display'))
+                .toHaveTextContent('/projects/100578/challenges/12345/view')
+        })
+    })
+
     it('renders submission settings for design first2finish challenges', () => {
         mockedUseFetchChallengeTracks.mockReturnValue({
             isLoading: false,

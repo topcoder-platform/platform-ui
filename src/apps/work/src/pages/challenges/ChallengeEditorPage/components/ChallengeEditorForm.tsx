@@ -2167,6 +2167,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         await handleSubmit(
             async formData => {
                 await saveChallenge(formData, {
+                    redirectToViewOnSuccess: true,
                     statusOverride: CHALLENGE_STATUS.ACTIVE,
                     successMessage: 'Challenge launched successfully',
                 })

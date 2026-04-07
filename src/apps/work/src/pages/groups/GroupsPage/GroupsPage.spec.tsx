@@ -2,6 +2,7 @@
 import '@testing-library/jest-dom'
 import type { PropsWithChildren } from 'react'
 import {
+    fireEvent,
     render,
     screen,
     waitFor,
@@ -154,5 +155,71 @@ describe('GroupsPage', () => {
             .toHaveBeenCalledWith(createdGroup)
         expect(onClose)
             .toHaveBeenCalledTimes(1)
+    })
+
+    it('does not submit the parent challenge form when the embedded form is submitted', async () => {
+        const user = userEvent.setup()
+        const createdGroup = {
+            id: 'new-group-id',
+            memberResults: [],
+            name: 'New Group',
+        }
+        const createGroup = jest.fn()
+            .mockResolvedValue(createdGroup)
+        const onParentSubmit = jest.fn(event => {
+            event.preventDefault()
+        })
+
+        mockedUseBulkCreateGroup.mockReturnValue({
+            createdGroup,
+            createGroup,
+            error: undefined,
+            isCreating: false,
+        })
+        mockedUseBulkSearchMembers.mockReturnValue({
+            error: undefined,
+            isSearching: false,
+            searchMembers: jest.fn(),
+            validationResults: [],
+        })
+
+        render(
+            <WorkAppContext.Provider value={defaultContextValue}>
+                <form onSubmit={onParentSubmit}>
+                    <GroupsPage embedded />
+                </form>
+            </WorkAppContext.Provider>,
+        )
+
+        await user.type(screen.getByRole('textbox', {
+            name: /Group Name/i,
+        }), 'New Group')
+        await user.type(screen.getByRole('textbox', {
+            name: /Description/i,
+        }), 'New group description')
+
+        const embeddedForm = screen.getByRole('button', {
+            name: 'Create Group',
+        })
+            .closest('form')
+
+        expect(embeddedForm)
+            .not.toBeNull()
+
+        fireEvent.submit(embeddedForm as HTMLFormElement)
+
+        await waitFor(() => {
+            expect(createGroup)
+                .toHaveBeenCalledWith({
+                    description: 'New group description',
+                    name: 'New Group',
+                    privateGroup: true,
+                    selfRegister: false,
+                    userIds: [],
+                })
+        })
+
+        expect(onParentSubmit)
+            .not.toHaveBeenCalled()
     })
 })
