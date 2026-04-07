@@ -184,6 +184,21 @@ describe('challenge-editor utils billing markup mapping', () => {
     })
 })
 
+describe('challenge-editor utils submission count mapping', () => {
+    it('keeps numOfSubmissions in form data so AI review locking can use it', () => {
+        const result = transformChallengeToFormData({
+            description: 'Public specification',
+            name: 'Submission challenge',
+            numOfSubmissions: 1,
+            trackId: 'track-id',
+            typeId: 'type-id',
+        })
+
+        expect(result.numOfSubmissions)
+            .toBe(1)
+    })
+})
+
 describe('challenge-editor utils task reviewer mapping', () => {
     it('maps task reviewer and task flag into form data', () => {
         const result = transformChallengeToFormData({

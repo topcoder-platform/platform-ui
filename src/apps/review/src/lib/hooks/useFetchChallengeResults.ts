@@ -27,6 +27,7 @@ import { PAST_CHALLENGE_STATUSES } from '../utils/challengeStatus'
 import {
     isContestSubmissionType,
 } from '../constants'
+import { buildChallengeResultSubmissionSource } from '../utils/challengeResultSubmissions'
 import { submissionMatchesWinner } from '../utils/winnerMatching'
 
 type ResourceMemberMapping = ChallengeDetailContextModel['resourceMemberIdMapping']
@@ -72,6 +73,15 @@ const orderReviewsByCreatedDate = (reviews: ReviewResult[]): ReviewResult[] => o
     },
     ['asc'],
 )
+
+const normalizeIdentifier = (value: unknown): string | undefined => {
+    if (value === undefined || value === null) {
+        return undefined
+    }
+
+    const normalized = `${value}`.trim()
+    return normalized.length ? normalized : undefined
+}
 
 const resolveUserInfo = ({
     challengeUuid,
@@ -300,18 +310,20 @@ export function useFetchChallengeResults(
     )
 
     const submissionSource = useMemo<SubmissionInfo[]>(() => {
-        if (winnerSubmissions?.length) {
-            return winnerSubmissions
-        }
+        const challengeSubmissions = isPastChallengeStatus
+            ? (challengeInfo?.submissions ?? submissions)
+            : submissions
 
-        if (isPastChallengeStatus && (challengeInfo?.submissions?.length ?? 0) > 0) {
-            return challengeInfo?.submissions ?? submissions
-        }
-
-        return submissions
+        return buildChallengeResultSubmissionSource({
+            challengeSubmissions,
+            memberMapping: resourceMemberIdMapping,
+            reviewSubmissions: submissions,
+            winnerSubmissions,
+        })
     }, [
         challengeInfo?.submissions,
         isPastChallengeStatus,
+        resourceMemberIdMapping,
         submissions,
         winnerSubmissions,
     ])
@@ -346,15 +358,45 @@ export function useFetchChallengeResults(
     const reviewsBySubmissionId = useMemo(() => {
         const result = new Map<string, ReviewResult[]>()
         const reviewList = challengeReviews ?? []
+        const submissionIdAliases = new Map<string, string>()
+
+        submissionSource.forEach(submission => {
+            const canonicalId = normalizeIdentifier(submission.id)
+            if (!canonicalId) {
+                return
+            }
+
+            submissionIdAliases.set(canonicalId, canonicalId)
+
+            const legacySubmissionId = normalizeIdentifier(submission.legacySubmissionId)
+            if (legacySubmissionId) {
+                submissionIdAliases.set(legacySubmissionId, canonicalId)
+            }
+        })
 
         reviewList.forEach(review => {
+            const canonicalSubmissionId = [
+                normalizeIdentifier(review.submissionId),
+                normalizeIdentifier(review.legacySubmissionId),
+            ]
+                .map(identifier => (
+                    identifier
+                        ? (submissionIdAliases.get(identifier) ?? identifier)
+                        : undefined
+                ))
+                .find((identifier): identifier is string => Boolean(identifier))
+
+            if (!canonicalSubmissionId) {
+                return
+            }
+
             const transformedReview = convertBackendReviewToReviewResult(review)
-            const existing = result.get(review.submissionId) ?? []
-            result.set(review.submissionId, [...existing, transformedReview])
+            const existing = result.get(canonicalSubmissionId) ?? []
+            result.set(canonicalSubmissionId, [...existing, transformedReview])
         })
 
         return result
-    }, [challengeReviews])
+    }, [challengeReviews, submissionSource])
 
     const sortedWinners = useMemo(
         () => orderBy(winners, ['placement'], ['asc']),
