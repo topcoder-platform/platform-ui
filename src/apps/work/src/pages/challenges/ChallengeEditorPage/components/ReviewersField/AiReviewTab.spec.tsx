@@ -1,5 +1,10 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
 import {
+    useCallback,
+    useState,
+} from 'react'
+import userEvent from '@testing-library/user-event'
+import {
     act,
     fireEvent,
     render,
@@ -11,9 +16,11 @@ import {
     useFetchChallengeTracks,
     useFetchChallengeTypes,
 } from '../../../../../lib/hooks'
+import { AiReviewConfig } from '../../../../../lib/models'
 import {
-    fetchAiReviewTemplates,
+    createAiReviewConfig,
     fetchAiReviewConfigByChallenge,
+    fetchAiReviewTemplates,
     fetchWorkflows,
     updateAiReviewConfig,
 } from '../../../../../lib/services'
@@ -85,6 +92,7 @@ jest.mock('~/libs/ui', () => ({
 
 const mockedUseFetchChallengeTracks = useFetchChallengeTracks as jest.Mock
 const mockedUseFetchChallengeTypes = useFetchChallengeTypes as jest.Mock
+const mockedCreateAiReviewConfig = createAiReviewConfig as jest.Mock
 const mockedFetchAiReviewTemplates = fetchAiReviewTemplates as jest.Mock
 const mockedFetchAiReviewConfigByChallenge = fetchAiReviewConfigByChallenge as jest.Mock
 const mockedFetchWorkflows = fetchWorkflows as jest.Mock
@@ -370,5 +378,92 @@ describe('AiReviewTab review mode options', () => {
                     }),
                 )
         })
+    })
+
+    it('does not refetch and overwrite a locally saved gating selection when AI reviewers sync in', async () => {
+        jest.useFakeTimers()
+
+        const user = userEvent.setup({
+            advanceTimers: jest.advanceTimersByTime,
+        })
+        const savedConfiguration = {
+            ...baseConfiguration,
+            workflows: [
+                {
+                    id: 'saved-workflow-1',
+                    isGating: true,
+                    weightPercent: 100,
+                    workflowId: 'workflow-1',
+                },
+            ],
+        }
+
+        mockedCreateAiReviewConfig.mockResolvedValueOnce(savedConfiguration)
+        mockedFetchWorkflows.mockResolvedValueOnce([
+            {
+                id: 'workflow-1',
+                name: 'Workflow 1',
+            },
+        ])
+
+        const LocalPersistenceHarness = (): JSX.Element => {
+            const [reviewers, setReviewers] = useState<typeof persistedAiReviewers>([])
+            const handleConfigPersisted = useCallback((config: AiReviewConfig): void => {
+                setReviewers(config.workflows.map(workflow => ({
+                    aiWorkflowId: workflow.workflowId,
+                    isMemberReview: false,
+                })))
+            }, [])
+
+            return (
+                <AiReviewTab
+                    challengeId='challenge-1'
+                    onConfigPersisted={handleConfigPersisted}
+                    reviewers={reviewers}
+                />
+            )
+        }
+
+        render(<LocalPersistenceHarness />)
+
+        await user.click(await screen.findByRole('button', { name: 'Configure manually' }))
+        await user.click(screen.getByRole('button', { name: 'Add AI workflow' }))
+
+        fireEvent.change(screen.getByLabelText('AI Workflow'), {
+            target: {
+                value: 'workflow-1',
+            },
+        })
+        fireEvent.change(screen.getByLabelText('Weight (%)'), {
+            target: {
+                value: '100',
+            },
+        })
+        fireEvent.click(screen.getByRole('checkbox', { name: 'Use as gating workflow' }))
+
+        expect(
+            (screen.getByRole('checkbox', { name: 'Use as gating workflow' }) as HTMLInputElement)
+                .checked,
+        )
+            .toBe(true)
+
+        await act(async () => {
+            jest.advanceTimersByTime(1500)
+        })
+
+        await waitFor(() => {
+            expect(mockedCreateAiReviewConfig)
+                .toHaveBeenCalledTimes(1)
+        })
+        await waitFor(() => {
+            expect(mockedFetchAiReviewConfigByChallenge)
+                .not
+                .toHaveBeenCalled()
+        })
+        expect(
+            (screen.getByRole('checkbox', { name: 'Use as gating workflow' }) as HTMLInputElement)
+                .checked,
+        )
+            .toBe(true)
     })
 })

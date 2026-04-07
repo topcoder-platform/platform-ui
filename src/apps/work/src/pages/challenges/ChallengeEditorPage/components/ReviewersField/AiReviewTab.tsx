@@ -553,6 +553,14 @@ export const AiReviewTab: FC<AiReviewTabProps> = (
             : []),
         [normalizedConfiguration],
     )
+    const hasPersistedConfigForCurrentChallenge = useMemo(
+        () => (
+            !!normalizeReviewerText(configId)
+            && normalizeReviewerText(lastSavedConfigurationRef.current?.challengeId)
+                === normalizedChallengeId
+        ),
+        [configId, normalizedChallengeId],
+    )
     const totalWorkflowWeight = useMemo(
         () => (configuration.workflows || [])
             .reduce((sum, workflow) => sum + Number(workflow.weightPercent || 0), 0),
@@ -826,6 +834,12 @@ export const AiReviewTab: FC<AiReviewTabProps> = (
             return undefined
         }
 
+        if (hasPersistedConfigForCurrentChallenge) {
+            setIsConfigLoading(false)
+            setLoadError(undefined)
+            return undefined
+        }
+
         // Saved AI configs sync their workflows back into the challenge reviewers array.
         // If there are no AI reviewers yet, there is no persisted config to load.
         if (!hasAssignedAiReviewers) {
@@ -880,7 +894,7 @@ export const AiReviewTab: FC<AiReviewTabProps> = (
         return () => {
             mounted = false
         }
-    }, [hasAssignedAiReviewers, normalizedChallengeId])
+    }, [hasAssignedAiReviewers, hasPersistedConfigForCurrentChallenge, normalizedChallengeId])
 
     useEffect(() => {
         let mounted = true
