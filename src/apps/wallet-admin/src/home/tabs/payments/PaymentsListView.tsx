@@ -490,13 +490,13 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
             {
                 appearance: 'primary' as const,
                 key: 'approve-selected-payments',
-                label: `${selectedPaymentsCount > 1 ? 'Bulk ' : ''}Approve (${selectedPaymentsCount})`,
+                label: `Approve (${selectedPaymentsCount})`,
                 onClick: () => setSelectedPaymentAction('approve'),
             },
             {
                 appearance: 'secondary' as const,
                 key: 'reject-selected-payments',
-                label: `${selectedPaymentsCount > 1 ? 'Bulk ' : ''}Reject (${selectedPaymentsCount})`,
+                label: `Reject (${selectedPaymentsCount})`,
                 onClick: () => setSelectedPaymentAction('reject'),
                 variant: 'danger' as const,
             },
@@ -765,7 +765,7 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                     maxWidth='800px'
                     size='lg'
                     showButtons
-                    title={`${selectedPaymentsCount > 1 ? 'Bulk ' : ''}${selectedPaymentAction === 'reject' ? 'Reject' : 'Approve'} Payment${selectedPaymentsCount > 1 ? 's' : ''}`}
+                    title={`${selectedPaymentAction === 'reject' ? 'Reject' : 'Approve'} Payment${selectedPaymentsCount > 1 ? 's' : ''}`}
                     action={selectedPaymentAction === 'reject' ? 'Reject' : 'Approve'}
                     onClose={function onClose() {
                         setBulkAuditNote('')
