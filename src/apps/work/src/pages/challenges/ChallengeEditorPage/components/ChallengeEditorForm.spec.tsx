@@ -518,6 +518,10 @@ describe('ChallengeEditorForm', () => {
         trackId: 'track-id',
         typeId: 'type-id',
     } as Challenge
+    const validNewChallenge = {
+        ...validDraftChallenge,
+        status: 'NEW',
+    } as Challenge
     const taskDraftChallenge = {
         ...draftChallenge,
         task: {
@@ -1690,6 +1694,35 @@ describe('ChallengeEditorForm', () => {
 
         await user.type(screen.getByLabelText('Challenge Name'), ' updated')
         await user.click(screen.getByRole('button', { name: 'Save Challenge' }))
+
+        await waitFor(() => {
+            expect(mockedPatchChallenge)
+                .toHaveBeenCalledTimes(1)
+            expect(screen.getByTestId('location-display'))
+                .toHaveTextContent('/projects/100578/challenges/12345/view')
+        })
+    })
+
+    it('returns to view mode after saving a new draft from the create route', async () => {
+        const user = userEvent.setup()
+
+        mockedPatchChallenge.mockResolvedValue({
+            ...validDraftChallenge,
+            status: 'DRAFT',
+        })
+
+        render(
+            <MemoryRouter initialEntries={['/projects/100578/challenges/new']}>
+                <LocationDisplay />
+                <ChallengeEditorForm
+                    challenge={validNewChallenge}
+                    projectId='100578'
+                />
+            </MemoryRouter>,
+        )
+
+        await user.type(screen.getByLabelText('Challenge Name'), ' updated')
+        await user.click(screen.getByRole('button', { name: 'Save as Draft' }))
 
         await waitFor(() => {
             expect(mockedPatchChallenge)
