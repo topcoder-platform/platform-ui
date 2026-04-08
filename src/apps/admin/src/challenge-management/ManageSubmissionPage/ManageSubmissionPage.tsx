@@ -5,6 +5,7 @@ import {
     ChangeEvent,
     FC,
     useCallback,
+    useEffect,
     useMemo,
     useState,
 } from 'react'
@@ -35,14 +36,17 @@ import {
 } from '../../lib/hooks'
 import {
     ActionLoading,
-    FieldHandleSelect,
+    FieldSingleSelect,
     PageWrapper,
     SubmissionTable,
     TableLoading,
     TableNoRecord,
 } from '../../lib'
 import { SelectOption } from '../../lib/models'
-import { uploadManualSubmission } from '../../lib/services'
+import {
+    getChallengeSubmitterResources,
+    uploadManualSubmission,
+} from '../../lib/services'
 import {
     checkIsMM,
     getSubmissionReprocessTopic,
@@ -53,6 +57,191 @@ import styles from './ManageSubmissionPage.module.scss'
 
 interface Props {
     className?: string
+}
+
+interface SubmissionsContentProps {
+    isLoading: boolean
+    submissions: useManageChallengeSubmissionsProps['submissions']
+    isDoingAvScan: useManageAVScanProps['isLoading']
+    doPostBusEventAvScan: useManageAVScanProps['doPostBusEvent']
+    isDownloadingSubmission: useDownloadSubmissionProps['isLoading']
+    downloadSubmission: useDownloadSubmissionProps['downloadSubmission']
+    isRemovingSubmission: useManageChallengeSubmissionsProps['isRemovingSubmission']
+    doRemoveSubmission: useManageChallengeSubmissionsProps['doRemoveSubmission']
+    isRemovingReviewSummations: useManageChallengeSubmissionsProps['isRemovingReviewSummations']
+    doRemoveReviewSummations: useManageChallengeSubmissionsProps['doRemoveReviewSummations']
+    isRunningTest: useManageBusEventProps['isRunningTest']
+    doPostBusEvent: useManageBusEventProps['doPostBusEvent']
+    showSubmissionHistory: useManageChallengeSubmissionsProps['showSubmissionHistory']
+    setShowSubmissionHistory: useManageChallengeSubmissionsProps['setShowSubmissionHistory']
+    isMM: boolean
+    isReprocessingSubmission: useManageSubmissionReprocessProps['isLoading']
+    doReprocessSubmission: useManageSubmissionReprocessProps['doReprocessSubmission']
+    canReprocessSubmission: boolean
+    isDoingAvScanBool: useManageAVScanProps['isLoadingBool']
+    isDownloadingSubmissionBool: useDownloadSubmissionProps['isLoadingBool']
+    isRemovingSubmissionBool: useManageChallengeSubmissionsProps['isRemovingSubmissionBool']
+    isRunningTestBool: useManageBusEventProps['isRunningTestBool']
+    isRemovingReviewSummationsBool: useManageChallengeSubmissionsProps['isRemovingReviewSummationsBool']
+    isReprocessingSubmissionBool: useManageSubmissionReprocessProps['isLoadingBool']
+}
+
+interface ManualSubmissionUploadModalProps {
+    open: boolean
+    onClose: () => void
+    selectedHandle?: SelectOption
+    setSelectedHandle: (value: SelectOption) => void
+    isUploading: boolean
+    isLoadingSubmitters: boolean
+    submitterOptions: SelectOption[]
+    handleFileChange: (event: ChangeEvent<HTMLInputElement>) => void
+    selectedFile?: File
+    handleUploadSubmission: () => void
+}
+
+/**
+ * Renders the submission table area, including loading and empty states, for
+ * the submission management page.
+ * @param {SubmissionsContentProps} props submission data and action state.
+ * @returns {JSX.Element} the submission management content for the page body.
+ */
+const SubmissionsContent: FC<SubmissionsContentProps> = (
+    props: SubmissionsContentProps,
+) => {
+    const shouldShowActionLoading = props.isDoingAvScanBool
+        || props.isDownloadingSubmissionBool
+        || props.isRemovingSubmissionBool
+        || props.isRunningTestBool
+        || props.isRemovingReviewSummationsBool
+        || props.isReprocessingSubmissionBool
+
+    if (props.isLoading) {
+        return <TableLoading />
+    }
+
+    if (props.submissions.length === 0) {
+        return <TableNoRecord />
+    }
+
+    return (
+        <div className={styles.blockTableContainer}>
+            <SubmissionTable
+                isDoingAvScan={props.isDoingAvScan}
+                doPostBusEventAvScan={props.doPostBusEventAvScan}
+                isDownloading={props.isDownloadingSubmission}
+                downloadSubmission={props.downloadSubmission}
+                data={props.submissions}
+                isRemovingSubmission={props.isRemovingSubmission}
+                doRemoveSubmission={props.doRemoveSubmission}
+                isRemovingReviewSummations={props.isRemovingReviewSummations}
+                doRemoveReviewSummations={props.doRemoveReviewSummations}
+                isRunningTest={props.isRunningTest}
+                doPostBusEvent={props.doPostBusEvent}
+                showSubmissionHistory={props.showSubmissionHistory}
+                setShowSubmissionHistory={props.setShowSubmissionHistory}
+                isMM={props.isMM}
+                isReprocessingSubmission={props.isReprocessingSubmission}
+                doReprocessSubmission={props.doReprocessSubmission}
+                canReprocessSubmission={props.canReprocessSubmission}
+            />
+
+            {shouldShowActionLoading && <ActionLoading />}
+        </div>
+    )
+}
+
+/**
+ * Renders the manual submission upload dialog with challenge-scoped submitter
+ * options so admins can only select registered submitter resources.
+ * @param {ManualSubmissionUploadModalProps} props upload form state and handlers.
+ * @returns {JSX.Element} the upload dialog for manual submission imports.
+ */
+const ManualSubmissionUploadModal: FC<ManualSubmissionUploadModalProps> = (
+    props: ManualSubmissionUploadModalProps,
+) => {
+    const isHandleSelectDisabled = props.isUploading
+        || props.isLoadingSubmitters
+        || props.submitterOptions.length === 0
+    const memberHandleHint = !props.isLoadingSubmitters
+        && props.submitterOptions.length === 0
+        ? 'No submitter resources are registered for this challenge.'
+        : undefined
+    const memberHandlePlaceholder = props.isLoadingSubmitters
+        ? 'Loading submitter handles...'
+        : 'Start typing a handle'
+
+    return (
+        <BaseModal
+            title='Upload Submission'
+            size='lg'
+            open={props.open}
+            onClose={props.onClose}
+        >
+            <div className={styles.uploadForm}>
+                <div className={styles.uploadFormFields}>
+                    <FieldSingleSelect
+                        label='Member Handle'
+                        hint={memberHandleHint}
+                        placeholder={memberHandlePlaceholder}
+                        value={props.selectedHandle}
+                        onChange={props.setSelectedHandle}
+                        disabled={isHandleSelectDisabled}
+                        isLoading={props.isLoadingSubmitters}
+                        options={props.submitterOptions}
+                    />
+                    <div className={styles.fileInputContainer}>
+                        <label
+                            htmlFor='manual-submission-file'
+                            className={styles.inputLabel}
+                        >
+                            Submission file
+                        </label>
+                        <input
+                            id='manual-submission-file'
+                            className={styles.fileInput}
+                            type='file'
+                            onChange={props.handleFileChange}
+                            disabled={props.isUploading}
+                        />
+                        {props.selectedFile && (
+                            <span className={styles.selectedFile}>
+                                {props.selectedFile.name}
+                            </span>
+                        )}
+                    </div>
+                </div>
+                <div className={styles.actionButtons}>
+                    <Button
+                        secondary
+                        size='lg'
+                        onClick={props.onClose}
+                        disabled={props.isUploading}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        primary
+                        size='lg'
+                        onClick={props.handleUploadSubmission}
+                        disabled={
+                            props.isUploading
+                            || props.isLoadingSubmitters
+                            || !props.selectedHandle?.value
+                            || !props.selectedFile
+                        }
+                    >
+                        Upload
+                    </Button>
+                </div>
+
+                {props.isUploading && (
+                    <div className={styles.dialogLoadingSpinnerContainer}>
+                        <LoadingSpinner className={styles.spinner} />
+                    </div>
+                )}
+            </div>
+        </BaseModal>
+    )
 }
 
 export const ManageSubmissionPage: FC<Props> = (props: Props) => {
@@ -110,6 +299,8 @@ export const ManageSubmissionPage: FC<Props> = (props: Props) => {
         = useState<SelectOption>()
     const [selectedFile, setSelectedFile] = useState<File>()
     const [isUploading, setIsUploading] = useState(false)
+    const [submitterOptions, setSubmitterOptions] = useState<SelectOption[]>([])
+    const [isLoadingSubmitters, setIsLoadingSubmitters] = useState(false)
 
     const resetUploadForm = useCallback(() => {
         setSelectedHandle(undefined)
@@ -164,6 +355,56 @@ export const ManageSubmissionPage: FC<Props> = (props: Props) => {
         }
     }, [challengeId, selectedFile, selectedHandle, resetUploadForm, refresh])
 
+    useEffect(() => {
+        let isCancelled = false
+
+        if (!challengeId) {
+            setSubmitterOptions([])
+            setSelectedHandle(undefined)
+            return undefined
+        }
+
+        setIsLoadingSubmitters(true)
+
+        const loadSubmitters = async (): Promise<void> => {
+            try {
+                const submitters = await getChallengeSubmitterResources(challengeId)
+                if (isCancelled) {
+                    return
+                }
+
+                const nextOptions = submitters.map(submitter => ({
+                    label: submitter.memberHandle,
+                    value: submitter.memberId,
+                }))
+                setSubmitterOptions(nextOptions)
+                setSelectedHandle(currentValue => (
+                    currentValue && nextOptions.some(
+                        option => option.value === currentValue.value,
+                    )
+                        ? currentValue
+                        : undefined
+                ))
+            } catch (error) {
+                if (!isCancelled) {
+                    setSubmitterOptions([])
+                    setSelectedHandle(undefined)
+                    handleError(error)
+                }
+            } finally {
+                if (!isCancelled) {
+                    setIsLoadingSubmitters(false)
+                }
+            }
+        }
+
+        loadSubmitters()
+
+        return () => {
+            isCancelled = true
+        }
+    }, [challengeId])
+
     return (
         <PageWrapper
             pageTitle='Submission Management'
@@ -184,122 +425,45 @@ export const ManageSubmissionPage: FC<Props> = (props: Props) => {
                 </div>
             )}
         >
-            {isLoading ? (
-                <TableLoading />
-            ) : (
-                <>
-                    {submissions.length === 0 ? (
-                        <TableNoRecord />
-                    ) : (
-                        <div className={styles.blockTableContainer}>
-                            <SubmissionTable
-                                isDoingAvScan={isDoingAvScan}
-                                doPostBusEventAvScan={doPostBusEventAvScan}
-                                isDownloading={isDownloadingSubmission}
-                                downloadSubmission={downloadSubmission}
-                                data={submissions}
-                                isRemovingSubmission={isRemovingSubmission}
-                                doRemoveSubmission={doRemoveSubmission}
-                                isRemovingReviewSummations={
-                                    isRemovingReviewSummations
-                                }
-                                doRemoveReviewSummations={
-                                    doRemoveReviewSummations
-                                }
-                                isRunningTest={isRunningTest}
-                                doPostBusEvent={doPostBusEvent}
-                                showSubmissionHistory={showSubmissionHistory}
-                                setShowSubmissionHistory={setShowSubmissionHistory}
-                                isMM={isMM}
-                                isReprocessingSubmission={
-                                    isReprocessingSubmission
-                                }
-                                doReprocessSubmission={doReprocessSubmission}
-                                canReprocessSubmission={Boolean(
-                                    submissionReprocessTopic,
-                                )}
-                            />
+            <SubmissionsContent
+                isLoading={isLoading}
+                submissions={submissions}
+                isDoingAvScan={isDoingAvScan}
+                doPostBusEventAvScan={doPostBusEventAvScan}
+                isDownloadingSubmission={isDownloadingSubmission}
+                downloadSubmission={downloadSubmission}
+                isRemovingSubmission={isRemovingSubmission}
+                doRemoveSubmission={doRemoveSubmission}
+                isRemovingReviewSummations={isRemovingReviewSummations}
+                doRemoveReviewSummations={doRemoveReviewSummations}
+                isRunningTest={isRunningTest}
+                doPostBusEvent={doPostBusEvent}
+                showSubmissionHistory={showSubmissionHistory}
+                setShowSubmissionHistory={setShowSubmissionHistory}
+                isMM={isMM}
+                isReprocessingSubmission={isReprocessingSubmission}
+                doReprocessSubmission={doReprocessSubmission}
+                canReprocessSubmission={Boolean(submissionReprocessTopic)}
+                isDoingAvScanBool={isDoingAvScanBool}
+                isDownloadingSubmissionBool={isDownloadingSubmissionBool}
+                isRemovingSubmissionBool={isRemovingSubmissionBool}
+                isRunningTestBool={isRunningTestBool}
+                isRemovingReviewSummationsBool={isRemovingReviewSummationsBool}
+                isReprocessingSubmissionBool={isReprocessingSubmissionBool}
+            />
 
-                            {(isDoingAvScanBool
-                                || isDownloadingSubmissionBool
-                                || isRemovingSubmissionBool
-                                || isRunningTestBool
-                                || isRemovingReviewSummationsBool
-                                || isReprocessingSubmissionBool) && (
-                                <ActionLoading />
-                            )}
-                        </div>
-                    )}
-                </>
-            )}
-
-            <BaseModal
-                title='Upload Submission'
-                size='lg'
+            <ManualSubmissionUploadModal
                 open={isUploadModalOpen}
                 onClose={closeUploadModal}
-            >
-                <div className={styles.uploadForm}>
-                    <div className={styles.uploadFormFields}>
-                        <FieldHandleSelect
-                            label='Member Handle'
-                            placeholder='Start typing a handle'
-                            value={selectedHandle}
-                            onChange={setSelectedHandle}
-                            disabled={isUploading}
-                            isLoading={isUploading}
-                        />
-                        <div className={styles.fileInputContainer}>
-                            <label
-                                htmlFor='manual-submission-file'
-                                className={styles.inputLabel}
-                            >
-                                Submission file
-                            </label>
-                            <input
-                                id='manual-submission-file'
-                                className={styles.fileInput}
-                                type='file'
-                                onChange={handleFileChange}
-                                disabled={isUploading}
-                            />
-                            {selectedFile && (
-                                <span className={styles.selectedFile}>
-                                    {selectedFile.name}
-                                </span>
-                            )}
-                        </div>
-                    </div>
-                    <div className={styles.actionButtons}>
-                        <Button
-                            secondary
-                            size='lg'
-                            onClick={closeUploadModal}
-                            disabled={isUploading}
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            primary
-                            size='lg'
-                            onClick={handleUploadSubmission}
-                            disabled={
-                                isUploading
-                                || !selectedHandle?.value
-                                || !selectedFile
-                            }
-                        >
-                            Upload
-                        </Button>
-                    </div>
-
-                    {isUploading && (
-                        <div className={styles.dialogLoadingSpinnerContainer}>
-                            <LoadingSpinner className={styles.spinner} />
-                        </div>
-                    )}
-                </div>
-            </BaseModal>
+                selectedHandle={selectedHandle}
+                setSelectedHandle={setSelectedHandle}
+                isUploading={isUploading}
+                isLoadingSubmitters={isLoadingSubmitters}
+                submitterOptions={submitterOptions}
+                handleFileChange={handleFileChange}
+                selectedFile={selectedFile}
+                handleUploadSubmission={handleUploadSubmission}
+            />
         </PageWrapper>
     )
 }

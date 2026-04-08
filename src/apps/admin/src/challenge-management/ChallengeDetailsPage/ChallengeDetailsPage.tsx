@@ -24,13 +24,11 @@ import {
     Challenge,
     ChallengeFilterCriteria,
     ChallengePrizeSet,
-    ChallengeResource,
     ChallengeWinner,
 } from '../../lib/models'
 import {
     getChallengeById,
-    getChallengeResources,
-    getResourceRoles,
+    getChallengeSubmitterResources,
     updateChallengeById,
 } from '../../lib/services'
 import {
@@ -247,54 +245,7 @@ export const ChallengeDetailsPage: FC = () => {
 
         setIsLoadingSubmitters(true)
         try {
-            const roles = await getResourceRoles()
-            const submitterRoleIds = roles
-                .filter(role => role.name.toLowerCase()
-                    .includes('submitter'))
-                .map(role => role.id)
-
-            if (submitterRoleIds.length === 0) {
-                setSubmitterOptions([{ label: 'Select submitter', value: '' }])
-                setSubmitterHandleByUserId({})
-                return
-            }
-
-            const resourcesByRole = await Promise.all(
-                submitterRoleIds.map(async roleId => {
-                    const resources: ChallengeResource[] = []
-                    let page = 1
-                    const perPage = 200
-                    let totalPages = 1
-
-                    do {
-                        // eslint-disable-next-line no-await-in-loop
-                        const response = await getChallengeResources(challengeId, {
-                            page,
-                            perPage,
-                            roleId,
-                        })
-                        resources.push(...response.data)
-                        totalPages = response.totalPages
-                        page += 1
-                    } while (page <= totalPages)
-
-                    return resources
-                }),
-            )
-
-            const deduplicatedByMemberId = new Map<string, ChallengeResource>()
-            resourcesByRole.flat()
-                .forEach(resource => {
-                    if (!deduplicatedByMemberId.has(resource.memberId)) {
-                        deduplicatedByMemberId.set(resource.memberId, resource)
-                    }
-                })
-
-            const submitters = Array.from(deduplicatedByMemberId.values())
-                .sort((left, right) => (
-                    left.memberHandle.localeCompare(right.memberHandle)
-                ))
-
+            const submitters = await getChallengeSubmitterResources(challengeId)
             const handleMap: Record<string, string> = {}
             const options: InputSelectOption[] = [
                 { label: 'Select submitter', value: '' },
