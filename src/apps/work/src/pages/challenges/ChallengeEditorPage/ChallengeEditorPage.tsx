@@ -609,7 +609,7 @@ function renderHeaderAction(params: RenderHeaderActionParams): JSX.Element | und
                 label='Edit'
                 onClick={params.onEditOpen}
                 secondary
-                size='md'
+                size='lg'
                 type='button'
             />,
         )
