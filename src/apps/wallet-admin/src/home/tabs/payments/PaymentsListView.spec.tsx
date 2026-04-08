@@ -383,8 +383,8 @@ describe('PaymentsListView', () => {
         await waitFor(() => {
             expect(mockFilterBar.mock.calls.at(-1)?.[0].selectionActions.map((action: any) => action.label))
                 .toEqual([
-                    'Bulk Approve (2)',
-                    'Bulk Reject (2)',
+                    'Approve (2)',
+                    'Reject (2)',
                 ])
         })
 
@@ -392,7 +392,7 @@ describe('PaymentsListView', () => {
             mockFilterBar.mock.calls.at(-1)?.[0].selectionActions[1].onClick()
         })
 
-        expect(screen.queryByText('Bulk Reject Payments'))
+        expect(screen.queryByText('Reject Payments'))
             .not.toBeNull()
 
         const confirmButton = screen.getByRole('button', { name: 'Reject' })

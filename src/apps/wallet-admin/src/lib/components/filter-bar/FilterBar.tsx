@@ -57,7 +57,7 @@ const FilterBar: React.FC<FilterBarProps> = (props: FilterBarProps) => {
             ? [{
                 appearance: 'primary' as const,
                 key: 'bulk-approve',
-                label: `${selectedCount > 1 ? 'Bulk ' : ''}Approve (${selectedCount})`,
+                label: `Approve (${selectedCount})`,
                 onClick: props.onBulkClick,
             }]
             : [])
