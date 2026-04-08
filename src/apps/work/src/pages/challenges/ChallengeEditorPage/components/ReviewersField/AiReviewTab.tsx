@@ -154,15 +154,19 @@ function normalizeConfiguration(
     challengeId: string,
     configurationMode?: ConfigurationMode,
 ): SaveAiReviewConfigInput {
+    const templateId = configurationMode === 'template'
+        ? configuration.templateId || undefined
+        : configuration.templateId === ''
+            ? ''
+            : undefined
+
     return {
         autoFinalize: configuration.mode === 'AI_ONLY' && configuration.autoFinalize === true,
         challengeId,
         formula: undefined,
         minPassingThreshold: Number(configuration.minPassingThreshold || 0),
         mode: configuration.mode || 'AI_GATING',
-        templateId: configurationMode === 'template'
-            ? configuration.templateId || undefined
-            : undefined,
+        templateId,
         workflows: (configuration.workflows || [])
             .map(workflow => ({
                 isGating: workflow.isGating === true,
@@ -692,7 +696,7 @@ export const AiReviewTab: FC<AiReviewTabProps> = (
 
         setConfiguration(previousConfiguration => ({
             ...previousConfiguration,
-            templateId: undefined,
+            templateId: '',
         }))
         setConfigurationMode('manual')
     }, [configId, resetConfiguration])
