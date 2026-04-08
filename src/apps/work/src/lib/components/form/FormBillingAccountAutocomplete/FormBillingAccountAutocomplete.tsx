@@ -166,6 +166,18 @@ function mergeOptions(
     return Array.from(optionMap.values())
 }
 
+function filterOptionsByInputValue(
+    options: BillingAccountOption[],
+    inputValue: string,
+): BillingAccountOption[] {
+    const normalizedInputValue = inputValue.trim()
+        .toLowerCase()
+
+    return options.filter(option => option.label
+        .toLowerCase()
+        .includes(normalizedInputValue))
+}
+
 function createDebouncedLoader(
     loader: (value: string) => Promise<BillingAccountOption[]>,
 ): (value: string) => Promise<BillingAccountOption[]> {
@@ -186,13 +198,15 @@ function createDebouncedLoader(
  * Async billing-account selector backed by server-side name search.
  *
  * When `projectId` is provided, the selector preloads the project's billing
- * accounts so edit flows match legacy behavior. When only `userId` is
- * provided, the selector preloads billing accounts granted to that user so
- * create flows start with their accessible options. Server-side search remains
- * scoped to `userId` when provided. When `selectedBillingAccount` is provided,
- * the field seeds the selected option label from project-scoped data before
- * attempting a direct billing-account lookup. The field stores only the
- * selected billing-account id in form state.
+ * accounts so edit flows match legacy behavior. Edit-mode search stays within
+ * that preloaded project-scoped list so the typed results remain consistent
+ * with the available options. When only `userId` is provided, the selector
+ * preloads billing accounts granted to that user so create flows start with
+ * their accessible options. Server-side search remains scoped to `userId` when
+ * provided. When `selectedBillingAccount` is provided, the field seeds the
+ * selected option label from project-scoped data before attempting a direct
+ * billing-account lookup. The field stores only the selected billing-account
+ * id in form state.
  */
 export const FormBillingAccountAutocomplete: FC<FormBillingAccountAutocompleteProps> = (
     props: FormBillingAccountAutocompleteProps,
@@ -226,6 +240,10 @@ export const FormBillingAccountAutocomplete: FC<FormBillingAccountAutocompletePr
                 return []
             }
 
+            if (props.projectId) {
+                return filterOptionsByInputValue(optionCache, normalizedInputValue)
+            }
+
             try {
                 const billingAccounts = await searchBillingAccounts({
                     name: normalizedInputValue,
@@ -248,7 +266,7 @@ export const FormBillingAccountAutocomplete: FC<FormBillingAccountAutocompletePr
                 return []
             }
         },
-        [props.userId],
+        [optionCache, props.projectId, props.userId],
     )
 
     const debouncedLoadBillingAccountOptions = useMemo(
