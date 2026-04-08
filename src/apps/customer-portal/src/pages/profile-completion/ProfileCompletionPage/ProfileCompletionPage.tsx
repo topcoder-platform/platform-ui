@@ -5,7 +5,7 @@ import { ChangeEvent, FC, useCallback, useEffect, useMemo, useState } from 'reac
 import useSWR, { SWRResponse } from 'swr'
 
 import { EnvironmentConfig } from '~/config'
-import { CountryLookup, useCountryLookup, UserSkill, UserSkillDisplayModes, xhrGetAsync } from '~/libs/core'
+import { CountryLookup, useCountryLookup, UserSkill, UserSkillDisplayModes } from '~/libs/core'
 import {
     Button,
     InputMultiselect,
@@ -15,6 +15,7 @@ import {
     LoadingSpinner,
     Tooltip,
 } from '~/libs/ui'
+import { fetchSkillAutocompleteOptions } from '~/libs/shared'
 import { getPreferredRoleLabelByValue } from '~/libs/shared/lib/utils/roles'
 
 import { PageWrapper } from '../../../lib'
@@ -44,25 +45,7 @@ export const ProfileCompletionPage: FC = () => {
     const loadSkillOptions = useCallback(async (query: string): Promise<InputMultiselectOption[]> => {
         setSkillOptionsLoading(true)
         try {
-            const baseUrl = `${EnvironmentConfig.API.V5}/standardized-skills`
-            const params = new URLSearchParams({
-                size: '25',
-            })
-            if (query && query.trim().length > 0) {
-                params.append('term', query.trim())
-            }
-
-            const url = `${baseUrl}/skills/autocomplete?${params.toString()}`
-            const response: any = await xhrGetAsync(url)
-
-            const skills = Array.isArray(response) ? response : []
-
-            return skills
-                .map((skill: any) => ({
-                    label: skill.name,
-                    value: String(skill.id),
-                }))
-                .filter((option: InputMultiselectOption) => !!option.value)
+            return fetchSkillAutocompleteOptions(query)
         } catch {
             return []
         } finally {

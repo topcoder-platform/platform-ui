@@ -40,7 +40,7 @@ export type MemberSearchResponse = {
     total?: number
 }
 
-export const MEMBER_SEARCH_LIMIT = 8
+export const MEMBER_SEARCH_LIMIT = 10
 
 export async function searchMembers(payload: MemberSearchPayload): Promise<MemberSearchResponse> {
     return xhrPostAsync<MemberSearchPayload, MemberSearchResponse>(

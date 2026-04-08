@@ -151,7 +151,7 @@
 .availability {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 2px;
     font-size: 14px;
     line-height: 22px;
     font-weight: 500;
@@ -199,8 +199,7 @@
     text-decoration: none;
 
     &:hover {
-        color: $turq-100;
-        text-decoration: underline;
+        color: $turq-160;
     }
 
     &:focus-visible {
@@ -213,6 +212,7 @@
 .experienceLinkIcon {
     width: 16px;
     height: 16px;
+    color: $turq-160;
 }
 
 .matchedSkillsText {
@@ -249,10 +249,6 @@
     display: block;
 }
 
-.matchedSkillsTooltip {
-    max-width: 280px;
-}
-
 .tooltipBody {
     text-align: left;
 }
@@ -277,4 +273,8 @@
     & + & {
         margin-top: 4px;
     }
+}
+
+.tooltipSkillName {
+    font-weight: 700;
 }

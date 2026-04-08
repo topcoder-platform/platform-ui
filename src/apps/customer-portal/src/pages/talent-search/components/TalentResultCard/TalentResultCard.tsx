@@ -57,7 +57,8 @@ function buildMatchedSkillsTooltipContent(
             <p className={styles.tooltipLines}>
                 {skills.map((skill: MatchedSkill) => (
                     <span key={`${skill.id}-${skill.name}`} className={styles.tooltipSkillLine}>
-                        {`${skill.name}: ${skill.wins} wins, ${skill.submitted} submissions`}
+                        <span className={styles.tooltipSkillName}>{skill.name}</span>
+                        {`: ${skill.wins} wins, ${skill.submitted} submissions`}
                     </span>
                 ))}
             </p>
@@ -128,12 +129,12 @@ export const TalentResultCard: FC<TalentResultCardProps> = (props: TalentResultC
                                     )}
                                 >
                                     {openToWork ? (
-                                        <IconSolid.CheckCircleIcon
+                                        <IconOutline.CheckIcon
                                             aria-hidden
                                             className={styles.availabilityIcon}
                                         />
                                     ) : (
-                                        <IconSolid.XCircleIcon
+                                        <IconOutline.XIcon
                                             aria-hidden
                                             className={styles.availabilityIcon}
                                         />
@@ -173,7 +174,7 @@ export const TalentResultCard: FC<TalentResultCardProps> = (props: TalentResultC
                     target='_blank'
                 >
                     Experience Match
-                    <IconOutline.ChevronRightIcon aria-hidden className={styles.experienceLinkIcon} />
+                    <IconOutline.ArrowRightIcon aria-hidden className={styles.experienceLinkIcon} />
                 </a>
             </div>
         </article>

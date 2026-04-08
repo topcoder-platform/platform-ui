@@ -6,6 +6,14 @@
     gap: $sp-4;
 }
 
+:global([class*='ContentLayout-module_content-outer']) {
+    margin: 24px auto 0 !important;
+}
+
+:global([class*='ContentLayout-module_content__']) {
+    padding-bottom: 0 !important;
+}
+
 .pageArea {
     position: relative;
     @include substractPagePaddings;
@@ -15,7 +23,7 @@
 .pageHero {
     width: 100%;
     height: 280px;
-    background-image: url('../assets/Header Image (1).png');
+    background-image: url('../../../lib/assets/talent-search-header.png');
     background-position: center;
     background-repeat: no-repeat;
     background-size: cover;
@@ -26,7 +34,7 @@
     grid-template-columns: 443px 1fr;
     gap: 40px;
     margin-top: -232px;
-    padding: $sp-4 $sp-12 0 $sp-12;
+    padding: $sp-4 $sp-12 $sp-14 $sp-12;
     position: relative;
     z-index: 1;
     font-family: $font-roboto;
@@ -124,6 +132,37 @@
     }
 }
 
+.skillsMultiselect {
+    :global([class*='__value-container']) {
+        gap: 6px;
+    }
+
+    :global([class*='__multi-value']) {
+        margin: 0;
+        border-radius: 12px;
+        background: $black-10;
+    }
+
+    :global([class*='__multi-value__label']) {
+        padding: 3px 8px;
+        color: $black-100;
+        font-size: 12px;
+        line-height: 14px;
+        font-weight: 500;
+    }
+
+    :global([class*='__multi-value__remove']) {
+        margin: 0 6px 0 0;
+        padding: 2px;
+        color: $black-60;
+
+        svg {
+            width: 14px;
+            height: 14px;
+        }
+    }
+}
+
 .checkboxRow {
     display: flex;
     align-items: center;
@@ -193,6 +232,11 @@
     &::after {
         left: 2px;
     }
+}
+
+.clearFiltersWrap {
+    margin-top: 10px;
+    align-self: flex-start;
 }
 
 .resultsPanel {
@@ -293,14 +337,33 @@
 
     p {
         margin: 0 0 $sp-1;
-        max-width: 380px;
+        max-width: 500px;
     }
 }
 
+.emptyStateTitle {
+    color: $black-100;
+    font-size: 24px;
+    line-height: 32px;
+    font-weight: 700;
+    margin: 0 0 $sp-2;
+}
+
+.emptyStateDescription {
+    color: $black-100;
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 400;
+    margin: 0;
+}
+
+.emptyStateSearchText {
+    font-weight: 700;
+}
+
 .emptyIcon {
-    width: 38px;
-    height: 38px;
-    color: #0b7d6a;
+    width: 80px;
+    height: 80px;
     margin-bottom: $sp-3;
 }
 
@@ -312,4 +375,10 @@
     @include ltemd {
         grid-template-columns: 1fr;
     }
+}
+
+.loadMoreWrap {
+    display: flex;
+    justify-content: center;
+    margin-top: 8px;
 }

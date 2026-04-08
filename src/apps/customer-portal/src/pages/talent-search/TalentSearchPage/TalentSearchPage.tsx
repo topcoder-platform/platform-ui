@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 /* eslint-disable react/jsx-no-bind */
 import { ChangeEvent, FC, FocusEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import classNames from 'classnames'
@@ -13,8 +14,9 @@ import {
     InputTextarea,
     Tooltip,
 } from '~/libs/ui'
-import { extractSkillsFromText } from '~/libs/shared'
+import { extractSkillsFromText, fetchSkillAutocompleteOptions } from '~/libs/shared'
 
+import { TalentResultCard } from '../components/TalentResultCard'
 import {
     MemberSearchPayload,
     MEMBER_SEARCH_LIMIT,
@@ -22,7 +24,7 @@ import {
     searchMembers,
     SearchTalent,
 } from '../../../lib'
-import { TalentResultCard } from '../components/TalentResultCard'
+import personSearchImage from '../../../lib/assets/person-search.png'
 
 import styles from './TalentSearchPage.module.scss'
 
@@ -33,13 +35,16 @@ export const TalentSearchPage: FC = () => {
     const [isExtractingSkills, setIsExtractingSkills] = useState<boolean>(false)
     const [errorMessage, setErrorMessage] = useState<string>('')
     const [hasSearched, setHasSearched] = useState<boolean>(false)
+    const [skillOptionsLoading, setSkillOptionsLoading] = useState<boolean>(false)
     const [selectedSkills, setSelectedSkills] = useState<InputMultiselectOption[]>([])
     const [selectedCountry, setSelectedCountry] = useState<string>('all')
     const [onlyOpenToWork, setOnlyOpenToWork] = useState<boolean>(true)
     const [onlyActive, setOnlyActive] = useState<boolean>(true)
     const [isSearchingMembers, setIsSearchingMembers] = useState<boolean>(false)
+    const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false)
     const [results, setResults] = useState<SearchTalent[]>([])
     const [totalResults, setTotalResults] = useState<number>(0)
+    const [currentPage, setCurrentPage] = useState<number>(1)
 
     // const breadCrumb = useMemo(
     //     () => [{ index: 1, label: 'Talent Search' }],
@@ -80,18 +85,37 @@ export const TalentSearchPage: FC = () => {
         return true
     }), [countryOptions, onlyActive, results, selectedCountry])
     const foundMembersCount = totalResults || filteredResults.length
+    const hasMoreResults = results.length < totalResults
+
+    const loadSkillOptions = useCallback(async (query: string): Promise<InputMultiselectOption[]> => {
+        setSkillOptionsLoading(true)
+        try {
+            return fetchSkillAutocompleteOptions(query)
+        } catch {
+            return []
+        } finally {
+            setSkillOptionsLoading(false)
+        }
+    }, [])
 
     const runMemberSearch = useCallback(async (
         skillsToSearch: InputMultiselectOption[],
-        overrides?: { openToWork?: boolean; recentlyActive?: boolean },
+        overrides?: {
+            append?: boolean
+            openToWork?: boolean
+            page?: number
+            recentlyActive?: boolean
+        },
     ): Promise<void> => {
+        const append = overrides?.append === true
         const openToWork = overrides?.openToWork ?? onlyOpenToWork
+        const page = overrides?.page ?? 1
         const recentlyActive = overrides?.recentlyActive ?? onlyActive
 
         const payload: MemberSearchPayload = {
             limit: MEMBER_SEARCH_LIMIT,
             openToWork,
-            page: 1,
+            page,
             recentlyActive,
             skills: skillsToSearch
                 .map(skill => String(skill.value || '')
@@ -105,20 +129,50 @@ export const TalentSearchPage: FC = () => {
             verifiedProfile: true,
         }
 
-        setIsSearchingMembers(true)
+        if (append) {
+            setIsLoadingMore(true)
+        } else {
+            setIsSearchingMembers(true)
+        }
+
         setErrorMessage('')
 
         try {
             const response = await searchMembers(payload)
+            const fetchedData = Array.isArray(response?.data) ? response.data : []
 
-            setResults(Array.isArray(response?.data) ? response.data : [])
+            setResults(prevResults => {
+                if (!append) {
+                    return fetchedData
+                }
+
+                const seen = new Set(prevResults.map(item => item.id))
+                const merged = [...prevResults]
+                fetchedData.forEach(item => {
+                    if (!seen.has(item.id)) {
+                        seen.add(item.id)
+                        merged.push(item)
+                    }
+                })
+
+                return merged
+            })
             setTotalResults(Number(response?.total || 0))
+            setCurrentPage(Number(response?.page || page))
         } catch {
-            setResults([])
-            setTotalResults(0)
+            if (!append) {
+                setResults([])
+                setTotalResults(0)
+                setCurrentPage(1)
+            }
+
             setErrorMessage('Failed to search matching members. Please try again.')
         } finally {
-            setIsSearchingMembers(false)
+            if (append) {
+                setIsLoadingMore(false)
+            } else {
+                setIsSearchingMembers(false)
+            }
         }
     }, [onlyActive, onlyOpenToWork])
 
@@ -130,6 +184,7 @@ export const TalentSearchPage: FC = () => {
         if (hasSearched && selectedSkills.length > 0) {
             runMemberSearch(selectedSkills, {
                 openToWork: true,
+                page: 1,
                 recentlyActive: true,
             })
         }
@@ -152,8 +207,10 @@ export const TalentSearchPage: FC = () => {
             const skillById = new Map<string, InputMultiselectOption>()
 
             extractedSkills.forEach((skill: { id?: unknown; name?: unknown }) => {
-                const skillId = typeof skill.id === 'string' ? skill.id.trim() : ''
-                const skillName = typeof skill.name === 'string' ? skill.name.trim() : ''
+                const skillId = String(skill.id ?? '')
+                    .trim()
+                const skillName = String(skill.name ?? '')
+                    .trim()
 
                 if (!skillId || !skillName) {
                     return
@@ -178,7 +235,7 @@ export const TalentSearchPage: FC = () => {
 
             setHasSearched(true)
             skipNextAutoSearchRef.current = true
-            await runMemberSearch(extractedOptions)
+            await runMemberSearch(extractedOptions, { page: 1 })
         } catch {
             setErrorMessage('Failed to extract skills. Please try again.')
             setHasSearched(true)
@@ -207,6 +264,17 @@ export const TalentSearchPage: FC = () => {
         selectedCountry,
         selectedSkills,
     ])
+
+    const handleLoadMore = useCallback((): void => {
+        if (isLoadingMore || isSearchingMembers || !hasMoreResults || selectedSkills.length === 0) {
+            return
+        }
+
+        runMemberSearch(selectedSkills, {
+            append: true,
+            page: currentPage + 1,
+        })
+    }, [currentPage, hasMoreResults, isLoadingMore, isSearchingMembers, runMemberSearch, selectedSkills])
 
     return (
         <PageWrapper
@@ -265,9 +333,12 @@ export const TalentSearchPage: FC = () => {
                             <p className={styles.panelTitle}>Filter</p>
                             <div className={styles.filterBlock}>
                                 <InputMultiselect
+                                    className={styles.skillsMultiselect}
                                     label='Skills'
                                     name='skills'
-                                    disabled={!hasSearched}
+                                    placeholder=''
+                                    loading={skillOptionsLoading}
+                                    onFetchOptions={loadSkillOptions}
                                     value={selectedSkills}
                                     onChange={(event: ChangeEvent<HTMLInputElement>) => {
                                         const value = (event.target.value || []) as InputMultiselectOption[]
@@ -328,9 +399,11 @@ export const TalentSearchPage: FC = () => {
                                     </Tooltip>
                                 </span>
                             </label>
-                            <Button secondary onClick={clearAllFilters}>
-                                Clear Filters
-                            </Button>
+                            <div className={styles.clearFiltersWrap}>
+                                <Button secondary onClick={clearAllFilters}>
+                                    Clear Filters
+                                </Button>
+                            </div>
                         </section>
                     </aside>
 
@@ -342,10 +415,18 @@ export const TalentSearchPage: FC = () => {
                     >
                         {!hasSearched && (
                             <div className={styles.emptyState}>
-                                <IconOutline.SearchIcon className={styles.emptyIcon} />
-                                <h4>Find the right talent</h4>
-                                <p>Paste a job description on the left and hit Search.</p>
-                                <p>Our AI will match you with the best candidates from our network.</p>
+                                <img
+                                    src={personSearchImage}
+                                    alt='Person search'
+                                    className={styles.emptyIcon}
+                                />
+                                <p className={styles.emptyStateTitle}>Find the right talent</p>
+                                <p className={styles.emptyStateDescription}>
+                                    Paste a job description on the left and hit&nbsp;
+                                    <span className={styles.emptyStateSearchText}>Search</span>
+                                    &nbsp;- Our AI will match you with the
+                                    best candidates from our network.
+                                </p>
                             </div>
                         )}
 
@@ -384,14 +465,27 @@ export const TalentSearchPage: FC = () => {
                                     </div>
                                 )}
                                 {!isSearchingMembers && filteredResults.length > 0 && (
-                                    <div className={styles.cardsGrid}>
-                                        {filteredResults.map(talent => (
-                                            <TalentResultCard
-                                                key={talent.id}
-                                                talent={talent}
-                                            />
-                                        ))}
-                                    </div>
+                                    <>
+                                        <div className={styles.cardsGrid}>
+                                            {filteredResults.map(talent => (
+                                                <TalentResultCard
+                                                    key={talent.id}
+                                                    talent={talent}
+                                                />
+                                            ))}
+                                        </div>
+                                        {hasMoreResults && (
+                                            <div className={styles.loadMoreWrap}>
+                                                <Button
+                                                    secondary
+                                                    disabled={isLoadingMore}
+                                                    onClick={handleLoadMore}
+                                                >
+                                                    {isLoadingMore ? 'Loading...' : 'Load More Members'}
+                                                </Button>
+                                            </div>
+                                        )}
+                                    </>
                                 )}
                             </div>
                         )}

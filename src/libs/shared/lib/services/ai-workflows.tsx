@@ -156,6 +156,8 @@ function parseSkillMatchesFromUnknown(payload: unknown): SkillMatch[] {
     }
 
     if (Array.isArray(payload)) {
+        const seenSkillIds = new Set<string>()
+
         return payload
             .map(item => {
                 if (!item || typeof item !== 'object') {
@@ -163,21 +165,22 @@ function parseSkillMatchesFromUnknown(payload: unknown): SkillMatch[] {
                 }
 
                 const raw = item as Record<string, unknown>
-                const id = typeof raw.id === 'string'
-                    ? raw.id
-                    : typeof raw.skillId === 'string'
-                        ? raw.skillId
-                        : ''
-                const name = typeof raw.name === 'string'
-                    ? raw.name
-                    : typeof raw.skillName === 'string'
-                        ? raw.skillName
-                        : ''
+                const candidateId = raw.id ?? raw.skillId
+                const candidateName = raw.name ?? raw.skillName
+                const id = String(candidateId ?? '')
+                    .trim()
+                const name = String(candidateName ?? '')
+                    .trim()
 
                 if (!id || !name) {
                     return undefined
                 }
 
+                if (seenSkillIds.has(id)) {
+                    return undefined
+                }
+
+                seenSkillIds.add(id)
                 return { id, name }
             })
             .filter((item): item is SkillMatch => !!item)
@@ -191,6 +194,9 @@ function parseSkillMatchesFromUnknown(payload: unknown): SkillMatch[] {
     const candidates: unknown[] = [
         raw.matches,
         raw.skills,
+        raw.matchesData,
+        raw.items,
+        raw.values,
         raw.result,
         raw.output,
         raw.outputData,
