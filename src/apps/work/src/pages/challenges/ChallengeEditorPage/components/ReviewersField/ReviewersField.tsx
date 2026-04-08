@@ -45,8 +45,8 @@ function hasReviewerChanges(
 }
 
 /**
- * Renders the challenge review section, including read-only summary, tab navigation,
- * and the human and AI review editors.
+ * Renders the challenge review section, showing either the read-only summary or
+ * the editable human and AI review tabs.
  */
 export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldProps) => {
     const formContext = useFormContext<ChallengeEditorFormData>()
@@ -222,92 +222,98 @@ export const ReviewersField: FC<ReviewersFieldProps> = (props: ReviewersFieldPro
                 )
                 : undefined}
 
-            <div
-                aria-orientation='horizontal'
-                className={styles.tabList}
-                role='tablist'
-            >
-                <div
-                    aria-controls='reviewers-human-panel'
-                    aria-selected={activeTab === 'human'}
-                    className={classNames(
-                        styles.tabButton,
-                        activeTab === 'human'
-                            ? styles.activeTab
-                            : undefined,
-                    )}
-                    id='reviewers-human-tab'
-                    onClick={function onClick() {
-                        handleTabChange('human')
-                    }}
-                    onKeyDown={getTabKeyDownHandler('human')}
-                    ref={humanTabRef}
-                    role='tab'
-                    tabIndex={activeTab === 'human' ? 0 : -1}
-                >
-                    {humanReviewLabel}
-                </div>
-                <div
-                    aria-controls='reviewers-ai-panel'
-                    aria-selected={activeTab === 'ai'}
-                    className={classNames(
-                        styles.tabButton,
-                        activeTab === 'ai'
-                            ? styles.activeTab
-                            : undefined,
-                    )}
-                    id='reviewers-ai-tab'
-                    onClick={function onClick() {
-                        handleTabChange('ai')
-                    }}
-                    onKeyDown={getTabKeyDownHandler('ai')}
-                    ref={aiTabRef}
-                    role='tab'
-                    tabIndex={activeTab === 'ai' ? 0 : -1}
-                >
-                    {aiReviewLabel}
-                </div>
-            </div>
+            {!props.isReadOnly
+                ? (
+                    <>
+                        <div
+                            aria-orientation='horizontal'
+                            className={styles.tabList}
+                            role='tablist'
+                        >
+                            <div
+                                aria-controls='reviewers-human-panel'
+                                aria-selected={activeTab === 'human'}
+                                className={classNames(
+                                    styles.tabButton,
+                                    activeTab === 'human'
+                                        ? styles.activeTab
+                                        : undefined,
+                                )}
+                                id='reviewers-human-tab'
+                                onClick={function onClick() {
+                                    handleTabChange('human')
+                                }}
+                                onKeyDown={getTabKeyDownHandler('human')}
+                                ref={humanTabRef}
+                                role='tab'
+                                tabIndex={activeTab === 'human' ? 0 : -1}
+                            >
+                                {humanReviewLabel}
+                            </div>
+                            <div
+                                aria-controls='reviewers-ai-panel'
+                                aria-selected={activeTab === 'ai'}
+                                className={classNames(
+                                    styles.tabButton,
+                                    activeTab === 'ai'
+                                        ? styles.activeTab
+                                        : undefined,
+                                )}
+                                id='reviewers-ai-tab'
+                                onClick={function onClick() {
+                                    handleTabChange('ai')
+                                }}
+                                onKeyDown={getTabKeyDownHandler('ai')}
+                                ref={aiTabRef}
+                                role='tab'
+                                tabIndex={activeTab === 'ai' ? 0 : -1}
+                            >
+                                {aiReviewLabel}
+                            </div>
+                        </div>
 
-            <fieldset className={styles.tabPanels} disabled={props.isReadOnly}>
-                <div
-                    aria-labelledby='reviewers-human-tab'
-                    className={classNames(
-                        styles.tabPanel,
-                        activeTab !== 'human'
-                            ? styles.tabPanelHidden
-                            : undefined,
-                    )}
-                    hidden={activeTab !== 'human'}
-                    id='reviewers-human-panel'
-                    role='tabpanel'
-                >
-                    <HumanReviewTab />
-                </div>
+                        <fieldset className={styles.tabPanels}>
+                            <div
+                                aria-labelledby='reviewers-human-tab'
+                                className={classNames(
+                                    styles.tabPanel,
+                                    activeTab !== 'human'
+                                        ? styles.tabPanelHidden
+                                        : undefined,
+                                )}
+                                hidden={activeTab !== 'human'}
+                                id='reviewers-human-panel'
+                                role='tabpanel'
+                            >
+                                <HumanReviewTab />
+                            </div>
 
-                <div
-                    aria-labelledby='reviewers-ai-tab'
-                    className={classNames(
-                        styles.tabPanel,
-                        activeTab !== 'ai'
-                            ? styles.tabPanelHidden
-                            : undefined,
-                    )}
-                    hidden={activeTab !== 'ai'}
-                    id='reviewers-ai-panel'
-                    role='tabpanel'
-                >
-                    <AiReviewTab
-                        challengeId={challengeId}
-                        hasSubmissions={hasSubmissions}
-                        onConfigPersisted={handleAiConfigPersisted}
-                        onConfigRemoved={handleAiConfigRemoved}
-                        reviewers={reviewerRows}
-                        trackId={trackId}
-                        typeId={typeId}
-                    />
-                </div>
-            </fieldset>
+                            <div
+                                aria-labelledby='reviewers-ai-tab'
+                                className={classNames(
+                                    styles.tabPanel,
+                                    activeTab !== 'ai'
+                                        ? styles.tabPanelHidden
+                                        : undefined,
+                                )}
+                                hidden={activeTab !== 'ai'}
+                                id='reviewers-ai-panel'
+                                role='tabpanel'
+                            >
+                                <AiReviewTab
+                                    challengeId={challengeId}
+                                    hasSubmissions={hasSubmissions}
+                                    onConfigPersisted={handleAiConfigPersisted}
+                                    onConfigRemoved={handleAiConfigRemoved}
+                                    reviewers={reviewerRows}
+                                    trackId={trackId}
+                                    typeId={typeId}
+                                />
+                            </div>
+                        </fieldset>
+                    </>
+                )
+                : undefined}
         </div>
     )
 }

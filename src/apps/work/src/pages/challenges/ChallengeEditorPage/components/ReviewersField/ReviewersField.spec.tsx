@@ -186,9 +186,7 @@ describe('ReviewersField', () => {
             })
     })
 
-    it('keeps the AI tab accessible in read-only mode', async () => {
-        const user = userEvent.setup()
-
+    it('shows only the summary in read-only mode', () => {
         render(
             <TestHarness
                 isReadOnly
@@ -207,13 +205,12 @@ describe('ReviewersField', () => {
         )
 
         expect(screen.getByTestId('review-summary')).not.toBeNull()
-        await user.click(screen.getByRole('tab', { name: 'AI Review (1)' }))
-
-        expect(screen.getByRole('tab', { name: 'AI Review (1)' })
-            .getAttribute('aria-selected'))
-            .toBe('true')
-        expect(screen.getByTestId('ai-review-tab').parentElement?.hasAttribute('hidden'))
-            .toBe(false)
+        expect(screen.queryByRole('tablist'))
+            .toBeNull()
+        expect(screen.queryByTestId('human-review-tab'))
+            .toBeNull()
+        expect(screen.queryByTestId('ai-review-tab'))
+            .toBeNull()
     })
 
     it('passes the submission lock state to the AI tab once submissions exist', async () => {
