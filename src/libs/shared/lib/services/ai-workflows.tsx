@@ -142,6 +142,76 @@ export interface SkillsExtractionResult {
     matches?: SkillMatch[]
 }
 
+function parseSkillMatchesFromUnknown(payload: unknown): SkillMatch[] {
+    if (!payload) {
+        return []
+    }
+
+    if (typeof payload === 'string') {
+        try {
+            return parseSkillMatchesFromUnknown(JSON.parse(payload))
+        } catch {
+            return []
+        }
+    }
+
+    if (Array.isArray(payload)) {
+        return payload
+            .map(item => {
+                if (!item || typeof item !== 'object') {
+                    return undefined
+                }
+
+                const raw = item as Record<string, unknown>
+                const id = typeof raw.id === 'string'
+                    ? raw.id
+                    : typeof raw.skillId === 'string'
+                        ? raw.skillId
+                        : ''
+                const name = typeof raw.name === 'string'
+                    ? raw.name
+                    : typeof raw.skillName === 'string'
+                        ? raw.skillName
+                        : ''
+
+                if (!id || !name) {
+                    return undefined
+                }
+
+                return { id, name }
+            })
+            .filter((item): item is SkillMatch => !!item)
+    }
+
+    if (typeof payload !== 'object') {
+        return []
+    }
+
+    const raw = payload as Record<string, unknown>
+    const candidates: unknown[] = [
+        raw.matches,
+        raw.skills,
+        raw.result,
+        raw.output,
+        raw.outputData,
+        raw.data,
+    ]
+
+    for (const candidate of candidates) {
+        const parsed = parseSkillMatchesFromUnknown(candidate)
+        if (parsed.length > 0) {
+            return parsed
+        }
+    }
+
+    return []
+}
+
+function normalizeSkillsExtractionResult(result: WorkflowRunResult): SkillsExtractionResult {
+    const matches = parseSkillMatchesFromUnknown(result?.result)
+    return matches.length > 0 ? { matches } : {}
+}
+
 /**
  * Extract skills from text using AI workflow
  *
@@ -178,7 +248,7 @@ export async function extractSkillsFromText(
         const result = await pollWorkflowRunStatus(workflowIdToUse, runId)
         console.log('Workflow completed successfully')
 
-        return (result.result as SkillsExtractionResult) || {}
+        return normalizeSkillsExtractionResult(result)
     } catch (error) {
         console.error('Skills extraction workflow failed:', (error as Error).message)
         throw error
