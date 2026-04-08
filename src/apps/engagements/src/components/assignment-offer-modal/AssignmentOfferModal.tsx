@@ -3,7 +3,11 @@ import { FC, useMemo } from 'react'
 import { BaseModal, Button } from '~/libs/ui'
 
 import type { Engagement, EngagementAssignment } from '../../lib/models'
-import { formatDate } from '../../lib/utils'
+import {
+    formatCurrencyAmount,
+    formatDate,
+    formatStandardHoursPerWeek,
+} from '../../lib/utils'
 
 import styles from './AssignmentOfferModal.module.scss'
 
@@ -29,30 +33,12 @@ const formatAssignmentDate = (value?: string): string => {
     return formatted === 'Date TBD' ? FALLBACK_LABEL : formatted
 }
 
-const formatCurrencyAmount = (value?: string | number): string => {
-    if (value === null || value === undefined) {
-        return FALLBACK_LABEL
-    }
-
-    const normalized = value.toString()
-        .trim()
-    return normalized ? `$ ${normalized}` : FALLBACK_LABEL
-}
-
 const formatDurationMonths = (value?: number): string => {
     if (!value) {
         return FALLBACK_LABEL
     }
 
     return `${value} month${value === 1 ? '' : 's'}`
-}
-
-const formatStandardHoursPerWeek = (value?: number): string => {
-    if (!value) {
-        return FALLBACK_LABEL
-    }
-
-    return `${value} hrs`
 }
 
 const formatRemarks = (value?: string): string => {
@@ -78,7 +64,7 @@ const AssignmentOfferModal: FC<AssignmentOfferModalProps> = (
         : 'Review the details below before accepting this offer.'
 
     const agreementRateLabel = useMemo(
-        () => formatCurrencyAmount(assignment.agreementRate),
+        () => formatCurrencyAmount(assignment.agreementRate, FALLBACK_LABEL),
         [assignment.agreementRate],
     )
     const startDateLabel = useMemo(
@@ -90,11 +76,11 @@ const AssignmentOfferModal: FC<AssignmentOfferModalProps> = (
         [assignment.durationMonths],
     )
     const ratePerHourLabel = useMemo(
-        () => formatCurrencyAmount(assignment.ratePerHour),
+        () => formatCurrencyAmount(assignment.ratePerHour, FALLBACK_LABEL),
         [assignment.ratePerHour],
     )
     const standardHoursPerWeekLabel = useMemo(
-        () => formatStandardHoursPerWeek(assignment.standardHoursPerWeek),
+        () => formatStandardHoursPerWeek(assignment.standardHoursPerWeek, FALLBACK_LABEL),
         [assignment.standardHoursPerWeek],
     )
     const otherRemarksLabel = useMemo(

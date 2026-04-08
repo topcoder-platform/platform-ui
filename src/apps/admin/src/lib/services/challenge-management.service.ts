@@ -87,6 +87,65 @@ export const getChallengeResources = async (
 }
 
 /**
+ * Gets all submitter resources for a challenge and returns a deduplicated,
+ * handle-sorted list for challenge-scoped submitter selection in admin flows.
+ * @param {string} challengeId challenge identifier used to load submitter resources.
+ * @returns {Promise<ChallengeResource[]>} unique submitter resources sorted by member handle.
+ * @throws {Error} Propagates request errors when resource roles or challenge resources cannot be loaded.
+ */
+export const getChallengeSubmitterResources = async (
+    challengeId: string,
+): Promise<ChallengeResource[]> => {
+    const perPage = 200
+    const roles = await getResourceRoles()
+    const submitterRoleIds = roles
+        .filter(role => role.name.toLowerCase()
+            .includes('submitter'))
+        .map(role => role.id)
+
+    if (submitterRoleIds.length === 0) {
+        return []
+    }
+
+    const resourcesByRole = await Promise.all(
+        submitterRoleIds.map(async roleId => {
+            const firstPageResponse = await getChallengeResources(challengeId, {
+                page: 1,
+                perPage,
+                roleId,
+            })
+            const remainingPageRequests = Array.from(
+                { length: Math.max(firstPageResponse.totalPages - 1, 0) },
+                (_ignoredValue, index) => getChallengeResources(challengeId, {
+                    page: index + 2,
+                    perPage,
+                    roleId,
+                }),
+            )
+            const remainingPageResponses = await Promise.all(
+                remainingPageRequests,
+            )
+
+            return [
+                ...firstPageResponse.data,
+                ...remainingPageResponses.flatMap(response => response.data),
+            ]
+        }),
+    )
+
+    const deduplicatedByMemberId = new Map<string, ChallengeResource>()
+    resourcesByRole.flat()
+        .forEach(resource => {
+            if (!deduplicatedByMemberId.has(resource.memberId)) {
+                deduplicatedByMemberId.set(resource.memberId, resource)
+            }
+        })
+
+    return Array.from(deduplicatedByMemberId.values())
+        .sort((left, right) => left.memberHandle.localeCompare(right.memberHandle))
+}
+
+/**
  * Gets a list of e-mails based on a list of users.
  * @returns {Promise} the promise with a list of userIds and e-mails.
  */

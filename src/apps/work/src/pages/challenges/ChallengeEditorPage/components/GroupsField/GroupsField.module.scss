@@ -1,0 +1,71 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.selectField {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+    width: 100%;
+}
+
+.fieldHeader {
+    align-items: center;
+    align-self: flex-start;
+    display: inline-flex;
+    position: relative;
+    width: fit-content;
+}
+
+.fieldHeaderWithAction {
+    padding-right: 32px;
+}
+
+.fieldLabel {
+    color: $black-80;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.createGroupButton {
+    align-items: center;
+    background: transparent;
+    border: 1px solid $link-blue-dark;
+    border-radius: 9999px;
+    color: $link-blue-dark;
+    cursor: pointer;
+    display: inline-flex;
+    flex: 0 0 auto;
+    height: 20px;
+    justify-content: center;
+    padding: 0;
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+
+    svg {
+        height: 12px;
+        width: 12px;
+    }
+
+    &:hover,
+    &:focus {
+        background-color: rgba(42, 98, 213, 0.08);
+        color: #2a62d5;
+        outline: none;
+    }
+}
+
+@media (max-width: 767px) {
+    .container {
+        gap: 8px;
+    }
+}

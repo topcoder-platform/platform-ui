@@ -1,0 +1,175 @@
+@import '@libs/ui/styles/includes';
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+}
+
+.formContent {
+    border: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    margin: 0;
+    min-inline-size: 0;
+    padding: 0;
+
+    &[disabled] {
+        pointer-events: none;
+    }
+}
+
+.section {
+    background-color: $tc-white;
+    border: 2px solid $black-20;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px;
+}
+
+.sectionTitle {
+    color: $black-80;
+    font-size: 18px;
+    margin: 0;
+}
+
+.grid {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.submissionSettingsGrid {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.block {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.readOnlyField {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.readOnlyFieldLabel {
+    color: $black-80;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.readOnlyFieldValue {
+    color: $black-100;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.billingSummary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 28px;
+}
+
+.prizesBillingGrid {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.prizeInputs {
+    display: grid;
+    align-items: start;
+    gap: 20px;
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.challengePrizesColumn {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 0;
+    width: 100%;
+}
+
+.copilotFeeColumn {
+    min-width: 0;
+    width: 100%;
+}
+
+@media (min-width: 1024px) {
+    .submissionSettingsGrid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .prizeInputs {
+        column-gap: 48px;
+        grid-template-columns: 472px 336px;
+        justify-content: start;
+    }
+
+    .copilotFeeColumn {
+        padding-left: 0;
+    }
+}
+
+.footer {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    justify-content: space-between;
+}
+
+.statusArea {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.statusText {
+    color: $black-80;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.lastSaved {
+    color: $black-60;
+    font-size: 12px;
+}
+
+.errorText {
+    color: $red-100;
+    font-size: 12px;
+}
+
+.warningText {
+    color: #7c5b1b;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.actions {
+    align-items: center;
+    display: flex;
+    gap: 16px;
+}
+
+.cancelLink {
+    color: $black-60;
+    font-size: 13px;
+    text-decoration: none;
+
+    &:hover,
+    &:focus {
+        color: $black-80;
+        text-decoration: underline;
+    }
+}

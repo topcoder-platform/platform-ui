@@ -2,6 +2,7 @@ import {
     BackendPhase,
     SubmissionInfo,
 } from '../models'
+import { isContestSubmissionType } from '../constants'
 
 const EXCLUDED_REVIEW_TYPE_FRAGMENTS = [
     'approval',
@@ -92,15 +93,17 @@ const collectReviewHints = (
     return normalizedCandidates
 }
 
-const normalizeReviewPhaseName = (value?: string | null): string => (
+const normalizeReviewPhaseKey = (value?: string | null): string => (
     (value ?? '')
         .trim()
         .toLowerCase()
+        .replace(/[^a-z]/g, '')
 )
 
 const hasReviewPhaseName = (
     phaseName?: string | null,
-): boolean => normalizeReviewPhaseName(phaseName) === 'review'
+    targetPhaseName = 'Review',
+): boolean => normalizeReviewPhaseKey(phaseName) === normalizeReviewPhaseKey(targetPhaseName)
 
 type ReviewPhaseCandidate = {
     phaseId?: string | null
@@ -111,47 +114,49 @@ type ReviewPhaseCandidate = {
 const hasReviewPhase = (
     review: ReviewPhaseCandidate | undefined,
     phases?: BackendPhase[],
+    targetPhaseName = 'Review',
 ): boolean => {
     if (!review) {
         return false
     }
 
-    if (hasReviewPhaseName(review.phaseName)) {
+    if (hasReviewPhaseName(review.phaseName, targetPhaseName)) {
         return true
     }
 
-    if (hasReviewPhaseName(review.reviewType)) {
+    if (hasReviewPhaseName(review.reviewType, targetPhaseName)) {
         return true
     }
 
     const resolvedPhaseName = resolvePhaseNameFromId(review.phaseId, phases)
-    return hasReviewPhaseName(resolvedPhaseName)
+    return hasReviewPhaseName(resolvedPhaseName, targetPhaseName)
 }
 
 export const isContestReviewPhaseSubmission = (
     submission?: SubmissionInfo,
     phases?: BackendPhase[],
+    targetPhaseName = 'Review',
 ): boolean => {
     if (!submission) {
         return false
     }
 
-    const submissionType = (submission.type ?? '')
-        .trim()
-        .toUpperCase()
-    if (submissionType !== 'CONTEST_SUBMISSION') {
+    if (!isContestSubmissionType(submission.type)) {
         return false
     }
 
-    if (hasReviewPhase(submission.review, phases)) {
+    if (hasReviewPhase(submission.review, phases, targetPhaseName)) {
         return true
     }
 
     if (Array.isArray(submission.reviews)) {
-        return submission.reviews.some(review => hasReviewPhase(review, phases))
+        if (submission.reviews.some(review => hasReviewPhase(review, phases, targetPhaseName))) {
+            return true
+        }
     }
 
-    return false
+    const normalizedCandidates = collectReviewHints(submission, phases)
+    return normalizedCandidates.has(normalizeReviewPhaseKey(targetPhaseName))
 }
 
 export const shouldIncludeInReviewPhase = (

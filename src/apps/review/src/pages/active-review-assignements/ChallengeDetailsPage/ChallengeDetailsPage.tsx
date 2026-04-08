@@ -50,9 +50,12 @@ import {
 import { REVIEWER, SUBMITTER, TAB, TABLE_DATE_FORMAT } from '../../../config/index.config'
 import {
     buildPhaseTabs,
+    collectReopenEligiblePhaseIds,
     findPhaseByTabLabel,
     isAppealsPhase,
     isAppealsResponsePhase,
+    shouldAllowWinnersTabForPastChallenge,
+    shouldForceWinnersTabForPastChallenge,
 } from '../../../lib/utils'
 import type { PhaseLike, PhaseOrderingOptions } from '../../../lib/utils'
 import {
@@ -69,8 +72,6 @@ interface Props {
 
 const normalizePhaseName = (name?: string): string => (name ? name.trim()
     .toLowerCase() : '')
-const SUBMISSION_PHASE_NAMES = new Set(['submission', 'topgear submission'])
-const REGISTRATION_PHASE_NAME = 'registration'
 const POST_MORTEM_PHASE_KEY = 'post-mortem'
 
 const isSubmissionDataTab = (label?: string): boolean => {
@@ -770,16 +771,35 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
             challengeInfo.status,
             phaseOrderingOptions,
         )
+        const itemsWithoutBlockedWinners = shouldAllowWinnersTabForPastChallenge(
+            challengeInfo,
+            approvalReviews,
+        )
+            ? items
+            : items.filter(item => item.value !== 'Winners')
+        const itemsWithWinnerFallback = shouldForceWinnersTabForPastChallenge(
+            challengeInfo,
+            approvalReviews,
+        )
+            && !itemsWithoutBlockedWinners.some(item => item.value === 'Winners')
+            ? [
+                ...itemsWithoutBlockedWinners,
+                {
+                    label: 'Winners',
+                    value: 'Winners',
+                },
+            ]
+            : itemsWithoutBlockedWinners
 
         // Only add indicators on active-challenges view
         if (isPastReviewDetail) {
-            setTabItems(items)
+            setTabItems(itemsWithWinnerFallback)
             return
         }
 
         // Map tab labels to the corresponding phase so we can check whether it is currently open
         const tabPhaseMap = new Map<string, PhaseLike | undefined>()
-        items.forEach(tab => {
+        itemsWithWinnerFallback.forEach(tab => {
             tabPhaseMap.set(
                 tab.value,
                 findPhaseByTabLabel(challengePhases, tab.value, phaseOrderingOptions),
@@ -852,7 +872,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         })()
 
         // Start with base items; add warnings per label if the viewer has obligations pending
-        const flagged = items.map(it => {
+        const flagged = itemsWithWinnerFallback.map(it => {
             const label = it.value.trim()
                 .toLowerCase()
             const phaseForTab = tabPhaseMap.get(it.value)
@@ -949,6 +969,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         setTabItems(finalItems)
     }, [
         challengeInfo,
+        approvalReviews,
         actionChallengeRole,
         review,
         submitterReviews,
@@ -1143,49 +1164,10 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         return map
     }, [challengePhases])
 
-    const reopenEligiblePhaseIds = useMemo(() => {
-        const allowed = new Set<string>()
-        if (!challengePhases?.length) {
-            return allowed
-        }
-
-        const addPhaseIdentifiers = (phase?: BackendPhase): void => {
-            if (!phase) {
-                return
-            }
-
-            if (phase.id) {
-                allowed.add(phase.id)
-            }
-
-            if (phase.phaseId) {
-                allowed.add(phase.phaseId)
-            }
-        }
-
-        challengePhases.forEach(phase => {
-            if (!phase?.isOpen || !phase.predecessor) {
-                return
-            }
-
-            allowed.add(phase.predecessor)
-            addPhaseIdentifiers(phaseLookup.get(phase.predecessor))
-        })
-
-        const hasSubmissionVariantOpen = challengePhases.some(phase => (
-            phase?.isOpen && SUBMISSION_PHASE_NAMES.has(normalizePhaseName(phase.name))
-        ))
-
-        if (hasSubmissionVariantOpen) {
-            challengePhases.forEach(phase => {
-                if (normalizePhaseName(phase?.name) === REGISTRATION_PHASE_NAME) {
-                    addPhaseIdentifiers(phase)
-                }
-            })
-        }
-
-        return allowed
-    }, [challengePhases, phaseLookup])
+    const reopenEligiblePhaseIds = useMemo(
+        () => collectReopenEligiblePhaseIds(challengePhases),
+        [challengePhases],
+    )
 
     const timelineRows = useMemo<ChallengeTimelineRow[]>(() => {
         if (phaseOrderingOptions.isTask && !phaseOrderingOptions.isTopgearTask) {
@@ -1201,6 +1183,12 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
             challengeInfo?.status,
             phaseOrderingOptions,
         )
+        const timelineItems = shouldAllowWinnersTabForPastChallenge(
+            challengeInfo,
+            approvalReviews,
+        )
+            ? baseItems
+            : baseItems.filter(item => item.value !== 'Winners')
         const seen = new Set<string>()
         const nowMs = Date.now()
 
@@ -1214,7 +1202,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         }
 
         const rows: ChallengeTimelineRow[] = []
-        baseItems.forEach(item => {
+        timelineItems.forEach(item => {
             const phase = findPhaseByTabLabel(
                 visibleChallengePhases,
                 item.value,
@@ -1259,7 +1247,7 @@ export const ChallengeDetailsPage: FC<Props> = (props: Props) => {
         })
 
         return rows
-    }, [challengeInfo, phaseOrderingOptions, visibleChallengePhases])
+    }, [approvalReviews, challengeInfo, phaseOrderingOptions, visibleChallengePhases])
 
     const setPhaseActionLoading = useCallback((phaseId: string, loading: boolean) => {
         setPhaseActionLoadingMap(prev => ({

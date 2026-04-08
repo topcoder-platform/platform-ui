@@ -41,7 +41,7 @@ export const PaymentsPage: FC = () => {
     const [showModal, setShowModal] = useState(false)
     const [selectedMember, setSelectedMember] = useState<SelectOption | undefined>(undefined)
     const [amount, setAmount] = useState('')
-    const [type, setType] = useState<'PAYMENT' | 'REWARD'>('PAYMENT')
+    const [type, setType] = useState<'PAYMENT' | 'POINTS'>('PAYMENT')
     const [category, setCategory] = useState<string>('CONTEST_PAYMENT')
     const [title, setTitle] = useState('')
     const [description, setDescription] = useState('')

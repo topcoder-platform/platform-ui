@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 /**
  * Table Iterative Review.
  */
@@ -7,9 +8,12 @@ import {
     useCallback,
     useContext,
     useMemo,
+    useState,
 } from 'react'
 import { Link } from 'react-router-dom'
 import { toast } from 'react-toastify'
+import { useSWRConfig } from 'swr'
+import { FullConfiguration } from 'swr/dist/types'
 import _ from 'lodash'
 import classNames from 'classnames'
 
@@ -33,18 +37,24 @@ import type { UseRolePermissionsResult } from '../../hooks/useRolePermissions'
 import { useRolePermissions } from '../../hooks/useRolePermissions'
 import type { UseSubmissionDownloadAccessResult } from '../../hooks/useSubmissionDownloadAccess'
 import {
+    AiReviewDecisionEscalation,
     BackendResource,
     ChallengeDetailContextModel,
     ReviewAppContextModel,
     ReviewInfo,
     SubmissionInfo,
 } from '../../models'
-import { getHandleUrl, isReviewPhase } from '../../utils'
-import type { SubmissionRow } from '../common/types'
+import { getHandleUrl, isReviewPhase, refreshChallengeReviewData } from '../../utils'
+import {
+    AiReviewEscalationDecision,
+    getAiReviewDecisionsCacheKey,
+} from '../../services'
+import type { SubmissionReviewerRow, SubmissionRow } from '../common/types'
 import { resolveSubmissionReviewResult } from '../common/reviewResult'
 import { ProgressBar } from '../ProgressBar'
 import { TableWrapper } from '../TableWrapper'
 import { CollapsibleAiReviewsRow } from '../CollapsibleAiReviewsRow'
+import { EscalationModals } from '../TableReview/EscalationModals'
 import { SUBMISSION_DOWNLOAD_RESTRICTION_MESSAGE } from '../../constants'
 
 import styles from './TableIterativeReview.module.scss'
@@ -492,9 +502,17 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
     const hideSubmissionColumn = props.hideSubmissionColumn ?? false
     const isDownloading = props.isDownloading
     const columnLabel = props.columnLabel || 'Iterative Review'
-    const { challengeInfo, myRoles, resources }: ChallengeDetailContextModel = useContext(
+    const {
+        aiReviewConfig,
+        aiReviewDecisionsBySubmissionId,
+        challengeInfo,
+        myRoles,
+        resources,
+        reviewers,
+    }: ChallengeDetailContextModel = useContext(
         ChallengeDetailContext,
     )
+    const { mutate }: FullConfiguration = useSWRConfig()
     const {
         isSubmissionDownloadRestricted,
         restrictionMessage,
@@ -506,7 +524,11 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
     const isTablet = useMemo(() => screenWidth <= 744, [screenWidth])
     const { loginUserInfo }: ReviewAppContextModel = useContext(ReviewAppContext)
     const { actionChallengeRole, myChallengeResources }: useRoleProps = useRole()
-    const { isCopilotWithReviewerAssignments, canViewAllSubmissions }: UseRolePermissionsResult = useRolePermissions()
+    const {
+        canManageCompletedReviews,
+        isCopilotWithReviewerAssignments,
+        canViewAllSubmissions,
+    }: UseRolePermissionsResult = useRolePermissions()
     const isSubmitterView = actionChallengeRole === SUBMITTER
     const ownedMemberIds: Set<string> = useMemo(
         (): Set<string> => new Set(
@@ -550,6 +572,88 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
         })
         return mapping
     }, [resources])
+
+    const escalationDecisionBySubmissionId = useMemo<Map<string, AiReviewEscalationDecision>>(
+        () => (datas ?? []).reduce((result, submission) => {
+            const submissionId = submission.id?.trim()
+            const aiDecision = submissionId
+                ? aiReviewDecisionsBySubmissionId[submissionId]
+                : undefined
+
+            if (!submissionId || !aiDecision?.id) {
+                return result
+            }
+
+            result.set(submissionId, {
+                aiReviewDecisionId: aiDecision.id,
+                challengeId: challengeInfo?.id ?? undefined,
+                decisionStatus: aiDecision.status,
+                escalations: aiDecision.escalations ?? [],
+                submissionId,
+                submissionLocked: aiDecision.submissionLocked,
+            })
+
+            return result
+        }, new Map<string, AiReviewEscalationDecision>()),
+        [aiReviewDecisionsBySubmissionId, challengeInfo?.id, datas],
+    )
+
+    const handleByMemberId = useMemo(
+        (): Map<string, { handle?: string; color?: string }> => {
+            const map = new Map<string, { handle?: string; color?: string }>();
+            [
+                ...(resources ?? []),
+                ...(reviewers ?? []),
+            ].forEach(resource => {
+                if (resource.memberId) {
+                    map.set(String(resource.memberId), {
+                        color: (resource as any).handleColor ?? undefined,
+                        handle: resource.memberHandle,
+                    })
+                }
+            })
+
+            return map
+        },
+        [resources, reviewers],
+    )
+
+    const [escalateTarget, setEscalateTarget] = useState<SubmissionReviewerRow | undefined>(undefined)
+    const [unlockTarget, setUnlockTarget] = useState<SubmissionReviewerRow | undefined>(undefined)
+    const [verifyTarget, setVerifyTarget] = useState<{
+        submission: SubmissionReviewerRow
+        decision: AiReviewEscalationDecision
+        escalations: AiReviewDecisionEscalation[]
+    } | undefined>(undefined)
+
+    const revalidateEscalationData = useCallback(async (): Promise<void> => {
+        if (aiReviewConfig?.id) {
+            await mutate(getAiReviewDecisionsCacheKey(aiReviewConfig.id))
+        }
+
+        if (challengeInfo?.id) {
+            await refreshChallengeReviewData(challengeInfo.id)
+        }
+    }, [aiReviewConfig?.id, challengeInfo?.id, mutate])
+
+    const isSubmissionAiLocked = useCallback((
+        submission: SubmissionInfo,
+        decision?: AiReviewEscalationDecision,
+    ): boolean => {
+        const hasApprovedEscalation = Boolean(decision?.escalations?.some(escalation => (
+            (escalation.status ?? '').toUpperCase() === 'APPROVED'
+        )))
+
+        if (decision && decision.submissionLocked === false && hasApprovedEscalation) {
+            return false
+        }
+
+        if (submission.review?.id) {
+            return false
+        }
+
+        return true
+    }, [])
 
     const isAdmin = useMemo(
         () => loginUserInfo?.roles?.some(
@@ -614,13 +718,16 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
     }, [challengeInfo?.status])
 
     const isCurrentPhaseApproval = useMemo(
-        () => (
-            (challengeInfo?.currentPhaseObject?.name
+        () => normaliseAlphaKey(
+            (
+                challengeInfo?.currentPhaseObject?.name
                 ?? challengeInfo?.currentPhase
-                ?? '')
+                ?? ''
+            )
+                .toString()
+                .toLowerCase(),
         )
-            .toString()
-            .toLowerCase() === 'approval',
+            .startsWith('approval'),
         [challengeInfo?.currentPhase, challengeInfo?.currentPhaseObject?.name],
     )
 
@@ -1216,50 +1323,176 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
         const status = (review?.status ?? '').toUpperCase()
         const hasReview = Boolean(reviewId)
         const resourceId = review?.resourceId
+        const actionEntries: JSX.Element[] = []
 
-        if (!resourceId || !myResourceIds.has(resourceId)) {
+        const decision = data.id
+            ? escalationDecisionBySubmissionId.get(data.id)
+            : undefined
+        const isAiLocked = isFirst2Finish
+            && isSubmissionAiLocked(data, decision)
+            && Boolean(decision?.submissionLocked)
+
+        if (isAiLocked && decision && data.id) {
+            const isReviewerOnly = (hasIterativeReviewerRole || isCopilotWithReviewerAssignments)
+                && !canManageCompletedReviews
+
+            if (isReviewerOnly && isReviewPhase(challengeInfo)) {
+                const hasOwnEscalation = decision.escalations.some(escalation => (
+                    String(escalation.createdBy ?? '') === String(loginUserInfo?.userId ?? '')
+                ))
+
+                if (!hasOwnEscalation) {
+                    actionEntries.push(
+                        <button
+                            key='escalate-submission'
+                            type='button'
+                            className={classNames(styles.submit, styles.textBlue)}
+                            onClick={function onClick() {
+                                setEscalateTarget(data as SubmissionReviewerRow)
+                            }}
+                        >
+                            <IconOutline.ArrowCircleUpIcon className='icon-lg' />
+                            Escalate
+                        </button>,
+                    )
+                } else {
+                    const latest = decision.escalations.slice()
+                        .sort((a, b) => (
+                            new Date(b.createdAt)
+                                .getTime() - new Date(a.createdAt)
+                                .getTime()
+                        ))[0]
+
+                    const escalationStatus = (latest?.status ?? '').toUpperCase()
+                    if (escalationStatus === 'PENDING_APPROVAL') {
+                        actionEntries.push(
+                            <span key='escalation-pending' className={styles.statusBadgePending}>
+                                Escalation Pending
+                            </span>,
+                        )
+                    } else if (escalationStatus === 'APPROVED') {
+                        actionEntries.push(
+                            <span key='escalation-approved' className={styles.resultPass}>
+                                Escalation Approved
+                            </span>,
+                        )
+                    } else if (escalationStatus === 'REJECTED') {
+                        actionEntries.push(
+                            <span key='escalation-rejected' className={styles.resultFail}>
+                                Escalation Rejected
+                            </span>,
+                        )
+                    }
+                }
+            }
+
+            if (canManageCompletedReviews) {
+                const pendingEscalations = decision.escalations.filter(escalation => (
+                    escalation.status === 'PENDING_APPROVAL'
+                ))
+
+                if (pendingEscalations.length) {
+                    actionEntries.push(
+                        <button
+                            key='verify-escalation'
+                            type='button'
+                            className={classNames(styles.submit, styles.textBlue)}
+                            onClick={function onClick() {
+                                setVerifyTarget({
+                                    decision,
+                                    escalations: pendingEscalations,
+                                    submission: data as SubmissionReviewerRow,
+                                })
+                            }}
+                        >
+                            <IconOutline.SearchIcon className='icon-lg' />
+                            Verify
+                        </button>,
+                    )
+                }
+
+                actionEntries.push(
+                    <button
+                        key='unlock-submission'
+                        type='button'
+                        className={classNames(styles.submit, styles.textBlue)}
+                        onClick={function onClick() {
+                            setUnlockTarget(data as SubmissionReviewerRow)
+                        }}
+                    >
+                        <IconOutline.LockOpenIcon className='icon-lg' />
+                        Unlock
+                    </button>,
+                )
+            }
+        }
+
+        if (resourceId && myResourceIds.has(resourceId)) {
+            if (['COMPLETED', 'SUBMITTED'].includes(status)) {
+                const normalized = (columnLabel || 'Iterative Review').trim()
+                const pillText = `${normalized} Complete`
+                actionEntries.push(
+                    <div
+                        key='iterative-complete'
+                        aria-label='Review completed'
+                        className={classNames(styles.completedAction, 'last-element')}
+                        title='Review completed'
+                    >
+                        <span className={styles.completedIcon} aria-hidden='true'>
+                            <IconOutline.CheckIcon />
+                        </span>
+                        <span className={styles.completedPill}>{pillText}</span>
+                    </div>,
+                )
+            } else if (
+                ['PENDING', 'IN_PROGRESS'].includes(status)
+                || (!status && hasReview)
+                || review?.reviewProgress
+            ) {
+                if (reviewId) {
+                    actionEntries.push(
+                        <Link
+                            key='complete-review'
+                            to={`./../reviews/${data.id}?reviewId=${reviewId}`}
+                            className={classNames(styles.submit, 'last-element')}
+                        >
+                            <i className='icon-upload' />
+                            Complete Review
+                        </Link>,
+                    )
+                }
+            }
+        }
+
+        if (!actionEntries.length) {
             return undefined
         }
 
-        if (['COMPLETED', 'SUBMITTED'].includes(status)) {
-            const normalized = (columnLabel || 'Iterative Review').trim()
-            const pillText = `${normalized} Complete`
-            return (
-                <div
-                    aria-label='Review completed'
-                    className={classNames(styles.completedAction, 'last-element')}
-                    title='Review completed'
-                >
-                    <span className={styles.completedIcon} aria-hidden='true'>
-                        <IconOutline.CheckIcon />
+        if (actionEntries.length === 1) {
+            return actionEntries[0]
+        }
+
+        return (
+            <span className={styles.actionsCell}>
+                {actionEntries.map(entry => (
+                    <span key={`action-${entry.key as string}`} className={styles.actionItem}>
+                        {entry}
                     </span>
-                    <span className={styles.completedPill}>{pillText}</span>
-                </div>
-            )
-        }
-
-        if (
-            ['PENDING', 'IN_PROGRESS'].includes(status)
-            || (!status && hasReview)
-            || review?.reviewProgress
-        ) {
-            if (!reviewId) {
-                return undefined
-            }
-
-            return (
-                <Link
-                    to={`./../reviews/${data.id}?reviewId=${reviewId}`}
-                    className={classNames(styles.submit, 'last-element')}
-                >
-                    <i className='icon-upload' />
-                    Complete Review
-                </Link>
-            )
-        }
-
-        return undefined
-    }, [columnLabel, myResourceIds])
+                ))}
+            </span>
+        )
+    }, [
+        canManageCompletedReviews,
+        challengeInfo,
+        columnLabel,
+        escalationDecisionBySubmissionId,
+        hasIterativeReviewerRole,
+        isCopilotWithReviewerAssignments,
+        isFirst2Finish,
+        isSubmissionAiLocked,
+        loginUserInfo?.userId,
+        myResourceIds,
+    ])
 
     // eslint-disable-next-line complexity
     const actionColumn: TableColumn<SubmissionInfo> | undefined = useMemo(() => {
@@ -1295,7 +1528,9 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
 
         // Show Action column to Iterative Reviewers during active review phase,
         // and for First2Finish also when iterative reviews are completed (past phase)
-        if (!hasIterativeReviewerRole && !isCopilotWithReviewerAssignments) {
+        if (!hasIterativeReviewerRole
+            && !isCopilotWithReviewerAssignments
+            && !canManageCompletedReviews) {
             return undefined
         }
 
@@ -1309,9 +1544,17 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
                 .toUpperCase())
         ))
 
+        const hasAiLockedFirst2FinishSubmission = (datas || []).some(d => {
+            const decision = d.id
+                ? escalationDecisionBySubmissionId.get(d.id)
+                : undefined
+            return isSubmissionAiLocked(d, decision) && Boolean(decision?.submissionLocked)
+        })
+
         const allowColumn = isReviewPhase(challengeInfo)
             || hasMyIterativeReviewAssignments
             || (isFirst2Finish && hasCompletedIterativeReviews)
+            || (isFirst2Finish && hasAiLockedFirst2FinishSubmission)
         if (!allowColumn) {
             return undefined
         }
@@ -1324,7 +1567,9 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
         }
     }, [
         challengeInfo,
+        canManageCompletedReviews,
         datas,
+        escalationDecisionBySubmissionId,
         hasApproverRole,
         hasIterativeReviewerRole,
         hasPostMortemReviewerRole,
@@ -1335,6 +1580,7 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
         isCurrentPhaseApproval,
         isFirst2Finish,
         isPostMortemColumn,
+        isSubmissionAiLocked,
         renderApprovalAction,
         renderIterativeAction,
         renderPostMortemAction,
@@ -1447,6 +1693,18 @@ export const TableIterativeReview: FC<Props> = (props: Props) => {
                     removeDefaultSort
                 />
             )}
+
+            <EscalationModals
+                escalateTarget={escalateTarget}
+                setEscalateTarget={setEscalateTarget}
+                unlockTarget={unlockTarget}
+                setUnlockTarget={setUnlockTarget}
+                verifyTarget={verifyTarget}
+                setVerifyTarget={setVerifyTarget}
+                escalationDecisionBySubmissionId={escalationDecisionBySubmissionId}
+                revalidateEscalationData={revalidateEscalationData}
+                handleByMemberId={handleByMemberId}
+            />
         </TableWrapper>
     )
 }

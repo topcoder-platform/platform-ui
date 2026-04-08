@@ -1,0 +1,75 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    background: $tc-white;
+    border: 1px solid $black-10;
+    border-radius: 8px;
+    margin-top: 18px;
+    padding: 16px;
+}
+
+.summary {
+    color: $black-80;
+    font-size: 14px;
+}
+
+.matchedCount {
+    color: #107f26;
+    font-weight: 700;
+}
+
+.unmatchedCount {
+    color: #b42318;
+    font-weight: 700;
+}
+
+.tableWrapper {
+    margin-top: 12px;
+    overflow-x: auto;
+}
+
+.table {
+    border-collapse: collapse;
+    min-width: 520px;
+    width: 100%;
+
+    thead tr {
+        background: #f7f8fa;
+    }
+
+    th {
+        border-bottom: 1px solid $black-10;
+        color: $black-60;
+        font-size: 12px;
+        font-weight: 700;
+        padding: 10px;
+        text-align: left;
+    }
+
+    td {
+        border-bottom: 1px solid $black-10;
+        color: $black-80;
+        font-size: 14px;
+        padding: 10px;
+    }
+
+    tbody tr:last-child td {
+        border-bottom: 0;
+    }
+}
+
+.statusMatched {
+    color: #107f26;
+    font-weight: 700;
+}
+
+.statusNotMatched {
+    color: #b42318;
+    font-weight: 700;
+}
+
+.emptyState {
+    color: $black-60;
+    font-size: 14px;
+    margin-top: 18px;
+}

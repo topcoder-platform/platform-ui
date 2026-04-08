@@ -59,6 +59,7 @@ export type UserSkillWithActivity = {
             [key: string]: UserSkillActivity,
         }
         engagement?: UserSkillActivity
+        'marathon match'?: UserSkillActivity
     }
 } & UserSkill
 

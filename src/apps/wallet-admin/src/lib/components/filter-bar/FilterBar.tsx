@@ -21,6 +21,20 @@ export type Filter = {
     options?: FilterOptions[];
 };
 
+/**
+ * Describes a selection-scoped action rendered beside the wallet-admin filters.
+ *
+ * @remarks Wallet-admin uses these actions for bulk payment approval and
+ * rejection flows that only appear when table rows are selected.
+ */
+interface FilterBarSelectionAction {
+    appearance?: 'primary' | 'secondary'
+    key: string
+    label: string
+    onClick: () => void
+    variant?: 'danger' | 'warning' | 'linkblue' | 'round' | 'tc-green'
+}
+
 interface FilterBarProps {
     filters: Filter[];
     showExportButton?: boolean;
@@ -29,6 +43,7 @@ interface FilterBarProps {
     onExport?: () => void;
     selectedCount?: number;
     onBulkClick?: () => void;
+    selectionActions?: FilterBarSelectionAction[];
     selectedValueOverrides?: Record<string, string>;
     hasActiveFilters?: boolean;
 }
@@ -36,6 +51,16 @@ interface FilterBarProps {
 const FilterBar: React.FC<FilterBarProps> = (props: FilterBarProps) => {
     const [selectedValue, setSelectedValue] = React.useState<Map<string, string | any[]>>(new Map())
     const selectedMembers = useRef<MembersAutocompeteResult[]>([])
+    const selectedCount = props.selectedCount ?? 0
+    const selectionActions = props.selectionActions
+        ?? (selectedCount > 0 && props.onBulkClick
+            ? [{
+                appearance: 'primary' as const,
+                key: 'bulk-approve',
+                label: `Approve (${selectedCount})`,
+                onClick: props.onBulkClick,
+            }]
+            : [])
 
     const renderDropdown = (index: number, filter: Filter): JSX.Element => (
         <InputSelect
@@ -126,15 +151,20 @@ const FilterBar: React.FC<FilterBarProps> = (props: FilterBarProps) => {
                     size='lg'
                 />
             )}
-            {!!props.selectedCount && props.selectedCount > 0 && (
+            {selectionActions.length > 0 && (
                 <>
-                    <Button
-                        primary
-                        className={styles.bulkButton}
-                        label={`${props.selectedCount > 1 ? 'Bulk ' : ''}Approve (${props.selectedCount})`}
-                        size='lg'
-                        onClick={() => props.onBulkClick?.()}
-                    />
+                    {selectionActions.map(action => (
+                        <Button
+                            key={action.key}
+                            primary={action.appearance !== 'secondary'}
+                            secondary={action.appearance === 'secondary'}
+                            variant={action.variant}
+                            className={styles.selectionActionButton}
+                            label={action.label}
+                            size='lg'
+                            onClick={action.onClick}
+                        />
+                    ))}
                 </>
             )}
             <Button
