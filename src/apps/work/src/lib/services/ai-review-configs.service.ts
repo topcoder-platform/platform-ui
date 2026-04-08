@@ -167,7 +167,9 @@ function serializeInput(
         formula: input.formula,
         minPassingThreshold: Number(input.minPassingThreshold),
         mode: input.mode,
-        templateId: input.templateId?.trim() || undefined,
+        templateId: input.templateId === undefined
+            ? undefined
+            : input.templateId.trim(),
         workflows: (input.workflows || [])
             .map(workflow => ({
                 isGating: workflow.isGating === true,

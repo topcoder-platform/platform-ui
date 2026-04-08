@@ -374,7 +374,7 @@ describe('AiReviewTab review mode options', () => {
                     'config-1',
                     expect.objectContaining({
                         challengeId: 'challenge-1',
-                        templateId: undefined,
+                        templateId: '',
                     }),
                 )
         })
