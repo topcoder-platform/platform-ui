@@ -131,10 +131,9 @@ describe('AiReviewTab review mode options', () => {
         jest.useRealTimers()
     })
 
-    it('does not fetch a persisted AI review config before any AI reviewers are synced', async () => {
+    it('does not fetch a persisted AI review config before the challenge has been saved', async () => {
         render(
             <AiReviewTab
-                challengeId='challenge-1'
                 reviewers={[]}
             />,
         )
@@ -143,6 +142,29 @@ describe('AiReviewTab review mode options', () => {
         expect(mockedFetchAiReviewConfigByChallenge)
             .not.toHaveBeenCalled()
     })
+
+    it(
+        'loads a persisted AI review config for existing challenges when synced AI reviewers are missing',
+        async () => {
+            const onConfigPersisted = jest.fn()
+
+            render(
+                <AiReviewTab
+                    challengeId='challenge-1'
+                    onConfigPersisted={onConfigPersisted}
+                    reviewers={[]}
+                />,
+            )
+
+            expect(await screen.findByRole('combobox')).not.toBeNull()
+            await waitFor(() => {
+                expect(mockedFetchAiReviewConfigByChallenge)
+                    .toHaveBeenCalledWith('challenge-1')
+            })
+            expect(onConfigPersisted)
+                .toHaveBeenCalledWith(baseConfiguration)
+        },
+    )
 
     it('shows only AI_GATING as a visible review mode option for standard configs', async () => {
         render(
@@ -398,6 +420,7 @@ describe('AiReviewTab review mode options', () => {
             ],
         }
 
+        mockedFetchAiReviewConfigByChallenge.mockResolvedValueOnce(undefined)
         mockedCreateAiReviewConfig.mockResolvedValueOnce(savedConfiguration)
         mockedFetchWorkflows.mockResolvedValueOnce([
             {
@@ -457,8 +480,7 @@ describe('AiReviewTab review mode options', () => {
         })
         await waitFor(() => {
             expect(mockedFetchAiReviewConfigByChallenge)
-                .not
-                .toHaveBeenCalled()
+                .toHaveBeenCalledTimes(1)
         })
         expect(
             (screen.getByRole('checkbox', { name: 'Use as gating workflow' }) as HTMLInputElement)
