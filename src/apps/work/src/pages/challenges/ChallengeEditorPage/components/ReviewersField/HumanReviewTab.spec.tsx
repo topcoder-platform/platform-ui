@@ -370,6 +370,16 @@ describe('HumanReviewTab', () => {
             ])
     })
 
+    it('backfills the iterative review type for legacy manual reviewer rows', async () => {
+        render(<TestHarness />)
+
+        await waitFor(() => {
+            expect(screen.getByTestId('reviewers.0.type')
+                .getAttribute('data-value'))
+                .toBe('ITERATIVE_REVIEW')
+        })
+    })
+
     it('restores iterative reviewer member ids from the iterative review role alias', async () => {
         mockedUseFetchResourceRoles.mockReturnValue({
             resourceRoles: [

@@ -238,6 +238,12 @@ function serializeReviewers(reviewers: unknown): Reviewer[] | undefined {
                 phaseId: toOptionalTrimmedString(typedReviewer.phaseId),
                 scorecardId: toOptionalTrimmedString(typedReviewer.scorecardId),
                 shouldOpenOpportunity: toOptionalBooleanValue(typedReviewer.shouldOpenOpportunity),
+                type: isMemberReview
+                    ? (
+                        toOptionalTrimmedString(typedReviewer.type)
+                        || toOptionalTrimmedString(typedReviewer.opportunityType)
+                    )
+                    : undefined,
             }
         })
         .filter((reviewer): reviewer is Reviewer => !!reviewer)

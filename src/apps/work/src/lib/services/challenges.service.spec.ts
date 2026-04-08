@@ -1,5 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
 import {
+    xhrPatchAsync,
     xhrGetAsync,
     xhrGetPaginatedAsync,
 } from '~/libs/core'
@@ -7,6 +8,7 @@ import {
 import {
     fetchChallenges,
     fetchDefaultReviewers,
+    patchChallenge,
 } from './challenges.service'
 
 jest.mock('~/apps/review/src/lib/services/file-upload.service', () => ({
@@ -123,5 +125,44 @@ describe('fetchDefaultReviewers', () => {
                     shouldOpenOpportunity: true,
                 },
             ])
+    })
+})
+
+describe('patchChallenge', () => {
+    beforeEach(() => {
+        jest.clearAllMocks()
+    })
+
+    it('preserves reviewer type when serializing manual reviewers', async () => {
+        const mockedPatch = xhrPatchAsync as jest.Mock
+
+        mockedPatch.mockResolvedValue({
+            id: 'challenge-1',
+            reviewers: [],
+        })
+
+        await patchChallenge('challenge-1', {
+            reviewers: [{
+                isMemberReview: true,
+                memberReviewerCount: 1,
+                phaseId: 'phase-1',
+                scorecardId: 'scorecard-1',
+                shouldOpenOpportunity: false,
+                type: 'ITERATIVE_REVIEW',
+            }],
+        })
+
+        expect(xhrPatchAsync)
+            .toHaveBeenCalledWith(
+                'https://example.com/challenges/challenge-1',
+                expect.objectContaining({
+                    reviewers: [
+                        expect.objectContaining({
+                            type: 'ITERATIVE_REVIEW',
+                        }),
+                    ],
+                }),
+                expect.any(Object),
+            )
     })
 })
