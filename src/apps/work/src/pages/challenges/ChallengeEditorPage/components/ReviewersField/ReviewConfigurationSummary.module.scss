@@ -330,13 +330,28 @@
 }
 
 @media (max-width: 1023px) {
-    .flowDiagram,
+    .flowDiagram {
+        &.withAIGating,
+        &.withAI,
+        &.withAIOnly,
+        &.humanOnly {
+            grid-template-columns: 1fr;
+        }
+    }
+
     .failureRow {
         grid-template-columns: 1fr;
     }
 
-    .failureArrow {
+    .flowArrow {
+        transform: rotate(90deg);
+    }
+
+    .failureBranch {
         grid-column: auto;
+    }
+
+    .failureArrow {
         justify-self: center;
     }
 }

@@ -1,4 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies, ordered-imports/ordered-imports */
+import fs from 'node:fs'
+import path from 'node:path'
+
 import {
     render,
     screen,
@@ -292,5 +295,25 @@ describe('ReviewConfigurationSummary', () => {
         expect(await screen.findByText('Locked')).not.toBeNull()
         expect(container.querySelector(`.${styles.withAI}`)).not.toBeNull()
         expect(container.querySelector(`.${styles.failureBranch}`)).not.toBeNull()
+    })
+
+    it('defines single-column mobile overrides for every review-flow layout variant', () => {
+        const stylesheet = fs.readFileSync(
+            path.join(__dirname, 'ReviewConfigurationSummary.module.scss'),
+            'utf8',
+        )
+        const mobileBlockStart = stylesheet.lastIndexOf('@media (max-width: 1023px) {')
+        const mobileBlockEnd = stylesheet.indexOf('@media (max-width: 767px) {', mobileBlockStart)
+        const mobileStyles = mobileBlockStart >= 0 && mobileBlockEnd > mobileBlockStart
+            ? stylesheet.slice(mobileBlockStart, mobileBlockEnd)
+            : undefined
+
+        expect(mobileStyles).toBeDefined()
+        expect(mobileStyles).toContain('&.withAIGating')
+        expect(mobileStyles).toContain('&.withAI')
+        expect(mobileStyles).toContain('&.withAIOnly')
+        expect(mobileStyles).toContain('&.humanOnly')
+        expect(mobileStyles).toContain('.failureBranch')
+        expect(mobileStyles).toContain('grid-column: auto;')
     })
 })
