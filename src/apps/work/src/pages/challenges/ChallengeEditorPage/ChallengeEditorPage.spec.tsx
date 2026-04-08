@@ -384,6 +384,16 @@ describe('ChallengeEditorPage', () => {
             .toBeTruthy()
         expect(screen.getByRole('button', { name: 'Edit' }))
             .toBeTruthy()
+        expect(
+            screen.getByRole('button', { name: 'Edit' })
+                .getAttribute('data-secondary'),
+        )
+            .toBe('true')
+        expect(
+            screen.getByRole('button', { name: 'Edit' })
+                .getAttribute('data-size'),
+        )
+            .toBe('lg')
     })
 
     it('treats trailing-slash view routes as read-only mode', async () => {
