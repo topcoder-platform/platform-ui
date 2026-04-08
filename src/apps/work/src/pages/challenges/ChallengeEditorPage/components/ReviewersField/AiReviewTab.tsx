@@ -471,6 +471,9 @@ export const AiReviewTab: FC<AiReviewTabProps> = (
     const trackId = props.trackId
     const typeId = props.typeId
     const lastSavedConfigurationRef = useRef<AiReviewConfig | AiReviewConfigurationDraft | undefined>()
+    // Track the initial persisted-config lookup per challenge so delete/mode changes
+    // do not re-trigger the edit-mode fallback fetch for the same saved challenge.
+    const initialConfigLookupChallengeIdRef = useRef<string | undefined>()
     const onConfigPersistedRef = useRef<typeof onConfigPersisted>(onConfigPersisted)
     const saveTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>()
 
@@ -828,6 +831,7 @@ export const AiReviewTab: FC<AiReviewTabProps> = (
         let mounted = true
 
         if (!normalizedChallengeId) {
+            initialConfigLookupChallengeIdRef.current = undefined
             setConfiguration(DEFAULT_CONFIGURATION)
             setConfigurationMode(undefined)
             setConfigId(undefined)
@@ -843,8 +847,15 @@ export const AiReviewTab: FC<AiReviewTabProps> = (
             return undefined
         }
 
+        if (initialConfigLookupChallengeIdRef.current === normalizedChallengeId) {
+            setIsConfigLoading(false)
+            setLoadError(undefined)
+            return undefined
+        }
+
         // Existing challenges can have a persisted AI config even when the
         // challenge payload is temporarily missing the synced AI reviewer rows.
+        initialConfigLookupChallengeIdRef.current = normalizedChallengeId
         setIsConfigLoading(true)
         setLoadError(undefined)
 
