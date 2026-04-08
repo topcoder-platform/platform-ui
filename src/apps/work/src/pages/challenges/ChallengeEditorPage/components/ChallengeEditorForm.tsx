@@ -214,6 +214,7 @@ interface SaveStatusMetadata {
 interface ResolvePostSaveNavigationPathParams {
     isEditMode?: boolean
     isSaveAsDraft: boolean
+    projectId?: string
     redirectToViewOnSuccess?: boolean
     savedChallengeId: string
     viewModePath?: string
@@ -869,6 +870,19 @@ function getChallengesListPath(projectId?: string): string {
         : '/challenges'
 }
 
+/**
+ * Builds the canonical read-only challenge route for the saved challenge.
+ *
+ * @param challengeId Saved challenge identifier.
+ * @param projectId Optional project identifier for project-scoped challenge routes.
+ * @returns The view-mode route for the resolved challenge.
+ */
+function getChallengeViewPath(challengeId: string, projectId?: string): string {
+    return projectId
+        ? `/projects/${encodeURIComponent(projectId)}/challenges/${encodeURIComponent(challengeId)}/view`
+        : `/challenges/${encodeURIComponent(challengeId)}/view`
+}
+
 function normalizeStatus(value: unknown): string | undefined {
     if (typeof value !== 'string') {
         return undefined
@@ -961,8 +975,9 @@ export function getTaskLaunchValidationError(
 /**
  * Resolves the next route after a manual challenge save succeeds.
  *
- * New draft saves still enter edit mode so the full form becomes available. Existing edit-route
- * saves return to the matching read-only challenge route when requested by the caller.
+ * Draft saves from the create route should open the canonical read-only challenge view. Existing
+ * edit-route saves still return to the matching read-only challenge route when requested by the
+ * caller.
  *
  * @param params Save-context values needed to choose the next route.
  * @returns The post-save route, or `undefined` when the user should stay on the current page.
@@ -971,7 +986,7 @@ function resolvePostSaveNavigationPath(
     params: ResolvePostSaveNavigationPathParams,
 ): string | undefined {
     if (params.isSaveAsDraft && !params.isEditMode) {
-        return `/challenges/${encodeURIComponent(params.savedChallengeId)}/edit`
+        return getChallengeViewPath(params.savedChallengeId, params.projectId)
     }
 
     if (params.redirectToViewOnSuccess && params.viewModePath) {
@@ -2110,6 +2125,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                 const postSaveNavigationPath = resolvePostSaveNavigationPath({
                     isEditMode,
                     isSaveAsDraft,
+                    projectId: fallbackProjectId,
                     redirectToViewOnSuccess: options.redirectToViewOnSuccess,
                     savedChallengeId: savedChallenge.id,
                     viewModePath,
@@ -2145,6 +2161,7 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             applyPersistedSingleAssignments,
             clearErrors,
             currentChallengeId,
+            fallbackProjectId,
             isEditMode,
             isTaskSingleAssignmentChallenge,
             navigate,
