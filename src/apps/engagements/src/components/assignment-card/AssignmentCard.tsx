@@ -10,11 +10,11 @@ import { EnvironmentConfig } from '~/config'
 import type { Engagement, EngagementAssignment } from '../../lib/models'
 import {
     formatCurrencyAmount,
-    formatDate,
-    formatLocation,
     formatStandardHoursPerWeek,
-    truncateText,
-} from '../../lib/utils'
+} from '../../lib/utils/currency.utils'
+import { formatDate } from '../../lib/utils/date.utils'
+import { formatLocation } from '../../lib/utils/api.utils'
+import { truncateText } from '../../lib/utils/application.utils'
 import { StatusBadge } from '../status-badge'
 
 import styles from './AssignmentCard.module.scss'
