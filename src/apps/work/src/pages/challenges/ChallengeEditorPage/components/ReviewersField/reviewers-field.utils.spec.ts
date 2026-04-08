@@ -132,6 +132,7 @@ describe('reviewers-field utils ai reviewer syncing', () => {
                     scorecardId: 'human-scorecard',
                 },
                 {
+                    aiConfigTemplateId: 'template-1',
                     aiWorkflowId: 'legacy-workflow',
                     isMemberReview: false,
                     phaseId: 'old-phase-id',
@@ -182,6 +183,55 @@ describe('reviewers-field utils ai reviewer syncing', () => {
                     resourceId: undefined,
                     roleId: undefined,
                     scorecardId: 'scorecard-2',
+                    shouldOpenOpportunity: false,
+                },
+            ])
+    })
+
+    it('drops stale aiConfigTemplateId metadata when syncing manual ai reviewers', () => {
+        expect(syncAiConfigReviewers({
+            availableWorkflows: [
+                {
+                    id: 'workflow-1',
+                    name: 'Workflow 1',
+                    scorecardId: 'scorecard-1',
+                },
+            ],
+            phases: [
+                {
+                    name: 'Review',
+                    phaseId: 'review-phase-id',
+                },
+            ],
+            reviewers: [
+                {
+                    aiConfigTemplateId: 'template-1',
+                    aiWorkflowId: 'workflow-1',
+                    isMemberReview: false,
+                    phaseId: 'old-phase-id',
+                    scorecardId: 'legacy-scorecard',
+                },
+            ],
+            workflows: [
+                {
+                    isGating: false,
+                    weightPercent: 100,
+                    workflowId: 'workflow-1',
+                },
+            ],
+        }))
+            .toEqual([
+                {
+                    additionalMemberIds: undefined,
+                    aiWorkflowId: 'workflow-1',
+                    handle: undefined,
+                    isMemberReview: false,
+                    memberId: undefined,
+                    memberReviewerCount: undefined,
+                    phaseId: 'old-phase-id',
+                    resourceId: undefined,
+                    roleId: undefined,
+                    scorecardId: 'scorecard-1',
                     shouldOpenOpportunity: false,
                 },
             ])

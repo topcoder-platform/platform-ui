@@ -254,6 +254,14 @@ export function syncAiConfigReviewers(
             const existingAiReviewer = existingAiReviewers.find(
                 reviewer => normalizeReviewerText(reviewer.aiWorkflowId) === workflowId,
             )
+            const existingAiReviewerWithoutTemplate: Reviewer | undefined = existingAiReviewer
+                ? { ...existingAiReviewer }
+                : undefined
+
+            if (existingAiReviewerWithoutTemplate) {
+                delete existingAiReviewerWithoutTemplate.aiConfigTemplateId
+            }
+
             const workflowDetails = workflow.workflow || availableWorkflows.find(
                 item => normalizeReviewerText(item.id) === workflowId,
             )
@@ -262,7 +270,7 @@ export function syncAiConfigReviewers(
                 || normalizeReviewerText(existingAiReviewer?.scorecardId)
 
             return {
-                ...existingAiReviewer,
+                ...existingAiReviewerWithoutTemplate,
                 additionalMemberIds: undefined,
                 aiWorkflowId: workflowId,
                 handle: undefined,
