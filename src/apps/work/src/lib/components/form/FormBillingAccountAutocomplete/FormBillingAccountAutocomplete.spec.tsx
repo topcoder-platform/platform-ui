@@ -335,6 +335,72 @@ describe('FormBillingAccountAutocomplete', () => {
             ])
     })
 
+    it('keeps debounced edit-mode searches synced with the latest preloaded options', async () => {
+        let resolveProjectBillingAccounts: ((value: unknown[]) => void) | undefined
+
+        fetchProjectBillingAccountsMock.mockImplementation(
+            () => new Promise<unknown[]>(resolve => {
+                resolveProjectBillingAccounts = resolve
+            }),
+        )
+
+        render(
+            <TestHarness projectId='100578' />,
+        )
+
+        await waitFor(() => {
+            expect(fetchProjectBillingAccountsMock)
+                .toHaveBeenCalledWith('100578')
+        })
+
+        const initialLoadOptions = latestAsyncSelectProps?.loadOptions as ((value: string) => Promise<unknown>)
+        const pendingOptions = initialLoadOptions('Budget')
+
+        await act(async () => {
+            resolveProjectBillingAccounts?.([
+                {
+                    active: true,
+                    endDate: '2023-11-20T00:00:00.000Z',
+                    id: '80001042',
+                    name: 'Budget Validation - 3',
+                    startDate: '2023-10-23T00:00:00.000Z',
+                },
+                {
+                    active: true,
+                    endDate: '2028-11-01T00:00:00.000Z',
+                    id: '80001012',
+                    name: 'Platform Dev - One',
+                    startDate: '2023-10-04T00:00:00.000Z',
+                },
+            ])
+            await Promise.resolve()
+        })
+
+        await waitFor(() => {
+            expect(latestAsyncSelectProps?.defaultOptions)
+                .toEqual(expect.arrayContaining([
+                    expect.objectContaining({
+                        label: expect.stringContaining('Budget Validation - 3'),
+                        value: '80001042',
+                    }),
+                ]))
+        })
+
+        expect(latestAsyncSelectProps?.loadOptions)
+            .toBe(initialLoadOptions)
+        expect(searchBillingAccountsMock)
+            .not
+            .toHaveBeenCalled()
+        await expect(pendingOptions)
+            .resolves
+            .toEqual([
+                expect.objectContaining({
+                    label: expect.stringContaining('Budget Validation - 3'),
+                    value: '80001042',
+                }),
+            ])
+    })
+
     it('clears the initial loading state when project preload is abandoned', async () => {
         let resolveProjectBillingAccounts: ((value: unknown[]) => void) | undefined
 

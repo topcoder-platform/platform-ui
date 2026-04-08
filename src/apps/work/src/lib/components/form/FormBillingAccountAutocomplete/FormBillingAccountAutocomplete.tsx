@@ -3,6 +3,7 @@ import {
     useCallback,
     useEffect,
     useMemo,
+    useRef,
     useState,
 } from 'react'
 import {
@@ -221,9 +222,23 @@ export const FormBillingAccountAutocomplete: FC<FormBillingAccountAutocompletePr
     })
 
     const [optionCache, setOptionCache] = useState<BillingAccountOption[]>([])
+    const optionCacheRef = useRef<BillingAccountOption[]>([])
     const [isLoadingInitialOptions, setIsLoadingInitialOptions] = useState<boolean>(false)
     const [initialBillingAccountOptions, setInitialBillingAccountOptions] = useState<BillingAccountOption[]>([])
     const [searchErrorMessage, setSearchErrorMessage] = useState<string | undefined>(undefined)
+
+    const mergeCachedOptions = useCallback(
+        (nextOptions: BillingAccountOption[]): void => {
+            setOptionCache(previousOptions => {
+                const mergedOptions = mergeOptions(previousOptions, nextOptions)
+
+                optionCacheRef.current = mergedOptions
+
+                return mergedOptions
+            })
+        },
+        [],
+    )
 
     const menuPortalTarget = useMemo(
         () => (typeof document === 'undefined' ? undefined : document.body),
@@ -241,7 +256,7 @@ export const FormBillingAccountAutocomplete: FC<FormBillingAccountAutocompletePr
             }
 
             if (props.projectId) {
-                return filterOptionsByInputValue(optionCache, normalizedInputValue)
+                return filterOptionsByInputValue(optionCacheRef.current, normalizedInputValue)
             }
 
             try {
@@ -253,7 +268,7 @@ export const FormBillingAccountAutocomplete: FC<FormBillingAccountAutocompletePr
                 })
                 const options = billingAccounts.map(account => toOption(account))
 
-                setOptionCache(previousOptions => mergeOptions(previousOptions, options))
+                mergeCachedOptions(options)
 
                 return options
             } catch (error) {
@@ -266,7 +281,7 @@ export const FormBillingAccountAutocomplete: FC<FormBillingAccountAutocompletePr
                 return []
             }
         },
-        [optionCache, props.projectId, props.userId],
+        [mergeCachedOptions, props.projectId, props.userId],
     )
 
     const debouncedLoadBillingAccountOptions = useMemo(
@@ -325,10 +340,10 @@ export const FormBillingAccountAutocomplete: FC<FormBillingAccountAutocompletePr
             return
         }
 
-        setOptionCache(previousOptions => mergeOptions(previousOptions, [
+        mergeCachedOptions([
             selectedBillingAccountOption,
-        ]))
-    }, [selectedBillingAccountOption])
+        ])
+    }, [mergeCachedOptions, selectedBillingAccountOption])
 
     useEffect(() => {
         if (!props.projectId && !normalizedUserId) {
@@ -360,7 +375,7 @@ export const FormBillingAccountAutocomplete: FC<FormBillingAccountAutocompletePr
                 const options = billingAccounts.map(account => toOption(account))
 
                 setInitialBillingAccountOptions(options)
-                setOptionCache(previousOptions => mergeOptions(previousOptions, options))
+                mergeCachedOptions(options)
             })
             .catch(error => {
                 if (!isMounted) {
@@ -384,7 +399,7 @@ export const FormBillingAccountAutocomplete: FC<FormBillingAccountAutocompletePr
         return () => {
             isMounted = false
         }
-    }, [normalizedUserId, props.projectId])
+    }, [mergeCachedOptions, normalizedUserId, props.projectId])
 
     useEffect(() => {
         if (!selectedBillingAccountId || hasSelectedOption) {
@@ -399,24 +414,24 @@ export const FormBillingAccountAutocomplete: FC<FormBillingAccountAutocompletePr
                     return
                 }
 
-                setOptionCache(previousOptions => mergeOptions(previousOptions, [
+                mergeCachedOptions([
                     toOption(billingAccount),
-                ]))
+                ])
             })
             .catch(() => {
                 if (!isMounted) {
                     return
                 }
 
-                setOptionCache(previousOptions => mergeOptions(previousOptions, [
+                mergeCachedOptions([
                     createFallbackOption(selectedBillingAccountId),
-                ]))
+                ])
             })
 
         return () => {
             isMounted = false
         }
-    }, [hasSelectedOption, selectedBillingAccountId])
+    }, [hasSelectedOption, mergeCachedOptions, selectedBillingAccountId])
 
     const selectedValue = useMemo<BillingAccountOption | undefined>(() => {
         if (!selectedBillingAccountId) {
