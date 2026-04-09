@@ -223,6 +223,19 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
             ...(statusOverride ? { status: statusOverride } : {}),
         }
     }, [filters.status, restrictedCategory, restrictedDefaultStatus])
+
+    const defaultDropdownValues = React.useMemo<Record<string, string>>(() => {
+        const defaults: Record<string, string> = {}
+
+        if (!restrictedCategory) {
+            defaults.status = filters.status?.[0] ?? 'all'
+            defaults.category = filters.category?.[0] ?? 'all'
+        }
+
+        defaults.date = filters.date?.[0] ?? 'all'
+
+        return defaults
+    }, [filters.category, filters.date, filters.status, restrictedCategory])
     const [pagination, setPagination] = React.useState<PaginationInfo>({
         currentPage: 1,
         pageSize: defaultPageSize,
@@ -549,7 +562,7 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                         )
                         toast.success('Download complete', { position: toast.POSITION.BOTTOM_RIGHT })
                     }}
-                    selectedValueOverrides={selectedValueOverrides}
+                    selectedValueOverrides={{ ...defaultDropdownValues, ...selectedValueOverrides }}
                     filters={[
                         {
                             key: 'winnerIds',
@@ -560,6 +573,10 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                             key: 'status',
                             label: 'Status',
                             options: [
+                                {
+                                    label: 'All',
+                                    value: 'all',
+                                },
                                 {
                                     label: 'Owed',
                                     value: 'OWED',
@@ -600,6 +617,10 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                                 key: 'category',
                                 label: 'Type',
                                 options: [
+                                    {
+                                        label: 'All',
+                                        value: 'all',
+                                    },
                                     {
                                         label: 'Task Payment',
                                         value: 'TASK_PAYMENT',
@@ -677,9 +698,19 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                         }
 
                         setPagination(newPagination)
-                        setFilters({
+                        /*    setFilters({
                             ...filters,
                             [key]: value,
+                        }) */
+                        setFilters(prev => {
+                            const newFilters = { ...prev }
+                            if (value[0] === 'all') {
+                                delete newFilters[key]
+                            } else {
+                                newFilters[key] = value
+                            }
+
+                            return newFilters
                         })
                         setSelectedPayments({})
                     }}
