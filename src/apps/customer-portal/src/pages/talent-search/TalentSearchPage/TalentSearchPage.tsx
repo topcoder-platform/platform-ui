@@ -90,7 +90,7 @@ export const TalentSearchPage: FC = () => {
     const loadSkillOptions = useCallback(async (query: string): Promise<InputMultiselectOption[]> => {
         setSkillOptionsLoading(true)
         try {
-            return fetchSkillAutocompleteOptions(query)
+            return await fetchSkillAutocompleteOptions(query)
         } catch {
             return []
         } finally {
@@ -261,7 +261,6 @@ export const TalentSearchPage: FC = () => {
         onlyActive,
         onlyOpenToWork,
         runMemberSearch,
-        selectedCountry,
         selectedSkills,
     ])
 
