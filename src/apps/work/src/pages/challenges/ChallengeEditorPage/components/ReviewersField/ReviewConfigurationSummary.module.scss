@@ -330,9 +330,36 @@
 }
 
 @media (max-width: 1023px) {
-    .flowDiagram,
+    .flowDiagram.withAIGating,
+    .flowDiagram.withAI,
+    .flowDiagram.withAIOnly,
+    .flowDiagram.humanOnly,
     .failureRow {
         grid-template-columns: 1fr;
+    }
+
+    .flowDiagram {
+        gap: 16px;
+        justify-items: center;
+    }
+
+    .flowStep {
+        width: min(100%, 260px);
+    }
+
+    .flowArrow {
+        transform: rotate(90deg);
+    }
+
+    .failureRow {
+        justify-items: center;
+        margin-top: 0;
+    }
+
+    .failureBranch {
+        grid-column: auto;
+        justify-self: center;
+        width: min(100%, 260px);
     }
 
     .failureArrow {
