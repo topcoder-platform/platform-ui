@@ -71,6 +71,7 @@
     justify-content: space-between;
     gap: $sp-2;
     align-items: center;
+    min-width: 0;
 
     h4 {
         margin: 0;
@@ -78,6 +79,17 @@
         font-size: 20px;
         line-height: 26px;
         font-weight: 700;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    @include ltemd {
+        h4 {
+            font-size: 16px;
+            line-height: 22px;
+        }
     }
 }
 
@@ -99,6 +111,7 @@
     font-weight: 500;
     white-space: nowrap;
     align-self: flex-start;
+    flex-shrink: 0;
 }
 
 .locationRow {

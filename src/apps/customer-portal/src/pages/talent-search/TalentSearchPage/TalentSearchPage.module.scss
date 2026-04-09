@@ -41,7 +41,7 @@
 
     @include ltemd {
         grid-template-columns: 1fr;
-        margin-top: 0;
+        margin-top: -232px;
         padding: $sp-3 $sp-3 0;
     }
 }
@@ -53,6 +53,8 @@
 
     @include ltemd {
         margin-left: 0;
+        position: relative;
+        z-index: 2;
     }
 }
 
@@ -306,6 +308,10 @@
     font-size: 16px;
     line-height: 22px;
     white-space: nowrap;
+
+    @include ltemd {
+        color: $black-100;
+    }
 }
 
 .foundText {
@@ -313,6 +319,10 @@
     color: $tc-white;
     font-size: 16px;
     line-height: 20px;
+
+    @include ltemd {
+        color: $black-100;
+    }
 }
 
 .foundTextCount {
