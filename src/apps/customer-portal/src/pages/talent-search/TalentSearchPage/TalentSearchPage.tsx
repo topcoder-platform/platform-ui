@@ -179,20 +179,25 @@ export const TalentSearchPage: FC = () => {
     }, [onlyActive, onlyOpenToWork])
 
     const clearAllFilters = useCallback((): void => {
+        const willTriggerAutoSearch = onlyOpenToWork !== true || onlyActive !== true
+
         setSelectedCountry('all')
         setOnlyOpenToWork(true)
         setOnlyActive(true)
 
         if (hasSearched && selectedSkills.length > 0) {
-            // Prevent duplicate request from the filters useEffect after state updates.
-            skipNextAutoSearchRef.current = true
+            // Prevent duplicate request only when toggles will trigger the search effect.
+            if (willTriggerAutoSearch) {
+                skipNextAutoSearchRef.current = true
+            }
+
             runMemberSearch(selectedSkills, {
                 openToWork: true,
                 page: 1,
                 recentlyActive: true,
             })
         }
-    }, [hasSearched, runMemberSearch, selectedSkills])
+    }, [hasSearched, onlyActive, onlyOpenToWork, runMemberSearch, selectedSkills])
 
     const handleAiSearch = useCallback(async (): Promise<void> => {
         const normalizedDescription = jobDescription.trim()
@@ -241,6 +246,8 @@ export const TalentSearchPage: FC = () => {
             skipNextAutoSearchRef.current = true
             await runMemberSearch(extractedOptions, { page: 1 })
         } catch {
+            // Prevent stale auto-search when extraction fails and loading flips to false.
+            skipNextAutoSearchRef.current = true
             setErrorMessage('Failed to extract skills. Please try again.')
             setHasSearched(true)
         } finally {
