@@ -9,13 +9,13 @@ import {
     useFetchAssignmentPayments,
 } from '../../hooks'
 import {
+    formatCurrency,
     getPaymentAmount,
+    getPaymentCreatorLabel,
     getPaymentHoursWorked,
     getPaymentRemarks,
     getPaymentStatus,
-} from '../../utils'
-import {
-    formatCurrency,
+    renderPaymentLinkedText,
 } from '../../utils/payment.utils'
 
 import styles from './PaymentHistoryModal.module.scss'
@@ -89,6 +89,7 @@ const PaymentHistoryModal: FC<PaymentHistoryModalProps> = (
                                 const paymentStatus = getPaymentStatus(payment)
                                 const paymentHoursWorked = getPaymentHoursWorked(payment)
                                 const paymentRemarks = getPaymentRemarks(payment)
+                                const paymentCreator = getPaymentCreatorLabel(payment)
                                 const normalizedPaymentStatus = paymentStatus
                                     .trim()
                                     .toLowerCase()
@@ -109,7 +110,11 @@ const PaymentHistoryModal: FC<PaymentHistoryModalProps> = (
                                         <div className={styles.itemBody}>
                                             <div>{payment.title || payment.description || 'Payment'}</div>
                                             {paymentRemarks
-                                                ? <div className={styles.remarks}>{paymentRemarks}</div>
+                                                ? (
+                                                    <div className={styles.remarks}>
+                                                        {renderPaymentLinkedText(paymentRemarks)}
+                                                    </div>
+                                                )
                                                 : <div className={styles.remarks}>No remarks</div>}
                                             {paymentHoursWorked
                                                 ? (
@@ -120,6 +125,12 @@ const PaymentHistoryModal: FC<PaymentHistoryModalProps> = (
                                                     </div>
                                                 )
                                                 : undefined}
+                                            <div className={styles.paymentCreator}>
+                                                <span className={styles.paymentCreatorLabel}>
+                                                    Payment Creator:
+                                                </span>
+                                                <span>{paymentCreator || '-'}</span>
+                                            </div>
                                             <div className={styles.date}>
                                                 {formatDate(payment.createdAt || payment.updatedAt)}
                                             </div>

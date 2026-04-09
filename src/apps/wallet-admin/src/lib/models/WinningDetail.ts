@@ -39,6 +39,7 @@ export interface PaymentWorkLog {
 
 export interface WinningPaymentDetails {
     engagementDetails?: PaymentEngagementDetails
+    paymentCreatorHandle?: string
     workLog?: PaymentWorkLog
 }
 

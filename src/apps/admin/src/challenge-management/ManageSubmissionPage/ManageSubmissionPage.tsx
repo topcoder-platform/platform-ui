@@ -339,6 +339,7 @@ export const ManageSubmissionPage: FC<Props> = (props: Props) => {
                 challengeId,
                 file: selectedFile,
                 fileName: selectedFile.name,
+                memberHandle: String(selectedHandle.label),
                 memberId: selectedHandle.value,
             })
 

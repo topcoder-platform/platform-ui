@@ -126,7 +126,16 @@
         grid-template-areas: none;
     }
 
-    .projectMode > * {
+    // Match the desktop/tablet selector specificity so the named grid areas
+    // are actually cleared when the layout collapses to a single column.
+    .projectMode .searchField,
+    .projectMode .statusField,
+    .projectMode .typeField,
+    .projectMode .startDateFromField,
+    .projectMode .startDateToField,
+    .projectMode .endDateFromField,
+    .projectMode .endDateToField,
+    .projectMode .actionsField {
         grid-area: auto;
     }
 }

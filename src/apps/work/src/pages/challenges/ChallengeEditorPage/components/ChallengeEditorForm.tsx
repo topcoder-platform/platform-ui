@@ -42,6 +42,8 @@ import {
     ChallengeEditorFormData,
     ChallengePhase,
     ChallengeType,
+    Resource,
+    ResourceRole,
     Reviewer,
 } from '../../../../lib/models'
 import {
@@ -273,6 +275,13 @@ const REVIEWER_REQUIRED_PHASE_KEYS = new Set(
     REVIEWER_REQUIRED_PHASES
         .map(phaseName => normalizeReviewerPhaseName(phaseName)),
 )
+const REVIEWER_ROLE_NAMES_BY_PHASE_KEY: Record<string, string[]> = {
+    approval: ['Approver'],
+    checkpointreview: ['Checkpoint Reviewer'],
+    checkpointscreening: ['Checkpoint Screener'],
+    iterativereview: ['Iterative Reviewer', 'Iterative Review'],
+    screening: ['Screener'],
+}
 const DESIGN_WORK_TYPE_BY_TOKEN = new Map<string, string>(
     DESIGN_WORK_TYPES
         .map(workType => [
@@ -689,6 +698,121 @@ function getAssignedMemberReviewerSlots(reviewer: Reviewer | undefined): string[
         normalizeTextValue(reviewer.memberId),
         ...additionalMemberIds.map(memberId => normalizeTextValue(memberId)),
     ]
+}
+
+/**
+ * Backfills manual reviewer member ids from persisted challenge resources.
+ *
+ * Reviewer assignments for closed public opportunities are stored as resources and older
+ * challenge payloads may omit the matching `memberId` fields on `reviewers`. The editable
+ * human-review tab patches those ids into the form, but read-only `/view` launches do not mount
+ * that tab. This helper mirrors the persisted-resource lookup at the form layer so validation and
+ * launch flows see the same reviewer assignments shown in the summary UI.
+ *
+ * @param formData current challenge form snapshot.
+ * @param resources loaded challenge resources for the current challenge.
+ * @param resourceRoles loaded resource role definitions used to map review phases to resources.
+ * @returns a form-data copy with missing reviewer member ids hydrated from persisted resources.
+ * @remarks Only reviewers with closed public opportunities and no existing assigned member ids are
+ * backfilled. Existing form assignments are preserved.
+ * @throws Does not throw.
+ */
+function applyPersistedManualReviewerAssignments(
+    formData: ChallengeEditorFormData,
+    resources: Resource[],
+    resourceRoles: ResourceRole[],
+): ChallengeEditorFormData {
+    if (!Array.isArray(formData.reviewers) || formData.reviewers.length === 0 || resourceRoles.length === 0) {
+        return formData
+    }
+
+    const phaseNameById = new Map(
+        (Array.isArray(formData.phases)
+            ? formData.phases
+            : [])
+            .map(phase => {
+                const phaseId = normalizeReviewerPhaseId(phase)
+                const phaseName = normalizeTextValue(phase.name)
+
+                return phaseId && phaseName
+                    ? [phaseId, phaseName] as const
+                    : undefined
+            })
+            .filter((entry): entry is readonly [string, string] => !!entry),
+    )
+    const roleIdByName = new Map(
+        resourceRoles
+            .map(role => {
+                const normalizedRoleName = normalizeReviewerPhaseName(role.name)
+                const roleId = normalizeTextValue(role.id)
+
+                return normalizedRoleName && roleId
+                    ? [normalizedRoleName, roleId] as const
+                    : undefined
+            })
+            .filter((entry): entry is readonly [string, string] => !!entry),
+    )
+    let hasChanges = false
+    const reviewers = formData.reviewers.map(reviewer => {
+        if (
+            !reviewer
+            || isAiReviewer(reviewer)
+            || reviewer.shouldOpenOpportunity === true
+            || getAssignedMemberReviewerSlots(reviewer)
+                .some(Boolean)
+        ) {
+            return reviewer
+        }
+
+        const phaseName = phaseNameById.get(normalizeReviewerPhaseId(reviewer))
+        const normalizedPhaseName = normalizeReviewerPhaseName(phaseName)
+        const roleNames = normalizedPhaseName
+            ? REVIEWER_ROLE_NAMES_BY_PHASE_KEY[normalizedPhaseName] || ['Reviewer']
+            : []
+        const roleId = roleNames
+            .map(roleName => roleIdByName.get(normalizeReviewerPhaseName(roleName)))
+            .find((value): value is string => !!value)
+            || normalizeTextValue(reviewer.roleId)
+            || undefined
+
+        if (!roleId) {
+            return reviewer
+        }
+
+        const memberIds = Array.from(new Set(
+            resources
+                .filter(resource => normalizeTextValue(resource.roleId) === roleId)
+                .map(resource => normalizeTextValue(resource.memberId))
+                .filter(Boolean),
+        ))
+            .slice(0, getRequiredMemberReviewerCount(reviewer))
+
+        if (memberIds.length === 0) {
+            return reviewer
+        }
+
+        const [
+            memberId,
+            ...additionalMemberIds
+        ] = memberIds
+
+        hasChanges = true
+
+        return {
+            ...reviewer,
+            additionalMemberIds: additionalMemberIds.length
+                ? additionalMemberIds
+                : undefined,
+            memberId: memberId || undefined,
+        }
+    })
+
+    return hasChanges
+        ? {
+            ...formData,
+            reviewers,
+        }
+        : formData
 }
 
 function getReviewerEntryValidationError(reviewer: Reviewer | undefined): string | undefined {
@@ -1593,8 +1717,12 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                     return
                 }
 
-                reset(applyPersistedSingleAssignmentsRef.current(
-                    baseFormData,
+                reset(applyPersistedManualReviewerAssignments(
+                    applyPersistedSingleAssignmentsRef.current(
+                        baseFormData,
+                        fetchedResources,
+                        fetchedResourceRoles,
+                    ),
                     fetchedResources,
                     fetchedResourceRoles,
                 ))
@@ -1627,7 +1755,11 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
         }
 
         const currentFormValues = getValues()
-        const persistedValues = applyPersistedSingleAssignments(currentFormValues)
+        const persistedValues = applyPersistedManualReviewerAssignments(
+            applyPersistedSingleAssignments(currentFormValues),
+            challengeResources,
+            resourceRoles,
+        )
 
         getSingleAssignmentConfigs(isTaskSingleAssignmentChallenge(currentFormValues))
             .forEach(config => {
@@ -1643,12 +1775,21 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                     shouldValidate: true,
                 })
             })
+
+        if (JSON.stringify(currentFormValues.reviewers || []) !== JSON.stringify(persistedValues.reviewers || [])) {
+            setValue('reviewers', persistedValues.reviewers, {
+                shouldDirty: false,
+                shouldValidate: true,
+            })
+        }
     }, [
         applyPersistedSingleAssignments,
+        challengeResources,
         currentChallengeId,
         formState.isDirty,
         getValues,
         isTaskSingleAssignmentChallenge,
+        resourceRoles,
         resourceRolesResult.isLoading,
         setValue,
         challengeResourcesResult.isLoading,

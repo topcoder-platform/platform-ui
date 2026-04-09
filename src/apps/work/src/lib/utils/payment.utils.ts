@@ -1,3 +1,8 @@
+import {
+    createElement,
+    ReactNode,
+} from 'react'
+
 import { Assignment, AssignmentPayment } from '../models'
 
 const currencyFormatter = new Intl.NumberFormat('en-US', {
@@ -165,6 +170,83 @@ export function calculatePaymentAmount(
 
 export function getPaymentRemarks(payment: AssignmentPayment): string {
     return toOptionalString(payment.attributes?.remarks) || ''
+}
+
+/**
+ * Resolves the display value for the payment creator field.
+ *
+ * @param payment payment record returned by the finance API.
+ * @returns creator handle when it was resolved, otherwise the raw creator
+ * identifier, or an empty string when unavailable.
+ */
+export function getPaymentCreatorLabel(payment: AssignmentPayment): string {
+    return toOptionalString(payment.createdByHandle)
+        || toOptionalString(payment.createdBy)
+        || ''
+}
+
+/**
+ * Renders payment remarks while converting embedded URLs into external links.
+ *
+ * @param value payment remarks text from the finance API.
+ * @returns an empty string when no remarks exist, otherwise text and anchor
+ * nodes with plain `http://` or `https://` URLs opened in a new tab.
+ *
+ * @remarks Used by the work-app payment history modal so managers can open
+ * ticket, spreadsheet, or document links directly from remarks.
+ *
+ * @throws This helper does not raise exceptions.
+ */
+export function renderPaymentLinkedText(value?: string): ReactNode {
+    const text = toOptionalString(value)
+
+    if (!text) {
+        return ''
+    }
+
+    const urlPattern = /https?:\/\/[^\s<>"']+/gu
+    const trailingPunctuationPattern = /[),.;!?]+$/u
+    const nodes: ReactNode[] = []
+    let currentIndex = 0
+
+    let match = urlPattern.exec(text)
+
+    while (match) {
+        const [matchedText] = match
+        const matchIndex = match.index ?? 0
+        const url = matchedText.replace(trailingPunctuationPattern, '')
+        const trailingText = matchedText.slice(url.length)
+
+        if (matchIndex > currentIndex) {
+            nodes.push(text.slice(currentIndex, matchIndex))
+        }
+
+        if (url) {
+            nodes.push(createElement('a', {
+                href: url,
+                key: `${url}-${matchIndex}`,
+                rel: 'noreferrer',
+                target: '_blank',
+            }, url))
+        }
+
+        if (trailingText) {
+            nodes.push(trailingText)
+        }
+
+        currentIndex = matchIndex + matchedText.length
+        match = urlPattern.exec(text)
+    }
+
+    if (nodes.length === 0) {
+        return text
+    }
+
+    if (currentIndex < text.length) {
+        nodes.push(text.slice(currentIndex))
+    }
+
+    return nodes
 }
 
 export function normalizeAssignmentStatus(status: string): string {

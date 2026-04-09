@@ -57,6 +57,8 @@ const mockedFetchWinningPaymentDetails = (
 const expectedWorkManagerLink
     = 'https://challenges.example.com/projects/project-789/engagements/engagement-456/assignments'
         + '?assignmentId=assignment-123'
+const expectedProjectLink
+    = 'https://challenges.example.com/projects/project-789'
 
 describe('PaymentView', () => {
     const payment: Winning = {
@@ -98,6 +100,7 @@ describe('PaymentView', () => {
                 ratePerHour: '10.60',
                 standardHoursPerWeek: 43.75,
             },
+            paymentCreatorHandle: 'copilot-manager',
             workLog: {
                 hoursWorked: 43.75,
                 remarks: 'Completed sprint support and bug triage. Reference: https://example.com/worklog',
@@ -119,7 +122,7 @@ describe('PaymentView', () => {
 
         expect(await screen.findByRole('heading', { name: 'Engagement Details' }))
             .toBeTruthy()
-        expect(await screen.findByText('Wipro - US Foods / Snowflake Developer - Vikash'))
+        expect(await screen.findByText('copilot-manager'))
             .toBeTruthy()
         await waitFor(() => {
             expect(screen.getAllByText('43.75'))
@@ -134,6 +137,15 @@ describe('PaymentView', () => {
 
         expect(descriptionLink.getAttribute('href'))
             .toBe(expectedWorkManagerLink)
+
+        const projectLink = await screen.findByRole('link', {
+            name: 'Wipro - US Foods',
+        })
+
+        expect(projectLink.getAttribute('href'))
+            .toBe(expectedProjectLink)
+        expect(projectLink.getAttribute('target'))
+            .toBe('_blank')
 
         const remarksLink = await screen.findByRole('link', {
             name: 'https://google.com',
