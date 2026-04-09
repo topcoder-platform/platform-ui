@@ -1,0 +1,394 @@
+@import '@libs/ui/styles/includes';
+
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-4;
+}
+
+:global([class*='ContentLayout-module_content-outer']) {
+    margin: 24px auto 0 !important;
+}
+
+:global([class*='ContentLayout-module_content__']) {
+    padding-bottom: 0 !important;
+}
+
+.pageArea {
+    position: relative;
+    @include substractPagePaddings;
+    background: $black-5;
+}
+
+.pageHero {
+    width: 100%;
+    height: 280px;
+    background-image: url('../../../lib/assets/talent-search-header.png');
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+.pageBody {
+    display: grid;
+    grid-template-columns: 443px 1fr;
+    gap: 40px;
+    margin-top: -232px;
+    padding: $sp-4 $sp-12 $sp-14 $sp-12;
+    position: relative;
+    z-index: 1;
+    font-family: $font-roboto;
+
+    @include ltemd {
+        grid-template-columns: 1fr;
+        margin-top: -232px;
+        padding: $sp-3 $sp-3 0;
+    }
+}
+
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+
+    @include ltemd {
+        margin-left: 0;
+        position: relative;
+        z-index: 2;
+    }
+}
+
+.panel {
+    background: $tc-white;
+    border: 0;
+    border-radius: 16px;
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    gap: $sp-3;
+}
+
+.sidebar .panel + .panel {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    border-top: 0;
+    padding-top: 20px;
+}
+
+.panelTitle {
+    color: $black-100;
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 500;
+    margin: 0;
+}
+
+.searchTabs {
+    display: flex;
+    gap: 40px;
+    border-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: 1px solid $black-20;
+}
+
+.tabButton {
+    border: 0;
+    background: transparent;
+    padding: 12px 0;
+    color: $black-60;
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 500;
+}
+
+.activeTab {
+    color: $black-100;
+}
+
+.jobDescriptionField {
+    margin-top: 0.5rem;
+    :global(textarea) {
+        min-height: 442px;
+        resize: vertical;
+        color: $black-100;
+        font-size: 14px;
+        line-height: 22px;
+    }
+}
+
+.aiActions {
+    display: flex;
+    gap: $sp-2;
+}
+
+.errorMessage {
+    color: $red-100;
+    font-size: 13px;
+    line-height: 18px;
+    margin: 0;
+}
+
+.filterBlock {
+    :global([class*='__value-container']) {
+        min-height: 18px;
+    }
+}
+
+.skillsMultiselect {
+    :global([class*='__value-container']) {
+        gap: 6px;
+    }
+
+    :global([class*='__multi-value']) {
+        margin: 0;
+        border-radius: 12px;
+        background: $black-10;
+    }
+
+    :global([class*='__multi-value__label']) {
+        padding: 3px 8px;
+        color: $black-100;
+        font-size: 12px;
+        line-height: 14px;
+        font-weight: 500;
+    }
+
+    :global([class*='__multi-value__remove']) {
+        margin: 0 6px 0 0;
+        padding: 2px;
+        color: $black-60;
+
+        svg {
+            width: 14px;
+            height: 14px;
+        }
+    }
+}
+
+.checkboxRow {
+    display: flex;
+    align-items: center;
+    gap: $sp-2;
+    color: $black-100;
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 400;
+    position: relative;
+    cursor: pointer;
+}
+
+.checkboxLabelWithInfo {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.infoIconButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border: 0;
+    border-radius: 50%;
+    padding: 0;
+    background: transparent;
+    color: $black-60;
+    cursor: pointer;
+
+    :global(svg) {
+        width: 18px;
+        height: 18px;
+    }
+}
+
+.checkboxInput {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.toggleControl {
+    width: 36px;
+    height: 20px;
+    border-radius: 10px;
+    background: $turq-160;
+    position: relative;
+    flex-shrink: 0;
+
+    &::after {
+        content: '';
+        position: absolute;
+        top: 3px;
+        left: 20px;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: $tc-white;
+    }
+}
+
+.checkboxInput:not(:checked) + .toggleControl {
+    background: $black-40;
+
+    &::after {
+        left: 2px;
+    }
+}
+
+.clearFiltersWrap {
+    margin-top: 10px;
+    align-self: flex-start;
+}
+
+.resultsPanel {
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    overflow: visible;
+    min-height: 620px;
+}
+
+.resultsPanelEmpty {
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+}
+
+.resultsContent {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-4;
+    padding: 0;
+}
+
+.resultsTop {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $sp-3;
+    padding-top: 8px;
+
+    @include ltemd {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+
+.matchingIndexSelect {
+    width: 184px;
+
+    :global(.input-el) {
+        padding: 4px 10px 1px 10px;
+    }
+}
+
+.sortControl {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 300px;
+    justify-content: flex-end;
+
+    :global([class*='__control']) {
+        min-height: 40px;
+    }
+
+    :global(.input-el) {
+        margin-bottom: 0;
+    }
+}
+
+.sortLabel {
+    color: $tc-white;
+    font-size: 16px;
+    line-height: 22px;
+    white-space: nowrap;
+
+    @include ltemd {
+        color: $black-100;
+    }
+}
+
+.foundText {
+    margin: 0;
+    color: $tc-white;
+    font-size: 16px;
+    line-height: 20px;
+
+    @include ltemd {
+        color: $black-100;
+    }
+}
+
+.foundTextCount {
+    font-weight: 700;
+}
+
+.emptyState {
+    min-height: 470px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: $sp-6;
+    margin-top: 20vh;
+    text-align: center;
+    color: $black-60;
+
+    h4 {
+        margin: 0 0 $sp-2;
+        color: $black-100;
+    }
+
+    p {
+        margin: 0 0 $sp-1;
+        max-width: 500px;
+    }
+}
+
+.emptyStateTitle {
+    color: $black-100;
+    font-size: 24px;
+    line-height: 32px;
+    font-weight: 700;
+    margin: 0 0 $sp-2;
+}
+
+.emptyStateDescription {
+    color: $black-100;
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 400;
+    margin: 0;
+}
+
+.emptyStateSearchText {
+    font-weight: 700;
+}
+
+.emptyIcon {
+    width: 80px;
+    height: 80px;
+    margin-bottom: $sp-3;
+}
+
+.cardsGrid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+
+    @include ltemd {
+        grid-template-columns: 1fr;
+    }
+}
+
+.loadMoreWrap {
+    display: flex;
+    justify-content: center;
+    margin-top: 8px;
+}

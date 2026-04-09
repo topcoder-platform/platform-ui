@@ -1,0 +1,293 @@
+@import '@libs/ui/styles/includes';
+
+.talentCard {
+    background: $tc-white;
+    border: 0;
+    border-radius: 12px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.cardMain {
+    padding: 24px;
+}
+
+.topRow {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    width: 100%;
+}
+
+.avatarWrap {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.profilePic {
+    width: 80px;
+    height: 80px;
+
+    :global(span) {
+        font-size: 30px !important;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+    }
+}
+
+.verifiedBadge {
+    position: absolute;
+    right: 2px;
+    top: 2px;
+    width: 20px;
+    height: 20px;
+    background: $tc-white;
+    color: $turq-120;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    z-index: 2;
+
+    :global(svg) {
+        width: 18px;
+        height: 18px;
+        display: block;
+    }
+}
+
+.headContent {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    min-width: 0;
+}
+
+.cardHeader {
+    display: flex;
+    justify-content: space-between;
+    gap: $sp-2;
+    align-items: center;
+    min-width: 0;
+
+    h4 {
+        margin: 0;
+        color: $black-100;
+        font-size: 20px;
+        line-height: 26px;
+        font-weight: 700;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    @include ltemd {
+        h4 {
+            font-size: 16px;
+            line-height: 22px;
+        }
+    }
+}
+
+.nameText {
+    margin: 0;
+    color: $black-100;
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 400;
+}
+
+.matchPill {
+    background: $teal-120;
+    color: $tc-white;
+    border-radius: 999px;
+    padding: 3px 10px;
+    font-size: 14px;
+    line-height: 22px;
+    font-weight: 500;
+    white-space: nowrap;
+    align-self: flex-start;
+    flex-shrink: 0;
+}
+
+.locationRow {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+}
+
+.locationIcon {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    margin-top: 1px;
+    color: $turq-160;
+}
+
+.locationText {
+    margin: 0;
+    color: $black-100;
+    font-size: 14px;
+    line-height: 22px;
+    font-weight: 400;
+}
+
+.statusRow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px;
+}
+
+.statusPill {
+    border-radius: 999px;
+    padding: 2px 10px;
+    font-size: 14px;
+    line-height: 22px;
+    font-weight: 500;
+}
+
+.statusPillActive {
+    background: $green-25;
+    color: $turq-180;
+}
+
+.statusPillInactive {
+    background: $black-10;
+    color: $black-80;
+}
+
+.availability {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 14px;
+    line-height: 22px;
+    font-weight: 500;
+}
+
+.availabilityYes {
+    color: $turq-160;
+}
+
+.availabilityNo {
+    color: $black-80;
+}
+
+.availabilityIcon {
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+}
+
+.cardFooter {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $sp-2;
+    padding: 16px 24px 20px;
+    border-top: 1px solid $black-10;
+    font-size: 14px;
+    line-height: 22px;
+    font-weight: 400;
+}
+
+.footerMatched {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.experienceLink {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+    color: $black-100;
+    text-decoration: none;
+
+    &:hover {
+        color: $turq-160;
+    }
+
+    &:focus-visible {
+        outline: 2px solid $link-blue;
+        outline-offset: 2px;
+        border-radius: 2px;
+    }
+}
+
+.experienceLinkIcon {
+    width: 16px;
+    height: 16px;
+    color: $turq-160;
+}
+
+.matchedSkillsText {
+    margin: 0;
+    color: $black-100;
+    font-weight: 500;
+}
+
+.infoButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    color: $black-60;
+    border-radius: 50%;
+
+    &:hover {
+        color: $black-80;
+    }
+
+    &:focus-visible {
+        outline: 2px solid $link-blue;
+        outline-offset: 2px;
+    }
+}
+
+.infoIcon {
+    width: 18px;
+    height: 18px;
+    display: block;
+}
+
+.tooltipBody {
+    text-align: left;
+}
+
+.tooltipTitle {
+    margin: 0 0 8px;
+    font-weight: 700;
+    font-size: 13px;
+    line-height: 18px;
+}
+
+.tooltipLines {
+    margin: 0;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 400;
+}
+
+.tooltipSkillLine {
+    display: block;
+
+    & + & {
+        margin-top: 4px;
+    }
+}
+
+.tooltipSkillName {
+    font-weight: 700;
+}
