@@ -698,10 +698,19 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                         }
 
                         setPagination(newPagination)
-                        setFilters({
+                    /*    setFilters({
                             ...filters,
                             [key]: value,
-                        })
+                        }) */
+                            setFilters(prev => {
+                                const newFilters = { ...prev }
+                                if (value[0] === 'all') {
+                                    delete newFilters[key]
+                                } else {
+                                    newFilters[key] = value
+                                }
+                                return newFilters
+                            })   
                         setSelectedPayments({})
                     }}
                     onResetFilters={() => {
