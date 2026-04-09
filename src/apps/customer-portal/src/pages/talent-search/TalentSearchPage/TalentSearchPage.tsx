@@ -84,7 +84,9 @@ export const TalentSearchPage: FC = () => {
 
         return true
     }), [countryOptions, onlyActive, results, selectedCountry])
-    const foundMembersCount = totalResults || filteredResults.length
+    const foundMembersCount = selectedCountry === 'all'
+        ? (totalResults || filteredResults.length)
+        : filteredResults.length
     const hasMoreResults = results.length < totalResults
 
     const loadSkillOptions = useCallback(async (query: string): Promise<InputMultiselectOption[]> => {
@@ -182,6 +184,8 @@ export const TalentSearchPage: FC = () => {
         setOnlyActive(true)
 
         if (hasSearched && selectedSkills.length > 0) {
+            // Prevent duplicate request from the filters useEffect after state updates.
+            skipNextAutoSearchRef.current = true
             runMemberSearch(selectedSkills, {
                 openToWork: true,
                 page: 1,
