@@ -22,6 +22,31 @@ export function buildWorkManagerAssignmentUrl(
     return `${assignmentPath}?assignmentId=${engagementDetails.assignmentId}`
 }
 
+/**
+ * Builds the Work Manager project destination used by wallet-admin payment
+ * details when engagement payments expose a linked project.
+ *
+ * @param engagementDetails Engagement metadata attached to the payment.
+ * @returns The absolute project URL when a project id is available; otherwise
+ * `undefined`.
+ *
+ * @remarks The payment details popup opens this URL in a new tab so admins can
+ * jump directly from a payment to its owning project workspace.
+ *
+ * @throws This helper does not raise exceptions.
+ */
+export function buildWorkManagerProjectUrl(
+    engagementDetails?: PaymentEngagementDetails,
+): string | undefined {
+    if (!engagementDetails?.projectId) {
+        return undefined
+    }
+
+    const baseUrl = EnvironmentConfig.ADMIN.WORK_MANAGER_URL.replace(/\/$/, '')
+
+    return `${baseUrl}/projects/${engagementDetails.projectId}`
+}
+
 export function formatOptionalText(
     value?: number | string | null,
 ): string {
@@ -118,19 +143,4 @@ export function formatOptionalDate(
         month: 'short',
         year: 'numeric',
     })
-}
-
-export function formatEngagementProjectName(
-    engagementDetails?: PaymentEngagementDetails,
-): string {
-    const projectName = String(engagementDetails?.projectName || '')
-        .trim()
-    const engagementTitle = String(engagementDetails?.engagementTitle || '')
-        .trim()
-
-    if (projectName && engagementTitle) {
-        return `${projectName} / ${engagementTitle}`
-    }
-
-    return projectName || engagementTitle || '-'
 }

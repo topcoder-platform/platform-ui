@@ -6,9 +6,13 @@ import {
 import {
     TC_FINANCE_API_URL,
 } from '../constants'
-import {
+import type {
     AssignmentPayment,
 } from '../models'
+
+import {
+    searchProfilesByUserIds,
+} from './users.service'
 
 const DEFAULT_ENGAGEMENT_PAYMENT_STATUS = 'ON_HOLD_ADMIN'
 
@@ -92,6 +96,57 @@ function normalizePaymentsResponse(response: unknown): AssignmentPayment[] {
     return []
 }
 
+/**
+ * Resolves creator handles for payment history rows when finance returns only
+ * the creator user id.
+ *
+ * @param payments payment rows returned by the finance API.
+ * @returns the original rows with `createdByHandle` hydrated when member data is available.
+ *
+ * @remarks Payment history remains usable even if the member lookup fails; in
+ * that case this helper returns the original rows unchanged.
+ *
+ * @throws This helper does not raise exceptions.
+ */
+async function hydratePaymentCreatorHandles(
+    payments: AssignmentPayment[],
+): Promise<AssignmentPayment[]> {
+    const creatorIds = Array.from(new Set(
+        payments
+            .map(payment => String(payment.createdBy || '')
+                .trim())
+            .filter(Boolean),
+    ))
+
+    if (!creatorIds.length) {
+        return payments
+    }
+
+    try {
+        const profiles = await searchProfilesByUserIds(creatorIds)
+        const creatorHandlesByUserId = new Map(
+            profiles
+                .filter(profile => profile.handle)
+                .map(profile => [profile.userId, profile.handle as string]),
+        )
+
+        return payments.map(payment => {
+            const creatorId = String(payment.createdBy || '')
+                .trim()
+            const createdByHandle = creatorHandlesByUserId.get(creatorId)
+
+            return createdByHandle
+                ? {
+                    ...payment,
+                    createdByHandle,
+                }
+                : payment
+        })
+    } catch {
+        return payments
+    }
+}
+
 export async function createMemberPayment(
     assignmentId: number | string,
     memberId: number | string,
@@ -154,7 +209,7 @@ export async function fetchAssignmentPayments(
             `${TC_FINANCE_API_URL}/winnings/by-external-id/${assignmentId}`,
         )
 
-        return normalizePaymentsResponse(response)
+        return hydratePaymentCreatorHandles(normalizePaymentsResponse(response))
     } catch (error) {
         throw normalizeError(error, 'Failed to fetch payment history')
     }

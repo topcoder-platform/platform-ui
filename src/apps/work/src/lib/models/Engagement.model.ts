@@ -104,6 +104,8 @@ export interface AssignmentPayment {
         hoursWorked?: number | string
         remarks?: string
     }
+    createdBy?: string
+    createdByHandle?: string
     createdAt?: string
     description?: string
     details?: Array<{

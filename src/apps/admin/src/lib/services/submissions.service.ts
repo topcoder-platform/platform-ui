@@ -39,6 +39,7 @@ const SUBMISSIONS_PER_PAGE = 100
 interface ManualSubmissionUploadPayload {
     challengeId: string
     memberId: number | string
+    memberHandle?: string
     file: File
     fileName?: string
     submittedDate?: string
@@ -226,6 +227,10 @@ export const uploadManualSubmission = async (
     formData.append('challengeId', payload.challengeId)
     formData.append('memberId', String(payload.memberId))
     formData.append('type', payload.type ?? 'CONTEST_SUBMISSION')
+
+    if (payload.memberHandle) {
+        formData.append('memberHandle', payload.memberHandle)
+    }
 
     if (payload.fileName) {
         formData.append('fileName', payload.fileName)

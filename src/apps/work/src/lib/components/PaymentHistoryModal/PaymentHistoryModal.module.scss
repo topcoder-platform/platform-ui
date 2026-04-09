@@ -59,11 +59,25 @@
 
 .remarks {
     color: #5b5b5b;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
 }
 
 .hoursWorked {
     color: #5b5b5b;
     font-size: 12px;
+}
+
+.paymentCreator {
+    color: #5b5b5b;
+    display: flex;
+    flex-wrap: wrap;
+    font-size: 12px;
+    gap: 4px;
+}
+
+.paymentCreatorLabel {
+    font-weight: 600;
 }
 
 .date {

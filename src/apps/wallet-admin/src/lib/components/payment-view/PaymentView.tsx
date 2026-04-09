@@ -20,7 +20,7 @@ import {
 } from '../../services/wallet'
 import {
     buildWorkManagerAssignmentUrl,
-    formatEngagementProjectName,
+    buildWorkManagerProjectUrl,
     formatOptionalDate,
     formatOptionalText,
     renderOptionalLinkedText,
@@ -139,6 +139,7 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
     const descriptionLink = isEngagementPayment
         ? buildWorkManagerAssignmentUrl(paymentDetails?.engagementDetails)
         : `${TOPCODER_URL}/challenges/${props.payment.externalId}`
+    const projectLink = buildWorkManagerProjectUrl(paymentDetails?.engagementDetails)
 
     return (
         <div className={styles.formContainer}>
@@ -163,6 +164,16 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
                             <span className={styles.label}>Handle</span>
                             <p className={styles.value}>{props.payment.handle}</p>
                         </div>
+                        {isEngagementPayment && (
+                            <div className={styles.infoItem}>
+                                <span className={styles.label}>Payment Creator</span>
+                                <p className={styles.value}>
+                                    {isPaymentDetailsLoading
+                                        ? 'Loading...'
+                                        : formatOptionalText(paymentDetails?.paymentCreatorHandle)}
+                                </p>
+                            </div>
+                        )}
 
                         <div className={styles.infoItem}>
                             <span className={styles.label}>Type</span>
@@ -215,10 +226,23 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
                                 {!isPaymentDetailsLoading && !paymentDetailsError && hasEngagementDetails && (
                                     <div className={styles.sectionGrid}>
                                         <div className={styles.infoItem}>
-                                            <span className={styles.label}>Engagement / Project Name</span>
-                                            <p className={styles.value}>
-                                                {formatEngagementProjectName(paymentDetails?.engagementDetails)}
-                                            </p>
+                                            <span className={styles.label}>Project Name</span>
+                                            {projectLink && paymentDetails?.engagementDetails?.projectName
+                                                ? (
+                                                    <a
+                                                        className={styles.value}
+                                                        href={projectLink}
+                                                        target='_blank'
+                                                        rel='noreferrer'
+                                                    >
+                                                        {paymentDetails.engagementDetails.projectName}
+                                                    </a>
+                                                )
+                                                : (
+                                                    <p className={styles.value}>
+                                                        {formatOptionalText(paymentDetails?.engagementDetails?.projectName)}
+                                                    </p>
+                                                )}
                                         </div>
                                         <div className={styles.infoItem}>
                                             <span className={styles.label}>Billing Start Date</span>
