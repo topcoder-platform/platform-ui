@@ -370,6 +370,50 @@ describe('HumanReviewTab', () => {
             ])
     })
 
+    it('backfills the iterative review type for legacy manual reviewer rows', async () => {
+        render(<TestHarness />)
+
+        await waitFor(() => {
+            expect(screen.getByTestId('reviewers.0.type')
+                .getAttribute('data-value'))
+                .toBe('ITERATIVE_REVIEW')
+        })
+    })
+
+    it('upgrades auto-backfilled reviewer types when default reviewers load later', async () => {
+        const resolvedDefaultReviewers = [
+            {
+                isMemberReview: true,
+                memberReviewerCount: 1,
+                opportunityType: 'COMPONENT_DEV_REVIEW',
+                phaseId: 'phase-1',
+                roleId: 'role-1',
+                scorecardId: 'scorecard-1',
+            },
+        ]
+        const deferredDefaultReviewers = createDeferredPromise<typeof resolvedDefaultReviewers>()
+
+        mockedFetchDefaultReviewers.mockReturnValue(deferredDefaultReviewers.promise)
+
+        render(<TestHarness />)
+
+        await waitFor(() => {
+            expect(screen.getByTestId('reviewers.0.type')
+                .getAttribute('data-value'))
+                .toBe('ITERATIVE_REVIEW')
+        })
+
+        await act(async () => {
+            deferredDefaultReviewers.resolve(resolvedDefaultReviewers)
+        })
+
+        await waitFor(() => {
+            expect(screen.getByTestId('reviewers.0.type')
+                .getAttribute('data-value'))
+                .toBe('COMPONENT_DEV_REVIEW')
+        })
+    })
+
     it('restores iterative reviewer member ids from the iterative review role alias', async () => {
         mockedUseFetchResourceRoles.mockReturnValue({
             resourceRoles: [

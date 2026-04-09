@@ -340,6 +340,42 @@ function getReviewerPhaseId(
     return reviewPhase?.phaseId || reviewPhase?.id || phases[0]?.phaseId || phases[0]?.id
 }
 
+/**
+ * Resolves the stored review opportunity type for a manual reviewer row.
+ *
+ * Legacy drafts may omit the manual-reviewer `type` field even though work-manager
+ * treated iterative-review rows as `ITERATIVE_REVIEW`. Prefer the matching default
+ * reviewer configuration when present, then fall back to the iterative-review phase
+ * mapping before using the regular review default.
+ */
+function getReviewOpportunityTypeForReviewer(params: {
+    defaultReviewers: DefaultReviewer[]
+    phaseId: string | undefined
+    phaseNameById: Map<string, string>
+    phases: ChallengeEditorFormData['phases']
+}): string {
+    const normalizedPhaseId = normalizeText(params.phaseId)
+    const matchingDefaultReviewer = normalizedPhaseId
+        ? params.defaultReviewers.find(defaultReviewer => (
+            isMemberReviewer(defaultReviewer)
+            && normalizeText(getReviewerPhaseId(defaultReviewer, params.phases)) === normalizedPhaseId
+        ))
+        : undefined
+    const configuredOpportunityType = normalizeText(matchingDefaultReviewer?.opportunityType)
+
+    if (configuredOpportunityType) {
+        return configuredOpportunityType
+    }
+
+    const phaseName = normalizedPhaseId
+        ? params.phaseNameById.get(normalizedPhaseId)
+        : undefined
+
+    return normalizeKey(phaseName) === 'iterativereview'
+        ? REVIEW_OPPORTUNITY_TYPES.ITERATIVE_REVIEW
+        : REVIEW_OPPORTUNITY_TYPES.REGULAR_REVIEW
+}
+
 function getRoleNameForPhaseName(phaseName: string | undefined): string {
     const normalizedPhaseName = normalizeKey(phaseName)
 
@@ -514,6 +550,7 @@ export const HumanReviewTab: FC = () => {
     // Keep existing selections intact until the first scorecard fetch resolves.
     const [isScorecardsLoading, setIsScorecardsLoading] = useState<boolean>(true)
     const [loadError, setLoadError] = useState<string | undefined>()
+    const autoBackfilledReviewerTypesRef = useRef<Record<string, string>>({})
     const validatedScorecardSelectionsRef = useRef<Record<string, string>>({})
 
     const challengeId = useWatch({
@@ -841,6 +878,76 @@ export const HumanReviewTab: FC = () => {
             mounted = false
         }
     }, [trackId, typeId])
+
+    useEffect(() => {
+        const activeReviewerTypeFieldNames = new Set<string>()
+
+        reviewerRows.forEach((reviewer, reviewerIndex) => {
+            const fieldIndex = getReviewerFieldIndex(reviewerIndex)
+            if (
+                fieldIndex === undefined
+                || !reviewer
+                || reviewer.isMemberReview === false
+            ) {
+                return
+            }
+
+            const reviewerTypeFieldName = `reviewers.${fieldIndex}.type`
+            const currentReviewerType = normalizeText(reviewer.type)
+            const autoBackfilledReviewerType = autoBackfilledReviewerTypesRef.current[reviewerTypeFieldName]
+
+            activeReviewerTypeFieldNames.add(reviewerTypeFieldName)
+
+            if (currentReviewerType && !autoBackfilledReviewerType) {
+                return
+            }
+
+            if (
+                currentReviewerType
+                && autoBackfilledReviewerType
+                && currentReviewerType !== autoBackfilledReviewerType
+            ) {
+                delete autoBackfilledReviewerTypesRef.current[reviewerTypeFieldName]
+                return
+            }
+
+            const nextReviewerType = getReviewOpportunityTypeForReviewer({
+                defaultReviewers,
+                phaseId: reviewer.phaseId,
+                phaseNameById,
+                phases,
+            })
+
+            autoBackfilledReviewerTypesRef.current[reviewerTypeFieldName] = nextReviewerType
+
+            if (currentReviewerType === nextReviewerType) {
+                return
+            }
+
+            formContext.setValue(
+                reviewerTypeFieldName as any,
+                nextReviewerType,
+                {
+                    shouldDirty: false,
+                    shouldValidate: true,
+                },
+            )
+        })
+
+        Object.keys(autoBackfilledReviewerTypesRef.current)
+            .forEach(reviewerTypeFieldName => {
+                if (!activeReviewerTypeFieldNames.has(reviewerTypeFieldName)) {
+                    delete autoBackfilledReviewerTypesRef.current[reviewerTypeFieldName]
+                }
+            })
+    }, [
+        defaultReviewers,
+        formContext,
+        getReviewerFieldIndex,
+        phaseNameById,
+        phases,
+        reviewerRows,
+    ])
 
     useEffect(() => {
         if (isScorecardsLoading || loadError) {
