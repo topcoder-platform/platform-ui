@@ -19,6 +19,7 @@ import {
 import { AiReviewConfig } from '../../../../../lib/models'
 import {
     createAiReviewConfig,
+    deleteAiReviewConfig,
     fetchAiReviewConfigByChallenge,
     fetchAiReviewTemplates,
     fetchWorkflows,
@@ -93,6 +94,7 @@ jest.mock('~/libs/ui', () => ({
 const mockedUseFetchChallengeTracks = useFetchChallengeTracks as jest.Mock
 const mockedUseFetchChallengeTypes = useFetchChallengeTypes as jest.Mock
 const mockedCreateAiReviewConfig = createAiReviewConfig as jest.Mock
+const mockedDeleteAiReviewConfig = deleteAiReviewConfig as jest.Mock
 const mockedFetchAiReviewTemplates = fetchAiReviewTemplates as jest.Mock
 const mockedFetchAiReviewConfigByChallenge = fetchAiReviewConfigByChallenge as jest.Mock
 const mockedFetchWorkflows = fetchWorkflows as jest.Mock
@@ -123,6 +125,7 @@ describe('AiReviewTab review mode options', () => {
         mockedUseFetchChallengeTypes.mockReturnValue({
             challengeTypes: [],
         })
+        mockedDeleteAiReviewConfig.mockResolvedValue(undefined)
         mockedFetchAiReviewConfigByChallenge.mockResolvedValue(baseConfiguration)
         mockedFetchWorkflows.mockResolvedValue([])
     })
@@ -131,10 +134,9 @@ describe('AiReviewTab review mode options', () => {
         jest.useRealTimers()
     })
 
-    it('does not fetch a persisted AI review config before any AI reviewers are synced', async () => {
+    it('does not fetch a persisted AI review config before the challenge has been saved', async () => {
         render(
             <AiReviewTab
-                challengeId='challenge-1'
                 reviewers={[]}
             />,
         )
@@ -143,6 +145,29 @@ describe('AiReviewTab review mode options', () => {
         expect(mockedFetchAiReviewConfigByChallenge)
             .not.toHaveBeenCalled()
     })
+
+    it(
+        'loads a persisted AI review config for existing challenges when synced AI reviewers are missing',
+        async () => {
+            const onConfigPersisted = jest.fn()
+
+            render(
+                <AiReviewTab
+                    challengeId='challenge-1'
+                    onConfigPersisted={onConfigPersisted}
+                    reviewers={[]}
+                />,
+            )
+
+            expect(await screen.findByRole('combobox')).not.toBeNull()
+            await waitFor(() => {
+                expect(mockedFetchAiReviewConfigByChallenge)
+                    .toHaveBeenCalledWith('challenge-1')
+            })
+            expect(onConfigPersisted)
+                .toHaveBeenCalledWith(baseConfiguration)
+        },
+    )
 
     it('shows only AI_GATING as a visible review mode option for standard configs', async () => {
         render(
@@ -200,6 +225,41 @@ describe('AiReviewTab review mode options', () => {
         expect(firstOnConfigPersisted)
             .toHaveBeenCalledWith(baseConfiguration)
         expect(secondOnConfigPersisted).not.toHaveBeenCalled()
+    })
+
+    it('does not refetch a removed persisted AI review config for the same challenge', async () => {
+        const user = userEvent.setup()
+        const onConfigRemoved = jest.fn()
+
+        render(
+            <AiReviewTab
+                challengeId='challenge-1'
+                onConfigRemoved={onConfigRemoved}
+                reviewers={persistedAiReviewers}
+            />,
+        )
+
+        expect(await screen.findByRole('combobox')).not.toBeNull()
+        await waitFor(() => {
+            expect(mockedFetchAiReviewConfigByChallenge)
+                .toHaveBeenCalledTimes(1)
+        })
+
+        await user.click(screen.getByRole('button', { name: 'Remove AI config' }))
+
+        await waitFor(() => {
+            expect(mockedDeleteAiReviewConfig)
+                .toHaveBeenCalledWith('config-1')
+        })
+        await waitFor(() => {
+            expect(onConfigRemoved)
+                .toHaveBeenCalledTimes(1)
+        })
+        expect(await screen.findByRole('button', { name: 'Choose template' })).not.toBeNull()
+        expect(mockedFetchAiReviewConfigByChallenge)
+            .toHaveBeenCalledTimes(1)
+        expect(screen.queryByText('Loading AI review configuration...'))
+            .toBeNull()
     })
 
     it('keeps legacy AI_ONLY configs visible without exposing AI_ONLY in the dropdown list', async () => {
@@ -398,6 +458,7 @@ describe('AiReviewTab review mode options', () => {
             ],
         }
 
+        mockedFetchAiReviewConfigByChallenge.mockResolvedValueOnce(undefined)
         mockedCreateAiReviewConfig.mockResolvedValueOnce(savedConfiguration)
         mockedFetchWorkflows.mockResolvedValueOnce([
             {
@@ -457,8 +518,7 @@ describe('AiReviewTab review mode options', () => {
         })
         await waitFor(() => {
             expect(mockedFetchAiReviewConfigByChallenge)
-                .not
-                .toHaveBeenCalled()
+                .toHaveBeenCalledTimes(1)
         })
         expect(
             (screen.getByRole('checkbox', { name: 'Use as gating workflow' }) as HTMLInputElement)
