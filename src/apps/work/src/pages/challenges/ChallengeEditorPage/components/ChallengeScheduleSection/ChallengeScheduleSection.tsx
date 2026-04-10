@@ -26,6 +26,7 @@ import {
     ChallengePhase,
 } from '../../../../../lib/models'
 import {
+    canChangeDuration,
     getMetadataValue,
     getPhaseDuration,
     setMetadataValue,
@@ -660,12 +661,15 @@ export const ChallengeScheduleSection: FC<ChallengeScheduleSectionProps> = (
                                 const phase = row.phase
                                 const index = row.actualIndex
                                 const phaseStartDate = toDate(phase.scheduledStartDate)
+                                const isDurationEditable = canChangeDuration(phase)
 
                                 return (
                                     <PhaseEditorRow
                                         disabled={isSectionDisabled}
                                         endDate={phase.scheduledEndDate}
                                         endDateError={phaseEndDateErrors[getPhaseKey(phase, index)]}
+                                        isDurationEditable={isDurationEditable}
+                                        isEndDateEditable={isDurationEditable}
                                         index={index}
                                         isStartDateEditable={editablePhaseStartDateKeys.has(
                                             getPhaseKey(phase, index),

@@ -855,6 +855,8 @@ function normalizePhasesForForm(phases: unknown): ChallengePhase[] {
             const durationMinutes = normalizeOptionalNumber(typedPhase.duration)
 
             return {
+                actualEndDate: typedPhase.actualEndDate,
+                actualStartDate: typedPhase.actualStartDate,
                 duration: normalizePhaseDurationMinutes(
                     durationMinutes !== undefined
                         ? durationMinutes / 60

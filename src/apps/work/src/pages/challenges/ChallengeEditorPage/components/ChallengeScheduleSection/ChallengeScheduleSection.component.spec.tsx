@@ -19,6 +19,7 @@ import { ChallengeScheduleSection } from './ChallengeScheduleSection'
 
 const mockUseFetchChallengePhases = jest.fn()
 const mockUseFetchChallengeTracks = jest.fn()
+const mockPhaseEditorRow = jest.fn()
 
 jest.mock('~/libs/ui', () => ({
     Button: (props: {
@@ -94,6 +95,22 @@ jest.mock('../../../../../lib/hooks', () => ({
 }))
 
 jest.mock('../../../../../lib/utils', () => ({
+    canChangeDuration: (
+        phase?: {
+            actualEndDate?: string
+            isOpen?: boolean
+        },
+    ): boolean => {
+        if (!phase) {
+            return false
+        }
+
+        if (phase.isOpen) {
+            return true
+        }
+
+        return !phase.actualEndDate
+    },
     getMetadataValue: (
         metadata: Array<{
             name?: string
@@ -155,7 +172,11 @@ jest.mock('../../../../../lib/utils', () => ({
 }))
 
 jest.mock('../PhaseEditorRow', () => ({
-    PhaseEditorRow: () => <div data-testid='phase-editor-row' />,
+    PhaseEditorRow: (props: unknown) => {
+        mockPhaseEditorRow(props)
+
+        return <div data-testid='phase-editor-row' />
+    },
 }))
 
 jest.mock('../TimelineVisualization', () => ({
@@ -435,5 +456,62 @@ describe('ChallengeScheduleSection component', () => {
             .toBeInTheDocument()
         expect(screen.getByTestId('phase-editor-row'))
             .toBeInTheDocument()
+    })
+
+    it('locks completed phase end dates and durations using the legacy work-manager rule', () => {
+        render(
+            <TestHarness
+                phases={[
+                    {
+                        actualEndDate: '2026-04-09T12:51:00.000Z',
+                        duration: 15,
+                        id: 'phase-1',
+                        isOpen: false,
+                        name: 'Registration',
+                        phaseId: 'registration-phase',
+                        scheduledEndDate: '2026-04-09T12:51:00.000Z',
+                        scheduledStartDate: '2026-04-09T12:36:00.000Z',
+                    },
+                    {
+                        duration: 2880,
+                        id: 'phase-2',
+                        isOpen: true,
+                        name: 'Checkpoint Review',
+                        phaseId: 'checkpoint-review-phase',
+                        scheduledEndDate: '2026-04-11T13:02:00.000Z',
+                        scheduledStartDate: '2026-04-09T13:02:00.000Z',
+                    },
+                ]}
+                startDate='2026-04-09T12:36:00.000Z'
+            />,
+        )
+
+        const renderedPhaseRows = mockPhaseEditorRow.mock.calls
+            .map(([props]) => props as {
+                isDurationEditable?: boolean
+                isEndDateEditable?: boolean
+                isStartDateEditable?: boolean
+                phase?: {
+                    name?: string
+                }
+            })
+        const registrationRow = [...renderedPhaseRows]
+            .reverse()
+            .find(props => props.phase?.name === 'Registration')
+        const checkpointReviewRow = [...renderedPhaseRows]
+            .reverse()
+            .find(props => props.phase?.name === 'Checkpoint Review')
+
+        expect(registrationRow)
+            .toEqual(expect.objectContaining({
+                isDurationEditable: false,
+                isEndDateEditable: false,
+                isStartDateEditable: true,
+            }))
+        expect(checkpointReviewRow)
+            .toEqual(expect.objectContaining({
+                isDurationEditable: true,
+                isEndDateEditable: true,
+            }))
     })
 })
