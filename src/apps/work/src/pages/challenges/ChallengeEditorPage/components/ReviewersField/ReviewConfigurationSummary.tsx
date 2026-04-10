@@ -901,107 +901,115 @@ export const ReviewConfigurationSummary: FC<ReviewConfigurationSummaryProps> = (
                         <h5 className={styles.flowTitle}>Review Flow</h5>
 
                         <div className={classNames(
-                            styles.flowDiagram,
+                            styles.flowCanvas,
                             {
-                                [styles.withAIGating]: isAiGatingMode && hasAiGateWorkflow,
-                                [styles.withAIOnly]: isAiOnlyMode,
-                                [styles.withAI]: hasConfiguredAiWorkflows && isAiGatingMode && !hasAiGateWorkflow,
-                                [styles.humanOnly]: !hasAiConfiguration,
+                                [styles.flowCanvasGated]: shouldShowLockedFailurePath,
                             },
                         )}
                         >
-                            <div className={styles.flowStep}>
-                                <span aria-hidden='true' className={styles.flowBoxIcon}>📥</span>
-                                <strong className={styles.flowBoxTitle}>Submission</strong>
-                                <span className={styles.flowDescription}>Received</span>
-                            </div>
+                            <div className={classNames(
+                                styles.flowDiagram,
+                                {
+                                    [styles.withAIGating]: isAiGatingMode && hasAiGateWorkflow,
+                                    [styles.withAIOnly]: isAiOnlyMode,
+                                    [styles.withAI]: hasConfiguredAiWorkflows && isAiGatingMode && !hasAiGateWorkflow,
+                                    [styles.humanOnly]: !hasAiConfiguration,
+                                },
+                            )}
+                            >
+                                <div className={classNames(styles.flowStep, styles.submissionStep)}>
+                                    <span aria-hidden='true' className={styles.flowBoxIcon}>📥</span>
+                                    <strong className={styles.flowBoxTitle}>Submission</strong>
+                                    <span className={styles.flowDescription}>Received</span>
+                                </div>
 
-                            {(hasConfiguredAiWorkflows || humanReviewers.length)
-                                ? <div className={styles.flowArrow}>→</div>
-                                : undefined}
+                                {(hasConfiguredAiWorkflows || humanReviewers.length)
+                                    ? <div className={classNames(styles.flowArrow, styles.entryArrow)}>→</div>
+                                    : undefined}
 
-                            {hasConfiguredAiWorkflows
-                                ? (
-                                    <div className={styles.flowStep}>
-                                        <span
-                                            aria-hidden='true'
-                                            className={styles.flowBoxIcon}
-                                        >
-                                            🤖
-                                        </span>
-                                        <strong className={styles.flowBoxTitle}>
-                                            {isAiOnlyMode ? 'AI Review' : 'AI Gate'}
-                                        </strong>
-                                        <span className={styles.flowDescription}>
-                                            score &gt;=
-                                            {' '}
-                                            {aiConfiguration?.minPassingThreshold ?? 75}
-                                            %
-                                        </span>
-                                        {isAiGatingMode
-                                            ? <span className={styles.flowDescription}>pass / lock</span>
-                                            : undefined}
-                                    </div>
-                                )
-                                : undefined}
-
-                            {hasConfiguredAiWorkflows && isAiGatingMode && humanReviewers.length
-                                ? <div className={styles.flowArrow}>→</div>
-                                : undefined}
-
-                            {!hasConfiguredAiWorkflows && humanReviewers.length
-                                ? (
-                                    <div className={styles.flowStep}>
-                                        <span aria-hidden='true' className={styles.flowBoxIcon}>👥</span>
-                                        <strong className={styles.flowBoxTitle}>Human Review</strong>
-                                        <span className={styles.flowDescription}>
-                                            {totalHumanReviewerCount}
-                                            {' '}
-                                            reviewers
-                                        </span>
-                                    </div>
-                                )
-                                : undefined}
-
-                            {hasConfiguredAiWorkflows && isAiGatingMode && humanReviewers.length
-                                ? (
-                                    <div className={styles.flowStep}>
-                                        <span aria-hidden='true' className={styles.flowBoxIcon}>👥</span>
-                                        <strong className={styles.flowBoxTitle}>Human Review</strong>
-                                        <span className={styles.flowDescription}>
-                                            {totalHumanReviewerCount}
-                                            {' '}
-                                            reviewers
-                                        </span>
-                                    </div>
-                                )
-                                : undefined}
-                        </div>
-
-                        {shouldShowLockedFailurePath
-                            ? (
-                                <div className={styles.failureRow}>
-                                    <div className={styles.failureBranch}>
-                                        <div className={styles.failureArrow}>
-                                            <span>↓</span>
-                                            <span className={styles.failLabel}>
-                                                &lt;
+                                {hasConfiguredAiWorkflows
+                                    ? (
+                                        <div className={classNames(styles.flowStep, styles.aiGateStep)}>
+                                            <span
+                                                aria-hidden='true'
+                                                className={styles.flowBoxIcon}
+                                            >
+                                                🤖
+                                            </span>
+                                            <strong className={styles.flowBoxTitle}>
+                                                {isAiOnlyMode ? 'AI Review' : 'AI Gate'}
+                                            </strong>
+                                            <span className={styles.flowDescription}>
+                                                score &gt;=
                                                 {' '}
                                                 {aiConfiguration?.minPassingThreshold ?? 75}
                                                 %
                                             </span>
-                                            <span>↓</span>
+                                            {isAiGatingMode
+                                                ? <span className={styles.flowDescription}>pass / lock</span>
+                                                : undefined}
                                         </div>
-                                        <div className={styles.flowStep}>
-                                            <span aria-hidden='true' className={styles.flowBoxIcon}>🔒</span>
-                                            <strong className={styles.flowBoxTitle}>Locked</strong>
-                                            <span className={styles.flowDescription}>No human</span>
-                                            <span className={styles.flowDescription}>review needed</span>
+                                    )
+                                    : undefined}
+
+                                {hasConfiguredAiWorkflows && isAiGatingMode && humanReviewers.length
+                                    ? <div className={classNames(styles.flowArrow, styles.humanArrow)}>→</div>
+                                    : undefined}
+
+                                {!hasConfiguredAiWorkflows && humanReviewers.length
+                                    ? (
+                                        <div className={classNames(styles.flowStep, styles.humanReviewStep)}>
+                                            <span aria-hidden='true' className={styles.flowBoxIcon}>👥</span>
+                                            <strong className={styles.flowBoxTitle}>Human Review</strong>
+                                            <span className={styles.flowDescription}>
+                                                {totalHumanReviewerCount}
+                                                {' '}
+                                                reviewers
+                                            </span>
+                                        </div>
+                                    )
+                                    : undefined}
+
+                                {hasConfiguredAiWorkflows && isAiGatingMode && humanReviewers.length
+                                    ? (
+                                        <div className={classNames(styles.flowStep, styles.humanReviewStep)}>
+                                            <span aria-hidden='true' className={styles.flowBoxIcon}>👥</span>
+                                            <strong className={styles.flowBoxTitle}>Human Review</strong>
+                                            <span className={styles.flowDescription}>
+                                                {totalHumanReviewerCount}
+                                                {' '}
+                                                reviewers
+                                            </span>
+                                        </div>
+                                    )
+                                    : undefined}
+                            </div>
+
+                            {shouldShowLockedFailurePath
+                                ? (
+                                    <div className={styles.failureRow}>
+                                        <div className={classNames(styles.failureBranch, styles.lockedBranch)}>
+                                            <div className={styles.failureArrow}>
+                                                <span>↓</span>
+                                                <span className={styles.failLabel}>
+                                                    &lt;
+                                                    {' '}
+                                                    {aiConfiguration?.minPassingThreshold ?? 75}
+                                                    %
+                                                </span>
+                                                <span>↓</span>
+                                            </div>
+                                            <div className={classNames(styles.flowStep, styles.lockedStep)}>
+                                                <span aria-hidden='true' className={styles.flowBoxIcon}>🔒</span>
+                                                <strong className={styles.flowBoxTitle}>Locked</strong>
+                                                <span className={styles.flowDescription}>No human</span>
+                                                <span className={styles.flowDescription}>review needed</span>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            )
-                            : undefined}
+                                )
+                                : undefined}
+                        </div>
                     </section>
                 )
                 : undefined}

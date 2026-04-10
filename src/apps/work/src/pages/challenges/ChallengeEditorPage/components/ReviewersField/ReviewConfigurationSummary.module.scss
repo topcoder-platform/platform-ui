@@ -212,6 +212,12 @@
     padding: 24px;
 }
 
+.flowCanvas {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
 .flowDiagram {
     align-items: center;
     display: grid;
@@ -365,6 +371,66 @@
     .failureArrow {
         grid-column: auto;
         justify-self: center;
+    }
+
+    .flowCanvasGated {
+        align-items: start;
+        column-gap: 16px;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        row-gap: 16px;
+    }
+
+    .flowCanvasGated > .flowDiagram,
+    .flowCanvasGated > .failureRow {
+        display: contents;
+    }
+
+    .flowCanvasGated .submissionStep {
+        grid-column: 1 / -1;
+        grid-row: 1;
+        justify-self: center;
+        width: min(100%, 320px);
+    }
+
+    .flowCanvasGated .entryArrow {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        justify-self: center;
+    }
+
+    .flowCanvasGated .aiGateStep {
+        grid-column: 1;
+        grid-row: 3;
+        justify-self: center;
+        min-height: 96px;
+        width: min(100%, 180px);
+    }
+
+    .flowCanvasGated .lockedBranch {
+        align-self: start;
+        grid-column: 2;
+        grid-row: 3 / span 3;
+        justify-self: center;
+        width: min(100%, 180px);
+    }
+
+    .flowCanvasGated .lockedStep {
+        min-height: 96px;
+        width: 100%;
+    }
+
+    .flowCanvasGated .humanArrow {
+        grid-column: 1;
+        grid-row: 4;
+        justify-self: center;
+    }
+
+    .flowCanvasGated .humanReviewStep {
+        grid-column: 1;
+        grid-row: 5;
+        justify-self: center;
+        width: min(100%, 220px);
     }
 }
 
