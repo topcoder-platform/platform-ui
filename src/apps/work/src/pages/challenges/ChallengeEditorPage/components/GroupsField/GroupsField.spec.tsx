@@ -66,6 +66,7 @@ jest.mock('../../../../../lib/components/form', () => ({
             id: string
             name: string
         }>
+        isCreatable?: boolean
         name: string
     }) => {
         const reactHookForm = jest.requireActual('react-hook-form') as typeof import('react-hook-form')
@@ -79,6 +80,7 @@ jest.mock('../../../../../lib/components/form', () => ({
             <div data-testid='groups-select'>
                 {JSON.stringify({
                     additionalGroups: props.additionalGroups,
+                    isCreatable: props.isCreatable,
                     selectedGroupIds,
                 })}
             </div>
@@ -161,6 +163,8 @@ describe('GroupsField', () => {
 
         expect(screen.getByTestId('groups-select'))
             .toHaveTextContent('"selectedGroupIds":[]')
+        expect(screen.getByTestId('groups-select'))
+            .toHaveTextContent('"isCreatable":false')
 
         await user.click(screen.getByRole('button', {
             name: 'Create Group',

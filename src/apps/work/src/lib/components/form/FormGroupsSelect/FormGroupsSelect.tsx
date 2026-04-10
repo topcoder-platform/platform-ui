@@ -11,6 +11,7 @@ import {
     useFormContext,
 } from 'react-hook-form'
 import AsyncCreatableSelect from 'react-select/async-creatable'
+import AsyncSelect from 'react-select/async'
 
 import {
     AUTOCOMPLETE_DEBOUNCE_TIME_MS,
@@ -33,6 +34,7 @@ interface FormGroupsSelectProps {
     additionalGroups?: Group[]
     disabled?: boolean
     hideLabel?: boolean
+    isCreatable?: boolean
     label: string
     name: string
     required?: boolean
@@ -105,6 +107,11 @@ export const FormGroupsSelect: FC<FormGroupsSelectProps> = (props: FormGroupsSel
     const fieldState = controller.fieldState
 
     const [optionCache, setOptionCache] = useState<GroupOption[]>([])
+    const isCreatable = props.isCreatable ?? true
+    const SelectComponent = useMemo<any>(
+        () => (isCreatable ? AsyncCreatableSelect : AsyncSelect),
+        [isCreatable],
+    )
 
     const menuPortalTarget = useMemo(
         () => (typeof document === 'undefined' ? undefined : document.body),
@@ -258,7 +265,7 @@ export const FormGroupsSelect: FC<FormGroupsSelectProps> = (props: FormGroupsSel
             name={props.name}
             required={props.required}
         >
-            <AsyncCreatableSelect
+            <SelectComponent
                 cacheOptions
                 className={styles.select}
                 classNamePrefix='challenge-select'
@@ -270,7 +277,9 @@ export const FormGroupsSelect: FC<FormGroupsSelectProps> = (props: FormGroupsSel
                 menuPortalTarget={menuPortalTarget}
                 onBlur={field.onBlur}
                 onChange={handleSelectionChange}
-                onCreateOption={handleCreateGroup}
+                onCreateOption={isCreatable
+                    ? handleCreateGroup
+                    : undefined}
                 placeholder='Search groups'
                 value={selectedValue}
             />
