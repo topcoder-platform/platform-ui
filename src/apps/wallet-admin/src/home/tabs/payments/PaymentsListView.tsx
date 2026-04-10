@@ -708,7 +708,6 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                         }
 
                         setPagination(newPagination)
-                    
                         setFilters(prev => ({
                             ...prev,
                             [key]: value, // store 'all' explicitly; appliedFilters strips it before the API call
