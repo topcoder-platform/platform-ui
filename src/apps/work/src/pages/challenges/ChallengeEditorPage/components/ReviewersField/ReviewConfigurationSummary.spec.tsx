@@ -200,6 +200,82 @@ describe('ReviewConfigurationSummary', () => {
             })
     })
 
+    it('distributes repeated role assignments across matching reviewer rows in view mode', async () => {
+        mockedFetchAiReviewConfigByChallenge.mockResolvedValue(undefined)
+        mockedUseFetchResourceRoles.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            resourceRoles: [{
+                id: 'role-approver',
+                name: 'Approver',
+            }],
+        })
+        mockedUseFetchResources.mockReturnValue({
+            error: undefined,
+            isError: false,
+            isLoading: false,
+            mutate: jest.fn(),
+            resources: [
+                {
+                    challengeId: 'challenge-1',
+                    memberHandle: 'approver-one',
+                    memberId: 'member-1',
+                    roleId: 'role-approver',
+                },
+                {
+                    challengeId: 'challenge-1',
+                    memberHandle: 'approver-two',
+                    memberId: 'member-2',
+                    roleId: 'role-approver',
+                },
+            ],
+        })
+        mockedFetchScorecards.mockResolvedValue([{
+            id: 'scorecard-approval',
+            name: 'Approval Scorecard',
+        }])
+
+        const rendered: ReturnType<typeof render> = render(
+            <ReviewConfigurationSummary
+                challengeId='challenge-1'
+                phases={[{
+                    name: 'Approval',
+                    phaseId: 'phase-approval',
+                }]}
+                reviewers={[
+                    {
+                        isMemberReview: true,
+                        memberReviewerCount: 1,
+                        phaseId: 'phase-approval',
+                        scorecardId: 'scorecard-approval',
+                    },
+                    {
+                        isMemberReview: true,
+                        memberReviewerCount: 1,
+                        phaseId: 'phase-approval',
+                        scorecardId: 'scorecard-approval',
+                    },
+                ]}
+                typeId='type-1'
+            />,
+        )
+        const container: HTMLElement = rendered.container
+
+        expect(
+            await screen.findAllByText('Approval Scorecard'),
+        )
+            .toHaveLength(2)
+
+        const humanReviewerRows = container.querySelectorAll('tbody tr')
+        expect(humanReviewerRows)
+            .toHaveLength(2)
+        expect(humanReviewerRows[0]?.textContent)
+            .toContain('approver-one')
+        expect(humanReviewerRows[1]?.textContent)
+            .toContain('approver-two')
+    })
+
     it('groups the locked review-flow path into the centered failure branch', async () => {
         const rendered: ReturnType<typeof render> = render(
             <ReviewConfigurationSummary
