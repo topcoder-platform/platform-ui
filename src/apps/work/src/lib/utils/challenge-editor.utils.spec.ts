@@ -226,6 +226,38 @@ describe('challenge-editor utils submission count mapping', () => {
     })
 })
 
+describe('challenge-editor utils schedule mapping', () => {
+    it('serializes scheduled phase end dates to the API payload', () => {
+        const formData: Record<string, unknown> = {
+            description: 'Public specification',
+            legacy: {
+                useSchedulingAPI: true,
+            },
+            name: 'Scheduled challenge',
+            phases: [{
+                duration: 1440,
+                phaseId: 'submission-phase',
+                scheduledEndDate: '2026-04-15T15:05:00.000Z',
+                scheduledStartDate: '2026-04-09T15:05:00.000Z',
+            }],
+            skills: [],
+            tags: [],
+            trackId: 'track-id',
+            typeId: 'type-id',
+        }
+
+        const result = transformFormDataToChallenge(formData as any)
+
+        expect(result.phases)
+            .toEqual([{
+                duration: 1440,
+                phaseId: 'submission-phase',
+                scheduledEndDate: '2026-04-15T15:05:00.000Z',
+                scheduledStartDate: '2026-04-09T15:05:00.000Z',
+            }])
+    })
+})
+
 describe('challenge-editor utils task reviewer mapping', () => {
     it('maps task reviewer and task flag into form data', () => {
         const result = transformChallengeToFormData({
