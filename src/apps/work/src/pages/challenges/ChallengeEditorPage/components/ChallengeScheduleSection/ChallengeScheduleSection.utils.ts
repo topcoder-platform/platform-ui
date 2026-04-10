@@ -64,6 +64,10 @@ export function normalizePhaseName(value: unknown): string {
         .toLowerCase()
 }
 
+function getPredecessorEndDate(phase?: ChallengePhase): Date | undefined {
+    return toDate(phase?.actualEndDate || phase?.scheduledEndDate)
+}
+
 function isIterativeReviewPhase(phaseName: unknown): boolean {
     return normalizePhaseName(phaseName) === 'iterative review'
 }
@@ -203,7 +207,7 @@ export function recalculatePhases(
         if (phase.predecessor) {
             const predecessorPhase = calculatedByPhaseId.get(phase.predecessor)
             const predecessorStartDate = toDate(predecessorPhase?.scheduledStartDate)
-            const predecessorEndDate = toDate(predecessorPhase?.scheduledEndDate)
+            const predecessorEndDate = getPredecessorEndDate(predecessorPhase)
 
             if (predecessorEndDate) {
                 phaseStartDate = isIterativeReviewPhase(phase.name)

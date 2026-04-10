@@ -99,6 +99,35 @@ describe('ChallengeScheduleSection helpers', () => {
             expect(result.phases[2]?.scheduledStartDate)
                 .toBe(updatedStartDate)
         })
+
+        it('aligns successor phases to a predecessor actual end date when the predecessor closes early', () => {
+            const checkpointReviewActualEnd = '2026-04-09T13:14:00.000Z'
+            const phases: ChallengePhase[] = [
+                buildPhase({
+                    actualEndDate: checkpointReviewActualEnd,
+                    duration: 48 * 60,
+                    name: 'Checkpoint Review',
+                    phaseId: 'checkpoint-review',
+                    scheduledEndDate: '2026-04-11T13:02:00.000Z',
+                    scheduledStartDate: '2026-04-09T13:02:00.000Z',
+                }),
+                buildPhase({
+                    duration: 19,
+                    name: 'Submission',
+                    phaseId: 'submission',
+                    predecessor: 'checkpoint-review',
+                    scheduledEndDate: '2026-04-09T13:33:00.000Z',
+                    scheduledStartDate: '2026-04-09T13:14:00.000Z',
+                }),
+            ]
+
+            const result = recalculatePhases(phases, '2026-04-09T12:36:00.000Z')
+
+            expect(result.phases[1]?.scheduledStartDate)
+                .toBe(checkpointReviewActualEnd)
+            expect(result.phases[1]?.scheduledEndDate)
+                .toBe('2026-04-09T13:33:00.000Z')
+        })
     })
 
     describe('buildSchedulePhaseRows', () => {

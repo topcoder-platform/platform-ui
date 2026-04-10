@@ -514,4 +514,50 @@ describe('ChallengeScheduleSection component', () => {
                 isEndDateEditable: true,
             }))
     })
+
+    it('uses a completed predecessor actual end date for the submission row start time', () => {
+        render(
+            <TestHarness
+                phases={[
+                    {
+                        actualEndDate: '2026-04-09T13:14:00.000Z',
+                        duration: 2880,
+                        id: 'phase-1',
+                        isOpen: false,
+                        name: 'Checkpoint Review',
+                        phaseId: 'checkpoint-review-phase',
+                        scheduledEndDate: '2026-04-11T13:02:00.000Z',
+                        scheduledStartDate: '2026-04-09T13:02:00.000Z',
+                    },
+                    {
+                        duration: 19,
+                        id: 'phase-2',
+                        isOpen: true,
+                        name: 'Submission',
+                        phaseId: 'submission-phase',
+                        predecessor: 'checkpoint-review-phase',
+                        scheduledEndDate: '2026-04-09T13:33:00.000Z',
+                        scheduledStartDate: '2026-04-09T13:14:00.000Z',
+                    },
+                ]}
+                startDate='2026-04-09T12:36:00.000Z'
+            />,
+        )
+
+        const renderedPhaseRows = mockPhaseEditorRow.mock.calls
+            .map(([props]) => props as {
+                phase?: {
+                    name?: string
+                }
+                startDate?: string
+            })
+        const submissionRow = [...renderedPhaseRows]
+            .reverse()
+            .find(props => props.phase?.name === 'Submission')
+
+        expect(submissionRow)
+            .toEqual(expect.objectContaining({
+                startDate: '2026-04-09T13:14:00.000Z',
+            }))
+    })
 })
