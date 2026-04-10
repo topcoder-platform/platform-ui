@@ -1,7 +1,8 @@
 import {
     ChangeEvent,
     FC,
-    useMemo,
+    useEffect,
+    useState,
 } from 'react'
 import classNames from 'classnames'
 
@@ -20,11 +21,33 @@ export interface PhaseDurationInputProps {
     error?: string
 }
 
-function normalizeInputValue(value: string): number {
-    const parsedValue = Number(value)
+/**
+ * Removes any non-digit characters from a duration field value.
+ *
+ * @param value raw input text entered into the duration field.
+ * @returns digits-only string that can be safely parsed as a whole number.
+ */
+function sanitizeInputValue(value: string): string {
+    return value.replace(/\D/g, '')
+}
 
+/**
+ * Parses a sanitized duration field value into a non-negative integer.
+ *
+ * Empty values remain undefined so the user can temporarily clear a field
+ * while typing a replacement value.
+ *
+ * @param value digits-only duration input value.
+ * @returns parsed integer, or `undefined` when the field is empty.
+ */
+function parseInputValue(value: string): number | undefined {
+    if (!value) {
+        return undefined
+    }
+
+    const parsedValue = Number(value)
     if (!Number.isFinite(parsedValue)) {
-        return 0
+        return undefined
     }
 
     return Math.max(0, Math.trunc(parsedValue))
@@ -35,30 +58,67 @@ export const PhaseDurationInput: FC<PhaseDurationInputProps> = (props: PhaseDura
     const error = props.error
     const label = props.label
     const value = props.value
+    const hoursMinutes = getPhaseHoursMinutes(Number(value) || 0)
+    const [hoursInput, setHoursInput] = useState<string>(() => String(hoursMinutes.hours))
+    const [minutesInput, setMinutesInput] = useState<string>(() => String(hoursMinutes.minutes))
 
-    const hoursMinutes = useMemo(
-        () => getPhaseHoursMinutes(Number(value) || 0),
-        [value],
-    )
+    useEffect(() => {
+        setHoursInput(String(hoursMinutes.hours))
+        setMinutesInput(String(hoursMinutes.minutes))
+    }, [
+        hoursMinutes.hours,
+        hoursMinutes.minutes,
+    ])
 
     function handleHoursChange(event: ChangeEvent<HTMLInputElement>): void {
-        const nextHours = normalizeInputValue(event.target.value)
+        const nextHoursInput = sanitizeInputValue(event.target.value)
+        const nextHours = parseInputValue(nextHoursInput)
+
+        setHoursInput(nextHoursInput)
+
+        if (nextHours === undefined) {
+            return
+        }
+
         const nextDuration = convertPhaseHoursMinutesToPhaseDuration({
             hours: nextHours,
-            minutes: hoursMinutes.minutes,
+            minutes: parseInputValue(minutesInput) ?? hoursMinutes.minutes,
         })
 
         props.onChange(nextDuration)
     }
 
     function handleMinutesChange(event: ChangeEvent<HTMLInputElement>): void {
-        const nextMinutes = Math.max(0, Math.min(59, normalizeInputValue(event.target.value)))
+        const nextMinutesInput = sanitizeInputValue(event.target.value)
+        const parsedMinutes = parseInputValue(nextMinutesInput)
+
+        if (parsedMinutes === undefined) {
+            setMinutesInput('')
+            return
+        }
+
+        const nextMinutes = Math.max(0, Math.min(59, parsedMinutes))
+
+        setMinutesInput(String(nextMinutes))
+
         const nextDuration = convertPhaseHoursMinutesToPhaseDuration({
-            hours: hoursMinutes.hours,
+            hours: parseInputValue(hoursInput) ?? hoursMinutes.hours,
             minutes: nextMinutes,
         })
 
         props.onChange(nextDuration)
+    }
+
+    function handleHoursBlur(): void {
+        if (!hoursInput) {
+            setHoursInput(String(hoursMinutes.hours))
+        }
+    }
+
+    function handleMinutesBlur(): void {
+        if (!minutesInput) {
+            setMinutesInput(String(hoursMinutes.minutes))
+        }
     }
 
     return (
@@ -77,10 +137,13 @@ export const PhaseDurationInput: FC<PhaseDurationInputProps> = (props: PhaseDura
                             error ? styles.error : undefined,
                         )}
                         disabled={disabled}
+                        inputMode='numeric'
                         min={0}
+                        onBlur={handleHoursBlur}
                         onChange={handleHoursChange}
-                        type='number'
-                        value={hoursMinutes.hours}
+                        pattern='[0-9]*'
+                        type='text'
+                        value={hoursInput}
                     />
                 </label>
 
@@ -93,11 +156,14 @@ export const PhaseDurationInput: FC<PhaseDurationInputProps> = (props: PhaseDura
                             error ? styles.error : undefined,
                         )}
                         disabled={disabled}
+                        inputMode='numeric'
                         max={59}
                         min={0}
+                        onBlur={handleMinutesBlur}
                         onChange={handleMinutesChange}
-                        type='number'
-                        value={hoursMinutes.minutes}
+                        pattern='[0-9]*'
+                        type='text'
+                        value={minutesInput}
                     />
                 </label>
             </div>
