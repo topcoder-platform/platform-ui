@@ -1351,7 +1351,6 @@ describe('ChallengeEditorForm', () => {
         const timelineIndex = sectionHeadings.indexOf('Timeline & Schedule')
         const submissionSettingsIndex = sectionHeadings.indexOf('Submission Settings')
         const reviewIndex = sectionHeadings.indexOf('Review')
-        const attachmentsIndex = sectionHeadings.indexOf('Attachments')
 
         expect(timelineIndex)
             .toBeGreaterThanOrEqual(0)
@@ -1359,8 +1358,8 @@ describe('ChallengeEditorForm', () => {
             .toBeGreaterThan(timelineIndex)
         expect(reviewIndex)
             .toBeGreaterThan(submissionSettingsIndex)
-        expect(attachmentsIndex)
-            .toBeGreaterThan(reviewIndex)
+        expect(sectionHeadings)
+            .not.toContain('Attachments')
         expect(screen.getByTestId('reviewers-field'))
             .toHaveAttribute('data-read-only', 'true')
         expect(screen.getByTestId('reviewers-field')
@@ -1747,36 +1746,17 @@ describe('ChallengeEditorForm', () => {
             .not.toHaveBeenCalledWith('Failed to save challenge')
     })
 
-    it('preserves uploaded attachments after saving when the update response omits them', async () => {
-        const user = userEvent.setup()
-
-        mockedPatchChallenge.mockResolvedValue({
-            ...validDraftChallenge,
-            attachments: undefined,
-        })
-
+    it('does not render the attachments section while editing a draft', () => {
         render(
             <MemoryRouter>
                 <ChallengeEditorForm challenge={validDraftChallenge} />
             </MemoryRouter>,
         )
 
-        expect(screen.getByText('Attachment Count: 0'))
-            .toBeInTheDocument()
-
-        await user.click(screen.getByRole('button', { name: 'Mock Add Attachment' }))
-
-        expect(screen.getByText('Attachment Count: 1'))
-            .toBeInTheDocument()
-
-        await user.click(screen.getByRole('button', { name: 'Save Challenge' }))
-
-        await waitFor(() => {
-            expect(mockedPatchChallenge)
-                .toHaveBeenCalledTimes(1)
-            expect(screen.getByText('Attachment Count: 1'))
-                .toBeInTheDocument()
-        })
+        expect(screen.queryByRole('heading', { level: 3, name: 'Attachments' }))
+            .not.toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: 'Mock Add Attachment' }))
+            .not.toBeInTheDocument()
     })
 
     it('returns to view mode after saving from an edit route', async () => {

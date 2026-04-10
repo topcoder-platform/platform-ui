@@ -78,9 +78,6 @@ import {
     AssignedMemberField,
 } from './AssignedMemberField'
 import {
-    AttachmentsField,
-} from './AttachmentsField'
-import {
     ChallengeDescriptionField,
 } from './ChallengeDescriptionField'
 import {
@@ -2477,14 +2474,6 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
             </section>
         )
         : undefined
-    const attachmentsSection = (
-        <section className={styles.section}>
-            <h3 className={styles.sectionTitle}>Attachments</h3>
-            <div className={styles.block}>
-                <AttachmentsField />
-            </div>
-        </section>
-    )
     const footerSection = !isReadOnly
         ? (
             <div className={styles.footer}>
@@ -2748,22 +2737,11 @@ export const ChallengeEditorForm: FC<ChallengeEditorFormProps> = (
                                 {!isReadOnly
                                     ? reviewSection
                                     : undefined}
-                                {!isReadOnly
-                                    ? attachmentsSection
-                                    : undefined}
                                 {footerSection}
                             </fieldset>
 
                             {isReadOnly
                                 ? reviewSection
-                                : undefined}
-
-                            {isReadOnly
-                                ? (
-                                    <fieldset className={styles.formContent} disabled>
-                                        {attachmentsSection}
-                                    </fieldset>
-                                )
                                 : undefined}
                         </>
                     )
