@@ -108,6 +108,7 @@ export const GroupsField: FC = () => {
                 <FormGroupsSelect
                     additionalGroups={createdGroups}
                     hideLabel
+                    isCreatable={false}
                     label='Groups'
                     name='groups'
                 />
