@@ -153,44 +153,88 @@ function getFallbackAssignedMembers(reviewer: Reviewer): string {
 }
 
 /**
- * Resolves the assigned resource members for a reviewer row in read-only mode.
+ * Resolves the resource role id for a reviewer row in read-only mode.
  *
  * @param reviewer reviewer row from the challenge payload.
  * @param phaseNameById map of phase ids to phase names.
- * @param resources loaded challenge resources.
  * @param resourceRoles loaded resource role definitions.
- * @returns a comma-separated handle list when assignments can be resolved.
+ * @returns the matching resource role id when assignments can be resolved.
  */
-function getAssignedMembersForReviewer(
+function getReviewerRoleId(
     reviewer: Reviewer,
     phaseNameById: Map<string, string>,
-    resources: Resource[],
     resourceRoles: ResourceRole[],
-): string {
+): string | undefined {
     const explicitRoleId = normalizeReviewerText(reviewer.roleId)
     const normalizedPhaseId = normalizeReviewerText(reviewer.phaseId)
     const phaseName = phaseNameById.get(normalizedPhaseId)
     const roleNames = normalizeSummaryKey(phaseName) === 'iterativereview'
         ? ITERATIVE_REVIEW_ROLE_NAMES
         : [getRoleNameForPhaseName(phaseName)]
-    const resolvedRoleId = explicitRoleId || roleNames
+
+    return explicitRoleId || roleNames
         .map(roleName => resourceRoles.find(
             role => normalizeSummaryKey(role.name) === normalizeSummaryKey(roleName),
         )?.id)
         .find((roleId): roleId is string => !!roleId)
-    const assignedMembers = resolvedRoleId
-        ? resources
-            .filter(resource => resource.roleId === resolvedRoleId)
-            .slice(0, getReviewerCount(reviewer))
-            .map(resource => normalizeReviewerText(resource.memberHandle) || normalizeReviewerText(resource.memberId))
-            .filter(Boolean)
-        : []
+}
 
-    if (assignedMembers.length) {
-        return assignedMembers.join(', ')
-    }
+/**
+ * Resolves the assigned resource members for each reviewer row in read-only mode.
+ *
+ * Review resources are stored per role, so repeated reviewer rows can share the same
+ * role id. This allocator consumes matching resources in reviewer order so duplicate
+ * approval or reviewer rows still surface every assigned member once in view mode.
+ *
+ * @param reviewers reviewer rows from the challenge payload.
+ * @param phaseNameById map of phase ids to phase names.
+ * @param resources loaded challenge resources.
+ * @param resourceRoles loaded resource role definitions.
+ * @returns a row-aligned list of comma-separated assigned-member labels.
+ */
+function buildAssignedMembersByReviewer(
+    reviewers: Reviewer[],
+    phaseNameById: Map<string, string>,
+    resources: Resource[],
+    resourceRoles: ResourceRole[],
+): string[] {
+    const resourceLabelsByRoleId = new Map<string, string[]>()
+    const roleOffsets = new Map<string, number>()
 
-    return getFallbackAssignedMembers(reviewer) || '-'
+    resources.forEach(resource => {
+        const roleId = normalizeReviewerText(resource.roleId)
+        const resourceLabel = normalizeReviewerText(resource.memberHandle) || normalizeReviewerText(resource.memberId)
+
+        if (!roleId || !resourceLabel) {
+            return
+        }
+
+        const existingLabels = resourceLabelsByRoleId.get(roleId) || []
+        existingLabels.push(resourceLabel)
+        resourceLabelsByRoleId.set(roleId, existingLabels)
+    })
+
+    return reviewers.map(reviewer => {
+        const fallbackAssignedMembers = getFallbackAssignedMembers(reviewer)
+        const resolvedRoleId = getReviewerRoleId(reviewer, phaseNameById, resourceRoles)
+
+        if (!resolvedRoleId) {
+            return fallbackAssignedMembers || '-'
+        }
+
+        const roleLabels = resourceLabelsByRoleId.get(resolvedRoleId) || []
+        const roleOffset = roleOffsets.get(resolvedRoleId) || 0
+        const nextRoleOffset = roleOffset + getReviewerCount(reviewer)
+        const assignedMembers = roleLabels.slice(roleOffset, nextRoleOffset)
+
+        roleOffsets.set(resolvedRoleId, nextRoleOffset)
+
+        if (assignedMembers.length) {
+            return assignedMembers.join(', ')
+        }
+
+        return fallbackAssignedMembers || '-'
+    })
 }
 
 /**
@@ -397,9 +441,10 @@ function mapLegacyAiReviewersToWorkflows(
  * Builds a stable row key for the human-review summary table.
  *
  * @param reviewer human reviewer row from the challenge payload.
+ * @param index row index from the rendered human-review table.
  * @returns a deterministic table row key.
  */
-function getHumanReviewerRowKey(reviewer: Reviewer): string {
+function getHumanReviewerRowKey(reviewer: Reviewer, index: number): string {
     return [
         normalizeReviewerText(reviewer.phaseId),
         normalizeReviewerText(reviewer.scorecardId),
@@ -407,6 +452,7 @@ function getHumanReviewerRowKey(reviewer: Reviewer): string {
         normalizeReviewerText(reviewer.handle),
         String(getReviewerCount(reviewer)),
         reviewer.shouldOpenOpportunity ? 'open' : 'closed',
+        String(index),
     ]
         .filter(Boolean)
         .join(':')
@@ -493,6 +539,20 @@ export const ReviewConfigurationSummary: FC<ReviewConfigurationSummaryProps> = (
     const totalHumanReviewerCount = useMemo(
         () => humanReviewers.reduce((sum, reviewer) => sum + getReviewerCount(reviewer), 0),
         [humanReviewers],
+    )
+    const assignedMembersByReviewer = useMemo(
+        () => buildAssignedMembersByReviewer(
+            humanReviewers,
+            phaseNameById,
+            resources,
+            resourceRoles,
+        ),
+        [
+            humanReviewers,
+            phaseNameById,
+            resourceRoles,
+            resources,
+        ],
     )
     const estimatedReviewCost = useMemo(
         () => calculateEstimatedReviewerCost(
@@ -743,7 +803,7 @@ export const ReviewConfigurationSummary: FC<ReviewConfigurationSummaryProps> = (
                                             <tbody>
                                                 {humanReviewers.map((reviewer, index) => (
                                                     <tr
-                                                        key={getHumanReviewerRowKey(reviewer)}
+                                                        key={getHumanReviewerRowKey(reviewer, index)}
                                                     >
                                                         <td>{index + 1}</td>
                                                         <td>
@@ -773,12 +833,7 @@ export const ReviewConfigurationSummary: FC<ReviewConfigurationSummaryProps> = (
                                                             </span>
                                                         </td>
                                                         <td>
-                                                            {getAssignedMembersForReviewer(
-                                                                reviewer,
-                                                                phaseNameById,
-                                                                resources,
-                                                                resourceRoles,
-                                                            )}
+                                                            {assignedMembersByReviewer[index] || '-'}
                                                         </td>
                                                     </tr>
                                                 ))}
