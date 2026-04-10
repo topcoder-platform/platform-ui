@@ -164,17 +164,6 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
                             <span className={styles.label}>Handle</span>
                             <p className={styles.value}>{props.payment.handle}</p>
                         </div>
-                        {isEngagementPayment && (
-                            <div className={styles.infoItem}>
-                                <span className={styles.label}>Payment Creator</span>
-                                <p className={styles.value}>
-                                    {isPaymentDetailsLoading
-                                        ? 'Loading...'
-                                        : formatOptionalText(paymentDetails?.paymentCreatorHandle)}
-                                </p>
-                            </div>
-                        )}
-
                         <div className={styles.infoItem}>
                             <span className={styles.label}>Type</span>
                             <p className={styles.value}>{props.payment.type}</p>
@@ -304,6 +293,12 @@ const PaymentView: React.FC<PaymentViewProps> = (props: PaymentViewProps) => {
                                                 <span className={styles.label}>Remarks</span>
                                                 <p className={styles.remarksValue}>
                                                     {renderOptionalLinkedText(paymentDetails?.workLog?.remarks)}
+                                                </p>
+                                            </div>
+                                            <div className={styles.infoItem}>
+                                                <span className={styles.label}>Payment Creator</span>
+                                                <p className={styles.value}>
+                                                    {formatOptionalText(paymentDetails?.paymentCreatorHandle)}
                                                 </p>
                                             </div>
                                         </div>

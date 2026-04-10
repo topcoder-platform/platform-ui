@@ -4,6 +4,7 @@ import {
     render,
     screen,
     waitFor,
+    within,
 } from '@testing-library/react'
 
 import { Winning } from '../../models/WinningDetail'
@@ -122,13 +123,29 @@ describe('PaymentView', () => {
 
         expect(await screen.findByRole('heading', { name: 'Engagement Details' }))
             .toBeTruthy()
-        expect(await screen.findByText('copilot-manager'))
-            .toBeTruthy()
         await waitFor(() => {
             expect(screen.getAllByText('43.75'))
                 .toHaveLength(2)
         })
         expect(await screen.findByText(/Completed sprint support and bug triage\./))
+            .toBeTruthy()
+
+        const workLogHeading = await screen.findByRole('heading', {
+            name: 'Work Log / Manager Inputs',
+        })
+        const workLogSection = workLogHeading.parentElement
+
+        if (!workLogSection) {
+            throw new Error('Expected work log section to be rendered.')
+        }
+
+        expect(screen.getAllByText('Payment Creator'))
+            .toHaveLength(1)
+        expect(within(workLogSection)
+            .getByText('Payment Creator'))
+            .toBeTruthy()
+        expect(within(workLogSection)
+            .getByText('copilot-manager'))
             .toBeTruthy()
 
         const descriptionLink = await screen.findByRole('link', {
