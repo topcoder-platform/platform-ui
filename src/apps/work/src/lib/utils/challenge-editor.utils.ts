@@ -895,6 +895,7 @@ function serializePhasesForApi(phases: unknown): ChallengePhase[] | undefined {
                 duration: normalizePhaseDurationMinutes(typedPhase.duration),
                 phaseId: typedPhase.phaseId,
                 predecessor: typedPhase.predecessor,
+                scheduledEndDate: toIsoDateString(typedPhase.scheduledEndDate),
                 scheduledStartDate: toIsoDateString(typedPhase.scheduledStartDate),
             }
         })

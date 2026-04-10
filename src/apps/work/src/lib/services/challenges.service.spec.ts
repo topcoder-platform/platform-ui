@@ -165,4 +165,36 @@ describe('patchChallenge', () => {
                 expect.any(Object),
             )
     })
+
+    it('preserves scheduled phase end dates when patching a challenge', async () => {
+        const mockedPatch = xhrPatchAsync as jest.Mock
+
+        mockedPatch.mockResolvedValue({
+            id: 'challenge-1',
+            phases: [],
+        })
+
+        await patchChallenge('challenge-1', {
+            phases: [{
+                duration: 1440,
+                phaseId: 'submission-phase',
+                scheduledEndDate: '2026-04-15T15:05:00.000Z',
+                scheduledStartDate: '2026-04-09T15:05:00.000Z',
+            }],
+        })
+
+        expect(xhrPatchAsync)
+            .toHaveBeenCalledWith(
+                'https://example.com/challenges/challenge-1',
+                expect.objectContaining({
+                    phases: [{
+                        duration: 86400,
+                        phaseId: 'submission-phase',
+                        scheduledEndDate: '2026-04-15T15:05:00.000Z',
+                        scheduledStartDate: '2026-04-09T15:05:00.000Z',
+                    }],
+                }),
+                expect.any(Object),
+            )
+    })
 })
