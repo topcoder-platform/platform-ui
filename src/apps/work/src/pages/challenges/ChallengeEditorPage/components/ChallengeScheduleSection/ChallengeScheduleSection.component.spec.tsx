@@ -94,7 +94,64 @@ jest.mock('../../../../../lib/hooks', () => ({
 }))
 
 jest.mock('../../../../../lib/utils', () => ({
+    getMetadataValue: (
+        metadata: Array<{
+            name?: string
+            value?: unknown
+        }> | undefined,
+        name: string,
+    ): string | undefined => {
+        const metadataEntry = Array.isArray(metadata)
+            ? metadata.find(entry => entry?.name === name)
+            : undefined
+
+        return metadataEntry?.value === undefined
+            ? undefined
+            : String(metadataEntry.value)
+    },
     getPhaseDuration: () => 0,
+    setMetadataValue: (
+        metadata: Array<{
+            name?: string
+            value?: unknown
+        }> | undefined,
+        name: string,
+        value: string,
+    ): Array<{
+        name: string
+        value: string
+    }> => {
+        const metadataEntries = Array.isArray(metadata)
+            ? metadata.map(entry => ({
+                name: entry?.name || '',
+                value: String(entry?.value ?? ''),
+            }))
+            : []
+        const existingEntryIndex = metadataEntries.findIndex(entry => entry?.name === name)
+
+        if (existingEntryIndex < 0) {
+            return [
+                ...metadataEntries,
+                {
+                    name,
+                    value,
+                },
+            ]
+        }
+
+        return metadataEntries.map((entry, index) => (
+            index === existingEntryIndex
+                ? {
+                    ...entry,
+                    name,
+                    value,
+                }
+                : {
+                    name: entry?.name || '',
+                    value: String(entry?.value ?? ''),
+                }
+        ))
+    },
 }))
 
 jest.mock('../PhaseEditorRow', () => ({
@@ -107,6 +164,7 @@ jest.mock('../TimelineVisualization', () => ({
 
 interface TestHarnessProps {
     disabled?: boolean
+    metadata?: ChallengeEditorFormData['metadata']
     phases?: ChallengeEditorFormData['phases']
     startDate?: ChallengeEditorFormData['startDate']
 }
@@ -127,12 +185,32 @@ const StartDateValue = (): JSX.Element => {
     )
 }
 
+const StartDateModeValue = (): JSX.Element => {
+    const formContext = useFormContext<ChallengeEditorFormData>()
+    const metadata = useWatch({
+        control: formContext.control,
+        name: 'metadata',
+    }) as ChallengeEditorFormData['metadata']
+    const startDateMode = Array.isArray(metadata)
+        ? metadata.find(entry => entry?.name === 'challengeStartMode')?.value
+        : undefined
+
+    return (
+        <div data-testid='start-date-mode-value'>
+            {typeof startDateMode === 'string'
+                ? startDateMode
+                : ''}
+        </div>
+    )
+}
+
 const TestHarness = (props: TestHarnessProps): JSX.Element => {
     const formMethods = useForm<ChallengeEditorFormData>({
         defaultValues: {
             legacy: {
                 useSchedulingAPI: true,
             },
+            metadata: props.metadata,
             phases: props.phases || [],
             reviewers: [],
             startDate: props.startDate,
@@ -144,6 +222,7 @@ const TestHarness = (props: TestHarnessProps): JSX.Element => {
         <FormProvider {...formMethods}>
             <ChallengeScheduleSection disabled={props.disabled} />
             <StartDateValue />
+            <StartDateModeValue />
         </FormProvider>
     )
 }
@@ -214,6 +293,8 @@ describe('ChallengeScheduleSection component', () => {
             expect(screen.getByTestId('start-date-value'))
                 .toHaveTextContent('2026-03-31T12:34:00.000Z')
         })
+        expect(screen.getByTestId('start-date-mode-value'))
+            .toHaveTextContent('immediately')
         expect(screen.getByTestId('start-date-input'))
             .toBeDisabled()
     })
@@ -242,8 +323,30 @@ describe('ChallengeScheduleSection component', () => {
             expect(screen.getByTestId('start-date-value'))
                 .toHaveTextContent('2026-04-02T10:30:00.000Z')
         })
+        expect(screen.getByTestId('start-date-mode-value'))
+            .toHaveTextContent('scheduled')
         expect(screen.getByRole('radio', { name: 'Scheduled' }))
             .toBeChecked()
+    })
+
+    it('restores immediate mode from saved metadata even when a start date exists', () => {
+        render(
+            <TestHarness
+                metadata={[{
+                    name: 'challengeStartMode',
+                    value: 'immediately',
+                }]}
+                startDate='2026-03-28T13:15:00.000Z'
+            />,
+        )
+
+        expect(screen.getByRole('radio', { name: 'Immediately' }))
+            .toBeChecked()
+        expect(screen.getByRole('radio', { name: 'Scheduled' }))
+            .not
+            .toBeChecked()
+        expect(screen.getByTestId('start-date-input'))
+            .toBeDisabled()
     })
 
     it('does not render the gantt view toggle in the editor', () => {
