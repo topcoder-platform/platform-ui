@@ -192,22 +192,7 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
     const restrictedDefaultStatus = isEngagementApproverView ? restrictedRoleDefaultStatus : undefined
     const isRestrictedApproverView = isEngagementApproverView
     const [filters, setFilters] = React.useState<Record<string, string[]>>({})
-    //   const hasSelectedStatusFilter = (filters.status?.length ?? 0) > 0
     const hasSelectedStatusFilter = (filters.status?.length ?? 0) > 0 && filters.status?.[0] !== 'all'
-
-    /*   const appliedFilters = React.useMemo<Record<string, string[]>>(() => {
-        if (!restrictedCategory) {
-            return filters
-        }
-
-        return {
-            ...filters,
-            category: [restrictedCategory],
-            ...(hasSelectedStatusFilter
-                ? { status: filters.status }
-                : (restrictedDefaultStatus ? { status: [restrictedDefaultStatus] } : {})),
-        }
-    }, [filters, hasSelectedStatusFilter, restrictedCategory, restrictedDefaultStatus]) */
     const appliedFilters = React.useMemo<Record<string, string[]>>(() => {
         // Strip 'all' sentinel values — never forward them to the API
         const activeFilters = Object.fromEntries(
@@ -233,18 +218,6 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
             .some(([key, value]) => key !== 'category' && value.length > 0),
         [appliedFilters],
     )
-    /*   const selectedValueOverrides = React.useMemo<Record<string, string>>(() => {
-        if (!restrictedCategory) {
-            return {} as Record<string, string>
-        }
-
-        const statusOverride = filters.status?.[0] ?? restrictedDefaultStatus
-
-        return {
-            category: restrictedCategory,
-            ...(statusOverride ? { status: statusOverride } : {}),
-        }
-    }, [filters.status, restrictedCategory, restrictedDefaultStatus]) */
     const selectedValueOverrides = React.useMemo<Record<string, string>>(() => {
         if (!restrictedCategory) {
             return {} as Record<string, string>
@@ -735,21 +708,7 @@ const PaymentsListView: FC<PaymentsListViewProps> = (props: PaymentsListViewProp
                         }
 
                         setPagination(newPagination)
-                        /*    setFilters({
-                            ...filters,
-                            [key]: value,
-                        }) */
-                        /*  setFilters(prev => {
-                            const newFilters = { ...prev }
-                            if (value[0] === 'all') {
-                                delete newFilters[key]
-                            } else {
-                                newFilters[key] = value
-                            }
-
-                            return newFilters
-                        }) */
-
+                    
                         setFilters(prev => ({
                             ...prev,
                             [key]: value, // store 'all' explicitly; appliedFilters strips it before the API call
