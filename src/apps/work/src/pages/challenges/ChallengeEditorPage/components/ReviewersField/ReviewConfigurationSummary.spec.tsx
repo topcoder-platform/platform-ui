@@ -297,7 +297,43 @@ describe('ReviewConfigurationSummary', () => {
         expect(container.querySelector(`.${styles.failureBranch}`)).not.toBeNull()
     })
 
-    it('defines single-column mobile overrides for every review-flow layout variant', () => {
+    it('marks the gated review flow with dedicated mobile layout hooks', async () => {
+        const rendered: ReturnType<typeof render> = render(
+            <ReviewConfigurationSummary
+                challengeId='challenge-1'
+                phases={[{
+                    name: 'Review',
+                    phaseId: 'phase-1',
+                }]}
+                reviewers={[
+                    {
+                        handle: 'reviewer-one',
+                        isMemberReview: true,
+                        memberId: 'member-1',
+                        memberReviewerCount: 1,
+                        phaseId: 'phase-1',
+                        scorecardId: 'scorecard-1',
+                    },
+                    {
+                        aiWorkflowId: 'workflow-1',
+                        isMemberReview: false,
+                    },
+                ]}
+                typeId='type-1'
+            />,
+        )
+        const container: HTMLElement = rendered.container
+
+        expect(await screen.findByText('Locked')).not.toBeNull()
+        expect(container.querySelector(`.${styles.flowCanvasGated}`)).not.toBeNull()
+        expect(container.querySelector(`.${styles.submissionStep}`)).not.toBeNull()
+        expect(container.querySelector(`.${styles.entryArrow}`)).not.toBeNull()
+        expect(container.querySelector(`.${styles.aiGateStep}`)).not.toBeNull()
+        expect(container.querySelector(`.${styles.lockedBranch}`)).not.toBeNull()
+        expect(container.querySelector(`.${styles.lockedStep}`)).not.toBeNull()
+    })
+
+    it('defines the compact mobile layout for gated review flows', () => {
         const stylesheet = fs.readFileSync(
             path.join(__dirname, 'ReviewConfigurationSummary.module.scss'),
             'utf8',
@@ -308,12 +344,21 @@ describe('ReviewConfigurationSummary', () => {
             ? stylesheet.slice(mobileBlockStart, mobileBlockEnd)
             : undefined
 
-        expect(mobileStyles).toBeDefined()
-        expect(mobileStyles).toContain('&.withAIGating')
-        expect(mobileStyles).toContain('&.withAI')
-        expect(mobileStyles).toContain('&.withAIOnly')
-        expect(mobileStyles).toContain('&.humanOnly')
-        expect(mobileStyles).toContain('.failureBranch')
-        expect(mobileStyles).toContain('grid-column: auto;')
+        expect(mobileStyles)
+            .toBeDefined()
+        expect(mobileStyles)
+            .toContain('.flowCanvasGated')
+        expect(mobileStyles)
+            .toContain('grid-template-columns: repeat(2, minmax(0, 1fr));')
+        expect(mobileStyles)
+            .toContain('.flowCanvasGated > .flowDiagram')
+        expect(mobileStyles)
+            .toContain('.submissionStep')
+        expect(mobileStyles)
+            .toContain('.aiGateStep')
+        expect(mobileStyles)
+            .toContain('.lockedBranch')
+        expect(mobileStyles)
+            .toContain('.humanReviewStep')
     })
 })
